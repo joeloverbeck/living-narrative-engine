@@ -276,5 +276,39 @@ export function createMockTraceQueueProcessor() {
   };
 }
 
+/**
+ * Create mock TimerService for Jest compatibility
+ * This integrates directly with Jest's fake timers
+ *
+ * @returns {object} Mock TimerService instance
+ */
+export function createMockTimerService() {
+  let callCount = 0;
+
+  return {
+    setTimeout: jest.fn().mockImplementation((callback, delay) => {
+      callCount++;
+      // Directly use global setTimeout which will be controlled by Jest fake timers
+      return setTimeout(callback, delay);
+    }),
+
+    clearTimeout: jest.fn().mockImplementation((timerId) => {
+      if (timerId) {
+        // Directly use global clearTimeout which will be controlled by Jest
+        clearTimeout(timerId);
+      }
+    }),
+
+    // Test utility methods
+    getCallCount: () => callCount,
+
+    // Async completion support for shutdown - this is key for the shutdown process
+    waitForCompletion: jest.fn().mockImplementation(async () => {
+      // In tests, we can resolve immediately since Jest controls the timers
+      return Promise.resolve();
+    }),
+  };
+}
+
 // Note: createMockEventDispatchService, createMockLogger, and createMockSafeEventDispatcher
 // are already defined in coreServices.js and should be imported from there

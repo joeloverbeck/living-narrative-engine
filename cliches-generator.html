@@ -3,10 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Generate common clichés and tropes to avoid for character development"
+    />
     <title>Clichés Generator - Living Narrative Engine</title>
+
+    <!-- Styles (matching existing pages) -->
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/components.css" />
     <link rel="stylesheet" href="css/cliches-generator.css" />
+
+    <!-- Favicon (matching existing pages) -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -85,7 +93,11 @@
 
           <!-- Navigation -->
           <div class="cb-navigation">
-            <button id="back-to-menu-btn" class="cb-button cb-button-secondary">
+            <button
+              type="button"
+              id="back-to-menu-btn"
+              class="cb-button cb-button-secondary"
+            >
               ← Back to Character Builder Menu
             </button>
           </div>
@@ -93,7 +105,7 @@
 
         <!-- Right Panel: Clichés Display -->
         <section class="cb-output-panel cliches-display-panel">
-          <h2 class="cb-panel-title">Clichés & Tropes</h2>
+          <h2 class="cb-panel-title">Clichés &amp; Tropes</h2>
 
           <!-- Status Messages -->
           <div id="status-messages" class="status-messages">
@@ -102,24 +114,61 @@
 
           <!-- Clichés Container -->
           <div id="cliches-container" class="cliches-container">
-            <div class="empty-state">
-              <p>Select a thematic direction to begin.</p>
-              <p>You can either view existing clichés or generate new ones.</p>
+            <!-- Empty State (default) -->
+            <div class="cb-empty-state" id="empty-state">
+              <h3>No Clichés Generated</h3>
+              <p>
+                Select a thematic direction and click "Generate Clichés" to
+                identify common tropes to avoid.
+              </p>
+            </div>
+
+            <!-- Loading State -->
+            <div
+              class="cb-loading-state"
+              id="loading-state"
+              style="display: none"
+            >
+              <div class="loading-spinner"></div>
+              <p>Generating clichés...</p>
+            </div>
+
+            <!-- Results State -->
+            <div
+              class="cb-results-state"
+              id="results-state"
+              style="display: none"
+            >
+              <!-- Clichés will be populated here dynamically -->
+            </div>
+
+            <!-- Error State -->
+            <div class="cb-error-state" id="error-state" style="display: none">
+              <h3>Generation Failed</h3>
+              <p id="error-message">
+                <!-- Error message populated dynamically -->
+              </p>
+              <button
+                type="button"
+                id="retry-btn"
+                class="cb-button cb-button-secondary"
+              >
+                Try Again
+              </button>
             </div>
           </div>
         </section>
       </main>
 
-      <!-- Loading Overlay -->
-      <div id="loading-overlay" class="loading-overlay" style="display: none">
-        <div class="loading-content">
-          <div class="spinner"></div>
-          <p class="loading-message">Loading...</p>
+      <!-- Footer (optional - matching existing pattern) -->
+      <footer class="cb-page-footer">
+        <div class="footer-content">
+          <p>Living Narrative Engine - Character Builder</p>
         </div>
-      </div>
+      </footer>
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="dist/cliches-generator-main.js"></script>
+    <script src="dist/cliches-generator-main.js" type="module"></script>
   </body>
 </html>

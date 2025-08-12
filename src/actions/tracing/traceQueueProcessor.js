@@ -969,6 +969,15 @@ export class TraceQueueProcessor {
       this.#batchTimer = null;
     }
 
+    // Wait for any currently running operations to complete if using TestTimerService
+    if (this.#timerService.waitForCompletion) {
+      try {
+        await this.#timerService.waitForCompletion();
+      } catch (error) {
+        this.#logger.warn('TraceQueueProcessor: Error waiting for timer completion', error);
+      }
+    }
+
     // Force stop processing by clearing the processing flag
     this.#isProcessing = false;
 

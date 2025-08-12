@@ -350,20 +350,20 @@ describe('ClichesGeneratorController', () => {
   });
 
   describe('Event Handling', () => {
-    it('should subscribe to cliché generation events using EventBus.on', async () => {
+    it('should subscribe to cliché generation events using EventBus.subscribe', async () => {
       // Arrange & Act
       await testBed.controller.initialize();
 
-      // Assert - now using the 'on' method instead of 'subscribe'
-      expect(testBed.mockEventBus.on).toHaveBeenCalledWith(
+      // Assert - using the 'subscribe' method
+      expect(testBed.mockEventBus.subscribe).toHaveBeenCalledWith(
         'CLICHES_GENERATION_STARTED',
         expect.any(Function)
       );
-      expect(testBed.mockEventBus.on).toHaveBeenCalledWith(
+      expect(testBed.mockEventBus.subscribe).toHaveBeenCalledWith(
         'CLICHES_GENERATION_COMPLETED',
         expect.any(Function)
       );
-      expect(testBed.mockEventBus.on).toHaveBeenCalledWith(
+      expect(testBed.mockEventBus.subscribe).toHaveBeenCalledWith(
         'CLICHES_GENERATION_FAILED',
         expect.any(Function)
       );
@@ -748,24 +748,24 @@ describe('ClichesGeneratorController', () => {
       });
     });
 
-    it('should use correct EventBus API (on instead of subscribe)', async () => {
+    it('should use correct EventBus API (subscribe)', async () => {
       // Act
       await testBed.controller.initialize();
 
-      // Assert - verify the correct methods were called
-      expect(testBed.mockEventBus.on).toHaveBeenCalledWith(
+      // Assert - verify the correct subscribe methods were called
+      expect(testBed.mockEventBus.subscribe).toHaveBeenCalledWith(
         'CLICHES_GENERATION_STARTED',
         expect.any(Function)
       );
-      expect(testBed.mockEventBus.on).toHaveBeenCalledWith(
+      expect(testBed.mockEventBus.subscribe).toHaveBeenCalledWith(
         'CLICHES_GENERATION_COMPLETED',
         expect.any(Function)
       );
-      expect(testBed.mockEventBus.on).toHaveBeenCalledWith(
+      expect(testBed.mockEventBus.subscribe).toHaveBeenCalledWith(
         'CLICHES_GENERATION_FAILED',
         expect.any(Function)
       );
-      expect(testBed.mockEventBus.on).toHaveBeenCalledWith(
+      expect(testBed.mockEventBus.subscribe).toHaveBeenCalledWith(
         'DIRECTION_SELECTION_STARTED',
         expect.any(Function)
       );

@@ -172,6 +172,10 @@ describe('Build System Integration', () => {
       type: 'file',
       size: 1024,
     });
+    mockFiles.set('src/cliches-generator-main.js', {
+      type: 'file',
+      size: 1024,
+    });
 
     // Setup HTML files
     mockFiles.set('index.html', { type: 'file', size: 512 });
@@ -188,6 +192,10 @@ describe('Build System Integration', () => {
     mockFiles.set('thematic-directions-manager.html', {
       type: 'file',
       size: 560,
+    });
+    mockFiles.set('cliches-generator.html', {
+      type: 'file',
+      size: 520,
     });
 
     // Setup static directories (source)
@@ -214,6 +222,7 @@ describe('Build System Integration', () => {
       'dist/thematic-direction.js',
       'dist/thematic-directions-manager.js',
       'dist/character-concepts-manager.js',
+      'dist/cliches-generator-main.js',
     ];
 
     for (const bundle of expectedBundles) {
@@ -243,6 +252,7 @@ describe('Build System Integration', () => {
       'dist/character-concepts-manager.html',
       'dist/thematic-direction-generator.html',
       'dist/thematic-directions-manager.html',
+      'dist/cliches-generator.html',
     ];
 
     for (const htmlFile of expectedHtmlFiles) {
@@ -270,7 +280,7 @@ describe('Build System Integration', () => {
         expect.arrayContaining(['esbuild']),
         expect.any(Object)
       );
-      expect(spawn).toHaveBeenCalledTimes(5); // 5 bundles
+      expect(spawn).toHaveBeenCalledTimes(6); // 6 bundles
 
       // Verify HTML files were copied
       expect(fs.copy).toHaveBeenCalledWith('index.html', 'dist/index.html', {
@@ -285,6 +295,7 @@ describe('Build System Integration', () => {
       // Verify output files exist
       expect(mockFiles.has('dist/bundle.js')).toBe(true);
       expect(mockFiles.has('dist/character-concepts-manager.js')).toBe(true);
+      expect(mockFiles.has('dist/cliches-generator-main.js')).toBe(true);
     });
 
     it('should handle production build mode', async () => {
@@ -329,7 +340,7 @@ describe('Build System Integration', () => {
       await buildSystem.build();
 
       // All bundles should be processed (parallel execution)
-      expect(spawn).toHaveBeenCalledTimes(5);
+      expect(spawn).toHaveBeenCalledTimes(6);
     });
 
     it('should build bundles sequentially when parallel disabled', async () => {
@@ -340,7 +351,7 @@ describe('Build System Integration', () => {
       await buildSystem.build();
 
       // Still processes all bundles, but with concurrency of 1
-      expect(spawn).toHaveBeenCalledTimes(5);
+      expect(spawn).toHaveBeenCalledTimes(6);
     });
   });
 
@@ -356,10 +367,12 @@ describe('Build System Integration', () => {
       expect(mockFiles.has('dist/thematic-direction.js')).toBe(true);
       expect(mockFiles.has('dist/thematic-directions-manager.js')).toBe(true);
       expect(mockFiles.has('dist/character-concepts-manager.js')).toBe(true);
+      expect(mockFiles.has('dist/cliches-generator-main.js')).toBe(true);
 
       // Verify HTML files were copied
       expect(mockFiles.has('dist/index.html')).toBe(true);
       expect(mockFiles.has('dist/character-concepts-manager.html')).toBe(true);
+      expect(mockFiles.has('dist/cliches-generator.html')).toBe(true);
     });
 
     it('should detect missing output files', async () => {
@@ -505,6 +518,7 @@ describe('Build System Integration', () => {
         'src/thematic-direction-main.js',
         'src/thematicDirectionsManager/thematicDirectionsManagerMain.js',
         'src/character-concepts-manager-entry.js',
+        'src/cliches-generator-main.js',
       ];
 
       const expectedHtmlFiles = [
@@ -514,6 +528,7 @@ describe('Build System Integration', () => {
         'character-concepts-manager.html',
         'thematic-direction-generator.html',
         'thematic-directions-manager.html',
+        'cliches-generator.html',
       ];
 
       // Verify all source files exist
@@ -540,6 +555,7 @@ describe('Build System Integration', () => {
         'dist/thematic-direction.js',
         'dist/thematic-directions-manager.js',
         'dist/character-concepts-manager.js',
+        'dist/cliches-generator-main.js',
       ];
 
       for (const file of expectedOutputFiles) {

@@ -210,6 +210,24 @@ describe('IndexedDBStorageAdapter', () => {
       // Should only open database once
       expect(mockIndexedDB.open).toHaveBeenCalledTimes(1);
     });
+
+    it('should return early when already initialized', async () => {
+      adapter = new IndexedDBStorageAdapter({ logger: mockLogger });
+
+      // First initialization
+      const initPromise = adapter.initialize();
+      mockIndexedDB.mockOpenRequest.onsuccess();
+      await initPromise;
+
+      // Clear mock calls
+      jest.clearAllMocks();
+
+      // Second initialization should return early (line 54)
+      await adapter.initialize();
+
+      // Should not open database again
+      expect(mockIndexedDB.open).not.toHaveBeenCalled();
+    });
   });
 
   describe('Storage Operations', () => {
@@ -269,6 +287,61 @@ describe('IndexedDBStorageAdapter', () => {
         mockPutRequest._trigger(false);
 
         await expect(setPromise).rejects.toThrow('Failed to set item');
+      });
+
+      it('should handle transaction errors in setItem', async () => {
+        const key = 'test-key';
+        const value = { data: 'test-value' };
+
+        // Create a custom transaction mock with onerror handler
+        const mockTransactionWithError = {
+          objectStore: jest.fn(() => mockIndexedDB.mockObjectStore),
+          onerror: null,
+          oncomplete: null,
+          error: new Error('Transaction failed'),
+        };
+
+        // Override the transaction method for this test
+        mockIndexedDB.mockDB.transaction.mockReturnValueOnce(
+          mockTransactionWithError
+        );
+
+        // Create a mock request
+        const mockPutRequest = createMockRequest(key);
+        mockIndexedDB.mockObjectStore.put.mockReturnValueOnce(mockPutRequest);
+
+        const setPromise = adapter.setItem(key, value);
+
+        // Trigger transaction error after a delay to simulate async behavior
+        setTimeout(() => {
+          if (mockTransactionWithError.onerror) {
+            mockTransactionWithError.onerror();
+          }
+        }, 0);
+
+        await expect(setPromise).rejects.toThrow('Transaction failed');
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'IndexedDBStorageAdapter: Transaction error',
+          expect.any(Error)
+        );
+      });
+
+      it('should handle transaction creation error in setItem', async () => {
+        const key = 'test-key';
+        const value = { data: 'test-value' };
+
+        // Make transaction creation throw
+        mockIndexedDB.mockDB.transaction.mockImplementationOnce(() => {
+          throw new Error('Transaction creation failed');
+        });
+
+        await expect(adapter.setItem(key, value)).rejects.toThrow(
+          'Transaction creation failed'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'IndexedDBStorageAdapter: Transaction error for setItem',
+          expect.any(Error)
+        );
       });
     });
 
@@ -334,6 +407,26 @@ describe('IndexedDBStorageAdapter', () => {
 
         await expect(getPromise).rejects.toThrow('Failed to get item');
       });
+
+      it('should handle transaction creation error in getItem', async () => {
+        const key = 'test-key';
+
+        // Make transaction creation throw
+        mockIndexedDB.mockDB.transaction.mockImplementationOnce(() => {
+          throw new Error('Transaction creation failed');
+        });
+
+        await expect(adapter.getItem(key)).rejects.toThrow(
+          'Transaction creation failed'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'IndexedDBStorageAdapter: Transaction error for getItem',
+          expect.any(Error)
+        );
+      });
+
+      // Skip this test for now as it's complex to simulate the exact null db condition
+      // The line 155 check is an edge case safety check that would require internal state manipulation
     });
 
     describe('removeItem', () => {
@@ -379,6 +472,23 @@ describe('IndexedDBStorageAdapter', () => {
 
         await expect(removePromise).rejects.toThrow('Failed to remove item');
       });
+
+      it('should handle transaction creation error in removeItem', async () => {
+        const key = 'test-key';
+
+        // Make transaction creation throw (lines 311-315)
+        mockIndexedDB.mockDB.transaction.mockImplementationOnce(() => {
+          throw new Error('Transaction creation failed');
+        });
+
+        await expect(adapter.removeItem(key)).rejects.toThrow(
+          'Transaction creation failed'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'IndexedDBStorageAdapter: Transaction error for removeItem',
+          expect.any(Error)
+        );
+      });
     });
 
     describe('getAllKeys', () => {
@@ -420,6 +530,44 @@ describe('IndexedDBStorageAdapter', () => {
 
         expect(result).toEqual([]);
       });
+
+      it('should handle getAllKeys errors', async () => {
+        // Create a mock request that will fail
+        const mockGetKeysRequest = createMockRequest(
+          undefined,
+          false,
+          new Error('GetKeys error')
+        );
+        mockIndexedDB.mockObjectStore.getAllKeys.mockReturnValueOnce(
+          mockGetKeysRequest
+        );
+
+        const getKeysPromise = adapter.getAllKeys();
+
+        // Trigger error event
+        mockGetKeysRequest._trigger(false);
+
+        await expect(getKeysPromise).rejects.toThrow('Failed to get keys');
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'IndexedDBStorageAdapter: Error getting all keys',
+          expect.any(Error)
+        );
+      });
+
+      it('should handle transaction creation error in getAllKeys', async () => {
+        // Make transaction creation throw (lines 343-357)
+        mockIndexedDB.mockDB.transaction.mockImplementationOnce(() => {
+          throw new Error('Transaction creation failed');
+        });
+
+        await expect(adapter.getAllKeys()).rejects.toThrow(
+          'Transaction creation failed'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'IndexedDBStorageAdapter: Transaction error for getAllKeys',
+          expect.any(Error)
+        );
+      });
     });
 
     describe('clear', () => {
@@ -440,6 +588,44 @@ describe('IndexedDBStorageAdapter', () => {
         expect(mockIndexedDB.mockObjectStore.clear).toHaveBeenCalled();
         expect(mockLogger.info).toHaveBeenCalledWith(
           'IndexedDBStorageAdapter: Cleared all items from storage'
+        );
+      });
+
+      it('should handle clear errors', async () => {
+        // Create a mock request that will fail
+        const mockClearRequest = createMockRequest(
+          undefined,
+          false,
+          new Error('Clear error')
+        );
+        mockIndexedDB.mockObjectStore.clear.mockReturnValueOnce(
+          mockClearRequest
+        );
+
+        const clearPromise = adapter.clear();
+
+        // Trigger error event
+        mockClearRequest._trigger(false);
+
+        await expect(clearPromise).rejects.toThrow('Failed to clear storage');
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'IndexedDBStorageAdapter: Error clearing storage',
+          expect.any(Error)
+        );
+      });
+
+      it('should handle transaction creation error in clear', async () => {
+        // Make transaction creation throw (lines 387-401)
+        mockIndexedDB.mockDB.transaction.mockImplementationOnce(() => {
+          throw new Error('Transaction creation failed');
+        });
+
+        await expect(adapter.clear()).rejects.toThrow(
+          'Transaction creation failed'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'IndexedDBStorageAdapter: Transaction error for clear',
+          expect.any(Error)
         );
       });
     });
@@ -464,6 +650,64 @@ describe('IndexedDBStorageAdapter', () => {
         expect(result).toBe(itemCount);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           `IndexedDBStorageAdapter: Storage contains ${itemCount} items`
+        );
+      });
+
+      it('should handle count errors', async () => {
+        // Create a mock request that will fail
+        const mockCountRequest = createMockRequest(
+          undefined,
+          false,
+          new Error('Count error')
+        );
+        mockIndexedDB.mockObjectStore.count.mockReturnValueOnce(
+          mockCountRequest
+        );
+
+        const countPromise = adapter.count();
+
+        // Trigger error event
+        mockCountRequest._trigger(false);
+
+        await expect(countPromise).rejects.toThrow('Failed to count items');
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'IndexedDBStorageAdapter: Error counting items',
+          expect.any(Error)
+        );
+      });
+
+      it('should handle transaction creation error in count', async () => {
+        // Make transaction creation throw (lines 429-443)
+        mockIndexedDB.mockDB.transaction.mockImplementationOnce(() => {
+          throw new Error('Transaction creation failed');
+        });
+
+        await expect(adapter.count()).rejects.toThrow(
+          'Transaction creation failed'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'IndexedDBStorageAdapter: Transaction error for count',
+          expect.any(Error)
+        );
+      });
+
+      it('should return 0 when count result is null', async () => {
+        // Create a mock request with null result
+        const mockCountRequest = createMockRequest(null);
+        mockIndexedDB.mockObjectStore.count.mockReturnValueOnce(
+          mockCountRequest
+        );
+
+        const countPromise = adapter.count();
+
+        // Trigger success event
+        mockCountRequest._trigger(true);
+
+        const result = await countPromise;
+
+        expect(result).toBe(0);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'IndexedDBStorageAdapter: Storage contains 0 items'
         );
       });
     });

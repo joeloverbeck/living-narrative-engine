@@ -420,8 +420,9 @@ describe('ClicheError Classes', () => {
       const timestamps = errors.map((e) => e.timestamp);
       const uniqueTimestamps = new Set(timestamps);
 
-      // Should have reasonable uniqueness (allowing for some same-millisecond occurrences)
-      expect(uniqueTimestamps.size).toBeGreaterThan(10);
+      // With 10 delay points (every 10th iteration), we expect approximately 10-12 unique timestamps
+      // as errors created between delays will share the same millisecond timestamp
+      expect(uniqueTimestamps.size).toBeGreaterThanOrEqual(10);
     });
   });
 });

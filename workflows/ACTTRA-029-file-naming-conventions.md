@@ -37,306 +37,201 @@ Implement standardized file naming conventions for action trace files that ensur
 
 ## Technical Specification
 
-### 1. File Naming Service Implementation
+### 1. Enhanced ActionTraceOutputService for File Naming
 
-#### File: `src/actions/tracing/traceFileNaming.js`
+#### File: `src/actions/tracing/actionTraceOutputService.js` (Enhancement)
 
 ```javascript
 /**
- * @file Service for generating trace file names
- * @see actionTraceOutputService.js
+ * @file Enhanced ActionTraceOutputService with file naming conventions
+ * @see storageRotationManager.js
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
-import crypto from 'crypto';
 
 /**
- * File naming strategies
+ * File naming strategies for browser-compatible trace storage
  * @enum {string}
  */
 export const NamingStrategy = {
-  TIMESTAMP_FIRST: 'timestamp_first', // 2024-01-15_103045_core-go_abc123.json
-  ACTION_FIRST: 'action_first', // core-go_2024-01-15_103045_abc123.json
-  HIERARCHICAL: 'hierarchical', // 2024/01/15/core-go_103045_abc123.json
-  SEQUENTIAL: 'sequential', // trace_000001_core-go.json
+  TIMESTAMP_FIRST: 'timestamp_first', // 2024-01-15_103045_core-go_abc123
+  ACTION_FIRST: 'action_first', // core-go_2024-01-15_103045_abc123
+  SEQUENTIAL: 'sequential', // trace_000001_core-go_20240115103045
 };
 
 /**
- * Timestamp formats
+ * Timestamp formats for browser-compatible storage
  * @enum {string}
  */
 export const TimestampFormat = {
-  ISO: 'iso', // 2024-01-15T10-30-45-123Z
   COMPACT: 'compact', // 20240115_103045
   UNIX: 'unix', // 1705315845123
   HUMAN: 'human', // 2024-01-15_10h30m45s
 };
 
 /**
- * Service for generating trace file names
+ * Enhanced ActionTraceOutputService with standardized naming conventions
  */
-export class TraceFileNaming {
-  #logger;
-  #strategy;
+export class ActionTraceOutputService {
+  // ... existing fields ...
+  #namingStrategy;
   #timestampFormat;
   #includeHash;
   #hashLength;
   #sequenceCounter;
-  #sequenceFile;
-  #sanitizer;
-  #maxLength;
 
   /**
-   * Constructor
-   * @param {object} dependencies
-   * @param {ILogger} dependencies.logger - Logger service
-   * @param {object} options - Naming options
+   * Enhanced constructor with naming configuration
+   * @param {object} dependencies - All existing ActionTraceOutputService dependencies
+   * @param {object} options - Additional naming options
    */
-  constructor({ logger }, options = {}) {
-    this.#logger = ensureValidLogger(logger, 'TraceFileNaming');
+  constructor({
+    storageAdapter,
+    logger,
+    actionTraceFilter,
+    jsonFormatter,
+    humanReadableFormatter,
+    outputHandler,
+    eventBus,
+    queueConfig,
+    namingOptions = {},
+  } = {}) {
+    // ... existing constructor code ...
 
     // Configure naming options
-    this.#strategy = options.strategy || NamingStrategy.TIMESTAMP_FIRST;
-    this.#timestampFormat = options.timestampFormat || TimestampFormat.COMPACT;
-    this.#includeHash = options.includeHash !== false;
-    this.#hashLength = options.hashLength || 6;
-    this.#maxLength = options.maxLength || 255; // Filesystem limit
-
-    // Sequential numbering
+    this.#namingStrategy =
+      namingOptions.strategy || NamingStrategy.TIMESTAMP_FIRST;
+    this.#timestampFormat =
+      namingOptions.timestampFormat || TimestampFormat.COMPACT;
+    this.#includeHash = namingOptions.includeHash !== false;
+    this.#hashLength = namingOptions.hashLength || 6;
     this.#sequenceCounter = 0;
-    this.#sequenceFile = options.sequenceFile || null;
 
-    // Character sanitization
-    this.#sanitizer = this.#createSanitizer();
-
-    // Load sequence if using sequential strategy
-    if (this.#strategy === NamingStrategy.SEQUENTIAL && this.#sequenceFile) {
-      this.#loadSequence();
-    }
+    this.#logger.debug(
+      'ActionTraceOutputService: Enhanced with naming conventions',
+      {
+        strategy: this.#namingStrategy,
+        timestampFormat: this.#timestampFormat,
+        includeHash: this.#includeHash,
+      }
+    );
   }
 
   /**
-   * Generate filename for trace
+   * Enhanced generateTraceId method with configurable naming strategies
    * @param {object} trace - Trace object
-   * @param {string} extension - File extension
-   * @returns {string} Generated filename
+   * @returns {string} Generated trace ID with naming convention
    */
-  generateFilename(trace, extension = 'json') {
-    // Extract metadata from trace
-    const metadata = this.#extractMetadata(trace);
+  #generateTraceId(trace) {
+    // Extract metadata from trace (existing logic)
+    const timestamp = Date.now();
+    let actionId = 'unknown';
 
-    // Generate filename based on strategy
-    let filename;
-    switch (this.#strategy) {
-      case NamingStrategy.TIMESTAMP_FIRST:
-        filename = this.#generateTimestampFirst(metadata);
-        break;
-
-      case NamingStrategy.ACTION_FIRST:
-        filename = this.#generateActionFirst(metadata);
-        break;
-
-      case NamingStrategy.HIERARCHICAL:
-        filename = this.#generateHierarchical(metadata);
-        break;
-
-      case NamingStrategy.SEQUENTIAL:
-        filename = this.#generateSequential(metadata);
-        break;
-
-      default:
-        filename = this.#generateTimestampFirst(metadata);
-    }
-
-    // Add extension
-    filename = this.#addExtension(filename, extension);
-
-    // Ensure filename is unique
-    filename = this.#ensureUniqueness(filename);
-
-    // Validate length
-    filename = this.#enforceMaxLength(filename);
-
-    return filename;
-  }
-
-  /**
-   * Extract metadata from trace
-   * @private
-   */
-  #extractMetadata(trace) {
-    const metadata = {
-      actionId: 'unknown',
-      actorId: null,
-      timestamp: Date.now(),
-      traceType: 'generic',
-      error: false,
-    };
-
-    // Extract action ID
     if (trace.actionId) {
-      metadata.actionId = trace.actionId;
+      actionId = trace.actionId;
     } else if (
       trace.getTracedActions &&
       typeof trace.getTracedActions === 'function'
     ) {
       const tracedActions = trace.getTracedActions();
       if (tracedActions.size > 0) {
-        metadata.actionId = Array.from(tracedActions.keys())[0];
+        actionId = Array.from(tracedActions.keys())[0];
       }
     }
 
-    // Extract actor ID
-    if (trace.actorId) {
-      metadata.actorId = trace.actorId;
-    }
+    const metadata = {
+      actionId,
+      timestamp,
+      error: trace.execution?.error || trace.error || false,
+    };
 
-    // Extract timestamp
-    if (trace.execution?.startTime) {
-      metadata.timestamp = trace.execution.startTime;
-    } else if (trace.startTime) {
-      metadata.timestamp = trace.startTime;
-    }
+    // Generate ID based on configured strategy
+    switch (this.#namingStrategy) {
+      case NamingStrategy.TIMESTAMP_FIRST:
+        return this.#generateTimestampFirst(metadata);
 
-    // Determine trace type
-    if (trace.constructor?.name === 'ActionExecutionTrace') {
-      metadata.traceType = 'execution';
-    } else if (trace.constructor?.name === 'ActionAwareStructuredTrace') {
-      metadata.traceType = 'pipeline';
-    }
+      case NamingStrategy.ACTION_FIRST:
+        return this.#generateActionFirst(metadata);
 
-    // Check for errors
-    if (trace.execution?.error || trace.error) {
-      metadata.error = true;
-    }
+      case NamingStrategy.SEQUENTIAL:
+        return this.#generateSequential(metadata);
 
-    return metadata;
+      default:
+        return this.#generateTimestampFirst(metadata);
+    }
   }
 
   /**
-   * Generate timestamp-first filename
+   * Generate timestamp-first trace ID format
    * @private
    */
   #generateTimestampFirst(metadata) {
-    const parts = [];
+    const parts = [
+      this.#formatTimestamp(metadata.timestamp),
+      this.#sanitizeActionId(metadata.actionId),
+    ];
 
-    // Add timestamp
-    parts.push(this.#formatTimestamp(metadata.timestamp));
-
-    // Add action ID
-    parts.push(this.#sanitizeActionId(metadata.actionId));
-
-    // Add actor ID if present
-    if (metadata.actorId) {
-      parts.push(this.#sanitizeString(metadata.actorId));
-    }
-
-    // Add error indicator
     if (metadata.error) {
       parts.push('ERROR');
     }
 
-    // Add hash if configured
     if (this.#includeHash) {
-      parts.push(this.#generateHash(metadata));
+      parts.push(this.#generateWebHash(metadata));
     }
 
     return parts.join('_');
   }
 
   /**
-   * Generate action-first filename
+   * Generate action-first trace ID format
    * @private
    */
   #generateActionFirst(metadata) {
-    const parts = [];
+    const parts = [
+      this.#sanitizeActionId(metadata.actionId),
+      this.#formatTimestamp(metadata.timestamp),
+    ];
 
-    // Add action ID first
-    parts.push(this.#sanitizeActionId(metadata.actionId));
-
-    // Add timestamp
-    parts.push(this.#formatTimestamp(metadata.timestamp));
-
-    // Add trace type
-    parts.push(metadata.traceType);
-
-    // Add error indicator
     if (metadata.error) {
       parts.push('ERROR');
     }
 
-    // Add hash if configured
     if (this.#includeHash) {
-      parts.push(this.#generateHash(metadata));
+      parts.push(this.#generateWebHash(metadata));
     }
 
     return parts.join('_');
   }
 
   /**
-   * Generate hierarchical filename (with path)
-   * @private
-   */
-  #generateHierarchical(metadata) {
-    const date = new Date(metadata.timestamp);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-
-    // Create directory structure
-    const dirs = [year, month, day];
-
-    // Create filename
-    const filename = [
-      this.#sanitizeActionId(metadata.actionId),
-      this.#formatTimeOnly(metadata.timestamp),
-      this.#includeHash ? this.#generateHash(metadata) : null,
-    ]
-      .filter(Boolean)
-      .join('_');
-
-    // Combine path and filename
-    return [...dirs, filename].join('/');
-  }
-
-  /**
-   * Generate sequential filename
+   * Generate sequential trace ID format
    * @private
    */
   #generateSequential(metadata) {
-    const parts = [];
+    const sequence = ++this.#sequenceCounter;
+    const parts = [
+      'trace',
+      String(sequence).padStart(6, '0'),
+      this.#sanitizeActionId(metadata.actionId),
+      this.#formatTimestamp(metadata.timestamp),
+    ];
 
-    // Add prefix
-    parts.push('trace');
-
-    // Add sequence number
-    const sequence = this.#getNextSequence();
-    parts.push(String(sequence).padStart(6, '0'));
-
-    // Add action ID
-    parts.push(this.#sanitizeActionId(metadata.actionId));
-
-    // Add compact timestamp
-    parts.push(
-      this.#formatTimestamp(metadata.timestamp, TimestampFormat.COMPACT)
-    );
+    if (metadata.error) {
+      parts.push('ERROR');
+    }
 
     return parts.join('_');
   }
 
   /**
-   * Format timestamp based on configured format
+   * Format timestamp for browser-compatible file naming
    * @private
    */
-  #formatTimestamp(timestamp, format = null) {
-    const fmt = format || this.#timestampFormat;
+  #formatTimestamp(timestamp) {
     const date = new Date(timestamp);
 
-    switch (fmt) {
-      case TimestampFormat.ISO:
-        return date.toISOString().replace(/[:.]/g, '-').replace('T', '_');
-
+    switch (this.#timestampFormat) {
       case TimestampFormat.COMPACT:
         return [
           date.getFullYear(),
@@ -368,423 +263,216 @@ export class TraceFileNaming {
         ].join('');
 
       default:
-        return this.#formatTimestamp(timestamp, TimestampFormat.COMPACT);
+        return this.#formatTimestamp(timestamp);
     }
   }
 
   /**
-   * Format time only (for hierarchical)
-   * @private
-   */
-  #formatTimeOnly(timestamp) {
-    const date = new Date(timestamp);
-    return [
-      String(date.getHours()).padStart(2, '0'),
-      String(date.getMinutes()).padStart(2, '0'),
-      String(date.getSeconds()).padStart(2, '0'),
-    ].join('');
-  }
-
-  /**
-   * Sanitize action ID for filename
+   * Sanitize action ID for browser-compatible storage keys
    * @private
    */
   #sanitizeActionId(actionId) {
-    // Replace colon with dash (common in action IDs)
-    let sanitized = actionId.replace(/:/g, '-');
+    if (!actionId) return 'unknown';
 
-    // Apply general sanitization
-    sanitized = this.#sanitizeString(sanitized);
-
-    return sanitized;
-  }
-
-  /**
-   * Sanitize string for filesystem
-   * @private
-   */
-  #sanitizeString(str) {
-    if (!str) return '';
-
-    // Replace invalid characters
-    let sanitized = str.replace(
-      this.#sanitizer.pattern,
-      this.#sanitizer.replacement
+    // Replace namespace colon and other special chars with dashes
+    return (
+      actionId
+        .replace(/[^a-zA-Z0-9_-]/g, '-')
+        .replace(/^[.\s]+|[.\s]+$/g, '')
+        .substring(0, 30) || 'unknown'
     );
-
-    // Remove leading/trailing dots and spaces
-    sanitized = sanitized.replace(/^[.\s]+|[.\s]+$/g, '');
-
-    // Limit length
-    if (sanitized.length > 50) {
-      sanitized = sanitized.substring(0, 50);
-    }
-
-    return sanitized || 'unknown';
   }
 
   /**
-   * Create sanitizer configuration
+   * Generate browser-compatible hash for uniqueness
    * @private
    */
-  #createSanitizer() {
-    // Characters not allowed in filenames across platforms
-    const invalidChars = /[<>:"/\\|?*\x00-\x1F]/g;
-
-    // Reserved names on Windows
-    const reservedNames = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;
-
-    return {
-      pattern: invalidChars,
-      replacement: '-',
-      reserved: reservedNames,
-    };
-  }
-
-  /**
-   * Generate hash for uniqueness
-   * @private
-   */
-  #generateHash(metadata) {
+  #generateWebHash(metadata) {
+    // Simple hash for browser compatibility
     const data = JSON.stringify({
       ...metadata,
       random: Math.random(),
-      pid: process.pid,
+      timestamp: performance.now(),
     });
 
-    const hash = crypto
-      .createHash('sha256')
-      .update(data)
-      .digest('hex')
-      .substring(0, this.#hashLength);
-
-    return hash;
-  }
-
-  /**
-   * Add extension to filename
-   * @private
-   */
-  #addExtension(filename, extension) {
-    // Clean extension
-    const ext = extension.startsWith('.') ? extension : `.${extension}`;
-
-    // Check if extension already present
-    if (filename.endsWith(ext)) {
-      return filename;
+    // Use simple string hash algorithm
+    let hash = 0;
+    for (let i = 0; i < data.length; i++) {
+      const char = data.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32-bit integer
     }
 
-    return filename + ext;
-  }
-
-  /**
-   * Ensure filename uniqueness
-   * @private
-   */
-  #ensureUniqueness(filename) {
-    // Add microseconds if not using hash
-    if (!this.#includeHash) {
-      const microseconds = String(process.hrtime.bigint()).slice(-6);
-      const parts = filename.split('.');
-      const name = parts[0];
-      const ext = parts.slice(1).join('.');
-
-      return `${name}_${microseconds}.${ext}`;
-    }
-
-    return filename;
-  }
-
-  /**
-   * Enforce maximum filename length
-   * @private
-   */
-  #enforceMaxLength(filename) {
-    if (filename.length <= this.#maxLength) {
-      return filename;
-    }
-
-    // Preserve extension
-    const lastDot = filename.lastIndexOf('.');
-    const name = filename.substring(0, lastDot);
-    const ext = filename.substring(lastDot);
-
-    // Calculate available space
-    const availableLength = this.#maxLength - ext.length - 10; // Reserve for hash
-
-    // Truncate name
-    const truncated = name.substring(0, availableLength);
-
-    // Add truncation indicator and hash
-    const hash = this.#generateHash({ filename, timestamp: Date.now() });
-
-    return `${truncated}_TRUNC_${hash}${ext}`;
-  }
-
-  /**
-   * Get next sequence number
-   * @private
-   */
-  #getNextSequence() {
-    this.#sequenceCounter++;
-
-    // Save sequence if configured
-    if (this.#sequenceFile) {
-      this.#saveSequence();
-    }
-
-    return this.#sequenceCounter;
-  }
-
-  /**
-   * Load sequence from file
-   * @private
-   */
-  async #loadSequence() {
-    // Implementation depends on file system access
-    // For now, start from 0
-    this.#sequenceCounter = 0;
-  }
-
-  /**
-   * Save sequence to file
-   * @private
-   */
-  async #saveSequence() {
-    // Implementation depends on file system access
-    // For now, just log
-    this.#logger.debug(`TraceFileNaming: Sequence at ${this.#sequenceCounter}`);
-  }
-
-  /**
-   * Parse filename to extract metadata
-   * @param {string} filename - Filename to parse
-   * @returns {object} Extracted metadata
-   */
-  parseFilename(filename) {
-    const metadata = {
-      actionId: null,
-      timestamp: null,
-      hash: null,
-      error: false,
-      extension: null,
-    };
-
-    // Remove path if present
-    const basename = filename.split('/').pop();
-
-    // Extract extension
-    const lastDot = basename.lastIndexOf('.');
-    if (lastDot > 0) {
-      metadata.extension = basename.substring(lastDot + 1);
-      filename = basename.substring(0, lastDot);
-    } else {
-      filename = basename;
-    }
-
-    // Check for error indicator
-    if (filename.includes('ERROR')) {
-      metadata.error = true;
-    }
-
-    // Parse based on strategy patterns
-    const parts = filename.split('_');
-
-    // Try to identify components
-    for (const part of parts) {
-      // Check if timestamp
-      if (/^\d{8}_?\d{6}/.test(part)) {
-        metadata.timestamp = this.#parseCompactTimestamp(part);
-      }
-      // Check if hash (6-8 hex chars)
-      else if (/^[a-f0-9]{6,8}$/i.test(part)) {
-        metadata.hash = part;
-      }
-      // Check if action ID (contains dash)
-      else if (part.includes('-') && !metadata.actionId) {
-        metadata.actionId = part.replace(/-/g, ':');
-      }
-    }
-
-    return metadata;
-  }
-
-  /**
-   * Parse compact timestamp
-   * @private
-   */
-  #parseCompactTimestamp(str) {
-    const cleaned = str.replace(/\D/g, '');
-
-    if (cleaned.length >= 14) {
-      const year = parseInt(cleaned.substring(0, 4));
-      const month = parseInt(cleaned.substring(4, 6)) - 1;
-      const day = parseInt(cleaned.substring(6, 8));
-      const hour = parseInt(cleaned.substring(8, 10));
-      const minute = parseInt(cleaned.substring(10, 12));
-      const second = parseInt(cleaned.substring(12, 14));
-
-      return new Date(year, month, day, hour, minute, second).getTime();
-    }
-
-    return null;
-  }
-
-  /**
-   * Get filename pattern for glob matching
-   * @param {object} criteria - Search criteria
-   * @returns {string} Glob pattern
-   */
-  getGlobPattern(criteria = {}) {
-    const patterns = [];
-
-    if (criteria.actionId) {
-      const sanitized = this.#sanitizeActionId(criteria.actionId);
-      patterns.push(`*${sanitized}*`);
-    }
-
-    if (criteria.date) {
-      const dateStr = this.#formatTimestamp(
-        criteria.date,
-        TimestampFormat.COMPACT
-      ).substring(0, 8); // Just the date part
-      patterns.push(`${dateStr}*`);
-    }
-
-    if (criteria.error) {
-      patterns.push('*ERROR*');
-    }
-
-    if (criteria.extension) {
-      patterns.push(`*.${criteria.extension}`);
-    }
-
-    return patterns.length > 0 ? patterns.join('') : '*';
-  }
-
-  /**
-   * Validate filename
-   * @param {string} filename - Filename to validate
-   * @returns {boolean} Whether filename is valid
-   */
-  isValidFilename(filename) {
-    // Check length
-    if (filename.length > this.#maxLength) {
-      return false;
-    }
-
-    // Check for invalid characters
-    if (this.#sanitizer.pattern.test(filename)) {
-      return false;
-    }
-
-    // Check for reserved names
-    const name = filename.split('.')[0];
-    if (this.#sanitizer.reserved.test(name)) {
-      return false;
-    }
-
-    return true;
+    return Math.abs(hash).toString(16).substring(0, this.#hashLength);
   }
 }
 
-export default TraceFileNaming;
+// Export constants for external use
+export { NamingStrategy, TimestampFormat };
+```
+
+### 2. Integration with Existing Systems
+
+#### Container Registration
+
+```javascript
+// src/dependencyInjection/appContainer.js
+import {
+  NamingStrategy,
+  TimestampFormat,
+} from '../actions/tracing/actionTraceOutputService.js';
+
+// Register enhanced service with naming options
+container.register(tokens.IActionTraceOutputService, ActionTraceOutputService, {
+  dependencies: [
+    'storageAdapter',
+    'logger',
+    'actionTraceFilter',
+    'jsonFormatter',
+    'humanReadableFormatter',
+    'eventBus',
+  ],
+  options: {
+    namingOptions: {
+      strategy: NamingStrategy.TIMESTAMP_FIRST,
+      timestampFormat: TimestampFormat.COMPACT,
+      includeHash: true,
+      hashLength: 6,
+    },
+  },
+});
+```
+
+#### Configuration Integration
+
+```javascript
+// config/trace-config.json
+{
+  "naming": {
+    "strategy": "timestamp_first",
+    "timestampFormat": "compact",
+    "includeHash": true,
+    "hashLength": 6
+  },
+  "storage": {
+    "rotationPolicy": "count",
+    "maxTraceCount": 100
+  }
+}
 ```
 
 ## Implementation Notes
 
-### Naming Strategies
+### Browser-Compatible Naming Strategies
 
 1. **Timestamp First**
-   - Best for chronological browsing
-   - Easy to find recent traces
-   - Natural sorting
+   - Format: `20240115_103045_core-go_abc123`
+   - Best for chronological browsing of IndexedDB records
+   - Natural sorting for trace export
+   - Compatible with existing `#generateTraceId()` method
 
 2. **Action First**
-   - Groups by action type
-   - Easy to find specific actions
-   - Good for analysis
+   - Format: `core-go_20240115_103045_abc123`
+   - Groups traces by action type in storage
+   - Useful for filtering by action ID
+   - Good for debugging specific actions
 
-3. **Hierarchical**
-   - Organizes by date
-   - Reduces files per directory
-   - Better for large volumes
+3. **Sequential**
+   - Format: `trace_000001_core-go_20240115103045`
+   - Simple incrementing counter
+   - Guaranteed order within session
+   - Compact and predictable
 
-4. **Sequential**
-   - Simple numbering
-   - Guaranteed order
-   - Compact names
+### Browser Storage Considerations
 
-### Uniqueness Guarantees
+1. **IndexedDB Key Constraints**
+   - No filesystem path separators needed
+   - Storage keys can be longer than traditional filenames
+   - UTF-8 safe character encoding
+   - Consistent with existing storage patterns
 
-1. **Hash Suffix**
-   - 6-character hash
-   - Based on content + random
-   - Very low collision probability
+2. **Hash Generation**
+   - Uses browser-compatible string hashing
+   - No Node.js crypto dependency
+   - Performance.now() for high-resolution uniqueness
+   - Collision-resistant within session scope
 
-2. **Microseconds**
-   - Process-unique timing
-   - High resolution
-   - No external state
-
-3. **Sequential Counter**
-   - Guaranteed unique
-   - Requires state management
-   - Simple and reliable
+3. **Integration Points**
+   - Enhances existing `#generateTraceId()` method
+   - Works with StorageRotationManager
+   - Compatible with IndexedDBStorageAdapter
+   - Maintains backward compatibility
 
 ## Testing Requirements
 
 ### Unit Tests
 
 ```javascript
-// tests/unit/actions/tracing/traceFileNaming.unit.test.js
+// tests/unit/actions/tracing/actionTraceOutputService.naming.test.js
 
-describe('TraceFileNaming - Name Generation', () => {
-  it('should generate unique filenames');
-  it('should sanitize action IDs correctly');
-  it('should format timestamps properly');
-  it('should handle all naming strategies');
-  it('should include metadata in filename');
-  it('should enforce maximum length');
-  it('should validate filenames');
-  it('should parse filenames correctly');
-  it('should generate glob patterns');
+describe('ActionTraceOutputService - Naming Conventions', () => {
+  it('should generate timestamp-first trace IDs');
+  it('should generate action-first trace IDs');  
+  it('should generate sequential trace IDs');
+  it('should sanitize action IDs for browser storage');
+  it('should format timestamps in different formats');
+  it('should include error indicators in trace IDs');
+  it('should generate browser-compatible hashes');
+  it('should handle empty or invalid action IDs');
+  it('should maintain uniqueness within session');
+  it('should integrate with existing trace storage');
+});
+```
+
+### Integration Tests
+
+```javascript
+// tests/integration/actions/tracing/namingIntegration.test.js
+
+describe('ActionTraceOutputService - Naming Integration', () => {
+  it('should work with StorageRotationManager');
+  it('should maintain consistency with IndexedDBStorageAdapter');
+  it('should preserve naming during export operations');
+  it('should handle configuration changes');
 });
 ```
 
 ## Examples
 
-### Generated Filenames
+### Generated Trace IDs
 
 ```
-// Timestamp First
-20240115_103045_core-go_player1_a1b2c3.json
-20240115_103046_core-attack_ERROR_d4e5f6.json
+// Timestamp First Strategy
+20240115_103045_core-go_a1b2c3
+20240115_103046_core-attack_ERROR_d4e5f6
 
-// Action First
-core-go_20240115_103045_pipeline_a1b2c3.json
-core-attack_20240115_103046_execution_ERROR.json
+// Action First Strategy  
+core-go_20240115_103045_a1b2c3
+core-attack_20240115_103046_ERROR_d4e5f6
 
-// Hierarchical
-2024/01/15/core-go_103045_a1b2c3.json
-2024/01/15/core-attack_103046_ERROR.json
-
-// Sequential
-trace_000001_core-go_20240115103045.json
-trace_000002_core-attack_20240115103046.json
+// Sequential Strategy
+trace_000001_core-go_20240115103045
+trace_000002_core-attack_20240115103046_ERROR
 ```
 
 ## Dependencies
 
-- `ILogger` - Logging
-- `crypto` - Hash generation
+- `IStorageAdapter` - IndexedDB storage interface
+- `ILogger` - Logging service  
+- `StorageRotationManager` - File rotation management
+- Existing ActionTraceOutputService infrastructure
+- Browser-compatible APIs (performance.now(), Date)
 
 ## Next Steps
 
-1. **ACTTRA-030** - Create output directory auto-creation
+1. **Implementation** - Enhance existing ActionTraceOutputService with naming methods
+2. **Configuration** - Add naming options to dependency injection setup  
+3. **Testing** - Create comprehensive test suite for naming functionality
+4. **Integration** - Ensure compatibility with StorageRotationManager
+5. **ACTTRA-030** - Storage rotation policies with naming awareness
 
 ---
 
-**Ticket Status**: Ready for Implementation
-**Last Updated**: 2025-01-10
+**Ticket Status**: Ready for Implementation (Enhanced for Browser Compatibility)
+**Last Updated**: 2025-01-12  
 **Author**: System Architect

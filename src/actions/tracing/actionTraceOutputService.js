@@ -7,6 +7,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { TraceQueueProcessor } from './traceQueueProcessor.js';
 import { TracePriority, DEFAULT_PRIORITY } from './tracePriority.js';
+import { StorageRotationManager } from './storageRotationManager.js';
 
 /**
  * Service for outputting action traces with queue processing
@@ -28,6 +29,7 @@ export class ActionTraceOutputService {
   #outputHandler;
   #queueProcessor;
   #eventBus;
+  #rotationManager;
 
   /**
    * Constructor
@@ -92,12 +94,16 @@ export class ActionTraceOutputService {
 
     // Initialize queue processing system
     if (this.#storageAdapter && typeof TraceQueueProcessor !== 'undefined') {
+      // Extract timerService from queueConfig if provided
+      const { timerService, ...remainingConfig } = queueConfig || {};
+      
       // Use advanced queue processor
       this.#queueProcessor = new TraceQueueProcessor({
         storageAdapter: this.#storageAdapter,
         logger: this.#logger,
         eventBus: this.#eventBus,
-        config: queueConfig,
+        timerService,
+        config: remainingConfig,
       });
 
       this.#logger.debug(
@@ -124,6 +130,37 @@ export class ActionTraceOutputService {
     // Use custom output handler if provided (for testing), otherwise use default
     this.#outputHandler =
       outputHandler || this.#defaultOutputHandler.bind(this);
+
+    // Initialize rotation manager if storage adapter is available
+    if (this.#storageAdapter && typeof StorageRotationManager !== 'undefined') {
+      // Get configuration from filter or use defaults
+      const rotationConfig = {
+        rotationPolicy: 'count', // Default to count-based
+        maxAge: 86400000, // 24 hours
+        maxTraceCount: 100,
+        maxStorageSize: 10 * 1024 * 1024, // 10MB
+        compressionEnabled: true,
+        preserveCount: 10,
+        preservePattern: null,
+      };
+
+      try {
+        this.#rotationManager = new StorageRotationManager({
+          storageAdapter: this.#storageAdapter,
+          logger: this.#logger,
+          config: rotationConfig,
+        });
+
+        this.#logger.debug(
+          'ActionTraceOutputService: Initialized with StorageRotationManager'
+        );
+      } catch (error) {
+        this.#logger.warn(
+          'ActionTraceOutputService: Failed to initialize StorageRotationManager',
+          error
+        );
+      }
+    }
   }
 
   /**
@@ -263,6 +300,9 @@ export class ActionTraceOutputService {
     // Add to storage
     existingTraces.push(traceRecord);
 
+    // Increment write counter for statistics
+    this.#writeCount++;
+
     // Limit stored traces (implement rotation in ACTTRA-028)
     const maxStoredTraces = 100;
     if (existingTraces.length > maxStoredTraces) {
@@ -275,6 +315,13 @@ export class ActionTraceOutputService {
     this.#logger.debug(
       `ActionTraceOutputService: Stored trace ${traceRecord.id}`
     );
+
+    // Check if rotation needed (async, non-blocking)
+    if (this.#rotationManager && existingTraces.length > 100) {
+      this.#rotationManager.forceRotation().catch((error) => {
+        this.#logger.error('Background rotation failed', error);
+      });
+    }
   }
 
   /**
@@ -399,6 +446,18 @@ export class ActionTraceOutputService {
       pendingWrites: this.#pendingWrites.size,
       errorRate: this.#writeCount > 0 ? this.#errorCount / this.#writeCount : 0,
     };
+  }
+
+  /**
+   * Get rotation statistics
+   *
+   * @returns {Promise<object|null>} Rotation statistics or null if not available
+   */
+  async getRotationStatistics() {
+    if (this.#rotationManager) {
+      return this.#rotationManager.getStatistics();
+    }
+    return null;
   }
 
   /**
@@ -728,6 +787,18 @@ export class ActionTraceOutputService {
           error: error.message,
         }
       );
+    }
+
+    // Shutdown rotation manager if available
+    if (this.#rotationManager) {
+      try {
+        this.#rotationManager.shutdown();
+      } catch (error) {
+        this.#logger.warn(
+          'ActionTraceOutputService: Error shutting down rotation manager',
+          error
+        );
+      }
     }
 
     this.#logger.info('ActionTraceOutputService: Shutdown complete');

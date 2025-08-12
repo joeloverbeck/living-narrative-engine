@@ -835,33 +835,33 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
    */
   _subscribeToEvents() {
     // Listen for cliché generation events
-    this.eventBus.on('CLICHES_GENERATION_STARTED', (event) => {
+    this.eventBus.subscribe('CLICHES_GENERATION_STARTED', (event) => {
       this.logger.debug('Cliché generation started', event.payload);
     });
 
-    this.eventBus.on('CLICHES_GENERATION_COMPLETED', (event) => {
+    this.eventBus.subscribe('CLICHES_GENERATION_COMPLETED', (event) => {
       this.logger.info('Cliché generation completed', event.payload);
     });
 
-    this.eventBus.on('CLICHES_GENERATION_FAILED', (event) => {
+    this.eventBus.subscribe('CLICHES_GENERATION_FAILED', (event) => {
       this.logger.debug('Cliché generation failed', event.payload);
     });
 
     // Listen for direction selection events
-    this.eventBus.on('DIRECTION_SELECTION_STARTED', (event) => {
+    this.eventBus.subscribe('DIRECTION_SELECTION_STARTED', (event) => {
       this.logger.debug('Direction selection started', event.payload);
     });
 
-    this.eventBus.on('DIRECTION_SELECTION_COMPLETED', (event) => {
+    this.eventBus.subscribe('DIRECTION_SELECTION_COMPLETED', (event) => {
       this.logger.debug('Direction selection completed', event.payload);
     });
 
-    this.eventBus.on('DIRECTION_SELECTION_FAILED', (event) => {
+    this.eventBus.subscribe('DIRECTION_SELECTION_FAILED', (event) => {
       this.logger.warn('Direction selection failed', event.payload);
     });
 
     // Listen for data loading events
-    this.eventBus.on('EXISTING_CLICHES_LOADED', (event) => {
+    this.eventBus.subscribe('EXISTING_CLICHES_LOADED', (event) => {
       this.logger.debug(
         'Existing clichés loaded from cache/storage',
         event.payload
