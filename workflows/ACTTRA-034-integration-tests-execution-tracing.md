@@ -45,14 +45,14 @@ describe('Action Tracing - Execution Integration', () => {
   beforeEach(async () => {
     testBed = new CommandProcessorTracingTestBed();
     await testBed.initialize();
-    
+
     // Ensure test output directory exists
     await fs.mkdir(testOutputDir, { recursive: true });
   });
 
   afterEach(async () => {
     await testBed.cleanup();
-    
+
     // Clean up test traces
     try {
       await fs.rm(testOutputDir, { recursive: true, force: true });
@@ -77,18 +77,18 @@ describe('End-to-End Execution Tracing', () => {
       enabled: true,
       tracedActions: ['core:go'],
       outputDirectory: testOutputDir,
-      verbosity: 'detailed'
+      verbosity: 'detailed',
     });
 
     // Create test actor
     const actor = testBed.createActor('player-1', {
-      components: ['core:position', 'core:movement']
+      components: ['core:position', 'core:movement'],
     });
 
     // Create turn action
     const turnAction = testBed.createTurnAction('core:go', {
       commandString: 'go north',
-      parameters: { direction: 'north' }
+      parameters: { direction: 'north' },
     });
 
     // Execute action with tracing
@@ -105,7 +105,7 @@ describe('End-to-End Execution Tracing', () => {
 
     // Verify trace file was created
     const traceFiles = await fs.readdir(testOutputDir);
-    const traceFile = traceFiles.find(f => f.includes('core-go'));
+    const traceFile = traceFiles.find((f) => f.includes('core-go'));
     expect(traceFile).toBeDefined();
 
     // Verify trace content
@@ -129,22 +129,22 @@ describe('End-to-End Execution Tracing', () => {
     await testBed.configureTracing({
       enabled: true,
       tracedActions: ['core:go', 'core:take', 'core:use'],
-      outputDirectory: testOutputDir
+      outputDirectory: testOutputDir,
     });
 
     const actor = testBed.createActor('player-1', {
-      components: ['core:position', 'core:movement', 'core:inventory']
+      components: ['core:position', 'core:movement', 'core:inventory'],
     });
 
     // Create multiple turn actions
     const actions = [
       testBed.createTurnAction('core:go', { commandString: 'go north' }),
       testBed.createTurnAction('core:take', { commandString: 'take sword' }),
-      testBed.createTurnAction('core:use', { commandString: 'use potion' })
+      testBed.createTurnAction('core:use', { commandString: 'use potion' }),
     ];
 
     // Execute actions concurrently
-    const promises = actions.map(action => 
+    const promises = actions.map((action) =>
       testBed.dispatchAction(actor, action)
     );
 
@@ -153,7 +153,9 @@ describe('End-to-End Execution Tracing', () => {
     // Verify all executions succeeded
     results.forEach((result, index) => {
       expect(result.success).toBe(true);
-      expect(result.actionResult.actionId).toBe(actions[index].actionDefinitionId);
+      expect(result.actionResult.actionId).toBe(
+        actions[index].actionDefinitionId
+      );
     });
 
     // Wait for all traces to be written
@@ -164,9 +166,9 @@ describe('End-to-End Execution Tracing', () => {
     expect(traceFiles.length).toBeGreaterThanOrEqual(3);
 
     // Verify each action has a trace
-    expect(traceFiles.some(f => f.includes('core-go'))).toBe(true);
-    expect(traceFiles.some(f => f.includes('core-take'))).toBe(true);
-    expect(traceFiles.some(f => f.includes('core-use'))).toBe(true);
+    expect(traceFiles.some((f) => f.includes('core-go'))).toBe(true);
+    expect(traceFiles.some((f) => f.includes('core-take'))).toBe(true);
+    expect(traceFiles.some((f) => f.includes('core-use'))).toBe(true);
   });
 });
 ```
@@ -178,12 +180,12 @@ describe('Timing and Performance Tracking', () => {
   it('should capture accurate execution timing', async () => {
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: ['core:go']
+      tracedActions: ['core:go'],
     });
 
     const actor = testBed.createActor('player-1');
     const turnAction = testBed.createTurnAction('core:go', {
-      commandString: 'go north'
+      commandString: 'go north',
     });
 
     // Add artificial delay to test timing accuracy
@@ -197,7 +199,7 @@ describe('Timing and Performance Tracking', () => {
     await testBed.waitForTraceOutput();
 
     const trace = await testBed.getLatestTrace('core:go');
-    
+
     expect(trace.execution.startTime).toBeGreaterThanOrEqual(startTime);
     expect(trace.execution.endTime).toBeLessThanOrEqual(endTime);
     expect(trace.execution.duration).toBeCloseTo(actualDuration, -1); // Within 10ms
@@ -207,12 +209,12 @@ describe('Timing and Performance Tracking', () => {
   it('should measure dispatch overhead', async () => {
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: ['core:go']
+      tracedActions: ['core:go'],
     });
 
     const actor = testBed.createActor('player-1');
     const turnAction = testBed.createTurnAction('core:go', {
-      commandString: 'go north'
+      commandString: 'go north',
     });
 
     // Measure execution without tracing
@@ -224,9 +226,9 @@ describe('Timing and Performance Tracking', () => {
     // Measure execution with tracing
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: ['core:go']
+      tracedActions: ['core:go'],
     });
-    
+
     const startWithTracing = performance.now();
     await testBed.dispatchAction(actor, turnAction);
     const durationWithTracing = performance.now() - startWithTracing;
@@ -246,28 +248,30 @@ describe('Event Payload Capture', () => {
     await testBed.configureTracing({
       enabled: true,
       tracedActions: ['core:take'],
-      verbosity: 'verbose'
+      verbosity: 'verbose',
     });
 
     const actor = testBed.createActor('player-1', {
-      components: ['core:inventory']
+      components: ['core:inventory'],
     });
 
     const turnAction = testBed.createTurnAction('core:take', {
       commandString: 'take sword',
       parameters: { target: 'sword' },
-      actionDefinitionId: 'core:take'
+      actionDefinitionId: 'core:take',
     });
 
     const result = await testBed.dispatchAction(actor, turnAction);
     await testBed.waitForTraceOutput();
 
     const trace = await testBed.getLatestTrace('core:take');
-    
+
     expect(trace.execution.eventPayload).toBeDefined();
     expect(trace.execution.eventPayload.actor).toBe('player-1');
     expect(trace.execution.eventPayload.action).toBeDefined();
-    expect(trace.execution.eventPayload.action.commandString).toBe('take sword');
+    expect(trace.execution.eventPayload.action.commandString).toBe(
+      'take sword'
+    );
     expect(trace.execution.eventPayload.timestamp).toBeGreaterThan(0);
   });
 
@@ -275,20 +279,20 @@ describe('Event Payload Capture', () => {
     await testBed.configureTracing({
       enabled: true,
       tracedActions: ['core:complex_action'],
-      verbosity: 'detailed'
+      verbosity: 'detailed',
     });
 
     const actor = testBed.createActor('player-1', {
       components: ['core:inventory', 'core:stats'],
       data: {
         inventory: testBed.createLargeInventory(100), // 100 items
-        stats: testBed.createComplexStats()
-      }
+        stats: testBed.createComplexStats(),
+      },
     });
 
     const turnAction = testBed.createTurnAction('core:complex_action', {
       commandString: 'perform complex action',
-      parameters: testBed.createComplexParameters()
+      parameters: testBed.createComplexParameters(),
     });
 
     const startTime = performance.now();
@@ -298,10 +302,10 @@ describe('Event Payload Capture', () => {
     await testBed.waitForTraceOutput();
 
     const trace = await testBed.getLatestTrace('core:complex_action');
-    
+
     expect(trace.execution.eventPayload).toBeDefined();
     expect(duration).toBeLessThan(100); // Should handle large payloads quickly
-    
+
     // Verify payload contains expected data
     expect(trace.execution.eventPayload.actor).toBe('player-1');
     expect(trace.execution.eventPayload.action.parameters).toBeDefined();
@@ -316,26 +320,29 @@ describe('Error Handling and Recovery', () => {
   it('should capture execution errors with stack traces', async () => {
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: ['core:failing_action']
+      tracedActions: ['core:failing_action'],
     });
 
     const actor = testBed.createActor('player-1');
     const turnAction = testBed.createTurnAction('core:failing_action', {
-      commandString: 'trigger error'
+      commandString: 'trigger error',
     });
 
     // Configure action to throw error
-    testBed.configureActionToFail('core:failing_action', new Error('Test error'));
+    testBed.configureActionToFail(
+      'core:failing_action',
+      new Error('Test error')
+    );
 
     const result = await testBed.dispatchAction(actor, turnAction);
-    
+
     // Execution should fail gracefully
     expect(result.success).toBe(false);
 
     await testBed.waitForTraceOutput();
 
     const trace = await testBed.getLatestTrace('core:failing_action');
-    
+
     expect(trace.execution.error).toBeDefined();
     expect(trace.execution.error.message).toBe('Test error');
     expect(trace.execution.error.type).toBe('Error');
@@ -346,25 +353,25 @@ describe('Error Handling and Recovery', () => {
   it('should handle EventDispatchService failures', async () => {
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: ['core:go']
+      tracedActions: ['core:go'],
     });
 
     const actor = testBed.createActor('player-1');
     const turnAction = testBed.createTurnAction('core:go', {
-      commandString: 'go north'
+      commandString: 'go north',
     });
 
     // Configure EventDispatchService to fail
     testBed.configureEventDispatchToFail(new Error('Event dispatch failed'));
 
     const result = await testBed.dispatchAction(actor, turnAction);
-    
+
     expect(result.success).toBe(false);
 
     await testBed.waitForTraceOutput();
 
     const trace = await testBed.getLatestTrace('core:go');
-    
+
     expect(trace.execution.result).toBeDefined();
     expect(trace.execution.result.success).toBe(false);
     expect(trace.execution.error).toBeDefined();
@@ -374,19 +381,19 @@ describe('Error Handling and Recovery', () => {
     await testBed.configureTracing({
       enabled: true,
       tracedActions: ['core:go'],
-      outputDirectory: '/invalid/path' // Cause output failure
+      outputDirectory: '/invalid/path', // Cause output failure
     });
 
     const actor = testBed.createActor('player-1');
     const turnAction = testBed.createTurnAction('core:go', {
-      commandString: 'go north'
+      commandString: 'go north',
     });
 
     // Should not throw error even if trace output fails
     const result = await testBed.dispatchAction(actor, turnAction);
-    
+
     expect(result.success).toBe(true); // Action should still succeed
-    
+
     // Verify error was logged
     expect(testBed.getLoggedErrors()).toContain(
       expect.stringContaining('Failed to write trace')
@@ -402,19 +409,19 @@ describe('EventDispatchService Integration', () => {
   it('should trace event dispatch success', async () => {
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: ['core:go']
+      tracedActions: ['core:go'],
     });
 
     const actor = testBed.createActor('player-1');
     const turnAction = testBed.createTurnAction('core:go', {
-      commandString: 'go north'
+      commandString: 'go north',
     });
 
     const result = await testBed.dispatchAction(actor, turnAction);
     await testBed.waitForTraceOutput();
 
     const trace = await testBed.getLatestTrace('core:go');
-    
+
     expect(trace.execution.result).toBeDefined();
     expect(trace.execution.result.success).toBe(true);
     expect(trace.execution.result.timestamp).toBeGreaterThan(0);
@@ -424,19 +431,19 @@ describe('EventDispatchService Integration', () => {
     await testBed.configureTracing({
       enabled: true,
       tracedActions: ['core:go'],
-      verbosity: 'detailed'
+      verbosity: 'detailed',
     });
 
     const actor = testBed.createActor('player-1');
     const turnAction = testBed.createTurnAction('core:go', {
-      commandString: 'go north'
+      commandString: 'go north',
     });
 
     const result = await testBed.dispatchAction(actor, turnAction);
     await testBed.waitForTraceOutput();
 
     const trace = await testBed.getLatestTrace('core:go');
-    
+
     expect(trace.execution.duration).toBeGreaterThan(0);
     expect(trace.execution.result.timestamp).toBeBetween(
       trace.execution.startTime,
@@ -447,12 +454,12 @@ describe('EventDispatchService Integration', () => {
   it('should handle event dispatch timeout', async () => {
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: ['core:slow_action']
+      tracedActions: ['core:slow_action'],
     });
 
     const actor = testBed.createActor('player-1');
     const turnAction = testBed.createTurnAction('core:slow_action', {
-      commandString: 'perform slow action'
+      commandString: 'perform slow action',
     });
 
     // Configure action to timeout
@@ -463,7 +470,7 @@ describe('EventDispatchService Integration', () => {
     await testBed.waitForTraceOutput();
 
     const trace = await testBed.getLatestTrace('core:slow_action');
-    
+
     expect(trace.execution.duration).toBeGreaterThan(5000);
     expect(trace.execution.error).toBeDefined();
     expect(trace.execution.error.message).toContain('timeout');
@@ -479,20 +486,24 @@ describe('Output Format Validation', () => {
     await testBed.configureTracing({
       enabled: true,
       tracedActions: ['core:go'],
-      verbosity: 'standard'
+      verbosity: 'standard',
     });
 
     const actor = testBed.createActor('player-1');
     const turnAction = testBed.createTurnAction('core:go', {
-      commandString: 'go north'
+      commandString: 'go north',
     });
 
     await testBed.dispatchAction(actor, turnAction);
     await testBed.waitForTraceOutput();
 
     const traceFiles = await fs.readdir(testOutputDir);
-    const jsonFile = traceFiles.find(f => f.includes('core-go') && f.endsWith('.json'));
-    const textFile = traceFiles.find(f => f.includes('core-go') && f.endsWith('.txt'));
+    const jsonFile = traceFiles.find(
+      (f) => f.includes('core-go') && f.endsWith('.json')
+    );
+    const textFile = traceFiles.find(
+      (f) => f.includes('core-go') && f.endsWith('.txt')
+    );
 
     expect(jsonFile).toBeDefined();
     expect(textFile).toBeDefined();
@@ -518,7 +529,7 @@ describe('Output Format Validation', () => {
     await testBed.configureTracing({
       enabled: true,
       tracedActions: ['core:go'],
-      verbosity: 'minimal'
+      verbosity: 'minimal',
     });
 
     const actor = testBed.createActor('player-1');
@@ -528,11 +539,15 @@ describe('Output Format Validation', () => {
     await testBed.waitForTraceOutput();
 
     const traceFiles = await fs.readdir(testOutputDir);
-    const jsonFile = traceFiles.find(f => f.includes('core-go') && f.endsWith('.json'));
-    
+    const jsonFile = traceFiles.find(
+      (f) => f.includes('core-go') && f.endsWith('.json')
+    );
+
     expect(jsonFile).toBeDefined();
     // Should not create text file for minimal verbosity
-    const textFile = traceFiles.find(f => f.includes('core-go') && f.endsWith('.txt'));
+    const textFile = traceFiles.find(
+      (f) => f.includes('core-go') && f.endsWith('.txt')
+    );
     expect(textFile).toBeUndefined();
   });
 });
@@ -559,16 +574,16 @@ export class CommandProcessorTracingTestBed {
   async initialize() {
     // Setup dependency injection container
     this.container = await this.createTestContainer();
-    
+
     // Get services
     this.commandProcessor = this.container.resolve('ICommandProcessor');
     this.entityManager = this.container.resolve('IEntityManager');
     this.eventDispatchService = this.container.resolve('IEventDispatchService');
     this.configLoader = this.container.resolve('IConfigLoader');
-    
+
     // Setup error logging capture
     this.setupErrorLogging();
-    
+
     // Initialize services
     await this.commandProcessor.initialize();
   }
@@ -582,8 +597,8 @@ export class CommandProcessorTracingTestBed {
         verbosity: config.verbosity || 'standard',
         includeComponentData: config.includeComponentData || false,
         includePrerequisites: config.includePrerequisites || false,
-        includeTargets: config.includeTargets || false
-      }
+        includeTargets: config.includeTargets || false,
+      },
     };
 
     await this.configLoader.setConfig(fullConfig);
@@ -591,9 +606,9 @@ export class CommandProcessorTracingTestBed {
 
   createActor(id, options = {}) {
     const actor = this.entityManager.createEntity(id);
-    
+
     if (options.components) {
-      options.components.forEach(comp => {
+      options.components.forEach((comp) => {
         actor.addComponent(comp, options.data || {});
       });
     }
@@ -607,7 +622,7 @@ export class CommandProcessorTracingTestBed {
       commandString: options.commandString || actionId,
       parameters: options.parameters || {},
       timestamp: Date.now(),
-      ...options
+      ...options,
     };
   }
 
@@ -615,7 +630,7 @@ export class CommandProcessorTracingTestBed {
     // Apply configured delays
     if (this.executionDelays.has(turnAction.actionDefinitionId)) {
       const delay = this.executionDelays.get(turnAction.actionDefinitionId);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
 
     // Check for configured failures
@@ -638,7 +653,8 @@ export class CommandProcessorTracingTestBed {
 
   configureEventDispatchToFail(error) {
     // Mock EventDispatchService to fail
-    jest.spyOn(this.eventDispatchService, 'dispatchWithErrorHandling')
+    jest
+      .spyOn(this.eventDispatchService, 'dispatchWithErrorHandling')
       .mockRejectedValueOnce(error);
   }
 
@@ -648,9 +664,10 @@ export class CommandProcessorTracingTestBed {
   }
 
   configureEventDispatchDelay(delay) {
-    jest.spyOn(this.eventDispatchService, 'dispatchWithErrorHandling')
+    jest
+      .spyOn(this.eventDispatchService, 'dispatchWithErrorHandling')
       .mockImplementation(async (...args) => {
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         return true;
       });
   }
@@ -664,8 +681,8 @@ export class CommandProcessorTracingTestBed {
         properties: {
           weight: Math.random() * 10,
           value: Math.random() * 100,
-          description: `This is test item ${i} with some properties`
-        }
+          description: `This is test item ${i} with some properties`,
+        },
       });
     }
     return items;
@@ -679,17 +696,17 @@ export class CommandProcessorTracingTestBed {
         strength: 10,
         dexterity: 12,
         intelligence: 8,
-        constitution: 11
+        constitution: 11,
       },
       skills: {
         combat: { level: 5, experience: 1250 },
         magic: { level: 3, experience: 750 },
-        crafting: { level: 2, experience: 300 }
+        crafting: { level: 2, experience: 300 },
       },
       effects: [
         { id: 'blessing', duration: 300, magnitude: 1.2 },
-        { id: 'fatigue', duration: 150, magnitude: 0.8 }
-      ]
+        { id: 'fatigue', duration: 150, magnitude: 0.8 },
+      ],
     };
   }
 
@@ -699,36 +716,36 @@ export class CommandProcessorTracingTestBed {
       modifiers: {
         intensity: 'high',
         duration: 'long',
-        effects: ['damage', 'stun', 'debuff']
+        effects: ['damage', 'stun', 'debuff'],
       },
       context: {
         location: { x: 10, y: 20, zone: 'test-area' },
         weather: 'stormy',
-        timeOfDay: 'midnight'
-      }
+        timeOfDay: 'midnight',
+      },
     };
   }
 
   async waitForTraceOutput(timeout = 200) {
-    return new Promise(resolve => setTimeout(resolve, timeout));
+    return new Promise((resolve) => setTimeout(resolve, timeout));
   }
 
   async getLatestTrace(actionId) {
     const files = await fs.readdir(this.outputDir);
-    const actionFiles = files.filter(f => 
-      f.includes(actionId.replace(':', '-')) && f.endsWith('.json')
+    const actionFiles = files.filter(
+      (f) => f.includes(actionId.replace(':', '-')) && f.endsWith('.json')
     );
-    
+
     if (actionFiles.length === 0) return null;
-    
+
     // Sort by timestamp in filename
     actionFiles.sort().reverse();
-    
+
     const content = await fs.readFile(
       path.join(this.outputDir, actionFiles[0]),
       'utf-8'
     );
-    
+
     return JSON.parse(content);
   }
 
@@ -748,12 +765,12 @@ export class CommandProcessorTracingTestBed {
   async cleanup() {
     // Restore console.error
     console.error = console.error.__original || console.error;
-    
+
     // Clear state
     this.loggedErrors = [];
     this.actionFailures.clear();
     this.executionDelays.clear();
-    
+
     // Cleanup container
     if (this.container) {
       await this.container.dispose();
@@ -796,11 +813,13 @@ export class CommandProcessorTracingTestBed {
 ## Dependencies
 
 ### Depends On
+
 - ACTTRA-019: Create ActionExecutionTrace class
 - ACTTRA-020: Enhance CommandProcessor with tracing
 - ACTTRA-023: Integrate with EventDispatchService
 
 ### Blocks
+
 - End-to-end system testing
 - Performance optimization work
 

@@ -36,16 +36,16 @@ describe('ActionTraceOutputService - Naming Integration', () => {
   beforeEach(() => {
     // Ensure we're using real timers at the start
     jest.useRealTimers();
-    
+
     mockLogger = createMockLogger();
     mockActionTraceFilter = createMockActionTraceFilter();
-    
+
     // Create test timer service for controlled execution
     testTimerService = new TestTimerService();
 
     // Create a storage state that persists between getItem/setItem calls
     let storageState = {};
-    
+
     // Mock IndexedDB storage adapter with proper persistence simulation
     storageAdapter = {
       getItem: jest.fn().mockImplementation((key) => {
@@ -91,7 +91,7 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       rotationManager.shutdown();
       rotationManager = null;
     }
-    
+
     // Restore mocks
     jest.restoreAllMocks();
   });
@@ -217,7 +217,10 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       ];
 
       // Pre-populate storage with old and recent traces
-      await storageAdapter.setItem('actionTraces', [...oldTraces, ...recentTraces]);
+      await storageAdapter.setItem('actionTraces', [
+        ...oldTraces,
+        ...recentTraces,
+      ]);
 
       // Add new trace
       const newTrace = {
@@ -233,7 +236,7 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       // Check that setItem was called after initial setup
       const setItemCalls = storageAdapter.setItem.mock.calls.length;
       expect(setItemCalls).toBeGreaterThanOrEqual(2); // At least initial setup + new trace
-      
+
       // Get the final state from storage
       const storedTraces = await storageAdapter.getItem('actionTraces');
 
@@ -295,7 +298,7 @@ describe('ActionTraceOutputService - Naming Integration', () => {
 
       // Get the final storage state
       const storedTraces = await storageAdapter.getItem('actionTraces');
-      
+
       // Should have all 3 traces
       expect(storedTraces.length).toBe(3);
 
@@ -407,7 +410,7 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       const mockCreateElement = jest
         .spyOn(document, 'createElement')
         .mockReturnValue(mockAnchor);
-      
+
       // Mock URL methods properly
       const originalCreateObjectURL = URL.createObjectURL;
       const originalRevokeObjectURL = URL.revokeObjectURL;
@@ -481,7 +484,7 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       const mockCreateElement = jest
         .spyOn(document, 'createElement')
         .mockReturnValue(mockAnchor);
-      
+
       // Mock URL methods properly
       const originalCreateObjectURL = URL.createObjectURL;
       const originalRevokeObjectURL = URL.revokeObjectURL;
@@ -547,7 +550,7 @@ describe('ActionTraceOutputService - Naming Integration', () => {
 
       // Second session with different configuration
       // Storage already contains the first session traces (persistent mock)
-      
+
       service = new ActionTraceOutputService({
         storageAdapter,
         logger: mockLogger,
@@ -721,8 +724,10 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       // Should log error but not crash - check for either the old or new error message
       expect(mockLogger.error).toHaveBeenCalled();
       const errorCalls = mockLogger.error.mock.calls;
-      const hasExpectedError = errorCalls.some(call => 
-        (call[0].includes('Failed to store trace') || call[0].includes('Failed to process item'))
+      const hasExpectedError = errorCalls.some(
+        (call) =>
+          call[0].includes('Failed to store trace') ||
+          call[0].includes('Failed to process item')
       );
       expect(hasExpectedError).toBe(true);
     });

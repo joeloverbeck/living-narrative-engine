@@ -58,7 +58,14 @@ export class TraceQueueProcessor {
    * @param {object} [dependencies.timerService] - Timer service for scheduling (defaults to real timers)
    * @param {object} [dependencies.namingOptions] - Options for trace ID generation
    */
-  constructor({ storageAdapter, logger, eventBus, config = {}, timerService, namingOptions }) {
+  constructor({
+    storageAdapter,
+    logger,
+    eventBus,
+    config = {},
+    timerService,
+    namingOptions,
+  }) {
     // Validate required dependencies
     validateDependency(storageAdapter, 'IStorageAdapter', null, {
       requiredMethods: ['getItem', 'setItem', 'removeItem', 'getAllKeys'],
@@ -68,7 +75,7 @@ export class TraceQueueProcessor {
     this.#logger = ensureValidLogger(logger, 'TraceQueueProcessor');
     this.#eventBus = eventBus;
     this.#timerService = timerService || defaultTimerService;
-    
+
     // Initialize ID generator with naming options
     this.#idGenerator = new TraceIdGenerator(namingOptions || {});
 

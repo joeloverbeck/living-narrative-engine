@@ -559,7 +559,10 @@ describe('MultiTargetResolutionStage - Full Coverage', () => {
         {
           isLegacy: true,
           targetDefinitions: {
-            primary: { scope: stringTargetsAction.targets, placeholder: 'target' },
+            primary: {
+              scope: stringTargetsAction.targets,
+              placeholder: 'target',
+            },
           },
         }
       );
@@ -831,9 +834,9 @@ describe('MultiTargetResolutionStage - Full Coverage', () => {
 
       // Verify only valid entities are included
       expect(result.success).toBe(true);
-      expect(result.data.actionsWithTargets[0].resolvedTargets.primary).toHaveLength(
-        2
-      ); // Only entity1 and entity3
+      expect(
+        result.data.actionsWithTargets[0].resolvedTargets.primary
+      ).toHaveLength(2); // Only entity1 and entity3
     });
 
     it('should handle trace methods that are missing', async () => {

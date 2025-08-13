@@ -68,52 +68,50 @@ describe('TraceQueueProcessor - Performance Tests', () => {
   });
 
   describe('High-Throughput Processing', () => {
-    it(
-      'should handle high-throughput trace processing (<5s for 100 traces)',
-      async () => {
-        service = new ActionTraceOutputService({
-          storageAdapter: mockStorageAdapter,
-          logger: mockLogger,
-          actionTraceFilter: mockActionTraceFilter,
-          eventBus: mockEventBus,
-          queueConfig: {
-            ...queueConfig,
-            batchSize: 20,
-            enableParallelProcessing: true,
-          },
-        });
+    it('should handle high-throughput trace processing (<5s for 100 traces)', async () => {
+      service = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        actionTraceFilter: mockActionTraceFilter,
+        eventBus: mockEventBus,
+        queueConfig: {
+          ...queueConfig,
+          batchSize: 20,
+          enableParallelProcessing: true,
+        },
+      });
 
-        // Warm up - let any initialization happen
-        for (let i = 0; i < 10; i++) {
-          const warmupTrace = {
-            actionId: `warmup:${i}`,
-            toJSON: () => ({ actionId: `warmup:${i}` }),
-          };
-          await service.writeTrace(warmupTrace);
-        }
+      // Warm up - let any initialization happen
+      for (let i = 0; i < 10; i++) {
+        const warmupTrace = {
+          actionId: `warmup:${i}`,
+          toJSON: () => ({ actionId: `warmup:${i}` }),
+        };
+        await service.writeTrace(warmupTrace);
+      }
 
-        // Wait for warmup traces to process
-        await new Promise((resolve) => setTimeout(resolve, 200));
+      // Wait for warmup traces to process
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
-        // Reset mocks after warmup
-        mockStorageAdapter.setItem.mockClear();
+      // Reset mocks after warmup
+      mockStorageAdapter.setItem.mockClear();
 
-        // Measure performance for actual test
-        const traceCount = 100;
-        const startTime = performance.now();
+      // Measure performance for actual test
+      const traceCount = 100;
+      const startTime = performance.now();
 
-        // Enqueue many traces quickly
-        for (let i = 0; i < traceCount; i++) {
-          const trace = {
-            actionId: `throughput:${i}`,
-            toJSON: () => ({ actionId: `throughput:${i}`, index: i }),
-          };
-          await service.writeTrace(trace);
-        }
+      // Enqueue many traces quickly
+      for (let i = 0; i < traceCount; i++) {
+        const trace = {
+          actionId: `throughput:${i}`,
+          toJSON: () => ({ actionId: `throughput:${i}`, index: i }),
+        };
+        await service.writeTrace(trace);
+      }
 
-        // Wait for processing to complete
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        const endTime = performance.now();
+      // Wait for processing to complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const endTime = performance.now();
 
       const processingTime = endTime - startTime;
       const metrics = service.getQueueMetrics();
@@ -129,16 +127,12 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         `Processing time: ${processingTime.toFixed(2)}ms for ${traceCount} traces`
       );
       console.log(`Throughput: ${throughput.toFixed(2)} traces/second`);
-        console.log(
-          `Batch efficiency: ${(metrics.batchEfficiency * 100).toFixed(2)}%`
-        );
-      },
-      60000
-    ); // 60 second timeout
+      console.log(
+        `Batch efficiency: ${(metrics.batchEfficiency * 100).toFixed(2)}%`
+      );
+    }, 60000); // 60 second timeout
 
-    it(
-      'should maintain performance with varying trace sizes',
-      async () => {
+    it('should maintain performance with varying trace sizes', async () => {
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
@@ -169,33 +163,29 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         }
       }
 
-        // Wait for processing to complete
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        const endTime = performance.now();
+      // Wait for processing to complete
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      const endTime = performance.now();
 
-        const processingTime = endTime - startTime;
-        const totalTraces = traceSizes.length * tracesPerSize;
+      const processingTime = endTime - startTime;
+      const totalTraces = traceSizes.length * tracesPerSize;
 
-        // Performance should scale reasonably with data size
-        expect(processingTime).toBeLessThan(8000); // 8 seconds for varied sizes
+      // Performance should scale reasonably with data size
+      expect(processingTime).toBeLessThan(8000); // 8 seconds for varied sizes
 
-        const metrics = service.getQueueMetrics();
-        expect(metrics.totalProcessed).toBeGreaterThan(0); // Should process some traces
-        expect(metrics.totalEnqueued).toBeGreaterThan(40); // Should enqueue most traces (queue size limit may apply)
+      const metrics = service.getQueueMetrics();
+      expect(metrics.totalProcessed).toBeGreaterThan(0); // Should process some traces
+      expect(metrics.totalEnqueued).toBeGreaterThan(40); // Should enqueue most traces (queue size limit may apply)
 
-        console.log(
-          `Mixed size processing: ${processingTime.toFixed(2)}ms for ${totalTraces} traces`
-        );
-        console.log(
-          `Average time per trace: ${(processingTime / totalTraces).toFixed(2)}ms`
-        );
-      },
-      60000
-    ); // 60 second timeout
+      console.log(
+        `Mixed size processing: ${processingTime.toFixed(2)}ms for ${totalTraces} traces`
+      );
+      console.log(
+        `Average time per trace: ${(processingTime / totalTraces).toFixed(2)}ms`
+      );
+    }, 60000); // 60 second timeout
 
-    it(
-      'should demonstrate parallel processing benefits',
-      async () => {
+    it('should demonstrate parallel processing benefits', async () => {
       // Test with parallel processing disabled
       let serviceSerial = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
@@ -291,16 +281,12 @@ describe('TraceQueueProcessor - Performance Tests', () => {
 
       console.log(`Serial processing: ${serialTime.toFixed(2)}ms`);
       console.log(`Parallel processing: ${parallelTime.toFixed(2)}ms`);
-        console.log(
-          `Performance improvement: ${((1 - parallelTime / serialTime) * 100).toFixed(2)}%`
-        );
-      },
-      60000
-    ); // 60 second timeout
+      console.log(
+        `Performance improvement: ${((1 - parallelTime / serialTime) * 100).toFixed(2)}%`
+      );
+    }, 60000); // 60 second timeout
 
-    it(
-      'should handle burst traffic efficiently',
-      async () => {
+    it('should handle burst traffic efficiently', async () => {
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
@@ -339,7 +325,9 @@ describe('TraceQueueProcessor - Performance Tests', () => {
 
         // Small delay between bursts
         if (burst < numberOfBursts - 1) {
-          await new Promise((resolve) => setTimeout(resolve, delayBetweenBursts));
+          await new Promise((resolve) =>
+            setTimeout(resolve, delayBetweenBursts)
+          );
         }
       }
 
@@ -360,16 +348,12 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         `Burst processing: ${processingTime.toFixed(2)}ms for ${totalTraces} traces in ${numberOfBursts} bursts`
       );
       console.log(`Burst throughput: ${throughput.toFixed(2)} traces/second`);
-        console.log(`Priority distribution:`, metrics.priorityDistribution);
-      },
-      60000
-    ); // 60 second timeout
+      console.log(`Priority distribution:`, metrics.priorityDistribution);
+    }, 60000); // 60 second timeout
   });
 
   describe('Batch Processing Efficiency', () => {
-    it(
-      'should optimize batch sizes for performance',
-      async () => {
+    it('should optimize batch sizes for performance', async () => {
       const batchSizes = [5, 10, 20, 50];
       const results = [];
 
@@ -440,12 +424,10 @@ describe('TraceQueueProcessor - Performance Tests', () => {
         );
       });
 
-        // All batch sizes should complete within reasonable time
-        results.forEach((r) => {
-          expect(r.processingTime).toBeLessThan(10000); // 10 seconds max
-        });
-      },
-      60000
-    ); // 60 second timeout
+      // All batch sizes should complete within reasonable time
+      results.forEach((r) => {
+        expect(r.processingTime).toBeLessThan(10000); // 10 seconds max
+      });
+    }, 60000); // 60 second timeout
   });
 });

@@ -208,25 +208,28 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
         responseTime: 500,
       },
     });
-    
+
     // Ensure the cliche has a proper getTotalCount method
     if (!cliche.getTotalCount || typeof cliche.getTotalCount !== 'function') {
-      cliche.getTotalCount = function() {
+      cliche.getTotalCount = function () {
         let total = 0;
         if (this.categories) {
-          Object.values(this.categories).forEach(category => {
+          Object.values(this.categories).forEach((category) => {
             if (Array.isArray(category)) {
               total += category.length;
             }
           });
         }
-        if (this.tropesAndStereotypes && Array.isArray(this.tropesAndStereotypes)) {
+        if (
+          this.tropesAndStereotypes &&
+          Array.isArray(this.tropesAndStereotypes)
+        ) {
           total += this.tropesAndStereotypes.length;
         }
         return total;
       };
     }
-    
+
     return cliche;
   }
 
@@ -688,7 +691,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
 
     // Wait for async operations
     await this.flushPromises();
-    
+
     // Additional wait to ensure finally block execution
     await new Promise((resolve) => setTimeout(resolve, 100));
   }

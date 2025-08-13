@@ -215,7 +215,7 @@ class TraceDirectoryManager {
 
   /**
    * Prompt user to select a directory for export
-   * 
+   *
    * @returns {Promise<FileSystemDirectoryHandle|null>} Directory handle or null if cancelled
    */
   async selectDirectory() {
@@ -255,7 +255,7 @@ class TraceDirectoryManager {
 
   /**
    * Ensure a subdirectory exists within a parent directory handle
-   * 
+   *
    * @param {FileSystemDirectoryHandle} parentHandle - Parent directory handle
    * @param {string} subdirectoryName - Name of subdirectory to create
    * @returns {Promise<FileSystemDirectoryHandle|null>} Subdirectory handle or null on error

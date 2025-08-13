@@ -31,7 +31,7 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
 
   beforeEach(() => {
     // Don't use Jest fake timers - rely on TestTimerService instead
-    
+
     mockLogger = createMockLogger();
     mockStorageAdapter = createMockIndexedDBStorageAdapter();
     mockActionTraceFilter = createMockActionTraceFilter();
@@ -62,12 +62,12 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
         console.warn('Error during service shutdown:', error.message);
       }
     }
-    
+
     // Clear test timer service
     if (testTimerService) {
       testTimerService.clearAll();
     }
-    
+
     service = null;
   });
 
@@ -207,8 +207,8 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
       for (let i = 0; i < 10; i++) {
         await testTimerService.triggerAll();
         // Small delay to allow any async operations to complete
-        await new Promise(resolve => setImmediate(resolve));
-        
+        await new Promise((resolve) => setImmediate(resolve));
+
         // Check if we have processed any traces yet
         const interimMetrics = service.getQueueMetrics();
         if (interimMetrics && interimMetrics.totalProcessed > 0) {

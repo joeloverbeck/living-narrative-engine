@@ -12,16 +12,13 @@
  */
 
 import { BaseCharacterBuilderController } from '../../characterBuilder/controllers/BaseCharacterBuilderController.js';
-import {
-  validateDependency,
-} from '../../utils/dependencyUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 import { Cliche } from '../../characterBuilder/models/cliche.js';
 import { DomUtils } from '../../utils/domUtils.js';
+import { ClicheDisplayEnhancer } from '../services/ClicheDisplayEnhancer.js';
 
 // Enhanced error handling imports
-import {
-  validateGenerationPrerequisites,
-} from '../../characterBuilder/validators/clicheValidator.js';
+import { validateGenerationPrerequisites } from '../../characterBuilder/validators/clicheValidator.js';
 import { ClicheErrorHandler } from '../../characterBuilder/services/clicheErrorHandler.js';
 
 /**
@@ -65,6 +62,9 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
   #errorHandler = null;
   #retryAttempts = new Map();
   #errorRecoveryState = new Map();
+
+  // Display enhancement
+  #displayEnhancer = null;
 
   // DOM element cache
   #directionSelector = null;
@@ -177,6 +177,14 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     this.#loadingOverlay =
       document.getElementById('loading-overlay') ||
       this.#createLoadingOverlay();
+
+    // Initialize display enhancer
+    if (this.#clichesContainer) {
+      this.#displayEnhancer = new ClicheDisplayEnhancer({
+        logger: this.logger,
+        container: this.#clichesContainer,
+      });
+    }
 
     // Validate required elements
     this.#validateRequiredElements();
@@ -376,7 +384,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       if (!foundDirection) {
         throw new Error(`Direction not found: ${directionId}`);
       }
-      
+
       const { direction, concept } = foundDirection;
       const sanitizedDirectionId = directionId;
 
@@ -513,7 +521,11 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
    */
   async #handleGenerateCliches() {
     // Check if regenerating and confirm with user
-    if (this.#currentCliches && this.#currentCliches.getTotalCount && this.#currentCliches.getTotalCount() > 0) {
+    if (
+      this.#currentCliches &&
+      this.#currentCliches.getTotalCount &&
+      this.#currentCliches.getTotalCount() > 0
+    ) {
       const confirmed = await this.#confirmRegeneration();
       if (!confirmed) {
         return;
@@ -612,7 +624,11 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
         message: `Generated ${result.getTotalCount()} clichés successfully!`,
       });
     } catch (error) {
-      await this.#handleGenerationErrorEnhanced(error, operationContext, operationKey);
+      await this.#handleGenerationErrorEnhanced(
+        error,
+        operationContext,
+        operationKey
+      );
     } finally {
       this.#isGenerating = false;
       this._showState('idle');
@@ -670,6 +686,11 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     this.#clichesContainer.innerHTML = html;
     this.#clichesContainer.classList.remove('empty-state');
     this.#clichesContainer.classList.add('has-content');
+
+    // Enhance display with interactive features
+    if (this.#displayEnhancer) {
+      this.#displayEnhancer.enhance(displayData);
+    }
   }
 
   /**
@@ -1171,8 +1192,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     if (this.#isGenerating) {
       // Generating state with spinner
       button.disabled = true;
-      button.innerHTML =
-        '<span class="cb-spinner"></span> Generating...';
+      button.innerHTML = '<span class="cb-spinner"></span> Generating...';
       button.classList.add('cb-button-loading');
       button.setAttribute('aria-busy', 'true');
       button.setAttribute('aria-label', 'Generating clichés, please wait');
@@ -1186,7 +1206,11 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
         'aria-label',
         'Please select a direction before generating'
       );
-    } else if (this.#currentCliches && this.#currentCliches.getTotalCount && this.#currentCliches.getTotalCount() > 0) {
+    } else if (
+      this.#currentCliches &&
+      this.#currentCliches.getTotalCount &&
+      this.#currentCliches.getTotalCount() > 0
+    ) {
       // Already has results state
       button.disabled = false;
       button.textContent = 'Regenerate Clichés';
@@ -1233,7 +1257,11 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
    * @private
    */
   async #confirmRegeneration() {
-    if (!this.#currentCliches || !this.#currentCliches.getTotalCount || this.#currentCliches.getTotalCount() === 0) {
+    if (
+      !this.#currentCliches ||
+      !this.#currentCliches.getTotalCount ||
+      this.#currentCliches.getTotalCount() === 0
+    ) {
       return true; // No existing clichés, proceed without confirmation
     }
 
@@ -2057,6 +2085,12 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
 
     if (this.#generateBtn) {
       this.#generateBtn.disabled = true;
+    }
+
+    // Cleanup display enhancer
+    if (this.#displayEnhancer) {
+      this.#displayEnhancer.cleanup();
+      this.#displayEnhancer = null;
     }
 
     // Clear DOM references
