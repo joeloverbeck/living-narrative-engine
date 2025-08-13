@@ -476,6 +476,7 @@ export class ActionDiscoveryServiceTestBed extends ServiceFactoryMixin(
               { id: 'core:look', name: 'Look' },
             ],
             errors: [],
+            trace: options?.trace ? {} : undefined, // Return trace if requested
           };
         }),
     };
