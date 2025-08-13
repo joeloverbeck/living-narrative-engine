@@ -408,6 +408,95 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       expect(capturedData.shortText).toBe('normal');
       expect(capturedData.longText).toBe('A'.repeat(1000) + '... [truncated]');
     });
+
+    it('should handle array size limiting edge cases', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:go'],
+        verbosity: 'detailed',
+        includeTargets: true,
+      });
+
+      // Test exactly at the limit
+      const exactLimitData = {
+        resolvedTargets: Array.from({ length: 10 }, (_, i) => ({ id: i })),
+      };
+
+      trace.captureActionData('exact_limit_stage', 'core:go', exactLimitData);
+
+      const exactLimitCaptured =
+        trace.getActionTrace('core:go').stages.exact_limit_stage.data;
+      expect(exactLimitCaptured.resolvedTargets).toHaveLength(10);
+      expect(exactLimitCaptured.resolvedTargets[9]).not.toHaveProperty(
+        'truncated'
+      );
+
+      // Test just over the limit
+      const overLimitData = {
+        resolvedTargets: Array.from({ length: 11 }, (_, i) => ({ id: i })),
+      };
+
+      trace.captureActionData('over_limit_stage', 'core:go', overLimitData);
+
+      const overLimitCaptured =
+        trace.getActionTrace('core:go').stages.over_limit_stage.data;
+      expect(overLimitCaptured.resolvedTargets).toHaveLength(10);
+      expect(overLimitCaptured.resolvedTargets[9]).toEqual({
+        truncated: true,
+        originalLength: 11,
+        showing: 9,
+      });
+
+      // Test non-array input
+      const nonArrayData = {
+        resolvedTargets: 'not an array',
+      };
+
+      trace.captureActionData('non_array_stage', 'core:go', nonArrayData);
+
+      const nonArrayCaptured =
+        trace.getActionTrace('core:go').stages.non_array_stage.data;
+      expect(nonArrayCaptured.resolvedTargets).toBe('not an array');
+    });
+
+    it('should handle standard verbosity target filtering edge cases', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:go'],
+        verbosity: 'standard',
+        includeTargets: true,
+      });
+
+      // Test targetKeys specifically (line 762)
+      const targetKeysData = {
+        targetKeys: ['key1', 'key2', 'key3'],
+        targetCount: 3,
+        passed: true,
+      };
+
+      trace.captureActionData('target_keys_stage', 'core:go', targetKeysData);
+
+      const capturedData =
+        trace.getActionTrace('core:go').stages.target_keys_stage.data;
+      expect(capturedData.targetKeys).toEqual(['key1', 'key2', 'key3']);
+      expect(capturedData.targetCount).toBe(3);
+      expect(capturedData.passed).toBe(true);
+
+      // Test with no targetKeys but with targetCount (line 759)
+      const targetCountOnlyData = {
+        targetCount: 5,
+        passed: true,
+      };
+
+      trace.captureActionData(
+        'target_count_stage',
+        'core:go',
+        targetCountOnlyData
+      );
+
+      const targetCountCaptured =
+        trace.getActionTrace('core:go').stages.target_count_stage.data;
+      expect(targetCountCaptured.targetCount).toBe(5);
+      expect(targetCountCaptured.targetKeys).toBeUndefined();
+    });
   });
 
   describe('Data Management', () => {
@@ -615,6 +704,68 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       // a standard field pattern - let's check what was actually captured
       expect(Object.keys(validStageData)).toContain('timestamp');
       expect(Object.keys(validStageData)).toContain('stage');
+    });
+
+    it('should handle filtering errors gracefully', async () => {
+      const mockFilter = testBed.createMockActionTraceFilter({
+        tracedActions: ['core:go'],
+        verbosity: 'standard',
+      });
+
+      // Make getInclusionConfig throw an error
+      mockFilter.getInclusionConfig.mockImplementation(() => {
+        throw new Error('Config access error');
+      });
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockFilter,
+        actorId: 'test-actor',
+        logger: testBed.mockLogger,
+      });
+
+      trace.captureActionData('test_stage', 'core:go', { test: 'data' });
+
+      // Should have logged the error from captureActionData, not the filtering error
+      expect(testBed.mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Error capturing action data'),
+        expect.any(Error)
+      );
+
+      // The action trace might not exist if error occurred early in capture
+      const actionTrace = trace.getActionTrace('core:go');
+      if (actionTrace && actionTrace.stages.test_stage) {
+        expect(actionTrace.stages.test_stage.data.error).toBe(
+          'Data filtering failed'
+        );
+      }
+    });
+
+    it('should handle safe data copy fallback when JSON serialization fails', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:go'],
+        verbosity: 'verbose',
+      });
+
+      // Create data that will cause JSON.stringify to throw
+      const problematicData = {};
+      Object.defineProperty(problematicData, 'badProperty', {
+        get() {
+          throw new Error('Property access error');
+        },
+        enumerable: true,
+      });
+
+      trace.captureActionData('test_stage', 'core:go', problematicData);
+
+      const actionTrace = trace.getActionTrace('core:go');
+      const capturedData = actionTrace.stages.test_stage.data;
+
+      // Should have used fallback due to serialization error
+      expect(capturedData.dataError).toBe('Failed to serialize data safely');
+      expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
+        'Failed to create safe data copy, using fallback',
+        expect.any(Error)
+      );
     });
   });
 

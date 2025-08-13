@@ -13,6 +13,7 @@ describe('ActionTraceOutputService - Export Functionality', () => {
   let mockEventBus;
   let mockJsonFormatter;
   let mockHumanReadableFormatter;
+  let mockTimerService;
 
   beforeEach(() => {
     // Reset all mocks
@@ -407,6 +408,159 @@ describe('ActionTraceOutputService - Export Functionality', () => {
       expect(writtenContent[0]).toContain('Trace ID: trace-1');
       expect(writtenContent[0]).toContain('Formatted:'); // From mock formatter
     });
+
+    it('should handle export file write failures', async () => {
+      // Setup
+      const mockDirectoryHandle = {
+        name: 'export-dir',
+        getFileHandle: jest
+          .fn()
+          .mockResolvedValueOnce({
+            createWritable: jest.fn().mockResolvedValue({
+              write: jest.fn(),
+              close: jest.fn(),
+            }),
+          })
+          .mockRejectedValueOnce(new Error('Write failed')),
+      };
+
+      const mockTraces = [
+        { id: 'trace-1', timestamp: Date.now(), data: {} },
+        { id: 'trace-2', timestamp: Date.now(), data: {} },
+      ];
+
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
+
+      // Act
+      const result = await service.exportTracesToFileSystem();
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.exportedCount).toBe(1);
+      expect(result.failedCount).toBe(1);
+    });
+
+    it('should dispatch progress events during file system export', async () => {
+      // Setup
+      const mockDirectoryHandle = {
+        name: 'export-dir',
+        getFileHandle: jest.fn().mockResolvedValue({
+          createWritable: jest.fn().mockResolvedValue({
+            write: jest.fn(),
+            close: jest.fn(),
+          }),
+        }),
+      };
+
+      const mockTraces = [
+        { id: 'trace1', timestamp: Date.now(), data: { actionType: 'test1' } },
+        { id: 'trace2', timestamp: Date.now(), data: { actionType: 'test2' } },
+      ];
+
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
+
+      // Act
+      await service.exportTracesToFileSystem();
+
+      // Assert
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'TRACE_EXPORT_PROGRESS',
+          payload: expect.objectContaining({
+            progress: expect.any(Number),
+            current: expect.any(Number),
+            total: 2,
+          }),
+        })
+      );
+    });
+
+    it('should handle export with specific trace IDs', async () => {
+      // Setup
+      const mockDirectoryHandle = {
+        name: 'export-dir',
+        getFileHandle: jest.fn().mockResolvedValue({
+          createWritable: jest.fn().mockResolvedValue({
+            write: jest.fn(),
+            close: jest.fn(),
+          }),
+        }),
+      };
+
+      const mockTraces = [
+        { id: 'trace-1', timestamp: Date.now(), data: {} },
+        { id: 'trace-2', timestamp: Date.now(), data: {} },
+        { id: 'trace-3', timestamp: Date.now(), data: {} },
+      ];
+
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
+
+      // Act
+      const result = await service.exportTracesToFileSystem([
+        'trace-1',
+        'trace-3',
+      ]);
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.totalTraces).toBe(2);
+      expect(result.exportedCount).toBe(2);
+      expect(mockDirectoryHandle.getFileHandle).toHaveBeenCalledTimes(2);
+    });
+
+    it('should generate proper export file names', async () => {
+      // Setup
+      const mockDirectoryHandle = {
+        name: 'export-dir',
+        getFileHandle: jest.fn().mockResolvedValue({
+          createWritable: jest.fn().mockResolvedValue({
+            write: jest.fn(),
+            close: jest.fn(),
+          }),
+        }),
+      };
+
+      const testTimestamp = new Date('2023-01-01T12:30:45.123Z').getTime();
+      mockStorageAdapter.getItem.mockResolvedValue([
+        {
+          id: 'trace1',
+          timestamp: testTimestamp,
+          data: { actionType: 'player_action' },
+        },
+      ]);
+
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        mockDirectoryHandle
+      );
+
+      // Act
+      await service.exportTracesToFileSystem(null, 'json');
+
+      // Assert
+      const calls = mockDirectoryHandle.getFileHandle.mock.calls;
+      expect(calls[0][0]).toMatch(/player_action.*\.json$/);
+    });
   });
 
   describe('exportTracesAsDownload', () => {
@@ -426,6 +580,18 @@ describe('ActionTraceOutputService - Export Functionality', () => {
         style: {},
       };
       global.document.createElement = jest.fn(() => mockAnchor);
+
+      // Initialize missing mockTimerService for this test suite
+      mockTimerService = {
+        setTimeout: jest.fn().mockImplementation((callback, delay) => {
+          return setTimeout(callback, delay);
+        }),
+        clearTimeout: jest.fn().mockImplementation((timerId) => {
+          if (timerId) {
+            clearTimeout(timerId);
+          }
+        }),
+      };
     });
 
     it('should fall back to download when File System Access API not supported', async () => {
@@ -465,6 +631,85 @@ describe('ActionTraceOutputService - Export Functionality', () => {
       // Assert
       expect(result.success).toBe(false);
       expect(result.reason).toBe('No traces to export');
+    });
+
+    it('should create zip file when export format is supported', async () => {
+      // Setup
+      const mockTraces = [
+        {
+          id: 'trace1',
+          timestamp: Date.now(),
+          data: { actionType: 'test', data: 'content' },
+        },
+      ];
+
+      mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
+
+      // Act
+      const result = await service.exportTracesAsDownload('json');
+
+      // Assert
+      expect(result.success).toBe(true);
+      expect(result.fileName).toMatch(/action-traces-\d+\.json/);
+      expect(result.method).toBe('download');
+      expect(global.document.createElement).toHaveBeenCalledWith('a');
+    });
+
+    it('should handle different export formats correctly', async () => {
+      // Setup
+      const mockTraces = [
+        { id: 'trace1', timestamp: Date.now(), data: { actionType: 'test1' } },
+      ];
+
+      mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
+
+      // Test JSON format
+      const jsonResult = await service.exportTracesAsDownload('json');
+      expect(jsonResult.success).toBe(true);
+      expect(jsonResult.fileName).toMatch(/\.json$/);
+
+      // Test text format
+      const textResult = await service.exportTracesAsDownload('text');
+      expect(textResult.success).toBe(true);
+      expect(textResult.fileName).toMatch(/\.txt$/);
+    });
+
+    it('should handle formatter integration correctly', async () => {
+      // Setup
+      const mockTraces = [
+        { id: 'trace1', timestamp: Date.now(), data: { actionType: 'test1' } },
+      ];
+
+      mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
+
+      // Test with JSON formatter
+      const serviceWithFormatter = new ActionTraceOutputService({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        jsonFormatter: mockJsonFormatter,
+        humanReadableFormatter: mockHumanReadableFormatter,
+      });
+
+      const result = await serviceWithFormatter.exportTracesAsDownload('json');
+      expect(result.success).toBe(true);
+      expect(result.totalTraces).toBe(1);
+    });
+
+    it('should prevent concurrent download exports', async () => {
+      // Setup
+      const mockTraces = [
+        { id: 'trace1', timestamp: Date.now(), data: { actionType: 'test' } },
+      ];
+
+      mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
+
+      // Act - start two exports concurrently
+      const promise1 = service.exportTracesAsDownload();
+      const promise2 = service.exportTracesAsDownload();
+
+      // Assert
+      await expect(promise2).rejects.toThrow('Export already in progress');
+      await promise1; // Let first export complete
     });
   });
 });

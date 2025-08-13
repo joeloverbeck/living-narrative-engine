@@ -198,19 +198,24 @@ describe('Operation Handler Performance Tests', () => {
 
         // Apply statistical filtering to reduce environmental noise
         iterationTimes.sort((a, b) => a - b);
-        
+
         // Remove outliers beyond 2 standard deviations
-        const mean = iterationTimes.reduce((sum, t) => sum + t, 0) / iterationTimes.length;
+        const mean =
+          iterationTimes.reduce((sum, t) => sum + t, 0) / iterationTimes.length;
         const stdDev = Math.sqrt(
-          iterationTimes.reduce((sum, t) => sum + (t - mean) ** 2, 0) / iterationTimes.length
+          iterationTimes.reduce((sum, t) => sum + (t - mean) ** 2, 0) /
+            iterationTimes.length
         );
-        const filtered = iterationTimes.filter(t => Math.abs(t - mean) <= 2 * stdDev);
-        
+        const filtered = iterationTimes.filter(
+          (t) => Math.abs(t - mean) <= 2 * stdDev
+        );
+
         // Use median of filtered results for stability
-        const medianTime = filtered.length > 0 
-          ? filtered[Math.floor(filtered.length / 2)]
-          : mean;
-        
+        const medianTime =
+          filtered.length > 0
+            ? filtered[Math.floor(filtered.length / 2)]
+            : mean;
+
         results.push({ size, avgTime: medianTime });
 
         console.log(
@@ -238,7 +243,9 @@ describe('Operation Handler Performance Tests', () => {
       }
 
       expect(scalingFactor).toBeLessThan(maxAllowedScaling); // Should scale reasonably with statistical stability
-      console.log(`Performance scaling factor: ${scalingFactor.toFixed(2)}x (median-filtered)`);
+      console.log(
+        `Performance scaling factor: ${scalingFactor.toFixed(2)}x (median-filtered)`
+      );
     });
   });
 });

@@ -497,5 +497,30 @@ describe('ActionAwareStructuredTrace - Multi-Target Support', () => {
         relationshipCount: 1,
       });
     });
+
+    it('should include error information in scope evaluations when present', () => {
+      // Capture scope evaluation with error
+      trace.captureScopeEvaluation('test:action', 'errorTarget', {
+        scope: 'invalid.scope[]',
+        context: 'actor',
+        resultCount: 0,
+        evaluationTimeMs: 5,
+        cacheHit: false,
+        error: 'Scope evaluation failed',
+      });
+
+      const summary = trace.getMultiTargetSummary('test:action');
+
+      expect(summary.scopeEvaluations).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            targetKey: 'errorTarget',
+            scope: 'invalid.scope[]',
+            resultCount: 0,
+            error: 'Scope evaluation failed',
+          }),
+        ])
+      );
+    });
   });
 });

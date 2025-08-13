@@ -216,6 +216,23 @@ describe('ActionAwareStructuredTrace - Legacy Support', () => {
         actionTrace.stages.legacy_detection.data.timestamp
       ).toBeLessThanOrEqual(afterTime);
     });
+
+    it('should not capture legacy detection for non-traced actions', () => {
+      const actionId = 'core:not-traced'; // This action is not in tracedActions list
+      const detectionData = {
+        hasStringTargets: true,
+        hasScopeOnly: false,
+        hasLegacyFields: false,
+        detectedFormat: 'string_targets',
+        requiresConversion: true,
+      };
+
+      trace.captureLegacyDetection(actionId, detectionData);
+
+      // Should not have created an action trace for non-traced action
+      const actionTrace = trace.getActionTrace(actionId);
+      expect(actionTrace).toBeNull();
+    });
   });
 
   describe('Legacy Processing Summary', () => {

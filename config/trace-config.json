@@ -3,9 +3,9 @@
   "traceAnalysisEnabled": true,
   "actionTracing": {
     "enabled": true,
-    "tracedActions": ["intimacy:*"],
-    "outputDirectory": "./traces/intmig-migration",
-    "verbosity": "standard",
+    "tracedActions": ["sex:rub_vagina_over_clothes"],
+    "outputDirectory": "./traces/rub-vagina-debugging",
+    "verbosity": "verbose",
     "includeComponentData": true,
     "includePrerequisites": true,
     "includeTargets": true,
