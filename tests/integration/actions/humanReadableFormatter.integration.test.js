@@ -348,6 +348,10 @@ describe('HumanReadableFormatter Integration', () => {
     });
 
     it('should handle color formatting correctly', () => {
+      // Use fixed timestamp to make test deterministic
+      const fixedTimestamp = 1700000000000;
+      const fixedTimeProvider = () => fixedTimestamp;
+
       const colorFormatter = new HumanReadableFormatter(
         {
           logger: mockLogger,
@@ -355,6 +359,7 @@ describe('HumanReadableFormatter Integration', () => {
         },
         {
           enableColors: true,
+          timeProvider: fixedTimeProvider,
         }
       );
 
@@ -365,6 +370,7 @@ describe('HumanReadableFormatter Integration', () => {
         },
         {
           enableColors: false,
+          timeProvider: fixedTimeProvider,
         }
       );
 

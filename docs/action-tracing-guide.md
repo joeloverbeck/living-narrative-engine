@@ -1,124 +1,16 @@
-# ACTTRA-036: Write User Documentation
-
-## Summary
-
-Create comprehensive user documentation for the action tracing system, including configuration guides, usage examples, trace interpretation instructions, and troubleshooting tips to enable effective debugging and analysis.
-
-## Parent Issue
-
-- **Phase**: Phase 5 - Testing & Documentation
-- **Specification**: [Action Tracing System Implementation Specification](../specs/action-tracing-implementation.spec.md)
-- **Overview**: [ACTTRA-000](./ACTTRA-000-implementation-overview.md)
-
-## Description
-
-This ticket focuses on creating user-facing documentation that explains how to configure and use the action tracing system effectively. The documentation must cover configuration options, common debugging scenarios, trace file interpretation, performance considerations, and troubleshooting guides. The goal is to enable developers and mod creators to efficiently debug action-related issues.
-
-## Acceptance Criteria
-
-- [ ] User guide created at `docs/action-tracing-guide.md`
-- [ ] Configuration instructions with clear examples
-- [ ] Common use case scenarios documented
-- [ ] Trace file interpretation guide with examples
-- [ ] Troubleshooting section for common issues
-- [ ] Performance tuning recommendations
-- [ ] Quick start section for new users
-- [ ] Reference table for all configuration options
-- [ ] Best practices section
-- [ ] Documentation reviewed and validated
-
-## Technical Requirements
-
-### Document Structure
-
-```markdown
 # Action Tracing System User Guide
 
 ## Table of Contents
 
-1. Quick Start
-2. Configuration Guide
-3. Common Use Cases
-4. Interpreting Trace Files
-5. Performance Tuning
-6. Troubleshooting
-7. Best Practices
-8. Reference
+1. [Quick Start](#1-quick-start)
+2. [Configuration Guide](#2-configuration-guide)
+3. [Common Use Cases](#3-common-use-cases)
+4. [Interpreting Trace Files](#4-interpreting-trace-files)
+5. [Performance Tuning](#5-performance-tuning)
+6. [Troubleshooting](#6-troubleshooting)
+7. [Best Practices](#7-best-practices)
+8. [Reference](#8-reference)
 
-## 1. Quick Start
-
-### Enabling Action Tracing
-
-### Your First Trace
-
-### Reading the Output
-
-## 2. Configuration Guide
-
-### Basic Configuration
-
-### Advanced Options
-
-### Environment-Specific Settings
-
-## 3. Common Use Cases
-
-### Debugging a Specific Action
-
-### Monitoring Performance
-
-### Tracking Action Flow
-
-### Debugging Prerequisites
-
-### Analyzing Target Resolution
-
-## 4. Interpreting Trace Files
-
-### JSON Format Structure
-
-### Human-Readable Format
-
-### Key Fields Explained
-
-### Timeline Analysis
-
-## 5. Performance Tuning
-
-### Minimizing Overhead
-
-### Optimizing Output
-
-### Managing File Storage
-
-## 6. Troubleshooting
-
-### Common Issues and Solutions
-
-### Error Messages
-
-### Performance Problems
-
-## 7. Best Practices
-
-### Development vs Production
-
-### Security Considerations
-
-### Maintenance
-
-## 8. Reference
-
-### Configuration Options Table
-
-### Verbosity Levels
-
-### File Rotation Policies
-```
-
-### Section 1: Quick Start
-
-````markdown
 ## 1. Quick Start
 
 ### Enabling Action Tracing
@@ -131,14 +23,16 @@ To enable action tracing for your first debugging session:
 
 ```json
 {
+  "$schema": "../data/schemas/trace-config.schema.json",
+  "traceAnalysisEnabled": true,
   "actionTracing": {
     "enabled": true,
     "tracedActions": ["core:go"],
-    "outputDirectory": "./traces/actions"
+    "outputDirectory": "./traces/actions",
+    "verbosity": "standard"
   }
 }
 ```
-````
 
 3. **Run your game**: Action traces will be written to `./traces/actions/`
 
@@ -154,13 +48,15 @@ Let's trace the "go" action to see how a player moves:
     "enabled": true,
     "tracedActions": ["core:go"],
     "outputDirectory": "./traces/actions",
-    "verbosity": "standard"
+    "verbosity": "standard",
+    "includeComponentData": true,
+    "includePrerequisites": true,
+    "includeTargets": true
   }
 }
 ```
 
-When the player executes "go north", you'll see a trace file like:
-
+When the player executes "go north", you'll see trace files like:
 - `core-go_2024-01-15_10-30-00.json` - Machine-readable format
 - `core-go_2024-01-15_10-30-00.txt` - Human-readable format
 
@@ -186,11 +82,6 @@ Duration: 102ms
 Status: SUCCESS
 ```
 
-````
-
-### Section 2: Configuration Guide
-
-```markdown
 ## 2. Configuration Guide
 
 ### Basic Configuration
@@ -199,14 +90,22 @@ The action tracing system is configured in `config/trace-config.json`:
 
 ```json
 {
+  "$schema": "../data/schemas/trace-config.schema.json",
+  "traceAnalysisEnabled": true,
   "actionTracing": {
     "enabled": false,              // Master switch
     "tracedActions": [],           // Actions to trace
     "outputDirectory": "./traces/actions",  // Where to write traces
-    "verbosity": "standard"        // Detail level
+    "verbosity": "standard",       // Detail level
+    "includeComponentData": true,  // Include entity component states
+    "includePrerequisites": true,  // Include prerequisite details
+    "includeTargets": true,        // Include target resolution
+    "maxTraceFiles": 100,          // Maximum files to keep
+    "rotationPolicy": "age",       // "age" or "count"
+    "maxFileAge": 86400            // Max age in seconds (24 hours)
   }
 }
-````
+```
 
 ### Traced Actions Patterns
 
@@ -223,12 +122,12 @@ You can specify actions to trace using different patterns:
 
 Control the amount of detail captured:
 
-| Level      | Description     | Use Case                    |
-| ---------- | --------------- | --------------------------- |
-| `minimal`  | Basic info only | Production monitoring       |
-| `standard` | Balanced detail | General debugging           |
-| `detailed` | Full context    | Complex issue investigation |
-| `verbose`  | Everything      | Deep debugging              |
+| Level      | Description     | Use Case                    | Performance Impact |
+| ---------- | --------------- | --------------------------- | ------------------ |
+| `minimal`  | Basic info only | Production monitoring       | <2ms               |
+| `standard` | Balanced detail | General debugging           | <5ms               |
+| `detailed` | Full context    | Complex issue investigation | <10ms              |
+| `verbose`  | Everything      | Deep debugging              | <15ms              |
 
 ### Advanced Options
 
@@ -241,14 +140,14 @@ Control the amount of detail captured:
     "verbosity": "detailed",
 
     // Control what data to include
-    "includeComponentData": true, // Entity component states
-    "includePrerequisites": true, // Prerequisite evaluation details
-    "includeTargets": true, // Target resolution data
+    "includeComponentData": true,  // Entity component states
+    "includePrerequisites": true,  // Prerequisite evaluation details
+    "includeTargets": true,        // Target resolution data
 
     // File management
-    "maxTraceFiles": 100, // Maximum files to keep
-    "rotationPolicy": "age", // "age" or "count"
-    "maxFileAge": 86400 // Max age in seconds (24 hours)
+    "maxTraceFiles": 100,         // Maximum files to keep
+    "rotationPolicy": "age",      // "age" or "count"
+    "maxFileAge": 86400           // Max age in seconds (24 hours)
   }
 }
 ```
@@ -261,9 +160,9 @@ Control the amount of detail captured:
 {
   "actionTracing": {
     "enabled": true,
-    "tracedActions": ["*"], // Trace everything
-    "verbosity": "detailed", // Maximum detail
-    "maxTraceFiles": 500, // Keep more history
+    "tracedActions": ["*"],        // Trace everything
+    "verbosity": "detailed",       // Maximum detail
+    "maxTraceFiles": 500,          // Keep more history
     "includeComponentData": true,
     "includePrerequisites": true,
     "includeTargets": true
@@ -276,21 +175,44 @@ Control the amount of detail captured:
 ```json
 {
   "actionTracing": {
-    "enabled": false, // Disabled by default
-    "tracedActions": [], // Enable selectively
-    "verbosity": "minimal", // Reduce overhead
-    "maxTraceFiles": 10, // Limit storage
+    "enabled": false,             // Disabled by default
+    "tracedActions": [],          // Enable selectively
+    "verbosity": "minimal",       // Reduce overhead
+    "maxTraceFiles": 10,          // Limit storage
     "rotationPolicy": "age",
-    "maxFileAge": 3600 // 1 hour retention
+    "maxFileAge": 3600            // 1 hour retention
   }
 }
 ```
 
-````
+### Integration with Other Trace Features
 
-### Section 3: Common Use Cases
+The action tracing system integrates with other tracing features:
 
-```markdown
+```json
+{
+  "traceAnalysisEnabled": true,
+  "actionTracing": {
+    "enabled": true,
+    "tracedActions": ["core:*"]
+  },
+  "performanceMonitoring": {
+    "enabled": true,
+    "thresholds": {
+      "slowOperationMs": 100,
+      "criticalOperationMs": 500
+    }
+  },
+  "visualization": {
+    "enabled": true,
+    "options": {
+      "showTimings": true,
+      "showErrors": true
+    }
+  }
+}
+```
+
 ## 3. Common Use Cases
 
 ### Debugging a Specific Action
@@ -304,13 +226,13 @@ Control the amount of detail captured:
     "enabled": true,
     "tracedActions": ["core:take"],
     "verbosity": "detailed",
-    "includeTargets": true
+    "includeTargets": true,
+    "includePrerequisites": true
   }
 }
-````
+```
 
 **What to look for in the trace**:
-
 - Component filtering: Does the actor have required components?
 - Prerequisites: Are all conditions met?
 - Target resolution: Is the item being found?
@@ -321,7 +243,6 @@ Control the amount of detail captured:
 **Problem**: Actions are taking too long to execute.
 
 **Configuration**:
-
 ```json
 {
   "actionTracing": {
@@ -329,12 +250,18 @@ Control the amount of detail captured:
     "tracedActions": ["*"],
     "verbosity": "minimal",
     "outputDirectory": "./traces/performance"
+  },
+  "performanceMonitoring": {
+    "enabled": true,
+    "thresholds": {
+      "slowOperationMs": 100,
+      "criticalOperationMs": 500
+    }
   }
 }
 ```
 
 **Analysis approach**:
-
 1. Look at the `duration` field in each trace
 2. Identify stages with high latency
 3. Compare timing across different actions
@@ -345,7 +272,6 @@ Control the amount of detail captured:
 **Problem**: Understanding the complete flow from discovery to execution.
 
 **Configuration**:
-
 ```json
 {
   "actionTracing": {
@@ -360,7 +286,6 @@ Control the amount of detail captured:
 ```
 
 **Key trace sections**:
-
 - `pipeline.componentFiltering` - Initial discovery
 - `pipeline.prerequisiteEvaluation` - Condition checking
 - `pipeline.targetResolution` - Finding valid targets
@@ -372,7 +297,6 @@ Control the amount of detail captured:
 **Problem**: Action appears in menu but fails when selected.
 
 **Configuration**:
-
 ```json
 {
   "actionTracing": {
@@ -385,7 +309,6 @@ Control the amount of detail captured:
 ```
 
 **Trace analysis**:
-
 ```json
 {
   "pipeline": {
@@ -408,7 +331,6 @@ Control the amount of detail captured:
 **Problem**: Multi-target actions not finding all expected targets.
 
 **Configuration**:
-
 ```json
 {
   "actionTracing": {
@@ -421,17 +343,11 @@ Control the amount of detail captured:
 ```
 
 **What to check**:
-
 - Scope expression evaluation
 - Number of targets found vs expected
 - Target filtering criteria
 - Entity component requirements
 
-````
-
-### Section 4: Interpreting Trace Files
-
-```markdown
 ## 4. Interpreting Trace Files
 
 ### JSON Format Structure
@@ -451,9 +367,25 @@ Each trace file contains a complete record of an action's journey:
       "actorComponents": ["core:position"],
       "passed": true
     },
-    "prerequisiteEvaluation": { ... },
-    "targetResolution": { ... },
-    "formatting": { ... }
+    "prerequisiteEvaluation": {
+      "startTime": 1234567890126,
+      "duration": 5.3,
+      "prerequisites": {...},
+      "result": true
+    },
+    "targetResolution": {
+      "startTime": 1234567890132,
+      "duration": 8.7,
+      "resolvedTargets": [
+        {"id": "north", "displayName": "North"},
+        {"id": "south", "displayName": "South"}
+      ]
+    },
+    "formatting": {
+      "startTime": 1234567890141,
+      "duration": 1.2,
+      "formattedCommand": "go north"
+    }
   },
 
   "execution": {                            // Actual execution
@@ -463,7 +395,52 @@ Each trace file contains a complete record of an action's journey:
     "result": "success"
   }
 }
-````
+```
+
+### Human-Readable Format
+
+The text format provides an easier-to-read overview:
+
+```
+ACTION TRACE REPORT
+==================
+Timestamp: 2024-01-15 10:30:00.123
+Action: core:go
+Actor: player-1
+
+PIPELINE STAGES
+===============
+
+1. Component Filtering (2.5ms)
+   - Actor Components: core:position
+   - Required: core:position
+   - Result: PASSED
+
+2. Prerequisite Evaluation (5.3ms)
+   - Conditions Evaluated: 1
+   - Result: PASSED
+   - Details: All prerequisites met
+
+3. Target Resolution (8.7ms)
+   - Scope: visible_directions
+   - Targets Found: 2
+     * north (direction) - "North"
+     * south (direction) - "South"
+
+4. Action Formatting (1.2ms)
+   - Template: "go {direction}"
+   - Formatted: "go north"
+   - Display: "Go North"
+
+EXECUTION
+=========
+Duration: 102ms
+Status: SUCCESS
+Event Type: ATTEMPT_ACTION
+
+Total Pipeline Time: 17.7ms
+Total Execution Time: 119.7ms
+```
 
 ### Key Fields Explained
 
@@ -479,9 +456,7 @@ Each trace file contains a complete record of an action's journey:
 ### Understanding Pipeline Stages
 
 #### Component Filtering
-
 Shows if the actor has required components:
-
 ```json
 {
   "componentFiltering": {
@@ -493,9 +468,7 @@ Shows if the actor has required components:
 ```
 
 #### Prerequisite Evaluation
-
 Details condition checking:
-
 ```json
 {
   "prerequisiteEvaluation": {
@@ -509,16 +482,14 @@ Details condition checking:
 ```
 
 #### Target Resolution
-
 Shows what targets were found:
-
 ```json
 {
   "targetResolution": {
     "scopeExpression": "visible_enemies",
     "resolvedTargets": [
-      { "id": "goblin-1", "name": "Goblin Scout" },
-      { "id": "goblin-2", "name": "Goblin Warrior" }
+      { "id": "goblin-1", "displayName": "Goblin Scout" },
+      { "id": "goblin-2", "displayName": "Goblin Warrior" }
     ],
     "targetCount": 2
   }
@@ -540,17 +511,11 @@ Execution Time: 102ms
 Total Time: 119.7ms
 ```
 
-Red flags to watch for:
-
+**Red flags to watch for**:
 - Pipeline time > 50ms
 - Execution time > 200ms
 - Any single stage > 20ms
 
-````
-
-### Section 5: Performance Tuning
-
-```markdown
 ## 5. Performance Tuning
 
 ### Minimizing Overhead
@@ -573,12 +538,10 @@ Instead of tracing all actions:
 {
   "tracedActions": ["core:problematic_action"]  // Just what you need
 }
-````
+```
 
 #### 2. Reduce Verbosity
-
 Lower detail levels for production:
-
 ```json
 {
   "verbosity": "minimal",
@@ -588,9 +551,7 @@ Lower detail levels for production:
 ```
 
 #### 3. Limit File Retention
-
 Manage disk usage:
-
 ```json
 {
   "maxTraceFiles": 50,
@@ -602,9 +563,7 @@ Manage disk usage:
 ### Managing File Storage
 
 #### Automatic Rotation
-
 Files are automatically rotated based on your policy:
-
 - **Age-based**: Deletes files older than `maxFileAge` seconds
 - **Count-based**: Keeps only the latest `maxTraceFiles` files
 
@@ -618,20 +577,13 @@ Files are automatically rotated based on your policy:
 | verbose   | ~30KB         | 100        | ~72MB       |
 
 #### Cleanup Script
-
 For manual cleanup:
-
 ```bash
 # Delete traces older than 24 hours
 find ./traces/actions -name "*.json" -mtime +1 -delete
 find ./traces/actions -name "*.txt" -mtime +1 -delete
 ```
 
-````
-
-### Section 6: Troubleshooting
-
-```markdown
 ## 6. Troubleshooting
 
 ### Common Issues and Solutions
@@ -645,28 +597,28 @@ find ./traces/actions -name "*.txt" -mtime +1 -delete
 2. Are `tracedActions` configured correctly?
 3. Does the output directory exist and have write permissions?
 4. Is the action actually being executed?
+5. Is `traceAnalysisEnabled` set to `true` at the top level?
 
 **Debug configuration**:
 ```json
 {
+  "traceAnalysisEnabled": true,
   "actionTracing": {
     "enabled": true,
     "tracedActions": ["*"],  // Trace everything temporarily
     "verbosity": "verbose"
   }
 }
-````
+```
 
 #### High Memory Usage
 
 **Symptoms**: Memory consumption increases over time
 
 **Solutions**:
-
 1. Reduce verbosity level
 2. Disable component data inclusion
 3. Implement more aggressive rotation:
-
 ```json
 {
   "maxTraceFiles": 20,
@@ -679,11 +631,9 @@ find ./traces/actions -name "*.txt" -mtime +1 -delete
 **Symptoms**: Game slows down with tracing enabled
 
 **Solutions**:
-
 1. Trace specific actions only
 2. Use minimal verbosity
 3. Disable non-essential data:
-
 ```json
 {
   "verbosity": "minimal",
@@ -692,6 +642,16 @@ find ./traces/actions -name "*.txt" -mtime +1 -delete
   "includeTargets": false
 }
 ```
+
+#### Invalid Configuration
+
+**Symptoms**: Tracing doesn't start or errors in logs
+
+**Check**:
+- JSON syntax is valid
+- Schema validation passes
+- File paths are accessible
+- Action ID patterns are correct
 
 ### Error Messages
 
@@ -705,25 +665,18 @@ find ./traces/actions -name "*.txt" -mtime +1 -delete
 ### Debugging the Tracer Itself
 
 Enable debug logging for the trace system:
-
 ```javascript
 // In your initialization code
 logger.setLevel('debug');
 ```
 
 Check the game logs for trace-related messages:
-
 ```
 [DEBUG] ActionTraceFilter: Initialized with 3 traced actions
 [DEBUG] ActionTraceOutputService: Writing trace for core:go
 [ERROR] ActionTraceOutputService: Failed to write trace: ENOENT
 ```
 
-````
-
-### Section 7: Best Practices
-
-```markdown
 ## 7. Best Practices
 
 ### Development vs Production
@@ -795,11 +748,7 @@ Check the game logs for trace-related messages:
    - Share trace files with team
    - Use consistent configuration
    - Document findings in traces
-````
 
-### Section 8: Reference
-
-```markdown
 ## 8. Reference
 
 ### Configuration Options Table
@@ -830,9 +779,7 @@ Check the game logs for trace-related messages:
 
 Trace files follow this pattern:
 ```
-
-{actionId}\_{timestamp}.{format}
-
+{actionId}_{timestamp}.{format}
 ```
 
 Examples:
@@ -852,14 +799,12 @@ Examples:
 ### Output Directory Structure
 
 ```
-
 traces/
 └── actions/
-├── core-go_2024-01-15_10-30-00.json
-├── core-go_2024-01-15_10-30-00.txt
-├── core-take_2024-01-15_10-31-45.json
-└── core-take_2024-01-15_10-31-45.txt
-
+    ├── core-go_2024-01-15_10-30-00.json
+    ├── core-go_2024-01-15_10-30-00.txt
+    ├── core-take_2024-01-15_10-31-45.json
+    └── core-take_2024-01-15_10-31-45.txt
 ```
 
 ### Trace File Size Estimates
@@ -870,7 +815,6 @@ traces/
 | Multi-target | 2KB | 5KB | 15KB | 30KB |
 | Complex prerequisites | 2KB | 6KB | 20KB | 40KB |
 | With errors | 3KB | 7KB | 25KB | 50KB |
-```
 
 ## Appendix A: Sample Configurations
 
@@ -878,6 +822,7 @@ traces/
 
 ```json
 {
+  "traceAnalysisEnabled": true,
   "actionTracing": {
     "enabled": true,
     "tracedActions": ["my_mod:*"],
@@ -895,6 +840,7 @@ traces/
 
 ```json
 {
+  "traceAnalysisEnabled": true,
   "actionTracing": {
     "enabled": true,
     "tracedActions": ["*"],
@@ -905,6 +851,13 @@ traces/
     "includeTargets": false,
     "maxTraceFiles": 1000,
     "rotationPolicy": "count"
+  },
+  "performanceMonitoring": {
+    "enabled": true,
+    "thresholds": {
+      "slowOperationMs": 50,
+      "criticalOperationMs": 200
+    }
   }
 }
 ```
@@ -913,6 +866,7 @@ traces/
 
 ```json
 {
+  "traceAnalysisEnabled": true,
   "actionTracing": {
     "enabled": true,
     "tracedActions": ["core:problematic_action"],
@@ -944,5 +898,5 @@ traces/
 ---
 
 **Document Version**: 1.0.0  
-**Last Updated**: 2024-01-15  
-**For System Version**: 1.0.0+
+**Last Updated**: 2025-01-13  
+**For System Version**: Current

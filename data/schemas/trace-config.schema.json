@@ -5,6 +5,10 @@
   "description": "Complete schema for trace configuration including analysis, performance monitoring, visualization, and action tracing",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference URI"
+    },
     "traceAnalysisEnabled": {
       "type": "boolean",
       "description": "Whether trace analysis tools should be enabled",

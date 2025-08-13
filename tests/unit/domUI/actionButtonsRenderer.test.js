@@ -324,22 +324,28 @@ describe('ActionButtonsRenderer', () => {
 
     it('should throw and log error if actionButtonsContainerSelector is empty string', () => {
       const expectedError = `${CLASS_PREFIX} 'actionButtonsContainerSelector' is required and must be a non-empty string.`;
-      
-      expect(() => createRenderer({ actionButtonsContainerSelector: '' })).toThrow(expectedError);
+
+      expect(() =>
+        createRenderer({ actionButtonsContainerSelector: '' })
+      ).toThrow(expectedError);
       expect(mockLogger.error).toHaveBeenCalledWith(expectedError);
     });
 
     it('should throw and log error if actionButtonsContainerSelector is null', () => {
       const expectedError = `${CLASS_PREFIX} 'actionButtonsContainerSelector' is required and must be a non-empty string.`;
-      
-      expect(() => createRenderer({ actionButtonsContainerSelector: null })).toThrow(expectedError);
+
+      expect(() =>
+        createRenderer({ actionButtonsContainerSelector: null })
+      ).toThrow(expectedError);
       expect(mockLogger.error).toHaveBeenCalledWith(expectedError);
     });
 
     it('should throw and log error if actionButtonsContainerSelector is not a string', () => {
       const expectedError = `${CLASS_PREFIX} 'actionButtonsContainerSelector' is required and must be a non-empty string.`;
-      
-      expect(() => createRenderer({ actionButtonsContainerSelector: 123 })).toThrow(expectedError);
+
+      expect(() =>
+        createRenderer({ actionButtonsContainerSelector: 123 })
+      ).toThrow(expectedError);
       expect(mockLogger.error).toHaveBeenCalledWith(expectedError);
     });
 
@@ -797,10 +803,15 @@ describe('ActionButtonsRenderer', () => {
     it('should return null if renderer is disposed', () => {
       // Dispose the renderer first
       renderer.dispose();
-      
-      const validAction = createTestComposite(1, 'core:test', 'Test', 'Test action');
+
+      const validAction = createTestComposite(
+        1,
+        'core:test',
+        'Test',
+        'Test action'
+      );
       const result = renderer._renderListItem(validAction);
-      
+
       expect(result).toBeNull();
     });
 
@@ -809,12 +820,12 @@ describe('ActionButtonsRenderer', () => {
         index: 1,
         commandString: 'Test Command',
         description: 'Test description',
-        params: {}
+        params: {},
       };
-      
+
       mockLogger.warn.mockClear();
       const result = renderer._renderListItem(invalidAction);
-      
+
       expect(result).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Skipping invalid action composite in _renderListItem: `,
@@ -828,12 +839,12 @@ describe('ActionButtonsRenderer', () => {
         actionId: '  ',
         commandString: 'Test Command',
         description: 'Test description',
-        params: {}
+        params: {},
       };
-      
+
       mockLogger.warn.mockClear();
       const result = renderer._renderListItem(invalidAction);
-      
+
       expect(result).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Skipping invalid action composite in _renderListItem: `,
@@ -847,12 +858,12 @@ describe('ActionButtonsRenderer', () => {
         actionId: 'test:action',
         commandString: '',
         description: 'Test description',
-        params: {}
+        params: {},
       };
-      
+
       mockLogger.warn.mockClear();
       const result = renderer._renderListItem(invalidAction);
-      
+
       expect(result).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Skipping invalid action composite in _renderListItem: `,
@@ -861,14 +872,19 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should log error and return null when domElementFactory.button fails', () => {
-      const validAction = createTestComposite(1, 'core:test', 'Test', 'Test action');
-      
+      const validAction = createTestComposite(
+        1,
+        'core:test',
+        'Test',
+        'Test action'
+      );
+
       // Mock button creation to return null
       mockDomElementFactoryInstance.button.mockReturnValue(null);
       mockLogger.error.mockClear();
-      
+
       const result = renderer._renderListItem(validAction);
-      
+
       expect(result).toBeNull();
       expect(mockLogger.error).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Failed to create button element for action composite:`,
@@ -888,7 +904,7 @@ describe('ActionButtonsRenderer', () => {
         }
         return jest.fn();
       });
-      
+
       renderer = createRenderer();
       jest.spyOn(renderer, 'renderList');
     });
@@ -897,12 +913,12 @@ describe('ActionButtonsRenderer', () => {
       // Set up some actions
       const actions = [
         createTestComposite(1, 'core:test1', 'Test 1', 'Test action 1'),
-        createTestComposite(2, 'core:test2', 'Test 2', 'Test action 2')
+        createTestComposite(2, 'core:test2', 'Test 2', 'Test action 2'),
       ];
 
       const eventObject = {
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'test-actor', actions }
+        payload: { actorId: 'test-actor', actions },
       };
 
       await capturedUpdateActionsHandler(eventObject);
@@ -910,32 +926,39 @@ describe('ActionButtonsRenderer', () => {
       // Find a button and simulate click with wrong index
       const container = actionButtonsContainerElement;
       const buttons = container.querySelectorAll('button.action-button');
-      
+
       // Manually trigger the click handler with an index that doesn't exist
       mockLogger.error.mockClear();
-      
+
       // Simulate clicking but then removing that action from availableActions
       renderer.availableActions = []; // Clear actions to simulate not found scenario
-      
+
       // Create a mock button with the expected data attribute
       const mockButton = createMockElement(document, 'button');
-      const dataAttrName = 'actionIndex'.replace(/([A-Z])/g, '-$1').toLowerCase();
+      const dataAttrName = 'actionIndex'
+        .replace(/([A-Z])/g, '-$1')
+        .toLowerCase();
       mockButton.setAttribute(`data-${dataAttrName}`, '1');
-      
+
       // Simulate the click event manually to cover the error path
       const clickEvent = new dom.window.Event('click');
       mockButton.dispatchEvent = jest.fn();
-      
+
       // Manually call the click handler logic with missing action
       const clickedActionIndex = 1;
-      const clickedAction = renderer.availableActions.find(c => c.index === clickedActionIndex);
-      
+      const clickedAction = renderer.availableActions.find(
+        (c) => c.index === clickedActionIndex
+      );
+
       if (!clickedAction) {
-        mockLogger.error(`${CLASS_PREFIX} Critical: Clicked action button with index '${clickedActionIndex}' but could not find corresponding composite.`, {
-          clickedActionIndex
-        });
+        mockLogger.error(
+          `${CLASS_PREFIX} Critical: Clicked action button with index '${clickedActionIndex}' but could not find corresponding composite.`,
+          {
+            clickedActionIndex,
+          }
+        );
       }
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Critical: Clicked action button with index '1' but could not find corresponding composite.`,
         { clickedActionIndex: 1 }
@@ -943,21 +966,23 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should return early from click handler when renderer is disposed', async () => {
-      const actions = [createTestComposite(1, 'core:test', 'Test', 'Test action')];
+      const actions = [
+        createTestComposite(1, 'core:test', 'Test', 'Test action'),
+      ];
       const eventObject = {
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'test-actor', actions }
+        payload: { actorId: 'test-actor', actions },
       };
 
       await capturedUpdateActionsHandler(eventObject);
-      
+
       // Dispose the renderer
       renderer.dispose();
-      
+
       // Try to trigger click - should return early without processing
       const container = actionButtonsContainerElement;
       const button = container.querySelector('button.action-button');
-      
+
       if (button) {
         // The button should exist but clicking it should do nothing due to disposal check
         await button.click();
@@ -975,22 +1000,29 @@ describe('ActionButtonsRenderer', () => {
 
     it('should handle _onItemSelected with null element and data', () => {
       mockLogger.debug.mockClear();
-      
+
       renderer._onItemSelected(null, null);
-      
+
       expect(renderer.selectedAction).toBeNull();
       expect(renderer.elements.sendButtonElement.disabled).toBe(true);
-      expect(mockLogger.debug).toHaveBeenCalledWith(`${CLASS_PREFIX} Action deselected.`);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `${CLASS_PREFIX} Action deselected.`
+      );
     });
 
     it('should handle _onItemSelected with valid action data', () => {
       const mockButton = createMockElement(document, 'button');
-      const actionData = createTestComposite(1, 'core:test', 'Test', 'Test action');
-      
+      const actionData = createTestComposite(
+        1,
+        'core:test',
+        'Test',
+        'Test action'
+      );
+
       mockLogger.debug.mockClear();
-      
+
       renderer._onItemSelected(mockButton, actionData);
-      
+
       expect(renderer.selectedAction).toBe(actionData);
       expect(renderer.elements.sendButtonElement.disabled).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -1009,11 +1041,11 @@ describe('ActionButtonsRenderer', () => {
     it('should handle error when listContainerElement is missing', async () => {
       // Remove the list container element
       renderer.elements.listContainerElement = null;
-      
+
       mockLogger.error.mockClear();
-      
+
       await renderer.renderList();
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Cannot render list: 'listContainerElement' is not available.`
       );
@@ -1021,17 +1053,17 @@ describe('ActionButtonsRenderer', () => {
 
     it('should handle error from _getListItemsData and display error message', async () => {
       const testError = new Error('Test data fetch error');
-      
+
       jest.spyOn(renderer, '_getListItemsData').mockRejectedValue(testError);
       mockLogger.error.mockClear();
-      
+
       await renderer.renderList();
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Error fetching list data:`,
         testError
       );
-      
+
       // Check that error message element was added
       const container = actionButtonsContainerElement;
       const errorElement = container.querySelector('.error-message');
@@ -1040,13 +1072,19 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should handle empty message as HTMLElement instead of string', async () => {
-      const mockElement = createMockElement(document, 'div', '', [], 'Custom empty message');
-      
+      const mockElement = createMockElement(
+        document,
+        'div',
+        '',
+        [],
+        'Custom empty message'
+      );
+
       jest.spyOn(renderer, '_getEmptyListMessage').mockReturnValue(mockElement);
       jest.spyOn(renderer, '_getListItemsData').mockResolvedValue([]);
-      
+
       await renderer.renderList();
-      
+
       const container = actionButtonsContainerElement;
       expect(container.contains(mockElement)).toBe(true);
     });
@@ -1063,60 +1101,66 @@ describe('ActionButtonsRenderer', () => {
         }
         return jest.fn();
       });
-      
+
       renderer = createRenderer();
     });
 
     it('should handle animation end event cleanup', async () => {
-      const actions = [createTestComposite(1, 'core:test', 'Test', 'Test action')];
+      const actions = [
+        createTestComposite(1, 'core:test', 'Test', 'Test action'),
+      ];
       const eventObject = {
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'test-actor', actions }
+        payload: { actorId: 'test-actor', actions },
       };
 
       await capturedUpdateActionsHandler(eventObject);
-      
+
       const container = actionButtonsContainerElement;
-      
+
       // Simulate animation end event
       const animationEndEvent = new dom.window.Event('animationend');
       container.dispatchEvent(animationEndEvent);
-      
+
       // The fade-in class should be removed
-      expect(container.classList.contains(ActionButtonsRenderer.FADE_IN_CLASS)).toBe(false);
+      expect(
+        container.classList.contains(ActionButtonsRenderer.FADE_IN_CLASS)
+      ).toBe(false);
     });
 
     it('should clear selection when previously selected action is no longer available', async () => {
       // First, set up actions and select one
       const actions = [
         createTestComposite(1, 'core:test1', 'Test 1', 'Test action 1'),
-        createTestComposite(2, 'core:test2', 'Test 2', 'Test action 2')
+        createTestComposite(2, 'core:test2', 'Test 2', 'Test action 2'),
       ];
 
       let eventObject = {
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'test-actor', actions }
+        payload: { actorId: 'test-actor', actions },
       };
 
       await capturedUpdateActionsHandler(eventObject);
-      
+
       // Select an action by clicking it
       const container = actionButtonsContainerElement;
       const button = container.querySelector('button.action-button');
       await button.click();
-      
+
       expect(renderer.selectedAction).toBe(actions[0]);
-      
+
       // Now call the private _onListRendered method directly to test the logic
       // This simulates what happens when a new list is rendered
       mockLogger.debug.mockClear();
-      
+
       // Create new actions data without the previously selected action
-      const newActionsData = [createTestComposite(3, 'core:test3', 'Test 3', 'Test action 3')];
-      
+      const newActionsData = [
+        createTestComposite(3, 'core:test3', 'Test 3', 'Test action 3'),
+      ];
+
       // Call _onListRendered directly with new data that doesn't contain selected action
       renderer._onListRendered(newActionsData, container);
-      
+
       expect(renderer.selectedAction).toBeNull();
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Previously selected action is no longer available. Selection cleared.`
@@ -1126,32 +1170,32 @@ describe('ActionButtonsRenderer', () => {
     it('should re-select previously selected action if still available', async () => {
       const actions = [
         createTestComposite(1, 'core:test1', 'Test 1', 'Test action 1'),
-        createTestComposite(2, 'core:test2', 'Test 2', 'Test action 2')
+        createTestComposite(2, 'core:test2', 'Test 2', 'Test action 2'),
       ];
 
       const eventObject = {
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'test-actor', actions }
+        payload: { actorId: 'test-actor', actions },
       };
 
       await capturedUpdateActionsHandler(eventObject);
-      
+
       // Select an action by clicking it
       const container = actionButtonsContainerElement;
       const button = container.querySelector('button.action-button');
       await button.click();
-      
+
       expect(renderer.selectedAction).toBe(actions[0]);
-      
+
       // Spy on _selectItem to verify it's called
       jest.spyOn(renderer, '_selectItem');
-      
+
       // Call _onListRendered directly with same actions data
       renderer._onListRendered(actions, container);
-      
+
       // The action should still be selected (not null but same action)
       expect(renderer.selectedAction).toBe(actions[0]);
-      
+
       // _selectItem should have been called to re-select the button
       expect(renderer._selectItem).toHaveBeenCalledWith(
         expect.any(Object), // the button element
@@ -1171,28 +1215,30 @@ describe('ActionButtonsRenderer', () => {
         }
         return jest.fn();
       });
-      
+
       renderer = createRenderer();
       mockVed.dispatch.mockClear().mockResolvedValue(true);
     });
 
     it('should return early if renderer is disposed', async () => {
       // First set up a valid state
-      const actions = [createTestComposite(1, 'core:test', 'Test', 'Test action')];
+      const actions = [
+        createTestComposite(1, 'core:test', 'Test', 'Test action'),
+      ];
       const eventObject = {
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'test-actor', actions }
+        payload: { actorId: 'test-actor', actions },
       };
       await capturedUpdateActionsHandler(eventObject);
-      
+
       // Select an action
       const container = actionButtonsContainerElement;
       const button = container.querySelector('button.action-button');
       await button.click();
-      
+
       // Now dispose the renderer
       renderer.dispose();
-      
+
       // The elements should be null after dispose, so we can't call click
       // The disposal check happens inside the private handler method
       // We'll verify the dispose cleared the state
@@ -1203,24 +1249,29 @@ describe('ActionButtonsRenderer', () => {
     it('should return early and log error if sendButtonElement is null', async () => {
       // Remove the send button element
       renderer.elements.sendButtonElement = null;
-      
+
       mockLogger.error.mockClear();
-      
+
       // Manually call the handler since there's no button to click
-      await renderer['_handleSendAction'] ? renderer['_handleSendAction']() : 
-            renderer[Object.getOwnPropertyNames(renderer).find(name => name.includes('handleSendAction'))]?.();
-      
+      (await renderer['_handleSendAction'])
+        ? renderer['_handleSendAction']()
+        : renderer[
+            Object.getOwnPropertyNames(renderer).find((name) =>
+              name.includes('handleSendAction')
+            )
+          ]?.();
+
       // The method is private, so we'll test through the scenarios it would be called
     });
 
     it('should warn and disable button if no action is selected', async () => {
       renderer.selectedAction = null;
       renderer.elements.sendButtonElement.disabled = false;
-      
+
       mockLogger.warn.mockClear();
-      
+
       await renderer.elements.sendButtonElement.click();
-      
+
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `${CLASS_PREFIX} 'Confirm Action' clicked, but no action is selected.`
       );
@@ -1231,74 +1282,80 @@ describe('ActionButtonsRenderer', () => {
       const action = createTestComposite(1, 'core:test', 'Test', 'Test action');
       renderer.selectedAction = action;
       renderer['_setTestCurrentActorId'](null); // Clear actor ID
-      
+
       mockLogger.error.mockClear();
-      
+
       await renderer.elements.sendButtonElement.click();
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         `${CLASS_PREFIX} #handleSendAction: Cannot send action, currentActorId is not set.`
       );
     });
 
     it('should handle successful action dispatch with speech input', async () => {
-      const actions = [createTestComposite(1, 'core:test', 'Test Command', 'Test action')];
+      const actions = [
+        createTestComposite(1, 'core:test', 'Test Command', 'Test action'),
+      ];
       const eventObject = {
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'test-actor', actions }
+        payload: { actorId: 'test-actor', actions },
       };
 
       await capturedUpdateActionsHandler(eventObject);
-      
+
       // Select the action
       const container = actionButtonsContainerElement;
       const button = container.querySelector('button.action-button');
       await button.click();
-      
+
       // Set speech input value
       renderer.elements.speechInputElement.value = 'Hello there!';
-      
+
       mockLogger.debug.mockClear();
-      
+
       await renderer.elements.sendButtonElement.click();
-      
+
       expect(mockVed.dispatch).toHaveBeenCalledWith(
         'core:player_turn_submitted',
         {
           submittedByActorId: 'test-actor',
           chosenIndex: 1,
-          speech: 'Hello there!'
+          speech: 'Hello there!',
         }
       );
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`${CLASS_PREFIX} Attempting to send action: 'Test Command' (Index: 1) for actor test-actor, Speech: "Hello there!"`)
+        expect.stringContaining(
+          `${CLASS_PREFIX} Attempting to send action: 'Test Command' (Index: 1) for actor test-actor, Speech: "Hello there!"`
+        )
       );
-      
+
       // Speech input should be cleared
       expect(renderer.elements.speechInputElement.value).toBe('');
     });
 
     it('should handle dispatch failure', async () => {
-      const actions = [createTestComposite(1, 'core:test', 'Test Command', 'Test action')];
+      const actions = [
+        createTestComposite(1, 'core:test', 'Test Command', 'Test action'),
+      ];
       const eventObject = {
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'test-actor', actions }
+        payload: { actorId: 'test-actor', actions },
       };
 
       await capturedUpdateActionsHandler(eventObject);
-      
+
       // Select the action
       const container = actionButtonsContainerElement;
       const button = container.querySelector('button.action-button');
       await button.click();
-      
+
       // Mock dispatch to return false (failure)
       mockVed.dispatch.mockResolvedValue(false);
       mockLogger.error.mockClear();
-      
+
       await renderer.elements.sendButtonElement.click();
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Failed to dispatch 'core:player_turn_submitted' for action index '1'.`,
         { payload: expect.any(Object) }
@@ -1306,25 +1363,27 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should handle dispatch exception', async () => {
-      const actions = [createTestComposite(1, 'core:test', 'Test Command', 'Test action')];
+      const actions = [
+        createTestComposite(1, 'core:test', 'Test Command', 'Test action'),
+      ];
       const eventObject = {
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'test-actor', actions }
+        payload: { actorId: 'test-actor', actions },
       };
 
       await capturedUpdateActionsHandler(eventObject);
-      
+
       // Select the action
       const container = actionButtonsContainerElement;
       const button = container.querySelector('button.action-button');
       await button.click();
-      
+
       const testError = new Error('Dispatch failed');
       mockVed.dispatch.mockRejectedValue(testError);
       mockLogger.error.mockClear();
-      
+
       await renderer.elements.sendButtonElement.click();
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Exception during dispatch for 'core:player_turn_submitted'.`,
         { error: testError, payload: expect.any(Object) }
@@ -1332,37 +1391,39 @@ describe('ActionButtonsRenderer', () => {
     });
 
     it('should handle missing speech input element gracefully', async () => {
-      const actions = [createTestComposite(1, 'core:test', 'Test Command', 'Test action')];
+      const actions = [
+        createTestComposite(1, 'core:test', 'Test Command', 'Test action'),
+      ];
       const eventObject = {
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'test-actor', actions }
+        payload: { actorId: 'test-actor', actions },
       };
 
       await capturedUpdateActionsHandler(eventObject);
-      
+
       // Select the action
       const container = actionButtonsContainerElement;
       const button = container.querySelector('button.action-button');
       await button.click();
-      
+
       // Remove speech input element
       renderer.elements.speechInputElement = null;
-      
+
       mockLogger.debug.mockClear();
-      
+
       await renderer.elements.sendButtonElement.click();
-      
+
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `${CLASS_PREFIX} No speech input element available.`
       );
-      
+
       // Should still dispatch with null speech
       expect(mockVed.dispatch).toHaveBeenCalledWith(
         'core:player_turn_submitted',
         {
           submittedByActorId: 'test-actor',
           chosenIndex: 1,
-          speech: null
+          speech: null,
         }
       );
     });
@@ -1377,16 +1438,20 @@ describe('ActionButtonsRenderer', () => {
 
     it('should return early if already disposed', () => {
       mockLogger.debug.mockClear();
-      
+
       renderer.dispose();
       renderer.dispose(); // Call again
-      
+
       // Should only log disposal once
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`${CLASS_PREFIX} Disposing ActionButtonsRenderer.`)
+        expect.stringContaining(
+          `${CLASS_PREFIX} Disposing ActionButtonsRenderer.`
+        )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`${CLASS_PREFIX} ActionButtonsRenderer disposed.`)
+        expect.stringContaining(
+          `${CLASS_PREFIX} ActionButtonsRenderer disposed.`
+        )
       );
     });
 
@@ -1395,13 +1460,13 @@ describe('ActionButtonsRenderer', () => {
       const container = renderer.elements.listContainerElement;
       const testElement = document.createElement('div');
       container.appendChild(testElement);
-      
+
       expect(container.children.length).toBeGreaterThan(0);
-      
+
       mockLogger.debug.mockClear();
-      
+
       renderer.dispose();
-      
+
       expect(container.children.length).toBe(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Cleared listContainerElement content during dispose.`
@@ -1413,9 +1478,9 @@ describe('ActionButtonsRenderer', () => {
       renderer.selectedAction = action;
       renderer.availableActions = [action];
       renderer._setTestCurrentActorId('test-actor');
-      
+
       renderer.dispose();
-      
+
       expect(renderer.selectedAction).toBeNull();
       expect(renderer.availableActions).toEqual([]);
       expect(renderer._getTestCurrentActorId()).toBeNull();
@@ -1431,10 +1496,10 @@ describe('ActionButtonsRenderer', () => {
 
     it('should get and set test current actor ID', () => {
       expect(renderer._getTestCurrentActorId()).toBeNull();
-      
+
       renderer._setTestCurrentActorId('test-actor-123');
       expect(renderer._getTestCurrentActorId()).toBe('test-actor-123');
-      
+
       renderer._setTestCurrentActorId(null);
       expect(renderer._getTestCurrentActorId()).toBeNull();
     });
@@ -1451,7 +1516,7 @@ describe('ActionButtonsRenderer', () => {
         }
         return jest.fn();
       });
-      
+
       renderer = createRenderer();
       jest.spyOn(renderer, 'refreshList');
     });
@@ -1459,17 +1524,19 @@ describe('ActionButtonsRenderer', () => {
     it('should handle error in refreshList during handleUpdateActions', async () => {
       const testError = new Error('Refresh list failed');
       renderer.refreshList.mockRejectedValue(testError);
-      
-      const actions = [createTestComposite(1, 'core:test', 'Test', 'Test action')];
+
+      const actions = [
+        createTestComposite(1, 'core:test', 'Test', 'Test action'),
+      ];
       const eventObject = {
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'test-actor', actions }
+        payload: { actorId: 'test-actor', actions },
       };
 
       mockLogger.error.mockClear();
-      
+
       await capturedUpdateActionsHandler(eventObject);
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         `${CLASS_PREFIX} Error refreshing list in #handleUpdateActions:`,
         testError

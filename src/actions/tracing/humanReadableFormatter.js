@@ -33,6 +33,7 @@ export class HumanReadableFormatter {
   #enableColors;
   #lineWidth;
   #indentSize;
+  #timeProvider;
 
   /**
    * Constructor
@@ -41,6 +42,7 @@ export class HumanReadableFormatter {
    * @param {ILogger} dependencies.logger - Logger service
    * @param {IActionTraceFilter} dependencies.actionTraceFilter - Trace filter
    * @param {object} options - Formatter options
+   * @param {Function} options.timeProvider - Function to get current time (defaults to Date.now)
    */
   constructor({ logger, actionTraceFilter }, options = {}) {
     this.#logger = ensureValidLogger(logger, 'HumanReadableFormatter');
@@ -53,6 +55,7 @@ export class HumanReadableFormatter {
     this.#enableColors = options.enableColors || false;
     this.#lineWidth = options.lineWidth || 80;
     this.#indentSize = options.indentSize || 2;
+    this.#timeProvider = options.timeProvider || (() => Date.now());
   }
 
   /**
@@ -210,7 +213,7 @@ export class HumanReadableFormatter {
     sections.push(
       this.#createSection('Summary', [
         ['Total Actions', tracedActions.size],
-        ['Timestamp', this.#formatTimestamp(Date.now())],
+        ['Timestamp', this.#formatTimestamp(this.#timeProvider())],
         ['Trace Type', 'Pipeline'],
       ])
     );
@@ -444,7 +447,7 @@ export class HumanReadableFormatter {
     lines.push(this.#createSeparator('═'));
     lines.push(this.#center(this.#color(title, Colors.BOLD)));
     lines.push(this.#createSeparator('═'));
-    lines.push(`Generated: ${new Date().toISOString()}`);
+    lines.push(`Generated: ${new Date(this.#timeProvider()).toISOString()}`);
     lines.push('');
     return lines.join('\n');
   }
@@ -671,7 +674,7 @@ export class HumanReadableFormatter {
 
     if (relative) {
       // Return relative time format
-      const now = Date.now();
+      const now = this.#timeProvider();
       const diff = now - timestamp;
       return `+${this.#formatDuration(diff)}`;
     }
