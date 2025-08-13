@@ -321,13 +321,11 @@ describe('ActionTraceOutputService - Export Functionality', () => {
 
       // Assert
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'TRACE_EXPORT_PROGRESS',
         expect.objectContaining({
-          type: 'TRACE_EXPORT_PROGRESS',
-          payload: expect.objectContaining({
-            progress: expect.any(Number),
-            current: expect.any(Number),
-            total: 2,
-          }),
+          progress: expect.any(Number),
+          current: expect.any(Number),
+          total: 2,
         })
       );
     });
@@ -476,13 +474,11 @@ describe('ActionTraceOutputService - Export Functionality', () => {
 
       // Assert
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'TRACE_EXPORT_PROGRESS',
         expect.objectContaining({
-          type: 'TRACE_EXPORT_PROGRESS',
-          payload: expect.objectContaining({
-            progress: expect.any(Number),
-            current: expect.any(Number),
-            total: 2,
-          }),
+          progress: expect.any(Number),
+          current: expect.any(Number),
+          total: 2,
         })
       );
     });

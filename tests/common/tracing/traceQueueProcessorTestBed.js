@@ -454,8 +454,9 @@ export class TraceQueueProcessorTestBed {
     }
 
     return this.mockEventBus.dispatch.mock.calls.some((call) => {
-      const event = call[0];
-      return event && event.type === eventType;
+      // After fix: first argument is the event type string
+      const eventName = call[0];
+      return eventName === eventType;
     });
   }
 

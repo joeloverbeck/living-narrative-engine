@@ -444,18 +444,16 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
 
     // Override dispatch method to track events
     const originalDispatch = baseEventBus.dispatch.bind(baseEventBus);
-    baseEventBus.dispatch = (event) => {
+    baseEventBus.dispatch = jest.fn((eventName, payload = {}) => {
+      // Store events in the format expected by test assertions
       this.dispatchedEvents.push({
-        ...event,
+        type: eventName,
+        payload: payload,
         timestamp: Date.now(),
       });
-      // Handle both old format (eventType, payload) and new format ({ type, payload })
-      if (typeof event === 'object' && event.type) {
-        return originalDispatch(event.type, event.payload);
-      } else {
-        return originalDispatch(event);
-      }
-    };
+      // Call original dispatch with correct two-argument format
+      return originalDispatch(eventName, payload);
+    });
 
     // Track callbacks when using the 'subscribe' method
     const originalSubscribe = baseEventBus.subscribe;

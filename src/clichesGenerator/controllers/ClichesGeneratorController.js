@@ -389,9 +389,8 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       const sanitizedDirectionId = directionId;
 
       // Dispatch selection started event
-      this.eventBus.dispatch({
-        type: 'DIRECTION_SELECTION_STARTED',
-        payload: { directionId: sanitizedDirectionId },
+      this.eventBus.dispatch('DIRECTION_SELECTION_STARTED', {
+        directionId: sanitizedDirectionId,
       });
 
       this._showLoading('Loading direction details...');
@@ -419,12 +418,9 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       await this.#loadExistingClichesWithErrorHandling(sanitizedDirectionId);
 
       // Dispatch selection completed event
-      this.eventBus.dispatch({
-        type: 'DIRECTION_SELECTION_COMPLETED',
-        payload: {
-          directionId: sanitizedDirectionId,
-          hasExistingCliches: !!this.#currentCliches,
-        },
+      this.eventBus.dispatch('DIRECTION_SELECTION_COMPLETED', {
+        directionId: sanitizedDirectionId,
+        hasExistingCliches: !!this.#currentCliches,
       });
 
       this._showState('idle');
@@ -561,14 +557,11 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       });
 
       // Dispatch generation started event
-      this.eventBus.dispatch({
-        type: 'CLICHES_GENERATION_STARTED',
-        payload: {
-          directionId: this.#selectedDirectionId,
-          concept: this.#currentConcept,
-          direction: this.#currentDirection,
-          attempt: currentAttempt,
-        },
+      this.eventBus.dispatch('CLICHES_GENERATION_STARTED', {
+        directionId: this.#selectedDirectionId,
+        concept: this.#currentConcept,
+        direction: this.#currentDirection,
+        attempt: currentAttempt,
       });
 
       this.#updateGenerateButtonEnhanced();
@@ -610,14 +603,11 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       this.#manageFocus('generation-complete');
 
       // Dispatch success event
-      this.eventBus.dispatch({
-        type: 'CLICHES_GENERATION_COMPLETED',
-        payload: {
-          directionId: this.#selectedDirectionId,
-          count: result.getTotalCount(),
-          attempt: currentAttempt,
-          timestamp: new Date().toISOString(),
-        },
+      this.eventBus.dispatch('CLICHES_GENERATION_COMPLETED', {
+        directionId: this.#selectedDirectionId,
+        count: result.getTotalCount(),
+        attempt: currentAttempt,
+        timestamp: new Date().toISOString(),
       });
 
       this._showResults({
@@ -1668,9 +1658,9 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
         this.#updateGenerateButtonEnhanced();
 
         // Dispatch clichés loaded event
-        this.eventBus.dispatch({
-          type: 'EXISTING_CLICHES_LOADED',
-          payload: { directionId, count: cliches.getTotalCount() },
+        this.eventBus.dispatch('EXISTING_CLICHES_LOADED', {
+          directionId,
+          count: cliches.getTotalCount(),
         });
       } else {
         // Enable generation
@@ -1705,13 +1695,10 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
    */
   async #handleDirectionSelectionError(error, context) {
     // Dispatch selection failed event
-    this.eventBus.dispatch({
-      type: 'DIRECTION_SELECTION_FAILED',
-      payload: {
-        directionId: context.directionId,
-        error: error.message,
-        timestamp: new Date().toISOString(),
-      },
+    this.eventBus.dispatch('DIRECTION_SELECTION_FAILED', {
+      directionId: context.directionId,
+      error: error.message,
+      timestamp: new Date().toISOString(),
     });
 
     if (this.#errorHandler) {
@@ -1752,14 +1739,11 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     this.#retryAttempts.set(operationKey, context.attempt);
 
     // Dispatch generation failed event
-    this.eventBus.dispatch({
-      type: 'CLICHES_GENERATION_FAILED',
-      payload: {
-        directionId: context.directionId,
-        error: error.message,
-        attempt: context.attempt,
-        timestamp: new Date().toISOString(),
-      },
+    this.eventBus.dispatch('CLICHES_GENERATION_FAILED', {
+      directionId: context.directionId,
+      error: error.message,
+      attempt: context.attempt,
+      timestamp: new Date().toISOString(),
     });
 
     this.#recordStateChange('generation_failed', {

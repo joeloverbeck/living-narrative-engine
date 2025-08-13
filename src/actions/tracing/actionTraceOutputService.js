@@ -590,13 +590,10 @@ export class ActionTraceOutputService {
 
         // Dispatch progress event if event bus available
         if (this.#eventBus) {
-          this.#eventBus.dispatch({
-            type: 'TRACE_EXPORT_PROGRESS',
-            payload: {
-              progress,
-              current: i + 1,
-              total: traces.length,
-            },
+          this.#eventBus.dispatch('TRACE_EXPORT_PROGRESS', {
+            progress,
+            current: i + 1,
+            total: traces.length,
           });
         }
 
