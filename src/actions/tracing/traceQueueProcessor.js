@@ -403,13 +403,10 @@ export class TraceQueueProcessor {
       );
 
       if (this.#eventBus) {
-        this.#eventBus.dispatch({
-          type: QUEUE_EVENTS.CIRCUIT_BREAKER,
-          payload: {
-            errorCount: this.#errorCount,
-            consecutiveFailures: this.#consecutiveFailures,
-            reason: 'consecutive_failures',
-          },
+        this.#eventBus.dispatch(QUEUE_EVENTS.CIRCUIT_BREAKER, {
+          errorCount: this.#errorCount,
+          consecutiveFailures: this.#consecutiveFailures,
+          reason: 'consecutive_failures',
         });
       }
     }
@@ -504,13 +501,10 @@ export class TraceQueueProcessor {
 
     // Notify via event bus
     if (this.#eventBus) {
-      this.#eventBus.dispatch({
-        type: QUEUE_EVENTS.BACKPRESSURE,
-        payload: {
-          queueSize: this.#getTotalQueueSize(),
-          memoryUsage: this.#currentMemoryUsage,
-          droppedCount: totalDropped,
-        },
+      this.#eventBus.dispatch(QUEUE_EVENTS.BACKPRESSURE, {
+        queueSize: this.#getTotalQueueSize(),
+        memoryUsage: this.#currentMemoryUsage,
+        droppedCount: totalDropped,
       });
     }
 
@@ -622,13 +616,10 @@ export class TraceQueueProcessor {
 
     // Notify batch completion
     if (this.#eventBus) {
-      this.#eventBus.dispatch({
-        type: QUEUE_EVENTS.BATCH_PROCESSED,
-        payload: {
-          batchSize: batch.length,
-          processingTime: batchLatency,
-          remainingItems: this.#getTotalQueueSize(),
-        },
+      this.#eventBus.dispatch(QUEUE_EVENTS.BATCH_PROCESSED, {
+        batchSize: batch.length,
+        processingTime: batchLatency,
+        remainingItems: this.#getTotalQueueSize(),
       });
     }
   }
@@ -931,14 +922,11 @@ export class TraceQueueProcessor {
       this.#metrics.totalDropped++;
 
       if (this.#eventBus) {
-        this.#eventBus.dispatch({
-          type: QUEUE_EVENTS.ITEM_DROPPED,
-          payload: {
-            itemId: item.id,
-            priority: item.priority,
-            retryCount: item.retryCount,
-            reason: 'max_retries_exceeded',
-          },
+        this.#eventBus.dispatch(QUEUE_EVENTS.ITEM_DROPPED, {
+          itemId: item.id,
+          priority: item.priority,
+          retryCount: item.retryCount,
+          reason: 'max_retries_exceeded',
         });
       }
 

@@ -122,14 +122,14 @@ describe('CharacterBuilderService - Cliché Operations', () => {
       expect(result).toBeInstanceOf(Cliche);
       expect(result.directionId).toBe('dir-1');
       expect(mockDatabase.getClicheByDirectionId).toHaveBeenCalledWith('dir-1');
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_RETRIEVED,
-        payload: {
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.CLICHES_RETRIEVED,
+        {
           directionId: 'dir-1',
           clicheId: 'cliche-1',
           categoryStats: expect.any(Object),
-        },
-      });
+        }
+      );
     });
 
     it('should return cached clichés on second call', async () => {
@@ -167,13 +167,13 @@ describe('CharacterBuilderService - Cliché Operations', () => {
         CharacterBuilderError
       );
 
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_RETRIEVAL_FAILED,
-        payload: {
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.CLICHES_RETRIEVAL_FAILED,
+        {
           directionId: 'dir-1',
           error: 'DB Error',
-        },
-      });
+        }
+      );
     });
 
     it('should handle missing database gracefully', async () => {
@@ -318,15 +318,15 @@ describe('CharacterBuilderService - Cliché Operations', () => {
           count: expect.any(Number),
         }),
       });
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_STORED,
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.CLICHES_STORED,
+        expect.objectContaining({
           directionId: 'dir-1',
           conceptId: 'concept-1',
           clicheId: expect.any(String),
           totalCount: expect.any(Number),
-        }),
-      });
+        })
+      );
     });
 
     it('should accept Cliche instances', async () => {
@@ -345,12 +345,12 @@ describe('CharacterBuilderService - Cliché Operations', () => {
       await expect(service.storeCliches(mockClicheInput)).rejects.toThrow(
         CharacterBuilderError
       );
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_STORAGE_FAILED,
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.CLICHES_STORAGE_FAILED,
+        expect.objectContaining({
           directionId: 'dir-1',
-        }),
-      });
+        })
+      );
     });
 
     it('should validate against schema when validator available', async () => {
@@ -454,24 +454,24 @@ describe('CharacterBuilderService - Cliché Operations', () => {
           coreTension: 'Power vs responsibility',
         }
       );
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_STARTED,
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_STARTED,
+        expect.objectContaining({
           conceptId: 'concept-1',
           directionId: 'dir-1',
           directionTitle: 'The Chosen One',
-        }),
-      });
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_COMPLETED,
-        payload: expect.objectContaining({
+        })
+      );
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_COMPLETED,
+        expect.objectContaining({
           conceptId: 'concept-1',
           directionId: 'dir-1',
           clicheId: expect.any(String),
           totalCount: expect.any(Number),
           generationTime: 1500,
-        }),
-      });
+        })
+      );
     });
 
     it('should return existing clichés without regeneration', async () => {
@@ -535,14 +535,14 @@ describe('CharacterBuilderService - Cliché Operations', () => {
         service.generateClichesForDirection(mockConcept, mockDirection)
       ).rejects.toThrow(CharacterBuilderError);
 
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_FAILED,
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_FAILED,
+        expect.objectContaining({
           conceptId: 'concept-1',
           directionId: 'dir-1',
           error: 'LLM Error',
-        }),
-      });
+        })
+      );
     });
 
     it('should throw error for invalid inputs', async () => {
@@ -715,13 +715,13 @@ describe('CharacterBuilderService - Cliché Operations', () => {
 
         expect(result).toBe(true);
         expect(mockDatabase.deleteCliche).toHaveBeenCalledWith('cliche-1');
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-          type: CHARACTER_BUILDER_EVENTS.CLICHES_DELETED,
-          payload: {
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          CHARACTER_BUILDER_EVENTS.CLICHES_DELETED,
+          {
             directionId: 'dir-1',
             clicheId: 'cliche-1',
-          },
-        });
+          }
+        );
       });
 
       it('should return false for non-existent clichés', async () => {

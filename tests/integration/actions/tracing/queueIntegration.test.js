@@ -367,7 +367,7 @@ describe('Queue Processor Integration', () => {
       // Circuit breaker event should be dispatched
       const eventCalls = mockEventBus.dispatch.mock.calls;
       const circuitEvent = eventCalls.find(
-        (call) => call[0] && call[0].type === QUEUE_EVENTS.CIRCUIT_BREAKER
+        (call) => call[0] === QUEUE_EVENTS.CIRCUIT_BREAKER
       );
 
       expect(circuitEvent).toBeDefined();

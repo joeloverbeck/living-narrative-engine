@@ -789,13 +789,10 @@ export class CharacterBuilderService {
       this.#cacheCliches(directionId, cliche);
 
       // Dispatch event
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_RETRIEVED,
-        payload: {
-          directionId,
-          clicheId: cliche.id,
-          categoryStats: cliche.getCategoryStats(),
-        },
+      this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.CLICHES_RETRIEVED, {
+        directionId,
+        clicheId: cliche.id,
+        categoryStats: cliche.getCategoryStats(),
       });
 
       return cliche;
@@ -805,13 +802,13 @@ export class CharacterBuilderService {
         error
       );
 
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_RETRIEVAL_FAILED,
-        payload: {
+      this.#eventBus.dispatch(
+        CHARACTER_BUILDER_EVENTS.CLICHES_RETRIEVAL_FAILED,
+        {
           directionId,
           error: error.message,
-        },
-      });
+        }
+      );
 
       throw new CharacterBuilderError(
         `Failed to retrieve clichés: ${error.message}`,
@@ -919,14 +916,11 @@ export class CharacterBuilderService {
       this.#cacheCliches(clicheInstance.directionId, clicheInstance);
 
       // Dispatch success event
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_STORED,
-        payload: {
-          directionId: clicheInstance.directionId,
-          conceptId: clicheInstance.conceptId,
-          clicheId: clicheInstance.id,
-          totalCount: clicheInstance.getTotalCount(),
-        },
+      this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.CLICHES_STORED, {
+        directionId: clicheInstance.directionId,
+        conceptId: clicheInstance.conceptId,
+        clicheId: clicheInstance.id,
+        totalCount: clicheInstance.getTotalCount(),
       });
 
       this.#logger.info(
@@ -937,12 +931,9 @@ export class CharacterBuilderService {
     } catch (error) {
       this.#logger.error('Failed to store clichés:', error);
 
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_STORAGE_FAILED,
-        payload: {
-          error: error.message,
-          directionId: cliches.directionId || 'unknown',
-        },
+      this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.CLICHES_STORAGE_FAILED, {
+        error: error.message,
+        directionId: cliches.directionId || 'unknown',
       });
 
       throw error instanceof CharacterBuilderError
@@ -993,14 +984,14 @@ export class CharacterBuilderService {
       }
 
       // Dispatch generation started event
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_STARTED,
-        payload: {
+      this.#eventBus.dispatch(
+        CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_STARTED,
+        {
           conceptId: concept.id,
           directionId: direction.id,
           directionTitle: direction.title,
-        },
-      });
+        }
+      );
 
       // Generate clichés using ClicheGenerator (implemented in CLIGEN-003)
       if (!this.#clicheGenerator) {
@@ -1031,16 +1022,16 @@ export class CharacterBuilderService {
       const stored = await this.storeCliches(cliche);
 
       // Dispatch generation completed event
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_COMPLETED,
-        payload: {
+      this.#eventBus.dispatch(
+        CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_COMPLETED,
+        {
           conceptId: concept.id,
           directionId: direction.id,
           clicheId: stored.id,
           totalCount: stored.getTotalCount(),
           generationTime: generatedData.metadata?.responseTime || 0,
-        },
-      });
+        }
+      );
 
       return stored;
     } catch (error) {
@@ -1049,14 +1040,14 @@ export class CharacterBuilderService {
         error
       );
 
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_FAILED,
-        payload: {
+      this.#eventBus.dispatch(
+        CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_FAILED,
+        {
           conceptId: concept.id,
           directionId: direction.id,
           error: error.message,
-        },
-      });
+        }
+      );
 
       throw error instanceof CharacterBuilderError
         ? error
@@ -1149,12 +1140,9 @@ export class CharacterBuilderService {
 
       this.#invalidateClicheCache(directionId);
 
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.CLICHES_DELETED,
-        payload: {
-          directionId,
-          clicheId: cliche.id,
-        },
+      this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.CLICHES_DELETED, {
+        directionId,
+        clicheId: cliche.id,
       });
 
       return true;

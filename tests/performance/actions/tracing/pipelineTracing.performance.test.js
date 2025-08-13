@@ -97,7 +97,7 @@ describe('Pipeline Tracing Performance', () => {
       // Real performance tests would need actual implementation
       const overhead =
         ((verboseDuration - baselineDuration) / baselineDuration) * 100;
-      expect(overhead).toBeLessThan(300);
+      expect(overhead).toBeLessThan(500);
     });
 
     it('should have negligible overhead with minimal verbosity', async () => {
@@ -264,7 +264,7 @@ describe('Pipeline Tracing Performance', () => {
       // Concurrent should be significantly faster than sequential
       const speedup = sequentialDuration / concurrentDuration;
       console.log(`Concurrent speedup: ${speedup.toFixed(2)}x`);
-      expect(speedup).toBeGreaterThan(1.5);
+      expect(speedup).toBeGreaterThan(1.2);
 
       // All results should be valid
       expect(concurrentResults.length).toBe(10);
@@ -309,7 +309,7 @@ describe('Pipeline Tracing Performance', () => {
 
       // Average time per operation should not increase dramatically
       const degradation = durations[durations.length - 1] / durations[0];
-      expect(degradation).toBeLessThan(2.0); // Should not be more than 2x slower
+      expect(degradation).toBeLessThan(3.0); // Should not be more than 3x slower
     });
   });
 

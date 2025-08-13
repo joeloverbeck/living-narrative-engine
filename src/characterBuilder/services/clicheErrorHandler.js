@@ -457,20 +457,17 @@ export class ClicheErrorHandler {
    */
   async #dispatchErrorEvent(error, context) {
     try {
-      await this.#eventBus.dispatch({
-        type: 'CLICHE_ERROR_OCCURRED',
-        payload: {
-          error: {
-            name: error.name,
-            message: error.message,
-            code: error.code || 'UNKNOWN',
-            details: error.details,
-            stack: error.stack,
-          },
-          context,
-          timestamp: context.timestamp,
-          severity: this.#determineErrorSeverity(error),
+      await this.#eventBus.dispatch('CLICHE_ERROR_OCCURRED', {
+        error: {
+          name: error.name,
+          message: error.message,
+          code: error.code || 'UNKNOWN',
+          details: error.details,
+          stack: error.stack,
         },
+        context,
+        timestamp: context.timestamp,
+        severity: this.#determineErrorSeverity(error),
       });
     } catch (eventError) {
       this.#logger.error('Failed to dispatch error event:', eventError);
