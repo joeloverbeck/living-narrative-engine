@@ -195,7 +195,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       'Dark past',
     ];
 
-    return new Cliche({
+    const cliche = new Cliche({
       id: uuidv4(),
       directionId: 'dir-123',
       conceptId: 'concept-1',
@@ -208,6 +208,26 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
         responseTime: 500,
       },
     });
+    
+    // Ensure the cliche has a proper getTotalCount method
+    if (!cliche.getTotalCount || typeof cliche.getTotalCount !== 'function') {
+      cliche.getTotalCount = function() {
+        let total = 0;
+        if (this.categories) {
+          Object.values(this.categories).forEach(category => {
+            if (Array.isArray(category)) {
+              total += category.length;
+            }
+          });
+        }
+        if (this.tropesAndStereotypes && Array.isArray(this.tropesAndStereotypes)) {
+          total += this.tropesAndStereotypes.length;
+        }
+        return total;
+      };
+    }
+    
+    return cliche;
   }
 
   /**
@@ -332,9 +352,12 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
 
   /**
    * Setup mock for existing clichés
+   *
+   * @param directionId
+   * @param existingCliches
    */
-  setupExistingCliches() {
-    const cliches = this.createMockClichesData();
+  setupExistingCliches(directionId = 'dir-1', existingCliches = null) {
+    const cliches = existingCliches || this.createMockClichesData();
 
     this.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
       true
@@ -603,6 +626,87 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
    */
   async flushPromises() {
     return new Promise((resolve) => setImmediate(resolve));
+  }
+
+  /**
+   * Setup mock for successful generation
+   *
+   * @param {string} directionId - Direction ID
+   * @param {object} cliches - Clichés to return
+   */
+  setupSuccessfulGeneration(directionId, cliches) {
+    const concept = this.createMockConcept();
+    this.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
+      concept
+    );
+    this.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+      false
+    );
+    this.mockCharacterBuilderService.generateClichesForDirection.mockResolvedValue(
+      cliches
+    );
+  }
+
+  /**
+   * Setup mock for failed generation
+   *
+   * @param {string} directionId - Direction ID
+   */
+  setupFailedGeneration(directionId) {
+    const concept = this.createMockConcept();
+    this.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
+      concept
+    );
+    this.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+      false
+    );
+    this.mockCharacterBuilderService.generateClichesForDirection.mockRejectedValue(
+      new Error('Generation failed')
+    );
+  }
+
+  /**
+   * Click the generate button
+   */
+  async clickGenerateButton() {
+    const generateBtn = this.getGenerateButton();
+    generateBtn.disabled = false;
+
+    // Trigger click event
+    const clickEvent = new Event('click', { bubbles: true });
+    generateBtn.dispatchEvent(clickEvent);
+
+    // Also trigger form submit to match real behavior
+    const form = document.getElementById('cliches-form');
+    if (form) {
+      const submitEvent = new Event('submit', {
+        bubbles: true,
+        cancelable: true,
+      });
+      form.dispatchEvent(submitEvent);
+    }
+
+    // Wait for async operations
+    await this.flushPromises();
+    
+    // Additional wait to ensure finally block execution
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  /**
+   * Wait for direction selection to complete
+   *
+   * @param {string} directionId - Direction ID to wait for
+   */
+  async waitForDirectionSelection(directionId) {
+    // Wait for direction selection event to be dispatched
+    try {
+      await this.waitForEvent('DIRECTION_SELECTION_COMPLETED', 2000);
+    } catch (error) {
+      // If event doesn't dispatch, just wait a bit for async operations
+      await this.flushPromises();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
   }
 
   /**

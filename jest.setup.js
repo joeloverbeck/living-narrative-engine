@@ -197,5 +197,43 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
+// --- DOM API MOCKS ---
+// These are needed for browser-based functionality in tests
+
+// 4. URL Web API mocks (needed for blob/file operations)
+if (typeof global.URL === 'undefined') {
+  global.URL = {};
+}
+
+// Mock URL.createObjectURL and URL.revokeObjectURL
+global.URL.createObjectURL = jest.fn((blob) => {
+  return `blob:${Math.random().toString(36).substring(2, 15)}`;
+});
+global.URL.revokeObjectURL = jest.fn();
+
+// 5. Blob constructor mock (needed for file export functionality)
+// Use a proper class constructor so instanceof checks work correctly
+global.Blob = class MockBlob {
+  constructor(content, options) {
+    this.content = content;
+    this.type = options?.type || 'application/octet-stream';
+    this.size = Array.isArray(content) ? content.join('').length : content?.length || 0;
+  }
+};
+
+// 6. Document createElement helper (needed for specific download functionality)
+// Note: We don't override document.createElement globally as it interferes with JSDOM
+// Instead, we only provide a backup when needed by individual tests
+
+// 7. File System Access API mocks (initially undefined to simulate unsupported browsers)
+if (typeof window !== 'undefined') {
+  // These will be undefined by default to simulate browsers without File System Access API
+  window.showDirectoryPicker = undefined;
+  window.showOpenFilePicker = undefined;
+  window.showSaveFilePicker = undefined;
+}
+
+console.log('jest.setup.js: DOM API mocks initialized');
+
 // Note: Removed default jest.useRealTimers() to avoid conflicts with tests that use fake timers
 // Individual test files should manage their own timer setup as needed

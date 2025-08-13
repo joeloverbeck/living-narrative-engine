@@ -214,6 +214,86 @@ class TraceDirectoryManager {
   }
 
   /**
+   * Prompt user to select a directory for export
+   * 
+   * @returns {Promise<FileSystemDirectoryHandle|null>} Directory handle or null if cancelled
+   */
+  async selectDirectory() {
+    try {
+      // Prompt the user to select a directory
+      const handle = await window.showDirectoryPicker({
+        mode: 'readwrite',
+        startIn: 'documents',
+      });
+
+      // Verify permissions
+      const permission = await handle.queryPermission({ mode: 'readwrite' });
+      if (permission !== 'granted') {
+        const requestResult = await handle.requestPermission({
+          mode: 'readwrite',
+        });
+        if (requestResult !== 'granted') {
+          this.#logger.warn('User denied write permission to directory');
+          return null;
+        }
+      }
+
+      this.#logger.debug('Directory selected for export', {
+        name: handle.name,
+      });
+
+      return handle;
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        this.#logger.info('User cancelled directory selection');
+      } else {
+        this.#logger.error('Failed to select directory', error);
+      }
+      return null;
+    }
+  }
+
+  /**
+   * Ensure a subdirectory exists within a parent directory handle
+   * 
+   * @param {FileSystemDirectoryHandle} parentHandle - Parent directory handle
+   * @param {string} subdirectoryName - Name of subdirectory to create
+   * @returns {Promise<FileSystemDirectoryHandle|null>} Subdirectory handle or null on error
+   */
+  async ensureSubdirectoryExists(parentHandle, subdirectoryName) {
+    assertNonBlankString(
+      subdirectoryName,
+      'subdirectoryName',
+      'TraceDirectoryManager.ensureSubdirectoryExists',
+      this.#logger
+    );
+
+    if (!parentHandle) {
+      this.#logger.error('Parent directory handle is required');
+      return null;
+    }
+
+    try {
+      // Create or get subdirectory
+      const subdirectoryHandle = await parentHandle.getDirectoryHandle(
+        subdirectoryName,
+        { create: true }
+      );
+
+      this.#logger.debug('Subdirectory ensured', {
+        name: subdirectoryName,
+      });
+
+      return subdirectoryHandle;
+    } catch (error) {
+      this.#logger.error('Failed to ensure subdirectory exists', error, {
+        subdirectoryName,
+      });
+      return null;
+    }
+  }
+
+  /**
    * Clear the cache of created directories
    */
   clearCache() {

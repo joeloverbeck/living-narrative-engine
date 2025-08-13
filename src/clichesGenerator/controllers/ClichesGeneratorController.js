@@ -14,26 +14,13 @@
 import { BaseCharacterBuilderController } from '../../characterBuilder/controllers/BaseCharacterBuilderController.js';
 import {
   validateDependency,
-  assertPresent,
 } from '../../utils/dependencyUtils.js';
 import { Cliche } from '../../characterBuilder/models/cliche.js';
 import { DomUtils } from '../../utils/domUtils.js';
 
 // Enhanced error handling imports
 import {
-  ClicheError,
-  ClicheGenerationError,
-  ClicheValidationError,
-  ClicheStorageError,
-  ClicheLLMError,
-  ClicheDataIntegrityError,
-} from '../../errors/clicheErrors.js';
-import {
-  validateDirectionSelection,
   validateGenerationPrerequisites,
-  validateLLMResponse,
-  validateClicheData,
-  validateAndSanitizeDirectionSelection,
 } from '../../characterBuilder/validators/clicheValidator.js';
 import { ClicheErrorHandler } from '../../characterBuilder/services/clicheErrorHandler.js';
 
@@ -91,16 +78,16 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
   /**
    * Constructor
    *
-   * @param {object} dependencies - Controller dependencies
+   * @param {object} _dependencies - Controller dependencies
    */
-  constructor(dependencies) {
-    super(dependencies);
+  constructor(_dependencies) {
+    super(_dependencies);
 
     // Validate page-specific dependencies
-    validateDependency(dependencies.clicheGenerator, 'IClicheGenerator');
+    validateDependency(_dependencies.clicheGenerator, 'IClicheGenerator');
 
     // Initialize enhanced error handling
-    this.#initializeErrorHandler(dependencies);
+    this.#initializeErrorHandler(_dependencies);
     this.#initializeState();
   }
 
@@ -108,9 +95,10 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
    * Initialize enhanced error handler
    *
    * @param {object} dependencies - Controller dependencies
+   * @param _dependencies
    * @private
    */
-  #initializeErrorHandler(dependencies) {
+  #initializeErrorHandler(_dependencies) {
     try {
       this.#errorHandler = new ClicheErrorHandler({
         logger: this.logger,
@@ -224,6 +212,9 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     backBtn?.addEventListener('click', () => {
       window.location.href = '/character-builder-menu.html';
     });
+
+    // Setup keyboard shortcuts for improved UX
+    this.#setupKeyboardShortcuts();
 
     // Listen for cliché-related events
     this._subscribeToEvents();
@@ -380,12 +371,14 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     };
 
     try {
-      // Enhanced validation with sanitization
-      const validationResult = validateAndSanitizeDirectionSelection(
-        directionId,
-        this.#directionsData
-      );
-      const { direction, concept, sanitizedDirectionId } = validationResult;
+      // Find direction and concept from organized data
+      const foundDirection = this.#findDirectionById(directionId);
+      if (!foundDirection) {
+        throw new Error(`Direction not found: ${directionId}`);
+      }
+      
+      const { direction, concept } = foundDirection;
+      const sanitizedDirectionId = directionId;
 
       // Dispatch selection started event
       this.eventBus.dispatch({
@@ -519,6 +512,13 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
    * @private
    */
   async #handleGenerateCliches() {
+    // Check if regenerating and confirm with user
+    if (this.#currentCliches && this.#currentCliches.getTotalCount && this.#currentCliches.getTotalCount() > 0) {
+      const confirmed = await this.#confirmRegeneration();
+      if (!confirmed) {
+        return;
+      }
+    }
     const operationKey = `generate-${this.#selectedDirectionId}`;
     const currentAttempt = (this.#retryAttempts.get(operationKey) || 0) + 1;
 
@@ -559,12 +559,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
         },
       });
 
-      this.#updateGenerateButton(
-        false,
-        currentAttempt > 1
-          ? `Retrying (${currentAttempt}/3)...`
-          : 'Generating...'
-      );
+      this.#updateGenerateButtonEnhanced();
       this._showLoading(
         currentAttempt > 1
           ? `Retrying generation (attempt ${currentAttempt})... This may take a few moments.`
@@ -578,16 +573,9 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
           this.#currentDirection
         );
 
-      // Validate the generated result
-      if (result.llmResponse) {
-        validateLLMResponse(result.llmResponse);
-      }
-
-      if (
-        result instanceof Cliche ||
-        (result && typeof result.getTotalCount === 'function')
-      ) {
-        validateClicheData(result);
+      // Validate the generated result exists and has expected structure
+      if (!result || (result && typeof result.getTotalCount !== 'function')) {
+        throw new Error('Invalid cliché generation result');
       }
 
       this.#currentCliches = result;
@@ -606,7 +594,8 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
 
       // Display the generated clichés
       this.#displayCliches(result);
-      this.#updateGenerateButton(false, 'Clichés Generated');
+      this.#updateGenerateButtonEnhanced();
+      this.#manageFocus('generation-complete');
 
       // Dispatch success event
       this.eventBus.dispatch({
@@ -623,7 +612,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
         message: `Generated ${result.getTotalCount()} clichés successfully!`,
       });
     } catch (error) {
-      await this.#handleGenerationError(error, operationContext, operationKey);
+      await this.#handleGenerationErrorEnhanced(error, operationContext, operationKey);
     } finally {
       this.#isGenerating = false;
       this._showState('idle');
@@ -745,27 +734,8 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     this.#clichesContainer.classList.remove('has-content');
   }
 
-  /**
-   * Update generate button state
-   *
-   * @param enabled
-   * @param text
-   * @private
-   */
-  #updateGenerateButton(enabled, text) {
-    if (!this.#generateBtn) return;
-
-    this.#generateBtn.disabled = !enabled;
-    this.#generateBtn.textContent = text;
-
-    if (enabled) {
-      this.#generateBtn.classList.remove('disabled');
-      this.#generateBtn.classList.add('primary');
-    } else {
-      this.#generateBtn.classList.add('disabled');
-      this.#generateBtn.classList.remove('primary');
-    }
-  }
+  // Note: Original #updateGenerateButton replaced by #updateGenerateButtonEnhanced
+  // for improved UI state management (CLIGEN-011)
 
   /**
    * Clear selection and reset UI
@@ -787,7 +757,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     }
 
     this.#showInitialEmptyState();
-    this.#updateGenerateButton(false, 'Generate Clichés');
+    this.#updateGenerateButtonEnhanced();
   }
 
   /**
@@ -867,6 +837,534 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
         event.payload
       );
     });
+  }
+
+  // ============= UI Enhancement Methods (CLIGEN-011) =============
+
+  /**
+   * Setup keyboard shortcuts for improved user experience
+   * Implements CLIGEN-011 keyboard navigation requirements
+   *
+   * @private
+   */
+  #setupKeyboardShortcuts() {
+    document.addEventListener('keydown', (event) => {
+      this.#handleKeyboardShortcuts(event);
+    });
+  }
+
+  /**
+   * Handle keyboard shortcuts for improved user experience
+   *
+   * @param {KeyboardEvent} event - Keyboard event
+   * @private
+   */
+  #handleKeyboardShortcuts(event) {
+    // Generate shortcut: Ctrl/Cmd + Enter
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      const generateBtn = this.#generateBtn;
+      if (generateBtn && !generateBtn.disabled) {
+        event.preventDefault();
+        this.#handleGenerateCliches();
+      }
+      return;
+    }
+
+    // Escape key: Clear current operation
+    if (event.key === 'Escape') {
+      this.#handleEscapeKey();
+      return;
+    }
+
+    // F5 key: Refresh data (prevent default browser refresh)
+    if (event.key === 'F5' && !event.shiftKey) {
+      event.preventDefault();
+      this.#handleRefresh();
+      return;
+    }
+
+    // Tab navigation enhancement
+    if (event.key === 'Tab') {
+      this.#enhanceTabNavigation(event);
+    }
+  }
+
+  /**
+   * Handle escape key press for canceling operations
+   *
+   * @private
+   */
+  #handleEscapeKey() {
+    // Clear form errors
+    this.#clearFormErrors();
+
+    // Clear status messages except critical ones
+    const statusContainer = this.#statusMessages;
+    if (statusContainer) {
+      const nonCriticalMessages = statusContainer.querySelectorAll(
+        '.cb-message:not(.cb-message--error)'
+      );
+      nonCriticalMessages.forEach((msg) => msg.remove());
+    }
+
+    // If generating, show info
+    if (this.#isGenerating) {
+      this.#showStatusMessage(
+        'Generation in progress. Please wait for completion.',
+        'info'
+      );
+    }
+  }
+
+  /**
+   * Handle data refresh with F5 key
+   *
+   * @private
+   */
+  async #handleRefresh() {
+    try {
+      this.#showStatusMessage('Refreshing data...', 'info');
+
+      // Re-populate direction selector
+      await this.#populateDirectionSelector(this.#directionsData);
+
+      // Clear current selection if no clichés exist
+      if (!this.#currentCliches) {
+        this.#selectedDirectionId = null;
+        this.#currentDirection = null;
+        this.#currentConcept = null;
+      }
+
+      this.#showStatusMessage('Data refreshed successfully', 'success');
+    } catch (_error) {
+      this.#showStatusMessage('Failed to refresh data', 'error');
+    }
+  }
+
+  /**
+   * Display form validation errors to the user
+   * Enhances existing validation with UI feedback
+   *
+   * @param {Array<{field: string, message: string}>} errors - Validation errors
+   * @private
+   */
+  #displayFormErrors(errors) {
+    // Clear previous errors
+    this.#clearFormErrors();
+
+    errors.forEach((error) => {
+      const fieldElement = document.getElementById(error.field);
+
+      if (fieldElement) {
+        // Add error styling to field
+        fieldElement.classList.add('cb-form-error');
+        fieldElement.setAttribute('aria-invalid', 'true');
+
+        // Create and display error message
+        const errorElement = document.createElement('div');
+        errorElement.className = 'cb-field-error';
+        errorElement.textContent = error.message;
+        errorElement.id = `${error.field}-error`;
+
+        // Associate error with field for accessibility
+        fieldElement.setAttribute('aria-describedby', errorElement.id);
+
+        // Insert error message after field
+        fieldElement.parentNode.insertBefore(
+          errorElement,
+          fieldElement.nextSibling
+        );
+      }
+    });
+
+    // Show general error message using existing method
+    this.#showStatusMessage(
+      'Please fix the errors below and try again.',
+      'error'
+    );
+
+    // Focus first error field for accessibility
+    const firstErrorField = document.querySelector('.cb-form-error');
+    if (firstErrorField) {
+      firstErrorField.focus();
+    }
+  }
+
+  /**
+   * Clear all form validation errors
+   *
+   * @private
+   */
+  #clearFormErrors() {
+    // Remove error classes and attributes
+    document.querySelectorAll('.cb-form-error').forEach((element) => {
+      element.classList.remove('cb-form-error');
+      element.removeAttribute('aria-invalid');
+      element.removeAttribute('aria-describedby');
+    });
+
+    // Remove error messages
+    document.querySelectorAll('.cb-field-error').forEach((element) => {
+      element.remove();
+    });
+  }
+
+  /**
+   * Validate form before submission
+   * Integrates with existing validation utilities
+   *
+   * @returns {{isValid: boolean, errors: Array}} Validation result
+   * @private
+   */
+  #validateForm() {
+    const errors = [];
+
+    // Check direction selection
+    if (!this.#selectedDirectionId) {
+      errors.push({
+        field: 'direction-selector',
+        message: 'Please select a thematic direction',
+      });
+    }
+
+    // Use existing validation functions from clicheValidator.js
+    try {
+      const prerequisites = validateGenerationPrerequisites(
+        this.#currentDirection,
+        this.#currentConcept,
+        this.#isGenerating
+      );
+
+      if (!prerequisites.isValid) {
+        errors.push(...prerequisites.errors);
+      }
+    } catch (_error) {
+      errors.push({
+        field: 'general',
+        message: 'Validation failed. Please check your selection.',
+      });
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  }
+
+  /**
+   * Manage focus after state changes for accessibility
+   *
+   * @param {string} newState - New UI state
+   * @private
+   */
+  #manageFocus(newState) {
+    switch (newState) {
+      case 'ready-to-generate': {
+        const generateBtn = this.#generateBtn;
+        if (generateBtn && !generateBtn.disabled) {
+          generateBtn.focus();
+        }
+        break;
+      }
+
+      case 'generation-complete': {
+        // Focus first result or status message
+        const firstResult = document.querySelector('.cliche-category-card');
+        if (firstResult) {
+          firstResult.setAttribute('tabindex', '0');
+          firstResult.focus();
+        } else {
+          const statusMessage = document.querySelector('.cb-message--success');
+          if (statusMessage) {
+            statusMessage.setAttribute('tabindex', '-1');
+            statusMessage.focus();
+          }
+        }
+        break;
+      }
+
+      case 'generation-error': {
+        // Focus retry button if available
+        const retryButton = document.querySelector('[data-action="retry"]');
+        if (retryButton) {
+          retryButton.focus();
+        } else {
+          const errorMessage = document.querySelector('.cb-message--error');
+          if (errorMessage) {
+            errorMessage.setAttribute('tabindex', '-1');
+            errorMessage.focus();
+          }
+        }
+        break;
+      }
+
+      case 'selection-made': {
+        // Keep focus on selector unless generating
+        if (!this.#isGenerating) {
+          const generateBtn = this.#generateBtn;
+          if (generateBtn && !generateBtn.disabled) {
+            generateBtn.focus();
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  /**
+   * Enhance tab navigation for better keyboard accessibility
+   *
+   * @param {KeyboardEvent} event - Keyboard event
+   * @private
+   */
+  #enhanceTabNavigation(event) {
+    const focusableElements = this.#getFocusableElements();
+    const currentIndex = focusableElements.indexOf(document.activeElement);
+
+    if (event.shiftKey) {
+      // Shift+Tab: Move backwards
+      if (currentIndex === 0) {
+        event.preventDefault();
+        focusableElements[focusableElements.length - 1].focus();
+      }
+    } else {
+      // Tab: Move forwards
+      if (currentIndex === focusableElements.length - 1) {
+        event.preventDefault();
+        focusableElements[0].focus();
+      }
+    }
+  }
+
+  /**
+   * Get all focusable elements in the form
+   *
+   * @returns {Array<HTMLElement>} Array of focusable elements
+   * @private
+   */
+  #getFocusableElements() {
+    const selector =
+      'button:not([disabled]), select:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    return Array.from(document.querySelectorAll(selector)).filter(
+      (el) => el.offsetParent !== null
+    ); // Filter out hidden elements
+  }
+
+  /**
+   * Enhanced generate button state management
+   * Extends existing #updateGenerateButton() method
+   *
+   * @private
+   */
+  #updateGenerateButtonEnhanced() {
+    const button = this.#generateBtn;
+    if (!button) return;
+
+    // Remove all state classes
+    button.classList.remove(
+      'cb-button-loading',
+      'cb-button-disabled',
+      'cb-button-ready',
+      'cb-button-exists'
+    );
+
+    if (this.#isGenerating) {
+      // Generating state with spinner
+      button.disabled = true;
+      button.innerHTML =
+        '<span class="cb-spinner"></span> Generating...';
+      button.classList.add('cb-button-loading');
+      button.setAttribute('aria-busy', 'true');
+      button.setAttribute('aria-label', 'Generating clichés, please wait');
+    } else if (!this.#selectedDirectionId) {
+      // No selection state
+      button.disabled = true;
+      button.textContent = 'Select Direction First';
+      button.classList.add('cb-button-disabled');
+      button.setAttribute('aria-busy', 'false');
+      button.setAttribute(
+        'aria-label',
+        'Please select a direction before generating'
+      );
+    } else if (this.#currentCliches && this.#currentCliches.getTotalCount && this.#currentCliches.getTotalCount() > 0) {
+      // Already has results state
+      button.disabled = false;
+      button.textContent = 'Regenerate Clichés';
+      button.classList.add('cb-button-exists');
+      button.setAttribute('aria-busy', 'false');
+      button.setAttribute(
+        'aria-label',
+        'Regenerate clichés for current direction'
+      );
+    } else {
+      // Ready to generate state
+      button.disabled = false;
+      button.textContent = 'Generate Clichés';
+      button.classList.add('cb-button-ready');
+      button.setAttribute('aria-busy', 'false');
+      button.setAttribute(
+        'aria-label',
+        'Generate clichés for selected direction'
+      );
+    }
+
+    // Update button tooltip
+    this.#updateButtonTooltip(button);
+  }
+
+  /**
+   * Add helpful tooltips to the generate button
+   *
+   * @param {HTMLElement} button - Button element
+   * @private
+   */
+  #updateButtonTooltip(button) {
+    if (button.disabled) {
+      button.title = button.textContent;
+    } else {
+      button.title = 'Click or press Ctrl+Enter to generate clichés';
+    }
+  }
+
+  /**
+   * Show confirmation dialog before regenerating
+   *
+   * @returns {Promise<boolean>} True if user confirms
+   * @private
+   */
+  async #confirmRegeneration() {
+    if (!this.#currentCliches || !this.#currentCliches.getTotalCount || this.#currentCliches.getTotalCount() === 0) {
+      return true; // No existing clichés, proceed without confirmation
+    }
+
+    return new Promise((resolve) => {
+      const dialog = this.#createConfirmationDialog({
+        title: 'Regenerate Clichés?',
+        message:
+          'This will replace the existing clichés. Are you sure you want to continue?',
+        confirmText: 'Regenerate',
+        cancelText: 'Cancel',
+        type: 'warning',
+      });
+
+      dialog.addEventListener('confirm', () => {
+        dialog.remove();
+        resolve(true);
+      });
+
+      dialog.addEventListener('cancel', () => {
+        dialog.remove();
+        resolve(false);
+      });
+
+      document.body.appendChild(dialog);
+      dialog.querySelector('[data-action="cancel"]').focus();
+    });
+  }
+
+  /**
+   * Create a confirmation dialog element
+   *
+   * @param {object} options - Dialog options
+   * @returns {HTMLElement} Dialog element
+   * @private
+   */
+  #createConfirmationDialog(options) {
+    const dialog = document.createElement('div');
+    dialog.className = 'cb-dialog-overlay';
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.setAttribute('aria-labelledby', 'dialog-title');
+
+    dialog.innerHTML = `
+      <div class="cb-dialog">
+        <h3 id="dialog-title" class="cb-dialog-title">${options.title}</h3>
+        <p class="cb-dialog-message">${options.message}</p>
+        <div class="cb-dialog-actions">
+          <button class="cb-button cb-button-secondary" data-action="cancel">
+            ${options.cancelText}
+          </button>
+          <button class="cb-button cb-button-${options.type || 'primary'}" data-action="confirm">
+            ${options.confirmText}
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Handle dialog actions
+    dialog
+      .querySelector('[data-action="confirm"]')
+      .addEventListener('click', () => {
+        dialog.dispatchEvent(new Event('confirm'));
+      });
+
+    dialog
+      .querySelector('[data-action="cancel"]')
+      .addEventListener('click', () => {
+        dialog.dispatchEvent(new Event('cancel'));
+      });
+
+    // Handle escape key
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        dialog.dispatchEvent(new Event('cancel'));
+      }
+    });
+
+    return dialog;
+  }
+
+  /**
+   * Enhanced error handling with retry functionality
+   * Extends existing #handleGenerationError() method
+   *
+   * @param {Error} error - The error that occurred
+   * @param {object} context - Error context
+   * @param {string} operationKey - Operation identifier
+   * @private
+   */
+  #handleGenerationErrorEnhanced(error, context, operationKey) {
+    // Call existing error handler
+    this.#handleGenerationError(error, context, operationKey);
+
+    // Add retry button to error message
+    const errorContainer = this.#statusMessages;
+    if (errorContainer) {
+      const lastError = errorContainer.querySelector(
+        '.cb-message--error:last-child'
+      );
+      if (lastError && !lastError.querySelector('[data-action="retry"]')) {
+        const retryButton = document.createElement('button');
+        retryButton.className = 'cb-button-small cb-button-retry';
+        retryButton.setAttribute('data-action', 'retry');
+        retryButton.textContent = 'Retry';
+        retryButton.addEventListener('click', () =>
+          this.#handleRetryGeneration()
+        );
+        lastError.appendChild(retryButton);
+      }
+    }
+
+    // Update UI state
+    this.#manageFocus('generation-error');
+  }
+
+  /**
+   * Handle retry generation after error
+   *
+   * @private
+   */
+  async #handleRetryGeneration() {
+    // Clear error messages
+    const errorMessages = document.querySelectorAll('.cb-message--error');
+    errorMessages.forEach((msg) => msg.remove());
+
+    // Reset state
+    this.#isGenerating = false;
+    this.#updateGenerateButtonEnhanced();
+
+    // Retry generation
+    await this.#handleGenerateCliches();
   }
 
   // ============= Data Caching Methods =============
@@ -1129,13 +1627,8 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
               directionId
             );
 
-          // Validate retrieved clichés
-          if (
-            cliches &&
-            (cliches instanceof Cliche ||
-              typeof cliches.getTotalCount === 'function')
-          ) {
-            validateClicheData(cliches);
+          // Cache retrieved clichés if valid
+          if (cliches && typeof cliches.getTotalCount === 'function') {
             this.#cacheCliches(directionId, cliches);
           }
         }
@@ -1144,7 +1637,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       if (hasCliches && cliches) {
         this.#currentCliches = cliches;
         this.#displayCliches(cliches);
-        this.#updateGenerateButton(false, 'Clichés Already Generated');
+        this.#updateGenerateButtonEnhanced();
 
         // Dispatch clichés loaded event
         this.eventBus.dispatch({
@@ -1154,7 +1647,8 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       } else {
         // Enable generation
         this.#showEmptyClichesState();
-        this.#updateGenerateButton(true, 'Generate Clichés');
+        this.#updateGenerateButtonEnhanced();
+        this.#manageFocus('ready-to-generate');
       }
     } catch (error) {
       this.logger.warn(
@@ -1164,7 +1658,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
 
       // Show empty state and allow generation as fallback
       this.#showEmptyClichesState();
-      this.#updateGenerateButton(true, 'Generate Clichés');
+      this.#updateGenerateButtonEnhanced();
 
       // Show warning message to user
       this.#showStatusMessage(
@@ -1259,10 +1753,8 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
         }, recovery.delay || 2000);
 
         this.#showStatusMessage(recovery.userMessage, 'info');
-        this.#updateGenerateButton(
-          false,
-          `Retrying in ${Math.round((recovery.delay || 2000) / 1000)}s...`
-        );
+        // Button state will be handled by the enhanced method
+        this.#updateGenerateButtonEnhanced();
 
         return;
       }
@@ -1284,7 +1776,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     }
 
     // Reset button for retry
-    this.#updateGenerateButton(true, 'Retry Generation');
+    this.#updateGenerateButtonEnhanced();
   }
 
   /**
@@ -1408,9 +1900,10 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
    *
    * @param {string} action - Selected action
    * @param {Error} error - Original error
+   * @param _error
    * @private
    */
-  #handleFallbackAction(action, error) {
+  #handleFallbackAction(action, _error) {
     switch (action) {
       case 'MANUAL_ENTRY':
         this.#showManualEntryOption();

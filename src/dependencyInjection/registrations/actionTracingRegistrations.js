@@ -159,6 +159,8 @@ export function registerActionTracing(container) {
         humanReadableFormatter: c.resolve(
           actionTracingTokens.IHumanReadableFormatter
         ),
+        traceDirectoryManager: c.resolve(actionTracingTokens.ITraceDirectoryManager),
+        eventBus: c.resolve(tokens.IEventBus),
         namingOptions: {
           strategy: NamingStrategy.TIMESTAMP_FIRST,
           timestampFormat: TimestampFormat.COMPACT,

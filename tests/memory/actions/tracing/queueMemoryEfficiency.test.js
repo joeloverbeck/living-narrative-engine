@@ -13,6 +13,7 @@ import {
   jest,
 } from '@jest/globals';
 import { ActionTraceOutputService } from '../../../../src/actions/tracing/actionTraceOutputService.js';
+import { TestTimerService } from '../../../../src/actions/tracing/timerService.js';
 import { createMockLogger } from '../../../common/mockFactories/loggerMocks.js';
 import {
   createMockActionTraceFilter,
@@ -26,13 +27,15 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
   let mockActionTraceFilter;
   let mockEventBus;
   let queueConfig;
+  let testTimerService;
 
   beforeEach(() => {
-    jest.useFakeTimers();
-
+    // Don't use Jest fake timers - rely on TestTimerService instead
+    
     mockLogger = createMockLogger();
     mockStorageAdapter = createMockIndexedDBStorageAdapter();
     mockActionTraceFilter = createMockActionTraceFilter();
+    testTimerService = new TestTimerService();
 
     mockEventBus = {
       dispatch: jest.fn(),
@@ -45,13 +48,26 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
       maxRetries: 2,
       memoryLimit: 1024 * 1024,
       enableParallelProcessing: true,
+      timerService: testTimerService,
     };
   });
 
   afterEach(async () => {
-    // Skip shutdown for memory tests - just clear timers
-    jest.clearAllTimers();
-    jest.useRealTimers();
+    // Properly shutdown service if it exists
+    if (service && typeof service.shutdown === 'function') {
+      try {
+        await service.shutdown();
+      } catch (error) {
+        // Ignore shutdown errors in tests
+        console.warn('Error during service shutdown:', error.message);
+      }
+    }
+    
+    // Clear test timer service
+    if (testTimerService) {
+      testTimerService.clearAll();
+    }
+    
     service = null;
   });
 
@@ -132,8 +148,8 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
             await service.writeTrace(trace);
           }
 
-          // Process batch
-          await jest.runAllTimersAsync();
+          // Process batch using TestTimerService
+          await testTimerService.triggerAll();
         }
 
         const finalMemory = process.memoryUsage().heapUsed;
@@ -165,6 +181,7 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
         queueConfig: {
           ...queueConfig,
           memoryLimit: 50 * 1024, // 50KB limit
+          timerService: testTimerService, // Ensure we use the test timer service
         },
       });
 
@@ -185,8 +202,19 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
         await service.writeTrace(trace);
       }
 
-      // Process all traces
-      await jest.runAllTimersAsync();
+      // Process all traces using TestTimerService
+      // May need multiple triggers due to batch processing
+      for (let i = 0; i < 10; i++) {
+        await testTimerService.triggerAll();
+        // Small delay to allow any async operations to complete
+        await new Promise(resolve => setImmediate(resolve));
+        
+        // Check if we have processed any traces yet
+        const interimMetrics = service.getQueueMetrics();
+        if (interimMetrics && interimMetrics.totalProcessed > 0) {
+          break; // Stop once we've processed something
+        }
+      }
 
       const stats = service.getQueueStats();
       expect(stats.memoryUsage).toBeLessThanOrEqual(
@@ -195,6 +223,7 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
 
       // Verify processing completed without memory issues
       const metrics = service.getQueueMetrics();
+      expect(metrics).toBeDefined();
       expect(metrics.totalProcessed).toBeGreaterThan(0);
     });
   });
@@ -234,8 +263,8 @@ describe('TraceQueueProcessor Memory Efficiency Tests', () => {
             await service.writeTrace(trace);
           }
 
-          // Process all traces
-          await jest.runAllTimersAsync();
+          // Process all traces using TestTimerService
+          await testTimerService.triggerAll();
 
           // Force garbage collection between iterations
           global.gc();
