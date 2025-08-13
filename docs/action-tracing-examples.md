@@ -247,6 +247,7 @@ Configuration for troubleshooting a specific action that's failing or behaving u
 ```
 
 **Debugging Steps**:
+
 1. Enable tracing for the problematic action
 2. Attempt the action that's failing
 3. Check trace files for:
@@ -256,6 +257,7 @@ Configuration for troubleshooting a specific action that's failing or behaving u
    - Execution errors
 
 **What to Look For**:
+
 - Failed prerequisite evaluations in verbose output
 - Missing or incorrect component data
 - Target resolution failures
@@ -291,6 +293,7 @@ Minimal overhead configuration to identify performance bottlenecks without impac
 ```
 
 **Analysis Focus**:
+
 - Pipeline stage durations
 - Total execution times
 - Patterns in slow actions
@@ -323,6 +326,7 @@ Detailed analysis of prerequisite evaluation for actions that aren't triggering 
 ```
 
 **What to Look For**:
+
 - Failed prerequisite evaluations
 - JSON Logic evaluation details
 - Condition vs. actual value comparisons
@@ -412,6 +416,7 @@ Minimal data exposure for security-sensitive environments.
 ```
 
 **Security Considerations**:
+
 - Limited data exposure
 - Short retention period (1 hour)
 - Restricted to security-related actions
@@ -697,8 +702,9 @@ Common mistakes and validation errors to avoid.
 ```
 
 **Issues Demonstrated**:
+
 - `enabled` should be boolean, not string
-- `tracedActions` should be array, not string  
+- `tracedActions` should be array, not string
 - `outputDirectory` should be string, not number
 - `verbosity` has invalid value (valid: minimal, standard, detailed, verbose)
 - `maxTraceFiles` should be positive integer (1-1000)
@@ -742,9 +748,10 @@ Example showing how to migrate from older configuration formats.
 ```
 
 **Migration Changes**:
+
 - Added `$schema` reference for validation
 - `enabledActions` → `tracedActions`
-- `outputDir` → `outputDirectory`  
+- `outputDir` → `outputDirectory`
 - `detail` → `verbosity` with specific enum values
 - Added granular include options
 - Added file rotation configuration
@@ -773,11 +780,12 @@ Configuration supporting environment-based customization.
 ```
 
 **Environment Variables Usage**:
+
 ```bash
 # Enable/disable tracing
 export TRACING_ENABLED=true
 
-# Set traced actions  
+# Set traced actions
 export TRACED_ACTIONS="core:*,my_mod:*"
 
 # Set output directory
@@ -792,7 +800,7 @@ export TRACE_VERBOSITY="verbose"
 ## Related Documentation
 
 - [Action Tracing User Guide](./action-tracing-guide.md) - Basic usage and getting started
-- [Action Tracing Developer Guide](./action-tracing-developer-guide.md) - Implementation details and architecture  
+- [Action Tracing Developer Guide](./action-tracing-developer-guide.md) - Implementation details and architecture
 - [Trace Configuration Schema](../data/schemas/trace-config.schema.json) - Complete schema validation rules
 
 ## Testing Your Configuration
@@ -814,21 +822,25 @@ cat traces/actions/core-go_*.txt
 ## Quick Reference
 
 ### Verbosity Levels
+
 - **minimal**: Basic success/failure and timing
 - **standard**: Includes component states and basic pipeline info
-- **detailed**: Adds prerequisite and target resolution details  
+- **detailed**: Adds prerequisite and target resolution details
 - **verbose**: Maximum detail including all evaluation steps
 
 ### Rotation Policies
+
 - **age**: Remove files older than `maxFileAge` seconds
 - **count**: Keep only the most recent `maxTraceFiles` files
 
 ### Wildcard Patterns
+
 - `*`: All actions from all mods
 - `mod_name:*`: All actions from specific mod
 - `core:combat_*`: All combat actions from core mod
 
 ### Performance Guidelines
+
 - **Development**: Use `verbose` with full includes
 - **Staging**: Use `standard` with selective includes
 - **Production**: Use `minimal` with specific actions only

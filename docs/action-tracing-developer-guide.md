@@ -72,8 +72,14 @@ The system uses dependency injection extensively through the `actionTracingToken
 ```javascript
 // Service registration example
 container.register(actionTracingTokens.IActionTraceFilter, ActionTraceFilter);
-container.register(actionTracingTokens.IActionExecutionTraceFactory, ActionExecutionTraceFactory);
-container.register(actionTracingTokens.IActionTraceOutputService, ActionTraceOutputService);
+container.register(
+  actionTracingTokens.IActionExecutionTraceFactory,
+  ActionExecutionTraceFactory
+);
+container.register(
+  actionTracingTokens.IActionTraceOutputService,
+  ActionTraceOutputService
+);
 ```
 
 ### Design Patterns
@@ -91,6 +97,7 @@ container.register(actionTracingTokens.IActionTraceOutputService, ActionTraceOut
 **Purpose**: Controls which actions are traced and at what verbosity level.
 
 **Key Features**:
+
 - Wildcard pattern matching (`core:*`, `*:go`)
 - Regex pattern support (`/pattern/`)
 - Verbosity levels: `minimal`, `standard`, `detailed`, `verbose`
@@ -98,6 +105,7 @@ container.register(actionTracingTokens.IActionTraceOutputService, ActionTraceOut
 - Inclusion/exclusion rules
 
 **Constructor**:
+
 ```javascript
 const filter = new ActionTraceFilter({
   enabled: true,
@@ -107,8 +115,8 @@ const filter = new ActionTraceFilter({
   inclusionConfig: {
     componentData: true,
     prerequisites: false,
-    targets: true
-  }
+    targets: true,
+  },
 });
 ```
 
@@ -117,6 +125,7 @@ const filter = new ActionTraceFilter({
 **Purpose**: Captures action-specific data during pipeline processing with filtering and verbosity control.
 
 **Key Features**:
+
 - Pipeline stage capture (`component_filtering`, `prerequisite_evaluation`, `target_resolution`)
 - Multi-target resolution support
 - Legacy action compatibility
@@ -124,18 +133,19 @@ const filter = new ActionTraceFilter({
 - Enhanced filtering capabilities
 
 **Usage Example**:
+
 ```javascript
 const trace = new ActionAwareStructuredTrace({
   actionTraceFilter: filter,
   actorId: 'actor_123',
-  context: { sessionId: 'game_session_456' }
+  context: { sessionId: 'game_session_456' },
 });
 
 // Capture pipeline data
 trace.captureActionData('component_filtering', 'core:go', {
   actorComponents: ['core:position', 'core:movement'],
   requiredComponents: ['core:position'],
-  passed: true
+  passed: true,
 });
 ```
 
@@ -144,6 +154,7 @@ trace.captureActionData('component_filtering', 'core:go', {
 **Purpose**: Tracks complete action execution lifecycle with high-precision timing and error analysis.
 
 **Key Features**:
+
 - Execution phase tracking (initialization, payload creation, completion)
 - High-precision timing with `ExecutionPhaseTimer`
 - Error classification with `ErrorClassifier`
@@ -151,13 +162,14 @@ trace.captureActionData('component_filtering', 'core:go', {
 - Payload sanitization for security
 
 **Lifecycle Example**:
+
 ```javascript
 const trace = new ActionExecutionTrace({
   actionId: 'core:go',
   actorId: 'player_1',
   turnAction: turnActionObject,
   enableTiming: true,
-  enableErrorAnalysis: true
+  enableErrorAnalysis: true,
 });
 
 // Track execution phases
@@ -172,6 +184,7 @@ trace.captureDispatchResult(result);
 **Purpose**: Manages trace output, storage, and export with advanced queuing and rotation.
 
 **Key Features**:
+
 - Priority-based queue processing with `TraceQueueProcessor`
 - Browser IndexedDB storage with `StorageRotationManager`
 - File System Access API export (with download fallback)
@@ -179,6 +192,7 @@ trace.captureDispatchResult(result);
 - Circuit breaker pattern for reliability
 
 **Service Setup**:
+
 ```javascript
 const outputService = new ActionTraceOutputService({
   storageAdapter: indexedDBAdapter,
@@ -188,8 +202,8 @@ const outputService = new ActionTraceOutputService({
   queueConfig: {
     maxQueueSize: 1000,
     batchSize: 10,
-    flushInterval: 5000
-  }
+    flushInterval: 5000,
+  },
 });
 ```
 
@@ -210,13 +224,14 @@ export const actionTracingTokens = {
   IEventDispatchTracer: 'IEventDispatchTracer',
   IIndexedDBStorageAdapter: 'IIndexedDBStorageAdapter',
   IJsonTraceFormatter: 'IJsonTraceFormatter',
-  IHumanReadableFormatter: 'IHumanReadableFormatter'
+  IHumanReadableFormatter: 'IHumanReadableFormatter',
 };
 ```
 
 ### Service Interfaces
 
 #### IActionTraceFilter
+
 ```typescript
 interface IActionTraceFilter {
   shouldTrace(actionId: string): boolean;
@@ -228,10 +243,14 @@ interface IActionTraceFilter {
 ```
 
 #### IActionTraceOutputService
+
 ```typescript
 interface IActionTraceOutputService {
   writeTrace(trace: object, priority?: number): Promise<void>;
-  exportTracesToFileSystem(traceIds?: string[], format?: string): Promise<object>;
+  exportTracesToFileSystem(
+    traceIds?: string[],
+    format?: string
+  ): Promise<object>;
   getStatistics(): object;
   shutdown(): Promise<void>;
 }
@@ -240,22 +259,24 @@ interface IActionTraceOutputService {
 ### Configuration Schemas
 
 #### VerbosityConfig
+
 ```javascript
 const verbosityConfig = {
-  componentData: boolean,    // Include component-related data
-  prerequisites: boolean,    // Include prerequisite evaluation data
-  targets: boolean          // Include target resolution data
+  componentData: boolean, // Include component-related data
+  prerequisites: boolean, // Include prerequisite evaluation data
+  targets: boolean, // Include target resolution data
 };
 ```
 
 #### Queue Configuration
+
 ```javascript
 const queueConfig = {
-  maxQueueSize: number,     // Maximum items in queue (default: 1000)
-  batchSize: number,        // Items processed per batch (default: 10)
-  flushInterval: number,    // Auto-flush interval in ms (default: 5000)
-  circuitBreakerThreshold: number,  // Error threshold (default: 10)
-  timerService: object      // Custom timer service
+  maxQueueSize: number, // Maximum items in queue (default: 1000)
+  batchSize: number, // Items processed per batch (default: 10)
+  flushInterval: number, // Auto-flush interval in ms (default: 5000)
+  circuitBreakerThreshold: number, // Error threshold (default: 10)
+  timerService: object, // Custom timer service
 };
 ```
 
@@ -276,17 +297,17 @@ class CustomActionStage {
     this.trace.captureActionData('custom_stage_start', actionId, {
       stageType: 'custom',
       inputCount: context.inputs?.length || 0,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     try {
       const result = await this.performProcessing(context);
-      
+
       // Capture successful completion
       this.trace.captureActionData('custom_stage_complete', actionId, {
         success: true,
         outputCount: result.outputs?.length || 0,
-        processingTime: Date.now() - startTime
+        processingTime: Date.now() - startTime,
       });
 
       return result;
@@ -295,7 +316,7 @@ class CustomActionStage {
       this.trace.captureActionData('custom_stage_error', actionId, {
         success: false,
         error: error.message,
-        errorType: error.constructor.name
+        errorType: error.constructor.name,
       });
       throw error;
     }
@@ -321,30 +342,30 @@ class CustomGameService {
       actorId: operationData.actorId,
       turnAction: operationData,
       enableTiming: true,
-      enableErrorAnalysis: true
+      enableErrorAnalysis: true,
     });
 
     trace.captureDispatchStart();
-    
+
     try {
       trace.captureEventPayload({
         operationType: operationData.type,
-        parameters: operationData.params
+        parameters: operationData.params,
       });
 
       const result = await this.executeOperation(operationData);
-      
+
       trace.captureDispatchResult({
         success: true,
         timestamp: Date.now(),
-        metadata: { resultSize: result.data?.length }
+        metadata: { resultSize: result.data?.length },
       });
 
       return result;
     } catch (error) {
       trace.captureError(error, {
         phase: 'execution',
-        retryCount: 0
+        retryCount: 0,
       });
       throw error;
     } finally {
@@ -364,10 +385,16 @@ class ActionEventHandler {
   constructor({ eventBus, actionAwareStructuredTrace }) {
     this.eventBus = eventBus;
     this.trace = actionAwareStructuredTrace;
-    
+
     // Subscribe to action events
-    this.eventBus.subscribe('ACTION_STARTED', this.handleActionStart.bind(this));
-    this.eventBus.subscribe('ACTION_COMPLETED', this.handleActionComplete.bind(this));
+    this.eventBus.subscribe(
+      'ACTION_STARTED',
+      this.handleActionStart.bind(this)
+    );
+    this.eventBus.subscribe(
+      'ACTION_COMPLETED',
+      this.handleActionComplete.bind(this)
+    );
   }
 
   handleActionStart(event) {
@@ -375,7 +402,7 @@ class ActionEventHandler {
       eventType: 'ACTION_STARTED',
       timestamp: event.timestamp,
       actorId: event.actorId,
-      payload: event.payload
+      payload: event.payload,
     });
   }
 
@@ -385,7 +412,7 @@ class ActionEventHandler {
       timestamp: event.timestamp,
       success: event.success,
       duration: event.duration,
-      result: event.result
+      result: event.result,
     });
   }
 }
@@ -428,7 +455,7 @@ class CustomJsonFormatter {
         version: '2.0',
         timestamp: new Date().toISOString(),
         trace: this.transformTrace(traceData),
-        metadata: this.generateMetadata(traceData)
+        metadata: this.generateMetadata(traceData),
       };
 
       return JSON.stringify(formatted, this.jsonReplacer, 2);
@@ -445,7 +472,7 @@ class CustomJsonFormatter {
       type: traceData.traceType || 'unknown',
       data: this.sanitizeData(traceData),
       timing: this.extractTiming(traceData),
-      errors: this.extractErrors(traceData)
+      errors: this.extractErrors(traceData),
     };
   }
 
@@ -462,7 +489,10 @@ class CustomJsonFormatter {
 }
 
 // Register the formatter
-container.register(actionTracingTokens.IJsonTraceFormatter, CustomJsonFormatter);
+container.register(
+  actionTracingTokens.IJsonTraceFormatter,
+  CustomJsonFormatter
+);
 ```
 
 #### Human-Readable Formatter Implementation
@@ -495,7 +525,7 @@ class CustomHumanReadableFormatter {
       execution: this.formatExecution(traceData),
       timing: this.formatTiming(traceData),
       errors: this.formatErrors(traceData),
-      summary: this.formatSummary(traceData)
+      summary: this.formatSummary(traceData),
     };
   }
 
@@ -577,22 +607,30 @@ import { ActionTraceOutputService } from '../actions/tracing/actionTraceOutputSe
 
 export function registerActionTracingServices(container) {
   // Core services
-  container.register(actionTracingTokens.IActionTraceFilter, ActionTraceFilter, {
-    // Configuration
-    enabled: true,
-    tracedActions: ['*'],
-    verbosityLevel: 'standard'
-  });
+  container.register(
+    actionTracingTokens.IActionTraceFilter,
+    ActionTraceFilter,
+    {
+      // Configuration
+      enabled: true,
+      tracedActions: ['*'],
+      verbosityLevel: 'standard',
+    }
+  );
 
-  container.register(actionTracingTokens.IActionTraceOutputService, ActionTraceOutputService, {
-    // Dependencies will be auto-injected
-    dependencies: [
-      actionTracingTokens.IIndexedDBStorageAdapter,
-      actionTracingTokens.IActionTraceFilter,
-      actionTracingTokens.IJsonTraceFormatter,
-      actionTracingTokens.IHumanReadableFormatter
-    ]
-  });
+  container.register(
+    actionTracingTokens.IActionTraceOutputService,
+    ActionTraceOutputService,
+    {
+      // Dependencies will be auto-injected
+      dependencies: [
+        actionTracingTokens.IIndexedDBStorageAdapter,
+        actionTracingTokens.IActionTraceFilter,
+        actionTracingTokens.IJsonTraceFormatter,
+        actionTracingTokens.IHumanReadableFormatter,
+      ],
+    }
+  );
 }
 ```
 
@@ -602,43 +640,60 @@ export function registerActionTracingServices(container) {
 // Complex service configuration with custom options
 export function registerAdvancedTracingServices(container, config) {
   // Register storage adapter
-  container.register(actionTracingTokens.IIndexedDBStorageAdapter, IndexedDBStorageAdapter, {
-    databaseName: config.storage.databaseName,
-    version: config.storage.version
-  });
+  container.register(
+    actionTracingTokens.IIndexedDBStorageAdapter,
+    IndexedDBStorageAdapter,
+    {
+      databaseName: config.storage.databaseName,
+      version: config.storage.version,
+    }
+  );
 
   // Register formatters
-  container.register(actionTracingTokens.IJsonTraceFormatter, JsonTraceFormatter, {
-    schemaValidation: config.formatting.validateSchema,
-    includeMetadata: config.formatting.includeMetadata
-  });
+  container.register(
+    actionTracingTokens.IJsonTraceFormatter,
+    JsonTraceFormatter,
+    {
+      schemaValidation: config.formatting.validateSchema,
+      includeMetadata: config.formatting.includeMetadata,
+    }
+  );
 
   // Register trace filter with environment-specific settings
-  container.register(actionTracingTokens.IActionTraceFilter, ActionTraceFilter, {
-    enabled: config.tracing.enabled,
-    tracedActions: config.tracing.actions,
-    verbosityLevel: config.environment === 'development' ? 'verbose' : 'standard',
-    inclusionConfig: {
-      componentData: config.tracing.includeComponents,
-      prerequisites: config.tracing.includePrerequisites,
-      targets: config.tracing.includeTargets
+  container.register(
+    actionTracingTokens.IActionTraceFilter,
+    ActionTraceFilter,
+    {
+      enabled: config.tracing.enabled,
+      tracedActions: config.tracing.actions,
+      verbosityLevel:
+        config.environment === 'development' ? 'verbose' : 'standard',
+      inclusionConfig: {
+        componentData: config.tracing.includeComponents,
+        prerequisites: config.tracing.includePrerequisites,
+        targets: config.tracing.includeTargets,
+      },
     }
-  });
+  );
 
   // Register output service with queue configuration
-  container.register(actionTracingTokens.IActionTraceOutputService, ActionTraceOutputService, {
-    queueConfig: {
-      maxQueueSize: config.queue.maxSize,
-      batchSize: config.queue.batchSize,
-      flushInterval: config.queue.flushInterval,
-      circuitBreakerThreshold: config.queue.errorThreshold
-    },
-    namingOptions: {
-      strategy: config.naming.strategy,
-      timestampFormat: config.naming.timestampFormat,
-      includeActorId: config.naming.includeActorId
+  container.register(
+    actionTracingTokens.IActionTraceOutputService,
+    ActionTraceOutputService,
+    {
+      queueConfig: {
+        maxQueueSize: config.queue.maxSize,
+        batchSize: config.queue.batchSize,
+        flushInterval: config.queue.flushInterval,
+        circuitBreakerThreshold: config.queue.errorThreshold,
+      },
+      namingOptions: {
+        strategy: config.naming.strategy,
+        timestampFormat: config.naming.timestampFormat,
+        includeActorId: config.naming.includeActorId,
+      },
     }
-  });
+  );
 }
 ```
 
@@ -653,7 +708,7 @@ class TracedActionStage {
     return [
       actionTracingTokens.IActionAwareStructuredTrace,
       actionTracingTokens.IActionTraceFilter,
-      'ILogger'
+      'ILogger',
     ];
   }
 
@@ -665,7 +720,7 @@ class TracedActionStage {
 
   async execute(context) {
     const { actionId } = context;
-    
+
     // Check if this action should be traced
     if (!this.filter.shouldTrace(actionId)) {
       return this.executeWithoutTracing(context);
@@ -681,16 +736,16 @@ class TracedActionStage {
     this.trace.captureActionData(`${stageName}_start`, context.actionId, {
       stage: stageName,
       timestamp: Date.now(),
-      context: this.sanitizeContext(context)
+      context: this.sanitizeContext(context),
     });
 
     try {
       const result = await this.processAction(context);
-      
+
       this.trace.captureActionData(`${stageName}_complete`, context.actionId, {
         success: true,
         duration: performance.now() - startTime,
-        resultSummary: this.summarizeResult(result)
+        resultSummary: this.summarizeResult(result),
       });
 
       return result;
@@ -699,7 +754,7 @@ class TracedActionStage {
         success: false,
         error: error.message,
         errorType: error.constructor.name,
-        duration: performance.now() - startTime
+        duration: performance.now() - startTime,
       });
       throw error;
     }
@@ -716,7 +771,7 @@ class TracingEventBus {
     return [
       actionTracingTokens.IEventDispatchTracer,
       actionTracingTokens.IActionTraceOutputService,
-      'ILogger'
+      'ILogger',
     ];
   }
 
@@ -730,13 +785,13 @@ class TracingEventBus {
   async dispatch(event) {
     // Create trace for event dispatch
     const trace = this.eventTracer.startTrace(event);
-    
+
     try {
       const result = await this.processEvent(event);
-      
+
       this.eventTracer.completeTrace(trace, {
         success: true,
-        result: result
+        result: result,
       });
 
       return result;
@@ -781,8 +836,8 @@ class AnalyticsTracingAdapter {
         actorId: traceData.metadata.actorId,
         duration: traceData.execution.duration,
         success: !traceData.error,
-        timestamp: traceData.execution.startTime
-      }
+        timestamp: traceData.execution.startTime,
+      },
     };
   }
 }
@@ -804,14 +859,14 @@ class PerformanceMonitoringIntegration {
   integrateWithTracing(outputService) {
     // Hook into trace writing to extract performance metrics
     const originalWriteTrace = outputService.writeTrace.bind(outputService);
-    
+
     outputService.writeTrace = async (trace, priority) => {
       // Extract performance data
       const perfData = this.extractPerformanceData(trace);
-      
+
       // Send to monitoring system
       await this.monitoring.recordMetrics(perfData);
-      
+
       // Continue with normal trace writing
       return originalWriteTrace(trace, priority);
     };
@@ -824,7 +879,7 @@ class PerformanceMonitoringIntegration {
       duration: data.execution.duration,
       memoryUsage: data.timing?.memoryUsage,
       errorRate: data.error ? 1 : 0,
-      timestamp: data.execution.startTime
+      timestamp: data.execution.startTime,
     };
   }
 }
@@ -854,7 +909,7 @@ class EfficientTracingManager {
         actionId,
         actorId,
         turnAction: {},
-        enableTiming: this.config.enableTiming
+        enableTiming: this.config.enableTiming,
       });
     } else {
       trace.reset(actionId, actorId);
@@ -872,7 +927,7 @@ class EfficientTracingManager {
       // Clean up and return to pool
       this.activeTraces.delete(trace.id);
       trace.cleanup();
-      
+
       // Maintain pool size limits
       if (this.tracePool.length < this.config.maxPoolSize) {
         this.tracePool.push(trace);
@@ -884,7 +939,7 @@ class EfficientTracingManager {
   cleanupStaleTraces() {
     const maxAge = this.config.maxTraceAge || 300000; // 5 minutes
     const now = Date.now();
-    
+
     for (const [id, trace] of this.activeTraces) {
       if (now - trace.startTime > maxAge) {
         this.activeTraces.delete(id);
@@ -911,7 +966,7 @@ class CircularTraceBuffer {
   add(trace) {
     this.buffer[this.head] = trace;
     this.head = (this.head + 1) % this.size;
-    
+
     if (this.count < this.size) {
       this.count++;
     } else {
@@ -922,13 +977,13 @@ class CircularTraceBuffer {
   getRecentTraces(n = 100) {
     const traces = [];
     let index = this.head - 1;
-    
+
     for (let i = 0; i < Math.min(n, this.count); i++) {
       if (index < 0) index = this.size - 1;
       traces.push(this.buffer[index]);
       index--;
     }
-    
+
     return traces;
   }
 }
@@ -951,7 +1006,7 @@ class OptimizedBatchProcessor {
 
   async addTrace(trace) {
     this.pendingTraces.push(trace);
-    
+
     // Trigger immediate processing if batch is full
     if (this.pendingTraces.length >= this.config.maxBatchSize) {
       await this.processBatch();
@@ -975,15 +1030,15 @@ class OptimizedBatchProcessor {
     }
 
     const batch = this.pendingTraces.splice(0, this.config.maxBatchSize);
-    
+
     try {
       // Process traces in parallel with concurrency limit
       const concurrency = this.config.maxConcurrency || 3;
       const chunks = this.chunkArray(batch, concurrency);
-      
+
       for (const chunk of chunks) {
         await Promise.all(
-          chunk.map(trace => this.outputService.writeTrace(trace))
+          chunk.map((trace) => this.outputService.writeTrace(trace))
         );
       }
     } catch (error) {
@@ -991,7 +1046,7 @@ class OptimizedBatchProcessor {
       // Could implement retry logic here
     } finally {
       this.processingBatch = false;
-      
+
       // Process remaining traces if any
       if (this.pendingTraces.length > 0) {
         setImmediate(() => this.processBatch());
@@ -1018,7 +1073,7 @@ class PriorityTraceQueue {
     this.queues = new Map([
       ['high', []],
       ['normal', []],
-      ['low', []]
+      ['low', []],
     ]);
     this.maxSize = maxSize;
     this.backpressureThreshold = backpressureThreshold;
@@ -1027,12 +1082,12 @@ class PriorityTraceQueue {
 
   enqueue(trace, priority = 'normal') {
     const totalSize = this.getTotalSize();
-    
+
     if (totalSize >= this.maxSize) {
       // Drop low priority items first
       this.dropLowPriorityItems();
     }
-    
+
     if (this.getTotalSize() >= this.maxSize) {
       this.droppedCount++;
       return false; // Queue full, trace dropped
@@ -1040,7 +1095,7 @@ class PriorityTraceQueue {
 
     const queue = this.queues.get(priority) || this.queues.get('normal');
     queue.push(trace);
-    
+
     return true;
   }
 
@@ -1056,8 +1111,10 @@ class PriorityTraceQueue {
   }
 
   getTotalSize() {
-    return Array.from(this.queues.values())
-      .reduce((total, queue) => total + queue.length, 0);
+    return Array.from(this.queues.values()).reduce(
+      (total, queue) => total + queue.length,
+      0
+    );
   }
 
   dropLowPriorityItems() {
@@ -1097,13 +1154,13 @@ export class TraceTestUtils {
       toJSON: () => ({
         metadata: { actionId: 'test:action', actorId: 'test_actor' },
         execution: { duration: 100, startTime: Date.now() },
-        ...overrides
+        ...overrides,
       }),
       getExecutionPhases: () => [
         { phase: 'start', timestamp: Date.now() - 100 },
-        { phase: 'complete', timestamp: Date.now() }
+        { phase: 'complete', timestamp: Date.now() },
       ],
-      ...overrides
+      ...overrides,
     };
   }
 
@@ -1114,25 +1171,29 @@ export class TraceTestUtils {
       getInclusionConfig: jest.fn().mockReturnValue({
         componentData: true,
         prerequisites: false,
-        targets: true
+        targets: true,
       }),
-      ...config
+      ...config,
     };
   }
 
   static createMockStorageAdapter() {
     const storage = new Map();
     return {
-      getItem: jest.fn().mockImplementation(key => Promise.resolve(storage.get(key))),
+      getItem: jest
+        .fn()
+        .mockImplementation((key) => Promise.resolve(storage.get(key))),
       setItem: jest.fn().mockImplementation((key, value) => {
         storage.set(key, value);
         return Promise.resolve();
       }),
-      removeItem: jest.fn().mockImplementation(key => {
+      removeItem: jest.fn().mockImplementation((key) => {
         storage.delete(key);
         return Promise.resolve();
       }),
-      getAllKeys: jest.fn().mockImplementation(() => Promise.resolve([...storage.keys()]))
+      getAllKeys: jest
+        .fn()
+        .mockImplementation(() => Promise.resolve([...storage.keys()])),
     };
   }
 }
@@ -1154,7 +1215,7 @@ describe('ActionTraceFilter', () => {
       enabled: true,
       tracedActions: ['core:*', 'game:combat'],
       excludedActions: ['debug:*'],
-      verbosityLevel: 'standard'
+      verbosityLevel: 'standard',
     });
   });
 
@@ -1209,7 +1270,7 @@ describe('Action Tracing Integration', () => {
     filter = new ActionTraceFilter({ enabled: true, tracedActions: ['*'] });
     trace = new ActionAwareStructuredTrace({
       actionTraceFilter: filter,
-      actorId: 'test_actor'
+      actorId: 'test_actor',
     });
     outputService = new ActionTraceOutputService({ storageAdapter });
   });
@@ -1223,12 +1284,12 @@ describe('Action Tracing Integration', () => {
     trace.captureActionData('component_filtering', 'core:go', {
       actorComponents: ['position', 'movement'],
       requiredComponents: ['position'],
-      passed: true
+      passed: true,
     });
 
     trace.captureActionData('target_resolution', 'core:go', {
       targets: [{ type: 'entity', id: 'door_1' }],
-      resolved: true
+      resolved: true,
     });
 
     // Write trace to storage
@@ -1238,20 +1299,24 @@ describe('Action Tracing Integration', () => {
     const stored = await storageAdapter.getItem('actionTraces');
     expect(stored).toHaveLength(1);
     expect(stored[0].data.actions['core:go']).toBeDefined();
-    expect(stored[0].data.actions['core:go'].stages).toHaveProperty('component_filtering');
-    expect(stored[0].data.actions['core:go'].stages).toHaveProperty('target_resolution');
+    expect(stored[0].data.actions['core:go'].stages).toHaveProperty(
+      'component_filtering'
+    );
+    expect(stored[0].data.actions['core:go'].stages).toHaveProperty(
+      'target_resolution'
+    );
   });
 
   it('should respect filtering configuration', async () => {
     filter = new ActionTraceFilter({
       enabled: true,
       tracedActions: ['game:*'],
-      excludedActions: ['debug:*']
+      excludedActions: ['debug:*'],
     });
 
     trace = new ActionAwareStructuredTrace({
       actionTraceFilter: filter,
-      actorId: 'test_actor'
+      actorId: 'test_actor',
     });
 
     // Should trace game actions
@@ -1277,21 +1342,21 @@ describe('Trace Performance', () => {
   it('should handle high-volume trace creation efficiently', () => {
     const startTime = performance.now();
     const traces = [];
-    
+
     // Create 10,000 traces
     for (let i = 0; i < 10000; i++) {
       const trace = new ActionExecutionTrace({
         actionId: `action_${i}`,
         actorId: `actor_${i}`,
         turnAction: { id: i },
-        enableTiming: true
+        enableTiming: true,
       });
       traces.push(trace);
     }
-    
+
     const endTime = performance.now();
     const duration = endTime - startTime;
-    
+
     expect(traces).toHaveLength(10000);
     expect(duration).toBeLessThan(1000); // Should complete in under 1 second
   });
@@ -1301,21 +1366,21 @@ describe('Trace Performance', () => {
       actionId: 'performance:test',
       actorId: 'perf_actor',
       turnAction: { complex: 'data'.repeat(1000) },
-      enableTiming: true
+      enableTiming: true,
     });
 
     const startTime = performance.now();
-    
+
     // Simulate trace lifecycle
     trace.captureDispatchStart();
     trace.captureEventPayload({ large: 'payload'.repeat(1000) });
     trace.captureDispatchResult({ success: true });
-    
+
     // Serialize multiple times
     for (let i = 0; i < 1000; i++) {
       JSON.stringify(trace.toJSON());
     }
-    
+
     const endTime = performance.now();
     expect(endTime - startTime).toBeLessThan(500); // Should be fast
   });
@@ -1342,23 +1407,23 @@ describe('Trace Memory Usage', () => {
 
   it('should not leak memory with repeated trace creation', () => {
     const initialMemory = process.memoryUsage().heapUsed;
-    
+
     // Create and discard many traces
     for (let cycle = 0; cycle < 10; cycle++) {
       for (let i = 0; i < 1000; i++) {
         const trace = TraceTestUtils.createMockTrace();
         trace.toJSON(); // Simulate usage
       }
-      
+
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
       }
     }
-    
+
     const finalMemory = process.memoryUsage().heapUsed;
     const memoryGrowth = finalMemory - initialMemory;
-    
+
     // Memory growth should be minimal (less than 10MB)
     expect(memoryGrowth).toBeLessThan(10 * 1024 * 1024);
   });
@@ -1415,6 +1480,7 @@ src/actions/tracing/
 #### Adding New Trace Types
 
 1. **Create trace interface**:
+
 ```javascript
 // src/actions/tracing/interfaces/customTraceInterface.js
 export class CustomTraceInterface {
@@ -1434,15 +1500,17 @@ export class CustomTraceInterface {
 ```
 
 2. **Add dependency injection token**:
+
 ```javascript
 // In actionTracingTokens.js
 export const actionTracingTokens = {
   // ... existing tokens
-  ICustomTraceInterface: 'ICustomTraceInterface'
+  ICustomTraceInterface: 'ICustomTraceInterface',
 };
 ```
 
 3. **Create implementation**:
+
 ```javascript
 // src/actions/tracing/customTrace.js
 export class CustomTrace extends CustomTraceInterface {
@@ -1451,6 +1519,7 @@ export class CustomTrace extends CustomTraceInterface {
 ```
 
 4. **Add tests**:
+
 ```javascript
 // tests/unit/actions/tracing/customTrace.test.js
 // tests/integration/actions/tracing/customTraceIntegration.test.js
@@ -1464,6 +1533,7 @@ export class CustomTrace extends CustomTraceInterface {
 #### Extending Formatters
 
 1. **Create formatter interface** (if needed):
+
 ```javascript
 export class CustomFormatterInterface {
   format(data) {
@@ -1473,6 +1543,7 @@ export class CustomFormatterInterface {
 ```
 
 2. **Implement formatter**:
+
 ```javascript
 export class CustomFormatter extends CustomFormatterInterface {
   format(data) {
@@ -1483,11 +1554,13 @@ export class CustomFormatter extends CustomFormatterInterface {
 ```
 
 3. **Register with DI container**:
+
 ```javascript
 container.register(tokens.ICustomFormatter, CustomFormatter);
 ```
 
 4. **Add to output service** (if automatic detection desired):
+
 ```javascript
 // In ActionTraceOutputService
 if (this.customFormatter) {
@@ -1498,6 +1571,7 @@ if (this.customFormatter) {
 #### Performance Optimization Updates
 
 1. **Profile existing code**:
+
 ```bash
 # Run performance tests
 npm run test:performance
@@ -1561,23 +1635,25 @@ export class LegacyTraceCompatibilityLayer {
 
 When making breaking changes, provide clear migration documentation:
 
-```markdown
+````markdown
 ## Migration from v1.x to v2.x
 
 ### Changed APIs
 
 1. **ActionTraceFilter constructor**:
+
    ```javascript
    // Old (v1.x)
    new ActionTraceFilter(enabled, actions, verbosity);
-   
+
    // New (v2.x)
    new ActionTraceFilter({
      enabled,
      tracedActions: actions,
-     verbosityLevel: verbosity
+     verbosityLevel: verbosity,
    });
    ```
+````
 
 2. **Trace output format**:
    - `timestamp` field now uses ISO 8601 format
@@ -1590,7 +1666,8 @@ When making breaking changes, provide clear migration documentation:
 2. Update code that reads trace output format
 3. Run tests to verify functionality
 4. Update dependencies that depend on old formats
-```
+
+````
 
 ### Release Process
 
@@ -1625,9 +1702,10 @@ When making breaking changes, provide clear migration documentation:
 git clone <repository-url>
 cd living-narrative-engine
 npm install
-```
+````
 
 2. **Development environment**:
+
 ```bash
 # Start development server
 npm run dev
@@ -1640,6 +1718,7 @@ npm run test:unit -- --testPathPattern=tracing
 ```
 
 3. **Code quality tools**:
+
 ```bash
 # Linting
 npm run lint
@@ -1654,24 +1733,28 @@ npm run format
 ### Code Standards
 
 #### File Structure
+
 - Follow existing directory structure
 - Use descriptive file names
 - Include JSDoc comments for all public APIs
 - Add unit tests for all new functionality
 
 #### Naming Conventions
+
 - Classes: `PascalCase` (e.g., `ActionTraceFilter`)
 - Functions: `camelCase` (e.g., `captureActionData`)
 - Constants: `UPPER_SNAKE_CASE` (e.g., `DEFAULT_PRIORITY`)
 - Private fields: `#fieldName` (e.g., `#logger`)
 
 #### Error Handling
+
 - Use descriptive error messages
 - Implement proper error classification
 - Don't let tracing errors break main functionality
 - Log errors appropriately without exposing sensitive data
 
 #### Performance Guidelines
+
 - Avoid unnecessary object creation in hot paths
 - Use appropriate data structures for the use case
 - Implement lazy loading where beneficial

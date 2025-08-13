@@ -13,7 +13,7 @@ describe('ActionExecutionTraceFactory', () => {
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
-    
+
     // Create mock logger that will be used by the factory
     // Make sure it has all required methods for ensureValidLogger
     mockLogger = {
@@ -49,10 +49,14 @@ describe('ActionExecutionTraceFactory', () => {
     });
 
     it('should create factory with fallback logger when logger is invalid', () => {
-      const factoryWithNullLogger = new ActionExecutionTraceFactory({ logger: null });
+      const factoryWithNullLogger = new ActionExecutionTraceFactory({
+        logger: null,
+      });
       expect(factoryWithNullLogger).toBeDefined();
-      
-      const factoryWithInvalidLogger = new ActionExecutionTraceFactory({ logger: 'not-a-logger' });
+
+      const factoryWithInvalidLogger = new ActionExecutionTraceFactory({
+        logger: 'not-a-logger',
+      });
       expect(factoryWithInvalidLogger).toBeDefined();
     });
   });
@@ -78,11 +82,11 @@ describe('ActionExecutionTraceFactory', () => {
         turnAction: validTurnAction,
         enableTiming: true,
       });
-      
+
       expect(result).toBeDefined();
       expect(result.actionId).toBe('core:go');
       expect(result.actorId).toBe('player-1');
-      
+
       // Verify debug logging occurs after successful creation
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -182,7 +186,9 @@ describe('ActionExecutionTraceFactory', () => {
           actorId: 'player-1',
           turnAction: null,
         })
-      ).toThrow('Failed to create execution trace: Turn action is required and must be an object');
+      ).toThrow(
+        'Failed to create execution trace: Turn action is required and must be an object'
+      );
     });
 
     it('should throw Error wrapping InvalidArgumentError for non-object turnAction', () => {
@@ -192,7 +198,9 @@ describe('ActionExecutionTraceFactory', () => {
           actorId: 'player-1',
           turnAction: 'not-an-object',
         })
-      ).toThrow('Failed to create execution trace: Turn action is required and must be an object');
+      ).toThrow(
+        'Failed to create execution trace: Turn action is required and must be an object'
+      );
     });
 
     it('should throw error for turnAction missing actionDefinitionId', () => {
@@ -280,7 +288,9 @@ describe('ActionExecutionTraceFactory', () => {
           actorId: 'player-1',
           turnAction: validTurnAction,
         })
-      ).toThrow('Failed to create execution trace: ActionExecutionTrace constructor failed');
+      ).toThrow(
+        'Failed to create execution trace: ActionExecutionTrace constructor failed'
+      );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to create ActionExecutionTrace',
@@ -305,7 +315,7 @@ describe('ActionExecutionTraceFactory', () => {
         turnAction: validTurnAction,
         enableTiming: true,
       });
-      
+
       expect(result).toBeDefined();
     });
 
@@ -334,12 +344,12 @@ describe('ActionExecutionTraceFactory', () => {
     });
 
     it('should throw InvalidArgumentError for null turnAction', () => {
-      expect(() =>
-        factory.createFromTurnAction(null, 'player-1')
-      ).toThrow(InvalidArgumentError);
-      expect(() =>
-        factory.createFromTurnAction(null, 'player-1')
-      ).toThrow('Turn action is required and must be an object');
+      expect(() => factory.createFromTurnAction(null, 'player-1')).toThrow(
+        InvalidArgumentError
+      );
+      expect(() => factory.createFromTurnAction(null, 'player-1')).toThrow(
+        'Turn action is required and must be an object'
+      );
     });
 
     it('should throw InvalidArgumentError for non-object turnAction', () => {
@@ -352,21 +362,21 @@ describe('ActionExecutionTraceFactory', () => {
     });
 
     it('should throw error for null actorId', () => {
-      expect(() =>
-        factory.createFromTurnAction(validTurnAction, null)
-      ).toThrow('actorId');
+      expect(() => factory.createFromTurnAction(validTurnAction, null)).toThrow(
+        'actorId'
+      );
     });
 
     it('should throw error for empty actorId', () => {
-      expect(() =>
-        factory.createFromTurnAction(validTurnAction, '')
-      ).toThrow('actorId');
+      expect(() => factory.createFromTurnAction(validTurnAction, '')).toThrow(
+        'actorId'
+      );
     });
 
     it('should throw error for non-string actorId', () => {
-      expect(() =>
-        factory.createFromTurnAction(validTurnAction, 123)
-      ).toThrow('actorId');
+      expect(() => factory.createFromTurnAction(validTurnAction, 123)).toThrow(
+        'actorId'
+      );
     });
 
     it('should throw InvalidArgumentError for missing actionDefinitionId', () => {

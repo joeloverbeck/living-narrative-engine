@@ -45,17 +45,17 @@ import { validateDependency } from '../../../utils/validationUtils.js';
  * Performance metric types
  */
 export const MetricType = {
-  COUNTER: 'counter',     // Incremental values (errors, requests)
-  GAUGE: 'gauge',         // Point-in-time values (memory, CPU)
+  COUNTER: 'counter', // Incremental values (errors, requests)
+  GAUGE: 'gauge', // Point-in-time values (memory, CPU)
   HISTOGRAM: 'histogram', // Distribution of values (response times)
-  TIMER: 'timer',         // Time measurements
+  TIMER: 'timer', // Time measurements
 };
 
 /**
  * Performance threshold levels
  */
 export const ThresholdLevel = {
-  INFO: 'info',       // Informational, no action needed
+  INFO: 'info', // Informational, no action needed
   WARNING: 'warning', // Performance degradation detected
   CRITICAL: 'critical', // Immediate action required
 };
@@ -74,7 +74,7 @@ export class PerformanceMetrics {
 
   constructor({ logger, config }) {
     validateDependency(logger, 'ILogger');
-    
+
     this.#logger = logger;
     this.#config = config || {};
     this.#metrics = new Map();
@@ -95,7 +95,7 @@ export class PerformanceMetrics {
 
     this.#setupMetrics();
     this.#startCollectors();
-    
+
     this.#logger.info('Performance monitoring initialized');
   }
 
@@ -143,26 +143,27 @@ export class PerformanceMetrics {
     if (!this.#enabled) return;
 
     const metric = this.#getOrCreateMetric(name, MetricType.HISTOGRAM);
-    
+
     if (!metric.values) {
       metric.values = [];
     }
-    
+
     metric.values.push(value);
-    
+
     // Keep only last 1000 values to prevent memory growth
     if (metric.values.length > 1000) {
       metric.values = metric.values.slice(-1000);
     }
-    
+
     // Calculate statistics
     metric.count = metric.values.length;
     metric.min = Math.min(...metric.values);
     metric.max = Math.max(...metric.values);
-    metric.avg = metric.values.reduce((sum, v) => sum + v, 0) / metric.values.length;
+    metric.avg =
+      metric.values.reduce((sum, v) => sum + v, 0) / metric.values.length;
     metric.p95 = this.#calculatePercentile(metric.values, 0.95);
     metric.p99 = this.#calculatePercentile(metric.values, 0.99);
-    
+
     metric.tags = { ...metric.tags, ...tags };
     metric.lastUpdated = Date.now();
 
@@ -181,7 +182,7 @@ export class PerformanceMetrics {
     }
 
     const startTime = process.hrtime.bigint();
-    
+
     return () => {
       const duration = Number(process.hrtime.bigint() - startTime) / 1000000; // Convert to milliseconds
       this.recordHistogram(name, duration, tags);
@@ -238,7 +239,7 @@ export class PerformanceMetrics {
     }
 
     const metrics = this.getMetrics();
-    
+
     return {
       system: {
         uptime: metrics.uptime,
@@ -270,7 +271,9 @@ export class PerformanceMetrics {
    */
   setThresholds(thresholds) {
     this.#thresholds = { ...this.#thresholds, ...thresholds };
-    this.#logger.info('Performance thresholds updated', { thresholds: Object.keys(thresholds) });
+    this.#logger.info('Performance thresholds updated', {
+      thresholds: Object.keys(thresholds),
+    });
   }
 
   /**
@@ -332,15 +335,17 @@ export class PerformanceMetrics {
   #calculateAndRecordThroughput() {
     const tracedActionsMetric = this.#metrics.get('tracing.actions.traced');
     const now = Date.now();
-    
+
     if (tracedActionsMetric && tracedActionsMetric.lastThroughputCheck) {
       const timeDiff = (now - tracedActionsMetric.lastThroughputCheck) / 1000; // seconds
-      const actionsDiff = tracedActionsMetric.value - (tracedActionsMetric.lastThroughputValue || 0);
+      const actionsDiff =
+        tracedActionsMetric.value -
+        (tracedActionsMetric.lastThroughputValue || 0);
       const throughput = actionsDiff / timeDiff;
-      
+
       this.setGauge('tracing.throughput.actions_per_second', throughput);
     }
-    
+
     if (tracedActionsMetric) {
       tracedActionsMetric.lastThroughputCheck = now;
       tracedActionsMetric.lastThroughputValue = tracedActionsMetric.value;
@@ -445,7 +450,7 @@ export class PerformanceMetrics {
 
   #getOverallHealthStatus() {
     const violations = this.#getActiveViolations();
-    
+
     if (violations.critical > 0) return 'critical';
     if (violations.warning > 0) return 'warning';
     return 'healthy';
@@ -501,7 +506,7 @@ export class PerformanceOptimizer {
   constructor({ logger, performanceMetrics, config, actionTraceFilter }) {
     validateDependency(logger, 'ILogger');
     validateDependency(performanceMetrics, 'IPerformanceMetrics');
-    
+
     this.#logger = logger;
     this.#performanceMetrics = performanceMetrics;
     this.#config = config || {};
@@ -538,7 +543,7 @@ export class PerformanceOptimizer {
 
     const metrics = this.#performanceMetrics.getPerformanceSummary();
     const issues = this.#identifyPerformanceIssues(metrics);
-    
+
     if (issues.length === 0) {
       return { status: 'no_issues', metrics };
     }
@@ -550,7 +555,7 @@ export class PerformanceOptimizer {
       try {
         const result = await this.#applyOptimization(strategy);
         results.push(result);
-        
+
         // Record optimization in history
         this.#optimizationHistory.push({
           timestamp: Date.now(),
@@ -570,7 +575,7 @@ export class PerformanceOptimizer {
     return {
       status: 'optimized',
       issues,
-      strategies: strategies.map(s => s.type),
+      strategies: strategies.map((s) => s.type),
       results,
       metrics,
     };
@@ -583,7 +588,7 @@ export class PerformanceOptimizer {
   getRecommendations() {
     const metrics = this.#performanceMetrics.getPerformanceSummary();
     const issues = this.#identifyPerformanceIssues(metrics);
-    
+
     if (issues.length === 0) {
       return [];
     }
@@ -602,7 +607,7 @@ export class PerformanceOptimizer {
   async #checkAndOptimize() {
     try {
       const result = await this.optimize();
-      
+
       if (result.status === 'optimized') {
         this.#logger.info('Automatic optimization completed', {
           strategies: result.strategies,
@@ -662,13 +667,17 @@ export class PerformanceOptimizer {
     }
 
     // Low throughput with high CPU
-    if (metrics.performance.throughput < 10 && metrics.resources.cpuUsage > 50) {
+    if (
+      metrics.performance.throughput < 10 &&
+      metrics.resources.cpuUsage > 50
+    ) {
       issues.push({
         type: 'low_throughput_high_cpu',
         severity: 'medium',
         throughput: metrics.performance.throughput,
         cpuUsage: metrics.resources.cpuUsage,
-        description: 'Low throughput with high CPU usage indicates inefficiency',
+        description:
+          'Low throughput with high CPU usage indicates inefficiency',
       });
     }
 
@@ -772,13 +781,17 @@ export class PerformanceOptimizer {
 
   async #reduceVerbosity() {
     // This would interact with the configuration system to reduce verbosity
-    this.#logger.info('Optimization: Reduced trace verbosity to improve performance');
+    this.#logger.info(
+      'Optimization: Reduced trace verbosity to improve performance'
+    );
     return { success: true, action: 'verbosity_reduced' };
   }
 
   async #increaseBatchSize() {
     // This would increase the batch size for file writes
-    this.#logger.info('Optimization: Increased batch size for better I/O efficiency');
+    this.#logger.info(
+      'Optimization: Increased batch size for better I/O efficiency'
+    );
     return { success: true, action: 'batch_size_increased' };
   }
 
@@ -796,7 +809,9 @@ export class PerformanceOptimizer {
 
   async #increaseQueueSize() {
     // This would increase queue sizes to reduce processing overhead
-    this.#logger.info('Optimization: Increased queue size for better throughput');
+    this.#logger.info(
+      'Optimization: Increased queue size for better throughput'
+    );
     return { success: true, action: 'queue_size_increased' };
   }
 
@@ -889,15 +904,16 @@ export class PerformanceProfiler {
    * @returns {Object} Statistics
    */
   getProfileStats(name) {
-    const profiles = Array.from(this.#profiles.values())
-      .filter(p => p.name === name);
+    const profiles = Array.from(this.#profiles.values()).filter(
+      (p) => p.name === name
+    );
 
     if (profiles.length === 0) {
       return null;
     }
 
-    const durations = profiles.map(p => p.duration);
-    const memoryDeltas = profiles.map(p => p.memoryDelta.heapUsed);
+    const durations = profiles.map((p) => p.duration);
+    const memoryDeltas = profiles.map((p) => p.memoryDelta.heapUsed);
 
     return {
       count: profiles.length,
@@ -931,12 +947,12 @@ export class PerformanceProfiler {
  * @param {string} metricName - Base name for metrics
  */
 export function withPerformanceMonitoring(metrics, metricName) {
-  return function(target, propertyKey, descriptor) {
+  return function (target, propertyKey, descriptor) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = async function(...args) {
+    descriptor.value = async function (...args) {
       const timer = metrics.startTimer(`${metricName}.duration`);
-      
+
       try {
         const result = await originalMethod.apply(this, args);
         metrics.incrementCounter(`${metricName}.success`);
@@ -963,16 +979,16 @@ export function withPerformanceMonitoring(metrics, metricName) {
 export async function monitorResourceUsage(metrics, operation, fn) {
   const startMemory = process.memoryUsage();
   const timer = metrics.startTimer(`${operation}.duration`);
-  
+
   try {
     const result = await fn();
-    
+
     const endMemory = process.memoryUsage();
     const memoryDelta = endMemory.heapUsed - startMemory.heapUsed;
-    
+
     metrics.recordHistogram(`${operation}.memory_delta`, memoryDelta);
     metrics.incrementCounter(`${operation}.success`);
-    
+
     return result;
   } catch (error) {
     metrics.incrementCounter(`${operation}.error`);

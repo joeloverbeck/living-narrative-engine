@@ -45,9 +45,9 @@ import { validateDependency } from '../../../utils/validationUtils.js';
  * Feature flag types
  */
 export const FlagType = {
-  BOOLEAN: 'boolean',           // Simple on/off flag
-  PERCENTAGE: 'percentage',     // Percentage-based rollout
-  WHITELIST: 'whitelist',       // User/session whitelist
+  BOOLEAN: 'boolean', // Simple on/off flag
+  PERCENTAGE: 'percentage', // Percentage-based rollout
+  WHITELIST: 'whitelist', // User/session whitelist
   MULTIVARIATE: 'multivariate', // Multiple variants for A/B testing
 };
 
@@ -55,11 +55,11 @@ export const FlagType = {
  * Feature flag states
  */
 export const FlagState = {
-  DISABLED: 'disabled',     // Feature completely disabled
+  DISABLED: 'disabled', // Feature completely disabled
   DEVELOPMENT: 'development', // Enabled for development only
-  CANARY: 'canary',         // Enabled for small percentage
-  ROLLOUT: 'rollout',       // Progressive rollout in progress
-  ENABLED: 'enabled',       // Fully enabled for all users
+  CANARY: 'canary', // Enabled for small percentage
+  ROLLOUT: 'rollout', // Progressive rollout in progress
+  ENABLED: 'enabled', // Fully enabled for all users
   EMERGENCY_OFF: 'emergency_off', // Emergency shutdown
 };
 
@@ -79,7 +79,7 @@ export class FeatureFlagManager {
   constructor({ logger, config, configLoader, rolloutStrategy, auditLogger }) {
     validateDependency(logger, 'ILogger');
     validateDependency(configLoader, 'IConfigLoader');
-    
+
     this.#logger = logger;
     this.#config = config || {};
     this.#configLoader = configLoader;
@@ -97,7 +97,7 @@ export class FeatureFlagManager {
     await this.#loadFlags();
     this.#setupConfigWatcher();
     this.#setupDefaultFlags();
-    
+
     this.#logger.info('Feature flag manager initialized', {
       flagCount: this.#flags.size,
       lastUpdate: this.#lastUpdate,
@@ -112,7 +112,7 @@ export class FeatureFlagManager {
    */
   isEnabled(flagName, context = {}) {
     const flag = this.#flags.get(flagName);
-    
+
     if (!flag) {
       this.#logger.warn(`Unknown feature flag: ${flagName}`);
       return false;
@@ -135,10 +135,10 @@ export class FeatureFlagManager {
 
     // Evaluate based on flag type
     const result = this.#evaluateFlag(flag, context);
-    
+
     // Log evaluation for audit
     this.#logFlagEvaluation(flagName, result, context);
-    
+
     return result;
   }
 
@@ -150,7 +150,7 @@ export class FeatureFlagManager {
    */
   getVariant(flagName, context = {}) {
     const flag = this.#flags.get(flagName);
-    
+
     if (!flag || flag.type !== FlagType.MULTIVARIATE) {
       return null;
     }
@@ -169,22 +169,22 @@ export class FeatureFlagManager {
    */
   async updateFlag(flagName, updates) {
     const flag = this.#flags.get(flagName);
-    
+
     if (!flag) {
       throw new Error(`Flag not found: ${flagName}`);
     }
 
     const oldConfig = { ...flag };
     const newConfig = { ...flag, ...updates, lastModified: Date.now() };
-    
+
     this.#flags.set(flagName, newConfig);
-    
+
     // Audit the change
     await this.#auditLogger?.logFlagUpdate(flagName, oldConfig, newConfig);
-    
+
     // Notify watchers
     this.#notifyWatchers(flagName, newConfig);
-    
+
     this.#logger.info(`Feature flag updated: ${flagName}`, {
       oldState: oldConfig.state,
       newState: newConfig.state,
@@ -198,7 +198,7 @@ export class FeatureFlagManager {
    */
   async emergencyShutdown(flagName, reason) {
     const flag = this.#flags.get(flagName);
-    
+
     if (!flag) {
       throw new Error(`Flag not found: ${flagName}`);
     }
@@ -207,13 +207,13 @@ export class FeatureFlagManager {
     flag.state = FlagState.EMERGENCY_OFF;
     flag.emergencyReason = reason;
     flag.emergencyTimestamp = Date.now();
-    
+
     // Audit emergency shutdown
     await this.#auditLogger?.logEmergencyShutdown(flagName, reason);
-    
+
     // Notify watchers immediately
     this.#notifyWatchers(flagName, flag);
-    
+
     this.#logger.error(`Emergency shutdown activated: ${flagName}`, {
       reason,
       previousState: oldState,
@@ -226,16 +226,18 @@ export class FeatureFlagManager {
    */
   getAllFlags() {
     const flagsStatus = {};
-    
+
     for (const [name, flag] of this.#flags) {
       flagsStatus[name] = {
         state: flag.state,
         type: flag.type,
-        enabled: flag.state !== FlagState.DISABLED && flag.state !== FlagState.EMERGENCY_OFF,
+        enabled:
+          flag.state !== FlagState.DISABLED &&
+          flag.state !== FlagState.EMERGENCY_OFF,
         lastModified: flag.lastModified,
       };
     }
-    
+
     return flagsStatus;
   }
 
@@ -248,9 +250,9 @@ export class FeatureFlagManager {
     if (!this.#watchers.has(flagName)) {
       this.#watchers.set(flagName, new Set());
     }
-    
+
     this.#watchers.get(flagName).add(callback);
-    
+
     return () => {
       const watchers = this.#watchers.get(flagName);
       if (watchers) {
@@ -266,7 +268,7 @@ export class FeatureFlagManager {
    */
   getRolloutProgress(flagName) {
     const flag = this.#flags.get(flagName);
-    
+
     if (!flag) {
       return null;
     }
@@ -286,7 +288,7 @@ export class FeatureFlagManager {
     try {
       const config = await this.#configLoader.getConfig();
       const flagsConfig = config.actionTracing?.featureFlags || {};
-      
+
       for (const [name, flagConfig] of Object.entries(flagsConfig)) {
         this.#flags.set(name, {
           name,
@@ -294,7 +296,7 @@ export class FeatureFlagManager {
           lastModified: Date.now(),
         });
       }
-      
+
       this.#lastUpdate = Date.now();
     } catch (error) {
       this.#logger.error('Failed to load feature flags', error);
@@ -357,18 +359,23 @@ export class FeatureFlagManager {
 
   async #updateFlagsFromConfig(flagsConfig) {
     let updatedCount = 0;
-    
+
     for (const [name, flagConfig] of Object.entries(flagsConfig)) {
       const existingFlag = this.#flags.get(name);
-      
-      if (!existingFlag || this.#hasSignificantChanges(existingFlag, flagConfig)) {
+
+      if (
+        !existingFlag ||
+        this.#hasSignificantChanges(existingFlag, flagConfig)
+      ) {
         await this.updateFlag(name, flagConfig);
         updatedCount++;
       }
     }
-    
+
     if (updatedCount > 0) {
-      this.#logger.info(`Updated ${updatedCount} feature flags from configuration`);
+      this.#logger.info(
+        `Updated ${updatedCount} feature flags from configuration`
+      );
     }
   }
 
@@ -386,16 +393,16 @@ export class FeatureFlagManager {
     switch (flag.type) {
       case FlagType.BOOLEAN:
         return flag.state === FlagState.ENABLED;
-        
+
       case FlagType.PERCENTAGE:
         return this.#evaluatePercentageFlag(flag, context);
-        
+
       case FlagType.WHITELIST:
         return this.#evaluateWhitelistFlag(flag, context);
-        
+
       case FlagType.MULTIVARIATE:
         return this.#evaluateMultivariateFlag(flag, context);
-        
+
       default:
         return false;
     }
@@ -405,32 +412,35 @@ export class FeatureFlagManager {
     if (flag.state === FlagState.ENABLED) {
       return true;
     }
-    
+
     if (flag.state !== FlagState.CANARY && flag.state !== FlagState.ROLLOUT) {
       return false;
     }
 
     const percentage = flag.percentage || 0;
     const hash = this.#hashContext(context);
-    
-    return (hash % 100) < percentage;
+
+    return hash % 100 < percentage;
   }
 
   #evaluateWhitelistFlag(flag, context) {
     if (flag.state === FlagState.ENABLED) {
       return true;
     }
-    
+
     const whitelist = flag.whitelist || [];
     const userId = context.userId || context.sessionId || 'anonymous';
-    
+
     return whitelist.includes(userId);
   }
 
   #evaluateMultivariateFlag(flag, context) {
     // For multivariate flags, we just check if any variant should be active
-    return flag.state === FlagState.ENABLED || 
-           (flag.state === FlagState.ROLLOUT && this.#evaluatePercentageFlag(flag, context));
+    return (
+      flag.state === FlagState.ENABLED ||
+      (flag.state === FlagState.ROLLOUT &&
+        this.#evaluatePercentageFlag(flag, context))
+    );
   }
 
   #selectVariant(flag, context) {
@@ -439,9 +449,12 @@ export class FeatureFlagManager {
     }
 
     const hash = this.#hashContext(context);
-    const totalWeight = Object.values(flag.variants).reduce((sum, v) => sum + v.weight, 0);
-    const target = (hash % totalWeight);
-    
+    const totalWeight = Object.values(flag.variants).reduce(
+      (sum, v) => sum + v.weight,
+      0
+    );
+    const target = hash % totalWeight;
+
     let currentWeight = 0;
     for (const [variant, config] of Object.entries(flag.variants)) {
       currentWeight += config.weight;
@@ -449,28 +462,31 @@ export class FeatureFlagManager {
         return variant;
       }
     }
-    
+
     return Object.keys(flag.variants)[0]; // Fallback to first variant
   }
 
   #hashContext(context) {
     // Create a stable hash from context for consistent flag evaluation
-    const key = context.userId || context.sessionId || context.requestId || 'default';
+    const key =
+      context.userId || context.sessionId || context.requestId || 'default';
     let hash = 0;
-    
+
     for (let i = 0; i < key.length; i++) {
       const char = key.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
-    
+
     return Math.abs(hash);
   }
 
   #isDevelopmentEnvironment() {
-    return process.env.NODE_ENV === 'development' || 
-           process.env.NODE_ENV === 'dev' ||
-           this.#config.environment === 'development';
+    return (
+      process.env.NODE_ENV === 'development' ||
+      process.env.NODE_ENV === 'dev' ||
+      this.#config.environment === 'development'
+    );
   }
 
   #logFlagEvaluation(flagName, result, context) {
@@ -501,14 +517,14 @@ export class FeatureFlagManager {
     if (flag.state !== FlagState.ROLLOUT || !flag.rolloutStartTime) {
       return null;
     }
-    
+
     const elapsed = Date.now() - flag.rolloutStartTime;
     const progress = (flag.percentage || 0) / (flag.targetPercentage || 100);
-    
+
     if (progress === 0) {
       return null;
     }
-    
+
     const estimatedTotal = elapsed / progress;
     return flag.rolloutStartTime + estimatedTotal;
   }
@@ -532,12 +548,12 @@ import { FlagState } from './featureFlagManager.js';
  * Rollout phases
  */
 export const RolloutPhase = {
-  PLANNED: 'planned',       // Rollout is planned but not started
-  CANARY: 'canary',         // Small percentage rollout (1-5%)
-  GRADUAL: 'gradual',       // Gradual increase (5-50%)
-  MAJORITY: 'majority',     // Majority rollout (50-95%)
-  COMPLETE: 'complete',     // Full rollout (100%)
-  PAUSED: 'paused',         // Rollout temporarily paused
+  PLANNED: 'planned', // Rollout is planned but not started
+  CANARY: 'canary', // Small percentage rollout (1-5%)
+  GRADUAL: 'gradual', // Gradual increase (5-50%)
+  MAJORITY: 'majority', // Majority rollout (50-95%)
+  COMPLETE: 'complete', // Full rollout (100%)
+  PAUSED: 'paused', // Rollout temporarily paused
   ROLLING_BACK: 'rolling_back', // Rollout is being reversed
   ROLLED_BACK: 'rolled_back', // Rollout has been reversed
 };
@@ -546,10 +562,10 @@ export const RolloutPhase = {
  * Rollout strategies
  */
 export const RolloutType = {
-  LINEAR: 'linear',           // Linear percentage increase
+  LINEAR: 'linear', // Linear percentage increase
   EXPONENTIAL: 'exponential', // Exponential percentage increase
-  STEPPED: 'stepped',         // Discrete steps
-  CUSTOM: 'custom',          // Custom schedule
+  STEPPED: 'stepped', // Discrete steps
+  CUSTOM: 'custom', // Custom schedule
 };
 
 /**
@@ -566,7 +582,7 @@ export class RolloutStrategy {
   constructor({ logger, featureFlagManager, performanceMetrics, config }) {
     validateDependency(logger, 'ILogger');
     validateDependency(featureFlagManager, 'IFeatureFlagManager');
-    
+
     this.#logger = logger;
     this.#featureFlagManager = featureFlagManager;
     this.#performanceMetrics = performanceMetrics;
@@ -632,7 +648,7 @@ export class RolloutStrategy {
    */
   async pauseRollout(flagName, reason) {
     const rollout = this.#activeRollouts.get(flagName);
-    
+
     if (!rollout) {
       throw new Error(`No active rollout found for flag: ${flagName}`);
     }
@@ -652,7 +668,7 @@ export class RolloutStrategy {
    */
   async resumeRollout(flagName) {
     const rollout = this.#activeRollouts.get(flagName);
-    
+
     if (!rollout || rollout.phase !== RolloutPhase.PAUSED) {
       throw new Error(`No paused rollout found for flag: ${flagName}`);
     }
@@ -673,7 +689,7 @@ export class RolloutStrategy {
    */
   async rollback(flagName, reason) {
     const rollout = this.#activeRollouts.get(flagName);
-    
+
     if (rollout) {
       rollout.phase = RolloutPhase.ROLLING_BACK;
       rollout.rollbackReason = reason;
@@ -698,7 +714,7 @@ export class RolloutStrategy {
    */
   getRolloutStatus(flagName) {
     const rollout = this.#activeRollouts.get(flagName);
-    
+
     if (!rollout) {
       return null;
     }
@@ -720,7 +736,7 @@ export class RolloutStrategy {
    * @returns {Array} List of active rollouts
    */
   getActiveRollouts() {
-    return Array.from(this.#activeRollouts.values()).map(rollout => ({
+    return Array.from(this.#activeRollouts.values()).map((rollout) => ({
       flagName: rollout.flagName,
       phase: rollout.phase,
       currentPercentage: rollout.currentPercentage,
@@ -730,13 +746,19 @@ export class RolloutStrategy {
 
   async #scheduleRolloutProgression(rollout) {
     const intervalMs = 300000; // 5 minutes
-    
+
     const progressionInterval = setInterval(async () => {
       try {
         await this.#progressRollout(rollout);
       } catch (error) {
-        this.#logger.error(`Rollout progression failed for ${rollout.flagName}`, error);
-        await this.rollback(rollout.flagName, `Progression error: ${error.message}`);
+        this.#logger.error(
+          `Rollout progression failed for ${rollout.flagName}`,
+          error
+        );
+        await this.rollback(
+          rollout.flagName,
+          `Progression error: ${error.message}`
+        );
       }
     }, intervalMs);
 
@@ -744,7 +766,10 @@ export class RolloutStrategy {
   }
 
   async #progressRollout(rollout) {
-    if (rollout.phase === RolloutPhase.PAUSED || rollout.phase === RolloutPhase.COMPLETE) {
+    if (
+      rollout.phase === RolloutPhase.PAUSED ||
+      rollout.phase === RolloutPhase.COMPLETE
+    ) {
       return;
     }
 
@@ -757,7 +782,7 @@ export class RolloutStrategy {
 
     // Calculate next percentage
     const nextPercentage = this.#calculateNextPercentage(rollout);
-    
+
     if (nextPercentage >= rollout.targetPercentage) {
       // Rollout complete
       await this.#completeRollout(rollout);
@@ -786,7 +811,7 @@ export class RolloutStrategy {
   async #completeRollout(rollout) {
     rollout.phase = RolloutPhase.COMPLETE;
     rollout.completionTime = Date.now();
-    
+
     await this.#featureFlagManager.updateFlag(rollout.flagName, {
       state: FlagState.ENABLED,
       percentage: 100,
@@ -802,15 +827,18 @@ export class RolloutStrategy {
 
   async #checkSafetyThresholds(rollout) {
     const thresholds = rollout.safetyThresholds;
-    
+
     if (!thresholds || !this.#performanceMetrics) {
       return { safe: true };
     }
 
     const metrics = this.#performanceMetrics.getPerformanceSummary();
-    
+
     // Check error rate threshold
-    if (thresholds.maxErrorRate && metrics.performance.errorRate > thresholds.maxErrorRate) {
+    if (
+      thresholds.maxErrorRate &&
+      metrics.performance.errorRate > thresholds.maxErrorRate
+    ) {
       return {
         safe: false,
         reason: `Error rate ${metrics.performance.errorRate} exceeds threshold ${thresholds.maxErrorRate}`,
@@ -818,7 +846,10 @@ export class RolloutStrategy {
     }
 
     // Check performance threshold
-    if (thresholds.maxLatency && metrics.performance.avgTraceTime > thresholds.maxLatency) {
+    if (
+      thresholds.maxLatency &&
+      metrics.performance.avgTraceTime > thresholds.maxLatency
+    ) {
       return {
         safe: false,
         reason: `Latency ${metrics.performance.avgTraceTime}ms exceeds threshold ${thresholds.maxLatency}ms`,
@@ -835,12 +866,17 @@ export class RolloutStrategy {
 
     switch (rollout.type) {
       case RolloutType.LINEAR:
-        return rollout.startPercentage + 
-               (rollout.targetPercentage - rollout.startPercentage) * progress;
+        return (
+          rollout.startPercentage +
+          (rollout.targetPercentage - rollout.startPercentage) * progress
+        );
 
       case RolloutType.EXPONENTIAL:
-        return rollout.startPercentage + 
-               (rollout.targetPercentage - rollout.startPercentage) * (progress * progress);
+        return (
+          rollout.startPercentage +
+          (rollout.targetPercentage - rollout.startPercentage) *
+            (progress * progress)
+        );
 
       case RolloutType.STEPPED:
         return this.#calculateSteppedPercentage(rollout, progress);
@@ -853,7 +889,10 @@ export class RolloutStrategy {
   #calculateSteppedPercentage(rollout, progress) {
     const steps = rollout.checkpoints || [25, 50, 75, 100];
     const stepIndex = Math.floor(progress * steps.length);
-    return Math.min(steps[stepIndex] || rollout.targetPercentage, rollout.targetPercentage);
+    return Math.min(
+      steps[stepIndex] || rollout.targetPercentage,
+      rollout.targetPercentage
+    );
   }
 
   #determineRolloutPhase(percentage) {
@@ -890,9 +929,9 @@ export class RolloutStrategy {
 
     const elapsed = Date.now() - rollout.startTime;
     const progress = rollout.currentPercentage / rollout.targetPercentage;
-    
+
     if (progress === 0) return null;
-    
+
     const estimatedTotal = elapsed / progress;
     return rollout.startTime + estimatedTotal;
   }
@@ -925,7 +964,7 @@ export const defaultFeatureFlagConfig = {
           production: { state: 'disabled' },
         },
       },
-      
+
       // Component flags
       trace_output_enabled: {
         type: 'percentage',
@@ -941,7 +980,7 @@ export const defaultFeatureFlagConfig = {
           },
         },
       },
-      
+
       // Performance monitoring
       performance_monitoring: {
         type: 'percentage',
@@ -949,7 +988,7 @@ export const defaultFeatureFlagConfig = {
         percentage: 0,
         description: 'Performance monitoring system',
       },
-      
+
       // Verbosity A/B test
       trace_verbosity_test: {
         type: 'multivariate',
@@ -961,7 +1000,7 @@ export const defaultFeatureFlagConfig = {
         },
         description: 'A/B test for optimal trace verbosity',
       },
-      
+
       // Emergency flags
       emergency_shutdown: {
         type: 'boolean',
@@ -970,7 +1009,7 @@ export const defaultFeatureFlagConfig = {
         priority: 1, // Highest priority
       },
     },
-    
+
     // Global feature flag settings
     featureFlagSettings: {
       auditFlagEvaluations: false,
@@ -989,39 +1028,42 @@ export const defaultFeatureFlagConfig = {
 export function validateFeatureFlagConfig(config) {
   const errors = [];
   const warnings = [];
-  
+
   if (!config.actionTracing?.featureFlags) {
     errors.push('Missing featureFlags configuration');
     return { valid: false, errors, warnings };
   }
-  
+
   const flags = config.actionTracing.featureFlags;
-  
+
   for (const [name, flag] of Object.entries(flags)) {
     // Check required fields
     if (!flag.type) {
       errors.push(`Flag ${name} missing required field: type`);
     }
-    
+
     if (!flag.state) {
       errors.push(`Flag ${name} missing required field: state`);
     }
-    
+
     // Validate flag types
-    if (flag.type === 'percentage' && (flag.percentage < 0 || flag.percentage > 100)) {
+    if (
+      flag.type === 'percentage' &&
+      (flag.percentage < 0 || flag.percentage > 100)
+    ) {
       errors.push(`Flag ${name} has invalid percentage: ${flag.percentage}`);
     }
-    
+
     if (flag.type === 'multivariate' && !flag.variants) {
       errors.push(`Flag ${name} missing variants for multivariate type`);
     }
-    
+
     // Validate rollout config
     if (flag.rolloutConfig && flag.rolloutConfig.duration < 60000) {
       warnings.push(`Flag ${name} has very short rollout duration`);
     }
   }
-  
+
   return {
     valid: errors.length === 0,
     errors,
@@ -1045,24 +1087,25 @@ export function validateFeatureFlagConfig(config) {
  * @param {*} fallbackValue - Value to return if feature is disabled
  */
 export function withFeatureFlag(flagName, fallbackValue = undefined) {
-  return function(target, propertyKey, descriptor) {
+  return function (target, propertyKey, descriptor) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = function(...args) {
-      const featureFlagManager = this._featureFlagManager || 
-                                this.container?.resolve('IFeatureFlagManager');
-      
+    descriptor.value = function (...args) {
+      const featureFlagManager =
+        this._featureFlagManager ||
+        this.container?.resolve('IFeatureFlagManager');
+
       if (!featureFlagManager) {
         // If no feature flag manager, default to enabled
         return originalMethod.apply(this, args);
       }
 
       const context = this._getFeatureFlagContext?.() || {};
-      
+
       if (featureFlagManager.isEnabled(flagName, context)) {
         return originalMethod.apply(this, args);
       }
-      
+
       return fallbackValue;
     };
 

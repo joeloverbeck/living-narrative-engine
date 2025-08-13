@@ -26,4 +26,9 @@ export const actionTracingTokens = freeze({
   IJsonTraceFormatter: 'IJsonTraceFormatter',
   // Human-readable formatter for trace output
   IHumanReadableFormatter: 'IHumanReadableFormatter',
+  // Error handling and recovery tokens
+  ITraceErrorHandler: 'ITraceErrorHandler',
+  IErrorMetrics: 'IErrorMetrics',
+  IRecoveryManager: 'IRecoveryManager',
+  IRetryManager: 'IRetryManager',
 });

@@ -19,6 +19,11 @@ import {
   NamingStrategy,
   TimestampFormat,
 } from '../../actions/tracing/actionTraceOutputService.js';
+import { ErrorMetricsService } from '../../actions/tracing/metrics/errorMetricsService.js';
+import { RetryManager } from '../../actions/tracing/resilience/retryManager.js';
+import { RecoveryManager } from '../../actions/tracing/recovery/recoveryManager.js';
+import { TraceErrorHandler } from '../../actions/tracing/errors/traceErrorHandler.js';
+import { ResilientServiceWrapper } from '../../actions/tracing/resilience/resilientServiceWrapper.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -221,6 +226,60 @@ export function registerActionTracing(container) {
   );
   log.debug(
     `Action Tracing Registration: Registered ${String(actionTracingTokens.IEventDispatchTracer)}.`
+  );
+
+  // Register error metrics service
+  container.register(
+    actionTracingTokens.IErrorMetrics,
+    (c) =>
+      new ErrorMetricsService({
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  log.debug(
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.IErrorMetrics)}.`
+  );
+
+  // Register retry manager
+  container.register(
+    actionTracingTokens.IRetryManager,
+    (c) => new RetryManager(),
+    { lifecycle: 'singleton' }
+  );
+  log.debug(
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.IRetryManager)}.`
+  );
+
+  // Register recovery manager
+  container.register(
+    actionTracingTokens.IRecoveryManager,
+    (c) =>
+      new RecoveryManager({
+        logger: c.resolve(tokens.ILogger),
+        config: c.resolve(tokens.IConfiguration),
+        retryManager: c.resolve(actionTracingTokens.IRetryManager),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  log.debug(
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.IRecoveryManager)}.`
+  );
+
+  // Register trace error handler
+  container.register(
+    actionTracingTokens.ITraceErrorHandler,
+    (c) =>
+      new TraceErrorHandler({
+        logger: c.resolve(tokens.ILogger),
+        errorMetrics: c.resolve(actionTracingTokens.IErrorMetrics),
+        recoveryManager: c.resolve(actionTracingTokens.IRecoveryManager),
+        config: c.resolve(tokens.IConfiguration),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  log.debug(
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.ITraceErrorHandler)}.`
   );
 
   log.debug('Action Tracing Registration: complete.');

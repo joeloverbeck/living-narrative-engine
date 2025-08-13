@@ -47,15 +47,19 @@ function enableMockTraceQueueProcessor() {
     constructor(dependencies) {
       this.dependencies = dependencies;
     }
-    enqueue() { return true; }
-    shutdown() { return Promise.resolve(); }
+    enqueue() {
+      return true;
+    }
+    shutdown() {
+      return Promise.resolve();
+    }
     getQueueStats() {
       return {
         totalSize: 0,
         isProcessing: false,
         memoryUsage: 0,
         circuitBreakerOpen: false,
-        priorities: {}
+        priorities: {},
       };
     }
   };
@@ -67,7 +71,7 @@ function enableMockTraceQueueProcessor() {
 function enableMockStorageRotationManager() {
   // Create a shared reference to track the mock instance
   let mockInstance;
-  
+
   mockStorageRotationManager = class MockStorageRotationManager {
     constructor(dependencies) {
       this.dependencies = dependencies;
@@ -76,20 +80,20 @@ function enableMockStorageRotationManager() {
       this._shutdown = jest.fn();
       mockInstance = this; // Store reference for test access
     }
-    
+
     forceRotation() {
       return this._forceRotation();
     }
-    
+
     getStatistics() {
       return this._getStatistics();
     }
-    
+
     shutdown() {
       return this._shutdown();
     }
   };
-  
+
   // Expose the instance for tests
   mockStorageRotationManager.getInstance = () => mockInstance;
 }
@@ -116,7 +120,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
   beforeEach(() => {
     // Reset mock dependencies to force simple queue behavior by default
     disableMockDependencies();
-    
+
     mockStorageAdapter = createMockStorageAdapter();
     mockLogger = createMockLogger();
     mockActionTraceFilter = createMockActionTraceFilter();
@@ -1784,13 +1788,15 @@ describe('ActionTraceOutputService - Storage Output', () => {
       });
 
       await service.writeTrace(createMockTrace());
-      
+
       // Fast-forward timers to process queue and retries
       await jest.runAllTimersAsync();
-      
+
       // The retry logic should attempt the operation at least once
-      expect(mockStorageAdapter.setItem.mock.calls.length).toBeGreaterThanOrEqual(1);
-      
+      expect(
+        mockStorageAdapter.setItem.mock.calls.length
+      ).toBeGreaterThanOrEqual(1);
+
       // With retry logic, the queue may still be processing or have items waiting to retry
       // Let's just verify that processing was attempted
       const stats = service.getQueueStats();
@@ -1807,10 +1813,10 @@ describe('ActionTraceOutputService - Storage Output', () => {
       });
 
       await service.writeTrace(createMockTrace());
-      
+
       // Process initial failure and retries
       await jest.runAllTimersAsync();
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to store trace (attempt'),
         expect.any(Error)
@@ -1818,7 +1824,9 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should permanently fail trace after max retries', async () => {
-      mockStorageAdapter.setItem.mockRejectedValue(new Error('Persistent failure'));
+      mockStorageAdapter.setItem.mockRejectedValue(
+        new Error('Persistent failure')
+      );
 
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
@@ -1830,10 +1838,10 @@ describe('ActionTraceOutputService - Storage Output', () => {
       for (let i = 0; i < 5; i++) {
         await service.writeTrace(createMockTrace());
       }
-      
+
       // Let all retries complete
       await jest.runAllTimersAsync();
-      
+
       // Should trigger permanent failure after multiple retry attempts
       // The error message format in production is: "Failed to store trace (attempt N)"
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -1845,13 +1853,15 @@ describe('ActionTraceOutputService - Storage Output', () => {
     it('should handle storage rotation trigger', async () => {
       // Enable the StorageRotationManager mock
       enableMockStorageRotationManager();
-      
+
       // Mock existing traces to be > 100 to trigger rotation
-      mockStorageAdapter.getItem.mockResolvedValue(new Array(101).fill({
-        id: 'test-trace',
-        timestamp: Date.now(),
-        data: {}
-      }));
+      mockStorageAdapter.getItem.mockResolvedValue(
+        new Array(101).fill({
+          id: 'test-trace',
+          timestamp: Date.now(),
+          data: {},
+        })
+      );
 
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
@@ -1869,7 +1879,7 @@ describe('ActionTraceOutputService - Storage Output', () => {
     });
 
     it('should handle background rotation failures', async () => {
-      // Enable the StorageRotationManager mock  
+      // Enable the StorageRotationManager mock
       enableMockStorageRotationManager();
 
       service = new ActionTraceOutputService({
@@ -1887,7 +1897,9 @@ describe('ActionTraceOutputService - Storage Output', () => {
       expect(rotationManager).toBeDefined();
 
       // Make the forceRotation method fail
-      rotationManager._forceRotation.mockRejectedValue(new Error('Rotation failed'));
+      rotationManager._forceRotation.mockRejectedValue(
+        new Error('Rotation failed')
+      );
 
       // The production code caps traces at 100 before checking for rotation, so rotation is never triggered
       // Let's test the rotation manager's error handling by calling it directly
@@ -1901,11 +1913,11 @@ describe('ActionTraceOutputService - Storage Output', () => {
       } catch (error) {
         // The mocked error should be thrown
         expect(error.message).toBe('Rotation failed');
-        
+
         // Now let's test that if the service were to call rotation and it failed,
         // the error would be properly logged by simulating the catch block behavior
         mockLogger.error('Background rotation failed', error);
-        
+
         expect(mockLogger.error).toHaveBeenCalledWith(
           'Background rotation failed',
           expect.any(Error)
@@ -1921,12 +1933,17 @@ describe('ActionTraceOutputService - Storage Output', () => {
       });
 
       // Start a write that will fail
-      const writePromise = service.writeTrace(createMockTrace()).catch(() => {});
-      
+      const writePromise = service
+        .writeTrace(createMockTrace())
+        .catch(() => {});
+
       await service.waitForPendingWrites();
       await writePromise;
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Error waiting for pending writes', expect.any(Error));
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error waiting for pending writes',
+        expect.any(Error)
+      );
     });
   });
 });

@@ -336,7 +336,8 @@ describe('ActionExecutionTrace', () => {
 
       // Create a custom error with stack trace
       const error = new Error('Analysis test error');
-      error.stack = 'Error: Analysis test error\n    at test (/path/to/test.js:1:1)';
+      error.stack =
+        'Error: Analysis test error\n    at test (/path/to/test.js:1:1)';
 
       // Capture error should trigger lazy initialization
       traceWithErrorAnalysis.captureError(error);
@@ -351,7 +352,7 @@ describe('ActionExecutionTrace', () => {
       traceWithErrorAnalysis.captureDispatchStart();
 
       const error = new Error('Test error');
-      
+
       // Mock console.warn to capture the warning
       const originalWarn = console.warn;
       const warnSpy = jest.fn();
@@ -363,7 +364,7 @@ describe('ActionExecutionTrace', () => {
         const errorData = traceWithErrorAnalysis.getError();
         expect(errorData).toBeTruthy();
         expect(errorData.classification).toBeTruthy();
-        
+
         // Should have default classification when classification fails
         expect(errorData.classification.category).toBe('unknown');
       } finally {
@@ -376,7 +377,7 @@ describe('ActionExecutionTrace', () => {
 
       const error = new Error('Stack trace test');
       error.stack = 'Invalid stack trace format';
-      
+
       // Mock console.warn to capture warnings
       const originalWarn = console.warn;
       const warnSpy = jest.fn();
@@ -544,7 +545,9 @@ describe('ActionExecutionTrace', () => {
         trace.captureEventPayload(payload);
 
         const phases = trace.getExecutionPhases();
-        const payloadPhase = phases.find(phase => phase.phase === 'payload_captured');
+        const payloadPhase = phases.find(
+          (phase) => phase.phase === 'payload_captured'
+        );
         expect(payloadPhase.payloadSize).toBe(0); // Fallback size when JSON.stringify fails
       } finally {
         JSON.stringify = originalStringify;
@@ -554,10 +557,10 @@ describe('ActionExecutionTrace', () => {
     it('should return unknown phase when no phases exist', () => {
       // Create trace but don't start dispatch
       const emptyTrace = new ActionExecutionTrace(validParams);
-      
+
       // Test error capture before dispatch start should still work for getCurrentPhase
       const error = new Error('Test error');
-      
+
       expect(() => emptyTrace.captureError(error)).toThrow(
         'Must call captureDispatchStart() before capturing error'
       );
@@ -595,7 +598,7 @@ describe('ActionExecutionTrace', () => {
       });
 
       traceWithoutTiming.captureDispatchStart();
-      
+
       const error = new Error('Timing test');
       traceWithoutTiming.captureError(error);
 
@@ -610,7 +613,7 @@ describe('ActionExecutionTrace', () => {
   describe('Advanced Error Features', () => {
     it('should generate error summary correctly', () => {
       trace.captureDispatchStart();
-      
+
       const error = new Error('Summary test error');
       trace.captureError(error);
 
@@ -635,7 +638,7 @@ describe('ActionExecutionTrace', () => {
 
     it('should generate error report correctly', () => {
       trace.captureDispatchStart();
-      
+
       const error = new Error('Report test error');
       trace.captureError(error);
 
@@ -656,7 +659,7 @@ describe('ActionExecutionTrace', () => {
 
     it('should check error recovery correctly', () => {
       trace.captureDispatchStart();
-      
+
       // Test with no error (should be recoverable)
       expect(trace.isErrorRecoverable()).toBe(true);
 
@@ -674,7 +677,7 @@ describe('ActionExecutionTrace', () => {
       });
 
       traceWithErrorAnalysis.captureDispatchStart();
-      
+
       const error = new Error('Recovery potential test');
       traceWithErrorAnalysis.captureError(error);
 
@@ -684,13 +687,13 @@ describe('ActionExecutionTrace', () => {
 
     it('should handle error with extended properties', () => {
       trace.captureDispatchStart();
-      
+
       const error = new Error('Extended properties test');
       error.code = 'TEST_CODE';
       error.errno = -1;
       error.syscall = 'test_syscall';
       error.cause = new Error('Root cause');
-      
+
       trace.captureError(error);
 
       const errorData = trace.getError();
@@ -702,14 +705,14 @@ describe('ActionExecutionTrace', () => {
 
     it('should capture error with custom context', () => {
       trace.captureDispatchStart();
-      
+
       const error = new Error('Context test');
       const context = {
         phase: 'custom_phase',
         retryCount: 3,
         executionState: { step: 'validation' },
       };
-      
+
       trace.captureError(error, context);
 
       const errorData = trace.getError();
@@ -727,12 +730,13 @@ describe('ActionExecutionTrace', () => {
         ...validParams,
         enableErrorAnalysis: true,
       });
-      
+
       traceWithErrorAnalysis.captureDispatchStart();
-      
+
       const error = new Error('Location test error');
-      error.stack = 'Error: Location test error\n    at testFunction (/path/to/file.js:10:5)';
-      
+      error.stack =
+        'Error: Location test error\n    at testFunction (/path/to/file.js:10:5)';
+
       traceWithErrorAnalysis.captureError(error);
 
       const report = traceWithErrorAnalysis.getErrorReport();
@@ -745,13 +749,13 @@ describe('ActionExecutionTrace', () => {
         ...validParams,
         enableErrorAnalysis: true,
       });
-      
+
       traceWithErrorAnalysis.captureDispatchStart();
-      
+
       // Create an error that might have troubleshooting steps
       const error = new Error('Troubleshooting test');
       error.code = 'ENOENT';
-      
+
       traceWithErrorAnalysis.captureError(error);
 
       const report = traceWithErrorAnalysis.getErrorReport();
@@ -765,7 +769,7 @@ describe('ActionExecutionTrace', () => {
       });
 
       traceWithErrorAnalysis.captureDispatchStart();
-      
+
       const error = new Error('Unknown recovery test');
       traceWithErrorAnalysis.captureError(error);
 
