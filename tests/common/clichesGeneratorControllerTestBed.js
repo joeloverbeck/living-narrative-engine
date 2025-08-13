@@ -44,10 +44,14 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       deleteCharacterConcept: jest.fn(),
       generateThematicDirections: jest.fn(),
       getThematicDirections: jest.fn(),
+      storeCliches: jest.fn().mockResolvedValue(true),
+      storeCharacterConcept: jest.fn().mockResolvedValue(true),
+      storeThematicDirection: jest.fn().mockResolvedValue(true),
     };
 
     this.mockClicheGenerator = {
       generateCliches: jest.fn(),
+      parseLLMResponse: jest.fn(),
     };
 
     // Use enhanced event bus that tracks dispatches for state management testing
@@ -709,6 +713,204 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       // If event doesn't dispatch, just wait a bit for async operations
       await this.flushPromises();
       await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+
+  /**
+   * Create a cliche object with specified properties
+   *
+   * @param {object} overrides - Properties to override defaults
+   * @returns {object} - Cliche object
+   */
+  createCliche(overrides = {}) {
+    const defaultCategories = {
+      names: ['John Doe', 'Jane Smith'],
+      physicalDescriptions: ['Tall and lean', 'Average build'],
+      personalityTraits: ['Brooding', 'Mysterious'],
+      skillsAbilities: ['Expert fighter', 'Master tracker'],
+      typicalLikes: ['Solitude', 'Justice'],
+      typicalDislikes: ['Crowds', 'Injustice'],
+      commonFears: ['Failure', 'Loss'],
+      genericGoals: ['Revenge', 'Redemption'],
+      backgroundElements: ['Tragic past', 'Lost family'],
+      overusedSecrets: ['Hidden power', 'Royal blood'],
+      speechPatterns: ['Few words', 'Cryptic statements'],
+    };
+
+    const defaultCliche = {
+      id: uuidv4(),
+      directionId: 'direction-1',
+      conceptId: 'concept-1',
+      categories: defaultCategories,
+      tropesAndStereotypes: ['Lone wolf', 'Dark past'],
+      llmMetadata: {
+        model: 'test-model',
+        temperature: 0.7,
+        tokens: 1000,
+        responseTime: 500,
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    return { ...defaultCliche, ...overrides };
+  }
+
+  /**
+   * Create a character concept with specified properties
+   *
+   * @param {object} overrides - Properties to override defaults
+   * @returns {object} - Character concept object
+   */
+  createCharacterConcept(overrides = {}) {
+    const defaultConcept = {
+      id: uuidv4(),
+      text: 'A mysterious wanderer with a troubled past.',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    return { ...defaultConcept, ...overrides };
+  }
+
+  /**
+   * Create a thematic direction with specified properties
+   *
+   * @param {object} overrides - Properties to override defaults
+   * @returns {object} - Thematic direction object
+   */
+  createThematicDirection(overrides = {}) {
+    const defaultDirection = {
+      id: uuidv4(),
+      conceptId: 'concept-1',
+      title: 'The Lone Wanderer',
+      description: 'A solitary figure walking the path of redemption.',
+      coreTension: 'Isolation vs Connection',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    return { ...defaultDirection, ...overrides };
+  }
+
+  /**
+   * Mock LLM service with a specific response
+   *
+   * @param {object} response - The response to return from LLM service
+   */
+  mockLLMService(response) {
+    if (this.mockClicheGenerator) {
+      this.mockClicheGenerator.generateCliches.mockResolvedValue(response);
+    }
+  }
+
+  /**
+   * Mock LLM service to return an error
+   *
+   * @param {string} errorMessage - Error message
+   */
+  mockLLMServiceError(errorMessage = 'LLM service error') {
+    if (this.mockClicheGenerator) {
+      this.mockClicheGenerator.generateCliches.mockRejectedValue(
+        new Error(errorMessage)
+      );
+    }
+  }
+
+  /**
+   * Simulate database error
+   *
+   * @param {string} errorMessage - Error message
+   */
+  simulateDatabaseError(errorMessage = 'Database connection error') {
+    // Mock all database-related methods to throw errors
+    const error = new Error(errorMessage);
+
+    this.mockCharacterBuilderService.storeCliches = jest
+      .fn()
+      .mockRejectedValue(error);
+    this.mockCharacterBuilderService.getClichesByDirectionId = jest
+      .fn()
+      .mockRejectedValue(error);
+    this.mockCharacterBuilderService.hasClichesForDirection = jest
+      .fn()
+      .mockRejectedValue(error);
+    this.mockCharacterBuilderService.generateClichesForDirection = jest
+      .fn()
+      .mockRejectedValue(error);
+  }
+
+  /**
+   * Reinitialize the test bed (for persistence testing)
+   */
+  async reinitialize() {
+    // Clean up current instance
+    this.cleanup();
+
+    // Recreate DOM structure
+    this.createDOMStructure();
+
+    // Recreate controller with same mocks
+    this.controller = new ClichesGeneratorController({
+      logger: this.logger,
+      characterBuilderService: this.mockCharacterBuilderService,
+      eventBus: this.mockEventBus,
+      schemaValidator: this.mockSchemaValidator,
+      clicheGenerator: this.mockClicheGenerator,
+    });
+
+    // Re-initialize the controller
+    await this.controller.initialize();
+  }
+
+  /**
+   * Get the database instance (mock)
+   *
+   * @returns {object} - Mock database
+   */
+  getDatabase() {
+    // Return a mock database interface
+    return {
+      storeCliches: this.mockCharacterBuilderService.storeCliches,
+      getClichesByDirectionId:
+        this.mockCharacterBuilderService.getClichesByDirectionId,
+      hasClichesForDirection:
+        this.mockCharacterBuilderService.hasClichesForDirection,
+    };
+  }
+
+  /**
+   * Get the controller instance
+   *
+   * @returns {object} - Controller instance
+   */
+  getController() {
+    return this.controller;
+  }
+
+  /**
+   * Initialize the test bed
+   */
+  async initialize() {
+    // Initialize mocks if needed
+    if (this.mockCharacterBuilderService.initialize) {
+      await this.mockCharacterBuilderService.initialize();
+    }
+
+    // Initialize controller if it has an initialize method
+    if (this.controller && this.controller.initialize) {
+      await this.controller.initialize();
+    }
+  }
+
+  /**
+   * Add storeCliches method to mock service if not present
+   */
+  setupStoreClichesMock() {
+    if (!this.mockCharacterBuilderService.storeCliches) {
+      this.mockCharacterBuilderService.storeCliches = jest
+        .fn()
+        .mockResolvedValue(true);
     }
   }
 

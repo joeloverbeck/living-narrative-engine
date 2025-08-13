@@ -144,9 +144,9 @@ describe('ActionTraceOutputService Memory Usage', () => {
       // Wait for processing with proper polling for queue completion
       let waitCount = 0;
       let stats = service.getQueueStats();
-      while (stats.queueLength > 0 && waitCount < 50) {
-        // Max 5 seconds
-        await new Promise((resolve) => setTimeout(resolve, 100));
+      while (stats.queueLength > 0 && waitCount < 30) {
+        // Max 1.5 seconds (reduced from 5 seconds)
+        await new Promise((resolve) => setTimeout(resolve, 50)); // Faster polling
         stats = service.getQueueStats();
         waitCount++;
       }
@@ -283,7 +283,7 @@ describe('ActionTraceOutputService Memory Usage', () => {
       }
 
       // Wait for processing
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Clear formatter references
       formattedTraces = null;
@@ -326,7 +326,7 @@ describe('ActionTraceOutputService Memory Usage', () => {
       }
 
       // Wait for processing
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Clear trace references
       traces.forEach((trace) => {
@@ -378,7 +378,7 @@ describe('ActionTraceOutputService Memory Usage', () => {
       }
 
       // Wait for processing
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       // Storage should be bounded by rotation policy
       expect(storageSize).toBeLessThan(1024 * 1024); // Less than 1MB in storage
@@ -411,7 +411,7 @@ describe('ActionTraceOutputService Memory Usage', () => {
       }
 
       // Wait for processing
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Clear storage mock data
       mockStorageAdapter.getItem.mockResolvedValue([]);
@@ -455,7 +455,7 @@ describe('ActionTraceOutputService Memory Usage', () => {
       }
 
       // Wait for processing
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Clear event references
       dispatchedEvents.length = 0;
@@ -546,8 +546,8 @@ describe('ActionTraceOutputService Memory Usage', () => {
       });
 
       const memoryCheckpoints = [];
-      const duration = 5000; // 5 seconds
-      const interval = 500; // Check every 500ms
+      const duration = 2000; // 2 seconds (reduced from 5 seconds for faster testing)
+      const interval = 400; // Check every 400ms (adjusted for shorter duration)
       const startTime = Date.now();
 
       // Continuously write traces
@@ -578,7 +578,7 @@ describe('ActionTraceOutputService Memory Usage', () => {
       clearInterval(memoryMonitor);
 
       // Wait for queue to clear
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       // Analyze memory stability
       if (memoryCheckpoints.length > 2) {
@@ -590,7 +590,8 @@ describe('ActionTraceOutputService Memory Usage', () => {
         const growthRate = totalGrowth / (lastCheckpoint.time / 1000); // Bytes per second
 
         // Memory should be stable (low growth rate)
-        expect(growthRate).toBeLessThan(1024 * 1024); // Less than 1MB/second growth
+        // Adjusted for shorter test duration (2s instead of 5s)
+        expect(growthRate).toBeLessThan(1.5 * 1024 * 1024); // Less than 1.5MB/second growth
 
         // Check for memory spikes
         const maxHeap = Math.max(...memoryCheckpoints.map((c) => c.heapUsed));

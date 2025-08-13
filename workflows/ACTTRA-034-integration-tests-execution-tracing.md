@@ -16,7 +16,7 @@ This ticket focuses on creating integration tests that validate the action traci
 
 ## Acceptance Criteria
 
-- [ ] Integration test file created at `tests/integration/actions/tracing/actionTracingExecution.integration.test.js`
+- [ ] Integration test file created at `tests/integration/actions/tracing/actionExecutionTrace.integration.test.js`
 - [ ] Tests cover complete execution path through CommandProcessor
 - [ ] Tests validate ActionExecutionTrace data capture
 - [ ] Tests verify integration with EventDispatchService
@@ -31,10 +31,10 @@ This ticket focuses on creating integration tests that validate the action traci
 ### Test File Structure
 
 ```javascript
-// tests/integration/actions/tracing/actionTracingExecution.integration.test.js
+// tests/integration/actions/tracing/actionExecutionTrace.integration.test.js
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { CommandProcessorTracingTestBed } from '../../../common/commands/commandProcessorTracingTestBed.js';
+import CommandProcessorTracingTestBed from '../../../common/commands/commandProcessorTracingTestBed.js';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -555,228 +555,74 @@ describe('Output Format Validation', () => {
 
 ### Test Bed Requirements
 
-Create `tests/common/commands/commandProcessorTracingTestBed.js`:
+The `tests/common/commands/commandProcessorTracingTestBed.js` file has been created as a reusable test bed extracted from the existing integration test:
 
 ```javascript
-export class CommandProcessorTracingTestBed {
+// tests/common/commands/commandProcessorTracingTestBed.js
+// Note: This test bed has been extracted and created as a reusable component
+
+import CommandProcessor from '../../../src/commands/commandProcessor.js';
+import ActionTraceFilter from '../../../src/actions/tracing/actionTraceFilter.js';
+import { ActionExecutionTraceFactory } from '../../../src/actions/tracing/actionExecutionTraceFactory.js';
+import { ActionTraceOutputService } from '../../../src/actions/tracing/actionTraceOutputService.js';
+import {
+  createMockEventDispatchService,
+  createMockLogger,
+  createMockSafeEventDispatcher,
+} from '../mockFactories/index.js';
+
+class CommandProcessorTracingTestBed {
   constructor() {
-    this.container = null;
+    this.logger = createMockLogger();
+    this.safeEventDispatcher = createMockSafeEventDispatcher();
+    this.eventDispatchService = createMockEventDispatchService();
+    
+    // Real tracing components
+    this.actionTraceFilter = null;
+    this.actionExecutionTraceFactory = null;
+    this.actionTraceOutputService = null;
+    
+    // Track written traces
+    this.writtenTraces = [];
+    
     this.commandProcessor = null;
-    this.entityManager = null;
-    this.eventDispatchService = null;
-    this.configLoader = null;
-    this.outputDir = './test-execution-traces';
-    this.loggedErrors = [];
-    this.actionFailures = new Map();
-    this.executionDelays = new Map();
   }
 
-  async initialize() {
-    // Setup dependency injection container
-    this.container = await this.createTestContainer();
-
-    // Get services
-    this.commandProcessor = this.container.resolve('ICommandProcessor');
-    this.entityManager = this.container.resolve('IEntityManager');
-    this.eventDispatchService = this.container.resolve('IEventDispatchService');
-    this.configLoader = this.container.resolve('IConfigLoader');
-
-    // Setup error logging capture
-    this.setupErrorLogging();
-
-    // Initialize services
-    await this.commandProcessor.initialize();
+  // Key methods provided by the test bed:
+  configureTracing(tracedActions = ['*']) {
+    // Configures action tracing filter and components
   }
 
-  async configureTracing(config) {
-    const fullConfig = {
-      actionTracing: {
-        enabled: config.enabled || false,
-        tracedActions: config.tracedActions || [],
-        outputDirectory: config.outputDirectory || this.outputDir,
-        verbosity: config.verbosity || 'standard',
-        includeComponentData: config.includeComponentData || false,
-        includePrerequisites: config.includePrerequisites || false,
-        includeTargets: config.includeTargets || false,
-      },
-    };
-
-    await this.configLoader.setConfig(fullConfig);
+  disableTracing() {
+    // Disables tracing for performance comparisons
   }
 
-  createActor(id, options = {}) {
-    const actor = this.entityManager.createEntity(id);
-
-    if (options.components) {
-      options.components.forEach((comp) => {
-        actor.addComponent(comp, options.data || {});
-      });
-    }
-
-    return actor;
+  createActor(id) {
+    // Creates a test actor with basic structure
   }
 
-  createTurnAction(actionId, options = {}) {
-    return {
-      actionDefinitionId: actionId,
-      commandString: options.commandString || actionId,
-      parameters: options.parameters || {},
-      timestamp: Date.now(),
-      ...options,
-    };
+  createTurnAction(actionId, commandString, parameters = {}) {
+    // Creates a turn action for testing
   }
 
-  async dispatchAction(actor, turnAction) {
-    // Apply configured delays
-    if (this.executionDelays.has(turnAction.actionDefinitionId)) {
-      const delay = this.executionDelays.get(turnAction.actionDefinitionId);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-
-    // Check for configured failures
-    if (this.actionFailures.has(turnAction.actionDefinitionId)) {
-      const error = this.actionFailures.get(turnAction.actionDefinitionId);
-      throw error;
-    }
-
-    return await this.commandProcessor.dispatchAction(actor, turnAction);
+  async getWrittenTraces() {
+    // Returns traces written during test execution
   }
 
-  addExecutionDelay(delay) {
-    // Add delay to next action execution
-    this.nextExecutionDelay = delay;
+  getRawTraces() {
+    // Returns raw trace objects for detailed validation
   }
 
-  configureActionToFail(actionId, error) {
-    this.actionFailures.set(actionId, error);
+  clearTraces() {
+    // Clears accumulated traces between tests
   }
 
-  configureEventDispatchToFail(error) {
-    // Mock EventDispatchService to fail
-    jest
-      .spyOn(this.eventDispatchService, 'dispatchWithErrorHandling')
-      .mockRejectedValueOnce(error);
-  }
-
-  configureActionTimeout(actionId, timeout) {
-    // Configure specific timeout for action
-    this.actionTimeouts.set(actionId, timeout);
-  }
-
-  configureEventDispatchDelay(delay) {
-    jest
-      .spyOn(this.eventDispatchService, 'dispatchWithErrorHandling')
-      .mockImplementation(async (...args) => {
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        return true;
-      });
-  }
-
-  createLargeInventory(itemCount) {
-    const items = [];
-    for (let i = 0; i < itemCount; i++) {
-      items.push({
-        id: `item-${i}`,
-        name: `Test Item ${i}`,
-        properties: {
-          weight: Math.random() * 10,
-          value: Math.random() * 100,
-          description: `This is test item ${i} with some properties`,
-        },
-      });
-    }
-    return items;
-  }
-
-  createComplexStats() {
-    return {
-      health: { current: 100, max: 100 },
-      mana: { current: 50, max: 50 },
-      attributes: {
-        strength: 10,
-        dexterity: 12,
-        intelligence: 8,
-        constitution: 11,
-      },
-      skills: {
-        combat: { level: 5, experience: 1250 },
-        magic: { level: 3, experience: 750 },
-        crafting: { level: 2, experience: 300 },
-      },
-      effects: [
-        { id: 'blessing', duration: 300, magnitude: 1.2 },
-        { id: 'fatigue', duration: 150, magnitude: 0.8 },
-      ],
-    };
-  }
-
-  createComplexParameters() {
-    return {
-      target: 'complex-target',
-      modifiers: {
-        intensity: 'high',
-        duration: 'long',
-        effects: ['damage', 'stun', 'debuff'],
-      },
-      context: {
-        location: { x: 10, y: 20, zone: 'test-area' },
-        weather: 'stormy',
-        timeOfDay: 'midnight',
-      },
-    };
-  }
-
-  async waitForTraceOutput(timeout = 200) {
-    return new Promise((resolve) => setTimeout(resolve, timeout));
-  }
-
-  async getLatestTrace(actionId) {
-    const files = await fs.readdir(this.outputDir);
-    const actionFiles = files.filter(
-      (f) => f.includes(actionId.replace(':', '-')) && f.endsWith('.json')
-    );
-
-    if (actionFiles.length === 0) return null;
-
-    // Sort by timestamp in filename
-    actionFiles.sort().reverse();
-
-    const content = await fs.readFile(
-      path.join(this.outputDir, actionFiles[0]),
-      'utf-8'
-    );
-
-    return JSON.parse(content);
-  }
-
-  setupErrorLogging() {
-    // Capture logged errors for testing
-    const originalError = console.error;
-    console.error = (...args) => {
-      this.loggedErrors.push(args.join(' '));
-      originalError.apply(console, args);
-    };
-  }
-
-  getLoggedErrors() {
-    return this.loggedErrors;
-  }
-
-  async cleanup() {
-    // Restore console.error
-    console.error = console.error.__original || console.error;
-
-    // Clear state
-    this.loggedErrors = [];
-    this.actionFailures.clear();
-    this.executionDelays.clear();
-
-    // Cleanup container
-    if (this.container) {
-      await this.container.dispose();
-    }
+  cleanup() {
+    // Cleans up test bed resources
   }
 }
+
+export default CommandProcessorTracingTestBed;
 ```
 
 ## Implementation Steps
@@ -847,12 +693,23 @@ export class CommandProcessorTracingTestBed {
 - Validate memory management with large payloads
 - Consider adding stress tests for high-frequency execution
 
+### Test Runner Commands
+
+- **Unit Tests**: `npm run test:unit` - Tests in `tests/unit/` with `.test.js` extension
+- **Integration Tests**: `npm run test:integration` - Tests in `tests/integration/` with `.integration.test.js` extension
+- **Performance Tests**: `npm run test:performance` - Tests in `tests/performance/` with `.performance.test.js` extension
+- **Memory Tests**: `npm run test:memory` - Tests in `tests/memory/` with `.memory.test.js` extension
+
+If performance-specific tests are needed, create them at:
+- `tests/performance/actions/tracing/actionExecutionTrace.performance.test.js`
+- `tests/memory/actions/tracing/actionExecutionTrace.memory.test.js`
+
 ## Related Files
 
 - Source: `src/commands/commandProcessor.js`
-- Test: `tests/integration/actions/tracing/actionTracingExecution.integration.test.js`
-- Test Bed: `tests/common/commands/commandProcessorTracingTestBed.js`
-- Similar Tests: `tests/integration/commands/commandProcessor.integration.test.js`
+- Test: `tests/integration/actions/tracing/actionExecutionTrace.integration.test.js`
+- Test Bed: `tests/common/commands/commandProcessorTracingTestBed.js` (created and ready for use)
+- Similar Tests: `tests/integration/commands/commandProcessorTracing.integration.test.js`
 
 ---
 
