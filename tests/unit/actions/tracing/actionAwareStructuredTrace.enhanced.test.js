@@ -442,7 +442,7 @@ describe('ActionAwareStructuredTrace - Enhanced Filtering (ACTTRA-017)', () => {
     it('should skip stages above target verbosity', () => {
       // Test basic verbosity filtering behavior
       const filteredData = trace.exportFilteredTraceData('minimal');
-      
+
       // Basic test that export function works
       expect(filteredData).toBeDefined();
       expect(typeof filteredData).toBe('object');

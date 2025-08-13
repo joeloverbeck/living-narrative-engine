@@ -30,6 +30,7 @@ class ActionTraceFilter {
   #verbosityLevel;
   #inclusionConfig;
   #logger;
+  #regexCache;
 
   /**
    * @param {object} options - Configuration options
@@ -63,6 +64,11 @@ class ActionTraceFilter {
     );
     this.#verbosityLevel = this.#validateVerbosityLevel(verbosityLevel);
     this.#inclusionConfig = this.#validateInclusionConfig(inclusionConfig);
+    this.#regexCache = new Map();
+
+    // Pre-compile regex patterns from initial tracedActions and excludedActions
+    this.#compileRegexPatterns(this.#tracedActions);
+    this.#compileRegexPatterns(this.#excludedActions);
 
     this.#logger.debug('ActionTraceFilter initialized', {
       enabled: this.#enabled,
@@ -189,6 +195,9 @@ class ActionTraceFilter {
         'ActionTraceFilter.addTracedActions'
       );
       this.#tracedActions.add(action);
+
+      // Pre-compile regex pattern if applicable
+      this.#compileRegexPattern(action);
     }
 
     this.#logger.debug('Added traced actions', actionList);
@@ -204,6 +213,8 @@ class ActionTraceFilter {
 
     for (const action of actionList) {
       this.#tracedActions.delete(action);
+      // Remove from regex cache if present
+      this.#regexCache.delete(action);
     }
 
     this.#logger.debug('Removed traced actions', actionList);
@@ -224,6 +235,9 @@ class ActionTraceFilter {
         'ActionTraceFilter.addExcludedActions'
       );
       this.#excludedActions.add(action);
+
+      // Pre-compile regex pattern if applicable
+      this.#compileRegexPattern(action);
     }
 
     this.#logger.debug('Added excluded actions', actionList);
@@ -288,14 +302,14 @@ class ActionTraceFilter {
 
       // Support regex patterns (if pattern starts with /)
       if (pattern.startsWith('/') && pattern.endsWith('/')) {
-        try {
-          const regex = new RegExp(pattern.slice(1, -1));
-          if (regex.test(actionId)) {
+        // Use cached regex if available
+        const cachedRegex = this.#regexCache.get(pattern);
+        if (cachedRegex) {
+          if (cachedRegex.test(actionId)) {
             return true;
           }
-        } catch (error) {
-          this.#logger.warn(`Invalid regex pattern: ${pattern}`, error);
         }
+        // Note: Invalid patterns are not in cache, so they're skipped
       }
     }
 
@@ -359,6 +373,46 @@ class ActionTraceFilter {
       tracedActions: Array.from(this.#tracedActions),
       excludedActions: Array.from(this.#excludedActions),
     };
+  }
+
+  /**
+   * Pre-compiles regex patterns from a set of patterns
+   *
+   * @private
+   * @param {Set<string>} patterns - Set of patterns to compile
+   */
+  #compileRegexPatterns(patterns) {
+    for (const pattern of patterns) {
+      this.#compileRegexPattern(pattern);
+    }
+  }
+
+  /**
+   * Pre-compiles a single regex pattern and caches it
+   *
+   * @private
+   * @param {string} pattern - Pattern to compile
+   */
+  #compileRegexPattern(pattern) {
+    // Only compile if it's a regex pattern
+    if (pattern.startsWith('/') && pattern.endsWith('/')) {
+      // Don't recompile if already cached
+      if (this.#regexCache.has(pattern)) {
+        return;
+      }
+
+      try {
+        const regex = new RegExp(pattern.slice(1, -1));
+        this.#regexCache.set(pattern, regex);
+        this.#logger.debug(`Compiled and cached regex pattern: ${pattern}`);
+      } catch (error) {
+        // Invalid regex patterns are not cached, so they'll be skipped during matching
+        this.#logger.warn(
+          `Invalid regex pattern will be ignored: ${pattern}`,
+          error
+        );
+      }
+    }
   }
 }
 

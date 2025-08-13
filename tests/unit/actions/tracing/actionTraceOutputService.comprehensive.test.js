@@ -54,13 +54,22 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       actorId: 'test-actor',
       duration: 100,
     }),
-    getExecutionPhases: jest.fn().mockReturnValue(['start', 'execute', 'complete']),
+    getExecutionPhases: jest
+      .fn()
+      .mockReturnValue(['start', 'execute', 'complete']),
   });
 
   const createStructuredTrace = () => ({
-    getTracedActions: jest.fn().mockReturnValue(new Map([
-      ['action1', { stages: { start: { timestamp: 1000 }, end: { timestamp: 1100 } } }],
-    ])),
+    getTracedActions: jest.fn().mockReturnValue(
+      new Map([
+        [
+          'action1',
+          {
+            stages: { start: { timestamp: 1000 }, end: { timestamp: 1100 } },
+          },
+        ],
+      ])
+    ),
     getSpans: jest.fn().mockReturnValue([]),
   });
 
@@ -81,7 +90,7 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
     // In jsdom environment, window already exists, so just add showDirectoryPicker
     global.window = global.window || {};
     global.window.showDirectoryPicker = jest.fn();
-    
+
     global.Blob = jest.fn((content, options) => ({
       content,
       options,
@@ -132,9 +141,11 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       });
 
       const invalidTrace = { actionId: 'test', actorId: 'actor' };
-      
-      await expect(service.writeTrace(invalidTrace)).rejects.toThrow('Trace must have toJSON() method');
-      
+
+      await expect(service.writeTrace(invalidTrace)).rejects.toThrow(
+        'Trace must have toJSON() method'
+      );
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to write trace',
         expect.objectContaining({
@@ -147,7 +158,7 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
 
     it('should handle storage adapter failures during write', async () => {
       mockStorageAdapter.setItem.mockRejectedValue(new Error('Storage full'));
-      
+
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
@@ -155,13 +166,13 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       });
 
       const mockTrace = createMockTrace();
-      
+
       // Trigger queue processing
       await service.writeTrace(mockTrace);
-      
+
       // Trigger timer processing to process the queue
       await testTimerService.triggerAll();
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to store trace'),
         expect.any(Error)
@@ -171,9 +182,9 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
     it('should handle export failures with AbortError', async () => {
       // Add some traces to storage first
       mockStorageAdapter.getItem.mockResolvedValue([
-        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } }
+        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } },
       ]);
-      
+
       mockTraceDirectoryManager.selectDirectory.mockRejectedValue(
         Object.assign(new Error('User denied access'), { name: 'AbortError' })
       );
@@ -189,16 +200,21 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
 
       expect(result.success).toBe(false);
       expect(result.reason).toBe('User denied file system access');
-      expect(mockLogger.error).toHaveBeenCalledWith('Export failed', expect.any(Error));
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Export failed',
+        expect.any(Error)
+      );
     });
 
     it('should handle export failures with generic errors', async () => {
       // Add some traces to storage first
       mockStorageAdapter.getItem.mockResolvedValue([
-        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } }
+        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } },
       ]);
-      
-      mockTraceDirectoryManager.selectDirectory.mockRejectedValue(new Error('Unexpected error'));
+
+      mockTraceDirectoryManager.selectDirectory.mockRejectedValue(
+        new Error('Unexpected error')
+      );
 
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
@@ -207,8 +223,13 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
         timerService: testTimerService,
       });
 
-      await expect(service.exportTracesToFileSystem()).rejects.toThrow('Unexpected error');
-      expect(mockLogger.error).toHaveBeenCalledWith('Export failed', expect.any(Error));
+      await expect(service.exportTracesToFileSystem()).rejects.toThrow(
+        'Unexpected error'
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Export failed',
+        expect.any(Error)
+      );
     });
 
     it('should handle queue overflow conditions', async () => {
@@ -227,7 +248,7 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       }
 
       await Promise.all(promises);
-      
+
       // Process any queued operations
       await testTimerService.triggerAll();
 
@@ -237,8 +258,10 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
     });
 
     it('should handle circuit breaker conditions', async () => {
-      mockStorageAdapter.setItem.mockRejectedValue(new Error('Persistent storage error'));
-      
+      mockStorageAdapter.setItem.mockRejectedValue(
+        new Error('Persistent storage error')
+      );
+
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
@@ -256,7 +279,9 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       await testTimerService.triggerAll();
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Too many storage errors, stopping queue processing')
+        expect.stringContaining(
+          'Too many storage errors, stopping queue processing'
+        )
       );
     });
   });
@@ -291,7 +316,7 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
 
       // Add traces to storage
       mockStorageAdapter.getItem.mockResolvedValue([
-        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } }
+        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } },
       ]);
 
       service = new ActionTraceOutputService({
@@ -318,14 +343,14 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       });
 
       const unknownTrace = { someData: 'test' };
-      
+
       // Trigger the formatTraceData method via writeTrace with unknown trace format
       await service.writeTrace(unknownTrace);
       await testTimerService.triggerAll();
 
       // Should handle unknown trace types gracefully by storing them
       expect(mockStorageAdapter.setItem).toHaveBeenCalled();
-      
+
       const storedData = mockStorageAdapter.setItem.mock.calls[0][1];
       expect(storedData[0].data.type).toBe('unknown');
       expect(storedData[0].data.data).toEqual(unknownTrace);
@@ -339,9 +364,11 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       });
 
       const partialStructuredTrace = {
-        getTracedActions: jest.fn().mockReturnValue(new Map([
-          ['action1', { stages: {} }], // No timestamps
-        ])),
+        getTracedActions: jest.fn().mockReturnValue(
+          new Map([
+            ['action1', { stages: {} }], // No timestamps
+          ])
+        ),
       };
 
       await service.writeTrace(partialStructuredTrace);
@@ -382,7 +409,7 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       });
 
       mockStorageAdapter.getItem.mockResolvedValue([
-        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } }
+        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } },
       ]);
 
       const result = await service.exportTracesToFileSystem();
@@ -403,13 +430,15 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
 
       // Start first export
       mockTraceDirectoryManager.selectDirectory.mockImplementation(
-        () => new Promise(resolve => setTimeout(resolve, 1000))
+        () => new Promise((resolve) => setTimeout(resolve, 1000))
       );
 
       const firstExport = service.exportTracesToFileSystem();
-      
+
       // Try to start second export immediately
-      await expect(service.exportTracesToFileSystem()).rejects.toThrow('Export already in progress');
+      await expect(service.exportTracesToFileSystem()).rejects.toThrow(
+        'Export already in progress'
+      );
 
       await firstExport;
     });
@@ -417,11 +446,15 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
     it('should handle directory creation failures', async () => {
       // Add traces to storage first
       mockStorageAdapter.getItem.mockResolvedValue([
-        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } }
+        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } },
       ]);
-      
-      mockTraceDirectoryManager.selectDirectory.mockResolvedValue('mock-directory-handle');
-      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(null);
+
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        'mock-directory-handle'
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        null
+      );
 
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
@@ -439,9 +472,9 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
     it('should handle user canceling directory selection', async () => {
       // Add traces to storage first
       mockStorageAdapter.getItem.mockResolvedValue([
-        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } }
+        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } },
       ]);
-      
+
       mockTraceDirectoryManager.selectDirectory.mockResolvedValue(null);
 
       service = new ActionTraceOutputService({
@@ -471,7 +504,9 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       expect(mockLogger.info).toHaveBeenCalledWith(
         'ActionTraceOutputService: Shutting down, flushing queue...'
       );
-      expect(mockLogger.info).toHaveBeenCalledWith('ActionTraceOutputService: Shutdown complete');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'ActionTraceOutputService: Shutdown complete'
+      );
     });
 
     it('should handle rotation manager shutdown errors', async () => {
@@ -479,7 +514,7 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       // this test scenario cannot be properly tested with the current setup.
       // The test assumption was incorrect - when StorageRotationManager is undefined,
       // no rotation manager is created, so there's nothing to fail during shutdown.
-      
+
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
@@ -489,12 +524,14 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       // Verify no rotation manager was created
       const rotationStats = await service.getRotationStatistics();
       expect(rotationStats).toBeNull();
-      
+
       await service.shutdown();
 
       // Since no rotation manager exists, no shutdown error should occur
-      expect(mockLogger.info).toHaveBeenCalledWith('ActionTraceOutputService: Shutdown complete');
-      
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'ActionTraceOutputService: Shutdown complete'
+      );
+
       // The error handling path is not testable in this configuration
       // This test should be moved to a separate file with proper StorageRotationManager mocking
     });
@@ -514,7 +551,9 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
 
       await service.shutdown();
 
-      expect(mockLogger.info).toHaveBeenCalledWith('ActionTraceOutputService: Shutdown complete');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'ActionTraceOutputService: Shutdown complete'
+      );
     });
   });
 
@@ -528,7 +567,9 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
 
       await service.writeTrace(null);
 
-      expect(mockLogger.warn).toHaveBeenCalledWith('ActionTraceOutputService: Null trace provided');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'ActionTraceOutputService: Null trace provided'
+      );
     });
 
     it('should handle storage adapter not available', async () => {
@@ -550,7 +591,9 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       service = new ActionTraceOutputService({
         logger: mockLogger,
         timerService: testTimerService,
-        outputHandler: jest.fn().mockRejectedValue(new Error('Output handler error')),
+        outputHandler: jest
+          .fn()
+          .mockRejectedValue(new Error('Output handler error')),
       });
 
       const traceWithMissingIds = {
@@ -558,7 +601,9 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
         // Missing actionId and actorId
       };
 
-      await expect(service.writeTrace(traceWithMissingIds)).rejects.toThrow('Output handler error');
+      await expect(service.writeTrace(traceWithMissingIds)).rejects.toThrow(
+        'Output handler error'
+      );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to write trace',
@@ -601,14 +646,21 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       });
 
       const traceWithIncompleteData = {
-        getTracedActions: jest.fn().mockReturnValue(new Map([
-          ['action1', { 
-            stages: { 
-              start: { timestamp: null }, 
-              end: { /* no timestamp */ } 
-            } 
-          }],
-        ])),
+        getTracedActions: jest.fn().mockReturnValue(
+          new Map([
+            [
+              'action1',
+              {
+                stages: {
+                  start: { timestamp: null },
+                  end: {
+                    /* no timestamp */
+                  },
+                },
+              },
+            ],
+          ])
+        ),
         getSpans: jest.fn().mockReturnValue([]),
       };
 
@@ -618,7 +670,7 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       expect(mockStorageAdapter.setItem).toHaveBeenCalled();
       const storedData = mockStorageAdapter.setItem.mock.calls[0][1];
       const traceData = storedData[0].data;
-      
+
       // Should handle missing timestamps gracefully
       expect(traceData.actions.action1.totalDuration).toBe(0);
     });
@@ -629,7 +681,7 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       });
 
       mockStorageAdapter.getItem.mockResolvedValue([
-        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } }
+        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } },
       ]);
 
       service = new ActionTraceOutputService({
@@ -654,7 +706,7 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       });
 
       mockStorageAdapter.getItem.mockResolvedValue([
-        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } }
+        { id: 'trace1', timestamp: Date.now(), data: { test: 'data' } },
       ]);
 
       service = new ActionTraceOutputService({
@@ -683,7 +735,7 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       });
 
       const trace = createMockTrace();
-      
+
       try {
         await service.writeTrace(trace);
       } catch (error) {
@@ -712,7 +764,9 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       stats = service.getStatistics();
       expect(stats.totalWrites).toBe(0);
       expect(stats.totalErrors).toBe(0);
-      expect(mockLogger.debug).toHaveBeenCalledWith('ActionTraceOutputService statistics reset');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'ActionTraceOutputService statistics reset'
+      );
     });
   });
 });

@@ -536,17 +536,15 @@ export class HumanReadableFormatter {
     lines.push(this.#color('TRACE SPANS', Colors.BOLD));
     lines.push(this.#createSeparator('─', 11));
 
-    if (verbosity === 'minimal') {
-      lines.push(`Total Spans: ${spans.length}`);
-    } else {
-      for (const span of spans) {
-        lines.push(
-          this.#indent(
-            `• ${span.name} (${this.#formatDuration(span.endTime - span.startTime)})`,
-            1
-          )
-        );
-      }
+    // Note: This method is only called when verbosity !== 'minimal' (see line 229)
+    // so we don't need to check for minimal verbosity here
+    for (const span of spans) {
+      lines.push(
+        this.#indent(
+          `• ${span.name} (${this.#formatDuration(span.endTime - span.startTime)})`,
+          1
+        )
+      );
     }
 
     lines.push('');
