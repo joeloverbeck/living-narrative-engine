@@ -716,3 +716,348 @@
     page-break-inside: avoid;
   }
 }
+
+/* ===== CLIGEN-011 UI Enhancements ===== */
+
+/* Form Validation Errors */
+.cb-form-error {
+  border-color: var(--error-color, #e74c3c) !important;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+  animation: shake 0.3s ease-in-out;
+}
+
+.cb-field-error {
+  color: var(--error-color, #e74c3c);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  animation: slideDown 0.2s ease-out;
+}
+
+.cb-field-error::before {
+  content: '⚠️';
+  margin-right: 0.25rem;
+  font-size: 1rem;
+}
+
+/* Button State Variations */
+.cb-button-loading {
+  background: var(--narrative-purple-light);
+  cursor: wait;
+  position: relative;
+  overflow: hidden;
+}
+
+.cb-button-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+.cb-button-disabled {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.cb-button-ready {
+  background: var(--creative-gradient);
+  animation: pulse 2s infinite;
+}
+
+.cb-button-exists {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Loading Spinner */
+.cb-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 0.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+/* Confirmation Dialog */
+.cb-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.cb-dialog {
+  background: var(--bg-primary);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(108, 92, 231, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+.cb-dialog-title {
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.cb-dialog-message {
+  margin: 0 0 1.5rem 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.cb-dialog-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.cb-dialog-actions .cb-button {
+  min-width: 100px;
+}
+
+.cb-button-warning {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
+}
+
+.cb-button-warning:hover {
+  background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+}
+
+/* Retry Button */
+.cb-button-small {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  margin-left: 0.5rem;
+  display: inline-block;
+}
+
+.cb-button-retry {
+  background: var(--narrative-purple);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cb-button-retry:hover {
+  background: var(--narrative-purple-dark);
+  transform: translateY(-1px);
+}
+
+/* Enhanced Status Messages */
+.cb-message {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  animation: slideDown 0.3s ease-out;
+  position: relative;
+}
+
+.cb-message__icon {
+  margin-right: 0.75rem;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.cb-message__text {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.cb-message__close {
+  background: transparent;
+  border: none;
+  color: currentColor;
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 0.25rem;
+  margin-left: 1rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  transition: opacity 0.2s ease;
+}
+
+.cb-message__close:hover {
+  opacity: 1;
+}
+
+.cb-message--info {
+  background: rgba(52, 152, 219, 0.1);
+  border: 1px solid rgba(52, 152, 219, 0.3);
+  color: #2980b9;
+}
+
+.cb-message--success {
+  background: rgba(46, 204, 113, 0.1);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  color: #27ae60;
+}
+
+.cb-message--warning {
+  background: rgba(241, 196, 15, 0.1);
+  border: 1px solid rgba(241, 196, 15, 0.3);
+  color: #f39c12;
+}
+
+.cb-message--error {
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  color: #e74c3c;
+}
+
+/* Animations */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    left: 100%;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(108, 92, 231, 0.5);
+  }
+}
+
+/* Accessibility Improvements */
+[aria-invalid='true'] {
+  border-color: var(--error-color, #e74c3c) !important;
+}
+
+[aria-busy='true'] {
+  cursor: wait;
+}
+
+/* Focus styles for better keyboard navigation */
+.cb-button:focus-visible,
+.cb-select:focus-visible,
+[tabindex='0']:focus-visible {
+  outline: 3px solid var(--narrative-purple);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .cb-form-error {
+    border-width: 3px;
+  }
+
+  .cb-dialog {
+    border-width: 2px;
+  }
+
+  .cb-message {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support - Updated */
+@media (prefers-reduced-motion: reduce) {
+  .cb-dialog-overlay,
+  .cb-dialog,
+  .cb-message,
+  .cb-field-error,
+  .cb-button-loading::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

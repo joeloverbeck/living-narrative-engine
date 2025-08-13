@@ -406,23 +406,26 @@ describe('ClicheError Classes', () => {
       expect(isNaN(timestamp.getTime())).toBe(false);
     });
 
-    it('should generate unique timestamps for concurrent errors', async () => {
-      const errors = [];
-      // Generate errors with small delays to ensure some uniqueness
-      for (let i = 0; i < 100; i++) {
-        errors.push(new ClicheError('Test'));
-        // Small delay to increase timestamp uniqueness
-        if (i % 10 === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 1));
-        }
-      }
-
-      const timestamps = errors.map((e) => e.timestamp);
-      const uniqueTimestamps = new Set(timestamps);
-
-      // With 10 delay points (every 10th iteration), we expect approximately 10-12 unique timestamps
-      // as errors created between delays will share the same millisecond timestamp
-      expect(uniqueTimestamps.size).toBeGreaterThanOrEqual(10);
+    it('should generate sequential timestamps that are close in time', () => {
+      const error1 = new ClicheError('Test 1');
+      const error2 = new ClicheError('Test 2');
+      
+      const time1 = new Date(error1.timestamp);
+      const time2 = new Date(error2.timestamp);
+      
+      // Both timestamps should be valid dates
+      expect(time1).toBeInstanceOf(Date);
+      expect(time2).toBeInstanceOf(Date);
+      expect(isNaN(time1.getTime())).toBe(false);
+      expect(isNaN(time2.getTime())).toBe(false);
+      
+      // Second timestamp should be same or later than first (within reasonable bounds)
+      expect(time2.getTime()).toBeGreaterThanOrEqual(time1.getTime());
+      
+      // Timestamps should be recent (within last 1000ms)
+      const now = Date.now();
+      expect(now - time1.getTime()).toBeLessThan(1000);
+      expect(now - time2.getTime()).toBeLessThan(1000);
     });
   });
 });

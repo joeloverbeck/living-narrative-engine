@@ -72,7 +72,8 @@
       "Bash(for:*)",
       "Bash(do grep -q '\"\"\"\"targets\"\"\"\":' \"$file\")",
       "Bash(do grep -q '\"\"\"\"targets\"\"\"\"' \"$file\")",
-      "Bash(basename:*)"
+      "Bash(basename:*)",
+      "Bash(do echo \"Run $i:\")"
     ],
     "deny": []
   }
