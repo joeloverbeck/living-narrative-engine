@@ -345,11 +345,21 @@ export class BaseCharacterBuilderController {
    * Get validation rules for additional services
    * Override in subclasses to provide custom validation rules
    *
+   * @protected
+   * @returns {object} Validation rules keyed by service name
+   */
+  _getAdditionalServiceValidationRules() {
+    return {};
+  }
+
+  /**
+   * Internal method to get validation rules (calls protected method)
+   *
    * @private
    * @returns {object} Validation rules keyed by service name
    */
   #getAdditionalServiceValidationRules() {
-    return {};
+    return this._getAdditionalServiceValidationRules();
   }
 
   /**
@@ -2617,7 +2627,14 @@ export class BaseCharacterBuilderController {
       case ERROR_CATEGORIES.NETWORK:
         // Retry after delay
         setTimeout(() => {
-          this._retryLastOperation();
+          try {
+            this._retryLastOperation();
+          } catch (error) {
+            this.#logger.error(
+              `${this.constructor.name}: Recovery retry failed`,
+              error
+            );
+          }
         }, 5000);
         break;
 
@@ -2625,7 +2642,14 @@ export class BaseCharacterBuilderController {
         // Attempt to reinitialize
         if (errorDetails.operation === 'initialization') {
           setTimeout(() => {
-            this._reinitialize();
+            try {
+              this._reinitialize();
+            } catch (error) {
+              this.#logger.error(
+                `${this.constructor.name}: Recovery reinitialize failed`,
+                error
+              );
+            }
           }, 2000);
         }
         break;

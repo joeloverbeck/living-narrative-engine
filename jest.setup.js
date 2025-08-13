@@ -217,7 +217,9 @@ global.Blob = class MockBlob {
   constructor(content, options) {
     this.content = content;
     this.type = options?.type || 'application/octet-stream';
-    this.size = Array.isArray(content) ? content.join('').length : content?.length || 0;
+    this.size = Array.isArray(content)
+      ? content.join('').length
+      : content?.length || 0;
   }
 };
 

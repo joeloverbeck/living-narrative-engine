@@ -17,7 +17,7 @@ describe('ActionTraceOutputService - Export Functionality', () => {
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
-    
+
     // Set default File System Access API availability for main tests
     // Individual test suites can override this as needed
     global.window.showDirectoryPicker = jest.fn();
@@ -26,13 +26,13 @@ describe('ActionTraceOutputService - Export Functionality', () => {
       getItem: jest.fn(),
       setItem: jest.fn(),
       removeItem: jest.fn(),
-      getAllKeys: jest.fn()
+      getAllKeys: jest.fn(),
     };
 
     // Mock trace directory manager
     mockTraceDirectoryManager = {
       selectDirectory: jest.fn(),
-      ensureSubdirectoryExists: jest.fn()
+      ensureSubdirectoryExists: jest.fn(),
     };
 
     // Mock logger
@@ -40,21 +40,21 @@ describe('ActionTraceOutputService - Export Functionality', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     // Mock event bus
     mockEventBus = {
-      dispatch: jest.fn()
+      dispatch: jest.fn(),
     };
 
     // Mock formatters
     mockJsonFormatter = {
-      format: jest.fn(data => JSON.stringify(data, null, 2))
+      format: jest.fn((data) => JSON.stringify(data, null, 2)),
     };
 
     mockHumanReadableFormatter = {
-      format: jest.fn(data => `Formatted: ${JSON.stringify(data)}`)
+      format: jest.fn((data) => `Formatted: ${JSON.stringify(data)}`),
     };
 
     // Create service instance
@@ -64,7 +64,7 @@ describe('ActionTraceOutputService - Export Functionality', () => {
       logger: mockLogger,
       eventBus: mockEventBus,
       jsonFormatter: mockJsonFormatter,
-      humanReadableFormatter: mockHumanReadableFormatter
+      humanReadableFormatter: mockHumanReadableFormatter,
     });
   });
 
@@ -73,10 +73,14 @@ describe('ActionTraceOutputService - Export Functionality', () => {
       // Setup
       const mockDirectoryHandle = {
         name: 'test-dir',
-        getFileHandle: jest.fn()
+        getFileHandle: jest.fn(),
       };
-      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(mockDirectoryHandle);
-      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(mockDirectoryHandle);
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        mockDirectoryHandle
+      );
       mockStorageAdapter.getItem.mockResolvedValue([]);
 
       // Act
@@ -107,26 +111,30 @@ describe('ActionTraceOutputService - Export Functionality', () => {
         getFileHandle: jest.fn().mockResolvedValue({
           createWritable: jest.fn().mockResolvedValue({
             write: jest.fn(),
-            close: jest.fn()
-          })
-        })
+            close: jest.fn(),
+          }),
+        }),
       };
 
       const mockTraces = [
         {
           id: 'trace-1',
           timestamp: Date.now(),
-          data: { actionType: 'test', actorId: 'actor-1' }
+          data: { actionType: 'test', actorId: 'actor-1' },
         },
         {
           id: 'trace-2',
           timestamp: Date.now(),
-          data: { actionType: 'test', actorId: 'actor-2' }
-        }
+          data: { actionType: 'test', actorId: 'actor-2' },
+        },
       ];
 
-      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(mockDirectoryHandle);
-      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(mockDirectoryHandle);
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        mockDirectoryHandle
+      );
       mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
 
       // Act
@@ -147,21 +155,25 @@ describe('ActionTraceOutputService - Export Functionality', () => {
         getFileHandle: jest.fn().mockResolvedValue({
           createWritable: jest.fn().mockResolvedValue({
             write: jest.fn(),
-            close: jest.fn()
-          })
-        })
+            close: jest.fn(),
+          }),
+        }),
       };
 
       const mockTraces = [
         {
           id: 'trace-1',
           timestamp: new Date('2024-01-01T12:00:00.000Z').getTime(),
-          data: { actionType: 'move', actorId: 'actor-1' }
-        }
+          data: { actionType: 'move', actorId: 'actor-1' },
+        },
       ];
 
-      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(mockDirectoryHandle);
-      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(mockDirectoryHandle);
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        mockDirectoryHandle
+      );
       mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
 
       // Act
@@ -179,22 +191,26 @@ describe('ActionTraceOutputService - Export Functionality', () => {
         name: 'export-dir',
         getFileHandle: jest.fn().mockResolvedValue({
           createWritable: jest.fn().mockResolvedValue({
-            write: jest.fn(content => writtenContent.push(content)),
-            close: jest.fn()
-          })
-        })
+            write: jest.fn((content) => writtenContent.push(content)),
+            close: jest.fn(),
+          }),
+        }),
       };
 
       const mockTraces = [
         {
           id: 'trace-1',
           timestamp: Date.now(),
-          data: { actionType: 'test', value: 123 }
-        }
+          data: { actionType: 'test', value: 123 },
+        },
       ];
 
-      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(mockDirectoryHandle);
-      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(mockDirectoryHandle);
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        mockDirectoryHandle
+      );
       mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
 
       // Act
@@ -210,23 +226,28 @@ describe('ActionTraceOutputService - Export Functionality', () => {
       // Setup
       const mockDirectoryHandle = {
         name: 'export-dir',
-        getFileHandle: jest.fn()
+        getFileHandle: jest
+          .fn()
           .mockResolvedValueOnce({
             createWritable: jest.fn().mockResolvedValue({
               write: jest.fn(),
-              close: jest.fn()
-            })
+              close: jest.fn(),
+            }),
           })
-          .mockRejectedValueOnce(new Error('Write failed'))
+          .mockRejectedValueOnce(new Error('Write failed')),
       };
 
       const mockTraces = [
         { id: 'trace-1', timestamp: Date.now(), data: {} },
-        { id: 'trace-2', timestamp: Date.now(), data: {} }
+        { id: 'trace-2', timestamp: Date.now(), data: {} },
       ];
 
-      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(mockDirectoryHandle);
-      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(mockDirectoryHandle);
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        mockDirectoryHandle
+      );
       mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
 
       // Act
@@ -245,15 +266,19 @@ describe('ActionTraceOutputService - Export Functionality', () => {
         getFileHandle: jest.fn().mockResolvedValue({
           createWritable: jest.fn().mockResolvedValue({
             write: jest.fn(),
-            close: jest.fn()
-          })
-        })
+            close: jest.fn(),
+          }),
+        }),
       };
 
-      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(mockDirectoryHandle);
-      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(mockDirectoryHandle);
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        mockDirectoryHandle
+      );
       mockStorageAdapter.getItem.mockResolvedValue([
-        { id: 'trace-1', timestamp: Date.now(), data: {} }
+        { id: 'trace-1', timestamp: Date.now(), data: {} },
       ]);
 
       // Act
@@ -272,18 +297,22 @@ describe('ActionTraceOutputService - Export Functionality', () => {
         getFileHandle: jest.fn().mockResolvedValue({
           createWritable: jest.fn().mockResolvedValue({
             write: jest.fn(),
-            close: jest.fn()
-          })
-        })
+            close: jest.fn(),
+          }),
+        }),
       };
 
       const mockTraces = [
         { id: 'trace-1', timestamp: Date.now(), data: {} },
-        { id: 'trace-2', timestamp: Date.now(), data: {} }
+        { id: 'trace-2', timestamp: Date.now(), data: {} },
       ];
 
-      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(mockDirectoryHandle);
-      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(mockDirectoryHandle);
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        mockDirectoryHandle
+      );
       mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
 
       // Act
@@ -296,8 +325,8 @@ describe('ActionTraceOutputService - Export Functionality', () => {
           payload: expect.objectContaining({
             progress: expect.any(Number),
             current: expect.any(Number),
-            total: 2
-          })
+            total: 2,
+          }),
         })
       );
     });
@@ -309,23 +338,30 @@ describe('ActionTraceOutputService - Export Functionality', () => {
         getFileHandle: jest.fn().mockResolvedValue({
           createWritable: jest.fn().mockResolvedValue({
             write: jest.fn(),
-            close: jest.fn()
-          })
-        })
+            close: jest.fn(),
+          }),
+        }),
       };
 
       const mockTraces = [
         { id: 'trace-1', timestamp: Date.now(), data: {} },
         { id: 'trace-2', timestamp: Date.now(), data: {} },
-        { id: 'trace-3', timestamp: Date.now(), data: {} }
+        { id: 'trace-3', timestamp: Date.now(), data: {} },
       ];
 
-      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(mockDirectoryHandle);
-      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(mockDirectoryHandle);
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        mockDirectoryHandle
+      );
       mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
 
       // Act
-      const result = await service.exportTracesToFileSystem(['trace-1', 'trace-3']);
+      const result = await service.exportTracesToFileSystem([
+        'trace-1',
+        'trace-3',
+      ]);
 
       // Assert
       expect(result.success).toBe(true);
@@ -341,22 +377,26 @@ describe('ActionTraceOutputService - Export Functionality', () => {
         name: 'export-dir',
         getFileHandle: jest.fn().mockResolvedValue({
           createWritable: jest.fn().mockResolvedValue({
-            write: jest.fn(content => writtenContent.push(content)),
-            close: jest.fn()
-          })
-        })
+            write: jest.fn((content) => writtenContent.push(content)),
+            close: jest.fn(),
+          }),
+        }),
       };
 
       const mockTraces = [
         {
           id: 'trace-1',
           timestamp: Date.now(),
-          data: { actionType: 'test', value: 123 }
-        }
+          data: { actionType: 'test', value: 123 },
+        },
       ];
 
-      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(mockDirectoryHandle);
-      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(mockDirectoryHandle);
+      mockTraceDirectoryManager.selectDirectory.mockResolvedValue(
+        mockDirectoryHandle
+      );
+      mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValue(
+        mockDirectoryHandle
+      );
       mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
 
       // Act
@@ -373,11 +413,11 @@ describe('ActionTraceOutputService - Export Functionality', () => {
     beforeEach(() => {
       // Reset global DOM API mocks for this test suite
       jest.clearAllMocks();
-      
+
       // DOM APIs (URL, Blob) are now mocked globally in jest.setup.js
       // File System Access API is unavailable for fallback testing
       global.window.showDirectoryPicker = undefined;
-      
+
       // Mock document.createElement specifically for download tests
       const mockAnchor = {
         href: '',
@@ -390,9 +430,7 @@ describe('ActionTraceOutputService - Export Functionality', () => {
 
     it('should fall back to download when File System Access API not supported', async () => {
       // Setup - File System Access API unavailable (already set in beforeEach)
-      const mockTraces = [
-        { id: 'trace-1', timestamp: Date.now(), data: {} }
-      ];
+      const mockTraces = [{ id: 'trace-1', timestamp: Date.now(), data: {} }];
       mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
 
       // Act
@@ -406,9 +444,7 @@ describe('ActionTraceOutputService - Export Functionality', () => {
 
     it('should create download with correct filename', async () => {
       // Setup
-      const mockTraces = [
-        { id: 'trace-1', timestamp: Date.now(), data: {} }
-      ];
+      const mockTraces = [{ id: 'trace-1', timestamp: Date.now(), data: {} }];
       mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
 
       // Act

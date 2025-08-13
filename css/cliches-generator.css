@@ -443,6 +443,309 @@
   display: none;
 }
 
+/* ===== Interactive Controls ===== */
+.cliche-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-primary);
+}
+
+.search-section {
+  flex: 1 1 300px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cliche-search-input {
+  flex: 1;
+  padding: 0.75rem;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-primary);
+  border-radius: 8px;
+  font-size: 1rem;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.cliche-search-input:focus {
+  outline: none;
+  border-color: var(--narrative-purple);
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+}
+
+.search-results-count {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.filter-section {
+  position: relative;
+}
+
+.filter-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-primary);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-toggle-btn:hover {
+  border-color: var(--narrative-purple);
+  background: var(--bg-tertiary);
+}
+
+.filter-toggle-btn .chevron {
+  transition: transform 0.3s ease;
+}
+
+.filter-toggle-btn[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
+}
+
+.category-filters {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background: var(--bg-primary);
+  border: 2px solid var(--narrative-purple);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card-hover);
+  z-index: 10;
+  min-width: 250px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.category-filter-label {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.category-filter-label:hover {
+  background: var(--bg-secondary);
+  border-radius: 6px;
+}
+
+.category-filter {
+  margin-right: 0.75rem;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.expand-all-btn,
+.collapse-all-btn {
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: 2px solid var(--narrative-purple);
+  border-radius: 8px;
+  color: var(--narrative-purple);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.expand-all-btn:hover,
+.collapse-all-btn:hover {
+  background: var(--narrative-purple);
+  color: #ffffff;
+}
+
+/* Category Toggle Controls */
+.category-title {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.category-toggle {
+  background: transparent;
+  border: none;
+  color: var(--narrative-purple);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 0.5rem 0 0;
+  transition: transform 0.3s ease;
+}
+
+.category-toggle:hover {
+  transform: scale(1.1);
+}
+
+.category-toggle .chevron {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.category-toggle[aria-expanded='false'] .chevron {
+  transform: rotate(-90deg);
+}
+
+/* Copy Buttons */
+.copy-category-btn,
+.copy-item-btn {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  padding: 0.25rem;
+}
+
+.copy-category-btn:hover,
+.copy-item-btn:hover {
+  opacity: 1;
+}
+
+.copy-item-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+}
+
+.cliche-item {
+  position: relative;
+  padding-right: 2rem;
+}
+
+.copy-all-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--narrative-gold);
+  border: none;
+  border-radius: 8px;
+  color: var(--bg-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.copy-all-btn:hover {
+  background: var(--narrative-purple);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* Export Controls */
+.export-controls {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.export-btn {
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-primary);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.export-btn:hover {
+  border-color: var(--narrative-purple);
+  background: var(--narrative-purple);
+  color: #ffffff;
+}
+
+/* Highlighted Search Results */
+mark {
+  background: rgba(243, 156, 18, 0.3);
+  color: inherit;
+  padding: 0.1rem 0.2rem;
+  border-radius: 3px;
+}
+
+/* Focus Styles for Accessibility */
+.cliche-item:focus {
+  outline: 2px solid var(--narrative-purple);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.cliche-item:focus-visible {
+  outline: 2px solid var(--narrative-purple);
+  outline-offset: 2px;
+}
+
+/* Animations for Expand/Collapse */
+.cliche-list {
+  transition:
+    max-height 0.3s ease,
+    opacity 0.3s ease;
+  overflow: hidden;
+}
+
+.cliche-list[style*='display: none'] {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .cliche-controls {
+    flex-direction: column;
+  }
+
+  .search-section {
+    width: 100%;
+  }
+
+  .category-filters {
+    position: static;
+    margin-top: 1rem;
+    width: 100%;
+  }
+
+  .export-controls {
+    flex-direction: column;
+  }
+
+  .export-btn,
+  .copy-all-btn {
+    width: 100%;
+  }
+}
+
+/* Loading State for Interactive Features */
+.cliche-controls[data-loading='true'] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 /* ===== Navigation ===== */
 .cb-navigation {
   margin-top: 2rem;
@@ -817,7 +1120,8 @@
   padding: 2rem;
   max-width: 450px;
   width: 90%;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(108, 92, 231, 0.2);
   animation: slideUp 0.3s ease-out;

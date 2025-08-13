@@ -13,7 +13,7 @@ import { jest } from '@jest/globals';
 export function createMockActionTraceFilter() {
   return {
     isEnabled: jest.fn().mockReturnValue(true),
-    shouldTrace: jest.fn().mockReturnValue(false),
+    shouldTrace: jest.fn().mockReturnValue(true), // Fixed: Allow traces through by default
     getVerbosityLevel: jest.fn().mockReturnValue('standard'),
     getInclusionConfig: jest.fn().mockReturnValue({
       componentData: false,
@@ -161,24 +161,49 @@ export function createMockActionExecutionTraceFactory() {
  * @returns {object} Mock ActionTraceOutputService instance
  */
 export function createMockActionTraceOutputService() {
+  // Stateful mock that tracks changes
+  let writeCount = 0;
+  let errorCount = 0;
+  let queueLength = 0;
+  let isProcessing = false;
+
   return {
-    writeTrace: jest.fn().mockResolvedValue(undefined),
-    waitForPendingWrites: jest.fn().mockResolvedValue(undefined),
-    getStatistics: jest.fn().mockReturnValue({
-      totalWrites: 0,
-      totalErrors: 0,
-      pendingWrites: 0,
-      errorRate: 0,
+    writeTrace: jest.fn().mockImplementation(async (trace) => {
+      writeCount++;
+      queueLength++;
+      isProcessing = true;
+
+      // Simulate async processing
+      await new Promise((resolve) => setTimeout(resolve, 1));
+
+      queueLength = Math.max(0, queueLength - 1);
+      if (queueLength === 0) {
+        isProcessing = false;
+      }
+
+      return undefined;
     }),
-    resetStatistics: jest.fn(),
+    waitForPendingWrites: jest.fn().mockResolvedValue(undefined),
+    getStatistics: jest.fn().mockImplementation(() => ({
+      totalWrites: writeCount,
+      totalErrors: errorCount,
+      pendingWrites: queueLength,
+      errorRate: writeCount > 0 ? errorCount / writeCount : 0,
+    })),
+    resetStatistics: jest.fn().mockImplementation(() => {
+      writeCount = 0;
+      errorCount = 0;
+      queueLength = 0;
+      isProcessing = false;
+    }),
     // Enhanced methods for queue processing
     exportTraces: jest.fn().mockResolvedValue(undefined),
-    getQueueStats: jest.fn().mockReturnValue({
-      queueLength: 0,
-      isProcessing: false,
-      writeErrors: 0,
+    getQueueStats: jest.fn().mockImplementation(() => ({
+      queueLength: queueLength,
+      isProcessing: isProcessing,
+      writeErrors: errorCount,
       maxQueueSize: 1000,
-    }),
+    })),
     shutdown: jest.fn().mockResolvedValue(undefined),
   };
 }
@@ -306,6 +331,110 @@ export function createMockTimerService() {
     waitForCompletion: jest.fn().mockImplementation(async () => {
       // In tests, we can resolve immediately since Jest controls the timers
       return Promise.resolve();
+    }),
+  };
+}
+
+/**
+ * Create mock StorageAdapter for testing storage operations
+ * Matches the IStorageAdapter interface expected by production code
+ *
+ * @returns {object} Mock StorageAdapter instance
+ */
+export function createMockStorageAdapter() {
+  const storage = new Map();
+
+  return {
+    getItem: jest.fn().mockImplementation(async (key) => {
+      // No artificial delay - let Jest fake timers control timing
+      return storage.get(key) || null;
+    }),
+    setItem: jest.fn().mockImplementation(async (key, value) => {
+      // No artificial delay - let Jest fake timers control timing
+      storage.set(key, value);
+      return undefined; // setItem returns void/undefined, not true
+    }),
+    removeItem: jest.fn().mockImplementation(async (key) => {
+      // No artificial delay - let Jest fake timers control timing
+      storage.delete(key);
+      return undefined; // removeItem returns void/undefined, not true
+    }),
+    getAllKeys: jest.fn().mockImplementation(async () => {
+      // No artificial delay - let Jest fake timers control timing
+      return Array.from(storage.keys());
+    }),
+    clear: jest.fn().mockImplementation(async () => {
+      // No artificial delay - let Jest fake timers control timing
+      storage.clear();
+      return undefined; // clear returns void/undefined, not true
+    }),
+    // Additional methods that may be expected by the interface
+    count: jest.fn().mockImplementation(async () => {
+      // No artificial delay - let Jest fake timers control timing
+      return storage.size;
+    }),
+    initialize: jest.fn().mockImplementation(async () => undefined),
+    close: jest.fn().mockImplementation(() => undefined),
+    isAvailable: jest.fn().mockImplementation(async () => true),
+    // For testing
+    _storage: storage,
+  };
+}
+
+/**
+ * Create mock TraceDirectoryManager for file system operations
+ *
+ * @returns {object} Mock TraceDirectoryManager instance
+ */
+export function createMockTraceDirectoryManager() {
+  return {
+    selectDirectory: jest.fn(() => Promise.resolve({ name: 'test-dir' })),
+    ensureSubdirectoryExists: jest.fn(() =>
+      Promise.resolve({ name: 'export-dir' })
+    ),
+    exportTrace: jest.fn(() => Promise.resolve('exported-file-path')),
+    getExportPath: jest.fn(() => './traces/exports'),
+  };
+}
+
+/**
+ * Create mock HumanReadableFormatter for trace formatting
+ *
+ * @returns {object} Mock HumanReadableFormatter instance
+ */
+export function createMockHumanReadableFormatter() {
+  return {
+    format: jest.fn().mockImplementation((trace, verbosity = 'standard') => {
+      if (!trace) {
+        return 'No trace data';
+      }
+
+      let output = '=== Action Trace ===\n';
+
+      if (verbosity === 'minimal') {
+        output += `Action: ${trace.actionId || 'unknown'}\n`;
+        output += `Actor: ${trace.actorId || 'unknown'}\n`;
+      } else if (verbosity === 'standard' || verbosity === 'detailed') {
+        output += `Action: ${trace.actionId || 'unknown'}\n`;
+        output += `Actor: ${trace.actorId || 'unknown'}\n`;
+        output += `Timestamp: ${new Date().toISOString()}\n`;
+
+        if (trace.execution) {
+          output += `Duration: ${trace.execution.duration || 0}ms\n`;
+          output += `Status: ${trace.execution.result?.success ? 'Success' : 'Failed'}\n`;
+        }
+
+        if (verbosity === 'detailed' && trace.stages) {
+          output += '\nStages:\n';
+          Object.entries(trace.stages).forEach(([stage, data]) => {
+            output += `  - ${stage}: ${JSON.stringify(data)}\n`;
+          });
+        }
+      } else if (verbosity === 'verbose') {
+        output += JSON.stringify(trace, null, 2);
+      }
+
+      return output;
     }),
   };
 }

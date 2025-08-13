@@ -409,19 +409,19 @@ describe('ClicheError Classes', () => {
     it('should generate sequential timestamps that are close in time', () => {
       const error1 = new ClicheError('Test 1');
       const error2 = new ClicheError('Test 2');
-      
+
       const time1 = new Date(error1.timestamp);
       const time2 = new Date(error2.timestamp);
-      
+
       // Both timestamps should be valid dates
       expect(time1).toBeInstanceOf(Date);
       expect(time2).toBeInstanceOf(Date);
       expect(isNaN(time1.getTime())).toBe(false);
       expect(isNaN(time2.getTime())).toBe(false);
-      
+
       // Second timestamp should be same or later than first (within reasonable bounds)
       expect(time2.getTime()).toBeGreaterThanOrEqual(time1.getTime());
-      
+
       // Timestamps should be recent (within last 1000ms)
       const now = Date.now();
       expect(now - time1.getTime()).toBeLessThan(1000);

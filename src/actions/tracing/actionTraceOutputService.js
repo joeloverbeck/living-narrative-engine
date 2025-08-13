@@ -8,7 +8,12 @@ import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { TraceQueueProcessor } from './traceQueueProcessor.js';
 import { TracePriority, DEFAULT_PRIORITY } from './tracePriority.js';
 import { StorageRotationManager } from './storageRotationManager.js';
-import { TraceIdGenerator, NamingStrategy, TimestampFormat } from './traceIdGenerator.js';
+import {
+  TraceIdGenerator,
+  NamingStrategy,
+  TimestampFormat,
+} from './traceIdGenerator.js';
+import { defaultTimerService } from './timerService.js';
 
 // Re-export from traceIdGenerator for backward compatibility
 export { NamingStrategy, TimestampFormat } from './traceIdGenerator.js';
@@ -38,6 +43,7 @@ export class ActionTraceOutputService {
   #namingOptions;
   #traceDirectoryManager;
   #exportInProgress;
+  #timerService;
 
   /**
    * Constructor
@@ -53,6 +59,7 @@ export class ActionTraceOutputService {
    * @param {object} [dependencies.queueConfig] - Queue processor configuration
    * @param {object} [dependencies.namingOptions] - Naming convention options
    * @param {object} [dependencies.traceDirectoryManager] - Directory manager for file exports
+   * @param {object} [dependencies.timerService] - Timer service for scheduling operations
    */
   constructor({
     storageAdapter,
@@ -65,6 +72,7 @@ export class ActionTraceOutputService {
     queueConfig,
     namingOptions = {},
     traceDirectoryManager,
+    timerService,
   } = {}) {
     // Validate dependencies if provided
     if (storageAdapter) {
@@ -97,9 +105,14 @@ export class ActionTraceOutputService {
       );
     }
     if (traceDirectoryManager) {
-      validateDependency(traceDirectoryManager, 'ITraceDirectoryManager', null, {
-        requiredMethods: ['selectDirectory', 'ensureSubdirectoryExists'],
-      });
+      validateDependency(
+        traceDirectoryManager,
+        'ITraceDirectoryManager',
+        null,
+        {
+          requiredMethods: ['selectDirectory', 'ensureSubdirectoryExists'],
+        }
+      );
     }
 
     this.#storageAdapter = storageAdapter;
@@ -113,12 +126,19 @@ export class ActionTraceOutputService {
 
     // Store naming options for later use
     this.#namingOptions = namingOptions || {};
-    
+
     // Initialize ID generator with naming options
     this.#idGenerator = new TraceIdGenerator(this.#namingOptions);
 
+    // Use provided timerService or extract from queueConfig, or use default
+    this.#timerService =
+      timerService ||
+      (queueConfig && queueConfig.timerService) ||
+      defaultTimerService;
+
     // Extract timerService from queueConfig if provided (used by both queue processor and rotation manager)
-    const { timerService, ...remainingConfig } = queueConfig || {};
+    const { timerService: configTimerService, ...remainingConfig } =
+      queueConfig || {};
 
     // Initialize queue processing system
     if (this.#storageAdapter && typeof TraceQueueProcessor !== 'undefined') {
@@ -127,7 +147,7 @@ export class ActionTraceOutputService {
         storageAdapter: this.#storageAdapter,
         logger: this.#logger,
         eventBus: this.#eventBus,
-        timerService,
+        timerService: this.#timerService,
         config: remainingConfig,
         namingOptions: this.#namingOptions,
       });
@@ -177,7 +197,7 @@ export class ActionTraceOutputService {
           storageAdapter: this.#storageAdapter,
           logger: this.#logger,
           config: rotationConfig,
-          timerService: timerService,
+          timerService: this.#timerService,
         });
 
         this.#logger.debug(
@@ -233,7 +253,8 @@ export class ActionTraceOutputService {
 
       // Start processing if not already running
       if (!this.#isProcessing) {
-        this.#processQueue();
+        // Use timer service to ensure async processing with Jest fake timers
+        this.#timerService.setTimeout(() => this.#processQueue(), 0);
       }
     } else {
       // Fallback to legacy behavior for backward compatibility
@@ -274,7 +295,7 @@ export class ActionTraceOutputService {
           item.retryCount++;
           const delay = Math.pow(2, item.retryCount) * 100;
 
-          setTimeout(() => {
+          this.#timerService.setTimeout(() => {
             this.#outputQueue.unshift(item); // Add back to front for retry
           }, delay);
         } else {
@@ -297,7 +318,7 @@ export class ActionTraceOutputService {
 
     // Resume processing if items were added during error recovery
     if (this.#outputQueue.length > 0 && this.#writeErrors < 10) {
-      setTimeout(() => this.#processQueue(), 1000);
+      this.#timerService.setTimeout(() => this.#processQueue(), 1000);
     }
   }
 
@@ -500,7 +521,7 @@ export class ActionTraceOutputService {
 
   /**
    * Export traces from IndexedDB to user's file system using File System Access API
-   * 
+   *
    * @param {Array<string>} [traceIds] - IDs of specific traces to export (optional, exports all if not provided)
    * @param {string} [format] - Export format ('json' or 'text')
    * @returns {Promise<object>} Export result with status and details
@@ -508,7 +529,9 @@ export class ActionTraceOutputService {
   async exportTracesToFileSystem(traceIds = null, format = 'json') {
     // Check if File System Access API is supported
     if (!this.#traceDirectoryManager || !window.showDirectoryPicker) {
-      this.#logger.warn('File System Access API not supported, falling back to download');
+      this.#logger.warn(
+        'File System Access API not supported, falling back to download'
+      );
       return this.exportTracesAsDownload(format);
     }
 
@@ -521,39 +544,41 @@ export class ActionTraceOutputService {
 
     try {
       // Step 1: Prompt user to select export directory
-      const directoryHandle = await this.#traceDirectoryManager.selectDirectory();
-      
+      const directoryHandle =
+        await this.#traceDirectoryManager.selectDirectory();
+
       if (!directoryHandle) {
         return {
           success: false,
           reason: 'User cancelled directory selection',
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         };
       }
 
       // Step 2: Create export subdirectory with timestamp
       const exportDirName = `traces_${new Date().toISOString().split('T')[0]}_${Date.now()}`;
-      const exportDir = await this.#traceDirectoryManager.ensureSubdirectoryExists(
-        directoryHandle,
-        exportDirName
-      );
+      const exportDir =
+        await this.#traceDirectoryManager.ensureSubdirectoryExists(
+          directoryHandle,
+          exportDirName
+        );
 
       if (!exportDir) {
         return {
           success: false,
           reason: 'Failed to create export directory',
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         };
       }
 
       // Step 3: Get traces from IndexedDB
       const traces = await this.#getTracesForExport(traceIds);
-      
+
       if (traces.length === 0) {
         return {
           success: false,
           reason: 'No traces found to export',
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         };
       }
 
@@ -562,7 +587,7 @@ export class ActionTraceOutputService {
       for (let i = 0; i < traces.length; i++) {
         const trace = traces[i];
         const progress = ((i + 1) / traces.length) * 100;
-        
+
         // Dispatch progress event if event bus available
         if (this.#eventBus) {
           this.#eventBus.dispatch({
@@ -570,38 +595,39 @@ export class ActionTraceOutputService {
             payload: {
               progress,
               current: i + 1,
-              total: traces.length
-            }
+              total: traces.length,
+            },
           });
         }
-        
+
         try {
           const fileName = this.#generateExportFileName(trace, format);
-          const fileContent = format === 'json' 
-            ? this.#formatTraceAsJSON(trace)
-            : this.#formatTraceAsText(trace);
-          
+          const fileContent =
+            format === 'json'
+              ? this.#formatTraceAsJSON(trace)
+              : this.#formatTraceAsText(trace);
+
           // Write file using File System Access API
           await this.#writeTraceToFile(exportDir, fileName, fileContent);
-          
+
           exportResults.push({
             traceId: trace.id,
             fileName,
-            success: true
+            success: true,
           });
         } catch (error) {
           this.#logger.error(`Failed to export trace ${trace.id}`, error);
           exportResults.push({
             traceId: trace.id,
             success: false,
-            error: error.message
+            error: error.message,
           });
         }
       }
 
       // Step 5: Generate export summary
-      const successCount = exportResults.filter(r => r.success).length;
-      
+      const successCount = exportResults.filter((r) => r.success).length;
+
       return {
         success: true,
         totalTraces: traces.length,
@@ -609,21 +635,20 @@ export class ActionTraceOutputService {
         failedCount: traces.length - successCount,
         exportPath: exportDirName,
         results: exportResults,
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       };
-
     } catch (error) {
       this.#logger.error('Export failed', error);
-      
+
       // Handle specific errors
       if (error.name === 'AbortError') {
         return {
           success: false,
           reason: 'User denied file system access',
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         };
       }
-      
+
       throw error;
     } finally {
       this.#exportInProgress = false;
@@ -643,74 +668,88 @@ export class ActionTraceOutputService {
       );
       return {
         success: false,
-        reason: 'No storage adapter available'
+        reason: 'No storage adapter available',
       };
     }
 
+    // Prevent concurrent exports (same as exportTracesToFileSystem)
+    if (this.#exportInProgress) {
+      throw new Error('Export already in progress');
+    }
+
+    this.#exportInProgress = true;
     const startTime = Date.now();
-    const traces = (await this.#storageAdapter.getItem(this.#storageKey)) || [];
 
-    if (traces.length === 0) {
-      this.#logger.warn('ActionTraceOutputService: No traces to export');
-      return {
-        success: false,
-        reason: 'No traces to export'
-      };
-    }
+    try {
+      const traces =
+        (await this.#storageAdapter.getItem(this.#storageKey)) || [];
 
-    let content;
-    let filename;
-    let mimeType;
-
-    if (format === 'json') {
-      // Use JsonTraceFormatter for each trace if available
-      if (this.#jsonFormatter) {
-        const formattedTraces = traces.map((traceRecord) => {
-          try {
-            const formattedJson = this.#jsonFormatter.format(traceRecord.data);
-            return {
-              ...traceRecord,
-              data: JSON.parse(formattedJson),
-            };
-          } catch (error) {
-            this.#logger.warn('Failed to format trace during export', error);
-            return traceRecord;
-          }
-        });
-        content = JSON.stringify(formattedTraces, null, 2);
-      } else {
-        content = JSON.stringify(traces, null, 2);
+      if (traces.length === 0) {
+        this.#logger.warn('ActionTraceOutputService: No traces to export');
+        return {
+          success: false,
+          reason: 'No traces to export',
+        };
       }
-      filename = `action-traces-${Date.now()}.json`;
-      mimeType = 'application/json';
-    } else {
-      content = this.#formatTracesAsText(traces);
-      filename = `action-traces-${Date.now()}.txt`;
-      mimeType = 'text/plain';
+
+      let content;
+      let filename;
+      let mimeType;
+
+      if (format === 'json') {
+        // Use JsonTraceFormatter for each trace if available
+        if (this.#jsonFormatter) {
+          const formattedTraces = traces.map((traceRecord) => {
+            try {
+              const formattedJson = this.#jsonFormatter.format(
+                traceRecord.data
+              );
+              return {
+                ...traceRecord,
+                data: JSON.parse(formattedJson),
+              };
+            } catch (error) {
+              this.#logger.warn('Failed to format trace during export', error);
+              return traceRecord;
+            }
+          });
+          content = JSON.stringify(formattedTraces, null, 2);
+        } else {
+          content = JSON.stringify(traces, null, 2);
+        }
+        filename = `action-traces-${Date.now()}.json`;
+        mimeType = 'application/json';
+      } else {
+        content = this.#formatTracesAsText(traces);
+        filename = `action-traces-${Date.now()}.txt`;
+        mimeType = 'text/plain';
+      }
+
+      // Create blob and download
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      this.#logger.info(
+        `ActionTraceOutputService: Exported ${traces.length} traces as ${filename}`
+      );
+
+      return {
+        success: true,
+        totalTraces: traces.length,
+        exportedCount: traces.length,
+        failedCount: 0,
+        fileName: filename,
+        method: 'download',
+        duration: Date.now() - startTime,
+      };
+    } finally {
+      this.#exportInProgress = false;
     }
-
-    // Create blob and download
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    this.#logger.info(
-      `ActionTraceOutputService: Exported ${traces.length} traces as ${filename}`
-    );
-
-    return {
-      success: true,
-      totalTraces: traces.length,
-      exportedCount: traces.length,
-      failedCount: 0,
-      fileName: filename,
-      method: 'download',
-      duration: Date.now() - startTime
-    };
   }
 
   /**
@@ -725,7 +764,7 @@ export class ActionTraceOutputService {
 
   /**
    * Get traces from IndexedDB storage for export
-   * 
+   *
    * @private
    * @param {Array<string>|null} traceIds - Specific trace IDs to retrieve, or null for all
    * @returns {Promise<Array>} Array of trace records
@@ -735,40 +774,42 @@ export class ActionTraceOutputService {
       return [];
     }
 
-    const allTraces = (await this.#storageAdapter.getItem(this.#storageKey)) || [];
-    
+    const allTraces =
+      (await this.#storageAdapter.getItem(this.#storageKey)) || [];
+
     if (!traceIds || traceIds.length === 0) {
       return allTraces;
     }
 
     // Filter to specific trace IDs
-    return allTraces.filter(trace => traceIds.includes(trace.id));
+    return allTraces.filter((trace) => traceIds.includes(trace.id));
   }
 
   /**
    * Generate file name for exported trace
-   * 
+   *
    * @private
    * @param {object} trace - Trace record
    * @param {string} format - Export format
    * @returns {string} File name
    */
   #generateExportFileName(trace, format) {
-    const timestamp = new Date(trace.timestamp || Date.now()).toISOString()
+    const timestamp = new Date(trace.timestamp || Date.now())
+      .toISOString()
       .replace(/:/g, '-')
       .replace(/\./g, '_');
-    
+
     const extension = format === 'json' ? 'json' : 'txt';
-    
+
     // Extract action type if available
     const actionType = trace.data?.actionType || trace.data?.type || 'trace';
-    
+
     return `${actionType}_${timestamp}.${extension}`;
   }
 
   /**
    * Format trace as JSON for export
-   * 
+   *
    * @private
    * @param {object} trace - Trace record
    * @returns {string} JSON string
@@ -781,13 +822,13 @@ export class ActionTraceOutputService {
         this.#logger.warn('Failed to use JSON formatter, falling back', error);
       }
     }
-    
+
     return JSON.stringify(trace, null, 2);
   }
 
   /**
    * Format single trace as text
-   * 
+   *
    * @private
    * @param {object} trace - Trace record
    * @returns {string} Human-readable text
@@ -795,24 +836,27 @@ export class ActionTraceOutputService {
   #formatTraceAsText(trace) {
     let output = `=== Trace ID: ${trace.id} ===\n`;
     output += `Timestamp: ${new Date(trace.timestamp).toISOString()}\n\n`;
-    
+
     if (this.#humanReadableFormatter && trace.data) {
       try {
         output += this.#humanReadableFormatter.format(trace.data);
       } catch (error) {
-        this.#logger.warn('Failed to use human-readable formatter, falling back', error);
+        this.#logger.warn(
+          'Failed to use human-readable formatter, falling back',
+          error
+        );
         output += JSON.stringify(trace.data, null, 2);
       }
     } else {
       output += JSON.stringify(trace.data, null, 2);
     }
-    
+
     return output;
   }
 
   /**
    * Write trace file using File System Access API
-   * 
+   *
    * @private
    * @param {FileSystemDirectoryHandle} directoryHandle - Directory to write to
    * @param {string} fileName - Name of file
@@ -820,10 +864,10 @@ export class ActionTraceOutputService {
    * @returns {Promise<void>}
    */
   async #writeTraceToFile(directoryHandle, fileName, content) {
-    const fileHandle = await directoryHandle.getFileHandle(fileName, { 
-      create: true 
+    const fileHandle = await directoryHandle.getFileHandle(fileName, {
+      create: true,
     });
-    
+
     const writable = await fileHandle.createWritable();
     await writable.write(content);
     await writable.close();
@@ -840,7 +884,6 @@ export class ActionTraceOutputService {
     // Use the shared ID generator for consistent naming
     return this.#idGenerator.generateId(trace);
   }
-
 
   /**
    * Format trace data for output

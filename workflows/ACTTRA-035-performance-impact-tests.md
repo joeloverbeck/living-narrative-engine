@@ -40,12 +40,12 @@ import { ActionTracingPerformanceTestBed } from '../../../common/performance/act
 describe('Action Tracing - Performance Impact', () => {
   let testBed;
   const performanceThresholds = {
-    disabledOverhead: 5,      // <5ms when disabled
-    enabledOverhead: 5,       // <5ms per traced action
-    throughput: 100,          // 100+ actions/second
+    disabledOverhead: 5, // <5ms when disabled
+    enabledOverhead: 5, // <5ms per traced action
+    throughput: 100, // 100+ actions/second
     memoryUsage: 10 * 1024 * 1024, // <10MB
-    fileWriteTime: 10,        // <10ms per file write
-    queueProcessingTime: 1    // <1ms queue processing
+    fileWriteTime: 10, // <10ms per file write
+    queueProcessingTime: 1, // <1ms queue processing
   };
 
   beforeEach(async () => {
@@ -70,43 +70,44 @@ describe('Disabled Tracing Overhead', () => {
   it('should have <5ms overhead when tracing is disabled', async () => {
     // Baseline: Execute action discovery without tracing infrastructure
     const baselineResults = await testBed.measureBaselinePerformance(1000);
-    
+
     // Test: Execute with tracing infrastructure but disabled
     await testBed.configureTracing({ enabled: false });
-    const disabledResults = await testBed.measureActionDiscoveryPerformance(1000);
-    
+    const disabledResults =
+      await testBed.measureActionDiscoveryPerformance(1000);
+
     const overhead = disabledResults.averageTime - baselineResults.averageTime;
-    
+
     expect(overhead).toBeLessThan(performanceThresholds.disabledOverhead);
-    
+
     // Log performance metrics
     testBed.logPerformanceMetrics('disabled_overhead', {
       baseline: baselineResults.averageTime,
       disabled: disabledResults.averageTime,
       overhead,
-      threshold: performanceThresholds.disabledOverhead
+      threshold: performanceThresholds.disabledOverhead,
     });
   });
 
   it('should have minimal memory overhead when disabled', async () => {
     const baselineMemory = await testBed.measureMemoryUsage();
-    
+
     await testBed.configureTracing({ enabled: false });
     await testBed.executeActionBatch(100);
-    
+
     const disabledMemory = await testBed.measureMemoryUsage();
     const memoryOverhead = disabledMemory - baselineMemory;
-    
+
     expect(memoryOverhead).toBeLessThan(1 * 1024 * 1024); // <1MB overhead
   });
 
   it('should not affect event processing when disabled', async () => {
     await testBed.configureTracing({ enabled: false });
-    
+
     const startTime = performance.now();
     const eventsProcessed = await testBed.processEventBatch(1000);
     const duration = performance.now() - startTime;
-    
+
     expect(eventsProcessed).toBe(1000);
     expect(duration).toBeLessThan(100); // <100ms for 1000 events
   });
@@ -119,65 +120,71 @@ describe('Disabled Tracing Overhead', () => {
 describe('Enabled Tracing Overhead', () => {
   it('should have <5ms overhead per traced action', async () => {
     const actionIds = ['core:go', 'core:take', 'core:use'];
-    
+
     // Measure without tracing
     await testBed.configureTracing({ enabled: false });
     const withoutTracing = await testBed.measureActionExecutionPerformance(
-      actionIds, 100
+      actionIds,
+      100
     );
-    
+
     // Measure with tracing
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: actionIds
+      tracedActions: actionIds,
     });
     const withTracing = await testBed.measureActionExecutionPerformance(
-      actionIds, 100
+      actionIds,
+      100
     );
-    
-    const overheadPerAction = withTracing.averageTime - withoutTracing.averageTime;
-    
-    expect(overheadPerAction).toBeLessThan(performanceThresholds.enabledOverhead);
-    
+
+    const overheadPerAction =
+      withTracing.averageTime - withoutTracing.averageTime;
+
+    expect(overheadPerAction).toBeLessThan(
+      performanceThresholds.enabledOverhead
+    );
+
     testBed.logPerformanceMetrics('enabled_overhead', {
       withoutTracing: withoutTracing.averageTime,
       withTracing: withTracing.averageTime,
       overhead: overheadPerAction,
-      threshold: performanceThresholds.enabledOverhead
+      threshold: performanceThresholds.enabledOverhead,
     });
   });
 
   it('should scale linearly with number of traced actions', async () => {
     const testSizes = [1, 10, 50, 100];
     const overheadResults = [];
-    
+
     for (const size of testSizes) {
       const tracedActions = testBed.generateActionIds(size);
-      
+
       await testBed.configureTracing({
         enabled: true,
-        tracedActions
+        tracedActions,
       });
-      
+
       const result = await testBed.measureActionExecutionPerformance(
-        tracedActions, 50
+        tracedActions,
+        50
       );
-      
+
       overheadResults.push({
         size,
         averageTime: result.averageTime,
-        perActionOverhead: result.averageTime / size
+        perActionOverhead: result.averageTime / size,
       });
     }
-    
+
     // Verify linear scaling (not exponential)
     for (let i = 1; i < overheadResults.length; i++) {
       const current = overheadResults[i];
       const previous = overheadResults[i - 1];
-      
+
       const scalingFactor = current.averageTime / previous.averageTime;
       const expectedScaling = current.size / previous.size;
-      
+
       // Should scale roughly linearly (within 50% tolerance)
       expect(scalingFactor).toBeLessThan(expectedScaling * 1.5);
     }
@@ -193,25 +200,25 @@ describe('Throughput Testing', () => {
     await testBed.configureTracing({
       enabled: true,
       tracedActions: ['core:go', 'core:take', 'core:use'],
-      verbosity: 'standard'
+      verbosity: 'standard',
     });
-    
+
     const actionCount = 200;
     const startTime = performance.now();
-    
+
     const results = await testBed.executeActionBatch(actionCount);
-    
+
     const duration = performance.now() - startTime;
     const actionsPerSecond = actionCount / (duration / 1000);
-    
+
     expect(actionsPerSecond).toBeGreaterThan(performanceThresholds.throughput);
     expect(results.successCount).toBe(actionCount);
-    
+
     testBed.logPerformanceMetrics('throughput', {
       actionCount,
       duration,
       actionsPerSecond,
-      threshold: performanceThresholds.throughput
+      threshold: performanceThresholds.throughput,
     });
   });
 
@@ -219,30 +226,33 @@ describe('Throughput Testing', () => {
     await testBed.configureTracing({
       enabled: true,
       tracedActions: ['*'], // Trace all actions
-      verbosity: 'minimal'
+      verbosity: 'minimal',
     });
-    
+
     const actorCount = 10;
     const actionsPerActor = 50;
-    
+
     const actors = testBed.createActors(actorCount);
-    
+
     const startTime = performance.now();
-    
-    const promises = actors.map(actor => 
+
+    const promises = actors.map((actor) =>
       testBed.executeActionSequence(actor, actionsPerActor)
     );
-    
+
     const results = await Promise.all(promises);
-    
+
     const duration = performance.now() - startTime;
     const totalActions = actorCount * actionsPerActor;
     const actionsPerSecond = totalActions / (duration / 1000);
-    
+
     expect(actionsPerSecond).toBeGreaterThan(performanceThresholds.throughput);
-    
+
     // Verify all actions succeeded
-    const totalSuccesses = results.reduce((sum, result) => sum + result.successCount, 0);
+    const totalSuccesses = results.reduce(
+      (sum, result) => sum + result.successCount,
+      0
+    );
     expect(totalSuccesses).toBe(totalActions);
   });
 
@@ -250,36 +260,36 @@ describe('Throughput Testing', () => {
     await testBed.configureTracing({
       enabled: true,
       tracedActions: ['core:go'],
-      verbosity: 'detailed'
+      verbosity: 'detailed',
     });
-    
+
     // Test burst: 500 actions in quick succession
     const burstSize = 500;
     const burstResults = [];
-    
+
     // Execute in small bursts to simulate realistic load
     for (let i = 0; i < 5; i++) {
       const batchSize = burstSize / 5;
       const startTime = performance.now();
-      
+
       await testBed.executeActionBatch(batchSize);
-      
+
       const batchDuration = performance.now() - startTime;
       const batchThroughput = batchSize / (batchDuration / 1000);
-      
+
       burstResults.push(batchThroughput);
     }
-    
+
     // All batches should maintain minimum throughput
-    burstResults.forEach(throughput => {
+    burstResults.forEach((throughput) => {
       expect(throughput).toBeGreaterThan(performanceThresholds.throughput);
     });
-    
+
     // Performance should not degrade over time
     const firstBatch = burstResults[0];
     const lastBatch = burstResults[burstResults.length - 1];
     const degradation = (firstBatch - lastBatch) / firstBatch;
-    
+
     expect(degradation).toBeLessThan(0.2); // <20% degradation
   });
 });
@@ -294,27 +304,27 @@ describe('Memory Usage Testing', () => {
       enabled: true,
       tracedActions: ['*'],
       verbosity: 'verbose',
-      maxTraceFiles: 1000 // Large number to test memory limits
+      maxTraceFiles: 1000, // Large number to test memory limits
     });
-    
+
     const initialMemory = await testBed.measureMemoryUsage();
-    
+
     // Execute large number of actions to generate traces
     await testBed.executeActionBatch(1000);
-    
+
     // Wait for all traces to be processed
     await testBed.waitForTraceProcessing();
-    
+
     const finalMemory = await testBed.measureMemoryUsage();
     const memoryUsage = finalMemory - initialMemory;
-    
+
     expect(memoryUsage).toBeLessThan(performanceThresholds.memoryUsage);
-    
+
     testBed.logPerformanceMetrics('memory_usage', {
       initialMemory,
       finalMemory,
       memoryUsage,
-      threshold: performanceThresholds.memoryUsage
+      threshold: performanceThresholds.memoryUsage,
     });
   });
 
@@ -323,54 +333,56 @@ describe('Memory Usage Testing', () => {
       enabled: true,
       tracedActions: ['core:go'],
       maxTraceFiles: 10, // Small limit to force rotation
-      rotationPolicy: 'count'
+      rotationPolicy: 'count',
     });
-    
+
     const memoryReadings = [];
-    
+
     // Execute actions in batches and measure memory
     for (let batch = 0; batch < 10; batch++) {
       await testBed.executeActionBatch(50);
       await testBed.waitForTraceProcessing();
-      
+
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
       }
-      
+
       const memory = await testBed.measureMemoryUsage();
       memoryReadings.push(memory);
     }
-    
+
     // Memory should not grow indefinitely
     const initialMemory = memoryReadings[0];
     const finalMemory = memoryReadings[memoryReadings.length - 1];
     const growth = (finalMemory - initialMemory) / initialMemory;
-    
+
     expect(growth).toBeLessThan(2.0); // <200% growth over test period
   });
 
   it('should handle memory pressure gracefully', async () => {
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: ['core:complex_action']
+      tracedActions: ['core:complex_action'],
     });
-    
+
     // Create large payload action
-    const largePayloadAction = testBed.createActionWithLargePayload(1024 * 1024); // 1MB payload
-    
+    const largePayloadAction = testBed.createActionWithLargePayload(
+      1024 * 1024
+    ); // 1MB payload
+
     const startMemory = await testBed.measureMemoryUsage();
-    
+
     // Execute actions with large payloads
     for (let i = 0; i < 20; i++) {
       await testBed.executeAction(largePayloadAction);
     }
-    
+
     await testBed.waitForTraceProcessing();
-    
+
     const endMemory = await testBed.measureMemoryUsage();
     const memoryIncrease = endMemory - startMemory;
-    
+
     // Should not retain all large payloads in memory
     expect(memoryIncrease).toBeLessThan(5 * 1024 * 1024); // <5MB increase
   });
@@ -385,24 +397,25 @@ describe('File I/O Performance', () => {
     await testBed.configureTracing({
       enabled: true,
       tracedActions: ['core:go'],
-      verbosity: 'standard'
+      verbosity: 'standard',
     });
-    
+
     const writeTimings = [];
-    
+
     for (let i = 0; i < 100; i++) {
       const startTime = performance.now();
-      
+
       await testBed.executeAction('core:go');
       await testBed.waitForSingleTraceWrite();
-      
+
       const writeTime = performance.now() - startTime;
       writeTimings.push(writeTime);
     }
-    
-    const averageWriteTime = writeTimings.reduce((sum, time) => sum + time, 0) / writeTimings.length;
+
+    const averageWriteTime =
+      writeTimings.reduce((sum, time) => sum + time, 0) / writeTimings.length;
     const maxWriteTime = Math.max(...writeTimings);
-    
+
     expect(averageWriteTime).toBeLessThan(performanceThresholds.fileWriteTime);
     expect(maxWriteTime).toBeLessThan(performanceThresholds.fileWriteTime * 2); // Allow some variance
   });
@@ -410,9 +423,9 @@ describe('File I/O Performance', () => {
   it('should batch file writes efficiently', async () => {
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: ['core:go', 'core:take', 'core:use']
+      tracedActions: ['core:go', 'core:take', 'core:use'],
     });
-    
+
     // Execute multiple actions rapidly
     const actionPromises = [];
     for (let i = 0; i < 50; i++) {
@@ -420,15 +433,15 @@ describe('File I/O Performance', () => {
       actionPromises.push(testBed.executeAction('core:take'));
       actionPromises.push(testBed.executeAction('core:use'));
     }
-    
+
     const startTime = performance.now();
     await Promise.all(actionPromises);
     await testBed.waitForAllTracesWritten();
     const totalTime = performance.now() - startTime;
-    
+
     // Should handle 150 actions + file writes efficiently
     expect(totalTime).toBeLessThan(2000); // <2 seconds total
-    
+
     // Verify all files were written
     const writtenFiles = await testBed.getWrittenTraceFiles();
     expect(writtenFiles.length).toBe(150);
@@ -437,23 +450,23 @@ describe('File I/O Performance', () => {
   it('should not block game loop during file writes', async () => {
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: ['*']
+      tracedActions: ['*'],
     });
-    
+
     // Start continuous game loop simulation
     const gameLoopMetrics = testBed.startGameLoopMonitoring();
-    
+
     // Execute actions while monitoring game loop
     for (let i = 0; i < 100; i++) {
       await testBed.executeAction('core:go');
-      
+
       // Check that game loop hasn't been blocked
       const currentFrameTime = gameLoopMetrics.getCurrentFrameTime();
       expect(currentFrameTime).toBeLessThan(16.67); // 60 FPS = 16.67ms per frame
     }
-    
+
     const finalMetrics = gameLoopMetrics.stop();
-    
+
     expect(finalMetrics.averageFrameTime).toBeLessThan(16.67);
     expect(finalMetrics.maxFrameTime).toBeLessThan(33.33); // Allow occasional slower frames
   });
@@ -466,37 +479,37 @@ describe('File I/O Performance', () => {
 describe('CPU Profiling and Analysis', () => {
   it('should use minimal CPU when tracing is disabled', async () => {
     await testBed.configureTracing({ enabled: false });
-    
+
     const cpuProfiler = testBed.startCPUProfiling();
-    
+
     await testBed.executeActionBatch(1000);
-    
+
     const profile = cpuProfiler.stop();
-    
+
     // CPU usage should be minimal for tracing code paths
     const tracingCPUTime = profile.getTimeInModule('tracing');
     const totalCPUTime = profile.getTotalTime();
-    
+
     expect(tracingCPUTime / totalCPUTime).toBeLessThan(0.01); // <1% CPU for tracing
   });
 
   it('should have efficient filtering performance', async () => {
     const actionIds = testBed.generateActionIds(1000);
-    
+
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: ['core:go', 'core:take'] // Only trace 2 out of 1000
+      tracedActions: ['core:go', 'core:take'], // Only trace 2 out of 1000
     });
-    
+
     const startTime = performance.now();
-    
+
     // Test filtering performance
     for (const actionId of actionIds) {
       testBed.shouldTraceAction(actionId);
     }
-    
+
     const filteringTime = performance.now() - startTime;
-    
+
     // Should filter 1000 actions very quickly
     expect(filteringTime).toBeLessThan(1); // <1ms for 1000 filters
   });
@@ -504,23 +517,23 @@ describe('CPU Profiling and Analysis', () => {
   it('should optimize wildcard pattern matching', async () => {
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: ['core:*', 'custom:*', 'specific:action']
+      tracedActions: ['core:*', 'custom:*', 'specific:action'],
     });
-    
+
     const testActions = [
       ...testBed.generateActionIds(500, 'core:'),
       ...testBed.generateActionIds(500, 'custom:'),
-      ...testBed.generateActionIds(100, 'other:')
+      ...testBed.generateActionIds(100, 'other:'),
     ];
-    
+
     const startTime = performance.now();
-    
-    const matches = testActions.filter(actionId => 
+
+    const matches = testActions.filter((actionId) =>
       testBed.shouldTraceAction(actionId)
     );
-    
+
     const matchingTime = performance.now() - startTime;
-    
+
     expect(matches.length).toBe(1000); // core:* + custom:*
     expect(matchingTime).toBeLessThan(2); // <2ms for pattern matching
   });
@@ -533,26 +546,28 @@ describe('CPU Profiling and Analysis', () => {
 describe('Performance Regression Detection', () => {
   it('should maintain historical performance benchmarks', async () => {
     const benchmarks = await testBed.loadHistoricalBenchmarks();
-    
+
     // Run current performance tests
     const currentResults = await testBed.runFullPerformanceSuite();
-    
+
     // Compare against historical data
     for (const [testName, currentTime] of Object.entries(currentResults)) {
       const historicalTime = benchmarks[testName];
-      
+
       if (historicalTime) {
         const regression = (currentTime - historicalTime) / historicalTime;
-        
+
         // Fail if performance has regressed by >20%
-        expect(regression).toBeLessThan(0.20);
-        
-        if (regression > 0.10) {
-          console.warn(`Performance warning: ${testName} is ${(regression * 100).toFixed(1)}% slower`);
+        expect(regression).toBeLessThan(0.2);
+
+        if (regression > 0.1) {
+          console.warn(
+            `Performance warning: ${testName} is ${(regression * 100).toFixed(1)}% slower`
+          );
         }
       }
     }
-    
+
     // Save current results as new benchmark
     await testBed.saveBenchmarks(currentResults);
   });
@@ -560,29 +575,31 @@ describe('Performance Regression Detection', () => {
   it('should detect memory leaks over time', async () => {
     await testBed.configureTracing({
       enabled: true,
-      tracedActions: ['core:go']
+      tracedActions: ['core:go'],
     });
-    
+
     const memorySnapshots = [];
-    
+
     // Execute actions in cycles and monitor memory
     for (let cycle = 0; cycle < 10; cycle++) {
       await testBed.executeActionBatch(100);
       await testBed.waitForTraceProcessing();
-      
+
       // Force garbage collection
       if (global.gc) {
         global.gc();
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      
+
       const memoryUsage = await testBed.measureDetailedMemoryUsage();
       memorySnapshots.push(memoryUsage);
     }
-    
+
     // Analyze memory trend
-    const memoryTrend = testBed.analyzeTrend(memorySnapshots.map(s => s.heapUsed));
-    
+    const memoryTrend = testBed.analyzeTrend(
+      memorySnapshots.map((s) => s.heapUsed)
+    );
+
     // Should not have significant upward trend (memory leak)
     expect(memoryTrend.slope).toBeLessThan(100 * 1024); // <100KB growth per cycle
   });
@@ -606,93 +623,93 @@ export class ActionTracingPerformanceTestBed {
   async initialize() {
     // Setup optimized container for performance testing
     this.container = await this.createPerformanceTestContainer();
-    
+
     this.discoveryService = this.container.resolve('IActionDiscoveryService');
     this.commandProcessor = this.container.resolve('ICommandProcessor');
-    
+
     // Warm up JIT compilation
     await this.warmupServices();
   }
 
   async measureBaselinePerformance(actionCount) {
     const startTime = performance.now();
-    
+
     for (let i = 0; i < actionCount; i++) {
       await this.executeActionWithoutTracing('core:go');
     }
-    
+
     const totalTime = performance.now() - startTime;
-    
+
     return {
       totalTime,
       averageTime: totalTime / actionCount,
-      actionsPerSecond: actionCount / (totalTime / 1000)
+      actionsPerSecond: actionCount / (totalTime / 1000),
     };
   }
 
   async measureActionDiscoveryPerformance(actionCount) {
     const actor = this.createTestActor();
     const startTime = performance.now();
-    
+
     for (let i = 0; i < actionCount; i++) {
       await this.discoveryService.getValidActions(actor, {}, { trace: false });
     }
-    
+
     const totalTime = performance.now() - startTime;
-    
+
     return {
       totalTime,
       averageTime: totalTime / actionCount,
-      actionsPerSecond: actionCount / (totalTime / 1000)
+      actionsPerSecond: actionCount / (totalTime / 1000),
     };
   }
 
   async measureActionExecutionPerformance(actionIds, iterationsPerAction) {
     const results = [];
-    
+
     for (const actionId of actionIds) {
       const actor = this.createTestActor();
       const startTime = performance.now();
-      
+
       for (let i = 0; i < iterationsPerAction; i++) {
         const turnAction = this.createTurnAction(actionId);
         await this.commandProcessor.dispatchAction(actor, turnAction);
       }
-      
+
       const actionTime = performance.now() - startTime;
       results.push({
         actionId,
         totalTime: actionTime,
-        averageTime: actionTime / iterationsPerAction
+        averageTime: actionTime / iterationsPerAction,
       });
     }
-    
+
     const totalTime = results.reduce((sum, r) => sum + r.totalTime, 0);
     const totalIterations = actionIds.length * iterationsPerAction;
-    
+
     return {
       results,
       totalTime,
       averageTime: totalTime / totalIterations,
-      actionsPerSecond: totalIterations / (totalTime / 1000)
+      actionsPerSecond: totalIterations / (totalTime / 1000),
     };
   }
 
   async measureMemoryUsage() {
     if (global.gc) {
       global.gc();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    
+
     return process.memoryUsage().heapUsed;
   }
 
   async measureDetailedMemoryUsage() {
     if (global.gc) {
       global.gc();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    
+
     return process.memoryUsage();
   }
 
@@ -719,7 +736,7 @@ export class ActionTracingPerformanceTestBed {
   async executeActionBatch(actionCount) {
     const results = { successCount: 0, failureCount: 0 };
     const promises = [];
-    
+
     for (let i = 0; i < actionCount; i++) {
       const actionId = this.getRandomActionId();
       const promise = this.executeAction(actionId).then(
@@ -728,14 +745,14 @@ export class ActionTracingPerformanceTestBed {
       );
       promises.push(promise);
     }
-    
+
     await Promise.all(promises);
     return results;
   }
 
   async executeActionSequence(actor, actionCount) {
     const results = { successCount: 0, failureCount: 0 };
-    
+
     for (let i = 0; i < actionCount; i++) {
       try {
         const actionId = this.getRandomActionId();
@@ -746,7 +763,7 @@ export class ActionTracingPerformanceTestBed {
         results.failureCount++;
       }
     }
-    
+
     return results;
   }
 
@@ -755,18 +772,18 @@ export class ActionTracingPerformanceTestBed {
       frameTimes: [],
       startTime: performance.now(),
       lastFrameTime: performance.now(),
-      running: true
+      running: true,
     };
-    
+
     const monitor = setInterval(() => {
       if (!metrics.running) return;
-      
+
       const currentTime = performance.now();
       const frameTime = currentTime - metrics.lastFrameTime;
       metrics.frameTimes.push(frameTime);
       metrics.lastFrameTime = currentTime;
     }, 16); // ~60 FPS monitoring
-    
+
     return {
       getCurrentFrameTime: () => {
         const now = performance.now();
@@ -775,37 +792,39 @@ export class ActionTracingPerformanceTestBed {
       stop: () => {
         metrics.running = false;
         clearInterval(monitor);
-        
+
         return {
-          averageFrameTime: metrics.frameTimes.reduce((sum, t) => sum + t, 0) / metrics.frameTimes.length,
+          averageFrameTime:
+            metrics.frameTimes.reduce((sum, t) => sum + t, 0) /
+            metrics.frameTimes.length,
           maxFrameTime: Math.max(...metrics.frameTimes),
           minFrameTime: Math.min(...metrics.frameTimes),
-          totalFrames: metrics.frameTimes.length
+          totalFrames: metrics.frameTimes.length,
         };
-      }
+      },
     };
   }
 
   startCPUProfiling() {
     const profiler = {
       startTime: performance.now(),
-      samples: []
+      samples: [],
     };
-    
+
     return {
       stop: () => ({
         getTimeInModule: (moduleName) => 0, // Mock implementation
-        getTotalTime: () => performance.now() - profiler.startTime
-      })
+        getTotalTime: () => performance.now() - profiler.startTime,
+      }),
     };
   }
 
   logPerformanceMetrics(testName, metrics) {
     this.performanceMetrics.set(testName, {
       timestamp: Date.now(),
-      ...metrics
+      ...metrics,
     });
-    
+
     console.log(`Performance: ${testName}`, metrics);
   }
 
@@ -826,10 +845,10 @@ export class ActionTracingPerformanceTestBed {
       environment: {
         nodeVersion: process.version,
         platform: process.platform,
-        arch: process.arch
-      }
+        arch: process.arch,
+      },
     };
-    
+
     await fs.writeFile(
       './performance-benchmarks.json',
       JSON.stringify(benchmarkData, null, 2)
@@ -842,15 +861,15 @@ export class ActionTracingPerformanceTestBed {
     const sumY = dataPoints.reduce((sum, y) => sum + y, 0);
     const sumXY = dataPoints.reduce((sum, y, x) => sum + x * y, 0);
     const sumX2 = dataPoints.reduce((sum, _, x) => sum + x * x, 0);
-    
+
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
     const intercept = (sumY - slope * sumX) / n;
-    
+
     return { slope, intercept };
   }
 
   async waitForTraceProcessing(timeout = 500) {
-    return new Promise(resolve => setTimeout(resolve, timeout));
+    return new Promise((resolve) => setTimeout(resolve, timeout));
   }
 
   async cleanup() {
@@ -859,7 +878,7 @@ export class ActionTracingPerformanceTestBed {
       const metricsData = Object.fromEntries(this.performanceMetrics);
       await this.saveBenchmarks(metricsData);
     }
-    
+
     if (this.container) {
       await this.container.dispose();
     }
@@ -902,10 +921,12 @@ export class ActionTracingPerformanceTestBed {
 ## Dependencies
 
 ### Depends On
+
 - All action tracing components (ACTTRA-001 through ACTTRA-030)
 - Unit and integration tests should be passing
 
 ### Blocks
+
 - Production deployment
 - Performance optimization work
 
