@@ -95,6 +95,13 @@ class ActionTraceFilter {
    * @returns {boolean} True if the action should be traced
    */
   shouldTrace(actionId) {
+    // CRITICAL DEBUG: Log every shouldTrace call - DISABLED
+    const result = this.#performShouldTrace(actionId);
+    // Debug logging removed - was causing log pollution
+    return result;
+  }
+
+  #performShouldTrace(actionId) {
     if (!this.#enabled) {
       return false;
     }
@@ -356,6 +363,78 @@ class ActionTraceFilter {
     };
 
     return validConfig;
+  }
+
+  /**
+   * Updates the filter configuration from loaded trace config
+   *
+   * @param {object} config - Action tracing configuration
+   * @param {boolean} config.enabled - Whether tracing is enabled
+   * @param {string[]} config.tracedActions - Actions to trace
+   * @param {string[]} [config.excludedActions] - Actions to exclude
+   * @param {string} config.verbosity - Verbosity level
+   * @param {boolean} config.includeComponentData - Include component data
+   * @param {boolean} config.includePrerequisites - Include prerequisites
+   * @param {boolean} config.includeTargets - Include targets
+   */
+  updateFromConfig(config) {
+    this.#logger.debug(
+      'ActionTraceFilter: Updating configuration from trace config',
+      config
+    );
+
+    // Update enabled state
+    this.#enabled = Boolean(config.enabled);
+
+    // Update verbosity level
+    this.#verbosityLevel = this.#validateVerbosityLevel(
+      config.verbosity || 'standard'
+    );
+
+    // Update inclusion config
+    this.#inclusionConfig = this.#validateInclusionConfig({
+      componentData: Boolean(config.includeComponentData),
+      prerequisites: Boolean(config.includePrerequisites),
+      targets: Boolean(config.includeTargets),
+    });
+
+    // Clear existing patterns and rebuild
+    this.#tracedActions.clear();
+    this.#excludedActions.clear();
+    this.#regexCache.clear();
+
+    // Add traced actions (default to ['*'] if not provided or empty)
+    const tracedActions =
+      Array.isArray(config.tracedActions) && config.tracedActions.length > 0
+        ? config.tracedActions
+        : ['*'];
+
+    for (const action of tracedActions) {
+      if (typeof action === 'string' && action.trim()) {
+        this.#tracedActions.add(action.trim());
+      }
+    }
+
+    // Add excluded actions if provided
+    if (Array.isArray(config.excludedActions)) {
+      for (const action of config.excludedActions) {
+        if (typeof action === 'string' && action.trim()) {
+          this.#excludedActions.add(action.trim());
+        }
+      }
+    }
+
+    // Pre-compile regex patterns for performance
+    this.#compileRegexPatterns(this.#tracedActions);
+    this.#compileRegexPatterns(this.#excludedActions);
+
+    this.#logger.info('ActionTraceFilter: Configuration updated successfully', {
+      enabled: this.#enabled,
+      tracedActions: Array.from(this.#tracedActions),
+      excludedActions: Array.from(this.#excludedActions),
+      verbosityLevel: this.#verbosityLevel,
+      inclusionConfig: this.#inclusionConfig,
+    });
   }
 
   /**

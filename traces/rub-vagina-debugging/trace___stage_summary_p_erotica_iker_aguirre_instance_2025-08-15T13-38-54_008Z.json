@@ -1,0 +1,1874 @@
+{
+  "timestamp": "2025-08-15T13:38:54.008Z",
+  "outputDirectory": "./traces/rub-vagina-debugging",
+  "trace": {
+    "timestamp": "2025-08-15T13:38:54.008Z",
+    "traceType": "action_aware_structured",
+    "actorId": "p_erotica:iker_aguirre_instance",
+    "context": {
+      "currentLocation": {},
+      "worldContext": {},
+      "discoveryOptions": {
+        "trace": true
+      },
+      "createdAt": 1755265133997
+    },
+    "summary": {
+      "tracedActionCount": 1,
+      "totalStagesTracked": 1,
+      "sessionDuration": 0,
+      "averageStagesPerAction": 1
+    },
+    "spans": [
+      {
+        "id": 1,
+        "operation": "action.discover",
+        "parentId": null,
+        "startTime": 1413.0999999940395,
+        "endTime": null,
+        "duration": null,
+        "status": "active",
+        "attributes": {
+          "actorId": "p_erotica:iker_aguirre_instance",
+          "withTrace": true
+        },
+        "children": [
+          {
+            "id": 2,
+            "operation": "Pipeline",
+            "parentId": 1,
+            "startTime": 1413.300000011921,
+            "endTime": 1422.699999988079,
+            "duration": 9.399999976158142,
+            "status": "success",
+            "attributes": {
+              "stageCount": 4
+            },
+            "children": [
+              {
+                "id": 3,
+                "operation": "ComponentFilteringStage",
+                "parentId": 2,
+                "startTime": 1413.5,
+                "endTime": 1414.199999988079,
+                "duration": 0.699999988079071,
+                "status": "success",
+                "attributes": {
+                  "stage": "ComponentFiltering"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 4,
+                "operation": "PrerequisiteEvaluationStage",
+                "parentId": 2,
+                "startTime": 1414.199999988079,
+                "endTime": 1416.699999988079,
+                "duration": 2.5,
+                "status": "success",
+                "attributes": {
+                  "stage": "PrerequisiteEvaluation"
+                },
+                "children": [
+                  {
+                    "id": 5,
+                    "operation": "prerequisite.evaluate",
+                    "parentId": 4,
+                    "startTime": 1414.4000000059605,
+                    "endTime": 1415.800000011921,
+                    "duration": 1.4000000059604645,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "core:follow",
+                      "actorId": "p_erotica:iker_aguirre_instance",
+                      "ruleCount": 2
+                    },
+                    "children": [
+                      {
+                        "id": 6,
+                        "operation": "prerequisite.evaluateRules",
+                        "parentId": 5,
+                        "startTime": 1414.800000011921,
+                        "endTime": 1415.800000011921,
+                        "duration": 1,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "core:follow",
+                          "ruleCount": 2
+                        },
+                        "children": [
+                          {
+                            "id": 7,
+                            "operation": "prerequisite.rule.1",
+                            "parentId": 6,
+                            "startTime": 1414.9000000059605,
+                            "endTime": 1415.5999999940395,
+                            "duration": 0.699999988079071,
+                            "status": "success",
+                            "attributes": {
+                              "actionId": "core:follow",
+                              "ruleNumber": 1,
+                              "totalRules": 2
+                            },
+                            "children": [],
+                            "error": null
+                          },
+                          {
+                            "id": 8,
+                            "operation": "prerequisite.rule.2",
+                            "parentId": 6,
+                            "startTime": 1415.5999999940395,
+                            "endTime": 1415.800000011921,
+                            "duration": 0.20000001788139343,
+                            "status": "success",
+                            "attributes": {
+                              "actionId": "core:follow",
+                              "ruleNumber": 2,
+                              "totalRules": 2
+                            },
+                            "children": [],
+                            "error": null
+                          }
+                        ],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 9,
+                    "operation": "prerequisite.evaluate",
+                    "parentId": 4,
+                    "startTime": 1415.800000011921,
+                    "endTime": 1416.199999988079,
+                    "duration": 0.3999999761581421,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "core:go",
+                      "actorId": "p_erotica:iker_aguirre_instance",
+                      "ruleCount": 1
+                    },
+                    "children": [
+                      {
+                        "id": 10,
+                        "operation": "prerequisite.evaluateRules",
+                        "parentId": 9,
+                        "startTime": 1416,
+                        "endTime": 1416.199999988079,
+                        "duration": 0.19999998807907104,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "core:go",
+                          "ruleCount": 1
+                        },
+                        "children": [
+                          {
+                            "id": 11,
+                            "operation": "prerequisite.rule.1",
+                            "parentId": 10,
+                            "startTime": 1416,
+                            "endTime": 1416.199999988079,
+                            "duration": 0.19999998807907104,
+                            "status": "success",
+                            "attributes": {
+                              "actionId": "core:go",
+                              "ruleNumber": 1,
+                              "totalRules": 1
+                            },
+                            "children": [],
+                            "error": null
+                          }
+                        ],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 12,
+                    "operation": "prerequisite.evaluate",
+                    "parentId": 4,
+                    "startTime": 1416.199999988079,
+                    "endTime": 1416.5,
+                    "duration": 0.30000001192092896,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "positioning:get_close",
+                      "actorId": "p_erotica:iker_aguirre_instance",
+                      "ruleCount": 1
+                    },
+                    "children": [
+                      {
+                        "id": 13,
+                        "operation": "prerequisite.evaluateRules",
+                        "parentId": 12,
+                        "startTime": 1416.300000011921,
+                        "endTime": 1416.4000000059605,
+                        "duration": 0.09999999403953552,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "positioning:get_close",
+                          "ruleCount": 1
+                        },
+                        "children": [
+                          {
+                            "id": 14,
+                            "operation": "prerequisite.rule.1",
+                            "parentId": 13,
+                            "startTime": 1416.300000011921,
+                            "endTime": 1416.4000000059605,
+                            "duration": 0.09999999403953552,
+                            "status": "success",
+                            "attributes": {
+                              "actionId": "positioning:get_close",
+                              "ruleNumber": 1,
+                              "totalRules": 1
+                            },
+                            "children": [],
+                            "error": null
+                          }
+                        ],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 15,
+                "operation": "MultiTargetResolutionStage",
+                "parentId": 2,
+                "startTime": 1416.699999988079,
+                "endTime": 1421.4000000059605,
+                "duration": 4.700000017881393,
+                "status": "success",
+                "attributes": {
+                  "stage": "MultiTargetResolution"
+                },
+                "children": [
+                  {
+                    "id": 16,
+                    "operation": "target.resolve",
+                    "parentId": 15,
+                    "startTime": 1417,
+                    "endTime": 1419,
+                    "duration": 2,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "core:potential_leaders",
+                      "actorId": "p_erotica:iker_aguirre_instance",
+                      "actionId": "core:follow"
+                    },
+                    "children": [
+                      {
+                        "id": 17,
+                        "operation": "scope.resolve",
+                        "parentId": 16,
+                        "startTime": 1417.0999999940395,
+                        "endTime": 1418.9000000059605,
+                        "duration": 1.800000011920929,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "core:potential_leaders",
+                          "actorId": "p_erotica:iker_aguirre_instance",
+                          "actionId": "core:follow"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 18,
+                    "operation": "scope.resolve",
+                    "parentId": 15,
+                    "startTime": 1419.699999988079,
+                    "endTime": 1420,
+                    "duration": 0.30000001192092896,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "core:clear_directions",
+                      "actorId": "p_erotica:iker_aguirre_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 19,
+                    "operation": "target.resolve",
+                    "parentId": 15,
+                    "startTime": 1420.0999999940395,
+                    "endTime": 1420.0999999940395,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "none",
+                      "actorId": "p_erotica:iker_aguirre_instance",
+                      "actionId": "core:wait"
+                    },
+                    "children": [
+                      {
+                        "id": 20,
+                        "operation": "scope.resolve",
+                        "parentId": 19,
+                        "startTime": 1420.0999999940395,
+                        "endTime": 1420.0999999940395,
+                        "duration": 0,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "none",
+                          "actorId": "p_erotica:iker_aguirre_instance",
+                          "actionId": "core:wait"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 21,
+                    "operation": "scope.resolve",
+                    "parentId": 15,
+                    "startTime": 1420.300000011921,
+                    "endTime": 1420.5999999940395,
+                    "duration": 0.29999998211860657,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "core:actors_in_location",
+                      "actorId": "p_erotica:iker_aguirre_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 22,
+                    "operation": "scope.resolve",
+                    "parentId": 15,
+                    "startTime": 1420.5999999940395,
+                    "endTime": 1420.699999988079,
+                    "duration": 0.09999999403953552,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "core:actors_in_location",
+                      "actorId": "p_erotica:iker_aguirre_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 23,
+                    "operation": "scope.resolve",
+                    "parentId": 15,
+                    "startTime": 1420.800000011921,
+                    "endTime": 1420.800000011921,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "core:actors_in_location",
+                      "actorId": "p_erotica:iker_aguirre_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 24,
+                    "operation": "scope.resolve",
+                    "parentId": 15,
+                    "startTime": 1420.9000000059605,
+                    "endTime": 1420.9000000059605,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "core:actors_in_location",
+                      "actorId": "p_erotica:iker_aguirre_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 25,
+                    "operation": "target.resolve",
+                    "parentId": 15,
+                    "startTime": 1421,
+                    "endTime": 1421.199999988079,
+                    "duration": 0.19999998807907104,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "clothing:topmost_clothing",
+                      "actorId": "p_erotica:iker_aguirre_instance",
+                      "actionId": "clothing:remove_clothing"
+                    },
+                    "children": [
+                      {
+                        "id": 26,
+                        "operation": "scope.resolve",
+                        "parentId": 25,
+                        "startTime": 1421,
+                        "endTime": 1421.0999999940395,
+                        "duration": 0.09999999403953552,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "clothing:topmost_clothing",
+                          "actorId": "p_erotica:iker_aguirre_instance",
+                          "actionId": "clothing:remove_clothing"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 27,
+                "operation": "ActionFormattingStage",
+                "parentId": 2,
+                "startTime": 1421.4000000059605,
+                "endTime": 1422.5999999940395,
+                "duration": 1.199999988079071,
+                "status": "success",
+                "attributes": {
+                  "stage": "ActionFormatting"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 2,
+        "operation": "Pipeline",
+        "parentId": 1,
+        "startTime": 1413.300000011921,
+        "endTime": 1422.699999988079,
+        "duration": 9.399999976158142,
+        "status": "success",
+        "attributes": {
+          "stageCount": 4
+        },
+        "children": [
+          {
+            "id": 3,
+            "operation": "ComponentFilteringStage",
+            "parentId": 2,
+            "startTime": 1413.5,
+            "endTime": 1414.199999988079,
+            "duration": 0.699999988079071,
+            "status": "success",
+            "attributes": {
+              "stage": "ComponentFiltering"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 4,
+            "operation": "PrerequisiteEvaluationStage",
+            "parentId": 2,
+            "startTime": 1414.199999988079,
+            "endTime": 1416.699999988079,
+            "duration": 2.5,
+            "status": "success",
+            "attributes": {
+              "stage": "PrerequisiteEvaluation"
+            },
+            "children": [
+              {
+                "id": 5,
+                "operation": "prerequisite.evaluate",
+                "parentId": 4,
+                "startTime": 1414.4000000059605,
+                "endTime": 1415.800000011921,
+                "duration": 1.4000000059604645,
+                "status": "success",
+                "attributes": {
+                  "actionId": "core:follow",
+                  "actorId": "p_erotica:iker_aguirre_instance",
+                  "ruleCount": 2
+                },
+                "children": [
+                  {
+                    "id": 6,
+                    "operation": "prerequisite.evaluateRules",
+                    "parentId": 5,
+                    "startTime": 1414.800000011921,
+                    "endTime": 1415.800000011921,
+                    "duration": 1,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "core:follow",
+                      "ruleCount": 2
+                    },
+                    "children": [
+                      {
+                        "id": 7,
+                        "operation": "prerequisite.rule.1",
+                        "parentId": 6,
+                        "startTime": 1414.9000000059605,
+                        "endTime": 1415.5999999940395,
+                        "duration": 0.699999988079071,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "core:follow",
+                          "ruleNumber": 1,
+                          "totalRules": 2
+                        },
+                        "children": [],
+                        "error": null
+                      },
+                      {
+                        "id": 8,
+                        "operation": "prerequisite.rule.2",
+                        "parentId": 6,
+                        "startTime": 1415.5999999940395,
+                        "endTime": 1415.800000011921,
+                        "duration": 0.20000001788139343,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "core:follow",
+                          "ruleNumber": 2,
+                          "totalRules": 2
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 9,
+                "operation": "prerequisite.evaluate",
+                "parentId": 4,
+                "startTime": 1415.800000011921,
+                "endTime": 1416.199999988079,
+                "duration": 0.3999999761581421,
+                "status": "success",
+                "attributes": {
+                  "actionId": "core:go",
+                  "actorId": "p_erotica:iker_aguirre_instance",
+                  "ruleCount": 1
+                },
+                "children": [
+                  {
+                    "id": 10,
+                    "operation": "prerequisite.evaluateRules",
+                    "parentId": 9,
+                    "startTime": 1416,
+                    "endTime": 1416.199999988079,
+                    "duration": 0.19999998807907104,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "core:go",
+                      "ruleCount": 1
+                    },
+                    "children": [
+                      {
+                        "id": 11,
+                        "operation": "prerequisite.rule.1",
+                        "parentId": 10,
+                        "startTime": 1416,
+                        "endTime": 1416.199999988079,
+                        "duration": 0.19999998807907104,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "core:go",
+                          "ruleNumber": 1,
+                          "totalRules": 1
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 12,
+                "operation": "prerequisite.evaluate",
+                "parentId": 4,
+                "startTime": 1416.199999988079,
+                "endTime": 1416.5,
+                "duration": 0.30000001192092896,
+                "status": "success",
+                "attributes": {
+                  "actionId": "positioning:get_close",
+                  "actorId": "p_erotica:iker_aguirre_instance",
+                  "ruleCount": 1
+                },
+                "children": [
+                  {
+                    "id": 13,
+                    "operation": "prerequisite.evaluateRules",
+                    "parentId": 12,
+                    "startTime": 1416.300000011921,
+                    "endTime": 1416.4000000059605,
+                    "duration": 0.09999999403953552,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "positioning:get_close",
+                      "ruleCount": 1
+                    },
+                    "children": [
+                      {
+                        "id": 14,
+                        "operation": "prerequisite.rule.1",
+                        "parentId": 13,
+                        "startTime": 1416.300000011921,
+                        "endTime": 1416.4000000059605,
+                        "duration": 0.09999999403953552,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "positioning:get_close",
+                          "ruleNumber": 1,
+                          "totalRules": 1
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  }
+                ],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 15,
+            "operation": "MultiTargetResolutionStage",
+            "parentId": 2,
+            "startTime": 1416.699999988079,
+            "endTime": 1421.4000000059605,
+            "duration": 4.700000017881393,
+            "status": "success",
+            "attributes": {
+              "stage": "MultiTargetResolution"
+            },
+            "children": [
+              {
+                "id": 16,
+                "operation": "target.resolve",
+                "parentId": 15,
+                "startTime": 1417,
+                "endTime": 1419,
+                "duration": 2,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "core:potential_leaders",
+                  "actorId": "p_erotica:iker_aguirre_instance",
+                  "actionId": "core:follow"
+                },
+                "children": [
+                  {
+                    "id": 17,
+                    "operation": "scope.resolve",
+                    "parentId": 16,
+                    "startTime": 1417.0999999940395,
+                    "endTime": 1418.9000000059605,
+                    "duration": 1.800000011920929,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "core:potential_leaders",
+                      "actorId": "p_erotica:iker_aguirre_instance",
+                      "actionId": "core:follow"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 18,
+                "operation": "scope.resolve",
+                "parentId": 15,
+                "startTime": 1419.699999988079,
+                "endTime": 1420,
+                "duration": 0.30000001192092896,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "core:clear_directions",
+                  "actorId": "p_erotica:iker_aguirre_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 19,
+                "operation": "target.resolve",
+                "parentId": 15,
+                "startTime": 1420.0999999940395,
+                "endTime": 1420.0999999940395,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "none",
+                  "actorId": "p_erotica:iker_aguirre_instance",
+                  "actionId": "core:wait"
+                },
+                "children": [
+                  {
+                    "id": 20,
+                    "operation": "scope.resolve",
+                    "parentId": 19,
+                    "startTime": 1420.0999999940395,
+                    "endTime": 1420.0999999940395,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "none",
+                      "actorId": "p_erotica:iker_aguirre_instance",
+                      "actionId": "core:wait"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 21,
+                "operation": "scope.resolve",
+                "parentId": 15,
+                "startTime": 1420.300000011921,
+                "endTime": 1420.5999999940395,
+                "duration": 0.29999998211860657,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "core:actors_in_location",
+                  "actorId": "p_erotica:iker_aguirre_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 22,
+                "operation": "scope.resolve",
+                "parentId": 15,
+                "startTime": 1420.5999999940395,
+                "endTime": 1420.699999988079,
+                "duration": 0.09999999403953552,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "core:actors_in_location",
+                  "actorId": "p_erotica:iker_aguirre_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 23,
+                "operation": "scope.resolve",
+                "parentId": 15,
+                "startTime": 1420.800000011921,
+                "endTime": 1420.800000011921,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "core:actors_in_location",
+                  "actorId": "p_erotica:iker_aguirre_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 24,
+                "operation": "scope.resolve",
+                "parentId": 15,
+                "startTime": 1420.9000000059605,
+                "endTime": 1420.9000000059605,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "core:actors_in_location",
+                  "actorId": "p_erotica:iker_aguirre_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 25,
+                "operation": "target.resolve",
+                "parentId": 15,
+                "startTime": 1421,
+                "endTime": 1421.199999988079,
+                "duration": 0.19999998807907104,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "clothing:topmost_clothing",
+                  "actorId": "p_erotica:iker_aguirre_instance",
+                  "actionId": "clothing:remove_clothing"
+                },
+                "children": [
+                  {
+                    "id": 26,
+                    "operation": "scope.resolve",
+                    "parentId": 25,
+                    "startTime": 1421,
+                    "endTime": 1421.0999999940395,
+                    "duration": 0.09999999403953552,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "clothing:topmost_clothing",
+                      "actorId": "p_erotica:iker_aguirre_instance",
+                      "actionId": "clothing:remove_clothing"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 27,
+            "operation": "ActionFormattingStage",
+            "parentId": 2,
+            "startTime": 1421.4000000059605,
+            "endTime": 1422.5999999940395,
+            "duration": 1.199999988079071,
+            "status": "success",
+            "attributes": {
+              "stage": "ActionFormatting"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 3,
+        "operation": "ComponentFilteringStage",
+        "parentId": 2,
+        "startTime": 1413.5,
+        "endTime": 1414.199999988079,
+        "duration": 0.699999988079071,
+        "status": "success",
+        "attributes": {
+          "stage": "ComponentFiltering"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 4,
+        "operation": "PrerequisiteEvaluationStage",
+        "parentId": 2,
+        "startTime": 1414.199999988079,
+        "endTime": 1416.699999988079,
+        "duration": 2.5,
+        "status": "success",
+        "attributes": {
+          "stage": "PrerequisiteEvaluation"
+        },
+        "children": [
+          {
+            "id": 5,
+            "operation": "prerequisite.evaluate",
+            "parentId": 4,
+            "startTime": 1414.4000000059605,
+            "endTime": 1415.800000011921,
+            "duration": 1.4000000059604645,
+            "status": "success",
+            "attributes": {
+              "actionId": "core:follow",
+              "actorId": "p_erotica:iker_aguirre_instance",
+              "ruleCount": 2
+            },
+            "children": [
+              {
+                "id": 6,
+                "operation": "prerequisite.evaluateRules",
+                "parentId": 5,
+                "startTime": 1414.800000011921,
+                "endTime": 1415.800000011921,
+                "duration": 1,
+                "status": "success",
+                "attributes": {
+                  "actionId": "core:follow",
+                  "ruleCount": 2
+                },
+                "children": [
+                  {
+                    "id": 7,
+                    "operation": "prerequisite.rule.1",
+                    "parentId": 6,
+                    "startTime": 1414.9000000059605,
+                    "endTime": 1415.5999999940395,
+                    "duration": 0.699999988079071,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "core:follow",
+                      "ruleNumber": 1,
+                      "totalRules": 2
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 8,
+                    "operation": "prerequisite.rule.2",
+                    "parentId": 6,
+                    "startTime": 1415.5999999940395,
+                    "endTime": 1415.800000011921,
+                    "duration": 0.20000001788139343,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "core:follow",
+                      "ruleNumber": 2,
+                      "totalRules": 2
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 9,
+            "operation": "prerequisite.evaluate",
+            "parentId": 4,
+            "startTime": 1415.800000011921,
+            "endTime": 1416.199999988079,
+            "duration": 0.3999999761581421,
+            "status": "success",
+            "attributes": {
+              "actionId": "core:go",
+              "actorId": "p_erotica:iker_aguirre_instance",
+              "ruleCount": 1
+            },
+            "children": [
+              {
+                "id": 10,
+                "operation": "prerequisite.evaluateRules",
+                "parentId": 9,
+                "startTime": 1416,
+                "endTime": 1416.199999988079,
+                "duration": 0.19999998807907104,
+                "status": "success",
+                "attributes": {
+                  "actionId": "core:go",
+                  "ruleCount": 1
+                },
+                "children": [
+                  {
+                    "id": 11,
+                    "operation": "prerequisite.rule.1",
+                    "parentId": 10,
+                    "startTime": 1416,
+                    "endTime": 1416.199999988079,
+                    "duration": 0.19999998807907104,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "core:go",
+                      "ruleNumber": 1,
+                      "totalRules": 1
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 12,
+            "operation": "prerequisite.evaluate",
+            "parentId": 4,
+            "startTime": 1416.199999988079,
+            "endTime": 1416.5,
+            "duration": 0.30000001192092896,
+            "status": "success",
+            "attributes": {
+              "actionId": "positioning:get_close",
+              "actorId": "p_erotica:iker_aguirre_instance",
+              "ruleCount": 1
+            },
+            "children": [
+              {
+                "id": 13,
+                "operation": "prerequisite.evaluateRules",
+                "parentId": 12,
+                "startTime": 1416.300000011921,
+                "endTime": 1416.4000000059605,
+                "duration": 0.09999999403953552,
+                "status": "success",
+                "attributes": {
+                  "actionId": "positioning:get_close",
+                  "ruleCount": 1
+                },
+                "children": [
+                  {
+                    "id": 14,
+                    "operation": "prerequisite.rule.1",
+                    "parentId": 13,
+                    "startTime": 1416.300000011921,
+                    "endTime": 1416.4000000059605,
+                    "duration": 0.09999999403953552,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "positioning:get_close",
+                      "ruleNumber": 1,
+                      "totalRules": 1
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              }
+            ],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 5,
+        "operation": "prerequisite.evaluate",
+        "parentId": 4,
+        "startTime": 1414.4000000059605,
+        "endTime": 1415.800000011921,
+        "duration": 1.4000000059604645,
+        "status": "success",
+        "attributes": {
+          "actionId": "core:follow",
+          "actorId": "p_erotica:iker_aguirre_instance",
+          "ruleCount": 2
+        },
+        "children": [
+          {
+            "id": 6,
+            "operation": "prerequisite.evaluateRules",
+            "parentId": 5,
+            "startTime": 1414.800000011921,
+            "endTime": 1415.800000011921,
+            "duration": 1,
+            "status": "success",
+            "attributes": {
+              "actionId": "core:follow",
+              "ruleCount": 2
+            },
+            "children": [
+              {
+                "id": 7,
+                "operation": "prerequisite.rule.1",
+                "parentId": 6,
+                "startTime": 1414.9000000059605,
+                "endTime": 1415.5999999940395,
+                "duration": 0.699999988079071,
+                "status": "success",
+                "attributes": {
+                  "actionId": "core:follow",
+                  "ruleNumber": 1,
+                  "totalRules": 2
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 8,
+                "operation": "prerequisite.rule.2",
+                "parentId": 6,
+                "startTime": 1415.5999999940395,
+                "endTime": 1415.800000011921,
+                "duration": 0.20000001788139343,
+                "status": "success",
+                "attributes": {
+                  "actionId": "core:follow",
+                  "ruleNumber": 2,
+                  "totalRules": 2
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 6,
+        "operation": "prerequisite.evaluateRules",
+        "parentId": 5,
+        "startTime": 1414.800000011921,
+        "endTime": 1415.800000011921,
+        "duration": 1,
+        "status": "success",
+        "attributes": {
+          "actionId": "core:follow",
+          "ruleCount": 2
+        },
+        "children": [
+          {
+            "id": 7,
+            "operation": "prerequisite.rule.1",
+            "parentId": 6,
+            "startTime": 1414.9000000059605,
+            "endTime": 1415.5999999940395,
+            "duration": 0.699999988079071,
+            "status": "success",
+            "attributes": {
+              "actionId": "core:follow",
+              "ruleNumber": 1,
+              "totalRules": 2
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 8,
+            "operation": "prerequisite.rule.2",
+            "parentId": 6,
+            "startTime": 1415.5999999940395,
+            "endTime": 1415.800000011921,
+            "duration": 0.20000001788139343,
+            "status": "success",
+            "attributes": {
+              "actionId": "core:follow",
+              "ruleNumber": 2,
+              "totalRules": 2
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 7,
+        "operation": "prerequisite.rule.1",
+        "parentId": 6,
+        "startTime": 1414.9000000059605,
+        "endTime": 1415.5999999940395,
+        "duration": 0.699999988079071,
+        "status": "success",
+        "attributes": {
+          "actionId": "core:follow",
+          "ruleNumber": 1,
+          "totalRules": 2
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 8,
+        "operation": "prerequisite.rule.2",
+        "parentId": 6,
+        "startTime": 1415.5999999940395,
+        "endTime": 1415.800000011921,
+        "duration": 0.20000001788139343,
+        "status": "success",
+        "attributes": {
+          "actionId": "core:follow",
+          "ruleNumber": 2,
+          "totalRules": 2
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 9,
+        "operation": "prerequisite.evaluate",
+        "parentId": 4,
+        "startTime": 1415.800000011921,
+        "endTime": 1416.199999988079,
+        "duration": 0.3999999761581421,
+        "status": "success",
+        "attributes": {
+          "actionId": "core:go",
+          "actorId": "p_erotica:iker_aguirre_instance",
+          "ruleCount": 1
+        },
+        "children": [
+          {
+            "id": 10,
+            "operation": "prerequisite.evaluateRules",
+            "parentId": 9,
+            "startTime": 1416,
+            "endTime": 1416.199999988079,
+            "duration": 0.19999998807907104,
+            "status": "success",
+            "attributes": {
+              "actionId": "core:go",
+              "ruleCount": 1
+            },
+            "children": [
+              {
+                "id": 11,
+                "operation": "prerequisite.rule.1",
+                "parentId": 10,
+                "startTime": 1416,
+                "endTime": 1416.199999988079,
+                "duration": 0.19999998807907104,
+                "status": "success",
+                "attributes": {
+                  "actionId": "core:go",
+                  "ruleNumber": 1,
+                  "totalRules": 1
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 10,
+        "operation": "prerequisite.evaluateRules",
+        "parentId": 9,
+        "startTime": 1416,
+        "endTime": 1416.199999988079,
+        "duration": 0.19999998807907104,
+        "status": "success",
+        "attributes": {
+          "actionId": "core:go",
+          "ruleCount": 1
+        },
+        "children": [
+          {
+            "id": 11,
+            "operation": "prerequisite.rule.1",
+            "parentId": 10,
+            "startTime": 1416,
+            "endTime": 1416.199999988079,
+            "duration": 0.19999998807907104,
+            "status": "success",
+            "attributes": {
+              "actionId": "core:go",
+              "ruleNumber": 1,
+              "totalRules": 1
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 11,
+        "operation": "prerequisite.rule.1",
+        "parentId": 10,
+        "startTime": 1416,
+        "endTime": 1416.199999988079,
+        "duration": 0.19999998807907104,
+        "status": "success",
+        "attributes": {
+          "actionId": "core:go",
+          "ruleNumber": 1,
+          "totalRules": 1
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 12,
+        "operation": "prerequisite.evaluate",
+        "parentId": 4,
+        "startTime": 1416.199999988079,
+        "endTime": 1416.5,
+        "duration": 0.30000001192092896,
+        "status": "success",
+        "attributes": {
+          "actionId": "positioning:get_close",
+          "actorId": "p_erotica:iker_aguirre_instance",
+          "ruleCount": 1
+        },
+        "children": [
+          {
+            "id": 13,
+            "operation": "prerequisite.evaluateRules",
+            "parentId": 12,
+            "startTime": 1416.300000011921,
+            "endTime": 1416.4000000059605,
+            "duration": 0.09999999403953552,
+            "status": "success",
+            "attributes": {
+              "actionId": "positioning:get_close",
+              "ruleCount": 1
+            },
+            "children": [
+              {
+                "id": 14,
+                "operation": "prerequisite.rule.1",
+                "parentId": 13,
+                "startTime": 1416.300000011921,
+                "endTime": 1416.4000000059605,
+                "duration": 0.09999999403953552,
+                "status": "success",
+                "attributes": {
+                  "actionId": "positioning:get_close",
+                  "ruleNumber": 1,
+                  "totalRules": 1
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 13,
+        "operation": "prerequisite.evaluateRules",
+        "parentId": 12,
+        "startTime": 1416.300000011921,
+        "endTime": 1416.4000000059605,
+        "duration": 0.09999999403953552,
+        "status": "success",
+        "attributes": {
+          "actionId": "positioning:get_close",
+          "ruleCount": 1
+        },
+        "children": [
+          {
+            "id": 14,
+            "operation": "prerequisite.rule.1",
+            "parentId": 13,
+            "startTime": 1416.300000011921,
+            "endTime": 1416.4000000059605,
+            "duration": 0.09999999403953552,
+            "status": "success",
+            "attributes": {
+              "actionId": "positioning:get_close",
+              "ruleNumber": 1,
+              "totalRules": 1
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 14,
+        "operation": "prerequisite.rule.1",
+        "parentId": 13,
+        "startTime": 1416.300000011921,
+        "endTime": 1416.4000000059605,
+        "duration": 0.09999999403953552,
+        "status": "success",
+        "attributes": {
+          "actionId": "positioning:get_close",
+          "ruleNumber": 1,
+          "totalRules": 1
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 15,
+        "operation": "MultiTargetResolutionStage",
+        "parentId": 2,
+        "startTime": 1416.699999988079,
+        "endTime": 1421.4000000059605,
+        "duration": 4.700000017881393,
+        "status": "success",
+        "attributes": {
+          "stage": "MultiTargetResolution"
+        },
+        "children": [
+          {
+            "id": 16,
+            "operation": "target.resolve",
+            "parentId": 15,
+            "startTime": 1417,
+            "endTime": 1419,
+            "duration": 2,
+            "status": "success",
+            "attributes": {
+              "scopeName": "core:potential_leaders",
+              "actorId": "p_erotica:iker_aguirre_instance",
+              "actionId": "core:follow"
+            },
+            "children": [
+              {
+                "id": 17,
+                "operation": "scope.resolve",
+                "parentId": 16,
+                "startTime": 1417.0999999940395,
+                "endTime": 1418.9000000059605,
+                "duration": 1.800000011920929,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "core:potential_leaders",
+                  "actorId": "p_erotica:iker_aguirre_instance",
+                  "actionId": "core:follow"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 18,
+            "operation": "scope.resolve",
+            "parentId": 15,
+            "startTime": 1419.699999988079,
+            "endTime": 1420,
+            "duration": 0.30000001192092896,
+            "status": "success",
+            "attributes": {
+              "scopeName": "core:clear_directions",
+              "actorId": "p_erotica:iker_aguirre_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 19,
+            "operation": "target.resolve",
+            "parentId": 15,
+            "startTime": 1420.0999999940395,
+            "endTime": 1420.0999999940395,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "none",
+              "actorId": "p_erotica:iker_aguirre_instance",
+              "actionId": "core:wait"
+            },
+            "children": [
+              {
+                "id": 20,
+                "operation": "scope.resolve",
+                "parentId": 19,
+                "startTime": 1420.0999999940395,
+                "endTime": 1420.0999999940395,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "none",
+                  "actorId": "p_erotica:iker_aguirre_instance",
+                  "actionId": "core:wait"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 21,
+            "operation": "scope.resolve",
+            "parentId": 15,
+            "startTime": 1420.300000011921,
+            "endTime": 1420.5999999940395,
+            "duration": 0.29999998211860657,
+            "status": "success",
+            "attributes": {
+              "scopeName": "core:actors_in_location",
+              "actorId": "p_erotica:iker_aguirre_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 22,
+            "operation": "scope.resolve",
+            "parentId": 15,
+            "startTime": 1420.5999999940395,
+            "endTime": 1420.699999988079,
+            "duration": 0.09999999403953552,
+            "status": "success",
+            "attributes": {
+              "scopeName": "core:actors_in_location",
+              "actorId": "p_erotica:iker_aguirre_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 23,
+            "operation": "scope.resolve",
+            "parentId": 15,
+            "startTime": 1420.800000011921,
+            "endTime": 1420.800000011921,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "core:actors_in_location",
+              "actorId": "p_erotica:iker_aguirre_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 24,
+            "operation": "scope.resolve",
+            "parentId": 15,
+            "startTime": 1420.9000000059605,
+            "endTime": 1420.9000000059605,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "core:actors_in_location",
+              "actorId": "p_erotica:iker_aguirre_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 25,
+            "operation": "target.resolve",
+            "parentId": 15,
+            "startTime": 1421,
+            "endTime": 1421.199999988079,
+            "duration": 0.19999998807907104,
+            "status": "success",
+            "attributes": {
+              "scopeName": "clothing:topmost_clothing",
+              "actorId": "p_erotica:iker_aguirre_instance",
+              "actionId": "clothing:remove_clothing"
+            },
+            "children": [
+              {
+                "id": 26,
+                "operation": "scope.resolve",
+                "parentId": 25,
+                "startTime": 1421,
+                "endTime": 1421.0999999940395,
+                "duration": 0.09999999403953552,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "clothing:topmost_clothing",
+                  "actorId": "p_erotica:iker_aguirre_instance",
+                  "actionId": "clothing:remove_clothing"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 16,
+        "operation": "target.resolve",
+        "parentId": 15,
+        "startTime": 1417,
+        "endTime": 1419,
+        "duration": 2,
+        "status": "success",
+        "attributes": {
+          "scopeName": "core:potential_leaders",
+          "actorId": "p_erotica:iker_aguirre_instance",
+          "actionId": "core:follow"
+        },
+        "children": [
+          {
+            "id": 17,
+            "operation": "scope.resolve",
+            "parentId": 16,
+            "startTime": 1417.0999999940395,
+            "endTime": 1418.9000000059605,
+            "duration": 1.800000011920929,
+            "status": "success",
+            "attributes": {
+              "scopeName": "core:potential_leaders",
+              "actorId": "p_erotica:iker_aguirre_instance",
+              "actionId": "core:follow"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 17,
+        "operation": "scope.resolve",
+        "parentId": 16,
+        "startTime": 1417.0999999940395,
+        "endTime": 1418.9000000059605,
+        "duration": 1.800000011920929,
+        "status": "success",
+        "attributes": {
+          "scopeName": "core:potential_leaders",
+          "actorId": "p_erotica:iker_aguirre_instance",
+          "actionId": "core:follow"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 18,
+        "operation": "scope.resolve",
+        "parentId": 15,
+        "startTime": 1419.699999988079,
+        "endTime": 1420,
+        "duration": 0.30000001192092896,
+        "status": "success",
+        "attributes": {
+          "scopeName": "core:clear_directions",
+          "actorId": "p_erotica:iker_aguirre_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 19,
+        "operation": "target.resolve",
+        "parentId": 15,
+        "startTime": 1420.0999999940395,
+        "endTime": 1420.0999999940395,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "none",
+          "actorId": "p_erotica:iker_aguirre_instance",
+          "actionId": "core:wait"
+        },
+        "children": [
+          {
+            "id": 20,
+            "operation": "scope.resolve",
+            "parentId": 19,
+            "startTime": 1420.0999999940395,
+            "endTime": 1420.0999999940395,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "none",
+              "actorId": "p_erotica:iker_aguirre_instance",
+              "actionId": "core:wait"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 20,
+        "operation": "scope.resolve",
+        "parentId": 19,
+        "startTime": 1420.0999999940395,
+        "endTime": 1420.0999999940395,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "none",
+          "actorId": "p_erotica:iker_aguirre_instance",
+          "actionId": "core:wait"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 21,
+        "operation": "scope.resolve",
+        "parentId": 15,
+        "startTime": 1420.300000011921,
+        "endTime": 1420.5999999940395,
+        "duration": 0.29999998211860657,
+        "status": "success",
+        "attributes": {
+          "scopeName": "core:actors_in_location",
+          "actorId": "p_erotica:iker_aguirre_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 22,
+        "operation": "scope.resolve",
+        "parentId": 15,
+        "startTime": 1420.5999999940395,
+        "endTime": 1420.699999988079,
+        "duration": 0.09999999403953552,
+        "status": "success",
+        "attributes": {
+          "scopeName": "core:actors_in_location",
+          "actorId": "p_erotica:iker_aguirre_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 23,
+        "operation": "scope.resolve",
+        "parentId": 15,
+        "startTime": 1420.800000011921,
+        "endTime": 1420.800000011921,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "core:actors_in_location",
+          "actorId": "p_erotica:iker_aguirre_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 24,
+        "operation": "scope.resolve",
+        "parentId": 15,
+        "startTime": 1420.9000000059605,
+        "endTime": 1420.9000000059605,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "core:actors_in_location",
+          "actorId": "p_erotica:iker_aguirre_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 25,
+        "operation": "target.resolve",
+        "parentId": 15,
+        "startTime": 1421,
+        "endTime": 1421.199999988079,
+        "duration": 0.19999998807907104,
+        "status": "success",
+        "attributes": {
+          "scopeName": "clothing:topmost_clothing",
+          "actorId": "p_erotica:iker_aguirre_instance",
+          "actionId": "clothing:remove_clothing"
+        },
+        "children": [
+          {
+            "id": 26,
+            "operation": "scope.resolve",
+            "parentId": 25,
+            "startTime": 1421,
+            "endTime": 1421.0999999940395,
+            "duration": 0.09999999403953552,
+            "status": "success",
+            "attributes": {
+              "scopeName": "clothing:topmost_clothing",
+              "actorId": "p_erotica:iker_aguirre_instance",
+              "actionId": "clothing:remove_clothing"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 26,
+        "operation": "scope.resolve",
+        "parentId": 25,
+        "startTime": 1421,
+        "endTime": 1421.0999999940395,
+        "duration": 0.09999999403953552,
+        "status": "success",
+        "attributes": {
+          "scopeName": "clothing:topmost_clothing",
+          "actorId": "p_erotica:iker_aguirre_instance",
+          "actionId": "clothing:remove_clothing"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 27,
+        "operation": "ActionFormattingStage",
+        "parentId": 2,
+        "startTime": 1421.4000000059605,
+        "endTime": 1422.5999999940395,
+        "duration": 1.199999988079071,
+        "status": "success",
+        "attributes": {
+          "stage": "ActionFormatting"
+        },
+        "children": [],
+        "error": null
+      }
+    ],
+    "actions": {
+      "__stage_summary": {
+        "actionId": "__stage_summary",
+        "actorId": "p_erotica:iker_aguirre_instance",
+        "startTime": 1755265134007,
+        "stages": {
+          "formatting": {
+            "timestamp": 1755265134007,
+            "data": {
+              "timestamp": 1755265134007,
+              "stage": "formatting",
+              "status": "completed",
+              "formattingPath": "per-action",
+              "statistics": {
+                "total": 8,
+                "successful": 8,
+                "failed": 0,
+                "perActionMetadata": 8,
+                "multiTarget": 5,
+                "legacy": 3
+              },
+              "performance": {
+                "totalDuration": 1,
+                "averagePerAction": 0.125
+              },
+              "errors": 0,
+              "_performance": {
+                "captureTime": 1422.5999999940395,
+                "stage": "formatting",
+                "actionId": "__stage_summary",
+                "timestamp": 1755265134007
+              }
+            },
+            "stageCompletedAt": 1755265134007
+          }
+        },
+        "context": {
+          "currentLocation": {},
+          "worldContext": {},
+          "discoveryOptions": {
+            "trace": true
+          },
+          "createdAt": 1755265133997
+        },
+        "stageOrder": ["formatting"],
+        "totalDuration": 0
+      }
+    },
+    "writeMetadata": {
+      "writtenAt": "2025-08-15T13:38:54.008Z",
+      "writeSequence": 1
+    }
+  },
+  "metadata": {
+    "actionId": "__stage_summary",
+    "actorId": "p_erotica:iker_aguirre_instance",
+    "generatedBy": "Living Narrative Engine Action Tracing System"
+  }
+}

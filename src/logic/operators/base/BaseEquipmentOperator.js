@@ -125,15 +125,51 @@ export class BaseEquipmentOperator {
    * @returns {boolean} True if slot exists and has items
    */
   hasItemsInSlot(equipmentData, slotName) {
-    if (!equipmentData?.equipped) return false;
+    if (!equipmentData?.equipped) {
+      this.logger.debug(
+        `${this.operatorName}: hasItemsInSlot - No equipped property in equipment data`
+      );
+      return false;
+    }
 
     const slot = equipmentData.equipped[slotName];
-    if (!slot) return false;
+    if (!slot) {
+      this.logger.debug(
+        `${this.operatorName}: hasItemsInSlot - Slot '${slotName}' does not exist`
+      );
+      return false;
+    }
+
+    // Check if slot is an object with layer structure
+    if (typeof slot !== 'object' || Array.isArray(slot)) {
+      this.logger.debug(
+        `${this.operatorName}: hasItemsInSlot - Slot '${slotName}' has invalid structure (not an object)`
+      );
+      return false;
+    }
 
     // Check if any layer has items
-    return Object.values(slot).some((items) =>
-      Array.isArray(items) ? items.length > 0 : Boolean(items)
+    const hasItems = Object.values(slot).some((items) => {
+      // Handle various possible item structures
+      if (Array.isArray(items)) {
+        return items.length > 0;
+      }
+      // Handle single item (non-array)
+      if (typeof items === 'string' && items.trim() !== '') {
+        return true;
+      }
+      // Handle object items
+      if (items && typeof items === 'object' && !Array.isArray(items)) {
+        return Object.keys(items).length > 0;
+      }
+      return false;
+    });
+
+    this.logger.debug(
+      `${this.operatorName}: hasItemsInSlot - Slot '${slotName}' has items: ${hasItems}`
     );
+
+    return hasItems;
   }
 
   /**

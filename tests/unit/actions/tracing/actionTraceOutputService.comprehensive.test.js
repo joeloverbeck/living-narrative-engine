@@ -143,13 +143,13 @@ describe('ActionTraceOutputService - Comprehensive Coverage', () => {
       const invalidTrace = { actionId: 'test', actorId: 'actor' };
 
       await expect(service.writeTrace(invalidTrace)).rejects.toThrow(
-        'Trace must have toJSON() method'
+        'Trace must have either toJSON() or getTracedActions() method'
       );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to write trace',
         expect.objectContaining({
-          error: 'Trace must have toJSON() method',
+          error: 'Trace must have either toJSON() or getTracedActions() method',
           actionId: 'test',
           actorId: 'actor',
         })

@@ -780,22 +780,26 @@ describe('ActionTraceConfigValidator', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle initialization errors', async () => {
-      mockSchemaValidator.validate.mockRejectedValue(
-        new Error('Schema not found')
-      );
-
+    it('should successfully initialize with valid dependencies', async () => {
       const newValidator = new ActionTraceConfigValidator({
         schemaValidator: mockSchemaValidator,
         logger: mockLogger,
       });
 
-      await expect(newValidator.initialize()).rejects.toThrow(
-        'Schema validation setup failed'
+      // Initialize should succeed with valid dependencies
+      await expect(newValidator.initialize()).resolves.toBeUndefined();
+      
+      // Verify logger was called
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Initializing action trace config validator'
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Action trace config validator initialized successfully'
       );
     });
 
-    it('should handle schema validation returning undefined', async () => {
+    it('should defer schema validation until validateConfiguration is called', async () => {
+      // Initialize should succeed even if validate would return undefined
       mockSchemaValidator.validate.mockResolvedValue(undefined);
 
       const newValidator = new ActionTraceConfigValidator({
@@ -803,9 +807,21 @@ describe('ActionTraceConfigValidator', () => {
         logger: mockLogger,
       });
 
-      await expect(newValidator.initialize()).rejects.toThrow(
-        'Action trace config schema not loaded'
-      );
+      // Initialize should succeed - schema validation is deferred
+      await expect(newValidator.initialize()).resolves.toBeUndefined();
+
+      // The actual schema validation happens during validateConfiguration
+      const config = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go'],
+          outputDirectory: './traces',
+        },
+      };
+
+      // This is where the undefined validation result should cause issues
+      const result = await newValidator.validateConfiguration(config);
+      expect(result.isValid).toBe(false);
     });
 
     it('should handle validation runtime errors', async () => {

@@ -14,6 +14,7 @@ import {
   TimestampFormat,
 } from './traceIdGenerator.js';
 import { defaultTimerService } from './timerService.js';
+import FileTraceOutputHandler from './fileTraceOutputHandler.js';
 
 // Re-export from traceIdGenerator for backward compatibility
 export { NamingStrategy, TimestampFormat } from './traceIdGenerator.js';
@@ -44,6 +45,8 @@ export class ActionTraceOutputService {
   #traceDirectoryManager;
   #exportInProgress;
   #timerService;
+  #fileOutputHandler;
+  #outputToFiles;
 
   /**
    * Constructor
@@ -60,6 +63,8 @@ export class ActionTraceOutputService {
    * @param {object} [dependencies.namingOptions] - Naming convention options
    * @param {object} [dependencies.traceDirectoryManager] - Directory manager for file exports
    * @param {object} [dependencies.timerService] - Timer service for scheduling operations
+   * @param {string} [dependencies.outputDirectory] - Directory for file output (enables file output mode)
+   * @param {boolean} [dependencies.outputToFiles] - Whether to output traces to files instead of IndexedDB
    */
   constructor({
     storageAdapter,
@@ -73,6 +78,8 @@ export class ActionTraceOutputService {
     namingOptions = {},
     traceDirectoryManager,
     timerService,
+    outputDirectory,
+    outputToFiles = false,
   } = {}) {
     // Validate dependencies if provided
     if (storageAdapter) {
@@ -139,6 +146,40 @@ export class ActionTraceOutputService {
     // Extract timerService from queueConfig if provided (used by both queue processor and rotation manager)
     const { timerService: configTimerService, ...remainingConfig } =
       queueConfig || {};
+
+    // Initialize file output handler if enabled
+    this.#outputToFiles = outputToFiles || !!outputDirectory;
+    if (this.#outputToFiles) {
+      this.#fileOutputHandler = new FileTraceOutputHandler({
+        outputDirectory: outputDirectory || './traces',
+        traceDirectoryManager: this.#traceDirectoryManager,
+        logger: this.#logger,
+      });
+
+      // Initialize the file output handler immediately
+      this.#fileOutputHandler
+        .initialize()
+        .then((success) => {
+          if (success) {
+            this.#logger.info(
+              'FileTraceOutputHandler initialized successfully'
+            );
+          } else {
+            this.#logger.warn('FileTraceOutputHandler initialization failed');
+          }
+        })
+        .catch((error) => {
+          this.#logger.error(
+            'Error initializing FileTraceOutputHandler',
+            error
+          );
+        });
+
+      this.#logger.debug('ActionTraceOutputService: File output mode enabled', {
+        outputDirectory: outputDirectory || './traces',
+        hasDirectoryManager: !!this.#traceDirectoryManager,
+      });
+    }
 
     // Initialize queue processing system
     if (this.#storageAdapter && typeof TraceQueueProcessor !== 'undefined') {
@@ -220,12 +261,31 @@ export class ActionTraceOutputService {
    * @returns {Promise<void>}
    */
   async writeTrace(trace, priority) {
+    // CRITICAL DEBUG: Log every call to writeTrace - DISABLED
+    // Debug logging removed - was causing log pollution
+
     if (!trace) {
       this.#logger.warn('ActionTraceOutputService: Null trace provided');
       return;
     }
 
-    // Use advanced queue processor if available
+    // When file output is enabled, bypass queue processor and write directly to files
+    if (this.#outputToFiles && this.#fileOutputHandler) {
+      this.#logger.warn(
+        'ActionTraceOutputService: Using file output mode, bypassing queue processor'
+      );
+      const writePromise = this.#performWrite(trace);
+      this.#pendingWrites.add(writePromise);
+
+      try {
+        await writePromise;
+      } finally {
+        this.#pendingWrites.delete(writePromise);
+      }
+      return;
+    }
+
+    // Use advanced queue processor if available (for IndexedDB storage)
     if (this.#queueProcessor) {
       const success = this.#queueProcessor.enqueue(trace, priority);
       if (!success) {
@@ -385,13 +445,21 @@ export class ActionTraceOutputService {
     const startTime = Date.now();
 
     try {
-      // Validate trace has required methods
-      if (!trace.toJSON || typeof trace.toJSON !== 'function') {
-        throw new Error('Trace must have toJSON() method');
+      // Validate trace has required methods (toJSON or getTracedActions)
+      const hasToJSON = trace.toJSON && typeof trace.toJSON === 'function';
+      const hasGetTracedActions =
+        trace.getTracedActions && typeof trace.getTracedActions === 'function';
+
+      if (!hasToJSON && !hasGetTracedActions) {
+        throw new Error(
+          'Trace must have either toJSON() or getTracedActions() method'
+        );
       }
 
-      // Serialize trace data
-      const traceData = trace.toJSON();
+      // Serialize trace data using the appropriate method
+      const traceData = hasToJSON
+        ? trace.toJSON()
+        : this.#formatTraceData(trace);
 
       // Add write metadata
       const writeData = {
@@ -432,8 +500,7 @@ export class ActionTraceOutputService {
   }
 
   /**
-   * Default output handler - logs trace to console in development
-   * In production, this would write to file system or external service
+   * Default output handler - writes to files when enabled, otherwise logs to console
    *
    * @private
    * @param {object} writeData - Serialized trace data with metadata
@@ -441,8 +508,46 @@ export class ActionTraceOutputService {
    * @returns {Promise<void>}
    */
   async #defaultOutputHandler(writeData, trace) {
-    // In development, log to debug
-    // In production, this would write to file or send to monitoring service
+    // CRITICAL DEBUG: Log handler entry - DISABLED
+    // Debug logging removed - was causing log pollution
+
+    // Use file output if enabled and available
+    if (this.#outputToFiles && this.#fileOutputHandler) {
+      try {
+        // Debug logging removed - was causing log pollution
+        const success = await this.#fileOutputHandler.writeTrace(
+          writeData,
+          trace
+        );
+        if (success) {
+          this.#logger.debug('Trace written to file', {
+            actionId: trace.actionId,
+            actorId: trace.actorId,
+            writeSequence: writeData.writeMetadata.writeSequence,
+          });
+          return;
+        } else {
+          this.#logger.warn(
+            'File output failed, falling back to console logging',
+            {
+              actionId: trace.actionId,
+              actorId: trace.actorId,
+            }
+          );
+        }
+      } catch (error) {
+        this.#logger.error(
+          'File output error, falling back to console logging',
+          {
+            error: error.message,
+            actionId: trace.actionId,
+            actorId: trace.actorId,
+          }
+        );
+      }
+    }
+
+    // Fallback to console logging (original behavior)
     if (
       process.env.NODE_ENV === 'development' ||
       process.env.NODE_ENV === 'test'
@@ -938,10 +1043,26 @@ export class ActionTraceOutputService {
       traceType: 'pipeline',
       spans: trace.getSpans ? trace.getSpans() : [],
       actions: {},
+      operatorEvaluations: null, // Will be populated if present
     };
 
     // Convert Map to object for JSON serialization
     for (const [actionId, data] of tracedActions) {
+      // Check if this is operator evaluation data
+      if (actionId === '_current_scope_evaluation') {
+        // Extract operator evaluations for separate section
+        if (data.stages?.operator_evaluations?.data?.evaluations) {
+          result.operatorEvaluations = {
+            timestamp: data.stages.operator_evaluations.timestamp,
+            evaluations: data.stages.operator_evaluations.data.evaluations,
+            totalCount:
+              data.stages.operator_evaluations.data.evaluations.length,
+          };
+        }
+        // Don't include this in regular actions
+        continue;
+      }
+
       result.actions[actionId] = {
         ...data,
         stageOrder: Object.keys(data.stages || {}),
@@ -1142,5 +1263,56 @@ export class ActionTraceOutputService {
    */
   async writeTraceWithPriority(trace, priority = DEFAULT_PRIORITY) {
     return this.writeTrace(trace, priority);
+  }
+
+  /**
+   * Set output directory for file-based trace output
+   *
+   * @param {string} directory - Output directory path
+   */
+  setOutputDirectory(directory) {
+    if (this.#fileOutputHandler) {
+      this.#fileOutputHandler.setOutputDirectory(directory);
+      this.#logger.info(
+        `ActionTraceOutputService: Output directory set to ${directory}`
+      );
+    } else {
+      this.#logger.warn(
+        'ActionTraceOutputService: Cannot set output directory - file output not enabled'
+      );
+    }
+  }
+
+  /**
+   * Enable file output mode with specified directory
+   *
+   * @param {string} outputDirectory - Directory for trace files
+   * @returns {boolean} Success status
+   */
+  enableFileOutput(outputDirectory) {
+    try {
+      if (!this.#fileOutputHandler) {
+        this.#fileOutputHandler = new FileTraceOutputHandler({
+          outputDirectory: outputDirectory || './traces',
+          traceDirectoryManager: this.#traceDirectoryManager,
+          logger: this.#logger,
+        });
+      } else {
+        this.#fileOutputHandler.setOutputDirectory(outputDirectory);
+      }
+
+      this.#outputToFiles = true;
+      this.#logger.info('ActionTraceOutputService: File output mode enabled', {
+        outputDirectory: outputDirectory || './traces',
+      });
+
+      return true;
+    } catch (error) {
+      this.#logger.error(
+        'ActionTraceOutputService: Failed to enable file output',
+        error
+      );
+      return false;
+    }
   }
 }

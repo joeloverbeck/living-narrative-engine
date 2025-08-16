@@ -52,6 +52,9 @@ import {
   LOG_LLM_ID_PROXY_NOT_OPERATIONAL,
 } from '../config/constants.js';
 
+// Import trace routes
+import traceRoutes from '../routes/traceRoutes.js';
+
 // Initialize Logger
 const proxyLogger = new ConsoleLogger();
 
@@ -244,6 +247,9 @@ app.post(
   handleValidationErrors, // Handle validation errors
   (req, res) => llmRequestController.handleLlmRequest(req, res)
 );
+
+// Register trace routes for action tracing system
+app.use('/api/traces', traceRoutes);
 
 // Store server instance for graceful shutdown
 let server;

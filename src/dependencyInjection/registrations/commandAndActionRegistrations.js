@@ -270,6 +270,7 @@ export function registerCommandAndAction(container) {
       // Get optional action tracing dependencies
       let actionAwareTraceFactory = null;
       let actionTraceFilter = null;
+      let actionTraceOutputService = null;
 
       try {
         // Try to resolve action-aware trace factory if registered
@@ -291,15 +292,28 @@ export function registerCommandAndAction(container) {
         logger.debug('ActionTraceFilter not available', err);
       }
 
+      try {
+        // Try to resolve action trace output service if registered
+        if (c.isRegistered(actionTracingTokens.IActionTraceOutputService)) {
+          actionTraceOutputService = c.resolve(
+            actionTracingTokens.IActionTraceOutputService
+          );
+        }
+      } catch (err) {
+        logger.debug('ActionTraceOutputService not available', err);
+      }
+
       // Log action tracing availability
       const actionTracingAvailable = !!(
         actionAwareTraceFactory && actionTraceFilter
       );
+      const traceOutputAvailable = !!actionTraceOutputService;
       logger.info(
-        `ActionDiscoveryService: Action tracing ${actionTracingAvailable ? 'available' : 'not available'}`,
+        `ActionDiscoveryService: Action tracing ${actionTracingAvailable ? 'available' : 'not available'}, output ${traceOutputAvailable ? 'available' : 'not available'}`,
         {
           hasActionAwareTraceFactory: !!actionAwareTraceFactory,
           hasActionTraceFilter: !!actionTraceFilter,
+          hasActionTraceOutputService: !!actionTraceOutputService,
         }
       );
 
@@ -313,6 +327,7 @@ export function registerCommandAndAction(container) {
         traceContextFactory: c.resolve(tokens.TraceContextFactory),
         actionAwareTraceFactory,
         actionTraceFilter,
+        actionTraceOutputService,
         getActorLocationFn: getActorLocation,
       });
     });

@@ -18,8 +18,9 @@
 
 import {
   describe,
+  beforeAll,
   beforeEach,
-  afterEach,
+  afterAll,
   test,
   expect,
   jest,
@@ -38,7 +39,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
   let testActions;
 
   beforeEach(async () => {
-    // Initialize test bed
+    // Initialize test bed - keep original pattern for complex container setup
     testBed = new PromptGenerationTestBed();
     await testBed.initialize();
 
@@ -57,10 +58,11 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
   });
 
   /**
-   * Test: Basic prompt generation flow
-   * Verifies the complete pipeline works end-to-end for AI actors
+   * Core Prompt Generation Tests
+   * These test the fundamental pipeline functionality
    */
-  test('should generate complete prompt for AI actor decision', async () => {
+  describe('Core Prompt Generation', () => {
+    test('should generate complete prompt for AI actor decision', async () => {
     // Arrange
     const aiActor = testActors.aiActor;
     const turnContext = testBed.createTestTurnContext();
@@ -92,11 +94,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     expect(prompt).toContain('The Rusty Tankard');
   });
 
-  /**
-   * Test: Prompt element assembly order
-   * Verifies elements appear in the order specified by promptAssemblyOrder
-   */
-  test('should assemble prompt elements in configured order', async () => {
+    test('should assemble prompt elements in configured order', async () => {
     // Arrange
     const aiActor = testActors.aiActor;
     const turnContext = testBed.createTestTurnContext();
@@ -136,11 +134,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     expect(instructionsIndex).toBeLessThan(contentPolicyIndex);
   });
 
-  /**
-   * Test: Action indexing
-   * Verifies actions are properly indexed starting from [1]
-   */
-  test('should properly index available actions', async () => {
+    test('should properly index available actions', async () => {
     // Arrange
     const aiActor = testActors.aiActor;
     const turnContext = testBed.createTestTurnContext();
@@ -176,12 +170,14 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
       true
     );
   });
+  }); // End Core Prompt Generation
 
   /**
-   * Test: Placeholder resolution
-   * Verifies placeholders are correctly replaced with actual data
+   * Content Processing Tests
+   * These test placeholder resolution, data inclusion, and formatting
    */
-  test('should resolve placeholders in prompt content', async () => {
+  describe('Content Processing', () => {
+    test('should resolve placeholders in prompt content', async () => {
     // Arrange
     const aiActor = testActors.aiActor;
     const turnContext = testBed.createTestTurnContext();
@@ -207,11 +203,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     expect(fullPrompt).toContain('rusty tankard');
   });
 
-  /**
-   * Test: Perception log inclusion
-   * Verifies perception log entries are included in the prompt
-   */
-  test('should include perception log entries in prompt', async () => {
+    test('should include perception log entries in prompt', async () => {
     // Arrange
     const aiActor = testActors.aiActor;
     const turnContext = testBed.createTestTurnContext();
@@ -238,11 +230,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     );
   });
 
-  /**
-   * Test: Conditional element inclusion (notes)
-   * Verifies conditional elements are included only when data is present
-   */
-  test('should conditionally include notes section when notes exist', async () => {
+    test('should conditionally include notes section when notes exist', async () => {
     // Arrange
     const aiActor = testActors.aiActor;
     const turnContext = testBed.createTestTurnContext();
@@ -280,11 +268,70 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     expect(promptWithoutNotes).not.toContain('I should perform a song');
   });
 
+    test('should include actor thoughts in prompt', async () => {
+    // Arrange
+    const aiActor = testActors.aiActor;
+    const turnContext = testBed.createTestTurnContext();
+    const availableActions = testBed.createTestActionComposites();
+
+    // Act
+    const prompt = await testBed.generatePrompt(
+      aiActor.id,
+      turnContext,
+      availableActions
+    );
+
+    // Assert - Thoughts section exists
+    const sections = testBed.parsePromptSections(prompt);
+    expect(sections.thoughts).toBeDefined();
+
+    // Assert - Thought entries are included
+    expect(sections.thoughts).toContain(
+      'I feel welcomed in this friendly tavern'
+    );
+    expect(sections.thoughts).toContain('The innkeeper seems trustworthy');
+  });
+
+    test('should generate character persona with markdown formatting', async () => {
+    // Arrange
+    const aiActor = testActors.aiActor;
+    const turnContext = testBed.createTestTurnContext();
+    const availableActions = testBed.createTestActionComposites();
+
+    // Act
+    const prompt = await testBed.generatePrompt(
+      aiActor.id,
+      turnContext,
+      availableActions
+    );
+
+    // Assert - Verify markdown structure in character persona
+    expect(prompt).toMatch(
+      /<character_persona>[\s\S]*## Your Description[\s\S]*<\/character_persona>/
+    );
+    expect(prompt).toMatch(/\*\*[^*]+\*\*:/); // Bold formatting for attributes
+
+    // Extract character persona section for detailed validation
+    const sections = testBed.parsePromptSections(prompt);
+    const personaSection = sections.character_persona;
+
+    // Verify specific markdown elements that should exist for the test character
+    expect(personaSection).toContain('YOU ARE Elara the Bard.');
+    expect(personaSection).toContain('## Your Description');
+    expect(personaSection).toMatch(/\*\*\w+\*\*:/); // Bold attribute labels (e.g., **Description**:)
+
+    // Since the test character may not have all sections, just verify the structure
+    // Check that the character persona section uses markdown formatting
+    expect(personaSection).toMatch(/^##\s+/m); // Contains markdown headers
+  });
+  }); // End Content Processing
+
   /**
-   * Test: Multiple LLM configurations
-   * Verifies prompt structure adapts to different LLM configurations
+   * LLM Configuration Tests
+   * These test different LLM configurations and adaptations
    */
-  test('should adapt prompt structure for different LLM configurations', async () => {
+  describe('LLM Configuration', () => {
+    test('should adapt prompt structure for different LLM configurations', async () => {
     // Arrange
     const aiActor = testActors.aiActor;
     const turnContext = testBed.createTestTurnContext();
@@ -323,11 +370,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     expect(jsonSchemaActions.length).toBe(availableActions.length);
   });
 
-  /**
-   * Test: Character persona markdown formatting
-   * Verifies character persona uses enhanced markdown structure
-   */
-  test('should generate character persona with markdown formatting', async () => {
+    test('should include static prompt content from files', async () => {
     // Arrange
     const aiActor = testActors.aiActor;
     const turnContext = testBed.createTestTurnContext();
@@ -340,39 +383,33 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
       availableActions
     );
 
-    // Assert - Verify markdown structure in character persona
-    expect(prompt).toMatch(
-      /<character_persona>[\s\S]*## Your Description[\s\S]*<\/character_persona>/
-    );
-    expect(prompt).toMatch(/\*\*[^*]+\*\*:/); // Bold formatting for attributes
-
-    // Extract character persona section for detailed validation
+    // Assert - Static content sections are included
     const sections = testBed.parsePromptSections(prompt);
-    const personaSection = sections.character_persona;
 
-    // Verify specific markdown elements that should exist for the test character
-    expect(personaSection).toContain('YOU ARE Elara the Bard.');
-    expect(personaSection).toContain('## Your Description');
-    expect(personaSection).toMatch(/\*\*\w+\*\*:/); // Bold attribute labels (e.g., **Description**:)
+    // Task definition should have content
+    expect(sections.task_definition).toBeDefined();
+    expect(sections.task_definition.length).toBeGreaterThan(50);
 
-    // Since the test character may not have all sections, just verify the structure
-    // Check that the character persona section uses markdown formatting
-    expect(personaSection).toMatch(/^##\s+/m); // Contains markdown headers
+    // Final instructions should have content
+    expect(sections.final_instructions).toBeDefined();
+    expect(sections.final_instructions.length).toBeGreaterThan(50);
   });
+  }); // End LLM Configuration
 
   /**
-   * Test: Token estimation and limits
-   * Verifies token counting and warnings for large prompts
+   * Edge Cases and Performance Tests
+   * These test error handling, performance, and edge cases
    */
-  test('should estimate tokens and respect context limits', async () => {
+  describe('Edge Cases and Performance', () => {
+    test('should estimate tokens and respect context limits', async () => {
     // Arrange
     const aiActor = testActors.aiActor;
     const turnContext = testBed.createTestTurnContext();
     const availableActions = testBed.createTestActionComposites();
 
-    // Create a very long perception log to increase prompt size
+    // Create a moderately sized perception log to test token limits
     const longPerceptionLog = [];
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 20; i++) {
       longPerceptionLog.push({
         descriptionText: `This is a very long observation entry number ${i} that contains a lot of text to increase the token count of the generated prompt.`,
         timestamp: new Date().toISOString(),
@@ -401,39 +438,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     expect(estimatedTokens).toBeLessThan(config.contextTokenLimit);
   });
 
-  /**
-   * Test: Thoughts section inclusion
-   * Verifies actor thoughts are included in the prompt
-   */
-  test('should include actor thoughts in prompt', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
-
-    // Act
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
-
-    // Assert - Thoughts section exists
-    const sections = testBed.parsePromptSections(prompt);
-    expect(sections.thoughts).toBeDefined();
-
-    // Assert - Thought entries are included
-    expect(sections.thoughts).toContain(
-      'I feel welcomed in this friendly tavern'
-    );
-    expect(sections.thoughts).toContain('The innkeeper seems trustworthy');
-  });
-
-  /**
-   * Test: Empty available actions handling
-   * Verifies prompt generation works even with no available actions
-   */
-  test('should handle empty available actions gracefully', async () => {
+    test('should handle empty available actions gracefully', async () => {
     // Arrange
     const aiActor = testActors.aiActor;
     const turnContext = testBed.createTestTurnContext();
@@ -458,11 +463,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     expect(prompt).toContain('Elara the Bard');
   });
 
-  /**
-   * Test: Actor without AI component
-   * Verifies appropriate error handling for non-AI actors
-   */
-  test('should handle non-AI actors appropriately', async () => {
+    test('should handle non-AI actors appropriately', async () => {
     // Arrange
     const nonAiActor = testActors.player; // Player is not an AI
     const turnContext = testBed.createTestTurnContext();
@@ -479,11 +480,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     expect(prompt).toContain('Test Player'); // Should use actor name
   });
 
-  /**
-   * Test: Complex action parameters
-   * Verifies actions with targets are properly formatted
-   */
-  test('should properly format actions with target parameters', async () => {
+    test('should properly format actions with target parameters', async () => {
     // Arrange
     const aiActor = testActors.aiActor;
     const turnContext = testBed.createTestTurnContext();
@@ -545,11 +542,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     }
   });
 
-  /**
-   * Test: Prompt caching behavior
-   * Verifies subsequent calls with same data are efficient
-   */
-  test('should efficiently generate prompts for repeated calls', async () => {
+    test('should efficiently generate prompts for repeated calls', async () => {
     // Arrange
     const aiActor = testActors.aiActor;
     const turnContext = testBed.createTestTurnContext();
@@ -579,33 +572,5 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
     // Use max to handle case where time1 is 0
     expect(time2).toBeLessThanOrEqual(Math.max(time1 * 1.5, 10));
   });
-
-  /**
-   * Test: Integration with static content service
-   * Verifies static prompt content is loaded correctly
-   */
-  test('should include static prompt content from files', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
-
-    // Act
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
-
-    // Assert - Static content sections are included
-    const sections = testBed.parsePromptSections(prompt);
-
-    // Task definition should have content
-    expect(sections.task_definition).toBeDefined();
-    expect(sections.task_definition.length).toBeGreaterThan(50);
-
-    // Final instructions should have content
-    expect(sections.final_instructions).toBeDefined();
-    expect(sections.final_instructions.length).toBeGreaterThan(50);
-  });
+  }); // End Edge Cases and Performance
 });

@@ -37,6 +37,8 @@ class ActionTraceConfigValidator {
 
   /**
    * Initialize validator
+   * Note: Schema validation is deferred until actual validation is needed,
+   * after schemas have been loaded by the application
    *
    * @returns {Promise<void>}
    */
@@ -44,15 +46,10 @@ class ActionTraceConfigValidator {
     try {
       this.#logger.debug('Initializing action trace config validator');
 
-      // Schema is already loaded by the application's schema loader
-      // We just need to verify it's available
-      const testValidation = await this.#schemaValidator.validate(
-        'action-trace-config',
-        { actionTracing: {} }
-      );
-
-      if (testValidation === undefined) {
-        throw new Error('Action trace config schema not loaded');
+      // Just verify that the schema validator service is available
+      // Actual schema validation will happen when validateConfiguration is called
+      if (!this.#schemaValidator) {
+        throw new Error('Schema validator service not available');
       }
 
       this.#logger.info(
@@ -60,7 +57,7 @@ class ActionTraceConfigValidator {
       );
     } catch (error) {
       this.#logger.error('Failed to initialize config validator', error);
-      throw new Error(`Schema validation setup failed: ${error.message}`);
+      throw new Error(`Validator initialization failed: ${error.message}`);
     }
   }
 
@@ -163,7 +160,7 @@ class ActionTraceConfigValidator {
   async #validateAgainstSchema(config) {
     // Use the AjvSchemaValidator's validate method
     const validationResult = await this.#schemaValidator.validate(
-      'action-trace-config',
+      'schema://living-narrative-engine/trace-config.schema.json',
       config
     );
 
@@ -362,6 +359,12 @@ class ActionTraceConfigValidator {
         // Valid patterns without colon: '*', 'prefix*', '*suffix', '*middle*'
         if (!action.includes('*')) {
           // Not a wildcard and no namespace - this is invalid
+          criticallyInvalidActions.push(action);
+          return;
+        }
+        // Even with wildcards, patterns without colons (except '*') are invalid
+        // This maintains strict mod:action format requirement
+        if (action !== '*') {
           criticallyInvalidActions.push(action);
           return;
         }

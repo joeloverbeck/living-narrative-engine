@@ -115,6 +115,7 @@ describe('Build System Performance', () => {
           'thematic-direction.js',
           'thematic-directions-manager.js',
           'character-concepts-manager.js',
+          'cliches-generator-main.js',
         ];
 
         let totalSize = 0;
@@ -131,7 +132,7 @@ describe('Build System Performance', () => {
         }
 
         // Total bundle size should be reasonable
-        expect(totalSize).toBeLessThan(25 * 1024 * 1024); // 25MB total max (adjusted based on actual output)
+        expect(totalSize).toBeLessThan(30 * 1024 * 1024); // 30MB total max (adjusted based on actual output with 6 bundles)
       },
       testTimeout
     );
