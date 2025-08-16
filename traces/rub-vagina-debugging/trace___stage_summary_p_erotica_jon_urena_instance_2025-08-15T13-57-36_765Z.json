@@ -1857,9 +1857,7 @@
           },
           "createdAt": 1755266256758
         },
-        "stageOrder": [
-          "formatting"
-        ],
+        "stageOrder": ["formatting"],
         "totalDuration": 0
       }
     },

@@ -1,10 +1,12 @@
 {
   "$schema": "../data/schemas/trace-config.schema.json",
-  "traceAnalysisEnabled": true,
+  "traceAnalysisEnabled": false,
   "actionTracing": {
-    "enabled": true,
-    "tracedActions": ["sex:rub_vagina_over_clothes"],
-    "outputDirectory": "./traces/rub-vagina-debugging",
+    "enabled": false,
+    "tracedActions": [
+      "positioning:get_close"
+    ],
+    "outputDirectory": "./traces/get-close",
     "verbosity": "verbose",
     "includeComponentData": true,
     "includePrerequisites": true,
@@ -14,7 +16,7 @@
     "maxFileAge": 86400
   },
   "performanceMonitoring": {
-    "enabled": true,
+    "enabled": false,
     "thresholds": {
       "slowOperationMs": 100,
       "criticalOperationMs": 500,

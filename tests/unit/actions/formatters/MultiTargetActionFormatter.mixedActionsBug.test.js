@@ -221,9 +221,12 @@ describe('MultiTargetActionFormatter - mixed actions bug reproduction', () => {
       console.log('Correct result:', JSON.stringify(result, null, 2));
 
       expect(result.ok).toBe(true);
-      expect(result.value).toEqual([
-        "adjust Iker Aguirre's denim trucker jacket",
-      ]);
+      expect(Array.isArray(result.value)).toBe(true);
+      expect(result.value).toHaveLength(1);
+
+      // Extract command from the object for comparison
+      const command = result.value[0].command;
+      expect(command).toBe("adjust Iker Aguirre's denim trucker jacket");
     });
   });
 });

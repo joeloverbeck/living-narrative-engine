@@ -336,8 +336,14 @@ describe('MultiTargetActionFormatter - Integration Tests', () => {
       expect(result.ok).toBe(true);
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value.length).toBeGreaterThan(0);
-      expect(result.value).toContain('throw Small Rock at Orc Brute');
-      expect(result.value).toContain('throw Throwing Knife at Orc Brute');
+
+      // Extract commands from the object structure
+      const commands = result.value.map((item) =>
+        typeof item === 'string' ? item : item.command
+      );
+
+      expect(commands).toContain('throw Small Rock at Orc Brute');
+      expect(commands).toContain('throw Throwing Knife at Orc Brute');
     });
   });
 
@@ -786,11 +792,15 @@ describe('MultiTargetActionFormatter - Integration Tests', () => {
 
       expect(result.ok).toBe(true);
       expect(Array.isArray(result.value)).toBe(true);
-      // Should generate combinations with first item from each remaining type
-      expect(result.value).toContain(
-        'combine Red Gem with Gold Dust using Mortar'
+
+      // Extract commands from the object structure
+      const commands = result.value.map((item) =>
+        typeof item === 'string' ? item : item.command
       );
-      expect(result.value).toContain(
+
+      // Should generate combinations with first item from each remaining type
+      expect(commands).toContain('combine Red Gem with Gold Dust using Mortar');
+      expect(commands).toContain(
         'combine Blue Gem with Gold Dust using Mortar'
       );
     });
@@ -862,9 +872,15 @@ describe('MultiTargetActionFormatter - Integration Tests', () => {
       expect(result.ok).toBe(true);
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value).toHaveLength(3);
-      expect(result.value).toContain('examine Ancient Scroll');
-      expect(result.value).toContain('examine Mysterious Orb');
-      expect(result.value).toContain('examine Golden Key');
+
+      // Extract commands from the object structure
+      const commands = result.value.map((item) =>
+        typeof item === 'string' ? item : item.command
+      );
+
+      expect(commands).toContain('examine Ancient Scroll');
+      expect(commands).toContain('examine Mysterious Orb');
+      expect(commands).toContain('examine Golden Key');
     });
 
     it('should respect maxCombinations limit exactly at boundary', async () => {
@@ -898,10 +914,16 @@ describe('MultiTargetActionFormatter - Integration Tests', () => {
       expect(result.ok).toBe(true);
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value).toHaveLength(50); // Should be exactly 50, not 51
-      expect(result.value[0]).toBe('test Item 0');
-      expect(result.value[49]).toBe('test Item 49');
+
+      // Extract commands from the object structure
+      const commands = result.value.map((item) =>
+        typeof item === 'string' ? item : item.command
+      );
+
+      expect(commands[0]).toBe('test Item 0');
+      expect(commands[49]).toBe('test Item 49');
       // Item 50 should not be included
-      expect(result.value).not.toContain('test Item 50');
+      expect(commands).not.toContain('test Item 50');
     });
   });
 

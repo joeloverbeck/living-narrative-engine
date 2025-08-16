@@ -4511,9 +4511,7 @@
                 "positioning:closeness",
                 "core:current_actor"
               ],
-              "requiredComponents": [
-                "positioning:closeness"
-              ],
+              "requiredComponents": ["positioning:closeness"],
               "forbiddenComponents": [],
               "componentMatchPassed": true,
               "missingComponents": [],
@@ -4609,16 +4607,12 @@
             "data": {
               "timestamp": 1755266289737,
               "stage": "multi_target_resolution",
-              "targetKeys": [
-                "primary"
-              ],
+              "targetKeys": ["primary"],
               "resolvedCounts": {
                 "primary": 1
               },
               "totalTargets": 1,
-              "resolutionOrder": [
-                "primary"
-              ],
+              "resolutionOrder": ["primary"],
               "hasContextDependencies": false,
               "resolutionTimeMs": 1,
               "_performance": {
@@ -4636,9 +4630,7 @@
               "timestamp": 1755266289737,
               "stage": "target_resolution",
               "actorId": "p_erotica:iker_aguirre_instance",
-              "targetKeys": [
-                "primary"
-              ],
+              "targetKeys": ["primary"],
               "isLegacy": false,
               "resolutionSuccess": true,
               "resolutionTimeMs": 1,
@@ -4720,18 +4712,13 @@
                     "legs",
                     "feet"
                   ],
-                  "potentialCoveringSlots": [
-                    "torso_upper"
-                  ],
+                  "potentialCoveringSlots": ["torso_upper"],
                   "slotChecks": {
                     "torso_upper": {
                       "hasItems": true,
                       "hasCoveringItems": true,
                       "slotExists": true,
-                      "layers": [
-                        "underwear",
-                        "outer"
-                      ],
+                      "layers": ["underwear", "outer"],
                       "itemCounts": {
                         "underwear": 1,
                         "outer": 1
@@ -4758,18 +4745,13 @@
                     "legs",
                     "feet"
                   ],
-                  "potentialCoveringSlots": [
-                    "torso_upper"
-                  ],
+                  "potentialCoveringSlots": ["torso_upper"],
                   "slotChecks": {
                     "torso_upper": {
                       "hasItems": true,
                       "hasCoveringItems": true,
                       "slotExists": true,
-                      "layers": [
-                        "underwear",
-                        "outer"
-                      ],
+                      "layers": ["underwear", "outer"],
                       "itemCounts": {
                         "underwear": 1,
                         "outer": 1
@@ -4796,18 +4778,13 @@
                     "legs",
                     "feet"
                   ],
-                  "potentialCoveringSlots": [
-                    "torso_lower"
-                  ],
+                  "potentialCoveringSlots": ["torso_lower"],
                   "slotChecks": {
                     "torso_lower": {
                       "hasItems": true,
                       "hasCoveringItems": true,
                       "slotExists": true,
-                      "layers": [
-                        "underwear",
-                        "accessories"
-                      ],
+                      "layers": ["underwear", "accessories"],
                       "itemCounts": {
                         "underwear": 1,
                         "accessories": 1
@@ -4838,9 +4815,7 @@
           "createdAt": 1755266289724,
           "type": "operator_evaluations"
         },
-        "stageOrder": [
-          "operator_evaluations"
-        ],
+        "stageOrder": ["operator_evaluations"],
         "totalDuration": 0
       },
       "__stage_summary": {
@@ -4886,9 +4861,7 @@
           },
           "createdAt": 1755266289724
         },
-        "stageOrder": [
-          "formatting"
-        ],
+        "stageOrder": ["formatting"],
         "totalDuration": 0
       }
     },

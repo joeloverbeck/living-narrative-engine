@@ -80,7 +80,11 @@ describe('Single Target Multiple Entities Bug - Integration', () => {
 
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value).toHaveLength(3);
-      expect(result.value).toEqual([
+      // Extract commands from the object structure
+      const commands = result.value.map((item) =>
+        typeof item === 'string' ? item : item.command
+      );
+      expect(commands).toEqual([
         'use Health Potion',
         'use Iron Sword',
         'use Teleport Scroll',
@@ -128,7 +132,11 @@ describe('Single Target Multiple Entities Bug - Integration', () => {
       // This works correctly - returns array of formatted commands
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value).toHaveLength(3);
-      expect(result.value).toEqual([
+      // Extract commands from the object structure
+      const commands = result.value.map((item) =>
+        typeof item === 'string' ? item : item.command
+      );
+      expect(commands).toEqual([
         'use Health Potion',
         'use Iron Sword',
         'use Teleport Scroll',
@@ -182,7 +190,11 @@ describe('Single Target Multiple Entities Bug - Integration', () => {
       // FIXED: Now generates cartesian product of all combinations
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value).toHaveLength(4);
-      expect(result.value).toEqual(
+      // Extract commands from the object structure
+      const commands = result.value.map((item) =>
+        typeof item === 'string' ? item : item.command
+      );
+      expect(commands).toEqual(
         expect.arrayContaining([
           'give Red Apple to Merchant',
           'give Red Apple to Guard',
@@ -284,8 +296,16 @@ describe('Single Target Multiple Entities Bug - Integration', () => {
       expect(Array.isArray(resultWithout.value)).toBe(true);
       expect(Array.isArray(resultWith.value)).toBe(true);
 
-      expect(resultWithout.value).toEqual(['drop Ruby', 'drop Gold Coin']);
-      expect(resultWith.value).toEqual(['drop Ruby', 'drop Gold Coin']);
+      // Extract commands from the object structure
+      const commandsWithout = resultWithout.value.map((item) =>
+        typeof item === 'string' ? item : item.command
+      );
+      const commandsWith = resultWith.value.map((item) =>
+        typeof item === 'string' ? item : item.command
+      );
+
+      expect(commandsWithout).toEqual(['drop Ruby', 'drop Gold Coin']);
+      expect(commandsWith).toEqual(['drop Ruby', 'drop Gold Coin']);
 
       // Consistent behavior achieved - both generate the same result
     });
@@ -334,7 +354,11 @@ describe('Single Target Multiple Entities Bug - Integration', () => {
       // VERIFIED: Returns array of actions
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value).toHaveLength(3);
-      expect(result.value).toEqual([
+      // Extract commands from the object structure
+      const commands = result.value.map((item) =>
+        typeof item === 'string' ? item : item.command
+      );
+      expect(commands).toEqual([
         'use Health Potion',
         'use Iron Sword',
         'use Teleport Scroll',
@@ -387,7 +411,11 @@ describe('Single Target Multiple Entities Bug - Integration', () => {
       // VERIFIED: Returns array with cartesian product
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value).toHaveLength(4);
-      expect(result.value).toEqual(
+      // Extract commands from the object structure
+      const commands = result.value.map((item) =>
+        typeof item === 'string' ? item : item.command
+      );
+      expect(commands).toEqual(
         expect.arrayContaining([
           'give Red Apple to Merchant',
           'give Red Apple to Guard',

@@ -176,13 +176,14 @@ describe('MultiTargetActionFormatter - Unresolved Placeholder Bug', () => {
       const formattedAction = result.value[0];
 
       // This is what we SHOULD get (test will fail until bug is fixed)
-      expect(formattedAction).toBe(
+      expect(formattedAction.command).toBe(
         "adjust Iker Aguirre's denim trucker jacket"
       );
+      expect(formattedAction.targets).toBeDefined();
 
       // These should NOT be present (bug indicators)
-      expect(formattedAction).not.toContain('{primary}');
-      expect(formattedAction).not.toContain('{secondary}');
+      expect(formattedAction.command).not.toContain('{primary}');
+      expect(formattedAction.command).not.toContain('{secondary}');
     });
 
     it('should demonstrate the bug with minimal case', () => {
@@ -220,8 +221,8 @@ describe('MultiTargetActionFormatter - Unresolved Placeholder Bug', () => {
 
       // This should work correctly
       expect(result.ok).toBe(true);
-      expect(result.value[0]).toBe('Actor adjusts item');
-      expect(result.value[0]).not.toContain('{secondary}');
+      expect(result.value[0].command).toBe('Actor adjusts item');
+      expect(result.value[0].command).not.toContain('{secondary}');
     });
 
     it('should fail when secondary target is missing (edge case)', () => {

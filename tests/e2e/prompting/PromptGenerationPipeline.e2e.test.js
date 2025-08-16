@@ -63,113 +63,113 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
    */
   describe('Core Prompt Generation', () => {
     test('should generate complete prompt for AI actor decision', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
+      const availableActions = testBed.createTestActionComposites();
 
-    // Act
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act
+      const prompt = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    // Assert - Prompt was generated
-    expect(prompt).toBeDefined();
-    expect(typeof prompt).toBe('string');
-    expect(prompt.length).toBeGreaterThan(100);
+      // Assert - Prompt was generated
+      expect(prompt).toBeDefined();
+      expect(typeof prompt).toBe('string');
+      expect(prompt.length).toBeGreaterThan(100);
 
-    // Assert - Key sections are present
-    const sections = testBed.parsePromptSections(prompt);
-    expect(sections.task_definition).toBeDefined();
-    expect(sections.character_persona).toBeDefined();
-    expect(sections.available_actions_info).toBeDefined();
-    expect(sections.final_instructions).toBeDefined();
+      // Assert - Key sections are present
+      const sections = testBed.parsePromptSections(prompt);
+      expect(sections.task_definition).toBeDefined();
+      expect(sections.character_persona).toBeDefined();
+      expect(sections.available_actions_info).toBeDefined();
+      expect(sections.final_instructions).toBeDefined();
 
-    // Assert - Character name was resolved
-    expect(prompt).toContain('Elara the Bard');
+      // Assert - Character name was resolved
+      expect(prompt).toContain('Elara the Bard');
 
-    // Assert - Location name was resolved
-    expect(prompt).toContain('The Rusty Tankard');
-  });
+      // Assert - Location name was resolved
+      expect(prompt).toContain('The Rusty Tankard');
+    });
 
     test('should assemble prompt elements in configured order', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
+      const availableActions = testBed.createTestActionComposites();
 
-    // Act
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act
+      const prompt = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    // Assert - Elements appear in correct order
-    const taskIndex = prompt.indexOf('<task_definition>');
-    const personaIndex = prompt.indexOf('<character_persona>');
-    const worldIndex = prompt.indexOf('<world_context>');
-    const perceptionIndex = prompt.indexOf('<perception_log>');
-    const thoughtsIndex = prompt.indexOf('<thoughts>');
-    const choicesIndex = prompt.indexOf('<available_actions_info>');
-    const instructionsIndex = prompt.indexOf('<final_instructions>');
-    const contentPolicyIndex = prompt.indexOf('<content_policy>');
+      // Assert - Elements appear in correct order
+      const taskIndex = prompt.indexOf('<task_definition>');
+      const personaIndex = prompt.indexOf('<character_persona>');
+      const worldIndex = prompt.indexOf('<world_context>');
+      const perceptionIndex = prompt.indexOf('<perception_log>');
+      const thoughtsIndex = prompt.indexOf('<thoughts>');
+      const choicesIndex = prompt.indexOf('<available_actions_info>');
+      const instructionsIndex = prompt.indexOf('<final_instructions>');
+      const contentPolicyIndex = prompt.indexOf('<content_policy>');
 
-    // All required elements should be present
-    expect(taskIndex).toBeGreaterThanOrEqual(0);
-    expect(personaIndex).toBeGreaterThanOrEqual(0);
-    expect(choicesIndex).toBeGreaterThanOrEqual(0);
-    expect(instructionsIndex).toBeGreaterThanOrEqual(0);
-    expect(contentPolicyIndex).toBeGreaterThanOrEqual(0);
+      // All required elements should be present
+      expect(taskIndex).toBeGreaterThanOrEqual(0);
+      expect(personaIndex).toBeGreaterThanOrEqual(0);
+      expect(choicesIndex).toBeGreaterThanOrEqual(0);
+      expect(instructionsIndex).toBeGreaterThanOrEqual(0);
+      expect(contentPolicyIndex).toBeGreaterThanOrEqual(0);
 
-    // They should appear in the configured order
-    expect(taskIndex).toBeLessThan(personaIndex);
-    expect(personaIndex).toBeLessThan(worldIndex);
-    expect(worldIndex).toBeLessThan(perceptionIndex);
-    expect(perceptionIndex).toBeLessThan(thoughtsIndex);
-    expect(choicesIndex).toBeLessThan(instructionsIndex);
-    // Content policy should now appear after final instructions (as appendix)
-    expect(instructionsIndex).toBeLessThan(contentPolicyIndex);
-  });
+      // They should appear in the configured order
+      expect(taskIndex).toBeLessThan(personaIndex);
+      expect(personaIndex).toBeLessThan(worldIndex);
+      expect(worldIndex).toBeLessThan(perceptionIndex);
+      expect(perceptionIndex).toBeLessThan(thoughtsIndex);
+      expect(choicesIndex).toBeLessThan(instructionsIndex);
+      // Content policy should now appear after final instructions (as appendix)
+      expect(instructionsIndex).toBeLessThan(contentPolicyIndex);
+    });
 
     test('should properly index available actions', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
+      const availableActions = testBed.createTestActionComposites();
 
-    // Act
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act
+      const prompt = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    // Assert - Extract indexed actions
-    const indexedActions = testBed.extractIndexedActions(prompt);
-    expect(indexedActions.length).toBe(availableActions.length);
+      // Assert - Extract indexed actions
+      const indexedActions = testBed.extractIndexedActions(prompt);
+      expect(indexedActions.length).toBe(availableActions.length);
 
-    // Verify indexing starts at 1 and is sequential
-    for (let i = 0; i < indexedActions.length; i++) {
-      expect(indexedActions[i].index).toBe(i + 1);
-    }
+      // Verify indexing starts at 1 and is sequential
+      for (let i = 0; i < indexedActions.length; i++) {
+        expect(indexedActions[i].index).toBe(i + 1);
+      }
 
-    // Verify action descriptions are included
-    expect(indexedActions.some((a) => a.description.includes('Wait'))).toBe(
-      true
-    );
-    expect(
-      indexedActions.some((a) => a.description.includes('Market Square'))
-    ).toBe(true);
-    expect(
-      indexedActions.some((a) => a.description.includes('Dark Alley'))
-    ).toBe(true);
-    expect(indexedActions.some((a) => a.description.includes('Perform'))).toBe(
-      true
-    );
-  });
+      // Verify action descriptions are included
+      expect(indexedActions.some((a) => a.description.includes('Wait'))).toBe(
+        true
+      );
+      expect(
+        indexedActions.some((a) => a.description.includes('Market Square'))
+      ).toBe(true);
+      expect(
+        indexedActions.some((a) => a.description.includes('Dark Alley'))
+      ).toBe(true);
+      expect(
+        indexedActions.some((a) => a.description.includes('Perform'))
+      ).toBe(true);
+    });
   }); // End Core Prompt Generation
 
   /**
@@ -178,152 +178,154 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
    */
   describe('Content Processing', () => {
     test('should resolve placeholders in prompt content', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
+      const availableActions = testBed.createTestActionComposites();
 
-    // Act
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act
+      const prompt = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    // Assert - No unresolved placeholders remain
-    expect(prompt).not.toMatch(/\{\{name\}\}/);
-    expect(prompt).not.toMatch(/\{\{[^}]+\}\}/); // No double brace placeholders
+      // Assert - No unresolved placeholders remain
+      expect(prompt).not.toMatch(/\{\{name\}\}/);
+      expect(prompt).not.toMatch(/\{\{[^}]+\}\}/); // No double brace placeholders
 
-    // Assert - Placeholders were replaced with actual values
-    const sections = testBed.parsePromptSections(prompt);
-    expect(sections.character_persona).toContain('Elara the Bard');
+      // Assert - Placeholders were replaced with actual values
+      const sections = testBed.parsePromptSections(prompt);
+      expect(sections.character_persona).toContain('Elara the Bard');
 
-    // The world context or perception should reference the location
-    const fullPrompt = prompt.toLowerCase();
-    expect(fullPrompt).toContain('rusty tankard');
-  });
+      // The world context or perception should reference the location
+      const fullPrompt = prompt.toLowerCase();
+      expect(fullPrompt).toContain('rusty tankard');
+    });
 
     test('should include perception log entries in prompt', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
+      const availableActions = testBed.createTestActionComposites();
 
-    // Act
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act
+      const prompt = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    // Assert - Perception log section exists
-    const sections = testBed.parsePromptSections(prompt);
-    expect(sections.perception_log).toBeDefined();
+      // Assert - Perception log section exists
+      const sections = testBed.parsePromptSections(prompt);
+      expect(sections.perception_log).toBeDefined();
 
-    // Assert - Log entries are included
-    expect(sections.perception_log).toContain(
-      'The tavern is warm and inviting'
-    );
-    expect(sections.perception_log).toContain('Welcome to the Rusty Tankard!');
-    expect(sections.perception_log).toContain(
-      'A patron raises their mug in greeting'
-    );
-  });
+      // Assert - Log entries are included
+      expect(sections.perception_log).toContain(
+        'The tavern is warm and inviting'
+      );
+      expect(sections.perception_log).toContain(
+        'Welcome to the Rusty Tankard!'
+      );
+      expect(sections.perception_log).toContain(
+        'A patron raises their mug in greeting'
+      );
+    });
 
     test('should conditionally include notes section when notes exist', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
+      const availableActions = testBed.createTestActionComposites();
 
-    // Act - Generate with notes
-    const promptWithNotes = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act - Generate with notes
+      const promptWithNotes = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    // Assert - Notes section is included
-    expect(promptWithNotes).toContain('<notes>');
-    expect(promptWithNotes).toContain(
-      'The innkeeper mentioned something about troubles'
-    );
-    expect(promptWithNotes).toContain('I should perform a song');
+      // Assert - Notes section is included
+      expect(promptWithNotes).toContain('<notes>');
+      expect(promptWithNotes).toContain(
+        'The innkeeper mentioned something about troubles'
+      );
+      expect(promptWithNotes).toContain('I should perform a song');
 
-    // Arrange - Remove notes
-    await testBed.updateActorNotes(aiActor.id, []);
+      // Arrange - Remove notes
+      await testBed.updateActorNotes(aiActor.id, []);
 
-    // Act - Generate without notes
-    const promptWithoutNotes = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act - Generate without notes
+      const promptWithoutNotes = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    // Assert - Notes section should not contain the previous notes
-    const sectionsWithout = testBed.parsePromptSections(promptWithoutNotes);
-    expect(promptWithoutNotes).not.toContain(
-      'The innkeeper mentioned something about troubles'
-    );
-    expect(promptWithoutNotes).not.toContain('I should perform a song');
-  });
+      // Assert - Notes section should not contain the previous notes
+      const sectionsWithout = testBed.parsePromptSections(promptWithoutNotes);
+      expect(promptWithoutNotes).not.toContain(
+        'The innkeeper mentioned something about troubles'
+      );
+      expect(promptWithoutNotes).not.toContain('I should perform a song');
+    });
 
     test('should include actor thoughts in prompt', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
+      const availableActions = testBed.createTestActionComposites();
 
-    // Act
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act
+      const prompt = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    // Assert - Thoughts section exists
-    const sections = testBed.parsePromptSections(prompt);
-    expect(sections.thoughts).toBeDefined();
+      // Assert - Thoughts section exists
+      const sections = testBed.parsePromptSections(prompt);
+      expect(sections.thoughts).toBeDefined();
 
-    // Assert - Thought entries are included
-    expect(sections.thoughts).toContain(
-      'I feel welcomed in this friendly tavern'
-    );
-    expect(sections.thoughts).toContain('The innkeeper seems trustworthy');
-  });
+      // Assert - Thought entries are included
+      expect(sections.thoughts).toContain(
+        'I feel welcomed in this friendly tavern'
+      );
+      expect(sections.thoughts).toContain('The innkeeper seems trustworthy');
+    });
 
     test('should generate character persona with markdown formatting', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
+      const availableActions = testBed.createTestActionComposites();
 
-    // Act
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act
+      const prompt = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    // Assert - Verify markdown structure in character persona
-    expect(prompt).toMatch(
-      /<character_persona>[\s\S]*## Your Description[\s\S]*<\/character_persona>/
-    );
-    expect(prompt).toMatch(/\*\*[^*]+\*\*:/); // Bold formatting for attributes
+      // Assert - Verify markdown structure in character persona
+      expect(prompt).toMatch(
+        /<character_persona>[\s\S]*## Your Description[\s\S]*<\/character_persona>/
+      );
+      expect(prompt).toMatch(/\*\*[^*]+\*\*:/); // Bold formatting for attributes
 
-    // Extract character persona section for detailed validation
-    const sections = testBed.parsePromptSections(prompt);
-    const personaSection = sections.character_persona;
+      // Extract character persona section for detailed validation
+      const sections = testBed.parsePromptSections(prompt);
+      const personaSection = sections.character_persona;
 
-    // Verify specific markdown elements that should exist for the test character
-    expect(personaSection).toContain('YOU ARE Elara the Bard.');
-    expect(personaSection).toContain('## Your Description');
-    expect(personaSection).toMatch(/\*\*\w+\*\*:/); // Bold attribute labels (e.g., **Description**:)
+      // Verify specific markdown elements that should exist for the test character
+      expect(personaSection).toContain('YOU ARE Elara the Bard.');
+      expect(personaSection).toContain('## Your Description');
+      expect(personaSection).toMatch(/\*\*\w+\*\*:/); // Bold attribute labels (e.g., **Description**:)
 
-    // Since the test character may not have all sections, just verify the structure
-    // Check that the character persona section uses markdown formatting
-    expect(personaSection).toMatch(/^##\s+/m); // Contains markdown headers
-  });
+      // Since the test character may not have all sections, just verify the structure
+      // Check that the character persona section uses markdown formatting
+      expect(personaSection).toMatch(/^##\s+/m); // Contains markdown headers
+    });
   }); // End Content Processing
 
   /**
@@ -332,68 +334,69 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
    */
   describe('LLM Configuration', () => {
     test('should adapt prompt structure for different LLM configurations', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
+      const availableActions = testBed.createTestActionComposites();
 
-    // Act - Generate with tool calling config
-    const toolCallingPrompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act - Generate with tool calling config
+      const toolCallingPrompt = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    // Switch to JSON schema config
-    await testBed.switchLLMConfig('test-llm-jsonschema');
+      // Switch to JSON schema config
+      await testBed.switchLLMConfig('test-llm-jsonschema');
 
-    // Act - Generate with JSON schema config
-    const jsonSchemaPrompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act - Generate with JSON schema config
+      const jsonSchemaPrompt = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    // Assert - Both use same template structure (new system uses fixed template)
-    expect(toolCallingPrompt).toContain('<task_definition>');
-    expect(toolCallingPrompt).toContain('<character_persona>');
-    expect(toolCallingPrompt).toContain('<available_actions_info>');
+      // Assert - Both use same template structure (new system uses fixed template)
+      expect(toolCallingPrompt).toContain('<task_definition>');
+      expect(toolCallingPrompt).toContain('<character_persona>');
+      expect(toolCallingPrompt).toContain('<available_actions_info>');
 
-    expect(jsonSchemaPrompt).toContain('<task_definition>');
-    expect(jsonSchemaPrompt).toContain('<character_persona>');
-    expect(jsonSchemaPrompt).toContain('<available_actions_info>');
+      expect(jsonSchemaPrompt).toContain('<task_definition>');
+      expect(jsonSchemaPrompt).toContain('<character_persona>');
+      expect(jsonSchemaPrompt).toContain('<available_actions_info>');
 
-    // Both should have indexed actions
-    const toolCallingActions = testBed.extractIndexedActions(toolCallingPrompt);
-    const jsonSchemaActions = testBed.extractIndexedActions(jsonSchemaPrompt);
-    expect(toolCallingActions.length).toBe(availableActions.length);
-    expect(jsonSchemaActions.length).toBe(availableActions.length);
-  });
+      // Both should have indexed actions
+      const toolCallingActions =
+        testBed.extractIndexedActions(toolCallingPrompt);
+      const jsonSchemaActions = testBed.extractIndexedActions(jsonSchemaPrompt);
+      expect(toolCallingActions.length).toBe(availableActions.length);
+      expect(jsonSchemaActions.length).toBe(availableActions.length);
+    });
 
     test('should include static prompt content from files', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
+      const availableActions = testBed.createTestActionComposites();
 
-    // Act
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act
+      const prompt = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    // Assert - Static content sections are included
-    const sections = testBed.parsePromptSections(prompt);
+      // Assert - Static content sections are included
+      const sections = testBed.parsePromptSections(prompt);
 
-    // Task definition should have content
-    expect(sections.task_definition).toBeDefined();
-    expect(sections.task_definition.length).toBeGreaterThan(50);
+      // Task definition should have content
+      expect(sections.task_definition).toBeDefined();
+      expect(sections.task_definition.length).toBeGreaterThan(50);
 
-    // Final instructions should have content
-    expect(sections.final_instructions).toBeDefined();
-    expect(sections.final_instructions.length).toBeGreaterThan(50);
-  });
+      // Final instructions should have content
+      expect(sections.final_instructions).toBeDefined();
+      expect(sections.final_instructions.length).toBeGreaterThan(50);
+    });
   }); // End LLM Configuration
 
   /**
@@ -402,175 +405,175 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
    */
   describe('Edge Cases and Performance', () => {
     test('should estimate tokens and respect context limits', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
+      const availableActions = testBed.createTestActionComposites();
 
-    // Create a moderately sized perception log to test token limits
-    const longPerceptionLog = [];
-    for (let i = 0; i < 20; i++) {
-      longPerceptionLog.push({
-        descriptionText: `This is a very long observation entry number ${i} that contains a lot of text to increase the token count of the generated prompt.`,
-        timestamp: new Date().toISOString(),
-        perceptionType: 'observation',
-        actorId: 'test-ai-actor',
-      });
-    }
-    await testBed.updateActorPerception(aiActor.id, longPerceptionLog);
+      // Create a moderately sized perception log to test token limits
+      const longPerceptionLog = [];
+      for (let i = 0; i < 20; i++) {
+        longPerceptionLog.push({
+          descriptionText: `This is a very long observation entry number ${i} that contains a lot of text to increase the token count of the generated prompt.`,
+          timestamp: new Date().toISOString(),
+          perceptionType: 'observation',
+          actorId: 'test-ai-actor',
+        });
+      }
+      await testBed.updateActorPerception(aiActor.id, longPerceptionLog);
 
-    // Act
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act
+      const prompt = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    // Assert - Prompt was still generated
-    expect(prompt).toBeDefined();
+      // Assert - Prompt was still generated
+      expect(prompt).toBeDefined();
 
-    // Estimate tokens
-    const estimatedTokens = testBed.estimateTokenCount(prompt);
-    expect(estimatedTokens).toBeGreaterThan(1000);
+      // Estimate tokens
+      const estimatedTokens = testBed.estimateTokenCount(prompt);
+      expect(estimatedTokens).toBeGreaterThan(1000);
 
-    // Get current config to check limits
-    const { config } = await testBed.getCurrentLLMConfig();
-    expect(estimatedTokens).toBeLessThan(config.contextTokenLimit);
-  });
+      // Get current config to check limits
+      const { config } = await testBed.getCurrentLLMConfig();
+      expect(estimatedTokens).toBeLessThan(config.contextTokenLimit);
+    });
 
     test('should handle empty available actions gracefully', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const emptyActions = [];
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
+      const emptyActions = [];
 
-    // Act
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      emptyActions
-    );
+      // Act
+      const prompt = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        emptyActions
+      );
 
-    // Assert - Prompt was generated
-    expect(prompt).toBeDefined();
+      // Assert - Prompt was generated
+      expect(prompt).toBeDefined();
 
-    // Assert - Either indexed choices section exists or the prompt handles empty actions gracefully
-    const sections = testBed.parsePromptSections(prompt);
-    const indexedActions = testBed.extractIndexedActions(prompt);
-    expect(indexedActions.length).toBe(0);
+      // Assert - Either indexed choices section exists or the prompt handles empty actions gracefully
+      const sections = testBed.parsePromptSections(prompt);
+      const indexedActions = testBed.extractIndexedActions(prompt);
+      expect(indexedActions.length).toBe(0);
 
-    // The prompt should still be valid even with no actions
-    expect(prompt).toContain('Elara the Bard');
-  });
+      // The prompt should still be valid even with no actions
+      expect(prompt).toContain('Elara the Bard');
+    });
 
     test('should handle non-AI actors appropriately', async () => {
-    // Arrange
-    const nonAiActor = testActors.player; // Player is not an AI
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
+      // Arrange
+      const nonAiActor = testActors.player; // Player is not an AI
+      const turnContext = testBed.createTestTurnContext();
+      const availableActions = testBed.createTestActionComposites();
 
-    // Act & Assert - Should still generate a prompt (AI component is optional)
-    const prompt = await testBed.generatePrompt(
-      nonAiActor.id,
-      turnContext,
-      availableActions
-    );
+      // Act & Assert - Should still generate a prompt (AI component is optional)
+      const prompt = await testBed.generatePrompt(
+        nonAiActor.id,
+        turnContext,
+        availableActions
+      );
 
-    expect(prompt).toBeDefined();
-    expect(prompt).toContain('Test Player'); // Should use actor name
-  });
+      expect(prompt).toBeDefined();
+      expect(prompt).toContain('Test Player'); // Should use actor name
+    });
 
     test('should properly format actions with target parameters', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
 
-    // Add an action targeting another actor
-    const baseActions = testBed.createTestActionComposites();
-    const complexActions = [
-      ...baseActions,
-      {
-        index: baseActions.length + 1, // Next index after existing actions
-        actionDefinitionId: 'core:follow',
-        displayName: 'Follow Gareth the Innkeeper',
-        commandString: 'follow gareth',
-        description: 'Start following Gareth the Innkeeper',
-        scopedTargets: [
-          {
-            id: 'test-innkeeper',
-            display: 'Gareth the Innkeeper',
-            type: 'actor',
-          },
-        ],
-        actionDefinition: { id: 'core:follow', name: 'Follow' }, // Simplified action definition
-      },
-    ];
+      // Add an action targeting another actor
+      const baseActions = testBed.createTestActionComposites();
+      const complexActions = [
+        ...baseActions,
+        {
+          index: baseActions.length + 1, // Next index after existing actions
+          actionDefinitionId: 'core:follow',
+          displayName: 'Follow Gareth the Innkeeper',
+          commandString: 'follow gareth',
+          description: 'Start following Gareth the Innkeeper',
+          scopedTargets: [
+            {
+              id: 'test-innkeeper',
+              display: 'Gareth the Innkeeper',
+              type: 'actor',
+            },
+          ],
+          actionDefinition: { id: 'core:follow', name: 'Follow' }, // Simplified action definition
+        },
+      ];
 
-    // Act
-    const prompt = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      complexActions
-    );
-
-    // Assert - Follow action is properly indexed
-    const indexedActions = testBed.extractIndexedActions(prompt);
-
-    // Debug: Check what actions were found
-    // console.log('Indexed actions:', indexedActions);
-
-    const followAction = indexedActions.find(
-      (a) =>
-        a.description.toLowerCase().includes('follow') &&
-        a.description.toLowerCase().includes('gareth')
-    );
-
-    // If not found, check for any follow action
-    if (!followAction) {
-      const anyFollowAction = indexedActions.find((a) =>
-        a.description.toLowerCase().includes('follow')
+      // Act
+      const prompt = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        complexActions
       );
-      if (anyFollowAction) {
-        // The follow action exists but doesn't mention Gareth - this is okay
-        expect(anyFollowAction).toBeDefined();
+
+      // Assert - Follow action is properly indexed
+      const indexedActions = testBed.extractIndexedActions(prompt);
+
+      // Debug: Check what actions were found
+      // console.log('Indexed actions:', indexedActions);
+
+      const followAction = indexedActions.find(
+        (a) =>
+          a.description.toLowerCase().includes('follow') &&
+          a.description.toLowerCase().includes('gareth')
+      );
+
+      // If not found, check for any follow action
+      if (!followAction) {
+        const anyFollowAction = indexedActions.find((a) =>
+          a.description.toLowerCase().includes('follow')
+        );
+        if (anyFollowAction) {
+          // The follow action exists but doesn't mention Gareth - this is okay
+          expect(anyFollowAction).toBeDefined();
+        } else {
+          // No follow action at all - this is a problem
+          expect(followAction).toBeDefined();
+        }
       } else {
-        // No follow action at all - this is a problem
         expect(followAction).toBeDefined();
       }
-    } else {
-      expect(followAction).toBeDefined();
-    }
-  });
+    });
 
     test('should efficiently generate prompts for repeated calls', async () => {
-    // Arrange
-    const aiActor = testActors.aiActor;
-    const turnContext = testBed.createTestTurnContext();
-    const availableActions = testBed.createTestActionComposites();
+      // Arrange
+      const aiActor = testActors.aiActor;
+      const turnContext = testBed.createTestTurnContext();
+      const availableActions = testBed.createTestActionComposites();
 
-    // Act - Generate prompt multiple times
-    const startTime = Date.now();
-    const prompt1 = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
-    const time1 = Date.now() - startTime;
+      // Act - Generate prompt multiple times
+      const startTime = Date.now();
+      const prompt1 = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
+      const time1 = Date.now() - startTime;
 
-    const startTime2 = Date.now();
-    const prompt2 = await testBed.generatePrompt(
-      aiActor.id,
-      turnContext,
-      availableActions
-    );
-    const time2 = Date.now() - startTime2;
+      const startTime2 = Date.now();
+      const prompt2 = await testBed.generatePrompt(
+        aiActor.id,
+        turnContext,
+        availableActions
+      );
+      const time2 = Date.now() - startTime2;
 
-    // Assert - Prompts are consistent
-    expect(prompt1).toBe(prompt2);
+      // Assert - Prompts are consistent
+      expect(prompt1).toBe(prompt2);
 
-    // Second call might be faster due to caching (but not required)
-    // Use max to handle case where time1 is 0
-    expect(time2).toBeLessThanOrEqual(Math.max(time1 * 1.5, 10));
-  });
+      // Second call might be faster due to caching (but not required)
+      // Use max to handle case where time1 is 0
+      expect(time2).toBeLessThanOrEqual(Math.max(time1 * 1.5, 10));
+    });
   }); // End Edge Cases and Performance
 });

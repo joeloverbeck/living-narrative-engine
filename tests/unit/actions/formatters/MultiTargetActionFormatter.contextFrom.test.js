@@ -93,19 +93,24 @@ describe('MultiTargetActionFormatter - contextFrom bug', () => {
       expect(result.value).toBeDefined();
 
       // The bug would produce an array with two malformed commands
-      // We expect a single properly formatted command
+      // We expect a single properly formatted command with target info
       if (Array.isArray(result.value)) {
         expect(result.value).toHaveLength(1);
-        expect(result.value[0]).toBe(
-          "adjust Iker Aguirre's denim trucker jacket"
-        );
+        const item = result.value[0];
+        expect(item.command).toBe("adjust Iker Aguirre's denim trucker jacket");
+        expect(item.targets).toBeDefined();
+        expect(item.targets.primary).toBeDefined();
+        expect(item.targets.secondary).toBeDefined();
       } else {
         expect(result.value).toBe("adjust Iker Aguirre's denim trucker jacket");
       }
 
       // Verify no incomplete placeholders remain
-      expect(result.value).not.toContain('{primary}');
-      expect(result.value).not.toContain('{secondary}');
+      const commandStr = Array.isArray(result.value)
+        ? result.value[0].command
+        : result.value;
+      expect(commandStr).not.toContain('{primary}');
+      expect(commandStr).not.toContain('{secondary}');
     });
 
     it('should handle multiple primary targets with their respective secondary targets', () => {
@@ -164,8 +169,11 @@ describe('MultiTargetActionFormatter - contextFrom bug', () => {
       expect(result.ok).toBe(true);
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value).toHaveLength(2);
-      expect(result.value).toContain("adjust Alice's red shirt");
-      expect(result.value).toContain("adjust Bob's blue jacket");
+
+      // Extract commands from the objects for comparison
+      const commands = result.value.map((item) => item.command);
+      expect(commands).toContain("adjust Alice's red shirt");
+      expect(commands).toContain("adjust Bob's blue jacket");
     });
 
     it('should not generate incorrect combinations for context-dependent targets', () => {
@@ -207,8 +215,11 @@ describe('MultiTargetActionFormatter - contextFrom bug', () => {
       expect(Array.isArray(result.value)).toBe(true);
       // Should generate combinations only for independent targets
       expect(result.value).toHaveLength(2);
-      expect(result.value).toContain('Alice gives book to Charlie');
-      expect(result.value).toContain('Alice gives book to David');
+
+      // Extract commands from the objects for comparison
+      const commands = result.value.map((item) => item.command);
+      expect(commands).toContain('Alice gives book to Charlie');
+      expect(commands).toContain('Alice gives book to David');
     });
   });
 

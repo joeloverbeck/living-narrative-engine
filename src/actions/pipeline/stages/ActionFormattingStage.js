@@ -358,8 +358,18 @@ export class ActionFormattingStage extends PipelineStage {
                 ? formatResult.value
                 : [formatResult.value];
 
-              for (const command of commands) {
-                const targetIds = this.#extractTargetIds(resolvedTargets);
+              for (const commandData of commands) {
+                // Check if this is an object with command and targets, or just a string
+                const command =
+                  typeof commandData === 'string'
+                    ? commandData
+                    : commandData.command;
+                const specificTargets =
+                  typeof commandData === 'object' && commandData.targets
+                    ? commandData.targets
+                    : resolvedTargets;
+
+                const targetIds = this.#extractTargetIds(specificTargets);
                 const params = {
                   targetIds,
                   isMultiTarget: true,
@@ -630,8 +640,18 @@ export class ActionFormattingStage extends PipelineStage {
                 ? formatResult.value
                 : [formatResult.value];
 
-              for (const command of commands) {
-                const targetIds = this.#extractTargetIds(resolvedTargets);
+              for (const commandData of commands) {
+                // Check if this is an object with command and targets, or just a string
+                const command =
+                  typeof commandData === 'string'
+                    ? commandData
+                    : commandData.command;
+                const specificTargets =
+                  typeof commandData === 'object' && commandData.targets
+                    ? commandData.targets
+                    : resolvedTargets;
+
+                const targetIds = this.#extractTargetIds(specificTargets);
                 const params = {
                   targetIds,
                   isMultiTarget: true,
@@ -917,8 +937,18 @@ export class ActionFormattingStage extends PipelineStage {
             ? formattingResult.value
             : [formattingResult.value];
 
-          for (const command of commands) {
-            const targetIds = this.#extractTargetIds(resolvedTargets);
+          for (const commandData of commands) {
+            // Check if this is an object with command and targets, or just a string
+            const command =
+              typeof commandData === 'string'
+                ? commandData
+                : commandData.command;
+            const specificTargets =
+              typeof commandData === 'object' && commandData.targets
+                ? commandData.targets
+                : resolvedTargets;
+
+            const targetIds = this.#extractTargetIds(specificTargets);
             const params = {
               targetIds,
               isMultiTarget: true,
@@ -1039,8 +1069,18 @@ export class ActionFormattingStage extends PipelineStage {
               ? formatResult.value
               : [formatResult.value];
 
-            for (const command of commands) {
-              const targetIds = this.#extractTargetIds(resolvedTargets);
+            for (const commandData of commands) {
+              // Check if this is an object with command and targets, or just a string
+              const command =
+                typeof commandData === 'string'
+                  ? commandData
+                  : commandData.command;
+              const specificTargets =
+                typeof commandData === 'object' && commandData.targets
+                  ? commandData.targets
+                  : resolvedTargets;
+
+              const targetIds = this.#extractTargetIds(specificTargets);
               const params = {
                 targetIds,
                 isMultiTarget: true,
@@ -1243,8 +1283,18 @@ export class ActionFormattingStage extends PipelineStage {
                 ? formatResult.value
                 : [formatResult.value];
 
-              for (const command of commands) {
-                const targetIds = this.#extractTargetIds(actionSpecificTargets);
+              for (const commandData of commands) {
+                // Check if this is an object with command and targets, or just a string
+                const command =
+                  typeof commandData === 'string'
+                    ? commandData
+                    : commandData.command;
+                const specificTargets =
+                  typeof commandData === 'object' && commandData.targets
+                    ? commandData.targets
+                    : actionSpecificTargets;
+
+                const targetIds = this.#extractTargetIds(specificTargets);
                 const params = {
                   targetIds,
                   isMultiTarget: true,
@@ -1500,8 +1550,18 @@ export class ActionFormattingStage extends PipelineStage {
                 ? formatResult.value
                 : [formatResult.value];
 
-              for (const command of commands) {
-                const targetIds = this.#extractTargetIds(actionSpecificTargets);
+              for (const commandData of commands) {
+                // Check if this is an object with command and targets, or just a string
+                const command =
+                  typeof commandData === 'string'
+                    ? commandData
+                    : commandData.command;
+                const specificTargets =
+                  typeof commandData === 'object' && commandData.targets
+                    ? commandData.targets
+                    : actionSpecificTargets;
+
+                const targetIds = this.#extractTargetIds(specificTargets);
                 const params = {
                   targetIds,
                   isMultiTarget: true,

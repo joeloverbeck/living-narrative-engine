@@ -62,7 +62,12 @@ describe('Multi-Target Action Examples - Integration', () => {
       expect(result.ok).toBe(true);
       if (actionDef.generateCombinations) {
         expect(result.value).toHaveLength(1); // 1x1 combination
-        expect(result.value[0]).toBe('throw Small Rock at Guard');
+        // Extract command from the object structure
+        const command =
+          typeof result.value[0] === 'string'
+            ? result.value[0]
+            : result.value[0].command;
+        expect(command).toBe('throw Small Rock at Guard');
       } else {
         expect(result.value).toBe('throw Small Rock at Guard');
       }
@@ -96,13 +101,19 @@ describe('Multi-Target Action Examples - Integration', () => {
       expect(result.ok).toBe(true);
       if (actionDef.generateCombinations) {
         expect(result.value).toHaveLength(4); // 2x2 combinations
-        expect(result.value[0]).toMatch(/throw .+ at .+/);
+
+        // Extract commands from the object structure
+        const commands = result.value.map((item) =>
+          typeof item === 'string' ? item : item.command
+        );
+
+        expect(commands[0]).toMatch(/throw .+ at .+/);
 
         // Check that all combinations are present
-        expect(result.value).toContain('throw Small Rock at Guard');
-        expect(result.value).toContain('throw Small Rock at Practice Dummy');
-        expect(result.value).toContain('throw Red Apple at Guard');
-        expect(result.value).toContain('throw Red Apple at Practice Dummy');
+        expect(commands).toContain('throw Small Rock at Guard');
+        expect(commands).toContain('throw Small Rock at Practice Dummy');
+        expect(commands).toContain('throw Red Apple at Guard');
+        expect(commands).toContain('throw Red Apple at Practice Dummy');
       }
     });
 
@@ -167,7 +178,12 @@ describe('Multi-Target Action Examples - Integration', () => {
       // Context-dependent targets now always generate combinations due to automatic detection
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value).toHaveLength(1);
-      expect(result.value[0]).toBe('unlock Wooden Chest with Brass Key');
+      // Extract command from the object structure
+      const command =
+        typeof result.value[0] === 'string'
+          ? result.value[0]
+          : result.value[0].command;
+      expect(command).toBe('unlock Wooden Chest with Brass Key');
     });
 
     it('should generate combinations for multiple entities even when generateCombinations is not explicitly set', () => {
@@ -201,7 +217,13 @@ describe('Multi-Target Action Examples - Integration', () => {
       // FIXED: Now generates combinations automatically when multiple entities are resolved
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value).toHaveLength(4); // 2 chests × 2 keys
-      expect(result.value).toEqual(
+
+      // Extract commands from the object structure
+      const commands = result.value.map((item) =>
+        typeof item === 'string' ? item : item.command
+      );
+
+      expect(commands).toEqual(
         expect.arrayContaining([
           'unlock Wooden Chest with Brass Key',
           'unlock Wooden Chest with Steel Key',
@@ -249,7 +271,12 @@ describe('Multi-Target Action Examples - Integration', () => {
       if (result.ok) {
         if (actionDef.generateCombinations || Array.isArray(result.value)) {
           expect(result.value).toHaveLength(1);
-          expect(result.value[0]).toContain('give Red Apple to Merchant');
+          // Extract command from the object structure
+          const command =
+            typeof result.value[0] === 'string'
+              ? result.value[0]
+              : result.value[0].command;
+          expect(command).toContain('give Red Apple to Merchant');
         } else {
           expect(result.value).toContain('give Red Apple to Merchant');
         }
@@ -285,8 +312,13 @@ describe('Multi-Target Action Examples - Integration', () => {
       if (result.ok) {
         if (actionDef.generateCombinations || Array.isArray(result.value)) {
           expect(result.value).toHaveLength(1);
-          expect(result.value[0]).toContain('give Red Apple to Merchant');
-          expect(result.value[0]).toContain('Thank You Note');
+          // Extract command from the object structure
+          const command =
+            typeof result.value[0] === 'string'
+              ? result.value[0]
+              : result.value[0].command;
+          expect(command).toContain('give Red Apple to Merchant');
+          expect(command).toContain('Thank You Note');
         } else {
           expect(result.value).toContain('give Red Apple to Merchant');
           expect(result.value).toContain('Thank You Note');

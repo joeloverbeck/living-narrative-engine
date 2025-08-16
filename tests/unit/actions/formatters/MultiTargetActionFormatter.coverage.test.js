@@ -342,8 +342,11 @@ describe('MultiTargetActionFormatter - Coverage improvements', () => {
       expect(result.ok).toBe(true);
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value.length).toBeGreaterThan(0);
-      expect(result.value).toContain('give Book from Alice to Charlie');
-      expect(result.value).toContain('give Pen from Bob to Charlie');
+
+      // Extract commands from the objects for comparison
+      const commands = result.value.map((item) => item.command);
+      expect(commands).toContain('give Book from Alice to Charlie');
+      expect(commands).toContain('give Pen from Bob to Charlie');
     });
   });
 
