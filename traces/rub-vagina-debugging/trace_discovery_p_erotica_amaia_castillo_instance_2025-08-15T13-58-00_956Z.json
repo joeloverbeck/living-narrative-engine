@@ -1,0 +1,4797 @@
+{
+  "timestamp": "2025-08-15T13:58:00.956Z",
+  "outputDirectory": "./traces/rub-vagina-debugging",
+  "trace": {
+    "timestamp": "2025-08-15T13:58:00.956Z",
+    "traceType": "action_aware_structured",
+    "actorId": "p_erotica:amaia_castillo_instance",
+    "context": {
+      "currentLocation": {},
+      "worldContext": {},
+      "discoveryOptions": {
+        "trace": true
+      },
+      "createdAt": 1755266280940
+    },
+    "summary": {
+      "tracedActionCount": 3,
+      "totalStagesTracked": 7,
+      "sessionDuration": 13,
+      "averageStagesPerAction": 2.3333333333333335
+    },
+    "spans": [
+      {
+        "id": 1,
+        "operation": "action.discover",
+        "parentId": null,
+        "startTime": 7303,
+        "endTime": null,
+        "duration": null,
+        "status": "active",
+        "attributes": {
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "withTrace": true
+        },
+        "children": [
+          {
+            "id": 2,
+            "operation": "Pipeline",
+            "parentId": 1,
+            "startTime": 7303.0999999940395,
+            "endTime": 7318.299999982119,
+            "duration": 15.199999988079071,
+            "status": "success",
+            "attributes": {
+              "stageCount": 4
+            },
+            "children": [
+              {
+                "id": 3,
+                "operation": "ComponentFilteringStage",
+                "parentId": 2,
+                "startTime": 7303.0999999940395,
+                "endTime": 7304.9000000059605,
+                "duration": 1.800000011920929,
+                "status": "success",
+                "attributes": {
+                  "stage": "ComponentFiltering"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 4,
+                "operation": "PrerequisiteEvaluationStage",
+                "parentId": 2,
+                "startTime": 7304.9000000059605,
+                "endTime": 7309.5,
+                "duration": 4.5999999940395355,
+                "status": "success",
+                "attributes": {
+                  "stage": "PrerequisiteEvaluation"
+                },
+                "children": [
+                  {
+                    "id": 5,
+                    "operation": "prerequisite.evaluate",
+                    "parentId": 4,
+                    "startTime": 7305,
+                    "endTime": 7306.199999988079,
+                    "duration": 1.199999988079071,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "core:follow",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "ruleCount": 2
+                    },
+                    "children": [
+                      {
+                        "id": 6,
+                        "operation": "prerequisite.evaluateRules",
+                        "parentId": 5,
+                        "startTime": 7305.9000000059605,
+                        "endTime": 7306.199999988079,
+                        "duration": 0.29999998211860657,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "core:follow",
+                          "ruleCount": 2
+                        },
+                        "children": [
+                          {
+                            "id": 7,
+                            "operation": "prerequisite.rule.1",
+                            "parentId": 6,
+                            "startTime": 7305.9000000059605,
+                            "endTime": 7306.199999988079,
+                            "duration": 0.29999998211860657,
+                            "status": "success",
+                            "attributes": {
+                              "actionId": "core:follow",
+                              "ruleNumber": 1,
+                              "totalRules": 2
+                            },
+                            "children": [],
+                            "error": null
+                          }
+                        ],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 8,
+                    "operation": "prerequisite.evaluate",
+                    "parentId": 4,
+                    "startTime": 7306.299999982119,
+                    "endTime": 7307.0999999940395,
+                    "duration": 0.800000011920929,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "core:go",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "ruleCount": 1
+                    },
+                    "children": [
+                      {
+                        "id": 9,
+                        "operation": "prerequisite.evaluateRules",
+                        "parentId": 8,
+                        "startTime": 7306.699999988079,
+                        "endTime": 7307.0999999940395,
+                        "duration": 0.4000000059604645,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "core:go",
+                          "ruleCount": 1
+                        },
+                        "children": [
+                          {
+                            "id": 10,
+                            "operation": "prerequisite.rule.1",
+                            "parentId": 9,
+                            "startTime": 7306.699999988079,
+                            "endTime": 7307.0999999940395,
+                            "duration": 0.4000000059604645,
+                            "status": "success",
+                            "attributes": {
+                              "actionId": "core:go",
+                              "ruleNumber": 1,
+                              "totalRules": 1
+                            },
+                            "children": [],
+                            "error": null
+                          }
+                        ],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 11,
+                    "operation": "prerequisite.evaluate",
+                    "parentId": 4,
+                    "startTime": 7307.199999988079,
+                    "endTime": 7308.0999999940395,
+                    "duration": 0.9000000059604645,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "positioning:get_close",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "ruleCount": 1
+                    },
+                    "children": [
+                      {
+                        "id": 12,
+                        "operation": "prerequisite.evaluateRules",
+                        "parentId": 11,
+                        "startTime": 7307.799999982119,
+                        "endTime": 7308.0999999940395,
+                        "duration": 0.30000001192092896,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "positioning:get_close",
+                          "ruleCount": 1
+                        },
+                        "children": [
+                          {
+                            "id": 13,
+                            "operation": "prerequisite.rule.1",
+                            "parentId": 12,
+                            "startTime": 7307.9000000059605,
+                            "endTime": 7308.0999999940395,
+                            "duration": 0.19999998807907104,
+                            "status": "success",
+                            "attributes": {
+                              "actionId": "positioning:get_close",
+                              "ruleNumber": 1,
+                              "totalRules": 1
+                            },
+                            "children": [],
+                            "error": null
+                          }
+                        ],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 14,
+                    "operation": "prerequisite.evaluate",
+                    "parentId": 4,
+                    "startTime": 7308.4000000059605,
+                    "endTime": 7308.9000000059605,
+                    "duration": 0.5,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "intimacy:adjust_clothing",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "ruleCount": 1
+                    },
+                    "children": [
+                      {
+                        "id": 15,
+                        "operation": "prerequisite.evaluateRules",
+                        "parentId": 14,
+                        "startTime": 7308.699999988079,
+                        "endTime": 7308.9000000059605,
+                        "duration": 0.20000001788139343,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "intimacy:adjust_clothing",
+                          "ruleCount": 1
+                        },
+                        "children": [
+                          {
+                            "id": 16,
+                            "operation": "prerequisite.rule.1",
+                            "parentId": 15,
+                            "startTime": 7308.799999982119,
+                            "endTime": 7308.9000000059605,
+                            "duration": 0.10000002384185791,
+                            "status": "success",
+                            "attributes": {
+                              "actionId": "intimacy:adjust_clothing",
+                              "ruleNumber": 1,
+                              "totalRules": 1
+                            },
+                            "children": [],
+                            "error": null
+                          }
+                        ],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 17,
+                "operation": "MultiTargetResolutionStage",
+                "parentId": 2,
+                "startTime": 7309.5,
+                "endTime": 7317.699999988079,
+                "duration": 8.199999988079071,
+                "status": "success",
+                "attributes": {
+                  "stage": "MultiTargetResolution"
+                },
+                "children": [
+                  {
+                    "id": 18,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7309.5999999940395,
+                    "endTime": 7309.5999999940395,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "none",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "core:wait"
+                    },
+                    "children": [
+                      {
+                        "id": 19,
+                        "operation": "scope.resolve",
+                        "parentId": 18,
+                        "startTime": 7309.5999999940395,
+                        "endTime": 7309.5999999940395,
+                        "duration": 0,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "none",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "core:wait"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 20,
+                    "operation": "scope.resolve",
+                    "parentId": 17,
+                    "startTime": 7309.799999982119,
+                    "endTime": 7310.299999982119,
+                    "duration": 0.5,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "core:actors_in_location",
+                      "actorId": "p_erotica:amaia_castillo_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 21,
+                    "operation": "scope.resolve",
+                    "parentId": 17,
+                    "startTime": 7310.4000000059605,
+                    "endTime": 7310.5,
+                    "duration": 0.09999999403953552,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "core:actors_in_location",
+                      "actorId": "p_erotica:amaia_castillo_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 22,
+                    "operation": "scope.resolve",
+                    "parentId": 17,
+                    "startTime": 7310.5999999940395,
+                    "endTime": 7310.5999999940395,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "core:actors_in_location",
+                      "actorId": "p_erotica:amaia_castillo_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 23,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7310.699999988079,
+                    "endTime": 7310.799999982119,
+                    "duration": 0.09999999403953552,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "clothing:topmost_clothing",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "clothing:remove_clothing"
+                    },
+                    "children": [
+                      {
+                        "id": 24,
+                        "operation": "scope.resolve",
+                        "parentId": 23,
+                        "startTime": 7310.699999988079,
+                        "endTime": 7310.799999982119,
+                        "duration": 0.09999999403953552,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "clothing:topmost_clothing",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "clothing:remove_clothing"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 25,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7311,
+                    "endTime": 7311,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "none",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "positioning:step_back"
+                    },
+                    "children": [
+                      {
+                        "id": 26,
+                        "operation": "scope.resolve",
+                        "parentId": 25,
+                        "startTime": 7311,
+                        "endTime": 7311,
+                        "duration": 0,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "none",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "positioning:step_back"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 27,
+                    "operation": "scope.resolve",
+                    "parentId": 17,
+                    "startTime": 7311.0999999940395,
+                    "endTime": 7311.4000000059605,
+                    "duration": 0.30000001192092896,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "positioning:close_actors_facing_each_other_or_behind_target",
+                      "actorId": "p_erotica:amaia_castillo_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 28,
+                    "operation": "scope.resolve",
+                    "parentId": 17,
+                    "startTime": 7311.5,
+                    "endTime": 7311.9000000059605,
+                    "duration": 0.4000000059604645,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other_with_torso_clothing",
+                      "actorId": "p_erotica:amaia_castillo_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 29,
+                    "operation": "scope.resolve",
+                    "parentId": 17,
+                    "startTime": 7312,
+                    "endTime": 7312.199999988079,
+                    "duration": 0.19999998807907104,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "clothing:target_topmost_torso_upper_clothing",
+                      "actorId": "p_erotica:amaia_castillo_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 30,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7312.299999982119,
+                    "endTime": 7312.5999999940395,
+                    "duration": 0.30000001192092896,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "positioning:close_actors",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:brush_hand"
+                    },
+                    "children": [
+                      {
+                        "id": 31,
+                        "operation": "scope.resolve",
+                        "parentId": 30,
+                        "startTime": 7312.299999982119,
+                        "endTime": 7312.5,
+                        "duration": 0.20000001788139343,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "positioning:close_actors",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:brush_hand"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 32,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7312.5999999940395,
+                    "endTime": 7313.5,
+                    "duration": 0.9000000059604645,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:feel_arm_muscles"
+                    },
+                    "children": [
+                      {
+                        "id": 33,
+                        "operation": "scope.resolve",
+                        "parentId": 32,
+                        "startTime": 7312.5999999940395,
+                        "endTime": 7313.5,
+                        "duration": 0.9000000059604645,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:feel_arm_muscles"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 34,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7313.5999999940395,
+                    "endTime": 7313.9000000059605,
+                    "duration": 0.30000001192092896,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:fondle_ass"
+                    },
+                    "children": [
+                      {
+                        "id": 35,
+                        "operation": "scope.resolve",
+                        "parentId": 34,
+                        "startTime": 7313.5999999940395,
+                        "endTime": 7313.9000000059605,
+                        "duration": 0.30000001192092896,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:fondle_ass"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 36,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7314,
+                    "endTime": 7314.199999988079,
+                    "duration": 0.19999998807907104,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:kiss_cheek"
+                    },
+                    "children": [
+                      {
+                        "id": 37,
+                        "operation": "scope.resolve",
+                        "parentId": 36,
+                        "startTime": 7314,
+                        "endTime": 7314.199999988079,
+                        "duration": 0.19999998807907104,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "intimacy:close_actors_facing_each_other",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:kiss_cheek"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 38,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7314.299999982119,
+                    "endTime": 7314.5,
+                    "duration": 0.20000001788139343,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:kiss_neck_sensually"
+                    },
+                    "children": [
+                      {
+                        "id": 39,
+                        "operation": "scope.resolve",
+                        "parentId": 38,
+                        "startTime": 7314.299999982119,
+                        "endTime": 7314.5,
+                        "duration": 0.20000001788139343,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:kiss_neck_sensually"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 40,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7314.5,
+                    "endTime": 7314.799999982119,
+                    "duration": 0.29999998211860657,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:actors_with_mouth_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:lean_in_for_deep_kiss"
+                    },
+                    "children": [
+                      {
+                        "id": 41,
+                        "operation": "scope.resolve",
+                        "parentId": 40,
+                        "startTime": 7314.5999999940395,
+                        "endTime": 7314.799999982119,
+                        "duration": 0.19999998807907104,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "intimacy:actors_with_mouth_facing_each_other",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:lean_in_for_deep_kiss"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 42,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7314.9000000059605,
+                    "endTime": 7314.9000000059605,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:lick_lips"
+                    },
+                    "children": [
+                      {
+                        "id": 43,
+                        "operation": "scope.resolve",
+                        "parentId": 42,
+                        "startTime": 7314.9000000059605,
+                        "endTime": 7314.9000000059605,
+                        "duration": 0,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "intimacy:close_actors_facing_each_other",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:lick_lips"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 44,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7314.9000000059605,
+                    "endTime": 7314.9000000059605,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:massage_shoulders"
+                    },
+                    "children": [
+                      {
+                        "id": 45,
+                        "operation": "scope.resolve",
+                        "parentId": 44,
+                        "startTime": 7314.9000000059605,
+                        "endTime": 7314.9000000059605,
+                        "duration": 0,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:massage_shoulders"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 46,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7314.9000000059605,
+                    "endTime": 7315.199999988079,
+                    "duration": 0.29999998211860657,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_away",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:massage_back"
+                    },
+                    "children": [
+                      {
+                        "id": 47,
+                        "operation": "scope.resolve",
+                        "parentId": 46,
+                        "startTime": 7314.9000000059605,
+                        "endTime": 7315.199999988079,
+                        "duration": 0.29999998211860657,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "intimacy:close_actors_facing_away",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:massage_back"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 48,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7315.299999982119,
+                    "endTime": 7315.5,
+                    "duration": 0.20000001788139343,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:nibble_earlobe_playfully"
+                    },
+                    "children": [
+                      {
+                        "id": 49,
+                        "operation": "scope.resolve",
+                        "parentId": 48,
+                        "startTime": 7315.299999982119,
+                        "endTime": 7315.4000000059605,
+                        "duration": 0.10000002384185791,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:nibble_earlobe_playfully"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 50,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7315.5,
+                    "endTime": 7315.5,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:nuzzle_face_into_neck"
+                    },
+                    "children": [
+                      {
+                        "id": 51,
+                        "operation": "scope.resolve",
+                        "parentId": 50,
+                        "startTime": 7315.5,
+                        "endTime": 7315.5,
+                        "duration": 0,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "intimacy:close_actors_facing_each_other",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:nuzzle_face_into_neck"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 52,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7315.5,
+                    "endTime": 7315.5,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:peck_on_lips"
+                    },
+                    "children": [
+                      {
+                        "id": 53,
+                        "operation": "scope.resolve",
+                        "parentId": 52,
+                        "startTime": 7315.5,
+                        "endTime": 7315.5,
+                        "duration": 0,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "intimacy:close_actors_facing_each_other",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:peck_on_lips"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 54,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7315.5999999940395,
+                    "endTime": 7315.5999999940395,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "positioning:close_actors",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:place_hand_on_waist"
+                    },
+                    "children": [
+                      {
+                        "id": 55,
+                        "operation": "scope.resolve",
+                        "parentId": 54,
+                        "startTime": 7315.5999999940395,
+                        "endTime": 7315.5999999940395,
+                        "duration": 0,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "positioning:close_actors",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:place_hand_on_waist"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 56,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7315.699999988079,
+                    "endTime": 7315.699999988079,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:suck_on_neck_to_leave_hickey"
+                    },
+                    "children": [
+                      {
+                        "id": 57,
+                        "operation": "scope.resolve",
+                        "parentId": 56,
+                        "startTime": 7315.699999988079,
+                        "endTime": 7315.699999988079,
+                        "duration": 0,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:suck_on_neck_to_leave_hickey"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 58,
+                    "operation": "target.resolve",
+                    "parentId": 17,
+                    "startTime": 7315.699999988079,
+                    "endTime": 7315.699999988079,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:thumb_wipe_cheek"
+                    },
+                    "children": [
+                      {
+                        "id": 59,
+                        "operation": "scope.resolve",
+                        "parentId": 58,
+                        "startTime": 7315.699999988079,
+                        "endTime": 7315.699999988079,
+                        "duration": 0,
+                        "status": "success",
+                        "attributes": {
+                          "scopeName": "intimacy:close_actors_facing_each_other",
+                          "actorId": "p_erotica:amaia_castillo_instance",
+                          "actionId": "intimacy:thumb_wipe_cheek"
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  },
+                  {
+                    "id": 60,
+                    "operation": "scope.resolve",
+                    "parentId": 17,
+                    "startTime": 7315.799999982119,
+                    "endTime": 7315.9000000059605,
+                    "duration": 0.10000002384185791,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "sex:actors_with_breasts_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 61,
+                    "operation": "scope.resolve",
+                    "parentId": 17,
+                    "startTime": 7316,
+                    "endTime": 7316.5999999940395,
+                    "duration": 0.5999999940395355,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "sex:actors_with_penis_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 62,
+                    "operation": "scope.resolve",
+                    "parentId": 17,
+                    "startTime": 7316.699999988079,
+                    "endTime": 7316.9000000059605,
+                    "duration": 0.20000001788139343,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "sex:actors_with_penis_facing_each_other_covered",
+                      "actorId": "p_erotica:amaia_castillo_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  },
+                  {
+                    "id": 63,
+                    "operation": "scope.resolve",
+                    "parentId": 17,
+                    "startTime": 7317,
+                    "endTime": 7317.199999988079,
+                    "duration": 0.19999998807907104,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "sex:actors_with_vagina_facing_each_other_covered",
+                      "actorId": "p_erotica:amaia_castillo_instance"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 64,
+                "operation": "ActionFormattingStage",
+                "parentId": 2,
+                "startTime": 7317.699999988079,
+                "endTime": 7318.299999982119,
+                "duration": 0.5999999940395355,
+                "status": "success",
+                "attributes": {
+                  "stage": "ActionFormatting"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 2,
+        "operation": "Pipeline",
+        "parentId": 1,
+        "startTime": 7303.0999999940395,
+        "endTime": 7318.299999982119,
+        "duration": 15.199999988079071,
+        "status": "success",
+        "attributes": {
+          "stageCount": 4
+        },
+        "children": [
+          {
+            "id": 3,
+            "operation": "ComponentFilteringStage",
+            "parentId": 2,
+            "startTime": 7303.0999999940395,
+            "endTime": 7304.9000000059605,
+            "duration": 1.800000011920929,
+            "status": "success",
+            "attributes": {
+              "stage": "ComponentFiltering"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 4,
+            "operation": "PrerequisiteEvaluationStage",
+            "parentId": 2,
+            "startTime": 7304.9000000059605,
+            "endTime": 7309.5,
+            "duration": 4.5999999940395355,
+            "status": "success",
+            "attributes": {
+              "stage": "PrerequisiteEvaluation"
+            },
+            "children": [
+              {
+                "id": 5,
+                "operation": "prerequisite.evaluate",
+                "parentId": 4,
+                "startTime": 7305,
+                "endTime": 7306.199999988079,
+                "duration": 1.199999988079071,
+                "status": "success",
+                "attributes": {
+                  "actionId": "core:follow",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "ruleCount": 2
+                },
+                "children": [
+                  {
+                    "id": 6,
+                    "operation": "prerequisite.evaluateRules",
+                    "parentId": 5,
+                    "startTime": 7305.9000000059605,
+                    "endTime": 7306.199999988079,
+                    "duration": 0.29999998211860657,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "core:follow",
+                      "ruleCount": 2
+                    },
+                    "children": [
+                      {
+                        "id": 7,
+                        "operation": "prerequisite.rule.1",
+                        "parentId": 6,
+                        "startTime": 7305.9000000059605,
+                        "endTime": 7306.199999988079,
+                        "duration": 0.29999998211860657,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "core:follow",
+                          "ruleNumber": 1,
+                          "totalRules": 2
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 8,
+                "operation": "prerequisite.evaluate",
+                "parentId": 4,
+                "startTime": 7306.299999982119,
+                "endTime": 7307.0999999940395,
+                "duration": 0.800000011920929,
+                "status": "success",
+                "attributes": {
+                  "actionId": "core:go",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "ruleCount": 1
+                },
+                "children": [
+                  {
+                    "id": 9,
+                    "operation": "prerequisite.evaluateRules",
+                    "parentId": 8,
+                    "startTime": 7306.699999988079,
+                    "endTime": 7307.0999999940395,
+                    "duration": 0.4000000059604645,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "core:go",
+                      "ruleCount": 1
+                    },
+                    "children": [
+                      {
+                        "id": 10,
+                        "operation": "prerequisite.rule.1",
+                        "parentId": 9,
+                        "startTime": 7306.699999988079,
+                        "endTime": 7307.0999999940395,
+                        "duration": 0.4000000059604645,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "core:go",
+                          "ruleNumber": 1,
+                          "totalRules": 1
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 11,
+                "operation": "prerequisite.evaluate",
+                "parentId": 4,
+                "startTime": 7307.199999988079,
+                "endTime": 7308.0999999940395,
+                "duration": 0.9000000059604645,
+                "status": "success",
+                "attributes": {
+                  "actionId": "positioning:get_close",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "ruleCount": 1
+                },
+                "children": [
+                  {
+                    "id": 12,
+                    "operation": "prerequisite.evaluateRules",
+                    "parentId": 11,
+                    "startTime": 7307.799999982119,
+                    "endTime": 7308.0999999940395,
+                    "duration": 0.30000001192092896,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "positioning:get_close",
+                      "ruleCount": 1
+                    },
+                    "children": [
+                      {
+                        "id": 13,
+                        "operation": "prerequisite.rule.1",
+                        "parentId": 12,
+                        "startTime": 7307.9000000059605,
+                        "endTime": 7308.0999999940395,
+                        "duration": 0.19999998807907104,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "positioning:get_close",
+                          "ruleNumber": 1,
+                          "totalRules": 1
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 14,
+                "operation": "prerequisite.evaluate",
+                "parentId": 4,
+                "startTime": 7308.4000000059605,
+                "endTime": 7308.9000000059605,
+                "duration": 0.5,
+                "status": "success",
+                "attributes": {
+                  "actionId": "intimacy:adjust_clothing",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "ruleCount": 1
+                },
+                "children": [
+                  {
+                    "id": 15,
+                    "operation": "prerequisite.evaluateRules",
+                    "parentId": 14,
+                    "startTime": 7308.699999988079,
+                    "endTime": 7308.9000000059605,
+                    "duration": 0.20000001788139343,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "intimacy:adjust_clothing",
+                      "ruleCount": 1
+                    },
+                    "children": [
+                      {
+                        "id": 16,
+                        "operation": "prerequisite.rule.1",
+                        "parentId": 15,
+                        "startTime": 7308.799999982119,
+                        "endTime": 7308.9000000059605,
+                        "duration": 0.10000002384185791,
+                        "status": "success",
+                        "attributes": {
+                          "actionId": "intimacy:adjust_clothing",
+                          "ruleNumber": 1,
+                          "totalRules": 1
+                        },
+                        "children": [],
+                        "error": null
+                      }
+                    ],
+                    "error": null
+                  }
+                ],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 17,
+            "operation": "MultiTargetResolutionStage",
+            "parentId": 2,
+            "startTime": 7309.5,
+            "endTime": 7317.699999988079,
+            "duration": 8.199999988079071,
+            "status": "success",
+            "attributes": {
+              "stage": "MultiTargetResolution"
+            },
+            "children": [
+              {
+                "id": 18,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7309.5999999940395,
+                "endTime": 7309.5999999940395,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "none",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "core:wait"
+                },
+                "children": [
+                  {
+                    "id": 19,
+                    "operation": "scope.resolve",
+                    "parentId": 18,
+                    "startTime": 7309.5999999940395,
+                    "endTime": 7309.5999999940395,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "none",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "core:wait"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 20,
+                "operation": "scope.resolve",
+                "parentId": 17,
+                "startTime": 7309.799999982119,
+                "endTime": 7310.299999982119,
+                "duration": 0.5,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "core:actors_in_location",
+                  "actorId": "p_erotica:amaia_castillo_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 21,
+                "operation": "scope.resolve",
+                "parentId": 17,
+                "startTime": 7310.4000000059605,
+                "endTime": 7310.5,
+                "duration": 0.09999999403953552,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "core:actors_in_location",
+                  "actorId": "p_erotica:amaia_castillo_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 22,
+                "operation": "scope.resolve",
+                "parentId": 17,
+                "startTime": 7310.5999999940395,
+                "endTime": 7310.5999999940395,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "core:actors_in_location",
+                  "actorId": "p_erotica:amaia_castillo_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 23,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7310.699999988079,
+                "endTime": 7310.799999982119,
+                "duration": 0.09999999403953552,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "clothing:topmost_clothing",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "clothing:remove_clothing"
+                },
+                "children": [
+                  {
+                    "id": 24,
+                    "operation": "scope.resolve",
+                    "parentId": 23,
+                    "startTime": 7310.699999988079,
+                    "endTime": 7310.799999982119,
+                    "duration": 0.09999999403953552,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "clothing:topmost_clothing",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "clothing:remove_clothing"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 25,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7311,
+                "endTime": 7311,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "none",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "positioning:step_back"
+                },
+                "children": [
+                  {
+                    "id": 26,
+                    "operation": "scope.resolve",
+                    "parentId": 25,
+                    "startTime": 7311,
+                    "endTime": 7311,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "none",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "positioning:step_back"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 27,
+                "operation": "scope.resolve",
+                "parentId": 17,
+                "startTime": 7311.0999999940395,
+                "endTime": 7311.4000000059605,
+                "duration": 0.30000001192092896,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "positioning:close_actors_facing_each_other_or_behind_target",
+                  "actorId": "p_erotica:amaia_castillo_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 28,
+                "operation": "scope.resolve",
+                "parentId": 17,
+                "startTime": 7311.5,
+                "endTime": 7311.9000000059605,
+                "duration": 0.4000000059604645,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other_with_torso_clothing",
+                  "actorId": "p_erotica:amaia_castillo_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 29,
+                "operation": "scope.resolve",
+                "parentId": 17,
+                "startTime": 7312,
+                "endTime": 7312.199999988079,
+                "duration": 0.19999998807907104,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "clothing:target_topmost_torso_upper_clothing",
+                  "actorId": "p_erotica:amaia_castillo_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 30,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7312.299999982119,
+                "endTime": 7312.5999999940395,
+                "duration": 0.30000001192092896,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "positioning:close_actors",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:brush_hand"
+                },
+                "children": [
+                  {
+                    "id": 31,
+                    "operation": "scope.resolve",
+                    "parentId": 30,
+                    "startTime": 7312.299999982119,
+                    "endTime": 7312.5,
+                    "duration": 0.20000001788139343,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "positioning:close_actors",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:brush_hand"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 32,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7312.5999999940395,
+                "endTime": 7313.5,
+                "duration": 0.9000000059604645,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:feel_arm_muscles"
+                },
+                "children": [
+                  {
+                    "id": 33,
+                    "operation": "scope.resolve",
+                    "parentId": 32,
+                    "startTime": 7312.5999999940395,
+                    "endTime": 7313.5,
+                    "duration": 0.9000000059604645,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:feel_arm_muscles"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 34,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7313.5999999940395,
+                "endTime": 7313.9000000059605,
+                "duration": 0.30000001192092896,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:fondle_ass"
+                },
+                "children": [
+                  {
+                    "id": 35,
+                    "operation": "scope.resolve",
+                    "parentId": 34,
+                    "startTime": 7313.5999999940395,
+                    "endTime": 7313.9000000059605,
+                    "duration": 0.30000001192092896,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:fondle_ass"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 36,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7314,
+                "endTime": 7314.199999988079,
+                "duration": 0.19999998807907104,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:kiss_cheek"
+                },
+                "children": [
+                  {
+                    "id": 37,
+                    "operation": "scope.resolve",
+                    "parentId": 36,
+                    "startTime": 7314,
+                    "endTime": 7314.199999988079,
+                    "duration": 0.19999998807907104,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:kiss_cheek"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 38,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7314.299999982119,
+                "endTime": 7314.5,
+                "duration": 0.20000001788139343,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:kiss_neck_sensually"
+                },
+                "children": [
+                  {
+                    "id": 39,
+                    "operation": "scope.resolve",
+                    "parentId": 38,
+                    "startTime": 7314.299999982119,
+                    "endTime": 7314.5,
+                    "duration": 0.20000001788139343,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:kiss_neck_sensually"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 40,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7314.5,
+                "endTime": 7314.799999982119,
+                "duration": 0.29999998211860657,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:actors_with_mouth_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:lean_in_for_deep_kiss"
+                },
+                "children": [
+                  {
+                    "id": 41,
+                    "operation": "scope.resolve",
+                    "parentId": 40,
+                    "startTime": 7314.5999999940395,
+                    "endTime": 7314.799999982119,
+                    "duration": 0.19999998807907104,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:actors_with_mouth_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:lean_in_for_deep_kiss"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 42,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7314.9000000059605,
+                "endTime": 7314.9000000059605,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:lick_lips"
+                },
+                "children": [
+                  {
+                    "id": 43,
+                    "operation": "scope.resolve",
+                    "parentId": 42,
+                    "startTime": 7314.9000000059605,
+                    "endTime": 7314.9000000059605,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:lick_lips"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 44,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7314.9000000059605,
+                "endTime": 7314.9000000059605,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:massage_shoulders"
+                },
+                "children": [
+                  {
+                    "id": 45,
+                    "operation": "scope.resolve",
+                    "parentId": 44,
+                    "startTime": 7314.9000000059605,
+                    "endTime": 7314.9000000059605,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:massage_shoulders"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 46,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7314.9000000059605,
+                "endTime": 7315.199999988079,
+                "duration": 0.29999998211860657,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_away",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:massage_back"
+                },
+                "children": [
+                  {
+                    "id": 47,
+                    "operation": "scope.resolve",
+                    "parentId": 46,
+                    "startTime": 7314.9000000059605,
+                    "endTime": 7315.199999988079,
+                    "duration": 0.29999998211860657,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_away",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:massage_back"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 48,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7315.299999982119,
+                "endTime": 7315.5,
+                "duration": 0.20000001788139343,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:nibble_earlobe_playfully"
+                },
+                "children": [
+                  {
+                    "id": 49,
+                    "operation": "scope.resolve",
+                    "parentId": 48,
+                    "startTime": 7315.299999982119,
+                    "endTime": 7315.4000000059605,
+                    "duration": 0.10000002384185791,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:nibble_earlobe_playfully"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 50,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7315.5,
+                "endTime": 7315.5,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:nuzzle_face_into_neck"
+                },
+                "children": [
+                  {
+                    "id": 51,
+                    "operation": "scope.resolve",
+                    "parentId": 50,
+                    "startTime": 7315.5,
+                    "endTime": 7315.5,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:nuzzle_face_into_neck"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 52,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7315.5,
+                "endTime": 7315.5,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:peck_on_lips"
+                },
+                "children": [
+                  {
+                    "id": 53,
+                    "operation": "scope.resolve",
+                    "parentId": 52,
+                    "startTime": 7315.5,
+                    "endTime": 7315.5,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:peck_on_lips"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 54,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7315.5999999940395,
+                "endTime": 7315.5999999940395,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "positioning:close_actors",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:place_hand_on_waist"
+                },
+                "children": [
+                  {
+                    "id": 55,
+                    "operation": "scope.resolve",
+                    "parentId": 54,
+                    "startTime": 7315.5999999940395,
+                    "endTime": 7315.5999999940395,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "positioning:close_actors",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:place_hand_on_waist"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 56,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7315.699999988079,
+                "endTime": 7315.699999988079,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:suck_on_neck_to_leave_hickey"
+                },
+                "children": [
+                  {
+                    "id": 57,
+                    "operation": "scope.resolve",
+                    "parentId": 56,
+                    "startTime": 7315.699999988079,
+                    "endTime": 7315.699999988079,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:suck_on_neck_to_leave_hickey"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 58,
+                "operation": "target.resolve",
+                "parentId": 17,
+                "startTime": 7315.699999988079,
+                "endTime": 7315.699999988079,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:thumb_wipe_cheek"
+                },
+                "children": [
+                  {
+                    "id": 59,
+                    "operation": "scope.resolve",
+                    "parentId": 58,
+                    "startTime": 7315.699999988079,
+                    "endTime": 7315.699999988079,
+                    "duration": 0,
+                    "status": "success",
+                    "attributes": {
+                      "scopeName": "intimacy:close_actors_facing_each_other",
+                      "actorId": "p_erotica:amaia_castillo_instance",
+                      "actionId": "intimacy:thumb_wipe_cheek"
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              },
+              {
+                "id": 60,
+                "operation": "scope.resolve",
+                "parentId": 17,
+                "startTime": 7315.799999982119,
+                "endTime": 7315.9000000059605,
+                "duration": 0.10000002384185791,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "sex:actors_with_breasts_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 61,
+                "operation": "scope.resolve",
+                "parentId": 17,
+                "startTime": 7316,
+                "endTime": 7316.5999999940395,
+                "duration": 0.5999999940395355,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "sex:actors_with_penis_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 62,
+                "operation": "scope.resolve",
+                "parentId": 17,
+                "startTime": 7316.699999988079,
+                "endTime": 7316.9000000059605,
+                "duration": 0.20000001788139343,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "sex:actors_with_penis_facing_each_other_covered",
+                  "actorId": "p_erotica:amaia_castillo_instance"
+                },
+                "children": [],
+                "error": null
+              },
+              {
+                "id": 63,
+                "operation": "scope.resolve",
+                "parentId": 17,
+                "startTime": 7317,
+                "endTime": 7317.199999988079,
+                "duration": 0.19999998807907104,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "sex:actors_with_vagina_facing_each_other_covered",
+                  "actorId": "p_erotica:amaia_castillo_instance"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 64,
+            "operation": "ActionFormattingStage",
+            "parentId": 2,
+            "startTime": 7317.699999988079,
+            "endTime": 7318.299999982119,
+            "duration": 0.5999999940395355,
+            "status": "success",
+            "attributes": {
+              "stage": "ActionFormatting"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 3,
+        "operation": "ComponentFilteringStage",
+        "parentId": 2,
+        "startTime": 7303.0999999940395,
+        "endTime": 7304.9000000059605,
+        "duration": 1.800000011920929,
+        "status": "success",
+        "attributes": {
+          "stage": "ComponentFiltering"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 4,
+        "operation": "PrerequisiteEvaluationStage",
+        "parentId": 2,
+        "startTime": 7304.9000000059605,
+        "endTime": 7309.5,
+        "duration": 4.5999999940395355,
+        "status": "success",
+        "attributes": {
+          "stage": "PrerequisiteEvaluation"
+        },
+        "children": [
+          {
+            "id": 5,
+            "operation": "prerequisite.evaluate",
+            "parentId": 4,
+            "startTime": 7305,
+            "endTime": 7306.199999988079,
+            "duration": 1.199999988079071,
+            "status": "success",
+            "attributes": {
+              "actionId": "core:follow",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "ruleCount": 2
+            },
+            "children": [
+              {
+                "id": 6,
+                "operation": "prerequisite.evaluateRules",
+                "parentId": 5,
+                "startTime": 7305.9000000059605,
+                "endTime": 7306.199999988079,
+                "duration": 0.29999998211860657,
+                "status": "success",
+                "attributes": {
+                  "actionId": "core:follow",
+                  "ruleCount": 2
+                },
+                "children": [
+                  {
+                    "id": 7,
+                    "operation": "prerequisite.rule.1",
+                    "parentId": 6,
+                    "startTime": 7305.9000000059605,
+                    "endTime": 7306.199999988079,
+                    "duration": 0.29999998211860657,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "core:follow",
+                      "ruleNumber": 1,
+                      "totalRules": 2
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 8,
+            "operation": "prerequisite.evaluate",
+            "parentId": 4,
+            "startTime": 7306.299999982119,
+            "endTime": 7307.0999999940395,
+            "duration": 0.800000011920929,
+            "status": "success",
+            "attributes": {
+              "actionId": "core:go",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "ruleCount": 1
+            },
+            "children": [
+              {
+                "id": 9,
+                "operation": "prerequisite.evaluateRules",
+                "parentId": 8,
+                "startTime": 7306.699999988079,
+                "endTime": 7307.0999999940395,
+                "duration": 0.4000000059604645,
+                "status": "success",
+                "attributes": {
+                  "actionId": "core:go",
+                  "ruleCount": 1
+                },
+                "children": [
+                  {
+                    "id": 10,
+                    "operation": "prerequisite.rule.1",
+                    "parentId": 9,
+                    "startTime": 7306.699999988079,
+                    "endTime": 7307.0999999940395,
+                    "duration": 0.4000000059604645,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "core:go",
+                      "ruleNumber": 1,
+                      "totalRules": 1
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 11,
+            "operation": "prerequisite.evaluate",
+            "parentId": 4,
+            "startTime": 7307.199999988079,
+            "endTime": 7308.0999999940395,
+            "duration": 0.9000000059604645,
+            "status": "success",
+            "attributes": {
+              "actionId": "positioning:get_close",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "ruleCount": 1
+            },
+            "children": [
+              {
+                "id": 12,
+                "operation": "prerequisite.evaluateRules",
+                "parentId": 11,
+                "startTime": 7307.799999982119,
+                "endTime": 7308.0999999940395,
+                "duration": 0.30000001192092896,
+                "status": "success",
+                "attributes": {
+                  "actionId": "positioning:get_close",
+                  "ruleCount": 1
+                },
+                "children": [
+                  {
+                    "id": 13,
+                    "operation": "prerequisite.rule.1",
+                    "parentId": 12,
+                    "startTime": 7307.9000000059605,
+                    "endTime": 7308.0999999940395,
+                    "duration": 0.19999998807907104,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "positioning:get_close",
+                      "ruleNumber": 1,
+                      "totalRules": 1
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 14,
+            "operation": "prerequisite.evaluate",
+            "parentId": 4,
+            "startTime": 7308.4000000059605,
+            "endTime": 7308.9000000059605,
+            "duration": 0.5,
+            "status": "success",
+            "attributes": {
+              "actionId": "intimacy:adjust_clothing",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "ruleCount": 1
+            },
+            "children": [
+              {
+                "id": 15,
+                "operation": "prerequisite.evaluateRules",
+                "parentId": 14,
+                "startTime": 7308.699999988079,
+                "endTime": 7308.9000000059605,
+                "duration": 0.20000001788139343,
+                "status": "success",
+                "attributes": {
+                  "actionId": "intimacy:adjust_clothing",
+                  "ruleCount": 1
+                },
+                "children": [
+                  {
+                    "id": 16,
+                    "operation": "prerequisite.rule.1",
+                    "parentId": 15,
+                    "startTime": 7308.799999982119,
+                    "endTime": 7308.9000000059605,
+                    "duration": 0.10000002384185791,
+                    "status": "success",
+                    "attributes": {
+                      "actionId": "intimacy:adjust_clothing",
+                      "ruleNumber": 1,
+                      "totalRules": 1
+                    },
+                    "children": [],
+                    "error": null
+                  }
+                ],
+                "error": null
+              }
+            ],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 5,
+        "operation": "prerequisite.evaluate",
+        "parentId": 4,
+        "startTime": 7305,
+        "endTime": 7306.199999988079,
+        "duration": 1.199999988079071,
+        "status": "success",
+        "attributes": {
+          "actionId": "core:follow",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "ruleCount": 2
+        },
+        "children": [
+          {
+            "id": 6,
+            "operation": "prerequisite.evaluateRules",
+            "parentId": 5,
+            "startTime": 7305.9000000059605,
+            "endTime": 7306.199999988079,
+            "duration": 0.29999998211860657,
+            "status": "success",
+            "attributes": {
+              "actionId": "core:follow",
+              "ruleCount": 2
+            },
+            "children": [
+              {
+                "id": 7,
+                "operation": "prerequisite.rule.1",
+                "parentId": 6,
+                "startTime": 7305.9000000059605,
+                "endTime": 7306.199999988079,
+                "duration": 0.29999998211860657,
+                "status": "success",
+                "attributes": {
+                  "actionId": "core:follow",
+                  "ruleNumber": 1,
+                  "totalRules": 2
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 6,
+        "operation": "prerequisite.evaluateRules",
+        "parentId": 5,
+        "startTime": 7305.9000000059605,
+        "endTime": 7306.199999988079,
+        "duration": 0.29999998211860657,
+        "status": "success",
+        "attributes": {
+          "actionId": "core:follow",
+          "ruleCount": 2
+        },
+        "children": [
+          {
+            "id": 7,
+            "operation": "prerequisite.rule.1",
+            "parentId": 6,
+            "startTime": 7305.9000000059605,
+            "endTime": 7306.199999988079,
+            "duration": 0.29999998211860657,
+            "status": "success",
+            "attributes": {
+              "actionId": "core:follow",
+              "ruleNumber": 1,
+              "totalRules": 2
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 7,
+        "operation": "prerequisite.rule.1",
+        "parentId": 6,
+        "startTime": 7305.9000000059605,
+        "endTime": 7306.199999988079,
+        "duration": 0.29999998211860657,
+        "status": "success",
+        "attributes": {
+          "actionId": "core:follow",
+          "ruleNumber": 1,
+          "totalRules": 2
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 8,
+        "operation": "prerequisite.evaluate",
+        "parentId": 4,
+        "startTime": 7306.299999982119,
+        "endTime": 7307.0999999940395,
+        "duration": 0.800000011920929,
+        "status": "success",
+        "attributes": {
+          "actionId": "core:go",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "ruleCount": 1
+        },
+        "children": [
+          {
+            "id": 9,
+            "operation": "prerequisite.evaluateRules",
+            "parentId": 8,
+            "startTime": 7306.699999988079,
+            "endTime": 7307.0999999940395,
+            "duration": 0.4000000059604645,
+            "status": "success",
+            "attributes": {
+              "actionId": "core:go",
+              "ruleCount": 1
+            },
+            "children": [
+              {
+                "id": 10,
+                "operation": "prerequisite.rule.1",
+                "parentId": 9,
+                "startTime": 7306.699999988079,
+                "endTime": 7307.0999999940395,
+                "duration": 0.4000000059604645,
+                "status": "success",
+                "attributes": {
+                  "actionId": "core:go",
+                  "ruleNumber": 1,
+                  "totalRules": 1
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 9,
+        "operation": "prerequisite.evaluateRules",
+        "parentId": 8,
+        "startTime": 7306.699999988079,
+        "endTime": 7307.0999999940395,
+        "duration": 0.4000000059604645,
+        "status": "success",
+        "attributes": {
+          "actionId": "core:go",
+          "ruleCount": 1
+        },
+        "children": [
+          {
+            "id": 10,
+            "operation": "prerequisite.rule.1",
+            "parentId": 9,
+            "startTime": 7306.699999988079,
+            "endTime": 7307.0999999940395,
+            "duration": 0.4000000059604645,
+            "status": "success",
+            "attributes": {
+              "actionId": "core:go",
+              "ruleNumber": 1,
+              "totalRules": 1
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 10,
+        "operation": "prerequisite.rule.1",
+        "parentId": 9,
+        "startTime": 7306.699999988079,
+        "endTime": 7307.0999999940395,
+        "duration": 0.4000000059604645,
+        "status": "success",
+        "attributes": {
+          "actionId": "core:go",
+          "ruleNumber": 1,
+          "totalRules": 1
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 11,
+        "operation": "prerequisite.evaluate",
+        "parentId": 4,
+        "startTime": 7307.199999988079,
+        "endTime": 7308.0999999940395,
+        "duration": 0.9000000059604645,
+        "status": "success",
+        "attributes": {
+          "actionId": "positioning:get_close",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "ruleCount": 1
+        },
+        "children": [
+          {
+            "id": 12,
+            "operation": "prerequisite.evaluateRules",
+            "parentId": 11,
+            "startTime": 7307.799999982119,
+            "endTime": 7308.0999999940395,
+            "duration": 0.30000001192092896,
+            "status": "success",
+            "attributes": {
+              "actionId": "positioning:get_close",
+              "ruleCount": 1
+            },
+            "children": [
+              {
+                "id": 13,
+                "operation": "prerequisite.rule.1",
+                "parentId": 12,
+                "startTime": 7307.9000000059605,
+                "endTime": 7308.0999999940395,
+                "duration": 0.19999998807907104,
+                "status": "success",
+                "attributes": {
+                  "actionId": "positioning:get_close",
+                  "ruleNumber": 1,
+                  "totalRules": 1
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 12,
+        "operation": "prerequisite.evaluateRules",
+        "parentId": 11,
+        "startTime": 7307.799999982119,
+        "endTime": 7308.0999999940395,
+        "duration": 0.30000001192092896,
+        "status": "success",
+        "attributes": {
+          "actionId": "positioning:get_close",
+          "ruleCount": 1
+        },
+        "children": [
+          {
+            "id": 13,
+            "operation": "prerequisite.rule.1",
+            "parentId": 12,
+            "startTime": 7307.9000000059605,
+            "endTime": 7308.0999999940395,
+            "duration": 0.19999998807907104,
+            "status": "success",
+            "attributes": {
+              "actionId": "positioning:get_close",
+              "ruleNumber": 1,
+              "totalRules": 1
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 13,
+        "operation": "prerequisite.rule.1",
+        "parentId": 12,
+        "startTime": 7307.9000000059605,
+        "endTime": 7308.0999999940395,
+        "duration": 0.19999998807907104,
+        "status": "success",
+        "attributes": {
+          "actionId": "positioning:get_close",
+          "ruleNumber": 1,
+          "totalRules": 1
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 14,
+        "operation": "prerequisite.evaluate",
+        "parentId": 4,
+        "startTime": 7308.4000000059605,
+        "endTime": 7308.9000000059605,
+        "duration": 0.5,
+        "status": "success",
+        "attributes": {
+          "actionId": "intimacy:adjust_clothing",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "ruleCount": 1
+        },
+        "children": [
+          {
+            "id": 15,
+            "operation": "prerequisite.evaluateRules",
+            "parentId": 14,
+            "startTime": 7308.699999988079,
+            "endTime": 7308.9000000059605,
+            "duration": 0.20000001788139343,
+            "status": "success",
+            "attributes": {
+              "actionId": "intimacy:adjust_clothing",
+              "ruleCount": 1
+            },
+            "children": [
+              {
+                "id": 16,
+                "operation": "prerequisite.rule.1",
+                "parentId": 15,
+                "startTime": 7308.799999982119,
+                "endTime": 7308.9000000059605,
+                "duration": 0.10000002384185791,
+                "status": "success",
+                "attributes": {
+                  "actionId": "intimacy:adjust_clothing",
+                  "ruleNumber": 1,
+                  "totalRules": 1
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 15,
+        "operation": "prerequisite.evaluateRules",
+        "parentId": 14,
+        "startTime": 7308.699999988079,
+        "endTime": 7308.9000000059605,
+        "duration": 0.20000001788139343,
+        "status": "success",
+        "attributes": {
+          "actionId": "intimacy:adjust_clothing",
+          "ruleCount": 1
+        },
+        "children": [
+          {
+            "id": 16,
+            "operation": "prerequisite.rule.1",
+            "parentId": 15,
+            "startTime": 7308.799999982119,
+            "endTime": 7308.9000000059605,
+            "duration": 0.10000002384185791,
+            "status": "success",
+            "attributes": {
+              "actionId": "intimacy:adjust_clothing",
+              "ruleNumber": 1,
+              "totalRules": 1
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 16,
+        "operation": "prerequisite.rule.1",
+        "parentId": 15,
+        "startTime": 7308.799999982119,
+        "endTime": 7308.9000000059605,
+        "duration": 0.10000002384185791,
+        "status": "success",
+        "attributes": {
+          "actionId": "intimacy:adjust_clothing",
+          "ruleNumber": 1,
+          "totalRules": 1
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 17,
+        "operation": "MultiTargetResolutionStage",
+        "parentId": 2,
+        "startTime": 7309.5,
+        "endTime": 7317.699999988079,
+        "duration": 8.199999988079071,
+        "status": "success",
+        "attributes": {
+          "stage": "MultiTargetResolution"
+        },
+        "children": [
+          {
+            "id": 18,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7309.5999999940395,
+            "endTime": 7309.5999999940395,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "none",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "core:wait"
+            },
+            "children": [
+              {
+                "id": 19,
+                "operation": "scope.resolve",
+                "parentId": 18,
+                "startTime": 7309.5999999940395,
+                "endTime": 7309.5999999940395,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "none",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "core:wait"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 20,
+            "operation": "scope.resolve",
+            "parentId": 17,
+            "startTime": 7309.799999982119,
+            "endTime": 7310.299999982119,
+            "duration": 0.5,
+            "status": "success",
+            "attributes": {
+              "scopeName": "core:actors_in_location",
+              "actorId": "p_erotica:amaia_castillo_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 21,
+            "operation": "scope.resolve",
+            "parentId": 17,
+            "startTime": 7310.4000000059605,
+            "endTime": 7310.5,
+            "duration": 0.09999999403953552,
+            "status": "success",
+            "attributes": {
+              "scopeName": "core:actors_in_location",
+              "actorId": "p_erotica:amaia_castillo_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 22,
+            "operation": "scope.resolve",
+            "parentId": 17,
+            "startTime": 7310.5999999940395,
+            "endTime": 7310.5999999940395,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "core:actors_in_location",
+              "actorId": "p_erotica:amaia_castillo_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 23,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7310.699999988079,
+            "endTime": 7310.799999982119,
+            "duration": 0.09999999403953552,
+            "status": "success",
+            "attributes": {
+              "scopeName": "clothing:topmost_clothing",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "clothing:remove_clothing"
+            },
+            "children": [
+              {
+                "id": 24,
+                "operation": "scope.resolve",
+                "parentId": 23,
+                "startTime": 7310.699999988079,
+                "endTime": 7310.799999982119,
+                "duration": 0.09999999403953552,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "clothing:topmost_clothing",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "clothing:remove_clothing"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 25,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7311,
+            "endTime": 7311,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "none",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "positioning:step_back"
+            },
+            "children": [
+              {
+                "id": 26,
+                "operation": "scope.resolve",
+                "parentId": 25,
+                "startTime": 7311,
+                "endTime": 7311,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "none",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "positioning:step_back"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 27,
+            "operation": "scope.resolve",
+            "parentId": 17,
+            "startTime": 7311.0999999940395,
+            "endTime": 7311.4000000059605,
+            "duration": 0.30000001192092896,
+            "status": "success",
+            "attributes": {
+              "scopeName": "positioning:close_actors_facing_each_other_or_behind_target",
+              "actorId": "p_erotica:amaia_castillo_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 28,
+            "operation": "scope.resolve",
+            "parentId": 17,
+            "startTime": 7311.5,
+            "endTime": 7311.9000000059605,
+            "duration": 0.4000000059604645,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other_with_torso_clothing",
+              "actorId": "p_erotica:amaia_castillo_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 29,
+            "operation": "scope.resolve",
+            "parentId": 17,
+            "startTime": 7312,
+            "endTime": 7312.199999988079,
+            "duration": 0.19999998807907104,
+            "status": "success",
+            "attributes": {
+              "scopeName": "clothing:target_topmost_torso_upper_clothing",
+              "actorId": "p_erotica:amaia_castillo_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 30,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7312.299999982119,
+            "endTime": 7312.5999999940395,
+            "duration": 0.30000001192092896,
+            "status": "success",
+            "attributes": {
+              "scopeName": "positioning:close_actors",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:brush_hand"
+            },
+            "children": [
+              {
+                "id": 31,
+                "operation": "scope.resolve",
+                "parentId": 30,
+                "startTime": 7312.299999982119,
+                "endTime": 7312.5,
+                "duration": 0.20000001788139343,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "positioning:close_actors",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:brush_hand"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 32,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7312.5999999940395,
+            "endTime": 7313.5,
+            "duration": 0.9000000059604645,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:feel_arm_muscles"
+            },
+            "children": [
+              {
+                "id": 33,
+                "operation": "scope.resolve",
+                "parentId": 32,
+                "startTime": 7312.5999999940395,
+                "endTime": 7313.5,
+                "duration": 0.9000000059604645,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:feel_arm_muscles"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 34,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7313.5999999940395,
+            "endTime": 7313.9000000059605,
+            "duration": 0.30000001192092896,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:fondle_ass"
+            },
+            "children": [
+              {
+                "id": 35,
+                "operation": "scope.resolve",
+                "parentId": 34,
+                "startTime": 7313.5999999940395,
+                "endTime": 7313.9000000059605,
+                "duration": 0.30000001192092896,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:fondle_ass"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 36,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7314,
+            "endTime": 7314.199999988079,
+            "duration": 0.19999998807907104,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:kiss_cheek"
+            },
+            "children": [
+              {
+                "id": 37,
+                "operation": "scope.resolve",
+                "parentId": 36,
+                "startTime": 7314,
+                "endTime": 7314.199999988079,
+                "duration": 0.19999998807907104,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:kiss_cheek"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 38,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7314.299999982119,
+            "endTime": 7314.5,
+            "duration": 0.20000001788139343,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:kiss_neck_sensually"
+            },
+            "children": [
+              {
+                "id": 39,
+                "operation": "scope.resolve",
+                "parentId": 38,
+                "startTime": 7314.299999982119,
+                "endTime": 7314.5,
+                "duration": 0.20000001788139343,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:kiss_neck_sensually"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 40,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7314.5,
+            "endTime": 7314.799999982119,
+            "duration": 0.29999998211860657,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:actors_with_mouth_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:lean_in_for_deep_kiss"
+            },
+            "children": [
+              {
+                "id": 41,
+                "operation": "scope.resolve",
+                "parentId": 40,
+                "startTime": 7314.5999999940395,
+                "endTime": 7314.799999982119,
+                "duration": 0.19999998807907104,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:actors_with_mouth_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:lean_in_for_deep_kiss"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 42,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7314.9000000059605,
+            "endTime": 7314.9000000059605,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:lick_lips"
+            },
+            "children": [
+              {
+                "id": 43,
+                "operation": "scope.resolve",
+                "parentId": 42,
+                "startTime": 7314.9000000059605,
+                "endTime": 7314.9000000059605,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:lick_lips"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 44,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7314.9000000059605,
+            "endTime": 7314.9000000059605,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:massage_shoulders"
+            },
+            "children": [
+              {
+                "id": 45,
+                "operation": "scope.resolve",
+                "parentId": 44,
+                "startTime": 7314.9000000059605,
+                "endTime": 7314.9000000059605,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:massage_shoulders"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 46,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7314.9000000059605,
+            "endTime": 7315.199999988079,
+            "duration": 0.29999998211860657,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_away",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:massage_back"
+            },
+            "children": [
+              {
+                "id": 47,
+                "operation": "scope.resolve",
+                "parentId": 46,
+                "startTime": 7314.9000000059605,
+                "endTime": 7315.199999988079,
+                "duration": 0.29999998211860657,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_away",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:massage_back"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 48,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7315.299999982119,
+            "endTime": 7315.5,
+            "duration": 0.20000001788139343,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:nibble_earlobe_playfully"
+            },
+            "children": [
+              {
+                "id": 49,
+                "operation": "scope.resolve",
+                "parentId": 48,
+                "startTime": 7315.299999982119,
+                "endTime": 7315.4000000059605,
+                "duration": 0.10000002384185791,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:nibble_earlobe_playfully"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 50,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7315.5,
+            "endTime": 7315.5,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:nuzzle_face_into_neck"
+            },
+            "children": [
+              {
+                "id": 51,
+                "operation": "scope.resolve",
+                "parentId": 50,
+                "startTime": 7315.5,
+                "endTime": 7315.5,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:nuzzle_face_into_neck"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 52,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7315.5,
+            "endTime": 7315.5,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:peck_on_lips"
+            },
+            "children": [
+              {
+                "id": 53,
+                "operation": "scope.resolve",
+                "parentId": 52,
+                "startTime": 7315.5,
+                "endTime": 7315.5,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:peck_on_lips"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 54,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7315.5999999940395,
+            "endTime": 7315.5999999940395,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "positioning:close_actors",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:place_hand_on_waist"
+            },
+            "children": [
+              {
+                "id": 55,
+                "operation": "scope.resolve",
+                "parentId": 54,
+                "startTime": 7315.5999999940395,
+                "endTime": 7315.5999999940395,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "positioning:close_actors",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:place_hand_on_waist"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 56,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7315.699999988079,
+            "endTime": 7315.699999988079,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:suck_on_neck_to_leave_hickey"
+            },
+            "children": [
+              {
+                "id": 57,
+                "operation": "scope.resolve",
+                "parentId": 56,
+                "startTime": 7315.699999988079,
+                "endTime": 7315.699999988079,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:suck_on_neck_to_leave_hickey"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 58,
+            "operation": "target.resolve",
+            "parentId": 17,
+            "startTime": 7315.699999988079,
+            "endTime": 7315.699999988079,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:thumb_wipe_cheek"
+            },
+            "children": [
+              {
+                "id": 59,
+                "operation": "scope.resolve",
+                "parentId": 58,
+                "startTime": 7315.699999988079,
+                "endTime": 7315.699999988079,
+                "duration": 0,
+                "status": "success",
+                "attributes": {
+                  "scopeName": "intimacy:close_actors_facing_each_other",
+                  "actorId": "p_erotica:amaia_castillo_instance",
+                  "actionId": "intimacy:thumb_wipe_cheek"
+                },
+                "children": [],
+                "error": null
+              }
+            ],
+            "error": null
+          },
+          {
+            "id": 60,
+            "operation": "scope.resolve",
+            "parentId": 17,
+            "startTime": 7315.799999982119,
+            "endTime": 7315.9000000059605,
+            "duration": 0.10000002384185791,
+            "status": "success",
+            "attributes": {
+              "scopeName": "sex:actors_with_breasts_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 61,
+            "operation": "scope.resolve",
+            "parentId": 17,
+            "startTime": 7316,
+            "endTime": 7316.5999999940395,
+            "duration": 0.5999999940395355,
+            "status": "success",
+            "attributes": {
+              "scopeName": "sex:actors_with_penis_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 62,
+            "operation": "scope.resolve",
+            "parentId": 17,
+            "startTime": 7316.699999988079,
+            "endTime": 7316.9000000059605,
+            "duration": 0.20000001788139343,
+            "status": "success",
+            "attributes": {
+              "scopeName": "sex:actors_with_penis_facing_each_other_covered",
+              "actorId": "p_erotica:amaia_castillo_instance"
+            },
+            "children": [],
+            "error": null
+          },
+          {
+            "id": 63,
+            "operation": "scope.resolve",
+            "parentId": 17,
+            "startTime": 7317,
+            "endTime": 7317.199999988079,
+            "duration": 0.19999998807907104,
+            "status": "success",
+            "attributes": {
+              "scopeName": "sex:actors_with_vagina_facing_each_other_covered",
+              "actorId": "p_erotica:amaia_castillo_instance"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 18,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7309.5999999940395,
+        "endTime": 7309.5999999940395,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "none",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "core:wait"
+        },
+        "children": [
+          {
+            "id": 19,
+            "operation": "scope.resolve",
+            "parentId": 18,
+            "startTime": 7309.5999999940395,
+            "endTime": 7309.5999999940395,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "none",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "core:wait"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 19,
+        "operation": "scope.resolve",
+        "parentId": 18,
+        "startTime": 7309.5999999940395,
+        "endTime": 7309.5999999940395,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "none",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "core:wait"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 20,
+        "operation": "scope.resolve",
+        "parentId": 17,
+        "startTime": 7309.799999982119,
+        "endTime": 7310.299999982119,
+        "duration": 0.5,
+        "status": "success",
+        "attributes": {
+          "scopeName": "core:actors_in_location",
+          "actorId": "p_erotica:amaia_castillo_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 21,
+        "operation": "scope.resolve",
+        "parentId": 17,
+        "startTime": 7310.4000000059605,
+        "endTime": 7310.5,
+        "duration": 0.09999999403953552,
+        "status": "success",
+        "attributes": {
+          "scopeName": "core:actors_in_location",
+          "actorId": "p_erotica:amaia_castillo_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 22,
+        "operation": "scope.resolve",
+        "parentId": 17,
+        "startTime": 7310.5999999940395,
+        "endTime": 7310.5999999940395,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "core:actors_in_location",
+          "actorId": "p_erotica:amaia_castillo_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 23,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7310.699999988079,
+        "endTime": 7310.799999982119,
+        "duration": 0.09999999403953552,
+        "status": "success",
+        "attributes": {
+          "scopeName": "clothing:topmost_clothing",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "clothing:remove_clothing"
+        },
+        "children": [
+          {
+            "id": 24,
+            "operation": "scope.resolve",
+            "parentId": 23,
+            "startTime": 7310.699999988079,
+            "endTime": 7310.799999982119,
+            "duration": 0.09999999403953552,
+            "status": "success",
+            "attributes": {
+              "scopeName": "clothing:topmost_clothing",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "clothing:remove_clothing"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 24,
+        "operation": "scope.resolve",
+        "parentId": 23,
+        "startTime": 7310.699999988079,
+        "endTime": 7310.799999982119,
+        "duration": 0.09999999403953552,
+        "status": "success",
+        "attributes": {
+          "scopeName": "clothing:topmost_clothing",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "clothing:remove_clothing"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 25,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7311,
+        "endTime": 7311,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "none",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "positioning:step_back"
+        },
+        "children": [
+          {
+            "id": 26,
+            "operation": "scope.resolve",
+            "parentId": 25,
+            "startTime": 7311,
+            "endTime": 7311,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "none",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "positioning:step_back"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 26,
+        "operation": "scope.resolve",
+        "parentId": 25,
+        "startTime": 7311,
+        "endTime": 7311,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "none",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "positioning:step_back"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 27,
+        "operation": "scope.resolve",
+        "parentId": 17,
+        "startTime": 7311.0999999940395,
+        "endTime": 7311.4000000059605,
+        "duration": 0.30000001192092896,
+        "status": "success",
+        "attributes": {
+          "scopeName": "positioning:close_actors_facing_each_other_or_behind_target",
+          "actorId": "p_erotica:amaia_castillo_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 28,
+        "operation": "scope.resolve",
+        "parentId": 17,
+        "startTime": 7311.5,
+        "endTime": 7311.9000000059605,
+        "duration": 0.4000000059604645,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other_with_torso_clothing",
+          "actorId": "p_erotica:amaia_castillo_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 29,
+        "operation": "scope.resolve",
+        "parentId": 17,
+        "startTime": 7312,
+        "endTime": 7312.199999988079,
+        "duration": 0.19999998807907104,
+        "status": "success",
+        "attributes": {
+          "scopeName": "clothing:target_topmost_torso_upper_clothing",
+          "actorId": "p_erotica:amaia_castillo_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 30,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7312.299999982119,
+        "endTime": 7312.5999999940395,
+        "duration": 0.30000001192092896,
+        "status": "success",
+        "attributes": {
+          "scopeName": "positioning:close_actors",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:brush_hand"
+        },
+        "children": [
+          {
+            "id": 31,
+            "operation": "scope.resolve",
+            "parentId": 30,
+            "startTime": 7312.299999982119,
+            "endTime": 7312.5,
+            "duration": 0.20000001788139343,
+            "status": "success",
+            "attributes": {
+              "scopeName": "positioning:close_actors",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:brush_hand"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 31,
+        "operation": "scope.resolve",
+        "parentId": 30,
+        "startTime": 7312.299999982119,
+        "endTime": 7312.5,
+        "duration": 0.20000001788139343,
+        "status": "success",
+        "attributes": {
+          "scopeName": "positioning:close_actors",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:brush_hand"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 32,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7312.5999999940395,
+        "endTime": 7313.5,
+        "duration": 0.9000000059604645,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:feel_arm_muscles"
+        },
+        "children": [
+          {
+            "id": 33,
+            "operation": "scope.resolve",
+            "parentId": 32,
+            "startTime": 7312.5999999940395,
+            "endTime": 7313.5,
+            "duration": 0.9000000059604645,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:feel_arm_muscles"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 33,
+        "operation": "scope.resolve",
+        "parentId": 32,
+        "startTime": 7312.5999999940395,
+        "endTime": 7313.5,
+        "duration": 0.9000000059604645,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:feel_arm_muscles"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 34,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7313.5999999940395,
+        "endTime": 7313.9000000059605,
+        "duration": 0.30000001192092896,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:fondle_ass"
+        },
+        "children": [
+          {
+            "id": 35,
+            "operation": "scope.resolve",
+            "parentId": 34,
+            "startTime": 7313.5999999940395,
+            "endTime": 7313.9000000059605,
+            "duration": 0.30000001192092896,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:fondle_ass"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 35,
+        "operation": "scope.resolve",
+        "parentId": 34,
+        "startTime": 7313.5999999940395,
+        "endTime": 7313.9000000059605,
+        "duration": 0.30000001192092896,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:fondle_ass"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 36,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7314,
+        "endTime": 7314.199999988079,
+        "duration": 0.19999998807907104,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:kiss_cheek"
+        },
+        "children": [
+          {
+            "id": 37,
+            "operation": "scope.resolve",
+            "parentId": 36,
+            "startTime": 7314,
+            "endTime": 7314.199999988079,
+            "duration": 0.19999998807907104,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:kiss_cheek"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 37,
+        "operation": "scope.resolve",
+        "parentId": 36,
+        "startTime": 7314,
+        "endTime": 7314.199999988079,
+        "duration": 0.19999998807907104,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:kiss_cheek"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 38,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7314.299999982119,
+        "endTime": 7314.5,
+        "duration": 0.20000001788139343,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:kiss_neck_sensually"
+        },
+        "children": [
+          {
+            "id": 39,
+            "operation": "scope.resolve",
+            "parentId": 38,
+            "startTime": 7314.299999982119,
+            "endTime": 7314.5,
+            "duration": 0.20000001788139343,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:kiss_neck_sensually"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 39,
+        "operation": "scope.resolve",
+        "parentId": 38,
+        "startTime": 7314.299999982119,
+        "endTime": 7314.5,
+        "duration": 0.20000001788139343,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:kiss_neck_sensually"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 40,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7314.5,
+        "endTime": 7314.799999982119,
+        "duration": 0.29999998211860657,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:actors_with_mouth_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:lean_in_for_deep_kiss"
+        },
+        "children": [
+          {
+            "id": 41,
+            "operation": "scope.resolve",
+            "parentId": 40,
+            "startTime": 7314.5999999940395,
+            "endTime": 7314.799999982119,
+            "duration": 0.19999998807907104,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:actors_with_mouth_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:lean_in_for_deep_kiss"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 41,
+        "operation": "scope.resolve",
+        "parentId": 40,
+        "startTime": 7314.5999999940395,
+        "endTime": 7314.799999982119,
+        "duration": 0.19999998807907104,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:actors_with_mouth_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:lean_in_for_deep_kiss"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 42,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7314.9000000059605,
+        "endTime": 7314.9000000059605,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:lick_lips"
+        },
+        "children": [
+          {
+            "id": 43,
+            "operation": "scope.resolve",
+            "parentId": 42,
+            "startTime": 7314.9000000059605,
+            "endTime": 7314.9000000059605,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:lick_lips"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 43,
+        "operation": "scope.resolve",
+        "parentId": 42,
+        "startTime": 7314.9000000059605,
+        "endTime": 7314.9000000059605,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:lick_lips"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 44,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7314.9000000059605,
+        "endTime": 7314.9000000059605,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:massage_shoulders"
+        },
+        "children": [
+          {
+            "id": 45,
+            "operation": "scope.resolve",
+            "parentId": 44,
+            "startTime": 7314.9000000059605,
+            "endTime": 7314.9000000059605,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:massage_shoulders"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 45,
+        "operation": "scope.resolve",
+        "parentId": 44,
+        "startTime": 7314.9000000059605,
+        "endTime": 7314.9000000059605,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:actors_with_arms_facing_each_other_or_behind_target",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:massage_shoulders"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 46,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7314.9000000059605,
+        "endTime": 7315.199999988079,
+        "duration": 0.29999998211860657,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_away",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:massage_back"
+        },
+        "children": [
+          {
+            "id": 47,
+            "operation": "scope.resolve",
+            "parentId": 46,
+            "startTime": 7314.9000000059605,
+            "endTime": 7315.199999988079,
+            "duration": 0.29999998211860657,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_away",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:massage_back"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 47,
+        "operation": "scope.resolve",
+        "parentId": 46,
+        "startTime": 7314.9000000059605,
+        "endTime": 7315.199999988079,
+        "duration": 0.29999998211860657,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_away",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:massage_back"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 48,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7315.299999982119,
+        "endTime": 7315.5,
+        "duration": 0.20000001788139343,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:nibble_earlobe_playfully"
+        },
+        "children": [
+          {
+            "id": 49,
+            "operation": "scope.resolve",
+            "parentId": 48,
+            "startTime": 7315.299999982119,
+            "endTime": 7315.4000000059605,
+            "duration": 0.10000002384185791,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:nibble_earlobe_playfully"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 49,
+        "operation": "scope.resolve",
+        "parentId": 48,
+        "startTime": 7315.299999982119,
+        "endTime": 7315.4000000059605,
+        "duration": 0.10000002384185791,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:nibble_earlobe_playfully"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 50,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7315.5,
+        "endTime": 7315.5,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:nuzzle_face_into_neck"
+        },
+        "children": [
+          {
+            "id": 51,
+            "operation": "scope.resolve",
+            "parentId": 50,
+            "startTime": 7315.5,
+            "endTime": 7315.5,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:nuzzle_face_into_neck"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 51,
+        "operation": "scope.resolve",
+        "parentId": 50,
+        "startTime": 7315.5,
+        "endTime": 7315.5,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:nuzzle_face_into_neck"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 52,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7315.5,
+        "endTime": 7315.5,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:peck_on_lips"
+        },
+        "children": [
+          {
+            "id": 53,
+            "operation": "scope.resolve",
+            "parentId": 52,
+            "startTime": 7315.5,
+            "endTime": 7315.5,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:peck_on_lips"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 53,
+        "operation": "scope.resolve",
+        "parentId": 52,
+        "startTime": 7315.5,
+        "endTime": 7315.5,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:peck_on_lips"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 54,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7315.5999999940395,
+        "endTime": 7315.5999999940395,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "positioning:close_actors",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:place_hand_on_waist"
+        },
+        "children": [
+          {
+            "id": 55,
+            "operation": "scope.resolve",
+            "parentId": 54,
+            "startTime": 7315.5999999940395,
+            "endTime": 7315.5999999940395,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "positioning:close_actors",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:place_hand_on_waist"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 55,
+        "operation": "scope.resolve",
+        "parentId": 54,
+        "startTime": 7315.5999999940395,
+        "endTime": 7315.5999999940395,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "positioning:close_actors",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:place_hand_on_waist"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 56,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7315.699999988079,
+        "endTime": 7315.699999988079,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:suck_on_neck_to_leave_hickey"
+        },
+        "children": [
+          {
+            "id": 57,
+            "operation": "scope.resolve",
+            "parentId": 56,
+            "startTime": 7315.699999988079,
+            "endTime": 7315.699999988079,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:suck_on_neck_to_leave_hickey"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 57,
+        "operation": "scope.resolve",
+        "parentId": 56,
+        "startTime": 7315.699999988079,
+        "endTime": 7315.699999988079,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other_or_behind_target",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:suck_on_neck_to_leave_hickey"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 58,
+        "operation": "target.resolve",
+        "parentId": 17,
+        "startTime": 7315.699999988079,
+        "endTime": 7315.699999988079,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:thumb_wipe_cheek"
+        },
+        "children": [
+          {
+            "id": 59,
+            "operation": "scope.resolve",
+            "parentId": 58,
+            "startTime": 7315.699999988079,
+            "endTime": 7315.699999988079,
+            "duration": 0,
+            "status": "success",
+            "attributes": {
+              "scopeName": "intimacy:close_actors_facing_each_other",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actionId": "intimacy:thumb_wipe_cheek"
+            },
+            "children": [],
+            "error": null
+          }
+        ],
+        "error": null
+      },
+      {
+        "id": 59,
+        "operation": "scope.resolve",
+        "parentId": 58,
+        "startTime": 7315.699999988079,
+        "endTime": 7315.699999988079,
+        "duration": 0,
+        "status": "success",
+        "attributes": {
+          "scopeName": "intimacy:close_actors_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance",
+          "actionId": "intimacy:thumb_wipe_cheek"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 60,
+        "operation": "scope.resolve",
+        "parentId": 17,
+        "startTime": 7315.799999982119,
+        "endTime": 7315.9000000059605,
+        "duration": 0.10000002384185791,
+        "status": "success",
+        "attributes": {
+          "scopeName": "sex:actors_with_breasts_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 61,
+        "operation": "scope.resolve",
+        "parentId": 17,
+        "startTime": 7316,
+        "endTime": 7316.5999999940395,
+        "duration": 0.5999999940395355,
+        "status": "success",
+        "attributes": {
+          "scopeName": "sex:actors_with_penis_facing_each_other",
+          "actorId": "p_erotica:amaia_castillo_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 62,
+        "operation": "scope.resolve",
+        "parentId": 17,
+        "startTime": 7316.699999988079,
+        "endTime": 7316.9000000059605,
+        "duration": 0.20000001788139343,
+        "status": "success",
+        "attributes": {
+          "scopeName": "sex:actors_with_penis_facing_each_other_covered",
+          "actorId": "p_erotica:amaia_castillo_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 63,
+        "operation": "scope.resolve",
+        "parentId": 17,
+        "startTime": 7317,
+        "endTime": 7317.199999988079,
+        "duration": 0.19999998807907104,
+        "status": "success",
+        "attributes": {
+          "scopeName": "sex:actors_with_vagina_facing_each_other_covered",
+          "actorId": "p_erotica:amaia_castillo_instance"
+        },
+        "children": [],
+        "error": null
+      },
+      {
+        "id": 64,
+        "operation": "ActionFormattingStage",
+        "parentId": 2,
+        "startTime": 7317.699999988079,
+        "endTime": 7318.299999982119,
+        "duration": 0.5999999940395355,
+        "status": "success",
+        "attributes": {
+          "stage": "ActionFormatting"
+        },
+        "children": [],
+        "error": null
+      }
+    ],
+    "actions": {
+      "sex:rub_vagina_over_clothes": {
+        "actionId": "sex:rub_vagina_over_clothes",
+        "actorId": "p_erotica:amaia_castillo_instance",
+        "startTime": 1755266280942,
+        "stages": {
+          "component_filtering": {
+            "timestamp": 1755266280942,
+            "data": {
+              "timestamp": 1755266280942,
+              "stage": "component_filtering",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "actorComponents": [
+                "core:name",
+                "core:portrait",
+                "core:profile",
+                "core:personality",
+                "core:likes",
+                "core:dislikes",
+                "core:fears",
+                "core:goals",
+                "core:secrets",
+                "core:speech_patterns",
+                "anatomy:body",
+                "core:perception_log",
+                "core:actor",
+                "core:player_type",
+                "core:notes",
+                "core:apparent_age",
+                "core:position",
+                "core:short_term_memory",
+                "clothing:slot_metadata",
+                "clothing:equipment",
+                "core:description",
+                "positioning:closeness",
+                "core:current_actor"
+              ],
+              "requiredComponents": [
+                "positioning:closeness"
+              ],
+              "forbiddenComponents": [],
+              "componentMatchPassed": true,
+              "missingComponents": [],
+              "forbiddenComponentsPresent": [],
+              "analysisMethod": "post-processing",
+              "_performance": {
+                "captureTime": 7304.699999988079,
+                "stage": "component_filtering",
+                "actionId": "sex:rub_vagina_over_clothes",
+                "timestamp": 1755266280942
+              }
+            },
+            "stageCompletedAt": 1755266280942
+          },
+          "stage_performance": {
+            "timestamp": 1755266280955,
+            "data": {
+              "timestamp": 1755266280955,
+              "stage": "multi_target_resolution",
+              "duration": 7.9000000059604645,
+              "itemsProcessed": 27,
+              "itemsResolved": 23,
+              "stageName": "MultiTargetResolution",
+              "_performance": {
+                "captureTime": 7317.5999999940395,
+                "stage": "stage_performance",
+                "actionId": "sex:rub_vagina_over_clothes",
+                "timestamp": 1755266280955
+              }
+            },
+            "stageCompletedAt": 1755266280955
+          },
+          "prerequisite_evaluation": {
+            "timestamp": 1755266280946,
+            "data": {
+              "timestamp": 1755266280946,
+              "stage": "prerequisite_evaluation",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "hasPrerequisites": false,
+              "evaluationPassed": true,
+              "evaluationReason": "No prerequisites defined",
+              "evaluationTimeMs": 0,
+              "_performance": {
+                "captureTime": 7309.0999999940395,
+                "stage": "prerequisite_evaluation",
+                "actionId": "sex:rub_vagina_over_clothes",
+                "timestamp": 1755266280946
+              }
+            },
+            "stageCompletedAt": 1755266280946
+          },
+          "legacy_detection": {
+            "timestamp": 1755266280954,
+            "data": {
+              "timestamp": 1755266280954,
+              "stage": "legacy_detection",
+              "hasStringTargets": false,
+              "hasScopeOnly": false,
+              "hasLegacyFields": false,
+              "legacyFormat": "modern",
+              "requiresConversion": false,
+              "_performance": {
+                "captureTime": 7317,
+                "stage": "legacy_detection",
+                "actionId": "sex:rub_vagina_over_clothes",
+                "timestamp": 1755266280954
+              }
+            },
+            "stageCompletedAt": 1755266280954
+          },
+          "target_resolution": {
+            "timestamp": 1755266280954,
+            "data": {
+              "timestamp": 1755266280954,
+              "stage": "target_resolution",
+              "actorId": "p_erotica:amaia_castillo_instance",
+              "targetKeys": [
+                "primary"
+              ],
+              "isLegacy": false,
+              "resolutionSuccess": true,
+              "resolutionTimeMs": 0,
+              "resolvedTargetCounts": {},
+              "totalTargetCount": 0,
+              "_performance": {
+                "captureTime": 7317.299999982119,
+                "stage": "target_resolution",
+                "actionId": "sex:rub_vagina_over_clothes",
+                "timestamp": 1755266280954
+              }
+            },
+            "stageCompletedAt": 1755266280954
+          }
+        },
+        "context": {
+          "currentLocation": {},
+          "worldContext": {},
+          "discoveryOptions": {
+            "trace": true
+          },
+          "createdAt": 1755266280940
+        },
+        "stageOrder": [
+          "component_filtering",
+          "stage_performance",
+          "prerequisite_evaluation",
+          "legacy_detection",
+          "target_resolution"
+        ],
+        "totalDuration": 13
+      },
+      "_current_scope_evaluation": {
+        "actionId": "_current_scope_evaluation",
+        "actorId": "p_erotica:amaia_castillo_instance",
+        "startTime": 1755266280954,
+        "stages": {
+          "operator_evaluations": {
+            "timestamp": 1755266280954,
+            "data": {
+              "evaluations": [
+                {
+                  "operator": "isSocketCovered",
+                  "entityId": "p_erotica:iker_aguirre_instance",
+                  "socketId": "penis",
+                  "timestamp": 1755266280954,
+                  "evaluationStart": 1755266280953,
+                  "hasEquipmentComponent": true,
+                  "hasEquippedStructure": true,
+                  "equippedSlots": [
+                    "torso_lower",
+                    "feet",
+                    "torso_upper",
+                    "legs"
+                  ],
+                  "potentialCoveringSlots": [
+                    "torso_lower"
+                  ],
+                  "slotChecks": {
+                    "torso_lower": {
+                      "hasItems": true,
+                      "hasCoveringItems": true,
+                      "slotExists": true,
+                      "layers": [
+                        "underwear"
+                      ],
+                      "itemCounts": {
+                        "underwear": 1
+                      }
+                    }
+                  },
+                  "coveredBySlot": "torso_lower",
+                  "result": true,
+                  "reason": "Socket covered by items in slot 'torso_lower'",
+                  "captureTime": 7316.5999999940395
+                },
+                {
+                  "operator": "isSocketCovered",
+                  "entityId": "p_erotica:iker_aguirre_instance",
+                  "socketId": "penis",
+                  "timestamp": 1755266280954,
+                  "evaluationStart": 1755266280954,
+                  "hasEquipmentComponent": true,
+                  "hasEquippedStructure": true,
+                  "equippedSlots": [
+                    "torso_lower",
+                    "feet",
+                    "torso_upper",
+                    "legs"
+                  ],
+                  "potentialCoveringSlots": [
+                    "torso_lower"
+                  ],
+                  "slotChecks": {
+                    "torso_lower": {
+                      "hasItems": true,
+                      "hasCoveringItems": true,
+                      "slotExists": true,
+                      "layers": [
+                        "underwear"
+                      ],
+                      "itemCounts": {
+                        "underwear": 1
+                      }
+                    }
+                  },
+                  "coveredBySlot": "torso_lower",
+                  "result": true,
+                  "reason": "Socket covered by items in slot 'torso_lower'",
+                  "captureTime": 7316.9000000059605
+                }
+              ],
+              "_performance": {
+                "captureTime": 7316.5999999940395,
+                "stage": "operator_evaluations",
+                "timestamp": 1755266280954
+              }
+            },
+            "stageCompletedAt": 1755266280954
+          }
+        },
+        "context": {
+          "currentLocation": {},
+          "worldContext": {},
+          "discoveryOptions": {
+            "trace": true
+          },
+          "createdAt": 1755266280940,
+          "type": "operator_evaluations"
+        },
+        "stageOrder": [
+          "operator_evaluations"
+        ],
+        "totalDuration": 0
+      },
+      "__stage_summary": {
+        "actionId": "__stage_summary",
+        "actorId": "p_erotica:amaia_castillo_instance",
+        "startTime": 1755266280955,
+        "stages": {
+          "formatting": {
+            "timestamp": 1755266280955,
+            "data": {
+              "timestamp": 1755266280955,
+              "stage": "formatting",
+              "status": "completed",
+              "formattingPath": "per-action",
+              "statistics": {
+                "total": 23,
+                "successful": 23,
+                "failed": 0,
+                "perActionMetadata": 23,
+                "multiTarget": 6,
+                "legacy": 17
+              },
+              "performance": {
+                "totalDuration": 0,
+                "averagePerAction": 0
+              },
+              "errors": 0,
+              "_performance": {
+                "captureTime": 7318.299999982119,
+                "stage": "formatting",
+                "actionId": "__stage_summary",
+                "timestamp": 1755266280955
+              }
+            },
+            "stageCompletedAt": 1755266280955
+          }
+        },
+        "context": {
+          "currentLocation": {},
+          "worldContext": {},
+          "discoveryOptions": {
+            "trace": true
+          },
+          "createdAt": 1755266280940
+        },
+        "stageOrder": [
+          "formatting"
+        ],
+        "totalDuration": 0
+      }
+    },
+    "writeMetadata": {
+      "writtenAt": "2025-08-15T13:58:00.956Z",
+      "writeSequence": 2
+    }
+  },
+  "metadata": {
+    "actionId": "discovery",
+    "actorId": "p_erotica:amaia_castillo_instance",
+    "generatedBy": "Living Narrative Engine Action Tracing System"
+  }
+}

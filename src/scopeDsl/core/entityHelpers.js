@@ -283,6 +283,8 @@ export function createEvaluationContext(
     ...(entity?.components && { components: entity.components }),
     // Also provide direct access to entity properties
     id: entity?.id,
+    // Include trace context so operators can capture evaluation data
+    trace,
   };
 
   // Add target context if available

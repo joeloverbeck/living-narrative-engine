@@ -1,0 +1,103 @@
+(base) joeloverbeck@JOELOVERBECK:~/projects/living-narrative-engine$ npm run start:all
+
+> living-narrative-engine@0.0.1 start:all
+> concurrently "npm run start" "npm run start --prefix llm-proxy-server"
+
+[0]
+[0] > living-narrative-engine@0.0.1 start
+[0] > npm run build && http-server dist -o
+[0]
+[1]
+[1] > llm-proxy-server@1.0.0 start
+[1] > node src/core/server.js
+[1]
+[0]
+[0] > living-narrative-engine@0.0.1 prebuild
+[0] > npm run build:clean
+[0]
+[0]
+[0] > living-narrative-engine@0.0.1 build:clean
+[0] > rimraf dist
+[0]
+[1] [dotenv@17.2.1] injecting env (8) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[0]
+[0] > living-narrative-engine@0.0.1 build
+[0] > node scripts/build.js
+[0]
+[1] EnhancedConsoleLogger: Chalk not available, falling back to plain text
+[1] [15:22:54.645] 🚀 DEBUG AppConfigService: AppConfigService: Initializing and loading configurations...
+[1] [15:22:54.646] ⚙️ DEBUG AppConfigService: AppConfigService: PROXY_PORT found in environment: '3001'. Using port 3001.
+[1] [15:22:54.646] ⚙️ DEBUG AppConfigService: AppConfigService: LLM_CONFIG_PATH found in environment: '../config/llm-configs.json'. Effective value: '../config/llm-configs.json'.
+[1] [15:22:54.646] 🌐 DEBUG AppConfigService: AppConfigService: PROXY_ALLOWED_ORIGIN found in environment: 'http://localhost:8080,http://127.0.0.1:8080,http://localhost:8081,http://127.0.0.1:8081'. Effective value: 'http://localhost:8080,http:...
+[1] [15:22:54.646] 🚀 DEBUG AppConfigService: AppConfigService: PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES found in environment: '/path/to/secure/api_key_files_on_server'. Effective value: '/path/to/secure/api_key_files_on_server'.
+[1] [15:22:54.646] ⚙️ DEBUG AppConfigService: AppConfigService: NODE_ENV found in environment: 'undefined'. Effective value: 'development'.
+[1] [15:22:54.646] 🚀 DEBUG AppConfigService: AppConfigService: Loading cache configuration...
+[1] [15:22:54.647] 💾 DEBUG AppConfigService: AppConfigService: CACHE_ENABLED: 'undefined'. Effective value: true.
+[1] [15:22:54.647] 💾 DEBUG AppConfigService: AppConfigService: CACHE_DEFAULT_TTL: 'undefined'. Effective value: 300000ms.
+[1] [15:22:54.647] 💾 DEBUG AppConfigService: AppConfigService: CACHE_MAX_SIZE: 'undefined'. Effective value: 1000.
+[1] [15:22:54.647] 🔑 DEBUG AppConfigService: AppConfigService: API_KEY_CACHE_TTL: 'undefined'. Effective value: 300000ms.
+[1] [15:22:54.647] 🚀 DEBUG AppConfigService: AppConfigService: Loading HTTP agent configuration...
+[1] [15:22:54.647] 🌐 DEBUG AppConfigService: AppConfigService: HTTP_AGENT_ENABLED: 'undefined'. Effective value: true.
+[1] [15:22:54.647] 🌐 DEBUG AppConfigService: AppConfigService: HTTP_AGENT_KEEP_ALIVE: 'undefined'. Effective value: true.
+[1] [15:22:54.647] 🌐 DEBUG AppConfigService: AppConfigService: HTTP_AGENT_MAX_SOCKETS: 'undefined'. Effective value: 50.
+[1] [15:22:54.647] 🌐 DEBUG AppConfigService: AppConfigService: HTTP_AGENT_MAX_FREE_SOCKETS: 'undefined'. Effective value: 10.
+[1] [15:22:54.647] 🌐 DEBUG AppConfigService: AppConfigService: HTTP_AGENT_TIMEOUT: 'undefined'. Effective value: 60000ms.
+[1] [15:22:54.647] 🌐 DEBUG AppConfigService: AppConfigService: HTTP_AGENT_FREE_SOCKET_TIMEOUT: 'undefined'. Effective value: 30000ms.
+[1] [15:22:54.647] 🌐 DEBUG AppConfigService: AppConfigService: HTTP_AGENT_MAX_TOTAL_SOCKETS: 'undefined'. Effective value: 500.
+[1] [15:22:54.647] 🌐 DEBUG AppConfigService: AppConfigService: HTTP_AGENT_MAX_IDLE_TIME: 'undefined'. Effective value: 300000ms.
+[1] [15:22:54.647] 🚀 DEBUG AppConfigService: AppConfigService: Configuration loading complete.
+[1] [15:22:54.650] 🚀 INFO System: Metrics service initialized
+[1]                     ↳ Context: {
+[1]                       "defaultMetrics": true,
+[1]                       "customMetrics": true
+[1]                     }
+[1] [15:22:54.652] ⚙️ DEBUG LlmConfigService: LlmConfigService: Instance created.
+[1] [15:22:54.652] 🚀 INFO CacheService: CacheService: Initialized with optimized configuration
+[1]                     ↳ Context: {
+[1]                       "maxSize": 1000,
+[1]                       "defaultTtl": 300000,
+[1]                       "maxMemoryBytes": 52428800,
+[1]                       "enableAutoCleanup": true
+[1]                     }
+[1] [15:22:54.652] 💾 INFO CacheService: CacheService: Started auto cleanup with 60000ms interval
+[1] [15:22:54.654] 🚀 INFO HttpAgentService: HttpAgentService: Initialized with adaptive cleanup configuration
+[1]                     ↳ Context: {
+[1]                       "keepAlive": true,
+[1]                       "maxSockets": 50,
+[1]                       "maxFreeSockets": 10,
+[1]                       "timeout": 60000,
+[1]                       "freeSocketTimeout": 30000,
+[1]                       "maxTotalSockets": 500,
+[1]                       "enabled": true,
+[1]                       "maxIdleTime": 300000,
+[1]                       "adaptiveCleanup": {
+[1]                         "baseIntervalMs": 300000,
+[1]                         "minIntervalMs": 60000,
+[1]                         "maxIntervalMs": 900000,
+[1]                         "idleThresholdMs": 300000,
+[1]                         "memoryThresholdMB": 100,
+[1]                         "highLoadRequestsPerMin": 60,
+[1]                         "adaptiveCleanupEnabled": true
+[1]                       }
+[1]                     }
+[1] [15:22:54.654] 🌐 DEBUG HttpAgentService: HttpAgentService: Scheduled next cleanup in 300000ms
+[1] [15:22:54.655] 🔑 DEBUG ApiKeyService: ApiKeyService: Instance created with caching support.
+[1] [15:22:54.655] 🔄 DEBUG LlmRequestService: LlmRequestService: Instance created with HTTP agent pooling support.
+[1] [15:22:54.655] 🔄 DEBUG LlmRequestController: LlmRequestController: Instance created.
+[1] [15:22:54.656] 🚀 DEBUG LlmConfigService: LlmConfigService: Initialization started.
+[1] [15:22:54.656] ⚙️ DEBUG LlmConfigService: LlmConfigService: Attempting to load LLM configurations from: /home/joeloverbeck/projects/living-narrative-engine/config/llm-configs.json
+[1] [15:22:54.656] ⚙️ DEBUG System: Attempting to load LLM configurations from: /home/joeloverbeck/projects/living-narrative-engine/config/llm-configs.json
+[1] [15:22:54.657] ⚙️ DEBUG System: Successfully read file content from /home/joeloverbeck/projects/living-narrative-engine/config/llm-configs.json. Length: 3167
+[1] [15:22:54.658] ⚙️ DEBUG System: Successfully parsed JSON content from /home/joeloverbeck/projects/living-narrative-engine/config/llm-configs.json.
+[1] [15:22:54.658] ⚙️ DEBUG System: LLM configurations loaded and validated successfully from /home/joeloverbeck/projects/living-narrative-engine/config/llm-configs.json. Found 4 LLM configurations.
+[1] [15:22:54.658] 🚀 DEBUG LlmConfigService: LlmConfigService: Initialization successful. Loaded 4 LLM configurations. Default LLM ID: openrouter-claude-sonnet-4-toolcalling. Proxy is operational.
+[1] [15:22:54.659] 🚀 INFO System: --- LLM Proxy Server Startup Summary ---
+[1] [15:22:54.659] 🚀 INFO System: LLM Proxy Server listening on port 3001
+[1] [15:22:54.659] ⚙️ INFO System: LLM configurations loaded from: /home/joeloverbeck/projects/living-narrative-engine/config/llm-configs.json
+[1] [15:22:54.659] 🚀 INFO LLM Proxy Server: LLM Proxy Server: Successfully loaded 0 LLM configurations. Proxy is OPERATIONAL.
+[1] [15:22:54.659] 🚀 INFO LLM Proxy Server: LLM Proxy Server: CORS enabled for origin(s): http://localhost:8080,http://127.0.0.1:8080,http://localhost:8081,http://127.0.0.1:8081
+[1] [15:22:54.659] 🚀 INFO LLM Proxy Server: LLM Proxy Server: API Key file root path set to: '/path/to/secure/api_key_files_on_server'.
+[1] [15:22:54.659] 🚀 INFO LLM Proxy Server: LLM Proxy Server: Cache ENABLED - TTL: 300000ms, Max Size: 1000 entries, API Key TTL: 300000ms
+[1] [15:22:54.659] 🚀 INFO LLM Proxy Server: LLM Proxy Server: HTTP Agent Pooling ENABLED - Keep-Alive: true, Max Sockets: 50, Timeout: 60000ms
+[1] [15:22:54.661] 🚀 INFO LLM Proxy Server: LLM Proxy Server: Metrics Collection ENABLED - Total metrics: 0, Custom metrics: 0, Default metrics: 0. Prometheus endpoint available at /metrics
+[1] [15:22:54.661] 🚀 INFO System: --- End of Startup Summary ---

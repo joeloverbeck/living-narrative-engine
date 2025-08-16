@@ -133,4 +133,44 @@ export class TraceContext {
       ? this.addLog(TRACE_DATA, msg, src)
       : this.addLog(TRACE_DATA, msg, src, data);
   }
+
+  /**
+   * Capture operator evaluation data from JSON Logic operators.
+   * This method allows operators to report their evaluation results
+   * for debugging and tracing purposes.
+   *
+   * @param {object} operatorData - Data from the operator evaluation
+   * @param {string} operatorData.operator - Name of the operator (e.g., 'isSocketCovered')
+   * @param {string} operatorData.entityId - Entity being evaluated
+   * @param {*} operatorData.result - Result of the evaluation
+   * @param {string} [operatorData.reason] - Reason for the result
+   * @param {object} [operatorData.details] - Additional evaluation details
+   */
+  captureOperatorEvaluation(operatorData) {
+    // Store operator evaluations as special data entries
+    this.addLog(
+      'data',
+      `Operator evaluation: ${operatorData.operator}`,
+      'OperatorEvaluation',
+      {
+        type: 'operator_evaluation',
+        ...operatorData,
+        capturedAt: Date.now(),
+      }
+    );
+  }
+
+  /**
+   * Get all operator evaluation logs from the trace.
+   *
+   * @returns {Array<object>} Array of operator evaluation data
+   */
+  getOperatorEvaluations() {
+    return this.logs
+      .filter(
+        (entry) =>
+          entry.type === 'data' && entry.data?.type === 'operator_evaluation'
+      )
+      .map((entry) => entry.data);
+  }
 }

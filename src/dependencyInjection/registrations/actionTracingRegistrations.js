@@ -24,6 +24,8 @@ import { RetryManager } from '../../actions/tracing/resilience/retryManager.js';
 import { RecoveryManager } from '../../actions/tracing/recovery/recoveryManager.js';
 import { TraceErrorHandler } from '../../actions/tracing/errors/traceErrorHandler.js';
 import { ResilientServiceWrapper } from '../../actions/tracing/resilience/resilientServiceWrapper.js';
+import TracingConfigurationInitializer from '../../actions/tracing/tracingConfigurationInitializer.js';
+import { INITIALIZABLE } from '../tags.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -102,13 +104,15 @@ export function registerActionTracing(container) {
     `Action Tracing Registration: Registered ${String(actionTracingTokens.IIndexedDBStorageAdapter)}.`
   );
 
-  // Register ActionTraceFilter
+  // Register ActionTraceFilter with safe defaults
+  // Configuration will be loaded later by TracingConfigurationInitializer during system initialization
   container.register(
     actionTracingTokens.IActionTraceFilter,
-    (c) =>
-      new ActionTraceFilter({
-        enabled: true,
-        tracedActions: ['*'], // Default to trace all actions
+    (c) => {
+      // Start with safe defaults - configuration will be loaded during system initialization
+      const filter = new ActionTraceFilter({
+        enabled: false, // Start disabled until config is loaded during system init
+        tracedActions: [],
         excludedActions: [],
         verbosityLevel: 'standard',
         inclusionConfig: {
@@ -117,7 +121,13 @@ export function registerActionTracing(container) {
           targets: false,
         },
         logger: c.resolve(tokens.ILogger),
-      }),
+      });
+
+      // Note: Configuration loading is now handled by TracingConfigurationInitializer
+      // during proper system initialization after schemas are loaded
+
+      return filter;
+    },
     { lifecycle: 'singleton' }
   );
   log.debug(
@@ -174,6 +184,10 @@ export function registerActionTracing(container) {
           includeHash: true,
           hashLength: 6,
         },
+        // Enable file output mode - the output directory will be configured
+        // later by TracingConfigurationInitializer when config is loaded
+        outputToFiles: true,
+        outputDirectory: './traces/rub-vagina-debugging', // Default directory
       }),
     { lifecycle: 'singleton' }
   );
@@ -280,6 +294,27 @@ export function registerActionTracing(container) {
   );
   log.debug(
     `Action Tracing Registration: Registered ${String(actionTracingTokens.ITraceErrorHandler)}.`
+  );
+
+  // Register TracingConfigurationInitializer with INITIALIZABLE tag for system startup
+  container.register(
+    actionTracingTokens.ITracingConfigurationInitializer,
+    (c) =>
+      new TracingConfigurationInitializer({
+        configLoader: c.resolve(actionTracingTokens.IActionTraceConfigLoader),
+        actionTraceFilter: c.resolve(actionTracingTokens.IActionTraceFilter),
+        actionTraceOutputService: c.resolve(
+          actionTracingTokens.IActionTraceOutputService
+        ),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    {
+      lifecycle: 'singleton',
+      tags: INITIALIZABLE,
+    }
+  );
+  log.debug(
+    `Action Tracing Registration: Registered ${String(actionTracingTokens.ITracingConfigurationInitializer)}.`
   );
 
   log.debug('Action Tracing Registration: complete.');

@@ -338,6 +338,110 @@ class ActionAwareStructuredTrace extends StructuredTrace {
   }
 
   /**
+   * Getter for actorId to maintain compatibility with ActionExecutionTrace
+   * Used by FileTraceOutputHandler for filename generation
+   *
+   * @returns {string} The actor ID
+   */
+  get actorId() {
+    return this.#actorId;
+  }
+
+  /**
+   * Getter for actionId to maintain compatibility with ActionExecutionTrace
+   * For discovery traces, returns 'discovery' or the first traced action
+   * Used by FileTraceOutputHandler for filename generation
+   *
+   * @returns {string} An action ID or 'discovery' for multi-action traces
+   */
+  get actionId() {
+    // For action discovery traces, we don't have a single actionId
+    // Return 'discovery' as a sensible default, or the first traced action if available
+    if (this.#tracedActionData.size > 0) {
+      const firstActionId = Array.from(this.#tracedActionData.keys())[0];
+      // If we have exactly one action, use its ID
+      // Otherwise, use 'discovery' to indicate this is a multi-action trace
+      return this.#tracedActionData.size === 1 ? firstActionId : 'discovery';
+    }
+    return 'discovery';
+  }
+
+  /**
+   * Capture operator evaluation data from JSON Logic operators
+   *
+   * @param {object} operatorData - Data from the operator evaluation
+   * @param {string} operatorData.operator - Name of the operator (e.g., 'isSocketCovered')
+   * @param {string} operatorData.entityId - Entity being evaluated
+   * @param {*} operatorData.result - Result of the evaluation
+   * @param {string} [operatorData.reason] - Reason for the result
+   * @param {object} [operatorData.details] - Additional evaluation details
+   * @returns {void}
+   */
+  captureOperatorEvaluation(operatorData) {
+    try {
+      // Store operator evaluations in a special stage
+      const stage = 'operator_evaluations';
+      const timestamp = Date.now();
+
+      // Get or create operator evaluations array for current action context
+      // We need to associate this with the current action being evaluated
+      // Since we might be in scope evaluation, we'll use a special key
+      const contextKey = '_current_scope_evaluation';
+
+      if (!this.#tracedActionData.has(contextKey)) {
+        this.#tracedActionData.set(contextKey, {
+          actionId: contextKey,
+          actorId: this.#actorId,
+          startTime: timestamp,
+          stages: {},
+          context: { ...this.#context, type: 'operator_evaluations' },
+        });
+      }
+
+      const trace = this.#tracedActionData.get(contextKey);
+
+      // Initialize operator evaluations array if needed
+      if (!trace.stages[stage]) {
+        trace.stages[stage] = {
+          timestamp,
+          data: {
+            evaluations: [],
+            _performance: {
+              captureTime: performance.now(),
+              stage,
+              timestamp,
+            },
+          },
+          stageCompletedAt: timestamp,
+        };
+      }
+
+      // Add this evaluation to the array
+      trace.stages[stage].data.evaluations.push({
+        ...operatorData,
+        timestamp,
+        captureTime: performance.now(),
+      });
+
+      this.#logger.debug(
+        `ActionAwareStructuredTrace: Captured operator evaluation for '${operatorData.operator}'`,
+        {
+          operator: operatorData.operator,
+          entityId: operatorData.entityId,
+          result: operatorData.result,
+          hasDetails: !!operatorData.details,
+        }
+      );
+    } catch (error) {
+      // Don't throw - tracing failures shouldn't break operator execution
+      this.#logger.error(
+        'ActionAwareStructuredTrace: Error capturing operator evaluation',
+        error
+      );
+    }
+  }
+
+  /**
    * Clear all traced action data
    *
    * @returns {void}
@@ -1219,6 +1323,59 @@ class ActionAwareStructuredTrace extends StructuredTrace {
     if (this.#actionTraceFilter.optimizeCache) {
       this.#actionTraceFilter.optimizeCache(maxAge);
     }
+  }
+
+  /**
+   * Serialize the trace data to JSON format
+   * This method provides compatibility with the trace output service
+   *
+   * @returns {object} Serialized trace data
+   */
+  toJSON() {
+    const tracedActions = this.getTracedActions();
+    const summary = this.getTracingSummary();
+    const spans = this.getSpans ? this.getSpans() : [];
+
+    const result = {
+      timestamp: new Date().toISOString(),
+      traceType: 'action_aware_structured',
+      actorId: this.#actorId,
+      context: this.#context,
+      summary: summary,
+      spans: spans,
+      actions: {},
+    };
+
+    // Convert Map to object for JSON serialization
+    for (const [actionId, data] of tracedActions) {
+      result.actions[actionId] = {
+        ...data,
+        stageOrder: Object.keys(data.stages || {}),
+        totalDuration: this.#calculateTotalDuration(data),
+      };
+    }
+
+    return result;
+  }
+
+  /**
+   * Calculate total duration from stage data
+   * Helper method for toJSON
+   *
+   * @private
+   * @param {object} actionData - Action trace data
+   * @returns {number} Total duration in ms
+   */
+  #calculateTotalDuration(actionData) {
+    if (!actionData.stages) return 0;
+
+    const timestamps = Object.values(actionData.stages)
+      .map((stage) => stage.timestamp)
+      .filter((ts) => ts);
+
+    if (timestamps.length < 2) return 0;
+
+    return Math.max(...timestamps) - Math.min(...timestamps);
   }
 }
 

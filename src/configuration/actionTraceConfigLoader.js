@@ -118,37 +118,58 @@ class ActionTraceConfigLoader {
         this.#buildLookupStructures(actionTracingConfig);
       }
 
-      // First, try enhanced validation if the validator is initialized
+      // Check if schema is loaded before attempting validation
+      const schemaId =
+        'schema://living-narrative-engine/trace-config.schema.json';
+      const schemaLoaded =
+        this.#validator.isSchemaLoaded &&
+        typeof this.#validator.isSchemaLoaded === 'function' &&
+        this.#validator.isSchemaLoaded(schemaId);
+
       let validationResult;
-      try {
-        // Initialize the enhanced validator
-        await this.#configValidator.initialize();
 
-        // Use enhanced validator for comprehensive validation
-        validationResult = await this.#configValidator.validateConfiguration({
-          actionTracing: actionTracingConfig,
-        });
+      if (!schemaLoaded) {
+        // Schema not yet loaded - skip validation and log debug message
+        this.#logger.debug(
+          'Trace config schema not yet loaded, proceeding without schema validation'
+        );
+        validationResult = { isValid: true, warnings: [] };
+      } else {
+        // Schema is loaded, perform validation
+        try {
+          // Initialize the enhanced validator
+          await this.#configValidator.initialize();
 
-        // Log warnings even if validation passed
-        validationResult.warnings.forEach((warning) => {
-          this.#logger.warn(`Configuration warning: ${warning}`);
-        });
+          // Use enhanced validator for comprehensive validation
+          validationResult = await this.#configValidator.validateConfiguration({
+            actionTracing: actionTracingConfig,
+          });
 
-        // Use normalized configuration if available
-        if (validationResult.normalizedConfig) {
-          actionTracingConfig = validationResult.normalizedConfig.actionTracing;
+          // Log warnings even if validation passed
+          validationResult.warnings.forEach((warning) => {
+            this.#logger.warn(`Configuration warning: ${warning}`);
+          });
+
+          // Use normalized configuration if available
+          if (validationResult.normalizedConfig) {
+            actionTracingConfig =
+              validationResult.normalizedConfig.actionTracing;
+            this.#logger.debug('Using normalized configuration', {
+              originalCount: fullConfig.actionTracing?.tracedActions?.length,
+              normalizedCount: actionTracingConfig.tracedActions?.length
+            });
+          }
+        } catch (validatorError) {
+          this.#logger.warn(
+            'Enhanced validator failed, falling back to basic validation',
+            validatorError
+          );
+
+          // Fall back to basic schema validation
+          validationResult = await this.#validator.validate(schemaId, {
+            actionTracing: actionTracingConfig,
+          });
         }
-      } catch (validatorError) {
-        this.#logger.warn(
-          'Enhanced validator failed, falling back to basic validation',
-          validatorError
-        );
-
-        // Fall back to basic schema validation
-        validationResult = await this.#validator.validate(
-          'action-trace-config',
-          { actionTracing: actionTracingConfig }
-        );
       }
 
       // Handle both validation result formats (isValid or valid)
@@ -165,6 +186,9 @@ class ActionTraceConfigLoader {
         // Return safe defaults on validation error
         const defaultConfig = this.#getDefaultConfig();
         this.#buildLookupStructures(defaultConfig);
+        // Cache the default config to prevent re-validation
+        this.#cachedConfig.data = defaultConfig;
+        this.#cachedConfig.timestamp = Date.now();
         return defaultConfig;
       }
 

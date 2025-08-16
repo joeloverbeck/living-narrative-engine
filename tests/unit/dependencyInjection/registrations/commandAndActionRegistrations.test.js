@@ -315,11 +315,13 @@ describe('registerCommandAndAction', () => {
       expect(actionDiscovery).toBeInstanceOf(ActionDiscoveryService);
 
       // Check that info logging shows tracing not available
+      // Note: ActionTraceOutputService is always available because it's automatically registered
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'ActionDiscoveryService: Action tracing not available',
+        'ActionDiscoveryService: Action tracing not available, output available',
         {
           hasActionAwareTraceFactory: false,
           hasActionTraceFilter: false,
+          hasActionTraceOutputService: true,
         }
       );
     });
@@ -343,11 +345,13 @@ describe('registerCommandAndAction', () => {
       expect(actionDiscovery).toBeInstanceOf(ActionDiscoveryService);
 
       // Check that info logging shows tracing available
+      // Note: ActionTraceOutputService is always available because it's automatically registered
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'ActionDiscoveryService: Action tracing available',
+        'ActionDiscoveryService: Action tracing available, output available',
         {
           hasActionAwareTraceFactory: true,
           hasActionTraceFilter: true,
+          hasActionTraceOutputService: true,
         }
       );
     });

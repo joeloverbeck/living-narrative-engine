@@ -125,6 +125,8 @@ class StaticConfiguration {
       'target-context.schema.json',
       'thematic-direction.schema.json', // Character builder thematic direction schema
       'base-operation.schema.json', // Base schema for all operations
+      'trace-config.schema.json', // Trace configuration schema
+      'actionTraceConfig.schema.json', // Action trace configuration schema
       // Prepend the 'operations/' subdirectory to each operation schema file
       ...OPERATION_SCHEMA_FILES.map((file) => `operations/${file}`),
     ];

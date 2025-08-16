@@ -35,6 +35,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #actionPipelineOrchestrator;
   #actionAwareTraceFactory;
   #actionTraceFilter;
+  #actionTraceOutputService;
 
   /**
    * Creates an ActionDiscoveryService instance.
@@ -47,6 +48,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {Function} deps.getActorLocationFn - Function to get actor location.
    * @param {Function} [deps.actionAwareTraceFactory] - Optional factory for creating action-aware traces.
    * @param {ActionTraceFilter} [deps.actionTraceFilter] - Optional filter for action tracing.
+   * @param {object} [deps.actionTraceOutputService] - Optional service for writing trace output.
    * @param {ServiceSetup} [deps.serviceSetup] - Optional service setup helper.
    */
   constructor({
@@ -58,6 +60,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     getActorLocationFn = getActorLocation,
     actionAwareTraceFactory = null,
     actionTraceFilter = null,
+    actionTraceOutputService = null,
   }) {
     super();
     const setup = serviceSetup ?? new ServiceSetup();
@@ -96,6 +99,23 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         );
       } else {
         this.#actionTraceFilter = actionTraceFilter;
+      }
+    }
+
+    // Optional action trace output service
+    if (actionTraceOutputService) {
+      if (
+        !actionTraceOutputService.writeTrace ||
+        typeof actionTraceOutputService.writeTrace !== 'function'
+      ) {
+        this.#logger.warn(
+          'ActionDiscoveryService: actionTraceOutputService missing writeTrace method, ignoring'
+        );
+      } else {
+        this.#actionTraceOutputService = actionTraceOutputService;
+        this.#logger.debug(
+          'ActionDiscoveryService: Initialized with ActionTraceOutputService'
+        );
       }
     }
 
@@ -269,6 +289,25 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
           sessionDuration: tracingSummary.sessionDuration || 0,
         }
       );
+
+      // Write discovery trace to output service if available
+      if (this.#actionTraceOutputService && tracedActions.size > 0) {
+        this.#logger.debug(
+          `Writing discovery trace for actor ${actorEntity.id}`,
+          {
+            actorId: actorEntity.id,
+            tracedActionCount: tracedActions.size,
+          }
+        );
+
+        // Fire and forget - don't wait for trace writing
+        this.#actionTraceOutputService.writeTrace(trace).catch((writeError) => {
+          this.#logger.warn('Failed to write discovery trace', {
+            error: writeError.message,
+            actorId: actorEntity.id,
+          });
+        });
+      }
     } else {
       this.#logger.debug(
         `Finished action discovery for actor ${actorEntity.id}. Found ${result.actions.length} actions.`

@@ -31,6 +31,7 @@ describe('ActionTraceConfigLoader', () => {
       validate: jest.fn(),
       addSchema: jest.fn(),
       removeSchema: jest.fn(),
+      isSchemaLoaded: jest.fn().mockReturnValue(true), // Add this for schema check
     };
 
     // Setup the ActionTraceConfigValidator mock
@@ -206,10 +207,10 @@ describe('ActionTraceConfigLoader', () => {
       };
 
       mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
-      mockValidator.validate.mockResolvedValue({
-        isValid: false,
-        errors: [{ message: 'Invalid type for enabled' }],
-      });
+      
+      // The enhanced validator mock was already set up to return isValid: false
+      // for invalid 'enabled' value in the beforeEach block (lines 42-55)
+      // This should trigger the default config return in production code
 
       const config = await loader.loadConfig();
 
@@ -238,18 +239,17 @@ describe('ActionTraceConfigLoader', () => {
         },
       };
 
+      // The normalized config from ActionTraceConfigValidator only removes duplicates
+      // and potentially adds rotation-related defaults based on the policy
+      // It does NOT add the missing boolean properties
       const normalizedConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['core:go'],
+          tracedActions: ['core:go'], // Duplicates removed if any
           outputDirectory: './traces',
           verbosity: 'standard',
-          includeComponentData: true,
-          includePrerequisites: true,
-          includeTargets: true,
-          maxTraceFiles: 100,
-          rotationPolicy: 'age',
-          maxFileAge: 86400,
+          // Since no rotationPolicy is specified in mockConfig, 
+          // normalization won't add defaults
         },
       };
 
@@ -261,7 +261,7 @@ describe('ActionTraceConfigLoader', () => {
           isValid: true,
           errors: [],
           warnings: [
-            'Configuration warning: Using default value for maxTraceFiles',
+            'Using default value for maxTraceFiles',
           ],
           normalizedConfig: normalizedConfig,
         }),
@@ -279,7 +279,7 @@ describe('ActionTraceConfigLoader', () => {
 
       expect(config).toEqual(normalizedConfig.actionTracing);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Configuration warning: Configuration warning: Using default value for maxTraceFiles'
+        'Configuration warning: Using default value for maxTraceFiles'
       );
     });
 
@@ -290,6 +290,14 @@ describe('ActionTraceConfigLoader', () => {
           tracedActions: ['core:go'],
           outputDirectory: './traces',
         },
+      };
+
+      // Create a new mock logger for this specific test to track calls
+      const testLogger = {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
       };
 
       // Setup the ActionTraceConfigValidator mock to throw during initialization
@@ -303,17 +311,19 @@ describe('ActionTraceConfigLoader', () => {
 
       const freshLoader = new ActionTraceConfigLoader({
         traceConfigLoader: mockTraceConfigLoader,
-        logger: mockLogger,
+        logger: testLogger, // Use test-specific logger
         validator: mockValidator,
       });
 
       mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
+      
+      // Mock the basic validator to return valid since we're falling back to it
       mockValidator.validate.mockResolvedValue({ isValid: true });
 
       const config = await freshLoader.loadConfig();
 
       expect(config).toEqual(mockConfig.actionTracing);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(testLogger.warn).toHaveBeenCalledWith(
         'Enhanced validator failed, falling back to basic validation',
         expect.any(Error)
       );

@@ -31,4 +31,6 @@ export const actionTracingTokens = freeze({
   IErrorMetrics: 'IErrorMetrics',
   IRecoveryManager: 'IRecoveryManager',
   IRetryManager: 'IRetryManager',
+  // Configuration initialization service
+  ITracingConfigurationInitializer: 'ITracingConfigurationInitializer',
 });

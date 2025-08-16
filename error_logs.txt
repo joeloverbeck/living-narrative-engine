@@ -1,39 +1,19 @@
-ActionIndexingService: actor "p_erotica:iker_aguirre_instance" suppressed 4 duplicate actions: positioning:get_close (get close to Amaia Castillo, params: {"targetIds":{"primary":["p_erotica:amaia_castillo_instance","p_erotica:jon_urena_instance"]},"isMultiTarget":true}) x2, positioning:kneel_before (kneel before Amaia Castillo, params: {"targetIds":{"primary":["p_erotica:amaia_castillo_instance","p_erotica:jon_urena_instance"]},"isMultiTarget":true}) x2, violence:slap (slap Amaia Castillo, params: {"targetIds":{"primary":["p_erotica:amaia_castillo_instance","p_erotica:jon_urena_instance"]},"isMultiTarget":true}) x2, violence:sucker_punch (sucker-punch Amaia Castillo, params: {"targetIds":{"primary":["p_erotica:amaia_castillo_instance","p_erotica:jon_urena_instance"]},"isMultiTarget":true}) x2
-consoleLogger.js:151 ActionDiscoveryService: Action discovery completed for actor p_erotica:amaia_castillo_instance with action tracing {actorId: 'p_erotica:amaia_castillo_instance', actionCount: 30, errorCount: 0, tracedActionCount: 31, totalStagesTracked: 198, …}
-consoleLogger.js:151 ActionIndexingService: actor "p_erotica:amaia_castillo_instance" suppressed 3 duplicate actions: positioning:kneel_before (kneel before Iker Aguirre, params: {"targetIds":{"primary":["p_erotica:iker_aguirre_instance","p_erotica:jon_urena_instance"]},"isMultiTarget":true}) x2, violence:slap (slap Iker Aguirre, params: {"targetIds":{"primary":["p_erotica:iker_aguirre_instance","p_erotica:jon_urena_instance"]},"isMultiTarget":true}) x2, violence:sucker_punch (sucker-punch Iker Aguirre, params: {"targetIds":{"primary":["p_erotica:iker_aguirre_instance","p_erotica:jon_urena_instance"]},"isMultiTarget":true}) x2
-consoleLogger.js:151 IndexedDBStorageAdapter: Database upgrade needed from version 0 to 1
-consoleLogger.js:151 IndexedDBStorageAdapter: Database opened successfully
-consoleLogger.js:175 EventBus: Invalid event name provided. {type: 'TRACE_QUEUE_BATCH_PROCESSED', payload: {…}}
-error @ consoleLogger.js:175
-validateEventName_fn @ eventBus.js:39
-dispatch @ eventBus.js:120
-processBatch_fn @ traceQueueProcessor.js:625
-await in processBatch_fn
-(anonymous) @ traceQueueProcessor.js:378
-setTimeout
-setTimeout @ timerService.js:19
-scheduleBatchProcessing_fn @ traceQueueProcessor.js:375
-enqueue @ traceQueueProcessor.js:257
-writeTrace @ actionTraceOutputService.js:230
-writeTrace @ eventDispatchTracer.js:55
-writeTraceAsync_fn @ eventDispatchService.js:377
-dispatchWithErrorHandling @ eventDispatchService.js:157
-await in dispatchWithErrorHandling
-dispatchAction @ commandProcessor.js:213
-_dispatchAction @ commandProcessingWorkflow.js:204
-processCommand @ commandProcessingWorkflow.js:480
-_processCommandInternal @ processingCommandState.js:333
-_executeAction @ processingWorkflow.js:261
-await in _executeAction
-run @ processingWorkflow.js:87
-await in run
-enterState @ processingCommandState.js:290
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestProcessingCommandStateTransition @ baseTurnHandler.js:677
-requestProcessingCommandStateTransition @ turnContext.js:253
-run @ actionDecisionWorkflow.js:62
-await in run
+ActionDiscoveryService: Action discovery completed for actor p_erotica:iker_aguirre_instance with action tracing {actorId: 'p_erotica:iker_aguirre_instance', actionCount: 16, errorCount: 0, tracedActionCount: 1, totalStagesTracked: 1, …}
+consoleLogger.js:163 ActionTraceOutputService: Using file output mode, bypassing queue processor
+warn @ consoleLogger.js:163
+writeTrace @ actionTraceOutputService.js:274
+getValidActionsInternal_fn @ actionDiscoveryService.js:301
+await in getValidActionsInternal_fn
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:205
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:202
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
 _handleActionDecision @ awaitingActorDecisionState.js:102
 enterState @ awaitingActorDecisionState.js:119
 await in enterState
@@ -50,4 +30,44 @@ await in advanceTurn
 advanceTurn @ turnManager.js:338
 await in advanceTurn
 start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this warning
+consoleLogger.js:163 FileTraceOutputHandler: Trace queued for processing {actionId: undefined, actorId: undefined, queueLength: 1}
+warn @ consoleLogger.js:163
+writeTrace @ fileTraceOutputHandler.js:104
+defaultOutputHandler_fn @ actionTraceOutputService.js:511
+performWrite_fn @ actionTraceOutputService.js:467
+writeTrace @ actionTraceOutputService.js:275
+getValidActionsInternal_fn @ actionDiscoveryService.js:301
+await in getValidActionsInternal_fn
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:205
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:202
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this warning
+consoleLogger.js:151 FileTraceOutputHandler: Writing trace to file {fileName: 'trace_unknown_unknown_2025-08-15T11-41-40_667Z.json', actionId: undefined, actorId: undefined, outputDirectory: './traces/rub-vagina-debugging'}
+consoleLogger.js:151 FileTraceOutputHandler: Attempting to write trace via server endpoint {fileName: 'trace_unknown_unknown_2025-08-15T11-41-40_667Z.json', outputDirectory: './traces/rub-vagina-debugging', contentLength: 62503}
+consoleLogger.js:151 FileTraceOutputHandler: Sending POST to server {url: 'http://localhost:3001/api/traces/write', bodySize: 68315}
+consoleLogger.js:151 ActionIndexingService: actor "p_erotica:iker_aguirre_instance" suppressed 4 duplicate actions: positioning:get_close (get close to Amaia Castillo, params: {"targetIds":{"primary":["p_erotica:amaia_castillo_instance","p_erotica:jon_urena_instance"]},"isMultiTarget":true}) x2, positioning:kneel_before (kneel before Amaia Castillo, params: {"targetIds":{"primary":["p_erotica:amaia_castillo_instance","p_erotica:jon_urena_instance"]},"isMultiTarget":true}) x2, violence:slap (slap Amaia Castillo, params: {"targetIds":{"primary":["p_erotica:amaia_castillo_instance","p_erotica:jon_urena_instance"]},"isMultiTarget":true}) x2, violence:sucker_punch (sucker-punch Amaia Castillo, params: {"targetIds":{"primary":["p_erotica:amaia_castillo_instance","p_erotica:jon_urena_instance"]},"isMultiTarget":true}) x2
+consoleLogger.js:151 FileTraceOutputHandler: Trace written to server successfully {path: 'traces/rub-vagina-debugging/trace_unknown_unknown_2025-08-15T11-41-40_667Z.json', size: 62503, fileName: 'trace_unknown_unknown_2025-08-15T11-41-40_667Z.json'}

@@ -39,7 +39,7 @@ describe('Action Trace Configuration Validation Integration', () => {
       logger: mockLogger,
     });
 
-    // Register the action trace config schema
+    // Register the action trace config schema with the correct ID
     await schemaValidator.addSchema(
       {
         $schema: 'http://json-schema.org/draft-07/schema#',
@@ -67,7 +67,7 @@ describe('Action Trace Configuration Validation Integration', () => {
         },
         required: ['actionTracing'],
       },
-      'action-trace-config'
+      'schema://living-narrative-engine/trace-config.schema.json'
     );
 
     // Create the config loader with dependencies
