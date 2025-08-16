@@ -271,7 +271,7 @@ export class ActionTraceOutputService {
 
     // When file output is enabled, bypass queue processor and write directly to files
     if (this.#outputToFiles && this.#fileOutputHandler) {
-      this.#logger.warn(
+      this.#logger.debug(
         'ActionTraceOutputService: Using file output mode, bypassing queue processor'
       );
       const writePromise = this.#performWrite(trace);

@@ -207,7 +207,7 @@ describe('ActionTraceConfigLoader', () => {
       };
 
       mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
-      
+
       // The enhanced validator mock was already set up to return isValid: false
       // for invalid 'enabled' value in the beforeEach block (lines 42-55)
       // This should trigger the default config return in production code
@@ -248,7 +248,7 @@ describe('ActionTraceConfigLoader', () => {
           tracedActions: ['core:go'], // Duplicates removed if any
           outputDirectory: './traces',
           verbosity: 'standard',
-          // Since no rotationPolicy is specified in mockConfig, 
+          // Since no rotationPolicy is specified in mockConfig,
           // normalization won't add defaults
         },
       };
@@ -260,9 +260,7 @@ describe('ActionTraceConfigLoader', () => {
         validateConfiguration: jest.fn().mockResolvedValue({
           isValid: true,
           errors: [],
-          warnings: [
-            'Using default value for maxTraceFiles',
-          ],
+          warnings: ['Using default value for maxTraceFiles'],
           normalizedConfig: normalizedConfig,
         }),
       }));
@@ -316,7 +314,7 @@ describe('ActionTraceConfigLoader', () => {
       });
 
       mockTraceConfigLoader.loadConfig.mockResolvedValue(mockConfig);
-      
+
       // Mock the basic validator to return valid since we're falling back to it
       mockValidator.validate.mockResolvedValue({ isValid: true });
 

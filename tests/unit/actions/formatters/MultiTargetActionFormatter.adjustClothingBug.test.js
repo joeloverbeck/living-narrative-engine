@@ -98,16 +98,13 @@ describe('MultiTargetActionFormatter - adjust_clothing bug reproduction', () => 
       expect(result.value.length).toBe(1);
 
       // Verify the action is properly formatted without placeholders
-      expect(result.value[0]).toBe(
-        "adjust Iker Aguirre's denim trucker jacket"
-      );
-      expect(result.value[0]).not.toContain('{primary}');
-      expect(result.value[0]).not.toContain('{secondary}');
+      const item = result.value[0];
+      expect(item.command).toBe("adjust Iker Aguirre's denim trucker jacket");
+      expect(item.targets).toBeDefined();
+      expect(item.command).not.toContain('{primary}');
+      expect(item.command).not.toContain('{secondary}');
 
-      console.log(
-        '✅ BUG FIXED! Got properly formatted action:',
-        result.value[0]
-      );
+      console.log('✅ BUG FIXED! Got properly formatted action:', item.command);
     });
 
     it('should handle multiple actors correctly (fix verified)', () => {
@@ -172,16 +169,19 @@ describe('MultiTargetActionFormatter - adjust_clothing bug reproduction', () => 
 
       // With the fix, we should get exactly 2 properly formatted actions
       expect(result.value.length).toBe(2);
-      expect(result.value).toContain("adjust Alice's red shirt");
-      expect(result.value).toContain("adjust Bob's blue jacket");
+
+      // Extract commands from the objects for comparison
+      const commands = result.value.map((item) => item.command);
+      expect(commands).toContain("adjust Alice's red shirt");
+      expect(commands).toContain("adjust Bob's blue jacket");
 
       // Verify no placeholders remain
-      result.value.forEach((cmd) => {
+      commands.forEach((cmd) => {
         expect(cmd).not.toContain('{primary}');
         expect(cmd).not.toContain('{secondary}');
       });
 
-      console.log('✅ Multiple actors handled correctly:', result.value);
+      console.log('✅ Multiple actors handled correctly:', commands);
     });
 
     it('should handle minimal case correctly (fix verified)', () => {
@@ -221,11 +221,13 @@ describe('MultiTargetActionFormatter - adjust_clothing bug reproduction', () => 
       expect(result.ok).toBe(true);
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value.length).toBe(1);
-      expect(result.value[0]).toBe('Person gives item');
-      expect(result.value[0]).not.toContain('{primary}');
-      expect(result.value[0]).not.toContain('{secondary}');
 
-      console.log('✅ Minimal test passes:', result.value[0]);
+      const item = result.value[0];
+      expect(item.command).toBe('Person gives item');
+      expect(item.command).not.toContain('{primary}');
+      expect(item.command).not.toContain('{secondary}');
+
+      console.log('✅ Minimal test passes:', item.command);
     });
   });
 });

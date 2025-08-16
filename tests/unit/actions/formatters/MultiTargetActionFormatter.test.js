@@ -111,10 +111,13 @@ describe('MultiTargetActionFormatter', () => {
       );
 
       expect(result.ok).toBe(true);
-      // New behavior: multiple entities generate array of combinations
+      // New behavior: multiple entities generate array of combinations with targets
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value).toHaveLength(4); // 2 items × 2 targets
-      expect(result.value).toEqual(
+
+      // Extract commands from the objects for comparison
+      const commands = result.value.map((item) => item.command);
+      expect(commands).toEqual(
         expect.arrayContaining([
           'throw Small Rock at Goblin',
           'throw Small Rock at Orc',
@@ -122,6 +125,14 @@ describe('MultiTargetActionFormatter', () => {
           'throw Knife at Orc',
         ])
       );
+
+      // Verify each item has the correct structure
+      result.value.forEach((item) => {
+        expect(item).toHaveProperty('command');
+        expect(item).toHaveProperty('targets');
+        expect(item.targets).toHaveProperty('primary');
+        expect(item.targets).toHaveProperty('secondary');
+      });
     });
 
     it('should handle missing placeholder in target definitions', () => {
@@ -144,7 +155,10 @@ describe('MultiTargetActionFormatter', () => {
       // New behavior: multiple entities generate array of combinations
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value).toHaveLength(4); // 2 items × 2 targets
-      expect(result.value).toEqual(
+
+      // Extract commands from the objects for comparison
+      const commands = result.value.map((item) => item.command);
+      expect(commands).toEqual(
         expect.arrayContaining([
           'throw Small Rock at Goblin',
           'throw Small Rock at Orc',
@@ -215,7 +229,10 @@ describe('MultiTargetActionFormatter', () => {
       // New behavior: multiple entities generate array of combinations
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value).toHaveLength(4); // 2 items × 2 targets
-      expect(result.value).toEqual(
+
+      // Extract commands from the objects for comparison
+      const commands = result.value.map((item) => item.command);
+      expect(commands).toEqual(
         expect.arrayContaining([
           'use Small Rock on Goblin',
           'use Small Rock on Orc',
@@ -259,8 +276,11 @@ describe('MultiTargetActionFormatter', () => {
       expect(result.ok).toBe(true);
       expect(Array.isArray(result.value)).toBe(true);
       expect(result.value.length).toBeGreaterThan(0);
-      expect(result.value).toContain('throw Small Rock at Goblin');
-      expect(result.value).toContain('throw Knife at Goblin');
+
+      // Extract commands from the objects for comparison
+      const commands = result.value.map((item) => item.command);
+      expect(commands).toContain('throw Small Rock at Goblin');
+      expect(commands).toContain('throw Knife at Goblin');
     });
 
     it('should handle single target type combinations', () => {
@@ -290,8 +310,11 @@ describe('MultiTargetActionFormatter', () => {
 
       expect(result.ok).toBe(true);
       expect(Array.isArray(result.value)).toBe(true);
-      expect(result.value).toContain('throw Small Rock');
-      expect(result.value).toContain('throw Knife');
+
+      // Extract commands from the objects for comparison
+      const commands = result.value.map((item) => item.command);
+      expect(commands).toContain('throw Small Rock');
+      expect(commands).toContain('throw Knife');
     });
 
     it('should respect combination limits', () => {
@@ -688,10 +711,13 @@ describe('MultiTargetActionFormatter', () => {
       // Should handle invalid data gracefully and include valid combinations
       expect(result.value.length).toBeGreaterThan(0);
       // Check that at least one valid combination exists
-      const validCombinations = result.value.filter(
-        (cmd) =>
-          cmd.includes('Valid Item') || cmd.includes('Another Valid Item')
-      );
+      const validCombinations = result.value.filter((item) => {
+        const cmd = item.command || item;
+        return (
+          typeof cmd === 'string' &&
+          (cmd.includes('Valid Item') || cmd.includes('Another Valid Item'))
+        );
+      });
       expect(validCombinations.length).toBeGreaterThan(0);
     });
 

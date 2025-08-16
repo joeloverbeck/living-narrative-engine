@@ -4518,9 +4518,7 @@
                 "positioning:closeness",
                 "core:current_actor"
               ],
-              "requiredComponents": [
-                "positioning:closeness"
-              ],
+              "requiredComponents": ["positioning:closeness"],
               "forbiddenComponents": [],
               "componentMatchPassed": true,
               "missingComponents": [],
@@ -4597,9 +4595,7 @@
               "timestamp": 1755266280954,
               "stage": "target_resolution",
               "actorId": "p_erotica:amaia_castillo_instance",
-              "targetKeys": [
-                "primary"
-              ],
+              "targetKeys": ["primary"],
               "isLegacy": false,
               "resolutionSuccess": true,
               "resolutionTimeMs": 0,
@@ -4655,17 +4651,13 @@
                     "torso_upper",
                     "legs"
                   ],
-                  "potentialCoveringSlots": [
-                    "torso_lower"
-                  ],
+                  "potentialCoveringSlots": ["torso_lower"],
                   "slotChecks": {
                     "torso_lower": {
                       "hasItems": true,
                       "hasCoveringItems": true,
                       "slotExists": true,
-                      "layers": [
-                        "underwear"
-                      ],
+                      "layers": ["underwear"],
                       "itemCounts": {
                         "underwear": 1
                       }
@@ -4690,17 +4682,13 @@
                     "torso_upper",
                     "legs"
                   ],
-                  "potentialCoveringSlots": [
-                    "torso_lower"
-                  ],
+                  "potentialCoveringSlots": ["torso_lower"],
                   "slotChecks": {
                     "torso_lower": {
                       "hasItems": true,
                       "hasCoveringItems": true,
                       "slotExists": true,
-                      "layers": [
-                        "underwear"
-                      ],
+                      "layers": ["underwear"],
                       "itemCounts": {
                         "underwear": 1
                       }
@@ -4730,9 +4718,7 @@
           "createdAt": 1755266280940,
           "type": "operator_evaluations"
         },
-        "stageOrder": [
-          "operator_evaluations"
-        ],
+        "stageOrder": ["operator_evaluations"],
         "totalDuration": 0
       },
       "__stage_summary": {
@@ -4778,9 +4764,7 @@
           },
           "createdAt": 1755266280940
         },
-        "stageOrder": [
-          "formatting"
-        ],
+        "stageOrder": ["formatting"],
         "totalDuration": 0
       }
     },

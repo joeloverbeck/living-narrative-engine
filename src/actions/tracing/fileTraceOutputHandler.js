@@ -101,11 +101,14 @@ class FileTraceOutputHandler {
         timestamp: Date.now(),
       });
 
-      this.#logger.warn('FileTraceOutputHandler: Trace queued for processing', {
-        actionId: originalTrace?.actionId,
-        actorId: originalTrace?.actorId,
-        queueLength: this.#queuedTraces.length,
-      });
+      this.#logger.debug(
+        'FileTraceOutputHandler: Trace queued for processing',
+        {
+          actionId: originalTrace?.actionId,
+          actorId: originalTrace?.actorId,
+          queueLength: this.#queuedTraces.length,
+        }
+      );
 
       // Start processing if not already running
       if (!this.#isProcessingQueue) {

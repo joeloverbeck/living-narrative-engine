@@ -156,7 +156,7 @@ class ActionTraceConfigLoader {
               validationResult.normalizedConfig.actionTracing;
             this.#logger.debug('Using normalized configuration', {
               originalCount: fullConfig.actionTracing?.tracedActions?.length,
-              normalizedCount: actionTracingConfig.tracedActions?.length
+              normalizedCount: actionTracingConfig.tracedActions?.length,
             });
           }
         } catch (validatorError) {

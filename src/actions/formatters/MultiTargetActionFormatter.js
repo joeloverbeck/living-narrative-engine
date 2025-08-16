@@ -177,7 +177,11 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       );
 
       if (result.ok) {
-        formattedCommands.push(result.value);
+        // Include the specific targets used for this command
+        formattedCommands.push({
+          command: result.value,
+          targets: combination,
+        });
       }
     }
 

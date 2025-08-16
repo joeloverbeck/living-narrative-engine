@@ -788,7 +788,7 @@ describe('ActionTraceConfigValidator', () => {
 
       // Initialize should succeed with valid dependencies
       await expect(newValidator.initialize()).resolves.toBeUndefined();
-      
+
       // Verify logger was called
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Initializing action trace config validator'
