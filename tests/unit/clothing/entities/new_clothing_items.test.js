@@ -388,9 +388,9 @@ describe('New Clothing Items Unit Tests', () => {
     it('should describe basic undergarment characteristics', () => {
       expect(entity.components['core:description'].text).toContain('cotton');
       expect(entity.components['core:description'].text).toContain('white');
-      expect(entity.components['core:description'].text.toLowerCase()).toContain(
-        'comfortable'
-      );
+      expect(
+        entity.components['core:description'].text.toLowerCase()
+      ).toContain('comfortable');
     });
   });
 

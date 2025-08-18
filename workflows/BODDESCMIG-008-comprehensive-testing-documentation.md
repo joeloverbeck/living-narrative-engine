@@ -41,12 +41,14 @@ Create a comprehensive test suite covering the complete body descriptor migratio
 ## Current State
 
 **Testing Coverage**:
+
 - Individual unit tests created for each component
 - Some integration tests exist for specific workflows
 - Missing comprehensive end-to-end testing
 - Missing performance and edge case testing
 
 **Documentation Status**:
+
 - Technical specification exists
 - Missing modder guidelines
 - Missing migration documentation
@@ -57,6 +59,7 @@ Create a comprehensive test suite covering the complete body descriptor migratio
 ### 1. Comprehensive Integration Tests
 
 #### End-to-End Body Descriptor Workflow
+
 **File**: `tests/integration/anatomy/bodyDescriptorWorkflow.test.js`
 
 ```javascript
@@ -86,7 +89,7 @@ describe('Body Descriptor Integration Workflow', () => {
         build: 'athletic',
         density: 'moderate',
         composition: 'lean',
-        skinColor: 'olive'
+        skinColor: 'olive',
       });
 
       // Act: Complete workflow
@@ -107,7 +110,7 @@ describe('Body Descriptor Integration Workflow', () => {
       // Test with only some descriptors present
       const recipe = testBed.createRecipeWithDescriptors({
         build: 'slim',
-        skinColor: 'pale'
+        skinColor: 'pale',
         // density and composition missing
       });
 
@@ -126,7 +129,9 @@ describe('Body Descriptor Integration Workflow', () => {
       // Test backward compatibility
       const recipeWithoutDescriptors = testBed.createBasicRecipe();
 
-      const entityId = await testBed.createEntityFromRecipe(recipeWithoutDescriptors);
+      const entityId = await testBed.createEntityFromRecipe(
+        recipeWithoutDescriptors
+      );
       const description = await testBed.generateBodyDescription(entityId);
 
       // Should not include any body descriptor lines
@@ -141,19 +146,22 @@ describe('Body Descriptor Integration Workflow', () => {
     it('should handle invalid descriptor values gracefully', async () => {
       const recipeWithInvalidDescriptor = testBed.createRecipeWithDescriptors({
         build: 'invalid-build-type',
-        skinColor: 'olive'
+        skinColor: 'olive',
       });
 
       // Should throw validation error during generation
-      await expect(testBed.createEntityFromRecipe(recipeWithInvalidDescriptor))
-        .rejects.toThrow('Invalid build descriptor');
+      await expect(
+        testBed.createEntityFromRecipe(recipeWithInvalidDescriptor)
+      ).rejects.toThrow('Invalid build descriptor');
     });
 
     it('should handle missing anatomy components gracefully', async () => {
       const entityWithoutBody = testBed.createEntityWithoutBodyComponent();
-      
-      const description = await testBed.generateBodyDescription(entityWithoutBody.id);
-      
+
+      const description = await testBed.generateBodyDescription(
+        entityWithoutBody.id
+      );
+
       // Should handle gracefully and return empty or default description
       expect(description).toBeDefined();
     });
@@ -165,7 +173,7 @@ describe('Body Descriptor Integration Workflow', () => {
         build: 'athletic',
         density: 'moderate',
         composition: 'lean',
-        skinColor: 'olive'
+        skinColor: 'olive',
       });
 
       const entityId = await testBed.createEntityFromRecipe(recipe);
@@ -183,6 +191,7 @@ describe('Body Descriptor Integration Workflow', () => {
 ```
 
 #### Schema Validation Integration Tests
+
 **File**: `tests/integration/anatomy/schemaValidationIntegration.test.js`
 
 ```javascript
@@ -208,6 +217,7 @@ describe('Schema Validation Integration', () => {
 ### 2. Test Utilities and Fixtures
 
 #### Integration Test Bed
+
 **File**: `tests/common/bodyDescriptorIntegrationTestBed.js`
 
 ```javascript
@@ -235,13 +245,13 @@ export class BodyDescriptorIntegrationTestBed {
       slots: {
         torso: {
           partType: 'torso',
-          preferId: 'anatomy:test_torso'
+          preferId: 'anatomy:test_torso',
         },
         head: {
           partType: 'head',
-          preferId: 'anatomy:test_head'
-        }
-      }
+          preferId: 'anatomy:test_head',
+        },
+      },
     };
   }
 
@@ -260,6 +270,7 @@ export class BodyDescriptorIntegrationTestBed {
 ```
 
 #### Test Data Fixtures
+
 **File**: `tests/fixtures/bodyDescriptorFixtures.js`
 
 ```javascript
@@ -272,39 +283,37 @@ export const DESCRIPTOR_TEST_FIXTURES = {
     build: 'athletic',
     density: 'moderate',
     composition: 'lean',
-    skinColor: 'olive'
+    skinColor: 'olive',
   },
 
   PARTIAL_DESCRIPTORS: {
     build: 'slim',
-    skinColor: 'pale'
+    skinColor: 'pale',
   },
 
   INVALID_DESCRIPTORS: {
     build: 'invalid-build-type',
     density: 'unknown-density',
-    composition: 'invalid-composition'
+    composition: 'invalid-composition',
   },
 
   EXPECTED_OUTPUT_FORMATS: {
     COMPLETE: [
       'Skin color: olive',
-      'Build: athletic', 
+      'Build: athletic',
       'Body hair: moderate',
-      'Body composition: lean'
+      'Body composition: lean',
     ],
-    
-    PARTIAL: [
-      'Skin color: pale',
-      'Build: slim'
-    ]
-  }
+
+    PARTIAL: ['Skin color: pale', 'Build: slim'],
+  },
 };
 ```
 
 ### 3. Performance Testing
 
 #### Performance Benchmarks
+
 **File**: `tests/performance/anatomy/bodyDescriptorPerformance.test.js`
 
 ```javascript
@@ -334,6 +343,7 @@ describe('Body Descriptor Performance', () => {
 ### 4. Edge Case Testing
 
 #### Edge Case Test Suite
+
 **File**: `tests/integration/anatomy/bodyDescriptorEdgeCases.test.js`
 
 ```javascript
@@ -371,9 +381,10 @@ describe('Body Descriptor Edge Cases', () => {
 ### 5. Documentation Creation
 
 #### Modder Documentation
+
 **File**: `docs/modding/body-descriptors-guide.md`
 
-```markdown
+````markdown
 # Body Descriptors Guide for Modders
 
 ## Overview
@@ -401,28 +412,34 @@ Body descriptors provide a convenient way to define overall body characteristics
   }
 }
 ```
+````
 
 ### Available Descriptors
 
 #### Build (Body Build Type)
+
 - `skinny`, `slim`, `toned`, `athletic`, `shapely`, `thick`, `muscular`, `stocky`
 - Displayed as: "Build: [value]"
 
-#### Density (Body Hair Level)  
+#### Density (Body Hair Level)
+
 - `hairless`, `sparse`, `light`, `moderate`, `hairy`, `very-hairy`
 - Displayed as: "Body hair: [value]"
 
 #### Composition (Body Composition)
+
 - `underweight`, `lean`, `average`, `soft`, `chubby`, `overweight`, `obese`
 - Displayed as: "Body composition: [value]"
 
 #### Skin Color
+
 - Free-form string value
 - Displayed as: "Skin color: [value]"
 
 ## Advanced Usage
 
 ### Partial Descriptors
+
 You don't need to specify all descriptors:
 
 ```json
@@ -435,6 +452,7 @@ You don't need to specify all descriptors:
 ```
 
 ### Body vs Part Descriptors
+
 - Body descriptors apply to the whole body
 - Part descriptors apply to individual parts
 - Body descriptors appear first in descriptions
@@ -445,6 +463,7 @@ You don't need to specify all descriptors:
 If your mod previously used entity-level descriptors:
 
 ### Before (Deprecated)
+
 ```json
 {
   "components": {
@@ -454,6 +473,7 @@ If your mod previously used entity-level descriptors:
 ```
 
 ### After (Recommended)
+
 ```json
 {
   "components": {
@@ -467,7 +487,8 @@ If your mod previously used entity-level descriptors:
   }
 }
 ```
-```
+
+````
 
 #### Developer Documentation
 **File**: `docs/development/body-descriptors-technical.md`
@@ -487,8 +508,10 @@ Body descriptors are stored in the `anatomy:body` component under `body.descript
 
 ### Data Flow
 
-```
+````
+
 Recipe (bodyDescriptors) → AnatomyGenerationWorkflow → Body Component (body.descriptors) → BodyDescriptionComposer → Description Output
+
 ```
 
 ## Implementation Details
@@ -504,18 +527,20 @@ Recipe (bodyDescriptors) → AnatomyGenerationWorkflow → Body Component (body.
 ```
 
 #### Migration Guide
+
 **File**: `docs/migration/body-descriptor-migration.md`
 
 ```markdown
 # Body Descriptor Migration Guide
 
 ## Overview
+
 This guide helps migrate from entity-level descriptors to body-level descriptors.
 
 ## Migration Steps
 
 1. **Identify Current Usage**: Find entity-level descriptors in your content
-2. **Update Recipe Definitions**: Add bodyDescriptors to recipes  
+2. **Update Recipe Definitions**: Add bodyDescriptors to recipes
 3. **Remove Entity-Level Components**: Clean up deprecated components
 4. **Test Migration**: Verify descriptions generate correctly
 
@@ -526,11 +551,13 @@ This guide helps migrate from entity-level descriptors to body-level descriptors
 ## Troubleshooting
 
 ### Common Issues
+
 - Invalid descriptor values
 - Missing required fields
 - Performance impact
 
 ### Solutions
+
 [Solutions for common migration issues]
 ```
 
@@ -570,6 +597,7 @@ This guide helps migrate from entity-level descriptors to body-level descriptors
 ## Validation Criteria
 
 ### Test Coverage
+
 - [ ] End-to-end workflow tests pass
 - [ ] All integration points tested
 - [ ] Edge cases covered
@@ -577,18 +605,21 @@ This guide helps migrate from entity-level descriptors to body-level descriptors
 - [ ] Error handling validated
 
 ### Documentation Quality
+
 - [ ] Modder guide complete with working examples
 - [ ] Technical documentation covers all components
 - [ ] Migration guide provides clear steps
 - [ ] All examples tested and verified
 
 ### Performance Validation
+
 - [ ] Anatomy generation: <5ms with body descriptors
 - [ ] Description composition: <5ms for complete body
 - [ ] Descriptor validation: <1ms per validation
 - [ ] No memory leaks in batch operations
 
 ### Integration Validation
+
 - [ ] Complete workflow from recipe to description works
 - [ ] Schema validation integrated correctly
 - [ ] Error handling provides clear messages
@@ -597,33 +628,40 @@ This guide helps migrate from entity-level descriptors to body-level descriptors
 ## Testing Requirements
 
 ### Unit Tests (Enhanced)
+
 All existing unit test files enhanced with:
+
 - Additional edge case coverage
 - Performance validation
 - Integration verification
 - Error scenario testing
 
 ### Integration Tests (New)
+
 - `tests/integration/anatomy/bodyDescriptorWorkflow.test.js`
 - `tests/integration/anatomy/schemaValidationIntegration.test.js`
 - `tests/integration/anatomy/bodyDescriptorEdgeCases.test.js`
 
 ### Performance Tests (New)
+
 - `tests/performance/anatomy/bodyDescriptorPerformance.test.js`
 
 ### Test Utilities (New)
+
 - `tests/common/bodyDescriptorIntegrationTestBed.js`
 - `tests/fixtures/bodyDescriptorFixtures.js`
 
 ## Files Created
 
 ### Test Files
+
 - Integration test suite
 - Performance test suite
 - Test utilities and fixtures
 - Edge case test suite
 
 ### Documentation Files
+
 - `docs/modding/body-descriptors-guide.md`
 - `docs/development/body-descriptors-technical.md`
 - `docs/migration/body-descriptor-migration.md`
@@ -650,7 +688,7 @@ All existing unit test files enhanced with:
 This ticket represents the completion of the body descriptor migration. After successful completion:
 
 1. **Feature is production-ready**
-2. **Complete documentation available**  
+2. **Complete documentation available**
 3. **Comprehensive test coverage achieved**
 4. **Performance validated**
 5. **Migration path clear for existing content**

@@ -100,6 +100,17 @@ export class BodyDescriptionComposer {
         continue;
       }
 
+      // Handle skin color
+      if (partType === 'skin_color') {
+        const skinColorDescription =
+          this.extractSkinColorDescription(bodyEntity);
+        if (skinColorDescription) {
+          lines.push(`Skin color: ${skinColorDescription}`);
+        }
+        processedTypes.add(partType);
+        continue;
+      }
+
       // Handle equipment descriptions
       if (partType === 'equipment' && this.equipmentDescriptionService) {
         const equipmentDescription =
@@ -186,6 +197,15 @@ export class BodyDescriptionComposer {
       return '';
     }
 
+    // Check body.descriptors first
+    const bodyComponent = bodyEntity.getComponentData(
+      ANATOMY_BODY_COMPONENT_ID
+    );
+    if (bodyComponent?.body?.descriptors?.build) {
+      return bodyComponent.body.descriptors.build;
+    }
+
+    // Fallback to entity-level component for backward compatibility
     const buildComponent = bodyEntity.getComponentData('descriptors:build');
     if (!buildComponent || !buildComponent.build) {
       return '';
@@ -205,6 +225,15 @@ export class BodyDescriptionComposer {
       return '';
     }
 
+    // Check body.descriptors first
+    const bodyComponent = bodyEntity.getComponentData(
+      ANATOMY_BODY_COMPONENT_ID
+    );
+    if (bodyComponent?.body?.descriptors?.composition) {
+      return bodyComponent.body.descriptors.composition;
+    }
+
+    // Fallback to entity-level component for backward compatibility
     const compositionComponent = bodyEntity.getComponentData(
       'descriptors:body_composition'
     );
@@ -226,6 +255,15 @@ export class BodyDescriptionComposer {
       return '';
     }
 
+    // Check body.descriptors first (note: density maps to "Body hair")
+    const bodyComponent = bodyEntity.getComponentData(
+      ANATOMY_BODY_COMPONENT_ID
+    );
+    if (bodyComponent?.body?.descriptors?.density) {
+      return bodyComponent.body.descriptors.density;
+    }
+
+    // Fallback to entity-level component for backward compatibility
     const bodyHairComponent = bodyEntity.getComponentData(
       'descriptors:body_hair'
     );
@@ -234,5 +272,35 @@ export class BodyDescriptionComposer {
     }
 
     return bodyHairComponent.density;
+  }
+
+  /**
+   * Extract skin color description from body entity
+   *
+   * @param {object} bodyEntity - The body entity
+   * @returns {string} Skin color description
+   */
+  extractSkinColorDescription(bodyEntity) {
+    if (!bodyEntity || typeof bodyEntity.getComponentData !== 'function') {
+      return '';
+    }
+
+    // Check body.descriptors first
+    const bodyComponent = bodyEntity.getComponentData(
+      ANATOMY_BODY_COMPONENT_ID
+    );
+    if (bodyComponent?.body?.descriptors?.skinColor) {
+      return bodyComponent.body.descriptors.skinColor;
+    }
+
+    // Fallback to entity-level component for backward compatibility
+    const skinColorComponent = bodyEntity.getComponentData(
+      'descriptors:skin_color'
+    );
+    if (!skinColorComponent || !skinColorComponent.skinColor) {
+      return '';
+    }
+
+    return skinColorComponent.skinColor;
   }
 }

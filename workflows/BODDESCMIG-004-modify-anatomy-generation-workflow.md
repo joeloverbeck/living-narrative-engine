@@ -39,12 +39,14 @@ Modify the AnatomyGenerationWorkflow to read `bodyDescriptors` from recipes and 
 **File**: `src/anatomy/workflows/anatomyGenerationWorkflow.js` (expected location based on spec)
 
 Current workflow:
+
 1. Reads recipe definition
 2. Generates body parts from slots
 3. Creates anatomy:body component with root and parts
 4. Does NOT handle body-level descriptors
 
 Missing functionality:
+
 - Reading bodyDescriptors from recipe
 - Applying descriptors to body component
 - Validation of descriptor values
@@ -69,7 +71,7 @@ _applyBodyDescriptors(bodyComponent, recipe) {
   if (!recipe.bodyDescriptors) {
     return bodyComponent; // No descriptors to apply
   }
-  
+
   // Apply body-level descriptors to the body component
   return {
     ...bodyComponent,
@@ -91,11 +93,11 @@ Modify the main `generateAnatomy` method:
 async generateAnatomy(entityId, recipeId) {
   try {
     // ... existing validation and loading code ...
-    
+
     const recipe = await this.recipeLoader.loadRecipe(recipeId);
-    
+
     // ... existing body generation code ...
-    
+
     // Generate base body component
     let bodyComponent = {
       recipeId: recipeId,
@@ -104,14 +106,14 @@ async generateAnatomy(entityId, recipeId) {
         parts: generatedParts
       }
     };
-    
+
     // NEW: Apply body descriptors from recipe
     bodyComponent = this._applyBodyDescriptors(bodyComponent, recipe);
-    
+
     // ... continue with existing code ...
-    
+
     return bodyComponent;
-    
+
   } catch (error) {
     this.#logger.error(`Anatomy generation failed for entity ${entityId}`, error);
     throw new AnatomyGenerationError(`Failed to generate anatomy: ${error.message}`);
@@ -132,34 +134,34 @@ Add validation of descriptor values during application:
  */
 _validateBodyDescriptors(bodyDescriptors, recipeId) {
   if (!bodyDescriptors) return;
-  
+
   const validBuilds = ['skinny', 'slim', 'toned', 'athletic', 'shapely', 'thick', 'muscular', 'stocky'];
   const validDensities = ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy'];
   const validCompositions = ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese'];
-  
+
   // Validate build
   if (bodyDescriptors.build && !validBuilds.includes(bodyDescriptors.build)) {
     throw new AnatomyGenerationError(
       `Invalid build descriptor '${bodyDescriptors.build}' in recipe '${recipeId}'. Must be one of: ${validBuilds.join(', ')}`
     );
   }
-  
+
   // Validate density (body hair)
   if (bodyDescriptors.density && !validDensities.includes(bodyDescriptors.density)) {
     throw new AnatomyGenerationError(
       `Invalid density descriptor '${bodyDescriptors.density}' in recipe '${recipeId}'. Must be one of: ${validDensities.join(', ')}`
     );
   }
-  
+
   // Validate composition
   if (bodyDescriptors.composition && !validCompositions.includes(bodyDescriptors.composition)) {
     throw new AnatomyGenerationError(
       `Invalid composition descriptor '${bodyDescriptors.composition}' in recipe '${recipeId}'. Must be one of: ${validCompositions.join(', ')}`
     );
   }
-  
+
   // skinColor is free-form string - no enum validation needed
-  
+
   // Log warnings for deprecated entity-level descriptors (if any detected)
   // Note: This workflow doesn't handle entity-level descriptors anymore
 }
@@ -175,12 +177,14 @@ Enhance existing event dispatching:
 // At the end of successful generation
 this.#eventBus.dispatch({
   type: 'ANATOMY_GENERATION_COMPLETED',
-  payload: { 
-    entityId, 
+  payload: {
+    entityId,
     recipeId,
     hasBodyDescriptors: Boolean(recipe.bodyDescriptors),
-    bodyDescriptorCount: recipe.bodyDescriptors ? Object.keys(recipe.bodyDescriptors).length : 0
-  }
+    bodyDescriptorCount: recipe.bodyDescriptors
+      ? Object.keys(recipe.bodyDescriptors).length
+      : 0,
+  },
 });
 ```
 
@@ -194,8 +198,8 @@ if (error instanceof AnatomyDescriptorValidationError) {
     payload: {
       entityId,
       recipeId,
-      error: error.message
-    }
+      error: error.message,
+    },
   });
   throw error;
 }
@@ -237,6 +241,7 @@ if (error instanceof AnatomyDescriptorValidationError) {
 ## Validation Criteria
 
 ### Core Functionality Tests
+
 - [ ] Recipes with bodyDescriptors generate correct body component structure
 - [ ] Recipes without bodyDescriptors work unchanged (backward compatibility)
 - [ ] body.descriptors object created only when recipe has bodyDescriptors
@@ -244,20 +249,23 @@ if (error instanceof AnatomyDescriptorValidationError) {
 - [ ] Partial bodyDescriptors handled correctly (only specified ones applied)
 
 ### Validation Tests
+
 - [ ] Invalid build enum values trigger AnatomyGenerationError
-- [ ] Invalid density enum values trigger AnatomyGenerationError  
+- [ ] Invalid density enum values trigger AnatomyGenerationError
 - [ ] Invalid composition enum values trigger AnatomyGenerationError
 - [ ] skinColor values pass through without enum validation
 - [ ] Error messages include recipe ID and invalid value
 - [ ] Validation errors prevent body component creation
 
 ### Integration Tests
+
 - [ ] Generated body components validate against updated schema
 - [ ] Event system receives correct anatomy generation events
 - [ ] Error handling works with descriptor validation failures
 - [ ] Performance impact is minimal (no measurable overhead)
 
 ### Data Structure Tests
+
 - [ ] Generated body component has correct structure:
   ```json
   {
@@ -277,13 +285,17 @@ if (error instanceof AnatomyDescriptorValidationError) {
 ## Error Handling
 
 ### AnatomyGenerationError Enhancement
+
 Add descriptor-specific error types:
+
 - AnatomyDescriptorValidationError
 - InvalidBodyDescriptorError
 - MissingDescriptorEnumError
 
 ### Error Context
+
 All errors should include:
+
 - Entity ID being processed
 - Recipe ID being used
 - Specific descriptor that failed
@@ -296,6 +308,7 @@ All errors should include:
 **File**: `tests/unit/anatomy/workflows/AnatomyGenerationWorkflow.test.js`
 
 Test cases:
+
 - `_applyBodyDescriptors()` with complete descriptors
 - `_applyBodyDescriptors()` with partial descriptors
 - `_applyBodyDescriptors()` with no descriptors (undefined)
@@ -310,6 +323,7 @@ Test cases:
 **File**: `tests/integration/anatomy/anatomyGeneration.test.js`
 
 Test cases:
+
 - End-to-end generation with body descriptors
 - Recipe loading → generation → component validation
 - Backward compatibility with existing recipes
@@ -329,15 +343,18 @@ Test cases:
 ## Integration Points
 
 ### With Previous Tickets
+
 - Uses body component schema from BODDESCMIG-001
 - Uses recipe schema from BODDESCMIG-002
 - Works with sample recipes from BODDESCMIG-003
 
 ### With Future Tickets
+
 - Generated components will be used by BODDESCMIG-006 & 007 (BodyDescriptionComposer)
 - Validation logic may be shared with BODDESCMIG-005
 
 ### With Existing Systems
+
 - Maintains compatibility with existing recipe loading
 - Preserves part generation workflow
 - Integrates with entity component system
@@ -346,11 +363,13 @@ Test cases:
 ## Risk Assessment
 
 **Medium Risk** - Modifies core generation logic:
+
 - Changes to main anatomy generation workflow
 - New validation logic could introduce failures
 - Integration with existing generation process
 
 **Mitigation Strategies**:
+
 - Thorough testing of backward compatibility
 - Gradual rollout with feature flags if needed
 - Comprehensive error handling and logging
@@ -376,13 +395,14 @@ Test cases:
 ## Next Steps
 
 After completion:
+
 - BODDESCMIG-005: Add body descriptor validation logic
 - BODDESCMIG-006: Update BodyDescriptionComposer methods
 
 ## Notes
 
 - This is a core implementation ticket affecting the main generation workflow
-- Proper testing is critical due to integration with existing systems  
+- Proper testing is critical due to integration with existing systems
 - Consider feature flag for gradual rollout if needed
 - Maintain comprehensive logging for debugging during rollout
 - Validation logic should be reusable across different systems

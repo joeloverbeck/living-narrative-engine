@@ -1,4 +1,4 @@
-# BODDESCMIG-002: Update Anatomy Recipe Schema
+# BODDESCMIG-002: Update Anatomy Recipe Schema (REVISED)
 
 ## Ticket ID
 
@@ -6,19 +6,19 @@ BODDESCMIG-002
 
 ## Title
 
-Update anatomy recipe schema to support body-level descriptors
+Add comprehensive test coverage for anatomy recipe bodyDescriptors field
 
 ## Status
 
 READY FOR IMPLEMENTATION
 
-## Priority
+## Priority  
 
-HIGH
+MEDIUM (downgraded from HIGH - implementation already complete)
 
 ## Estimated Effort
 
-1-2 hours
+30-60 minutes (reduced from 1-2 hours)
 
 ## Dependencies
 
@@ -30,262 +30,234 @@ HIGH
 
 ## Description
 
-Update the anatomy recipe schema to support an optional `bodyDescriptors` field at the root level. This allows recipe authors to define body-level descriptors that will be applied to the generated body component, providing a convenient way to set overall body characteristics in recipes.
+The anatomy recipe schema has already been updated with the `bodyDescriptors` field. This ticket focuses on adding comprehensive test coverage for the new field to ensure proper validation of body-level descriptors in recipe definitions.
 
 ## Current State
 
-**File**: `data/schemas/anatomy-recipe.schema.json`
+**File**: `data/schemas/anatomy.recipe.schema.json` ✅
 
-Current recipe schema supports:
-- Recipe metadata (recipeId, name, description)
-- Slot definitions with part types and properties
-- Part-specific descriptors within slot properties
+The schema currently includes:
+- ✅ Recipe metadata (recipeId, blueprintId, slots)  
+- ✅ Optional `bodyDescriptors` field at root level
+- ✅ Complete descriptor property definitions with proper enums
+- ✅ Integration with body component schema structure
 
-Missing:
-- Body-level descriptor support
-- Integration with new body component descriptor structure
+**Missing**:
+- Comprehensive test coverage for `bodyDescriptors` field validation
 
 ## Technical Requirements
 
-### Schema Enhancement
+### Test Coverage Enhancement
 
-Add optional `bodyDescriptors` field at the root level of recipes:
+The existing test file `tests/unit/schemas/anatomy.recipe.schema.test.js` needs additional test cases for the `bodyDescriptors` field:
 
-```json
-{
-  "type": "object",
-  "properties": {
-    "recipeId": { "type": "string" },
-    "name": { "type": "string" },
-    "bodyDescriptors": {
-      "type": "object",
-      "description": "Body-level descriptors applied to the generated body component",
-      "properties": {
-        "build": {
-          "type": "string",
-          "enum": ["skinny", "slim", "toned", "athletic", "shapely", "thick", "muscular", "stocky"]
-        },
-        "density": {
-          "type": "string",
-          "enum": ["hairless", "sparse", "light", "moderate", "hairy", "very-hairy"]
-        },
-        "composition": {
-          "type": "string", 
-          "enum": ["underweight", "lean", "average", "soft", "chubby", "overweight", "obese"]
-        },
-        "skinColor": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
-    "slots": { /* existing slot definitions */ }
-  }
-}
-```
+1. **Valid bodyDescriptors tests**:
+   - Complete bodyDescriptors with all properties
+   - Partial bodyDescriptors (some properties only)
+   - Empty bodyDescriptors object
+   - Missing bodyDescriptors field (backward compatibility)
 
-### Integration Points
+2. **Invalid bodyDescriptors tests**:
+   - Invalid enum values for each descriptor type
+   - Additional properties in bodyDescriptors (should fail)
+   - Wrong data types for descriptor values
 
-The `bodyDescriptors` will be:
-1. Validated against the schema during recipe loading
-2. Applied to the generated `anatomy:body` component by AnatomyGenerationWorkflow
-3. Used independently from part-specific descriptors
+3. **Integration tests**:
+   - Recipe validation with both bodyDescriptors and part descriptors
+   - Existing recipes continue to validate
 
 ## Implementation Steps
 
-1. **Locate Recipe Schema File**
-   - Find `data/schemas/anatomy-recipe.schema.json`
-   - Backup current schema
+1. **Review Current Schema**
+   - ✅ Verify `bodyDescriptors` field exists in schema
+   - ✅ Confirm enum values match body component schema
+   - ✅ Validate schema structure
 
-2. **Update Schema Structure**
-   - Add optional `bodyDescriptors` property at root level
-   - Define descriptor properties matching body component schema
-   - Set `additionalProperties: false` for validation
-   - Maintain existing schema structure
+2. **Enhance Existing Tests**
+   - Add test suite for bodyDescriptors validation
+   - Test all valid descriptor combinations  
+   - Test invalid descriptor scenarios
+   - Verify backward compatibility
 
-3. **Coordinate with Body Component Schema**
-   - Ensure descriptor enums match BODDESCMIG-001 exactly
-   - Maintain consistent property names and types
-   - Align validation rules
+3. **Validate Integration**
+   - Test existing recipe files validate correctly
+   - Test new recipe examples with bodyDescriptors
+   - Ensure no breaking changes
 
-4. **Test Schema Validation**
-   - Existing recipes without bodyDescriptors validate
-   - New recipes with bodyDescriptors validate
-   - Invalid descriptor values are rejected
-   - Schema prevents unexpected properties
+## Example Test Cases to Add
 
-## Example Recipe Structures
+### Valid bodyDescriptors Tests
 
-### Complete Recipe with Body Descriptors
-```json
-{
-  "recipeId": "anatomy:warrior",
-  "name": "Warrior Body Type",
-  "bodyDescriptors": {
-    "build": "muscular",
-    "density": "hairy", 
-    "composition": "lean",
-    "skinColor": "tanned"
-  },
-  "slots": {
-    "torso": {
-      "partType": "torso",
-      "preferId": "anatomy:human_male_torso_muscular",
-      "properties": {
-        "descriptors:build": { "build": "muscular" }
+```javascript
+describe('Valid Recipe - With bodyDescriptors', () => {
+  test('should validate recipe with complete bodyDescriptors', () => {
+    const validRecipe = {
+      recipeId: 'anatomy:warrior',
+      blueprintId: 'anatomy:human_male',
+      slots: {
+        head: { partType: 'head' }
+      },
+      bodyDescriptors: {
+        build: 'muscular',
+        density: 'hairy',
+        composition: 'lean',
+        skinColor: 'tanned'
       }
-    },
-    "head": {
-      "partType": "head",
-      "preferId": "anatomy:human_male_head_bearded"
-    }
-  }
-}
+    };
+    
+    const ok = validate(validRecipe);
+    expect(ok).toBe(true);
+  });
+
+  test('should validate recipe with partial bodyDescriptors', () => {
+    const validRecipe = {
+      recipeId: 'anatomy:athletic',
+      blueprintId: 'anatomy:human_female', 
+      slots: {
+        head: { partType: 'head' }
+      },
+      bodyDescriptors: {
+        build: 'athletic',
+        composition: 'lean'
+      }
+    };
+    
+    const ok = validate(validRecipe);
+    expect(ok).toBe(true);
+  });
+
+  test('should validate recipe with empty bodyDescriptors', () => {
+    const validRecipe = {
+      recipeId: 'anatomy:basic',
+      blueprintId: 'anatomy:human_male',
+      slots: {
+        head: { partType: 'head' }
+      },
+      bodyDescriptors: {}
+    };
+    
+    const ok = validate(validRecipe);
+    expect(ok).toBe(true);
+  });
+});
 ```
 
-### Minimal Recipe (Backward Compatibility)
-```json
-{
-  "recipeId": "anatomy:basic_human",
-  "name": "Basic Human",
-  "slots": {
-    "torso": {
-      "partType": "torso",
-      "preferId": "anatomy:human_male_torso_average"
-    }
-  }
-}
-```
+### Invalid bodyDescriptors Tests
 
-### Partial Body Descriptors
-```json
-{
-  "recipeId": "anatomy:athletic",
-  "name": "Athletic Build",
-  "bodyDescriptors": {
-    "build": "athletic",
-    "composition": "lean"
-  },
-  "slots": {
-    "torso": {
-      "partType": "torso"
-    }
-  }
-}
+```javascript
+describe('Invalid bodyDescriptors', () => {
+  test('should reject invalid build enum value', () => {
+    const invalidRecipe = {
+      recipeId: 'anatomy:test',
+      blueprintId: 'anatomy:human_male',
+      slots: {
+        head: { partType: 'head' }
+      },
+      bodyDescriptors: {
+        build: 'invalid-build'
+      }
+    };
+    
+    const ok = validate(invalidRecipe);
+    expect(ok).toBe(false);
+    expect(validate.errors).toContainEqual(
+      expect.objectContaining({
+        message: 'must be equal to one of the allowed values',
+        instancePath: '/bodyDescriptors/build'
+      })
+    );
+  });
+
+  test('should reject additional properties in bodyDescriptors', () => {
+    const invalidRecipe = {
+      recipeId: 'anatomy:test',
+      blueprintId: 'anatomy:human_male',
+      slots: {
+        head: { partType: 'head' }
+      },
+      bodyDescriptors: {
+        build: 'athletic',
+        invalidProperty: 'value'
+      }
+    };
+    
+    const ok = validate(invalidRecipe);
+    expect(ok).toBe(false);
+    expect(validate.errors).toContainEqual(
+      expect.objectContaining({
+        message: 'must NOT have additional properties',
+        params: { additionalProperty: 'invalidProperty' }
+      })
+    );
+  });
+});
 ```
 
 ## Validation Criteria
 
-### Schema Validation Tests
-- [ ] Existing recipes validate without changes
-- [ ] Recipes with bodyDescriptors validate correctly
-- [ ] Invalid descriptor enum values are rejected
+### Test Coverage Requirements
+- [ ] All valid bodyDescriptor enum values test successfully
+- [ ] Invalid enum values are properly rejected with clear error messages  
 - [ ] Additional properties in bodyDescriptors are rejected
-- [ ] All bodyDescriptor properties are optional
-- [ ] Empty bodyDescriptors object is valid
-- [ ] Missing bodyDescriptors field is valid (backward compatibility)
+- [ ] Partial bodyDescriptors (missing some properties) validate correctly
+- [ ] Empty bodyDescriptors object validates successfully
+- [ ] Missing bodyDescriptors field validates (backward compatibility)
+- [ ] Existing sample recipes continue to validate without changes
 
-### Invalid Examples (Should Fail)
-```json
-{
-  "bodyDescriptors": {
-    "build": "invalid-build",  // Invalid enum
-    "unknownProp": "value"     // Additional property
-  }
-}
-```
-
-## Data Flow Integration
-
-```
-Recipe Definition (bodyDescriptors)
-    ↓
-AnatomyGenerationWorkflow.generateAnatomy()
-    ↓
-Apply bodyDescriptors to body component
-    ↓
-Body Component (with body.descriptors)
-    ↓
-BodyDescriptionComposer.composeDescription()
-    ↓
-Generated description with body-level descriptors first
-```
-
-## Testing Requirements
-
-### Unit Tests
-Create test file: `tests/unit/schemas/anatomyRecipeSchema.test.js`
-
-Test cases:
-- Valid recipe without bodyDescriptors (backward compatibility)
-- Valid recipe with all bodyDescriptors
-- Valid recipe with partial bodyDescriptors
-- Invalid bodyDescriptor enum values (should fail)
-- Additional properties in bodyDescriptors (should fail)
-- Empty bodyDescriptors object
-- Recipe validation integration
-
-### Schema Loading Tests
-- Test recipe schema loading in validation system
-- Test recipe parsing with new bodyDescriptors
-- Verify schema validation error messages
+### Integration Validation
+- [ ] All existing recipe files in `data/mods/anatomy/recipes/` validate successfully
+- [ ] Schema loading works correctly with new tests
+- [ ] No breaking changes to recipe loading system
 
 ## Files Modified
+- `tests/unit/schemas/anatomy.recipe.schema.test.js` (add test cases)
 
-- `data/schemas/anatomy-recipe.schema.json`
+## Files NOT Modified (Already Complete)
+- ✅ `data/schemas/anatomy.recipe.schema.json` (schema already contains bodyDescriptors)
 
 ## Integration Points
 
-### With BODDESCMIG-001
-- Uses identical descriptor property definitions
-- Matches enum values exactly
-- Consistent validation rules
+### With BODDESCMIG-001 ✅
+- Schema definitions are perfectly aligned
+- Enum values match exactly between recipe and body component schemas
+- Validation rules are consistent
 
 ### With BODDESCMIG-004 (Future)
-- AnatomyGenerationWorkflow will read bodyDescriptors
-- Apply to generated body component
-- Preserve part-specific descriptors independently
-
-### With Recipe Loading System
-- RecipeLoader validates against updated schema
-- RecipeValidator processes bodyDescriptors
-- Error handling for invalid descriptors
+- AnatomyGenerationWorkflow will read bodyDescriptors from validated recipes
+- Applied to generated body component structure
+- Part-specific descriptors preserved independently
 
 ## Risk Assessment
-
-**Low Risk** - Additive schema enhancement:
-- Only adds optional field
-- Maintains all existing recipe structure
-- Clear validation prevents invalid data
-- Backward compatible with existing recipes
+**Very Low Risk** - Test enhancement only:
+- No schema changes required (already implemented)
+- No breaking changes to existing functionality  
+- Purely additive test coverage
+- Validates existing implementation quality
 
 ## Success Criteria
 
-1. **Schema Enhancement**:
-   - bodyDescriptors field added and validated
-   - Enum constraints properly enforced
-   - Additional properties rejected
+1. **Comprehensive Test Coverage**:
+   - All bodyDescriptors validation scenarios covered
+   - Clear test failure messages for invalid data
+   - 100% coverage of new schema features
 
-2. **Backward Compatibility**:
+2. **Backward Compatibility Verified**:
    - All existing recipes continue to validate
-   - Recipe loading system unaffected
-   - No breaking changes to recipe format
+   - No impact on recipe loading system
+   - No breaking changes to existing workflows
 
-3. **Integration Readiness**:
-   - Schema supports AnatomyGenerationWorkflow integration
-   - Consistent with body component schema
-   - Ready for implementation workflows
+3. **Integration Readiness Confirmed**:
+   - Schema validation works perfectly for future implementation
+   - Clear error messages for invalid bodyDescriptors
+   - Ready for AnatomyGenerationWorkflow integration
 
 ## Next Steps
-
 After completion:
-- BODDESCMIG-003: Update sample recipes and validation
-- BODDESCMIG-004: Modify AnatomyGenerationWorkflow
+- BODDESCMIG-003: Update sample recipes and validation ✅ (recipes already validate)
+- BODDESCMIG-004: Modify AnatomyGenerationWorkflow to use bodyDescriptors
 
 ## Notes
-
-- bodyDescriptors is completely optional for backward compatibility
-- Descriptor values must match body component schema exactly
-- Part-specific descriptors in slots remain unchanged
-- Schema follows project's validation patterns
-- Supports both complete and partial descriptor definitions
+- **Implementation Status**: Schema implementation is complete and correct
+- **Focus Shift**: From implementation to comprehensive testing
+- **Quality Assurance**: Ensure robust validation for downstream integration
+- **Backward Compatibility**: Verified - existing recipes work unchanged

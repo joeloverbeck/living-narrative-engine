@@ -37,12 +37,14 @@ Create centralized validation utilities for body descriptors that can be shared 
 ## Current State
 
 **Validation Scattered Across Components**:
+
 - AnatomyGenerationWorkflow has inline validation (from BODDESCMIG-004)
 - RecipeLoader may have separate validation (from BODDESCMIG-003)
 - No centralized constants for descriptor enums
 - Inconsistent error messages across components
 
 **Missing Infrastructure**:
+
 - Centralized descriptor constants
 - Reusable validation utilities
 - Consistent error handling
@@ -65,13 +67,13 @@ Create centralized validation utilities for body descriptors that can be shared 
  */
 export const BODY_BUILD_TYPES = {
   SKINNY: 'skinny',
-  SLIM: 'slim', 
+  SLIM: 'slim',
   TONED: 'toned',
   ATHLETIC: 'athletic',
   SHAPELY: 'shapely',
   THICK: 'thick',
   MUSCULAR: 'muscular',
-  STOCKY: 'stocky'
+  STOCKY: 'stocky',
 };
 
 /**
@@ -83,7 +85,7 @@ export const BODY_HAIR_DENSITY = {
   LIGHT: 'light',
   MODERATE: 'moderate',
   HAIRY: 'hairy',
-  VERY_HAIRY: 'very-hairy'
+  VERY_HAIRY: 'very-hairy',
 };
 
 /**
@@ -96,7 +98,7 @@ export const BODY_COMPOSITION_TYPES = {
   SOFT: 'soft',
   CHUBBY: 'chubby',
   OVERWEIGHT: 'overweight',
-  OBESE: 'obese'
+  OBESE: 'obese',
 };
 
 /**
@@ -106,23 +108,23 @@ export const DESCRIPTOR_METADATA = {
   build: {
     label: 'Build',
     validValues: Object.values(BODY_BUILD_TYPES),
-    description: 'Body build type'
+    description: 'Body build type',
   },
   density: {
     label: 'Body hair',
     validValues: Object.values(BODY_HAIR_DENSITY),
-    description: 'Body hair density level'
+    description: 'Body hair density level',
   },
   composition: {
     label: 'Body composition',
     validValues: Object.values(BODY_COMPOSITION_TYPES),
-    description: 'Body composition type'
+    description: 'Body composition type',
   },
   skinColor: {
     label: 'Skin color',
     validValues: null, // Free-form string
-    description: 'Skin color descriptor'
-  }
+    description: 'Skin color descriptor',
+  },
 };
 
 /**
@@ -141,9 +143,9 @@ export const SUPPORTED_DESCRIPTOR_PROPERTIES = Object.keys(DESCRIPTOR_METADATA);
  * Centralized validation logic for body-level descriptors
  */
 
-import { 
-  DESCRIPTOR_METADATA, 
-  SUPPORTED_DESCRIPTOR_PROPERTIES 
+import {
+  DESCRIPTOR_METADATA,
+  SUPPORTED_DESCRIPTOR_PROPERTIES,
 } from '../constants/bodyDescriptorConstants.js';
 import { BodyDescriptorValidationError } from '../errors/bodyDescriptorValidationError.js';
 
@@ -158,22 +160,22 @@ export class BodyDescriptorValidator {
     if (!bodyDescriptors) {
       return; // null/undefined is valid (optional field)
     }
-    
+
     if (typeof bodyDescriptors !== 'object') {
       throw new BodyDescriptorValidationError(
         `Body descriptors must be an object in ${context}`
       );
     }
-    
+
     // Validate each descriptor property
     for (const [property, value] of Object.entries(bodyDescriptors)) {
       this.validateDescriptorProperty(property, value, context);
     }
-    
+
     // Check for unknown properties
     this.validateNoUnknownProperties(bodyDescriptors, context);
   }
-  
+
   /**
    * Validates a single descriptor property
    * @param {string} property - The property name
@@ -183,20 +185,20 @@ export class BodyDescriptorValidator {
    */
   static validateDescriptorProperty(property, value, context = 'unknown') {
     const metadata = DESCRIPTOR_METADATA[property];
-    
+
     if (!metadata) {
       throw new BodyDescriptorValidationError(
         `Unknown body descriptor property '${property}' in ${context}. Supported properties: ${SUPPORTED_DESCRIPTOR_PROPERTIES.join(', ')}`
       );
     }
-    
+
     // Validate value type
     if (typeof value !== 'string') {
       throw new BodyDescriptorValidationError(
         `Body descriptor '${property}' must be a string in ${context}, got ${typeof value}`
       );
     }
-    
+
     // Validate enum values (skip skinColor as it's free-form)
     if (metadata.validValues && !metadata.validValues.includes(value)) {
       throw new BodyDescriptorValidationError(
@@ -204,7 +206,7 @@ export class BodyDescriptorValidator {
       );
     }
   }
-  
+
   /**
    * Validates that no unknown properties are present
    * @param {Object} bodyDescriptors - The descriptors object
@@ -213,16 +215,16 @@ export class BodyDescriptorValidator {
    */
   static validateNoUnknownProperties(bodyDescriptors, context = 'unknown') {
     const unknownProperties = Object.keys(bodyDescriptors).filter(
-      prop => !SUPPORTED_DESCRIPTOR_PROPERTIES.includes(prop)
+      (prop) => !SUPPORTED_DESCRIPTOR_PROPERTIES.includes(prop)
     );
-    
+
     if (unknownProperties.length > 0) {
       throw new BodyDescriptorValidationError(
         `Unknown body descriptor properties in ${context}: ${unknownProperties.join(', ')}. Supported properties: ${SUPPORTED_DESCRIPTOR_PROPERTIES.join(', ')}`
       );
     }
   }
-  
+
   /**
    * Validates a specific descriptor type
    * @param {'build'|'density'|'composition'|'skinColor'} descriptorType - The descriptor type
@@ -233,7 +235,7 @@ export class BodyDescriptorValidator {
   static validateDescriptorType(descriptorType, value, context = 'unknown') {
     this.validateDescriptorProperty(descriptorType, value, context);
   }
-  
+
   /**
    * Gets display label for a descriptor property
    * @param {string} property - The property name
@@ -243,7 +245,7 @@ export class BodyDescriptorValidator {
     const metadata = DESCRIPTOR_METADATA[property];
     return metadata ? metadata.label : property;
   }
-  
+
   /**
    * Gets valid values for a descriptor property
    * @param {string} property - The property name
@@ -253,7 +255,7 @@ export class BodyDescriptorValidator {
     const metadata = DESCRIPTOR_METADATA[property];
     return metadata ? metadata.validValues : null;
   }
-  
+
   /**
    * Checks if a descriptor property supports enum validation
    * @param {string} property - The property name
@@ -283,11 +285,11 @@ export class BodyDescriptorValidationError extends ValidationError {
     this.name = 'BodyDescriptorValidationError';
     this.descriptorProperty = descriptorProperty;
     this.invalidValue = invalidValue;
-    
+
     // Capture stack trace
     Error.captureStackTrace(this, BodyDescriptorValidationError);
   }
-  
+
   /**
    * Creates error for invalid enum value
    * @param {string} property - The descriptor property
@@ -300,7 +302,7 @@ export class BodyDescriptorValidationError extends ValidationError {
     const message = `Invalid ${property} descriptor '${value}' in ${context}. Must be one of: ${validValues.join(', ')}`;
     return new BodyDescriptorValidationError(message, property, value);
   }
-  
+
   /**
    * Creates error for unknown property
    * @param {string} property - The unknown property
@@ -346,7 +348,7 @@ export function formatDescriptorForDisplay(property, value) {
  */
 export function filterValidDescriptors(bodyDescriptors) {
   if (!bodyDescriptors) return {};
-  
+
   const filtered = {};
   for (const [key, value] of Object.entries(bodyDescriptors)) {
     if (value && typeof value === 'string' && value.trim()) {
@@ -365,7 +367,7 @@ export function filterValidDescriptors(bodyDescriptors) {
 export function mergeDescriptors(baseDescriptors, overrideDescriptors) {
   return {
     ...filterValidDescriptors(baseDescriptors),
-    ...filterValidDescriptors(overrideDescriptors)
+    ...filterValidDescriptors(overrideDescriptors),
   };
 }
 
@@ -386,7 +388,7 @@ export function getActiveDescriptorProperties(bodyDescriptors) {
  */
 export function descriptorsToDisplayArray(bodyDescriptors) {
   const filtered = filterValidDescriptors(bodyDescriptors);
-  return Object.entries(filtered).map(([property, value]) => 
+  return Object.entries(filtered).map(([property, value]) =>
     formatDescriptorForDisplay(property, value)
   );
 }
@@ -427,6 +429,7 @@ export function descriptorsToDisplayArray(bodyDescriptors) {
 ## Validation Criteria
 
 ### Validation Logic Tests
+
 - [ ] Valid descriptor objects pass validation
 - [ ] Invalid enum values trigger appropriate errors
 - [ ] Unknown properties are caught and reported
@@ -435,18 +438,21 @@ export function descriptorsToDisplayArray(bodyDescriptors) {
 - [ ] Empty descriptor objects are valid
 
 ### Error Handling Tests
+
 - [ ] BodyDescriptorValidationError provides clear messages
 - [ ] Error includes context information (recipe ID, etc.)
 - [ ] Factory methods create appropriate error instances
 - [ ] Error inheritance works correctly
 
 ### Utility Function Tests
+
 - [ ] Descriptor formatting produces correct display strings
 - [ ] Filtering removes empty/null values correctly
 - [ ] Merging preserves override precedence
 - [ ] Display array conversion works properly
 
 ### Integration Tests
+
 - [ ] AnatomyGenerationWorkflow uses centralized validation
 - [ ] RecipeLoader integrates with validation utilities
 - [ ] Error messages are consistent across components
@@ -457,16 +463,19 @@ export function descriptorsToDisplayArray(bodyDescriptors) {
 ### Unit Tests
 
 **File**: `tests/unit/anatomy/utils/bodyDescriptorValidator.test.js`
+
 - Test all validation methods
 - Test error conditions and messages
 - Test edge cases (null, empty objects, invalid types)
 
 **File**: `tests/unit/anatomy/utils/bodyDescriptorUtils.test.js`
+
 - Test utility functions
 - Test formatting and display functions
 - Test filtering and merging logic
 
 **File**: `tests/unit/anatomy/errors/bodyDescriptorValidationError.test.js`
+
 - Test error class behavior
 - Test factory methods
 - Test error properties and inheritance
@@ -474,6 +483,7 @@ export function descriptorsToDisplayArray(bodyDescriptors) {
 ### Integration Tests
 
 **File**: `tests/integration/anatomy/descriptorValidationIntegration.test.js`
+
 - Test integration with AnatomyGenerationWorkflow
 - Test integration with RecipeLoader
 - Test end-to-end validation workflow
@@ -481,12 +491,14 @@ export function descriptorsToDisplayArray(bodyDescriptors) {
 ## Files Created
 
 ### New Files
+
 - `src/anatomy/constants/bodyDescriptorConstants.js`
 - `src/anatomy/utils/bodyDescriptorValidator.js`
 - `src/anatomy/utils/bodyDescriptorUtils.js`
 - `src/anatomy/errors/bodyDescriptorValidationError.js`
 
 ### Test Files
+
 - `tests/unit/anatomy/utils/bodyDescriptorValidator.test.js`
 - `tests/unit/anatomy/utils/bodyDescriptorUtils.test.js`
 - `tests/unit/anatomy/errors/bodyDescriptorValidationError.test.js`
@@ -501,16 +513,19 @@ export function descriptorsToDisplayArray(bodyDescriptors) {
 ## Integration Points
 
 ### With Previous Tickets
+
 - Uses constants matching schema definitions from BODDESCMIG-001 & 002
 - Replaces inline validation from BODDESCMIG-004
 - Enhances recipe validation from BODDESCMIG-003
 
 ### With Future Tickets
+
 - Validation utilities will be used by BODDESCMIG-006 & 007
 - Error classes will be used throughout descriptor system
 - Constants will be referenced by description generation
 
 ### With Existing Systems
+
 - Integrates with existing error handling patterns
 - Uses project's validation architecture
 - Maintains compatibility with ECS system
@@ -518,12 +533,14 @@ export function descriptorsToDisplayArray(bodyDescriptors) {
 ## Risk Assessment
 
 **Low Risk** - Utility/infrastructure enhancement:
+
 - Creates reusable validation infrastructure
 - Consolidates existing scattered validation logic
 - Clear error handling improves debugging
 - No breaking changes to existing APIs
 
 **Benefits**:
+
 - Consistent validation across all components
 - Better error messages for debugging
 - Reduced code duplication
@@ -549,6 +566,7 @@ export function descriptorsToDisplayArray(bodyDescriptors) {
 ## Next Steps
 
 After completion:
+
 - BODDESCMIG-006: Update BodyDescriptionComposer methods
 - BODDESCMIG-007: Implement description generation with body descriptors
 

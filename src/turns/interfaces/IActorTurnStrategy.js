@@ -42,6 +42,9 @@
  * "use health potion on self", "move north".
  * @property {string} [speech] - Optional. Any text content the actor should say
  * while performing the action. This is used to dispatch dialogue events.
+ * @property {import('../dtos/actionComposite.js').VisualProperties} [visual] - Optional. Visual customization properties
+ * for UI rendering. Contains colors for button styling (backgroundColor, textColor,
+ * hoverBackgroundColor, hoverTextColor). Preserved from the ActionComposite.
  */
 
 /**

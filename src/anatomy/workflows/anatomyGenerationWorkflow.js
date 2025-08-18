@@ -457,13 +457,27 @@ export class AnatomyGenerationWorkflow extends BaseService {
     const partsObject =
       partsMap instanceof Map ? Object.fromEntries(partsMap) : partsMap;
 
+    // Get recipe data to check for bodyDescriptors
+    const recipe = this.#dataRegistry.get('anatomyRecipes', recipeId);
+
+    // Build body object
+    const bodyObject = {
+      root: graphResult.rootId,
+      parts: partsObject,
+    };
+
+    // Apply recipe bodyDescriptors if present
+    if (recipe?.bodyDescriptors) {
+      bodyObject.descriptors = { ...recipe.bodyDescriptors };
+      this.#logger.debug(
+        `AnatomyGenerationWorkflow: Applied bodyDescriptors from recipe '${recipeId}': ${JSON.stringify(recipe.bodyDescriptors)}`
+      );
+    }
+
     const updatedData = {
       ...existingData,
       recipeId, // Ensure recipe ID is preserved
-      body: {
-        root: graphResult.rootId,
-        parts: partsObject,
-      },
+      body: bodyObject,
     };
 
     await this.#entityManager.addComponent(
