@@ -212,6 +212,7 @@ export const coreTokens = freeze({
   IThematicDirectionGenerator: 'IThematicDirectionGenerator',
   ThematicDirectionGenerator: 'ThematicDirectionGenerator',
   ClicheGenerator: 'ClicheGenerator',
+  ICoreMotivationsGenerator: 'ICoreMotivationsGenerator',
   CharacterDatabase: 'CharacterDatabase',
   // Target Context Builder
   ITargetContextBuilder: 'ITargetContextBuilder',

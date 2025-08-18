@@ -37,24 +37,44 @@ Implement a comprehensive caching strategy for Core Motivations data to improve 
 
 ### 1. Cache Manager Implementation
 
-**File**: `src/characterBuilder/cache/coreMotivationsCacheManager.js`
+**File**: `src/characterBuilder/cache/CoreMotivationsCacheManager.js`
 
 ```javascript
 /**
  * @file Core Motivations Cache Manager
  * @description Manages caching for core motivations data with TTL and invalidation
+ * @see ../services/characterBuilderService.js
  */
 
-import { validateDependency } from '../../utils/dependencyUtils.js';
+import { 
+  validateDependency, 
+  assertNonBlankString, 
+  assertPresent 
+} from '../../utils/dependencyUtils.js';
+import { CHARACTER_BUILDER_EVENTS } from '../services/characterBuilderService.js';
+import { ValidationError } from '../../errors/validationError.js';
+import { CacheError } from '../../errors/cacheError.js';
+
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../../interfaces/ISchemaValidator.js').ISchemaValidator} ISchemaValidator */
 
 /**
  * Cache manager for Core Motivations data
  */
-class CoreMotivationsCacheManager {
+export class CoreMotivationsCacheManager {
   #cache = new Map();
   #logger;
+  #eventBus;
+  #schemaValidator;
   #maxCacheSize = 100; // Maximum number of cache entries
   #defaultTTL = 600000; // 10 minutes default
+  #stats = {
+    hits: 0,
+    misses: 0,
+    sets: 0,
+    evictions: 0,
+  };
 
   // Cache TTL configuration (in milliseconds)
   #ttlConfig = {
@@ -66,11 +86,22 @@ class CoreMotivationsCacheManager {
 
   /**
    * @param {Object} params
-   * @param {import('../../interfaces/ILogger.js').ILogger} params.logger
+   * @param {ILogger} params.logger
+   * @param {ISafeEventDispatcher} params.eventBus
+   * @param {ISchemaValidator} [params.schemaValidator]
    */
-  constructor({ logger }) {
+  constructor({ logger, eventBus, schemaValidator }) {
     validateDependency(logger, 'ILogger');
+    validateDependency(eventBus, 'ISafeEventDispatcher');
+    
     this.#logger = logger;
+    this.#eventBus = eventBus;
+    this.#schemaValidator = schemaValidator;
+    
+    this.#dispatchEvent(CHARACTER_BUILDER_EVENTS.CACHE_INITIALIZED, {
+      maxSize: this.#maxCacheSize,
+      ttlConfig: this.#ttlConfig,
+    });
   }
 
   /**
@@ -79,23 +110,35 @@ class CoreMotivationsCacheManager {
    * @returns {*} Cached value or null
    */
   get(key) {
+    assertNonBlankString(key, 'Cache key is required');
+
     const entry = this.#cache.get(key);
 
     if (!entry) {
+      this.#stats.misses++;
+      this.#dispatchEvent(CHARACTER_BUILDER_EVENTS.CACHE_MISS, { key });
       return null;
     }
 
     // Check if expired
     if (entry.ttl && Date.now() > entry.expiresAt) {
       this.#cache.delete(key);
+      this.#stats.misses++;
       this.#logger.debug(`Cache expired for key: ${key}`);
       return null;
     }
 
-    // Update last accessed time
+    // Update last accessed time and stats
     entry.lastAccessed = Date.now();
     entry.hits++;
+    this.#stats.hits++;
 
+    this.#dispatchEvent(CHARACTER_BUILDER_EVENTS.CACHE_HIT, { 
+      key, 
+      type: entry.type,
+      totalHits: entry.hits 
+    });
+    
     this.#logger.debug(`Cache hit for key: ${key} (hits: ${entry.hits})`);
     return entry.data;
   }
@@ -108,6 +151,19 @@ class CoreMotivationsCacheManager {
    * @param {number} [customTTL] - Custom TTL in milliseconds
    */
   set(key, data, type = null, customTTL = null) {
+    assertNonBlankString(key, 'Cache key is required');
+    assertPresent(data, 'Cache data is required');
+
+    // Validate cached data if schema validator available
+    if (this.#schemaValidator && type) {
+      try {
+        this.#schemaValidator.validateAgainstSchema(data, `core:${type}-cache-entry`);
+      } catch (validationError) {
+        this.#logger.warn(`Cache data validation failed for ${key}:`, validationError);
+        // Continue with caching - validation is advisory for cache
+      }
+    }
+
     // Enforce cache size limit
     if (this.#cache.size >= this.#maxCacheSize) {
       this.#evictLRU();
@@ -132,6 +188,8 @@ class CoreMotivationsCacheManager {
     };
 
     this.#cache.set(key, entry);
+    this.#stats.sets++;
+    
     this.#logger.debug(
       `Cached data for key: ${key} (type: ${type || 'generic'})`
     );
@@ -201,7 +259,26 @@ class CoreMotivationsCacheManager {
   }
 
   /**
+   * Helper method to dispatch events safely
+   * @param {string} eventType 
+   * @param {Object} payload 
+   * @private
+   */
+  #dispatchEvent(eventType, payload) {
+    try {
+      this.#eventBus.dispatch({
+        type: eventType,
+        payload,
+        timestamp: Date.now(),
+      });
+    } catch (error) {
+      this.#logger.error('Failed to dispatch cache event', error);
+    }
+  }
+
+  /**
    * Evict least recently used entry
+   * @private
    */
   #evictLRU() {
     let lruKey = null;
@@ -216,6 +293,8 @@ class CoreMotivationsCacheManager {
 
     if (lruKey) {
       this.#cache.delete(lruKey);
+      this.#stats.evictions++;
+      this.#dispatchEvent(CHARACTER_BUILDER_EVENTS.CACHE_EVICTED, { key: lruKey });
       this.#logger.debug(`Evicted LRU cache entry: ${lruKey}`);
     }
   }
@@ -228,6 +307,12 @@ class CoreMotivationsCacheManager {
     const stats = {
       size: this.#cache.size,
       maxSize: this.#maxCacheSize,
+      hits: this.#stats.hits,
+      misses: this.#stats.misses,
+      sets: this.#stats.sets,
+      evictions: this.#stats.evictions,
+      hitRate: this.#stats.hits + this.#stats.misses > 0 ? 
+        this.#stats.hits / (this.#stats.hits + this.#stats.misses) : 0,
       entries: [],
       totalHits: 0,
       byType: {},
@@ -279,33 +364,8 @@ class CoreMotivationsCacheManager {
   }
 }
 
-/**
- * Singleton instance manager
- */
-class CoreMotivationsCacheService {
-  static #instance = null;
-
-  /**
-   * Get or create cache manager instance
-   * @param {Object} [params] - Parameters for initialization
-   * @returns {CoreMotivationsCacheManager}
-   */
-  static getInstance(params) {
-    if (!this.#instance && params) {
-      this.#instance = new CoreMotivationsCacheManager(params);
-    }
-    return this.#instance;
-  }
-
-  /**
-   * Reset the singleton instance (for testing)
-   */
-  static reset() {
-    this.#instance = null;
-  }
-}
-
-export { CoreMotivationsCacheManager, CoreMotivationsCacheService };
+export { CoreMotivationsCacheManager };
+export default CoreMotivationsCacheManager;
 ```
 
 ### 2. Cache Integration Helper
@@ -379,13 +439,17 @@ export const CacheInvalidation = {
 export const CacheWarming = {
   /**
    * Pre-warm cache with frequently accessed data
+   * @param {CoreMotivationsCacheManager} cache - Cache manager instance
+   * @param {CharacterBuilderService} service - Character builder service
+   * @param {ILogger} logger - Logger instance
    */
-  async warmCache(cache, service) {
+  async warmCache(cache, service, logger) {
     try {
       // Load all concepts
       const concepts = await service.getAllCharacterConcepts();
       if (concepts) {
         cache.set(CacheKeys.allConcepts(), concepts, 'concepts');
+        logger.debug('Cache warmed with all concepts');
       }
 
       // Load recent concept and its data
@@ -403,11 +467,12 @@ export const CacheWarming = {
             directions,
             'directions'
           );
+          logger.debug(`Cache warmed with directions for concept ${recentConcept.id}`);
         }
       }
     } catch (error) {
-      // Cache warming is best-effort, don't throw
-      console.warn('Cache warming failed:', error);
+      // Cache warming is best-effort, don't throw but log properly
+      logger.warn('Cache warming failed:', error);
     }
   },
 };
@@ -415,66 +480,150 @@ export const CacheWarming = {
 
 ### 3. Integration with CharacterBuilderService
 
-Update the CharacterBuilderService to use the cache manager:
+Update the CharacterBuilderService to use the cache manager via proper dependency injection:
 
 ```javascript
-// In constructor
-this.#cache = CoreMotivationsCacheService.getInstance({ logger: this.#logger });
+// Update constructor to accept cache manager via DI
+constructor({
+  logger,
+  storageService,
+  directionGenerator,
+  eventBus,
+  database,
+  schemaValidator,
+  clicheGenerator,
+  container,
+  cacheManager, // Add cache manager dependency
+}) {
+  // ... existing validations ...
+  validateDependency(cacheManager, 'ICoreMotivationsCacheManager');
+  
+  // ... existing assignments ...
+  this.#cacheManager = cacheManager;
+  
+  // Initialize cache with existing Maps as fallback
+  this.#enhanceCacheIntegration();
+}
 
-// In methods, use cache helpers
-async getCoreMotivationsByDirectionId(directionId) {
-    const cacheKey = CacheKeys.motivationsForDirection(directionId);
-
-    // Check cache
-    const cached = this.#cache.get(cacheKey);
-    if (cached) {
-        return cached;
+// Helper to integrate new cache with existing cache Maps
+#enhanceCacheIntegration() {
+  // Migrate existing cache data if present
+  if (this.#clicheCache.size > 0) {
+    for (const [key, value] of this.#clicheCache.entries()) {
+      this.#cacheManager.set(key, value.data, 'cliches');
     }
+    this.#clicheCache.clear();
+  }
+  
+  if (this.#motivationCache.size > 0) {
+    for (const [key, value] of this.#motivationCache.entries()) {
+      this.#cacheManager.set(key, value.data, 'motivations');
+    }
+    this.#motivationCache.clear();
+  }
+}
 
+// Updated method using cache helpers
+async getCoreMotivationsByDirectionId(directionId) {
+  assertNonBlankString(directionId, 'Direction ID is required');
+  
+  const cacheKey = CacheKeys.motivationsForDirection(directionId);
+
+  // Check cache first
+  const cached = this.#cacheManager.get(cacheKey);
+  if (cached) {
+    this.#eventBus.dispatch({
+      type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
+      payload: { directionId, source: 'cache', count: cached.length },
+    });
+    return cached;
+  }
+
+  try {
     // Fetch from database
     const motivations = await this.#database.getCoreMotivationsByDirectionId(directionId);
+    
+    if (motivations) {
+      // Cache with appropriate type
+      this.#cacheManager.set(cacheKey, motivations, 'motivations');
+    }
 
-    // Cache with appropriate type
-    this.#cache.set(cacheKey, motivations, 'motivations');
+    this.#eventBus.dispatch({
+      type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
+      payload: { directionId, source: 'database', count: motivations?.length || 0 },
+    });
 
     return motivations;
+  } catch (error) {
+    this.#logger.error(`Failed to get core motivations for direction ${directionId}:`, error);
+    throw new CharacterBuilderError(`Failed to retrieve core motivations`, error);
+  }
 }
 
 // On modifications, invalidate cache
 async saveCoreMotivations(directionId, motivations) {
-    // ... save logic ...
-
+  assertNonBlankString(directionId, 'Direction ID is required');
+  assertPresent(motivations, 'Motivations data is required');
+  
+  try {
+    // ... existing save logic ...
+    
     // Invalidate related caches
     CacheInvalidation.invalidateMotivations(
-        this.#cache,
-        directionId,
-        motivations[0]?.conceptId
+      this.#cacheManager,
+      directionId,
+      motivations[0]?.conceptId
     );
+    
+    this.#logger.debug(`Invalidated cache for direction ${directionId}`);
+  } catch (error) {
+    this.#logger.error(`Failed to save core motivations for direction ${directionId}:`, error);
+    throw new CharacterBuilderError('Failed to save core motivations', error);
+  }
 }
 ```
 
 ## Implementation Steps
 
-1. **Create cache manager**
-   - Implement CoreMotivationsCacheManager class
-   - Add TTL management
-   - Implement LRU eviction
-   - Add statistics tracking
+1. **Add Dependency Injection Tokens**
+   - Add `ICoreMotivationsCacheManager` token to `src/dependencyInjection/tokens/tokens-core.js`
+   - Add `CoreMotivationsCacheManager` token to same file
+   - Register both tokens in DI container
 
-2. **Create cache helpers**
-   - Key generation utilities
-   - Invalidation helpers
-   - Cache warming utilities
+2. **Add Cache Events to CHARACTER_BUILDER_EVENTS**
+   - `CACHE_INITIALIZED: 'core:cache_initialized'`
+   - `CACHE_HIT: 'core:cache_hit'`
+   - `CACHE_MISS: 'core:cache_miss'`
+   - `CACHE_EVICTED: 'core:cache_evicted'`
 
-3. **Integrate with service**
-   - Update CharacterBuilderService
-   - Add cache checks before database queries
-   - Invalidate on modifications
+3. **Create cache manager**
+   - Implement CoreMotivationsCacheManager class following AnatomyQueryCache pattern
+   - Add TTL management with proper event integration
+   - Implement LRU eviction with event dispatching
+   - Add statistics tracking with hit rate calculation
+   - Use proper validation utilities and error types
 
-4. **Add cache maintenance**
+4. **Create cache helpers**
+   - Key generation utilities following existing naming patterns
+   - Invalidation helpers with event integration
+   - Cache warming utilities using ILogger instead of console
+
+5. **Update CharacterBuilderService**
+   - Add cacheManager to constructor dependencies
+   - Enhance existing cache integration (don't replace Maps immediately)
+   - Add cache checks before database queries with proper event dispatching
+   - Invalidate on modifications with proper error handling
+   - Use assertNonBlankString and assertPresent for validation
+
+6. **Register in DI Container**
+   - Register CoreMotivationsCacheManager in container with proper dependencies
+   - Update CharacterBuilderService registration to include cache manager
+   - Ensure proper dependency resolution order
+
+7. **Add cache maintenance**
    - Periodic cleanup of expired entries
-   - Memory management
-   - Statistics logging
+   - Memory management following existing patterns
+   - Statistics logging via ILogger interface
 
 ## Validation Criteria
 
@@ -490,17 +639,37 @@ async saveCoreMotivations(directionId, motivations) {
 
 ### Testing Requirements
 
-1. **Unit Tests** (`tests/unit/characterBuilder/cache/coreMotivationsCacheManager.test.js`)
-   - Test get/set operations
-   - Test TTL expiration
-   - Test LRU eviction
-   - Test invalidation patterns
-   - Test statistics
+1. **Unit Tests** (`tests/unit/characterBuilder/cache/CoreMotivationsCacheManager.test.js`)
+   - Follow existing AnatomyQueryCache test structure
+   - Use `createMockLogger()` from `tests/common/mockFactories/`
+   - Use TestBed pattern with beforeEach/afterEach cleanup
+   - Test get/set operations with proper validation
+   - Test TTL expiration scenarios
+   - Test LRU eviction with statistics validation
+   - Test invalidation patterns with event verification
+   - Test statistics including hit rate calculation
+   - Test event dispatching for all cache operations
+   - Test error scenarios and validation failures
 
-2. **Integration Tests**
-   - Test with CharacterBuilderService
-   - Verify performance improvements
-   - Test cache invalidation flow
+2. **Cache Helper Tests** (`tests/unit/characterBuilder/cache/cacheHelpers.test.js`)
+   - Test CacheKeys generation functions
+   - Test CacheInvalidation pattern matching
+   - Test CacheWarming with mock services and logger
+   - Use proper mock factories for dependencies
+
+3. **Integration Tests** (`tests/integration/characterBuilder/cache/`)
+   - Test CharacterBuilderService with cache manager integration
+   - Verify cache hit/miss statistics match expectations
+   - Test cache invalidation flow with database operations
+   - Test cache warming on service initialization
+   - Use TestBed class for service setup and teardown
+   - Verify event bus integration works correctly
+
+4. **Test Coverage Requirements**
+   - 80% branch coverage minimum
+   - 90% function/line coverage minimum
+   - Test all error scenarios and edge cases
+   - Verify proper cleanup in all test scenarios
 
 ## Performance Metrics
 
@@ -511,19 +680,41 @@ async saveCoreMotivations(directionId, motivations) {
 
 ## Notes
 
-- Session cache for motivations (no expiry)
+- **Follow Existing Patterns**: Use AnatomyQueryCache as reference implementation
+- **Enhance, Don't Replace**: Build upon existing cache Maps in CharacterBuilderService
+- **Event Integration**: All cache operations must dispatch appropriate events
+- **Proper DI**: No singletons - use dependency injection throughout
+- **Session cache for motivations** (no expiry for current session)
+- **Validation Required**: Use project validation utilities, not generic Error types
+- **Testing Standards**: Follow TestBed patterns from anatomy cache tests
 - Consider Redis for production scaling
-- Monitor cache hit rates
-- Implement cache warming on startup
+- Monitor cache hit rates via statistics
+- Implement cache warming on service startup
+
+## Important Architectural Requirements
+
+⚠️  **CRITICAL**: This workflow must align with existing project patterns:
+
+1. **Dependency Injection**: Register all services in DI container, no singleton pattern
+2. **Event Bus Integration**: All cache operations must dispatch events
+3. **Validation Patterns**: Use `assertNonBlankString`, `assertPresent`, domain-specific errors
+4. **Testing Standards**: Use TestBed classes, mock factories, proper coverage
+5. **Logging Standards**: Use ILogger interface, never direct console usage
+6. **File Structure**: Follow existing cache organization like `src/anatomy/cache/`
 
 ## Checklist
 
-- [ ] Create cache manager class
-- [ ] Implement TTL management
-- [ ] Add LRU eviction
-- [ ] Create cache helpers
-- [ ] Integrate with service
-- [ ] Add invalidation logic
-- [ ] Implement statistics
-- [ ] Write unit tests
-- [ ] Test performance improvements
+- [ ] Add DI tokens to tokens-core.js
+- [ ] Add cache events to CHARACTER_BUILDER_EVENTS
+- [ ] Create cache manager class following AnatomyQueryCache pattern
+- [ ] Implement TTL management with event integration
+- [ ] Add LRU eviction with proper statistics tracking
+- [ ] Create cache helpers with proper logging
+- [ ] Integrate with CharacterBuilderService via DI (enhance existing cache)
+- [ ] Add invalidation logic with event dispatching
+- [ ] Implement statistics with hit rate calculation
+- [ ] Register in DI container with proper dependencies
+- [ ] Write unit tests following AnatomyQueryCache test structure
+- [ ] Write integration tests using TestBed patterns
+- [ ] Test performance improvements and cache hit rates
+- [ ] Verify event bus integration works correctly

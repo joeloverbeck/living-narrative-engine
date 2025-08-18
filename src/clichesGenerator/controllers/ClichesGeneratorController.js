@@ -2433,6 +2433,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
 
   /**
    * Test helper to get current state for debugging
+   *
    * @private
    */
   _testGetCurrentState() {

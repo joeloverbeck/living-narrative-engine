@@ -614,6 +614,127 @@ export class IntegrationTestBed extends BaseTestBed {
             additionalProperties: true,
           },
         },
+        {
+          id: 'core:core_motivations_generation_started',
+          description: 'Dispatched when core motivations generation begins',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: {
+                type: 'string',
+                description: 'ID of the character concept',
+              },
+              directionId: {
+                type: 'string',
+                description: 'ID of the thematic direction',
+              },
+              directionTitle: {
+                type: 'string',
+                description: 'Title of the thematic direction',
+              },
+              timestamp: {
+                type: 'string',
+                format: 'date-time',
+                description: 'ISO 8601 timestamp of when generation started',
+              },
+            },
+            required: ['conceptId', 'directionId'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:core_motivations_generation_completed',
+          description: 'Dispatched when core motivations are successfully generated',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: {
+                type: 'string',
+                description: 'ID of the character concept',
+              },
+              directionId: {
+                type: 'string',
+                description: 'ID of the thematic direction',
+              },
+              motivationIds: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                description: 'Array of generated motivation IDs',
+              },
+              totalCount: {
+                type: 'integer',
+                minimum: 0,
+                description: 'Total number of motivations for this direction',
+              },
+              generationTime: {
+                type: 'integer',
+                minimum: 0,
+                description: 'Time taken to generate in milliseconds',
+              },
+            },
+            required: ['conceptId', 'directionId', 'motivationIds'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:core_motivations_generation_failed',
+          description: 'Dispatched when core motivations generation fails',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: {
+                type: 'string',
+                description: 'ID of the character concept',
+              },
+              directionId: {
+                type: 'string',
+                description: 'ID of the thematic direction',
+              },
+              error: {
+                type: 'string',
+                description: 'Error message describing the failure',
+              },
+              errorCode: {
+                type: 'string',
+                description: 'Error code for categorization',
+              },
+              retryAttempt: {
+                type: 'integer',
+                minimum: 0,
+                description: 'Number of retry attempts made',
+              },
+            },
+            required: ['conceptId', 'directionId', 'error'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:core_motivations_retrieved',
+          description: 'Dispatched when core motivations are loaded from storage',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              directionId: {
+                type: 'string',
+                description: 'ID of the thematic direction',
+              },
+              count: {
+                type: 'integer',
+                minimum: 0,
+                description: 'Number of motivations retrieved',
+              },
+              source: {
+                type: 'string',
+                enum: ['database', 'cache', 'session'],
+                description: 'Source of the retrieved data',
+              },
+            },
+            required: ['directionId', 'count'],
+            additionalProperties: true,
+          },
+        },
       ];
 
       // Register event definitions with the data registry

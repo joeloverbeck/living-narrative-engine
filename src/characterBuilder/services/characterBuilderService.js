@@ -15,6 +15,10 @@ import {
   CHARACTER_CONCEPT_STATUS,
 } from '../models/characterConcept.js';
 import { Cliche } from '../models/cliche.js';
+import { CoreMotivation } from '../models/coreMotivation.js';
+import { coreTokens as tokens } from '../../dependencyInjection/tokens/tokens-core.js';
+import { ValidationError } from '../../errors/validationError.js';
+import { EntityNotFoundError } from '../../errors/entityNotFoundError.js';
 
 /**
  * Retry configuration for character builder operations
@@ -59,6 +63,11 @@ export const CHARACTER_BUILDER_EVENTS = {
   CLICHES_GENERATION_COMPLETED: 'core:cliches_generation_completed',
   CLICHES_GENERATION_FAILED: 'core:cliches_generation_failed',
   CLICHES_DELETED: 'core:cliches_deleted',
+  // Core motivations events
+  CORE_MOTIVATIONS_GENERATION_STARTED: 'core:core_motivations_generation_started',
+  CORE_MOTIVATIONS_GENERATION_COMPLETED: 'core:core_motivations_generation_completed',
+  CORE_MOTIVATIONS_GENERATION_FAILED: 'core:core_motivations_generation_failed',
+  CORE_MOTIVATIONS_RETRIEVED: 'core:core_motivations_retrieved',
 };
 
 /**
@@ -83,9 +92,12 @@ export class CharacterBuilderService {
   #database;
   #schemaValidator;
   #clicheGenerator;
+  #container;
   #circuitBreakers = new Map(); // For circuit breaker pattern
   #clicheCache = new Map(); // Cache for clichés with TTL
   #clicheCacheTTL = 300000; // 5 minutes TTL
+  #motivationCache = new Map(); // Cache for core motivations with TTL
+  #motivationCacheTTL = 600000; // 10 minutes TTL
 
   /**
    * @param {object} dependencies
@@ -96,6 +108,7 @@ export class CharacterBuilderService {
    * @param {CharacterDatabase} [dependencies.database] - Database instance
    * @param {object} [dependencies.schemaValidator] - Schema validator
    * @param {object} [dependencies.clicheGenerator] - Cliché generator (CLIGEN-003)
+   * @param {object} [dependencies.container] - DI container for resolving dependencies
    */
   constructor({
     logger,
@@ -105,6 +118,7 @@ export class CharacterBuilderService {
     database = null,
     schemaValidator = null,
     clicheGenerator = null,
+    container = null,
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
@@ -139,6 +153,7 @@ export class CharacterBuilderService {
     this.#database = database;
     this.#schemaValidator = schemaValidator;
     this.#clicheGenerator = clicheGenerator;
+    this.#container = container;
   }
 
   /**
@@ -1316,6 +1331,489 @@ export class CharacterBuilderService {
     }
 
     await this.#database.updateCliche(cliche.id, cliche.toJSON());
+  }
+
+  // ============= Core Motivations Operations =============
+
+  /**
+   * Generate new core motivations for a direction
+   *
+   * @param {string} conceptId - Character concept ID
+   * @param {string} directionId - Thematic direction ID
+   * @param {Array} cliches - Associated clichés for context
+   * @returns {Promise<Array>} Generated motivation objects
+   */
+  async generateCoreMotivationsForDirection(conceptId, directionId, cliches) {
+    assertNonBlankString(conceptId, 'Concept ID is required');
+    assertNonBlankString(directionId, 'Direction ID is required');
+    assertPresent(cliches, 'Clichés are required for generation');
+
+    try {
+      this.#logger.info(
+        `Generating core motivations for direction ${directionId}`
+      );
+
+      // Get the concept
+      const concept = await this.getCharacterConcept(conceptId);
+      if (!concept) {
+        throw new EntityNotFoundError(`Concept ${conceptId} not found`);
+      }
+
+      // Get the direction
+      const direction = await this.#storageService.getThematicDirection(directionId);
+      if (!direction) {
+        throw new EntityNotFoundError(`Direction ${directionId} not found`);
+      }
+
+      // Verify direction belongs to concept
+      if (direction.conceptId !== conceptId) {
+        throw new ValidationError(
+          'Direction does not belong to the specified concept'
+        );
+      }
+
+      // Verify clichés exist
+      if (!Array.isArray(cliches) || cliches.length === 0) {
+        throw new ValidationError(
+          'Cannot generate motivations without clichés context'
+        );
+      }
+
+      // Dispatch generation started event
+      this.#eventBus.dispatch({
+        type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_STARTED,
+        payload: {
+          conceptId,
+          directionId,
+          directionTitle: direction.title,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      const startTime = Date.now();
+
+      try {
+        // Call the Core Motivations Generator service
+        const generator = this.#container.resolve(tokens.ICoreMotivationsGenerator);
+        const generatedMotivations = await generator.generate({
+          concept,
+          direction,
+          cliches
+        });
+
+        // Create CoreMotivation instances
+        const motivations = generatedMotivations.map(rawMotivation =>
+          CoreMotivation.fromRawData({
+            directionId,
+            conceptId,
+            ...rawMotivation,
+            llmMetadata: {
+              model: generator.getLastModelUsed(),
+              temperature: 0.8,
+              generationTime: Date.now() - startTime
+            }
+          })
+        );
+
+        // Validate all motivations
+        for (const motivation of motivations) {
+          const validation = motivation.validate();
+          if (!validation.valid) {
+            this.#logger.warn(
+              `Motivation validation issues: ${validation.errors.join(', ')}`
+            );
+          }
+        }
+
+        this.#logger.info(
+          `Generated ${motivations.length} core motivations`
+        );
+
+        return motivations;
+
+      } catch (error) {
+        // Dispatch generation failed event
+        this.#eventBus.dispatch({
+          type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_FAILED,
+          payload: {
+            conceptId,
+            directionId,
+            error: error.message,
+            errorCode: error.code || 'GENERATION_ERROR'
+          }
+        });
+
+        throw error;
+      }
+
+    } catch (error) {
+      this.#logger.error('Failed to generate core motivations:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieve all motivations for a direction
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<Array>} Array of motivation objects
+   */
+  async getCoreMotivationsByDirectionId(directionId) {
+    assertNonBlankString(directionId, 'Direction ID is required');
+
+    try {
+      // Check cache first
+      const cacheKey = `motivations_${directionId}`;
+      const cached = this.#motivationCache?.get(cacheKey);
+
+      if (cached && Date.now() - cached.timestamp < this.#motivationCacheTTL) {
+        this.#logger.info('Returning cached core motivations');
+
+        this.#eventBus.dispatch({
+          type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
+          payload: {
+            directionId,
+            count: cached.data.length,
+            source: 'cache'
+          }
+        });
+
+        return cached.data;
+      }
+
+      // Fetch from database
+      const motivations = await this.#database.getCoreMotivationsByDirectionId(
+        directionId
+      );
+
+      // Convert to model instances
+      const motivationModels = motivations.map(data =>
+        CoreMotivation.fromRawData(data)
+      );
+
+      // Update cache
+      if (this.#motivationCache) {
+        this.#motivationCache.set(cacheKey, {
+          data: motivationModels,
+          timestamp: Date.now()
+        });
+      }
+
+      return motivationModels;
+
+    } catch (error) {
+      this.#logger.error(
+        `Failed to get core motivations for direction ${directionId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Check if direction has motivations
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<boolean>} True if motivations exist
+   */
+  async hasCoreMotivationsForDirection(directionId) {
+    assertNonBlankString(directionId, 'Direction ID is required');
+
+    try {
+      return await this.#database.hasCoreMotivationsForDirection(directionId);
+    } catch (error) {
+      this.#logger.error(
+        `Failed to check core motivations for direction ${directionId}:`,
+        error
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Save core motivations (accumulative)
+   *
+   * @param {string} directionId - Direction ID
+   * @param {Array} motivations - Array of motivation objects
+   * @returns {Promise<Array>} Array of saved motivation IDs
+   */
+  async saveCoreMotivations(directionId, motivations) {
+    assertNonBlankString(directionId, 'Direction ID is required');
+    assertPresent(motivations, 'Motivations are required');
+
+    if (!Array.isArray(motivations) || motivations.length === 0) {
+      throw new ValidationError('Motivations must be a non-empty array');
+    }
+
+    try {
+      // Convert to plain objects for storage
+      const motivationData = motivations.map(m => {
+        if (m instanceof CoreMotivation) {
+          return m.toJSON();
+        }
+        return m;
+      });
+
+      // Ensure all have the correct directionId
+      motivationData.forEach(m => {
+        m.directionId = directionId;
+      });
+
+      // Save to database
+      const savedIds = await this.#database.saveCoreMotivations(motivationData);
+
+      // Clear cache for this direction
+      if (this.#motivationCache) {
+        const cacheKey = `motivations_${directionId}`;
+        this.#motivationCache.delete(cacheKey);
+      }
+
+      // Dispatch completion event
+      this.#eventBus.dispatch({
+        type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_COMPLETED,
+        payload: {
+          conceptId: motivationData[0].conceptId,
+          directionId,
+          motivationIds: savedIds,
+          totalCount: await this.#database.getCoreMotivationsCount(directionId),
+          generationTime: Date.now()
+        }
+      });
+
+      this.#logger.info(`Saved ${savedIds.length} core motivations`);
+
+      return savedIds;
+
+    } catch (error) {
+      this.#logger.error('Failed to save core motivations:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove individual motivation
+   *
+   * @param {string} directionId - Direction ID
+   * @param {string} motivationId - Motivation ID to remove
+   * @returns {Promise<boolean>} Success status
+   */
+  async removeCoreMotivationItem(directionId, motivationId) {
+    assertNonBlankString(directionId, 'Direction ID is required');
+    assertNonBlankString(motivationId, 'Motivation ID is required');
+
+    try {
+      const success = await this.#database.deleteCoreMotivation(motivationId);
+
+      if (success) {
+        // Clear cache for this direction
+        if (this.#motivationCache) {
+          const cacheKey = `motivations_${directionId}`;
+          this.#motivationCache.delete(cacheKey);
+        }
+
+        this.#logger.info(`Removed core motivation ${motivationId}`);
+      }
+
+      return success;
+
+    } catch (error) {
+      this.#logger.error(
+        `Failed to remove core motivation ${motivationId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Clear all motivations for a direction
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<number>} Number of deleted items
+   */
+  async clearCoreMotivationsForDirection(directionId) {
+    assertNonBlankString(directionId, 'Direction ID is required');
+
+    try {
+      const deletedCount = await this.#database
+        .deleteAllCoreMotivationsForDirection(directionId);
+
+      // Clear cache
+      if (this.#motivationCache) {
+        const cacheKey = `motivations_${directionId}`;
+        this.#motivationCache.delete(cacheKey);
+      }
+
+      this.#logger.info(
+        `Cleared ${deletedCount} core motivations for direction ${directionId}`
+      );
+
+      return deletedCount;
+
+    } catch (error) {
+      this.#logger.error(
+        `Failed to clear core motivations for direction ${directionId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get all core motivations for a concept
+   *
+   * @param {string} conceptId - Concept ID
+   * @returns {Promise<object>} Map of directionId to motivations array
+   */
+  async getAllCoreMotivationsForConcept(conceptId) {
+    assertNonBlankString(conceptId, 'Concept ID is required');
+
+    try {
+      // Get all motivations for the concept
+      const allMotivations = await this.#database
+        .getCoreMotivationsByConceptId(conceptId);
+
+      // Group by direction
+      const motivationsByDirection = {};
+
+      for (const motivation of allMotivations) {
+        if (!motivationsByDirection[motivation.directionId]) {
+          motivationsByDirection[motivation.directionId] = [];
+        }
+
+        motivationsByDirection[motivation.directionId].push(
+          CoreMotivation.fromRawData(motivation)
+        );
+      }
+
+      this.#logger.info(
+        `Retrieved motivations for ${Object.keys(motivationsByDirection).length} directions`
+      );
+
+      return motivationsByDirection;
+
+    } catch (error) {
+      this.#logger.error(
+        `Failed to get all core motivations for concept ${conceptId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Export core motivations to text format
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<string>} Formatted text export
+   */
+  async exportCoreMotivationsToText(directionId) {
+    assertNonBlankString(directionId, 'Direction ID is required');
+
+    try {
+      const motivations = await this.getCoreMotivationsByDirectionId(directionId);
+
+      if (motivations.length === 0) {
+        return 'No core motivations found for this direction.';
+      }
+
+      const direction = await this.#storageService.getThematicDirection(directionId);
+
+      let text = `Core Motivations for: ${direction?.title || directionId}\n`;
+      text += `${'='.repeat(60)}\n\n`;
+
+      motivations.forEach((motivation, index) => {
+        text += `Motivation Block ${index + 1}\n`;
+        text += `${'-'.repeat(40)}\n`;
+        text += `Core Motivation:\n${motivation.coreDesire}\n\n`;
+        text += `Contradiction/Conflict:\n${motivation.internalContradiction}\n\n`;
+        text += `Central Question:\n${motivation.centralQuestion}\n\n`;
+        text += `Created: ${new Date(motivation.createdAt).toLocaleString()}\n`;
+        text += `\n`;
+      });
+
+      text += `\nTotal Motivations: ${motivations.length}`;
+      text += `\nGenerated on: ${new Date().toLocaleString()}`;
+
+      return text;
+
+    } catch (error) {
+      this.#logger.error(
+        `Failed to export core motivations for direction ${directionId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get statistics about core motivations
+   *
+   * @param {string} conceptId - Concept ID
+   * @returns {Promise<object>} Statistics object
+   */
+  async getCoreMotivationsStatistics(conceptId) {
+    assertNonBlankString(conceptId, 'Concept ID is required');
+
+    try {
+      const directions = await this.getThematicDirectionsByConceptId(conceptId);
+      const stats = {
+        totalDirections: directions.length,
+        directionsWithMotivations: 0,
+        totalMotivations: 0,
+        averageMotivationsPerDirection: 0,
+        directionStats: []
+      };
+
+      for (const direction of directions) {
+        const count = await this.#database.getCoreMotivationsCount(direction.id);
+
+        if (count > 0) {
+          stats.directionsWithMotivations++;
+          stats.totalMotivations += count;
+
+          stats.directionStats.push({
+            directionId: direction.id,
+            directionTitle: direction.title,
+            motivationCount: count
+          });
+        }
+      }
+
+      if (stats.directionsWithMotivations > 0) {
+        stats.averageMotivationsPerDirection =
+          stats.totalMotivations / stats.directionsWithMotivations;
+      }
+
+      return stats;
+
+    } catch (error) {
+      this.#logger.error(
+        `Failed to get core motivations statistics for concept ${conceptId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get thematic directions by concept ID
+   *
+   * @param {string} conceptId - Concept ID
+   * @returns {Promise<Array>} Array of thematic directions
+   */
+  async getThematicDirectionsByConceptId(conceptId) {
+    assertNonBlankString(conceptId, 'Concept ID is required');
+
+    try {
+      return await this.#storageService.getThematicDirections(conceptId);
+    } catch (error) {
+      this.#logger.error(
+        `Failed to get thematic directions for concept ${conceptId}:`,
+        error
+      );
+      throw error;
+    }
   }
 
   // Private helper methods for enhanced error handling

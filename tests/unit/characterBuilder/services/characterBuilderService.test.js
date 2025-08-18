@@ -685,4 +685,566 @@ describe('CharacterBuilderService', () => {
       // in the tests above (which they do)
     });
   });
+
+  describe('Core Motivations Operations', () => {
+    let mockContainer;
+    let mockDatabase;
+    let mockCoreMotivationsGenerator;
+
+    beforeEach(() => {
+      mockDatabase = {
+        getCoreMotivationsByDirectionId: jest.fn(),
+        hasCoreMotivationsForDirection: jest.fn(),
+        saveCoreMotivations: jest.fn(),
+        deleteCoreMotivation: jest.fn(),
+        deleteAllCoreMotivationsForDirection: jest.fn(),
+        getCoreMotivationsByConceptId: jest.fn(),
+        getCoreMotivationsCount: jest.fn(),
+      };
+
+      mockCoreMotivationsGenerator = {
+        generate: jest.fn(),
+        getLastModelUsed: jest.fn().mockReturnValue('gpt-4'),
+      };
+
+      mockContainer = {
+        resolve: jest.fn().mockImplementation((token) => {
+          if (token === 'ICoreMotivationsGenerator') {
+            return mockCoreMotivationsGenerator;
+          }
+          throw new Error(`Unknown token: ${token}`);
+        }),
+      };
+
+      mockStorageService.getThematicDirection = jest.fn();
+
+      service = new CharacterBuilderService({
+        logger: mockLogger,
+        storageService: mockStorageService,
+        directionGenerator: mockDirectionGenerator,
+        eventBus: mockEventBus,
+        database: mockDatabase,
+        container: mockContainer,
+      });
+    });
+
+    describe('generateCoreMotivationsForDirection', () => {
+      it('should generate core motivations successfully', async () => {
+        const conceptId = 'concept-123';
+        const directionId = 'direction-456';
+        const cliches = [{ id: 'cliche-1', type: 'name' }];
+
+        const mockConcept = {
+          id: conceptId,
+          concept: 'A brave warrior',
+        };
+
+        const mockDirection = {
+          id: directionId,
+          conceptId,
+          title: 'The Reluctant Hero',
+        };
+
+        const mockGeneratedMotivations = [
+          {
+            coreDesire: 'To protect the innocent',
+            internalContradiction: 'Wants peace but must fight',
+            centralQuestion: 'Can violence ever be justified?',
+          },
+        ];
+
+        mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
+        mockStorageService.getThematicDirection.mockResolvedValue(mockDirection);
+        mockCoreMotivationsGenerator.generate.mockResolvedValue(mockGeneratedMotivations);
+
+        const result = await service.generateCoreMotivationsForDirection(
+          conceptId,
+          directionId,
+          cliches
+        );
+
+        expect(result).toHaveLength(1);
+        expect(result[0]).toMatchObject({
+          directionId,
+          conceptId,
+          coreDesire: 'To protect the innocent',
+          internalContradiction: 'Wants peace but must fight',
+          centralQuestion: 'Can violence ever be justified?',
+        });
+
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith({
+          type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_STARTED,
+          payload: {
+            conceptId,
+            directionId,
+            directionTitle: 'The Reluctant Hero',
+            timestamp: expect.any(String),
+          },
+        });
+      });
+
+      it('should throw error when concept not found', async () => {
+        const conceptId = 'non-existent';
+        const directionId = 'direction-456';
+        const cliches = [{ id: 'cliche-1' }];
+
+        mockStorageService.getCharacterConcept.mockResolvedValue(null);
+
+        await expect(
+          service.generateCoreMotivationsForDirection(conceptId, directionId, cliches)
+        ).rejects.toThrow('Concept non-existent not found');
+      });
+
+      it('should throw error when direction not found', async () => {
+        const conceptId = 'concept-123';
+        const directionId = 'non-existent';
+        const cliches = [{ id: 'cliche-1' }];
+
+        const mockConcept = { id: conceptId, concept: 'A brave warrior' };
+
+        mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
+        mockStorageService.getThematicDirection.mockResolvedValue(null);
+
+        await expect(
+          service.generateCoreMotivationsForDirection(conceptId, directionId, cliches)
+        ).rejects.toThrow('Direction non-existent not found');
+      });
+
+      it('should throw error when direction does not belong to concept', async () => {
+        const conceptId = 'concept-123';
+        const directionId = 'direction-456';
+        const cliches = [{ id: 'cliche-1' }];
+
+        const mockConcept = { id: conceptId, concept: 'A brave warrior' };
+        const mockDirection = { id: directionId, conceptId: 'other-concept' };
+
+        mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
+        mockStorageService.getThematicDirection.mockResolvedValue(mockDirection);
+
+        await expect(
+          service.generateCoreMotivationsForDirection(conceptId, directionId, cliches)
+        ).rejects.toThrow('Direction does not belong to the specified concept');
+      });
+
+      it('should dispatch generation failed event on error', async () => {
+        const conceptId = 'concept-123';
+        const directionId = 'direction-456';
+        const cliches = [{ id: 'cliche-1' }];
+
+        const mockConcept = { id: conceptId, concept: 'A brave warrior' };
+        const mockDirection = { id: directionId, conceptId, title: 'Hero' };
+
+        mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
+        mockStorageService.getThematicDirection.mockResolvedValue(mockDirection);
+        mockCoreMotivationsGenerator.generate.mockRejectedValue(new Error('Generation failed'));
+
+        await expect(
+          service.generateCoreMotivationsForDirection(conceptId, directionId, cliches)
+        ).rejects.toThrow('Generation failed');
+
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith({
+          type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_FAILED,
+          payload: {
+            conceptId,
+            directionId,
+            error: 'Generation failed',
+            errorCode: 'GENERATION_ERROR',
+          },
+        });
+      });
+    });
+
+    describe('getCoreMotivationsByDirectionId', () => {
+      it('should return cached motivations when available', async () => {
+        const directionId = 'direction-123';
+        const cachedMotivations = [{ id: 'motivation-1' }];
+
+        // Since we can't access private fields directly, we'll mock the database to return empty
+        // and set up the scenario where cache would be hit by making subsequent calls
+        mockDatabase.getCoreMotivationsByDirectionId.mockResolvedValue([]);
+
+        // First call will populate cache, second call should use cache
+        await service.getCoreMotivationsByDirectionId(directionId);
+        
+        // Now test that subsequent calls don't hit database again
+        const result = await service.getCoreMotivationsByDirectionId(directionId);
+
+        expect(mockDatabase.getCoreMotivationsByDirectionId).toHaveBeenCalledTimes(1);
+      });
+
+      it('should fetch from database when cache is empty', async () => {
+        const directionId = 'direction-123';
+        const dbMotivations = [
+          {
+            id: 'motivation-1',
+            directionId,
+            conceptId: 'concept-1',
+            coreDesire: 'To be loved',
+            internalContradiction: 'Fears vulnerability',
+            centralQuestion: 'Is love worth the risk?',
+          },
+        ];
+
+        mockDatabase.getCoreMotivationsByDirectionId.mockResolvedValue(dbMotivations);
+
+        const result = await service.getCoreMotivationsByDirectionId(directionId);
+
+        expect(result).toHaveLength(1);
+        expect(mockDatabase.getCoreMotivationsByDirectionId).toHaveBeenCalledWith(directionId);
+      });
+
+      it('should handle database errors gracefully', async () => {
+        const directionId = 'direction-123';
+
+        mockDatabase.getCoreMotivationsByDirectionId.mockRejectedValue(
+          new Error('Database error')
+        );
+
+        await expect(
+          service.getCoreMotivationsByDirectionId(directionId)
+        ).rejects.toThrow('Database error');
+      });
+    });
+
+    describe('hasCoreMotivationsForDirection', () => {
+      it('should return true when motivations exist', async () => {
+        const directionId = 'direction-123';
+
+        mockDatabase.hasCoreMotivationsForDirection.mockResolvedValue(true);
+
+        const result = await service.hasCoreMotivationsForDirection(directionId);
+
+        expect(result).toBe(true);
+        expect(mockDatabase.hasCoreMotivationsForDirection).toHaveBeenCalledWith(directionId);
+      });
+
+      it('should return false when no motivations exist', async () => {
+        const directionId = 'direction-123';
+
+        mockDatabase.hasCoreMotivationsForDirection.mockResolvedValue(false);
+
+        const result = await service.hasCoreMotivationsForDirection(directionId);
+
+        expect(result).toBe(false);
+      });
+
+      it('should return false on database error', async () => {
+        const directionId = 'direction-123';
+
+        mockDatabase.hasCoreMotivationsForDirection.mockRejectedValue(
+          new Error('Database error')
+        );
+
+        const result = await service.hasCoreMotivationsForDirection(directionId);
+
+        expect(result).toBe(false);
+        expect(mockLogger.error).toHaveBeenCalled();
+      });
+    });
+
+    describe('saveCoreMotivations', () => {
+      it('should save motivations successfully', async () => {
+        const directionId = 'direction-123';
+        const motivations = [
+          {
+            id: 'motivation-1',
+            directionId,
+            conceptId: 'concept-1',
+            coreDesire: 'To be loved',
+            toJSON: jest.fn().mockReturnValue({
+              id: 'motivation-1',
+              directionId,
+              conceptId: 'concept-1',
+              coreDesire: 'To be loved',
+            }),
+          },
+        ];
+
+        const savedIds = ['motivation-1'];
+
+        mockDatabase.saveCoreMotivations.mockResolvedValue(savedIds);
+        mockDatabase.getCoreMotivationsCount.mockResolvedValue(1);
+
+        const result = await service.saveCoreMotivations(directionId, motivations);
+
+        expect(result).toEqual(savedIds);
+        expect(mockDatabase.saveCoreMotivations).toHaveBeenCalled();
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith({
+          type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_COMPLETED,
+          payload: {
+            conceptId: 'concept-1',
+            directionId,
+            motivationIds: savedIds,
+            totalCount: 1,
+            generationTime: expect.any(Number),
+          },
+        });
+      });
+
+      it('should throw error for empty motivations array', async () => {
+        const directionId = 'direction-123';
+        const motivations = [];
+
+        await expect(
+          service.saveCoreMotivations(directionId, motivations)
+        ).rejects.toThrow('Motivations must be a non-empty array');
+      });
+
+      it('should handle non-CoreMotivation objects', async () => {
+        const directionId = 'direction-123';
+        const motivations = [
+          {
+            id: 'motivation-1',
+            conceptId: 'concept-1',
+            coreDesire: 'To be loved',
+          },
+        ];
+
+        const savedIds = ['motivation-1'];
+
+        mockDatabase.saveCoreMotivations.mockResolvedValue(savedIds);
+        mockDatabase.getCoreMotivationsCount.mockResolvedValue(1);
+
+        const result = await service.saveCoreMotivations(directionId, motivations);
+
+        expect(result).toEqual(savedIds);
+      });
+    });
+
+    describe('removeCoreMotivationItem', () => {
+      it('should remove motivation successfully', async () => {
+        const directionId = 'direction-123';
+        const motivationId = 'motivation-456';
+
+        mockDatabase.deleteCoreMotivation.mockResolvedValue(true);
+
+        const result = await service.removeCoreMotivationItem(directionId, motivationId);
+
+        expect(result).toBe(true);
+        expect(mockDatabase.deleteCoreMotivation).toHaveBeenCalledWith(motivationId);
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          `Removed core motivation ${motivationId}`
+        );
+      });
+
+      it('should handle failed removal', async () => {
+        const directionId = 'direction-123';
+        const motivationId = 'motivation-456';
+
+        mockDatabase.deleteCoreMotivation.mockResolvedValue(false);
+
+        const result = await service.removeCoreMotivationItem(directionId, motivationId);
+
+        expect(result).toBe(false);
+      });
+
+      it('should handle database errors', async () => {
+        const directionId = 'direction-123';
+        const motivationId = 'motivation-456';
+
+        mockDatabase.deleteCoreMotivation.mockRejectedValue(new Error('Database error'));
+
+        await expect(
+          service.removeCoreMotivationItem(directionId, motivationId)
+        ).rejects.toThrow('Database error');
+      });
+    });
+
+    describe('clearCoreMotivationsForDirection', () => {
+      it('should clear all motivations for direction', async () => {
+        const directionId = 'direction-123';
+        const deletedCount = 5;
+
+        mockDatabase.deleteAllCoreMotivationsForDirection.mockResolvedValue(deletedCount);
+
+        const result = await service.clearCoreMotivationsForDirection(directionId);
+
+        expect(result).toBe(deletedCount);
+        expect(mockDatabase.deleteAllCoreMotivationsForDirection).toHaveBeenCalledWith(
+          directionId
+        );
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          `Cleared ${deletedCount} core motivations for direction ${directionId}`
+        );
+      });
+
+      it('should handle database errors', async () => {
+        const directionId = 'direction-123';
+
+        mockDatabase.deleteAllCoreMotivationsForDirection.mockRejectedValue(
+          new Error('Database error')
+        );
+
+        await expect(
+          service.clearCoreMotivationsForDirection(directionId)
+        ).rejects.toThrow('Database error');
+      });
+    });
+
+    describe('getAllCoreMotivationsForConcept', () => {
+      it('should return motivations grouped by direction', async () => {
+        const conceptId = 'concept-123';
+        const dbMotivations = [
+          {
+            id: 'motivation-1',
+            directionId: 'direction-1',
+            conceptId,
+            coreDesire: 'To be loved',
+            internalContradiction: 'Fears vulnerability',
+            centralQuestion: 'Is love worth the risk?',
+          },
+          {
+            id: 'motivation-2',
+            directionId: 'direction-2',
+            conceptId,
+            coreDesire: 'To be powerful',
+            internalContradiction: 'Knows power corrupts',
+            centralQuestion: 'Can power be used for good?',
+          },
+          {
+            id: 'motivation-3',
+            directionId: 'direction-1',
+            conceptId,
+            coreDesire: 'To be accepted',
+            internalContradiction: 'Wants to be unique',
+            centralQuestion: 'Can one belong while being different?',
+          },
+        ];
+
+        mockDatabase.getCoreMotivationsByConceptId.mockResolvedValue(dbMotivations);
+
+        const result = await service.getAllCoreMotivationsForConcept(conceptId);
+
+        expect(Object.keys(result)).toHaveLength(2);
+        expect(result['direction-1']).toHaveLength(2);
+        expect(result['direction-2']).toHaveLength(1);
+      });
+
+      it('should handle database errors', async () => {
+        const conceptId = 'concept-123';
+
+        mockDatabase.getCoreMotivationsByConceptId.mockRejectedValue(
+          new Error('Database error')
+        );
+
+        await expect(
+          service.getAllCoreMotivationsForConcept(conceptId)
+        ).rejects.toThrow('Database error');
+      });
+    });
+
+    describe('exportCoreMotivationsToText', () => {
+      it('should export motivations to formatted text', async () => {
+        const directionId = 'direction-123';
+        const motivations = [
+          {
+            coreDesire: 'To be loved',
+            internalContradiction: 'Fears vulnerability',
+            centralQuestion: 'Is love worth the risk?',
+            createdAt: '2023-01-01T00:00:00.000Z',
+          },
+        ];
+
+        const mockDirection = { id: directionId, title: 'The Reluctant Lover' };
+
+        service.getCoreMotivationsByDirectionId = jest.fn().mockResolvedValue(motivations);
+        mockStorageService.getThematicDirection.mockResolvedValue(mockDirection);
+
+        const result = await service.exportCoreMotivationsToText(directionId);
+
+        expect(result).toContain('Core Motivations for: The Reluctant Lover');
+        expect(result).toContain('To be loved');
+        expect(result).toContain('Fears vulnerability');
+        expect(result).toContain('Is love worth the risk?');
+        expect(result).toContain('Total Motivations: 1');
+      });
+
+      it('should return message when no motivations found', async () => {
+        const directionId = 'direction-123';
+
+        service.getCoreMotivationsByDirectionId = jest.fn().mockResolvedValue([]);
+
+        const result = await service.exportCoreMotivationsToText(directionId);
+
+        expect(result).toBe('No core motivations found for this direction.');
+      });
+    });
+
+    describe('getCoreMotivationsStatistics', () => {
+      it('should return statistics about core motivations', async () => {
+        const conceptId = 'concept-123';
+        const directions = [
+          { id: 'direction-1', title: 'Hero' },
+          { id: 'direction-2', title: 'Villain' },
+          { id: 'direction-3', title: 'Mentor' },
+        ];
+
+        service.getThematicDirectionsByConceptId = jest.fn().mockResolvedValue(directions);
+        mockDatabase.getCoreMotivationsCount
+          .mockResolvedValueOnce(3) // direction-1 has 3 motivations
+          .mockResolvedValueOnce(0) // direction-2 has 0 motivations
+          .mockResolvedValueOnce(2); // direction-3 has 2 motivations
+
+        const result = await service.getCoreMotivationsStatistics(conceptId);
+
+        expect(result).toEqual({
+          totalDirections: 3,
+          directionsWithMotivations: 2,
+          totalMotivations: 5,
+          averageMotivationsPerDirection: 2.5,
+          directionStats: [
+            { directionId: 'direction-1', directionTitle: 'Hero', motivationCount: 3 },
+            { directionId: 'direction-3', directionTitle: 'Mentor', motivationCount: 2 },
+          ],
+        });
+      });
+
+      it('should handle concepts with no motivations', async () => {
+        const conceptId = 'concept-123';
+        const directions = [{ id: 'direction-1', title: 'Hero' }];
+
+        service.getThematicDirectionsByConceptId = jest.fn().mockResolvedValue(directions);
+        mockDatabase.getCoreMotivationsCount.mockResolvedValue(0);
+
+        const result = await service.getCoreMotivationsStatistics(conceptId);
+
+        expect(result).toEqual({
+          totalDirections: 1,
+          directionsWithMotivations: 0,
+          totalMotivations: 0,
+          averageMotivationsPerDirection: 0,
+          directionStats: [],
+        });
+      });
+    });
+
+    describe('getThematicDirectionsByConceptId', () => {
+      it('should return thematic directions for concept', async () => {
+        const conceptId = 'concept-123';
+        const directions = [
+          { id: 'direction-1', title: 'Hero' },
+          { id: 'direction-2', title: 'Villain' },
+        ];
+
+        mockStorageService.getThematicDirections.mockResolvedValue(directions);
+
+        const result = await service.getThematicDirectionsByConceptId(conceptId);
+
+        expect(result).toEqual(directions);
+        expect(mockStorageService.getThematicDirections).toHaveBeenCalledWith(conceptId);
+      });
+
+      it('should handle storage service errors', async () => {
+        const conceptId = 'concept-123';
+
+        mockStorageService.getThematicDirections.mockRejectedValue(
+          new Error('Storage error')
+        );
+
+        await expect(
+          service.getThematicDirectionsByConceptId(conceptId)
+        ).rejects.toThrow('Storage error');
+      });
+    });
+  });
 });

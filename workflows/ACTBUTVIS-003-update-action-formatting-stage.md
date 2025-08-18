@@ -11,12 +11,14 @@
 - **Blocks**: ACTBUTVIS-007 (UI Rendering)
 
 ## Context
-The ActionFormattingStage is part of the action processing pipeline that formats actions before they're presented to the UI. Currently, it doesn't pass visual properties through the pipeline. This ticket ensures visual properties flow from the action definition through the formatting stage to the ActionComposite DTO.
+The ActionFormattingStage is part of the action processing pipeline that formats actions before they're presented to the UI. Currently, it creates intermediate `actionInfo` objects but doesn't include visual properties from action definitions. This ticket ensures visual properties from `actionDef.visual` flow through the `actionInfo` objects to eventually reach the ActionComposite DTO.
+
+**Key Architecture Note**: ActionFormattingStage creates `actionInfo` objects, not ActionComposite objects directly. ActionComposite objects are created elsewhere in the pipeline from the actionInfo data.
 
 ## Objectives
-1. Update ActionFormattingStage to preserve visual properties from action definitions
-2. Ensure visual data flows through the pipeline context
-3. Pass visual properties when creating ActionComposite objects
+1. Update ActionFormattingStage to preserve visual properties from action definitions (`actionDef.visual`)
+2. Ensure visual data flows through the `actionInfo` objects
+3. Pass visual properties in `actionInfo` objects for downstream ActionComposite creation
 4. Maintain pipeline performance and error handling
 
 ## Implementation Details
@@ -29,129 +31,117 @@ The ActionFormattingStage is part of the action processing pipeline that formats
 **Current Structure Analysis**:
 - Part of a multi-stage pipeline system
 - Receives context object with action data
-- Creates ActionComposite objects for formatted actions
-- Uses the `createActionComposite` function from the DTO
+- Creates intermediate `actionInfo` objects (NOT ActionComposite objects directly)
+- ActionComposite objects are created elsewhere from the actionInfo data
+- Multiple locations create actionInfo objects throughout the file
 
 **Changes Required**:
 
 ```javascript
-// In the execute method of ActionFormattingStage class
+// In all locations where actionInfo objects are created in ActionFormattingStage
+// Multiple locations need this pattern (lines 384-390, 446-452, 508-514, etc.)
 
-async execute(context) {
-  try {
-    // ... existing validation and formatting logic ...
+// BEFORE: Current actionInfo creation pattern
+const actionInfo = {
+  id: actionDef.id,
+  name: actionDef.name,
+  command: formatResult.value,
+  description: actionDef.description || '',
+  params: { targetId: targetContext.entityId },
+};
 
-    // Extract visual properties from the action data
-    // The visual property should be available in context.actionData
-    const visual = context.actionData?.visual || null;
+// AFTER: Updated actionInfo creation pattern with visual properties
+const actionInfo = {
+  id: actionDef.id,
+  name: actionDef.name,
+  command: formatResult.value,
+  description: actionDef.description || '',
+  params: { targetId: targetContext.entityId },
+  visual: actionDef.visual || null, // NEW: Extract from actionDef.visual
+};
 
-    // When creating the ActionComposite, include visual properties
-    const actionComposite = createActionComposite({
-      index: context.index,
-      actionId: context.actionId,
-      commandString: formattedCommand,
-      params: context.formattedParams || {},
-      description: context.description || '',
-      visual: visual, // NEW: Pass visual properties
-    });
-
-    // Update the context with the composite
-    context.actionComposite = actionComposite;
-
-    // Return success result
-    return {
-      success: true,
-      context: context,
-    };
-  } catch (error) {
-    // Enhanced error handling for visual property issues
-    if (error.message?.includes('visual properties')) {
-      return {
-        success: false,
-        error: `Visual property formatting failed for action ${context.actionId}: ${error.message}`,
-        context: context,
-      };
-    }
-    
-    // Existing error handling
-    return {
-      success: false,
-      error: error.message,
-      context: context,
-    };
-  }
-}
+formattedActions.push(actionInfo);
 ```
 
-#### 2. Ensure Pipeline Context Preservation
-**Additional considerations for the pipeline**:
+**Key Implementation Notes**:
+1. Visual properties are extracted from `actionDef.visual` (not `context.actionData.visual`)
+2. All 13+ locations where actionInfo objects are created need this update
+3. The visual property flows through actionInfo → ActionComposite conversion elsewhere
+4. No direct ActionComposite creation happens in ActionFormattingStage
+
+#### 2. Error Handling for Visual Properties
+**Additional considerations for actionDef validation**:
 
 ```javascript
-// If there's a method that prepares or validates the context
-validateContext(context) {
+// Validate actionDef before processing
+validateActionDef(actionDef) {
   // Existing validation...
   
   // NEW: Validate visual properties if present
-  if (context.actionData?.visual) {
-    // Basic structure validation (detailed validation in DTO)
-    if (typeof context.actionData.visual !== 'object') {
-      throw new Error('Visual properties must be an object');
+  if (actionDef.visual) {
+    // Basic structure validation (detailed validation in ActionComposite DTO)
+    if (typeof actionDef.visual !== 'object' || actionDef.visual === null) {
+      throw new Error(`Invalid visual properties for action ${actionDef.id}: must be object or undefined`);
+    }
+    
+    // Optional: Validate CSS color format if present
+    if (actionDef.visual.backgroundColor && !isValidColor(actionDef.visual.backgroundColor)) {
+      this.#logger.warn(`Invalid backgroundColor for action ${actionDef.id}: ${actionDef.visual.backgroundColor}`);
     }
   }
   
   return true;
 }
 
-// If there's a method that transforms or enriches the context
-enrichContext(context) {
-  // Existing enrichment...
-  
-  // NEW: Preserve visual properties during enrichment
-  if (context.actionData?.visual) {
-    // Ensure visual properties aren't lost during transformations
-    context.preservedVisual = context.actionData.visual;
-  }
-  
-  return context;
+// Helper function for color validation
+function isValidColor(color) {
+  // Basic validation for hex colors and CSS color names
+  return /^#[0-9A-F]{6}$/i.test(color) || 
+         /^#[0-9A-F]{3}$/i.test(color) || 
+         ['red', 'blue', 'green', 'white', 'black'].includes(color.toLowerCase());
 }
 ```
 
 ### Integration Points
 
-#### 1. Input Context Structure
-The stage should expect context with this structure:
+#### 1. Action Definition Structure
+The stage processes `actionDef` objects with this structure:
 ```javascript
+// actionDef structure (from action definition files)
 {
-  index: number,
-  actionId: string,
-  actionData: {
-    // ... other action properties ...
-    visual: {
-      backgroundColor: string,
-      textColor: string,
-      hoverBackgroundColor: string,
-      hoverTextColor: string
-    } // optional
-  },
-  formattedParams: object,
-  description: string
+  id: string,
+  name: string,
+  template: string,
+  description: string,
+  visual: { // optional - NEW visual properties
+    backgroundColor: string,
+    textColor: string, 
+    hoverBackgroundColor: string,
+    hoverTextColor: string
+  }
+}
+
+// targetContext structure (existing)
+{
+  entityId: string,
+  // ... other context properties
 }
 ```
 
-#### 2. Output Context Structure
-The stage should produce context with:
+#### 2. Output actionInfo Structure
+The stage produces `actionInfo` objects with:
 ```javascript
+// actionInfo structure added to formattedActions array
 {
-  // ... all input properties ...
-  actionComposite: {
-    index: number,
-    actionId: string,
-    commandString: string,
-    params: object,
-    description: string,
-    visual: object // NEW: visual properties included
-  }
+  id: string,          // from actionDef.id
+  name: string,        // from actionDef.name
+  command: string,     // from formatResult.value
+  description: string, // from actionDef.description
+  params: object,      // contains targetId and other parameters
+  visual: object       // NEW: from actionDef.visual (or null if not present)
 }
+
+// These actionInfo objects flow through pipeline to eventually become ActionComposite objects
 ```
 
 ### Error Handling
@@ -167,17 +157,26 @@ class VisualPropertyError extends Error {
   }
 }
 
-// Use in the stage:
-if (context.actionData?.visual && !isValidVisualStructure(context.actionData.visual)) {
-  throw new VisualPropertyError(context.actionId, 'Invalid visual property structure');
+// Use in the stage when processing actionDef:
+if (actionDef.visual && !isValidVisualStructure(actionDef.visual)) {
+  throw new VisualPropertyError(actionDef.id, 'Invalid visual property structure');
+}
+
+// Helper function
+function isValidVisualStructure(visual) {
+  return typeof visual === 'object' && 
+         visual !== null &&
+         (visual.backgroundColor === undefined || typeof visual.backgroundColor === 'string') &&
+         (visual.textColor === undefined || typeof visual.textColor === 'string');
 }
 ```
 
 ### Performance Considerations
 
-1. **Minimal Processing**: Visual properties should be passed through without transformation
-2. **No Deep Cloning**: Use reference passing for visual objects (they're immutable in DTO)
-3. **Early Validation**: Validate structure early to fail fast
+1. **Minimal Processing**: Visual properties should be passed through from actionDef to actionInfo without transformation
+2. **No Deep Cloning**: Use reference passing for visual objects (they're validated in ActionComposite DTO)
+3. **Early Validation**: Validate actionDef.visual structure early to fail fast
+4. **Multiple Locations**: Remember to update ALL locations where actionInfo objects are created
 
 ### Testing Requirements
 
@@ -187,66 +186,113 @@ if (context.actionData?.visual && !isValidVisualStructure(context.actionData.vis
 ```javascript
 describe('ActionFormattingStage - Visual Properties', () => {
   let stage;
-  let mockContext;
+  let mockActionDef;
+  let mockTargetContext;
+  let mockFormatResult;
 
   beforeEach(() => {
     stage = new ActionFormattingStage(/* dependencies */);
-    mockContext = {
-      index: 0,
-      actionId: 'test:action',
-      actionData: {
-        name: 'Test Action',
-        template: 'test {target}'
-      },
-      formattedParams: { target: 'player' },
-      description: 'Test action'
+    mockActionDef = {
+      id: 'test:action',
+      name: 'Test Action',
+      template: 'test {target}',
+      description: 'Test action description'
+    };
+    mockTargetContext = {
+      entityId: 'player_entity'
+    };
+    mockFormatResult = {
+      value: 'formatted command string'
     };
   });
 
-  describe('visual property handling', () => {
-    it('should pass visual properties to ActionComposite', async () => {
-      mockContext.actionData.visual = {
+  describe('actionInfo visual property handling', () => {
+    it('should include visual properties in actionInfo objects', () => {
+      mockActionDef.visual = {
         backgroundColor: '#ff0000',
         textColor: '#ffffff'
       };
 
-      const result = await stage.execute(mockContext);
+      // Test the actionInfo creation pattern
+      const actionInfo = {
+        id: mockActionDef.id,
+        name: mockActionDef.name,
+        command: mockFormatResult.value,
+        description: mockActionDef.description || '',
+        params: { targetId: mockTargetContext.entityId },
+        visual: mockActionDef.visual || null
+      };
 
-      expect(result.success).toBe(true);
-      expect(result.context.actionComposite.visual).toBeDefined();
-      expect(result.context.actionComposite.visual.backgroundColor).toBe('#ff0000');
+      expect(actionInfo.visual).toBeDefined();
+      expect(actionInfo.visual.backgroundColor).toBe('#ff0000');
+      expect(actionInfo.visual.textColor).toBe('#ffffff');
     });
 
-    it('should handle missing visual properties', async () => {
-      // No visual property in actionData
-      const result = await stage.execute(mockContext);
+    it('should handle missing visual properties with null', () => {
+      // No visual property in actionDef
+      const actionInfo = {
+        id: mockActionDef.id,
+        name: mockActionDef.name,
+        command: mockFormatResult.value,
+        description: mockActionDef.description || '',
+        params: { targetId: mockTargetContext.entityId },
+        visual: mockActionDef.visual || null
+      };
 
-      expect(result.success).toBe(true);
-      expect(result.context.actionComposite.visual).toBeNull();
+      expect(actionInfo.visual).toBeNull();
     });
 
-    it('should handle partial visual properties', async () => {
-      mockContext.actionData.visual = {
+    it('should handle partial visual properties', () => {
+      mockActionDef.visual = {
         backgroundColor: '#ff0000'
         // No textColor
       };
 
-      const result = await stage.execute(mockContext);
-
-      expect(result.success).toBe(true);
-      expect(result.context.actionComposite.visual.backgroundColor).toBe('#ff0000');
-      expect(result.context.actionComposite.visual.textColor).toBeUndefined();
-    });
-
-    it('should handle visual property errors gracefully', async () => {
-      mockContext.actionData.visual = {
-        backgroundColor: 'invalid-color'
+      const actionInfo = {
+        id: mockActionDef.id,
+        name: mockActionDef.name,
+        command: mockFormatResult.value,
+        description: mockActionDef.description || '',
+        params: { targetId: mockTargetContext.entityId },
+        visual: mockActionDef.visual || null
       };
 
-      const result = await stage.execute(mockContext);
+      expect(actionInfo.visual.backgroundColor).toBe('#ff0000');
+      expect(actionInfo.visual.textColor).toBeUndefined();
+    });
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('visual');
+    it('should validate actionDef.visual structure early', () => {
+      mockActionDef.visual = 'invalid-visual-data'; // Should be object
+
+      expect(() => {
+        // This would be called in the stage validation
+        if (mockActionDef.visual && typeof mockActionDef.visual !== 'object') {
+          throw new Error(`Invalid visual properties for action ${mockActionDef.id}: must be object`);
+        }
+      }).toThrow('Invalid visual properties');
+    });
+
+    it('should test integration with formattedActions array', () => {
+      mockActionDef.visual = {
+        backgroundColor: '#00ff00'
+      };
+
+      const formattedActions = [];
+      
+      // Simulate the actual pattern used in ActionFormattingStage
+      const actionInfo = {
+        id: mockActionDef.id,
+        name: mockActionDef.name,
+        command: mockFormatResult.value,
+        description: mockActionDef.description || '',
+        params: { targetId: mockTargetContext.entityId },
+        visual: mockActionDef.visual || null
+      };
+      
+      formattedActions.push(actionInfo);
+
+      expect(formattedActions).toHaveLength(1);
+      expect(formattedActions[0].visual.backgroundColor).toBe('#00ff00');
     });
   });
 });
@@ -254,21 +300,23 @@ describe('ActionFormattingStage - Visual Properties', () => {
 
 ## Acceptance Criteria
 
-1. ✅ ActionFormattingStage extracts visual properties from action data
-2. ✅ Visual properties are passed to createActionComposite function
-3. ✅ Pipeline handles actions without visual properties (backward compatibility)
+1. ✅ ActionFormattingStage extracts visual properties from actionDef.visual
+2. ✅ Visual properties are included in actionInfo objects (all 13+ creation locations)
+3. ✅ Pipeline handles actions without visual properties (backward compatibility - null value)
 4. ✅ Pipeline handles partial visual properties correctly
-5. ✅ Error handling includes visual property-specific errors
-6. ✅ Context structure is documented and consistent
-7. ✅ Unit tests verify visual property flow through the stage
-8. ✅ Performance is not impacted (no deep cloning or heavy processing)
+5. ✅ Error handling includes actionDef.visual validation
+6. ✅ actionInfo structure is documented and consistent
+7. ✅ Unit tests verify visual property inclusion in actionInfo objects
+8. ✅ Performance is not impacted (reference passing, no transformation)
 
 ## Notes
 
-- Visual properties should flow through unchanged - no transformation needed
-- The stage should be defensive about missing or malformed visual data
-- Consider logging when visual properties are processed for debugging
-- This is a pass-through operation - actual validation happens in the DTO
+- Visual properties should flow from actionDef.visual to actionInfo.visual unchanged
+- The stage should handle missing visual properties gracefully (set to null)
+- All 13+ actionInfo creation locations need the visual property addition
+- Early validation of actionDef.visual structure prevents downstream issues
+- Actual detailed validation still happens in ActionComposite DTO
+- Remember: ActionFormattingStage creates actionInfo, not ActionComposite objects
 
 ## Related Tickets
 - **Depends on**: ACTBUTVIS-002 (DTO must accept visual parameter)
