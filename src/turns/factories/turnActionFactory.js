@@ -13,6 +13,7 @@ import { ITurnActionFactory } from '../ports/ITurnActionFactory.js';
 export class TurnActionFactory extends ITurnActionFactory {
   /**
    * Creates an {@link ITurnAction} instance from the provided action composite and optional speech.
+   * Now preserves visual properties from the composite.
    *
    * @param {import('../dtos/actionComposite.js').ActionComposite} composite - The action composite.
    * @param {string|null} speech - Optional speech text.
@@ -23,6 +24,7 @@ export class TurnActionFactory extends ITurnActionFactory {
       actionDefinitionId: composite.actionId,
       resolvedParameters: composite.params,
       commandString: composite.commandString,
+      ...(composite.visual ? { visual: composite.visual } : {}),
       ...(speech ? { speech: speech.trim() } : {}),
     };
     return freeze(obj);

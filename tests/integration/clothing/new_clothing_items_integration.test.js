@@ -24,7 +24,7 @@ describe('New Clothing Items Integration Tests', () => {
           'data/mods/clothing/entities/definitions',
           filename
         );
-        
+
         // Check file exists
         let fileExists = false;
         try {
@@ -33,7 +33,7 @@ describe('New Clothing Items Integration Tests', () => {
         } catch (err) {
           fileExists = false;
         }
-        
+
         expect(fileExists).toBe(true);
       }
     });
@@ -45,14 +45,14 @@ describe('New Clothing Items Integration Tests', () => {
           'data/mods/clothing/entities/definitions',
           filename
         );
-        
+
         const content = readFileSync(filePath, 'utf8');
         let parsed;
-        
+
         expect(() => {
           parsed = JSON.parse(content);
         }).not.toThrow();
-        
+
         // Check basic structure
         expect(parsed).toHaveProperty('id');
         expect(parsed).toHaveProperty('components');
@@ -68,21 +68,23 @@ describe('New Clothing Items Integration Tests', () => {
         '../../../data/mods/clothing/entities/definitions',
         'pink_off_shoulder_crop_top.entity.json'
       );
-      
+
       const content = readFileSync(filePath, 'utf8');
       const entityData = JSON.parse(content);
-      
+
       expect(entityData.id).toBe('clothing:pink_off_shoulder_crop_top');
       expect(entityData.components['clothing:wearable']).toEqual({
         layer: 'base',
         equipmentSlots: {
           primary: 'torso_upper',
-          secondary: ['left_arm_clothing', 'right_arm_clothing']
+          secondary: ['left_arm_clothing', 'right_arm_clothing'],
         },
-        allowedLayers: ['underwear', 'base']
+        allowedLayers: ['underwear', 'base'],
       });
       expect(entityData.components['core:material'].material).toBe('cotton');
-      expect(entityData.components['descriptors:color_basic'].color).toBe('pink');
+      expect(entityData.components['descriptors:color_basic'].color).toBe(
+        'pink'
+      );
     });
 
     it('should have correct component structure for pink skirt', () => {
@@ -91,20 +93,22 @@ describe('New Clothing Items Integration Tests', () => {
         '../../../data/mods/clothing/entities/definitions',
         'pink_short_flared_skirt.entity.json'
       );
-      
+
       const content = readFileSync(filePath, 'utf8');
       const entityData = JSON.parse(content);
-      
+
       expect(entityData.id).toBe('clothing:pink_short_flared_skirt');
       expect(entityData.components['clothing:wearable']).toEqual({
         layer: 'base',
         equipmentSlots: {
-          primary: 'torso_lower'
+          primary: 'torso_lower',
         },
-        allowedLayers: ['underwear', 'base']
+        allowedLayers: ['underwear', 'base'],
       });
       expect(entityData.components['core:material'].material).toBe('cotton');
-      expect(entityData.components['descriptors:color_basic'].color).toBe('pink');
+      expect(entityData.components['descriptors:color_basic'].color).toBe(
+        'pink'
+      );
     });
 
     it('should have correct component structure for white thigh-high socks', () => {
@@ -113,21 +117,25 @@ describe('New Clothing Items Integration Tests', () => {
         '../../../data/mods/clothing/entities/definitions',
         'white_thigh_high_socks_pink_hearts.entity.json'
       );
-      
+
       const content = readFileSync(filePath, 'utf8');
       const entityData = JSON.parse(content);
-      
+
       expect(entityData.id).toBe('clothing:white_thigh_high_socks_pink_hearts');
       expect(entityData.components['clothing:wearable']).toEqual({
         layer: 'underwear',
         equipmentSlots: {
-          primary: 'feet'
+          primary: 'feet',
         },
-        allowedLayers: ['underwear']
+        allowedLayers: ['underwear'],
       });
       expect(entityData.components['core:material'].material).toBe('cotton');
-      expect(entityData.components['descriptors:color_basic'].color).toBe('white');
-      expect(entityData.components['descriptors:pattern'].pattern).toBe('heart');
+      expect(entityData.components['descriptors:color_basic'].color).toBe(
+        'white'
+      );
+      expect(entityData.components['descriptors:pattern'].pattern).toBe(
+        'heart'
+      );
     });
 
     it('should have correct component structure for white cotton panties', () => {
@@ -136,20 +144,22 @@ describe('New Clothing Items Integration Tests', () => {
         '../../../data/mods/clothing/entities/definitions',
         'white_cotton_panties.entity.json'
       );
-      
+
       const content = readFileSync(filePath, 'utf8');
       const entityData = JSON.parse(content);
-      
+
       expect(entityData.id).toBe('clothing:white_cotton_panties');
       expect(entityData.components['clothing:wearable']).toEqual({
         layer: 'underwear',
         equipmentSlots: {
-          primary: 'torso_lower'
+          primary: 'torso_lower',
         },
-        allowedLayers: ['underwear']
+        allowedLayers: ['underwear'],
       });
       expect(entityData.components['core:material'].material).toBe('cotton');
-      expect(entityData.components['descriptors:color_basic'].color).toBe('white');
+      expect(entityData.components['descriptors:color_basic'].color).toBe(
+        'white'
+      );
     });
 
     it('should have correct component structure for white platform sneakers', () => {
@@ -158,20 +168,22 @@ describe('New Clothing Items Integration Tests', () => {
         '../../../data/mods/clothing/entities/definitions',
         'white_platform_sneakers.entity.json'
       );
-      
+
       const content = readFileSync(filePath, 'utf8');
       const entityData = JSON.parse(content);
-      
+
       expect(entityData.id).toBe('clothing:white_platform_sneakers');
       expect(entityData.components['clothing:wearable']).toEqual({
         layer: 'base',
         equipmentSlots: {
-          primary: 'feet'
+          primary: 'feet',
         },
-        allowedLayers: ['underwear', 'base']
+        allowedLayers: ['underwear', 'base'],
       });
       expect(entityData.components['core:material'].material).toBe('leather');
-      expect(entityData.components['descriptors:color_basic'].color).toBe('white');
+      expect(entityData.components['descriptors:color_basic'].color).toBe(
+        'white'
+      );
     });
   });
 
@@ -182,13 +194,17 @@ describe('New Clothing Items Integration Tests', () => {
         '../../../data/mods/descriptors/components',
         'pattern.component.json'
       );
-      
+
       const content = readFileSync(filePath, 'utf8');
       const componentData = JSON.parse(content);
-      
+
       expect(componentData.id).toBe('descriptors:pattern');
-      expect(componentData.dataSchema.properties.pattern.enum).toContain('heart');
-      expect(componentData.dataSchema.properties.pattern.enum).toContain('solid');
+      expect(componentData.dataSchema.properties.pattern.enum).toContain(
+        'heart'
+      );
+      expect(componentData.dataSchema.properties.pattern.enum).toContain(
+        'solid'
+      );
       expect(componentData.dataSchema.properties.pattern.default).toBe('solid');
     });
 
@@ -198,10 +214,10 @@ describe('New Clothing Items Integration Tests', () => {
         '../../../data/mods/descriptors/components',
         'color_basic.component.json'
       );
-      
+
       const content = readFileSync(filePath, 'utf8');
       const componentData = JSON.parse(content);
-      
+
       expect(componentData.id).toBe('descriptors:color_basic');
       expect(componentData.dataSchema.properties.color.enum).toContain('pink');
       expect(componentData.dataSchema.properties.color.enum).toContain('white');
@@ -212,15 +228,15 @@ describe('New Clothing Items Integration Tests', () => {
     it('should respect underwear and base layering rules', () => {
       const underwearItems = [
         'white_cotton_panties.entity.json',
-        'white_thigh_high_socks_pink_hearts.entity.json'
+        'white_thigh_high_socks_pink_hearts.entity.json',
       ];
-      
+
       const baseItems = [
         'pink_off_shoulder_crop_top.entity.json',
         'pink_short_flared_skirt.entity.json',
-        'white_platform_sneakers.entity.json'
+        'white_platform_sneakers.entity.json',
       ];
-      
+
       // Check underwear items
       for (const filename of underwearItems) {
         const filePath = join(
@@ -230,11 +246,15 @@ describe('New Clothing Items Integration Tests', () => {
         );
         const content = readFileSync(filePath, 'utf8');
         const entityData = JSON.parse(content);
-        
-        expect(entityData.components['clothing:wearable'].layer).toBe('underwear');
-        expect(entityData.components['clothing:wearable'].allowedLayers).toEqual(['underwear']);
+
+        expect(entityData.components['clothing:wearable'].layer).toBe(
+          'underwear'
+        );
+        expect(
+          entityData.components['clothing:wearable'].allowedLayers
+        ).toEqual(['underwear']);
       }
-      
+
       // Check base layer items
       for (const filename of baseItems) {
         const filePath = join(
@@ -244,27 +264,51 @@ describe('New Clothing Items Integration Tests', () => {
         );
         const content = readFileSync(filePath, 'utf8');
         const entityData = JSON.parse(content);
-        
+
         expect(entityData.components['clothing:wearable'].layer).toBe('base');
-        expect(entityData.components['clothing:wearable'].allowedLayers).toContain('underwear');
-        expect(entityData.components['clothing:wearable'].allowedLayers).toContain('base');
+        expect(
+          entityData.components['clothing:wearable'].allowedLayers
+        ).toContain('underwear');
+        expect(
+          entityData.components['clothing:wearable'].allowedLayers
+        ).toContain('base');
       }
     });
 
     it('should allow complete outfit composition without slot conflicts', () => {
       const outfitItems = [
-        { file: 'white_cotton_panties.entity.json', expectedSlot: 'torso_lower', layer: 'underwear' },
-        { file: 'white_thigh_high_socks_pink_hearts.entity.json', expectedSlot: 'feet', layer: 'underwear' },
-        { file: 'pink_off_shoulder_crop_top.entity.json', expectedSlot: 'torso_upper', layer: 'base' },
-        { file: 'pink_short_flared_skirt.entity.json', expectedSlot: 'torso_lower', layer: 'base' },
-        { file: 'white_platform_sneakers.entity.json', expectedSlot: 'feet', layer: 'base' }
+        {
+          file: 'white_cotton_panties.entity.json',
+          expectedSlot: 'torso_lower',
+          layer: 'underwear',
+        },
+        {
+          file: 'white_thigh_high_socks_pink_hearts.entity.json',
+          expectedSlot: 'feet',
+          layer: 'underwear',
+        },
+        {
+          file: 'pink_off_shoulder_crop_top.entity.json',
+          expectedSlot: 'torso_upper',
+          layer: 'base',
+        },
+        {
+          file: 'pink_short_flared_skirt.entity.json',
+          expectedSlot: 'torso_lower',
+          layer: 'base',
+        },
+        {
+          file: 'white_platform_sneakers.entity.json',
+          expectedSlot: 'feet',
+          layer: 'base',
+        },
       ];
-      
+
       const slotsByLayer = {
         underwear: [],
-        base: []
+        base: [],
       };
-      
+
       for (const item of outfitItems) {
         const filePath = join(
           process.cwd(),
@@ -273,20 +317,21 @@ describe('New Clothing Items Integration Tests', () => {
         );
         const content = readFileSync(filePath, 'utf8');
         const entityData = JSON.parse(content);
-        
-        const slot = entityData.components['clothing:wearable'].equipmentSlots.primary;
+
+        const slot =
+          entityData.components['clothing:wearable'].equipmentSlots.primary;
         expect(slot).toBe(item.expectedSlot);
-        
+
         slotsByLayer[item.layer].push(slot);
       }
-      
+
       // Check for no conflicts within each layer
       const underwearSlots = new Set(slotsByLayer.underwear);
       expect(underwearSlots.size).toBe(slotsByLayer.underwear.length); // No duplicates
-      
+
       const baseSlots = new Set(slotsByLayer.base);
       expect(baseSlots.size).toBe(slotsByLayer.base.length); // No duplicates
-      
+
       // Verify layering allows overlaps (e.g., panties and skirt both on torso_lower)
       expect(slotsByLayer.underwear).toContain('torso_lower');
       expect(slotsByLayer.base).toContain('torso_lower');
@@ -298,13 +343,28 @@ describe('New Clothing Items Integration Tests', () => {
   describe('Material Properties', () => {
     it('should use appropriate materials for each item', () => {
       const materialExpectations = [
-        { file: 'pink_off_shoulder_crop_top.entity.json', expectedMaterial: 'cotton' },
-        { file: 'pink_short_flared_skirt.entity.json', expectedMaterial: 'cotton' },
-        { file: 'white_thigh_high_socks_pink_hearts.entity.json', expectedMaterial: 'cotton' },
-        { file: 'white_cotton_panties.entity.json', expectedMaterial: 'cotton' },
-        { file: 'white_platform_sneakers.entity.json', expectedMaterial: 'leather' }
+        {
+          file: 'pink_off_shoulder_crop_top.entity.json',
+          expectedMaterial: 'cotton',
+        },
+        {
+          file: 'pink_short_flared_skirt.entity.json',
+          expectedMaterial: 'cotton',
+        },
+        {
+          file: 'white_thigh_high_socks_pink_hearts.entity.json',
+          expectedMaterial: 'cotton',
+        },
+        {
+          file: 'white_cotton_panties.entity.json',
+          expectedMaterial: 'cotton',
+        },
+        {
+          file: 'white_platform_sneakers.entity.json',
+          expectedMaterial: 'leather',
+        },
       ];
-      
+
       for (const item of materialExpectations) {
         const filePath = join(
           process.cwd(),
@@ -313,8 +373,10 @@ describe('New Clothing Items Integration Tests', () => {
         );
         const content = readFileSync(filePath, 'utf8');
         const entityData = JSON.parse(content);
-        
-        expect(entityData.components['core:material'].material).toBe(item.expectedMaterial);
+
+        expect(entityData.components['core:material'].material).toBe(
+          item.expectedMaterial
+        );
       }
     });
   });

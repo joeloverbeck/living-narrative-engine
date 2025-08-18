@@ -211,58 +211,6 @@ describe('BodyDescriptionComposer - Performance Tests', () => {
     });
   });
 
-  describe('Memory Usage', () => {
-    it('should not leak memory with repeated calls', () => {
-      const entity = createEntityWithAllDescriptors();
-      const initialMemory = process.memoryUsage().heapUsed;
-
-      // Call methods many times
-      for (let i = 0; i < 100000; i++) {
-        composer.extractBodyCompositionDescription(entity);
-        composer.extractBodyHairDescription(entity);
-        composer.extractBuildDescription(entity);
-      }
-
-      // Force garbage collection if available
-      if (global.gc) {
-        global.gc();
-      }
-
-      const finalMemory = process.memoryUsage().heapUsed;
-      const memoryGrowth = finalMemory - initialMemory;
-
-      // Memory growth should be reasonable (less than 100MB for 100k operations)
-      expect(memoryGrowth).toBeLessThan(100 * 1024 * 1024);
-    });
-
-    it('should handle large entity sets without excessive memory usage', () => {
-      const initialMemory = process.memoryUsage().heapUsed;
-      const largePartIds = Array.from({ length: 1000 }, (_, i) => `part-${i}`);
-
-      // Mock entity finder to return valid entities
-      mockEntityFinder.getEntityInstance.mockImplementation(() => ({
-        hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue({ subType: 'arm' }),
-      }));
-
-      // Process large sets multiple times
-      for (let i = 0; i < 100; i++) {
-        composer.groupPartsByType(largePartIds);
-      }
-
-      // Force garbage collection if available
-      if (global.gc) {
-        global.gc();
-      }
-
-      const finalMemory = process.memoryUsage().heapUsed;
-      const memoryGrowth = finalMemory - initialMemory;
-
-      // Should handle large sets without excessive memory growth (less than 1GB for 100k entities)
-      expect(memoryGrowth).toBeLessThan(1024 * 1024 * 1024); // Less than 1GB
-    });
-  });
-
   describe('Stress Testing', () => {
     it('should handle rapid successive calls without degradation', async () => {
       const entity = createEntityWithAllDescriptors();

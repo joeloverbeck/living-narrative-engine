@@ -35,12 +35,14 @@ Update existing sample anatomy recipes to demonstrate the new `bodyDescriptors` 
 
 ## Current State
 
-**Sample Recipe Files**: 
+**Sample Recipe Files**:
+
 - Location: `data/mods/anatomy/recipes/`
 - Current recipes lack bodyDescriptors examples
 - Need demonstration recipes for modder guidance
 
 **Recipe Validation**:
+
 - RecipeLoader validates against schema
 - Need enhanced validation for body descriptors
 - Error handling for new descriptor format
@@ -52,6 +54,7 @@ Update existing sample anatomy recipes to demonstrate the new `bodyDescriptors` 
 #### Create Enhanced Recipe Examples
 
 **File**: `data/mods/anatomy/recipes/example_warrior.recipe.json`
+
 ```json
 {
   "recipeId": "anatomy:example_warrior",
@@ -60,7 +63,7 @@ Update existing sample anatomy recipes to demonstrate the new `bodyDescriptors` 
   "bodyDescriptors": {
     "build": "muscular",
     "density": "hairy",
-    "composition": "lean", 
+    "composition": "lean",
     "skinColor": "tanned"
   },
   "slots": {
@@ -80,9 +83,10 @@ Update existing sample anatomy recipes to demonstrate the new `bodyDescriptors` 
 ```
 
 **File**: `data/mods/anatomy/recipes/example_athletic.recipe.json`
+
 ```json
 {
-  "recipeId": "anatomy:example_athletic", 
+  "recipeId": "anatomy:example_athletic",
   "name": "Athletic Body Example",
   "description": "Example recipe with partial body descriptors",
   "bodyDescriptors": {
@@ -102,10 +106,11 @@ Update existing sample anatomy recipes to demonstrate the new `bodyDescriptors` 
 ```
 
 **File**: `data/mods/anatomy/recipes/example_basic.recipe.json`
+
 ```json
 {
   "recipeId": "anatomy:example_basic",
-  "name": "Basic Human Example", 
+  "name": "Basic Human Example",
   "description": "Example recipe without body descriptors (backward compatibility)",
   "slots": {
     "torso": {
@@ -126,6 +131,7 @@ Update existing sample anatomy recipes to demonstrate the new `bodyDescriptors` 
 **File**: `src/loaders/recipeLoader.js` (if exists) or appropriate recipe validation component
 
 Enhanced validation should:
+
 1. **Validate descriptor values against enums**
    - Ensure build values match allowed enum
    - Validate density values against body hair enum
@@ -147,34 +153,34 @@ Enhanced validation should:
 ```javascript
 validateBodyDescriptors(bodyDescriptors, recipeId) {
   if (!bodyDescriptors) return; // Optional field
-  
+
   const validBuilds = ['skinny', 'slim', 'toned', 'athletic', 'shapely', 'thick', 'muscular', 'stocky'];
   const validDensities = ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy'];
   const validCompositions = ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese'];
-  
+
   // Validate build
   if (bodyDescriptors.build && !validBuilds.includes(bodyDescriptors.build)) {
     throw new RecipeValidationError(
       `Invalid build descriptor: '${bodyDescriptors.build}' in recipe '${recipeId}'. Must be one of: ${validBuilds.join(', ')}`
     );
   }
-  
+
   // Validate density
   if (bodyDescriptors.density && !validDensities.includes(bodyDescriptors.density)) {
     throw new RecipeValidationError(
       `Invalid density descriptor: '${bodyDescriptors.density}' in recipe '${recipeId}'. Must be one of: ${validDensities.join(', ')}`
     );
   }
-  
-  // Validate composition  
+
+  // Validate composition
   if (bodyDescriptors.composition && !validCompositions.includes(bodyDescriptors.composition)) {
     throw new RecipeValidationError(
       `Invalid composition descriptor: '${bodyDescriptors.composition}' in recipe '${recipeId}'. Must be one of: ${validCompositions.join(', ')}`
     );
   }
-  
+
   // skinColor is free-form string - no validation needed
-  
+
   // Check for unknown properties
   const knownProps = ['build', 'density', 'composition', 'skinColor'];
   const unknownProps = Object.keys(bodyDescriptors).filter(prop => !knownProps.includes(prop));
@@ -190,7 +196,7 @@ validateBodyDescriptors(bodyDescriptors, recipeId) {
 
 1. **Create Example Recipes**
    - Create warrior example with all descriptors
-   - Create athletic example with partial descriptors  
+   - Create athletic example with partial descriptors
    - Create basic example without descriptors
    - Add clear descriptions explaining each example
 
@@ -215,12 +221,14 @@ validateBodyDescriptors(bodyDescriptors, recipeId) {
 ## Validation Criteria
 
 ### Sample Recipe Tests
+
 - [ ] All example recipes validate against updated schema
 - [ ] Example recipes demonstrate different usage patterns
 - [ ] Recipes provide clear documentation for modders
 - [ ] Backward compatibility maintained with basic example
 
-### Recipe Validation Tests  
+### Recipe Validation Tests
+
 - [ ] Valid body descriptors pass validation
 - [ ] Invalid enum values are caught and reported clearly
 - [ ] Unknown properties are rejected with helpful messages
@@ -229,6 +237,7 @@ validateBodyDescriptors(bodyDescriptors, recipeId) {
 - [ ] Partial bodyDescriptors validate successfully
 
 ### Error Message Quality
+
 - [ ] Error messages include recipe ID for context
 - [ ] Error messages suggest valid values for enums
 - [ ] Error messages are clear and actionable
@@ -241,10 +250,11 @@ validateBodyDescriptors(bodyDescriptors, recipeId) {
 **File**: `tests/unit/recipes/recipeValidation.test.js`
 
 Test cases:
+
 - Valid recipes with all descriptor types
 - Valid recipes with partial descriptors
 - Valid recipes without descriptors
-- Invalid build enum values  
+- Invalid build enum values
 - Invalid density enum values
 - Invalid composition enum values
 - Unknown descriptor properties
@@ -256,6 +266,7 @@ Test cases:
 **File**: `tests/integration/recipes/recipeLoading.test.js`
 
 Test cases:
+
 - Loading example recipes successfully
 - Recipe validation integration with schema
 - Error handling in recipe loading workflow
@@ -264,11 +275,13 @@ Test cases:
 ## Files Created/Modified
 
 ### New Files
+
 - `data/mods/anatomy/recipes/example_warrior.recipe.json`
-- `data/mods/anatomy/recipes/example_athletic.recipe.json`  
+- `data/mods/anatomy/recipes/example_athletic.recipe.json`
 - `data/mods/anatomy/recipes/example_basic.recipe.json`
 
 ### Modified Files
+
 - Recipe validation logic (location TBD based on codebase structure)
 - Recipe loader integration
 - Test files for validation
@@ -276,13 +289,16 @@ Test cases:
 ## Documentation Updates
 
 ### Recipe Examples Documentation
+
 Create or update documentation explaining:
+
 - How to use bodyDescriptors in recipes
 - Available descriptor values and their meanings
 - Examples of complete vs. partial descriptors
 - Migration from part-level to body-level descriptors
 
 ### Modder Guidelines
+
 - When to use body-level vs. part-level descriptors
 - How body descriptors interact with part descriptors
 - Best practices for descriptor usage
@@ -290,6 +306,7 @@ Create or update documentation explaining:
 ## Risk Assessment
 
 **Low Risk** - Additive enhancement with clear fallbacks:
+
 - Example recipes are demonstrative only
 - Validation enhancement improves error handling
 - Backward compatibility maintained
@@ -315,6 +332,7 @@ Create or update documentation explaining:
 ## Next Steps
 
 After completion:
+
 - BODDESCMIG-004: Modify AnatomyGenerationWorkflow
 - BODDESCMIG-005: Add body descriptor validation logic
 

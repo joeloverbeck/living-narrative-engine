@@ -48,6 +48,9 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
     it('should extract body composition when component exists', () => {
       const mockEntity = {
         getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null; // Primary lookup fails, triggers fallback
+          }
           if (componentId === 'descriptors:body_composition') {
             return { composition: 'average' };
           }
@@ -57,6 +60,7 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
 
       const result = composer.extractBodyCompositionDescription(mockEntity);
       expect(result).toBe('average');
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith('anatomy:body');
       expect(mockEntity.getComponentData).toHaveBeenCalledWith(
         'descriptors:body_composition'
       );
@@ -75,7 +79,15 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
 
       validValues.forEach((value) => {
         const mockEntity = {
-          getComponentData: jest.fn(() => ({ composition: value })),
+          getComponentData: jest.fn((componentId) => {
+            if (componentId === 'anatomy:body') {
+              return null; // Primary lookup fails, triggers fallback
+            }
+            if (componentId === 'descriptors:body_composition') {
+              return { composition: value };
+            }
+            return null;
+          }),
         };
 
         const result = composer.extractBodyCompositionDescription(mockEntity);
@@ -114,6 +126,7 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
 
       const result = composer.extractBodyCompositionDescription(mockEntity);
       expect(result).toBe('');
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith('anatomy:body');
       expect(mockEntity.getComponentData).toHaveBeenCalledWith(
         'descriptors:body_composition'
       );
@@ -126,11 +139,23 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
 
       const result = composer.extractBodyCompositionDescription(mockEntity);
       expect(result).toBe('');
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith('anatomy:body');
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+        'descriptors:body_composition'
+      );
     });
 
     it('should return empty string when component lacks composition property', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ someOtherProperty: 'value' })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null; // Primary lookup fails
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return { someOtherProperty: 'value' }; // Missing composition property
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyCompositionDescription(mockEntity);
@@ -139,7 +164,15 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
 
     it('should return empty string when composition is null', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: null })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return { composition: null };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyCompositionDescription(mockEntity);
@@ -148,7 +181,15 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
 
     it('should return empty string when composition is undefined', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: undefined })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return { composition: undefined };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyCompositionDescription(mockEntity);
@@ -157,7 +198,15 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
 
     it('should return empty string when composition is empty string', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: '' })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return { composition: '' };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyCompositionDescription(mockEntity);
@@ -180,17 +229,33 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
 
     it('should handle composition with unexpected type - number', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: 123 })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return { composition: 123 };
+          }
+          return null;
+        }),
       };
 
-      // Should return the value as-is (coerced to string by the template)
+      // Should return the value as-is
       const result = composer.extractBodyCompositionDescription(mockEntity);
       expect(result).toBe(123);
     });
 
     it('should handle composition with unexpected type - boolean', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: true })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return { composition: true };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyCompositionDescription(mockEntity);
@@ -199,7 +264,15 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
 
     it('should handle composition with unexpected type - object', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: { nested: 'value' } })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return { composition: { nested: 'value' } };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyCompositionDescription(mockEntity);
@@ -233,11 +306,19 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
   describe('Component Data Structure Validation', () => {
     it('should handle component with different property names', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({
-          build: 'muscular', // Wrong property name
-          value: 'average', // Wrong property name
-          type: 'lean', // Wrong property name
-        })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return {
+              build: 'muscular', // Wrong property name
+              value: 'average', // Wrong property name
+              type: 'lean', // Wrong property name
+            };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyCompositionDescription(mockEntity);
@@ -246,7 +327,15 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
 
     it('should handle component with composition property set to false', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: false })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return { composition: false };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyCompositionDescription(mockEntity);
@@ -255,7 +344,15 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
 
     it('should handle component with composition property set to 0', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: 0 })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return { composition: 0 };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyCompositionDescription(mockEntity);
@@ -266,7 +363,15 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
   describe('Method Integration', () => {
     it('should work consistently with multiple calls', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ composition: 'lean' })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return { composition: 'lean' };
+          }
+          return null;
+        }),
       };
 
       const result1 = composer.extractBodyCompositionDescription(mockEntity);
@@ -276,12 +381,20 @@ describe('BodyDescriptionComposer - extractBodyCompositionDescription', () => {
       expect(result1).toBe('lean');
       expect(result2).toBe('lean');
       expect(result3).toBe('lean');
-      expect(mockEntity.getComponentData).toHaveBeenCalledTimes(3);
+      expect(mockEntity.getComponentData).toHaveBeenCalledTimes(6);
     });
 
     it('should not modify the input entity', () => {
       const originalEntity = {
-        getComponentData: jest.fn(() => ({ composition: 'soft' })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return { composition: 'soft' };
+          }
+          return null;
+        }),
         otherProperty: 'should not change',
       };
 

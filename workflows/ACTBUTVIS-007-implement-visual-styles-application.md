@@ -34,117 +34,83 @@ The ActionButtonsRenderer is responsible for rendering action buttons in the UI.
 
 **Current Structure Analysis**:
 
-- Renders action buttons in a list container
-- Uses domElementFactory to create DOM elements
-- Handles button click events
-- Manages selected state
+- Extends SelectableListDisplayComponent (which extends BaseListDisplayComponent → BoundDomRendererBase)
+- Uses _renderListItem() method to create individual action buttons
+- Supports action grouping and categorization via actionCategorizationService
+- Handles button selection and dispatches player turn events
+- Already includes visual property validation in ActionComposite DTOs
 
 **Changes Required**:
 
 ```javascript
-import { visualPropertiesToCSS } from '../validation/visualPropertiesValidator.js';
+// Visual properties validation is already imported via actionComposite.js
+// import { validateVisualProperties } from '../turns/dtos/actionComposite.js'; (already available)
 
-class ActionButtonsRenderer extends BoundDomRendererBase {
-  constructor({ domElementFactory, eventBus, logger, containerSelector }) {
-    super({ domElementFactory, eventBus, logger, containerSelector });
+// Note: ActionButtonsRenderer extends SelectableListDisplayComponent
+// Constructor signature is already established:
+// constructor({
+//   logger,
+//   documentContext, 
+//   validatedEventDispatcher,
+//   domElementFactory,
+//   actionButtonsContainerSelector,
+//   sendButtonSelector,
+//   speechInputSelector,
+//   actionCategorizationService,
+// })
 
+// Add visual mapping for hover handling (prep for ACTBUTVIS-008)
+// Add to existing constructor:
+  constructor(params) {
+    super(params);
+    // ... existing constructor code ...
+    
     // Store references for hover handling (prep for ACTBUTVIS-008)
     this.buttonVisualMap = new Map();
   }
 
   /**
-   * Render action buttons from action composites
-   * @param {Array} actionComposites - Array of action composite objects
+   * Override _renderListItem to add visual styles support
+   * This method is called by the base class renderList() method
+   * @protected
+   * @override
+   * @param {ActionComposite} actionComposite - The action data to render
+   * @returns {HTMLButtonElement | null} The button element or null if invalid
    */
-  render(actionComposites) {
+  _renderListItem(actionComposite) {
+    // Call parent implementation to create the basic button
+    const button = super._renderListItem(actionComposite);
+    
+    if (!button) {
+      return null;
+    }
+
     try {
-      // Clear existing buttons
-      this.clear();
-
-      // Create container if needed
-      const container = this.getOrCreateContainer();
-
-      // Render each action as a button
-      actionComposites.forEach((actionComposite, index) => {
-        this._renderActionButton(actionComposite, container, index);
-      });
-
-      this.logger.debug(`Rendered ${actionComposites.length} action buttons`);
-
-      // Report visual customization statistics
-      const visualCount = actionComposites.filter((a) => a.visual).length;
-      if (visualCount > 0) {
-        this.logger.debug(`${visualCount} buttons have visual customization`);
+      // Apply visual styles if present
+      if (actionComposite.visual) {
+        this._applyVisualStyles(
+          button,
+          actionComposite.visual,
+          actionComposite.actionId
+        );
+        
+        this.logger.debug(
+          `${this._logPrefix} Applied visual styles to button for action: ${actionComposite.actionId}`
+        );
       }
     } catch (error) {
-      this.logger.error('Failed to render action buttons:', error);
-      this.handleRenderError(error);
-    }
-  }
-
-  /**
-   * Render a single action button
-   * @private
-   * @param {Object} actionComposite - Action composite object
-   * @param {HTMLElement} container - Container element
-   * @param {number} index - Button index
-   */
-  _renderActionButton(actionComposite, container, index) {
-    // Create list item wrapper
-    const listItem = this.domElementFactory.createElement('li', {
-      className: 'action-item',
-      attributes: {
-        'data-action-index': index,
-        'data-action-id': actionComposite.actionId,
-      },
-    });
-
-    // Create button element
-    const button = this._createActionButton(actionComposite, index);
-
-    // NEW: Apply visual styles if present
-    if (actionComposite.visual) {
-      this._applyVisualStyles(
-        button,
-        actionComposite.visual,
-        actionComposite.actionId
+      this.logger.warn(
+        `${this._logPrefix} Failed to apply visual styles for action ${actionComposite.actionId}:`,
+        error
       );
+      // Continue without visual customization
     }
-
-    // Attach event listeners
-    this._attachButtonListeners(button, actionComposite, index);
-
-    // Append to container
-    listItem.appendChild(button);
-    container.appendChild(listItem);
-  }
-
-  /**
-   * Create an action button element
-   * @private
-   * @param {Object} actionComposite - Action composite object
-   * @param {number} index - Button index
-   * @returns {HTMLButtonElement} Button element
-   */
-  _createActionButton(actionComposite, index) {
-    // Format button text
-    const buttonText = this._formatButtonText(actionComposite);
-
-    // Create button
-    const button = this.domElementFactory.button(buttonText, 'action-button');
-
-    // Add data attributes
-    button.dataset.actionIndex = index;
-    button.dataset.actionId = actionComposite.actionId;
-
-    // Add accessibility attributes
-    button.setAttribute(
-      'aria-label',
-      actionComposite.description || buttonText
-    );
 
     return button;
   }
+
+  // Note: Basic button creation is handled by parent class _renderListItem()
+  // We only need to add the visual styles application method
 
   /**
    * Apply visual styles to a button
@@ -242,118 +208,33 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
     }
   }
 
-  /**
-   * Handle button click events
-   * @private
-   * @param {HTMLButtonElement} button - Button element
-   * @param {Object} actionComposite - Action composite
-   * @param {number} index - Button index
-   */
-  _attachButtonListeners(button, actionComposite, index) {
-    // Click handler
-    button.addEventListener('click', (event) => {
-      event.preventDefault();
-      this._handleButtonClick(actionComposite, index);
-    });
+  // Note: Button click handling is already implemented in the parent class
+  // The parent _renderListItem() adds click listeners that call _onItemSelected()
+  // We can add hover preparation in _renderListItem() override
 
-    // Prepare for hover handlers (ACTBUTVIS-008)
-    if (button.dataset.hasCustomHover === 'true') {
-      // Hover handlers will be added in ACTBUTVIS-008
-      button.dataset.pendingHoverHandlers = 'true';
-    }
-  }
+  // Note: Selected state handling is managed by the parent SelectableListDisplayComponent
+  // Custom visual buttons will use CSS box-shadow for selection indicators
+  // to preserve custom background colors as defined in the CSS section above
+
+  // Note: Color blending is handled via CSS box-shadow for selection
+  // This preserves the original custom colors while indicating selection
 
   /**
-   * Handle selected state visual changes
-   * @private
-   * @param {HTMLButtonElement} button - Button element
-   * @param {boolean} isSelected - Whether button is selected
+   * Override dispose to clean up visual mappings
+   * @override
    */
-  _updateSelectedState(button, isSelected) {
-    if (isSelected) {
-      button.classList.add('selected');
-
-      // Preserve custom colors in selected state
-      if (button.dataset.customBg) {
-        // Apply a selected overlay while preserving custom color
-        const originalBg = button.dataset.customBg;
-        button.style.backgroundColor = this._blendWithSelected(originalBg);
-      }
-    } else {
-      button.classList.remove('selected');
-
-      // Restore original custom color
-      if (button.dataset.customBg) {
-        button.style.backgroundColor = button.dataset.customBg;
-      }
-    }
-  }
-
-  /**
-   * Blend a color with selected state overlay
-   * @private
-   * @param {string} color - Original color
-   * @returns {string} Blended color
-   */
-  _blendWithSelected(color) {
-    // Simple approach: add transparency overlay
-    // In production, could use a proper color blending algorithm
-    if (color.startsWith('#')) {
-      // For hex, darken slightly
-      return color + 'dd'; // ~87% opacity
-    }
-
-    if (color.startsWith('rgb(')) {
-      // Convert to rgba with slight transparency
-      return color.replace('rgb(', 'rgba(').replace(')', ', 0.87)');
-    }
-
-    // Return as-is for other formats
-    return color;
-  }
-
-  /**
-   * Clear all rendered buttons
-   */
-  clear() {
-    super.clear();
-
+  dispose() {
     // Clear visual mappings
-    this.buttonVisualMap.clear();
-  }
-
-  /**
-   * Handle render errors gracefully
-   * @private
-   * @param {Error} error - Render error
-   */
-  handleRenderError(error) {
-    // Log error
-    this.logger.error('Action button render error:', error);
-
-    // Emit error event
-    this.eventBus.emit('UI_RENDER_ERROR', {
-      component: 'ActionButtonsRenderer',
-      error: error.message,
-    });
-
-    // Attempt to render fallback UI
-    this.renderFallback();
-  }
-
-  /**
-   * Render fallback UI when visual customization fails
-   * @private
-   */
-  renderFallback() {
-    try {
-      const container = this.getOrCreateContainer();
-      container.innerHTML =
-        '<div class="error-message">Failed to render actions</div>';
-    } catch (fallbackError) {
-      this.logger.error('Fallback render also failed:', fallbackError);
+    if (this.buttonVisualMap) {
+      this.buttonVisualMap.clear();
     }
+    
+    // Call parent dispose
+    super.dispose();
   }
+
+  // Note: Error handling is already implemented in the parent class
+  // The base class handles render errors and fallback UI appropriately
 }
 
 export default ActionButtonsRenderer;
@@ -363,15 +244,19 @@ export default ActionButtonsRenderer;
 
 #### Add CSS class for custom visual buttons
 
-**File**: `css/components/_game-actions.css`
+**File**: `css/components/_actions-widget.css`
 
 ```css
+/* Add to existing _actions-widget.css */
+
 /* Custom visual action buttons */
 .action-button-custom-visual {
-  /* Ensure inline styles take precedence */
+  /* Ensure inline styles take precedence while preserving animations */
   transition:
-    background-color 0.2s,
-    color 0.2s;
+    background-color 0.2s ease-in-out,
+    color 0.2s ease-in-out,
+    transform 0.2s ease-in-out,
+    opacity 0.2s ease-in-out;
 }
 
 /* Preserve theme animations with custom colors */
@@ -379,10 +264,15 @@ export default ActionButtonsRenderer;
   cursor: pointer;
 }
 
-/* Selected state with custom visual */
+/* Selected state with custom visual - use box-shadow to preserve custom background */
 .action-button-custom-visual.selected {
-  /* Use box-shadow for selection indicator instead of background */
-  box-shadow: inset 0 0 0 2px var(--selection-color, #0066cc);
+  box-shadow: inset 0 0 0 2px var(--focus-color, #0066cc);
+  /* Ensure custom background colors are preserved */
+}
+
+/* Ensure custom visual buttons work with existing animations */
+.action-button-custom-visual {
+  /* Inherit existing animation properties from parent selectors */
 }
 ```
 
@@ -396,11 +286,18 @@ export default ActionButtonsRenderer;
 describe('ActionButtonsRenderer - Visual Styles', () => {
   let renderer;
   let mockDomElementFactory;
-  let mockEventBus;
+  let mockValidatedEventDispatcher;
+  let mockDocumentContext;
+  let mockActionCategorizationService;
   let mockContainer;
 
   beforeEach(() => {
     mockContainer = document.createElement('div');
+    
+    mockDocumentContext = {
+      create: jest.fn((tag) => document.createElement(tag)),
+      document: document,
+    };
 
     mockDomElementFactory = {
       createElement: jest.fn((tag, options) => {
@@ -416,32 +313,50 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
       }),
     };
 
-    mockEventBus = {
-      emit: jest.fn(),
+    mockValidatedEventDispatcher = {
+      dispatch: jest.fn(),
+    };
+    
+    mockActionCategorizationService = {
+      extractNamespace: jest.fn(),
+      shouldUseGrouping: jest.fn(() => false),
+      groupActionsByNamespace: jest.fn(),
+      getSortedNamespaces: jest.fn(),
+      formatNamespaceDisplayName: jest.fn(),
     };
 
-    renderer = new ActionButtonsRenderer({
-      domElementFactory: mockDomElementFactory,
-      eventBus: mockEventBus,
-      logger: console,
-      containerSelector: '#test-container',
-    });
+    // Mock document methods
+    document.querySelector = jest.fn(() => mockContainer);
 
-    renderer.getOrCreateContainer = jest.fn(() => mockContainer);
+    renderer = new ActionButtonsRenderer({
+      logger: console,
+      documentContext: mockDocumentContext,
+      validatedEventDispatcher: mockValidatedEventDispatcher,
+      domElementFactory: mockDomElementFactory,
+      actionButtonsContainerSelector: '#action-buttons',
+      actionCategorizationService: mockActionCategorizationService,
+    });
   });
 
   describe('visual styles application', () => {
-    it('should apply backgroundColor and textColor', () => {
+    it('should apply backgroundColor and textColor', async () => {
       const actionComposite = {
+        index: 1,
         actionId: 'test:action',
         commandString: 'Test Action',
+        description: 'Test action description',
+        params: {},
         visual: {
           backgroundColor: '#ff0000',
           textColor: '#ffffff',
         },
       };
 
-      renderer.render([actionComposite]);
+      // Mock the data source
+      renderer.availableActions = [actionComposite];
+      
+      // Trigger render via renderList()
+      await renderer.renderList();
 
       const button = mockContainer.querySelector('button');
       expect(button.style.backgroundColor).toBe('rgb(255, 0, 0)'); // Browsers normalize
@@ -450,14 +365,18 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
       expect(button.dataset.customText).toBe('#ffffff');
     });
 
-    it('should add custom visual class', () => {
+    it('should add custom visual class', async () => {
       const actionComposite = {
+        index: 1,
         actionId: 'test:action',
         commandString: 'Test Action',
+        description: 'Test action description',
+        params: {},
         visual: { backgroundColor: '#ff0000' },
       };
 
-      renderer.render([actionComposite]);
+      renderer.availableActions = [actionComposite];
+      await renderer.renderList();
 
       const button = mockContainer.querySelector('button');
       expect(button.classList.contains('action-button-custom-visual')).toBe(
@@ -465,10 +384,13 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
       );
     });
 
-    it('should store hover colors in dataset', () => {
+    it('should store hover colors in dataset', async () => {
       const actionComposite = {
+        index: 1,
         actionId: 'test:action',
         commandString: 'Test Action',
+        description: 'Test action description',
+        params: {},
         visual: {
           backgroundColor: '#ff0000',
           hoverBackgroundColor: '#00ff00',
@@ -476,7 +398,8 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
         },
       };
 
-      renderer.render([actionComposite]);
+      renderer.availableActions = [actionComposite];
+      await renderer.renderList();
 
       const button = mockContainer.querySelector('button');
       expect(button.dataset.hoverBg).toBe('#00ff00');
@@ -484,14 +407,19 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
       expect(button.dataset.hasCustomHover).toBe('true');
     });
 
-    it('should handle missing visual properties', () => {
+    it('should handle missing visual properties', async () => {
       const actionComposite = {
+        index: 1,
         actionId: 'test:action',
         commandString: 'Test Action',
+        description: 'Test action description',
+        params: {},
         // No visual property
       };
 
-      expect(() => renderer.render([actionComposite])).not.toThrow();
+      renderer.availableActions = [actionComposite];
+      
+      await expect(renderer.renderList()).resolves.not.toThrow();
 
       const button = mockContainer.querySelector('button');
       expect(button.style.backgroundColor).toBe('');
@@ -502,14 +430,18 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
   });
 
   describe('updateButtonVisual', () => {
-    it('should update existing button visual', () => {
+    it('should update existing button visual', async () => {
       const actionComposite = {
+        index: 1,
         actionId: 'test:action',
         commandString: 'Test',
+        description: 'Test action description',
+        params: {},
         visual: { backgroundColor: '#ff0000' },
       };
 
-      renderer.render([actionComposite]);
+      renderer.availableActions = [actionComposite];
+      await renderer.renderList();
 
       const newVisual = { backgroundColor: '#00ff00' };
       renderer.updateButtonVisual('test:action', newVisual);
@@ -518,14 +450,19 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
       expect(button.style.backgroundColor).toBe('rgb(0, 255, 0)');
     });
 
-    it('should remove visual styles when passed null', () => {
+    it('should remove visual styles when passed null', async () => {
       const actionComposite = {
+        index: 1,
         actionId: 'test:action',
         commandString: 'Test',
+        description: 'Test action description', 
+        params: {},
         visual: { backgroundColor: '#ff0000' },
       };
 
-      renderer.render([actionComposite]);
+      renderer.availableActions = [actionComposite];
+      await renderer.renderList();
+      
       renderer.updateButtonVisual('test:action', null);
 
       const button = mockContainer.querySelector('button');
@@ -553,10 +490,13 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
 
 ## Notes
 
-- Inline styles ensure visual properties override theme styles
+- Implementation extends existing `_renderListItem()` method instead of creating new render system
+- Inline styles ensure visual properties override theme styles while preserving animations
 - Dataset attributes prepare for hover implementation (ACTBUTVIS-008)
-- The visual map enables efficient updates without re-rendering
-- Consider using CSS variables for frequently used colors in future optimization
+- The visual map enables efficient updates without full re-rendering
+- CSS uses box-shadow for selection indicators to preserve custom background colors
+- Works with existing grouping and animation systems
+- Visual properties validation is already implemented in ActionComposite DTOs
 
 ## Related Tickets
 
@@ -567,7 +507,8 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
 ## References
 
 - Renderer Location: `src/domUI/actionButtonsRenderer.js`
-- Base Class: `src/domUI/boundDomRendererBase.js`
-- Visual Validator: `src/validation/visualPropertiesValidator.js`
-- CSS Files: `css/components/_game-actions.css`
+- Parent Class: `src/domUI/selectableListDisplayComponent.js`
+- Base Classes: `src/domUI/baseListDisplayComponent.js` → `src/domUI/boundDomRendererBase.js`
+- Visual Validation: `src/turns/dtos/actionComposite.js` (validateVisualProperties function)
+- CSS Files: `css/components/_actions-widget.css`
 - Original Spec: `specs/action-button-visual-customization.spec.md`

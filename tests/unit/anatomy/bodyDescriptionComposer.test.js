@@ -416,32 +416,183 @@ describe('BodyDescriptionComposer', () => {
   });
 
   describe('extractBuildDescription', () => {
-    it('should extract build description', () => {
+    it('should extract build from body.descriptors first', () => {
       const entity = {
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue({ build: 'athletic' }),
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            return { body: { descriptors: { build: 'athletic' } } };
+          }
+          if (componentId === 'descriptors:build') {
+            return { build: 'muscular' }; // Should be ignored
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBuildDescription(entity);
       expect(result).toBe('athletic');
     });
 
-    it('should return empty string without build component', () => {
+    it('should fallback to entity-level component when body.descriptors not present', () => {
       const entity = {
-        hasComponent: jest.fn().mockReturnValue(false),
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            return { body: { root: 'torso-1' } }; // No descriptors
+          }
+          if (componentId === 'descriptors:build') {
+            return { build: 'slim' };
+          }
+          return null;
+        }),
+      };
+
+      const result = composer.extractBuildDescription(entity);
+      expect(result).toBe('slim');
+    });
+
+    it('should return empty string when neither body.descriptors nor entity-level exists', () => {
+      const entity = {
+        hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockReturnValue(null),
       };
+
       const result = composer.extractBuildDescription(entity);
       expect(result).toBe('');
     });
 
-    it('should return empty string with empty build value', () => {
+    it('should return empty string for invalid entity', () => {
+      const result = composer.extractBuildDescription(null);
+      expect(result).toBe('');
+    });
+  });
+
+  describe('extractBodyCompositionDescription', () => {
+    it('should extract composition from body.descriptors first', () => {
       const entity = {
         hasComponent: jest.fn().mockReturnValue(true),
-        getComponentData: jest.fn().mockReturnValue({ build: '' }),
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            return { body: { descriptors: { composition: 'lean' } } };
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return { composition: 'chubby' }; // Should be ignored
+          }
+          return null;
+        }),
       };
 
-      const result = composer.extractBuildDescription(entity);
+      const result = composer.extractBodyCompositionDescription(entity);
+      expect(result).toBe('lean');
+    });
+
+    it('should fallback to entity-level component when body.descriptors not present', () => {
+      const entity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            return { body: { root: 'torso-1' } }; // No descriptors
+          }
+          if (componentId === 'descriptors:body_composition') {
+            return { composition: 'average' };
+          }
+          return null;
+        }),
+      };
+
+      const result = composer.extractBodyCompositionDescription(entity);
+      expect(result).toBe('average');
+    });
+  });
+
+  describe('extractBodyHairDescription', () => {
+    it('should extract density from body.descriptors first', () => {
+      const entity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            return { body: { descriptors: { density: 'moderate' } } };
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return { density: 'hairy' }; // Should be ignored
+          }
+          return null;
+        }),
+      };
+
+      const result = composer.extractBodyHairDescription(entity);
+      expect(result).toBe('moderate');
+    });
+
+    it('should fallback to entity-level component when body.descriptors not present', () => {
+      const entity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            return { body: { root: 'torso-1' } }; // No descriptors
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return { density: 'sparse' };
+          }
+          return null;
+        }),
+      };
+
+      const result = composer.extractBodyHairDescription(entity);
+      expect(result).toBe('sparse');
+    });
+  });
+
+  describe('extractSkinColorDescription', () => {
+    it('should extract skinColor from body.descriptors first', () => {
+      const entity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            return { body: { descriptors: { skinColor: 'olive' } } };
+          }
+          if (componentId === 'descriptors:skin_color') {
+            return { skinColor: 'pale' }; // Should be ignored
+          }
+          return null;
+        }),
+      };
+
+      const result = composer.extractSkinColorDescription(entity);
+      expect(result).toBe('olive');
+    });
+
+    it('should fallback to entity-level component when body.descriptors not present', () => {
+      const entity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            return { body: { root: 'torso-1' } }; // No descriptors
+          }
+          if (componentId === 'descriptors:skin_color') {
+            return { skinColor: 'bronze' };
+          }
+          return null;
+        }),
+      };
+
+      const result = composer.extractSkinColorDescription(entity);
+      expect(result).toBe('bronze');
+    });
+
+    it('should return empty string when neither body.descriptors nor entity-level exists', () => {
+      const entity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockReturnValue(null),
+      };
+
+      const result = composer.extractSkinColorDescription(entity);
+      expect(result).toBe('');
+    });
+
+    it('should return empty string for invalid entity', () => {
+      const result = composer.extractSkinColorDescription(null);
       expect(result).toBe('');
     });
   });

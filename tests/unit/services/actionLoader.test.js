@@ -337,12 +337,10 @@ describe('ActionLoader', () => {
           .spyOn(actionLoader, '_validatePrimarySchema')
           .mockReturnValue({ isValid: true, errors: null });
       }
-      jest
-        .spyOn(actionLoader, '_storeItemInRegistry')
-        .mockReturnValue({
-          qualifiedId: `${TEST_MOD_ID}:test_action`,
-          didOverride: false,
-        });
+      jest.spyOn(actionLoader, '_storeItemInRegistry').mockReturnValue({
+        qualifiedId: `${TEST_MOD_ID}:test_action`,
+        didOverride: false,
+      });
     });
 
     it('should load action with valid visual properties and log debug info', async () => {

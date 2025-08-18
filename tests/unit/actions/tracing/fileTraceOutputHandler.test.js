@@ -2,7 +2,14 @@
  * @file Unit tests for FileTraceOutputHandler
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import FileTraceOutputHandler from '../../../../src/actions/tracing/fileTraceOutputHandler.js';
 
 describe('FileTraceOutputHandler', () => {
@@ -15,13 +22,18 @@ describe('FileTraceOutputHandler', () => {
 
   // Helper function to wait for queue processing
   const waitForQueueProcessing = async (handlerInstance, maxWaitMs = 200) => {
-    const realDateNow = Date.now ? Date.now.bind(Date) : (() => new Date().getTime());
+    const realDateNow = Date.now
+      ? Date.now.bind(Date)
+      : () => new Date().getTime();
     const startTime = realDateNow();
-    while (handlerInstance.getStatistics().isProcessingQueue && (realDateNow() - startTime) < maxWaitMs) {
-      await new Promise(resolve => setTimeout(resolve, 10));
+    while (
+      handlerInstance.getStatistics().isProcessingQueue &&
+      realDateNow() - startTime < maxWaitMs
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
     // Wait a bit more to ensure all async operations complete
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
   };
 
   beforeEach(() => {
@@ -46,7 +58,7 @@ describe('FileTraceOutputHandler', () => {
 
     // Create jest mock for fetch first
     const mockFetch = jest.fn();
-    
+
     // Mock window and document for browser APIs
     global.window = {
       showDirectoryPicker: jest.fn(),
@@ -177,7 +189,6 @@ describe('FileTraceOutputHandler', () => {
       );
     });
 
-
     it('should return true if already initialized', async () => {
       await handler.initialize();
       mockLogger.info.mockClear();
@@ -192,7 +203,7 @@ describe('FileTraceOutputHandler', () => {
       // Mock the window check to throw an error
       const originalWindow = global.window;
       delete global.window;
-      
+
       // Mock console error to catch the internal error
       handler = new FileTraceOutputHandler({
         logger: {
@@ -205,10 +216,10 @@ describe('FileTraceOutputHandler', () => {
 
       // This should gracefully handle the error
       const result = await handler.initialize();
-      
+
       // The implementation returns true even on error
       expect(result).toBe(true);
-      
+
       global.window = originalWindow;
     });
   });
@@ -240,7 +251,7 @@ describe('FileTraceOutputHandler', () => {
 
     it('should initialize if not already initialized', async () => {
       const initializeSpy = jest.spyOn(handler, 'initialize');
-      
+
       await handler.writeTrace({}, {});
 
       expect(initializeSpy).toHaveBeenCalled();
@@ -267,9 +278,9 @@ describe('FileTraceOutputHandler', () => {
     it('should start processing queue if not already processing', async () => {
       // Use a small delay to allow async processing to start
       await handler.writeTrace({}, {});
-      
+
       // Give the async queue processor time to start
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // The queue should be processing
       const stats = handler.getStatistics();
@@ -300,7 +311,7 @@ describe('FileTraceOutputHandler', () => {
         const originalTrace = { actionId: 'test', actorId: 'actor' };
 
         await handler.writeTrace(traceData, originalTrace);
-        
+
         // Wait for async processing
         await waitForQueueProcessing(handler);
 
@@ -337,7 +348,7 @@ describe('FileTraceOutputHandler', () => {
         });
 
         await handler.writeTrace({}, {});
-        
+
         // Wait for async processing
         await waitForQueueProcessing(handler);
 
@@ -356,7 +367,7 @@ describe('FileTraceOutputHandler', () => {
         global.fetch.mockRejectedValueOnce(new Error('Failed to fetch'));
 
         await handler.writeTrace({}, {});
-        
+
         // Wait for async processing
         await waitForQueueProcessing(handler);
 
@@ -369,7 +380,7 @@ describe('FileTraceOutputHandler', () => {
         global.fetch.mockRejectedValueOnce(new Error('CORS policy blocked'));
 
         await handler.writeTrace({}, {});
-        
+
         // Wait for async processing
         await waitForQueueProcessing(handler);
 
@@ -383,7 +394,7 @@ describe('FileTraceOutputHandler', () => {
         global.fetch = undefined;
 
         await handler.writeTrace({}, {});
-        
+
         // Wait for async processing
         await waitForQueueProcessing(handler);
 
@@ -402,7 +413,7 @@ describe('FileTraceOutputHandler', () => {
           write: jest.fn().mockResolvedValue(),
           close: jest.fn().mockResolvedValue(),
         };
-        
+
         const mockFileHandle = {
           createWritable: jest.fn().mockResolvedValue(mockWritable),
         };
@@ -414,7 +425,9 @@ describe('FileTraceOutputHandler', () => {
         // Create a clean mock
         const cleanTraceManager = {
           selectDirectory: jest.fn().mockResolvedValue(mockDirectoryHandle),
-          ensureSubdirectoryExists: jest.fn().mockResolvedValue(mockDirectoryHandle),
+          ensureSubdirectoryExists: jest
+            .fn()
+            .mockResolvedValue(mockDirectoryHandle),
         };
 
         handler = new FileTraceOutputHandler({
@@ -431,7 +444,7 @@ describe('FileTraceOutputHandler', () => {
 
         // Write trace
         await handler.writeTrace({ test: 'data' }, { actionId: 'test' });
-        
+
         // Allow full processing
         await waitForQueueProcessing(handler, 200);
 
@@ -452,7 +465,7 @@ describe('FileTraceOutputHandler', () => {
           write: jest.fn(),
           close: jest.fn(),
         };
-        
+
         const mockFileHandle = {
           createWritable: jest.fn(() => Promise.resolve(mockWritable)),
         };
@@ -461,8 +474,12 @@ describe('FileTraceOutputHandler', () => {
           getFileHandle: jest.fn(() => Promise.resolve(mockFileHandle)),
         };
 
-        mockTraceDirectoryManager.selectDirectory.mockResolvedValueOnce(mockDirectoryHandle);
-        mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValueOnce(mockDirectoryHandle);
+        mockTraceDirectoryManager.selectDirectory.mockResolvedValueOnce(
+          mockDirectoryHandle
+        );
+        mockTraceDirectoryManager.ensureSubdirectoryExists.mockResolvedValueOnce(
+          mockDirectoryHandle
+        );
 
         handler = new FileTraceOutputHandler({
           outputDirectory: './traces',
@@ -478,15 +495,14 @@ describe('FileTraceOutputHandler', () => {
         });
 
         await handler.writeTrace({}, {});
-        
+
         // Wait for async processing
         await waitForQueueProcessing(handler);
 
         expect(mockTraceDirectoryManager.selectDirectory).toHaveBeenCalled();
-        expect(mockTraceDirectoryManager.ensureSubdirectoryExists).toHaveBeenCalledWith(
-          mockDirectoryHandle,
-          'traces'
-        );
+        expect(
+          mockTraceDirectoryManager.ensureSubdirectoryExists
+        ).toHaveBeenCalledWith(mockDirectoryHandle, 'traces');
         expect(mockDirectoryHandle.getFileHandle).toHaveBeenCalledWith(
           expect.stringContaining('trace_'),
           { create: true }
@@ -497,7 +513,7 @@ describe('FileTraceOutputHandler', () => {
         // Reset the mock to ensure clean state
         mockTraceDirectoryManager.selectDirectory.mockClear();
         mockTraceDirectoryManager.ensureSubdirectoryExists.mockClear();
-        
+
         mockTraceDirectoryManager.selectDirectory.mockRejectedValueOnce(
           new Error('User cancelled')
         );
@@ -515,7 +531,7 @@ describe('FileTraceOutputHandler', () => {
         });
 
         await handler.writeTrace({}, {});
-        
+
         // Wait for async processing
         await waitForQueueProcessing(handler);
 
@@ -529,7 +545,6 @@ describe('FileTraceOutputHandler', () => {
     });
 
     describe('download fallback', () => {
-
       it('should handle download errors gracefully', async () => {
         // Mock createElement to throw error
         const originalCreateElement = global.document.createElement;
@@ -547,7 +562,7 @@ describe('FileTraceOutputHandler', () => {
         delete global.window.showDirectoryPicker;
 
         await handler.writeTrace({}, {});
-        
+
         // Wait for async processing
         await waitForQueueProcessing(handler);
 
@@ -555,7 +570,7 @@ describe('FileTraceOutputHandler', () => {
           'Failed to download trace file',
           expect.any(Error)
         );
-        
+
         // Restore original
         global.document.createElement = originalCreateElement;
       });
@@ -569,7 +584,6 @@ describe('FileTraceOutputHandler', () => {
       });
     });
 
-
     it('should sanitize special characters in filenames', async () => {
       const trace = {
         actionId: 'test/action:special',
@@ -582,14 +596,16 @@ describe('FileTraceOutputHandler', () => {
       });
 
       await handler.writeTrace({}, trace);
-      
+
       // Wait for async processing
       await waitForQueueProcessing(handler);
 
       const fetchCall = global.fetch.mock.calls[0];
       const body = JSON.parse(fetchCall[1].body);
-      
-      expect(body.fileName).toMatch(/^trace_test_action_special_actor_domain_com_.*\.json$/);
+
+      expect(body.fileName).toMatch(
+        /^trace_test_action_special_actor_domain_com_.*\.json$/
+      );
       expect(body.fileName).not.toContain('/');
       expect(body.fileName).not.toContain(':');
       expect(body.fileName).not.toContain('@');
@@ -602,13 +618,13 @@ describe('FileTraceOutputHandler', () => {
       });
 
       await handler.writeTrace({}, {});
-      
+
       // Wait for async processing
       await waitForQueueProcessing(handler);
 
       const fetchCall = global.fetch.mock.calls[0];
       const body = JSON.parse(fetchCall[1].body);
-      
+
       expect(body.fileName).toMatch(/^trace_unknown_unknown_.*\.json$/);
     });
   });
@@ -640,14 +656,14 @@ describe('FileTraceOutputHandler', () => {
       });
 
       await handler.writeTrace(traceData, originalTrace);
-      
+
       // Wait for async processing
       await waitForQueueProcessing(handler);
 
       const fetchCall = global.fetch.mock.calls[0];
       const body = JSON.parse(fetchCall[1].body);
       const content = JSON.parse(body.traceData);
-      
+
       expect(content).toMatchObject({
         timestamp: expect.any(String),
         outputDirectory: './test-traces',
@@ -685,7 +701,7 @@ describe('FileTraceOutputHandler', () => {
       await waitForQueueProcessing(handler);
 
       expect(global.fetch).toHaveBeenCalledTimes(3);
-      
+
       // Check that all traces were processed
       const stats = handler.getStatistics();
       expect(stats.queuedTraces).toBe(0);
@@ -708,7 +724,7 @@ describe('FileTraceOutputHandler', () => {
 
       expect(global.fetch).toHaveBeenCalledTimes(2);
       expect(mockLogger.error).toHaveBeenCalled();
-      
+
       // Second trace should still be processed
       const stats = handler.getStatistics();
       expect(stats.queuedTraces).toBe(0);
@@ -717,12 +733,17 @@ describe('FileTraceOutputHandler', () => {
     it('should prevent concurrent queue processing', async () => {
       // Slow fetch to ensure overlap
       global.fetch.mockImplementation(
-        () => new Promise(resolve => 
-          setTimeout(() => resolve({
-            ok: true,
-            json: async () => ({ path: 'test' }),
-          }), 50)
-        )
+        () =>
+          new Promise((resolve) =>
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  json: async () => ({ path: 'test' }),
+                }),
+              50
+            )
+          )
       );
 
       // Write multiple traces rapidly
@@ -804,7 +825,6 @@ describe('FileTraceOutputHandler', () => {
   });
 
   describe('initialization edge cases', () => {
-
     it('should handle queue processing errors', async () => {
       handler = new FileTraceOutputHandler({
         logger: mockLogger,
@@ -812,12 +832,12 @@ describe('FileTraceOutputHandler', () => {
 
       // Mock internal method to throw error
       const originalProcess = handler._processTraceQueue;
-      
+
       // Add a trace that will cause processing error
       await handler.writeTrace(null, {}); // null will cause JSON stringify error
-      
+
       // Wait for processing
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Should have logged error
       expect(mockLogger.error).toHaveBeenCalled();
@@ -836,7 +856,7 @@ describe('FileTraceOutputHandler', () => {
       expect(result).toBe(true);
 
       await handler.writeTrace({}, {});
-      
+
       // Should not throw
       expect(mockLogger.error).not.toHaveBeenCalledWith(
         expect.stringContaining('Failed to write trace to file'),
@@ -852,9 +872,9 @@ describe('FileTraceOutputHandler', () => {
       });
 
       await handler.writeTrace({}, {});
-      
+
       // Wait for processing
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'FileTraceOutputHandler: Not in browser environment or fetch unavailable',
@@ -877,9 +897,9 @@ describe('FileTraceOutputHandler', () => {
       });
 
       await handler.writeTrace({}, {});
-      
+
       // Wait for processing
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'FileTraceOutputHandler: Server endpoint write failed',
@@ -891,9 +911,14 @@ describe('FileTraceOutputHandler', () => {
     });
 
     it('should handle File System API permission denial', async () => {
-      const mockError = new DOMException('User denied permission', 'NotAllowedError');
-      
-      mockTraceDirectoryManager.selectDirectory.mockRejectedValueOnce(mockError);
+      const mockError = new DOMException(
+        'User denied permission',
+        'NotAllowedError'
+      );
+
+      mockTraceDirectoryManager.selectDirectory.mockRejectedValueOnce(
+        mockError
+      );
 
       handler = new FileTraceOutputHandler({
         traceDirectoryManager: mockTraceDirectoryManager,
@@ -907,9 +932,9 @@ describe('FileTraceOutputHandler', () => {
       });
 
       await handler.writeTrace({}, {});
-      
+
       // Wait for processing
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Could not establish directory handle',

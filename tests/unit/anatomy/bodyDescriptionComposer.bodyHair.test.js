@@ -48,6 +48,9 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
     it('should extract body hair density when component exists', () => {
       const mockEntity = {
         getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null; // Primary lookup fails, triggers fallback
+          }
           if (componentId === 'descriptors:body_hair') {
             return { density: 'moderate' };
           }
@@ -57,6 +60,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
 
       const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('moderate');
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith('anatomy:body');
       expect(mockEntity.getComponentData).toHaveBeenCalledWith(
         'descriptors:body_hair'
       );
@@ -74,7 +78,15 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
 
       validValues.forEach((value) => {
         const mockEntity = {
-          getComponentData: jest.fn(() => ({ density: value })),
+          getComponentData: jest.fn((componentId) => {
+            if (componentId === 'anatomy:body') {
+              return null; // Primary lookup fails, triggers fallback
+            }
+            if (componentId === 'descriptors:body_hair') {
+              return { density: value };
+            }
+            return null;
+          }),
         };
 
         const result = composer.extractBodyHairDescription(mockEntity);
@@ -84,7 +96,15 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
 
     it('should handle hyphenated value "very-hairy"', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ density: 'very-hairy' })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return { density: 'very-hairy' };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyHairDescription(mockEntity);
@@ -122,6 +142,7 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
 
       const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('');
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith('anatomy:body');
       expect(mockEntity.getComponentData).toHaveBeenCalledWith(
         'descriptors:body_hair'
       );
@@ -134,14 +155,26 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
 
       const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe('');
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith('anatomy:body');
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+        'descriptors:body_hair'
+      );
     });
 
     it('should return empty string when component lacks density property', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({
-          value: 'moderate', // Wrong property name
-          hair: 'moderate', // Wrong property name
-        })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null; // Primary lookup fails
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return {
+              value: 'moderate', // Wrong property name
+              hair: 'moderate', // Wrong property name
+            };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyHairDescription(mockEntity);
@@ -150,7 +183,15 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
 
     it('should return empty string when density is null', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ density: null })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return { density: null };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyHairDescription(mockEntity);
@@ -159,7 +200,15 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
 
     it('should return empty string when density is undefined', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ density: undefined })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return { density: undefined };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyHairDescription(mockEntity);
@@ -168,7 +217,15 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
 
     it('should return empty string when density is empty string', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ density: '' })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return { density: '' };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyHairDescription(mockEntity);
@@ -191,17 +248,33 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
 
     it('should handle density with unexpected type - number', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ density: 123 })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return { density: 123 };
+          }
+          return null;
+        }),
       };
 
-      // Should return the value as-is (coerced to string by the template)
+      // Should return the value as-is
       const result = composer.extractBodyHairDescription(mockEntity);
       expect(result).toBe(123);
     });
 
     it('should handle density with unexpected type - boolean', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ density: true })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return { density: true };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyHairDescription(mockEntity);
@@ -210,7 +283,15 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
 
     it('should handle density with unexpected type - object', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ density: { nested: 'value' } })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return { density: { nested: 'value' } };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyHairDescription(mockEntity);
@@ -243,11 +324,19 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
   describe('Component Data Structure Validation', () => {
     it('should handle component with different property names', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({
-          build: 'muscular', // Wrong property name
-          value: 'moderate', // Wrong property name
-          type: 'hairy', // Wrong property name
-        })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return {
+              build: 'muscular', // Wrong property name
+              value: 'moderate', // Wrong property name
+              type: 'hairy', // Wrong property name
+            };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyHairDescription(mockEntity);
@@ -256,7 +345,15 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
 
     it('should handle component with density property set to false', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ density: false })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return { density: false };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyHairDescription(mockEntity);
@@ -265,7 +362,15 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
 
     it('should handle component with density property set to 0', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ density: 0 })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return { density: 0 };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyHairDescription(mockEntity);
@@ -274,11 +379,19 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
 
     it('should handle component with additional properties', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({
-          density: 'moderate',
-          color: 'brown', // Additional property
-          texture: 'coarse', // Additional property
-        })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return {
+              density: 'moderate',
+              color: 'brown', // Additional property
+              texture: 'coarse', // Additional property
+            };
+          }
+          return null;
+        }),
       };
 
       const result = composer.extractBodyHairDescription(mockEntity);
@@ -289,7 +402,15 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
   describe('Method Integration', () => {
     it('should work consistently with multiple calls', () => {
       const mockEntity = {
-        getComponentData: jest.fn(() => ({ density: 'hairy' })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return { density: 'hairy' };
+          }
+          return null;
+        }),
       };
 
       const result1 = composer.extractBodyHairDescription(mockEntity);
@@ -299,12 +420,20 @@ describe('BodyDescriptionComposer - extractBodyHairDescription', () => {
       expect(result1).toBe('hairy');
       expect(result2).toBe('hairy');
       expect(result3).toBe('hairy');
-      expect(mockEntity.getComponentData).toHaveBeenCalledTimes(3);
+      expect(mockEntity.getComponentData).toHaveBeenCalledTimes(6);
     });
 
     it('should not modify the input entity', () => {
       const originalEntity = {
-        getComponentData: jest.fn(() => ({ density: 'sparse' })),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === 'anatomy:body') {
+            return null;
+          }
+          if (componentId === 'descriptors:body_hair') {
+            return { density: 'sparse' };
+          }
+          return null;
+        }),
         otherProperty: 'should not change',
       };
 

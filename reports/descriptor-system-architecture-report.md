@@ -13,6 +13,7 @@ This report analyzes the current implementation of descriptor components in the 
 The descriptor system currently operates with the following structure:
 
 #### Component Organization
+
 - **Descriptor Components**: Located in `data/mods/descriptors/components/`
   - `build.component.json` - Body build descriptors (skinny, athletic, muscular, etc.)
   - `body_hair.component.json` - Body hair density descriptors
@@ -20,6 +21,7 @@ The descriptor system currently operates with the following structure:
   - Various part-specific descriptors (color, size, shape, etc.)
 
 #### Current Ownership Pattern
+
 Body-level descriptors are currently attached directly to the entity that owns the `anatomy:body` component:
 
 ```javascript
@@ -34,6 +36,7 @@ extractBuildDescription(bodyEntity) {
 ```
 
 This means an entity structure looks like:
+
 ```
 Entity (e.g., "actor_123")
 ├── anatomy:body (component)
@@ -45,18 +48,23 @@ Entity (e.g., "actor_123")
 ### 2. Identified Issues
 
 #### Architectural Inconsistency
+
 The current pattern creates a logical disconnect:
+
 - Body-level descriptors (build, body_hair, body_composition) describe properties of the body itself
 - Yet they exist as separate components on the entity, not as part of the body structure
 - This violates the principle of cohesion - related data should be grouped together
 
 #### Semantic Misalignment
+
 - A "build" or "body_hair" descriptor logically describes the body, not the entity as a whole
 - The entity might represent an actor, NPC, or other game object that HAS a body
 - The descriptors should be properties OF the body, not peers TO the body
 
 #### Complexity in Description Generation
+
 The current implementation requires checking multiple locations:
+
 1. Body parts for part-specific descriptors
 2. The entity itself for body-level descriptors
 3. Special handling in `BodyDescriptionComposer` for these different sources
@@ -81,6 +89,7 @@ Recipes show an interesting pattern where descriptors are added to parts:
 ```
 
 **Important Finding**: There is currently a **disconnect** between recipe definitions and runtime behavior:
+
 - **In Recipes**: Body-level descriptors are defined on body parts (e.g., `descriptors:build` on torso)
 - **At Runtime**: These descriptors remain on the parts and are used for part descriptions
 - **The Missing Link**: There is NO mechanism to transfer these body-level descriptors from parts to the owner entity
@@ -122,11 +131,27 @@ Modify the `anatomy:body` component to include a descriptors field:
             "properties": {
               "build": {
                 "type": "string",
-                "enum": ["skinny", "slim", "toned", "athletic", "shapely", "thick", "muscular", "stocky"]
+                "enum": [
+                  "skinny",
+                  "slim",
+                  "toned",
+                  "athletic",
+                  "shapely",
+                  "thick",
+                  "muscular",
+                  "stocky"
+                ]
               },
               "bodyHair": {
                 "type": "string",
-                "enum": ["hairless", "sparse", "light", "moderate", "hairy", "very-hairy"]
+                "enum": [
+                  "hairless",
+                  "sparse",
+                  "light",
+                  "moderate",
+                  "hairy",
+                  "very-hairy"
+                ]
               },
               "bodyComposition": {
                 "type": "string",
@@ -153,6 +178,7 @@ Modify the `anatomy:body` component to include a descriptors field:
 3. **No aggregation needed**: Body-level descriptors should be set directly in the body component during anatomy generation
 
 The correct approach is to:
+
 - Keep part-specific descriptors on parts (current behavior - working correctly)
 - Move body-level descriptors to be optional properties of the `anatomy:body` component
 - Update recipes to specify body-level descriptors separately from part descriptors
@@ -174,13 +200,16 @@ extractBuildDescription(bodyEntity) {
 ### 4. Migration Strategy
 
 #### Phase 1: Schema Update
+
 - Update `anatomy:body` component schema to include optional `descriptors` field
 - Each descriptor property (build, bodyHair, bodyComposition) is optional
 - Maintain backward compatibility by keeping support for entity-level descriptors
 
 #### Phase 2: Recipe Format Update
+
 - Update recipe schema to support body-level descriptors at the recipe root level
 - Example structure:
+
 ```json
 {
   "recipeId": "anatomy:example",
@@ -196,62 +225,75 @@ extractBuildDescription(bodyEntity) {
 ```
 
 #### Phase 3: Anatomy Generation Update
+
 - Modify `AnatomyGenerationWorkflow` to apply body descriptors to the body component
 - Keep part descriptors on parts (no changes needed there)
 
 #### Phase 4: Description Composer Update
+
 - Update `BodyDescriptionComposer` to check body component first, fall back to entity
 - This provides backward compatibility during migration
 
 #### Phase 5: Deprecation
+
 - Remove entity-level descriptor support after all content is migrated
 - Clean up dual-support code
 
 ## Benefits of Proposed Architecture
 
 ### 1. Improved Cohesion
+
 - Body-related data is kept together in a single logical structure
 - Clear ownership and relationships between body and its descriptors
 
 ### 2. Simplified Mental Model
+
 - Developers can reason about body properties in one place
 - Clear distinction between entity properties and body properties
 
 ### 3. Better Extensibility
+
 - Easy to add new body-level descriptors
 - Clear pattern for part-specific vs body-level descriptors
 
 ### 4. Cleaner APIs
+
 - Single source of truth for body information
 - Reduced coupling between description generation and entity structure
 
 ### 5. More Logical Data Flow
+
 - Descriptors flow from parts → body → description
 - Natural aggregation pattern from detailed to general
 
 ## Implementation Recommendations
 
 ### Priority 1: Core Schema Changes
+
 1. Update `body.component.json` schema to include optional `descriptors` field
 2. Update recipe schema to support `bodyDescriptors` at root level
 3. Validate schemas with test data
 
 ### Priority 2: Generation Logic
+
 1. Update `AnatomyGenerationWorkflow` to apply body descriptors from recipe to body component
 2. Ensure part descriptors remain on parts (no changes needed)
 3. Add validation for descriptor values
 
 ### Priority 3: Description Composition
+
 1. Update `BodyDescriptionComposer` to read from body component's descriptors field
 2. Implement fallback to entity-level descriptors for backward compatibility
 3. Update tests to cover both old and new patterns
 
 ### Priority 4: Content Migration
+
 1. Update existing recipe files to use new `bodyDescriptors` field
 2. Remove body-level descriptors from part definitions in recipes
 3. Document the new pattern for modders
 
 ### Priority 5: Cleanup & Documentation
+
 1. After migration, remove entity-level descriptor support
 2. Update all documentation to reflect new architecture
 3. Add migration guide for mod developers
@@ -259,14 +301,17 @@ extractBuildDescription(bodyEntity) {
 ## Risk Assessment
 
 ### Low Risk
+
 - Changes are backward compatible initially
 - Existing functionality preserved during migration
 
 ### Medium Risk
+
 - Recipe format changes may affect modders
 - Some complex aggregation logic needed for multi-part descriptors
 
 ### Mitigation Strategies
+
 - Comprehensive testing at each phase
 - Clear migration documentation
 - Gradual rollout with feature flags if needed
@@ -300,7 +345,7 @@ This updated version corrects several misconceptions from the initial analysis:
 
 ---
 
-*Report generated: 2025-08-18*  
-*Author: Architecture Analysis System*  
-*Status: Proposal - Updated with Corrections*  
-*Last Updated: 2025-08-18 - Corrected assumptions and clarified proposed vs existing features*
+_Report generated: 2025-08-18_  
+_Author: Architecture Analysis System_  
+_Status: Proposal - Updated with Corrections_  
+_Last Updated: 2025-08-18 - Corrected assumptions and clarified proposed vs existing features_

@@ -27,6 +27,7 @@ Entity (e.g., "actor_123")
 ```
 
 Example part entity (e.g., `human_male_torso_muscular`):
+
 ```
 Part Entity
 ├── anatomy:part (component)
@@ -51,6 +52,7 @@ Entity (e.g., "actor_123")
 ```
 
 Output format:
+
 ```
 Skin color: white
 Build: athletic
@@ -178,7 +180,7 @@ File: `data/mods/anatomy/components/body.component.json`
                 "description": "Body build type",
                 "enum": [
                   "skinny",
-                  "slim", 
+                  "slim",
                   "toned",
                   "athletic",
                   "shapely",
@@ -340,7 +342,7 @@ _applyBodyDescriptors(bodyComponent, recipe) {
   if (!recipe.bodyDescriptors) {
     return bodyComponent;
   }
-  
+
   // Apply body-level descriptors to the body component
   return {
     ...bodyComponent,
@@ -369,77 +371,77 @@ _applyBodyDescriptors(bodyComponent, recipe) {
 ```javascript
 extractBuildDescription(bodyEntity) {
   const bodyComponent = bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
-  
+
   // Only check body.descriptors - no entity-level fallback
   if (bodyComponent?.body?.descriptors?.build) {
     return bodyComponent.body.descriptors.build;
   }
-  
+
   return '';
 }
 
 extractBodyHairDescription(bodyEntity) {
   const bodyComponent = bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
-  
+
   // Only check body.descriptors.density - no entity-level fallback
   if (bodyComponent?.body?.descriptors?.density) {
     return bodyComponent.body.descriptors.density;
   }
-  
+
   return '';
 }
 
 extractBodyCompositionDescription(bodyEntity) {
   const bodyComponent = bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
-  
+
   // Only check body.descriptors.composition
   if (bodyComponent?.body?.descriptors?.composition) {
     return bodyComponent.body.descriptors.composition;
   }
-  
+
   return '';
 }
 
 extractSkinColorDescription(bodyEntity) {
   const bodyComponent = bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
-  
+
   // Only check body.descriptors.skinColor
   if (bodyComponent?.body?.descriptors?.skinColor) {
     return bodyComponent.body.descriptors.skinColor;
   }
-  
+
   return '';
 }
 
 async composeDescription(bodyEntity) {
   // ... existing validation code ...
-  
+
   const lines = [];
-  
+
   // FIRST: Add body-level descriptors (new)
   const skinColor = this.extractSkinColorDescription(bodyEntity);
   if (skinColor) {
     lines.push(`Skin color: ${skinColor}`);
   }
-  
+
   const build = this.extractBuildDescription(bodyEntity);
   if (build) {
     lines.push(`Build: ${build}`);
   }
-  
+
   const bodyHair = this.extractBodyHairDescription(bodyEntity);
   if (bodyHair) {
     lines.push(`Body hair: ${bodyHair}`);
   }
-  
+
   const composition = this.extractBodyCompositionDescription(bodyEntity);
   if (composition) {
     lines.push(`Body composition: ${composition}`);
   }
-  
+
   // THEN: Add existing part-level descriptions (unchanged)
   // ... existing part description generation code ...
-  
+
   return lines.join('\n');
 }
 ```
@@ -529,16 +531,19 @@ Create test fixtures for:
 ### 6.1 Rollout Phases
 
 #### Phase 1: Schema Addition (Version 1.x)
+
 - Deploy schema changes (purely additive)
 - Support new body.descriptors structure
 - No support for entity-level descriptors
 
 #### Phase 2: Content Enhancement (Version 1.x+1)
+
 - Update core mod recipes to use bodyDescriptors where appropriate
 - Provide examples for modders
 - Document new functionality
 
 #### Phase 3: Finalization (Version 2.0)
+
 - Complete documentation updates
 - Performance optimizations
 - Full testing coverage
@@ -546,13 +551,17 @@ Create test fixtures for:
 ### 6.2 Migration Guide for Modders
 
 #### Before Enhancement:
+
 ```json
 // Only part-level descriptors on individual parts
 {
   "components": {
-    "anatomy:body": { 
+    "anatomy:body": {
       "recipeId": "anatomy:human",
-      "body": { "root": "part_123_torso", "parts": {"torso": "part_123_torso"} }
+      "body": {
+        "root": "part_123_torso",
+        "parts": { "torso": "part_123_torso" }
+      }
     }
   }
 }
@@ -560,6 +569,7 @@ Create test fixtures for:
 ```
 
 #### After Enhancement:
+
 ```json
 // Body-level descriptors PLUS existing part descriptors
 {
@@ -568,7 +578,7 @@ Create test fixtures for:
       "recipeId": "anatomy:human",
       "body": {
         "root": "part_123_torso",
-        "parts": {"torso": "part_123_torso"},
+        "parts": { "torso": "part_123_torso" },
         "descriptors": {
           "build": "athletic",
           "density": "moderate",
@@ -670,6 +680,7 @@ Only specified descriptors appear in the description:
 ```
 
 Output:
+
 ```
 Skin color: pale
 Build: slim
@@ -718,6 +729,7 @@ Torso: slender...
 ### 10.2 Long-term Vision
 
 The descriptor system could evolve into a more sophisticated appearance system that:
+
 - Supports gradual changes over time
 - Integrates with equipment and clothing systems
 - Provides hooks for AI-generated descriptions
@@ -751,12 +763,12 @@ The implementation will be considered successful when:
 
 ### 12.1 Identified Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|------------|--------|------------|
-| Breaking existing mods | Low | High | Dual support period, extensive testing |
-| Performance regression | Low | Medium | Performance testing, optimization |
-| Complex migration | Medium | Medium | Clear guides, migration tools |
-| Incomplete adoption | Medium | Low | Deprecation warnings, benefits documentation |
+| Risk                   | Probability | Impact | Mitigation                                   |
+| ---------------------- | ----------- | ------ | -------------------------------------------- |
+| Breaking existing mods | Low         | High   | Dual support period, extensive testing       |
+| Performance regression | Low         | Medium | Performance testing, optimization            |
+| Complex migration      | Medium      | Medium | Clear guides, migration tools                |
+| Incomplete adoption    | Medium      | Low    | Deprecation warnings, benefits documentation |
 
 ### 12.2 Contingency Plans
 

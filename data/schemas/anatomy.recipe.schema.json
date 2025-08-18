@@ -131,6 +131,52 @@
         "required": ["entityId"],
         "additionalProperties": false
       }
+    },
+    "bodyDescriptors": {
+      "type": "object",
+      "description": "Optional body-level descriptors to apply to generated body",
+      "properties": {
+        "build": {
+          "type": "string",
+          "enum": [
+            "skinny",
+            "slim",
+            "toned",
+            "athletic",
+            "shapely",
+            "thick",
+            "muscular",
+            "stocky"
+          ]
+        },
+        "density": {
+          "type": "string",
+          "enum": [
+            "hairless",
+            "sparse",
+            "light",
+            "moderate",
+            "hairy",
+            "very-hairy"
+          ]
+        },
+        "composition": {
+          "type": "string",
+          "enum": [
+            "underweight",
+            "lean",
+            "average",
+            "soft",
+            "chubby",
+            "overweight",
+            "obese"
+          ]
+        },
+        "skinColor": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": ["recipeId", "blueprintId", "slots"],
