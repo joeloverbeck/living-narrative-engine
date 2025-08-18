@@ -18,7 +18,7 @@ HIGH
 
 ## Estimated Effort
 
-3-4 hours
+1-2 hours
 
 ## Dependencies
 
@@ -37,21 +37,23 @@ Create the prompt generation system that constructs the LLM prompt for generatin
 
 ### File: `src/characterBuilder/prompts/coreMotivationsGenerationPrompt.js`
 
-Key components:
+**CORRECTED Structure** (following existing pattern from `clicheGenerationPrompt.js`):
 
-1. **Prompt Template Structure**
-   - Character concept section
-   - Thematic direction details (all sections)
-   - Clichés list (formatted for avoidance)
-   - Content guidelines (NC-21, no restrictions)
-   - Generation instructions (3-5 blocks)
+1. **Required Exports** (aligned with existing prompt pattern):
+   - `export const CORE_MOTIVATIONS_LLM_PARAMS` - LLM parameters
+   - `export const CORE_MOTIVATIONS_RESPONSE_SCHEMA` - JSON schema for validation
+   - `export const PROMPT_VERSION_INFO` - Version tracking
+   - `export function buildCoreMotivationsGenerationPrompt(characterConcept, direction, cliches)` - Main prompt builder
+   - `export function validateCoreMotivationsGenerationResponse(response)` - Response validation
+   - `export function createCoreMotivationsGenerationLlmConfig(baseLlmConfig)` - LLM config creation
 
-2. **Required Methods**
-   - `buildPrompt(concept, direction, cliches)` - Main prompt builder
-   - `formatConcept(concept)` - Format concept text
-   - `formatDirection(direction)` - Include all direction sections
-   - `formatCliches(cliches)` - Export format for clichés
-   - `getContentGuidelines()` - Copy from cliché prompt
+2. **Content Guidelines Integration**:
+   - Embed guidelines directly in prompt template (current pattern)
+   - Copy exact text from `clicheGenerationPrompt.js` lines 319-331
+
+3. **NO Separate Formatting Methods**:
+   - Use single prompt builder function (existing pattern)
+   - Token validation handled by LLM services using `TokenEstimator`
 
 3. **Prompt Template**
 
@@ -79,8 +81,8 @@ Return as JSON:
 {
   "motivations": [
     {
-      "coreMotivation": "What deeply drives the character",
-      "contradiction": "Internal contradiction or external conflict",
+      "coreDesire": "What deeply drives the character",
+      "internalContradiction": "Internal contradiction or external conflict",
       "centralQuestion": "Philosophical/narrative question with ?"
     }
   ]
@@ -89,23 +91,35 @@ Return as JSON:
 
 ## Validation Criteria
 
-- [ ] Prompt includes all required sections
-- [ ] Content guidelines match cliché prompt exactly
-- [ ] JSON format instructions are clear
-- [ ] Handles missing data gracefully
-- [ ] Character limit validation (<10K tokens)
+- [ ] Follows existing `clicheGenerationPrompt.js` pattern exactly
+- [ ] JSON schema matches `CoreMotivation` model fields
+- [ ] Content guidelines embedded in prompt template
+- [ ] Exports all required functions and constants
+- [ ] Response validation using AJV schema
+- [ ] Token validation handled by LLM services (not prompt builder)
 
 ## Testing Requirements
 
-- Unit tests for each formatting method
-- Test complete prompt generation
-- Test edge cases (missing data)
-- Validate token count
+- Mirror existing `tests/unit/characterBuilder/prompts/clicheGenerationPrompt.test.js`
+- Test complete prompt generation function
+- Test response validation function
+- Test LLM config creation function
+- Use existing `CharacterBuilderIntegrationTestBed` for integration tests
+- Follow test organization in `/tests/unit/characterBuilder/prompts/`
 
 ## Checklist
 
-- [ ] Create prompt class
-- [ ] Implement formatting methods
-- [ ] Add content guidelines
-- [ ] Add JSON instructions
-- [ ] Write unit tests
+- [ ] Copy structure from `clicheGenerationPrompt.js`
+- [ ] Adapt prompt content for core motivations
+- [ ] Use correct JSON schema matching `CoreMotivation` model
+- [ ] Include version management and enhancement options
+- [ ] Embed content guidelines directly in template
+- [ ] Write unit tests following existing patterns
+- [ ] Create integration tests using existing test bed
+
+## Dependencies Already Satisfied
+
+- ✅ `CoreMotivation` model exists with required structure
+- ✅ `CharacterBuilderService` has placeholder for core motivations events
+- ✅ Dependency injection tokens already defined in `tokens-core.js`
+- ✅ Test infrastructure exists and can be extended

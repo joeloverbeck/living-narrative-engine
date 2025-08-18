@@ -902,7 +902,7 @@ describe('CharacterBuilderService', () => {
 
         await expect(
           service.getCoreMotivationsByDirectionId(directionId)
-        ).rejects.toThrow('Database error');
+        ).rejects.toThrow('Failed to retrieve core motivations');
       });
     });
 

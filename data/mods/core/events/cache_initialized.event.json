@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:cache_initialized",
+  "description": "Dispatched when a cache manager is initialized.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "maxSize": {
+        "description": "Maximum cache size",
+        "type": "number"
+      },
+      "ttlConfig": {
+        "description": "Time-to-live configuration for different data types",
+        "type": "object"
+      },
+      "cacheManagerType": {
+        "description": "Type of cache manager that was initialized",
+        "type": "string"
+      },
+      "timestamp": {
+        "description": "Initialization timestamp",
+        "type": "number"
+      }
+    },
+    "additionalProperties": true
+  }
+}

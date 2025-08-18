@@ -167,6 +167,7 @@ describe('ActionFormattingStage - Coverage Enhancement', () => {
           },
           isMultiTarget: true,
         },
+        visual: null,
       });
 
       expect(mockFormatter.formatMultiTarget).toHaveBeenCalledWith(
@@ -948,6 +949,7 @@ describe('ActionFormattingStage - Coverage Enhancement', () => {
         command: 'test Item 1',
         description: '',
         params: { targetId: 'item1' },
+        visual: null,
       });
       expect(result.errors).toHaveLength(0);
     });
@@ -1033,6 +1035,7 @@ describe('ActionFormattingStage - Coverage Enhancement', () => {
         command: 'test Item 1',
         description: '',
         params: { targetId: 'item1' },
+        visual: null,
       });
       expect(result.errors).toHaveLength(0);
 

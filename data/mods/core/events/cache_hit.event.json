@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:cache_hit",
+  "description": "Dispatched when a cache hit occurs.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "key": {
+        "description": "Cache key that was hit",
+        "type": "string"
+      },
+      "type": {
+        "description": "Type of cached data",
+        "type": "string"
+      },
+      "totalHits": {
+        "description": "Total number of hits for this key",
+        "type": "number"
+      }
+    },
+    "required": ["key"],
+    "additionalProperties": true
+  }
+}

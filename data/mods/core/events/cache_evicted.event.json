@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:cache_evicted",
+  "description": "Dispatched when a cache entry is evicted.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "key": {
+        "description": "Cache key that was evicted",
+        "type": "string"
+      }
+    },
+    "required": ["key"],
+    "additionalProperties": true
+  }
+}

@@ -214,6 +214,8 @@ export const coreTokens = freeze({
   ClicheGenerator: 'ClicheGenerator',
   ICoreMotivationsGenerator: 'ICoreMotivationsGenerator',
   CharacterDatabase: 'CharacterDatabase',
+  ICoreMotivationsCacheManager: 'ICoreMotivationsCacheManager',
+  CoreMotivationsCacheManager: 'CoreMotivationsCacheManager',
   // Target Context Builder
   ITargetContextBuilder: 'ITargetContextBuilder',
   // Multi-Target Resolution Stage

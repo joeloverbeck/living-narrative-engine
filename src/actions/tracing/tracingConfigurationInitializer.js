@@ -174,6 +174,10 @@ class TracingConfigurationInitializer {
         );
       }
 
+      // Clear the promise after successful initialization so subsequent calls
+      // can return "Already initialized" message
+      this.#initializationPromise = null;
+
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;

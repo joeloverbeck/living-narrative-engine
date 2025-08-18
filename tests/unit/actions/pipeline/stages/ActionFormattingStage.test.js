@@ -130,6 +130,7 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
         command: 'attack Goblin',
         description: '',
         params: { targetId: 'enemy1' },
+        visual: null,
       });
       expect(mockMultiTargetFormatter.format).toHaveBeenCalledTimes(2);
     });
@@ -169,6 +170,7 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
           },
           isMultiTarget: true,
         },
+        visual: null,
       });
 
       expect(mockMultiTargetFormatter.formatMultiTarget).toHaveBeenCalledWith(
@@ -650,6 +652,7 @@ describe('ActionFormattingStage - Enhanced Multi-Target Support', () => {
         command: 'fallback: use Sword',
         description: '',
         params: { targetId: 'item1' },
+        visual: null,
       });
 
       // Verify legacy formatter was called with transformed template
@@ -2105,6 +2108,7 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
         command: 'Test Target 1',
         description: '',
         params: { targetId: 'target-1' },
+        visual: null,
       });
     });
 
@@ -2264,6 +2268,7 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
           targetIds: { item: ['item_001'], enemy: ['enemy_001'] },
           isMultiTarget: true,
         },
+        visual: null,
       });
 
       // Verify trace captured the legacy multi-target processing
@@ -2343,6 +2348,7 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
         command: 'cast Fireball',
         description: '',
         params: { targetId: 'spell_001' },
+        visual: null,
       });
 
       // Verify both formatMultiTarget and fallback format were called
@@ -2432,6 +2438,7 @@ describe('ActionFormattingStage - Action Tracing Integration', () => {
         command: 'swing Axe',
         description: '',
         params: { targetId: 'weapon_001' },
+        visual: null,
       });
 
       // Verify only legacy formatter was called

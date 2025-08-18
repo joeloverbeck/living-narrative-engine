@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:cache_miss",
+  "description": "Dispatched when a cache miss occurs.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "key": {
+        "description": "Cache key that was missed",
+        "type": "string"
+      }
+    },
+    "required": ["key"],
+    "additionalProperties": true
+  }
+}
