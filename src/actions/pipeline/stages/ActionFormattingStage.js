@@ -190,6 +190,9 @@ export class ActionFormattingStage extends PipelineStage {
 
       // Capture initial formatting context for each action
       for (const { actionDef, targetContexts } of actionsWithTargets) {
+        // Validate visual properties early in processing
+        this.#validateVisualProperties(actionDef.visual, actionDef.id);
+
         trace.captureActionData('formatting', actionDef.id, {
           timestamp: Date.now(),
           status: 'started',
@@ -386,6 +389,7 @@ export class ActionFormattingStage extends PipelineStage {
                   command: command,
                   description: actionDef.description || '',
                   params,
+                  visual: actionDef.visual || null,
                 };
                 formattedActions.push(actionInfo);
               }
@@ -408,6 +412,7 @@ export class ActionFormattingStage extends PipelineStage {
                     command: fallbackResult.value,
                     description: actionDef.description || '',
                     params: { targetId: primaryTarget.entityId },
+                    visual: actionDef.visual || null,
                   };
                   formattedActions.push(actionInfo);
                   stats.successful++;
@@ -449,6 +454,7 @@ export class ActionFormattingStage extends PipelineStage {
                   command: formatResult.value,
                   description: actionDef.description || '',
                   params: { targetId: primaryTarget.entityId },
+                  visual: actionDef.visual || null,
                 };
                 formattedActions.push(actionInfo);
                 stats.successful++;
@@ -511,6 +517,7 @@ export class ActionFormattingStage extends PipelineStage {
                   command: formatResult.value,
                   description: actionDef.description || '',
                   params: { targetId: targetContext.entityId },
+                  visual: actionDef.visual || null,
                 };
                 formattedActions.push(actionInfo);
                 successCount++;
@@ -668,6 +675,7 @@ export class ActionFormattingStage extends PipelineStage {
                   command: command,
                   description: actionDef.description || '',
                   params,
+                  visual: actionDef.visual || null,
                 };
                 formattedActions.push(actionInfo);
               }
@@ -688,6 +696,7 @@ export class ActionFormattingStage extends PipelineStage {
                     command: fallbackResult.value,
                     description: actionDef.description || '',
                     params: { targetId: primaryTarget.entityId },
+                    visual: actionDef.visual || null,
                   };
                   formattedActions.push(actionInfo);
                 } else {
@@ -724,6 +733,7 @@ export class ActionFormattingStage extends PipelineStage {
                   command: formatResult.value,
                   description: actionDef.description || '',
                   params: { targetId: primaryTarget.entityId },
+                  visual: actionDef.visual || null,
                 };
                 formattedActions.push(actionInfo);
               } else {
@@ -766,6 +776,7 @@ export class ActionFormattingStage extends PipelineStage {
                   command: formatResult.value,
                   description: actionDef.description || '',
                   params: { targetId: targetContext.entityId },
+                  visual: actionDef.visual || null,
                 };
                 formattedActions.push(actionInfo);
               } else {
@@ -854,6 +865,9 @@ export class ActionFormattingStage extends PipelineStage {
 
     for (const { actionDef } of actionsWithTargets) {
       const actionStartTime = Date.now();
+
+      // Validate visual properties early in processing
+      this.#validateVisualProperties(actionDef.visual, actionDef.id);
 
       try {
         // Capture formatting attempt
@@ -964,6 +978,7 @@ export class ActionFormattingStage extends PipelineStage {
               command: command,
               description: actionDef.description || '',
               params,
+              visual: actionDef.visual || null,
             };
             formattedActions.push(actionInfo);
           }
@@ -1045,6 +1060,9 @@ export class ActionFormattingStage extends PipelineStage {
     });
 
     for (const { actionDef } of actionsWithTargets) {
+      // Validate visual properties early in processing
+      this.#validateVisualProperties(actionDef.visual, actionDef.id);
+
       try {
         // Check if formatter supports multi-target
         if (this.#commandFormatter.formatMultiTarget) {
@@ -1097,6 +1115,7 @@ export class ActionFormattingStage extends PipelineStage {
                 command: command,
                 description: actionDef.description || '',
                 params,
+                visual: actionDef.visual || null,
               };
               formattedActions.push(actionInfo);
             }
@@ -1133,6 +1152,7 @@ export class ActionFormattingStage extends PipelineStage {
                   command: fallbackResult.value,
                   description: actionDef.description || '',
                   params: { targetId: primaryTarget.entityId },
+                  visual: actionDef.visual || null,
                 };
                 formattedActions.push(actionInfo);
               } else {
@@ -1175,6 +1195,7 @@ export class ActionFormattingStage extends PipelineStage {
                 command: formatResult.value,
                 description: actionDef.description || '',
                 params: { targetId: primaryTarget.entityId },
+                visual: actionDef.visual || null,
               };
               formattedActions.push(actionInfo);
             } else {
@@ -1240,6 +1261,9 @@ export class ActionFormattingStage extends PipelineStage {
 
     for (const { actionDef, targetContexts } of actionsWithTargets) {
       const actionStartTime = Date.now();
+
+      // Validate visual properties early in processing
+      this.#validateVisualProperties(actionDef.visual, actionDef.id);
 
       // Check if this is actually a multi-target action in legacy path
       const isMultiTargetAction =
@@ -1310,6 +1334,7 @@ export class ActionFormattingStage extends PipelineStage {
                   command: command,
                   description: actionDef.description || '',
                   params,
+                  visual: actionDef.visual || null,
                 };
                 formattedActions.push(actionInfo);
               }
@@ -1332,6 +1357,7 @@ export class ActionFormattingStage extends PipelineStage {
                   command: fallbackResult.value,
                   description: actionDef.description || '',
                   params: { targetId: targetContexts[0].entityId },
+                  visual: actionDef.visual || null,
                 };
                 formattedActions.push(actionInfo);
                 stats.successful++;
@@ -1367,6 +1393,7 @@ export class ActionFormattingStage extends PipelineStage {
                   command: fallbackResult.value,
                   description: actionDef.description || '',
                   params: { targetId: targetContexts[0].entityId },
+                  visual: actionDef.visual || null,
                 };
                 formattedActions.push(actionInfo);
                 stats.successful++;
@@ -1414,6 +1441,7 @@ export class ActionFormattingStage extends PipelineStage {
                 command: formatResult.value,
                 description: actionDef.description || '',
                 params: { targetId: targetContext.entityId },
+                visual: actionDef.visual || null,
               };
               formattedActions.push(actionInfo);
               successCount++;
@@ -1516,6 +1544,9 @@ export class ActionFormattingStage extends PipelineStage {
 
     // Process each action with its targets
     for (const { actionDef, targetContexts } of actionsWithTargets) {
+      // Validate visual properties early in processing
+      this.#validateVisualProperties(actionDef.visual, actionDef.id);
+
       // Check if this is a multi-target action being processed through legacy path
       const isMultiTargetAction =
         actionDef.targets && typeof actionDef.targets === 'object';
@@ -1578,6 +1609,7 @@ export class ActionFormattingStage extends PipelineStage {
                   command: command,
                   description: actionDef.description || '',
                   params,
+                  visual: actionDef.visual || null,
                 };
                 formattedActions.push(actionInfo);
               }
@@ -1599,6 +1631,7 @@ export class ActionFormattingStage extends PipelineStage {
                     command: fallbackResult.value,
                     description: actionDef.description || '',
                     params: { targetId: targetContexts[0].entityId },
+                    visual: actionDef.visual || null,
                   };
                   formattedActions.push(actionInfo);
                 } else {
@@ -1632,6 +1665,7 @@ export class ActionFormattingStage extends PipelineStage {
                   command: fallbackResult.value,
                   description: actionDef.description || '',
                   params: { targetId: targetContexts[0].entityId },
+                  visual: actionDef.visual || null,
                 };
                 formattedActions.push(actionInfo);
               } else {
@@ -1676,6 +1710,7 @@ export class ActionFormattingStage extends PipelineStage {
               command: formatResult.value,
               description: actionDef.description || '',
               params: { targetId: targetContext.entityId },
+              visual: actionDef.visual || null,
             };
             formattedActions.push(actionInfo);
           } else {
@@ -1905,6 +1940,57 @@ export class ActionFormattingStage extends PipelineStage {
     }
 
     return targetsByPlaceholder;
+  }
+
+  /**
+   * Basic validation for actionDef.visual structure
+   * Logs warnings for invalid visual properties but doesn't block processing
+   *
+   * @param {object} visual - Visual properties to validate
+   * @param {string} actionId - Action ID for logging context
+   * @returns {boolean} True if valid or correctable, false if severely malformed
+   * @private
+   */
+  #validateVisualProperties(visual, actionId) {
+    if (!visual) {
+      return true; // null or undefined is acceptable
+    }
+
+    if (typeof visual !== 'object' || Array.isArray(visual)) {
+      this.#logger.warn(
+        `Invalid visual property structure for action '${actionId}': expected object, got ${typeof visual}. Visual properties will be passed through.`
+      );
+      return true; // Pass through for downstream validation
+    }
+
+    // Check for known visual properties and warn about unknowns
+    const knownProperties = [
+      'backgroundColor',
+      'textColor',
+      'hoverBackgroundColor',
+      'hoverTextColor',
+    ];
+    const providedProperties = Object.keys(visual);
+    const unknownProperties = providedProperties.filter(
+      (prop) => !knownProperties.includes(prop)
+    );
+
+    if (unknownProperties.length > 0) {
+      this.#logger.warn(
+        `Unknown visual properties for action '${actionId}': ${unknownProperties.join(', ')}. These will be passed through but may not be used.`
+      );
+    }
+
+    // Basic type validation for known properties
+    for (const [prop, value] of Object.entries(visual)) {
+      if (knownProperties.includes(prop) && typeof value !== 'string') {
+        this.#logger.warn(
+          `Visual property '${prop}' for action '${actionId}' should be a string, got ${typeof value}. Property will be passed through.`
+        );
+      }
+    }
+
+    return true;
   }
 
   /**

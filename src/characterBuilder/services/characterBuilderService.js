@@ -19,6 +19,7 @@ import { CoreMotivation } from '../models/coreMotivation.js';
 import { coreTokens as tokens } from '../../dependencyInjection/tokens/tokens-core.js';
 import { ValidationError } from '../../errors/validationError.js';
 import { EntityNotFoundError } from '../../errors/entityNotFoundError.js';
+import { CacheKeys, CacheInvalidation } from '../cache/cacheHelpers.js';
 
 /**
  * Retry configuration for character builder operations
@@ -68,6 +69,11 @@ export const CHARACTER_BUILDER_EVENTS = {
   CORE_MOTIVATIONS_GENERATION_COMPLETED: 'core:core_motivations_generation_completed',
   CORE_MOTIVATIONS_GENERATION_FAILED: 'core:core_motivations_generation_failed',
   CORE_MOTIVATIONS_RETRIEVED: 'core:core_motivations_retrieved',
+  // Cache events
+  CACHE_INITIALIZED: 'core:cache_initialized',
+  CACHE_HIT: 'core:cache_hit',
+  CACHE_MISS: 'core:cache_miss',
+  CACHE_EVICTED: 'core:cache_evicted',
 };
 
 /**
@@ -93,6 +99,7 @@ export class CharacterBuilderService {
   #schemaValidator;
   #clicheGenerator;
   #container;
+  #cacheManager;
   #circuitBreakers = new Map(); // For circuit breaker pattern
   #clicheCache = new Map(); // Cache for clichés with TTL
   #clicheCacheTTL = 300000; // 5 minutes TTL
@@ -109,6 +116,7 @@ export class CharacterBuilderService {
    * @param {object} [dependencies.schemaValidator] - Schema validator
    * @param {object} [dependencies.clicheGenerator] - Cliché generator (CLIGEN-003)
    * @param {object} [dependencies.container] - DI container for resolving dependencies
+   * @param {import('../cache/CoreMotivationsCacheManager.js').default} [dependencies.cacheManager] - Cache manager for Core Motivations
    */
   constructor({
     logger,
@@ -119,6 +127,7 @@ export class CharacterBuilderService {
     schemaValidator = null,
     clicheGenerator = null,
     container = null,
+    cacheManager = null,
   }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
@@ -154,6 +163,35 @@ export class CharacterBuilderService {
     this.#schemaValidator = schemaValidator;
     this.#clicheGenerator = clicheGenerator;
     this.#container = container;
+    this.#cacheManager = cacheManager;
+    
+    // Initialize cache with existing Maps as fallback
+    if (this.#cacheManager) {
+      this.#enhanceCacheIntegration();
+      // Note: CACHE_INITIALIZED event is already dispatched by the cache manager itself
+    }
+  }
+
+  /**
+   * Helper to integrate new cache with existing cache Maps
+   *
+   * @private
+   */
+  #enhanceCacheIntegration() {
+    // Migrate existing cache data if present
+    if (this.#clicheCache.size > 0) {
+      for (const [key, value] of this.#clicheCache.entries()) {
+        this.#cacheManager.set(key, value.data, 'cliches');
+      }
+      this.#clicheCache.clear();
+    }
+    
+    if (this.#motivationCache.size > 0) {
+      for (const [key, value] of this.#motivationCache.entries()) {
+        this.#cacheManager.set(key, value.data, 'motivations');
+      }
+      this.#motivationCache.clear();
+    }
   }
 
   /**
@@ -1461,14 +1499,28 @@ export class CharacterBuilderService {
   async getCoreMotivationsByDirectionId(directionId) {
     assertNonBlankString(directionId, 'Direction ID is required');
 
-    try {
-      // Check cache first
-      const cacheKey = `motivations_${directionId}`;
-      const cached = this.#motivationCache?.get(cacheKey);
+    const cacheKey = CacheKeys.motivationsForDirection(directionId);
 
+    // Check cache first (new cache manager or fallback to old cache)
+    if (this.#cacheManager) {
+      try {
+        const cached = this.#cacheManager.get(cacheKey);
+        if (cached) {
+          this.#eventBus.dispatch({
+            type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
+            payload: { directionId, source: 'cache', count: cached.length },
+          });
+          return cached;
+        }
+      } catch (cacheError) {
+        // Log cache error but continue with database fallback
+        this.#logger.warn(`Cache error for key ${cacheKey}: ${cacheError.message}`);
+      }
+    } else {
+      // Fallback to old cache system
+      const cached = this.#motivationCache?.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < this.#motivationCacheTTL) {
         this.#logger.info('Returning cached core motivations');
-
         this.#eventBus.dispatch({
           type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
           payload: {
@@ -1477,36 +1529,53 @@ export class CharacterBuilderService {
             source: 'cache'
           }
         });
-
         return cached.data;
       }
+    }
 
+    try {
       // Fetch from database
-      const motivations = await this.#database.getCoreMotivationsByDirectionId(
-        directionId
-      );
-
+      const motivations = await this.#database.getCoreMotivationsByDirectionId(directionId);
+      
+      // Handle case where database returns null/undefined
+      if (!motivations || !Array.isArray(motivations)) {
+        this.#eventBus.dispatch({
+          type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
+          payload: { directionId, source: 'database', count: 0 },
+        });
+        return [];
+      }
+      
       // Convert to model instances
       const motivationModels = motivations.map(data =>
         CoreMotivation.fromRawData(data)
       );
 
-      // Update cache
-      if (this.#motivationCache) {
+      // Cache with appropriate type
+      if (this.#cacheManager) {
+        try {
+          this.#cacheManager.set(cacheKey, motivationModels, 'motivations');
+        } catch (cacheError) {
+          // Log cache error but don't fail the operation
+          this.#logger.warn(`Failed to cache motivations for key ${cacheKey}: ${cacheError.message}`);
+        }
+      } else if (this.#motivationCache) {
+        // Fallback to old cache system
         this.#motivationCache.set(cacheKey, {
           data: motivationModels,
           timestamp: Date.now()
         });
       }
 
-      return motivationModels;
+      this.#eventBus.dispatch({
+        type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
+        payload: { directionId, source: 'database', count: motivationModels?.length || 0 },
+      });
 
+      return motivationModels;
     } catch (error) {
-      this.#logger.error(
-        `Failed to get core motivations for direction ${directionId}:`,
-        error
-      );
-      throw error;
+      this.#logger.error(`Failed to get core motivations for direction ${directionId}:`, error);
+      throw new CharacterBuilderError(`Failed to retrieve core motivations`, error);
     }
   }
 
@@ -1562,8 +1631,15 @@ export class CharacterBuilderService {
       // Save to database
       const savedIds = await this.#database.saveCoreMotivations(motivationData);
 
-      // Clear cache for this direction
-      if (this.#motivationCache) {
+      // Invalidate related caches
+      if (this.#cacheManager) {
+        CacheInvalidation.invalidateMotivations(
+          this.#cacheManager,
+          directionId,
+          motivationData[0]?.conceptId
+        );
+      } else if (this.#motivationCache) {
+        // Fallback to old cache system
         const cacheKey = `motivations_${directionId}`;
         this.#motivationCache.delete(cacheKey);
       }
@@ -1605,8 +1681,11 @@ export class CharacterBuilderService {
       const success = await this.#database.deleteCoreMotivation(motivationId);
 
       if (success) {
-        // Clear cache for this direction
-        if (this.#motivationCache) {
+        // Invalidate related caches
+        if (this.#cacheManager) {
+          CacheInvalidation.invalidateMotivations(this.#cacheManager, directionId);
+        } else if (this.#motivationCache) {
+          // Fallback to old cache system
           const cacheKey = `motivations_${directionId}`;
           this.#motivationCache.delete(cacheKey);
         }

@@ -735,6 +735,85 @@ export class IntegrationTestBed extends BaseTestBed {
             additionalProperties: true,
           },
         },
+        {
+          id: 'core:cache_initialized',
+          description: 'Dispatched when a cache manager is initialized.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              maxSize: {
+                description: 'Maximum cache size',
+                type: 'number',
+              },
+              ttlConfig: {
+                description: 'Time-to-live configuration for different data types',
+                type: 'object',
+              },
+              cacheManagerType: {
+                description: 'Type of cache manager that was initialized',
+                type: 'string',
+              },
+              timestamp: {
+                description: 'Initialization timestamp',
+                type: 'number',
+              },
+            },
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:cache_hit',
+          description: 'Dispatched when a cache hit occurs.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              key: {
+                description: 'Cache key that was hit',
+                type: 'string',
+              },
+              type: {
+                description: 'Type of cached data',
+                type: 'string',
+              },
+              totalHits: {
+                description: 'Total number of hits for this key',
+                type: 'number',
+              },
+            },
+            required: ['key'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:cache_miss',
+          description: 'Dispatched when a cache miss occurs.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              key: {
+                description: 'Cache key that was missed',
+                type: 'string',
+              },
+            },
+            required: ['key'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:cache_evicted',
+          description: 'Dispatched when a cache entry is evicted.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              key: {
+                description: 'Cache key that was evicted',
+                type: 'string',
+              },
+            },
+            required: ['key'],
+            additionalProperties: true,
+          },
+        },
       ];
 
       // Register event definitions with the data registry

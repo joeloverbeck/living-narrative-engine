@@ -182,6 +182,7 @@ describe('ActionFormattingStage - Integration Tests', () => {
         command: 'wait a moment',
         description: 'Pass time',
         params: { targetId: null },
+        visual: null,
       });
 
       expect(result.errors).toHaveLength(0);
@@ -807,6 +808,7 @@ describe('ActionFormattingStage - Integration Tests', () => {
           isMultiTarget: true,
           targetId: 'sword-001', // Backward compatibility field
         },
+        visual: null,
       });
 
       expect(trace.info).toHaveBeenCalledWith(
