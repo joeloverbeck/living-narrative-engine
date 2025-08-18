@@ -2,10 +2,20 @@
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
   "recipeId": "anatomy:human_female",
   "blueprintId": "anatomy:human_female",
+  "bodyDescriptors": {
+    "build": "athletic",
+    "composition": "lean",
+    "skinColor": "olive"
+  },
   "slots": {
     "torso": {
       "partType": "torso",
-      "preferId": "anatomy:human_female_torso"
+      "preferId": "anatomy:human_female_torso",
+      "properties": {
+        "descriptors:build": {
+          "build": "toned"
+        }
+      }
     },
     "head": {
       "partType": "head",

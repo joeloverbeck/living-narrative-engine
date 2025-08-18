@@ -3,7 +3,14 @@
  * @description Tests memory usage patterns and leak detection for body description composition
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 import { ANATOMY_BODY_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
@@ -92,7 +99,8 @@ describe('BodyDescriptionComposer - Memory Tests', () => {
 
       // Establish memory baseline
       await global.memoryTestUtils.forceGCAndWait();
-      const baselineMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      const baselineMemory =
+        await global.memoryTestUtils.getStableMemoryUsage();
 
       // Call extraction methods many times to detect memory leaks
       for (let i = 0; i < iterations; i++) {
@@ -117,7 +125,9 @@ describe('BodyDescriptionComposer - Memory Tests', () => {
       // Memory efficiency assertions - adjusted based on observed behavior
       const maxMemoryGrowthMB = global.memoryTestUtils.isCI() ? 180 : 150; // Observed ~150MB growth
       const maxMemoryLeakageMB = global.memoryTestUtils.isCI() ? 20 : 15; // Memory that doesn't get cleaned up
-      const maxMemoryPerOperationBytes = global.memoryTestUtils.isCI() ? 600 : 500; // Per operation overhead
+      const maxMemoryPerOperationBytes = global.memoryTestUtils.isCI()
+        ? 600
+        : 500; // Per operation overhead
 
       expect(memoryGrowth).toBeLessThan(maxMemoryGrowthMB * 1024 * 1024);
       expect(memoryLeakage).toBeLessThan(maxMemoryLeakageMB * 1024 * 1024);
@@ -140,9 +150,13 @@ describe('BodyDescriptionComposer - Memory Tests', () => {
 
       // Establish memory baseline
       await global.memoryTestUtils.forceGCAndWait();
-      const baselineMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      const baselineMemory =
+        await global.memoryTestUtils.getStableMemoryUsage();
 
-      const largePartIds = Array.from({ length: largePartIdCount }, (_, i) => `part-${i}`);
+      const largePartIds = Array.from(
+        { length: largePartIdCount },
+        (_, i) => `part-${i}`
+      );
 
       // Mock entity finder to return valid entities
       mockEntityFinder.getEntityInstance.mockImplementation(() => ({
@@ -174,7 +188,9 @@ describe('BodyDescriptionComposer - Memory Tests', () => {
       // Note: High memory usage may indicate room for optimization in groupPartsByType method
       const maxLargeSetGrowthMB = global.memoryTestUtils.isCI() ? 1200 : 1000; // Observed ~937MB growth
       const maxLargeSetLeakageMB = global.memoryTestUtils.isCI() ? 30 : 20; // Observed ~16MB leakage
-      const maxMemoryPerEntityBytes = global.memoryTestUtils.isCI() ? 12000 : 10000; // Observed ~9.8KB per operation
+      const maxMemoryPerEntityBytes = global.memoryTestUtils.isCI()
+        ? 12000
+        : 10000; // Observed ~9.8KB per operation
 
       console.log(
         `Large entity set memory - Baseline: ${(baselineMemory / 1024 / 1024).toFixed(2)}MB, ` +
@@ -197,14 +213,15 @@ describe('BodyDescriptionComposer - Memory Tests', () => {
 
       // Establish memory baseline
       await global.memoryTestUtils.forceGCAndWait();
-      const baselineMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      const baselineMemory =
+        await global.memoryTestUtils.getStableMemoryUsage();
 
       // Perform composition operations
       const results = [];
       for (let i = 0; i < compositionCount; i++) {
         const result = await composer.composeDescription(entity);
         results.push(result);
-        
+
         // Periodic cleanup to simulate realistic usage
         if (i % 50 === 0) {
           results.length = 0; // Clear accumulated results
@@ -228,7 +245,9 @@ describe('BodyDescriptionComposer - Memory Tests', () => {
       // Composition workflow memory efficiency assertions
       const maxCompositionGrowthMB = global.memoryTestUtils.isCI() ? 15 : 10;
       const maxCompositionLeakageMB = global.memoryTestUtils.isCI() ? 3 : 2;
-      const maxMemoryPerCompositionBytes = global.memoryTestUtils.isCI() ? 35000 : 25000; // ~25-35KB per composition
+      const maxMemoryPerCompositionBytes = global.memoryTestUtils.isCI()
+        ? 35000
+        : 25000; // ~25-35KB per composition
 
       expect(memoryGrowth).toBeLessThan(maxCompositionGrowthMB * 1024 * 1024);
       expect(memoryLeakage).toBeLessThan(maxCompositionLeakageMB * 1024 * 1024);

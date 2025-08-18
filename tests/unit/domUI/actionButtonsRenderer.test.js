@@ -1543,4 +1543,671 @@ describe('ActionButtonsRenderer', () => {
       );
     });
   });
+
+  describe('Visual Styles', () => {
+    let renderer;
+    let capturedUpdateActionsHandler;
+
+    beforeEach(() => {
+      mockVed.subscribe.mockClear().mockImplementation((eventName, handler) => {
+        if (eventName === UPDATE_ACTIONS_EVENT_TYPE) {
+          capturedUpdateActionsHandler = handler;
+        }
+        return jest.fn();
+      });
+
+      renderer = createRenderer();
+    });
+
+    describe('visual styles application', () => {
+      it('should apply backgroundColor and textColor', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action description',
+          params: {},
+          visual: {
+            backgroundColor: '#ff0000',
+            textColor: '#ffffff',
+          },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        const container = actionButtonsContainerElement;
+        const button = container.querySelector('button');
+
+        expect(button.style.backgroundColor).toBe('rgb(255, 0, 0)'); // Browsers normalize hex to rgb
+        expect(button.style.color).toBe('rgb(255, 255, 255)');
+        expect(button.dataset.customBg).toBe('#ff0000');
+        expect(button.dataset.customText).toBe('#ffffff');
+      });
+
+      it('should add custom visual class', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action description',
+          params: {},
+          visual: { backgroundColor: '#ff0000' },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        const container = actionButtonsContainerElement;
+        const button = container.querySelector('button');
+        expect(button.classList.contains('action-button-custom-visual')).toBe(
+          true
+        );
+      });
+
+      it('should store hover colors in dataset', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action description',
+          params: {},
+          visual: {
+            backgroundColor: '#ff0000',
+            hoverBackgroundColor: '#00ff00',
+            hoverTextColor: '#000000',
+          },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        const container = actionButtonsContainerElement;
+        const button = container.querySelector('button');
+        expect(button.dataset.hoverBg).toBe('#00ff00');
+        expect(button.dataset.hoverText).toBe('#000000');
+        expect(button.dataset.hasCustomHover).toBe('true');
+        expect(button.dataset.originalBg).toBe('#ff0000');
+      });
+
+      it('should handle missing visual properties', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action description',
+          params: {},
+          // No visual property
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await expect(
+          capturedUpdateActionsHandler(eventObject)
+        ).resolves.not.toThrow();
+
+        const container = actionButtonsContainerElement;
+        const button = container.querySelector('button');
+        expect(button.style.backgroundColor).toBe('');
+        expect(button.classList.contains('action-button-custom-visual')).toBe(
+          false
+        );
+      });
+
+      it('should log debug message when visual styles are applied', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action description',
+          params: {},
+          visual: { backgroundColor: '#ff0000' },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        mockLogger.debug.mockClear();
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          `${CLASS_PREFIX} Applied visual styles to button for action: test:action`
+        );
+      });
+
+      it('should handle visual styles application error gracefully', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action description',
+          params: {},
+          visual: { backgroundColor: '#ff0000' },
+        };
+
+        // Mock the _applyVisualStyles method to throw an error
+        const originalApply = renderer._applyVisualStyles;
+        renderer._applyVisualStyles = jest.fn().mockImplementation(() => {
+          throw new Error('Visual styles error');
+        });
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        mockLogger.warn.mockClear();
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          `${CLASS_PREFIX} Failed to apply visual styles for action test:action:`,
+          expect.any(Error)
+        );
+
+        // Restore the original method
+        renderer._applyVisualStyles = originalApply;
+      });
+    });
+
+    describe('updateButtonVisual', () => {
+      beforeEach(async () => {
+        // Set up a button with initial visual styles
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test',
+          description: 'Test action description',
+          params: {},
+          visual: { backgroundColor: '#ff0000' },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+      });
+
+      it('should update existing button visual', () => {
+        const newVisual = { backgroundColor: '#00ff00' };
+        renderer.updateButtonVisual('test:action', newVisual);
+
+        const container = actionButtonsContainerElement;
+        const button = container.querySelector('button');
+        expect(button.style.backgroundColor).toBe('rgb(0, 255, 0)');
+      });
+
+      it('should remove visual styles when passed null', () => {
+        renderer.updateButtonVisual('test:action', null);
+
+        const container = actionButtonsContainerElement;
+        const button = container.querySelector('button');
+        expect(button.style.backgroundColor).toBe('');
+        expect(button.classList.contains('action-button-custom-visual')).toBe(
+          false
+        );
+        expect(button.dataset.customBg).toBeUndefined();
+      });
+
+      it('should warn when trying to update non-existent button', () => {
+        mockLogger.warn.mockClear();
+
+        renderer.updateButtonVisual('nonexistent:action', {
+          backgroundColor: '#ff0000',
+        });
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'No button found for action: nonexistent:action'
+        );
+      });
+    });
+
+    describe('dispose cleanup', () => {
+      it('should clear visual mappings during disposal', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test',
+          description: 'Test action description',
+          params: {},
+          visual: { backgroundColor: '#ff0000' },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        // Verify mapping exists
+        expect(renderer.buttonVisualMap.size).toBe(1);
+
+        renderer.dispose();
+
+        // Verify mapping is cleared
+        expect(renderer.buttonVisualMap.size).toBe(0);
+      });
+    });
+
+    describe('Hover State Management (ACTBUTVIS-008)', () => {
+      let renderer;
+      let capturedUpdateActionsHandler;
+
+      beforeEach(() => {
+        const mockSubscriptionUnsubscribe = jest.fn();
+        mockVed.subscribe.mockReset().mockImplementation((eventName, handler) => {
+          if (eventName === UPDATE_ACTIONS_EVENT_TYPE) {
+            capturedUpdateActionsHandler = handler;
+          }
+          return mockSubscriptionUnsubscribe;
+        });
+
+        renderer = new ActionButtonsRenderer({
+          logger: mockLogger,
+          validatedEventDispatcher: mockVed,
+          domElementFactory: mockDomElementFactoryInstance,
+          documentContext: docContext,
+          actionButtonsContainerSelector: ACTION_BUTTONS_CONTAINER_SELECTOR,
+          confirmButtonSelector: SEND_BUTTON_SELECTOR,
+          speechInputSelector: SPEECH_INPUT_SELECTOR,
+          actionCategorizationService: mockActionCategorizationService,
+        });
+
+        if (typeof capturedUpdateActionsHandler !== 'function') {
+          throw new Error(
+            `Test setup for Hover State Management failed: VED handler for '${UPDATE_ACTIONS_EVENT_TYPE}' was not captured for this test run.`
+          );
+        }
+      });
+
+      it('should add hover listeners when rendering buttons', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action',
+          params: {},
+          visual: {
+            backgroundColor: '#ff0000',
+            hoverBackgroundColor: '#00ff00',
+            hoverTextColor: '#ffffff',
+          },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        const button = actionButtonsContainerElement.querySelector('button');
+        
+        // Verify hover listeners were added (indicated by dataset flag)
+        expect(button.dataset.hasHoverListeners).toBe('true');
+      });
+
+      it('should apply hover styles on mouseenter', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action',
+          params: {},
+          visual: {
+            backgroundColor: '#ff0000',
+            textColor: '#ffffff',
+            hoverBackgroundColor: '#00ff00',
+            hoverTextColor: '#000000',
+          },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        const button = actionButtonsContainerElement.querySelector('button');
+        
+        // Manually trigger the mouseenter listener 
+        // (since JSDOM doesn't properly trigger event listeners)
+        if (button._listeners && button._listeners['mouseenter']) {
+          const event = { target: button };
+          for (const listener of button._listeners['mouseenter']) {
+            await listener(event);
+          }
+        }
+
+        // Wait for hover timeout
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Check that hover styles are applied
+        expect(button.style.backgroundColor).toBe('rgb(0, 255, 0)');
+        expect(button.style.color).toBe('rgb(0, 0, 0)');
+        expect(button.classList.contains('action-button-hovering')).toBe(true);
+      });
+
+      it('should restore original styles on mouseleave', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action',
+          params: {},
+          visual: {
+            backgroundColor: '#ff0000',
+            textColor: '#ffffff',
+            hoverBackgroundColor: '#00ff00',
+            hoverTextColor: '#000000',
+          },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        const button = actionButtonsContainerElement.querySelector('button');
+        
+        // Simulate hover in
+        if (button._listeners && button._listeners['mouseenter']) {
+          const event = { target: button };
+          for (const listener of button._listeners['mouseenter']) {
+            await listener(event);
+          }
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Simulate hover out
+        if (button._listeners && button._listeners['mouseleave']) {
+          const event = { target: button };
+          for (const listener of button._listeners['mouseleave']) {
+            await listener(event);
+          }
+        }
+        // Wait for debounce timeout
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Check that original styles are restored
+        expect(button.style.backgroundColor).toBe('rgb(255, 0, 0)');
+        expect(button.style.color).toBe('rgb(255, 255, 255)');
+        expect(button.classList.contains('action-button-hovering')).toBe(false);
+      });
+
+      it('should handle buttons without custom hover colors', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action',
+          params: {},
+          visual: {
+            backgroundColor: '#ff0000',
+            textColor: '#ffffff',
+            // No hover colors
+          },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        const button = actionButtonsContainerElement.querySelector('button');
+        
+        // Hover listeners should still be added
+        expect(button.dataset.hasHoverListeners).toBe('true');
+        
+        // But hasCustomHover should not be set (undefined)
+        expect(button.dataset.hasCustomHover).toBeUndefined();
+
+        // Simulate hover - should not change styles
+        if (button._listeners && button._listeners['mouseenter']) {
+          const event = { target: button };
+          for (const listener of button._listeners['mouseenter']) {
+            await listener(event);
+          }
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        expect(button.style.backgroundColor).toBe('rgb(255, 0, 0)');
+        expect(button.style.color).toBe('rgb(255, 255, 255)');
+      });
+
+      it('should not apply hover to disabled buttons', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action',
+          params: {},
+          visual: {
+            backgroundColor: '#ff0000',
+            hoverBackgroundColor: '#00ff00',
+          },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        const button = actionButtonsContainerElement.querySelector('button');
+        
+        // Disable the button
+        button.disabled = true;
+        
+        // Simulate hover
+        if (button._listeners && button._listeners['mouseenter']) {
+          const event = { target: button };
+          for (const listener of button._listeners['mouseenter']) {
+            await listener(event);
+          }
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Should not apply hover styles to disabled button
+        expect(button.style.backgroundColor).toBe('rgb(255, 0, 0)');
+        expect(button.classList.contains('action-button-hovering')).toBe(false);
+      });
+
+      it('should clean up hover timeouts on dispose', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action',
+          params: {},
+          visual: {
+            backgroundColor: '#ff0000',
+            hoverBackgroundColor: '#00ff00',
+          },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        const button = actionButtonsContainerElement.querySelector('button');
+        
+        // Start a hover (creates timeout)
+        if (button._listeners && button._listeners['mouseenter']) {
+          const event = { target: button };
+          for (const listener of button._listeners['mouseenter']) {
+            await listener(event);
+          }
+        }
+        
+        // Dispose before timeout completes
+        renderer.dispose();
+        
+        // Verify timeouts were cleared
+        expect(renderer.hoverTimeouts.size).toBe(0);
+      });
+
+      it('should remove and re-add hover listeners when updating visual', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action',
+          params: {},
+          visual: {
+            backgroundColor: '#ff0000',
+            hoverBackgroundColor: '#00ff00',
+          },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        const button = actionButtonsContainerElement.querySelector('button');
+        
+        // Original hover listeners added
+        expect(button.dataset.hasHoverListeners).toBe('true');
+        
+        // Update visual
+        const newVisual = {
+          backgroundColor: '#0000ff',
+          hoverBackgroundColor: '#ff00ff',
+        };
+        
+        renderer.updateButtonVisual('test:action', newVisual);
+        
+        // Hover listeners should still be present
+        expect(button.dataset.hasHoverListeners).toBe('true');
+        
+        // New hover colors should be stored
+        expect(button.dataset.hoverBg).toBe('#ff00ff');
+      });
+
+      it('should handle focus/blur events like hover', async () => {
+        const actionComposite = {
+          index: 1,
+          actionId: 'test:action',
+          commandString: 'Test Action',
+          description: 'Test action',
+          params: {},
+          visual: {
+            backgroundColor: '#ff0000',
+            hoverBackgroundColor: '#00ff00',
+          },
+        };
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions: [actionComposite] },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        const button = actionButtonsContainerElement.querySelector('button');
+        
+        // Simulate focus (should act like hover)
+        if (button._listeners && button._listeners['focus']) {
+          const event = { target: button };
+          for (const listener of button._listeners['focus']) {
+            await listener(event);
+          }
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        expect(button.style.backgroundColor).toBe('rgb(0, 255, 0)');
+        expect(button.classList.contains('action-button-hovering')).toBe(true);
+        
+        // Simulate blur (should restore)
+        if (button._listeners && button._listeners['blur']) {
+          const event = { target: button };
+          for (const listener of button._listeners['blur']) {
+            await listener(event);
+          }
+        }
+        // Wait for debounce
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        expect(button.style.backgroundColor).toBe('rgb(255, 0, 0)');
+        expect(button.classList.contains('action-button-hovering')).toBe(false);
+      });
+
+      it('should remove hover listeners from all buttons on dispose', async () => {
+        // Create multiple actions
+        const actions = [
+          {
+            index: 1,
+            actionId: 'test:action1',
+            commandString: 'Action 1',
+            description: 'Test action 1',
+            params: {},
+            visual: { hoverBackgroundColor: '#00ff00' },
+          },
+          {
+            index: 2,
+            actionId: 'test:action2',
+            commandString: 'Action 2',
+            description: 'Test action 2',
+            params: {},
+            visual: { hoverBackgroundColor: '#0000ff' },
+          },
+        ];
+
+        const eventObject = {
+          type: UPDATE_ACTIONS_EVENT_TYPE,
+          payload: { actorId: 'test-actor', actions },
+        };
+
+        await capturedUpdateActionsHandler(eventObject);
+
+        const buttons = actionButtonsContainerElement.querySelectorAll('button');
+        expect(buttons.length).toBe(2);
+        
+        // Both should have hover listeners
+        buttons.forEach(button => {
+          expect(button.dataset.hasHoverListeners).toBe('true');
+        });
+        
+        renderer.dispose();
+        
+        // Hover listeners should be removed (dataset property deleted)
+        buttons.forEach(button => {
+          expect(button.dataset.hasHoverListeners).toBeUndefined();
+        });
+      });
+    });
+  });
 });

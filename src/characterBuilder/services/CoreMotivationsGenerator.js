@@ -20,6 +20,7 @@ import { CoreMotivation } from '../models/coreMotivation.js';
  * @typedef {import('../../llms/interfaces/ILLMConfigurationManager.js').ILLMConfigurationManager} ILLMConfigurationManager
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('../models/coreMotivation.js').CoreMotivation} CoreMotivation
+ * @typedef {import('../../llms/interfaces/ITokenEstimator.js').ITokenEstimator} ITokenEstimator
  */
 
 /**
@@ -42,6 +43,7 @@ export class CoreMotivationsGenerator {
   #llmStrategyFactory;
   #llmConfigManager;
   #eventBus;
+  #tokenEstimator;
 
   /**
    * Create a new CoreMotivationsGenerator instance
@@ -52,6 +54,7 @@ export class CoreMotivationsGenerator {
    * @param {ConfigurableLLMAdapter} dependencies.llmStrategyFactory - LLM adapter (provides strategy factory functionality)
    * @param {ILLMConfigurationManager} dependencies.llmConfigManager - LLM configuration manager
    * @param {ISafeEventDispatcher} dependencies.eventBus - Event bus for dispatching events
+   * @param {ITokenEstimator} [dependencies.tokenEstimator] - Token estimation service (optional)
    */
   constructor({
     logger,
@@ -59,6 +62,7 @@ export class CoreMotivationsGenerator {
     llmStrategyFactory,
     llmConfigManager,
     eventBus,
+    tokenEstimator,
   }) {
     validateDependency(logger, 'ILogger', null, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
@@ -80,11 +84,19 @@ export class CoreMotivationsGenerator {
       requiredMethods: ['dispatch'],
     });
 
+    // TokenEstimator is optional - fallback to simple estimation if not provided
+    if (tokenEstimator) {
+      validateDependency(tokenEstimator, 'ITokenEstimator', null, {
+        requiredMethods: ['estimateTokens'],
+      });
+    }
+
     this.#logger = logger;
     this.#llmJsonService = llmJsonService;
     this.#llmStrategyFactory = llmStrategyFactory;
     this.#llmConfigManager = llmConfigManager;
     this.#eventBus = eventBus;
+    this.#tokenEstimator = tokenEstimator;
   }
 
   /**
@@ -172,44 +184,56 @@ export class CoreMotivationsGenerator {
     });
 
     try {
-      // Build the prompt
-      const prompt = buildCoreMotivationsGenerationPrompt(
-        concept.concept,
+      // Use retry mechanism with configurable retry count
+      const maxRetries =
+        options.maxRetries !== undefined ? options.maxRetries : 2;
+      const retryParams = {
+        concept,
         direction,
-        clichés
+        clichés,
+        llmConfigId: options.llmConfigId,
+      };
+
+      const parsedResponse = await this.#generateWithRetry(
+        retryParams,
+        maxRetries
       );
-
-      this.#logger.debug('CoreMotivationsGenerator: Built prompt', {
-        promptLength: prompt.length,
-        conceptId: concept.id,
-        directionId: direction.id,
-      });
-
-      // Get LLM response
-      const llmResponse = await this.#callLLM(prompt, options.llmConfigId);
       const processingTime = Date.now() - startTime;
-
-      // Parse and validate response
-      const parsedResponse = await this.#parseResponse(llmResponse);
-      this.#validateMotivations(parsedResponse);
 
       // Get active config for metadata
       const activeConfig =
         await this.#llmConfigManager.getActiveConfiguration();
 
-      // Create metadata
-      const promptTokens = this.#estimateTokens(prompt);
-      const responseTokens = this.#estimateTokens(
-        JSON.stringify(parsedResponse)
+      // Create enhanced metadata with better token tracking
+      const promptTokens = await this.#estimateTokens(
+        buildCoreMotivationsGenerationPrompt(
+          concept.concept,
+          direction,
+          clichés
+        ),
+        activeConfig?.configId
+      );
+      const responseTokens = await this.#estimateTokens(
+        JSON.stringify(parsedResponse),
+        activeConfig?.configId
       );
 
       const llmMetadata = {
         model: activeConfig?.configId || 'unknown',
-        tokens: promptTokens + responseTokens,
+        promptTokens,
+        responseTokens,
+        totalTokens: promptTokens + responseTokens,
         responseTime: processingTime,
+        retryAttempts: maxRetries,
         promptVersion: PROMPT_VERSION_INFO.version,
         clicheIds: this.#extractClicheIds(clichés),
-        generationPrompt: prompt.substring(0, 500) + '...', // Truncated for storage
+        qualityChecks: ['structure', 'quality', 'length', 'format'],
+        generationPrompt:
+          buildCoreMotivationsGenerationPrompt(
+            concept.concept,
+            direction,
+            clichés
+          ).substring(0, 500) + '...', // Truncated for storage
       };
 
       // Convert to CoreMotivation instances
@@ -246,20 +270,25 @@ export class CoreMotivationsGenerator {
       return coreMotivations;
     } catch (error) {
       const processingTime = Date.now() - startTime;
+      const failureStage = this.#determineFailureStage(error);
+
       this.#logger.error('CoreMotivationsGenerator: Generation failed', {
         conceptId: concept.id,
         directionId: direction.id,
         error: error.message,
         processingTime,
+        failureStage,
       });
 
-      // Dispatch failure event
+      // Dispatch failure event with enhanced details
       this.#eventBus.dispatch({
         type: 'CORE_MOTIVATIONS_GENERATION_FAILED',
         payload: {
           conceptId: concept.id,
           directionId: direction.id,
           error: error.message,
+          processingTime,
+          failureStage,
         },
       });
 
@@ -393,15 +422,254 @@ export class CoreMotivationsGenerator {
   }
 
   /**
-   * Estimate token count for a text string
+   * Generate core motivations with retry logic for transient failures
+   *
+   * @private
+   * @param {object} params - Generation parameters
+   * @param {number} [maxRetries] - Maximum number of retry attempts
+   * @returns {Promise<object>} Parsed and validated response
+   * @throws {CoreMotivationsGenerationError} If all attempts fail
+   */
+  async #generateWithRetry(params, maxRetries = 2) {
+    let lastError;
+    let attemptCount = 0;
+
+    for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
+      attemptCount = attempt;
+
+      try {
+        // Build the prompt
+        const prompt = buildCoreMotivationsGenerationPrompt(
+          params.concept.concept,
+          params.direction,
+          params.clichés
+        );
+
+        this.#logger.debug('CoreMotivationsGenerator: Built prompt', {
+          promptLength: prompt.length,
+          conceptId: params.concept.id,
+          directionId: params.direction.id,
+          attempt,
+          maxRetries,
+        });
+
+        // Get LLM response
+        const llmResponse = await this.#callLLM(prompt, params.llmConfigId);
+
+        // Parse and validate response
+        const parsedResponse = await this.#parseResponse(llmResponse);
+        this.#validateMotivations(parsedResponse);
+        this.#validateResponseQuality(parsedResponse);
+
+        this.#logger.debug('CoreMotivationsGenerator: Generation succeeded', {
+          conceptId: params.concept.id,
+          directionId: params.direction.id,
+          attempt,
+          motivationsCount: parsedResponse.motivations?.length || 0,
+        });
+
+        return parsedResponse;
+      } catch (error) {
+        lastError = error;
+
+        if (attempt <= maxRetries) {
+          // Calculate exponential backoff delay (1s, 2s, 4s, ...)
+          const delayMs = Math.pow(2, attempt) * 1000;
+
+          this.#logger.warn(
+            `CoreMotivationsGenerator: Attempt ${attempt} failed, retrying in ${delayMs}ms`,
+            {
+              error: error.message,
+              attempt,
+              maxRetries,
+              conceptId: params.concept.id,
+              directionId: params.direction.id,
+              delayMs,
+            }
+          );
+
+          // Wait before retry
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        } else {
+          this.#logger.error(
+            'CoreMotivationsGenerator: All retry attempts exhausted',
+            {
+              totalAttempts: attempt,
+              maxRetries,
+              conceptId: params.concept.id,
+              directionId: params.direction.id,
+              finalError: error.message,
+            }
+          );
+        }
+      }
+    }
+
+    // All attempts failed, throw the last error
+    if (lastError instanceof CoreMotivationsGenerationError) {
+      // Add retry context to existing error
+      throw new CoreMotivationsGenerationError(
+        `${lastError.message} (after ${attemptCount} attempts)`,
+        lastError.cause
+      );
+    }
+
+    throw new CoreMotivationsGenerationError(
+      `Generation failed after ${attemptCount} attempts: ${lastError.message}`,
+      lastError
+    );
+  }
+
+  /**
+   * Validate response quality beyond structural validation
+   *
+   * @private
+   * @param {object} response - Parsed response
+   * @throws {CoreMotivationsGenerationError} If quality issues are found
+   */
+  #validateResponseQuality(response) {
+    const issues = [];
+
+    if (!response.motivations || !Array.isArray(response.motivations)) {
+      throw new CoreMotivationsGenerationError(
+        'Response quality validation failed: motivations must be an array'
+      );
+    }
+
+    response.motivations.forEach((motivation, index) => {
+      // Check minimum content length for core desire
+      if (
+        !motivation.coreDesire ||
+        typeof motivation.coreDesire !== 'string' ||
+        motivation.coreDesire.trim().length < 20
+      ) {
+        issues.push(
+          `Motivation ${index + 1}: Core desire too brief (minimum 20 characters)`
+        );
+      }
+
+      // Check minimum content length for internal contradiction
+      if (
+        !motivation.internalContradiction ||
+        typeof motivation.internalContradiction !== 'string' ||
+        motivation.internalContradiction.trim().length < 30
+      ) {
+        issues.push(
+          `Motivation ${index + 1}: Internal contradiction too brief (minimum 30 characters)`
+        );
+      }
+
+      // Check for question mark in central question
+      if (
+        !motivation.centralQuestion ||
+        typeof motivation.centralQuestion !== 'string'
+      ) {
+        issues.push(
+          `Motivation ${index + 1}: Central question missing or invalid`
+        );
+      } else if (!motivation.centralQuestion.includes('?')) {
+        issues.push(
+          `Motivation ${index + 1}: Central question missing question mark`
+        );
+      }
+
+      // Check for content depth (basic word count check)
+      if (motivation.coreDesire && typeof motivation.coreDesire === 'string') {
+        const words = motivation.coreDesire.trim().split(/\s+/).filter(Boolean);
+        if (words.length < 5) {
+          issues.push(
+            `Motivation ${index + 1}: Core desire lacks depth (minimum 5 words)`
+          );
+        }
+      }
+
+      // Check for repetitive content (very basic check for duplicate words)
+      if (motivation.coreDesire && typeof motivation.coreDesire === 'string') {
+        const words = motivation.coreDesire
+          .toLowerCase()
+          .split(/\s+/)
+          .filter(Boolean);
+        const uniqueWords = new Set(words);
+        if (words.length > 0 && uniqueWords.size / words.length < 0.5) {
+          issues.push(
+            `Motivation ${index + 1}: Core desire appears repetitive`
+          );
+        }
+      }
+    });
+
+    if (issues.length > 0) {
+      this.#logger.warn(
+        'CoreMotivationsGenerator: Response quality issues detected',
+        {
+          issueCount: issues.length,
+          issues: issues.slice(0, 5), // Log first 5 issues to avoid spam
+        }
+      );
+
+      throw new CoreMotivationsGenerationError(
+        `Response quality issues: ${issues.join('; ')}`,
+        { qualityIssues: issues }
+      );
+    }
+
+    this.#logger.debug(
+      'CoreMotivationsGenerator: Response quality validated successfully'
+    );
+  }
+
+  /**
+   * Estimate token count for a text string using TokenEstimator or fallback method
    *
    * @private
    * @param {string} text - Text to estimate
-   * @returns {number} Estimated token count
+   * @param {string} [model] - Model to estimate tokens for
+   * @returns {Promise<number>} Estimated token count
    */
-  #estimateTokens(text) {
-    // Simple estimation: ~4 characters per token on average
-    return Math.ceil(text.length / 4);
+  async #estimateTokens(text, model = 'gpt-3.5-turbo') {
+    if (!text || typeof text !== 'string') {
+      return 0;
+    }
+
+    try {
+      if (this.#tokenEstimator) {
+        // Use proper TokenEstimator service when available
+        const tokens = await this.#tokenEstimator.estimateTokens(text, model);
+        this.#logger.debug(
+          'CoreMotivationsGenerator: Token estimation (TokenEstimator)',
+          {
+            model,
+            textLength: text.length,
+            estimatedTokens: tokens,
+            method: 'TokenEstimator',
+          }
+        );
+        return tokens;
+      } else {
+        // Fallback to simple estimation
+        const tokens = Math.ceil(text.length / 4);
+        this.#logger.debug(
+          'CoreMotivationsGenerator: Token estimation (fallback)',
+          {
+            textLength: text.length,
+            estimatedTokens: tokens,
+            method: 'fallback',
+          }
+        );
+        return tokens;
+      }
+    } catch (error) {
+      this.#logger.warn(
+        'CoreMotivationsGenerator: Token estimation failed, using fallback',
+        {
+          error: error.message,
+          textLength: text.length,
+        }
+      );
+
+      // Fallback estimation if TokenEstimator fails
+      return Math.ceil(text.length / 4);
+    }
   }
 
   /**
@@ -434,6 +702,65 @@ export class CoreMotivationsGenerator {
     }
 
     return ids;
+  }
+
+  /**
+   * Determine the stage at which generation failed for better error reporting
+   *
+   * @private
+   * @param {Error} error - The error that occurred
+   * @returns {string} The failure stage
+   */
+  #determineFailureStage(error) {
+    if (!error || !error.message) {
+      return 'unknown';
+    }
+
+    const message = error.message.toLowerCase();
+
+    if (
+      message.includes('llm request failed') ||
+      message.includes('network') ||
+      message.includes('timeout')
+    ) {
+      return 'llm_request';
+    }
+
+    if (
+      message.includes('failed to parse') ||
+      message.includes('invalid json') ||
+      message.includes('parsing')
+    ) {
+      return 'response_parsing';
+    }
+
+    if (
+      message.includes('invalid response structure') ||
+      message.includes('schema validation')
+    ) {
+      return 'structure_validation';
+    }
+
+    if (
+      message.includes('response quality') ||
+      message.includes('too brief') ||
+      message.includes('lacks depth')
+    ) {
+      return 'quality_validation';
+    }
+
+    if (
+      message.includes('configuration') ||
+      message.includes('no active llm')
+    ) {
+      return 'configuration';
+    }
+
+    if (error instanceof CoreMotivationsGenerationError && error.cause) {
+      return this.#determineFailureStage(error.cause);
+    }
+
+    return 'processing';
   }
 
   /**

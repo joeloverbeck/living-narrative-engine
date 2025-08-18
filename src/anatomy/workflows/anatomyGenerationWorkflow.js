@@ -555,6 +555,97 @@ export class AnatomyGenerationWorkflow extends BaseService {
   }
 
   /**
+   * Validates body descriptors in a recipe
+   *
+   * @param {object} bodyDescriptors - The body descriptors to validate
+   * @param {string} recipeId - The recipe ID for error messages
+   * @throws {ValidationError} If body descriptors are invalid
+   */
+  validateBodyDescriptors(bodyDescriptors, recipeId) {
+    if (!bodyDescriptors) return; // Optional field
+
+    const validBuilds = [
+      'skinny',
+      'slim',
+      'toned',
+      'athletic',
+      'shapely',
+      'thick',
+      'muscular',
+      'stocky',
+    ];
+    const validDensities = [
+      'hairless',
+      'sparse',
+      'light',
+      'moderate',
+      'hairy',
+      'very-hairy',
+    ];
+    const validCompositions = [
+      'underweight',
+      'lean',
+      'average',
+      'soft',
+      'chubby',
+      'overweight',
+      'obese',
+    ];
+
+    // Validate build
+    if (bodyDescriptors.build && !validBuilds.includes(bodyDescriptors.build)) {
+      throw new ValidationError(
+        `Invalid build descriptor: '${
+          bodyDescriptors.build
+        }' in recipe '${recipeId}'. Must be one of: ${validBuilds.join(', ')}`
+      );
+    }
+
+    // Validate density
+    if (
+      bodyDescriptors.density &&
+      !validDensities.includes(bodyDescriptors.density)
+    ) {
+      throw new ValidationError(
+        `Invalid density descriptor: '${
+          bodyDescriptors.density
+        }' in recipe '${recipeId}'. Must be one of: ${validDensities.join(
+          ', '
+        )}`
+      );
+    }
+
+    // Validate composition
+    if (
+      bodyDescriptors.composition &&
+      !validCompositions.includes(bodyDescriptors.composition)
+    ) {
+      throw new ValidationError(
+        `Invalid composition descriptor: '${
+          bodyDescriptors.composition
+        }' in recipe '${recipeId}'. Must be one of: ${validCompositions.join(
+          ', '
+        )}`
+      );
+    }
+
+    // skinColor is free-form string - no validation needed
+
+    // Check for unknown properties
+    const knownProps = ['build', 'density', 'composition', 'skinColor'];
+    const unknownProps = Object.keys(bodyDescriptors).filter(
+      (prop) => !knownProps.includes(prop)
+    );
+    if (unknownProps.length > 0) {
+      throw new ValidationError(
+        `Unknown body descriptor properties in recipe '${recipeId}': ${unknownProps.join(
+          ', '
+        )}`
+      );
+    }
+  }
+
+  /**
    * Validates that a recipe exists and has required fields
    *
    * @param {string} recipeId - The recipe ID to validate
@@ -572,6 +663,11 @@ export class AnatomyGenerationWorkflow extends BaseService {
       throw new ValidationError(
         `Recipe '${recipeId}' does not specify a blueprintId`
       );
+    }
+
+    // Validate body descriptors if present
+    if (recipe.bodyDescriptors) {
+      this.validateBodyDescriptors(recipe.bodyDescriptors, recipeId);
     }
 
     return recipe.blueprintId;

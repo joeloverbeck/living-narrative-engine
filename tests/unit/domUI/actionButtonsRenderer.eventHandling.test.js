@@ -77,6 +77,13 @@ function createButtonLikeMock(initialText = '') {
         this.toggle.mockClear();
       },
     },
+    // Add dataset property to mimic HTMLElement.dataset
+    dataset: {},
+    style: {
+      backgroundColor: '',
+      color: '',
+      setProperty: jest.fn(),
+    },
     _clickHandlers: [],
     _actionIndex: null,
     _disabled: false,
@@ -113,6 +120,12 @@ function createButtonLikeMock(initialText = '') {
       this.parentNode = null;
       this.title = '';
       this.focus.mockClear();
+      // Reset dataset
+      this.dataset = {};
+      // Reset style
+      this.style.backgroundColor = '';
+      this.style.color = '';
+      this.style.setProperty.mockClear();
       Object.keys(this)
         .filter((key) => key.startsWith('_attr_'))
         .forEach((key) => delete this[key]);

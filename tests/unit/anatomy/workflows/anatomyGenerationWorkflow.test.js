@@ -401,6 +401,238 @@ describe('AnatomyGenerationWorkflow', () => {
     });
   });
 
+  describe('validateBodyDescriptors', () => {
+    it('should validate valid complete body descriptors', () => {
+      const bodyDescriptors = {
+        build: 'muscular',
+        density: 'hairy',
+        composition: 'lean',
+        skinColor: 'tanned',
+      };
+
+      // Should not throw
+      expect(() =>
+        workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+      ).not.toThrow();
+    });
+
+    it('should validate valid partial body descriptors', () => {
+      const bodyDescriptors = {
+        build: 'athletic',
+        composition: 'lean',
+      };
+
+      // Should not throw
+      expect(() =>
+        workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+      ).not.toThrow();
+    });
+
+    it('should validate empty body descriptors object', () => {
+      const bodyDescriptors = {};
+
+      // Should not throw
+      expect(() =>
+        workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+      ).not.toThrow();
+    });
+
+    it('should not throw for missing/null body descriptors', () => {
+      // Should not throw for null
+      expect(() =>
+        workflow.validateBodyDescriptors(null, 'test-recipe')
+      ).not.toThrow();
+
+      // Should not throw for undefined
+      expect(() =>
+        workflow.validateBodyDescriptors(undefined, 'test-recipe')
+      ).not.toThrow();
+    });
+
+    it('should throw error for invalid build value', () => {
+      const bodyDescriptors = {
+        build: 'invalid-build',
+      };
+
+      expect(() =>
+        workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+      ).toThrow(ValidationError);
+      expect(() =>
+        workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+      ).toThrow(
+        "Invalid build descriptor: 'invalid-build' in recipe 'test-recipe'. Must be one of: skinny, slim, toned, athletic, shapely, thick, muscular, stocky"
+      );
+    });
+
+    it('should throw error for invalid density value', () => {
+      const bodyDescriptors = {
+        density: 'super-hairy',
+      };
+
+      expect(() =>
+        workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+      ).toThrow(ValidationError);
+      expect(() =>
+        workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+      ).toThrow(
+        "Invalid density descriptor: 'super-hairy' in recipe 'test-recipe'. Must be one of: hairless, sparse, light, moderate, hairy, very-hairy"
+      );
+    });
+
+    it('should throw error for invalid composition value', () => {
+      const bodyDescriptors = {
+        composition: 'extremely-overweight',
+      };
+
+      expect(() =>
+        workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+      ).toThrow(ValidationError);
+      expect(() =>
+        workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+      ).toThrow(
+        "Invalid composition descriptor: 'extremely-overweight' in recipe 'test-recipe'. Must be one of: underweight, lean, average, soft, chubby, overweight, obese"
+      );
+    });
+
+    it('should accept any string value for skinColor', () => {
+      const bodyDescriptors = {
+        skinColor: 'custom-color-value',
+      };
+
+      // Should not throw
+      expect(() =>
+        workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+      ).not.toThrow();
+    });
+
+    it('should throw error for unknown properties', () => {
+      const bodyDescriptors = {
+        build: 'athletic',
+        unknownProp: 'value',
+        anotherUnknown: 'test',
+      };
+
+      expect(() =>
+        workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+      ).toThrow(ValidationError);
+      expect(() =>
+        workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+      ).toThrow(
+        "Unknown body descriptor properties in recipe 'test-recipe': unknownProp, anotherUnknown"
+      );
+    });
+
+    it('should validate all valid enum values for build', () => {
+      const validBuilds = [
+        'skinny',
+        'slim',
+        'toned',
+        'athletic',
+        'shapely',
+        'thick',
+        'muscular',
+        'stocky',
+      ];
+
+      validBuilds.forEach((build) => {
+        const bodyDescriptors = { build };
+        expect(() =>
+          workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+        ).not.toThrow();
+      });
+    });
+
+    it('should validate all valid enum values for density', () => {
+      const validDensities = [
+        'hairless',
+        'sparse',
+        'light',
+        'moderate',
+        'hairy',
+        'very-hairy',
+      ];
+
+      validDensities.forEach((density) => {
+        const bodyDescriptors = { density };
+        expect(() =>
+          workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+        ).not.toThrow();
+      });
+    });
+
+    it('should validate all valid enum values for composition', () => {
+      const validCompositions = [
+        'underweight',
+        'lean',
+        'average',
+        'soft',
+        'chubby',
+        'overweight',
+        'obese',
+      ];
+
+      validCompositions.forEach((composition) => {
+        const bodyDescriptors = { composition };
+        expect(() =>
+          workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
+        ).not.toThrow();
+      });
+    });
+  });
+
+  describe('validateRecipe with bodyDescriptors', () => {
+    it('should validate recipe with valid body descriptors', () => {
+      const recipeId = 'test-recipe';
+      const blueprintId = 'test-blueprint';
+
+      mockDataRegistry.get.mockReturnValue({
+        blueprintId,
+        bodyDescriptors: {
+          build: 'athletic',
+          composition: 'lean',
+        },
+      });
+
+      const result = workflow.validateRecipe(recipeId);
+
+      expect(result).toBe(blueprintId);
+      expect(mockDataRegistry.get).toHaveBeenCalledWith(
+        'anatomyRecipes',
+        recipeId
+      );
+    });
+
+    it('should throw error for recipe with invalid body descriptors', () => {
+      const recipeId = 'test-recipe';
+
+      mockDataRegistry.get.mockReturnValue({
+        blueprintId: 'test-blueprint',
+        bodyDescriptors: {
+          build: 'invalid-build',
+        },
+      });
+
+      expect(() => workflow.validateRecipe(recipeId)).toThrow(ValidationError);
+      expect(() => workflow.validateRecipe(recipeId)).toThrow(
+        "Invalid build descriptor: 'invalid-build' in recipe 'test-recipe'"
+      );
+    });
+
+    it('should validate recipe without body descriptors', () => {
+      const recipeId = 'test-recipe';
+      const blueprintId = 'test-blueprint';
+
+      mockDataRegistry.get.mockReturnValue({
+        blueprintId,
+        // No bodyDescriptors
+      });
+
+      const result = workflow.validateRecipe(recipeId);
+
+      expect(result).toBe(blueprintId);
+    });
+  });
+
   describe('blueprint slot entity creation', () => {
     const blueprintId = 'test-blueprint';
     const recipeId = 'test-recipe';

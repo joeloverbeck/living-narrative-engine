@@ -12,12 +12,23 @@ describe('ErrorMetricsService', () => {
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    metricsService = new ErrorMetricsService({
-      logger: mockLogger,
-    });
+    // Note: metricsService creation moved to individual describe blocks
+    // to ensure proper timer setup for time-dependent tests.
+    //
+    // TIMING SETUP EXPLANATION:
+    // - Most describe blocks create metricsService with real timers (normal case)
+    // - getErrorRate describe block sets up fake timers BEFORE creating service
+    // - This ensures Date.now() calls in constructor and methods are synchronized
+    // - Critical for rate calculation tests that depend on precise timing
   });
 
   describe('Constructor', () => {
+    beforeEach(() => {
+      metricsService = new ErrorMetricsService({
+        logger: mockLogger,
+      });
+    });
+
     it('should create service with valid logger', () => {
       expect(metricsService).toBeInstanceOf(ErrorMetricsService);
     });
@@ -32,6 +43,12 @@ describe('ErrorMetricsService', () => {
   });
 
   describe('recordError', () => {
+    beforeEach(() => {
+      metricsService = new ErrorMetricsService({
+        logger: mockLogger,
+      });
+    });
+
     it('should record error with type and severity', () => {
       metricsService.recordError(
         TraceErrorType.VALIDATION,
@@ -96,6 +113,12 @@ describe('ErrorMetricsService', () => {
   });
 
   describe('getMetrics', () => {
+    beforeEach(() => {
+      metricsService = new ErrorMetricsService({
+        logger: mockLogger,
+      });
+    });
+
     it('should return empty metrics initially', () => {
       const metrics = metricsService.getMetrics();
 
@@ -152,6 +175,12 @@ describe('ErrorMetricsService', () => {
   });
 
   describe('resetMetrics', () => {
+    beforeEach(() => {
+      metricsService = new ErrorMetricsService({
+        logger: mockLogger,
+      });
+    });
+
     it('should clear all metrics', () => {
       // Record some errors
       metricsService.recordError(
@@ -202,7 +231,12 @@ describe('ErrorMetricsService', () => {
 
   describe('getErrorRate', () => {
     beforeEach(() => {
+      // CRITICAL: Set up fake timers BEFORE creating the service
+      // This ensures Date.now() calls in constructor and getErrorRate() are consistent
       jest.useFakeTimers();
+      metricsService = new ErrorMetricsService({
+        logger: mockLogger,
+      });
     });
 
     afterEach(() => {
@@ -313,6 +347,12 @@ describe('ErrorMetricsService', () => {
   });
 
   describe('Complex scenarios', () => {
+    beforeEach(() => {
+      metricsService = new ErrorMetricsService({
+        logger: mockLogger,
+      });
+    });
+
     it('should handle rapid error recording', () => {
       // Record 100 errors rapidly
       for (let i = 0; i < 100; i++) {

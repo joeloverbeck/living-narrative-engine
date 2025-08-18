@@ -12,7 +12,7 @@ import AnatomyIntegrationTestBed from './anatomy/anatomyIntegrationTestBed.js';
 export class TestBedAnatomy extends AnatomyIntegrationTestBed {
   /**
    * Creates a new TestBedAnatomy instance
-   * 
+   *
    * @param {object} [options] - Optional configuration
    */
   constructor(options = {}) {
@@ -21,7 +21,7 @@ export class TestBedAnatomy extends AnatomyIntegrationTestBed {
 
   /**
    * Gets the data registry for compatibility with test expectations
-   * 
+   *
    * @returns {object} The data registry
    */
   get dataRegistry() {
@@ -30,12 +30,12 @@ export class TestBedAnatomy extends AnatomyIntegrationTestBed {
 
   /**
    * Sets up the test bed with anatomy test data and ensures proper initialization
-   * 
+   *
    * @returns {Promise<void>}
    */
   async setup() {
     await super.setup();
-    
+
     // Ensure we have the anatomy:body_test entity definition
     this.loadEntityDefinitions({
       'anatomy:body_test': {
@@ -64,7 +64,7 @@ export class TestBedAnatomy extends AnatomyIntegrationTestBed {
     // Create a minimal test blueprint
     this.loadBlueprints({
       'anatomy:humanoid': {
-        id: 'anatomy:humanoid', 
+        id: 'anatomy:humanoid',
         root: 'test:simple_torso',
         slots: {},
         clothingSlotMappings: {},
@@ -93,7 +93,7 @@ export class TestBedAnatomy extends AnatomyIntegrationTestBed {
 
   /**
    * Performs cleanup after test execution
-   * 
+   *
    * @returns {Promise<void>}
    */
   async cleanup() {

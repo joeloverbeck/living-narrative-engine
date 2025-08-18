@@ -16,6 +16,9 @@ jest.mock('../../src/characterBuilder/CharacterBuilderBootstrap.js');
 jest.mock(
   '../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js'
 );
+jest.mock(
+  '../../src/coreMotivationsGenerator/services/CoreMotivationsDisplayEnhancer.js'
+);
 
 describe('Core Motivations Generator Entry Point', () => {
   let mockBootstrap;
@@ -26,6 +29,7 @@ describe('Core Motivations Generator Entry Point', () => {
   let mockAddEventListener;
   let CharacterBuilderBootstrap;
   let CoreMotivationsGeneratorController;
+  let CoreMotivationsDisplayEnhancer;
   let initializeApp;
 
   beforeEach(async () => {
@@ -63,10 +67,16 @@ describe('Core Motivations Generator Entry Point', () => {
         '../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js'
       )
     ).CoreMotivationsGeneratorController;
+    CoreMotivationsDisplayEnhancer = (
+      await import(
+        '../../src/coreMotivationsGenerator/services/CoreMotivationsDisplayEnhancer.js'
+      )
+    ).CoreMotivationsDisplayEnhancer;
 
     // Mock implementations
     CharacterBuilderBootstrap.mockImplementation(() => mockBootstrap);
     CoreMotivationsGeneratorController.mockImplementation(() => mockController);
+    CoreMotivationsDisplayEnhancer.mockImplementation(() => ({}));
 
     // Mock DOM methods
     mockGetElementById = jest.fn();
@@ -114,6 +124,9 @@ describe('Core Motivations Generator Entry Point', () => {
       controllerClass: CoreMotivationsGeneratorController,
       includeModLoading: true,
       customSchemas: ['/data/schemas/core-motivation.schema.json'],
+      services: {
+        displayEnhancer: CoreMotivationsDisplayEnhancer,
+      },
       hooks: expect.objectContaining({
         postInit: expect.any(Function),
       }),
@@ -134,6 +147,9 @@ describe('Core Motivations Generator Entry Point', () => {
     expect(mockBootstrap.bootstrap).toHaveBeenCalledWith(
       expect.objectContaining({
         includeModLoading: true,
+        services: {
+          displayEnhancer: CoreMotivationsDisplayEnhancer,
+        },
       })
     );
   });

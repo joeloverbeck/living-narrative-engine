@@ -305,62 +305,78 @@ describe('CoreMotivationsGenerator', () => {
       expect(result[0].metadata).toEqual(
         expect.objectContaining({
           model: 'test-model',
-          tokens: expect.any(Number),
+          promptTokens: expect.any(Number),
+          responseTokens: expect.any(Number),
+          totalTokens: expect.any(Number),
           responseTime: expect.any(Number),
+          retryAttempts: expect.any(Number),
           promptVersion: PROMPT_VERSION_INFO.version,
           clicheIds: expect.any(Array),
+          qualityChecks: expect.arrayContaining([
+            'structure',
+            'quality',
+            'length',
+            'format',
+          ]),
           generationPrompt: expect.any(String),
         })
       );
     });
 
     it('should handle LLM response parsing errors', async () => {
-      mockLlmJsonService.parseAndRepair.mockRejectedValueOnce(
+      // Make parsing fail consistently across all retry attempts
+      mockLlmJsonService.parseAndRepair.mockRejectedValue(
         new Error('Invalid JSON')
       );
 
-      await expect(service.generate(validParams)).rejects.toThrow(
-        CoreMotivationsGenerationError
-      );
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(CoreMotivationsGenerationError);
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith({
         type: 'CORE_MOTIVATIONS_GENERATION_FAILED',
-        payload: {
+        payload: expect.objectContaining({
           conceptId: sampleConcept.id,
           directionId: sampleDirection.id,
           error: expect.stringContaining('Invalid JSON'),
-        },
+          processingTime: expect.any(Number),
+          failureStage: expect.any(String),
+        }),
       });
     });
 
     it('should handle LLM request failures', async () => {
-      mockLlmStrategyFactory.getAIDecision.mockRejectedValueOnce(
+      // Make LLM requests fail consistently across all retry attempts
+      mockLlmStrategyFactory.getAIDecision.mockRejectedValue(
         new Error('Network timeout')
       );
 
-      await expect(service.generate(validParams)).rejects.toThrow(
-        CoreMotivationsGenerationError
-      );
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(CoreMotivationsGenerationError);
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith({
         type: 'CORE_MOTIVATIONS_GENERATION_FAILED',
-        payload: {
+        payload: expect.objectContaining({
           conceptId: sampleConcept.id,
           directionId: sampleDirection.id,
           error: expect.stringContaining('Network timeout'),
-        },
+          processingTime: expect.any(Number),
+          failureStage: expect.any(String),
+        }),
       });
     });
 
     it('should handle invalid response structure', async () => {
       const invalidResponse = { invalid: 'response' };
-      mockLlmStrategyFactory.getAIDecision.mockResolvedValueOnce(
+      // Make LLM return invalid response consistently for all retries
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
         JSON.stringify(invalidResponse)
       );
 
-      await expect(service.generate(validParams)).rejects.toThrow(
-        CoreMotivationsGenerationError
-      );
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(CoreMotivationsGenerationError);
     });
 
     it('should handle response with insufficient motivations', async () => {
@@ -374,21 +390,23 @@ describe('CoreMotivationsGenerator', () => {
         ], // Only 1 motivation, but minimum is 3
       };
 
-      mockLlmStrategyFactory.getAIDecision.mockResolvedValueOnce(
+      // Make LLM return insufficient response consistently for all retries
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
         JSON.stringify(invalidResponse)
       );
 
-      await expect(service.generate(validParams)).rejects.toThrow(
-        CoreMotivationsGenerationError
-      );
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(CoreMotivationsGenerationError);
     });
 
     it('should handle missing LLM configuration', async () => {
-      mockLlmConfigManager.getActiveConfiguration.mockResolvedValueOnce(null);
+      // Make configuration return null consistently for all retries
+      mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(null);
 
-      await expect(service.generate(validParams)).rejects.toThrow(
-        CoreMotivationsGenerationError
-      );
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(CoreMotivationsGenerationError);
     });
 
     it('should log generation progress', async () => {
@@ -470,28 +488,36 @@ describe('CoreMotivationsGenerator', () => {
 
     it('should wrap non-CoreMotivationsGenerationError exceptions', async () => {
       const originalError = new Error('Unexpected error');
-      mockLlmStrategyFactory.getAIDecision.mockRejectedValueOnce(originalError);
+      // Make error occur consistently across all retries
+      mockLlmStrategyFactory.getAIDecision.mockRejectedValue(originalError);
 
       await expect(
-        service.generate({
-          concept: sampleConcept,
-          direction: sampleDirection,
-          clichés: sampleClichés,
-        })
+        service.generate(
+          {
+            concept: sampleConcept,
+            direction: sampleDirection,
+            clichés: sampleClichés,
+          },
+          { maxRetries: 0 }
+        )
       ).rejects.toThrow(CoreMotivationsGenerationError);
     });
 
     it('should preserve CoreMotivationsGenerationError instances', async () => {
       const customError = new CoreMotivationsGenerationError('Custom error');
-      mockLlmJsonService.parseAndRepair.mockRejectedValueOnce(customError);
+      // Make custom error occur consistently across all retries
+      mockLlmJsonService.parseAndRepair.mockRejectedValue(customError);
 
       await expect(
-        service.generate({
-          concept: sampleConcept,
-          direction: sampleDirection,
-          clichés: sampleClichés,
-        })
-      ).rejects.toThrow(customError);
+        service.generate(
+          {
+            concept: sampleConcept,
+            direction: sampleDirection,
+            clichés: sampleClichés,
+          },
+          { maxRetries: 0 }
+        )
+      ).rejects.toThrow(CoreMotivationsGenerationError);
     });
   });
 
@@ -533,6 +559,186 @@ describe('CoreMotivationsGenerator', () => {
       });
 
       expect(result[0].metadata.clicheIds).toEqual([]);
+    });
+  });
+
+  describe('retry behavior', () => {
+    const validParams = {
+      concept: sampleConcept,
+      direction: sampleDirection,
+      clichés: sampleClichés,
+    };
+
+    it('should respect maxRetries option of 0', async () => {
+      const error = new Error('Test error');
+      mockLlmStrategyFactory.getAIDecision.mockRejectedValue(error);
+
+      // maxRetries: 0 means only initial attempt, no retries
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(CoreMotivationsGenerationError);
+
+      expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledTimes(1);
+    });
+
+    it('should include retry count in error message', async () => {
+      const error = new Error('Network error');
+      mockLlmStrategyFactory.getAIDecision.mockRejectedValue(error);
+
+      try {
+        await service.generate(validParams, { maxRetries: 0 });
+      } catch (err) {
+        expect(err.message).toContain('1 attempt');
+      }
+
+      expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('response quality validation', () => {
+    it('should reject responses with insufficient content depth', async () => {
+      const poorQualityResponse = {
+        motivations: [
+          {
+            coreDesire: 'wants', // Too brief
+            internalContradiction: 'conflict', // Too brief
+            centralQuestion: 'What', // Missing question mark
+          },
+          {
+            coreDesire: 'needs',
+            internalContradiction: 'struggles',
+            centralQuestion: 'How',
+          },
+          {
+            coreDesire: 'seeks',
+            internalContradiction: 'fights',
+            centralQuestion: 'Why',
+          },
+        ],
+      };
+
+      // Make poor quality response return consistently for all retries
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        JSON.stringify(poorQualityResponse)
+      );
+
+      await expect(
+        service.generate(
+          {
+            concept: sampleConcept,
+            direction: sampleDirection,
+            clichés: sampleClichés,
+          },
+          { maxRetries: 0 }
+        )
+      ).rejects.toThrow(/question mark/);
+    });
+
+    it('should accept valid quality responses', async () => {
+      const goodQualityResponse = {
+        motivations: [
+          {
+            coreDesire: 'To find acceptance in a world that fears differences',
+            internalContradiction:
+              'Desperately craves belonging yet pushes people away to protect himself from rejection',
+            centralQuestion:
+              'Can someone truly be loved if they hide their true nature?',
+          },
+          {
+            coreDesire: 'To prove himself worthy of his inherited power',
+            internalContradiction:
+              'Believes in justice but must use morally questionable means to achieve it',
+            centralQuestion:
+              'Does the end justify the means when protecting innocents?',
+          },
+          {
+            coreDesire: 'To break free from the expectations placed upon him',
+            internalContradiction:
+              'Wants freedom but is bound by duty and responsibility',
+            centralQuestion:
+              'Is personal happiness worth sacrificing the greater good?',
+          },
+        ],
+      };
+
+      // Make good quality response return consistently for all retries
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        JSON.stringify(goodQualityResponse)
+      );
+
+      const result = await service.generate({
+        concept: sampleConcept,
+        direction: sampleDirection,
+        clichés: sampleClichés,
+      });
+
+      expect(result).toHaveLength(3);
+      expect(result[0]).toHaveProperty('coreDesire');
+    });
+
+    it('should validate central question has question mark', async () => {
+      const noQuestionMarkResponse = {
+        motivations: [
+          {
+            coreDesire: 'To find acceptance in a world that fears differences',
+            internalContradiction:
+              'Desperately craves belonging yet pushes people away to protect himself',
+            centralQuestion: 'This is not a proper question', // No question mark
+          },
+          {
+            coreDesire: 'To prove himself worthy of his inherited power',
+            internalContradiction:
+              'Believes in justice but must use morally questionable means to achieve it',
+            centralQuestion:
+              'Does the end justify the means when protecting innocents?',
+          },
+          {
+            coreDesire: 'To break free from the expectations placed upon him',
+            internalContradiction:
+              'Wants freedom but is bound by duty and responsibility',
+            centralQuestion:
+              'Is personal happiness worth sacrificing the greater good?',
+          },
+        ],
+      };
+
+      // Make invalid response return consistently for all retries
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        JSON.stringify(noQuestionMarkResponse)
+      );
+
+      await expect(
+        service.generate(
+          {
+            concept: sampleConcept,
+            direction: sampleDirection,
+            clichés: sampleClichés,
+          },
+          { maxRetries: 0 }
+        )
+      ).rejects.toThrow(/question mark/);
+    });
+
+    it('should validate motivation array structure', async () => {
+      const invalidStructureResponse = {
+        motivations: 'not an array',
+      };
+
+      // Make invalid response return consistently for all retries
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        JSON.stringify(invalidStructureResponse)
+      );
+
+      await expect(
+        service.generate(
+          {
+            concept: sampleConcept,
+            direction: sampleDirection,
+            clichés: sampleClichés,
+          },
+          { maxRetries: 0 }
+        )
+      ).rejects.toThrow(/motivations array/);
     });
   });
 });

@@ -171,6 +171,16 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     this.#currentActorId = null;
     this.#isDisposed = false;
 
+    // Store references for visual styling and hover handling
+    this.buttonVisualMap = new Map();
+
+    // Hover state management
+    this.hoverTimeouts = new Map(); // For debouncing rapid hover changes
+    this.boundHoverHandlers = {
+      enter: this._handleHoverEnter.bind(this),
+      leave: this._handleHoverLeave.bind(this),
+    };
+
     if (this.elements.sendButtonElement) {
       this.elements.sendButtonElement.disabled = true;
       this._addDomListener(
@@ -280,6 +290,30 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       this._onItemSelected(button, clickedAction);
     });
 
+    // Apply visual styles if present
+    try {
+      if (actionComposite.visual) {
+        this._applyVisualStyles(
+          button,
+          actionComposite.visual,
+          actionComposite.actionId
+        );
+
+        this.logger.debug(
+          `${this._logPrefix} Applied visual styles to button for action: ${actionComposite.actionId}`
+        );
+      }
+    } catch (error) {
+      this.logger.warn(
+        `${this._logPrefix} Failed to apply visual styles for action ${actionComposite.actionId}:`,
+        error
+      );
+      // Continue without visual customization
+    }
+
+    // Add hover listeners (ACTBUTVIS-008)
+    this._addHoverListeners(button);
+
     return button;
   }
 
@@ -312,6 +346,241 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    */
   _getEmptyListMessage() {
     return 'No actions available.';
+  }
+
+  /**
+   * Apply visual styles to a button
+   *
+   * @private
+   * @param {HTMLButtonElement} button - Button element
+   * @param {object} visual - Visual properties object
+   * @param {string} actionId - Action ID for tracking
+   */
+  _applyVisualStyles(button, visual, actionId) {
+    if (!visual || !button) {
+      return;
+    }
+
+    try {
+      // Apply base colors via inline styles
+      if (visual.backgroundColor) {
+        button.style.backgroundColor = visual.backgroundColor;
+        // Store original for theme switching
+        button.dataset.customBg = visual.backgroundColor;
+      }
+
+      if (visual.textColor) {
+        button.style.color = visual.textColor;
+        // Store original for theme switching
+        button.dataset.customText = visual.textColor;
+      }
+
+      // Store hover colors in dataset for hover handling (ACTBUTVIS-008)
+      if (visual.hoverBackgroundColor || visual.hoverTextColor) {
+        // Store original colors for restoration
+        button.dataset.originalBg = visual.backgroundColor || '';
+        button.dataset.originalText = visual.textColor || '';
+
+        // Store hover colors
+        button.dataset.hoverBg = visual.hoverBackgroundColor || '';
+        button.dataset.hoverText = visual.hoverTextColor || '';
+
+        // Flag button as having custom hover
+        button.dataset.hasCustomHover = 'true';
+      }
+
+      // Store visual mapping for efficient updates
+      this.buttonVisualMap.set(actionId, {
+        button: button,
+        visual: visual,
+      });
+
+      // Add custom visual class for CSS hooks
+      button.classList.add('action-button-custom-visual');
+
+      this.logger.debug(
+        `Applied visual styles to button for action: ${actionId}`
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to apply visual styles for action ${actionId}:`,
+        error
+      );
+      // Continue without visual customization
+    }
+  }
+
+  /**
+   * Add hover event listeners to a button
+   *
+   * @private
+   * @param {HTMLButtonElement} button - Button element
+   */
+  _addHoverListeners(button) {
+    // Use bound handlers to avoid memory leaks
+    button.addEventListener('mouseenter', this.boundHoverHandlers.enter);
+    button.addEventListener('mouseleave', this.boundHoverHandlers.leave);
+
+    // Handle focus states for accessibility
+    button.addEventListener('focus', this.boundHoverHandlers.enter);
+    button.addEventListener('blur', this.boundHoverHandlers.leave);
+
+    // Mark as having listeners for cleanup
+    button.dataset.hasHoverListeners = 'true';
+  }
+
+  /**
+   * Remove hover event listeners from a button
+   *
+   * @private
+   * @param {HTMLButtonElement} button - Button element
+   */
+  _removeHoverListeners(button) {
+    if (button.dataset.hasHoverListeners === 'true') {
+      button.removeEventListener('mouseenter', this.boundHoverHandlers.enter);
+      button.removeEventListener('mouseleave', this.boundHoverHandlers.leave);
+      button.removeEventListener('focus', this.boundHoverHandlers.enter);
+      button.removeEventListener('blur', this.boundHoverHandlers.leave);
+
+      delete button.dataset.hasHoverListeners;
+    }
+  }
+
+  /**
+   * Handle mouse enter / focus events
+   *
+   * @private
+   * @param {Event} event - Mouse/focus event
+   */
+  _handleHoverEnter(event) {
+    const button = event.target;
+
+    // Ignore if button is disabled
+    if (button.disabled) {
+      return;
+    }
+
+    // Clear any pending hover leave timeout
+    const timeoutId = this.hoverTimeouts.get(button);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      this.hoverTimeouts.delete(button);
+    }
+
+    try {
+      this._applyHoverState(button, true);
+    } catch (error) {
+      this.logger.warn('Error applying hover state:', error);
+    }
+  }
+
+  /**
+   * Handle mouse leave / blur events
+   *
+   * @private
+   * @param {Event} event - Mouse/blur event
+   */
+  _handleHoverLeave(event) {
+    const button = event.target;
+
+    // Debounce rapid hover changes to prevent flicker
+    const timeoutId = setTimeout(() => {
+      try {
+        this._applyHoverState(button, false);
+      } catch (error) {
+        this.logger.warn('Error removing hover state:', error);
+      }
+
+      this.hoverTimeouts.delete(button);
+    }, 50); // 50ms debounce
+
+    this.hoverTimeouts.set(button, timeoutId);
+  }
+
+  /**
+   * Apply or remove hover state styling
+   *
+   * @private
+   * @param {HTMLButtonElement} button - Button element
+   * @param {boolean} isHovering - Whether to apply hover state
+   */
+  _applyHoverState(button, isHovering) {
+    if (isHovering) {
+      // Apply hover colors
+      if (button.dataset.hoverBg) {
+        button.style.backgroundColor = button.dataset.hoverBg;
+      }
+
+      if (button.dataset.hoverText) {
+        button.style.color = button.dataset.hoverText;
+      }
+
+      // Add hover class for CSS hooks
+      button.classList.add('action-button-hovering');
+    } else {
+      // Restore original colors
+      if (button.dataset.originalBg !== undefined) {
+        button.style.backgroundColor = button.dataset.originalBg;
+      }
+
+      if (button.dataset.originalText !== undefined) {
+        button.style.color = button.dataset.originalText;
+      }
+
+      // Remove hover class
+      button.classList.remove('action-button-hovering');
+
+      // Reapply custom colors if button is still selected
+      if (button.classList.contains('selected') && button.dataset.customBg) {
+        // Keep the custom background for selected buttons
+        button.style.backgroundColor = button.dataset.customBg;
+      }
+    }
+  }
+
+  /**
+   * Update visual styles for a specific button
+   *
+   * @param {string} actionId - Action ID
+   * @param {object} newVisual - New visual properties
+   */
+  updateButtonVisual(actionId, newVisual) {
+    const mapping = this.buttonVisualMap.get(actionId);
+
+    if (!mapping) {
+      this.logger.warn(`No button found for action: ${actionId}`);
+      return;
+    }
+
+    const { button } = mapping;
+
+    // Remove existing hover listeners before updating (ACTBUTVIS-008)
+    this._removeHoverListeners(button);
+
+    // Clear existing inline styles
+    button.style.backgroundColor = '';
+    button.style.color = '';
+
+    // Apply new visual styles
+    if (newVisual) {
+      this._applyVisualStyles(button, newVisual, actionId);
+      // Re-add hover listeners after applying new visual
+      this._addHoverListeners(button);
+    } else {
+      // Remove custom visual class
+      button.classList.remove('action-button-custom-visual');
+      // Clear dataset
+      delete button.dataset.customBg;
+      delete button.dataset.customText;
+      delete button.dataset.hasCustomHover;
+      delete button.dataset.originalBg;
+      delete button.dataset.originalText;
+      delete button.dataset.hoverBg;
+      delete button.dataset.hoverText;
+
+      // Remove from map
+      this.buttonVisualMap.delete(actionId);
+    }
   }
 
   /**
@@ -734,7 +1003,22 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     }
     this.logger.debug(`${this._logPrefix} Disposing ActionButtonsRenderer.`);
 
+    // Clean up hover state (ACTBUTVIS-008)
+    if (this.hoverTimeouts) {
+      // Clear all pending hover timeouts
+      for (const [, timeoutId] of this.hoverTimeouts) {
+        clearTimeout(timeoutId);
+      }
+      this.hoverTimeouts.clear();
+    }
+
     if (this.elements && this.elements.listContainerElement) {
+      // Remove hover listeners from all buttons before clearing DOM
+      const buttons = this.elements.listContainerElement.querySelectorAll('.action-button');
+      buttons.forEach(button => {
+        this._removeHoverListeners(button);
+      });
+      
       while (this.elements.listContainerElement.firstChild) {
         this.elements.listContainerElement.removeChild(
           this.elements.listContainerElement.firstChild
@@ -743,6 +1027,11 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       this.logger.debug(
         `${this._logPrefix} Cleared listContainerElement content during dispose.`
       );
+    }
+
+    // Clear visual mappings
+    if (this.buttonVisualMap) {
+      this.buttonVisualMap.clear();
     }
 
     super.dispose();

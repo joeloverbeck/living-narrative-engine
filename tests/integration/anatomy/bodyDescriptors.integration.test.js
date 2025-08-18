@@ -58,7 +58,11 @@ describe('Body Descriptors Integration', () => {
         },
       };
 
-      await testBed.entityManager.addComponent(entityId, 'anatomy:body', bodyData);
+      await testBed.entityManager.addComponent(
+        entityId,
+        'anatomy:body',
+        bodyData
+      );
 
       // Verify the body component now has the descriptors
       const bodyComponent = testBed.entityManager.getComponentData(
@@ -108,7 +112,11 @@ describe('Body Descriptors Integration', () => {
         },
       };
 
-      await testBed.entityManager.addComponent(entityId, 'anatomy:body', bodyData);
+      await testBed.entityManager.addComponent(
+        entityId,
+        'anatomy:body',
+        bodyData
+      );
 
       // Verify the body component does NOT have descriptors
       const bodyComponent = testBed.entityManager.getComponentData(
@@ -157,7 +165,11 @@ describe('Body Descriptors Integration', () => {
         },
       };
 
-      await testBed.entityManager.addComponent(entityId, 'anatomy:body', bodyData);
+      await testBed.entityManager.addComponent(
+        entityId,
+        'anatomy:body',
+        bodyData
+      );
 
       // Verify the body component has only the specified descriptors
       const bodyComponent = testBed.entityManager.getComponentData(
@@ -220,7 +232,9 @@ describe('Body Descriptors Integration', () => {
       const density =
         testBed.bodyDescriptionComposer.extractBodyHairDescription(mockEntity1);
       const skinColor =
-        testBed.bodyDescriptionComposer.extractSkinColorDescription(mockEntity1);
+        testBed.bodyDescriptionComposer.extractSkinColorDescription(
+          mockEntity1
+        );
 
       expect(build).toBe('athletic'); // From body.descriptors, not entity-level
       expect(composition).toBe('lean'); // From body.descriptors, not entity-level
@@ -283,7 +297,9 @@ describe('Body Descriptors Integration', () => {
       const density =
         testBed.bodyDescriptionComposer.extractBodyHairDescription(mockEntity2);
       const skinColor =
-        testBed.bodyDescriptionComposer.extractSkinColorDescription(mockEntity2);
+        testBed.bodyDescriptionComposer.extractSkinColorDescription(
+          mockEntity2
+        );
 
       expect(build).toBe('toned');
       expect(composition).toBe('soft');
@@ -335,7 +351,9 @@ describe('Body Descriptors Integration', () => {
       const density =
         testBed.bodyDescriptionComposer.extractBodyHairDescription(mockEntity3);
       const skinColor =
-        testBed.bodyDescriptionComposer.extractSkinColorDescription(mockEntity3);
+        testBed.bodyDescriptionComposer.extractSkinColorDescription(
+          mockEntity3
+        );
 
       expect(build).toBe('muscular'); // From entity-level (fallback)
       expect(composition).toBe('average'); // From body.descriptors (precedence)
@@ -343,7 +361,6 @@ describe('Body Descriptors Integration', () => {
       expect(skinColor).toBe('dark'); // From entity-level (fallback)
     });
   });
-
 
   describe('Schema Validation Integration', () => {
     it('should validate generated body components with descriptors', async () => {
