@@ -34,7 +34,9 @@ describe('CacheKeys', () => {
     });
 
     it('should generate directions for concept key', () => {
-      expect(CacheKeys.directionsForConcept('concept-123')).toBe('directions_concept_concept-123');
+      expect(CacheKeys.directionsForConcept('concept-123')).toBe(
+        'directions_concept_concept-123'
+      );
     });
   });
 
@@ -46,21 +48,29 @@ describe('CacheKeys', () => {
 
   describe('motivation keys', () => {
     it('should generate motivations for direction key', () => {
-      expect(CacheKeys.motivationsForDirection('dir-456')).toBe('motivations_dir-456');
+      expect(CacheKeys.motivationsForDirection('dir-456')).toBe(
+        'motivations_dir-456'
+      );
     });
 
     it('should generate motivations for concept key', () => {
-      expect(CacheKeys.motivationsForConcept('concept-123')).toBe('motivations_concept_concept-123');
+      expect(CacheKeys.motivationsForConcept('concept-123')).toBe(
+        'motivations_concept_concept-123'
+      );
     });
 
     it('should generate motivation stats key', () => {
-      expect(CacheKeys.motivationStats('concept-123')).toBe('motivation_stats_concept-123');
+      expect(CacheKeys.motivationStats('concept-123')).toBe(
+        'motivation_stats_concept-123'
+      );
     });
   });
 
   describe('generation keys', () => {
     it('should generate generation in progress key', () => {
-      expect(CacheKeys.generationInProgress('dir-456')).toBe('generating_dir-456');
+      expect(CacheKeys.generationInProgress('dir-456')).toBe(
+        'generating_dir-456'
+      );
     });
 
     it('should generate last generation key', () => {
@@ -129,11 +139,19 @@ describe('CacheInvalidation', () => {
     });
 
     it('should invalidate motivation caches with direction and concept', () => {
-      CacheInvalidation.invalidateMotivations(mockCache, 'dir-456', 'concept-123');
+      CacheInvalidation.invalidateMotivations(
+        mockCache,
+        'dir-456',
+        'concept-123'
+      );
 
       expect(mockCache.delete).toHaveBeenCalledWith('motivations_dir-456');
-      expect(mockCache.delete).toHaveBeenCalledWith('motivations_concept_concept-123');
-      expect(mockCache.delete).toHaveBeenCalledWith('motivation_stats_concept-123');
+      expect(mockCache.delete).toHaveBeenCalledWith(
+        'motivations_concept_concept-123'
+      );
+      expect(mockCache.delete).toHaveBeenCalledWith(
+        'motivation_stats_concept-123'
+      );
       expect(mockCache.delete).toHaveBeenCalledTimes(3);
     });
   });
@@ -148,12 +166,12 @@ describe('CacheWarming', () => {
     mockCache = {
       set: jest.fn(),
     };
-    
+
     mockService = {
       getAllCharacterConcepts: jest.fn(),
       getThematicDirectionsByConceptId: jest.fn(),
     };
-    
+
     mockLogger = createMockLogger();
   });
 
@@ -168,14 +186,16 @@ describe('CacheWarming', () => {
         { id: 'concept-2', name: 'Concept 2' },
         { id: 'concept-3', name: 'Recent Concept' },
       ];
-      
+
       const mockDirections = [
         { id: 'dir-1', conceptId: 'concept-3', title: 'Direction 1' },
         { id: 'dir-2', conceptId: 'concept-3', title: 'Direction 2' },
       ];
 
       mockService.getAllCharacterConcepts.mockResolvedValue(mockConcepts);
-      mockService.getThematicDirectionsByConceptId.mockResolvedValue(mockDirections);
+      mockService.getThematicDirectionsByConceptId.mockResolvedValue(
+        mockDirections
+      );
 
       await CacheWarming.warmCache(mockCache, mockService, mockLogger);
 
@@ -187,7 +207,9 @@ describe('CacheWarming', () => {
       );
 
       // Should cache directions for the most recent concept
-      expect(mockService.getThematicDirectionsByConceptId).toHaveBeenCalledWith('concept-3');
+      expect(mockService.getThematicDirectionsByConceptId).toHaveBeenCalledWith(
+        'concept-3'
+      );
       expect(mockCache.set).toHaveBeenCalledWith(
         'directions_concept_concept-3',
         mockDirections,
@@ -195,8 +217,12 @@ describe('CacheWarming', () => {
       );
 
       // Should log debug messages
-      expect(mockLogger.debug).toHaveBeenCalledWith('Cache warmed with all concepts');
-      expect(mockLogger.debug).toHaveBeenCalledWith('Cache warmed with directions for concept concept-3');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Cache warmed with all concepts'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Cache warmed with directions for concept concept-3'
+      );
     });
 
     it('should handle empty concepts gracefully', async () => {
@@ -205,8 +231,14 @@ describe('CacheWarming', () => {
       await CacheWarming.warmCache(mockCache, mockService, mockLogger);
 
       // Should cache empty concepts but not try to get directions
-      expect(mockCache.set).toHaveBeenCalledWith('all_concepts', [], 'concepts');
-      expect(mockService.getThematicDirectionsByConceptId).not.toHaveBeenCalled();
+      expect(mockCache.set).toHaveBeenCalledWith(
+        'all_concepts',
+        [],
+        'concepts'
+      );
+      expect(
+        mockService.getThematicDirectionsByConceptId
+      ).not.toHaveBeenCalled();
     });
 
     it('should handle null concepts gracefully', async () => {
@@ -216,13 +248,13 @@ describe('CacheWarming', () => {
 
       // Should not cache anything
       expect(mockCache.set).not.toHaveBeenCalled();
-      expect(mockService.getThematicDirectionsByConceptId).not.toHaveBeenCalled();
+      expect(
+        mockService.getThematicDirectionsByConceptId
+      ).not.toHaveBeenCalled();
     });
 
     it('should cache concepts but skip directions if getThematicDirectionsByConceptId fails', async () => {
-      const mockConcepts = [
-        { id: 'concept-1', name: 'Concept 1' },
-      ];
+      const mockConcepts = [{ id: 'concept-1', name: 'Concept 1' }];
 
       mockService.getAllCharacterConcepts.mockResolvedValue(mockConcepts);
       mockService.getThematicDirectionsByConceptId.mockResolvedValue(null);
@@ -237,7 +269,9 @@ describe('CacheWarming', () => {
       );
 
       // Should try to get directions but not cache them
-      expect(mockService.getThematicDirectionsByConceptId).toHaveBeenCalledWith('concept-1');
+      expect(mockService.getThematicDirectionsByConceptId).toHaveBeenCalledWith(
+        'concept-1'
+      );
       expect(mockCache.set).toHaveBeenCalledTimes(1); // Only concepts cached
     });
 
@@ -245,26 +279,31 @@ describe('CacheWarming', () => {
       const error = new Error('Service error');
       mockService.getAllCharacterConcepts.mockRejectedValue(error);
 
-      await expect(CacheWarming.warmCache(mockCache, mockService, mockLogger))
-        .resolves.not.toThrow();
+      await expect(
+        CacheWarming.warmCache(mockCache, mockService, mockLogger)
+      ).resolves.not.toThrow();
 
       // Should log the error
-      expect(mockLogger.warn).toHaveBeenCalledWith('Cache warming failed:', error);
-      
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Cache warming failed:',
+        error
+      );
+
       // Should not cache anything
       expect(mockCache.set).not.toHaveBeenCalled();
     });
 
     it('should handle partial errors gracefully', async () => {
-      const mockConcepts = [
-        { id: 'concept-1', name: 'Concept 1' },
-      ];
-      
-      mockService.getAllCharacterConcepts.mockResolvedValue(mockConcepts);
-      mockService.getThematicDirectionsByConceptId.mockRejectedValue(new Error('Directions error'));
+      const mockConcepts = [{ id: 'concept-1', name: 'Concept 1' }];
 
-      await expect(CacheWarming.warmCache(mockCache, mockService, mockLogger))
-        .resolves.not.toThrow();
+      mockService.getAllCharacterConcepts.mockResolvedValue(mockConcepts);
+      mockService.getThematicDirectionsByConceptId.mockRejectedValue(
+        new Error('Directions error')
+      );
+
+      await expect(
+        CacheWarming.warmCache(mockCache, mockService, mockLogger)
+      ).resolves.not.toThrow();
 
       // Should cache concepts
       expect(mockCache.set).toHaveBeenCalledWith(
@@ -285,8 +324,14 @@ describe('CacheWarming', () => {
 
       await CacheWarming.warmCache(mockCache, mockService, mockLogger);
 
-      expect(mockService.getThematicDirectionsByConceptId).not.toHaveBeenCalled();
-      expect(mockCache.set).toHaveBeenCalledWith('all_concepts', [], 'concepts');
+      expect(
+        mockService.getThematicDirectionsByConceptId
+      ).not.toHaveBeenCalled();
+      expect(mockCache.set).toHaveBeenCalledWith(
+        'all_concepts',
+        [],
+        'concepts'
+      );
     });
   });
 });

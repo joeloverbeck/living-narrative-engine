@@ -165,7 +165,6 @@ describe('Action Tracing - Execution Integration', () => {
     });
   });
 
-
   describe('Event Payload Capture', () => {
     it('should capture complete event payload', async () => {
       await testBed.configureTracing({
@@ -194,7 +193,6 @@ describe('Action Tracing - Execution Integration', () => {
       expect(trace.eventPayload.actionId).toBe('core:take');
       expect(trace.eventPayload.timestamp).toBeGreaterThan(0);
     });
-
 
     it('should preserve payload structure through execution', async () => {
       await testBed.configureTracing({

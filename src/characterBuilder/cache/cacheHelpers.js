@@ -108,7 +108,9 @@ export const CacheWarming = {
             directions,
             'directions'
           );
-          logger.debug(`Cache warmed with directions for concept ${recentConcept.id}`);
+          logger.debug(
+            `Cache warmed with directions for concept ${recentConcept.id}`
+          );
         }
       }
     } catch (error) {

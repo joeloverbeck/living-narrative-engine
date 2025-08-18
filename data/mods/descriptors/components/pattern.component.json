@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:pattern",
+  "description": "Pattern and decorative element descriptors for clothing and accessories",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "pattern": {
+        "type": "string",
+        "description": "The pattern or decorative element",
+        "enum": [
+          "solid",
+          "striped",
+          "polka-dot",
+          "heart",
+          "floral",
+          "geometric",
+          "plaid",
+          "checked"
+        ],
+        "default": "solid"
+      }
+    },
+    "required": ["pattern"],
+    "additionalProperties": false
+  }
+}

@@ -4,10 +4,10 @@
  * @see ../services/characterBuilderService.js
  */
 
-import { 
-  validateDependency, 
-  assertNonBlankString, 
-  assertPresent 
+import {
+  validateDependency,
+  assertNonBlankString,
+  assertPresent,
 } from '../../utils/dependencyUtils.js';
 import { CHARACTER_BUILDER_EVENTS } from '../services/characterBuilderService.js';
 import { CacheError, CacheKeyError } from '../../errors/cacheError.js';
@@ -51,11 +51,11 @@ export class CoreMotivationsCacheManager {
   constructor({ logger, eventBus, schemaValidator }) {
     validateDependency(logger, 'ILogger');
     validateDependency(eventBus, 'ISafeEventDispatcher');
-    
+
     this.#logger = logger;
     this.#eventBus = eventBus;
     this.#schemaValidator = schemaValidator;
-    
+
     this.#dispatchEvent(CHARACTER_BUILDER_EVENTS.CACHE_INITIALIZED, {
       maxSize: this.#maxCacheSize,
       ttlConfig: this.#ttlConfig,
@@ -70,7 +70,12 @@ export class CoreMotivationsCacheManager {
    * @returns {*} Cached value or null
    */
   get(key) {
-    assertNonBlankString(key, 'key', 'CoreMotivationsCacheManager.get', this.#logger);
+    assertNonBlankString(
+      key,
+      'key',
+      'CoreMotivationsCacheManager.get',
+      this.#logger
+    );
 
     const entry = this.#cache.get(key);
 
@@ -93,12 +98,12 @@ export class CoreMotivationsCacheManager {
     entry.hits++;
     this.#stats.hits++;
 
-    this.#dispatchEvent(CHARACTER_BUILDER_EVENTS.CACHE_HIT, { 
-      key, 
+    this.#dispatchEvent(CHARACTER_BUILDER_EVENTS.CACHE_HIT, {
+      key,
       type: entry.type,
-      totalHits: entry.hits 
+      totalHits: entry.hits,
     });
-    
+
     this.#logger.debug(`Cache hit for key: ${key} (hits: ${entry.hits})`);
     return entry.data;
   }
@@ -112,15 +117,26 @@ export class CoreMotivationsCacheManager {
    * @param {number} [customTTL] - Custom TTL in milliseconds
    */
   set(key, data, type = null, customTTL = null) {
-    assertNonBlankString(key, 'key', 'CoreMotivationsCacheManager.set', this.#logger);
+    assertNonBlankString(
+      key,
+      'key',
+      'CoreMotivationsCacheManager.set',
+      this.#logger
+    );
     assertPresent(data, 'data', InvalidArgumentError, this.#logger);
 
     // Validate cached data if schema validator available
     if (this.#schemaValidator && type) {
       try {
-        this.#schemaValidator.validateAgainstSchema(data, `core:${type}-cache-entry`);
+        this.#schemaValidator.validateAgainstSchema(
+          data,
+          `core:${type}-cache-entry`
+        );
       } catch (validationError) {
-        this.#logger.warn(`Cache data validation failed for ${key}:`, validationError);
+        this.#logger.warn(
+          `Cache data validation failed for ${key}:`,
+          validationError
+        );
         // Continue with caching - validation is advisory for cache
       }
     }
@@ -150,7 +166,7 @@ export class CoreMotivationsCacheManager {
 
     this.#cache.set(key, entry);
     this.#stats.sets++;
-    
+
     this.#logger.debug(
       `Cached data for key: ${key} (type: ${type || 'generic'})`
     );
@@ -225,8 +241,8 @@ export class CoreMotivationsCacheManager {
   /**
    * Helper method to dispatch events safely
    *
-   * @param {string} eventType 
-   * @param {object} payload 
+   * @param {string} eventType
+   * @param {object} payload
    * @private
    */
   #dispatchEvent(eventType, payload) {
@@ -260,7 +276,9 @@ export class CoreMotivationsCacheManager {
     if (lruKey) {
       this.#cache.delete(lruKey);
       this.#stats.evictions++;
-      this.#dispatchEvent(CHARACTER_BUILDER_EVENTS.CACHE_EVICTED, { key: lruKey });
+      this.#dispatchEvent(CHARACTER_BUILDER_EVENTS.CACHE_EVICTED, {
+        key: lruKey,
+      });
       this.#logger.debug(`Evicted LRU cache entry: ${lruKey}`);
     }
   }
@@ -278,8 +296,10 @@ export class CoreMotivationsCacheManager {
       misses: this.#stats.misses,
       sets: this.#stats.sets,
       evictions: this.#stats.evictions,
-      hitRate: this.#stats.hits + this.#stats.misses > 0 ? 
-        this.#stats.hits / (this.#stats.hits + this.#stats.misses) : 0,
+      hitRate:
+        this.#stats.hits + this.#stats.misses > 0
+          ? this.#stats.hits / (this.#stats.hits + this.#stats.misses)
+          : 0,
       entries: [],
       totalHits: 0,
       byType: {},

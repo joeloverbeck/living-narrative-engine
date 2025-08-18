@@ -20,10 +20,10 @@ describe('ClichesGenerator - Bug Fix Integration Tests', () => {
 
     // Now setup will initialize the controller with the mocked data already in place
     await testBed.setup();
-    
+
     // Additional wait to ensure initialization is complete
     await testBed.flushPromises();
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
   });
 
   afterEach(() => {
@@ -47,19 +47,21 @@ describe('ClichesGenerator - Bug Fix Integration Tests', () => {
       // Act - Simulate selecting a direction
       const directionSelector = document.getElementById('direction-selector');
       directionSelector.value = mockDirection.id;
-      
+
       // Trigger the change event
       const changeEvent = new Event('change', { bubbles: true });
       directionSelector.dispatchEvent(changeEvent);
 
       // Wait for async operations to complete
       await testBed.flushPromises();
-      await new Promise(resolve => setTimeout(resolve, 100)); // Additional wait for async handlers
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Additional wait for async handlers
 
       // Assert - Check if the event was dispatched
       const calls = dispatchSpy.mock.calls;
-      const eventCall = calls.find(call => call[0] === 'core:direction_selection_started');
-      
+      const eventCall = calls.find(
+        (call) => call[0] === 'core:direction_selection_started'
+      );
+
       expect(eventCall).toBeDefined();
       expect(eventCall[1]).toEqual(
         expect.objectContaining({
@@ -88,7 +90,7 @@ describe('ClichesGenerator - Bug Fix Integration Tests', () => {
 
       // Get the dispatch spy
       const dispatchSpy = testBed.mockEventBus.dispatch;
-      
+
       // Clear previous calls
       dispatchSpy.mockClear();
 
@@ -99,7 +101,7 @@ describe('ClichesGenerator - Bug Fix Integration Tests', () => {
 
       // Wait for async operations
       await testBed.flushPromises();
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Wait for direction selection to complete and generate button to be enabled
       await testBed.waitFor(() => {
@@ -110,20 +112,27 @@ describe('ClichesGenerator - Bug Fix Integration Tests', () => {
       // Generate clichés
       const generateBtn = document.getElementById('generate-btn');
       const form = document.getElementById('cliches-form');
-      
+
       // Trigger form submit event (which the controller listens to)
-      const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+      const submitEvent = new Event('submit', {
+        bubbles: true,
+        cancelable: true,
+      });
       form.dispatchEvent(submitEvent);
 
       // Wait for generation to complete
       await testBed.flushPromises();
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Assert - check if events were dispatched
       const calls = dispatchSpy.mock.calls;
-      const startedEvent = calls.find(call => call[0] === 'core:cliches_generation_started');
-      const completedEvent = calls.find(call => call[0] === 'core:cliches_generation_completed');
-      
+      const startedEvent = calls.find(
+        (call) => call[0] === 'core:cliches_generation_started'
+      );
+      const completedEvent = calls.find(
+        (call) => call[0] === 'core:cliches_generation_completed'
+      );
+
       expect(startedEvent).toBeDefined();
       expect(completedEvent).toBeDefined();
     });
@@ -157,8 +166,8 @@ describe('ClichesGenerator - Bug Fix Integration Tests', () => {
 
       // Wait for direction selection
       await testBed.flushPromises();
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       await testBed.waitFor(() => {
         const generateBtn = document.getElementById('generate-btn');
         return generateBtn && !generateBtn.disabled;
@@ -166,17 +175,22 @@ describe('ClichesGenerator - Bug Fix Integration Tests', () => {
 
       // Try to generate clichés
       const form = document.getElementById('cliches-form');
-      const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+      const submitEvent = new Event('submit', {
+        bubbles: true,
+        cancelable: true,
+      });
       form.dispatchEvent(submitEvent);
 
       // Wait for failure event
       await testBed.flushPromises();
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Assert
       const calls = dispatchSpy.mock.calls;
-      const failedEvent = calls.find(call => call[0] === 'core:cliches_generation_failed');
-      
+      const failedEvent = calls.find(
+        (call) => call[0] === 'core:cliches_generation_failed'
+      );
+
       expect(failedEvent).toBeDefined();
       expect(failedEvent[0]).toBe('core:cliches_generation_failed');
     });
@@ -207,7 +221,7 @@ describe('ClichesGenerator - Bug Fix Integration Tests', () => {
 
       // Wait for async operations
       await testBed.flushPromises();
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Wait for state change
       await testBed.waitFor(() => {
@@ -250,7 +264,7 @@ describe('ClichesGenerator - Bug Fix Integration Tests', () => {
 
       // Wait for async operations
       await testBed.flushPromises();
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Wait for direction selection
       await testBed.waitFor(() => {
@@ -260,13 +274,16 @@ describe('ClichesGenerator - Bug Fix Integration Tests', () => {
 
       // Generate clichés
       const form = document.getElementById('cliches-form');
-      const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+      const submitEvent = new Event('submit', {
+        bubbles: true,
+        cancelable: true,
+      });
       form.dispatchEvent(submitEvent);
 
       // Wait for generation to complete
       await testBed.flushPromises();
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       await testBed.waitFor(() => {
         const resultsState = document.getElementById('results-state');
         return resultsState && resultsState.style.display !== 'none';

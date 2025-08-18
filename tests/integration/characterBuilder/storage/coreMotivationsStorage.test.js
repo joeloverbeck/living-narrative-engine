@@ -466,9 +466,8 @@ describe('Core Motivations Storage Integration', () => {
         .mockReturnValueOnce(deleteRequest1)
         .mockReturnValueOnce(deleteRequest2);
 
-      const deletePromise = db.deleteAllCoreMotivationsForDirection(
-        'direction-1'
-      );
+      const deletePromise =
+        db.deleteAllCoreMotivationsForDirection('direction-1');
 
       setTimeout(() => {
         getAllRequest.onsuccess();
@@ -644,14 +643,22 @@ describe('Core Motivations Storage Integration', () => {
 
     it('should handle concurrent operations safely', async () => {
       const motivations = [
-        { directionId: 'direction-1', conceptId: 'concept-1', coreDesire: 'First' },
-        { directionId: 'direction-1', conceptId: 'concept-1', coreDesire: 'Second' },
+        {
+          directionId: 'direction-1',
+          conceptId: 'concept-1',
+          coreDesire: 'First',
+        },
+        {
+          directionId: 'direction-1',
+          conceptId: 'concept-1',
+          coreDesire: 'Second',
+        },
       ];
 
       // Simulate concurrent save operations
       const putRequest1 = { onsuccess: null, onerror: null };
       const putRequest2 = { onsuccess: null, onerror: null };
-      
+
       mockObjectStore.put
         .mockReturnValueOnce(putRequest1)
         .mockReturnValueOnce(putRequest2);
@@ -664,7 +671,10 @@ describe('Core Motivations Storage Integration', () => {
         putRequest2.onsuccess();
       }, 0);
 
-      const [result1, result2] = await Promise.all([save1Promise, save2Promise]);
+      const [result1, result2] = await Promise.all([
+        save1Promise,
+        save2Promise,
+      ]);
 
       expect(result1).toMatchObject(motivations[0]);
       expect(result2).toMatchObject(motivations[1]);

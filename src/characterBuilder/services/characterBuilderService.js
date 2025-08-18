@@ -65,8 +65,10 @@ export const CHARACTER_BUILDER_EVENTS = {
   CLICHES_GENERATION_FAILED: 'core:cliches_generation_failed',
   CLICHES_DELETED: 'core:cliches_deleted',
   // Core motivations events
-  CORE_MOTIVATIONS_GENERATION_STARTED: 'core:core_motivations_generation_started',
-  CORE_MOTIVATIONS_GENERATION_COMPLETED: 'core:core_motivations_generation_completed',
+  CORE_MOTIVATIONS_GENERATION_STARTED:
+    'core:core_motivations_generation_started',
+  CORE_MOTIVATIONS_GENERATION_COMPLETED:
+    'core:core_motivations_generation_completed',
   CORE_MOTIVATIONS_GENERATION_FAILED: 'core:core_motivations_generation_failed',
   CORE_MOTIVATIONS_RETRIEVED: 'core:core_motivations_retrieved',
   // Cache events
@@ -164,7 +166,7 @@ export class CharacterBuilderService {
     this.#clicheGenerator = clicheGenerator;
     this.#container = container;
     this.#cacheManager = cacheManager;
-    
+
     // Initialize cache with existing Maps as fallback
     if (this.#cacheManager) {
       this.#enhanceCacheIntegration();
@@ -185,7 +187,7 @@ export class CharacterBuilderService {
       }
       this.#clicheCache.clear();
     }
-    
+
     if (this.#motivationCache.size > 0) {
       for (const [key, value] of this.#motivationCache.entries()) {
         this.#cacheManager.set(key, value.data, 'motivations');
@@ -1398,7 +1400,8 @@ export class CharacterBuilderService {
       }
 
       // Get the direction
-      const direction = await this.#storageService.getThematicDirection(directionId);
+      const direction =
+        await this.#storageService.getThematicDirection(directionId);
       if (!direction) {
         throw new EntityNotFoundError(`Direction ${directionId} not found`);
       }
@@ -1424,23 +1427,25 @@ export class CharacterBuilderService {
           conceptId,
           directionId,
           directionTitle: direction.title,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
 
       const startTime = Date.now();
 
       try {
         // Call the Core Motivations Generator service
-        const generator = this.#container.resolve(tokens.ICoreMotivationsGenerator);
+        const generator = this.#container.resolve(
+          tokens.ICoreMotivationsGenerator
+        );
         const generatedMotivations = await generator.generate({
           concept,
           direction,
-          cliches
+          cliches,
         });
 
         // Create CoreMotivation instances
-        const motivations = generatedMotivations.map(rawMotivation =>
+        const motivations = generatedMotivations.map((rawMotivation) =>
           CoreMotivation.fromRawData({
             directionId,
             conceptId,
@@ -1448,8 +1453,8 @@ export class CharacterBuilderService {
             llmMetadata: {
               model: generator.getLastModelUsed(),
               temperature: 0.8,
-              generationTime: Date.now() - startTime
-            }
+              generationTime: Date.now() - startTime,
+            },
           })
         );
 
@@ -1463,12 +1468,9 @@ export class CharacterBuilderService {
           }
         }
 
-        this.#logger.info(
-          `Generated ${motivations.length} core motivations`
-        );
+        this.#logger.info(`Generated ${motivations.length} core motivations`);
 
         return motivations;
-
       } catch (error) {
         // Dispatch generation failed event
         this.#eventBus.dispatch({
@@ -1477,13 +1479,12 @@ export class CharacterBuilderService {
             conceptId,
             directionId,
             error: error.message,
-            errorCode: error.code || 'GENERATION_ERROR'
-          }
+            errorCode: error.code || 'GENERATION_ERROR',
+          },
         });
 
         throw error;
       }
-
     } catch (error) {
       this.#logger.error('Failed to generate core motivations:', error);
       throw error;
@@ -1514,7 +1515,9 @@ export class CharacterBuilderService {
         }
       } catch (cacheError) {
         // Log cache error but continue with database fallback
-        this.#logger.warn(`Cache error for key ${cacheKey}: ${cacheError.message}`);
+        this.#logger.warn(
+          `Cache error for key ${cacheKey}: ${cacheError.message}`
+        );
       }
     } else {
       // Fallback to old cache system
@@ -1526,8 +1529,8 @@ export class CharacterBuilderService {
           payload: {
             directionId,
             count: cached.data.length,
-            source: 'cache'
-          }
+            source: 'cache',
+          },
         });
         return cached.data;
       }
@@ -1535,8 +1538,9 @@ export class CharacterBuilderService {
 
     try {
       // Fetch from database
-      const motivations = await this.#database.getCoreMotivationsByDirectionId(directionId);
-      
+      const motivations =
+        await this.#database.getCoreMotivationsByDirectionId(directionId);
+
       // Handle case where database returns null/undefined
       if (!motivations || !Array.isArray(motivations)) {
         this.#eventBus.dispatch({
@@ -1545,9 +1549,9 @@ export class CharacterBuilderService {
         });
         return [];
       }
-      
+
       // Convert to model instances
-      const motivationModels = motivations.map(data =>
+      const motivationModels = motivations.map((data) =>
         CoreMotivation.fromRawData(data)
       );
 
@@ -1557,25 +1561,37 @@ export class CharacterBuilderService {
           this.#cacheManager.set(cacheKey, motivationModels, 'motivations');
         } catch (cacheError) {
           // Log cache error but don't fail the operation
-          this.#logger.warn(`Failed to cache motivations for key ${cacheKey}: ${cacheError.message}`);
+          this.#logger.warn(
+            `Failed to cache motivations for key ${cacheKey}: ${cacheError.message}`
+          );
         }
       } else if (this.#motivationCache) {
         // Fallback to old cache system
         this.#motivationCache.set(cacheKey, {
           data: motivationModels,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
 
       this.#eventBus.dispatch({
         type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
-        payload: { directionId, source: 'database', count: motivationModels?.length || 0 },
+        payload: {
+          directionId,
+          source: 'database',
+          count: motivationModels?.length || 0,
+        },
       });
 
       return motivationModels;
     } catch (error) {
-      this.#logger.error(`Failed to get core motivations for direction ${directionId}:`, error);
-      throw new CharacterBuilderError(`Failed to retrieve core motivations`, error);
+      this.#logger.error(
+        `Failed to get core motivations for direction ${directionId}:`,
+        error
+      );
+      throw new CharacterBuilderError(
+        `Failed to retrieve core motivations`,
+        error
+      );
     }
   }
 
@@ -1616,7 +1632,7 @@ export class CharacterBuilderService {
 
     try {
       // Convert to plain objects for storage
-      const motivationData = motivations.map(m => {
+      const motivationData = motivations.map((m) => {
         if (m instanceof CoreMotivation) {
           return m.toJSON();
         }
@@ -1624,7 +1640,7 @@ export class CharacterBuilderService {
       });
 
       // Ensure all have the correct directionId
-      motivationData.forEach(m => {
+      motivationData.forEach((m) => {
         m.directionId = directionId;
       });
 
@@ -1652,14 +1668,13 @@ export class CharacterBuilderService {
           directionId,
           motivationIds: savedIds,
           totalCount: await this.#database.getCoreMotivationsCount(directionId),
-          generationTime: Date.now()
-        }
+          generationTime: Date.now(),
+        },
       });
 
       this.#logger.info(`Saved ${savedIds.length} core motivations`);
 
       return savedIds;
-
     } catch (error) {
       this.#logger.error('Failed to save core motivations:', error);
       throw error;
@@ -1683,7 +1698,10 @@ export class CharacterBuilderService {
       if (success) {
         // Invalidate related caches
         if (this.#cacheManager) {
-          CacheInvalidation.invalidateMotivations(this.#cacheManager, directionId);
+          CacheInvalidation.invalidateMotivations(
+            this.#cacheManager,
+            directionId
+          );
         } else if (this.#motivationCache) {
           // Fallback to old cache system
           const cacheKey = `motivations_${directionId}`;
@@ -1694,7 +1712,6 @@ export class CharacterBuilderService {
       }
 
       return success;
-
     } catch (error) {
       this.#logger.error(
         `Failed to remove core motivation ${motivationId}:`,
@@ -1714,8 +1731,8 @@ export class CharacterBuilderService {
     assertNonBlankString(directionId, 'Direction ID is required');
 
     try {
-      const deletedCount = await this.#database
-        .deleteAllCoreMotivationsForDirection(directionId);
+      const deletedCount =
+        await this.#database.deleteAllCoreMotivationsForDirection(directionId);
 
       // Clear cache
       if (this.#motivationCache) {
@@ -1728,7 +1745,6 @@ export class CharacterBuilderService {
       );
 
       return deletedCount;
-
     } catch (error) {
       this.#logger.error(
         `Failed to clear core motivations for direction ${directionId}:`,
@@ -1749,8 +1765,8 @@ export class CharacterBuilderService {
 
     try {
       // Get all motivations for the concept
-      const allMotivations = await this.#database
-        .getCoreMotivationsByConceptId(conceptId);
+      const allMotivations =
+        await this.#database.getCoreMotivationsByConceptId(conceptId);
 
       // Group by direction
       const motivationsByDirection = {};
@@ -1770,7 +1786,6 @@ export class CharacterBuilderService {
       );
 
       return motivationsByDirection;
-
     } catch (error) {
       this.#logger.error(
         `Failed to get all core motivations for concept ${conceptId}:`,
@@ -1790,13 +1805,15 @@ export class CharacterBuilderService {
     assertNonBlankString(directionId, 'Direction ID is required');
 
     try {
-      const motivations = await this.getCoreMotivationsByDirectionId(directionId);
+      const motivations =
+        await this.getCoreMotivationsByDirectionId(directionId);
 
       if (motivations.length === 0) {
         return 'No core motivations found for this direction.';
       }
 
-      const direction = await this.#storageService.getThematicDirection(directionId);
+      const direction =
+        await this.#storageService.getThematicDirection(directionId);
 
       let text = `Core Motivations for: ${direction?.title || directionId}\n`;
       text += `${'='.repeat(60)}\n\n`;
@@ -1815,7 +1832,6 @@ export class CharacterBuilderService {
       text += `\nGenerated on: ${new Date().toLocaleString()}`;
 
       return text;
-
     } catch (error) {
       this.#logger.error(
         `Failed to export core motivations for direction ${directionId}:`,
@@ -1841,11 +1857,13 @@ export class CharacterBuilderService {
         directionsWithMotivations: 0,
         totalMotivations: 0,
         averageMotivationsPerDirection: 0,
-        directionStats: []
+        directionStats: [],
       };
 
       for (const direction of directions) {
-        const count = await this.#database.getCoreMotivationsCount(direction.id);
+        const count = await this.#database.getCoreMotivationsCount(
+          direction.id
+        );
 
         if (count > 0) {
           stats.directionsWithMotivations++;
@@ -1854,7 +1872,7 @@ export class CharacterBuilderService {
           stats.directionStats.push({
             directionId: direction.id,
             directionTitle: direction.title,
-            motivationCount: count
+            motivationCount: count,
           });
         }
       }
@@ -1865,7 +1883,6 @@ export class CharacterBuilderService {
       }
 
       return stats;
-
     } catch (error) {
       this.#logger.error(
         `Failed to get core motivations statistics for concept ${conceptId}:`,

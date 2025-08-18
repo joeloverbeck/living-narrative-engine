@@ -55,7 +55,6 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       parseLLMResponse: jest.fn(),
     };
 
-
     // Use enhanced event bus that tracks dispatches for state management testing
     this.mockEventBus = this.createEnhancedEventBus();
 
@@ -84,8 +83,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
     // This ensures the controller has data to load during initialization
     // Check if the mock has not been configured with a return value
     if (
-      !this.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
-        .getMockImplementation?.() &&
+      !this.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.getMockImplementation?.() &&
       !this.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
         .mock.results.length
     ) {
@@ -362,7 +360,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       // Wait for async operations
       await this.flushPromises();
     }
-    
+
     // Give extra time for all operations to complete
     await this.waitForAsyncOperations();
   }
@@ -383,7 +381,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       // Wait for async operations
       await this.flushPromises();
     }
-    
+
     // Give extra time for all operations to complete
     await this.waitForAsyncOperations();
   }
@@ -494,7 +492,9 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
     );
 
     // Setup hasClichesForDirection to return false initially to trigger proper caching flow
-    this.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+    this.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+      false
+    );
 
     return { directions, concepts };
   }
@@ -552,7 +552,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
 
     // Wait for all async operations to complete
     await this.waitForAsyncOperations();
-    
+
     // Give extra time for state updates
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
@@ -807,10 +807,10 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
     // Set the direction selector value
     const selector = this.getDirectionSelector();
     selector.value = directionId;
-    
+
     // Clear previous events for cleaner testing
     this.clearEventTracking();
-    
+
     // Directly trigger the controller's direction selection handler
     // This ensures the expected flow executes regardless of event timing issues
     if (this.controller && this.controller._testDirectionSelection) {
@@ -830,7 +830,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
   async ensureGenerationFlow() {
     // Clear previous events for cleaner testing
     this.clearEventTracking();
-    
+
     // Directly trigger the controller's generation handler
     if (this.controller && this.controller._testGeneration) {
       await this.controller._testGeneration();
@@ -880,20 +880,24 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
    */
   async waitForAsyncOperations(timeout = 1000) {
     const startTime = Date.now();
-    
+
     // First flush immediate promises
     await this.flushPromises();
-    
+
     // Wait for any pending operations
     while (Date.now() - startTime < timeout) {
       // Check if controller is still processing
-      if (this.controller && this.controller.isGenerating && this.controller.isGenerating()) {
+      if (
+        this.controller &&
+        this.controller.isGenerating &&
+        this.controller.isGenerating()
+      ) {
         await new Promise((resolve) => setTimeout(resolve, 10));
         continue;
       }
       break;
     }
-    
+
     // Final flush to ensure everything is settled
     await this.flushPromises();
   }
@@ -1207,7 +1211,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
       // Access private fields through the controller's state
       // We can't directly access private fields, but we can wait for any pending operations
       // and ensure the controller is not in a generating state
-      
+
       // Clear any pending operations by waiting
       return new Promise((resolve) => {
         const checkState = () => {

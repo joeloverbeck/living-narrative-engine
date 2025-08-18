@@ -1,21 +1,25 @@
 # ACTBUTVIS-011: Integration Tests for End-to-End Flow
 
 ## Status
+
 **Status**: Not Started  
 **Priority**: High  
 **Type**: Integration Testing  
-**Estimated Effort**: 3 hours  
+**Estimated Effort**: 3 hours
 
 ## Dependencies
+
 - **Requires**: ACTBUTVIS-010 (Unit Tests)
 - **Blocks**: ACTBUTVIS-012 (Performance Testing)
 
 ## Context
+
 Integration tests to verify that visual properties flow correctly through the entire application pipeline, from action JSON files through to rendered DOM elements. These tests ensure all components work together properly and catch integration issues that unit tests might miss.
 
 ## Objectives
+
 1. Test complete pipeline from JSON to DOM rendering
-2. Verify visual properties persist through action processing stages  
+2. Verify visual properties persist through action processing stages
 3. Test theme switching with custom visual properties
 4. Validate hover state interactions work end-to-end
 5. Ensure error handling works across component boundaries
@@ -25,6 +29,7 @@ Integration tests to verify that visual properties flow correctly through the en
 ### Integration Test Structure
 
 #### 1. End-to-End Action Processing Test
+
 **New File**: `tests/integration/actions/visualPropertiesFlow.integration.test.js`
 
 ```javascript
@@ -58,30 +63,34 @@ describe('Visual Properties - End-to-End Integration', () => {
           backgroundColor: '#ff6b35',
           textColor: '#ffffff',
           hoverBackgroundColor: '#e55a2b',
-          hoverTextColor: '#f0f0f0'
+          hoverTextColor: '#f0f0f0',
         },
         conditions: [],
-        effects: []
+        effects: [],
       };
 
       // 2. Load action through the system
       await testBed.loadAction(actionData, 'test_mod');
 
       // 3. Verify action is in registry with visual properties
-      const loadedAction = testBed.dataRegistry.get('actions.test_mod:test_visual_action');
+      const loadedAction = testBed.dataRegistry.get(
+        'actions.test_mod:test_visual_action'
+      );
       expect(loadedAction).toBeDefined();
       expect(loadedAction.visual).toEqual(actionData.visual);
 
       // 4. Process action through pipeline
       const turnContext = testBed.createTurnContext({
         actor: 'player',
-        availableActions: ['test_mod:test_visual_action']
+        availableActions: ['test_mod:test_visual_action'],
       });
 
       const processedActions = await testBed.processTurnActions(turnContext);
-      
+
       // 5. Verify visual properties survive pipeline processing
-      const processedAction = processedActions.find(a => a.actionId === 'test_mod:test_visual_action');
+      const processedAction = processedActions.find(
+        (a) => a.actionId === 'test_mod:test_visual_action'
+      );
       expect(processedAction.visual).toEqual(actionData.visual);
 
       // 6. Render actions to DOM
@@ -89,7 +98,9 @@ describe('Visual Properties - End-to-End Integration', () => {
       renderer.render(processedActions);
 
       // 7. Verify DOM elements have correct visual styles
-      const button = mockDOMEnv.container.querySelector('[data-action-id="test_mod:test_visual_action"]');
+      const button = mockDOMEnv.container.querySelector(
+        '[data-action-id="test_mod:test_visual_action"]'
+      );
       expect(button).toBeTruthy();
       expect(button.style.backgroundColor).toContain('255, 107, 53'); // RGB of #ff6b35
       expect(button.style.color).toContain('255, 255, 255'); // RGB of #ffffff
@@ -103,14 +114,14 @@ describe('Visual Properties - End-to-End Integration', () => {
           id: 'action_with_visual',
           name: 'Visual Action',
           template: 'visual action',
-          visual: { backgroundColor: '#ff0000' }
+          visual: { backgroundColor: '#ff0000' },
         },
         {
           id: 'action_without_visual',
-          name: 'Normal Action', 
-          template: 'normal action'
+          name: 'Normal Action',
+          template: 'normal action',
           // No visual property
-        }
+        },
       ];
 
       // Load both actions
@@ -121,7 +132,10 @@ describe('Visual Properties - End-to-End Integration', () => {
       // Process both actions
       const turnContext = testBed.createTurnContext({
         actor: 'player',
-        availableActions: ['test_mod:action_with_visual', 'test_mod:action_without_visual']
+        availableActions: [
+          'test_mod:action_with_visual',
+          'test_mod:action_without_visual',
+        ],
       });
 
       const processedActions = await testBed.processTurnActions(turnContext);
@@ -131,14 +145,22 @@ describe('Visual Properties - End-to-End Integration', () => {
       renderer.render(processedActions);
 
       // Verify visual action has styles
-      const visualButton = mockDOMEnv.container.querySelector('[data-action-id="test_mod:action_with_visual"]');
+      const visualButton = mockDOMEnv.container.querySelector(
+        '[data-action-id="test_mod:action_with_visual"]'
+      );
       expect(visualButton.style.backgroundColor).toContain('255, 0, 0');
-      expect(visualButton.classList.contains('action-button-custom-visual')).toBe(true);
+      expect(
+        visualButton.classList.contains('action-button-custom-visual')
+      ).toBe(true);
 
       // Verify normal action has no custom styles
-      const normalButton = mockDOMEnv.container.querySelector('[data-action-id="test_mod:action_without_visual"]');
+      const normalButton = mockDOMEnv.container.querySelector(
+        '[data-action-id="test_mod:action_without_visual"]'
+      );
       expect(normalButton.style.backgroundColor).toBe('');
-      expect(normalButton.classList.contains('action-button-custom-visual')).toBe(false);
+      expect(
+        normalButton.classList.contains('action-button-custom-visual')
+      ).toBe(false);
     });
   });
 
@@ -150,27 +172,31 @@ describe('Visual Properties - End-to-End Integration', () => {
         template: 'test action',
         visual: {
           backgroundColor: 'invalid-color',
-          textColor: '#ffffff'
-        }
+          textColor: '#ffffff',
+        },
       };
 
       // Should not throw during loading
-      await expect(testBed.loadAction(actionData, 'test_mod')).resolves.not.toThrow();
+      await expect(
+        testBed.loadAction(actionData, 'test_mod')
+      ).resolves.not.toThrow();
 
       // Verify action loads but visual properties are cleaned up
-      const loadedAction = testBed.dataRegistry.get('actions.test_mod:invalid_visual_action');
+      const loadedAction = testBed.dataRegistry.get(
+        'actions.test_mod:invalid_visual_action'
+      );
       expect(loadedAction).toBeDefined();
       expect(loadedAction.visual).toBeNull(); // Invalid properties removed
 
       // Should still render normally
       const turnContext = testBed.createTurnContext({
         actor: 'player',
-        availableActions: ['test_mod:invalid_visual_action']
+        availableActions: ['test_mod:invalid_visual_action'],
       });
 
       const processedActions = await testBed.processTurnActions(turnContext);
       const renderer = testBed.getActionButtonsRenderer();
-      
+
       expect(() => renderer.render(processedActions)).not.toThrow();
     });
 
@@ -180,7 +206,7 @@ describe('Visual Properties - End-to-End Integration', () => {
         id: 'test_action',
         name: 'Test Action',
         template: 'test',
-        visual: { backgroundColor: '#ff0000' }
+        visual: { backgroundColor: '#ff0000' },
       };
 
       await testBed.loadAction(actionData, 'test_mod');
@@ -188,7 +214,7 @@ describe('Visual Properties - End-to-End Integration', () => {
       // Spy on formatting stage to inject invalid visual data
       const formattingStage = testBed.getActionFormattingStage();
       const originalExecute = formattingStage.execute.bind(formattingStage);
-      
+
       formattingStage.execute = jest.fn((context) => {
         // Corrupt visual data during processing
         if (context.actionData?.visual) {
@@ -199,13 +225,13 @@ describe('Visual Properties - End-to-End Integration', () => {
 
       const turnContext = testBed.createTurnContext({
         actor: 'player',
-        availableActions: ['test_mod:test_action']
+        availableActions: ['test_mod:test_action'],
       });
 
       // Should handle the error gracefully
       const processedActions = await testBed.processTurnActions(turnContext);
       expect(processedActions).toHaveLength(1);
-      
+
       // Visual properties should be null due to validation failure
       expect(processedActions[0].visual).toBeNull();
     });
@@ -219,38 +245,42 @@ describe('Visual Properties - End-to-End Integration', () => {
         template: 'test',
         visual: {
           backgroundColor: '#ff0000',
-          textColor: '#ffffff'
-        }
+          textColor: '#ffffff',
+        },
       };
 
       await testBed.loadAction(actionData, 'test_mod');
 
       const turnContext = testBed.createTurnContext({
         actor: 'player',
-        availableActions: ['test_mod:theme_test_action']
+        availableActions: ['test_mod:theme_test_action'],
       });
 
       const processedActions = await testBed.processTurnActions(turnContext);
       const renderer = testBed.getActionButtonsRenderer();
       renderer.render(processedActions);
 
-      const button = mockDOMEnv.container.querySelector('[data-action-id="test_mod:theme_test_action"]');
-      
+      const button = mockDOMEnv.container.querySelector(
+        '[data-action-id="test_mod:theme_test_action"]'
+      );
+
       // Initial theme (light)
       expect(button.style.getPropertyValue('--selection-color')).toBe('');
 
       // Trigger theme change to dark
       testBed.eventBus.emit('THEME_CHANGED', {
         newTheme: 'dark',
-        previousTheme: 'light'
+        previousTheme: 'light',
       });
 
       // Wait for theme change processing
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Verify theme-specific adaptations
       expect(button.classList.contains('theme-dark-adapted')).toBe(true);
-      expect(button.style.getPropertyValue('--selection-color')).toBe('#4CAF50');
+      expect(button.style.getPropertyValue('--selection-color')).toBe(
+        '#4CAF50'
+      );
     });
   });
 
@@ -264,50 +294,52 @@ describe('Visual Properties - End-to-End Integration', () => {
           backgroundColor: '#ff0000',
           textColor: '#ffffff',
           hoverBackgroundColor: '#00ff00',
-          hoverTextColor: '#000000'
-        }
+          hoverTextColor: '#000000',
+        },
       };
 
       await testBed.loadAction(actionData, 'test_mod');
 
       const turnContext = testBed.createTurnContext({
         actor: 'player',
-        availableActions: ['test_mod:hover_test_action']
+        availableActions: ['test_mod:hover_test_action'],
       });
 
       const processedActions = await testBed.processTurnActions(turnContext);
       const renderer = testBed.getActionButtonsRenderer();
       renderer.render(processedActions);
 
-      const button = mockDOMEnv.container.querySelector('[data-action-id="test_mod:hover_test_action"]');
-      
+      const button = mockDOMEnv.container.querySelector(
+        '[data-action-id="test_mod:hover_test_action"]'
+      );
+
       // Verify hover listeners are attached
       expect(button.dataset.hasCustomHover).toBe('true');
-      
+
       // Simulate hover
       const mouseEnterEvent = new MouseEvent('mouseenter', {
         bubbles: true,
-        cancelable: true
+        cancelable: true,
       });
-      
+
       button.dispatchEvent(mouseEnterEvent);
-      
+
       // Verify hover styles are applied
       expect(button.style.backgroundColor).toBe('#00ff00');
       expect(button.style.color).toBe('#000000');
       expect(button.classList.contains('action-button-hovering')).toBe(true);
-      
+
       // Simulate mouse leave
       const mouseLeaveEvent = new MouseEvent('mouseleave', {
         bubbles: true,
-        cancelable: true
+        cancelable: true,
       });
-      
+
       button.dispatchEvent(mouseLeaveEvent);
-      
+
       // Wait for debounce
-      await new Promise(resolve => setTimeout(resolve, 60));
-      
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
       // Verify original styles are restored
       expect(button.style.backgroundColor).toBe('#ff0000');
       expect(button.style.color).toBe('#ffffff');
@@ -326,8 +358,8 @@ describe('Visual Properties - End-to-End Integration', () => {
           template: `action ${i}`,
           visual: {
             backgroundColor: `#${i.toString(16).padStart(6, '0')}`,
-            textColor: '#ffffff'
-          }
+            textColor: '#ffffff',
+          },
         });
       }
 
@@ -337,19 +369,19 @@ describe('Visual Properties - End-to-End Integration', () => {
         await testBed.loadAction(actionData, 'test_mod');
       }
       const loadEnd = performance.now();
-      
+
       expect(loadEnd - loadStart).toBeLessThan(200); // <200ms to load 50 actions
 
       // Process all actions
       const turnContext = testBed.createTurnContext({
         actor: 'player',
-        availableActions: actions.map(a => `test_mod:${a.id}`)
+        availableActions: actions.map((a) => `test_mod:${a.id}`),
       });
 
       const processStart = performance.now();
       const processedActions = await testBed.processTurnActions(turnContext);
       const processEnd = performance.now();
-      
+
       expect(processEnd - processStart).toBeLessThan(100); // <100ms to process 50 actions
 
       // Render all actions
@@ -357,11 +389,13 @@ describe('Visual Properties - End-to-End Integration', () => {
       const renderStart = performance.now();
       renderer.render(processedActions);
       const renderEnd = performance.now();
-      
+
       expect(renderEnd - renderStart).toBeLessThan(150); // <150ms to render 50 buttons
 
       // Verify all buttons rendered correctly
-      const buttons = mockDOMEnv.container.querySelectorAll('.action-button-custom-visual');
+      const buttons = mockDOMEnv.container.querySelectorAll(
+        '.action-button-custom-visual'
+      );
       expect(buttons).toHaveLength(50);
     });
   });
@@ -371,6 +405,7 @@ describe('Visual Properties - End-to-End Integration', () => {
 ### Integration Test Configuration
 
 #### Test Environment Setup
+
 **Update**: `tests/common/integrationTestBed.js`
 
 ```javascript
@@ -389,24 +424,29 @@ class IntegrationTestBed {
    * Process turn actions through formatting pipeline
    */
   async processTurnActions(turnContext) {
-    const actionPipelineOrchestrator = this.container.get('IActionPipelineOrchestrator');
+    const actionPipelineOrchestrator = this.container.get(
+      'IActionPipelineOrchestrator'
+    );
     const turnActionFactory = this.container.get('ITurnActionFactory');
-    
+
     // Create turn actions
     const turnActions = turnActionFactory.createTurnActions(
       turnContext.availableActions,
       turnContext
     );
-    
+
     // Process through pipeline
     const processedActions = [];
     for (const turnAction of turnActions) {
-      const result = await actionPipelineOrchestrator.process(turnAction, turnContext);
+      const result = await actionPipelineOrchestrator.process(
+        turnAction,
+        turnContext
+      );
       if (result.success) {
         processedActions.push(result.actionComposite);
       }
     }
-    
+
     return processedActions;
   }
 
@@ -433,7 +473,7 @@ class IntegrationTestBed {
       target,
       availableActions,
       turnNumber: 1,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 }
@@ -474,11 +514,13 @@ npm run test:integration -- --testNamePattern="performance integration"
 - Test bed extensions support comprehensive testing
 
 ## Related Tickets
+
 - **Depends on**: ACTBUTVIS-010 (Unit tests foundation)
 - **Next**: ACTBUTVIS-012 (Performance testing)
 - **Validates**: All ACTBUTVIS-001 through ACTBUTVIS-009 implementations
 
 ## References
+
 - Integration Test: `tests/integration/actions/visualPropertiesFlow.integration.test.js`
 - Test Bed: `tests/common/integrationTestBed.js`
 - Test Utils: `tests/common/visualPropertiesTestUtils.js`

@@ -928,7 +928,10 @@ describe('Multi-Target Action Schema Validation', () => {
 
           const isValid = validate(action);
           if (!isValid) {
-            console.error(`Failed for named color '${color}':`, validate.errors);
+            console.error(
+              `Failed for named color '${color}':`,
+              validate.errors
+            );
           }
           expect(isValid).toBe(true);
         });
@@ -1029,7 +1032,8 @@ describe('Multi-Target Action Schema Validation', () => {
       const action = {
         id: 'combat:berserker_rage',
         name: 'Berserker Rage',
-        description: 'Enter a frenzied state, increasing damage but reducing accuracy',
+        description:
+          'Enter a frenzied state, increasing damage but reducing accuracy',
         targets: 'none',
         template: 'enter berserker rage',
         visual: {
@@ -1047,7 +1051,8 @@ describe('Multi-Target Action Schema Validation', () => {
       };
 
       const isValid = validate(action);
-      if (!isValid) console.error('Schema example validation errors:', validate.errors);
+      if (!isValid)
+        console.error('Schema example validation errors:', validate.errors);
       expect(isValid).toBe(true);
     });
   });
