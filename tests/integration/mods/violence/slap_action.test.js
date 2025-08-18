@@ -124,9 +124,11 @@ describe('violence:slap action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'violence:slap',
       targetId: 'beth',
+      originalInput: 'slap beth',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -226,9 +228,11 @@ describe('violence:slap action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'violence:slap',
       targetId: 'beth',
+      originalInput: 'slap beth',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -277,9 +281,11 @@ describe('violence:slap action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'violence:slap',
       targetId: 'beth',
+      originalInput: 'slap beth',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -312,9 +318,11 @@ describe('violence:slap action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'violence:slap',
       targetId: 'target1',
+      originalInput: 'slap target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -351,9 +359,11 @@ describe('violence:slap action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'violence:slap',
       targetId: 'bob',
+      originalInput: 'slap bob',
     });
 
     const perceptibleEvent = testEnv.events.find(

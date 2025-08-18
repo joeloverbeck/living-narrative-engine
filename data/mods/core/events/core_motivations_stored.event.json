@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:core_motivations_stored",
+  "description": "Dispatched when core motivations are saved to storage",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "directionId": {
+        "type": "string",
+        "description": "ID of the thematic direction"
+      },
+      "motivationIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Array of stored motivation IDs"
+      },
+      "count": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of motivations stored"
+      }
+    },
+    "required": ["directionId", "motivationIds", "count"],
+    "additionalProperties": true
+  }
+}

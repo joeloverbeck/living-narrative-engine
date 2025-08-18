@@ -159,6 +159,35 @@
     "template": {
       "type": "string",
       "description": "Required. Text template for generating the command string output, using placeholders like {target} (e.g., 'eat {target}', 'wait')."
+    },
+    "visual": {
+      "type": "object",
+      "description": "Visual customization options for action buttons",
+      "properties": {
+        "backgroundColor": {
+          "type": "string",
+          "description": "CSS color value for button background",
+          "pattern": "^(#([0-9A-Fa-f]{3}){1,2}|rgb\\(\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*\\)|rgba\\(\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(0|0\\.[0-9]+|1(\\.0+)?)\\s*\\)|(aliceblue|antiquewhite|aqua|aquamarine|azure|beige|bisque|black|blanchedalmond|blue|blueviolet|brown|burlywood|cadetblue|chartreuse|chocolate|coral|cornflowerblue|cornsilk|crimson|cyan|darkblue|darkcyan|darkgoldenrod|darkgray|darkgrey|darkgreen|darkkhaki|darkmagenta|darkolivegreen|darkorange|darkorchid|darkred|darksalmon|darkseagreen|darkslateblue|darkslategray|darkslategrey|darkturquoise|darkviolet|deeppink|deepskyblue|dimgray|dimgrey|dodgerblue|firebrick|floralwhite|forestgreen|fuchsia|gainsboro|ghostwhite|gold|goldenrod|gray|grey|green|greenyellow|honeydew|hotpink|indianred|indigo|ivory|khaki|lavender|lavenderblush|lawngreen|lemonchiffon|lightblue|lightcoral|lightcyan|lightgoldenrodyellow|lightgray|lightgrey|lightgreen|lightpink|lightsalmon|lightseagreen|lightskyblue|lightslategray|lightslategrey|lightsteelblue|lightyellow|lime|limegreen|linen|magenta|maroon|mediumaquamarine|mediumblue|mediumorchid|mediumpurple|mediumseagreen|mediumslateblue|mediumspringgreen|mediumturquoise|mediumvioletred|midnightblue|mintcream|mistyrose|moccasin|navajowhite|navy|oldlace|olive|olivedrab|orange|orangered|orchid|palegoldenrod|palegreen|paleturquoise|palevioletred|papayawhip|peachpuff|peru|pink|plum|powderblue|purple|red|rosybrown|royalblue|saddlebrown|salmon|sandybrown|seagreen|seashell|sienna|silver|skyblue|slateblue|slategray|slategrey|snow|springgreen|steelblue|tan|teal|thistle|tomato|turquoise|violet|wheat|white|whitesmoke|yellow|yellowgreen))$",
+          "examples": ["#ff0000", "rgb(255, 0, 0)", "red", "#f00"]
+        },
+        "textColor": {
+          "type": "string",
+          "description": "CSS color value for button text",
+          "pattern": "^(#([0-9A-Fa-f]{3}){1,2}|rgb\\(\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*\\)|rgba\\(\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(0|0\\.[0-9]+|1(\\.0+)?)\\s*\\)|(aliceblue|antiquewhite|aqua|aquamarine|azure|beige|bisque|black|blanchedalmond|blue|blueviolet|brown|burlywood|cadetblue|chartreuse|chocolate|coral|cornflowerblue|cornsilk|crimson|cyan|darkblue|darkcyan|darkgoldenrod|darkgray|darkgrey|darkgreen|darkkhaki|darkmagenta|darkolivegreen|darkorange|darkorchid|darkred|darksalmon|darkseagreen|darkslateblue|darkslategray|darkslategrey|darkturquoise|darkviolet|deeppink|deepskyblue|dimgray|dimgrey|dodgerblue|firebrick|floralwhite|forestgreen|fuchsia|gainsboro|ghostwhite|gold|goldenrod|gray|grey|green|greenyellow|honeydew|hotpink|indianred|indigo|ivory|khaki|lavender|lavenderblush|lawngreen|lemonchiffon|lightblue|lightcoral|lightcyan|lightgoldenrodyellow|lightgray|lightgrey|lightgreen|lightpink|lightsalmon|lightseagreen|lightskyblue|lightslategray|lightslategrey|lightsteelblue|lightyellow|lime|limegreen|linen|magenta|maroon|mediumaquamarine|mediumblue|mediumorchid|mediumpurple|mediumseagreen|mediumslateblue|mediumspringgreen|mediumturquoise|mediumvioletred|midnightblue|mintcream|mistyrose|moccasin|navajowhite|navy|oldlace|olive|olivedrab|orange|orangered|orchid|palegoldenrod|palegreen|paleturquoise|palevioletred|papayawhip|peachpuff|peru|pink|plum|powderblue|purple|red|rosybrown|royalblue|saddlebrown|salmon|sandybrown|seagreen|seashell|sienna|silver|skyblue|slateblue|slategray|slategrey|snow|springgreen|steelblue|tan|teal|thistle|tomato|turquoise|violet|wheat|white|whitesmoke|yellow|yellowgreen))$",
+          "examples": ["#ffffff", "rgb(255, 255, 255)", "white", "#fff"]
+        },
+        "hoverBackgroundColor": {
+          "type": "string",
+          "description": "CSS color for button hover state background (optional)",
+          "pattern": "^(#([0-9A-Fa-f]{3}){1,2}|rgb\\(\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*\\)|rgba\\(\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(0|0\\.[0-9]+|1(\\.0+)?)\\s*\\)|(aliceblue|antiquewhite|aqua|aquamarine|azure|beige|bisque|black|blanchedalmond|blue|blueviolet|brown|burlywood|cadetblue|chartreuse|chocolate|coral|cornflowerblue|cornsilk|crimson|cyan|darkblue|darkcyan|darkgoldenrod|darkgray|darkgrey|darkgreen|darkkhaki|darkmagenta|darkolivegreen|darkorange|darkorchid|darkred|darksalmon|darkseagreen|darkslateblue|darkslategray|darkslategrey|darkturquoise|darkviolet|deeppink|deepskyblue|dimgray|dimgrey|dodgerblue|firebrick|floralwhite|forestgreen|fuchsia|gainsboro|ghostwhite|gold|goldenrod|gray|grey|green|greenyellow|honeydew|hotpink|indianred|indigo|ivory|khaki|lavender|lavenderblush|lawngreen|lemonchiffon|lightblue|lightcoral|lightcyan|lightgoldenrodyellow|lightgray|lightgrey|lightgreen|lightpink|lightsalmon|lightseagreen|lightskyblue|lightslategray|lightslategrey|lightsteelblue|lightyellow|lime|limegreen|linen|magenta|maroon|mediumaquamarine|mediumblue|mediumorchid|mediumpurple|mediumseagreen|mediumslateblue|mediumspringgreen|mediumturquoise|mediumvioletred|midnightblue|mintcream|mistyrose|moccasin|navajowhite|navy|oldlace|olive|olivedrab|orange|orangered|orchid|palegoldenrod|palegreen|paleturquoise|palevioletred|papayawhip|peachpuff|peru|pink|plum|powderblue|purple|red|rosybrown|royalblue|saddlebrown|salmon|sandybrown|seagreen|seashell|sienna|silver|skyblue|slateblue|slategray|slategrey|snow|springgreen|steelblue|tan|teal|thistle|tomato|turquoise|violet|wheat|white|whitesmoke|yellow|yellowgreen))$"
+        },
+        "hoverTextColor": {
+          "type": "string",
+          "description": "CSS color for button hover state text (optional)",
+          "pattern": "^(#([0-9A-Fa-f]{3}){1,2}|rgb\\(\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*\\)|rgba\\(\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\\s*,\\s*(0|0\\.[0-9]+|1(\\.0+)?)\\s*\\)|(aliceblue|antiquewhite|aqua|aquamarine|azure|beige|bisque|black|blanchedalmond|blue|blueviolet|brown|burlywood|cadetblue|chartreuse|chocolate|coral|cornflowerblue|cornsilk|crimson|cyan|darkblue|darkcyan|darkgoldenrod|darkgray|darkgrey|darkgreen|darkkhaki|darkmagenta|darkolivegreen|darkorange|darkorchid|darkred|darksalmon|darkseagreen|darkslateblue|darkslategray|darkslategrey|darkturquoise|darkviolet|deeppink|deepskyblue|dimgray|dimgrey|dodgerblue|firebrick|floralwhite|forestgreen|fuchsia|gainsboro|ghostwhite|gold|goldenrod|gray|grey|green|greenyellow|honeydew|hotpink|indianred|indigo|ivory|khaki|lavender|lavenderblush|lawngreen|lemonchiffon|lightblue|lightcoral|lightcyan|lightgoldenrodyellow|lightgray|lightgrey|lightgreen|lightpink|lightsalmon|lightseagreen|lightskyblue|lightslategray|lightslategrey|lightsteelblue|lightyellow|lime|limegreen|linen|magenta|maroon|mediumaquamarine|mediumblue|mediumorchid|mediumpurple|mediumseagreen|mediumslateblue|mediumspringgreen|mediumturquoise|mediumvioletred|midnightblue|mintcream|mistyrose|moccasin|navajowhite|navy|oldlace|olive|olivedrab|orange|orangered|orchid|palegoldenrod|palegreen|paleturquoise|palevioletred|papayawhip|peachpuff|peru|pink|plum|powderblue|purple|red|rosybrown|royalblue|saddlebrown|salmon|sandybrown|seagreen|seashell|sienna|silver|skyblue|slateblue|slategray|slategrey|snow|springgreen|steelblue|tan|teal|thistle|tomato|turquoise|violet|wheat|white|whitesmoke|yellow|yellowgreen))$"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": ["id", "description", "name", "template"],
@@ -287,6 +316,26 @@
         {
           "logic": { "condition_ref": "magic:has-mana" },
           "failure_message": "You don't have enough mana to cast spells."
+        }
+      ]
+    },
+    {
+      "$comment": "Action with custom visual properties",
+      "id": "combat:berserker_rage",
+      "name": "Berserker Rage",
+      "description": "Enter a frenzied state, increasing damage but reducing accuracy",
+      "targets": "none",
+      "template": "enter berserker rage",
+      "visual": {
+        "backgroundColor": "#cc0000",
+        "textColor": "#ffffff",
+        "hoverBackgroundColor": "#990000",
+        "hoverTextColor": "#ffcccc"
+      },
+      "prerequisites": [
+        {
+          "logic": { "condition_ref": "combat:not-in-rage" },
+          "failure_message": "You are already in a rage."
         }
       ]
     }

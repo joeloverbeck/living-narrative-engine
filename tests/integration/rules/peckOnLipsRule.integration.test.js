@@ -158,9 +158,11 @@ describe('handle_peck_on_lips rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:peck_on_lips',
       targetId: 'target1',
+      originalInput: 'peck_on_lips target1',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -194,9 +196,11 @@ describe('handle_peck_on_lips rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:peck_on_lips',
       targetId: 'target1',
+      originalInput: 'peck_on_lips target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -229,9 +233,11 @@ describe('handle_peck_on_lips rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:different_action',
       targetId: 'target1',
+      originalInput: 'different_action target1',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -274,9 +280,11 @@ describe('handle_peck_on_lips rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:peck_on_lips',
       targetId: 'target1',
+      originalInput: 'peck_on_lips target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -310,9 +318,11 @@ describe('handle_peck_on_lips rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:peck_on_lips',
       targetId: 'target1',
+      originalInput: 'peck_on_lips target1',
     });
 
     const perceptibleEvent = testEnv.events.find(

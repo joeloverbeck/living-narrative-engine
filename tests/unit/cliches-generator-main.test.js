@@ -112,21 +112,9 @@ describe('Clichés Generator Entry Point', () => {
     expect(mockBootstrap.bootstrap).toHaveBeenCalledWith({
       pageName: 'cliches-generator',
       controllerClass: ClichesGeneratorController,
+      includeModLoading: true,
       customSchemas: ['/data/schemas/cliche.schema.json'],
-      eventDefinitions: expect.arrayContaining([
-        expect.objectContaining({
-          id: 'core:cliche_generation_started',
-          description: 'Fired when cliché generation begins',
-        }),
-        expect.objectContaining({
-          id: 'core:cliche_generation_completed',
-          description: 'Fired when cliché generation completes',
-        }),
-        expect.objectContaining({
-          id: 'core:cliche_generation_failed',
-          description: 'Fired when cliché generation fails',
-        }),
-      ]),
+      // Note: Event definitions are no longer passed here - they're loaded from mod files
       hooks: expect.objectContaining({
         postInit: expect.any(Function),
       }),
@@ -137,6 +125,18 @@ describe('Clichés Generator Entry Point', () => {
       container: {},
       bootstrapTime: 123.45,
     });
+  });
+
+  it('should include mod loading configuration for core event definitions', async () => {
+    // Act
+    await initializeApp();
+
+    // Assert - Verify that includeModLoading is set to true
+    expect(mockBootstrap.bootstrap).toHaveBeenCalledWith(
+      expect.objectContaining({
+        includeModLoading: true,
+      })
+    );
   });
 
   it('should log initialization messages', async () => {
@@ -307,42 +307,15 @@ describe('Clichés Generator Entry Point', () => {
     expect(mockController.cleanup).not.toHaveBeenCalled();
   });
 
-  it('should provide correct event definitions', async () => {
+  it('should not provide event definitions directly (they are loaded from mods)', async () => {
     // Act
     await initializeApp();
 
-    // Assert
+    // Assert - Event definitions should not be passed since they're loaded from mod files
     const callArgs = mockBootstrap.bootstrap.mock.calls[0][0];
-    const eventDefinitions = callArgs.eventDefinitions;
+    expect(callArgs.eventDefinitions).toBeUndefined();
 
-    // Check generation started event
-    const startedEvent = eventDefinitions.find(
-      (e) => e.id === 'core:cliche_generation_started'
-    );
-    expect(startedEvent).toBeDefined();
-    expect(startedEvent.payloadSchema.required).toEqual([
-      'directionId',
-      'conceptId',
-    ]);
-
-    // Check generation completed event
-    const completedEvent = eventDefinitions.find(
-      (e) => e.id === 'core:cliche_generation_completed'
-    );
-    expect(completedEvent).toBeDefined();
-    expect(completedEvent.payloadSchema.required).toEqual([
-      'directionId',
-      'clicheId',
-    ]);
-
-    // Check generation failed event
-    const failedEvent = eventDefinitions.find(
-      (e) => e.id === 'core:cliche_generation_failed'
-    );
-    expect(failedEvent).toBeDefined();
-    expect(failedEvent.payloadSchema.required).toEqual([
-      'directionId',
-      'error',
-    ]);
+    // Verify that includeModLoading is true, which will cause events to be loaded from mods
+    expect(callArgs.includeModLoading).toBe(true);
   });
 });

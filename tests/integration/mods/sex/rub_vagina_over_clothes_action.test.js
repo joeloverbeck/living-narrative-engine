@@ -166,9 +166,11 @@ describe('sex:rub_vagina_over_clothes action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'sex:rub_vagina_over_clothes',
       targetId: 'bob',
+      originalInput: 'rub_vagina_over_clothes bob',
     });
 
     const types = testEnv.events.map((e) => e.eventType);

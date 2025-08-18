@@ -1,0 +1,26 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:core_motivations_retrieved",
+  "description": "Dispatched when core motivations are loaded from storage",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "directionId": {
+        "type": "string",
+        "description": "ID of the thematic direction"
+      },
+      "count": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of motivations retrieved"
+      },
+      "source": {
+        "type": "string",
+        "enum": ["database", "cache", "session"],
+        "description": "Source of the retrieved data"
+      }
+    },
+    "required": ["directionId", "count"],
+    "additionalProperties": true
+  }
+}

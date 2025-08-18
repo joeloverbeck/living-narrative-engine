@@ -596,6 +596,14 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
       }
 
       const { key, targets } = independentTargets[index];
+      // Add defensive check for targets
+      if (!targets || !Array.isArray(targets)) {
+        this.#logger?.warn(
+          `MultiTargetActionFormatter: targets for key '${key}' is not an array`,
+          { key, targets, type: typeof targets }
+        );
+        return;
+      }
       for (const target of targets) {
         generateProduct(index + 1, { ...current, [key]: target });
       }

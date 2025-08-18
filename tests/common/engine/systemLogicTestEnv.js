@@ -218,6 +218,52 @@ export function resetRuleEnvironment(env, newEntities = []) {
 }
 
 /**
+ * Helper function to create a properly formatted attempt_action event payload
+ * that meets schema requirements and supports both legacy and multi-target formats.
+ *
+ * @param {object} params - Event parameters
+ * @param {string} params.actorId - The acting entity ID
+ * @param {string} params.actionId - The action being attempted
+ * @param {string} [params.targetId] - Primary target for legacy format
+ * @param {object} [params.targets] - Multi-target format targets
+ * @param {string} [params.originalInput] - Original input (defaults to generated)
+ * @returns {object} Properly formatted event payload
+ */
+export function createAttemptActionPayload({
+  actorId,
+  actionId,
+  targetId = null,
+  targets = null,
+  originalInput = null,
+}) {
+  // Build the base payload with required fields
+  const payload = {
+    eventName: 'core:attempt_action',
+    actorId,
+    actionId,
+    originalInput: originalInput || `${actionId} ${targetId || 'none'}`.trim(),
+  };
+
+  // Add target information based on what's provided
+  if (targets) {
+    // Multi-target format
+    payload.targets = targets;
+    // Set targetId as primary for backward compatibility
+    if (targets.primary) {
+      payload.targetId =
+        typeof targets.primary === 'string'
+          ? targets.primary
+          : targets.primary.entityId;
+    }
+  } else if (targetId) {
+    // Legacy single-target format
+    payload.targetId = targetId;
+  }
+
+  return payload;
+}
+
+/**
  * Creates a complete test environment for system logic rule testing.
  *
  * @param {object} options - Configuration options
@@ -237,5 +283,15 @@ export function createRuleTestEnvironment(options) {
   env.reset = (newEntities = []) => {
     resetRuleEnvironment(env, newEntities);
   };
+
+  // Add the helper function to the environment for easy access
+  env.createAttemptActionPayload = createAttemptActionPayload;
+
+  // Add a convenience method for dispatching attempt_action events
+  env.dispatchAction = async (params) => {
+    const payload = createAttemptActionPayload(params);
+    return env.eventBus.dispatch('core:attempt_action', payload);
+  };
+
   return env;
 }

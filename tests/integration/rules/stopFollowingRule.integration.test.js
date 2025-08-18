@@ -463,8 +463,10 @@ describe('stop_following rule integration', () => {
     );
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'f1',
       actionId: 'core:stop_following',
+      originalInput: 'stop_following',
     });
     expect(
       testEnv.entityManager.getComponentData('f1', 'core:following')
@@ -522,8 +524,10 @@ describe('stop_following rule integration', () => {
       ifCoLocatedHandler.execute.bind(ifCoLocatedHandler)
     );
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'f1',
       actionId: 'core:stop_following',
+      originalInput: 'stop_following',
     });
     expect(
       testEnv.entityManager.getComponentData('f1', 'core:following')
@@ -579,8 +583,10 @@ describe('stop_following rule integration', () => {
       ifCoLocatedHandler.execute.bind(ifCoLocatedHandler)
     );
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'f1',
       actionId: 'core:stop_following',
+      originalInput: 'stop_following',
     });
     expect(
       testEnv.entityManager.getComponentData('f1', 'core:following')

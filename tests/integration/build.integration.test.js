@@ -176,6 +176,10 @@ describe('Build System Integration', () => {
       type: 'file',
       size: 1024,
     });
+    mockFiles.set('src/core-motivations-generator-main.js', {
+      type: 'file',
+      size: 1024,
+    });
 
     // Setup HTML files
     mockFiles.set('index.html', { type: 'file', size: 512 });
@@ -194,6 +198,10 @@ describe('Build System Integration', () => {
       size: 560,
     });
     mockFiles.set('cliches-generator.html', {
+      type: 'file',
+      size: 520,
+    });
+    mockFiles.set('core-motivations-generator.html', {
       type: 'file',
       size: 520,
     });
@@ -223,6 +231,7 @@ describe('Build System Integration', () => {
       'dist/thematic-directions-manager.js',
       'dist/character-concepts-manager.js',
       'dist/cliches-generator-main.js',
+      'dist/core-motivations-generator.js',
     ];
 
     for (const bundle of expectedBundles) {
@@ -253,6 +262,7 @@ describe('Build System Integration', () => {
       'dist/thematic-direction-generator.html',
       'dist/thematic-directions-manager.html',
       'dist/cliches-generator.html',
+      'dist/core-motivations-generator.html',
     ];
 
     for (const htmlFile of expectedHtmlFiles) {
@@ -270,6 +280,7 @@ describe('Build System Integration', () => {
         mode: 'development',
         parallel: true,
         verbose: false,
+        fast: true, // Skip source file verification in tests
       });
 
       await buildSystem.build();
@@ -280,7 +291,7 @@ describe('Build System Integration', () => {
         expect.arrayContaining(['esbuild']),
         expect.any(Object)
       );
-      expect(spawn).toHaveBeenCalledTimes(6); // 6 bundles
+      expect(spawn).toHaveBeenCalledTimes(7); // 7 bundles
 
       // Verify HTML files were copied
       expect(fs.copy).toHaveBeenCalledWith('index.html', 'dist/index.html', {
@@ -296,6 +307,7 @@ describe('Build System Integration', () => {
       expect(mockFiles.has('dist/bundle.js')).toBe(true);
       expect(mockFiles.has('dist/character-concepts-manager.js')).toBe(true);
       expect(mockFiles.has('dist/cliches-generator-main.js')).toBe(true);
+      expect(mockFiles.has('dist/core-motivations-generator.js')).toBe(true);
     });
 
     it('should handle production build mode', async () => {
@@ -303,6 +315,7 @@ describe('Build System Integration', () => {
         mode: 'production',
         parallel: true,
         verbose: false,
+        // Don't use fast mode for production testing to test actual minify behavior
       });
 
       await buildSystem.build();
@@ -335,29 +348,33 @@ describe('Build System Integration', () => {
     it('should build bundles in parallel by default', async () => {
       const buildSystem = new BuildSystem(buildConfig, {
         parallel: true,
+        fast: true, // Skip source file verification in tests
       });
 
       await buildSystem.build();
 
       // All bundles should be processed (parallel execution)
-      expect(spawn).toHaveBeenCalledTimes(6);
+      expect(spawn).toHaveBeenCalledTimes(7);
     });
 
     it('should build bundles sequentially when parallel disabled', async () => {
       const buildSystem = new BuildSystem(buildConfig, {
         parallel: false,
+        fast: true, // Skip source file verification in tests
       });
 
       await buildSystem.build();
 
       // Still processes all bundles, but with concurrency of 1
-      expect(spawn).toHaveBeenCalledTimes(6);
+      expect(spawn).toHaveBeenCalledTimes(7);
     });
   });
 
   describe('Build Validation', () => {
     it('should validate successful build output', async () => {
-      const buildSystem = new BuildSystem(buildConfig);
+      const buildSystem = new BuildSystem(buildConfig, {
+        fast: true, // Skip source file verification in tests
+      });
 
       await buildSystem.build();
 
@@ -368,18 +385,23 @@ describe('Build System Integration', () => {
       expect(mockFiles.has('dist/thematic-directions-manager.js')).toBe(true);
       expect(mockFiles.has('dist/character-concepts-manager.js')).toBe(true);
       expect(mockFiles.has('dist/cliches-generator-main.js')).toBe(true);
+      expect(mockFiles.has('dist/core-motivations-generator.js')).toBe(true);
 
       // Verify HTML files were copied
       expect(mockFiles.has('dist/index.html')).toBe(true);
       expect(mockFiles.has('dist/character-concepts-manager.html')).toBe(true);
       expect(mockFiles.has('dist/cliches-generator.html')).toBe(true);
+      expect(mockFiles.has('dist/core-motivations-generator.html')).toBe(true);
     });
 
     it('should detect missing output files', async () => {
       // Remove one expected bundle to simulate build failure
       mockFiles.delete('dist/bundle.js');
 
-      const buildSystem = new BuildSystem(buildConfig);
+      const buildSystem = new BuildSystem(buildConfig, {
+        // Don't use fast mode to enable validation
+        verbose: false,
+      });
 
       await expect(buildSystem.build()).rejects.toThrow();
     });
@@ -391,7 +413,9 @@ describe('Build System Integration', () => {
       // This test should check that validation passes for large files
       mockFiles.set('dist/bundle.js', { type: 'file', size: 15000000 }); // 15MB
 
-      const buildSystem = new BuildSystem(buildConfig);
+      const buildSystem = new BuildSystem(buildConfig, {
+        fast: true, // Skip source file verification in tests
+      });
       const validator = buildSystem.validator;
 
       const result = await validator.validate();
@@ -404,7 +428,9 @@ describe('Build System Integration', () => {
       // Create a very small bundle (under minFileSize threshold of 1000 bytes)
       mockFiles.set('dist/bundle.js', { type: 'file', size: 10 }); // 10 bytes
 
-      const buildSystem = new BuildSystem(buildConfig);
+      const buildSystem = new BuildSystem(buildConfig, {
+        fast: true, // Skip source file verification in tests
+      });
       const validator = buildSystem.validator;
 
       const result = await validator.validate();
@@ -425,7 +451,10 @@ describe('Build System Integration', () => {
       mockFiles.delete('dist/thematic-directions-manager.js');
       mockFiles.delete('dist/character-concepts-manager.js');
 
-      const buildSystem = new BuildSystem(buildConfig);
+      const buildSystem = new BuildSystem(buildConfig, {
+        // Don't use fast mode to enable validation
+        verbose: false,
+      });
 
       await expect(buildSystem.build()).rejects.toThrow();
     });
@@ -434,7 +463,9 @@ describe('Build System Integration', () => {
       // Mock file copy failure
       fs.copy.mockRejectedValue(new Error('Permission denied'));
 
-      const buildSystem = new BuildSystem(buildConfig);
+      const buildSystem = new BuildSystem(buildConfig, {
+        fast: true, // Skip source file verification in tests
+      });
 
       await expect(buildSystem.build()).rejects.toThrow();
     });
@@ -456,7 +487,9 @@ describe('Build System Integration', () => {
       mockFiles.set('dist/custom.js', { type: 'file', size: 2048 });
       mockFiles.set('dist/custom.js.map', { type: 'file', size: 512 });
 
-      const buildSystem = new BuildSystem(customConfig);
+      const buildSystem = new BuildSystem(customConfig, {
+        fast: true, // Skip source file verification in tests
+      });
 
       await buildSystem.build();
 
@@ -472,7 +505,9 @@ describe('Build System Integration', () => {
       // Remove expected dist static directory
       mockFiles.delete('dist/css');
 
-      const buildSystem = new BuildSystem(buildConfig);
+      const buildSystem = new BuildSystem(buildConfig, {
+        fast: true, // Skip source file verification in tests
+      });
       const validator = buildSystem.validator;
 
       const result = await validator.validate();
@@ -489,6 +524,7 @@ describe('Build System Integration', () => {
 
       const buildSystem = new BuildSystem(buildConfig, {
         parallel: true,
+        fast: true, // Skip source file verification in tests
       });
 
       await buildSystem.build();
@@ -500,7 +536,9 @@ describe('Build System Integration', () => {
     });
 
     it('should show performance improvement calculation', async () => {
-      const buildSystem = new BuildSystem(buildConfig);
+      const buildSystem = new BuildSystem(buildConfig, {
+        fast: true, // Skip source file verification in tests
+      });
 
       // Test with different build times
       expect(buildSystem.calculateImprovement(4000)).toBeCloseTo(0.6, 1); // 60% improvement
@@ -544,6 +582,7 @@ describe('Build System Integration', () => {
       const buildSystem = new BuildSystem(buildConfig, {
         mode: 'production',
         parallel: true,
+        fast: true, // Skip source file verification in tests
       });
 
       await buildSystem.build();

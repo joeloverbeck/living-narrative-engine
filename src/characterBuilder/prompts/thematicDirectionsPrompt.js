@@ -43,7 +43,7 @@ export const THEMATIC_DIRECTIONS_RESPONSE_SCHEMA = {
           uniqueTwist: {
             type: 'string',
             minLength: 20,
-            maxLength: 200,
+            maxLength: 1000,
           },
           narrativePotential: {
             type: 'string',
@@ -220,7 +220,7 @@ export function validateThematicDirectionsResponse(response) {
       title: { min: 5, max: 100 },
       description: { min: 50, max: 500 },
       coreTension: { min: 20, max: 200 },
-      uniqueTwist: { min: 20, max: 200 },
+      uniqueTwist: { min: 20, max: 1000 },
       narrativePotential: { min: 30, max: 300 },
     };
 

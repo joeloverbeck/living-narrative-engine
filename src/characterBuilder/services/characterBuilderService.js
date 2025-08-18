@@ -788,8 +788,9 @@ export class CharacterBuilderService {
       // Cache the result
       this.#cacheCliches(directionId, cliche);
 
-      // Dispatch event
+      // Dispatch event with conceptId included
       this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.CLICHES_RETRIEVED, {
+        conceptId: cliche.conceptId, // FIX: Include conceptId from the cliche object
         directionId,
         clicheId: cliche.id,
         categoryStats: cliche.getCategoryStats(),
@@ -932,8 +933,9 @@ export class CharacterBuilderService {
       this.#logger.error('Failed to store clichés:', error);
 
       this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.CLICHES_STORAGE_FAILED, {
-        error: error.message,
-        directionId: cliches.directionId || 'unknown',
+        conceptId: cliches.conceptId || 'unknown', // Required field
+        directionId: cliches.directionId || 'unknown', // Required field
+        error: error.message, // Required field
       });
 
       throw error instanceof CharacterBuilderError
@@ -1001,12 +1003,9 @@ export class CharacterBuilderService {
       }
 
       const generatedData = await this.#clicheGenerator.generateCliches(
+        concept.id,
         concept.text || concept.concept,
-        {
-          title: direction.title,
-          description: direction.description,
-          coreTension: direction.coreTension,
-        }
+        direction
       );
 
       // Create Cliche instance
@@ -1155,6 +1154,168 @@ export class CharacterBuilderService {
             error
           );
     }
+  }
+
+  /**
+   * Remove a specific item from a cliché category
+   *
+   * @param {string} directionId - Direction ID
+   * @param {string} categoryId - Category ID (e.g., 'names', 'physicalDescriptions')
+   * @param {string} itemText - The exact text of the item to remove
+   * @returns {Promise<Cliche>} Updated cliché instance
+   */
+  async removeClicheItem(directionId, categoryId, itemText) {
+    assertNonBlankString(
+      directionId,
+      'directionId',
+      'removeClicheItem',
+      this.#logger
+    );
+    assertNonBlankString(
+      categoryId,
+      'categoryId',
+      'removeClicheItem',
+      this.#logger
+    );
+    assertNonBlankString(
+      itemText,
+      'itemText',
+      'removeClicheItem',
+      this.#logger
+    );
+
+    try {
+      // Get existing clichés
+      const existingCliche = await this.getClichesByDirectionId(directionId);
+      if (!existingCliche) {
+        throw new CharacterBuilderError(
+          `No clichés found for direction: ${directionId}`
+        );
+      }
+
+      // Create new cliché with item removed
+      const updatedCliche = existingCliche.createWithItemRemoved(
+        categoryId,
+        itemText
+      );
+
+      // Update in database
+      await this.#updateCliche(updatedCliche);
+
+      // Invalidate cache and update with new data
+      this.#invalidateClicheCache(directionId);
+      this.#cacheCliches(directionId, updatedCliche);
+
+      // Dispatch event
+      this.#eventBus.dispatch('CLICHE_ITEM_DELETED', {
+        conceptId: updatedCliche.conceptId,
+        directionId: updatedCliche.directionId,
+        categoryId,
+        itemText,
+        remainingCount: updatedCliche.getTotalCount(),
+      });
+
+      this.#logger.info(
+        `Removed item from cliché category ${categoryId} for direction ${directionId}`
+      );
+
+      return updatedCliche;
+    } catch (error) {
+      this.#logger.error(
+        `Failed to remove cliché item for ${directionId}:`,
+        error
+      );
+      throw error instanceof CharacterBuilderError
+        ? error
+        : new CharacterBuilderError(
+            `Failed to remove cliché item: ${error.message}`,
+            error
+          );
+    }
+  }
+
+  /**
+   * Remove a specific trope from clichés
+   *
+   * @param {string} directionId - Direction ID
+   * @param {string} tropeText - The exact text of the trope to remove
+   * @returns {Promise<Cliche>} Updated cliché instance
+   */
+  async removeClicheTrope(directionId, tropeText) {
+    assertNonBlankString(
+      directionId,
+      'directionId',
+      'removeClicheTrope',
+      this.#logger
+    );
+    assertNonBlankString(
+      tropeText,
+      'tropeText',
+      'removeClicheTrope',
+      this.#logger
+    );
+
+    try {
+      // Get existing clichés
+      const existingCliche = await this.getClichesByDirectionId(directionId);
+      if (!existingCliche) {
+        throw new CharacterBuilderError(
+          `No clichés found for direction: ${directionId}`
+        );
+      }
+
+      // Create new cliché with trope removed
+      const updatedCliche = existingCliche.createWithTropeRemoved(tropeText);
+
+      // Update in database
+      await this.#updateCliche(updatedCliche);
+
+      // Invalidate cache and update with new data
+      this.#invalidateClicheCache(directionId);
+      this.#cacheCliches(directionId, updatedCliche);
+
+      // Dispatch event
+      this.#eventBus.dispatch('CLICHE_TROPE_DELETED', {
+        conceptId: updatedCliche.conceptId,
+        directionId: updatedCliche.directionId,
+        tropeText,
+        remainingCount: updatedCliche.getTotalCount(),
+      });
+
+      this.#logger.info(
+        `Removed trope from clichés for direction ${directionId}`
+      );
+
+      return updatedCliche;
+    } catch (error) {
+      this.#logger.error(
+        `Failed to remove cliché trope for ${directionId}:`,
+        error
+      );
+      throw error instanceof CharacterBuilderError
+        ? error
+        : new CharacterBuilderError(
+            `Failed to remove cliché trope: ${error.message}`,
+            error
+          );
+    }
+  }
+
+  /**
+   * Update cliché in database
+   *
+   * @param {Cliche} cliche - The updated cliché instance
+   * @returns {Promise<void>}
+   * @private
+   */
+  async #updateCliche(cliche) {
+    if (!this.#database) {
+      throw new CharacterBuilderError(
+        'Database not available for cliché update'
+      );
+    }
+
+    await this.#database.updateCliche(cliche.id, cliche.toJSON());
   }
 
   // Private helper methods for enhanced error handling

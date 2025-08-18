@@ -137,9 +137,11 @@ describe('intimacy:accept_kiss_passively action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'receiver1',
       actionId: 'intimacy:accept_kiss_passively',
       targetId: 'initiator1',
+      originalInput: 'accept_kiss_passively initiator1',
     });
 
     const successEvent = testEnv.events.find(
@@ -180,9 +182,11 @@ describe('intimacy:accept_kiss_passively action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'receiver1',
       actionId: 'intimacy:accept_kiss_passively',
       targetId: 'initiator1',
+      originalInput: 'accept_kiss_passively initiator1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -220,9 +224,11 @@ describe('intimacy:accept_kiss_passively action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'receiver1',
       actionId: 'intimacy:accept_kiss_passively',
       targetId: 'initiator1',
+      originalInput: 'accept_kiss_passively initiator1',
     });
 
     // Verify this is an enhancement action that preserves kissing state
@@ -271,9 +277,11 @@ describe('intimacy:accept_kiss_passively action integration', () => {
 
     // Accept kiss from Bob (current partner)
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'receiver1',
       actionId: 'intimacy:accept_kiss_passively',
       targetId: 'initiator1',
+      originalInput: 'accept_kiss_passively initiator1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -308,9 +316,11 @@ describe('intimacy:accept_kiss_passively action integration', () => {
 
     // Try with a different action
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'receiver1',
       actionId: 'intimacy:break_kiss_gently',
       targetId: 'initiator1',
+      originalInput: 'break_kiss_gently initiator1',
     });
 
     // Should not have any perceptible events from our rule
@@ -343,9 +353,11 @@ describe('intimacy:accept_kiss_passively action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'receiver1',
       actionId: 'intimacy:accept_kiss_passively',
       targetId: 'initiator1',
+      originalInput: 'accept_kiss_passively initiator1',
     });
 
     const eventTypes = testEnv.events.map((e) => e.eventType);
@@ -394,9 +406,11 @@ describe('intimacy:accept_kiss_passively action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'romantic_receiver',
       actionId: 'intimacy:accept_kiss_passively',
       targetId: 'passionate_initiator',
+      originalInput: 'accept_kiss_passively passionate_initiator',
     });
 
     const perceptibleEvent = testEnv.events.find(

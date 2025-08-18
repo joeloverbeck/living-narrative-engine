@@ -161,9 +161,11 @@ describe('handle_brush_hand rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:brush_hand',
       targetId: 'target1',
+      originalInput: 'brush_hand target1',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -197,9 +199,11 @@ describe('handle_brush_hand rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:brush_hand',
       targetId: 'target1',
+      originalInput: 'brush_hand target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -232,9 +236,11 @@ describe('handle_brush_hand rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:different_action',
       targetId: 'target1',
+      originalInput: 'different_action target1',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -277,9 +283,11 @@ describe('handle_brush_hand rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:brush_hand',
       targetId: 'target1',
+      originalInput: 'brush_hand target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -313,9 +321,11 @@ describe('handle_brush_hand rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:brush_hand',
       targetId: 'target1',
+      originalInput: 'brush_hand target1',
     });
 
     const perceptibleEvent = testEnv.events.find(

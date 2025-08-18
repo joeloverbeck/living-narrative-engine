@@ -159,9 +159,11 @@ describe('handle_sucker_punch rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'violence:sucker_punch',
       targetId: 'target1',
+      originalInput: 'sucker_punch target1',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -193,9 +195,11 @@ describe('handle_sucker_punch rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'violence:sucker_punch',
       targetId: 'target1',
+      originalInput: 'sucker_punch target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -226,9 +230,11 @@ describe('handle_sucker_punch rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:different_action',
       targetId: 'target1',
+      originalInput: 'different_action target1',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -269,9 +275,11 @@ describe('handle_sucker_punch rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'violence:sucker_punch',
       targetId: 'target1',
+      originalInput: 'sucker_punch target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -303,9 +311,11 @@ describe('handle_sucker_punch rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'violence:sucker_punch',
       targetId: 'target1',
+      originalInput: 'sucker_punch target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -336,9 +346,11 @@ describe('handle_sucker_punch rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'violence:sucker_punch',
       targetId: 'target1',
+      originalInput: 'sucker_punch target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -367,9 +379,11 @@ describe('handle_sucker_punch rule integration', () => {
     // This should not throw, but may fail during GET_NAME operation
     await expect(async () => {
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'nonexistent',
         actionId: 'violence:sucker_punch',
         targetId: 'target1',
+        originalInput: 'sucker_punch target1',
       });
     }).not.toThrow();
 

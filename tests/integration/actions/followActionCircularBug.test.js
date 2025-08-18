@@ -83,7 +83,10 @@ describe('Follow Action Circular Following Bug', () => {
         if (action.id === 'core:follow') {
           const targets = await mockTargetResolutionService.resolveTargets({
             actorId,
-            scope: action.scope,
+            scope:
+              typeof action.targets === 'string'
+                ? action.targets
+                : action.targets?.primary?.scope || action.targets,
           });
 
           if (targets.length > 0) {

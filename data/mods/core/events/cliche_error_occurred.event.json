@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:cliche_error_occurred",
+  "description": "Dispatched when an error occurs during cliché operations.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "error": {
+        "description": "Error information",
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "code": {
+            "type": "string",
+            "description": "Error code"
+          },
+          "operation": {
+            "type": "string",
+            "description": "Operation that failed"
+          },
+          "context": {
+            "type": "object",
+            "description": "Additional context about the error"
+          }
+        },
+        "required": ["message"]
+      },
+      "timestamp": {
+        "description": "ISO timestamp when error occurred",
+        "type": "string"
+      }
+    },
+    "required": ["error"],
+    "additionalProperties": true
+  }
+}

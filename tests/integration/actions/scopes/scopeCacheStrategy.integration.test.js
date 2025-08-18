@@ -24,7 +24,7 @@ describe('ScopeCacheStrategy Integration Tests', () => {
   let cacheStrategy;
   let mockLogger;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
 
     // Create DOM elements needed by container configuration
@@ -34,7 +34,7 @@ describe('ScopeCacheStrategy Integration Tests', () => {
 
     // Create and configure container
     container = new AppContainer();
-    configureContainer(container, {
+    await configureContainer(container, {
       outputDiv,
       inputElement,
       titleElement,

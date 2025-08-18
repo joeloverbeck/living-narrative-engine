@@ -521,8 +521,10 @@ describe('positioning_handle_step_back rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'a1',
       actionId: 'positioning:step_back',
+      originalInput: 'step_back',
     });
 
     expect(
@@ -661,8 +663,10 @@ describe('positioning_handle_step_back rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'a1',
       actionId: 'positioning:step_back',
+      originalInput: 'step_back',
     });
 
     expect(
@@ -754,8 +758,10 @@ describe('positioning_handle_step_back rule integration', () => {
     testEnv.reset(entities);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'a1',
       actionId: 'positioning:step_back',
+      originalInput: 'step_back',
     });
 
     expect(
@@ -889,8 +895,10 @@ describe('positioning_handle_step_back rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'a1',
       actionId: 'positioning:step_back',
+      originalInput: 'step_back',
     });
 
     // Verify both closeness and facing_away components are removed
@@ -1059,8 +1067,10 @@ describe('positioning_handle_step_back rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'a1',
       actionId: 'positioning:step_back',
+      originalInput: 'step_back',
     });
 
     // Verify actor a1's components are completely cleaned
@@ -1196,8 +1206,10 @@ describe('positioning_handle_step_back rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'a1',
       actionId: 'positioning:step_back',
+      originalInput: 'step_back',
     });
 
     // Verify normal step back behavior works (regression test)
@@ -1405,8 +1417,10 @@ describe('positioning_handle_step_back rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'a1',
       actionId: 'positioning:step_back',
+      originalInput: 'step_back',
     });
 
     // Verify a1 is completely removed from the intimate context

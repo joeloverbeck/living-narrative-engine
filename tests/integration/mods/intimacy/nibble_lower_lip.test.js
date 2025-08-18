@@ -134,9 +134,11 @@ describe('intimacy:nibble_lower_lip action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'initiator1',
       actionId: 'intimacy:nibble_lower_lip',
       targetId: 'receiver1',
+      originalInput: 'nibble_lower_lip receiver1',
     });
 
     const successEvent = testEnv.events.find(
@@ -177,9 +179,11 @@ describe('intimacy:nibble_lower_lip action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'receiver1',
       actionId: 'intimacy:nibble_lower_lip',
       targetId: 'initiator1',
+      originalInput: 'nibble_lower_lip initiator1',
     });
 
     const successEvent = testEnv.events.find(
@@ -220,9 +224,11 @@ describe('intimacy:nibble_lower_lip action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'passionate1',
       actionId: 'intimacy:nibble_lower_lip',
       targetId: 'passionate2',
+      originalInput: 'nibble_lower_lip passionate2',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -260,9 +266,11 @@ describe('intimacy:nibble_lower_lip action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'kisser1',
       actionId: 'intimacy:nibble_lower_lip',
       targetId: 'kisser2',
+      originalInput: 'nibble_lower_lip kisser2',
     });
 
     // Verify this is an enhancement action that preserves kissing state
@@ -311,9 +319,11 @@ describe('intimacy:nibble_lower_lip action integration', () => {
 
     // Nibble current partner Bob's lower lip
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'polyamorous1',
       actionId: 'intimacy:nibble_lower_lip',
       targetId: 'partner1',
+      originalInput: 'nibble_lower_lip partner1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -348,9 +358,11 @@ describe('intimacy:nibble_lower_lip action integration', () => {
 
     // Try with a different action
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:break_kiss_gently',
       targetId: 'actor2',
+      originalInput: 'break_kiss_gently actor2',
     });
 
     // Should not have any perceptible events from our rule
@@ -383,9 +395,11 @@ describe('intimacy:nibble_lower_lip action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'sequencer1',
       actionId: 'intimacy:nibble_lower_lip',
       targetId: 'sequencer2',
+      originalInput: 'nibble_lower_lip sequencer2',
     });
 
     const eventTypes = testEnv.events.map((e) => e.eventType);
@@ -437,9 +451,11 @@ describe('intimacy:nibble_lower_lip action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'romantic_nibbler',
       actionId: 'intimacy:nibble_lower_lip',
       targetId: 'passionate_recipient',
+      originalInput: 'nibble_lower_lip passionate_recipient',
     });
 
     const perceptibleEvent = testEnv.events.find(

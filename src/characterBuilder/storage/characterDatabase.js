@@ -4,6 +4,11 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import { v4 as uuidv4 } from 'uuid';
+import { 
+  assertPresent, 
+  assertNonBlankString 
+} from '../../utils/index.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -12,19 +17,21 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
 /**
  * @typedef {import('../models/characterConcept.js').CharacterConcept} CharacterConcept
  * @typedef {import('../models/thematicDirection.js').ThematicDirection} ThematicDirection
+ * @typedef {import('../models/coreMotivation.js').CoreMotivation} CoreMotivation
  */
 
 /**
  * Database configuration constants
  */
 const DB_NAME = 'CharacterBuilder';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 const STORES = {
   CHARACTER_CONCEPTS: 'characterConcepts',
   THEMATIC_DIRECTIONS: 'thematicDirections',
   METADATA: 'metadata',
   CLICHES: 'cliches',
+  CORE_MOTIVATIONS: 'coreMotivations',
 };
 
 /**
@@ -89,6 +96,11 @@ export class CharacterDatabase {
         // Add new cliches store for version 2
         if (oldVersion < 2) {
           this.#createClichesStore(db);
+        }
+
+        // Add core motivations store for version 3
+        if (oldVersion < 3) {
+          this.#createCoreMotivationsStore(db);
         }
       };
     });
@@ -166,6 +178,39 @@ export class CharacterDatabase {
       });
 
       this.#logger.debug('CharacterDatabase: Created cliches object store');
+    }
+  }
+
+  /**
+   * Create core motivations object store
+   *
+   * @private
+   * @param {IDBDatabase} db - Database instance
+   */
+  #createCoreMotivationsStore(db) {
+    if (!db.objectStoreNames.contains(STORES.CORE_MOTIVATIONS)) {
+      const store = db.createObjectStore(STORES.CORE_MOTIVATIONS, {
+        keyPath: 'id',
+      });
+
+      // Non-unique index for many-to-one relationship with directions
+      store.createIndex('directionId', 'directionId', {
+        unique: false,
+      });
+
+      // Non-unique index for concept tracking
+      store.createIndex('conceptId', 'conceptId', {
+        unique: false,
+      });
+
+      // Index for chronological queries
+      store.createIndex('createdAt', 'createdAt', {
+        unique: false,
+      });
+
+      this.#logger.debug(
+        'CharacterDatabase: Created coreMotivations object store'
+      );
     }
   }
 
@@ -324,7 +369,7 @@ export class CharacterDatabase {
 
       // Delete the concept
       const conceptsStore = transaction.objectStore(STORES.CHARACTER_CONCEPTS);
-      const conceptRequest = conceptsStore.delete(conceptId);
+      const _conceptRequest = conceptsStore.delete(conceptId);
 
       // Delete associated thematic directions
       const directionsStore = transaction.objectStore(
@@ -621,7 +666,7 @@ export class CharacterDatabase {
           if (!concept) {
             orphanedDirections.push(direction);
           }
-        } catch (error) {
+        } catch (_error) {
           // If we can't find the concept, it's orphaned
           orphanedDirections.push(direction);
         }
@@ -760,6 +805,29 @@ export class CharacterDatabase {
   }
 
   /**
+   * Update an existing cliche
+   *
+   * @param {string} id - Cliche ID
+   * @param {object} updatedData - Updated cliche data
+   * @returns {Promise<object>}
+   */
+  async updateCliche(id, updatedData) {
+    if (!id || typeof id !== 'string') {
+      throw new Error('Cliche ID is required for update');
+    }
+
+    if (!updatedData || typeof updatedData !== 'object') {
+      throw new Error('Updated cliche data is required');
+    }
+
+    // Ensure the ID matches
+    updatedData.id = id;
+
+    // Use saveCliche which uses put() and will update existing records
+    return this.saveCliche(updatedData);
+  }
+
+  /**
    * Delete a cliché by ID
    *
    * @param {string} clicheId - Cliche ID
@@ -819,6 +887,487 @@ export class CharacterDatabase {
         this.#logger.error('CharacterDatabase: Error adding metadata', error);
         reject(error);
       };
+    });
+  }
+
+  /**
+   * Save a core motivation to the database
+   *
+   * @param {object} motivation - Core motivation object
+   * @returns {Promise<object>} Saved motivation with ID
+   */
+  async saveCoreMotivation(motivation) {
+    assertPresent(motivation, 'Motivation is required');
+    assertNonBlankString(motivation.directionId, 'directionId', 'saveCoreMotivation', this.#logger);
+    assertNonBlankString(motivation.conceptId, 'conceptId', 'saveCoreMotivation', this.#logger);
+    assertPresent(motivation.coreDesire, 'Core desire is required');
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS], 'readwrite');
+        const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
+
+        // Ensure ID exists
+        if (!motivation.id) {
+          motivation.id = uuidv4();
+        }
+
+        // Ensure timestamp exists
+        if (!motivation.createdAt) {
+          motivation.createdAt = new Date().toISOString();
+        }
+
+        const request = store.put(motivation);
+
+        request.onsuccess = () => {
+          this.#logger.info(`Saved core motivation ${motivation.id}`);
+          resolve(motivation);
+        };
+
+        request.onerror = () => {
+          const error = new Error(
+            `Failed to save core motivation: ${request.error?.message || 'Unknown error'}`
+          );
+          this.#logger.error('Failed to save core motivation:', error);
+          reject(error);
+        };
+
+      } catch (error) {
+        this.#logger.error('Failed to save core motivation:', error);
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Save multiple core motivations
+   *
+   * @param {Array<object>} motivations - Array of motivation objects
+   * @returns {Promise<Array<string>>} Array of saved motivation IDs
+   */
+  async saveCoreMotivations(motivations) {
+    assertPresent(motivations, 'Motivations array is required');
+
+    if (!Array.isArray(motivations) || motivations.length === 0) {
+      throw new Error('Motivations must be a non-empty array');
+    }
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS], 'readwrite');
+        const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
+
+        const savedIds = [];
+        let processedCount = 0;
+
+        // Process each motivation
+        for (const motivation of motivations) {
+          // Ensure ID and timestamp
+          if (!motivation.id) {
+            motivation.id = uuidv4();
+          }
+          if (!motivation.createdAt) {
+            motivation.createdAt = new Date().toISOString();
+          }
+
+          const request = store.put(motivation);
+
+          request.onsuccess = () => {
+            savedIds.push(motivation.id);
+            processedCount++;
+            
+            // Check if all motivations processed
+            if (processedCount === motivations.length) {
+              this.#logger.info(`Saved ${savedIds.length} core motivations`);
+              resolve(savedIds);
+            }
+          };
+
+          request.onerror = () => {
+            this.#logger.warn(
+              `Failed to save motivation ${motivation.id}: ${request.error?.message}`
+            );
+            processedCount++;
+            
+            // Continue processing even if some fail
+            if (processedCount === motivations.length) {
+              this.#logger.info(`Saved ${savedIds.length} core motivations`);
+              resolve(savedIds);
+            }
+          };
+        }
+
+        // Handle empty array case
+        if (motivations.length === 0) {
+          resolve([]);
+        }
+
+      } catch (error) {
+        this.#logger.error('Failed to save core motivations:', error);
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Get all core motivations for a direction
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<Array<object>>} Array of motivations
+   */
+  async getCoreMotivationsByDirectionId(directionId) {
+    assertNonBlankString(directionId, 'directionId', 'getCoreMotivationsByDirectionId', this.#logger);
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS]);
+        const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
+        const index = store.index('directionId');
+        const request = index.getAll(directionId);
+
+        request.onsuccess = () => {
+          const motivations = request.result || [];
+
+          // Sort by creation date (newest first)
+          motivations.sort((a, b) => {
+            const dateA = new Date(a.createdAt);
+            const dateB = new Date(b.createdAt);
+            return dateB - dateA;
+          });
+
+          this.#logger.info(
+            `Retrieved ${motivations.length} motivations for direction ${directionId}`
+          );
+
+          resolve(motivations);
+        };
+
+        request.onerror = () => {
+          const error = new Error(
+            `Failed to get core motivations: ${request.error?.message || 'Unknown error'}`
+          );
+          this.#logger.error('Failed to get core motivations by direction:', error);
+          reject(error);
+        };
+
+      } catch (error) {
+        this.#logger.error('Failed to get core motivations by direction:', error);
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Get all core motivations for a concept
+   *
+   * @param {string} conceptId - Concept ID
+   * @returns {Promise<Array<object>>} Array of motivations
+   */
+  async getCoreMotivationsByConceptId(conceptId) {
+    assertNonBlankString(conceptId, 'conceptId', 'getCoreMotivationsByConceptId', this.#logger);
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS]);
+        const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
+        const index = store.index('conceptId');
+        const request = index.getAll(conceptId);
+
+        request.onsuccess = () => {
+          const motivations = request.result || [];
+
+          // Sort by creation date (newest first)
+          motivations.sort((a, b) => {
+            const dateA = new Date(a.createdAt);
+            const dateB = new Date(b.createdAt);
+            return dateB - dateA;
+          });
+
+          this.#logger.info(
+            `Retrieved ${motivations.length} motivations for concept ${conceptId}`
+          );
+
+          resolve(motivations);
+        };
+
+        request.onerror = () => {
+          const error = new Error(
+            `Failed to get core motivations: ${request.error?.message || 'Unknown error'}`
+          );
+          this.#logger.error('Failed to get core motivations by concept:', error);
+          reject(error);
+        };
+
+      } catch (error) {
+        this.#logger.error('Failed to get core motivations by concept:', error);
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Get a single core motivation by ID
+   *
+   * @param {string} motivationId - Motivation ID
+   * @returns {Promise<object | null>} Motivation object or null
+   */
+  async getCoreMotivationById(motivationId) {
+    assertNonBlankString(motivationId, 'motivationId', 'getCoreMotivationById', this.#logger);
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS]);
+        const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
+        const request = store.get(motivationId);
+
+        request.onsuccess = () => {
+          const motivation = request.result || null;
+
+          if (motivation) {
+            this.#logger.info(`Retrieved core motivation ${motivationId}`);
+          } else {
+            this.#logger.warn(`Core motivation ${motivationId} not found`);
+          }
+
+          resolve(motivation);
+        };
+
+        request.onerror = () => {
+          const error = new Error(
+            `Failed to get core motivation: ${request.error?.message || 'Unknown error'}`
+          );
+          this.#logger.error('Failed to get core motivation by ID:', error);
+          reject(error);
+        };
+
+      } catch (error) {
+        this.#logger.error('Failed to get core motivation by ID:', error);
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Delete a core motivation
+   *
+   * @param {string} motivationId - Motivation ID to delete
+   * @returns {Promise<boolean>} Success status
+   */
+  async deleteCoreMotivation(motivationId) {
+    assertNonBlankString(motivationId, 'motivationId', 'deleteCoreMotivation', this.#logger);
+
+    // First get motivation details before deletion for logging
+    const motivation = await this.getCoreMotivationById(motivationId);
+
+    if (!motivation) {
+      this.#logger.warn(`Cannot delete non-existent motivation ${motivationId}`);
+      return false;
+    }
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS], 'readwrite');
+        const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
+        const request = store.delete(motivationId);
+
+        request.onsuccess = () => {
+          this.#logger.info(`Deleted core motivation ${motivationId}`);
+          resolve(true);
+        };
+
+        request.onerror = () => {
+          const error = new Error(
+            `Failed to delete core motivation: ${request.error?.message || 'Unknown error'}`
+          );
+          this.#logger.error('Failed to delete core motivation:', error);
+          reject(error);
+        };
+
+      } catch (error) {
+        this.#logger.error('Failed to delete core motivation:', error);
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Update a core motivation
+   *
+   * @param {string} motivationId - Motivation ID
+   * @param {object} updates - Fields to update
+   * @returns {Promise<object>} Updated motivation
+   */
+  async updateCoreMotivation(motivationId, updates) {
+    assertNonBlankString(motivationId, 'motivationId', 'updateCoreMotivation', this.#logger);
+    assertPresent(updates, 'Updates are required');
+
+    // First get the existing motivation
+    const existing = await this.getCoreMotivationById(motivationId);
+
+    if (!existing) {
+      throw new Error(`Core motivation ${motivationId} not found`);
+    }
+
+    // Merge updates
+    const updated = {
+      ...existing,
+      ...updates,
+      id: existing.id, // Preserve ID
+      createdAt: existing.createdAt // Preserve creation date
+    };
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS], 'readwrite');
+        const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
+        const request = store.put(updated);
+
+        request.onsuccess = () => {
+          this.#logger.info(`Updated core motivation ${motivationId}`);
+          resolve(updated);
+        };
+
+        request.onerror = () => {
+          const error = new Error(
+            `Failed to update core motivation: ${request.error?.message || 'Unknown error'}`
+          );
+          this.#logger.error('Failed to update core motivation:', error);
+          reject(error);
+        };
+
+      } catch (error) {
+        this.#logger.error('Failed to update core motivation:', error);
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Delete all core motivations for a direction
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<number>} Number of deleted motivations
+   */
+  async deleteAllCoreMotivationsForDirection(directionId) {
+    assertNonBlankString(directionId, 'directionId', 'deleteAllCoreMotivationsForDirection', this.#logger);
+
+    // Get all motivations for this direction first
+    const motivations = await this.getCoreMotivationsByDirectionId(directionId);
+
+    if (motivations.length === 0) {
+      this.#logger.info(`No motivations to delete for direction ${directionId}`);
+      return 0;
+    }
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS], 'readwrite');
+        const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
+        let deletedCount = 0;
+        let processedCount = 0;
+
+        // Delete each motivation
+        for (const motivation of motivations) {
+          const request = store.delete(motivation.id);
+
+          request.onsuccess = () => {
+            deletedCount++;
+            processedCount++;
+
+            if (processedCount === motivations.length) {
+              this.#logger.info(
+                `Deleted ${deletedCount} motivations for direction ${directionId}`
+              );
+              resolve(deletedCount);
+            }
+          };
+
+          request.onerror = () => {
+            this.#logger.warn(
+              `Failed to delete motivation ${motivation.id}: ${request.error?.message}`
+            );
+            processedCount++;
+
+            if (processedCount === motivations.length) {
+              this.#logger.info(
+                `Deleted ${deletedCount} motivations for direction ${directionId}`
+              );
+              resolve(deletedCount);
+            }
+          };
+        }
+
+      } catch (error) {
+        this.#logger.error(
+          'Failed to delete all core motivations for direction:',
+          error
+        );
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Check if a direction has any core motivations
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<boolean>} True if motivations exist
+   */
+  async hasCoreMotivationsForDirection(directionId) {
+    assertNonBlankString(directionId, 'directionId', 'hasCoreMotivationsForDirection', this.#logger);
+
+    try {
+      const motivations = await this.getCoreMotivationsByDirectionId(directionId);
+      return motivations.length > 0;
+
+    } catch (error) {
+      this.#logger.error(
+        'Failed to check core motivations existence:',
+        error
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Get count of core motivations for a direction
+   *
+   * @param {string} directionId - Direction ID
+   * @returns {Promise<number>} Count of motivations
+   */
+  async getCoreMotivationsCount(directionId) {
+    assertNonBlankString(directionId, 'directionId', 'getCoreMotivationsCount', this.#logger);
+
+    return new Promise((resolve, _reject) => {
+      try {
+        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS]);
+        const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
+        const index = store.index('directionId');
+        const request = index.count(directionId);
+
+        request.onsuccess = () => {
+          const count = request.result || 0;
+
+          this.#logger.info(
+            `Direction ${directionId} has ${count} core motivations`
+          );
+
+          resolve(count);
+        };
+
+        request.onerror = () => {
+          const error = new Error(
+            `Failed to get core motivations count: ${request.error?.message || 'Unknown error'}`
+          );
+          this.#logger.error('Failed to get core motivations count:', error);
+          // Return 0 on error as fallback
+          resolve(0);
+        };
+
+      } catch (error) {
+        this.#logger.error('Failed to get core motivations count:', error);
+        resolve(0);
+      }
     });
   }
 }

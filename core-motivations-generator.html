@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Generate powerful core motivations, internal contradictions, and central questions for your character"
+    />
+    <title>Core Motivations Generator - Living Narrative Engine</title>
+
+    <!-- Styles (matching existing character builder pages) -->
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/core-motivations-generator.css" />
+
+    <!-- Favicon (matching existing pages) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- JavaScript bundle will be loaded here after build -->
+    <script type="module" src="core-motivations-generator.js"></script>
+  </head>
+  <body>
+    <div id="app" class="cb-page-container">
+      <!-- Header Section -->
+      <header class="cb-page-header">
+        <div class="header-content">
+          <h1>Core Motivations Generator</h1>
+          <p class="header-subtitle">
+            Generate powerful core motivations, internal contradictions, and
+            central questions for your character
+          </p>
+        </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main class="cb-page-main core-motivations-main">
+        <!-- Left Panel: Direction Selector -->
+        <aside class="cb-input-panel direction-selection-panel">
+          <h2 class="cb-panel-title">Select Thematic Direction</h2>
+
+          <div class="direction-filter-info">
+            <p class="info-text">
+              Only directions with generated clichés are available
+            </p>
+          </div>
+
+          <div
+            id="direction-selector-container"
+            class="direction-selector-container"
+          >
+            <select
+              id="direction-selector"
+              class="cb-select"
+              aria-label="Select thematic direction"
+            >
+              <option value="">-- Choose a thematic direction --</option>
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+
+          <div
+            id="no-directions-message"
+            class="no-directions-message"
+            style="display: none"
+            role="alert"
+            aria-live="polite"
+          >
+            <p>No eligible directions found. Please generate clichés first.</p>
+            <a href="cliches-generator.html" class="cb-link"
+              >Go to Clichés Generator</a
+            >
+          </div>
+
+          <!-- Generation Controls -->
+          <div class="generation-controls">
+            <button
+              id="generate-btn"
+              class="cb-button cb-button-primary"
+              disabled
+              aria-label="Generate core motivations"
+            >
+              <span class="button-icon">✨</span>
+              <span class="button-text">Generate Motivations</span>
+            </button>
+
+            <div class="shortcut-hint">
+              <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate
+            </div>
+          </div>
+        </aside>
+
+        <!-- Right Panel: Motivations Display -->
+        <section class="cb-output-panel motivations-display-panel">
+          <div class="cb-panel-header">
+            <h2 class="cb-panel-title">Core Motivations</h2>
+            <div class="panel-actions">
+              <button
+                id="clear-all-btn"
+                class="cb-button cb-button-danger"
+                disabled
+                aria-label="Clear all motivations"
+              >
+                <span class="button-icon">🗑️</span>
+                <span class="button-text">Clear All</span>
+              </button>
+              <button
+                id="export-btn"
+                class="cb-button cb-button-secondary"
+                disabled
+                aria-label="Export motivations to text"
+              >
+                <span class="button-icon">📄</span>
+                <span class="button-text">Export</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Loading Indicator -->
+          <div
+            id="loading-indicator"
+            class="loading-indicator"
+            style="display: none"
+            role="status"
+            aria-live="polite"
+          >
+            <div class="spinner" aria-hidden="true"></div>
+            <p>Generating core motivations...</p>
+          </div>
+
+          <!-- Motivations Container -->
+          <div
+            id="motivations-container"
+            class="motivations-container"
+            role="region"
+            aria-label="Generated motivations"
+          >
+            <!-- Motivation blocks will be dynamically added here -->
+          </div>
+
+          <!-- Empty State -->
+          <div id="empty-state" class="empty-state">
+            <div class="empty-state-icon">📝</div>
+            <p class="empty-state-text">
+              Select a direction and click "Generate Motivations" to begin
+            </p>
+            <p class="empty-state-subtext">
+              Each generation creates 3-5 unique motivation blocks that
+              accumulate
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer class="cb-page-footer">
+        <nav class="footer-navigation">
+          <button
+            id="back-btn"
+            class="cb-button cb-button-navigation"
+            aria-label="Back to Character Builder"
+          >
+            ← Back to Character Builder
+          </button>
+        </nav>
+
+        <div class="footer-info">
+          <span class="motivation-count" id="motivation-count">
+            0 motivations generated
+          </span>
+        </div>
+      </footer>
+
+      <!-- Confirmation Modal -->
+      <div
+        id="confirmation-modal"
+        class="modal-overlay"
+        style="display: none"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
+        <div class="modal-content">
+          <h3 id="modal-title" class="modal-title">Clear All Motivations?</h3>
+          <p class="modal-text">
+            This will permanently delete all core motivations for the selected
+            direction. This action cannot be undone.
+          </p>
+          <div class="modal-actions">
+            <button
+              id="confirm-clear"
+              class="cb-button cb-button-danger"
+              aria-label="Confirm clear all"
+            >
+              Yes, Clear All
+            </button>
+            <button
+              id="cancel-clear"
+              class="cb-button cb-button-secondary"
+              aria-label="Cancel"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Copy Success Toast -->
+      <div
+        id="copy-toast"
+        class="toast toast-success"
+        style="display: none"
+        role="status"
+        aria-live="polite"
+      >
+        <span class="toast-icon">✓</span>
+        <span class="toast-message">Copied to clipboard!</span>
+      </div>
+    </div>
+  </body>
+</html>

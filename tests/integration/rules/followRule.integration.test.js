@@ -314,9 +314,11 @@ describe('core_handle_follow rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'f1',
       actionId: 'core:follow',
       targetId: 'l1',
+      originalInput: 'follow l1',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -356,9 +358,11 @@ describe('core_handle_follow rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'f1',
       actionId: 'core:follow',
       targetId: 'l1',
+      originalInput: 'follow l1',
     });
 
     expect(
@@ -433,9 +437,11 @@ describe('core_handle_follow rule integration', () => {
 
     // Step 1: Follower follows Leader
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'follower1',
       actionId: 'core:follow',
       targetId: 'leader1',
+      originalInput: 'follow leader1',
     });
 
     // Verify the follow relationship was established
@@ -456,9 +462,11 @@ describe('core_handle_follow rule integration', () => {
     // Step 2: Clear events and try to make Leader follow Follower
     testEnv.events.length = 0;
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'leader1',
       actionId: 'core:follow',
       targetId: 'follower1',
+      originalInput: 'follow follower1',
     });
 
     // This should fail due to cycle detection

@@ -13,7 +13,7 @@ describe('Clichés Generator - Workflow Integration', () => {
 
   beforeEach(async () => {
     testBed = new ClichesGeneratorControllerTestBed();
-    await testBed.initialize();
+    await testBed.setup();
 
     controller = testBed.getController();
     characterBuilderService = testBed.mockCharacterBuilderService;

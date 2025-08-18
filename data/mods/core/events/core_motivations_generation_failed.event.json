@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:core_motivations_generation_failed",
+  "description": "Dispatched when core motivations generation fails",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "type": "string",
+        "description": "ID of the character concept"
+      },
+      "directionId": {
+        "type": "string",
+        "description": "ID of the thematic direction"
+      },
+      "error": {
+        "type": "string",
+        "description": "Error message describing the failure"
+      },
+      "errorCode": {
+        "type": "string",
+        "description": "Error code for categorization"
+      },
+      "retryAttempt": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of retry attempts made"
+      }
+    },
+    "required": ["conceptId", "directionId", "error"],
+    "additionalProperties": true
+  }
+}

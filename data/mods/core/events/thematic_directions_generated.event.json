@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:thematic_directions_generated",
+  "description": "Dispatched when thematic directions are generated for a character concept.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "description": "Unique identifier of the character concept",
+        "type": "string"
+      },
+      "directionCount": {
+        "description": "Number of thematic directions generated",
+        "type": "integer",
+        "minimum": 0
+      },
+      "autoSaved": {
+        "description": "Whether the directions were automatically saved",
+        "type": "boolean"
+      }
+    },
+    "required": ["conceptId", "directionCount", "autoSaved"],
+    "additionalProperties": true
+  }
+}

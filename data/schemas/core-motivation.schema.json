@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/core-motivation.schema.json",
+  "title": "Core Motivation",
+  "description": "Schema for a character's core motivation, including desires, contradictions, and central questions",
+  "type": "object",
+  "required": [
+    "id",
+    "directionId",
+    "conceptId",
+    "coreDesire",
+    "internalContradiction",
+    "centralQuestion",
+    "createdAt"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the core motivation",
+      "pattern": "^[a-f0-9-]+$"
+    },
+    "directionId": {
+      "type": "string",
+      "description": "ID of the associated thematic direction",
+      "pattern": "^[a-f0-9-]+$"
+    },
+    "conceptId": {
+      "type": "string",
+      "description": "ID of the associated character concept",
+      "pattern": "^[a-f0-9-]+$"
+    },
+    "coreDesire": {
+      "type": "string",
+      "description": "The character's fundamental driving desire",
+      "minLength": 10,
+      "maxLength": 500
+    },
+    "internalContradiction": {
+      "type": "string",
+      "description": "The internal conflict or contradiction within the character",
+      "minLength": 10,
+      "maxLength": 500
+    },
+    "centralQuestion": {
+      "type": "string",
+      "description": "The central question that drives the character's journey",
+      "minLength": 10,
+      "maxLength": 500
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for the motivation",
+      "properties": {
+        "clicheIds": {
+          "type": "array",
+          "description": "IDs of clichés used to generate this motivation",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9-]+$"
+          }
+        },
+        "generationModel": {
+          "type": "string",
+          "description": "The AI model used for generation"
+        },
+        "generationPrompt": {
+          "type": "string",
+          "description": "The prompt used for generation (for debugging)"
+        },
+        "temperature": {
+          "type": "number",
+          "description": "The temperature setting used for generation",
+          "minimum": 0,
+          "maximum": 2
+        }
+      },
+      "additionalProperties": false
+    },
+    "createdAt": {
+      "type": "string",
+      "description": "ISO 8601 timestamp of when the motivation was created",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "description": "ISO 8601 timestamp of when the motivation was last updated",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

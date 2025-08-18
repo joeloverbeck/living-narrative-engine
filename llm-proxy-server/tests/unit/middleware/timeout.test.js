@@ -440,4 +440,127 @@ describe('timeout middleware', () => {
       }).toThrow();
     });
   });
+
+  describe('Route-specific timeout configuration for LLM requests', () => {
+    let req, res, next;
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.spyOn(global, 'setTimeout');
+      jest.spyOn(global, 'clearTimeout');
+
+      req = {
+        path: '/',
+        method: 'GET',
+      };
+
+      res = {
+        headersSent: false,
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+        end: jest.fn(),
+        on: jest.fn(),
+      };
+
+      next = jest.fn();
+    });
+
+    afterEach(() => {
+      jest.clearAllTimers();
+      jest.useRealTimers();
+      jest.restoreAllMocks();
+    });
+
+    test('should apply 90 second timeout for LLM requests', () => {
+      // Simulate the actual route configuration for LLM requests
+      const llmTimeout = 90000; // 90 seconds
+      const middleware = createTimeoutMiddleware(llmTimeout);
+
+      // Store the original json method before middleware wraps it
+      const originalJsonMethod = jest.fn().mockReturnThis();
+      res.json = originalJsonMethod;
+
+      req.path = '/api/llm-request';
+      middleware(req, res, next);
+
+      // Advance time less than timeout - should not trigger
+      jest.advanceTimersByTime(80000);
+      expect(res.status).not.toHaveBeenCalled();
+
+      // Advance past timeout - should trigger
+      jest.advanceTimersByTime(11000);
+
+      expect(res.status).toHaveBeenCalledWith(503);
+      expect(originalJsonMethod).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: true,
+          message: 'Request timeout - the server took too long to respond.',
+          stage: 'request_timeout',
+          details: expect.objectContaining({
+            timeoutMs: llmTimeout,
+            path: '/api/llm-request',
+          }),
+        })
+      );
+    });
+
+    test('should handle route-specific timeout logic from server.js', () => {
+      // This simulates the server.js logic for skipping general timeout on /api/llm-request
+      const routeSpecificMiddleware = (req, res, next) => {
+        if (req.path === '/api/llm-request') {
+          // Skip general timeout for LLM routes
+          return next();
+        }
+        // Apply 30 second timeout for all other routes
+        return createTimeoutMiddleware(30000)(req, res, next);
+      };
+
+      // Test with LLM request path - should skip timeout
+      req.path = '/api/llm-request';
+      routeSpecificMiddleware(req, res, next);
+      expect(next).toHaveBeenCalledTimes(1);
+
+      // No timeout should be set when we skip it
+      jest.advanceTimersByTime(35000);
+      expect(res.status).not.toHaveBeenCalled();
+    });
+
+    test('should handle concurrent requests with different timeout configurations', () => {
+      const generalTimeout = createTimeoutMiddleware(30000);
+      const llmTimeout = createTimeoutMiddleware(90000);
+
+      // Create separate response objects for concurrent requests
+      const generalRes = {
+        headersSent: false,
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+        end: jest.fn(),
+        on: jest.fn(),
+      };
+
+      const llmRes = {
+        headersSent: false,
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+        end: jest.fn(),
+        on: jest.fn(),
+      };
+
+      // Start both requests
+      generalTimeout({ path: '/api/other', method: 'GET' }, generalRes, next);
+      llmTimeout({ path: '/api/llm-request', method: 'POST' }, llmRes, next);
+
+      // After 30 seconds, only the general request should timeout
+      jest.advanceTimersByTime(30000);
+      expect(generalRes.status).toHaveBeenCalledWith(503);
+      expect(llmRes.status).not.toHaveBeenCalled();
+
+      // After 90 seconds total, both should have timed out
+      jest.advanceTimersByTime(60000);
+      expect(llmRes.status).toHaveBeenCalledWith(503);
+    });
+  });
 });

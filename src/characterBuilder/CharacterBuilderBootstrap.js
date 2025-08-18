@@ -98,16 +98,19 @@ export class CharacterBuilderBootstrap {
         await this.#loadMods(container, config);
       }
 
-      // Step 6: Register page-specific services
+      // Step 6: Initialize LLM services
+      await this.#initializeLLMServices(container, config);
+
+      // Step 7: Register page-specific services
       await this.#registerCustomServices(container, config);
 
-      // Step 7: Instantiate controller
+      // Step 8: Instantiate controller
       const controller = await this.#createController(container, config);
 
-      // Step 8: Initialize controller
+      // Step 9: Initialize controller
       await this.#initializeController(controller, config);
 
-      // Step 9: Setup error display
+      // Step 10: Setup error display
       this.#setupErrorDisplay(container, config);
 
       const bootstrapTime = performance.now() - startTime;
@@ -513,6 +516,88 @@ export class CharacterBuilderBootstrap {
     }
 
     this.#performanceMetrics.modLoading = performance.now() - startTime;
+  }
+
+  /**
+   * Initialize LLM services for character builder
+   *
+   * @private
+   * @param {AppContainer} container
+   * @param {BootstrapConfig} config
+   */
+  async #initializeLLMServices(container, config) {
+    const startTime = performance.now();
+
+    try {
+      // Get the LLM adapter
+      const llmAdapter = container.resolve(tokens.LLMAdapter);
+
+      if (llmAdapter && typeof llmAdapter.init === 'function') {
+        // Get the LLM config loader
+        const llmConfigLoader = container.resolve(tokens.LlmConfigLoader);
+
+        if (llmConfigLoader) {
+          if (this.#logger) {
+            this.#logger.debug(
+              '[CharacterBuilderBootstrap] Initializing LLM adapter...'
+            );
+          }
+
+          // Initialize the adapter with the config loader
+          await llmAdapter.init({ llmConfigLoader });
+
+          if (this.#logger) {
+            this.#logger.debug(
+              '[CharacterBuilderBootstrap] LLM adapter initialized successfully'
+            );
+          }
+        } else {
+          if (this.#logger) {
+            this.#logger.warn(
+              '[CharacterBuilderBootstrap] LlmConfigLoader not available, skipping LLM initialization'
+            );
+          }
+        }
+      } else {
+        if (this.#logger) {
+          this.#logger.debug(
+            '[CharacterBuilderBootstrap] LLM adapter not available or already initialized'
+          );
+        }
+      }
+
+      // Also initialize the LLM configuration manager directly if needed
+      const llmConfigManager = container.resolve(
+        tokens.ILLMConfigurationManager
+      );
+      if (llmConfigManager && typeof llmConfigManager.init === 'function') {
+        const llmConfigLoader = container.resolve(tokens.LlmConfigLoader);
+        if (llmConfigLoader && !llmConfigManager.isInitialized) {
+          await llmConfigManager.init({ llmConfigLoader });
+          if (this.#logger) {
+            this.#logger.debug(
+              '[CharacterBuilderBootstrap] LLM configuration manager initialized'
+            );
+          }
+        }
+      }
+    } catch (error) {
+      if (this.#logger) {
+        this.#logger.error(
+          `[CharacterBuilderBootstrap] Failed to initialize LLM services: ${error.message}`,
+          error
+        );
+      }
+      // Don't throw - allow bootstrap to continue even if LLM init fails
+      // The error will be handled when actually trying to use LLM services
+    }
+
+    this.#performanceMetrics.llmInit = performance.now() - startTime;
+    if (this.#logger) {
+      this.#logger.debug(
+        `[CharacterBuilderBootstrap] LLM initialization completed in ${this.#performanceMetrics.llmInit.toFixed(2)}ms`
+      );
+    }
   }
 
   /**

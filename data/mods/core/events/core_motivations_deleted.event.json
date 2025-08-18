@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:core_motivations_deleted",
+  "description": "Dispatched when a core motivation block is deleted",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "directionId": {
+        "type": "string",
+        "description": "ID of the thematic direction"
+      },
+      "motivationId": {
+        "type": "string",
+        "description": "ID of the deleted motivation"
+      },
+      "remainingCount": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of motivations remaining after deletion"
+      }
+    },
+    "required": ["directionId", "motivationId", "remainingCount"],
+    "additionalProperties": true
+  }
+}

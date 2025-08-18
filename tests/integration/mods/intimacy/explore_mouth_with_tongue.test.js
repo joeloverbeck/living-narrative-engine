@@ -136,9 +136,11 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'initiator1',
       actionId: 'intimacy:explore_mouth_with_tongue',
       targetId: 'receiver1',
+      originalInput: 'explore_mouth_with_tongue receiver1',
     });
 
     const successEvent = testEnv.events.find(
@@ -179,9 +181,11 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'receiver1',
       actionId: 'intimacy:explore_mouth_with_tongue',
       targetId: 'initiator1',
+      originalInput: 'explore_mouth_with_tongue initiator1',
     });
 
     const successEvent = testEnv.events.find(
@@ -222,9 +226,11 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'passionate1',
       actionId: 'intimacy:explore_mouth_with_tongue',
       targetId: 'passionate2',
+      originalInput: 'explore_mouth_with_tongue passionate2',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -262,9 +268,11 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'kisser1',
       actionId: 'intimacy:explore_mouth_with_tongue',
       targetId: 'kisser2',
+      originalInput: 'explore_mouth_with_tongue kisser2',
     });
 
     // Verify this is an enhancement action that preserves kissing state
@@ -313,9 +321,11 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
 
     // Explore current partner Bob's mouth
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'polyamorous1',
       actionId: 'intimacy:explore_mouth_with_tongue',
       targetId: 'partner1',
+      originalInput: 'explore_mouth_with_tongue partner1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -350,9 +360,11 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
 
     // Try with a different action
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:break_kiss_gently',
       targetId: 'actor2',
+      originalInput: 'break_kiss_gently actor2',
     });
 
     // Should not have any perceptible events from our rule
@@ -385,9 +397,11 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'sequencer1',
       actionId: 'intimacy:explore_mouth_with_tongue',
       targetId: 'sequencer2',
+      originalInput: 'explore_mouth_with_tongue sequencer2',
     });
 
     const eventTypes = testEnv.events.map((e) => e.eventType);
@@ -439,9 +453,11 @@ describe('intimacy:explore_mouth_with_tongue action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'romantic_explorer',
       actionId: 'intimacy:explore_mouth_with_tongue',
       targetId: 'passionate_recipient',
+      originalInput: 'explore_mouth_with_tongue passionate_recipient',
     });
 
     const perceptibleEvent = testEnv.events.find(

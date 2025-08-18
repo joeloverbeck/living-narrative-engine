@@ -3,9 +3,7 @@
   "traceAnalysisEnabled": false,
   "actionTracing": {
     "enabled": false,
-    "tracedActions": [
-      "positioning:get_close"
-    ],
+    "tracedActions": ["positioning:get_close"],
     "outputDirectory": "./traces/get-close",
     "verbosity": "verbose",
     "includeComponentData": true,

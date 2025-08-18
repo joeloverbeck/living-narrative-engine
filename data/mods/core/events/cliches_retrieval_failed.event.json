@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:cliches_retrieval_failed",
+  "description": "Dispatched when cliché retrieval from storage fails.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "description": "Unique identifier of the character concept",
+        "type": "string"
+      },
+      "directionId": {
+        "description": "Unique identifier of the thematic direction",
+        "type": "string"
+      },
+      "error": {
+        "description": "Error message describing the retrieval failure",
+        "type": "string"
+      },
+      "errorCode": {
+        "description": "Error code for the failure",
+        "type": "string"
+      }
+    },
+    "required": ["conceptId", "directionId", "error"],
+    "additionalProperties": true
+  }
+}

@@ -160,9 +160,11 @@ describe('intimacy:massage_shoulders action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'intimacy:massage_shoulders',
       targetId: 'beth',
+      originalInput: 'massage_shoulders beth',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -292,9 +294,11 @@ describe('intimacy:massage_shoulders action integration', () => {
 
     // The rule should still execute even if the scope wouldn't normally allow this
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'intimacy:massage_shoulders',
       targetId: 'carl',
+      originalInput: 'massage_shoulders carl',
     });
 
     const types = testEnv.events.map((e) => e.eventType);

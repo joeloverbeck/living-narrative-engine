@@ -121,9 +121,11 @@ describe('intimacy:brush_hand action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:brush_hand',
       targetId: 'target1',
+      originalInput: 'brush_hand target1',
     });
 
     const successEvent = testEnv.events.find(
@@ -162,9 +164,11 @@ describe('intimacy:brush_hand action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:brush_hand',
       targetId: 'target1',
+      originalInput: 'brush_hand target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -209,9 +213,11 @@ describe('intimacy:brush_hand action integration', () => {
 
     // First brush Bob's hand
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:brush_hand',
       targetId: 'target1',
+      originalInput: 'brush_hand target1',
     });
 
     let perceptibleEvent = testEnv.events.find(
@@ -226,9 +232,11 @@ describe('intimacy:brush_hand action integration', () => {
 
     // Then brush Charlie's hand
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:brush_hand',
       targetId: 'target2',
+      originalInput: 'brush_hand target2',
     });
 
     perceptibleEvent = testEnv.events.find(
@@ -262,9 +270,11 @@ describe('intimacy:brush_hand action integration', () => {
 
     // Try with a different action
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:place_hand_on_waist',
       targetId: 'target1',
+      originalInput: 'place_hand_on_waist target1',
     });
 
     // Should not have any perceptible events from our rule

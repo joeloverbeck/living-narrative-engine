@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:core_motivations_ui_initialized",
+  "description": "Dispatched when Core Motivations UI is fully initialized",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "type": "string",
+        "description": "Current character concept ID"
+      },
+      "eligibleDirectionsCount": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of directions with clichés"
+      }
+    },
+    "required": ["conceptId", "eligibleDirectionsCount"],
+    "additionalProperties": true
+  }
+}

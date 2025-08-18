@@ -161,9 +161,11 @@ describe('sex:fondle_breasts action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'sex:fondle_breasts',
       targetId: 'beth',
+      originalInput: 'fondle_breasts beth',
     });
 
     const types = testEnv.events.map((e) => e.eventType);

@@ -76,8 +76,10 @@ describe('core_handle_wait rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'core:wait',
+      originalInput: 'wait',
     });
 
     const types = testEnv.events.map((e) => e.eventType);

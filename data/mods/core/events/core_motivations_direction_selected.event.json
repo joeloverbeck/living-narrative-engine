@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:core_motivations_direction_selected",
+  "description": "Dispatched when user selects a thematic direction",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "directionId": {
+        "type": "string",
+        "description": "Selected direction ID"
+      },
+      "conceptId": {
+        "type": "string",
+        "description": "Current concept ID"
+      },
+      "hasExistingMotivations": {
+        "type": "boolean",
+        "description": "Whether direction has existing motivations"
+      }
+    },
+    "required": ["directionId", "conceptId"],
+    "additionalProperties": true
+  }
+}

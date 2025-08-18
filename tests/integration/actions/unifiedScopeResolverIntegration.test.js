@@ -20,7 +20,7 @@ describe('UnifiedScopeResolver Integration', () => {
   let targetResolutionService;
   let unifiedScopeResolver;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Create DOM elements needed by container configuration
     const outputDiv = document.createElement('div');
     const inputElement = document.createElement('input');
@@ -28,7 +28,7 @@ describe('UnifiedScopeResolver Integration', () => {
 
     // Create and configure container
     container = new AppContainer();
-    configureContainer(container, {
+    await configureContainer(container, {
       outputDiv,
       inputElement,
       titleElement,

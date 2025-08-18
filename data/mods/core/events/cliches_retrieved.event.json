@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:cliches_retrieved",
+  "description": "Dispatched when clichés are successfully retrieved from storage.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "description": "Unique identifier of the character concept",
+        "type": "string"
+      },
+      "directionId": {
+        "description": "Unique identifier of the thematic direction",
+        "type": "string"
+      },
+      "cliches": {
+        "description": "Array of retrieved clichés",
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      },
+      "count": {
+        "description": "Number of clichés retrieved",
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": ["conceptId", "directionId"],
+    "additionalProperties": true
+  }
+}

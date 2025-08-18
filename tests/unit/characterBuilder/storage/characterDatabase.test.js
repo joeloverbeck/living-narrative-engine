@@ -44,6 +44,8 @@ describe('CharacterDatabase', () => {
     mockIndex = {
       getAll: jest.fn(),
       openCursor: jest.fn(),
+      get: jest.fn(),
+      count: jest.fn(),
     };
 
     // Create mock object store
@@ -148,7 +150,7 @@ describe('CharacterDatabase', () => {
 
       await initPromise;
 
-      expect(mockIndexedDB.open).toHaveBeenCalledWith('CharacterBuilder', 2);
+      expect(mockIndexedDB.open).toHaveBeenCalledWith('CharacterBuilder', 3);
       expect(mockLogger.info).toHaveBeenCalledWith(
         'CharacterDatabase: Successfully opened database'
       );
@@ -257,6 +259,120 @@ describe('CharacterDatabase', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'CharacterDatabase: Already initialized'
       );
+    });
+
+    it('should create coreMotivations store during version 3 migration', async () => {
+      mockRequest.result = mockDbInstance;
+      const upgradeEvent = {
+        target: { result: mockDbInstance },
+        oldVersion: 2,
+      };
+
+      // Mock that coreMotivations store doesn't exist yet
+      mockDbInstance.objectStoreNames.contains.mockImplementation(
+        (storeName) => {
+          return storeName !== 'coreMotivations';
+        }
+      );
+
+      const initPromise = database.initialize();
+
+      // Simulate upgrade needed from version 2 to 3
+      setTimeout(() => {
+        mockRequest.onupgradeneeded(upgradeEvent);
+        mockRequest.onsuccess();
+      }, 0);
+
+      await initPromise;
+
+      expect(mockDbInstance.createObjectStore).toHaveBeenCalledWith(
+        'coreMotivations',
+        { keyPath: 'id' }
+      );
+      expect(mockObjectStore.createIndex).toHaveBeenCalledWith(
+        'directionId',
+        'directionId',
+        { unique: false }
+      );
+      expect(mockObjectStore.createIndex).toHaveBeenCalledWith(
+        'conceptId',
+        'conceptId',
+        { unique: false }
+      );
+      expect(mockObjectStore.createIndex).toHaveBeenCalledWith(
+        'createdAt',
+        'createdAt',
+        { unique: false }
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'CharacterDatabase: Created coreMotivations object store'
+      );
+    });
+
+    it('should handle all migration steps from version 0 to 3', async () => {
+      mockRequest.result = mockDbInstance;
+      const upgradeEvent = {
+        target: { result: mockDbInstance },
+        oldVersion: 0,
+      };
+
+      // Mock that no stores exist
+      mockDbInstance.objectStoreNames.contains.mockReturnValue(false);
+
+      const initPromise = database.initialize();
+
+      // Simulate upgrade needed from version 0 to 3
+      setTimeout(() => {
+        mockRequest.onupgradeneeded(upgradeEvent);
+        mockRequest.onsuccess();
+      }, 0);
+
+      await initPromise;
+
+      // Should create all stores including the new coreMotivations store
+      expect(mockDbInstance.createObjectStore).toHaveBeenCalledWith(
+        'characterConcepts',
+        { keyPath: 'id' }
+      );
+      expect(mockDbInstance.createObjectStore).toHaveBeenCalledWith(
+        'thematicDirections',
+        { keyPath: 'id' }
+      );
+      expect(mockDbInstance.createObjectStore).toHaveBeenCalledWith(
+        'metadata',
+        { keyPath: 'key' }
+      );
+      expect(mockDbInstance.createObjectStore).toHaveBeenCalledWith('cliches', {
+        keyPath: 'id',
+      });
+      expect(mockDbInstance.createObjectStore).toHaveBeenCalledWith(
+        'coreMotivations',
+        { keyPath: 'id' }
+      );
+    });
+
+    it('should not create coreMotivations store if it already exists', async () => {
+      mockRequest.result = mockDbInstance;
+      const upgradeEvent = {
+        target: { result: mockDbInstance },
+        oldVersion: 2,
+      };
+
+      // Mock that coreMotivations store already exists
+      mockDbInstance.objectStoreNames.contains.mockReturnValue(true);
+
+      const initPromise = database.initialize();
+
+      // Simulate upgrade needed from version 2 to 3
+      setTimeout(() => {
+        mockRequest.onupgradeneeded(upgradeEvent);
+        mockRequest.onsuccess();
+      }, 0);
+
+      await initPromise;
+
+      // Should not create any stores since they all exist
+      expect(mockDbInstance.createObjectStore).not.toHaveBeenCalled();
     });
   });
 
@@ -1725,6 +1841,525 @@ describe('CharacterDatabase', () => {
       await expect(database.findOrphanedDirections()).rejects.toThrow(
         'CharacterDatabase: Database not initialized. Call initialize() first.'
       );
+    });
+  });
+
+  describe('Core Motivations Methods', () => {
+    beforeEach(async () => {
+      database = new CharacterDatabase({ logger: mockLogger });
+      mockRequest.result = mockDbInstance;
+      mockDbInstance.objectStoreNames.contains.mockReturnValue(true);
+
+      const initPromise = database.initialize();
+      setTimeout(() => mockRequest.onsuccess(), 0);
+      await initPromise;
+    });
+
+    describe('saveCoreMotivation', () => {
+      const mockMotivation = {
+        directionId: 'direction-1',
+        conceptId: 'concept-1',
+        coreDesire: 'To seek truth and justice',
+        internalContradiction: 'Must lie to protect loved ones',
+        centralQuestion: 'What price is too high for truth?'
+      };
+
+      it('should successfully save a core motivation with generated ID and timestamp', async () => {
+        const putRequest = { onsuccess: null, onerror: null };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const savePromise = database.saveCoreMotivation(mockMotivation);
+
+        setTimeout(() => putRequest.onsuccess(), 0);
+        const result = await savePromise;
+
+        expect(result).toMatchObject(mockMotivation);
+        expect(result.id).toBeDefined();
+        expect(result.createdAt).toBeDefined();
+        expect(mockObjectStore.put).toHaveBeenCalledWith(expect.objectContaining({
+          ...mockMotivation,
+          id: expect.any(String),
+          createdAt: expect.any(String)
+        }));
+        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Saved core motivation'));
+      });
+
+      it('should preserve existing ID and timestamp', async () => {
+        const motivationWithId = {
+          ...mockMotivation,
+          id: 'existing-id',
+          createdAt: '2024-01-01T00:00:00.000Z'
+        };
+
+        const putRequest = { onsuccess: null, onerror: null };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const savePromise = database.saveCoreMotivation(motivationWithId);
+
+        setTimeout(() => putRequest.onsuccess(), 0);
+        const result = await savePromise;
+
+        expect(result.id).toBe('existing-id');
+        expect(result.createdAt).toBe('2024-01-01T00:00:00.000Z');
+      });
+
+      it('should throw error for missing motivation', async () => {
+        await expect(database.saveCoreMotivation(null)).rejects.toThrow('Motivation is required');
+      });
+
+      it('should throw error for missing directionId', async () => {
+        const invalidMotivation = { ...mockMotivation, directionId: '' };
+        await expect(database.saveCoreMotivation(invalidMotivation)).rejects.toThrow('saveCoreMotivation: Invalid directionId');
+      });
+
+      it('should throw error for missing conceptId', async () => {
+        const invalidMotivation = { ...mockMotivation, conceptId: '' };
+        await expect(database.saveCoreMotivation(invalidMotivation)).rejects.toThrow('saveCoreMotivation: Invalid conceptId');
+      });
+
+      it('should throw error for missing coreDesire', async () => {
+        const invalidMotivation = { ...mockMotivation, coreDesire: null };
+        await expect(database.saveCoreMotivation(invalidMotivation)).rejects.toThrow('Core desire is required');
+      });
+
+      it('should handle IndexedDB put error', async () => {
+        const putRequest = { onsuccess: null, onerror: null, error: { message: 'Storage error' } };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const savePromise = database.saveCoreMotivation(mockMotivation);
+
+        setTimeout(() => putRequest.onerror(), 0);
+
+        await expect(savePromise).rejects.toThrow('Failed to save core motivation: Storage error');
+        expect(mockLogger.error).toHaveBeenCalled();
+      });
+    });
+
+    describe('saveCoreMotivations', () => {
+      const mockMotivations = [
+        {
+          directionId: 'direction-1',
+          conceptId: 'concept-1',
+          coreDesire: 'First motivation'
+        },
+        {
+          directionId: 'direction-1',
+          conceptId: 'concept-1',
+          coreDesire: 'Second motivation'
+        }
+      ];
+
+      it('should save multiple motivations successfully', async () => {
+        const putRequest1 = { onsuccess: null, onerror: null };
+        const putRequest2 = { onsuccess: null, onerror: null };
+        mockObjectStore.put.mockReturnValueOnce(putRequest1).mockReturnValueOnce(putRequest2);
+
+        const savePromise = database.saveCoreMotivations(mockMotivations);
+
+        setTimeout(() => {
+          putRequest1.onsuccess();
+          putRequest2.onsuccess();
+        }, 0);
+
+        const result = await savePromise;
+
+        expect(result).toHaveLength(2);
+        expect(result[0]).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+        expect(mockObjectStore.put).toHaveBeenCalledTimes(2);
+        expect(mockLogger.info).toHaveBeenCalledWith('Saved 2 core motivations');
+      });
+
+      it('should throw error for null motivations array', async () => {
+        await expect(database.saveCoreMotivations(null)).rejects.toThrow('Motivations array is required');
+      });
+
+      it('should throw error for empty motivations array', async () => {
+        await expect(database.saveCoreMotivations([])).rejects.toThrow('Motivations must be a non-empty array');
+      });
+
+      it('should continue processing even if some motivations fail', async () => {
+        const putRequest1 = { onsuccess: null, onerror: null, error: { message: 'Storage error' } };
+        const putRequest2 = { onsuccess: null, onerror: null };
+        mockObjectStore.put.mockReturnValueOnce(putRequest1).mockReturnValueOnce(putRequest2);
+
+        const savePromise = database.saveCoreMotivations(mockMotivations);
+
+        setTimeout(() => {
+          putRequest1.onerror();
+          putRequest2.onsuccess();
+        }, 0);
+
+        const result = await savePromise;
+
+        expect(result).toHaveLength(1); // Only one succeeded
+        expect(mockLogger.warn).toHaveBeenCalled();
+        expect(mockLogger.info).toHaveBeenCalledWith('Saved 1 core motivations');
+      });
+    });
+
+    describe('getCoreMotivationsByDirectionId', () => {
+      const mockMotivations = [
+        { id: 'motivation-1', directionId: 'direction-1', createdAt: '2024-01-01T00:00:00Z' },
+        { id: 'motivation-2', directionId: 'direction-1', createdAt: '2024-01-02T00:00:00Z' }
+      ];
+
+      it('should retrieve motivations for a direction sorted by createdAt desc', async () => {
+        const getAllRequest = { onsuccess: null, onerror: null, result: mockMotivations };
+        mockIndex.getAll.mockReturnValue(getAllRequest);
+
+        const retrievePromise = database.getCoreMotivationsByDirectionId('direction-1');
+
+        setTimeout(() => getAllRequest.onsuccess(), 0);
+        const result = await retrievePromise;
+
+        expect(result).toHaveLength(2);
+        expect(result[0].id).toBe('motivation-2'); // Newest first
+        expect(result[1].id).toBe('motivation-1');
+        expect(mockObjectStore.index).toHaveBeenCalledWith('directionId');
+        expect(mockIndex.getAll).toHaveBeenCalledWith('direction-1');
+        expect(mockLogger.info).toHaveBeenCalledWith('Retrieved 2 motivations for direction direction-1');
+      });
+
+      it('should return empty array when no motivations found', async () => {
+        const getAllRequest = { onsuccess: null, onerror: null, result: [] };
+        mockIndex.getAll.mockReturnValue(getAllRequest);
+
+        const retrievePromise = database.getCoreMotivationsByDirectionId('direction-1');
+
+        setTimeout(() => getAllRequest.onsuccess(), 0);
+        const result = await retrievePromise;
+
+        expect(result).toEqual([]);
+        expect(mockLogger.info).toHaveBeenCalledWith('Retrieved 0 motivations for direction direction-1');
+      });
+
+      it('should throw error for missing directionId', async () => {
+        await expect(database.getCoreMotivationsByDirectionId('')).rejects.toThrow('getCoreMotivationsByDirectionId: Invalid directionId');
+      });
+
+      it('should handle IndexedDB getAll error', async () => {
+        const getAllRequest = { onsuccess: null, onerror: null, error: { message: 'Query error' } };
+        mockIndex.getAll.mockReturnValue(getAllRequest);
+
+        const retrievePromise = database.getCoreMotivationsByDirectionId('direction-1');
+
+        setTimeout(() => getAllRequest.onerror(), 0);
+
+        await expect(retrievePromise).rejects.toThrow('Failed to get core motivations: Query error');
+        expect(mockLogger.error).toHaveBeenCalled();
+      });
+    });
+
+    describe('getCoreMotivationsByConceptId', () => {
+      it('should retrieve motivations for a concept', async () => {
+        const mockMotivations = [
+          { id: 'motivation-1', conceptId: 'concept-1', createdAt: '2024-01-01T00:00:00Z' }
+        ];
+        const getAllRequest = { onsuccess: null, onerror: null, result: mockMotivations };
+        mockIndex.getAll.mockReturnValue(getAllRequest);
+
+        const retrievePromise = database.getCoreMotivationsByConceptId('concept-1');
+
+        setTimeout(() => getAllRequest.onsuccess(), 0);
+        const result = await retrievePromise;
+
+        expect(result).toHaveLength(1);
+        expect(mockObjectStore.index).toHaveBeenCalledWith('conceptId');
+        expect(mockIndex.getAll).toHaveBeenCalledWith('concept-1');
+        expect(mockLogger.info).toHaveBeenCalledWith('Retrieved 1 motivations for concept concept-1');
+      });
+
+      it('should throw error for missing conceptId', async () => {
+        await expect(database.getCoreMotivationsByConceptId('')).rejects.toThrow('getCoreMotivationsByConceptId: Invalid conceptId');
+      });
+    });
+
+    describe('getCoreMotivationById', () => {
+      it('should retrieve motivation by ID successfully', async () => {
+        const mockMotivation = { id: 'motivation-1', directionId: 'direction-1' };
+        const getRequest = { onsuccess: null, onerror: null, result: mockMotivation };
+        mockObjectStore.get.mockReturnValue(getRequest);
+
+        const retrievePromise = database.getCoreMotivationById('motivation-1');
+
+        setTimeout(() => getRequest.onsuccess(), 0);
+        const result = await retrievePromise;
+
+        expect(result).toEqual(mockMotivation);
+        expect(mockObjectStore.get).toHaveBeenCalledWith('motivation-1');
+        expect(mockLogger.info).toHaveBeenCalledWith('Retrieved core motivation motivation-1');
+      });
+
+      it('should return null when motivation not found', async () => {
+        const getRequest = { onsuccess: null, onerror: null, result: null };
+        mockObjectStore.get.mockReturnValue(getRequest);
+
+        const retrievePromise = database.getCoreMotivationById('nonexistent');
+
+        setTimeout(() => getRequest.onsuccess(), 0);
+        const result = await retrievePromise;
+
+        expect(result).toBeNull();
+        expect(mockLogger.warn).toHaveBeenCalledWith('Core motivation nonexistent not found');
+      });
+
+      it('should throw error for missing motivationId', async () => {
+        await expect(database.getCoreMotivationById('')).rejects.toThrow('getCoreMotivationById: Invalid motivationId');
+      });
+    });
+
+    describe('deleteCoreMotivation', () => {
+      it('should delete motivation successfully', async () => {
+        // Mock getCoreMotivationById to return a motivation
+        const mockMotivation = { id: 'motivation-1', directionId: 'direction-1' };
+        const getRequest = { onsuccess: null, onerror: null, result: mockMotivation };
+        mockObjectStore.get.mockReturnValue(getRequest);
+
+        const deleteRequest = { 
+          onsuccess: null, 
+          onerror: null,
+          result: undefined
+        };
+        mockObjectStore.delete.mockReturnValue(deleteRequest);
+
+        const deletePromise = database.deleteCoreMotivation('motivation-1');
+
+        setTimeout(() => {
+          getRequest.onsuccess(); // First call succeeds
+          setTimeout(() => deleteRequest.onsuccess(), 0); // Then deletion succeeds
+        }, 0);
+
+        const result = await deletePromise;
+
+        expect(result).toBe(true);
+        expect(mockObjectStore.delete).toHaveBeenCalledWith('motivation-1');
+        expect(mockLogger.info).toHaveBeenCalledWith('Deleted core motivation motivation-1');
+      });
+
+      it('should return false when motivation does not exist', async () => {
+        const getRequest = { onsuccess: null, onerror: null, result: null };
+        mockObjectStore.get.mockReturnValue(getRequest);
+
+        const deletePromise = database.deleteCoreMotivation('nonexistent');
+
+        setTimeout(() => getRequest.onsuccess(), 0);
+        const result = await deletePromise;
+
+        expect(result).toBe(false);
+        expect(mockObjectStore.delete).not.toHaveBeenCalled();
+        expect(mockLogger.warn).toHaveBeenCalledWith('Cannot delete non-existent motivation nonexistent');
+      });
+
+      it('should throw error for missing motivationId', async () => {
+        await expect(database.deleteCoreMotivation('')).rejects.toThrow('deleteCoreMotivation: Invalid motivationId');
+      });
+    });
+
+    describe('updateCoreMotivation', () => {
+      it('should update motivation successfully', async () => {
+        const existingMotivation = {
+          id: 'motivation-1',
+          directionId: 'direction-1',
+          conceptId: 'concept-1',
+          coreDesire: 'Original desire',
+          createdAt: '2024-01-01T00:00:00Z'
+        };
+
+        const updates = { coreDesire: 'Updated desire' };
+
+        // Mock getCoreMotivationById
+        const getRequest = { onsuccess: null, onerror: null, result: existingMotivation };
+        mockObjectStore.get.mockReturnValue(getRequest);
+
+        const putRequest = { 
+          onsuccess: null, 
+          onerror: null,
+          result: undefined
+        };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const updatePromise = database.updateCoreMotivation('motivation-1', updates);
+
+        setTimeout(() => {
+          getRequest.onsuccess(); // First call succeeds
+          setTimeout(() => putRequest.onsuccess(), 0); // Then update succeeds
+        }, 0);
+
+        const result = await updatePromise;
+
+        expect(result.coreDesire).toBe('Updated desire');
+        expect(result.id).toBe('motivation-1'); // Preserved
+        expect(result.createdAt).toBe('2024-01-01T00:00:00Z'); // Preserved
+        expect(mockLogger.info).toHaveBeenCalledWith('Updated core motivation motivation-1');
+      });
+
+      it('should throw error when motivation not found', async () => {
+        const getRequest = { onsuccess: null, onerror: null, result: null };
+        mockObjectStore.get.mockReturnValue(getRequest);
+
+        const updatePromise = database.updateCoreMotivation('nonexistent', { coreDesire: 'New desire' });
+
+        setTimeout(() => getRequest.onsuccess(), 0);
+
+        await expect(updatePromise).rejects.toThrow('Core motivation nonexistent not found');
+      });
+
+      it('should throw error for missing motivationId', async () => {
+        await expect(database.updateCoreMotivation('', {})).rejects.toThrow('updateCoreMotivation: Invalid motivationId');
+      });
+
+      it('should throw error for missing updates', async () => {
+        await expect(database.updateCoreMotivation('motivation-1', null)).rejects.toThrow('Updates are required');
+      });
+    });
+
+    describe('deleteAllCoreMotivationsForDirection', () => {
+      it('should delete all motivations for a direction', async () => {
+        const mockMotivations = [
+          { id: 'motivation-1', directionId: 'direction-1' },
+          { id: 'motivation-2', directionId: 'direction-1' }
+        ];
+
+        // Mock getCoreMotivationsByDirectionId
+        const getAllRequest = { onsuccess: null, onerror: null, result: mockMotivations };
+        mockIndex.getAll.mockReturnValue(getAllRequest);
+
+        const deleteRequest1 = { 
+          onsuccess: null, 
+          onerror: null,
+          result: undefined
+        };
+        const deleteRequest2 = { 
+          onsuccess: null, 
+          onerror: null,
+          result: undefined
+        };
+        mockObjectStore.delete.mockReturnValueOnce(deleteRequest1).mockReturnValueOnce(deleteRequest2);
+
+        const deletePromise = database.deleteAllCoreMotivationsForDirection('direction-1');
+
+        setTimeout(() => {
+          getAllRequest.onsuccess(); // Get motivations succeeds
+          setTimeout(() => {
+            deleteRequest1.onsuccess(); // First deletion succeeds
+            deleteRequest2.onsuccess(); // Second deletion succeeds
+          }, 0);
+        }, 0);
+
+        const result = await deletePromise;
+
+        expect(result).toBe(2);
+        expect(mockObjectStore.delete).toHaveBeenCalledWith('motivation-1');
+        expect(mockObjectStore.delete).toHaveBeenCalledWith('motivation-2');
+        expect(mockLogger.info).toHaveBeenCalledWith('Deleted 2 motivations for direction direction-1');
+      });
+
+      it('should return 0 when no motivations exist for direction', async () => {
+        const getAllRequest = { onsuccess: null, onerror: null, result: [] };
+        mockIndex.getAll.mockReturnValue(getAllRequest);
+
+        const deletePromise = database.deleteAllCoreMotivationsForDirection('direction-1');
+
+        setTimeout(() => getAllRequest.onsuccess(), 0);
+        const result = await deletePromise;
+
+        expect(result).toBe(0);
+        expect(mockObjectStore.delete).not.toHaveBeenCalled();
+        expect(mockLogger.info).toHaveBeenCalledWith('No motivations to delete for direction direction-1');
+      });
+
+      it('should throw error for missing directionId', async () => {
+        await expect(database.deleteAllCoreMotivationsForDirection('')).rejects.toThrow('deleteAllCoreMotivationsForDirection: Invalid directionId');
+      });
+    });
+
+    describe('hasCoreMotivationsForDirection', () => {
+      it('should return true when motivations exist', async () => {
+        const getAllRequest = { onsuccess: null, onerror: null, result: [{ id: 'motivation-1' }] };
+        mockIndex.getAll.mockReturnValue(getAllRequest);
+
+        const checkPromise = database.hasCoreMotivationsForDirection('direction-1');
+
+        setTimeout(() => getAllRequest.onsuccess(), 0);
+        const result = await checkPromise;
+
+        expect(result).toBe(true);
+      });
+
+      it('should return false when no motivations exist', async () => {
+        const getAllRequest = { onsuccess: null, onerror: null, result: [] };
+        mockIndex.getAll.mockReturnValue(getAllRequest);
+
+        const checkPromise = database.hasCoreMotivationsForDirection('direction-1');
+
+        setTimeout(() => getAllRequest.onsuccess(), 0);
+        const result = await checkPromise;
+
+        expect(result).toBe(false);
+      });
+
+      it('should return false on error', async () => {
+        const getAllRequest = { onsuccess: null, onerror: null, error: { message: 'Error' } };
+        mockIndex.getAll.mockReturnValue(getAllRequest);
+
+        const checkPromise = database.hasCoreMotivationsForDirection('direction-1');
+
+        setTimeout(() => getAllRequest.onerror(), 0);
+        const result = await checkPromise;
+
+        expect(result).toBe(false);
+        expect(mockLogger.error).toHaveBeenCalled();
+      });
+
+      it('should throw error for missing directionId', async () => {
+        await expect(database.hasCoreMotivationsForDirection('')).rejects.toThrow('hasCoreMotivationsForDirection: Invalid directionId');
+      });
+    });
+
+    describe('getCoreMotivationsCount', () => {
+      it('should return count of motivations for direction', async () => {
+        const countRequest = { onsuccess: null, onerror: null, result: 5 };
+        mockIndex.count.mockReturnValue(countRequest);
+
+        const countPromise = database.getCoreMotivationsCount('direction-1');
+
+        setTimeout(() => countRequest.onsuccess(), 0);
+        const result = await countPromise;
+
+        expect(result).toBe(5);
+        expect(mockObjectStore.index).toHaveBeenCalledWith('directionId');
+        expect(mockIndex.count).toHaveBeenCalledWith('direction-1');
+        expect(mockLogger.info).toHaveBeenCalledWith('Direction direction-1 has 5 core motivations');
+      });
+
+      it('should return 0 when count is null or undefined', async () => {
+        const countRequest = { onsuccess: null, onerror: null, result: null };
+        mockIndex.count.mockReturnValue(countRequest);
+
+        const countPromise = database.getCoreMotivationsCount('direction-1');
+
+        setTimeout(() => countRequest.onsuccess(), 0);
+        const result = await countPromise;
+
+        expect(result).toBe(0);
+      });
+
+      it('should return 0 on error', async () => {
+        const countRequest = { onsuccess: null, onerror: null, error: { message: 'Count error' } };
+        mockIndex.count.mockReturnValue(countRequest);
+
+        const countPromise = database.getCoreMotivationsCount('direction-1');
+
+        setTimeout(() => countRequest.onerror(), 0);
+        const result = await countPromise;
+
+        expect(result).toBe(0);
+        expect(mockLogger.error).toHaveBeenCalled();
+      });
+
+      it('should throw error for missing directionId', async () => {
+        await expect(database.getCoreMotivationsCount('')).rejects.toThrow('getCoreMotivationsCount: Invalid directionId');
+      });
     });
   });
 });

@@ -8,6 +8,23 @@ import { ClichesGeneratorController } from '../../../src/clichesGenerator/contro
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
+// Mock ClichesGeneratorController to prevent IndexedDB access
+jest.mock(
+  '../../../src/clichesGenerator/controllers/ClichesGeneratorController.js',
+  () => {
+    return {
+      ClichesGeneratorController: jest.fn().mockImplementation((deps) => {
+        return {
+          initialize: jest.fn().mockResolvedValue(true),
+          cleanup: jest.fn().mockResolvedValue(true),
+          _loadInitialData: jest.fn().mockResolvedValue(true),
+          dependencies: deps,
+        };
+      }),
+    };
+  }
+);
+
 describe('Clichés Generator Bootstrap Integration', () => {
   let bootstrap;
   let result;
@@ -33,7 +50,7 @@ describe('Clichés Generator Bootstrap Integration', () => {
       validateSchema: jest.fn().mockReturnValue({ valid: true }),
     };
 
-    // Mock fetch for schema loading
+    // Mock fetch for schema loading and logger config
     global.fetch = jest.fn().mockImplementation((url) => {
       if (url.includes('.schema.json')) {
         return Promise.resolve({
@@ -43,6 +60,27 @@ describe('Clichés Generator Bootstrap Integration', () => {
               $schema: 'http://json-schema.org/draft-07/schema#',
               id: 'test-schema',
               type: 'object',
+            }),
+        });
+      }
+      // Mock logger config fetch
+      if (url.includes('logger-config.json')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              logLevel: 'INFO',
+            }),
+        });
+      }
+      // Mock LLM config fetch
+      if (url.includes('llm-configs.json')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              providers: [],
+              configurations: [],
             }),
         });
       }
@@ -122,7 +160,9 @@ describe('Clichés Generator Bootstrap Integration', () => {
     expect(result).toHaveProperty('controller');
     expect(result).toHaveProperty('container');
     expect(result).toHaveProperty('bootstrapTime');
-    expect(result.controller).toBeInstanceOf(ClichesGeneratorController);
+    // Since we're mocking ClichesGeneratorController, just verify it exists
+    expect(result.controller).toBeDefined();
+    expect(typeof result.controller.initialize).toBe('function');
     expect(result.container).toBeInstanceOf(AppContainer);
   });
 

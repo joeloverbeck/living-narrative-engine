@@ -151,10 +151,18 @@ class TracingConfigurationInitializer {
       };
 
       if (diagnosis.configurationValid) {
-        this.#logger.info(
-          'TracingConfigurationInitializer: Initialization complete and validated',
-          result
-        );
+        // Check if this is a pre-configured but disabled state
+        if (!config.enabled && config.tracedActions?.length > 0) {
+          this.#logger.info(
+            'TracingConfigurationInitializer: Initialization complete - tracing pre-configured but disabled',
+            result
+          );
+        } else {
+          this.#logger.info(
+            'TracingConfigurationInitializer: Initialization complete and validated',
+            result
+          );
+        }
       } else {
         this.#logger.warn(
           'TracingConfigurationInitializer: Initialization complete but configuration has issues',
@@ -227,28 +235,30 @@ class TracingConfigurationInitializer {
         filterSummary.tracedActionCount;
 
       // Check for common issues
-      if (!config.enabled) {
-        diagnosis.issues.push('Tracing is disabled in configuration');
-        diagnosis.recommendations.push(
-          'Set "enabled": true in config/trace-config.json to enable tracing'
-        );
-      }
+      // Note: Having tracedActions configured while disabled is valid -
+      // allows pre-configuration for intermittent debugging
+      if (config.enabled) {
+        // Only check for missing configuration when tracing is enabled
+        if (
+          !Array.isArray(config.tracedActions) ||
+          config.tracedActions.length === 0
+        ) {
+          diagnosis.issues.push(
+            'Tracing is enabled but no actions configured for tracing'
+          );
+          diagnosis.recommendations.push(
+            'Add action IDs to "tracedActions" array in configuration (e.g., ["*"] for all actions)'
+          );
+        }
 
-      if (
-        !Array.isArray(config.tracedActions) ||
-        config.tracedActions.length === 0
-      ) {
-        diagnosis.issues.push('No actions configured for tracing');
-        diagnosis.recommendations.push(
-          'Add action IDs to "tracedActions" array in configuration (e.g., ["*"] for all actions)'
-        );
-      }
-
-      if (!config.outputDirectory) {
-        diagnosis.issues.push('No output directory specified');
-        diagnosis.recommendations.push(
-          'Set "outputDirectory" in configuration to specify where trace files should be saved'
-        );
+        if (!config.outputDirectory) {
+          diagnosis.issues.push(
+            'Tracing is enabled but no output directory specified'
+          );
+          diagnosis.recommendations.push(
+            'Set "outputDirectory" in configuration to specify where trace files should be saved'
+          );
+        }
       }
 
       // Check if filter matches config
@@ -266,12 +276,22 @@ class TracingConfigurationInitializer {
 
       // Log diagnostics
       if (diagnosis.configurationValid) {
-        this.#logger.info('Tracing configuration validation passed', {
-          enabled: config.enabled,
-          tracedActionsCount: config.tracedActions?.length || 0,
-          outputDirectory: config.outputDirectory,
-          filterConfigured: filterSummary.enabled,
-        });
+        // Log appropriate message based on enabled state
+        if (!config.enabled && config.tracedActions?.length > 0) {
+          this.#logger.info('Tracing configuration ready but disabled', {
+            enabled: config.enabled,
+            tracedActionsConfigured: config.tracedActions?.length || 0,
+            outputDirectory: config.outputDirectory,
+            note: 'Tracing is pre-configured but disabled. Set enabled:true to activate.',
+          });
+        } else {
+          this.#logger.info('Tracing configuration validation passed', {
+            enabled: config.enabled,
+            tracedActionsCount: config.tracedActions?.length || 0,
+            outputDirectory: config.outputDirectory,
+            filterConfigured: filterSummary.enabled,
+          });
+        }
       } else {
         this.#logger.warn('Tracing configuration validation found issues', {
           issueCount: diagnosis.issues.length,

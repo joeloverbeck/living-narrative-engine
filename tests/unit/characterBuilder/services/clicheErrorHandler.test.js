@@ -125,7 +125,7 @@ describe('ClicheErrorHandler', () => {
 
       expect(mockLogger.error).toHaveBeenCalled();
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'CLICHE_ERROR_OCCURRED',
+        'core:cliche_error_occurred',
         expect.objectContaining({
           error: expect.objectContaining({
             name: 'ClicheError',
@@ -149,7 +149,7 @@ describe('ClicheErrorHandler', () => {
       await errorHandler.handleError(error, context);
 
       const [eventName, payload] = mockEventBus.dispatch.mock.calls[0];
-      expect(eventName).toBe('CLICHE_ERROR_OCCURRED');
+      expect(eventName).toBe('core:cliche_error_occurred');
       expect(payload.context).toMatchObject({
         operation: 'test',
         timestamp: expect.any(String),

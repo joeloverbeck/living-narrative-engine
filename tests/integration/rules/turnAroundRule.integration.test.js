@@ -144,9 +144,11 @@ describe('positioning_handle_turn_around rule integration', () => {
       ]);
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'actor1',
         actionId: 'positioning:turn_around',
         targetId: 'target1',
+        originalInput: 'turn_around target1',
       });
 
       // Check basic events first to ensure action triggered
@@ -195,9 +197,11 @@ describe('positioning_handle_turn_around rule integration', () => {
       ]);
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'actor1',
         actionId: 'positioning:turn_around',
         targetId: 'target1',
+        originalInput: 'turn_around target1',
       });
 
       // Check that actor was removed from facing_away array
@@ -255,9 +259,11 @@ describe('positioning_handle_turn_around rule integration', () => {
       ]);
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'actor1',
         actionId: 'positioning:turn_around',
         targetId: 'target1',
+        originalInput: 'turn_around target1',
       });
 
       // Check that only actor1 was removed
@@ -303,9 +309,11 @@ describe('positioning_handle_turn_around rule integration', () => {
       ]);
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'actor1',
         actionId: 'positioning:turn_around',
         targetId: 'target1',
+        originalInput: 'turn_around target1',
       });
 
       // Check that actor1 was added to existing array

@@ -90,8 +90,16 @@ app.use(compression());
 // Apply general rate limiting
 app.use(createApiRateLimiter());
 
-// Apply request timeout (30 seconds default)
-app.use(createTimeoutMiddleware(30000));
+// Apply request timeout (30 seconds default for most routes)
+// Note: LLM requests will have a longer timeout applied directly to their route
+app.use((req, res, next) => {
+  // Skip timeout middleware for LLM request route
+  if (req.path === '/api/llm-request') {
+    return next();
+  }
+  // Apply 30 second timeout for all other routes
+  return createTimeoutMiddleware(30000)(req, res, next);
+});
 
 // CORS Configuration - This initial log is now covered by the summary log.
 // const PROXY_ALLOWED_ORIGIN_CONFIG = appConfigService.getProxyAllowedOrigin();
@@ -240,6 +248,7 @@ app.get('/', (req, res) => {
 // Updated route to use LlmRequestController's handleLlmRequest method with validation and rate limiting
 app.post(
   '/api/llm-request',
+  createTimeoutMiddleware(90000), // 90 second timeout for LLM requests (was implicitly 30s)
   createLlmRateLimiter(), // Stricter rate limiting for LLM requests
   createLlmMetricsMiddleware({ metricsService, logger: proxyLogger }), // LLM-specific metrics
   validateRequestHeaders(), // Validate headers

@@ -17,7 +17,7 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 describe('ActionTraceConfigLoader - DI Integration', () => {
   let container;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Create a fresh container for each test
     container = new AppContainer();
 
@@ -45,7 +45,7 @@ describe('ActionTraceConfigLoader - DI Integration', () => {
     );
 
     // Configure the container with full configuration (includes logger and action tracing)
-    configureContainer(container, {
+    await configureContainer(container, {
       outputDiv: mockOutputDiv,
       inputElement: mockInputElement,
       titleElement: mockTitleElement,

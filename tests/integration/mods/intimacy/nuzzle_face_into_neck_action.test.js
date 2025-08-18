@@ -121,9 +121,11 @@ describe('intimacy:nuzzle_face_into_neck action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:nuzzle_face_into_neck',
       targetId: 'target1',
+      originalInput: 'nuzzle_face_into_neck target1',
     });
 
     const successEvent = testEnv.events.find(
@@ -162,9 +164,11 @@ describe('intimacy:nuzzle_face_into_neck action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:nuzzle_face_into_neck',
       targetId: 'target1',
+      originalInput: 'nuzzle_face_into_neck target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -209,9 +213,11 @@ describe('intimacy:nuzzle_face_into_neck action integration', () => {
 
     // First nuzzle Bob's neck
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:nuzzle_face_into_neck',
       targetId: 'target1',
+      originalInput: 'nuzzle_face_into_neck target1',
     });
 
     let perceptibleEvent = testEnv.events.find(
@@ -226,9 +232,11 @@ describe('intimacy:nuzzle_face_into_neck action integration', () => {
 
     // Then nuzzle Charlie's neck
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:nuzzle_face_into_neck',
       targetId: 'target2',
+      originalInput: 'nuzzle_face_into_neck target2',
     });
 
     perceptibleEvent = testEnv.events.find(
@@ -262,9 +270,11 @@ describe('intimacy:nuzzle_face_into_neck action integration', () => {
 
     // Try with a different action
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:place_hand_on_waist',
       targetId: 'target1',
+      originalInput: 'place_hand_on_waist target1',
     });
 
     // Should not have any perceptible events from our rule
@@ -295,9 +305,11 @@ describe('intimacy:nuzzle_face_into_neck action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:nuzzle_face_into_neck',
       targetId: 'target1',
+      originalInput: 'nuzzle_face_into_neck target1',
     });
 
     const perceptibleEvent = testEnv.events.find(

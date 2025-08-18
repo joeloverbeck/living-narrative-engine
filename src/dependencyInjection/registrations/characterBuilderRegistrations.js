@@ -90,8 +90,14 @@ function registerCharacterBuilderServices(registrar, logger) {
       clicheGenerator: c.resolve(tokens.ClicheGenerator), // Replace null with actual service
     });
   });
+
+  // Register the interface to resolve to the concrete implementation
+  registrar.singletonFactory(tokens.ICharacterBuilderService, (c) => {
+    return c.resolve(tokens.CharacterBuilderService);
+  });
+
   logger.debug(
-    `Character Builder Registration: Updated ${tokens.CharacterBuilderService} with ClicheGenerator.`
+    `Character Builder Registration: Registered ${tokens.CharacterBuilderService} and ${tokens.ICharacterBuilderService}.`
   );
 }
 

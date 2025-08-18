@@ -117,9 +117,11 @@ describe('intimacy_handle_thumb_wipe_cheek rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:thumb_wipe_cheek',
       targetId: 'target1',
+      originalInput: 'thumb_wipe_cheek target1',
     });
 
     const types = testEnv.events.map((e) => e.eventType);

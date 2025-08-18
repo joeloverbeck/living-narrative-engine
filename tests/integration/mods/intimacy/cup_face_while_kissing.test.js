@@ -134,9 +134,11 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'initiator1',
       actionId: 'intimacy:cup_face_while_kissing',
       targetId: 'receiver1',
+      originalInput: 'cup_face_while_kissing receiver1',
     });
 
     const successEvent = testEnv.events.find(
@@ -177,9 +179,11 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'receiver1',
       actionId: 'intimacy:cup_face_while_kissing',
       targetId: 'initiator1',
+      originalInput: 'cup_face_while_kissing initiator1',
     });
 
     const successEvent = testEnv.events.find(
@@ -220,9 +224,11 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'passionate1',
       actionId: 'intimacy:cup_face_while_kissing',
       targetId: 'passionate2',
+      originalInput: 'cup_face_while_kissing passionate2',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -260,9 +266,11 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'kisser1',
       actionId: 'intimacy:cup_face_while_kissing',
       targetId: 'kisser2',
+      originalInput: 'cup_face_while_kissing kisser2',
     });
 
     // Verify this is an enhancement action that preserves kissing state
@@ -311,9 +319,11 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
 
     // Cup current partner Bob's face
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'polyamorous1',
       actionId: 'intimacy:cup_face_while_kissing',
       targetId: 'partner1',
+      originalInput: 'cup_face_while_kissing partner1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -348,9 +358,11 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
 
     // Try with a different action
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:break_kiss_gently',
       targetId: 'actor2',
+      originalInput: 'break_kiss_gently actor2',
     });
 
     // Should not have any perceptible events from our rule
@@ -383,9 +395,11 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'sequencer1',
       actionId: 'intimacy:cup_face_while_kissing',
       targetId: 'sequencer2',
+      originalInput: 'cup_face_while_kissing sequencer2',
     });
 
     const eventTypes = testEnv.events.map((e) => e.eventType);
@@ -437,9 +451,11 @@ describe('intimacy:cup_face_while_kissing action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'romantic_cupper',
       actionId: 'intimacy:cup_face_while_kissing',
       targetId: 'beloved_partner',
+      originalInput: 'cup_face_while_kissing beloved_partner',
     });
 
     const perceptibleEvent = testEnv.events.find(

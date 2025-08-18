@@ -13,7 +13,6 @@ import {
   DEFAULT_ENHANCEMENT_OPTIONS,
   PROMPT_VERSION_INFO,
 } from '../prompts/clicheGenerationPrompt.js';
-import { createClichesFromLLMResponse } from '../models/cliche.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -97,6 +96,8 @@ export class ClicheGenerator {
    * @param {string} direction.title - Direction title
    * @param {string} direction.description - Direction description
    * @param {string} direction.coreTension - Core tension/conflict
+   * @param {string} [direction.uniqueTwist] - Unique twist or deeper archetype
+   * @param {string} [direction.narrativePotential] - Narrative possibilities
    * @param {object} [options] - Generation options
    * @param {string} [options.llmConfigId] - Specific LLM config to use
    * @param {boolean} [options.useEnhancedPrompt] - Use enhanced prompt features
@@ -161,14 +162,13 @@ export class ClicheGenerator {
       const parsedResponse = await this.#parseResponse(llmResponse);
 
       let validationResult = null;
-      let qualityMetrics = null;
 
       if (
         options.useEnhancedPrompt &&
         options.enhancementOptions?.enableAdvancedValidation !== false
       ) {
         validationResult = this.#validateResponseEnhanced(parsedResponse);
-        qualityMetrics = validationResult.qualityMetrics;
+        // Quality metrics are now handled internally but not exposed in metadata
       } else {
         this.#validateResponseStructure(parsedResponse);
       }
@@ -176,34 +176,39 @@ export class ClicheGenerator {
       // Get active config for metadata
       const activeConfig =
         await this.#llmConfigManager.getActiveConfiguration();
+
+      // Map to schema-compliant field names
+      const promptTokens = this.#estimateTokens(prompt);
+      const responseTokens = this.#estimateTokens(
+        JSON.stringify(parsedResponse)
+      );
+
       const llmMetadata = {
-        modelId: activeConfig?.configId || 'unknown',
-        promptTokens: this.#estimateTokens(prompt),
-        responseTokens: this.#estimateTokens(JSON.stringify(parsedResponse)),
-        processingTime,
+        model: activeConfig?.configId || 'unknown', // Changed from modelId
+        tokens: promptTokens + responseTokens, // Changed from separate fields
+        responseTime: processingTime, // Changed from processingTime
         promptVersion: options.useEnhancedPrompt
           ? PROMPT_VERSION_INFO.version
           : '1.0.0',
-        enhanced: !!options.useEnhancedPrompt,
-        qualityMetrics: qualityMetrics || null,
-        validationWarnings: validationResult?.warnings || [],
-        recommendations: validationResult?.recommendations || [],
+        // temperature is optional but can be included if available
+        // Removed non-schema fields: enhanced, qualityMetrics, validationWarnings, recommendations
       };
 
-      const cliches = createClichesFromLLMResponse(
-        conceptId,
-        parsedResponse.categories,
-        parsedResponse.tropesAndStereotypes,
-        llmMetadata
-      );
+      // Return the data structure expected by characterBuilderService
+      const result = {
+        categories: parsedResponse.categories,
+        tropesAndStereotypes: parsedResponse.tropesAndStereotypes,
+        metadata: llmMetadata,
+      };
 
       this.#logger.info('ClicheGenerator: Successfully generated clichés', {
         conceptId,
-        clicheCount: cliches.length,
+        categoriesCount: Object.keys(parsedResponse.categories).length,
+        tropesCount: parsedResponse.tropesAndStereotypes.length,
         processingTime,
       });
 
-      return cliches;
+      return result;
     } catch (error) {
       const processingTime = Date.now() - startTime;
       this.#logger.error('ClicheGenerator: Generation failed', {

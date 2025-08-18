@@ -142,10 +142,11 @@ describe('Scope Integration Tests', () => {
       logger,
       gameDataRepository,
     });
-    // FIX: Ensure the mock has a function with the correct arity
+    // FIX: Ensure the mock has a function with the correct arity and returns proper result
     const prerequisiteEvaluationService = {
       evaluate: (prerequisites, actionDef, actor, trace) => {
-        return true;
+        // Return ActionResult.success for successful prerequisite evaluation
+        return { success: true, value: true };
       },
     };
     const validatedEventDispatcher = {
@@ -198,8 +199,13 @@ describe('Scope Integration Tests', () => {
         logger,
         unifiedScopeResolver: createMockUnifiedScopeResolver({
           scopeRegistry,
+          scopeEngine,
           entityManager,
           logger,
+          safeEventDispatcher,
+          jsonLogicEvaluationService: jsonLogicEval,
+          dslParser: new DefaultDslParser(),
+          actionErrorContextBuilder: createMockActionErrorContextBuilder(),
         }),
         targetResolver: targetResolutionService,
       }),

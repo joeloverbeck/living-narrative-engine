@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:existing_cliches_loaded",
+  "description": "Dispatched when existing clichés are loaded for a thematic direction.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "directionId": {
+        "description": "Unique identifier of the thematic direction",
+        "type": "string"
+      },
+      "count": {
+        "description": "Number of clichés loaded",
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": ["directionId", "count"],
+    "additionalProperties": true
+  }
+}

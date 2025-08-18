@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/cliche.schema.json",
+  "title": "Cliche",
+  "description": "Schema for storing common tropes and stereotypes to avoid in character development",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier (UUID)"
+    },
+    "directionId": {
+      "type": "string",
+      "description": "Reference to parent ThematicDirection",
+      "minLength": 1
+    },
+    "conceptId": {
+      "type": "string",
+      "description": "Reference to original CharacterConcept",
+      "minLength": 1
+    },
+    "categories": {
+      "type": "object",
+      "description": "Categorized clichés",
+      "properties": {
+        "names": {
+          "type": "array",
+          "description": "Common/overused character names",
+          "items": {
+            "type": "string"
+          }
+        },
+        "physicalDescriptions": {
+          "type": "array",
+          "description": "Clichéd physical traits",
+          "items": {
+            "type": "string"
+          }
+        },
+        "personalityTraits": {
+          "type": "array",
+          "description": "Overused personality traits",
+          "items": {
+            "type": "string"
+          }
+        },
+        "skillsAbilities": {
+          "type": "array",
+          "description": "Common skills/abilities",
+          "items": {
+            "type": "string"
+          }
+        },
+        "typicalLikes": {
+          "type": "array",
+          "description": "Predictable likes/interests",
+          "items": {
+            "type": "string"
+          }
+        },
+        "typicalDislikes": {
+          "type": "array",
+          "description": "Common dislikes",
+          "items": {
+            "type": "string"
+          }
+        },
+        "commonFears": {
+          "type": "array",
+          "description": "Overused fears",
+          "items": {
+            "type": "string"
+          }
+        },
+        "genericGoals": {
+          "type": "array",
+          "description": "Predictable goals/motivations",
+          "items": {
+            "type": "string"
+          }
+        },
+        "backgroundElements": {
+          "type": "array",
+          "description": "Clichéd backstory elements",
+          "items": {
+            "type": "string"
+          }
+        },
+        "overusedSecrets": {
+          "type": "array",
+          "description": "Common secrets/reveals",
+          "items": {
+            "type": "string"
+          }
+        },
+        "speechPatterns": {
+          "type": "array",
+          "description": "Overused catchphrases/patterns",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "names",
+        "physicalDescriptions",
+        "personalityTraits",
+        "skillsAbilities",
+        "typicalLikes",
+        "typicalDislikes",
+        "commonFears",
+        "genericGoals",
+        "backgroundElements",
+        "overusedSecrets",
+        "speechPatterns"
+      ],
+      "additionalProperties": false
+    },
+    "tropesAndStereotypes": {
+      "type": "array",
+      "description": "Overall narrative patterns",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp of creation"
+    },
+    "llmMetadata": {
+      "type": "object",
+      "description": "Generation metadata",
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "LLM model used for generation"
+        },
+        "temperature": {
+          "type": "number",
+          "description": "Temperature setting used",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "tokens": {
+          "type": "integer",
+          "description": "Token count for generation",
+          "minimum": 0
+        },
+        "responseTime": {
+          "type": "integer",
+          "description": "Generation time in ms",
+          "minimum": 0
+        },
+        "promptVersion": {
+          "type": "string",
+          "description": "Version of prompt used"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["directionId", "conceptId", "categories"],
+  "additionalProperties": false
+}
