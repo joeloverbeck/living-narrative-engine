@@ -265,6 +265,395 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
     });
   });
 
+  describe('Valid Recipe - With bodyDescriptors', () => {
+    test('should validate recipe with complete bodyDescriptors', () => {
+      const validRecipe = {
+        recipeId: 'anatomy:warrior',
+        blueprintId: 'anatomy:human_male',
+        slots: {
+          head: { partType: 'head' },
+        },
+        bodyDescriptors: {
+          build: 'muscular',
+          density: 'hairy',
+          composition: 'lean',
+          skinColor: 'tanned',
+        },
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate recipe with partial bodyDescriptors', () => {
+      const validRecipe = {
+        recipeId: 'anatomy:athletic',
+        blueprintId: 'anatomy:human_female',
+        slots: {
+          head: { partType: 'head' },
+        },
+        bodyDescriptors: {
+          build: 'athletic',
+          composition: 'lean',
+        },
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate recipe with empty bodyDescriptors', () => {
+      const validRecipe = {
+        recipeId: 'anatomy:basic',
+        blueprintId: 'anatomy:human_male',
+        slots: {
+          head: { partType: 'head' },
+        },
+        bodyDescriptors: {},
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate recipe without bodyDescriptors field (backward compatibility)', () => {
+      const validRecipe = {
+        recipeId: 'anatomy:traditional',
+        blueprintId: 'anatomy:human_male',
+        slots: {
+          head: { partType: 'head' },
+        },
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate all valid build enum values', () => {
+      const builds = [
+        'skinny',
+        'slim',
+        'toned',
+        'athletic',
+        'shapely',
+        'thick',
+        'muscular',
+        'stocky',
+      ];
+
+      builds.forEach((build) => {
+        const validRecipe = {
+          recipeId: 'anatomy:test_build',
+          blueprintId: 'anatomy:human',
+          slots: {
+            head: { partType: 'head' },
+          },
+          bodyDescriptors: {
+            build: build,
+          },
+        };
+
+        const ok = validate(validRecipe);
+        expect(ok).toBe(true);
+      });
+    });
+
+    test('should validate all valid density enum values', () => {
+      const densities = [
+        'hairless',
+        'sparse',
+        'light',
+        'moderate',
+        'hairy',
+        'very-hairy',
+      ];
+
+      densities.forEach((density) => {
+        const validRecipe = {
+          recipeId: 'anatomy:test_density',
+          blueprintId: 'anatomy:human',
+          slots: {
+            head: { partType: 'head' },
+          },
+          bodyDescriptors: {
+            density: density,
+          },
+        };
+
+        const ok = validate(validRecipe);
+        expect(ok).toBe(true);
+      });
+    });
+
+    test('should validate all valid composition enum values', () => {
+      const compositions = [
+        'underweight',
+        'lean',
+        'average',
+        'soft',
+        'chubby',
+        'overweight',
+        'obese',
+      ];
+
+      compositions.forEach((composition) => {
+        const validRecipe = {
+          recipeId: 'anatomy:test_composition',
+          blueprintId: 'anatomy:human',
+          slots: {
+            head: { partType: 'head' },
+          },
+          bodyDescriptors: {
+            composition: composition,
+          },
+        };
+
+        const ok = validate(validRecipe);
+        expect(ok).toBe(true);
+      });
+    });
+
+    test('should validate skinColor as any string value', () => {
+      const skinColors = [
+        'pale',
+        'tanned',
+        'dark',
+        'olive',
+        '#F5DEB3',
+        'rgb(245, 222, 179)',
+      ];
+
+      skinColors.forEach((skinColor) => {
+        const validRecipe = {
+          recipeId: 'anatomy:test_skin',
+          blueprintId: 'anatomy:human',
+          slots: {
+            head: { partType: 'head' },
+          },
+          bodyDescriptors: {
+            skinColor: skinColor,
+          },
+        };
+
+        const ok = validate(validRecipe);
+        expect(ok).toBe(true);
+      });
+    });
+  });
+
+  describe('Invalid bodyDescriptors', () => {
+    test('should reject invalid build enum value', () => {
+      const invalidRecipe = {
+        recipeId: 'anatomy:test',
+        blueprintId: 'anatomy:human_male',
+        slots: {
+          head: { partType: 'head' },
+        },
+        bodyDescriptors: {
+          build: 'invalid-build',
+        },
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          message: 'must be equal to one of the allowed values',
+          instancePath: '/bodyDescriptors/build',
+        })
+      );
+    });
+
+    test('should reject invalid density enum value', () => {
+      const invalidRecipe = {
+        recipeId: 'anatomy:test',
+        blueprintId: 'anatomy:human_male',
+        slots: {
+          head: { partType: 'head' },
+        },
+        bodyDescriptors: {
+          density: 'super-hairy',
+        },
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          message: 'must be equal to one of the allowed values',
+          instancePath: '/bodyDescriptors/density',
+        })
+      );
+    });
+
+    test('should reject invalid composition enum value', () => {
+      const invalidRecipe = {
+        recipeId: 'anatomy:test',
+        blueprintId: 'anatomy:human_male',
+        slots: {
+          head: { partType: 'head' },
+        },
+        bodyDescriptors: {
+          composition: 'extremely-overweight',
+        },
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          message: 'must be equal to one of the allowed values',
+          instancePath: '/bodyDescriptors/composition',
+        })
+      );
+    });
+
+    test('should reject additional properties in bodyDescriptors', () => {
+      const invalidRecipe = {
+        recipeId: 'anatomy:test',
+        blueprintId: 'anatomy:human_male',
+        slots: {
+          head: { partType: 'head' },
+        },
+        bodyDescriptors: {
+          build: 'athletic',
+          invalidProperty: 'value',
+        },
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+      expect(validate.errors).toContainEqual(
+        expect.objectContaining({
+          message: 'must NOT have additional properties',
+          params: { additionalProperty: 'invalidProperty' },
+        })
+      );
+    });
+
+    test('should reject non-string values for descriptor properties', () => {
+      const invalidRecipe = {
+        recipeId: 'anatomy:test',
+        blueprintId: 'anatomy:human_male',
+        slots: {
+          head: { partType: 'head' },
+        },
+        bodyDescriptors: {
+          build: 123,
+          density: true,
+          composition: ['array'],
+          skinColor: { object: 'value' },
+        },
+      };
+
+      const ok = validate(invalidRecipe);
+      expect(ok).toBe(false);
+
+      // Should have multiple type errors
+      const typeErrors = validate.errors.filter(
+        (err) => err.message === 'must be string'
+      );
+      expect(typeErrors.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('bodyDescriptors Integration Tests', () => {
+    test('should validate recipe with bodyDescriptors and clothingEntities', () => {
+      const validRecipe = {
+        recipeId: 'anatomy:complete_character',
+        blueprintId: 'anatomy:human_male',
+        slots: {
+          head: { partType: 'head' },
+        },
+        bodyDescriptors: {
+          build: 'muscular',
+          density: 'hairy',
+          composition: 'lean',
+          skinColor: 'tanned',
+        },
+        clothingEntities: [
+          {
+            entityId: 'clothing:simple_shirt',
+            equip: true,
+            layer: 'base',
+          },
+        ],
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate recipe with bodyDescriptors and patterns', () => {
+      const validRecipe = {
+        recipeId: 'anatomy:patterned_character',
+        blueprintId: 'anatomy:human_male',
+        slots: {
+          head: { partType: 'head' },
+        },
+        patterns: [
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            tags: ['anatomy:muscular'],
+          },
+        ],
+        bodyDescriptors: {
+          build: 'athletic',
+          composition: 'lean',
+        },
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate recipe with bodyDescriptors and constraints', () => {
+      const validRecipe = {
+        recipeId: 'anatomy:constrained_character',
+        blueprintId: 'anatomy:human_male',
+        slots: {
+          head: { partType: 'head' },
+        },
+        constraints: {
+          requires: [
+            {
+              components: ['anatomy:wings', 'anatomy:tail'],
+            },
+          ],
+        },
+        bodyDescriptors: {
+          build: 'shapely',
+          skinColor: 'pale',
+        },
+      };
+
+      const ok = validate(validRecipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+  });
+
   describe('ClothingEntities validations', () => {
     test('should fail if clothingEntities item missing required entityId', () => {
       const invalidData = {

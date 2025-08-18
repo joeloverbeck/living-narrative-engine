@@ -2,14 +2,25 @@
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
   "recipeId": "anatomy:human_male",
   "blueprintId": "anatomy:human_male",
+  "bodyDescriptors": {
+    "build": "muscular",
+    "density": "hairy",
+    "composition": "lean",
+    "skinColor": "tanned"
+  },
   "slots": {
     "torso": {
       "partType": "torso",
-      "preferId": "anatomy:human_male_torso"
+      "preferId": "anatomy:human_male_torso_muscular",
+      "properties": {
+        "descriptors:build": {
+          "build": "muscular"
+        }
+      }
     },
     "head": {
       "partType": "head",
-      "preferId": "anatomy:humanoid_head"
+      "preferId": "anatomy:human_male_head_bearded"
     }
   },
   "patterns": [

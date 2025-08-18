@@ -7,6 +7,7 @@
 
 import { CharacterBuilderBootstrap } from './characterBuilder/CharacterBuilderBootstrap.js';
 import { CoreMotivationsGeneratorController } from './coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js';
+import { CoreMotivationsDisplayEnhancer } from './coreMotivationsGenerator/services/CoreMotivationsDisplayEnhancer.js';
 
 /**
  * Initialize the Core Motivations Generator application
@@ -29,6 +30,9 @@ const initializeApp = async () => {
       ],
       // Note: Event definitions will be loaded from data/mods/core/events/*.event.json
       // These will be created in CORMOTGEN-005
+      services: {
+        displayEnhancer: CoreMotivationsDisplayEnhancer,
+      },
       hooks: {
         postInit: (controller) => {
           // Store controller reference for debugging
