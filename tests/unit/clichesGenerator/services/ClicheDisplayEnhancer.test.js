@@ -371,7 +371,12 @@ describe('ClicheDisplayEnhancer', () => {
     it('should copy individual item', async () => {
       const copyBtn = container.querySelector('.copy-item-btn');
       const item = copyBtn.closest('.cliche-item');
-      const expectedText = item.textContent.replace('📋', '').trim();
+
+      // Get the actual text content, excluding the button controls
+      const clone = item.cloneNode(true);
+      const controls = clone.querySelector('.item-controls');
+      if (controls) controls.remove();
+      const expectedText = clone.textContent.trim();
 
       await copyBtn.click();
 

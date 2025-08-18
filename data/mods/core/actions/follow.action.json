@@ -3,7 +3,13 @@
   "id": "core:follow",
   "name": "Follow",
   "description": "Commands your character to follow the specified target, becoming their companion and moving with them.",
-  "targets": "core:potential_leaders",
+  "targets": {
+    "primary": {
+      "scope": "core:potential_leaders",
+      "placeholder": "target",
+      "description": "The leader to follow"
+    }
+  },
   "required_components": {},
   "template": "follow {target}",
   "prerequisites": [

@@ -370,9 +370,11 @@ describe('positioning_handle_get_close rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'a1',
       actionId: 'positioning:get_close',
       targetId: 'b1',
+      originalInput: 'get_close b1',
     });
 
     expect(
@@ -433,9 +435,11 @@ describe('positioning_handle_get_close rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'a1',
       actionId: 'positioning:get_close',
       targetId: 'c1',
+      originalInput: 'get_close c1',
     });
 
     // All actors should now be in the same closeness circle
@@ -468,21 +472,27 @@ describe('positioning_handle_get_close rule integration', () => {
 
     // Create a complex poly relationship
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'a1',
       actionId: 'positioning:get_close',
       targetId: 'b1',
+      originalInput: 'get_close b1',
     });
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'b1',
       actionId: 'positioning:get_close',
       targetId: 'c1',
+      originalInput: 'get_close c1',
     });
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'c1',
       actionId: 'positioning:get_close',
       targetId: 'd1',
+      originalInput: 'get_close d1',
     });
 
     // All actors should be in the same closeness circle

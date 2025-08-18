@@ -168,9 +168,11 @@ describe('intimacy:feel_arm_muscles action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'intimacy:feel_arm_muscles',
       targetId: 'bob',
+      originalInput: 'feel_arm_muscles bob',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -314,9 +316,11 @@ describe('intimacy:feel_arm_muscles action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'intimacy:feel_arm_muscles',
       targetId: 'bob',
+      originalInput: 'feel_arm_muscles bob',
     });
 
     // Find the display successful action result event

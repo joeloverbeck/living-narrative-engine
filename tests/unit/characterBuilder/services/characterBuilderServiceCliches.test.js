@@ -125,6 +125,7 @@ describe('CharacterBuilderService - Cliché Operations', () => {
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         CHARACTER_BUILDER_EVENTS.CLICHES_RETRIEVED,
         {
+          conceptId: 'concept-1', // Now includes conceptId from the cliche
           directionId: 'dir-1',
           clicheId: 'cliche-1',
           categoryStats: expect.any(Object),
@@ -447,12 +448,9 @@ describe('CharacterBuilderService - Cliché Operations', () => {
       expect(result.directionId).toBe('dir-1');
       expect(result.conceptId).toBe('concept-1');
       expect(mockClicheGenerator.generateCliches).toHaveBeenCalledWith(
+        'concept-1',
         'A hero with a mysterious past',
-        {
-          title: 'The Chosen One',
-          description: 'A destined hero',
-          coreTension: 'Power vs responsibility',
-        }
+        mockDirection // The actual direction object is passed
       );
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         CHARACTER_BUILDER_EVENTS.CLICHES_GENERATION_STARTED,

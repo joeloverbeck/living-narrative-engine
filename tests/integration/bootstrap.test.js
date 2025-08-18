@@ -28,16 +28,17 @@ describe('Application Bootstrap Integration Test', () => {
     container = new AppContainer();
   });
 
-  it('should configure the container without throwing immediate errors', () => {
+  it('should configure the container without throwing immediate errors', async () => {
     // Assertion: configureContainer runs successfully.
-    expect(() => {
+    // Test that configureContainer doesn't throw
+    await expect(
       configureContainer(container, {
         outputDiv: mockOutputDiv,
         inputElement: mockInputElement,
         titleElement: mockTitleElement,
         document,
-      });
-    }).not.toThrow();
+      })
+    ).resolves.not.toThrow();
 
     // Optional: Basic check if logger got registered (it's the first one)
     expect(() => container.resolve(tokens.ILogger)).not.toThrow();
@@ -46,10 +47,10 @@ describe('Application Bootstrap Integration Test', () => {
     expect(typeof logger.info).toBe('function');
   });
 
-  it('should be able to resolve all registered services defined in tokens', () => {
+  it('should be able to resolve all registered services defined in tokens', async () => {
     // --- Arrange ---
     // Configure the container first
-    configureContainer(container, {
+    await configureContainer(container, {
       outputDiv: mockOutputDiv,
       inputElement: mockInputElement,
       titleElement: mockTitleElement,
@@ -83,7 +84,7 @@ describe('Application Bootstrap Integration Test', () => {
   it('should resolve SystemInitializer and execute initializeAll without critical errors', async () => {
     // --- Arrange ---
     // Configure the container first
-    configureContainer(container, {
+    await configureContainer(container, {
       outputDiv: mockOutputDiv,
       inputElement: mockInputElement,
       titleElement: mockTitleElement,
@@ -117,7 +118,7 @@ describe('Application Bootstrap Integration Test', () => {
     const resolveByTagSpy = jest.spyOn(container, 'resolveByTag'); // Spy on the instance method
 
     // Configure the container
-    configureContainer(container, {
+    await configureContainer(container, {
       outputDiv: mockOutputDiv,
       inputElement: mockInputElement,
       titleElement: mockTitleElement, // Now passes the correct h1 element

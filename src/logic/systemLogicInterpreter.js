@@ -265,7 +265,16 @@ class SystemLogicInterpreter extends BaseService {
     let nestedCtx;
     try {
       const actorId = event.payload?.actorId ?? event.payload?.entityId ?? null;
-      const targetId = event.payload?.targetId ?? null;
+      // Support both legacy (targetId) and multi-target (targets.primary) formats
+      let targetId = event.payload?.targetId ?? null;
+      // If no targetId but we have targets.primary, use that as the target
+      if (!targetId && event.payload?.targets?.primary) {
+        // targets.primary can be a string (single target) or an object with entityId
+        targetId =
+          typeof event.payload.targets.primary === 'string'
+            ? event.payload.targets.primary
+            : (event.payload.targets.primary?.entityId ?? null);
+      }
 
       // Keep original format for tests
       this.#logger.debug(

@@ -293,6 +293,14 @@ export class LegacyTargetCompatibilityLayer extends BaseService {
       return actionDef.placeholder;
     }
 
+    // Check if the template has a placeholder we can use
+    if (actionDef.template) {
+      const placeholderMatch = actionDef.template.match(/\{(\w+)\}/);
+      if (placeholderMatch && placeholderMatch[1]) {
+        return placeholderMatch[1];
+      }
+    }
+
     // Generate based on target type
     const scope = this.#extractLegacyScope(actionDef);
 

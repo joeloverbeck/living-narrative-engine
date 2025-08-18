@@ -319,17 +319,17 @@ describe('ThematicDirection Model', () => {
         expect(() => {
           createThematicDirection(conceptId, invalidData);
         }).toThrow(
-          'ThematicDirection: uniqueTwist must be between 10 and 500 characters'
+          'ThematicDirection: uniqueTwist must be between 10 and 1000 characters'
         );
       });
 
       it('should throw error for uniqueTwist too long', () => {
-        const invalidData = { ...validData, uniqueTwist: 'A'.repeat(501) }; // 501 chars, max is 500
+        const invalidData = { ...validData, uniqueTwist: 'A'.repeat(1001) }; // 1001 chars, max is 1000
 
         expect(() => {
           createThematicDirection(conceptId, invalidData);
         }).toThrow(
-          'ThematicDirection: uniqueTwist must be between 10 and 500 characters'
+          'ThematicDirection: uniqueTwist must be between 10 and 1000 characters'
         );
       });
 

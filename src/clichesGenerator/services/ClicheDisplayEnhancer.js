@@ -22,13 +22,17 @@ export class ClicheDisplayEnhancer {
   #searchInput;
   #categoryFilters;
   #currentData;
+  #onDeleteItem;
+  #onDeleteTrope;
 
   /**
    * @param {object} params
    * @param {ILogger} params.logger
    * @param {HTMLElement} params.container
+   * @param {Function} [params.onDeleteItem] - Callback for item deletion
+   * @param {Function} [params.onDeleteTrope] - Callback for trope deletion
    */
-  constructor({ logger, container }) {
+  constructor({ logger, container, onDeleteItem, onDeleteTrope }) {
     if (!logger) throw new Error('Logger is required');
     if (!container) throw new Error('Container element is required');
 
@@ -38,6 +42,8 @@ export class ClicheDisplayEnhancer {
     this.#exporter = new ClicheExporter();
     this.#collapsedCategories = this.#loadCollapsedState();
     this.#currentData = null;
+    this.#onDeleteItem = onDeleteItem;
+    this.#onDeleteTrope = onDeleteTrope;
   }
 
   /**
@@ -196,14 +202,26 @@ export class ClicheDisplayEnhancer {
       if (item.querySelector('.item-controls')) return;
 
       const itemText = item.textContent.trim();
+      const categoryId = categoryEl.dataset.category;
       const controlsHtml = `
-        <button 
-          class="copy-item-btn" 
-          title="Copy this item"
-          aria-label="Copy: ${DomUtils.escapeHtml(itemText)}"
-        >
-          📋
-        </button>
+        <span class="item-controls">
+          <button 
+            class="copy-item-btn" 
+            title="Copy this item"
+            aria-label="Copy: ${DomUtils.escapeHtml(itemText)}"
+          >
+            📋
+          </button>
+          <button 
+            class="delete-item-btn" 
+            data-category="${categoryId}"
+            data-text="${DomUtils.escapeHtml(itemText)}"
+            title="Delete this item"
+            aria-label="Delete: ${DomUtils.escapeHtml(itemText)}"
+          >
+            🗑️
+          </button>
+        </span>
       `;
 
       item.insertAdjacentHTML('beforeend', controlsHtml);
@@ -290,7 +308,7 @@ export class ClicheDisplayEnhancer {
       toggle.addEventListener('click', (e) => this.#toggleCategory(e));
     });
 
-    // Copy buttons
+    // Copy and delete buttons
     this.#container.addEventListener('click', (e) => {
       if (e.target.classList.contains('copy-item-btn')) {
         this.#copyItem(e.target);
@@ -298,6 +316,10 @@ export class ClicheDisplayEnhancer {
         this.#copyCategory(e.target);
       } else if (e.target.classList.contains('copy-all-btn')) {
         this.#copyAll();
+      } else if (e.target.classList.contains('delete-item-btn')) {
+        this.#deleteItem(e.target);
+      } else if (e.target.classList.contains('delete-trope-btn')) {
+        this.#deleteTrope(e.target);
       }
     });
 
@@ -522,8 +544,20 @@ export class ClicheDisplayEnhancer {
    * @private
    */
   async #copyItem(button) {
-    const item = button.closest('.cliche-item');
-    const text = item.textContent.replace('📋', '').trim();
+    const item =
+      button.closest('.cliche-item') || button.closest('.trope-item');
+    if (!item) {
+      this.#logger.error('Could not find parent item element');
+      return;
+    }
+
+    // Clone the item and remove buttons to get clean text
+    const clone = item.cloneNode(true);
+    const controls = clone.querySelector('.item-controls');
+    if (controls) {
+      controls.remove();
+    }
+    const text = clone.textContent.trim();
 
     try {
       await navigator.clipboard.writeText(text);
@@ -535,6 +569,108 @@ export class ClicheDisplayEnhancer {
   }
 
   /**
+   * Delete individual item
+   *
+   * @param button
+   * @private
+   */
+  async #deleteItem(button) {
+    const categoryId = button.dataset.category;
+    const itemText = button.dataset.text;
+
+    if (!this.#onDeleteItem) {
+      this.#logger.warn('Delete handler not configured');
+      return;
+    }
+
+    try {
+      // Disable button to prevent double-clicks
+      button.disabled = true;
+      button.textContent = '⏳';
+
+      // Call the deletion handler
+      await this.#onDeleteItem(categoryId, itemText);
+
+      // Remove the item from DOM (optimistic update)
+      const item = button.closest('.cliche-item');
+      if (item) {
+        item.style.opacity = '0.5';
+        item.style.transition = 'opacity 0.3s';
+        setTimeout(() => {
+          item.remove();
+          // Update category count
+          this.#updateCategoryCount(categoryId);
+        }, 300);
+      }
+    } catch (err) {
+      this.#logger.error('Failed to delete item', err);
+      // Re-enable button on error
+      button.disabled = false;
+      button.textContent = '🗑️';
+      this.#showCopyFeedback(button, 'Failed');
+    }
+  }
+
+  /**
+   * Delete trope
+   *
+   * @param button
+   * @private
+   */
+  async #deleteTrope(button) {
+    const tropeText = button.dataset.text;
+
+    if (!this.#onDeleteTrope) {
+      this.#logger.warn('Delete trope handler not configured');
+      return;
+    }
+
+    try {
+      // Disable button to prevent double-clicks
+      button.disabled = true;
+      button.textContent = '⏳';
+
+      // Call the deletion handler
+      await this.#onDeleteTrope(tropeText);
+
+      // Remove the trope from DOM (optimistic update)
+      const tropeItem = button.closest('li');
+      if (tropeItem) {
+        tropeItem.style.opacity = '0.5';
+        tropeItem.style.transition = 'opacity 0.3s';
+        setTimeout(() => {
+          tropeItem.remove();
+        }, 300);
+      }
+    } catch (err) {
+      this.#logger.error('Failed to delete trope', err);
+      // Re-enable button on error
+      button.disabled = false;
+      button.textContent = '🗑️';
+      this.#showCopyFeedback(button, 'Failed');
+    }
+  }
+
+  /**
+   * Update category count after deletion
+   *
+   * @param categoryId
+   * @private
+   */
+  #updateCategoryCount(categoryId) {
+    const category = this.#container.querySelector(
+      `[data-category="${categoryId}"]`
+    );
+    if (category) {
+      const items = category.querySelectorAll('.cliche-item');
+      const countEl = category.querySelector('.category-count');
+      if (countEl) {
+        countEl.textContent = `(${items.length})`;
+      }
+    }
+  }
+
+  /**
    * Copy category items
    *
    * @param button
@@ -542,12 +678,22 @@ export class ClicheDisplayEnhancer {
    */
   async #copyCategory(button) {
     const category = button.closest('.cliche-category');
-    const title = category
-      .querySelector('.category-title')
-      .textContent.replace(/[\(📋\)]/g, '')
-      .trim();
+    const titleEl = category.querySelector('.category-title');
+
+    // Clone title and remove buttons to get clean text
+    const titleClone = titleEl.cloneNode(true);
+    const titleButtons = titleClone.querySelectorAll('button');
+    titleButtons.forEach((btn) => btn.remove());
+    const title = titleClone.textContent.trim();
+
+    // Get clean item texts
     const items = Array.from(category.querySelectorAll('.cliche-item'))
-      .map((item) => `• ${item.textContent.replace('📋', '').trim()}`)
+      .map((item) => {
+        const clone = item.cloneNode(true);
+        const controls = clone.querySelector('.item-controls');
+        if (controls) controls.remove();
+        return `• ${clone.textContent.trim()}`;
+      })
       .join('\n');
 
     const text = `${title}\n${items}`;

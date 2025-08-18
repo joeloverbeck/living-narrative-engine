@@ -25,7 +25,13 @@ describe('Multi-Target Migration Unit Tests', () => {
     it('should have targets property instead of scope for follow action', () => {
       expect(followAction.targets).toBeDefined();
       expect(followAction.scope).toBeUndefined();
-      expect(followAction.targets).toBe('core:potential_leaders');
+      expect(followAction.targets).toEqual({
+        primary: {
+          scope: 'core:potential_leaders',
+          placeholder: 'target',
+          description: 'The leader to follow',
+        },
+      });
     });
 
     it('should have targets property instead of scope for stop_following action', () => {
@@ -42,25 +48,21 @@ describe('Multi-Target Migration Unit Tests', () => {
   });
 
   describe('LegacyTargetCompatibilityLayer Handling', () => {
-    it('should recognize string targets as legacy format', () => {
+    it('should recognize object targets as modern format', () => {
       const isLegacy = compatibilityLayer.isLegacyAction(followAction);
-      expect(isLegacy).toBe(true); // String targets are considered legacy format
+      expect(isLegacy).toBe(false); // Object targets are modern format
     });
 
-    it('should convert string targets to modern format', () => {
+    it('should handle modern object format without conversion', () => {
       const mockActor = { id: 'test-actor' };
-      const result = compatibilityLayer.convertLegacyFormat(
-        followAction,
-        mockActor
-      );
+      // followAction now has object-based targets, so it shouldn't need conversion
+      const isLegacy = compatibilityLayer.isLegacyAction(followAction);
+      expect(isLegacy).toBe(false);
 
-      expect(result.isLegacy).toBe(true);
-      expect(result.targetDefinitions).toBeDefined();
-      expect(result.targetDefinitions.primary).toBeDefined();
-      expect(result.targetDefinitions.primary.scope).toBe(
-        'core:potential_leaders'
-      );
-      expect(result.targetDefinitions.primary.placeholder).toBe('target');
+      // Verify the modern format structure
+      expect(followAction.targets.primary).toBeDefined();
+      expect(followAction.targets.primary.scope).toBe('core:potential_leaders');
+      expect(followAction.targets.primary.placeholder).toBe('target');
     });
 
     it('should handle "none" targets specially', () => {

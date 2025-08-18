@@ -130,9 +130,11 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:nibble_earlobe_playfully',
       targetId: 'target1',
+      originalInput: 'nibble_earlobe_playfully target1',
     });
 
     const successEvent = testEnv.events.find(
@@ -171,9 +173,11 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:nibble_earlobe_playfully',
       targetId: 'target1',
+      originalInput: 'nibble_earlobe_playfully target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -218,9 +222,11 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
 
     // First nibble Bob's earlobe
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:nibble_earlobe_playfully',
       targetId: 'target1',
+      originalInput: 'nibble_earlobe_playfully target1',
     });
 
     let perceptibleEvent = testEnv.events.find(
@@ -235,9 +241,11 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
 
     // Then nibble Charlie's earlobe
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:nibble_earlobe_playfully',
       targetId: 'target2',
+      originalInput: 'nibble_earlobe_playfully target2',
     });
 
     perceptibleEvent = testEnv.events.find(
@@ -271,9 +279,11 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
 
     // Try with a different action
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:kiss_neck_sensually',
       targetId: 'target1',
+      originalInput: 'kiss_neck_sensually target1',
     });
 
     // Should not have any perceptible events from our rule
@@ -304,9 +314,11 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:nibble_earlobe_playfully',
       targetId: 'target1',
+      originalInput: 'nibble_earlobe_playfully target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -343,9 +355,11 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:nibble_earlobe_playfully',
       targetId: 'target1',
+      originalInput: 'nibble_earlobe_playfully target1',
     });
 
     const successEvent = testEnv.events.find(
@@ -389,9 +403,11 @@ describe('intimacy:nibble_earlobe_playfully action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:nibble_earlobe_playfully',
       targetId: 'target1',
+      originalInput: 'nibble_earlobe_playfully target1',
     });
 
     const successEvent = testEnv.events.find(

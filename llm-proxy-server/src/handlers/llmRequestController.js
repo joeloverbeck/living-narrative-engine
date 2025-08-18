@@ -318,6 +318,14 @@ export class LlmRequestController {
           `LlmRequestController: LlmRequestService returned success for llmId '${llmId}'. Relaying to client with status ${result.statusCode}.`,
           { llmId }
         );
+        // Check if headers have already been sent before attempting to send response
+        if (res.headersSent) {
+          this.#logger.warn(
+            `LlmRequestController: Headers already sent for llmId '${llmId}'. Cannot send success response.`,
+            { llmId }
+          );
+          return;
+        }
         res
           .status(result.statusCode)
           // MODIFIED: Use imported constant for fallback Content-Type
@@ -326,6 +334,7 @@ export class LlmRequestController {
             result.contentTypeIfSuccess || CONTENT_TYPE_JSON
           )
           .json(result.data);
+        return; // Explicitly return after sending successful response
       } else {
         this.#logger.warn(
           `LlmRequestController: LlmRequestService returned failure for llmId '${llmId}'. Status: ${result.statusCode}, Stage: ${result.errorStage}, Message: ${result.errorMessage}`,
@@ -363,7 +372,15 @@ export class LlmRequestController {
           llmId,
         }
       );
-      sendProxyError(res, 500, stage, message, details, llmId, this.#logger);
+      // Check if headers have already been sent before attempting to send error response
+      if (!res.headersSent) {
+        sendProxyError(res, 500, stage, message, details, llmId, this.#logger);
+      } else {
+        this.#logger.warn(
+          `LlmRequestController: Cannot send error response - headers already sent for llmId '${llmId}'.`,
+          { llmId, errorMessage: serviceException.message }
+        );
+      }
     }
   }
 }

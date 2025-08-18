@@ -457,7 +457,7 @@ export class ClicheErrorHandler {
    */
   async #dispatchErrorEvent(error, context) {
     try {
-      await this.#eventBus.dispatch('CLICHE_ERROR_OCCURRED', {
+      await this.#eventBus.dispatch('core:cliche_error_occurred', {
         error: {
           name: error.name,
           message: error.message,

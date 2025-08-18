@@ -19,48 +19,10 @@ const initializeApp = async () => {
     const result = await bootstrap.bootstrap({
       pageName: 'cliches-generator',
       controllerClass: ClichesGeneratorController,
+      includeModLoading: true, // Load core mod for event definitions (including cliché events)
       customSchemas: ['/data/schemas/cliche.schema.json'],
-      eventDefinitions: [
-        {
-          id: 'core:cliche_generation_started',
-          description: 'Fired when cliché generation begins',
-          payloadSchema: {
-            type: 'object',
-            required: ['directionId', 'conceptId'],
-            properties: {
-              directionId: { type: 'string' },
-              conceptId: { type: 'string' },
-              timestamp: { type: 'string' },
-            },
-          },
-        },
-        {
-          id: 'core:cliche_generation_completed',
-          description: 'Fired when cliché generation completes',
-          payloadSchema: {
-            type: 'object',
-            required: ['directionId', 'clicheId'],
-            properties: {
-              directionId: { type: 'string' },
-              clicheId: { type: 'string' },
-              timestamp: { type: 'string' },
-            },
-          },
-        },
-        {
-          id: 'core:cliche_generation_failed',
-          description: 'Fired when cliché generation fails',
-          payloadSchema: {
-            type: 'object',
-            required: ['directionId', 'error'],
-            properties: {
-              directionId: { type: 'string' },
-              error: { type: 'string' },
-              timestamp: { type: 'string' },
-            },
-          },
-        },
-      ],
+      // Note: Event definitions are now loaded from data/mods/core/events/*.event.json
+      // This ensures consistency with the actual event schemas
       hooks: {
         postInit: (controller) => {
           // Store controller reference for debugging

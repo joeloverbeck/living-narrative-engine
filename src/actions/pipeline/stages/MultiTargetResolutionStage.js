@@ -376,11 +376,25 @@ export class MultiTargetResolutionStage extends PipelineStage {
   async #resolveLegacyTarget(context, trace) {
     const { actionDef, actor, actionContext } = context;
 
-    // Use legacy compatibility layer to get the scope
+    // Use legacy compatibility layer to convert to multi-target format
     const conversionResult = this.#legacyLayer.convertLegacyFormat(
       actionDef,
       actor
     );
+
+    // If conversion failed, return failure
+    if (conversionResult.error) {
+      return PipelineResult.failure(
+        {
+          error: conversionResult.error,
+          phase: 'target_resolution',
+          actionId: actionDef.id,
+          stage: 'MultiTargetResolutionStage',
+        },
+        context.data
+      );
+    }
+
     const scope =
       conversionResult.targetDefinitions?.primary?.scope ||
       actionDef.targets ||
@@ -434,6 +448,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
       })),
     };
 
+    // Get the placeholder from the conversion result
+    const placeholder =
+      conversionResult.targetDefinitions?.primary?.placeholder || 'target';
+
     return PipelineResult.success({
       data: {
         ...context.data,
@@ -446,7 +464,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
             // Attach metadata for consistency with multi-target actions
             resolvedTargets,
             targetDefinitions: conversionResult.targetDefinitions || {
-              primary: { scope: scope, placeholder: 'target' },
+              primary: { scope: scope, placeholder: placeholder },
             },
             isMultiTarget: false,
           },

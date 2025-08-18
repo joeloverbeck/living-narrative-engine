@@ -332,6 +332,63 @@ export class IntegrationTestBed extends BaseTestBed {
       // Register minimal event definitions needed for tests
       const testEventDefinitions = [
         {
+          id: 'core:character_concept_created',
+          description: 'Dispatched when a new character concept is created.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: { type: 'string' },
+              concept: { type: 'string' },
+              autoSaved: { type: 'boolean' },
+            },
+            required: ['conceptId', 'concept'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:character_concept_updated',
+          description: 'Dispatched when a character concept is updated.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: { type: 'string' },
+              concept: { type: 'string' },
+              field: { type: 'string' },
+              oldValue: {},
+              newValue: {},
+            },
+            required: ['conceptId'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:character_concept_deleted',
+          description: 'Dispatched when a character concept is deleted.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: { type: 'string' },
+            },
+            required: ['conceptId'],
+            additionalProperties: false,
+          },
+        },
+        {
+          id: 'core:character_builder_error_occurred',
+          description: 'Dispatched when an error occurs in character builder.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              error: { type: 'string' },
+              code: { type: 'string' },
+              operation: { type: 'string' },
+              context: { type: 'object' },
+            },
+            required: ['error'],
+            additionalProperties: true,
+          },
+        },
+        {
           id: 'core:analytics_track',
           description: 'Event for tracking user analytics',
           payloadSchema: {
@@ -389,6 +446,174 @@ export class IntegrationTestBed extends BaseTestBed {
             required: ['deletedCount'],
           },
         },
+        {
+          id: 'core:thematic_directions_generated',
+          description:
+            'Dispatched when thematic directions are generated for a character concept.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: { type: 'string' },
+              directionCount: { type: 'integer', minimum: 0 },
+              autoSaved: { type: 'boolean' },
+            },
+            required: ['conceptId', 'directionCount', 'autoSaved'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:character_concept_saved',
+          description:
+            'Dispatched when a character concept is saved to storage.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: { type: 'string' },
+              concept: { type: 'string' },
+              autoSaved: { type: 'boolean' },
+            },
+            required: ['conceptId', 'concept'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:cliches_retrieved',
+          description:
+            'Dispatched when clichés are successfully retrieved from storage.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: { type: 'string' },
+              directionId: { type: 'string' },
+              cliches: { type: 'array', items: { type: 'object' } },
+              count: { type: 'integer', minimum: 0 },
+            },
+            required: ['conceptId', 'directionId'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:cliches_retrieval_failed',
+          description: 'Dispatched when cliché retrieval from storage fails.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: { type: 'string' },
+              directionId: { type: 'string' },
+              error: { type: 'string' },
+              errorCode: { type: 'string' },
+            },
+            required: ['conceptId', 'directionId', 'error'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:cliches_stored',
+          description: 'Dispatched when clichés are successfully stored.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: { type: 'string' },
+              directionId: { type: 'string' },
+              clicheId: { type: 'string' },
+              count: { type: 'integer', minimum: 0 },
+            },
+            required: ['conceptId', 'directionId'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:cliches_storage_failed',
+          description: 'Dispatched when cliché storage operation fails.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: { type: 'string' },
+              directionId: { type: 'string' },
+              error: { type: 'string' },
+              errorCode: { type: 'string' },
+            },
+            required: ['conceptId', 'directionId', 'error'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:cliches_deleted',
+          description: 'Dispatched when clichés are deleted from storage.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: { type: 'string' },
+              directionId: { type: 'string' },
+              deletedCount: { type: 'integer', minimum: 0 },
+            },
+            required: ['conceptId', 'directionId'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:cliches_generation_started',
+          description: 'Dispatched when cliché generation starts.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: { type: 'string' },
+              directionId: { type: 'string' },
+            },
+            required: ['conceptId', 'directionId'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:cliches_generation_completed',
+          description:
+            'Dispatched when cliché generation completes successfully.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: { type: 'string' },
+              directionId: { type: 'string' },
+              clicheId: { type: 'string' },
+              totalCount: { type: 'integer', minimum: 0 },
+              generationTime: { type: 'number', minimum: 0 },
+            },
+            required: ['conceptId', 'directionId'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:cliches_generation_failed',
+          description: 'Dispatched when cliché generation fails.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: { type: 'string' },
+              directionId: { type: 'string' },
+              error: { type: 'string' },
+              errorCode: { type: 'string' },
+              attempt: { type: 'integer', minimum: 0 },
+            },
+            required: ['conceptId', 'directionId', 'error'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:cliche_error_occurred',
+          description: 'Dispatched when a cliché-related error occurs.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              message: { type: 'string' },
+              code: { type: 'string' },
+              operation: { type: 'string' },
+              attempt: { type: 'integer', minimum: 1 },
+              context: { type: 'object' },
+              recovery: { type: 'string' },
+            },
+            required: ['message', 'operation'],
+            additionalProperties: true,
+          },
+        },
       ];
 
       // Register event definitions with the data registry
@@ -422,6 +647,39 @@ export class IntegrationTestBed extends BaseTestBed {
       }
       throw error;
     }
+  }
+
+  /**
+   * Getter methods to expose registered services for tests
+   */
+
+  get characterBuilderService() {
+    return this.container.resolve(tokens.ICharacterBuilderService);
+  }
+
+  get eventBus() {
+    return this.container.resolve(tokens.IEventBus);
+  }
+
+  get schemaValidator() {
+    return this.container.resolve(tokens.ISchemaValidator);
+  }
+
+  get coreMotivationsGenerator() {
+    // Return a mock since this service doesn't exist yet
+    return {
+      generate: jest.fn().mockResolvedValue([]),
+      getMotivations: jest.fn().mockResolvedValue([]),
+      deleteMotivation: jest.fn().mockResolvedValue(true),
+    };
+  }
+
+  get displayEnhancer() {
+    // Return a mock since this service doesn't exist yet
+    return {
+      enhance: jest.fn().mockReturnValue('enhanced content'),
+      format: jest.fn().mockReturnValue('formatted content'),
+    };
   }
 
   /**

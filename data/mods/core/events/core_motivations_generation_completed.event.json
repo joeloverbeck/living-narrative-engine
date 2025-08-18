@@ -1,0 +1,37 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:core_motivations_generation_completed",
+  "description": "Dispatched when core motivations are successfully generated",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "type": "string",
+        "description": "ID of the character concept"
+      },
+      "directionId": {
+        "type": "string",
+        "description": "ID of the thematic direction"
+      },
+      "motivationIds": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Array of generated motivation IDs"
+      },
+      "totalCount": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Total number of motivations for this direction"
+      },
+      "generationTime": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Time taken to generate in milliseconds"
+      }
+    },
+    "required": ["conceptId", "directionId", "motivationIds"],
+    "additionalProperties": true
+  }
+}

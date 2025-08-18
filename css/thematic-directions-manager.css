@@ -638,6 +638,41 @@
   margin-top: 1.5rem;
 }
 
+/* Fix for modal content visibility issue */
+/* Override the opacity: 0 from _modals.css that's preventing the modal content from showing */
+#confirmation-modal .modal-content {
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
+}
+
+/* Ensure the modal backdrop and content display correctly */
+#confirmation-modal {
+  /* When shown via JavaScript display: flex */
+  background: rgba(0, 0, 0, 0.5);
+  display: none; /* Hidden by default, JS will set to flex */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* Ensure modal content is properly styled */
+#confirmation-modal .modal-content {
+  background: var(--bg-secondary, #ffffff);
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
 /* ===== Responsive Design ===== */
 
 @media (max-width: 768px) {

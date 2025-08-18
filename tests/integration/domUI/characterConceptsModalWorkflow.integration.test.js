@@ -160,7 +160,7 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
       document: document,
     };
 
-    configureContainer(container, mockUiElements);
+    await configureContainer(container, mockUiElements);
 
     // Get services
     logger = container.resolve(tokens.ILogger);

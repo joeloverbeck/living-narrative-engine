@@ -145,9 +145,11 @@ describe('Example Rule Test with Utilities', () => {
   it('should handle follow action correctly', async () => {
     // Dispatch follow action
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'follower1',
       actionId: 'core:follow',
       targetId: 'leader1',
+      originalInput: 'follow leader1',
     });
 
     // Check results

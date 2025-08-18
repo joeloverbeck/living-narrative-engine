@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:cliches_generation_started",
+  "description": "Dispatched when cliché generation begins for a thematic direction.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "description": "Unique identifier of the character concept",
+        "type": "string"
+      },
+      "directionId": {
+        "description": "Unique identifier of the thematic direction",
+        "type": "string"
+      },
+      "directionTitle": {
+        "description": "Title of the thematic direction",
+        "type": "string"
+      }
+    },
+    "required": ["conceptId", "directionId"],
+    "additionalProperties": true
+  }
+}

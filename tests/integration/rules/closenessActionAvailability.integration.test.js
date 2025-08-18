@@ -369,9 +369,11 @@ describe('closeness action availability chain', () => {
     expect(prerequisitesMet('a1', 't1')).toBe(false);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'a1',
       actionId: 'positioning:get_close',
       targetId: 't1',
+      originalInput: 'get_close t1',
     });
 
     expect(prerequisitesMet('a1', 't1')).toBe(true);

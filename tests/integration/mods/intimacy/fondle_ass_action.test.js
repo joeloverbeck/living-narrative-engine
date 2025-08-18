@@ -161,9 +161,11 @@ describe('intimacy:fondle_ass action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'intimacy:fondle_ass',
       targetId: 'beth',
+      originalInput: 'fondle_ass beth',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -292,9 +294,11 @@ describe('intimacy:fondle_ass action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'intimacy:fondle_ass',
       targetId: 'beth',
+      originalInput: 'fondle_ass beth',
     });
 
     const perceptibleEvents = testEnv.events.filter(

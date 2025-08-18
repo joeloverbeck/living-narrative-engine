@@ -25,6 +25,9 @@ describe('clicheGenerationPrompt', () => {
     description:
       'A character who must protect something they never wanted to guard',
     coreTension: 'Duty versus personal freedom',
+    uniqueTwist: 'The guardian is protecting their own forgotten past self',
+    narrativePotential:
+      "Explores themes of self-discovery and reconciliation with one's past",
   };
 
   // Sample valid LLM response
@@ -141,6 +144,8 @@ describe('clicheGenerationPrompt', () => {
         title: '  ' + validDirection.title + '  ',
         description: '  ' + validDirection.description + '  ',
         coreTension: '  ' + validDirection.coreTension + '  ',
+        uniqueTwist: '  ' + validDirection.uniqueTwist + '  ',
+        narrativePotential: '  ' + validDirection.narrativePotential + '  ',
       };
 
       const prompt = buildClicheGenerationPrompt(
@@ -152,6 +157,28 @@ describe('clicheGenerationPrompt', () => {
       expect(prompt).toContain(validDirection.title);
       expect(prompt).toContain(validDirection.description);
       expect(prompt).toContain(validDirection.coreTension);
+      expect(prompt).toContain(validDirection.uniqueTwist);
+      expect(prompt).toContain(validDirection.narrativePotential);
+    });
+
+    it('should handle direction without optional fields', () => {
+      const directionWithoutOptional = {
+        title: 'The Reluctant Guardian',
+        description:
+          'A character who must protect something they never wanted to guard',
+        coreTension: 'Duty versus personal freedom',
+      };
+
+      const prompt = buildClicheGenerationPrompt(
+        validCharacterConcept,
+        directionWithoutOptional
+      );
+
+      expect(prompt).toContain(directionWithoutOptional.title);
+      expect(prompt).toContain(directionWithoutOptional.description);
+      expect(prompt).toContain(directionWithoutOptional.coreTension);
+      expect(prompt).not.toContain('Unique Twist:');
+      expect(prompt).not.toContain('Narrative Potential:');
     });
 
     describe('input validation', () => {

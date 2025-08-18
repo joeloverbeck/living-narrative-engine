@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:cliches_deleted",
+  "description": "Dispatched when clichés are deleted from storage.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "description": "Unique identifier of the character concept",
+        "type": "string"
+      },
+      "directionId": {
+        "description": "Unique identifier of the thematic direction",
+        "type": "string"
+      },
+      "deletedCount": {
+        "description": "Number of clichés deleted",
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": ["conceptId", "directionId"],
+    "additionalProperties": true
+  }
+}

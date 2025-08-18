@@ -126,9 +126,11 @@ describe('violence:sucker_punch action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'violence:sucker_punch',
       targetId: 'beth',
+      originalInput: 'sucker_punch beth',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -228,9 +230,11 @@ describe('violence:sucker_punch action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'violence:sucker_punch',
       targetId: 'beth',
+      originalInput: 'sucker_punch beth',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -279,9 +283,11 @@ describe('violence:sucker_punch action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'alice',
       actionId: 'violence:sucker_punch',
       targetId: 'beth',
+      originalInput: 'sucker_punch beth',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -314,9 +320,11 @@ describe('violence:sucker_punch action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'violence:sucker_punch',
       targetId: 'target1',
+      originalInput: 'sucker_punch target1',
     });
 
     const perceptibleEvent = testEnv.events.find(

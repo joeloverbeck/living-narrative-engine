@@ -605,9 +605,11 @@
   transform: rotate(-90deg);
 }
 
-/* Copy Buttons */
+/* Copy and Delete Buttons */
 .copy-category-btn,
-.copy-item-btn {
+.copy-item-btn,
+.delete-item-btn,
+.delete-trope-btn {
   background: transparent;
   border: none;
   font-size: 1rem;
@@ -622,17 +624,57 @@
   opacity: 1;
 }
 
-.copy-item-btn {
+.delete-item-btn:hover,
+.delete-trope-btn:hover {
+  opacity: 1;
+  color: #dc3545;
+}
+
+/* Item controls container */
+.item-controls {
   position: absolute;
   right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.copy-item-btn,
+.delete-item-btn,
+.delete-trope-btn {
   font-size: 0.875rem;
 }
 
-.cliche-item {
+.cliche-item,
+.trope-item {
   position: relative;
-  padding-right: 2rem;
+  padding-right: 4rem; /* Increased to accommodate both buttons */
+}
+
+/* Disabled state for delete buttons */
+.delete-item-btn:disabled,
+.delete-trope-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Trope item styling */
+.trope-item {
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border-left: 3px solid var(--narrative-gold);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.trope-item:hover {
+  background: var(--bg-tertiary);
+  transform: translateX(3px);
+  border-left-color: var(--narrative-purple);
 }
 
 .copy-all-btn {

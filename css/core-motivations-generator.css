@@ -1,0 +1,709 @@
+/**
+ * Core Motivations Generator Page Styles
+ * Uses the narrative purple/gold theme from components.css design system
+ * Supports accumulative display pattern for motivation blocks
+ */
+
+/* ===== Page Layout ===== */
+.core-motivations-main {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 2rem;
+  padding: 2rem;
+  min-height: calc(100vh - 200px);
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ===== Direction Selection Panel (Left) ===== */
+.direction-selection-panel {
+  background: var(--bg-primary);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(108, 92, 231, 0.1);
+  height: fit-content;
+  max-height: calc(100vh - 240px);
+  overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+.direction-selection-panel:hover {
+  box-shadow: var(--shadow-card-hover);
+  border-color: rgba(108, 92, 231, 0.2);
+}
+
+.direction-filter-info {
+  margin: 1rem 0;
+  padding: 0.75rem;
+  background: var(--bg-highlight);
+  border-radius: 8px;
+  border-left: 3px solid var(--narrative-purple);
+}
+
+.direction-filter-info .info-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.direction-selector-container {
+  margin: 1.5rem 0;
+}
+
+#direction-selector {
+  width: 100%;
+  padding: 0.875rem;
+  border: 2px solid var(--border-primary);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-family: var(--font-ui);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+#direction-selector:focus {
+  outline: none;
+  border-color: var(--narrative-purple);
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+}
+
+#direction-selector:hover:not(:disabled) {
+  border-color: var(--narrative-purple-light);
+  background: var(--bg-secondary);
+}
+
+#direction-selector:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.no-directions-message {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-secondary);
+}
+
+.no-directions-message p {
+  margin-bottom: 1rem;
+}
+
+.cb-link {
+  color: var(--narrative-purple);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.cb-link:hover {
+  color: var(--narrative-purple-light);
+  text-decoration: underline;
+}
+
+/* Generation Controls */
+.generation-controls {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-primary);
+}
+
+#generate-btn {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  background: var(--creative-gradient);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+#generate-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.6s,
+    height 0.6s;
+}
+
+#generate-btn:hover:not(:disabled)::before {
+  width: 300%;
+  height: 300%;
+}
+
+#generate-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(108, 92, 231, 0.3);
+}
+
+#generate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #999 0%, #666 100%);
+}
+
+.button-icon {
+  font-size: 1.2rem;
+}
+
+.shortcut-hint {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.shortcut-hint kbd {
+  padding: 0.2rem 0.4rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+/* ===== Motivations Display Panel (Right) ===== */
+.motivations-display-panel {
+  background: var(--bg-primary);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(108, 92, 231, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  transition: all 0.3s ease;
+}
+
+.motivations-display-panel:hover {
+  box-shadow: var(--shadow-card-hover);
+  border-color: rgba(108, 92, 231, 0.2);
+}
+
+.cb-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-primary);
+}
+
+.panel-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Motivations Container */
+.motivations-container {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 400px);
+  padding-right: 0.5rem;
+  min-height: 300px;
+}
+
+/* Motivation Block Styles */
+.motivation-block {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  animation: slideIn 0.4s ease-out;
+  transition: all 0.3s ease;
+}
+
+.motivation-block:hover {
+  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.15);
+  border-color: rgba(108, 92, 231, 0.3);
+  transform: translateY(-2px);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.motivation-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.motivation-timestamp {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.motivation-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.motivation-actions button {
+  padding: 0.4rem 0.6rem;
+  background: transparent;
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.motivation-actions button:hover {
+  background: var(--bg-primary);
+  border-color: var(--narrative-purple);
+  color: var(--narrative-purple);
+}
+
+/* Motivation Content Sections */
+.motivation-content {
+  display: grid;
+  gap: 1rem;
+}
+
+.motivation-section {
+  padding: 1rem;
+  background: var(--bg-primary);
+  border-left: 4px solid var(--narrative-purple);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.motivation-section:hover {
+  border-left-color: var(--narrative-gold);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.motivation-section h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--narrative-purple);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.motivation-section p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+/* Different colors for each section type */
+.motivation-section.core-motivation {
+  border-left-color: var(--narrative-purple);
+}
+
+.motivation-section.core-motivation h4 {
+  color: var(--narrative-purple);
+}
+
+.motivation-section.contradiction {
+  border-left-color: var(--narrative-gold);
+}
+
+.motivation-section.contradiction h4 {
+  color: var(--narrative-gold);
+}
+
+.motivation-section.central-question {
+  border-left-color: #e74c3c;
+}
+
+.motivation-section.central-question h4 {
+  color: #e74c3c;
+}
+
+/* Loading State */
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  min-height: 300px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border-primary);
+  border-top-color: var(--narrative-purple);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-indicator p {
+  margin-top: 1.5rem;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  min-height: 300px;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  opacity: 0.3;
+  margin-bottom: 1rem;
+}
+
+.empty-state-text {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-subtext {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Button Styles (Extending from components.css) */
+.cb-button {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cb-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cb-button-primary {
+  background: var(--narrative-purple);
+  color: white;
+}
+
+.cb-button-primary:hover:not(:disabled) {
+  background: var(--narrative-purple-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.25);
+}
+
+.cb-button-danger {
+  background: var(--status-error);
+  color: white;
+}
+
+.cb-button-danger:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.25);
+}
+
+.cb-button-secondary {
+  background: var(--narrative-gold);
+  color: white;
+}
+
+.cb-button-secondary:hover:not(:disabled) {
+  background: var(--narrative-gold-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.25);
+}
+
+.cb-button-navigation {
+  background: transparent;
+  color: var(--narrative-purple);
+  border: 2px solid var(--narrative-purple);
+}
+
+.cb-button-navigation:hover {
+  background: var(--narrative-purple);
+  color: white;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: var(--bg-primary);
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-title {
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+  font-size: 1.3rem;
+}
+
+.modal-text {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 2000;
+  animation: toastSlideIn 0.3s ease-out;
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-success {
+  border-left: 4px solid #2ecc71;
+}
+
+.toast-icon {
+  color: #2ecc71;
+  font-size: 1.2rem;
+}
+
+.toast-message {
+  color: var(--text-primary);
+}
+
+/* Footer */
+.cb-page-footer {
+  padding: 1.5rem 2rem;
+  background: var(--bg-secondary);
+  border-top: 2px solid var(--border-primary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-navigation {
+  display: flex;
+  gap: 1rem;
+}
+
+.footer-info {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.motivation-count {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .core-motivations-main {
+    grid-template-columns: 300px 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .core-motivations-main {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .direction-selection-panel {
+    max-height: none;
+    margin-bottom: 1rem;
+  }
+
+  .motivations-display-panel {
+    min-height: 400px;
+  }
+
+  .motivations-container {
+    max-height: none;
+  }
+
+  .panel-actions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .cb-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .footer-info {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+
+  .toast {
+    bottom: 1rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+  }
+}
+
+/* Scrollbar Styling */
+.motivations-container::-webkit-scrollbar,
+.direction-selection-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.motivations-container::-webkit-scrollbar-track,
+.direction-selection-panel::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.motivations-container::-webkit-scrollbar-thumb,
+.direction-selection-panel::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 4px;
+}
+
+.motivations-container::-webkit-scrollbar-thumb:hover,
+.direction-selection-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Accessibility */
+.cb-button:focus-visible,
+.cb-link:focus-visible {
+  outline: 2px solid var(--narrative-purple);
+  outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+  .cb-page-header,
+  .cb-page-footer,
+  .panel-actions,
+  .motivation-actions,
+  .direction-selection-panel {
+    display: none;
+  }
+
+  .core-motivations-main {
+    display: block;
+    padding: 0;
+  }
+
+  .motivations-display-panel {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+  }
+
+  .motivation-block {
+    page-break-inside: avoid;
+    border: 1px solid #000;
+    margin-bottom: 1rem;
+  }
+}

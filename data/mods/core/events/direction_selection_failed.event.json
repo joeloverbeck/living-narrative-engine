@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:direction_selection_failed",
+  "description": "Dispatched when thematic direction selection fails due to invalid direction ID or other errors.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "directionId": {
+        "description": "Identifier of the direction that failed to load",
+        "type": "string"
+      },
+      "error": {
+        "description": "Error message describing why selection failed",
+        "type": "string"
+      },
+      "timestamp": {
+        "description": "ISO timestamp when the error occurred",
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "required": ["directionId", "error"],
+    "additionalProperties": true
+  }
+}

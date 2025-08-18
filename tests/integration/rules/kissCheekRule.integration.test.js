@@ -116,9 +116,11 @@ describe('intimacy_handle_kiss_cheek rule integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:kiss_cheek',
       targetId: 'target1',
+      originalInput: 'kiss_cheek target1',
     });
 
     const types = testEnv.events.map((e) => e.eventType);

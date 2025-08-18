@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:direction_selection_started",
+  "description": "Dispatched when a thematic direction selection begins.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "directionId": {
+        "description": "Unique identifier of the selected direction",
+        "type": "string"
+      }
+    },
+    "required": ["directionId"],
+    "additionalProperties": true
+  }
+}

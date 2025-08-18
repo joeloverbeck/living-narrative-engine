@@ -26,7 +26,7 @@ const mockDocument = document; // Or a more isolated mock if needed
 describe('Dependency Injection Container Configuration', () => {
   let container;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Create a fresh container and register dummy dispatchers before configuring
     container = new AppContainer();
 
@@ -48,7 +48,7 @@ describe('Dependency Injection Container Configuration', () => {
     );
 
     // Now configure the container with all registrations
-    configureContainer(container, {
+    await configureContainer(container, {
       outputDiv: mockOutputDiv,
       inputElement: mockInputElement,
       titleElement: mockTitleElement,

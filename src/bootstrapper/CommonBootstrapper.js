@@ -74,7 +74,7 @@ export class CommonBootstrapper {
             'UI elements are required for full container configuration'
           );
         }
-        configureContainer(container, uiElements);
+        await configureContainer(container, uiElements);
       } else {
         configureMinimalContainer(container, { includeCharacterBuilder });
       }

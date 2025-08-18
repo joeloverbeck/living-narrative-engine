@@ -124,9 +124,11 @@ describe('positioning:kneel_before action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'test:actor1',
       actionId: 'positioning:kneel_before',
       targetId: 'test:target1',
+      originalInput: 'kneel_before test:target1',
     });
 
     // Check that kneeling component was added
@@ -170,9 +172,11 @@ describe('positioning:kneel_before action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'test:actor1',
       actionId: 'positioning:kneel_before',
       targetId: 'test:target1',
+      originalInput: 'kneel_before test:target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -213,9 +217,11 @@ describe('positioning:kneel_before action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'test:actor1',
       actionId: 'positioning:kneel_before',
       targetId: 'test:target1',
+      originalInput: 'kneel_before test:target1',
     });
 
     // Component should be added correctly
@@ -254,9 +260,11 @@ describe('positioning:kneel_before action integration', () => {
     // based on forbidden_components, but we dispatch directly
     // The rule should still execute but this demonstrates the logic
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'test:actor1',
       actionId: 'positioning:kneel_before',
       targetId: 'test:target1',
+      originalInput: 'kneel_before test:target1',
     });
 
     // The ADD_COMPONENT operation would replace existing component
@@ -286,9 +294,11 @@ describe('positioning:kneel_before action integration', () => {
 
     // Try with a different action
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'test:actor1',
       actionId: 'core:wait',
       targetId: 'test:target1',
+      originalInput: 'wait test:target1',
     });
 
     // Should not have any perceptible events from our rule
@@ -322,9 +332,11 @@ describe('positioning:kneel_before action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'p_erotica:iker_aguirre_instance',
       actionId: 'positioning:kneel_before',
       targetId: 'p_erotica:amaia_castillo_instance',
+      originalInput: 'kneel_before p_erotica:amaia_castillo_instance',
     });
 
     // This should work with the schema fix - component should store the namespaced target ID

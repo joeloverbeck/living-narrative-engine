@@ -75,7 +75,7 @@ export function createThematicDirection(conceptId, data, options = {}) {
     title: { min: 5, max: 200 },
     description: { min: 20, max: 2000 },
     coreTension: { min: 10, max: 500 },
-    uniqueTwist: { min: 10, max: 500 },
+    uniqueTwist: { min: 10, max: 1000 },
     narrativePotential: { min: 10, max: 1000 },
   };
 

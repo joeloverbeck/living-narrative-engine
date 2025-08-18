@@ -67,7 +67,12 @@ export async function configureMinimalContainer(container, options = {}) {
   logger.debug('[MinimalContainerConfig] All core bundles registered.');
 
   // --- Load logger configuration asynchronously ---
-  loadAndApplyLoggerConfig(container, logger, tokens, 'MinimalContainerConfig');
+  await loadAndApplyLoggerConfig(
+    container,
+    logger,
+    tokens,
+    'MinimalContainerConfig'
+  );
 
   logger.debug('[MinimalContainerConfig] Minimal configuration complete.');
 }

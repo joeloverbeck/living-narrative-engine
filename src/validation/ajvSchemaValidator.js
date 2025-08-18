@@ -235,6 +235,18 @@ class AjvSchemaValidator {
   }
 
   /**
+   * Loads a schema object into the validator instance.
+   * This is an alias for addSchema with parameters in the order expected by tests.
+   *
+   * @param {string} schemaId - The schema identifier
+   * @param {object} schemaData - The schema object to load
+   * @returns {Promise<void>}
+   */
+  async loadSchemaObject(schemaId, schemaData) {
+    return this.addSchema(schemaData, schemaId);
+  }
+
+  /**
    * Removes a schema from Ajv by its ID.
    *
    * @param {string} schemaId

@@ -148,9 +148,11 @@ describe('Turn Around to Face Rule', () => {
       expect(aliceBefore.components['positioning:facing_away']).toBeDefined();
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'alice',
         actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
+        originalInput: 'turn_around_to_face bob',
       });
 
       // Verify facing_away component was removed
@@ -180,9 +182,11 @@ describe('Turn Around to Face Rule', () => {
       ]);
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'alice',
         actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
+        originalInput: 'turn_around_to_face bob',
       });
 
       const types = testEnv.events.map((e) => e.eventType);
@@ -217,9 +221,11 @@ describe('Turn Around to Face Rule', () => {
       ]);
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'alice',
         actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
+        originalInput: 'turn_around_to_face bob',
       });
 
       const types = testEnv.events.map((e) => e.eventType);
@@ -261,9 +267,11 @@ describe('Turn Around to Face Rule', () => {
       ]);
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'alice',
         actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
+        originalInput: 'turn_around_to_face bob',
       });
 
       const types = testEnv.events.map((e) => e.eventType);
@@ -316,9 +324,11 @@ describe('Turn Around to Face Rule', () => {
       ).toContain('charlie');
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'alice',
         actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
+        originalInput: 'turn_around_to_face bob',
       });
 
       // Verify entire component was removed
@@ -356,9 +366,11 @@ describe('Turn Around to Face Rule', () => {
       ]);
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'alice',
         actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
+        originalInput: 'turn_around_to_face bob',
       });
 
       const facedEvent = testEnv.events.find(
@@ -385,9 +397,11 @@ describe('Turn Around to Face Rule', () => {
       ]);
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'alice',
         actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
+        originalInput: 'turn_around_to_face bob',
       });
 
       // Verify facing_away component was still removed
@@ -417,9 +431,11 @@ describe('Turn Around to Face Rule', () => {
       ]);
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'alice',
         actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
+        originalInput: 'turn_around_to_face bob',
       });
 
       // The rule should execute without error
@@ -449,9 +465,11 @@ describe('Turn Around to Face Rule', () => {
       ]);
 
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+        eventName: 'core:attempt_action',
         actorId: 'alice',
         actionId: 'positioning:turn_around_to_face',
         targetId: 'bob',
+        originalInput: 'turn_around_to_face bob',
       });
 
       // Component should still be removed

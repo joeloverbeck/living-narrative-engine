@@ -127,10 +127,13 @@ describe('intimacy:kiss_cheek action integration', () => {
       },
     ]);
 
+    // Use the proper event format with required fields
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:kiss_cheek',
       targetId: 'target1',
+      originalInput: 'kiss_cheek target1',
     });
 
     const successEvent = testEnv.events.find(
@@ -169,9 +172,11 @@ describe('intimacy:kiss_cheek action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:kiss_cheek',
       targetId: 'target1',
+      originalInput: 'kiss_cheek target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -216,9 +221,11 @@ describe('intimacy:kiss_cheek action integration', () => {
 
     // First kiss Bob's cheek
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:kiss_cheek',
       targetId: 'target1',
+      originalInput: 'kiss_cheek target1',
     });
 
     let perceptibleEvent = testEnv.events.find(
@@ -233,9 +240,11 @@ describe('intimacy:kiss_cheek action integration', () => {
 
     // Then kiss Charlie's cheek
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:kiss_cheek',
       targetId: 'target2',
+      originalInput: 'kiss_cheek target2',
     });
 
     perceptibleEvent = testEnv.events.find(
@@ -269,9 +278,11 @@ describe('intimacy:kiss_cheek action integration', () => {
 
     // Try with a different action
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:lick_lips',
       targetId: 'target1',
+      originalInput: 'lick_lips target1',
     });
 
     // Should not have any perceptible events from our rule
@@ -302,9 +313,11 @@ describe('intimacy:kiss_cheek action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:kiss_cheek',
       targetId: 'target1',
+      originalInput: 'kiss_cheek target1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -341,9 +354,11 @@ describe('intimacy:kiss_cheek action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:kiss_cheek',
       targetId: 'target1',
+      originalInput: 'kiss_cheek target1',
     });
 
     const successEvent = testEnv.events.find(

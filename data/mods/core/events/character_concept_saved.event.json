@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:character_concept_saved",
+  "description": "Dispatched when a character concept is saved to storage.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "description": "Unique identifier of the saved concept",
+        "type": "string"
+      },
+      "concept": {
+        "description": "The character concept text",
+        "type": "string"
+      },
+      "autoSaved": {
+        "description": "Whether the concept was automatically saved",
+        "type": "boolean"
+      }
+    },
+    "required": ["conceptId", "concept"],
+    "additionalProperties": true
+  }
+}

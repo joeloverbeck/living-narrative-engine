@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/coreMotivationLLMResponse.schema.json",
+  "title": "Core Motivation LLM Response Schema",
+  "description": "Schema for validating LLM responses for core motivations",
+  "type": "object",
+  "properties": {
+    "motivations": {
+      "type": "array",
+      "description": "Array of generated motivation blocks",
+      "minItems": 3,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "properties": {
+          "coreDesire": {
+            "type": "string",
+            "description": "The character's fundamental driving desire",
+            "minLength": 10,
+            "maxLength": 500
+          },
+          "internalContradiction": {
+            "type": "string",
+            "description": "The internal conflict or contradiction within the character",
+            "minLength": 10,
+            "maxLength": 500
+          },
+          "centralQuestion": {
+            "type": "string",
+            "description": "The central question that drives the character's journey",
+            "minLength": 10,
+            "maxLength": 500
+          }
+        },
+        "required": ["coreDesire", "internalContradiction", "centralQuestion"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["motivations"],
+  "additionalProperties": false
+}

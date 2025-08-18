@@ -12,19 +12,47 @@ export function createEventBus({ captureEvents = false } = {}) {
   const events = captureEvents ? [] : null;
 
   const eventBus = {
-    dispatch: jest.fn(async (eventType, payload) => {
+    dispatch: jest.fn(async (eventTypeOrObject, payload) => {
+      // Handle both old format (object) and new format (string, payload)
+      let eventType;
+      let eventPayload;
+
+      if (typeof eventTypeOrObject === 'object' && eventTypeOrObject !== null) {
+        // Old format: dispatch({ type: 'EVENT', payload: {...} })
+        eventType = eventTypeOrObject.type;
+        eventPayload = eventTypeOrObject.payload || {};
+      } else {
+        // New format: dispatch('EVENT', {...})
+        eventType = eventTypeOrObject;
+        eventPayload = payload || {};
+      }
+
       if (captureEvents) {
-        events.push({ eventType, payload });
+        events.push({ eventType, payload: eventPayload });
       }
       const listeners = [
         ...(handlers[eventType] || []),
         ...(handlers['*'] || []),
       ];
-      await Promise.all(
-        listeners.map(async (h) => {
-          await h({ type: eventType, payload });
-        })
-      );
+
+      // Process listeners asynchronously to handle async event handlers
+      let validationPassed = true;
+      const listenerPromises = listeners.map(async (h) => {
+        try {
+          // Pass full event object to match real EventBus behavior
+          // Await the handler in case it's async (like SystemLogicInterpreter)
+          await h({ type: eventType, payload: eventPayload });
+        } catch (error) {
+          validationPassed = false;
+          console.error(`Event handler error for ${eventType}:`, error);
+        }
+      });
+
+      // Wait for all listeners to complete
+      await Promise.all(listenerPromises);
+
+      // Return boolean for validation tests that expect it
+      return validationPassed;
     }),
     subscribe: jest.fn((eventType, handler) => {
       if (!handlers[eventType]) {
@@ -39,8 +67,12 @@ export function createEventBus({ captureEvents = false } = {}) {
       handlers[eventType]?.delete(handler);
     }),
     listenerCount: jest.fn((eventType) => handlers[eventType]?.size || 0),
-    _triggerEvent(eventType, payload) {
-      (handlers[eventType] || new Set()).forEach((h) => h(payload));
+    async _triggerEvent(eventType, payload) {
+      const promises = [];
+      (handlers[eventType] || new Set()).forEach((h) =>
+        promises.push(h({ type: eventType, payload }))
+      );
+      await Promise.all(promises);
     },
     _clearHandlers() {
       Object.keys(handlers).forEach((k) => delete handlers[k]);

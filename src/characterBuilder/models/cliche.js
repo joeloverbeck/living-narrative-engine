@@ -225,6 +225,74 @@ export class Cliche {
   }
 
   /**
+   * Create a new Cliche instance with an item removed from a category
+   *
+   * @param {string} categoryId - The category ID to remove from
+   * @param {string} itemText - The exact text of the item to remove
+   * @returns {Cliche} New Cliche instance with the item removed
+   */
+  createWithItemRemoved(categoryId, itemText) {
+    if (!categoryId || typeof categoryId !== 'string') {
+      throw new Error('categoryId must be a non-empty string');
+    }
+
+    if (!itemText || typeof itemText !== 'string') {
+      throw new Error('itemText must be a non-empty string');
+    }
+
+    // Create a deep copy of the current data
+    const newData = this.toJSON();
+
+    // Check if removing from categories
+    if (newData.categories[categoryId]) {
+      const itemIndex = newData.categories[categoryId].indexOf(itemText.trim());
+      if (itemIndex === -1) {
+        throw new Error(
+          `Item "${itemText}" not found in category "${categoryId}"`
+        );
+      }
+
+      // Remove the item from the category
+      newData.categories[categoryId] = newData.categories[categoryId].filter(
+        (item) => item !== itemText.trim()
+      );
+    } else {
+      throw new Error(`Category "${categoryId}" not found`);
+    }
+
+    // Create and return new immutable instance
+    return new Cliche(newData);
+  }
+
+  /**
+   * Create a new Cliche instance with a trope removed
+   *
+   * @param {string} tropeText - The exact text of the trope to remove
+   * @returns {Cliche} New Cliche instance with the trope removed
+   */
+  createWithTropeRemoved(tropeText) {
+    if (!tropeText || typeof tropeText !== 'string') {
+      throw new Error('tropeText must be a non-empty string');
+    }
+
+    // Create a deep copy of the current data
+    const newData = this.toJSON();
+
+    const tropeIndex = newData.tropesAndStereotypes.indexOf(tropeText.trim());
+    if (tropeIndex === -1) {
+      throw new Error(`Trope "${tropeText}" not found`);
+    }
+
+    // Remove the trope
+    newData.tropesAndStereotypes = newData.tropesAndStereotypes.filter(
+      (trope) => trope !== tropeText.trim()
+    );
+
+    // Create and return new immutable instance
+    return new Cliche(newData);
+  }
+
+  /**
    * Format categories with human-readable names
    *
    * @private

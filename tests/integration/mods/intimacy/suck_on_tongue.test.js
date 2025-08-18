@@ -134,9 +134,11 @@ describe('intimacy:suck_on_tongue action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'initiator1',
       actionId: 'intimacy:suck_on_tongue',
       targetId: 'receiver1',
+      originalInput: 'suck_on_tongue receiver1',
     });
 
     const successEvent = testEnv.events.find(
@@ -175,9 +177,11 @@ describe('intimacy:suck_on_tongue action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'receiver1',
       actionId: 'intimacy:suck_on_tongue',
       targetId: 'initiator1',
+      originalInput: 'suck_on_tongue initiator1',
     });
 
     const successEvent = testEnv.events.find(
@@ -216,9 +220,11 @@ describe('intimacy:suck_on_tongue action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'passionate1',
       actionId: 'intimacy:suck_on_tongue',
       targetId: 'passionate2',
+      originalInput: 'suck_on_tongue passionate2',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -256,9 +262,11 @@ describe('intimacy:suck_on_tongue action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'kisser1',
       actionId: 'intimacy:suck_on_tongue',
       targetId: 'kisser2',
+      originalInput: 'suck_on_tongue kisser2',
     });
 
     // Verify this is an enhancement action that preserves kissing state
@@ -307,9 +315,11 @@ describe('intimacy:suck_on_tongue action integration', () => {
 
     // Suck on current partner Bob's tongue
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'polyamorous1',
       actionId: 'intimacy:suck_on_tongue',
       targetId: 'partner1',
+      originalInput: 'suck_on_tongue partner1',
     });
 
     const perceptibleEvent = testEnv.events.find(
@@ -344,9 +354,11 @@ describe('intimacy:suck_on_tongue action integration', () => {
 
     // Try with a different action
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:break_kiss_gently',
       targetId: 'actor2',
+      originalInput: 'break_kiss_gently actor2',
     });
 
     // Should not have any perceptible events from our rule
@@ -379,9 +391,11 @@ describe('intimacy:suck_on_tongue action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'sequencer1',
       actionId: 'intimacy:suck_on_tongue',
       targetId: 'sequencer2',
+      originalInput: 'suck_on_tongue sequencer2',
     });
 
     const eventTypes = testEnv.events.map((e) => e.eventType);
@@ -433,9 +447,11 @@ describe('intimacy:suck_on_tongue action integration', () => {
     ]);
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'passionate_sucker',
       actionId: 'intimacy:suck_on_tongue',
       targetId: 'willing_recipient',
+      originalInput: 'suck_on_tongue willing_recipient',
     });
 
     const perceptibleEvent = testEnv.events.find(

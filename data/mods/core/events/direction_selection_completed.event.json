@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:direction_selection_completed",
+  "description": "Dispatched when a thematic direction selection completes.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "directionId": {
+        "description": "Unique identifier of the selected direction",
+        "type": "string"
+      },
+      "hasExistingCliches": {
+        "description": "Whether clichés already exist for this direction",
+        "type": "boolean"
+      }
+    },
+    "required": ["directionId"],
+    "additionalProperties": true
+  }
+}

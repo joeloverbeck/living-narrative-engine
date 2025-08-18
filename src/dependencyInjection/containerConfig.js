@@ -38,7 +38,7 @@ import { configureBaseContainer } from './baseContainerConfig.js';
  * @param {AppContainer} container
  * @param {EssentialUIElements} uiElements – external DOM references.
  */
-export function configureContainer(container, uiElements) {
+export async function configureContainer(container, uiElements) {
   const registrar = new Registrar(container);
   const { outputDiv, inputElement, titleElement, document: doc } = uiElements;
 
@@ -76,12 +76,10 @@ export function configureContainer(container, uiElements) {
   logger.debug('[ContainerConfig] All core bundles registered.');
 
   // --- Load logger configuration asynchronously ---
-  // This is intentionally fire-and-forget during container setup.
-  loadAndApplyLoggerConfig(container, logger, tokens, 'ContainerConfig');
+  await loadAndApplyLoggerConfig(container, logger, tokens, 'ContainerConfig');
 
   // --- Load trace configuration asynchronously ---
-  // This is also fire-and-forget during container setup.
-  loadAndApplyTraceConfig(container, logger, tokens, 'ContainerConfig');
+  await loadAndApplyTraceConfig(container, logger, tokens, 'ContainerConfig');
 
   logger.debug(
     '[ContainerConfig] Configuration and registry population complete.'

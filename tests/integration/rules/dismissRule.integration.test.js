@@ -309,9 +309,11 @@ describe('core_handle_dismiss rule integration', () => {
     );
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'core:dismiss',
       targetId: 'target1',
+      originalInput: 'dismiss target1',
     });
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -412,9 +414,11 @@ describe('core_handle_dismiss rule integration', () => {
     );
 
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'core:dismiss',
       targetId: 'target1',
+      originalInput: 'dismiss target1',
     });
 
     const legacyEvents = [...testEnv.events];

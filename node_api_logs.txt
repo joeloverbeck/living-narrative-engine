@@ -1,0 +1,502 @@
+
+[1] [10:04:47.126] 🔄 DEBUG LlmRequestController: LlmRequestController: API key successfully obtained for llmId 'openrouter-claude-sonnet-4-toolcalling' from source: environment variable 'OPENROUTER_API_KEY_ENV_VAR'. Key: sk-o*********************...
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:04:47.126] 🔄 DEBUG LlmRequestController: LlmRequestController: API Key Status after retrieval for 'openrouter-claude-sonnet-4-toolcalling': Source: environment variable 'OPENROUTER_API_KEY_ENV_VAR', Required: true, KeyPresent: true
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:04:47.126] 🔄 DEBUG LlmRequestController: LlmRequestController: Handing off request for llmId 'openrouter-claude-sonnet-4-toolcalling' to LlmRequestService.
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:04:47.126] 🔄 DEBUG LlmRequestService: LlmRequestService: forwardRequest invoked.
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling",
+[1]                       "apiType": "openrouter",
+[1]                       "displayName": "Claude Sonnet 4 (OpenRouter - Tool Calling)"
+[1]                     }
+[1] [10:04:47.126] 🔄 DEBUG LlmRequestService: LlmRequestService: Constructed headers for llmId 'openrouter-claude-sonnet-4-toolcalling': ["Content-Type","HTTP-Referer","X-Title","Authorization"]. Auth included: true
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:04:47.126] 🔄 DEBUG LlmRequestService: LlmRequestService: Retry parameters for llmId 'openrouter-claude-sonnet-4-toolcalling': maxRetries=3, baseDelayMs=1000, maxDelayMs=10000
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:04:47.126] 🔄 DEBUG LlmRequestService: LlmRequestService: Preparing to forward request to LLM provider 'Claude Sonnet 4 (OpenRouter - Tool Calling)'.
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling",
+[1]                       "targetUrl": "https://openrouter.ai/api/v1/chat/completions",
+[1]                       "headerKeys": [
+[1]                         "Content-Type",
+[1]                         "HTTP-Referer",
+[1]                         "X-Title",
+[1]                         "Authorization"
+[1]                       ]
+[1]                     }
+[1] [10:04:47.126] 🔄 DEBUG System:    Sanitized Target Payload Preview for 'openrouter-claude-sonnet-4-toolcalling':
+[1]                     ↳ Context: {
+[1]                       "payload": {
+[1]                         "temperature": 1,
+[1]                         "model": "anthropic/claude-sonnet-4",
+[1]                         "messages": [
+[1]                           {
+[1]                             "role": "user",
+[1]                             "content": "<role>\nYou are an expert character development consultant specializing..."
+[1]                           }
+[1]                         ],
+[1]                         "tools": [
+[1]                           {
+[1]                             "type": "function",
+[1]                             "function": {
+[1]                               "name": "generate_character_cliches",
+[1]                               "description": "Generate cliché warnings for character development based on the provided concept and thematic direction",
+[1]                               "parameters": {
+[1]                                 "type": "object",
+[1]                                 "additionalProperties": false,
+[1]                                 "properties": {
+[1]                                   "categories": {
+[1]                                     "type": "object",
+[1]                                     "additionalProperties": false,
+[1]                                     "properties": {
+[1]                                       "names": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "physicalDescriptions": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "personalityTraits": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "skillsAbilities": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "typicalLikes": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "typicalDislikes": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "commonFears": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "genericGoals": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "backgroundElements": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "overusedSecrets": "[MASKED]",
+[1]                                       "speechPatterns": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       }
+[1]                                     },
+[1]                                     "required": [
+[1]                                       "names",
+[1]                                       "physicalDescriptions",
+[1]                                       "personalityTraits",
+[1]                                       "skillsAbilities",
+[1]                                       "typicalLikes",
+[1]                                       "typicalDislikes",
+[1]                                       "commonFears",
+[1]                                       "genericGoals",
+[1]                                       "backgroundElements",
+[1]                                       "overusedSecrets",
+[1]                                       "speechPatterns"
+[1]                                     ]
+[1]                                   },
+[1]                                   "tropesAndStereotypes": {
+[1]                                     "type": "array",
+[1]                                     "items": {
+[1]                                       "type": "string",
+[1]                                       "minLength": 1
+[1]                                     },
+[1]                                     "minItems": 0,
+[1]                                     "maxItems": 15
+[1]                                   }
+[1]                                 },
+[1]                                 "required": [
+[1]                                   "categories",
+[1]                                   "tropesAndStereotypes"
+[1]                                 ]
+[1]                               }
+[1]                             }
+[1]                           }
+[1]                         ],
+[1]                         "tool_choice": {
+[1]                           "type": "function",
+[1]                           "function": {
+[1]                             "name": "generate_character_cliches"
+[1]                           }
+[1]                         }
+[1]                       },
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:04:47.126] 🔄 DEBUG LlmRequestService: LlmRequestService: Initiating call via RetryManager to https://openrouter.ai/api/v1/chat/completions for llmId 'openrouter-claude-sonnet-4-toolcalling'.
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:04:47.126] 🔄 DEBUG HttpAgentService: HttpAgentService: Reusing agent for https://openrouter.ai:443 (2 requests)
+[1] [10:04:47.126] 🔄 DEBUG LlmRequestService: LlmRequestService: Using HTTP agent with connection pooling for llmId 'openrouter-claude-sonnet-4-toolcalling' to https://openrouter.ai/api/v1/chat/completions.
+[1] [10:04:47.126] 🔄 DEBUG RetryManager: RetryManager: Initiating request sequence for https://openrouter.ai/api/v1/chat/completions with maxRetries=3, baseDelayMs=1000, maxDelayMs=10000.
+[1] [10:04:47.127] 🔄 DEBUG System: Attempt 1/3 - Fetching POST https://openrouter.ai/api/v1/chat/completions
+[1] [10:04:49.161] 🔄 DEBUG RetryManager: RetryManager: Attempt 1/3 for https://openrouter.ai/api/v1/chat/completions - Request successful (status 200). Parsing JSON response.
+[1] [10:04:56.179] 🌐 INFO RetryManager: RetryManager: Successfully fetched and parsed JSON from https://openrouter.ai/api/v1/chat/completions after 1 attempt(s).
+[1] [10:04:56.179] 🔄 INFO LlmRequestService: LlmRequestService: Successfully received response from LLM provider for llmId 'openrouter-claude-sonnet-4-toolcalling'. Status: 200 (assumed for RetryManager success).
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:04:56.179] 📝 DEBUG System:    LLM Provider Response Body (Preview for 'openrouter-claude-sonnet-4-toolcalling'): {"id":"gen-1755417856-f2HYwdMuxKdoGrmFN1g7","provider":"Google","model":"anthropic/claude-sonnet-4",...
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:04:56.179] 🔄 DEBUG LlmRequestController: LlmRequestController: LlmRequestService returned success for llmId 'openrouter-claude-sonnet-4-toolcalling'. Relaying to client with status 200.
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:04:56.179] 🔄 WARN LlmRequestController: LlmRequestController: Headers already sent for llmId 'openrouter-claude-sonnet-4-toolcalling'. Cannot send success response.
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:05:17.082] 🔄 DEBUG System: LLM request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "provider": "unknown",
+[1]                       "model": "openrouter-claude-sonnet-4-toolcalling",
+[1]                       "status": "error",
+[1]                       "duration": 29.957875979,
+[1]                       "tokens": "[MASKED]"
+[1]                     }
+[1] [10:05:17.083] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "POST",
+[1]                       "route": "/api/llm-request",
+[1]                       "statusCode": 503,
+[1]                       "duration": 30.000533979,
+[1]                       "requestSize": 7775,
+[1]                       "responseSize": 204
+[1]                     }
+[1] [10:05:18.086] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "OPTIONS",
+[1]                       "route": "/api/llm-request",
+[1]                       "statusCode": 204,
+[1]                       "duration": 0.0002888,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 0
+[1]                     }
+[1] [10:05:18.129] 🔄 DEBUG LlmRequestController: LlmRequestController: Received POST request on /api/llm-request from ::1.
+[1]                     ↳ Context: {
+[1]                       "payloadSummary": {
+[1]                         "llmId": "openrouter-claude-sonnet-4-toolcalling",
+[1]                         "hasTargetPayload": true,
+[1]                         "hasTargetHeaders": true
+[1]                       }
+[1]                     }
+[1] [10:05:18.129] 🔄 DEBUG LlmRequestController: LlmRequestController: Retrieved LLMModelConfig for llmId 'openrouter-claude-sonnet-4-toolcalling': DisplayName: Claude Sonnet 4 (OpenRouter - Tool Calling).
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:05:18.129] 🔄 DEBUG LlmRequestController: LlmRequestController: Config details for 'openrouter-claude-sonnet-4-toolcalling':
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling",
+[1]                       "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
+[1]                       "modelIdentifier": "anthropic/claude-sonnet-4",
+[1]                       "apiKeyEnvVar": "[MASKED]",
+[1]                       "apiKeyFileName": "[MASKED]",
+[1]                       "apiType": "openrouter"
+[1]                     }
+[1] [10:05:18.129] 🔑 DEBUG System: ApiKeyService.isApiKeyRequired: For apiType='openrouter', isLocalType=false. Key required: true
+[1] [10:05:18.129] 🔄 DEBUG LlmRequestController: LlmRequestController: API key is required for llmId 'openrouter-claude-sonnet-4-toolcalling'. Invoking ApiKeyService.
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:05:18.129] 🔑 DEBUG System: ApiKeyService.isApiKeyRequired: For apiType='openrouter', isLocalType=false. Key required: true
+[1] [10:05:18.129] 🔄 INFO System: ApiKeyService.getApiKey: Attempting API key retrieval for cloud service llmId 'openrouter-claude-sonnet-4-toolcalling'.
+[1] [10:05:18.129] 🔄 DEBUG System: ApiKeyService.getApiKey: Checking environment variable 'OPENROUTER_API_KEY_ENV_VAR' for llmId 'openrouter-claude-sonnet-4-toolcalling'.
+[1] [10:05:18.129] 🔄 INFO System: ApiKeyService.getApiKey: Successfully retrieved API key for llmId 'openrouter-claude-sonnet-4-toolcalling' from environment variable 'OPENROUTER_API_KEY_ENV_VAR'.
+[1] [10:05:18.129] 🔄 DEBUG LlmRequestController: LlmRequestController: API key successfully obtained for llmId 'openrouter-claude-sonnet-4-toolcalling' from source: environment variable 'OPENROUTER_API_KEY_ENV_VAR'. Key: sk-o*********************...
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:05:18.130] 🔄 DEBUG LlmRequestController: LlmRequestController: API Key Status after retrieval for 'openrouter-claude-sonnet-4-toolcalling': Source: environment variable 'OPENROUTER_API_KEY_ENV_VAR', Required: true, KeyPresent: true
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:05:18.130] 🔄 DEBUG LlmRequestController: LlmRequestController: Handing off request for llmId 'openrouter-claude-sonnet-4-toolcalling' to LlmRequestService.
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:05:18.130] 🔄 DEBUG LlmRequestService: LlmRequestService: forwardRequest invoked.
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling",
+[1]                       "apiType": "openrouter",
+[1]                       "displayName": "Claude Sonnet 4 (OpenRouter - Tool Calling)"
+[1]                     }
+[1] [10:05:18.130] 🔄 DEBUG LlmRequestService: LlmRequestService: Constructed headers for llmId 'openrouter-claude-sonnet-4-toolcalling': ["Content-Type","HTTP-Referer","X-Title","Authorization"]. Auth included: true
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:05:18.130] 🔄 DEBUG LlmRequestService: LlmRequestService: Retry parameters for llmId 'openrouter-claude-sonnet-4-toolcalling': maxRetries=3, baseDelayMs=1000, maxDelayMs=10000
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:05:18.130] 🔄 DEBUG LlmRequestService: LlmRequestService: Preparing to forward request to LLM provider 'Claude Sonnet 4 (OpenRouter - Tool Calling)'.
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling",
+[1]                       "targetUrl": "https://openrouter.ai/api/v1/chat/completions",
+[1]                       "headerKeys": [
+[1]                         "Content-Type",
+[1]                         "HTTP-Referer",
+[1]                         "X-Title",
+[1]                         "Authorization"
+[1]                       ]
+[1]                     }
+[1] [10:05:18.130] 🔄 DEBUG System:    Sanitized Target Payload Preview for 'openrouter-claude-sonnet-4-toolcalling':
+[1]                     ↳ Context: {
+[1]                       "payload": {
+[1]                         "temperature": 1,
+[1]                         "model": "anthropic/claude-sonnet-4",
+[1]                         "messages": [
+[1]                           {
+[1]                             "role": "user",
+[1]                             "content": "<role>\nYou are an expert character development consultant specializing..."
+[1]                           }
+[1]                         ],
+[1]                         "tools": [
+[1]                           {
+[1]                             "type": "function",
+[1]                             "function": {
+[1]                               "name": "generate_character_cliches",
+[1]                               "description": "Generate cliché warnings for character development based on the provided concept and thematic direction",
+[1]                               "parameters": {
+[1]                                 "type": "object",
+[1]                                 "additionalProperties": false,
+[1]                                 "properties": {
+[1]                                   "categories": {
+[1]                                     "type": "object",
+[1]                                     "additionalProperties": false,
+[1]                                     "properties": {
+[1]                                       "names": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "physicalDescriptions": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "personalityTraits": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "skillsAbilities": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "typicalLikes": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "typicalDislikes": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "commonFears": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "genericGoals": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "backgroundElements": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       },
+[1]                                       "overusedSecrets": "[MASKED]",
+[1]                                       "speechPatterns": {
+[1]                                         "type": "array",
+[1]                                         "items": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1
+[1]                                         },
+[1]                                         "minItems": 0,
+[1]                                         "maxItems": 10
+[1]                                       }
+[1]                                     },
+[1]                                     "required": [
+[1]                                       "names",
+[1]                                       "physicalDescriptions",
+[1]                                       "personalityTraits",
+[1]                                       "skillsAbilities",
+[1]                                       "typicalLikes",
+[1]                                       "typicalDislikes",
+[1]                                       "commonFears",
+[1]                                       "genericGoals",
+[1]                                       "backgroundElements",
+[1]                                       "overusedSecrets",
+[1]                                       "speechPatterns"
+[1]                                     ]
+[1]                                   },
+[1]                                   "tropesAndStereotypes": {
+[1]                                     "type": "array",
+[1]                                     "items": {
+[1]                                       "type": "string",
+[1]                                       "minLength": 1
+[1]                                     },
+[1]                                     "minItems": 0,
+[1]                                     "maxItems": 15
+[1]                                   }
+[1]                                 },
+[1]                                 "required": [
+[1]                                   "categories",
+[1]                                   "tropesAndStereotypes"
+[1]                                 ]
+[1]                               }
+[1]                             }
+[1]                           }
+[1]                         ],
+[1]                         "tool_choice": {
+[1]                           "type": "function",
+[1]                           "function": {
+[1]                             "name": "generate_character_cliches"
+[1]                           }
+[1]                         }
+[1]                       },
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:05:18.130] 🔄 DEBUG LlmRequestService: LlmRequestService: Initiating call via RetryManager to https://openrouter.ai/api/v1/chat/completions for llmId 'openrouter-claude-sonnet-4-toolcalling'.
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:05:18.130] 🔄 DEBUG HttpAgentService: HttpAgentService: Reusing agent for https://openrouter.ai:443 (3 requests)
+[1] [10:05:18.130] 🔄 DEBUG LlmRequestService: LlmRequestService: Using HTTP agent with connection pooling for llmId 'openrouter-claude-sonnet-4-toolcalling' to https://openrouter.ai/api/v1/chat/completions.
+[1] [10:05:18.130] 🔄 DEBUG RetryManager: RetryManager: Initiating request sequence for https://openrouter.ai/api/v1/chat/completions with maxRetries=3, baseDelayMs=1000, maxDelayMs=10000.
+[1] [10:05:18.130] 🔄 DEBUG System: Attempt 1/3 - Fetching POST https://openrouter.ai/api/v1/chat/completions
+[1] [10:05:20.087] 🔄 DEBUG RetryManager: RetryManager: Attempt 1/3 for https://openrouter.ai/api/v1/chat/completions - Request successful (status 200). Parsing JSON response.
+(base) joeloverbeck@JOELOVERBECK:~/projects/living-narrative-engine$ [0] http-server stopped.
+[1] [10:05:21.215] 🚀 INFO LLM Proxy Server: LLM Proxy Server: Received SIGINT, starting graceful shutdown...
+[0] npm run start exited with code SIGINT
+[1] [10:05:26.514] 🌐 INFO RetryManager: RetryManager: Successfully fetched and parsed JSON from https://openrouter.ai/api/v1/chat/completions after 1 attempt(s).
+[1] [10:05:26.514] 🔄 INFO LlmRequestService: LlmRequestService: Successfully received response from LLM provider for llmId 'openrouter-claude-sonnet-4-toolcalling'. Status: 200 (assumed for RetryManager success).
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:05:26.514] 📝 DEBUG System:    LLM Provider Response Body (Preview for 'openrouter-claude-sonnet-4-toolcalling'): {"id":"gen-1755417886-AoPiZHyvetJurPQZAH1Q","provider":"Google","model":"anthropic/claude-sonnet-4",...
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:05:26.514] 🔄 DEBUG LlmRequestController: LlmRequestController: LlmRequestService returned success for llmId 'openrouter-claude-sonnet-4-toolcalling'. Relaying to client with status 200.
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
+[1] [10:05:26.514] 🔄 WARN LlmRequestController: LlmRequestController: Headers already sent for llmId 'openrouter-claude-sonnet-4-toolcalling'. Cannot send success response.
+[1]                     ↳ Context: {
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
+[1]                     }
