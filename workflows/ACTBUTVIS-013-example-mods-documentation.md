@@ -1,19 +1,23 @@
 # ACTBUTVIS-013: Create Example Mods and Documentation
 
 ## Status
+
 **Status**: Not Started  
 **Priority**: Low  
 **Type**: Documentation & Examples  
-**Estimated Effort**: 3 hours  
+**Estimated Effort**: 3 hours
 
 ## Dependencies
+
 - **Requires**: All ACTBUTVIS-001 through ACTBUTVIS-012 (Complete implementation)
 - **Blocks**: None (Final ticket)
 
 ## Context
+
 Create comprehensive documentation and example mods to help modders understand and use the visual customization feature. This includes practical examples, best practices, and troubleshooting guidance.
 
 ## Objectives
+
 1. Create example mod demonstrating visual customization
 2. Write comprehensive documentation for modders
 3. Provide best practices and accessibility guidelines
@@ -26,9 +30,11 @@ Create comprehensive documentation and example mods to help modders understand a
 ### Example Mod Creation
 
 #### 1. Combat Actions Visual Mod
+
 **New Directory**: `data/examples/visual-combat-actions/`
 
 **File**: `data/examples/visual-combat-actions/mod-manifest.json`
+
 ```json
 {
   "id": "visual_combat_actions",
@@ -43,6 +49,7 @@ Create comprehensive documentation and example mods to help modders understand a
 ```
 
 **File**: `data/examples/visual-combat-actions/actions/power_attack.action.json`
+
 ```json
 {
   "id": "power_attack",
@@ -68,7 +75,7 @@ Create comprehensive documentation and example mods to help modders understand a
       "target": "target"
     },
     {
-      "type": "consumeStamina", 
+      "type": "consumeStamina",
       "amount": 15,
       "target": "actor"
     }
@@ -79,6 +86,7 @@ Create comprehensive documentation and example mods to help modders understand a
 ```
 
 **File**: `data/examples/visual-combat-actions/actions/defensive_stance.action.json`
+
 ```json
 {
   "id": "defensive_stance",
@@ -106,6 +114,7 @@ Create comprehensive documentation and example mods to help modders understand a
 ```
 
 **File**: `data/examples/visual-combat-actions/actions/magic_missile.action.json`
+
 ```json
 {
   "id": "magic_missile",
@@ -143,9 +152,11 @@ Create comprehensive documentation and example mods to help modders understand a
 ```
 
 #### 2. Social Interaction Visual Mod
+
 **New Directory**: `data/examples/visual-social-actions/`
 
 **File**: `data/examples/visual-social-actions/actions/friendly_greeting.action.json`
+
 ```json
 {
   "id": "friendly_greeting",
@@ -172,6 +183,7 @@ Create comprehensive documentation and example mods to help modders understand a
 ```
 
 **File**: `data/examples/visual-social-actions/actions/intimidate.action.json`
+
 ```json
 {
   "id": "intimidate",
@@ -207,9 +219,10 @@ Create comprehensive documentation and example mods to help modders understand a
 ### Documentation
 
 #### 1. Modder Documentation
+
 **New File**: `docs/mods/action-visual-customization.md`
 
-```markdown
+````markdown
 # Action Button Visual Customization
 
 This guide explains how to add custom visual properties to action buttons in your mods.
@@ -219,7 +232,7 @@ This guide explains how to add custom visual properties to action buttons in you
 Visual customization allows modders to specify custom colors for action buttons, making it easier for players to quickly identify different types of actions. You can customize:
 
 - Background color
-- Text color  
+- Text color
 - Hover background color
 - Hover text color
 
@@ -238,34 +251,39 @@ Add a `visual` property to your action definition:
   }
 }
 ```
+````
 
 ## Supported Color Formats
 
 ### Hexadecimal Colors
+
 ```json
 {
-  "backgroundColor": "#ff0000",     // Red
-  "textColor": "#fff"              // White (3-digit shorthand)
+  "backgroundColor": "#ff0000", // Red
+  "textColor": "#fff" // White (3-digit shorthand)
 }
 ```
 
 ### RGB Colors
+
 ```json
 {
-  "backgroundColor": "rgb(255, 0, 0)",      // Red
-  "textColor": "rgb(255, 255, 255)"        // White
+  "backgroundColor": "rgb(255, 0, 0)", // Red
+  "textColor": "rgb(255, 255, 255)" // White
 }
 ```
 
 ### RGBA Colors (with transparency)
+
 ```json
 {
   "backgroundColor": "rgba(255, 0, 0, 0.8)", // Semi-transparent red
-  "textColor": "rgba(255, 255, 255, 1.0)"   // Opaque white
+  "textColor": "rgba(255, 255, 255, 1.0)" // Opaque white
 }
 ```
 
 ### Named Colors
+
 ```json
 {
   "backgroundColor": "red",
@@ -280,10 +298,10 @@ Add a `visual` property to your action definition:
 ```json
 {
   "visual": {
-    "backgroundColor": "#2196f3",        // Button background
-    "textColor": "#ffffff",              // Button text
-    "hoverBackgroundColor": "#1976d2",   // Background on hover
-    "hoverTextColor": "#e3f2fd"          // Text color on hover
+    "backgroundColor": "#2196f3", // Button background
+    "textColor": "#ffffff", // Button text
+    "hoverBackgroundColor": "#1976d2", // Background on hover
+    "hoverTextColor": "#e3f2fd" // Text color on hover
   }
 }
 ```
@@ -291,6 +309,7 @@ Add a `visual` property to your action definition:
 ## Color Scheme Examples
 
 ### Combat Actions (Red Theme)
+
 ```json
 {
   "visual": {
@@ -303,6 +322,7 @@ Add a `visual` property to your action definition:
 ```
 
 ### Magic Actions (Purple Theme)
+
 ```json
 {
   "visual": {
@@ -315,6 +335,7 @@ Add a `visual` property to your action definition:
 ```
 
 ### Social Actions (Green Theme)
+
 ```json
 {
   "visual": {
@@ -327,6 +348,7 @@ Add a `visual` property to your action definition:
 ```
 
 ### Stealth Actions (Dark Theme)
+
 ```json
 {
   "visual": {
@@ -370,6 +392,7 @@ Add a `visual` property to your action definition:
 ### Theme Compatibility
 
 Visual properties work with all game themes:
+
 - **Light Theme**: Colors adapt automatically
 - **Dark Theme**: Colors are preserved with theme-appropriate accents
 - **High Contrast Theme**: Additional borders and emphasis are added
@@ -379,16 +402,19 @@ Visual properties work with all game themes:
 ### Common Issues
 
 **Colors not appearing:**
+
 - Check that color values are valid CSS colors
 - Verify JSON syntax is correct
 - Check browser console for validation errors
 
 **Colors look different than expected:**
+
 - Browser color rendering may vary slightly
 - Theme system may add subtle overlays
 - High contrast mode adds borders and emphasis
 
 **Performance issues:**
+
 - Limit to essential color customizations
 - Use simple hex colors when possible
 - Avoid changing colors dynamically
@@ -396,6 +422,7 @@ Visual properties work with all game themes:
 ### Validation Errors
 
 The system validates color formats and will:
+
 - Log warnings for invalid colors
 - Remove invalid visual properties
 - Continue loading the action without visual customization
@@ -417,6 +444,7 @@ Check your browser console for validation messages.
 ### Example Migration
 
 Before:
+
 ```json
 {
   "id": "attack",
@@ -426,9 +454,10 @@ Before:
 ```
 
 After:
+
 ```json
 {
-  "id": "attack", 
+  "id": "attack",
   "name": "Attack",
   "template": "attack {target}",
   "visual": {
@@ -443,12 +472,14 @@ After:
 ### Conditional Visual Properties
 
 Currently, visual properties are static. For dynamic styling based on game state, consider:
+
 - Creating multiple action variants with different visuals
 - Using the existing condition system to show/hide actions
 
 ### Integration with Other Systems
 
 Visual properties work seamlessly with:
+
 - Action conditions and effects
 - Target resolution system
 - Turn management
@@ -457,6 +488,7 @@ Visual properties work seamlessly with:
 ## Examples
 
 See the example mods in `data/examples/`:
+
 - `visual-combat-actions/` - Combat action color schemes
 - `visual-social-actions/` - Social interaction colors
 
@@ -465,6 +497,7 @@ See the example mods in `data/examples/`:
 ### Schema Definition
 
 Visual properties are defined in `data/schemas/action.schema.json`:
+
 - All properties are optional
 - Colors must be valid CSS color values
 - Invalid colors are removed with warnings logged
@@ -472,6 +505,7 @@ Visual properties are defined in `data/schemas/action.schema.json`:
 ### Implementation Details
 
 The visual customization system:
+
 1. Validates colors during action loading
 2. Preserves visual properties through the action pipeline
 3. Applies inline styles to rendered buttons
@@ -479,7 +513,8 @@ The visual customization system:
 5. Integrates with the theme system
 
 For technical implementation details, see the component documentation.
-```
+
+````
 
 #### 2. README Updates
 **Update File**: `README.md`
@@ -503,7 +538,7 @@ See [Action Visual Customization Guide](docs/mods/action-visual-customization.md
 ```json
 {
   "id": "power_attack",
-  "name": "Power Attack", 
+  "name": "Power Attack",
   "template": "deliver a powerful attack to {target}",
   "visual": {
     "backgroundColor": "#d32f2f",
@@ -511,8 +546,9 @@ See [Action Visual Customization Guide](docs/mods/action-visual-customization.md
     "hoverBackgroundColor": "#f44336"
   }
 }
-```
-```
+````
+
+````
 
 #### 3. Modding Guide Updates
 **Update File**: `docs/mods/creating-actions.md`
@@ -533,10 +569,11 @@ Actions can include visual properties to customize button appearance:
     "hoverTextColor": "#f0f0f0"       // Hover text color
   }
 }
-```
+````
 
 All visual properties are optional. For detailed guidance, see the [Visual Customization Guide](action-visual-customization.md).
-```
+
+````
 
 ### Example Screenshots and Assets
 
@@ -559,7 +596,7 @@ Create example screenshots showing:
 
 ### Combat Actions
 - **Aggressive**: `#d32f2f` (red) background, `#ffffff` text
-- **Defensive**: `#2e7d32` (green) background, `#ffffff` text  
+- **Defensive**: `#2e7d32` (green) background, `#ffffff` text
 - **Special**: `#f57c00` (orange) background, `#ffffff` text
 
 ### Magic Actions
@@ -586,7 +623,7 @@ All combinations below meet WCAG 2.1 AA contrast requirements:
 - `#d32f2f` background + `#ffffff` text (5.25:1 ratio)
 - `#2e7d32` background + `#ffffff` text (5.37:1 ratio)
 - `#7b1fa2` background + `#ffffff` text (8.59:1 ratio)
-```
+````
 
 ## Testing Guide
 
@@ -599,18 +636,20 @@ describe('Visual Customization Examples', () => {
   it('should load combat actions example mod', async () => {
     const testBed = new IntegrationTestBed();
     await testBed.initialize();
-    
+
     // Load the example mod
     await testBed.loadMod('visual_combat_actions');
-    
+
     // Verify actions loaded with visual properties
-    const powerAttack = testBed.dataRegistry.get('actions.visual_combat_actions:power_attack');
+    const powerAttack = testBed.dataRegistry.get(
+      'actions.visual_combat_actions:power_attack'
+    );
     expect(powerAttack.visual).toBeDefined();
     expect(powerAttack.visual.backgroundColor).toBe('#d32f2f');
-    
+
     await testBed.cleanup();
   });
-  
+
   it('should render example actions with correct colors', async () => {
     // Integration test to verify visual examples render correctly
     // ... test implementation
@@ -621,7 +660,7 @@ describe('Visual Customization Examples', () => {
 ## Acceptance Criteria
 
 1. ✅ Example combat actions mod created with diverse color schemes
-2. ✅ Example social actions mod demonstrating different visual styles  
+2. ✅ Example social actions mod demonstrating different visual styles
 3. ✅ Comprehensive modder documentation with examples
 4. ✅ Best practices and accessibility guidelines provided
 5. ✅ Troubleshooting guide for common issues
@@ -640,10 +679,12 @@ describe('Visual Customization Examples', () => {
 - Ensure examples meet accessibility standards
 
 ## Related Tickets
+
 - **Completes**: The entire ACTBUTVIS feature implementation
 - **Documents**: All functionality from ACTBUTVIS-001 through ACTBUTVIS-012
 
 ## References
+
 - Example Mods: `data/examples/visual-*-actions/`
 - Documentation: `docs/mods/action-visual-customization.md`
 - Color Reference: `docs/mods/color-palettes.md`

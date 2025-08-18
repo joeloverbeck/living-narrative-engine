@@ -644,7 +644,8 @@ export class IntegrationTestBed extends BaseTestBed {
         },
         {
           id: 'core:core_motivations_generation_completed',
-          description: 'Dispatched when core motivations are successfully generated',
+          description:
+            'Dispatched when core motivations are successfully generated',
           payloadSchema: {
             type: 'object',
             properties: {
@@ -712,7 +713,8 @@ export class IntegrationTestBed extends BaseTestBed {
         },
         {
           id: 'core:core_motivations_retrieved',
-          description: 'Dispatched when core motivations are loaded from storage',
+          description:
+            'Dispatched when core motivations are loaded from storage',
           payloadSchema: {
             type: 'object',
             properties: {
@@ -746,7 +748,8 @@ export class IntegrationTestBed extends BaseTestBed {
                 type: 'number',
               },
               ttlConfig: {
-                description: 'Time-to-live configuration for different data types',
+                description:
+                  'Time-to-live configuration for different data types',
                 type: 'object',
               },
               cacheManagerType: {

@@ -18,7 +18,8 @@
           "brown",
           "black",
           "white",
-          "gray"
+          "gray",
+          "pink"
         ],
         "default": "black"
       }

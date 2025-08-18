@@ -5,10 +5,7 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  assertPresent, 
-  assertNonBlankString 
-} from '../../utils/index.js';
+import { assertPresent, assertNonBlankString } from '../../utils/index.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -898,13 +895,26 @@ export class CharacterDatabase {
    */
   async saveCoreMotivation(motivation) {
     assertPresent(motivation, 'Motivation is required');
-    assertNonBlankString(motivation.directionId, 'directionId', 'saveCoreMotivation', this.#logger);
-    assertNonBlankString(motivation.conceptId, 'conceptId', 'saveCoreMotivation', this.#logger);
+    assertNonBlankString(
+      motivation.directionId,
+      'directionId',
+      'saveCoreMotivation',
+      this.#logger
+    );
+    assertNonBlankString(
+      motivation.conceptId,
+      'conceptId',
+      'saveCoreMotivation',
+      this.#logger
+    );
     assertPresent(motivation.coreDesire, 'Core desire is required');
 
     return new Promise((resolve, reject) => {
       try {
-        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS], 'readwrite');
+        const transaction = this.#getTransaction(
+          [STORES.CORE_MOTIVATIONS],
+          'readwrite'
+        );
         const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
 
         // Ensure ID exists
@@ -931,7 +941,6 @@ export class CharacterDatabase {
           this.#logger.error('Failed to save core motivation:', error);
           reject(error);
         };
-
       } catch (error) {
         this.#logger.error('Failed to save core motivation:', error);
         reject(error);
@@ -954,7 +963,10 @@ export class CharacterDatabase {
 
     return new Promise((resolve, reject) => {
       try {
-        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS], 'readwrite');
+        const transaction = this.#getTransaction(
+          [STORES.CORE_MOTIVATIONS],
+          'readwrite'
+        );
         const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
 
         const savedIds = [];
@@ -975,7 +987,7 @@ export class CharacterDatabase {
           request.onsuccess = () => {
             savedIds.push(motivation.id);
             processedCount++;
-            
+
             // Check if all motivations processed
             if (processedCount === motivations.length) {
               this.#logger.info(`Saved ${savedIds.length} core motivations`);
@@ -988,7 +1000,7 @@ export class CharacterDatabase {
               `Failed to save motivation ${motivation.id}: ${request.error?.message}`
             );
             processedCount++;
-            
+
             // Continue processing even if some fail
             if (processedCount === motivations.length) {
               this.#logger.info(`Saved ${savedIds.length} core motivations`);
@@ -1001,7 +1013,6 @@ export class CharacterDatabase {
         if (motivations.length === 0) {
           resolve([]);
         }
-
       } catch (error) {
         this.#logger.error('Failed to save core motivations:', error);
         reject(error);
@@ -1016,7 +1027,12 @@ export class CharacterDatabase {
    * @returns {Promise<Array<object>>} Array of motivations
    */
   async getCoreMotivationsByDirectionId(directionId) {
-    assertNonBlankString(directionId, 'directionId', 'getCoreMotivationsByDirectionId', this.#logger);
+    assertNonBlankString(
+      directionId,
+      'directionId',
+      'getCoreMotivationsByDirectionId',
+      this.#logger
+    );
 
     return new Promise((resolve, reject) => {
       try {
@@ -1046,12 +1062,17 @@ export class CharacterDatabase {
           const error = new Error(
             `Failed to get core motivations: ${request.error?.message || 'Unknown error'}`
           );
-          this.#logger.error('Failed to get core motivations by direction:', error);
+          this.#logger.error(
+            'Failed to get core motivations by direction:',
+            error
+          );
           reject(error);
         };
-
       } catch (error) {
-        this.#logger.error('Failed to get core motivations by direction:', error);
+        this.#logger.error(
+          'Failed to get core motivations by direction:',
+          error
+        );
         reject(error);
       }
     });
@@ -1064,7 +1085,12 @@ export class CharacterDatabase {
    * @returns {Promise<Array<object>>} Array of motivations
    */
   async getCoreMotivationsByConceptId(conceptId) {
-    assertNonBlankString(conceptId, 'conceptId', 'getCoreMotivationsByConceptId', this.#logger);
+    assertNonBlankString(
+      conceptId,
+      'conceptId',
+      'getCoreMotivationsByConceptId',
+      this.#logger
+    );
 
     return new Promise((resolve, reject) => {
       try {
@@ -1094,10 +1120,12 @@ export class CharacterDatabase {
           const error = new Error(
             `Failed to get core motivations: ${request.error?.message || 'Unknown error'}`
           );
-          this.#logger.error('Failed to get core motivations by concept:', error);
+          this.#logger.error(
+            'Failed to get core motivations by concept:',
+            error
+          );
           reject(error);
         };
-
       } catch (error) {
         this.#logger.error('Failed to get core motivations by concept:', error);
         reject(error);
@@ -1112,7 +1140,12 @@ export class CharacterDatabase {
    * @returns {Promise<object | null>} Motivation object or null
    */
   async getCoreMotivationById(motivationId) {
-    assertNonBlankString(motivationId, 'motivationId', 'getCoreMotivationById', this.#logger);
+    assertNonBlankString(
+      motivationId,
+      'motivationId',
+      'getCoreMotivationById',
+      this.#logger
+    );
 
     return new Promise((resolve, reject) => {
       try {
@@ -1139,7 +1172,6 @@ export class CharacterDatabase {
           this.#logger.error('Failed to get core motivation by ID:', error);
           reject(error);
         };
-
       } catch (error) {
         this.#logger.error('Failed to get core motivation by ID:', error);
         reject(error);
@@ -1154,19 +1186,29 @@ export class CharacterDatabase {
    * @returns {Promise<boolean>} Success status
    */
   async deleteCoreMotivation(motivationId) {
-    assertNonBlankString(motivationId, 'motivationId', 'deleteCoreMotivation', this.#logger);
+    assertNonBlankString(
+      motivationId,
+      'motivationId',
+      'deleteCoreMotivation',
+      this.#logger
+    );
 
     // First get motivation details before deletion for logging
     const motivation = await this.getCoreMotivationById(motivationId);
 
     if (!motivation) {
-      this.#logger.warn(`Cannot delete non-existent motivation ${motivationId}`);
+      this.#logger.warn(
+        `Cannot delete non-existent motivation ${motivationId}`
+      );
       return false;
     }
 
     return new Promise((resolve, reject) => {
       try {
-        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS], 'readwrite');
+        const transaction = this.#getTransaction(
+          [STORES.CORE_MOTIVATIONS],
+          'readwrite'
+        );
         const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
         const request = store.delete(motivationId);
 
@@ -1182,7 +1224,6 @@ export class CharacterDatabase {
           this.#logger.error('Failed to delete core motivation:', error);
           reject(error);
         };
-
       } catch (error) {
         this.#logger.error('Failed to delete core motivation:', error);
         reject(error);
@@ -1198,7 +1239,12 @@ export class CharacterDatabase {
    * @returns {Promise<object>} Updated motivation
    */
   async updateCoreMotivation(motivationId, updates) {
-    assertNonBlankString(motivationId, 'motivationId', 'updateCoreMotivation', this.#logger);
+    assertNonBlankString(
+      motivationId,
+      'motivationId',
+      'updateCoreMotivation',
+      this.#logger
+    );
     assertPresent(updates, 'Updates are required');
 
     // First get the existing motivation
@@ -1213,12 +1259,15 @@ export class CharacterDatabase {
       ...existing,
       ...updates,
       id: existing.id, // Preserve ID
-      createdAt: existing.createdAt // Preserve creation date
+      createdAt: existing.createdAt, // Preserve creation date
     };
 
     return new Promise((resolve, reject) => {
       try {
-        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS], 'readwrite');
+        const transaction = this.#getTransaction(
+          [STORES.CORE_MOTIVATIONS],
+          'readwrite'
+        );
         const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
         const request = store.put(updated);
 
@@ -1234,7 +1283,6 @@ export class CharacterDatabase {
           this.#logger.error('Failed to update core motivation:', error);
           reject(error);
         };
-
       } catch (error) {
         this.#logger.error('Failed to update core motivation:', error);
         reject(error);
@@ -1249,19 +1297,29 @@ export class CharacterDatabase {
    * @returns {Promise<number>} Number of deleted motivations
    */
   async deleteAllCoreMotivationsForDirection(directionId) {
-    assertNonBlankString(directionId, 'directionId', 'deleteAllCoreMotivationsForDirection', this.#logger);
+    assertNonBlankString(
+      directionId,
+      'directionId',
+      'deleteAllCoreMotivationsForDirection',
+      this.#logger
+    );
 
     // Get all motivations for this direction first
     const motivations = await this.getCoreMotivationsByDirectionId(directionId);
 
     if (motivations.length === 0) {
-      this.#logger.info(`No motivations to delete for direction ${directionId}`);
+      this.#logger.info(
+        `No motivations to delete for direction ${directionId}`
+      );
       return 0;
     }
 
     return new Promise((resolve, reject) => {
       try {
-        const transaction = this.#getTransaction([STORES.CORE_MOTIVATIONS], 'readwrite');
+        const transaction = this.#getTransaction(
+          [STORES.CORE_MOTIVATIONS],
+          'readwrite'
+        );
         const store = transaction.objectStore(STORES.CORE_MOTIVATIONS);
         let deletedCount = 0;
         let processedCount = 0;
@@ -1296,7 +1354,6 @@ export class CharacterDatabase {
             }
           };
         }
-
       } catch (error) {
         this.#logger.error(
           'Failed to delete all core motivations for direction:',
@@ -1314,17 +1371,19 @@ export class CharacterDatabase {
    * @returns {Promise<boolean>} True if motivations exist
    */
   async hasCoreMotivationsForDirection(directionId) {
-    assertNonBlankString(directionId, 'directionId', 'hasCoreMotivationsForDirection', this.#logger);
+    assertNonBlankString(
+      directionId,
+      'directionId',
+      'hasCoreMotivationsForDirection',
+      this.#logger
+    );
 
     try {
-      const motivations = await this.getCoreMotivationsByDirectionId(directionId);
+      const motivations =
+        await this.getCoreMotivationsByDirectionId(directionId);
       return motivations.length > 0;
-
     } catch (error) {
-      this.#logger.error(
-        'Failed to check core motivations existence:',
-        error
-      );
+      this.#logger.error('Failed to check core motivations existence:', error);
       return false;
     }
   }
@@ -1336,7 +1395,12 @@ export class CharacterDatabase {
    * @returns {Promise<number>} Count of motivations
    */
   async getCoreMotivationsCount(directionId) {
-    assertNonBlankString(directionId, 'directionId', 'getCoreMotivationsCount', this.#logger);
+    assertNonBlankString(
+      directionId,
+      'directionId',
+      'getCoreMotivationsCount',
+      this.#logger
+    );
 
     return new Promise((resolve, _reject) => {
       try {
@@ -1363,7 +1427,6 @@ export class CharacterDatabase {
           // Return 0 on error as fallback
           resolve(0);
         };
-
       } catch (error) {
         this.#logger.error('Failed to get core motivations count:', error);
         resolve(0);

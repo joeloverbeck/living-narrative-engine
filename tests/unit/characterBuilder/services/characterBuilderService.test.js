@@ -754,8 +754,12 @@ describe('CharacterBuilderService', () => {
         ];
 
         mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
-        mockStorageService.getThematicDirection.mockResolvedValue(mockDirection);
-        mockCoreMotivationsGenerator.generate.mockResolvedValue(mockGeneratedMotivations);
+        mockStorageService.getThematicDirection.mockResolvedValue(
+          mockDirection
+        );
+        mockCoreMotivationsGenerator.generate.mockResolvedValue(
+          mockGeneratedMotivations
+        );
 
         const result = await service.generateCoreMotivationsForDirection(
           conceptId,
@@ -791,7 +795,11 @@ describe('CharacterBuilderService', () => {
         mockStorageService.getCharacterConcept.mockResolvedValue(null);
 
         await expect(
-          service.generateCoreMotivationsForDirection(conceptId, directionId, cliches)
+          service.generateCoreMotivationsForDirection(
+            conceptId,
+            directionId,
+            cliches
+          )
         ).rejects.toThrow('Concept non-existent not found');
       });
 
@@ -806,7 +814,11 @@ describe('CharacterBuilderService', () => {
         mockStorageService.getThematicDirection.mockResolvedValue(null);
 
         await expect(
-          service.generateCoreMotivationsForDirection(conceptId, directionId, cliches)
+          service.generateCoreMotivationsForDirection(
+            conceptId,
+            directionId,
+            cliches
+          )
         ).rejects.toThrow('Direction non-existent not found');
       });
 
@@ -819,10 +831,16 @@ describe('CharacterBuilderService', () => {
         const mockDirection = { id: directionId, conceptId: 'other-concept' };
 
         mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
-        mockStorageService.getThematicDirection.mockResolvedValue(mockDirection);
+        mockStorageService.getThematicDirection.mockResolvedValue(
+          mockDirection
+        );
 
         await expect(
-          service.generateCoreMotivationsForDirection(conceptId, directionId, cliches)
+          service.generateCoreMotivationsForDirection(
+            conceptId,
+            directionId,
+            cliches
+          )
         ).rejects.toThrow('Direction does not belong to the specified concept');
       });
 
@@ -835,11 +853,19 @@ describe('CharacterBuilderService', () => {
         const mockDirection = { id: directionId, conceptId, title: 'Hero' };
 
         mockStorageService.getCharacterConcept.mockResolvedValue(mockConcept);
-        mockStorageService.getThematicDirection.mockResolvedValue(mockDirection);
-        mockCoreMotivationsGenerator.generate.mockRejectedValue(new Error('Generation failed'));
+        mockStorageService.getThematicDirection.mockResolvedValue(
+          mockDirection
+        );
+        mockCoreMotivationsGenerator.generate.mockRejectedValue(
+          new Error('Generation failed')
+        );
 
         await expect(
-          service.generateCoreMotivationsForDirection(conceptId, directionId, cliches)
+          service.generateCoreMotivationsForDirection(
+            conceptId,
+            directionId,
+            cliches
+          )
         ).rejects.toThrow('Generation failed');
 
         expect(mockEventBus.dispatch).toHaveBeenCalledWith({
@@ -865,11 +891,14 @@ describe('CharacterBuilderService', () => {
 
         // First call will populate cache, second call should use cache
         await service.getCoreMotivationsByDirectionId(directionId);
-        
-        // Now test that subsequent calls don't hit database again
-        const result = await service.getCoreMotivationsByDirectionId(directionId);
 
-        expect(mockDatabase.getCoreMotivationsByDirectionId).toHaveBeenCalledTimes(1);
+        // Now test that subsequent calls don't hit database again
+        const result =
+          await service.getCoreMotivationsByDirectionId(directionId);
+
+        expect(
+          mockDatabase.getCoreMotivationsByDirectionId
+        ).toHaveBeenCalledTimes(1);
       });
 
       it('should fetch from database when cache is empty', async () => {
@@ -885,12 +914,17 @@ describe('CharacterBuilderService', () => {
           },
         ];
 
-        mockDatabase.getCoreMotivationsByDirectionId.mockResolvedValue(dbMotivations);
+        mockDatabase.getCoreMotivationsByDirectionId.mockResolvedValue(
+          dbMotivations
+        );
 
-        const result = await service.getCoreMotivationsByDirectionId(directionId);
+        const result =
+          await service.getCoreMotivationsByDirectionId(directionId);
 
         expect(result).toHaveLength(1);
-        expect(mockDatabase.getCoreMotivationsByDirectionId).toHaveBeenCalledWith(directionId);
+        expect(
+          mockDatabase.getCoreMotivationsByDirectionId
+        ).toHaveBeenCalledWith(directionId);
       });
 
       it('should handle database errors gracefully', async () => {
@@ -912,10 +946,13 @@ describe('CharacterBuilderService', () => {
 
         mockDatabase.hasCoreMotivationsForDirection.mockResolvedValue(true);
 
-        const result = await service.hasCoreMotivationsForDirection(directionId);
+        const result =
+          await service.hasCoreMotivationsForDirection(directionId);
 
         expect(result).toBe(true);
-        expect(mockDatabase.hasCoreMotivationsForDirection).toHaveBeenCalledWith(directionId);
+        expect(
+          mockDatabase.hasCoreMotivationsForDirection
+        ).toHaveBeenCalledWith(directionId);
       });
 
       it('should return false when no motivations exist', async () => {
@@ -923,7 +960,8 @@ describe('CharacterBuilderService', () => {
 
         mockDatabase.hasCoreMotivationsForDirection.mockResolvedValue(false);
 
-        const result = await service.hasCoreMotivationsForDirection(directionId);
+        const result =
+          await service.hasCoreMotivationsForDirection(directionId);
 
         expect(result).toBe(false);
       });
@@ -935,7 +973,8 @@ describe('CharacterBuilderService', () => {
           new Error('Database error')
         );
 
-        const result = await service.hasCoreMotivationsForDirection(directionId);
+        const result =
+          await service.hasCoreMotivationsForDirection(directionId);
 
         expect(result).toBe(false);
         expect(mockLogger.error).toHaveBeenCalled();
@@ -965,7 +1004,10 @@ describe('CharacterBuilderService', () => {
         mockDatabase.saveCoreMotivations.mockResolvedValue(savedIds);
         mockDatabase.getCoreMotivationsCount.mockResolvedValue(1);
 
-        const result = await service.saveCoreMotivations(directionId, motivations);
+        const result = await service.saveCoreMotivations(
+          directionId,
+          motivations
+        );
 
         expect(result).toEqual(savedIds);
         expect(mockDatabase.saveCoreMotivations).toHaveBeenCalled();
@@ -1005,7 +1047,10 @@ describe('CharacterBuilderService', () => {
         mockDatabase.saveCoreMotivations.mockResolvedValue(savedIds);
         mockDatabase.getCoreMotivationsCount.mockResolvedValue(1);
 
-        const result = await service.saveCoreMotivations(directionId, motivations);
+        const result = await service.saveCoreMotivations(
+          directionId,
+          motivations
+        );
 
         expect(result).toEqual(savedIds);
       });
@@ -1018,10 +1063,15 @@ describe('CharacterBuilderService', () => {
 
         mockDatabase.deleteCoreMotivation.mockResolvedValue(true);
 
-        const result = await service.removeCoreMotivationItem(directionId, motivationId);
+        const result = await service.removeCoreMotivationItem(
+          directionId,
+          motivationId
+        );
 
         expect(result).toBe(true);
-        expect(mockDatabase.deleteCoreMotivation).toHaveBeenCalledWith(motivationId);
+        expect(mockDatabase.deleteCoreMotivation).toHaveBeenCalledWith(
+          motivationId
+        );
         expect(mockLogger.info).toHaveBeenCalledWith(
           `Removed core motivation ${motivationId}`
         );
@@ -1033,7 +1083,10 @@ describe('CharacterBuilderService', () => {
 
         mockDatabase.deleteCoreMotivation.mockResolvedValue(false);
 
-        const result = await service.removeCoreMotivationItem(directionId, motivationId);
+        const result = await service.removeCoreMotivationItem(
+          directionId,
+          motivationId
+        );
 
         expect(result).toBe(false);
       });
@@ -1042,7 +1095,9 @@ describe('CharacterBuilderService', () => {
         const directionId = 'direction-123';
         const motivationId = 'motivation-456';
 
-        mockDatabase.deleteCoreMotivation.mockRejectedValue(new Error('Database error'));
+        mockDatabase.deleteCoreMotivation.mockRejectedValue(
+          new Error('Database error')
+        );
 
         await expect(
           service.removeCoreMotivationItem(directionId, motivationId)
@@ -1055,14 +1110,17 @@ describe('CharacterBuilderService', () => {
         const directionId = 'direction-123';
         const deletedCount = 5;
 
-        mockDatabase.deleteAllCoreMotivationsForDirection.mockResolvedValue(deletedCount);
+        mockDatabase.deleteAllCoreMotivationsForDirection.mockResolvedValue(
+          deletedCount
+        );
 
-        const result = await service.clearCoreMotivationsForDirection(directionId);
+        const result =
+          await service.clearCoreMotivationsForDirection(directionId);
 
         expect(result).toBe(deletedCount);
-        expect(mockDatabase.deleteAllCoreMotivationsForDirection).toHaveBeenCalledWith(
-          directionId
-        );
+        expect(
+          mockDatabase.deleteAllCoreMotivationsForDirection
+        ).toHaveBeenCalledWith(directionId);
         expect(mockLogger.info).toHaveBeenCalledWith(
           `Cleared ${deletedCount} core motivations for direction ${directionId}`
         );
@@ -1111,7 +1169,9 @@ describe('CharacterBuilderService', () => {
           },
         ];
 
-        mockDatabase.getCoreMotivationsByConceptId.mockResolvedValue(dbMotivations);
+        mockDatabase.getCoreMotivationsByConceptId.mockResolvedValue(
+          dbMotivations
+        );
 
         const result = await service.getAllCoreMotivationsForConcept(conceptId);
 
@@ -1147,8 +1207,12 @@ describe('CharacterBuilderService', () => {
 
         const mockDirection = { id: directionId, title: 'The Reluctant Lover' };
 
-        service.getCoreMotivationsByDirectionId = jest.fn().mockResolvedValue(motivations);
-        mockStorageService.getThematicDirection.mockResolvedValue(mockDirection);
+        service.getCoreMotivationsByDirectionId = jest
+          .fn()
+          .mockResolvedValue(motivations);
+        mockStorageService.getThematicDirection.mockResolvedValue(
+          mockDirection
+        );
 
         const result = await service.exportCoreMotivationsToText(directionId);
 
@@ -1162,7 +1226,9 @@ describe('CharacterBuilderService', () => {
       it('should return message when no motivations found', async () => {
         const directionId = 'direction-123';
 
-        service.getCoreMotivationsByDirectionId = jest.fn().mockResolvedValue([]);
+        service.getCoreMotivationsByDirectionId = jest
+          .fn()
+          .mockResolvedValue([]);
 
         const result = await service.exportCoreMotivationsToText(directionId);
 
@@ -1179,7 +1245,9 @@ describe('CharacterBuilderService', () => {
           { id: 'direction-3', title: 'Mentor' },
         ];
 
-        service.getThematicDirectionsByConceptId = jest.fn().mockResolvedValue(directions);
+        service.getThematicDirectionsByConceptId = jest
+          .fn()
+          .mockResolvedValue(directions);
         mockDatabase.getCoreMotivationsCount
           .mockResolvedValueOnce(3) // direction-1 has 3 motivations
           .mockResolvedValueOnce(0) // direction-2 has 0 motivations
@@ -1193,8 +1261,16 @@ describe('CharacterBuilderService', () => {
           totalMotivations: 5,
           averageMotivationsPerDirection: 2.5,
           directionStats: [
-            { directionId: 'direction-1', directionTitle: 'Hero', motivationCount: 3 },
-            { directionId: 'direction-3', directionTitle: 'Mentor', motivationCount: 2 },
+            {
+              directionId: 'direction-1',
+              directionTitle: 'Hero',
+              motivationCount: 3,
+            },
+            {
+              directionId: 'direction-3',
+              directionTitle: 'Mentor',
+              motivationCount: 2,
+            },
           ],
         });
       });
@@ -1203,7 +1279,9 @@ describe('CharacterBuilderService', () => {
         const conceptId = 'concept-123';
         const directions = [{ id: 'direction-1', title: 'Hero' }];
 
-        service.getThematicDirectionsByConceptId = jest.fn().mockResolvedValue(directions);
+        service.getThematicDirectionsByConceptId = jest
+          .fn()
+          .mockResolvedValue(directions);
         mockDatabase.getCoreMotivationsCount.mockResolvedValue(0);
 
         const result = await service.getCoreMotivationsStatistics(conceptId);
@@ -1228,10 +1306,13 @@ describe('CharacterBuilderService', () => {
 
         mockStorageService.getThematicDirections.mockResolvedValue(directions);
 
-        const result = await service.getThematicDirectionsByConceptId(conceptId);
+        const result =
+          await service.getThematicDirectionsByConceptId(conceptId);
 
         expect(result).toEqual(directions);
-        expect(mockStorageService.getThematicDirections).toHaveBeenCalledWith(conceptId);
+        expect(mockStorageService.getThematicDirections).toHaveBeenCalledWith(
+          conceptId
+        );
       });
 
       it('should handle storage service errors', async () => {

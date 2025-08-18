@@ -9,7 +9,7 @@ import { freeze } from '../../utils/cloneUtils.js';
 /**
  * @typedef {object} VisualProperties
  * @property {string} [backgroundColor] - CSS color for button background
- * @property {string} [textColor] - CSS color for button text  
+ * @property {string} [textColor] - CSS color for button text
  * @property {string} [hoverBackgroundColor] - CSS color for hover background
  * @property {string} [hoverTextColor] - CSS color for hover text
  */
@@ -73,20 +73,20 @@ export function createActionComposite(
     validateVisualProperties(visual);
   }
 
-  const composite = { 
-    index, 
-    actionId, 
-    commandString, 
-    params, 
-    description, 
-    visual: visual ? freeze({ ...visual }) : null
+  const composite = {
+    index,
+    actionId,
+    commandString,
+    params,
+    description,
+    visual: visual ? freeze({ ...visual }) : null,
   };
   return freeze(composite);
 }
 
 /**
  * Validate visual properties according to the action schema patterns.
- * 
+ *
  * @param {VisualProperties} visual - Visual properties to validate.
  * @throws {Error} When validation fails.
  */
@@ -96,21 +96,26 @@ function validateVisualProperties(visual) {
   }
 
   // CSS color pattern from action.schema.json (simplified for DTO validation)
-  const validColorPattern = 
+  const validColorPattern =
     /^(#([0-9A-Fa-f]{3}){1,2}|rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)|rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)|[a-zA-Z]+)$/;
 
-  const colorProperties = ['backgroundColor', 'textColor', 'hoverBackgroundColor', 'hoverTextColor'];
-  
+  const colorProperties = [
+    'backgroundColor',
+    'textColor',
+    'hoverBackgroundColor',
+    'hoverTextColor',
+  ];
+
   for (const [prop, value] of Object.entries(visual)) {
     if (!colorProperties.includes(prop)) {
       console.warn(`Unknown visual property "${prop}" will be ignored`);
       continue;
     }
-    
+
     if (typeof value !== 'string' || !validColorPattern.test(value)) {
       throw new Error(
         `Invalid ${prop} in visual properties: "${value}". ` +
-        `Must be a valid CSS color (hex, rgb, rgba, or named color).`
+          `Must be a valid CSS color (hex, rgb, rgba, or named color).`
       );
     }
   }

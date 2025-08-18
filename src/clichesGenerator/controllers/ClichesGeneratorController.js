@@ -485,7 +485,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
           error: `Direction not found: ${directionId}`,
           timestamp: new Date().toISOString(),
         });
-        
+
         // Clear selection and show error message
         this.#clearSelection();
         this.#showStatusMessage(`Direction not found: ${directionId}`, 'error');
@@ -625,7 +625,8 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     if (!this.#conceptDisplay || !conceptContent) return;
 
     // Handle both text and concept field for compatibility
-    const conceptText = concept.text || concept.concept || 'No concept text available';
+    const conceptText =
+      concept.text || concept.concept || 'No concept text available';
 
     conceptContent.innerHTML = `
       <div class="concept-text">
@@ -644,7 +645,9 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
   async #handleGenerateCliches() {
     // Prevent concurrent generation
     if (this.#isGenerating) {
-      this.logger.warn('Generation already in progress, ignoring duplicate request');
+      this.logger.warn(
+        'Generation already in progress, ignoring duplicate request'
+      );
       return;
     }
 
@@ -748,7 +751,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     } catch (error) {
       // Set generating flag to false BEFORE handling error to ensure proper button state
       this.#isGenerating = false;
-      
+
       await this.#handleGenerationErrorEnhanced(
         error,
         operationContext,
@@ -1881,9 +1884,17 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
    */
   _populateTestCaches() {
     // Add dummy cache entries for testing
-    this.#conceptsCache.set('test-concept', { id: 'test-concept', text: 'test' });
-    this.#clichesCache.set('test-direction', [{ id: 'test-cliche', text: 'test' }]);
-    this.#directionsCache.set('test-direction', { id: 'test-direction', title: 'test' });
+    this.#conceptsCache.set('test-concept', {
+      id: 'test-concept',
+      text: 'test',
+    });
+    this.#clichesCache.set('test-direction', [
+      { id: 'test-cliche', text: 'test' },
+    ]);
+    this.#directionsCache.set('test-direction', {
+      id: 'test-direction',
+      title: 'test',
+    });
   }
 
   /**
@@ -2022,7 +2033,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
       this.#currentCliches = null;
       this.#showEmptyClichesState();
       this.#updateGenerateButtonEnhanced();
-      
+
       // Show warning but keep direction display visible
       this.#showStatusMessage(
         'Could not load existing clichés. You can generate new ones.',
@@ -2098,7 +2109,7 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
 
     // Reset button for retry, but preserve selection state
     this.#updateGenerateButtonEnhanced();
-    
+
     // Show empty cliches state but keep direction/concept visible
     this.#showEmptyClichesState();
   }

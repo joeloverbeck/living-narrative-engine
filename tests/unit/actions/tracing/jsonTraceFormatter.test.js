@@ -642,28 +642,28 @@ describe('JsonTraceFormatter', () => {
 
       // Test minimal verbosity by mocking the internal method call
       const originalGetVerbosity = mockFilter.getVerbosityLevel;
-      
+
       // We need to test the sanitizePayload method behavior when verbosity is minimal
       // This tests line 470 in the source code
       mockFilter.getVerbosityLevel.mockReturnValue('minimal');
-      
+
       // Create a simple formatter instance to test with
       const testFormatter = new JsonTraceFormatter({
         logger: mockLogger,
         actionTraceFilter: mockFilter,
       });
-      
-      // The sanitizePayload method is private, but we can test its behavior 
+
+      // The sanitizePayload method is private, but we can test its behavior
       // by creating an object that would use it
       const testObject = {
-        payload: testPayload
+        payload: testPayload,
       };
-      
+
       const result = JSON.parse(testFormatter.format(testObject));
-      
+
       // The sanitized object should be in the generic trace format
       expect(result.data.payload).toBeDefined();
-      
+
       // Restore mock
       mockFilter.getVerbosityLevel = originalGetVerbosity;
     });
@@ -689,7 +689,9 @@ describe('JsonTraceFormatter', () => {
       expect(result.error).toBeDefined();
       expect(result.error.message).toBe('Test error with stack');
       expect(result.error.type).toBe('CustomError');
-      expect(result.error.stack).toBe('Error: Test error\n    at line 1\n    at line 2');
+      expect(result.error.stack).toBe(
+        'Error: Test error\n    at line 1\n    at line 2'
+      );
     });
 
     it('should handle error formatting with context in verbose verbosity', () => {
@@ -818,7 +820,7 @@ describe('JsonTraceFormatter', () => {
       // Should use default indentation (2 spaces) for unknown verbosity
       expect(result).toContain('\n');
       const lines = result.split('\n');
-      const indentedLine = lines.find(line => line.startsWith('  '));
+      const indentedLine = lines.find((line) => line.startsWith('  '));
       expect(indentedLine).toBeDefined();
     });
 
@@ -894,7 +896,7 @@ describe('JsonTraceFormatter', () => {
 
       // This should include eventPayload since verbosity is verbose and componentData is true
       const result = JSON.parse(formatter.format(trace));
-      
+
       expect(result.eventPayload).toBeDefined();
       expect(result.eventPayload.type).toBe('TEST_EVENT');
       // In verbose mode, all data should be included
@@ -947,12 +949,12 @@ describe('JsonTraceFormatter', () => {
       // Mock JSON.stringify to use our replacer with a circular reference
       // that bypasses the sanitizeObject method
       const mockStringify = jest.spyOn(JSON, 'stringify');
-      
+
       formatter.format(trace);
-      
+
       // Verify that JSON.stringify was called (which uses our replacer)
       expect(mockStringify).toHaveBeenCalled();
-      
+
       mockStringify.mockRestore();
     });
   });

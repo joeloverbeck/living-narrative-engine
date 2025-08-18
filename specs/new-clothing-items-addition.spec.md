@@ -48,7 +48,7 @@
 This specification defines the addition of 5 new clothing items to the Living Narrative Engine's clothing system:
 
 1. **Pink off-the-shoulder crop top** - Fashionable upper body garment
-2. **Pink short flared skirt** - Stylish lower body garment  
+2. **Pink short flared skirt** - Stylish lower body garment
 3. **White thigh-high socks with pink heart pattern** - Decorative hosiery
 4. **White cotton panties** - Basic underwear
 5. **White platform sneakers** - Elevated casual footwear
@@ -76,6 +76,7 @@ This specification defines the addition of 5 new clothing items to the Living Na
 The system SHALL support 5 new clothing items with the following specifications:
 
 **Pink Off-The-Shoulder Crop Top:**
+
 - Equipment Slot: `torso_upper` (primary), `left_arm_clothing`, `right_arm_clothing` (secondary)
 - Layer: `base`
 - Material: `cotton`
@@ -83,13 +84,15 @@ The system SHALL support 5 new clothing items with the following specifications:
 - Style: Crop top with off-shoulder design
 
 **Pink Short Flared Skirt:**
+
 - Equipment Slot: `torso_lower` (primary)
-- Layer: `base`  
+- Layer: `base`
 - Material: `cotton`
 - Colors: Pink (basic)
 - Style: Short length with flared silhouette
 
 **White Thigh-High Socks with Pink Heart Pattern:**
+
 - Equipment Slot: `feet` (primary)
 - Layer: `underwear`
 - Material: `cotton`
@@ -97,6 +100,7 @@ The system SHALL support 5 new clothing items with the following specifications:
 - Style: Thigh-high length with decorative hearts
 
 **White Cotton Panties:**
+
 - Equipment Slot: `torso_lower` (primary)
 - Layer: `underwear`
 - Material: `cotton`
@@ -104,6 +108,7 @@ The system SHALL support 5 new clothing items with the following specifications:
 - Style: Basic undergarment
 
 **White Platform Sneakers:**
+
 - Equipment Slot: `feet` (primary)
 - Layer: `base`
 - Material: `leather` (with platform construction)
@@ -113,12 +118,14 @@ The system SHALL support 5 new clothing items with the following specifications:
 #### FR-2: Color System Extension
 
 The system SHALL extend the color descriptor system:
+
 - Add "pink" to `descriptors:color_basic` component enum values
 - Maintain backward compatibility with existing color usage
 
 #### FR-3: Pattern System Introduction
 
 The system SHALL introduce a new pattern descriptor component:
+
 - Create `descriptors:pattern` component with "heart" pattern value
 - Support for solid (no pattern) as default
 - Extensible design for future pattern additions
@@ -173,7 +180,7 @@ The system SHALL introduce a new pattern descriptor component:
         "description": "The basic color",
         "enum": [
           "red",
-          "blue", 
+          "blue",
           "green",
           "yellow",
           "orange",
@@ -201,7 +208,7 @@ The system SHALL introduce a new pattern descriptor component:
 
 ```json
 {
-  "$schema": "schema://living-narrative-engine/component.schema.json", 
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "descriptors:pattern",
   "description": "Pattern and decorative element descriptors for clothing and accessories",
   "dataSchema": {
@@ -212,7 +219,7 @@ The system SHALL introduce a new pattern descriptor component:
         "description": "The pattern or decorative element",
         "enum": [
           "solid",
-          "striped", 
+          "striped",
           "polka-dot",
           "heart",
           "floral",
@@ -245,7 +252,7 @@ The system SHALL introduce a new pattern descriptor component:
       "layer": "base",
       "equipmentSlots": {
         "primary": "torso_upper",
-        "secondary": ["left_arm_clothing", "right_arm_clothing"] 
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
       },
       "allowedLayers": ["underwear", "base"]
     },
@@ -275,7 +282,7 @@ The system SHALL introduce a new pattern descriptor component:
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-  "id": "clothing:pink_short_flared_skirt", 
+  "id": "clothing:pink_short_flared_skirt",
   "description": "Pink short flared skirt",
   "components": {
     "clothing:wearable": {
@@ -315,7 +322,7 @@ The system SHALL introduce a new pattern descriptor component:
   "description": "White thigh-high socks with pink heart pattern",
   "components": {
     "clothing:wearable": {
-      "layer": "underwear", 
+      "layer": "underwear",
       "equipmentSlots": {
         "primary": "feet"
       },
@@ -387,7 +394,7 @@ The system SHALL introduce a new pattern descriptor component:
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "clothing:white_platform_sneakers",
-  "description": "White platform sneakers", 
+  "description": "White platform sneakers",
   "components": {
     "clothing:wearable": {
       "layer": "base",
@@ -443,7 +450,7 @@ The system SHALL introduce a new pattern descriptor component:
 Create 5 new entity definition files in `data/mods/clothing/entities/definitions/`:
 
 1. `pink_off_shoulder_crop_top.entity.json`
-2. `pink_short_flared_skirt.entity.json` 
+2. `pink_short_flared_skirt.entity.json`
 3. `white_thigh_high_socks_pink_hearts.entity.json`
 4. `white_cotton_panties.entity.json`
 5. `white_platform_sneakers.entity.json`
@@ -451,6 +458,7 @@ Create 5 new entity definition files in `data/mods/clothing/entities/definitions
 #### Step 2.2: Component Assignment Guidelines
 
 **Required Components for All Items:**
+
 - `clothing:wearable` - Equipment slots and layering rules
 - `core:material` - Material specification
 - `core:name` - Display name
@@ -459,24 +467,29 @@ Create 5 new entity definition files in `data/mods/clothing/entities/definitions
 - `descriptors:texture` - Texture properties
 
 **Additional Components:**
+
 - `descriptors:pattern` - Only for items with patterns (heart socks)
 
 #### Step 2.3: Equipment Slot Assignments
 
 **Upper Body Items (Crop Top):**
+
 - Primary: `torso_upper`
 - Secondary: `left_arm_clothing`, `right_arm_clothing`
 - Layer: `base`
 
 **Lower Body Items (Skirt, Panties):**
+
 - Primary: `torso_lower`
 - Layer: `base` (skirt) or `underwear` (panties)
 
 **Foot Items (Socks/Thigh-highs):**
-- Primary: `feet` 
+
+- Primary: `feet`
 - Layer: `underwear`
 
 **Foot Items (Sneakers):**
+
 - Primary: `feet`
 - Layer: `base`
 
@@ -564,17 +577,20 @@ Upper Layer (Base):
 ### 6.2 Layering Compatibility
 
 **Valid Combinations:**
+
 - Panties (underwear) + Skirt (base) = ✅ Compatible layers
 - Socks (underwear) + Sneakers (base) = ✅ Different equipment slots
 - Crop top (base) + Any underwear layer = ✅ Compatible layers
 
 **Invalid Combinations:**
+
 - Two base layer items on same equipment slot = ❌ Layer conflict
 - Underwear over base layer = ❌ Layer ordering violation
 
 ### 6.3 Component Usage Examples
 
 **Basic Color Usage:**
+
 ```json
 "descriptors:color_basic": {
   "color": "pink"
@@ -582,13 +598,15 @@ Upper Layer (Base):
 ```
 
 **Pattern Usage (New):**
+
 ```json
 "descriptors:pattern": {
-  "pattern": "heart" 
+  "pattern": "heart"
 }
 ```
 
 **Material Consistency:**
+
 ```json
 "core:material": {
   "material": "cotton"
@@ -629,7 +647,7 @@ Upper Layer (Base):
 The new pattern component enables future additions:
 
 1. **Additional Patterns**: stripes, polka-dots, florals, geometric designs
-2. **Color Coordination**: Pattern colors that complement base colors  
+2. **Color Coordination**: Pattern colors that complement base colors
 3. **Seasonal Patterns**: Holiday-themed or seasonal decorative elements
 4. **Cultural Patterns**: Traditional or cultural design elements
 
@@ -677,14 +695,16 @@ The implementation will be considered successful when:
 ### Appendix A: Equipment Slot Reference
 
 **Available Equipment Slots Used:**
+
 - `torso_upper` - Upper torso coverage (crop top)
-- `torso_lower` - Lower torso coverage (skirt, panties) 
+- `torso_lower` - Lower torso coverage (skirt, panties)
 - `feet` - Foot coverage (platform sneakers, thigh-high socks)
 - `left_arm_clothing`, `right_arm_clothing` - Arm coverage (crop top secondary)
 
 ### Appendix B: Layer System Reference
 
 **Layer Hierarchy (bottom to top):**
+
 1. `underwear` - Base undergarments (panties, socks)
 2. `base` - Primary clothing layer (crop top, skirt, sneakers)
 3. `outer` - Outer garments (jackets, coats) - not used in this spec
@@ -693,19 +713,22 @@ The implementation will be considered successful when:
 ### Appendix C: Material Reference
 
 **Materials Used in New Items:**
+
 - `cotton` - Natural fiber, breathable, comfortable (tops, bottoms, socks, underwear)
 - `leather` - Durable material for footwear (platform sneakers)
 
 ### Appendix D: Component Schema Dependencies
 
 **Required Schema Files:**
+
 - `schema://living-narrative-engine/entity-definition.schema.json`
 - `schema://living-narrative-engine/component.schema.json`
 
 **Component Dependencies:**
+
 - `clothing:wearable` - Existing clothing system component
 - `core:material` - Existing material component
-- `core:name` - Existing name component  
+- `core:name` - Existing name component
 - `core:description` - Existing description component
 - `descriptors:color_basic` - Modified existing component
 - `descriptors:texture` - Existing texture component

@@ -1,19 +1,23 @@
 # ACTBUTVIS-008: Add Hover State Management
 
 ## Status
+
 **Status**: Not Started  
 **Priority**: Medium  
 **Type**: UI Enhancement  
-**Estimated Effort**: 3 hours  
+**Estimated Effort**: 3 hours
 
 ## Dependencies
+
 - **Requires**: ACTBUTVIS-007 (Visual Styles Application)
 - **Blocks**: ACTBUTVIS-009 (Theme Compatibility)
 
 ## Context
+
 This ticket implements hover state functionality for action buttons with custom visual properties. The foundation was laid in ACTBUTVIS-007 with dataset attributes storing hover colors. Now we need to implement the actual hover behavior and ensure it works seamlessly with the theme system.
 
 ## Objectives
+
 1. Implement hover event listeners for buttons with custom hover colors
 2. Apply hover state visual changes dynamically
 3. Ensure smooth transitions between states
@@ -25,6 +29,7 @@ This ticket implements hover state functionality for action buttons with custom 
 ### File Modifications
 
 #### 1. Extend ActionButtonsRenderer
+
 **File**: `src/domUI/actionButtonsRenderer.js`
 
 **Changes to existing methods**:
@@ -33,15 +38,15 @@ This ticket implements hover state functionality for action buttons with custom 
 class ActionButtonsRenderer extends BoundDomRendererBase {
   constructor({ domElementFactory, eventBus, logger, containerSelector }) {
     super({ domElementFactory, eventBus, logger, containerSelector });
-    
+
     // Store references for hover handling
     this.buttonVisualMap = new Map();
-    
+
     // NEW: Hover state management
     this.hoverTimeouts = new Map(); // For debouncing rapid hover changes
     this.boundHoverHandlers = {
       enter: this._handleHoverEnter.bind(this),
-      leave: this._handleHoverLeave.bind(this)
+      leave: this._handleHoverLeave.bind(this),
     };
   }
 
@@ -71,11 +76,11 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
     // Use bound handlers to avoid memory leaks
     button.addEventListener('mouseenter', this.boundHoverHandlers.enter);
     button.addEventListener('mouseleave', this.boundHoverHandlers.leave);
-    
+
     // Handle focus states for accessibility
     button.addEventListener('focus', this.boundHoverHandlers.enter);
     button.addEventListener('blur', this.boundHoverHandlers.leave);
-    
+
     // Mark as having listeners for cleanup
     button.dataset.hasHoverListeners = 'true';
   }
@@ -91,7 +96,7 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
       button.removeEventListener('mouseleave', this.boundHoverHandlers.leave);
       button.removeEventListener('focus', this.boundHoverHandlers.enter);
       button.removeEventListener('blur', this.boundHoverHandlers.leave);
-      
+
       delete button.dataset.hasHoverListeners;
     }
   }
@@ -103,7 +108,7 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
    */
   _handleHoverEnter(event) {
     const button = event.target;
-    
+
     // Ignore if button is disabled
     if (button.disabled) {
       return;
@@ -130,7 +135,7 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
    */
   _handleHoverLeave(event) {
     const button = event.target;
-    
+
     // Debounce rapid hover changes to prevent flicker
     const timeoutId = setTimeout(() => {
       try {
@@ -138,10 +143,10 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
       } catch (error) {
         this.logger.warn('Error removing hover state:', error);
       }
-      
+
       this.hoverTimeouts.delete(button);
     }, 50); // 50ms debounce
-    
+
     this.hoverTimeouts.set(button, timeoutId);
   }
 
@@ -157,11 +162,11 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
       if (button.dataset.hoverBg) {
         button.style.backgroundColor = button.dataset.hoverBg;
       }
-      
+
       if (button.dataset.hoverText) {
         button.style.color = button.dataset.hoverText;
       }
-      
+
       // Add hover class for CSS hooks
       button.classList.add('action-button-hovering');
     } else {
@@ -169,14 +174,14 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
       if (button.dataset.originalBg !== undefined) {
         button.style.backgroundColor = button.dataset.originalBg;
       }
-      
+
       if (button.dataset.originalText !== undefined) {
         button.style.color = button.dataset.originalText;
       }
-      
+
       // Remove hover class
       button.classList.remove('action-button-hovering');
-      
+
       // Handle selected state restoration
       if (button.classList.contains('selected')) {
         this._updateSelectedState(button, true);
@@ -191,26 +196,26 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
    */
   setButtonDisabled(actionId, isDisabled) {
     const mapping = this.buttonVisualMap.get(actionId);
-    
+
     if (!mapping) {
       return;
     }
 
     const { button } = mapping;
     button.disabled = isDisabled;
-    
+
     if (isDisabled) {
       // Clear hover state for disabled buttons
       this._applyHoverState(button, false);
       button.classList.add('action-button-disabled');
-      
+
       // Apply disabled visual styling
       if (button.dataset.customBg || button.dataset.customText) {
         this._applyDisabledVisualState(button);
       }
     } else {
       button.classList.remove('action-button-disabled');
-      
+
       // Restore original visual state
       if (button.dataset.customBg) {
         button.style.backgroundColor = button.dataset.customBg;
@@ -241,16 +246,18 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
       clearTimeout(timeoutId);
     }
     this.hoverTimeouts.clear();
-    
+
     // Remove hover listeners from buttons
-    const buttons = this.container?.querySelectorAll('button[data-has-hover-listeners="true"]');
+    const buttons = this.container?.querySelectorAll(
+      'button[data-has-hover-listeners="true"]'
+    );
     if (buttons) {
-      buttons.forEach(button => this._removeHoverListeners(button));
+      buttons.forEach((button) => this._removeHoverListeners(button));
     }
-    
+
     // Call parent clear
     super.clear();
-    
+
     // Clear visual mappings
     this.buttonVisualMap.clear();
   }
@@ -260,26 +267,26 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
    */
   updateButtonVisual(actionId, newVisual) {
     const mapping = this.buttonVisualMap.get(actionId);
-    
+
     if (!mapping) {
       this.logger.warn(`No button found for action: ${actionId}`);
       return;
     }
 
     const { button } = mapping;
-    
+
     // Remove existing hover listeners
     this._removeHoverListeners(button);
-    
+
     // Clear existing inline styles
     button.style.backgroundColor = '';
     button.style.color = '';
     button.style.opacity = '';
-    
+
     // Apply new visual styles
     if (newVisual) {
       this._applyVisualStyles(button, newVisual, actionId);
-      
+
       // Add new hover listeners if needed
       if (button.dataset.hasCustomHover === 'true') {
         this._addHoverListeners(button);
@@ -287,7 +294,7 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
     } else {
       // Remove custom visual class
       button.classList.remove('action-button-custom-visual');
-      
+
       // Clear all custom datasets
       delete button.dataset.customBg;
       delete button.dataset.customText;
@@ -296,7 +303,7 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
       delete button.dataset.hoverText;
       delete button.dataset.originalBg;
       delete button.dataset.originalText;
-      
+
       // Remove from map
       this.buttonVisualMap.delete(actionId);
     }
@@ -307,12 +314,15 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
 ### CSS Enhancements
 
 #### Update CSS for hover states
+
 **File**: `css/components/_game-actions.css`
 
 ```css
 /* Custom visual action buttons (existing) */
 .action-button-custom-visual {
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 /* Hovering state */
@@ -329,8 +339,11 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
 }
 
 /* Ensure smooth transitions even with inline styles */
-.action-button[style*="background-color"] {
-  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.2s ease;
+.action-button[style*='background-color'] {
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.2s ease;
 }
 
 /* Focus styles for accessibility */
@@ -343,6 +356,7 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
 ### Testing Requirements
 
 #### Unit Tests
+
 **File**: `tests/unit/domUI/actionButtonsRenderer.test.js`
 
 ```javascript
@@ -353,7 +367,7 @@ describe('ActionButtonsRenderer - Hover State Management', () => {
 
   beforeEach(() => {
     // Setup from previous tests...
-    
+
     // Create a test button with hover properties
     testButton = document.createElement('button');
     testButton.dataset.hasCustomHover = 'true';
@@ -367,51 +381,73 @@ describe('ActionButtonsRenderer - Hover State Management', () => {
   describe('hover event listeners', () => {
     it('should add hover listeners for buttons with custom hover', () => {
       const addListenersSpy = jest.spyOn(testButton, 'addEventListener');
-      
+
       renderer._addHoverListeners(testButton);
-      
-      expect(addListenersSpy).toHaveBeenCalledWith('mouseenter', expect.any(Function));
-      expect(addListenersSpy).toHaveBeenCalledWith('mouseleave', expect.any(Function));
-      expect(addListenersSpy).toHaveBeenCalledWith('focus', expect.any(Function));
-      expect(addListenersSpy).toHaveBeenCalledWith('blur', expect.any(Function));
+
+      expect(addListenersSpy).toHaveBeenCalledWith(
+        'mouseenter',
+        expect.any(Function)
+      );
+      expect(addListenersSpy).toHaveBeenCalledWith(
+        'mouseleave',
+        expect.any(Function)
+      );
+      expect(addListenersSpy).toHaveBeenCalledWith(
+        'focus',
+        expect.any(Function)
+      );
+      expect(addListenersSpy).toHaveBeenCalledWith(
+        'blur',
+        expect.any(Function)
+      );
     });
 
     it('should remove hover listeners on cleanup', () => {
       renderer._addHoverListeners(testButton);
       const removeListenersSpy = jest.spyOn(testButton, 'removeEventListener');
-      
+
       renderer._removeHoverListeners(testButton);
-      
-      expect(removeListenersSpy).toHaveBeenCalledWith('mouseenter', expect.any(Function));
-      expect(removeListenersSpy).toHaveBeenCalledWith('mouseleave', expect.any(Function));
+
+      expect(removeListenersSpy).toHaveBeenCalledWith(
+        'mouseenter',
+        expect.any(Function)
+      );
+      expect(removeListenersSpy).toHaveBeenCalledWith(
+        'mouseleave',
+        expect.any(Function)
+      );
     });
   });
 
   describe('hover state application', () => {
     it('should apply hover colors on hover enter', () => {
       renderer._applyHoverState(testButton, true);
-      
+
       expect(testButton.style.backgroundColor).toBe('#00ff00');
       expect(testButton.style.color).toBe('#000000');
-      expect(testButton.classList.contains('action-button-hovering')).toBe(true);
+      expect(testButton.classList.contains('action-button-hovering')).toBe(
+        true
+      );
     });
 
     it('should restore original colors on hover leave', () => {
       // First apply hover
       renderer._applyHoverState(testButton, true);
-      
+
       // Then remove hover
       renderer._applyHoverState(testButton, false);
-      
+
       expect(testButton.style.backgroundColor).toBe('#ff0000');
       expect(testButton.style.color).toBe('#ffffff');
-      expect(testButton.classList.contains('action-button-hovering')).toBe(false);
+      expect(testButton.classList.contains('action-button-hovering')).toBe(
+        false
+      );
     });
 
     it('should handle missing hover colors gracefully', () => {
       delete testButton.dataset.hoverBg;
       delete testButton.dataset.hoverText;
-      
+
       expect(() => {
         renderer._applyHoverState(testButton, true);
       }).not.toThrow();
@@ -423,17 +459,19 @@ describe('ActionButtonsRenderer - Hover State Management', () => {
       const actionId = 'test:action';
       renderer.buttonVisualMap.set(actionId, {
         button: testButton,
-        visual: { backgroundColor: '#ff0000' }
+        visual: { backgroundColor: '#ff0000' },
       });
-      
+
       // Apply hover first
       renderer._applyHoverState(testButton, true);
-      
+
       // Then disable
       renderer.setButtonDisabled(actionId, true);
-      
+
       expect(testButton.disabled).toBe(true);
-      expect(testButton.classList.contains('action-button-hovering')).toBe(false);
+      expect(testButton.classList.contains('action-button-hovering')).toBe(
+        false
+      );
       expect(testButton.style.opacity).toBe('0.5');
     });
 
@@ -442,13 +480,13 @@ describe('ActionButtonsRenderer - Hover State Management', () => {
       testButton.dataset.customBg = '#ff0000';
       renderer.buttonVisualMap.set(actionId, {
         button: testButton,
-        visual: { backgroundColor: '#ff0000' }
+        visual: { backgroundColor: '#ff0000' },
       });
-      
+
       // Disable then enable
       renderer.setButtonDisabled(actionId, true);
       renderer.setButtonDisabled(actionId, false);
-      
+
       expect(testButton.disabled).toBe(false);
       expect(testButton.style.backgroundColor).toBe('#ff0000');
       expect(testButton.style.opacity).toBe('');
@@ -459,23 +497,23 @@ describe('ActionButtonsRenderer - Hover State Management', () => {
     it('should handle mouseenter events', () => {
       renderer._addHoverListeners(testButton);
       const applyHoverSpy = jest.spyOn(renderer, '_applyHoverState');
-      
+
       const event = new MouseEvent('mouseenter', { target: testButton });
       testButton.dispatchEvent(event);
-      
+
       expect(applyHoverSpy).toHaveBeenCalledWith(testButton, true);
     });
 
     it('should handle mouseleave events with debounce', (done) => {
       renderer._addHoverListeners(testButton);
       const applyHoverSpy = jest.spyOn(renderer, '_applyHoverState');
-      
+
       const event = new MouseEvent('mouseleave', { target: testButton });
       testButton.dispatchEvent(event);
-      
+
       // Should be debounced
       expect(applyHoverSpy).not.toHaveBeenCalledWith(testButton, false);
-      
+
       // Check after debounce period
       setTimeout(() => {
         expect(applyHoverSpy).toHaveBeenCalledWith(testButton, false);
@@ -486,9 +524,9 @@ describe('ActionButtonsRenderer - Hover State Management', () => {
     it('should ignore hover on disabled buttons', () => {
       testButton.disabled = true;
       const applyHoverSpy = jest.spyOn(renderer, '_applyHoverState');
-      
+
       renderer._handleHoverEnter({ target: testButton });
-      
+
       expect(applyHoverSpy).not.toHaveBeenCalled();
     });
   });
@@ -496,13 +534,13 @@ describe('ActionButtonsRenderer - Hover State Management', () => {
   describe('cleanup', () => {
     it('should clear all hover timeouts on cleanup', () => {
       const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
-      
+
       // Set up some timeouts
       renderer.hoverTimeouts.set(testButton, 123);
       renderer.hoverTimeouts.set(document.createElement('button'), 456);
-      
+
       renderer.clear();
-      
+
       expect(clearTimeoutSpy).toHaveBeenCalledWith(123);
       expect(clearTimeoutSpy).toHaveBeenCalledWith(456);
       expect(renderer.hoverTimeouts.size).toBe(0);
@@ -533,11 +571,13 @@ describe('ActionButtonsRenderer - Hover State Management', () => {
 - CSS transitions provide smooth visual feedback
 
 ## Related Tickets
+
 - **Depends on**: ACTBUTVIS-007 (Visual styles foundation)
 - **Next**: ACTBUTVIS-009 (Theme compatibility)
 - **Testing**: ACTBUTVIS-010 (Unit tests), ACTBUTVIS-011 (Integration tests)
 
 ## References
+
 - Renderer Location: `src/domUI/actionButtonsRenderer.js`
 - CSS Location: `css/components/_game-actions.css`
 - Original Spec: `specs/action-button-visual-customization.spec.md`

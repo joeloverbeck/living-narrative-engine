@@ -466,14 +466,14 @@ describe('ClichesGeneratorController', () => {
       testBed.setupSuccessfulDirectionLoad();
       await testBed.setup(); // Ensure clean initialization
       await testBed.simulateDirectionSelection('dir-1');
-      
+
       // Ensure controller is in a clean state
       await testBed.resetControllerState();
       await testBed.waitForAsyncOperations();
-      
+
       // Clear any previous events that might have been dispatched during setup
       testBed.clearEventTracking();
-      
+
       const error = new Error('LLM service unavailable');
       testBed.mockCharacterBuilderService.generateClichesForDirection.mockRejectedValue(
         error
@@ -484,9 +484,11 @@ describe('ClichesGeneratorController', () => {
 
       // Assert
       // Check that error event was dispatched (should be the service error, not generation in progress)
-      const errorEvents = testBed.getDispatchedEventsByType('core:cliches_generation_failed');
+      const errorEvents = testBed.getDispatchedEventsByType(
+        'core:cliches_generation_failed'
+      );
       expect(errorEvents.length).toBeGreaterThan(0);
-      
+
       // The error could be either the LLM service error or a validation error
       // Let's check that an error event was dispatched with the correct direction
       expect(errorEvents[0].payload).toEqual(
@@ -494,11 +496,12 @@ describe('ClichesGeneratorController', () => {
           directionId: 'dir-1',
         })
       );
-      
+
       // Verify error is one of the expected types
-      expect(['LLM service unavailable', 'Generation already in progress']).toContain(
-        errorEvents[0].payload.error
-      );
+      expect([
+        'LLM service unavailable',
+        'Generation already in progress',
+      ]).toContain(errorEvents[0].payload.error);
 
       // Check UI state - should show error state or have reset to ready state
       const generateBtn = testBed.getGenerateButton();
@@ -507,7 +510,9 @@ describe('ClichesGeneratorController', () => {
 
       // Check that state change was recorded
       const stateHistory = testBed.getStateHistory();
-      const failureStates = stateHistory.filter(state => state.action === 'generation_failed');
+      const failureStates = stateHistory.filter(
+        (state) => state.action === 'generation_failed'
+      );
       expect(failureStates.length).toBeGreaterThan(0);
     });
 
@@ -745,10 +750,10 @@ describe('ClichesGeneratorController', () => {
     beforeEach(async () => {
       // Clean up the existing controller first
       await testBed.controller.cleanup();
-      
+
       // Setup mock data BEFORE reinitializing
       testBed.setupSuccessfulDirectionLoad();
-      
+
       // Reinitialize the controller with proper mock data
       await testBed.controller.initialize();
     });
@@ -758,7 +763,7 @@ describe('ClichesGeneratorController', () => {
       const concept = testBed.createMockConcept();
       testBed.setupSuccessfulDirectionLoad(); // Load directions first
       await testBed.setup(); // Ensure proper initialization
-      
+
       testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         concept
       );
@@ -781,7 +786,7 @@ describe('ClichesGeneratorController', () => {
       const concept = testBed.createMockConcept();
       testBed.setupSuccessfulDirectionLoad(); // Load directions first
       await testBed.setup(); // Ensure proper initialization
-      
+
       testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         concept
       );
@@ -829,7 +834,7 @@ describe('ClichesGeneratorController', () => {
       const concept = testBed.createMockConcept();
       testBed.setupSuccessfulDirectionLoad(); // Load directions first
       await testBed.setup(); // Ensure proper initialization
-      
+
       testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         concept
       );
@@ -861,10 +866,10 @@ describe('ClichesGeneratorController', () => {
     beforeEach(async () => {
       // Clean up the existing controller first
       await testBed.controller.cleanup();
-      
+
       // Setup mock data BEFORE reinitializing
       testBed.setupSuccessfulDirectionLoad();
-      
+
       // Reinitialize the controller with proper mock data
       await testBed.controller.initialize();
     });
@@ -874,7 +879,7 @@ describe('ClichesGeneratorController', () => {
       const concept = testBed.createMockConcept();
       testBed.setupSuccessfulDirectionLoad(); // Set up directions first
       await testBed.setup(); // Ensure proper initialization
-      
+
       testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         concept
       );
@@ -900,7 +905,7 @@ describe('ClichesGeneratorController', () => {
       const concept = testBed.createMockConcept();
       testBed.setupSuccessfulDirectionLoad(); // Load directions first
       await testBed.setup(); // Ensure proper initialization
-      
+
       testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         concept
       );
@@ -953,7 +958,7 @@ describe('ClichesGeneratorController', () => {
       const concept = testBed.createMockConcept();
       testBed.setupSuccessfulDirectionLoad(); // Load directions first
       await testBed.setup(); // Ensure proper initialization
-      
+
       testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         concept
       );
@@ -980,13 +985,13 @@ describe('ClichesGeneratorController', () => {
     beforeEach(async () => {
       // Clean up the existing controller first
       await testBed.controller.cleanup();
-      
+
       // Setup mock data BEFORE reinitializing
       testBed.setupSuccessfulDirectionLoad();
-      
+
       // Reinitialize the controller with proper mock data
       await testBed.controller.initialize();
-      
+
       testBed.clearEventTracking();
     });
 
@@ -995,7 +1000,7 @@ describe('ClichesGeneratorController', () => {
       const concept = testBed.createMockConcept();
       testBed.setupSuccessfulDirectionLoad(); // Load directions first
       await testBed.setup(); // Ensure proper initialization
-      
+
       testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         concept
       );
@@ -1021,7 +1026,7 @@ describe('ClichesGeneratorController', () => {
       const concept = testBed.createMockConcept();
       testBed.setupSuccessfulDirectionLoad(); // Load directions first
       await testBed.setup(); // Ensure proper initialization
-      
+
       testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         concept
       );
@@ -1048,7 +1053,7 @@ describe('ClichesGeneratorController', () => {
       const concept = testBed.createMockConcept();
       testBed.setupSuccessfulDirectionLoad(); // Load directions first
       await testBed.setup(); // Ensure proper initialization
-      
+
       testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         concept
       );
@@ -1101,10 +1106,10 @@ describe('ClichesGeneratorController', () => {
     beforeEach(async () => {
       // Clean up the existing controller first
       await testBed.controller.cleanup();
-      
+
       // Setup mock data BEFORE reinitializing
       testBed.setupSuccessfulDirectionLoad();
-      
+
       // Reinitialize the controller with proper mock data
       await testBed.controller.initialize();
     });
@@ -1132,7 +1137,7 @@ describe('ClichesGeneratorController', () => {
       const generateBtn = testBed.getGenerateButton();
       expect(generateBtn.textContent).toBe('Generate Clichés');
       expect(generateBtn.disabled).toBe(false);
-      
+
       // Should show some form of error message to user
       const statusMessages = testBed.getStatusMessages();
       expect(statusMessages).toBeDefined();
@@ -1155,7 +1160,6 @@ describe('ClichesGeneratorController', () => {
       const directionDisplay = testBed.getDirectionDisplay();
       expect(directionDisplay.style.display).toBe('block');
     });
-
   });
 
   // ===== CLIGEN-011 UI Enhancement Tests =====
@@ -1213,7 +1217,7 @@ describe('ClichesGeneratorController', () => {
     it('should validate form before submission', async () => {
       // Arrange - Setup direction without selection to test validation
       testBed.setupSuccessfulDirectionLoad();
-      
+
       // Don't select a direction to trigger validation error
       const generateBtn = testBed.getGenerateButton();
       generateBtn.disabled = false; // Force enable to test validation
@@ -1232,10 +1236,10 @@ describe('ClichesGeneratorController', () => {
     beforeEach(async () => {
       // Clean up the existing controller first
       await testBed.controller.cleanup();
-      
+
       // Setup mock data BEFORE reinitializing
       testBed.setupSuccessfulDirectionLoad();
-      
+
       // Reinitialize the controller with proper mock data
       await testBed.controller.initialize();
     });
@@ -1245,7 +1249,7 @@ describe('ClichesGeneratorController', () => {
       const directionId = 'dir-1';
       const concept = testBed.createMockConcept();
       const cliches = testBed.createMockCliches();
-      
+
       testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         concept
       );
@@ -1257,7 +1261,7 @@ describe('ClichesGeneratorController', () => {
       );
 
       await testBed.selectDirection(directionId);
-      
+
       // Ensure button is ready for generation
       const generateBtn = testBed.getGenerateButton();
       expect(generateBtn.disabled).toBe(false);
@@ -1266,7 +1270,7 @@ describe('ClichesGeneratorController', () => {
       const ctrlEnterEvent = new KeyboardEvent('keydown', {
         key: 'Enter',
         ctrlKey: true,
-        bubbles: true
+        bubbles: true,
       });
       document.dispatchEvent(ctrlEnterEvent);
 
@@ -1358,10 +1362,10 @@ describe('ClichesGeneratorController', () => {
     beforeEach(async () => {
       // Clean up the existing controller first
       await testBed.controller.cleanup();
-      
+
       // Setup mock data BEFORE reinitializing
       testBed.setupSuccessfulDirectionLoad();
-      
+
       // Reinitialize the controller with proper mock data
       await testBed.controller.initialize();
     });
@@ -1371,7 +1375,7 @@ describe('ClichesGeneratorController', () => {
       const directionId = 'dir-1';
       const existingCliches = testBed.createMockCliches();
       const concept = testBed.createMockConcept();
-      
+
       testBed.setupSuccessfulDirectionLoad();
       testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         concept
@@ -1380,7 +1384,7 @@ describe('ClichesGeneratorController', () => {
 
       // Act
       await testBed.selectDirection(directionId);
-      
+
       // Wait for existing clichés to load
       await testBed.waitForAsyncOperations();
 
@@ -1395,7 +1399,7 @@ describe('ClichesGeneratorController', () => {
       const directionWithoutCliches = 'dir-2';
       const concept = testBed.createMockConcept();
       const existingCliches = testBed.createMockCliches();
-      
+
       testBed.setupSuccessfulDirectionLoad();
       testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         concept
@@ -1502,10 +1506,10 @@ describe('ClichesGeneratorController', () => {
     beforeEach(async () => {
       // Clean up the existing controller first
       await testBed.controller.cleanup();
-      
+
       // Setup mock data BEFORE reinitializing
       testBed.setupSuccessfulDirectionLoad();
-      
+
       // Reinitialize the controller with proper mock data
       await testBed.controller.initialize();
     });
@@ -1514,7 +1518,7 @@ describe('ClichesGeneratorController', () => {
       // Arrange
       const directionId = 'dir-1';
       const concept = testBed.createMockConcept();
-      
+
       testBed.setupSuccessfulDirectionLoad();
       testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         concept
@@ -1537,13 +1541,11 @@ describe('ClichesGeneratorController', () => {
       const generateBtn = testBed.getGenerateButton();
       expect(generateBtn.disabled).toBe(false);
       expect(generateBtn.textContent).toBe('Generate Clichés');
-      
+
       // Should have some error indication in the UI
       const statusMessages = testBed.getStatusMessages();
       expect(statusMessages).toBeDefined();
     });
-
-
   });
 
   describe('Accessibility Features', () => {
@@ -1691,7 +1693,6 @@ describe('ClichesGeneratorController', () => {
       // Cleanup
       retryButton.remove();
     });
-
   });
 
   describe('Error Recovery Methods', () => {
@@ -1911,10 +1912,10 @@ describe('ClichesGeneratorController', () => {
     beforeEach(async () => {
       // Clean up the existing controller first
       await testBed.controller.cleanup();
-      
+
       // Setup mock data BEFORE reinitializing
       testBed.setupSuccessfulDirectionLoad();
-      
+
       // Reinitialize the controller with proper mock data
       await testBed.controller.initialize();
     });

@@ -64,13 +64,15 @@ describe('CoreMotivationsCacheManager', () => {
     });
 
     it('should throw error if logger is not provided', () => {
-      expect(() => new CoreMotivationsCacheManager({ eventBus: mockEventBus }))
-        .toThrow('Missing required dependency: ILogger');
+      expect(
+        () => new CoreMotivationsCacheManager({ eventBus: mockEventBus })
+      ).toThrow('Missing required dependency: ILogger');
     });
 
     it('should throw error if eventBus is not provided', () => {
-      expect(() => new CoreMotivationsCacheManager({ logger: mockLogger }))
-        .toThrow('Missing required dependency: ISafeEventDispatcher');
+      expect(
+        () => new CoreMotivationsCacheManager({ logger: mockLogger })
+      ).toThrow('Missing required dependency: ISafeEventDispatcher');
     });
   });
 
@@ -117,49 +119,49 @@ describe('CoreMotivationsCacheManager', () => {
 
     it('should expire entries with TTL', () => {
       cache.set('test-key', 'test-value', 'concepts'); // 10 minutes TTL
-      
+
       // Should be available immediately
       expect(cache.get('test-key')).toBe('test-value');
-      
+
       // Fast forward past TTL
       jest.advanceTimersByTime(700000); // 11+ minutes
-      
+
       // Should be expired
       expect(cache.get('test-key')).toBeNull();
     });
 
     it('should not expire entries with null TTL (motivations)', () => {
       cache.set('test-key', 'test-value', 'motivations'); // null TTL
-      
+
       // Fast forward a long time
       jest.advanceTimersByTime(3600000); // 1 hour
-      
+
       // Should still be available
       expect(cache.get('test-key')).toBe('test-value');
     });
 
     it('should use custom TTL when provided', () => {
       cache.set('test-key', 'test-value', 'concepts', 5000); // 5 seconds custom TTL
-      
+
       // Should be available immediately
       expect(cache.get('test-key')).toBe('test-value');
-      
+
       // Fast forward past custom TTL
       jest.advanceTimersByTime(6000);
-      
+
       // Should be expired
       expect(cache.get('test-key')).toBeNull();
     });
 
     it('should use default TTL for unknown types', () => {
       cache.set('test-key', 'test-value', 'unknown-type');
-      
+
       // Should be available immediately
       expect(cache.get('test-key')).toBe('test-value');
-      
+
       // Fast forward past default TTL (10 minutes)
       jest.advanceTimersByTime(700000);
-      
+
       // Should be expired
       expect(cache.get('test-key')).toBeNull();
     });
@@ -171,13 +173,13 @@ describe('CoreMotivationsCacheManager', () => {
       for (let i = 0; i < 100; i++) {
         cache.set(`key${i}`, `value${i}`);
       }
-      
+
       // Access key1 to make key0 the LRU
       cache.get('key1');
-      
+
       // Add one more entry, should evict key0
       cache.set('key100', 'value100');
-      
+
       expect(cache.get('key0')).toBeNull(); // LRU should be evicted
       expect(cache.get('key1')).toBe('value1'); // Recently accessed should remain
       expect(cache.get('key100')).toBe('value100'); // New entry should be present
@@ -188,18 +190,18 @@ describe('CoreMotivationsCacheManager', () => {
       for (let i = 0; i < 100; i++) {
         cache.set(`key${i}`, `value${i}`);
       }
-      
+
       // Clear previous calls after filling cache
       mockEventBus.dispatch.mockClear();
-      
+
       // Add one more entry to trigger eviction
       cache.set('key100', 'value100');
-      
+
       // Find the eviction event among all dispatched events
       const evictionCall = mockEventBus.dispatch.mock.calls.find(
         ([event]) => event.type === CHARACTER_BUILDER_EVENTS.CACHE_EVICTED
       );
-      
+
       expect(evictionCall).toBeTruthy();
       expect(evictionCall[0]).toEqual(
         expect.objectContaining({
@@ -214,7 +216,7 @@ describe('CoreMotivationsCacheManager', () => {
     it('should dispatch CACHE_HIT event on cache hit', () => {
       cache.set('test-key', 'test-value', 'concepts');
       cache.get('test-key');
-      
+
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
           type: CHARACTER_BUILDER_EVENTS.CACHE_HIT,
@@ -229,7 +231,7 @@ describe('CoreMotivationsCacheManager', () => {
 
     it('should dispatch CACHE_MISS event on cache miss', () => {
       cache.get('non-existent');
-      
+
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
           type: CHARACTER_BUILDER_EVENTS.CACHE_MISS,
@@ -248,7 +250,7 @@ describe('CoreMotivationsCacheManager', () => {
           }),
         },
       });
-      
+
       // Should not throw despite event dispatch failure
       expect(() => faultyCache.set('test-key', 'test-value')).not.toThrow();
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -268,7 +270,7 @@ describe('CoreMotivationsCacheManager', () => {
 
     it('should clear entries by type', () => {
       cache.clearType('concepts');
-      
+
       expect(cache.get('concept1')).toBeNull();
       expect(cache.get('concept2')).toBeNull();
       expect(cache.get('direction1')).toBe('data3'); // Different type should remain
@@ -277,7 +279,7 @@ describe('CoreMotivationsCacheManager', () => {
 
     it('should invalidate entries by pattern', () => {
       cache.invalidatePattern(/concept/);
-      
+
       expect(cache.get('concept1')).toBeNull();
       expect(cache.get('concept2')).toBeNull();
       expect(cache.get('direction1')).toBe('data3'); // Doesn't match pattern
@@ -286,7 +288,7 @@ describe('CoreMotivationsCacheManager', () => {
 
     it('should invalidate entries by string pattern', () => {
       cache.invalidatePattern('direction');
-      
+
       expect(cache.get('direction1')).toBeNull();
       expect(cache.get('concept1')).toBe('data1'); // Doesn't match pattern
     });
@@ -295,13 +297,13 @@ describe('CoreMotivationsCacheManager', () => {
   describe('statistics', () => {
     it('should track hit and miss statistics', () => {
       cache.set('key1', 'value1');
-      
+
       // Generate hits and misses
       cache.get('key1'); // hit
       cache.get('key1'); // hit
       cache.get('key2'); // miss
       cache.get('key3'); // miss
-      
+
       const stats = cache.getStats();
       expect(stats.hits).toBe(2);
       expect(stats.misses).toBe(2);
@@ -312,12 +314,12 @@ describe('CoreMotivationsCacheManager', () => {
       cache.set('key1', 'value1', 'concepts');
       cache.set('key2', 'value2', 'concepts');
       cache.set('key3', 'value3', 'directions');
-      
+
       // Generate some hits
       cache.get('key1');
       cache.get('key1');
       cache.get('key3');
-      
+
       const stats = cache.getStats();
       expect(stats.byType.concepts).toEqual({ count: 2, hits: 2 });
       expect(stats.byType.directions).toEqual({ count: 1, hits: 1 });
@@ -325,7 +327,7 @@ describe('CoreMotivationsCacheManager', () => {
 
     it('should include entry details in statistics', () => {
       cache.set('key1', 'value1', 'concepts');
-      
+
       const stats = cache.getStats();
       expect(stats.entries).toHaveLength(1);
       expect(stats.entries[0]).toEqual({
@@ -350,12 +352,12 @@ describe('CoreMotivationsCacheManager', () => {
     it('should clean expired entries', () => {
       cache.set('key1', 'value1', 'concepts'); // 10 minutes TTL
       cache.set('key2', 'value2', 'motivations'); // No TTL
-      
+
       // Fast forward past TTL for concepts
       jest.advanceTimersByTime(700000);
-      
+
       const cleaned = cache.cleanExpired();
-      
+
       expect(cleaned).toBe(1);
       expect(cache.get('key1')).toBeNull(); // Should be cleaned
       expect(cache.get('key2')).toBe('value2'); // Should remain
@@ -373,7 +375,7 @@ describe('CoreMotivationsCacheManager', () => {
 
     it('should validate data when schema validator is provided', () => {
       cache.set('key1', { test: 'data' }, 'concepts');
-      
+
       expect(mockSchemaValidator.validateAgainstSchema).toHaveBeenCalledWith(
         { test: 'data' },
         'core:concepts-cache-entry'
@@ -384,9 +386,9 @@ describe('CoreMotivationsCacheManager', () => {
       mockSchemaValidator.validateAgainstSchema.mockImplementation(() => {
         throw new Error('Validation failed');
       });
-      
+
       cache.set('key1', { invalid: 'data' }, 'concepts');
-      
+
       // Should still cache the data
       expect(cache.get('key1')).toEqual({ invalid: 'data' });
       expect(mockLogger.warn).toHaveBeenCalledWith(

@@ -1,19 +1,23 @@
 # ACTBUTVIS-010: Unit Tests for Visual Properties
 
 ## Status
+
 **Status**: Not Started  
 **Priority**: High  
 **Type**: Testing Implementation  
-**Estimated Effort**: 4 hours  
+**Estimated Effort**: 4 hours
 
 ## Dependencies
+
 - **Requires**: All ACTBUTVIS-001 through ACTBUTVIS-009 (Complete implementation)
 - **Blocks**: ACTBUTVIS-011 (Integration Tests)
 
 ## Context
+
 Comprehensive unit testing for all visual properties functionality. This ticket consolidates and completes unit tests across all components that were started in previous tickets, ensuring complete test coverage for the visual customization feature.
 
 ## Objectives
+
 1. Achieve >90% test coverage for visual properties code
 2. Test all edge cases and error conditions
 3. Validate color format handling
@@ -24,6 +28,7 @@ Comprehensive unit testing for all visual properties functionality. This ticket 
 ## Test Implementation
 
 ### Test Utilities
+
 **New File**: `tests/common/visualPropertiesTestUtils.js`
 
 ```javascript
@@ -39,7 +44,7 @@ export const VALID_COLORS = {
   rgbSpaces: 'rgb( 255 , 0 , 0 )',
   rgba: 'rgba(255, 0, 0, 0.5)',
   named: 'red',
-  namedExtended: 'darkslateblue'
+  namedExtended: 'darkslateblue',
 };
 
 export const INVALID_COLORS = {
@@ -49,7 +54,7 @@ export const INVALID_COLORS = {
   rgbaMalformed: 'rgba(255, 0, 0)',
   notAColor: 'notacolor',
   incomplete: '#',
-  empty: ''
+  empty: '',
 };
 
 export const createMockActionComposite = (overrides = {}) => ({
@@ -59,13 +64,13 @@ export const createMockActionComposite = (overrides = {}) => ({
   params: {},
   description: 'Test action description',
   visual: null,
-  ...overrides
+  ...overrides,
 });
 
 export const createMockButton = (visual = null) => {
   const button = document.createElement('button');
   button.className = 'action-button';
-  
+
   if (visual) {
     button.classList.add('action-button-custom-visual');
     if (visual.backgroundColor) {
@@ -84,7 +89,7 @@ export const createMockButton = (visual = null) => {
       button.dataset.originalText = visual.textColor || '';
     }
   }
-  
+
   return button;
 };
 
@@ -94,13 +99,13 @@ export const assertButtonHasVisualStyles = (button, expectedVisual) => {
       expectedVisual.backgroundColor.replace('#', '')
     );
   }
-  
+
   if (expectedVisual.textColor) {
     expect(button.style.color).toContain(
       expectedVisual.textColor.replace('#', '')
     );
   }
-  
+
   if (expectedVisual.hoverBackgroundColor || expectedVisual.hoverTextColor) {
     expect(button.dataset.hasCustomHover).toBe('true');
   }
@@ -110,32 +115,33 @@ export const createMockDOMEnvironment = () => {
   const container = document.createElement('div');
   container.id = 'test-container';
   document.body.appendChild(container);
-  
+
   return {
     container,
     cleanup: () => {
       if (container.parentNode) {
         container.parentNode.removeChild(container);
       }
-    }
+    },
   };
 };
 
 export const waitForAsyncOperations = () => {
-  return new Promise(resolve => setTimeout(resolve, 0));
+  return new Promise((resolve) => setTimeout(resolve, 0));
 };
 ```
 
 ### Complete Test Suites
 
 #### 1. Visual Properties Validator Tests
+
 **File**: `tests/unit/validation/visualPropertiesValidator.test.js`
 Already created in ACTBUTVIS-004, but ensure coverage includes:
 
 ```javascript
 describe('Visual Properties Validator - Complete Coverage', () => {
   // Tests from ACTBUTVIS-004 plus additional coverage tests
-  
+
   describe('edge cases', () => {
     it('should handle null and undefined inputs', () => {
       expect(validateVisualProperties(null)).toBeNull();
@@ -149,16 +155,16 @@ describe('Visual Properties Validator - Complete Coverage', () => {
 
     it('should warn about unknown properties', () => {
       const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-      
+
       validateVisualProperties({
         backgroundColor: '#ff0000',
-        unknownProp: 'value'
+        unknownProp: 'value',
       });
-      
+
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('Unknown visual properties')
       );
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -166,11 +172,11 @@ describe('Visual Properties Validator - Complete Coverage', () => {
   describe('performance tests', () => {
     it('should validate 1000 colors quickly', () => {
       const start = performance.now();
-      
+
       for (let i = 0; i < 1000; i++) {
         validateCSSColor('#ff0000');
       }
-      
+
       const end = performance.now();
       expect(end - start).toBeLessThan(100); // <100ms for 1000 validations
     });
@@ -179,12 +185,13 @@ describe('Visual Properties Validator - Complete Coverage', () => {
 ```
 
 #### 2. ActionComposite DTO Tests
+
 **File**: `tests/unit/turns/dtos/actionComposite.test.js`
 
 ```javascript
 describe('ActionComposite - Complete Visual Properties Coverage', () => {
   // Include tests from ACTBUTVIS-002 plus:
-  
+
   describe('immutability tests', () => {
     it('should deeply freeze visual properties', () => {
       const composite = createActionComposite({
@@ -193,10 +200,10 @@ describe('ActionComposite - Complete Visual Properties Coverage', () => {
         commandString: 'test',
         visual: {
           backgroundColor: '#ff0000',
-          nested: { prop: 'value' }
-        }
+          nested: { prop: 'value' },
+        },
       });
-      
+
       expect(Object.isFrozen(composite.visual)).toBe(true);
       expect(Object.isFrozen(composite.visual.nested)).toBe(true);
     });
@@ -204,18 +211,21 @@ describe('ActionComposite - Complete Visual Properties Coverage', () => {
 
   describe('error handling', () => {
     it('should provide clear error messages for validation failures', () => {
-      expect(() => createActionComposite({
-        index: 0,
-        actionId: 'test:action',
-        commandString: 'test',
-        visual: { backgroundColor: 'invalid' }
-      })).toThrow(/Invalid backgroundColor/);
+      expect(() =>
+        createActionComposite({
+          index: 0,
+          actionId: 'test:action',
+          commandString: 'test',
+          visual: { backgroundColor: 'invalid' },
+        })
+      ).toThrow(/Invalid backgroundColor/);
     });
   });
 });
 ```
 
 #### 3. ActionButtonsRenderer Tests
+
 **File**: `tests/unit/domUI/actionButtonsRenderer.test.js`
 
 ```javascript
@@ -225,12 +235,12 @@ describe('ActionButtonsRenderer - Complete Coverage', () => {
 
   beforeEach(() => {
     mockDOMEnv = createMockDOMEnvironment();
-    
+
     renderer = new ActionButtonsRenderer({
       domElementFactory: mockDOMElementFactory,
       eventBus: mockEventBus,
       logger: mockLogger,
-      containerSelector: '#test-container'
+      containerSelector: '#test-container',
     });
   });
 
@@ -240,10 +250,10 @@ describe('ActionButtonsRenderer - Complete Coverage', () => {
 
   describe('performance tests', () => {
     it('should render 100 custom buttons quickly', () => {
-      const actions = Array.from({ length: 100 }, (_, i) => 
+      const actions = Array.from({ length: 100 }, (_, i) =>
         createMockActionComposite({
           actionId: `test:action${i}`,
-          visual: { backgroundColor: '#ff0000' }
+          visual: { backgroundColor: '#ff0000' },
         })
       );
 
@@ -256,15 +266,15 @@ describe('ActionButtonsRenderer - Complete Coverage', () => {
 
     it('should handle rapid visual updates efficiently', () => {
       const composite = createMockActionComposite({
-        visual: { backgroundColor: '#ff0000' }
+        visual: { backgroundColor: '#ff0000' },
       });
-      
+
       renderer.render([composite]);
 
       const start = performance.now();
       for (let i = 0; i < 50; i++) {
         renderer.updateButtonVisual('test:action', {
-          backgroundColor: `#${i.toString(16).padStart(6, '0')}`
+          backgroundColor: `#${i.toString(16).padStart(6, '0')}`,
         });
       }
       const end = performance.now();
@@ -276,24 +286,24 @@ describe('ActionButtonsRenderer - Complete Coverage', () => {
   describe('memory management', () => {
     it('should clean up visual mappings on clear', () => {
       const composite = createMockActionComposite({
-        visual: { backgroundColor: '#ff0000' }
+        visual: { backgroundColor: '#ff0000' },
       });
-      
+
       renderer.render([composite]);
       expect(renderer.buttonVisualMap.size).toBe(1);
-      
+
       renderer.clear();
       expect(renderer.buttonVisualMap.size).toBe(0);
     });
 
     it('should clean up hover timeouts on clear', () => {
       const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
-      
+
       renderer.hoverTimeouts.set('button1', 123);
       renderer.hoverTimeouts.set('button2', 456);
-      
+
       renderer.clear();
-      
+
       expect(clearTimeoutSpy).toHaveBeenCalledWith(123);
       expect(clearTimeoutSpy).toHaveBeenCalledWith(456);
     });
@@ -303,15 +313,17 @@ describe('ActionButtonsRenderer - Complete Coverage', () => {
     it('should handle DOM manipulation errors gracefully', () => {
       // Mock DOM error
       const mockContainer = {
-        appendChild: jest.fn(() => { throw new Error('DOM Error'); })
+        appendChild: jest.fn(() => {
+          throw new Error('DOM Error');
+        }),
       };
-      
+
       renderer.getOrCreateContainer = jest.fn(() => mockContainer);
-      
+
       expect(() => {
         renderer.render([createMockActionComposite()]);
       }).not.toThrow();
-      
+
       expect(mockLogger.error).toHaveBeenCalled();
     });
   });
@@ -320,25 +332,25 @@ describe('ActionButtonsRenderer - Complete Coverage', () => {
     it('should maintain aria-label with visual customization', () => {
       const composite = createMockActionComposite({
         description: 'Test Description',
-        visual: { backgroundColor: '#ff0000' }
+        visual: { backgroundColor: '#ff0000' },
       });
-      
+
       renderer.render([composite]);
-      
+
       const button = mockDOMEnv.container.querySelector('button');
       expect(button.getAttribute('aria-label')).toBe('Test Description');
     });
 
     it('should ensure focus styles work with custom colors', () => {
       const composite = createMockActionComposite({
-        visual: { backgroundColor: '#ff0000', textColor: '#ffffff' }
+        visual: { backgroundColor: '#ff0000', textColor: '#ffffff' },
       });
-      
+
       renderer.render([composite]);
-      
+
       const button = mockDOMEnv.container.querySelector('button');
       button.focus();
-      
+
       const computedStyle = window.getComputedStyle(button);
       expect(computedStyle.outline).toBeTruthy();
     });
@@ -349,48 +361,49 @@ describe('ActionButtonsRenderer - Complete Coverage', () => {
 ### Test Configuration
 
 #### Jest Configuration for Visual Properties
+
 **Update**: `jest.config.unit.js`
 
 ```javascript
 module.exports = {
   // Existing configuration...
-  
+
   collectCoverageFrom: [
     'src/**/*.js',
     '!src/**/*.test.js',
-    '!src/**/*.spec.js'
+    '!src/**/*.spec.js',
   ],
-  
+
   coverageThreshold: {
     global: {
       branches: 90,
       functions: 90,
       lines: 90,
-      statements: 90
+      statements: 90,
     },
-    
+
     // Specific thresholds for visual properties code
     'src/validation/visualPropertiesValidator.js': {
       branches: 95,
       functions: 95,
       lines: 95,
-      statements: 95
+      statements: 95,
     },
-    
+
     'src/turns/dtos/actionComposite.js': {
       branches: 90,
       functions: 90,
       lines: 90,
-      statements: 90
+      statements: 90,
     },
-    
+
     'src/domUI/actionButtonsRenderer.js': {
       branches: 85,
       functions: 85,
       lines: 85,
-      statements: 85
-    }
-  }
+      statements: 85,
+    },
+  },
 };
 ```
 
@@ -406,7 +419,7 @@ npm run test:unit -- --coverage --testPathPattern="visual"
 # Run performance tests
 npm run test:unit -- --testNamePattern="performance"
 
-# Run accessibility tests  
+# Run accessibility tests
 npm run test:unit -- --testNamePattern="accessibility"
 ```
 
@@ -432,10 +445,12 @@ npm run test:unit -- --testNamePattern="accessibility"
 - Test utilities make maintenance easier
 
 ## Related Tickets
+
 - **Consolidates**: Testing requirements from ACTBUTVIS-001 through ACTBUTVIS-009
 - **Next**: ACTBUTVIS-011 (Integration tests)
 
 ## References
+
 - Test Utilities: `tests/common/visualPropertiesTestUtils.js`
 - All component test files updated with visual properties coverage
 - Original Spec: `specs/action-button-visual-customization.spec.md`

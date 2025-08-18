@@ -10,7 +10,10 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { CharacterBuilderService, CHARACTER_BUILDER_EVENTS } from '../../../../src/characterBuilder/services/characterBuilderService.js';
+import {
+  CharacterBuilderService,
+  CHARACTER_BUILDER_EVENTS,
+} from '../../../../src/characterBuilder/services/characterBuilderService.js';
 import CoreMotivationsCacheManager from '../../../../src/characterBuilder/cache/CoreMotivationsCacheManager.js';
 import { CoreMotivation } from '../../../../src/characterBuilder/models/coreMotivation.js';
 import { createMockLogger } from '../../../common/mockFactories/index.js';
@@ -28,7 +31,7 @@ describe('CharacterBuilderService Cache Integration', () => {
 
   beforeEach(() => {
     mockLogger = createMockLogger();
-    
+
     eventCaptured = [];
     mockEventBus = {
       dispatch: jest.fn().mockImplementation((event) => {
@@ -88,10 +91,10 @@ describe('CharacterBuilderService Cache Integration', () => {
   describe('cache integration initialization', () => {
     it('should initialize with cache manager properly', () => {
       expect(service).toBeDefined();
-      
+
       // Should have dispatched cache initialization event
       const cacheInitEvent = eventCaptured.find(
-        e => e.type === CHARACTER_BUILDER_EVENTS.CACHE_INITIALIZED
+        (e) => e.type === CHARACTER_BUILDER_EVENTS.CACHE_INITIALIZED
       );
       expect(cacheInitEvent).toBeDefined();
     });
@@ -131,19 +134,25 @@ describe('CharacterBuilderService Cache Integration', () => {
         internalContradiction: 'Test contradiction 2',
         centralQuestion: 'Test question 2?',
         createdAt: Date.now(),
-      }
+      },
     ];
 
     beforeEach(() => {
-      mockDatabase.getCoreMotivationsByDirectionId.mockResolvedValue(mockMotivations);
+      mockDatabase.getCoreMotivationsByDirectionId.mockResolvedValue(
+        mockMotivations
+      );
     });
 
     it('should fetch from database and cache the results on first call', async () => {
       const result = await service.getCoreMotivationsByDirectionId(directionId);
 
       // Should call database
-      expect(mockDatabase.getCoreMotivationsByDirectionId).toHaveBeenCalledWith(directionId);
-      expect(mockDatabase.getCoreMotivationsByDirectionId).toHaveBeenCalledTimes(1);
+      expect(mockDatabase.getCoreMotivationsByDirectionId).toHaveBeenCalledWith(
+        directionId
+      );
+      expect(
+        mockDatabase.getCoreMotivationsByDirectionId
+      ).toHaveBeenCalledTimes(1);
 
       // Should return Core Motivation models
       expect(result).toHaveLength(2);
@@ -152,8 +161,9 @@ describe('CharacterBuilderService Cache Integration', () => {
 
       // Should dispatch database retrieval event
       const dbEvent = eventCaptured.find(
-        e => e.type === CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED && 
-             e.payload.source === 'database'
+        (e) =>
+          e.type === CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED &&
+          e.payload.source === 'database'
       );
       expect(dbEvent).toBeDefined();
       expect(dbEvent.payload.count).toBe(2);
@@ -161,24 +171,29 @@ describe('CharacterBuilderService Cache Integration', () => {
 
     it('should return cached results on subsequent calls', async () => {
       // First call - should hit database
-      const firstResult = await service.getCoreMotivationsByDirectionId(directionId);
-      
+      const firstResult =
+        await service.getCoreMotivationsByDirectionId(directionId);
+
       // Clear event capture
       eventCaptured = [];
-      
+
       // Second call - should hit cache
-      const secondResult = await service.getCoreMotivationsByDirectionId(directionId);
+      const secondResult =
+        await service.getCoreMotivationsByDirectionId(directionId);
 
       // Database should only have been called once
-      expect(mockDatabase.getCoreMotivationsByDirectionId).toHaveBeenCalledTimes(1);
+      expect(
+        mockDatabase.getCoreMotivationsByDirectionId
+      ).toHaveBeenCalledTimes(1);
 
       // Results should be equivalent
       expect(secondResult).toEqual(firstResult);
 
       // Should dispatch cache hit event
       const cacheEvent = eventCaptured.find(
-        e => e.type === CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED && 
-             e.payload.source === 'cache'
+        (e) =>
+          e.type === CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED &&
+          e.payload.source === 'cache'
       );
       expect(cacheEvent).toBeDefined();
       expect(cacheEvent.payload.count).toBe(2);
@@ -208,11 +223,13 @@ describe('CharacterBuilderService Cache Integration', () => {
         internalContradiction: 'Test contradiction',
         centralQuestion: 'Test question?',
         createdAt: Date.now(),
-      }
+      },
     ];
 
     beforeEach(() => {
-      mockDatabase.getCoreMotivationsByDirectionId.mockResolvedValue(mockMotivations);
+      mockDatabase.getCoreMotivationsByDirectionId.mockResolvedValue(
+        mockMotivations
+      );
       mockDatabase.saveCoreMotivations.mockResolvedValue(['mot-1']);
       mockDatabase.deleteCoreMotivation.mockResolvedValue(true);
     });
@@ -220,7 +237,9 @@ describe('CharacterBuilderService Cache Integration', () => {
     it('should invalidate cache when saving motivations', async () => {
       // Populate cache
       await service.getCoreMotivationsByDirectionId(directionId);
-      expect(mockDatabase.getCoreMotivationsByDirectionId).toHaveBeenCalledTimes(1);
+      expect(
+        mockDatabase.getCoreMotivationsByDirectionId
+      ).toHaveBeenCalledTimes(1);
 
       // Save new motivations (should invalidate cache)
       await service.saveCoreMotivations(directionId, mockMotivations);
@@ -230,12 +249,15 @@ describe('CharacterBuilderService Cache Integration', () => {
 
       // Next call should hit database again (cache was invalidated)
       await service.getCoreMotivationsByDirectionId(directionId);
-      expect(mockDatabase.getCoreMotivationsByDirectionId).toHaveBeenCalledTimes(2);
+      expect(
+        mockDatabase.getCoreMotivationsByDirectionId
+      ).toHaveBeenCalledTimes(2);
 
       // Should dispatch database retrieval event (not cache)
       const dbEvent = eventCaptured.find(
-        e => e.type === CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED && 
-             e.payload.source === 'database'
+        (e) =>
+          e.type === CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED &&
+          e.payload.source === 'database'
       );
       expect(dbEvent).toBeDefined();
     });
@@ -243,7 +265,9 @@ describe('CharacterBuilderService Cache Integration', () => {
     it('should invalidate cache when removing motivations', async () => {
       // Populate cache
       await service.getCoreMotivationsByDirectionId(directionId);
-      expect(mockDatabase.getCoreMotivationsByDirectionId).toHaveBeenCalledTimes(1);
+      expect(
+        mockDatabase.getCoreMotivationsByDirectionId
+      ).toHaveBeenCalledTimes(1);
 
       // Remove motivation (should invalidate cache)
       await service.removeCoreMotivationItem(directionId, 'mot-1');
@@ -253,7 +277,9 @@ describe('CharacterBuilderService Cache Integration', () => {
 
       // Next call should hit database again (cache was invalidated)
       await service.getCoreMotivationsByDirectionId(directionId);
-      expect(mockDatabase.getCoreMotivationsByDirectionId).toHaveBeenCalledTimes(2);
+      expect(
+        mockDatabase.getCoreMotivationsByDirectionId
+      ).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -280,16 +306,21 @@ describe('CharacterBuilderService Cache Integration', () => {
           internalContradiction: 'Test contradiction',
           centralQuestion: 'Test question?',
           createdAt: Date.now(),
-        }
+        },
       ]);
     });
 
     it('should work with fallback caching system', async () => {
-      const result = await serviceWithoutCache.getCoreMotivationsByDirectionId('test-direction');
-      
+      const result =
+        await serviceWithoutCache.getCoreMotivationsByDirectionId(
+          'test-direction'
+        );
+
       expect(result).toHaveLength(1);
       expect(result[0]).toBeInstanceOf(CoreMotivation);
-      expect(mockDatabase.getCoreMotivationsByDirectionId).toHaveBeenCalledTimes(1);
+      expect(
+        mockDatabase.getCoreMotivationsByDirectionId
+      ).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -299,15 +330,37 @@ describe('CharacterBuilderService Cache Integration', () => {
       const direction2 = 'dir-2';
 
       // Set up default mock to return appropriate data based on direction ID
-      mockDatabase.getCoreMotivationsByDirectionId.mockImplementation((directionId) => {
-        if (directionId === direction1) {
-          return Promise.resolve([{ id: 'mot-1', directionId: direction1, conceptId: 'concept-1', coreDesire: 'Desire 1', internalContradiction: 'Contradiction 1', centralQuestion: 'Question 1?', createdAt: Date.now() }]);
-        } else if (directionId === direction2) {
-          return Promise.resolve([{ id: 'mot-2', directionId: direction2, conceptId: 'concept-2', coreDesire: 'Desire 2', internalContradiction: 'Contradiction 2', centralQuestion: 'Question 2?', createdAt: Date.now() }]);
-        } else {
-          return Promise.resolve([]); // Return empty array for non-existent directions
+      mockDatabase.getCoreMotivationsByDirectionId.mockImplementation(
+        (directionId) => {
+          if (directionId === direction1) {
+            return Promise.resolve([
+              {
+                id: 'mot-1',
+                directionId: direction1,
+                conceptId: 'concept-1',
+                coreDesire: 'Desire 1',
+                internalContradiction: 'Contradiction 1',
+                centralQuestion: 'Question 1?',
+                createdAt: Date.now(),
+              },
+            ]);
+          } else if (directionId === direction2) {
+            return Promise.resolve([
+              {
+                id: 'mot-2',
+                directionId: direction2,
+                conceptId: 'concept-2',
+                coreDesire: 'Desire 2',
+                internalContradiction: 'Contradiction 2',
+                centralQuestion: 'Question 2?',
+                createdAt: Date.now(),
+              },
+            ]);
+          } else {
+            return Promise.resolve([]); // Return empty array for non-existent directions
+          }
         }
-      });
+      );
 
       // Generate some cache activity
       await service.getCoreMotivationsByDirectionId(direction1); // miss + set
@@ -316,7 +369,7 @@ describe('CharacterBuilderService Cache Integration', () => {
       await service.getCoreMotivationsByDirectionId('non-existent'); // miss (no data)
 
       const stats = cacheManager.getStats();
-      
+
       expect(stats.size).toBeGreaterThan(0);
       expect(stats.hits).toBeGreaterThan(0);
       expect(stats.misses).toBeGreaterThan(0);
@@ -328,7 +381,15 @@ describe('CharacterBuilderService Cache Integration', () => {
     it('should dispatch cache events properly', async () => {
       // Set up mock to return test data
       mockDatabase.getCoreMotivationsByDirectionId.mockResolvedValue([
-        { id: 'mot-1', directionId: 'test-direction', conceptId: 'test-concept', coreDesire: 'Test desire', internalContradiction: 'Test contradiction', centralQuestion: 'Test question?', createdAt: Date.now() }
+        {
+          id: 'mot-1',
+          directionId: 'test-direction',
+          conceptId: 'test-concept',
+          coreDesire: 'Test desire',
+          internalContradiction: 'Test contradiction',
+          centralQuestion: 'Test question?',
+          createdAt: Date.now(),
+        },
       ]);
 
       await service.getCoreMotivationsByDirectionId('test-direction');
@@ -336,10 +397,11 @@ describe('CharacterBuilderService Cache Integration', () => {
 
       // Should have cache miss and hit events
       const cacheEvents = eventCaptured.filter(
-        e => e.type === CHARACTER_BUILDER_EVENTS.CACHE_HIT || 
-             e.type === CHARACTER_BUILDER_EVENTS.CACHE_MISS
+        (e) =>
+          e.type === CHARACTER_BUILDER_EVENTS.CACHE_HIT ||
+          e.type === CHARACTER_BUILDER_EVENTS.CACHE_MISS
       );
-      
+
       expect(cacheEvents.length).toBeGreaterThan(0);
     });
   });
@@ -349,8 +411,9 @@ describe('CharacterBuilderService Cache Integration', () => {
       const error = new Error('Database connection failed');
       mockDatabase.getCoreMotivationsByDirectionId.mockRejectedValue(error);
 
-      await expect(service.getCoreMotivationsByDirectionId('test-direction'))
-        .rejects.toThrow('Failed to retrieve core motivations');
+      await expect(
+        service.getCoreMotivationsByDirectionId('test-direction')
+      ).rejects.toThrow('Failed to retrieve core motivations');
 
       // Cache should remain clean
       const stats = cacheManager.getStats();
@@ -364,11 +427,20 @@ describe('CharacterBuilderService Cache Integration', () => {
       });
 
       mockDatabase.getCoreMotivationsByDirectionId.mockResolvedValue([
-        { id: 'mot-1', directionId: 'test', conceptId: 'test-concept', coreDesire: 'desire', internalContradiction: 'contradiction', centralQuestion: 'question?', createdAt: Date.now() }
+        {
+          id: 'mot-1',
+          directionId: 'test',
+          conceptId: 'test-concept',
+          coreDesire: 'desire',
+          internalContradiction: 'contradiction',
+          centralQuestion: 'question?',
+          createdAt: Date.now(),
+        },
       ]);
 
       // Should still work by falling back to database
-      const result = await service.getCoreMotivationsByDirectionId('test-direction');
+      const result =
+        await service.getCoreMotivationsByDirectionId('test-direction');
       expect(result).toHaveLength(1);
     });
   });

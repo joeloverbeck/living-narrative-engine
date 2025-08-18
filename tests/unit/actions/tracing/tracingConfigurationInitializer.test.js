@@ -76,7 +76,7 @@ describe('TracingConfigurationInitializer', () => {
 
     it('should throw error when configLoader lacks required methods', () => {
       const invalidConfigLoader = { someMethod: jest.fn() };
-      
+
       expect(() => {
         new TracingConfigurationInitializer({
           configLoader: invalidConfigLoader,
@@ -100,7 +100,7 @@ describe('TracingConfigurationInitializer', () => {
 
     it('should throw error when actionTraceFilter lacks required methods', () => {
       const invalidFilter = { someMethod: jest.fn() };
-      
+
       expect(() => {
         new TracingConfigurationInitializer({
           configLoader: mockConfigLoader,
@@ -169,8 +169,12 @@ describe('TracingConfigurationInitializer', () => {
       expect(result.diagnostics).toBeDefined();
 
       expect(mockConfigLoader.loadConfig).toHaveBeenCalledTimes(2); // Once for init, once for validation
-      expect(mockActionTraceFilter.updateFromConfig).toHaveBeenCalledWith(mockConfig);
-      expect(mockActionTraceOutputService.enableFileOutput).toHaveBeenCalledWith('./traces');
+      expect(mockActionTraceFilter.updateFromConfig).toHaveBeenCalledWith(
+        mockConfig
+      );
+      expect(
+        mockActionTraceOutputService.enableFileOutput
+      ).toHaveBeenCalledWith('./traces');
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Initialization complete'),
         expect.any(Object)
@@ -186,18 +190,18 @@ describe('TracingConfigurationInitializer', () => {
       };
 
       mockConfigLoader.loadConfig.mockResolvedValue(mockConfig);
-      
+
       // First initialization
       const firstResult = await initializer.initialize();
       expect(firstResult.success).toBe(true);
       expect(firstResult.message).toContain('successfully');
-      
+
       // Second initialization attempt should return "Already initialized"
       const result = await initializer.initialize();
-      
+
       expect(result.success).toBe(true);
       expect(result.message).toBe('Already initialized');
-      
+
       // Verify loadConfig was only called twice (both during first init for loading and validation)
       expect(mockConfigLoader.loadConfig).toHaveBeenCalledTimes(2);
     });
@@ -211,19 +215,19 @@ describe('TracingConfigurationInitializer', () => {
       };
 
       mockConfigLoader.loadConfig.mockResolvedValue(mockConfig);
-      
+
       // Start two concurrent initializations - they should share the same promise
       const promise1 = initializer.initialize();
       const promise2 = initializer.initialize();
-      
+
       // Wait for both to complete
       const [result1, result2] = await Promise.all([promise1, promise2]);
-      
+
       // Both should have the same successful result
       expect(result1).toEqual(result2);
       expect(result1.success).toBe(true);
       expect(result1.message).toContain('successfully');
-      
+
       // Verify that loadConfig was only called twice (once for init, once for validation)
       expect(mockConfigLoader.loadConfig).toHaveBeenCalledTimes(2);
     });
@@ -304,7 +308,9 @@ describe('TracingConfigurationInitializer', () => {
 
       await initializer.initialize();
 
-      expect(mockActionTraceOutputService.enableFileOutput).not.toHaveBeenCalled();
+      expect(
+        mockActionTraceOutputService.enableFileOutput
+      ).not.toHaveBeenCalled();
     });
 
     it('should skip file output when actionTraceOutputService is not provided', async () => {
@@ -512,17 +518,17 @@ describe('TracingConfigurationInitializer', () => {
       };
 
       mockConfigLoader.loadConfig.mockResolvedValue(mockConfig);
-      
+
       await initializer.initialize();
-      
+
       expect(initializer.isInitialized()).toBe(true);
     });
 
     it('should return false after failed initialization', async () => {
       mockConfigLoader.loadConfig.mockRejectedValue(new Error('Failed'));
-      
+
       await initializer.initialize();
-      
+
       expect(initializer.isInitialized()).toBe(false);
     });
   });
@@ -638,7 +644,9 @@ describe('TracingConfigurationInitializer', () => {
       expect(result.success).toBe(true);
       expect(result.message).toBe('Configuration reloaded successfully');
       expect(result.config).toEqual(newConfig);
-      expect(mockActionTraceFilter.updateFromConfig).toHaveBeenCalledWith(newConfig);
+      expect(mockActionTraceFilter.updateFromConfig).toHaveBeenCalledWith(
+        newConfig
+      );
       expect(mockLogger.info).toHaveBeenCalledWith(
         'Configuration reloaded successfully'
       );
@@ -672,7 +680,9 @@ describe('TracingConfigurationInitializer', () => {
       const result = await initializer.reloadConfiguration();
 
       expect(result.success).toBe(true);
-      expect(mockActionTraceFilter.updateFromConfig).toHaveBeenCalledWith(newConfig);
+      expect(mockActionTraceFilter.updateFromConfig).toHaveBeenCalledWith(
+        newConfig
+      );
     });
   });
 });

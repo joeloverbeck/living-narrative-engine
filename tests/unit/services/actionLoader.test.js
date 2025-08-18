@@ -309,4 +309,200 @@ describe('ActionLoader', () => {
       expect(storeItemSpy).not.toHaveBeenCalled();
     });
   });
+
+  // --- Visual Properties Tests ---
+  describe('ActionLoader - Visual Properties', () => {
+    const filename = 'test_action.json';
+    const resolvedPath = `./data/mods/${TEST_MOD_ID}/${ACTION_CONTENT_DIR}/${filename}`;
+
+    beforeEach(() => {
+      if (!actionLoader) {
+        actionLoader = new ActionLoader(
+          mockConfig,
+          mockResolver,
+          mockFetcher,
+          mockValidator,
+          mockRegistry,
+          mockLogger
+        );
+        loadItemsInternalSpy = jest
+          .spyOn(actionLoader, '_loadItemsInternal')
+          .mockResolvedValue({
+            count: 0,
+            overrides: 0,
+            errors: 0,
+            failures: [],
+          });
+        validatePrimarySchemaSpy = jest
+          .spyOn(actionLoader, '_validatePrimarySchema')
+          .mockReturnValue({ isValid: true, errors: null });
+      }
+      jest
+        .spyOn(actionLoader, '_storeItemInRegistry')
+        .mockReturnValue({
+          qualifiedId: `${TEST_MOD_ID}:test_action`,
+          didOverride: false,
+        });
+    });
+
+    it('should load action with valid visual properties and log debug info', async () => {
+      const fetchedData = {
+        id: 'core:test_action',
+        name: 'Test Action',
+        description: 'Test description',
+        template: 'test {target}',
+        targets: 'none',
+        visual: {
+          backgroundColor: '#ff0000',
+          textColor: '#ffffff',
+          hoverBackgroundColor: '#cc0000',
+          hoverTextColor: '#ffcccc',
+        },
+      };
+
+      const result = await actionLoader._processFetchedItem(
+        TEST_MOD_ID,
+        filename,
+        resolvedPath,
+        fetchedData,
+        ACTION_TYPE_NAME
+      );
+
+      // Verify result
+      expect(result.qualifiedId).toBe(`${TEST_MOD_ID}:test_action`);
+      expect(result.didOverride).toBe(false);
+
+      // Verify debug logging for visual properties
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `Action ${TEST_MOD_ID}:test_action loaded with visual properties:`,
+        fetchedData.visual
+      );
+
+      // Verify storage was called with visual properties
+      expect(actionLoader._storeItemInRegistry).toHaveBeenCalledWith(
+        ACTION_TYPE_NAME,
+        TEST_MOD_ID,
+        'test_action',
+        fetchedData,
+        filename
+      );
+    });
+
+    it('should handle actions without visual properties normally', async () => {
+      const fetchedData = {
+        id: 'core:test_action',
+        name: 'Test Action',
+        description: 'Test description',
+        template: 'test {target}',
+        targets: 'none',
+        // No visual property
+      };
+
+      const result = await actionLoader._processFetchedItem(
+        TEST_MOD_ID,
+        filename,
+        resolvedPath,
+        fetchedData,
+        ACTION_TYPE_NAME
+      );
+
+      // Verify result
+      expect(result.qualifiedId).toBe(`${TEST_MOD_ID}:test_action`);
+      expect(result.didOverride).toBe(false);
+
+      // Verify no debug logging for visual properties (only look for visual-specific debug)
+      const visualDebugCalls = mockLogger.debug.mock.calls.filter(
+        (call) => call[0] && call[0].includes('visual properties')
+      );
+      expect(visualDebugCalls.length).toBe(0);
+
+      // Should still store the action
+      expect(actionLoader._storeItemInRegistry).toHaveBeenCalled();
+    });
+
+    it('should count and report actions with visual properties when loading mod', async () => {
+      // Mock data with some actions having visual properties
+      const actionsWithVisual = [
+        {
+          id: 'test_mod:action1',
+          visual: { backgroundColor: '#ff0000' },
+        },
+        {
+          id: 'test_mod:action2',
+          visual: { textColor: '#ffffff' },
+        },
+        {
+          id: 'test_mod:action3',
+          // No visual
+        },
+      ];
+
+      // Mock registry to return our test actions
+      mockRegistry.getAll.mockReturnValue(actionsWithVisual);
+
+      // Mock _loadItemsInternal to return successful result
+      loadItemsInternalSpy.mockResolvedValue({
+        count: 3,
+        overrides: 0,
+        errors: 0,
+        failures: [],
+      });
+
+      const manifest = {
+        content: {
+          actions: ['action1.json', 'action2.json', 'action3.json'],
+        },
+      };
+
+      await actionLoader.loadItemsForMod(
+        TEST_MOD_ID,
+        manifest,
+        ACTION_CONTENT_KEY,
+        ACTION_CONTENT_DIR,
+        ACTION_TYPE_NAME
+      );
+
+      // Verify visual properties count was logged
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `2 action(s) from mod '${TEST_MOD_ID}' have visual customization properties.`
+      );
+    });
+
+    it('should not log visual count when no actions have visual properties', async () => {
+      // Mock data with no visual properties
+      const actionsWithoutVisual = [
+        { id: 'test_mod:action1' },
+        { id: 'test_mod:action2' },
+        { id: 'test_mod:action3' },
+      ];
+
+      mockRegistry.getAll.mockReturnValue(actionsWithoutVisual);
+      loadItemsInternalSpy.mockResolvedValue({
+        count: 3,
+        overrides: 0,
+        errors: 0,
+        failures: [],
+      });
+
+      const manifest = {
+        content: {
+          actions: ['action1.json', 'action2.json', 'action3.json'],
+        },
+      };
+
+      await actionLoader.loadItemsForMod(
+        TEST_MOD_ID,
+        manifest,
+        ACTION_CONTENT_KEY,
+        ACTION_CONTENT_DIR,
+        ACTION_TYPE_NAME
+      );
+
+      // Verify no visual properties info log
+      const visualInfoCalls = mockLogger.info.mock.calls.filter(
+        (call) => call[0] && call[0].includes('visual customization')
+      );
+      expect(visualInfoCalls.length).toBe(0);
+    });
+  });
 });

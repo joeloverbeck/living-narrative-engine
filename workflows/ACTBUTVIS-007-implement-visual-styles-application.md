@@ -1,19 +1,23 @@
 # ACTBUTVIS-007: Implement Visual Styles Application in ActionButtonsRenderer
 
 ## Status
+
 **Status**: Not Started  
 **Priority**: High  
 **Type**: UI Implementation  
-**Estimated Effort**: 4 hours  
+**Estimated Effort**: 4 hours
 
 ## Dependencies
+
 - **Requires**: ACTBUTVIS-003 (Pipeline), ACTBUTVIS-006 (Factory)
 - **Blocks**: ACTBUTVIS-008 (Hover States), ACTBUTVIS-009 (Theme Compatibility)
 
 ## Context
+
 The ActionButtonsRenderer is responsible for rendering action buttons in the UI. This is the critical UI implementation ticket where visual properties are actually applied to the DOM elements. This ticket implements the core visual customization functionality.
 
 ## Objectives
+
 1. Apply visual properties to action buttons via inline styles
 2. Maintain existing button functionality
 3. Ensure efficient DOM manipulation
@@ -25,9 +29,11 @@ The ActionButtonsRenderer is responsible for rendering action buttons in the UI.
 ### File Modifications
 
 #### 1. Update ActionButtonsRenderer
+
 **File**: `src/domUI/actionButtonsRenderer.js`
 
 **Current Structure Analysis**:
+
 - Renders action buttons in a list container
 - Uses domElementFactory to create DOM elements
 - Handles button click events
@@ -41,7 +47,7 @@ import { visualPropertiesToCSS } from '../validation/visualPropertiesValidator.j
 class ActionButtonsRenderer extends BoundDomRendererBase {
   constructor({ domElementFactory, eventBus, logger, containerSelector }) {
     super({ domElementFactory, eventBus, logger, containerSelector });
-    
+
     // Store references for hover handling (prep for ACTBUTVIS-008)
     this.buttonVisualMap = new Map();
   }
@@ -54,19 +60,19 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
     try {
       // Clear existing buttons
       this.clear();
-      
+
       // Create container if needed
       const container = this.getOrCreateContainer();
-      
+
       // Render each action as a button
       actionComposites.forEach((actionComposite, index) => {
         this._renderActionButton(actionComposite, container, index);
       });
-      
+
       this.logger.debug(`Rendered ${actionComposites.length} action buttons`);
-      
+
       // Report visual customization statistics
-      const visualCount = actionComposites.filter(a => a.visual).length;
+      const visualCount = actionComposites.filter((a) => a.visual).length;
       if (visualCount > 0) {
         this.logger.debug(`${visualCount} buttons have visual customization`);
       }
@@ -89,21 +95,25 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
       className: 'action-item',
       attributes: {
         'data-action-index': index,
-        'data-action-id': actionComposite.actionId
-      }
+        'data-action-id': actionComposite.actionId,
+      },
     });
 
     // Create button element
     const button = this._createActionButton(actionComposite, index);
-    
+
     // NEW: Apply visual styles if present
     if (actionComposite.visual) {
-      this._applyVisualStyles(button, actionComposite.visual, actionComposite.actionId);
+      this._applyVisualStyles(
+        button,
+        actionComposite.visual,
+        actionComposite.actionId
+      );
     }
-    
+
     // Attach event listeners
     this._attachButtonListeners(button, actionComposite, index);
-    
+
     // Append to container
     listItem.appendChild(button);
     container.appendChild(listItem);
@@ -119,17 +129,20 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
   _createActionButton(actionComposite, index) {
     // Format button text
     const buttonText = this._formatButtonText(actionComposite);
-    
+
     // Create button
     const button = this.domElementFactory.button(buttonText, 'action-button');
-    
+
     // Add data attributes
     button.dataset.actionIndex = index;
     button.dataset.actionId = actionComposite.actionId;
-    
+
     // Add accessibility attributes
-    button.setAttribute('aria-label', actionComposite.description || buttonText);
-    
+    button.setAttribute(
+      'aria-label',
+      actionComposite.description || buttonText
+    );
+
     return button;
   }
 
@@ -152,7 +165,7 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
         // Store original for theme switching
         button.dataset.customBg = visual.backgroundColor;
       }
-      
+
       if (visual.textColor) {
         button.style.color = visual.textColor;
         // Store original for theme switching
@@ -164,11 +177,11 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
         // Store original colors for restoration
         button.dataset.originalBg = visual.backgroundColor || '';
         button.dataset.originalText = visual.textColor || '';
-        
+
         // Store hover colors
         button.dataset.hoverBg = visual.hoverBackgroundColor || '';
         button.dataset.hoverText = visual.hoverTextColor || '';
-        
+
         // Flag button as having custom hover
         button.dataset.hasCustomHover = 'true';
       }
@@ -176,13 +189,15 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
       // Store visual mapping for efficient updates
       this.buttonVisualMap.set(actionId, {
         button: button,
-        visual: visual
+        visual: visual,
       });
 
       // Add custom visual class for CSS hooks
       button.classList.add('action-button-custom-visual');
-      
-      this.logger.debug(`Applied visual styles to button for action: ${actionId}`);
+
+      this.logger.debug(
+        `Applied visual styles to button for action: ${actionId}`
+      );
     } catch (error) {
       this.logger.warn(
         `Failed to apply visual styles for action ${actionId}:`,
@@ -199,18 +214,18 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
    */
   updateButtonVisual(actionId, newVisual) {
     const mapping = this.buttonVisualMap.get(actionId);
-    
+
     if (!mapping) {
       this.logger.warn(`No button found for action: ${actionId}`);
       return;
     }
 
     const { button } = mapping;
-    
+
     // Clear existing inline styles
     button.style.backgroundColor = '';
     button.style.color = '';
-    
+
     // Apply new visual styles
     if (newVisual) {
       this._applyVisualStyles(button, newVisual, actionId);
@@ -221,7 +236,7 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
       delete button.dataset.customBg;
       delete button.dataset.customText;
       delete button.dataset.hasCustomHover;
-      
+
       // Remove from map
       this.buttonVisualMap.delete(actionId);
     }
@@ -257,7 +272,7 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
   _updateSelectedState(button, isSelected) {
     if (isSelected) {
       button.classList.add('selected');
-      
+
       // Preserve custom colors in selected state
       if (button.dataset.customBg) {
         // Apply a selected overlay while preserving custom color
@@ -266,7 +281,7 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
       }
     } else {
       button.classList.remove('selected');
-      
+
       // Restore original custom color
       if (button.dataset.customBg) {
         button.style.backgroundColor = button.dataset.customBg;
@@ -287,12 +302,12 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
       // For hex, darken slightly
       return color + 'dd'; // ~87% opacity
     }
-    
+
     if (color.startsWith('rgb(')) {
       // Convert to rgba with slight transparency
       return color.replace('rgb(', 'rgba(').replace(')', ', 0.87)');
     }
-    
+
     // Return as-is for other formats
     return color;
   }
@@ -302,7 +317,7 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
    */
   clear() {
     super.clear();
-    
+
     // Clear visual mappings
     this.buttonVisualMap.clear();
   }
@@ -315,13 +330,13 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
   handleRenderError(error) {
     // Log error
     this.logger.error('Action button render error:', error);
-    
+
     // Emit error event
     this.eventBus.emit('UI_RENDER_ERROR', {
       component: 'ActionButtonsRenderer',
-      error: error.message
+      error: error.message,
     });
-    
+
     // Attempt to render fallback UI
     this.renderFallback();
   }
@@ -333,7 +348,8 @@ class ActionButtonsRenderer extends BoundDomRendererBase {
   renderFallback() {
     try {
       const container = this.getOrCreateContainer();
-      container.innerHTML = '<div class="error-message">Failed to render actions</div>';
+      container.innerHTML =
+        '<div class="error-message">Failed to render actions</div>';
     } catch (fallbackError) {
       this.logger.error('Fallback render also failed:', fallbackError);
     }
@@ -346,13 +362,16 @@ export default ActionButtonsRenderer;
 ### CSS Considerations
 
 #### Add CSS class for custom visual buttons
+
 **File**: `css/components/_game-actions.css`
 
 ```css
 /* Custom visual action buttons */
 .action-button-custom-visual {
   /* Ensure inline styles take precedence */
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 /* Preserve theme animations with custom colors */
@@ -370,6 +389,7 @@ export default ActionButtonsRenderer;
 ### Testing Requirements
 
 #### Unit Tests
+
 **File**: `tests/unit/domUI/actionButtonsRenderer.test.js`
 
 ```javascript
@@ -381,7 +401,7 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
 
   beforeEach(() => {
     mockContainer = document.createElement('div');
-    
+
     mockDomElementFactory = {
       createElement: jest.fn((tag, options) => {
         const element = document.createElement(tag);
@@ -393,18 +413,18 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
         button.textContent = text;
         button.className = className;
         return button;
-      })
+      }),
     };
-    
+
     mockEventBus = {
-      emit: jest.fn()
+      emit: jest.fn(),
     };
 
     renderer = new ActionButtonsRenderer({
       domElementFactory: mockDomElementFactory,
       eventBus: mockEventBus,
       logger: console,
-      containerSelector: '#test-container'
+      containerSelector: '#test-container',
     });
 
     renderer.getOrCreateContainer = jest.fn(() => mockContainer);
@@ -417,8 +437,8 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
         commandString: 'Test Action',
         visual: {
           backgroundColor: '#ff0000',
-          textColor: '#ffffff'
-        }
+          textColor: '#ffffff',
+        },
       };
 
       renderer.render([actionComposite]);
@@ -434,13 +454,15 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
       const actionComposite = {
         actionId: 'test:action',
         commandString: 'Test Action',
-        visual: { backgroundColor: '#ff0000' }
+        visual: { backgroundColor: '#ff0000' },
       };
 
       renderer.render([actionComposite]);
 
       const button = mockContainer.querySelector('button');
-      expect(button.classList.contains('action-button-custom-visual')).toBe(true);
+      expect(button.classList.contains('action-button-custom-visual')).toBe(
+        true
+      );
     });
 
     it('should store hover colors in dataset', () => {
@@ -450,8 +472,8 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
         visual: {
           backgroundColor: '#ff0000',
           hoverBackgroundColor: '#00ff00',
-          hoverTextColor: '#000000'
-        }
+          hoverTextColor: '#000000',
+        },
       };
 
       renderer.render([actionComposite]);
@@ -465,15 +487,17 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
     it('should handle missing visual properties', () => {
       const actionComposite = {
         actionId: 'test:action',
-        commandString: 'Test Action'
+        commandString: 'Test Action',
         // No visual property
       };
 
       expect(() => renderer.render([actionComposite])).not.toThrow();
-      
+
       const button = mockContainer.querySelector('button');
       expect(button.style.backgroundColor).toBe('');
-      expect(button.classList.contains('action-button-custom-visual')).toBe(false);
+      expect(button.classList.contains('action-button-custom-visual')).toBe(
+        false
+      );
     });
   });
 
@@ -482,7 +506,7 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
       const actionComposite = {
         actionId: 'test:action',
         commandString: 'Test',
-        visual: { backgroundColor: '#ff0000' }
+        visual: { backgroundColor: '#ff0000' },
       };
 
       renderer.render([actionComposite]);
@@ -498,7 +522,7 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
       const actionComposite = {
         actionId: 'test:action',
         commandString: 'Test',
-        visual: { backgroundColor: '#ff0000' }
+        visual: { backgroundColor: '#ff0000' },
       };
 
       renderer.render([actionComposite]);
@@ -506,7 +530,9 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
 
       const button = mockContainer.querySelector('button');
       expect(button.style.backgroundColor).toBe('');
-      expect(button.classList.contains('action-button-custom-visual')).toBe(false);
+      expect(button.classList.contains('action-button-custom-visual')).toBe(
+        false
+      );
     });
   });
 });
@@ -533,11 +559,13 @@ describe('ActionButtonsRenderer - Visual Styles', () => {
 - Consider using CSS variables for frequently used colors in future optimization
 
 ## Related Tickets
+
 - **Depends on**: ACTBUTVIS-003 (Pipeline), ACTBUTVIS-006 (Factory)
 - **Next**: ACTBUTVIS-008 (Hover states), ACTBUTVIS-009 (Theme compatibility)
 - **Testing**: ACTBUTVIS-010 (Unit tests), ACTBUTVIS-011 (Integration tests)
 
 ## References
+
 - Renderer Location: `src/domUI/actionButtonsRenderer.js`
 - Base Class: `src/domUI/boundDomRendererBase.js`
 - Visual Validator: `src/validation/visualPropertiesValidator.js`
