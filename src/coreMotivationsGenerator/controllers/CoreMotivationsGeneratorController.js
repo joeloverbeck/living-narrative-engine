@@ -295,7 +295,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     }
 
     this.#isGenerating = true;
-    this.#showLoadingState(true);
+    this.#showLoadingState(true, 'Generating core motivations...');
 
     try {
       // Dispatch generation started event
@@ -375,6 +375,8 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   async #deleteMotivation(motivationId) {
     assertNonBlankString(motivationId, 'Motivation ID');
 
+    this.#showLoadingState(true, 'Deleting motivation...');
+
     try {
       const success =
         await this.characterBuilderService.removeCoreMotivationItem(
@@ -400,6 +402,8 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     } catch (error) {
       this.logger.error('Failed to delete motivation:', error);
       this.showError('Failed to delete motivation');
+    } finally {
+      this.#showLoadingState(false);
     }
   }
 
@@ -421,6 +425,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
     const handleConfirm = async () => {
       modal.style.display = 'none';
+      this.#showLoadingState(true, 'Clearing all motivations...');
 
       try {
         const deletedCount =
@@ -435,6 +440,8 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       } catch (error) {
         this.logger.error('Failed to clear motivations:', error);
         this.showError('Failed to clear motivations');
+      } finally {
+        this.#showLoadingState(false);
       }
 
       cleanup();
@@ -566,16 +573,49 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   }
 
   /**
-   * Show/hide loading state
+   * Show/hide loading state with contextual messages
    *
-   * @param show
+   * @param {boolean} show - Whether to show loading state
+   * @param {string} [message] - Optional loading message
    */
-  #showLoadingState(show) {
+  #showLoadingState(show, message = 'Loading...') {
     const loadingIndicator = document.getElementById('loading-indicator');
     if (loadingIndicator) {
       loadingIndicator.style.display = show ? 'flex' : 'none';
+
+      if (show) {
+        // Update loading message if provided
+        const loadingText = loadingIndicator.querySelector('p');
+        if (loadingText && message) {
+          loadingText.textContent = message;
+        }
+      }
     }
+
+    // Disable/enable buttons during loading to prevent multiple operations
+    this.#setButtonsDisabled(show);
     this.#updateUIState();
+  }
+
+  /**
+   * Enable/disable buttons during loading operations
+   *
+   * @param {boolean} disabled - Whether buttons should be disabled
+   * @private
+   */
+  #setButtonsDisabled(disabled) {
+    const buttonsToDisable = ['generate-btn', 'clear-all-btn', 'export-btn'];
+
+    buttonsToDisable.forEach((buttonId) => {
+      const button = document.getElementById(buttonId);
+      if (button && disabled) {
+        button.disabled = true;
+        button.classList.add('loading-disabled');
+      } else if (button && !disabled) {
+        button.classList.remove('loading-disabled');
+        // Let #updateUIState handle the proper enabled/disabled logic
+      }
+    });
   }
 
   /**

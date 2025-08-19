@@ -293,7 +293,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     // Apply visual styles if present
     try {
       if (actionComposite.visual) {
-        this._applyVisualStyles(
+        this._applyVisualStylesWithValidation(
           button,
           actionComposite.visual,
           actionComposite.actionId
@@ -346,6 +346,43 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    */
   _getEmptyListMessage() {
     return 'No actions available.';
+  }
+
+  /**
+   * Apply visual styles with contrast validation
+   *
+   * @private
+   * @param {HTMLButtonElement} button - Button element
+   * @param {object} visual - Visual properties
+   * @param {string} actionId - Action identifier
+   */
+  _applyVisualStylesWithValidation(button, visual, actionId) {
+    // Apply the visual styles (existing method)
+    this._applyVisualStyles(button, visual, actionId);
+
+    // Validate contrast for accessibility
+    if (visual.backgroundColor && visual.textColor) {
+      const hasGoodContrast = this._validateContrast(
+        visual.backgroundColor,
+        visual.textColor
+      );
+
+      if (!hasGoodContrast) {
+        this.logger.warn(
+          `Action button ${actionId} may have insufficient contrast. ` +
+            `Background: ${visual.backgroundColor}, Text: ${visual.textColor}`
+        );
+
+        // Add warning class for developer awareness
+        button.classList.add('contrast-warning');
+      }
+    }
+
+    // Set CSS custom properties for future theme support
+    this._setThemeReadyProperties(button, visual);
+
+    // Prepare for future theme support
+    this._prepareForThemeSupport(button);
   }
 
   /**
@@ -408,6 +445,125 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       );
       // Continue without visual customization
     }
+  }
+
+  /**
+   * Set CSS custom properties for theme readiness
+   *
+   * @private
+   * @param {HTMLButtonElement} button - Button element
+   * @param {object} visual - Visual properties
+   */
+  _setThemeReadyProperties(button, visual) {
+    // Use CSS custom properties that can be overridden by future themes
+    if (visual.backgroundColor) {
+      button.style.setProperty('--custom-bg-color', visual.backgroundColor);
+    }
+    if (visual.textColor) {
+      button.style.setProperty('--custom-text-color', visual.textColor);
+    }
+    if (visual.borderColor) {
+      button.style.setProperty('--custom-border-color', visual.borderColor);
+    }
+
+    // Set default theme-aware properties for selection and focus
+    button.style.setProperty(
+      '--selection-color',
+      'var(--theme-selection-color, #0066cc)'
+    );
+    button.style.setProperty(
+      '--focus-color',
+      'var(--theme-focus-color, #0066cc)'
+    );
+  }
+
+  /**
+   * Validate contrast ratio between background and text colors
+   *
+   * @private
+   * @param {string} bgColor - Background color
+   * @param {string} textColor - Text color
+   * @returns {boolean} True if contrast meets WCAG AA standards
+   */
+  _validateContrast(bgColor, textColor) {
+    const bg = this._parseColor(bgColor);
+    const text = this._parseColor(textColor);
+
+    if (!bg || !text) return true; // Assume valid if can't parse
+
+    // Calculate relative luminance (WCAG formula)
+    const getLuminance = (rgb) => {
+      const sRGB = [rgb.r / 255, rgb.g / 255, rgb.b / 255];
+      const linear = sRGB.map((val) => {
+        if (val <= 0.03928) return val / 12.92;
+        return Math.pow((val + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+    };
+
+    const bgLuminance = getLuminance(bg);
+    const textLuminance = getLuminance(text);
+
+    // Calculate contrast ratio
+    const lighter = Math.max(bgLuminance, textLuminance);
+    const darker = Math.min(bgLuminance, textLuminance);
+    const contrastRatio = (lighter + 0.05) / (darker + 0.05);
+
+    // WCAG AA requires 4.5:1 for normal text
+    return contrastRatio >= 4.5;
+  }
+
+  /**
+   * Parse CSS color to RGB values
+   *
+   * @private
+   * @param {string} color - CSS color string
+   * @returns {object | null} RGB object or null if parsing fails
+   */
+  _parseColor(color) {
+    try {
+      // Use a temporary element to parse the color
+      const div = this.documentContext.create('div');
+      div.style.color = color;
+
+      // Get the document body, fallback to documentElement if body doesn't exist
+      const container =
+        this.documentContext.body ||
+        this.documentContext.document.documentElement;
+      container.appendChild(div);
+
+      const computed = this.documentContext.window.getComputedStyle(div).color;
+      container.removeChild(div);
+
+      // Parse rgb(r, g, b) or rgba(r, g, b, a) format
+      const match = computed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (match) {
+        return {
+          r: parseInt(match[1], 10),
+          g: parseInt(match[2], 10),
+          b: parseInt(match[3], 10),
+        };
+      }
+
+      return null;
+    } catch (error) {
+      // Return null if parsing fails for any reason
+      return null;
+    }
+  }
+
+  /**
+   * Prepare for future theme support
+   *
+   * @private
+   * @param {HTMLButtonElement} button - Button element
+   */
+  _prepareForThemeSupport(button) {
+    // Add data attribute for future theme system
+    button.dataset.themeReady = 'true';
+
+    // Add class for theme-aware styling
+    button.classList.add('theme-aware-button');
   }
 
   /**
@@ -563,12 +719,22 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
 
     // Apply new visual styles
     if (newVisual) {
-      this._applyVisualStyles(button, newVisual, actionId);
+      this._applyVisualStylesWithValidation(button, newVisual, actionId);
       // Re-add hover listeners after applying new visual
       this._addHoverListeners(button);
     } else {
       // Remove custom visual class
       button.classList.remove('action-button-custom-visual');
+      // Remove theme-aware class
+      button.classList.remove('theme-aware-button');
+
+      // Clear CSS custom properties
+      button.style.removeProperty('--custom-bg-color');
+      button.style.removeProperty('--custom-text-color');
+      button.style.removeProperty('--custom-border-color');
+      button.style.removeProperty('--selection-color');
+      button.style.removeProperty('--focus-color');
+
       // Clear dataset
       delete button.dataset.customBg;
       delete button.dataset.customText;
@@ -577,6 +743,10 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       delete button.dataset.originalText;
       delete button.dataset.hoverBg;
       delete button.dataset.hoverText;
+      delete button.dataset.themeReady;
+
+      // Remove contrast warning class
+      button.classList.remove('contrast-warning');
 
       // Remove from map
       this.buttonVisualMap.delete(actionId);
@@ -1014,11 +1184,12 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
 
     if (this.elements && this.elements.listContainerElement) {
       // Remove hover listeners from all buttons before clearing DOM
-      const buttons = this.elements.listContainerElement.querySelectorAll('.action-button');
-      buttons.forEach(button => {
+      const buttons =
+        this.elements.listContainerElement.querySelectorAll('.action-button');
+      buttons.forEach((button) => {
         this._removeHoverListeners(button);
       });
-      
+
       while (this.elements.listContainerElement.firstChild) {
         this.elements.listContainerElement.removeChild(
           this.elements.listContainerElement.firstChild

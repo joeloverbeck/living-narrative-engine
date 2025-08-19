@@ -42,7 +42,12 @@ export class CoreMotivationsDisplayEnhancer {
       throw new Error('Motivation object is required');
     }
 
-    const required = ['id', 'coreDesire', 'internalContradiction', 'centralQuestion'];
+    const required = [
+      'id',
+      'coreDesire',
+      'internalContradiction',
+      'centralQuestion',
+    ];
     for (const field of required) {
       if (!motivation[field]) {
         throw new Error(`Motivation missing required field: ${field}`);
@@ -64,7 +69,9 @@ export class CoreMotivationsDisplayEnhancer {
   #sanitizeText(text) {
     if (!text) return '';
     // Remove any potential script tags or HTML
-    return String(text).replace(/<[^>]*>/g, '').trim();
+    return String(text)
+      .replace(/<[^>]*>/g, '')
+      .trim();
   }
 
   /**
@@ -343,7 +350,9 @@ export class CoreMotivationsDisplayEnhancer {
    */
   formatSingleMotivation(motivation) {
     if (!motivation || typeof motivation !== 'object') {
-      this.#logger.error('Invalid motivation provided to formatSingleMotivation');
+      this.#logger.error(
+        'Invalid motivation provided to formatSingleMotivation'
+      );
       throw new Error('Valid motivation object is required');
     }
 
