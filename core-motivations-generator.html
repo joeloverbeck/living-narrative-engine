@@ -119,6 +119,38 @@
             </div>
           </div>
 
+          <!-- Search and Filter Controls -->
+          <div class="motivations-controls" id="motivations-controls">
+            <div class="search-section">
+              <input
+                type="search"
+                id="motivation-search"
+                class="motivation-search-input"
+                placeholder="Search motivations..."
+                aria-label="Search motivations"
+              />
+              <span
+                class="search-results-count"
+                id="search-results-count"
+                style="display: none"
+              >
+                <span id="search-count">0</span> results
+              </span>
+            </div>
+            <div class="sort-section">
+              <label for="motivation-sort" class="sort-label">Sort by:</label>
+              <select
+                id="motivation-sort"
+                class="cb-select sort-select"
+                aria-label="Sort motivations"
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="alphabetical">Alphabetical (Core Desire)</option>
+              </select>
+            </div>
+          </div>
+
           <!-- Loading Indicator -->
           <div
             id="loading-indicator"

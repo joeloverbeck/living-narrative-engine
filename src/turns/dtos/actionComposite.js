@@ -77,7 +77,7 @@ export function createActionComposite(
     index,
     actionId,
     commandString,
-    params,
+    params: freeze({ ...params }),
     description,
     visual: visual ? freeze({ ...visual }) : null,
   };

@@ -455,26 +455,34 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    * @param {object} visual - Visual properties
    */
   _setThemeReadyProperties(button, visual) {
-    // Use CSS custom properties that can be overridden by future themes
-    if (visual.backgroundColor) {
-      button.style.setProperty('--custom-bg-color', visual.backgroundColor);
-    }
-    if (visual.textColor) {
-      button.style.setProperty('--custom-text-color', visual.textColor);
-    }
-    if (visual.borderColor) {
-      button.style.setProperty('--custom-border-color', visual.borderColor);
-    }
+    try {
+      // Use CSS custom properties that can be overridden by future themes
+      if (visual.backgroundColor) {
+        button.style.setProperty('--custom-bg-color', visual.backgroundColor);
+      }
+      if (visual.textColor) {
+        button.style.setProperty('--custom-text-color', visual.textColor);
+      }
+      if (visual.borderColor) {
+        button.style.setProperty('--custom-border-color', visual.borderColor);
+      }
 
-    // Set default theme-aware properties for selection and focus
-    button.style.setProperty(
-      '--selection-color',
-      'var(--theme-selection-color, #0066cc)'
-    );
-    button.style.setProperty(
-      '--focus-color',
-      'var(--theme-focus-color, #0066cc)'
-    );
+      // Set default theme-aware properties for selection and focus
+      button.style.setProperty(
+        '--selection-color',
+        'var(--theme-selection-color, #0066cc)'
+      );
+      button.style.setProperty(
+        '--focus-color',
+        'var(--theme-focus-color, #0066cc)'
+      );
+    } catch (error) {
+      // Log warning but continue - CSS custom properties are enhancement only
+      this.logger.warn(
+        `Failed to set theme-ready properties: ${error.message}`,
+        error
+      );
+    }
   }
 
   /**
@@ -710,46 +718,54 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
 
     const { button } = mapping;
 
-    // Remove existing hover listeners before updating (ACTBUTVIS-008)
-    this._removeHoverListeners(button);
+    try {
+      // Remove existing hover listeners before updating (ACTBUTVIS-008)
+      this._removeHoverListeners(button);
 
-    // Clear existing inline styles
-    button.style.backgroundColor = '';
-    button.style.color = '';
+      // Clear existing inline styles
+      button.style.backgroundColor = '';
+      button.style.color = '';
 
-    // Apply new visual styles
-    if (newVisual) {
-      this._applyVisualStylesWithValidation(button, newVisual, actionId);
-      // Re-add hover listeners after applying new visual
-      this._addHoverListeners(button);
-    } else {
-      // Remove custom visual class
-      button.classList.remove('action-button-custom-visual');
-      // Remove theme-aware class
-      button.classList.remove('theme-aware-button');
+      // Apply new visual styles
+      if (newVisual) {
+        this._applyVisualStylesWithValidation(button, newVisual, actionId);
+        // Re-add hover listeners after applying new visual
+        this._addHoverListeners(button);
+      } else {
+        // Remove custom visual class
+        button.classList.remove('action-button-custom-visual');
+        // Remove theme-aware class
+        button.classList.remove('theme-aware-button');
 
-      // Clear CSS custom properties
-      button.style.removeProperty('--custom-bg-color');
-      button.style.removeProperty('--custom-text-color');
-      button.style.removeProperty('--custom-border-color');
-      button.style.removeProperty('--selection-color');
-      button.style.removeProperty('--focus-color');
+        // Clear CSS custom properties
+        button.style.removeProperty('--custom-bg-color');
+        button.style.removeProperty('--custom-text-color');
+        button.style.removeProperty('--custom-border-color');
+        button.style.removeProperty('--selection-color');
+        button.style.removeProperty('--focus-color');
 
-      // Clear dataset
-      delete button.dataset.customBg;
-      delete button.dataset.customText;
-      delete button.dataset.hasCustomHover;
-      delete button.dataset.originalBg;
-      delete button.dataset.originalText;
-      delete button.dataset.hoverBg;
-      delete button.dataset.hoverText;
-      delete button.dataset.themeReady;
+        // Clear dataset
+        delete button.dataset.customBg;
+        delete button.dataset.customText;
+        delete button.dataset.hasCustomHover;
+        delete button.dataset.originalBg;
+        delete button.dataset.originalText;
+        delete button.dataset.hoverBg;
+        delete button.dataset.hoverText;
+        delete button.dataset.themeReady;
 
-      // Remove contrast warning class
-      button.classList.remove('contrast-warning');
+        // Remove contrast warning class
+        button.classList.remove('contrast-warning');
 
-      // Remove from map
-      this.buttonVisualMap.delete(actionId);
+        // Remove from map
+        this.buttonVisualMap.delete(actionId);
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Failed to update visual styles for action ${actionId}:`,
+        error
+      );
+      // Continue without visual update
     }
   }
 

@@ -73,7 +73,8 @@
       "Bash(do grep -q '\"\"\"\"targets\"\"\"\":' \"$file\")",
       "Bash(do grep -q '\"\"\"\"targets\"\"\"\"' \"$file\")",
       "Bash(basename:*)",
-      "Bash(do echo \"Run $i:\")"
+      "Bash(do echo \"Run $i:\")",
+      "Bash(git log:*)"
     ],
     "deny": []
   }
