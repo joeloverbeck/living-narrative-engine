@@ -10,6 +10,7 @@ export * from './container.js';
 export * from './memoryStorageProvider.js';
 export * from './actions.js';
 export * from './actionTracing.js';
+export * from './visualProperties.js';
 export { createMockTargetResolutionServiceWithErrorContext } from './actions.js';
 
 // Explicit convenience exports

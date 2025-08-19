@@ -2,11 +2,16 @@ import { ANATOMY_BODY_COMPONENT_ID } from '../constants/componentIds.js';
 import { DescriptionConfiguration } from './configuration/descriptionConfiguration.js';
 import { DescriptionTemplate } from './templates/descriptionTemplate.js';
 import { TextFormatter } from './templates/textFormatter.js';
+import { ensureValidLogger } from '../utils/loggerUtils.js';
+// Validation utilities are imported but not actively used yet
+// They will be used in future phases of the migration
 
 /**
  * Service for composing full body descriptions from all body parts
  */
 export class BodyDescriptionComposer {
+  #logger;
+
   constructor({
     bodyPartDescriptionBuilder,
     bodyGraphService,
@@ -14,6 +19,7 @@ export class BodyDescriptionComposer {
     anatomyFormattingService,
     partDescriptionGenerator,
     equipmentDescriptionService = null,
+    logger = null,
   } = {}) {
     this.bodyPartDescriptionBuilder = bodyPartDescriptionBuilder;
     this.bodyGraphService = bodyGraphService;
@@ -21,6 +27,7 @@ export class BodyDescriptionComposer {
     this.anatomyFormattingService = anatomyFormattingService;
     this.partDescriptionGenerator = partDescriptionGenerator;
     this.equipmentDescriptionService = equipmentDescriptionService;
+    this.#logger = ensureValidLogger(logger, 'BodyDescriptionComposer');
 
     // Initialize configuration and template services
     this.config = new DescriptionConfiguration(anatomyFormattingService);
@@ -145,8 +152,8 @@ export class BodyDescriptionComposer {
   /**
    * Group body parts by their subtype
    *
-   * @param {Array<string>} partIds
-   * @returns {Map<string, Array<object>>}
+   * @param {Array<string>} partIds - Array of part entity IDs
+   * @returns {Map<string, Array<object>>} Map of part type to entity arrays
    */
   groupPartsByType(partIds) {
     const partsByType = new Map();
@@ -187,31 +194,57 @@ export class BodyDescriptionComposer {
   }
 
   /**
-   * Extract overall build description from body entity
+   * Safely gets the anatomy:body component from an entity
    *
-   * @param {object} bodyEntity
-   * @returns {string}
+   * @param {object} bodyEntity - The entity
+   * @returns {object|null} The body component data or null
+   * @private
    */
-  extractBuildDescription(bodyEntity) {
+  #getBodyComponent(bodyEntity) {
     if (!bodyEntity || typeof bodyEntity.getComponentData !== 'function') {
-      return '';
+      return null;
     }
 
+    try {
+      return bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID);
+    } catch (error) {
+      this.#logger.error('Failed to get anatomy:body component', error);
+      return null;
+    }
+  }
+
+  // Validation methods will be activated in future phases
+  // Currently maintaining backward compatibility without strict validation
+
+  /**
+   * Extract overall build description from body entity
+   *
+   * @param {object} bodyEntity - The entity with anatomy:body component
+   * @returns {string} Build descriptor value or empty string
+   */
+  extractBuildDescription(bodyEntity) {
+    const bodyComponent = this.#getBodyComponent(bodyEntity);
+
     // Check body.descriptors first
-    const bodyComponent = bodyEntity.getComponentData(
-      ANATOMY_BODY_COMPONENT_ID
-    );
     if (bodyComponent?.body?.descriptors?.build) {
       return bodyComponent.body.descriptors.build;
     }
 
     // Fallback to entity-level component for backward compatibility
-    const buildComponent = bodyEntity.getComponentData('descriptors:build');
-    if (!buildComponent || !buildComponent.build) {
-      return '';
+    if (bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+      const buildComponent = bodyEntity.getComponentData('descriptors:build');
+      if (buildComponent?.build) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[DEPRECATION] Entity ${bodyEntity.id || 'unknown'} uses entity-level descriptor 'descriptors:build'. ` +
+            'Please migrate to body.descriptors.build in anatomy:body component. ' +
+            'Entity-level descriptors will be removed in a future version.'
+        );
+        return buildComponent.build;
+      }
     }
 
-    return buildComponent.build;
+    return '';
   }
 
   /**
@@ -221,27 +254,30 @@ export class BodyDescriptionComposer {
    * @returns {string} Body composition description
    */
   extractBodyCompositionDescription(bodyEntity) {
-    if (!bodyEntity || typeof bodyEntity.getComponentData !== 'function') {
-      return '';
-    }
+    const bodyComponent = this.#getBodyComponent(bodyEntity);
 
     // Check body.descriptors first
-    const bodyComponent = bodyEntity.getComponentData(
-      ANATOMY_BODY_COMPONENT_ID
-    );
     if (bodyComponent?.body?.descriptors?.composition) {
       return bodyComponent.body.descriptors.composition;
     }
 
     // Fallback to entity-level component for backward compatibility
-    const compositionComponent = bodyEntity.getComponentData(
-      'descriptors:body_composition'
-    );
-    if (!compositionComponent || !compositionComponent.composition) {
-      return '';
+    if (bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+      const compositionComponent = bodyEntity.getComponentData(
+        'descriptors:body_composition'
+      );
+      if (compositionComponent?.composition) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[DEPRECATION] Entity ${bodyEntity.id || 'unknown'} uses entity-level descriptor 'descriptors:body_composition'. ` +
+            'Please migrate to body.descriptors.composition in anatomy:body component. ' +
+            'Entity-level descriptors will be removed in a future version.'
+        );
+        return compositionComponent.composition;
+      }
     }
 
-    return compositionComponent.composition;
+    return '';
   }
 
   /**
@@ -251,27 +287,30 @@ export class BodyDescriptionComposer {
    * @returns {string} Body hair description
    */
   extractBodyHairDescription(bodyEntity) {
-    if (!bodyEntity || typeof bodyEntity.getComponentData !== 'function') {
-      return '';
-    }
+    const bodyComponent = this.#getBodyComponent(bodyEntity);
 
     // Check body.descriptors first (note: density maps to "Body hair")
-    const bodyComponent = bodyEntity.getComponentData(
-      ANATOMY_BODY_COMPONENT_ID
-    );
     if (bodyComponent?.body?.descriptors?.density) {
       return bodyComponent.body.descriptors.density;
     }
 
     // Fallback to entity-level component for backward compatibility
-    const bodyHairComponent = bodyEntity.getComponentData(
-      'descriptors:body_hair'
-    );
-    if (!bodyHairComponent || !bodyHairComponent.density) {
-      return '';
+    if (bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+      const bodyHairComponent = bodyEntity.getComponentData(
+        'descriptors:body_hair'
+      );
+      if (bodyHairComponent?.density) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[DEPRECATION] Entity ${bodyEntity.id || 'unknown'} uses entity-level descriptor 'descriptors:body_hair'. ` +
+            'Please migrate to body.descriptors.density in anatomy:body component. ' +
+            'Entity-level descriptors will be removed in a future version.'
+        );
+        return bodyHairComponent.density;
+      }
     }
 
-    return bodyHairComponent.density;
+    return '';
   }
 
   /**
@@ -281,26 +320,29 @@ export class BodyDescriptionComposer {
    * @returns {string} Skin color description
    */
   extractSkinColorDescription(bodyEntity) {
-    if (!bodyEntity || typeof bodyEntity.getComponentData !== 'function') {
-      return '';
-    }
+    const bodyComponent = this.#getBodyComponent(bodyEntity);
 
     // Check body.descriptors first
-    const bodyComponent = bodyEntity.getComponentData(
-      ANATOMY_BODY_COMPONENT_ID
-    );
     if (bodyComponent?.body?.descriptors?.skinColor) {
       return bodyComponent.body.descriptors.skinColor;
     }
 
     // Fallback to entity-level component for backward compatibility
-    const skinColorComponent = bodyEntity.getComponentData(
-      'descriptors:skin_color'
-    );
-    if (!skinColorComponent || !skinColorComponent.skinColor) {
-      return '';
+    if (bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+      const skinColorComponent = bodyEntity.getComponentData(
+        'descriptors:skin_color'
+      );
+      if (skinColorComponent?.skinColor) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[DEPRECATION] Entity ${bodyEntity.id || 'unknown'} uses entity-level descriptor 'descriptors:skin_color'. ` +
+            'Please migrate to body.descriptors.skinColor in anatomy:body component. ' +
+            'Entity-level descriptors will be removed in a future version.'
+        );
+        return skinColorComponent.skinColor;
+      }
     }
 
-    return skinColorComponent.skinColor;
+    return '';
   }
 }

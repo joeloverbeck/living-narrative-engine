@@ -25,6 +25,12 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   #eligibleDirections = [];
   #currentMotivations = [];
   #isGenerating = false;
+  #currentSortOrder = 'newest';
+  #currentSearchQuery = '';
+  #searchDebounceTimer = null;
+  #lazyLoadEnabled = false;
+  #currentLoadedCount = 20;
+  #loadMoreObserver = null;
 
   /**
    * @param {object} _dependencies - Controller dependencies
@@ -70,6 +76,9 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
       // Set up UI event listeners
       this.#setupEventListeners();
+
+      // Load user preferences
+      this.#loadUserPreferences();
 
       // Initialize UI state
       this.#updateUIState();
@@ -265,25 +274,265 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     const container = document.getElementById('motivations-container');
     const emptyState = document.getElementById('empty-state');
 
-    if (this.#currentMotivations.length === 0) {
-      container.style.display = 'none';
-      emptyState.style.display = 'flex';
+    // Filter motivations based on search query
+    let filteredMotivations = this.#filterMotivations(this.#currentMotivations);
+
+    // Sort filtered motivations
+    const sortedMotivations = this.#sortMotivations(filteredMotivations);
+
+    // Update search results count
+    this.#updateSearchResultsCount(filteredMotivations.length);
+
+    // Display empty state or motivations
+    if (sortedMotivations.length === 0) {
+      if (this.#currentSearchQuery && this.#currentMotivations.length > 0) {
+        container.style.display = 'block';
+        emptyState.style.display = 'none';
+        this.#displayNoSearchResults(container);
+      } else {
+        container.style.display = 'none';
+        emptyState.style.display = 'flex';
+      }
+    } else {
+      container.style.display = 'block';
+      emptyState.style.display = 'none';
+
+      // Use lazy loading for large datasets
+      if (sortedMotivations.length > 50) {
+        this.#displayWithLazyLoading(container, sortedMotivations);
+      } else {
+        this.#displayAllMotivations(container, sortedMotivations);
+      }
+    }
+  }
+
+  /**
+   * Display all motivations without lazy loading
+   *
+   * @param {HTMLElement} container - Container element
+   * @param {Array} motivations - Sorted motivations
+   */
+  #displayAllMotivations(container, motivations) {
+    // Disconnect lazy load observer if active
+    this.#disconnectLazyLoadObserver();
+    this.#lazyLoadEnabled = false;
+
+    // Use DocumentFragment for better performance
+    const fragment = document.createDocumentFragment();
+
+    motivations.forEach((motivation) => {
+      const element = this.#displayEnhancer.createMotivationBlock(motivation);
+      fragment.appendChild(element);
+    });
+
+    container.innerHTML = '';
+    container.appendChild(fragment);
+  }
+
+  /**
+   * Display motivations with lazy loading
+   *
+   * @param {HTMLElement} container - Container element
+   * @param {Array} motivations - Sorted motivations
+   */
+  #displayWithLazyLoading(container, motivations) {
+    this.#lazyLoadEnabled = true;
+    this.#currentLoadedCount = 20;
+
+    // Clear container
+    container.innerHTML = '';
+
+    // Create initial batch
+    const fragment = document.createDocumentFragment();
+    const initialBatch = motivations.slice(0, this.#currentLoadedCount);
+
+    initialBatch.forEach((motivation) => {
+      const element = this.#displayEnhancer.createMotivationBlock(motivation);
+      fragment.appendChild(element);
+    });
+
+    container.appendChild(fragment);
+
+    // Add load more indicator if there are more items
+    if (motivations.length > this.#currentLoadedCount) {
+      const loadMoreEl = document.createElement('div');
+      loadMoreEl.id = 'load-more-trigger';
+      loadMoreEl.className = 'load-more-trigger';
+      loadMoreEl.innerHTML = `
+        <div class="load-more-spinner"></div>
+        <div class="load-more-text">Loading more...</div>
+      `;
+      container.appendChild(loadMoreEl);
+
+      // Set up Intersection Observer for lazy loading
+      this.#setupLazyLoadObserver(container, motivations, loadMoreEl);
+    }
+  }
+
+  /**
+   * Set up intersection observer for lazy loading
+   *
+   * @param {HTMLElement} container - Container element
+   * @param {Array} motivations - All motivations
+   * @param {HTMLElement} triggerEl - Load more trigger element
+   */
+  #setupLazyLoadObserver(container, motivations, triggerEl) {
+    // Disconnect existing observer
+    this.#disconnectLazyLoadObserver();
+
+    // Create new observer
+    this.#loadMoreObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            this.#loadMoreMotivations(container, motivations, triggerEl);
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: '100px',
+        threshold: 0.1,
+      }
+    );
+
+    // Start observing
+    this.#loadMoreObserver.observe(triggerEl);
+  }
+
+  /**
+   * Load more motivations for lazy loading
+   *
+   * @param {HTMLElement} container - Container element
+   * @param {Array} motivations - All motivations
+   * @param {HTMLElement} triggerEl - Load more trigger element
+   */
+  #loadMoreMotivations(container, motivations, triggerEl) {
+    const batchSize = 20;
+    const startIndex = this.#currentLoadedCount;
+    const endIndex = Math.min(startIndex + batchSize, motivations.length);
+
+    // Load next batch
+    const fragment = document.createDocumentFragment();
+    const nextBatch = motivations.slice(startIndex, endIndex);
+
+    nextBatch.forEach((motivation) => {
+      const element = this.#displayEnhancer.createMotivationBlock(motivation);
+      fragment.appendChild(element);
+    });
+
+    // Insert before trigger element
+    container.insertBefore(fragment, triggerEl);
+
+    // Update count
+    this.#currentLoadedCount = endIndex;
+
+    // Remove trigger if all items loaded
+    if (this.#currentLoadedCount >= motivations.length) {
+      this.#disconnectLazyLoadObserver();
+      triggerEl.remove();
+    }
+  }
+
+  /**
+   * Disconnect lazy load observer
+   */
+  #disconnectLazyLoadObserver() {
+    if (this.#loadMoreObserver) {
+      this.#loadMoreObserver.disconnect();
+      this.#loadMoreObserver = null;
+    }
+  }
+
+  /**
+   * Filter motivations based on search query
+   *
+   * @param {Array} motivations - Motivations to filter
+   * @returns {Array} Filtered motivations
+   */
+  #filterMotivations(motivations) {
+    if (!this.#currentSearchQuery) {
+      return motivations;
+    }
+
+    const query = this.#currentSearchQuery.toLowerCase();
+    return motivations.filter((motivation) => {
+      const searchableText = [
+        motivation.coreDesire || '',
+        motivation.internalContradiction || '',
+        motivation.centralQuestion || '',
+      ]
+        .join(' ')
+        .toLowerCase();
+
+      return searchableText.includes(query);
+    });
+  }
+
+  /**
+   * Sort motivations based on current sort order
+   *
+   * @param {Array} motivations - Motivations to sort
+   * @returns {Array} Sorted motivations
+   */
+  #sortMotivations(motivations) {
+    const sorted = [...motivations];
+
+    switch (this.#currentSortOrder) {
+      case 'oldest':
+        return sorted.sort(
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+        );
+      case 'alphabetical':
+        return sorted.sort((a, b) => {
+          const aDesire = (a.coreDesire || '').toLowerCase();
+          const bDesire = (b.coreDesire || '').toLowerCase();
+          return aDesire.localeCompare(bDesire);
+        });
+      case 'newest':
+      default:
+        return sorted.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+    }
+  }
+
+  /**
+   * Update search results count display
+   *
+   * @param {number} count - Number of results
+   */
+  #updateSearchResultsCount(count) {
+    const resultsCount = document.getElementById('search-results-count');
+    const searchCount = document.getElementById('search-count');
+
+    if (!resultsCount || !searchCount) {
       return;
     }
 
-    container.style.display = 'block';
-    emptyState.style.display = 'none';
-    container.innerHTML = '';
+    if (this.#currentSearchQuery) {
+      searchCount.textContent = count;
+      resultsCount.style.display = 'inline';
+    } else {
+      resultsCount.style.display = 'none';
+    }
+  }
 
-    // Display motivations in reverse chronological order (newest first)
-    const sortedMotivations = [...this.#currentMotivations].sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    );
-
-    sortedMotivations.forEach((motivation) => {
-      const element = this.#displayEnhancer.createMotivationBlock(motivation);
-      container.appendChild(element);
-    });
+  /**
+   * Display no search results message
+   *
+   * @param {HTMLElement} container - Container element
+   */
+  #displayNoSearchResults(container) {
+    container.innerHTML = `
+      <div class="no-search-results">
+        <div class="no-search-results-icon">🔍</div>
+        <div class="no-search-results-text">No motivations found</div>
+        <div class="no-search-results-hint">
+          Try different search terms or clear the search
+        </div>
+      </div>
+    `;
   }
 
   /**
@@ -488,6 +737,74 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   }
 
   /**
+   * Handle search input
+   *
+   * @param {string} query - Search query
+   */
+  #handleSearch(query) {
+    // Clear existing debounce timer
+    if (this.#searchDebounceTimer) {
+      clearTimeout(this.#searchDebounceTimer);
+    }
+
+    // Debounce search to avoid excessive updates
+    this.#searchDebounceTimer = setTimeout(() => {
+      this.#currentSearchQuery = query.trim();
+      this.#displayMotivations();
+
+      this.eventBus.dispatch({
+        type: 'MOTIVATIONS_SEARCH_PERFORMED',
+        payload: {
+          query: this.#currentSearchQuery,
+          resultsCount: this.#filterMotivations(this.#currentMotivations)
+            .length,
+        },
+      });
+    }, 300);
+  }
+
+  /**
+   * Handle sort order change
+   *
+   * @param {string} sortOrder - New sort order
+   */
+  #handleSortChange(sortOrder) {
+    this.#currentSortOrder = sortOrder;
+
+    // Save preference to localStorage
+    try {
+      localStorage.setItem('motivations-sort-order', sortOrder);
+    } catch (error) {
+      this.logger.warn('Failed to save sort preference:', error);
+    }
+
+    this.#displayMotivations();
+
+    this.eventBus.dispatch({
+      type: 'MOTIVATIONS_SORT_CHANGED',
+      payload: { sortOrder },
+    });
+  }
+
+  /**
+   * Load user preferences from localStorage
+   */
+  #loadUserPreferences() {
+    try {
+      const savedSort = localStorage.getItem('motivations-sort-order');
+      if (savedSort) {
+        this.#currentSortOrder = savedSort;
+        const sortSelect = document.getElementById('motivation-sort');
+        if (sortSelect) {
+          sortSelect.value = savedSort;
+        }
+      }
+    } catch (error) {
+      this.logger.warn('Failed to load user preferences:', error);
+    }
+  }
+
+  /**
    * Set up UI event listeners
    */
   #setupEventListeners() {
@@ -502,6 +819,18 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     // Export button
     const exportBtn = document.getElementById('export-btn');
     exportBtn?.addEventListener('click', () => this.#exportToText());
+
+    // Search input
+    const searchInput = document.getElementById('motivation-search');
+    searchInput?.addEventListener('input', (e) => {
+      this.#handleSearch(e.target.value);
+    });
+
+    // Sort select
+    const sortSelect = document.getElementById('motivation-sort');
+    sortSelect?.addEventListener('change', (e) => {
+      this.#handleSortChange(e.target.value);
+    });
 
     // Back button
     const backBtn = document.getElementById('back-btn');

@@ -440,6 +440,7 @@ export function registerWorldAndEntity(container) {
       equipmentDescriptionService: c.resolve(
         tokens.EquipmentDescriptionService
       ),
+      logger: c.resolve(tokens.ILogger),
     });
   });
   logger.debug(

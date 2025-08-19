@@ -18,10 +18,22 @@ describe('CoreMotivationsGeneratorController', () => {
   beforeEach(async () => {
     testBed = new CoreMotivationsGeneratorControllerTestBed();
     await testBed.setup();
+
+    // Mock localStorage
+    const localStorageMock = {
+      getItem: jest.fn(),
+      setItem: jest.fn(),
+      clear: jest.fn(),
+    };
+    Object.defineProperty(window, 'localStorage', {
+      value: localStorageMock,
+      writable: true,
+    });
   });
 
   afterEach(() => {
     testBed.cleanup();
+    jest.clearAllMocks();
   });
 
   describe('Initialization', () => {
@@ -820,6 +832,375 @@ describe('CoreMotivationsGeneratorController', () => {
           'Failed to generate motivations. Please try again.'
         );
       });
+    });
+  });
+
+  describe('Sorting Functionality', () => {
+    it('should sort motivations by newest first by default', async () => {
+      // Arrange
+      const motivations = [
+        {
+          id: 'mot-1',
+          coreDesire: 'Desire A',
+          createdAt: new Date('2024-01-01'),
+        },
+        {
+          id: 'mot-2',
+          coreDesire: 'Desire B',
+          createdAt: new Date('2024-01-02'),
+        },
+        {
+          id: 'mot-3',
+          coreDesire: 'Desire C',
+          createdAt: new Date('2024-01-03'),
+        },
+      ];
+
+      testBed.setupMotivationsDisplay(motivations);
+      await testBed.controller.initialize();
+
+      // Act
+      await testBed.loadDirectionWithMotivations('dir-1', motivations);
+
+      // Assert
+      const container = document.getElementById('motivations-container');
+      const blocks = container.querySelectorAll('.motivation-block');
+      expect(blocks.length).toBe(3);
+      // Newest first: mot-3, mot-2, mot-1
+      expect(blocks[0].dataset.motivationId).toBe('mot-3');
+      expect(blocks[1].dataset.motivationId).toBe('mot-2');
+      expect(blocks[2].dataset.motivationId).toBe('mot-1');
+    });
+
+    it('should sort motivations by oldest first when selected', async () => {
+      // Arrange
+      const motivations = [
+        {
+          id: 'mot-1',
+          coreDesire: 'Desire A',
+          createdAt: new Date('2024-01-01'),
+        },
+        {
+          id: 'mot-2',
+          coreDesire: 'Desire B',
+          createdAt: new Date('2024-01-02'),
+        },
+        {
+          id: 'mot-3',
+          coreDesire: 'Desire C',
+          createdAt: new Date('2024-01-03'),
+        },
+      ];
+
+      testBed.setupMotivationsDisplay(motivations);
+      await testBed.controller.initialize();
+      await testBed.loadDirectionWithMotivations('dir-1', motivations);
+
+      // Act
+      const sortSelect = document.getElementById('motivation-sort');
+      sortSelect.value = 'oldest';
+      sortSelect.dispatchEvent(new Event('change'));
+
+      // Assert
+      const container = document.getElementById('motivations-container');
+      const blocks = container.querySelectorAll('.motivation-block');
+      expect(blocks.length).toBe(3);
+      // Oldest first: mot-1, mot-2, mot-3
+      expect(blocks[0].dataset.motivationId).toBe('mot-1');
+      expect(blocks[1].dataset.motivationId).toBe('mot-2');
+      expect(blocks[2].dataset.motivationId).toBe('mot-3');
+    });
+
+    it('should sort motivations alphabetically by core desire', async () => {
+      // Arrange
+      const motivations = [
+        {
+          id: 'mot-1',
+          coreDesire: 'Zebra desire',
+          createdAt: new Date('2024-01-01'),
+        },
+        {
+          id: 'mot-2',
+          coreDesire: 'Apple desire',
+          createdAt: new Date('2024-01-02'),
+        },
+        {
+          id: 'mot-3',
+          coreDesire: 'Mango desire',
+          createdAt: new Date('2024-01-03'),
+        },
+      ];
+
+      testBed.setupMotivationsDisplay(motivations);
+      await testBed.controller.initialize();
+      await testBed.loadDirectionWithMotivations('dir-1', motivations);
+
+      // Act
+      const sortSelect = document.getElementById('motivation-sort');
+      sortSelect.value = 'alphabetical';
+      sortSelect.dispatchEvent(new Event('change'));
+
+      // Assert
+      const container = document.getElementById('motivations-container');
+      const blocks = container.querySelectorAll('.motivation-block');
+      expect(blocks.length).toBe(3);
+      // Alphabetical: Apple, Mango, Zebra
+      expect(blocks[0].dataset.motivationId).toBe('mot-2');
+      expect(blocks[1].dataset.motivationId).toBe('mot-3');
+      expect(blocks[2].dataset.motivationId).toBe('mot-1');
+    });
+
+    it('should save sort preference to localStorage', async () => {
+      // Arrange
+      await testBed.controller.initialize();
+
+      // Act
+      const sortSelect = document.getElementById('motivation-sort');
+      sortSelect.value = 'alphabetical';
+      sortSelect.dispatchEvent(new Event('change'));
+
+      // Assert
+      expect(window.localStorage.setItem).toHaveBeenCalledWith(
+        'motivations-sort-order',
+        'alphabetical'
+      );
+    });
+
+    it('should load sort preference from localStorage', async () => {
+      // Arrange
+      window.localStorage.getItem.mockReturnValue('oldest');
+
+      // Act
+      await testBed.controller.initialize();
+
+      // Assert
+      const sortSelect = document.getElementById('motivation-sort');
+      expect(sortSelect.value).toBe('oldest');
+    });
+  });
+
+  describe('Search Functionality', () => {
+    it('should filter motivations based on search query', async () => {
+      // Arrange
+      const motivations = [
+        {
+          id: 'mot-1',
+          coreDesire: 'Find true love',
+          internalContradiction: 'Fear of vulnerability',
+          centralQuestion: 'Can I trust?',
+          createdAt: new Date('2024-01-01'),
+        },
+        {
+          id: 'mot-2',
+          coreDesire: 'Achieve greatness',
+          internalContradiction: 'Imposter syndrome',
+          centralQuestion: 'Am I worthy?',
+          createdAt: new Date('2024-01-02'),
+        },
+        {
+          id: 'mot-3',
+          coreDesire: 'Find inner peace',
+          internalContradiction: 'Need for control',
+          centralQuestion: 'Can I let go?',
+          createdAt: new Date('2024-01-03'),
+        },
+      ];
+
+      testBed.setupMotivationsDisplay(motivations);
+      await testBed.controller.initialize();
+      await testBed.loadDirectionWithMotivations('dir-1', motivations);
+
+      // Act
+      const searchInput = document.getElementById('motivation-search');
+      searchInput.value = 'love';
+      searchInput.dispatchEvent(new Event('input'));
+
+      // Wait for debounce
+      await new Promise((resolve) => setTimeout(resolve, 350));
+
+      // Assert
+      const container = document.getElementById('motivations-container');
+      const blocks = container.querySelectorAll('.motivation-block');
+      expect(blocks.length).toBe(1);
+      expect(blocks[0].dataset.motivationId).toBe('mot-1');
+    });
+
+    it('should display search results count', async () => {
+      // Arrange
+      const motivations = [
+        {
+          id: 'mot-1',
+          coreDesire: 'Find true love',
+          createdAt: new Date('2024-01-01'),
+        },
+        {
+          id: 'mot-2',
+          coreDesire: 'Find inner peace',
+          createdAt: new Date('2024-01-02'),
+        },
+      ];
+
+      testBed.setupMotivationsDisplay(motivations);
+      await testBed.controller.initialize();
+      await testBed.loadDirectionWithMotivations('dir-1', motivations);
+
+      // Act
+      const searchInput = document.getElementById('motivation-search');
+      searchInput.value = 'find';
+      searchInput.dispatchEvent(new Event('input'));
+
+      // Wait for debounce
+      await new Promise((resolve) => setTimeout(resolve, 350));
+
+      // Assert
+      const resultsCount = document.getElementById('search-results-count');
+      const searchCount = document.getElementById('search-count');
+      expect(resultsCount.style.display).toBe('inline');
+      expect(searchCount.textContent).toBe('2');
+    });
+
+    it('should show no results message when search finds nothing', async () => {
+      // Arrange
+      const motivations = [
+        {
+          id: 'mot-1',
+          coreDesire: 'Find true love',
+          createdAt: new Date('2024-01-01'),
+        },
+      ];
+
+      testBed.setupMotivationsDisplay(motivations);
+      await testBed.controller.initialize();
+      await testBed.loadDirectionWithMotivations('dir-1', motivations);
+
+      // Act
+      const searchInput = document.getElementById('motivation-search');
+      searchInput.value = 'nonexistent';
+      searchInput.dispatchEvent(new Event('input'));
+
+      // Wait for debounce
+      await new Promise((resolve) => setTimeout(resolve, 350));
+
+      // Assert
+      const container = document.getElementById('motivations-container');
+      const noResults = container.querySelector('.no-search-results');
+      expect(noResults).toBeTruthy();
+      expect(noResults.textContent).toContain('No motivations found');
+    });
+
+    it('should debounce search input', async () => {
+      // Arrange
+      const motivations = [
+        {
+          id: 'mot-1',
+          coreDesire: 'Test',
+          createdAt: new Date('2024-01-01'),
+        },
+      ];
+
+      testBed.setupMotivationsDisplay(motivations);
+      await testBed.controller.initialize();
+      await testBed.loadDirectionWithMotivations('dir-1', motivations);
+
+      const spy = jest.spyOn(testBed.mockEventBus, 'dispatch');
+
+      // Act
+      const searchInput = document.getElementById('motivation-search');
+      searchInput.value = 't';
+      searchInput.dispatchEvent(new Event('input'));
+      searchInput.value = 'te';
+      searchInput.dispatchEvent(new Event('input'));
+      searchInput.value = 'tes';
+      searchInput.dispatchEvent(new Event('input'));
+
+      // Wait for debounce
+      await new Promise((resolve) => setTimeout(resolve, 350));
+
+      // Assert - should only dispatch once due to debounce
+      const searchEvents = spy.mock.calls.filter(
+        (call) => call[0].type === 'MOTIVATIONS_SEARCH_PERFORMED'
+      );
+      expect(searchEvents.length).toBe(1);
+      expect(searchEvents[0][0].payload.query).toBe('tes');
+    });
+  });
+
+  describe('Performance Optimizations', () => {
+    it('should use lazy loading for more than 50 motivations', async () => {
+      // Arrange
+      const motivations = Array.from({ length: 60 }, (_, i) => ({
+        id: `mot-${i}`,
+        coreDesire: `Desire ${i}`,
+        createdAt: new Date(`2024-01-${String(i + 1).padStart(2, '0')}`),
+      }));
+
+      testBed.setupMotivationsDisplay(motivations);
+      await testBed.controller.initialize();
+
+      // Act
+      await testBed.loadDirectionWithMotivations('dir-1', motivations);
+
+      // Assert
+      const container = document.getElementById('motivations-container');
+      const blocks = container.querySelectorAll('.motivation-block');
+      // Should only load initial batch of 20
+      expect(blocks.length).toBe(20);
+
+      // Check for load more trigger
+      const loadMoreTrigger = container.querySelector('.load-more-trigger');
+      expect(loadMoreTrigger).toBeTruthy();
+    });
+
+    it('should not use lazy loading for 50 or fewer motivations', async () => {
+      // Arrange
+      const motivations = Array.from({ length: 50 }, (_, i) => ({
+        id: `mot-${i}`,
+        coreDesire: `Desire ${i}`,
+        createdAt: new Date(`2024-01-${String(i + 1).padStart(2, '0')}`),
+      }));
+
+      testBed.setupMotivationsDisplay(motivations);
+      await testBed.controller.initialize();
+
+      // Act
+      await testBed.loadDirectionWithMotivations('dir-1', motivations);
+
+      // Assert
+      const container = document.getElementById('motivations-container');
+      const blocks = container.querySelectorAll('.motivation-block');
+      // Should load all 50
+      expect(blocks.length).toBe(50);
+
+      // No load more trigger
+      const loadMoreTrigger = container.querySelector('.load-more-trigger');
+      expect(loadMoreTrigger).toBeFalsy();
+    });
+
+    it('should use DocumentFragment for batch DOM updates', async () => {
+      // Arrange
+      const motivations = Array.from({ length: 30 }, (_, i) => ({
+        id: `mot-${i}`,
+        coreDesire: `Desire ${i}`,
+        createdAt: new Date(`2024-01-${String(i + 1).padStart(2, '0')}`),
+      }));
+
+      // Spy on DocumentFragment usage
+      const originalCreateDocumentFragment =
+        document.createDocumentFragment.bind(document);
+      const fragmentSpy = jest.fn(originalCreateDocumentFragment);
+      document.createDocumentFragment = fragmentSpy;
+
+      testBed.setupMotivationsDisplay(motivations);
+      await testBed.controller.initialize();
+
+      // Act
+      await testBed.loadDirectionWithMotivations('dir-1', motivations);
+
+      // Assert
+      expect(fragmentSpy).toHaveBeenCalled();
+
+      // Restore original
+      document.createDocumentFragment = originalCreateDocumentFragment;
     });
   });
 });

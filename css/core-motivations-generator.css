@@ -402,6 +402,140 @@
   }
 }
 
+/* ============================================
+   Search and Sort Controls
+   ============================================ */
+.motivations-controls {
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-section {
+  flex: 1;
+  min-width: 250px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.motivation-search-input {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.motivation-search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.motivation-search-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.search-results-count {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.sort-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort-label {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.sort-select {
+  min-width: 150px;
+  padding: 0.5rem;
+  font-size: 0.95rem;
+}
+
+/* Highlight search matches */
+.search-highlight {
+  background-color: rgba(255, 235, 59, 0.4);
+  color: var(--text-primary);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* Lazy loading styles */
+.load-more-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  gap: 1rem;
+}
+
+.load-more-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--narrative-purple);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.load-more-text {
+  font-size: 0.95rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hidden motivations during search */
+.motivation-block.hidden {
+  display: none;
+}
+
+/* No search results state */
+.no-search-results {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--text-secondary);
+}
+
+.no-search-results-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.no-search-results-text {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.no-search-results-hint {
+  font-size: 0.95rem;
+  color: var(--text-tertiary);
+}
+
 /* Empty State */
 .empty-state {
   display: flex;

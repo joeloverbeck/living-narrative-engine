@@ -2,12 +2,24 @@
  * @file Unit tests for visual properties validator
  */
 
-import { describe, it, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import {
   validateVisualProperties,
   hasVisualProperties,
   countActionsWithVisualProperties,
 } from '../../../src/validation/visualPropertiesValidator.js';
+import {
+  VALID_COLORS,
+  INVALID_COLORS,
+  runVisualPropertiesPerformanceTest,
+} from '../../common/mockFactories/visualProperties.js';
 
 // Mock the colorValidation module
 jest.mock('../../../src/utils/colorValidation.js', () => ({
@@ -196,6 +208,184 @@ describe('visualPropertiesValidator', () => {
       ];
 
       expect(countActionsWithVisualProperties(actions)).toBe(2);
+    });
+  });
+
+  describe('edge cases and comprehensive validation', () => {
+    let consoleSpy;
+
+    beforeEach(() => {
+      consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+    });
+
+    afterEach(() => {
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle null and undefined inputs gracefully', () => {
+      expect(() => validateVisualProperties(null, 'test:action')).toThrow(
+        'Invalid visual properties for action test:action: expected object'
+      );
+      expect(() => validateVisualProperties(undefined, 'test:action')).toThrow(
+        'Invalid visual properties for action test:action: expected object'
+      );
+    });
+
+    it('should handle arrays and primitive types correctly', () => {
+      // Arrays are objects in JavaScript, so they won't throw the "expected object" error
+      // But they should still be handled properly (empty array = no properties)
+      const result = validateVisualProperties([], 'test:action');
+      expect(result).toEqual({});
+
+      expect(() => validateVisualProperties(123, 'test:action')).toThrow(
+        'Invalid visual properties for action test:action: expected object'
+      );
+      expect(() => validateVisualProperties(true, 'test:action')).toThrow(
+        'Invalid visual properties for action test:action: expected object'
+      );
+    });
+
+    it('should provide clear error messages for each property', () => {
+      const testCases = [
+        { prop: 'backgroundColor', value: 'invalid' },
+        { prop: 'textColor', value: 123 },
+        { prop: 'hoverBackgroundColor', value: null },
+        { prop: 'hoverTextColor', value: {} },
+      ];
+
+      testCases.forEach(({ prop, value }) => {
+        const visual = { [prop]: value };
+        expect(() => validateVisualProperties(visual, 'test:action')).toThrow(
+          'Invalid visual properties for action test:action'
+        );
+      });
+    });
+
+    it('should warn about multiple unknown properties', () => {
+      const visual = {
+        backgroundColor: '#ff0000',
+        unknownProp1: 'value1',
+        unknownProp2: 'value2',
+        anotherUnknown: 'value3',
+      };
+
+      expect(() => validateVisualProperties(visual, 'test:action')).toThrow(
+        'Unknown visual properties: unknownProp1, unknownProp2, anotherUnknown'
+      );
+    });
+
+    it('should handle deeply nested invalid structures', () => {
+      const visual = {
+        backgroundColor: '#ff0000',
+        nested: { invalid: 'structure' },
+      };
+
+      expect(() => validateVisualProperties(visual, 'test:action')).toThrow(
+        'Unknown visual properties: nested'
+      );
+    });
+
+    it('should validate all color formats from VALID_COLORS', () => {
+      Object.entries(VALID_COLORS).forEach(([format, color]) => {
+        // Skip non-string formats for this validator
+        if (typeof color !== 'string') return;
+
+        const visual = { backgroundColor: color };
+
+        // Update mock to handle more color formats
+        const {
+          validateColor,
+        } = require('../../../src/utils/colorValidation.js');
+        validateColor.mockImplementationOnce(() => true);
+
+        expect(() =>
+          validateVisualProperties(visual, 'test:action')
+        ).not.toThrow();
+      });
+    });
+
+    it('should reject all invalid color formats from INVALID_COLORS', () => {
+      Object.entries(INVALID_COLORS).forEach(([format, color]) => {
+        // Skip null/undefined as they're handled differently
+        if (color === null || color === undefined) return;
+
+        const visual = { backgroundColor: color };
+
+        // Update mock to reject invalid colors
+        const {
+          validateColor,
+        } = require('../../../src/utils/colorValidation.js');
+        validateColor.mockImplementationOnce(() => false);
+
+        expect(() => validateVisualProperties(visual, 'test:action')).toThrow();
+      });
+    });
+  });
+
+  describe('performance benchmarks', () => {
+    it('should validate 1000 colors in under 100ms', () => {
+      const {
+        validateColor,
+      } = require('../../../src/utils/colorValidation.js');
+
+      const result = runVisualPropertiesPerformanceTest(
+        () => {
+          validateColor('#ff0000');
+        },
+        1000,
+        100
+      );
+
+      expect(result.passed).toBe(true);
+      expect(result.duration).toBeLessThan(100);
+      console.log(
+        `Validated ${result.iterations} colors in ${result.duration.toFixed(2)}ms`
+      );
+    });
+
+    it('should validate complex visual properties quickly', () => {
+      const complexVisual = {
+        backgroundColor: '#ff0000',
+        textColor: '#ffffff',
+        hoverBackgroundColor: '#cc0000',
+        hoverTextColor: '#ffcccc',
+      };
+
+      const result = runVisualPropertiesPerformanceTest(
+        () => {
+          try {
+            validateVisualProperties(complexVisual, 'test:action');
+          } catch (e) {
+            // Ignore validation errors for performance test
+          }
+        },
+        500,
+        100
+      );
+
+      expect(result.passed).toBe(true);
+      console.log(
+        `Validated ${result.iterations} complex visual properties in ${result.duration.toFixed(2)}ms`
+      );
+    });
+
+    it('should handle large batches of actions efficiently', () => {
+      const actions = Array(100)
+        .fill(null)
+        .map((_, i) => ({
+          id: `action${i}`,
+          visual: i % 2 === 0 ? { backgroundColor: '#ff0000' } : null,
+        }));
+
+      const startTime = performance.now();
+      const count = countActionsWithVisualProperties(actions);
+      const endTime = performance.now();
+
+      expect(count).toBe(50);
+      expect(endTime - startTime).toBeLessThan(10);
+      console.log(
+        `Counted visual properties in ${actions.length} actions in ${(endTime - startTime).toFixed(2)}ms`
+      );
     });
   });
 });

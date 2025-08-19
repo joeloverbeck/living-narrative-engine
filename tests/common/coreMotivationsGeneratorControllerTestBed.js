@@ -153,6 +153,28 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     noDirectionsMsg.textContent = 'No eligible directions found';
     main.appendChild(noDirectionsMsg);
 
+    // Search and sort controls
+    const searchInput = document.createElement('input');
+    searchInput.id = 'motivation-search';
+    searchInput.type = 'search';
+    searchInput.placeholder = 'Search motivations...';
+    main.appendChild(searchInput);
+
+    const searchResultsCount = document.createElement('span');
+    searchResultsCount.id = 'search-results-count';
+    searchResultsCount.style.display = 'none';
+    searchResultsCount.innerHTML = '<span id="search-count">0</span> results';
+    main.appendChild(searchResultsCount);
+
+    const sortSelect = document.createElement('select');
+    sortSelect.id = 'motivation-sort';
+    sortSelect.innerHTML = `
+      <option value="newest">Newest First</option>
+      <option value="oldest">Oldest First</option>
+      <option value="alphabetical">Alphabetical (Core Desire)</option>
+    `;
+    main.appendChild(sortSelect);
+
     // Motivations container
     const motivationsContainer = document.createElement('div');
     motivationsContainer.id = 'motivations-container';
@@ -196,7 +218,12 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     const loadingIndicator = document.createElement('div');
     loadingIndicator.id = 'loading-indicator';
     loadingIndicator.style.display = 'none';
-    loadingIndicator.textContent = 'Loading...';
+    
+    // Add paragraph element for loading text
+    const loadingText = document.createElement('p');
+    loadingText.textContent = 'Loading...';
+    loadingIndicator.appendChild(loadingText);
+    
     main.appendChild(loadingIndicator);
 
     // Confirmation modal
@@ -365,6 +392,81 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
   /**
    * Cleanup test environment
    */
+  /**
+   * Setup motivations display with test data
+   *
+   * @param {Array} motivations - Array of motivation objects
+   */
+  setupMotivationsDisplay(motivations) {
+    // Mock the display enhancer to create proper elements with data attributes
+    this.mockDisplayEnhancer.createMotivationBlock.mockImplementation(
+      (motivation) => {
+        const block = document.createElement('div');
+        block.className = 'motivation-block';
+        block.dataset.motivationId = motivation.id;
+        block.innerHTML = `
+          <div class="motivation-content">
+            <div class="core-desire">${motivation.coreDesire || ''}</div>
+            <div class="internal-contradiction">${motivation.internalContradiction || ''}</div>
+            <div class="central-question">${motivation.centralQuestion || ''}</div>
+          </div>
+        `;
+        return block;
+      }
+    );
+  }
+
+  /**
+   * Load a direction with motivations
+   *
+   * @param {string} directionId - Direction ID
+   * @param {Array} motivations - Array of motivation objects
+   */
+  async loadDirectionWithMotivations(directionId, motivations) {
+    // Ensure the controller is initialized with directions
+    if (!this.controller) {
+      throw new Error('Controller not initialized');
+    }
+
+    // Setup the mock to return the test direction when requested
+    const testDirection = {
+      id: directionId,
+      title: 'Test Direction',
+      theme: 'Test theme',
+      conceptId: 'concept-1',
+    };
+    
+    // Update mocks to ensure the direction is available
+    this.mockCharacterBuilderService.getThematicDirectionsByConceptId.mockResolvedValue([
+      testDirection
+    ]);
+    this.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+    
+    // Update mock to return the specified motivations
+    this.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+      motivations
+    );
+
+    // Re-initialize the controller to load the directions
+    // This ensures #eligibleDirections is populated
+    await this.controller.initialize();
+
+    // Now select the direction through the controller's public interface
+    // The direction should now exist in the DOM from initialization
+    const directionElement = document.querySelector(
+      `[data-direction-id="${directionId}"]`
+    );
+    
+    if (directionElement) {
+      // Click the direction element to trigger the controller's selection logic
+      // This will call #selectDirection which will load the motivations
+      directionElement.click();
+      
+      // Wait for async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  }
+
   cleanup() {
     super.cleanup();
 
