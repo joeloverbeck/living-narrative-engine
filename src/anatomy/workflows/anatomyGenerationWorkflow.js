@@ -4,6 +4,8 @@
 
 import { BaseService } from '../../utils/serviceBase.js';
 import { ValidationError } from '../../errors/validationError.js';
+import { BodyDescriptorValidator } from '../utils/bodyDescriptorValidator.js';
+import { BodyDescriptorValidationError } from '../errors/bodyDescriptorValidationError.js';
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
@@ -562,86 +564,14 @@ export class AnatomyGenerationWorkflow extends BaseService {
    * @throws {ValidationError} If body descriptors are invalid
    */
   validateBodyDescriptors(bodyDescriptors, recipeId) {
-    if (!bodyDescriptors) return; // Optional field
-
-    const validBuilds = [
-      'skinny',
-      'slim',
-      'toned',
-      'athletic',
-      'shapely',
-      'thick',
-      'muscular',
-      'stocky',
-    ];
-    const validDensities = [
-      'hairless',
-      'sparse',
-      'light',
-      'moderate',
-      'hairy',
-      'very-hairy',
-    ];
-    const validCompositions = [
-      'underweight',
-      'lean',
-      'average',
-      'soft',
-      'chubby',
-      'overweight',
-      'obese',
-    ];
-
-    // Validate build
-    if (bodyDescriptors.build && !validBuilds.includes(bodyDescriptors.build)) {
-      throw new ValidationError(
-        `Invalid build descriptor: '${
-          bodyDescriptors.build
-        }' in recipe '${recipeId}'. Must be one of: ${validBuilds.join(', ')}`
-      );
-    }
-
-    // Validate density
-    if (
-      bodyDescriptors.density &&
-      !validDensities.includes(bodyDescriptors.density)
-    ) {
-      throw new ValidationError(
-        `Invalid density descriptor: '${
-          bodyDescriptors.density
-        }' in recipe '${recipeId}'. Must be one of: ${validDensities.join(
-          ', '
-        )}`
-      );
-    }
-
-    // Validate composition
-    if (
-      bodyDescriptors.composition &&
-      !validCompositions.includes(bodyDescriptors.composition)
-    ) {
-      throw new ValidationError(
-        `Invalid composition descriptor: '${
-          bodyDescriptors.composition
-        }' in recipe '${recipeId}'. Must be one of: ${validCompositions.join(
-          ', '
-        )}`
-      );
-    }
-
-    // skinColor is free-form string - no validation needed
-
-    // Check for unknown properties
-    const knownProps = ['build', 'density', 'composition', 'skinColor'];
-    const unknownProps = Object.keys(bodyDescriptors).filter(
-      (prop) => !knownProps.includes(prop)
-    );
-    if (unknownProps.length > 0) {
-      throw new ValidationError(
-        `Unknown body descriptor properties in recipe '${recipeId}': ${unknownProps.join(
-          ', '
-        )}`
-      );
+    try {
+      BodyDescriptorValidator.validate(bodyDescriptors, `recipe '${recipeId}'`);
+    } catch (error) {
+      if (error instanceof BodyDescriptorValidationError) {
+        // Convert BodyDescriptorValidationError to ValidationError to maintain compatibility
+        throw new ValidationError(error.message);
+      }
+      throw error;
     }
   }
 

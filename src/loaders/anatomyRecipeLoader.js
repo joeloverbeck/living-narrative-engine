@@ -4,6 +4,8 @@ import { SimpleItemLoader } from './simpleItemLoader.js';
 import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
 import { ValidationError } from '../errors/validationError.js';
+import { BodyDescriptorValidator } from '../anatomy/utils/bodyDescriptorValidator.js';
+import { BodyDescriptorValidationError } from '../anatomy/errors/bodyDescriptorValidationError.js';
 
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver */
@@ -77,6 +79,11 @@ class AnatomyRecipeLoader extends SimpleItemLoader {
       this._validateConstraints(data.constraints, modId, filename);
     }
 
+    // Validate body descriptors if present
+    if (data.bodyDescriptors) {
+      this._validateBodyDescriptors(data.bodyDescriptors, baseId, filename);
+    }
+
     // Store the recipe in the registry
     const { qualifiedId, didOverride } = await processAndStoreItem(this, {
       data,
@@ -133,6 +140,30 @@ class AnatomyRecipeLoader extends SimpleItemLoader {
           );
         }
       }
+    }
+  }
+
+  /**
+   * Validates body descriptors for proper structure and values
+   *
+   * @param {object} bodyDescriptors - The body descriptors to validate
+   * @param {string} recipeId - The recipe ID for error messages
+   * @param {string} filename - The filename for error messages
+   * @throws {ValidationError} If body descriptors are invalid
+   * @private
+   */
+  _validateBodyDescriptors(bodyDescriptors, recipeId, filename) {
+    try {
+      BodyDescriptorValidator.validate(
+        bodyDescriptors,
+        `recipe '${recipeId}' from file '${filename}'`
+      );
+    } catch (error) {
+      if (error instanceof BodyDescriptorValidationError) {
+        // Convert BodyDescriptorValidationError to ValidationError to maintain consistency
+        throw new ValidationError(error.message);
+      }
+      throw error;
     }
   }
 }

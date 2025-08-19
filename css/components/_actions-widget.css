@@ -192,30 +192,88 @@
   }
 }
 
-/* Custom visual action buttons */
+/* Theme-ready custom action buttons */
 .action-button-custom-visual {
-  /* Ensure inline styles take precedence while preserving animations */
+  /* Use CSS custom properties that can be overridden when themes are added */
+  background-color: var(--custom-bg-color);
+  color: var(--custom-text-color);
+  border-color: var(--custom-border-color);
+
+  /* Theme-aware properties with fallbacks */
+  --selection-color: var(--theme-selection-color, #0066cc);
+  --focus-color: var(--theme-focus-color, #0066cc);
+  --disabled-opacity: var(--theme-disabled-opacity, 0.5);
+
   transition:
-    background-color 0.2s ease-in-out,
-    color 0.2s ease-in-out,
-    transform 0.2s ease-in-out,
-    opacity 0.2s ease-in-out;
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
-/* Preserve theme animations with custom colors */
-.action-button-custom-visual:not(:disabled) {
-  cursor: pointer;
+/* Theme-aware button marker */
+.theme-aware-button {
+  /* Ready for future theme system */
+  position: relative;
 }
 
-/* Selected state with custom visual - use box-shadow to preserve custom background */
+/* Selected state with custom colors */
 .action-button-custom-visual.selected {
-  box-shadow: inset 0 0 0 2px var(--focus-color, #0066cc);
-  /* Ensure custom background colors are preserved */
+  box-shadow:
+    inset 0 0 0 2px var(--selection-color),
+    0 0 4px var(--selection-color);
 }
 
-/* Ensure custom visual buttons work with existing animations */
-.action-button-custom-visual {
-  /* Inherit existing animation properties from parent selectors */
+/* Focus state - accessible by default */
+.action-button-custom-visual:focus {
+  outline: 2px solid var(--focus-color);
+  outline-offset: 2px;
+}
+
+/* Hover state enhancement */
+.action-button-custom-visual.action-button-hovering {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Contrast warning indicator for developers */
+.action-button-custom-visual.contrast-warning {
+  position: relative;
+}
+
+.action-button-custom-visual.contrast-warning::after {
+  content: '⚠';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 16px;
+  height: 16px;
+  background: #ff9800;
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+  display: none; /* Hidden in production, shown in dev mode */
+}
+
+/* Show contrast warnings in development */
+body[data-dev-mode='true']
+  .action-button-custom-visual.contrast-warning::after {
+  display: block;
+}
+
+/* Prepare structure for future theme variants */
+:root {
+  /* Default theme values */
+  --theme-selection-color: #0066cc;
+  --theme-focus-color: #0066cc;
+  --theme-disabled-opacity: 0.5;
+
+  /* These will be used when theme system is implemented */
+  --theme-background: #ffffff;
+  --theme-text: #333333;
+  --theme-border: #cccccc;
 }
 
 /* Note: Styles for specific button states within #action-buttons

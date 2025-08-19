@@ -1,0 +1,74 @@
+/**
+ * @file Body descriptor constants and metadata
+ * Centralized definitions for body-level descriptors used across the anatomy system
+ */
+
+/**
+ * Valid body build types
+ */
+export const BODY_BUILD_TYPES = {
+  SKINNY: 'skinny',
+  SLIM: 'slim',
+  TONED: 'toned',
+  ATHLETIC: 'athletic',
+  SHAPELY: 'shapely',
+  THICK: 'thick',
+  MUSCULAR: 'muscular',
+  STOCKY: 'stocky',
+};
+
+/**
+ * Valid body hair density levels
+ */
+export const BODY_HAIR_DENSITY = {
+  HAIRLESS: 'hairless',
+  SPARSE: 'sparse',
+  LIGHT: 'light',
+  MODERATE: 'moderate',
+  HAIRY: 'hairy',
+  VERY_HAIRY: 'very-hairy',
+};
+
+/**
+ * Valid body composition types
+ */
+export const BODY_COMPOSITION_TYPES = {
+  UNDERWEIGHT: 'underweight',
+  LEAN: 'lean',
+  AVERAGE: 'average',
+  SOFT: 'soft',
+  CHUBBY: 'chubby',
+  OVERWEIGHT: 'overweight',
+  OBESE: 'obese',
+};
+
+/**
+ * Descriptor metadata including display labels and validation info
+ */
+export const DESCRIPTOR_METADATA = {
+  build: {
+    label: 'Build',
+    validValues: Object.values(BODY_BUILD_TYPES),
+    description: 'Body build type',
+  },
+  density: {
+    label: 'Body hair density',
+    validValues: Object.values(BODY_HAIR_DENSITY),
+    description: 'Body hair density level',
+  },
+  composition: {
+    label: 'Body composition',
+    validValues: Object.values(BODY_COMPOSITION_TYPES),
+    description: 'Body composition type',
+  },
+  skinColor: {
+    label: 'Skin color',
+    validValues: null, // Free-form string
+    description: 'Skin color descriptor',
+  },
+};
+
+/**
+ * All supported descriptor property names
+ */
+export const SUPPORTED_DESCRIPTOR_PROPERTIES = Object.keys(DESCRIPTOR_METADATA);
