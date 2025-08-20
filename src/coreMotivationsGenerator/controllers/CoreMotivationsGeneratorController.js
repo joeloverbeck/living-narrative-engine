@@ -719,21 +719,125 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       return;
     }
 
+    const direction = this.#eligibleDirections.find(
+      (d) => d.id === this.#selectedDirectionId
+    );
     const text = this.#displayEnhancer.formatMotivationsForExport(
       this.#currentMotivations,
-      this.#eligibleDirections.find((d) => d.id === this.#selectedDirectionId)
+      direction
     );
 
-    // Copy to clipboard
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        this.showSuccess('Motivations copied to clipboard');
-      })
-      .catch((error) => {
-        this.logger.error('Failed to copy to clipboard:', error);
-        this.showError('Failed to copy to clipboard');
-      });
+    // Generate filename with timestamp and direction name
+    const filename = this.#generateExportFilename(direction);
+
+    // Offer both download and clipboard options
+    // For simplicity, we'll download the file AND copy to clipboard
+    try {
+      // Download as file
+      this.#downloadAsFile(text, filename);
+
+      // Also copy to clipboard for convenience
+      navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          this.showSuccess('Motivations downloaded and copied to clipboard');
+
+          // Dispatch export event
+          this.eventBus.dispatch({
+            type: 'CORE_MOTIVATIONS_EXPORTED',
+            payload: {
+              directionId: this.#selectedDirectionId,
+              method: 'file_and_clipboard',
+              filename,
+              motivationCount: this.#currentMotivations.length,
+            },
+          });
+        })
+        .catch((error) => {
+          this.logger.warn('Failed to copy to clipboard:', error);
+          // Still successful if download worked
+          this.showSuccess('Motivations downloaded to file');
+
+          this.eventBus.dispatch({
+            type: 'CORE_MOTIVATIONS_EXPORTED',
+            payload: {
+              directionId: this.#selectedDirectionId,
+              method: 'file_only',
+              filename,
+              motivationCount: this.#currentMotivations.length,
+            },
+          });
+        });
+    } catch (error) {
+      this.logger.error('Failed to export motivations:', error);
+      this.showError('Failed to export motivations');
+
+      // Try clipboard as fallback
+      navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          this.showWarning('Download failed, but copied to clipboard');
+        })
+        .catch((clipboardError) => {
+          this.logger.error('Both export methods failed:', clipboardError);
+          this.showError('Failed to export motivations');
+        });
+    }
+  }
+
+  /**
+   * Download text as a file
+   *
+   * @param {string} text - Text content to download
+   * @param {string} filename - Name of the file to download
+   */
+  #downloadAsFile(text, filename) {
+    try {
+      // Create a Blob with the text content
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+
+      // Create a temporary URL for the blob
+      const url = URL.createObjectURL(blob);
+
+      // Create a temporary anchor element and trigger download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.style.display = 'none';
+
+      // Add to DOM, click, and remove
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      // Clean up the URL object
+      URL.revokeObjectURL(url);
+
+      this.logger.info(`Downloaded motivations to file: ${filename}`);
+    } catch (error) {
+      this.logger.error('Failed to download file:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate a filename for export with timestamp and direction name
+   *
+   * @param {object} direction - The selected direction object
+   * @returns {string} Generated filename
+   */
+  #generateExportFilename(direction) {
+    // Format: core-motivations_[direction-name]_YYYY-MM-DD_HH-mm.txt
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    const timeStr = now.toTimeString().split(':').slice(0, 2).join('-'); // HH-mm
+
+    // Sanitize direction title for filename
+    const directionName = direction
+      ? direction.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+      : 'unknown';
+
+    return `core-motivations_${directionName}_${dateStr}_${timeStr}.txt`;
   }
 
   /**

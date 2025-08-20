@@ -47,11 +47,31 @@ export class IntegrationTestBed extends BaseTestBed {
     // Register the logger first before configuring base container
     this.container.register(tokens.ILogger, mockLogger);
 
+    // Create mock UI elements for tests that need UI components
+    const outputDiv = document.createElement('div');
+    outputDiv.id = 'gameArea';
+
+    // Create action buttons container for ActionButtonsRenderer
+    const actionButtonsContainer = document.createElement('div');
+    actionButtonsContainer.id = 'action-buttons';
+    outputDiv.appendChild(actionButtonsContainer);
+
+    // Append outputDiv to document body so selectors work
+    document.body.appendChild(outputDiv);
+
+    const mockUIElements = {
+      outputDiv: outputDiv,
+      inputElement: document.createElement('input'),
+      titleElement: document.createElement('h1'),
+      document: document,
+    };
+
     // Configure the container WITHOUT character builder first
     await configureBaseContainer(this.container, {
       includeGameSystems: false, // Keep minimal for integration tests
-      includeUI: false, // No UI needed for event testing
+      includeUI: true, // UI needed for action button rendering tests
       includeCharacterBuilder: false, // DON'T include character builder yet
+      uiElements: mockUIElements, // Provide mock UI elements
       logger: mockLogger,
     });
 

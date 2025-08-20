@@ -10,12 +10,6 @@ describe('BodyDescriptionComposer', () => {
   let mockAnatomyFormattingService;
   let mockPartDescriptionGenerator;
 
-  // Helper function to create mock entities with proper interface
-  const createMockPartEntity = (subType) => ({
-    hasComponent: jest.fn().mockReturnValue(true),
-    getComponentData: jest.fn().mockReturnValue({ subType }),
-  });
-
   beforeEach(() => {
     // Create mocks
     mockBodyPartDescriptionBuilder = {
@@ -90,7 +84,7 @@ describe('BodyDescriptionComposer', () => {
       expect(result).toBe('');
     });
 
-    it('should compose complete body description', async () => {
+    it('should compose complete body description with body descriptors FIRST', async () => {
       const bodyEntity = {
         hasComponent: jest.fn().mockReturnValue(true),
         getComponentData: jest.fn().mockImplementation((componentId) => {
@@ -150,14 +144,14 @@ describe('BodyDescriptionComposer', () => {
         return entities[id];
       });
 
-      // Mock formatting service
+      // Mock formatting service - Note: build is in the order but should appear first
       mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
-        'build',
         'hair',
         'eye',
         'face',
         'torso',
         'arm',
+        'build', // Even though build is last in config, it should appear first
       ]);
       mockAnatomyFormattingService.getGroupedParts.mockReturnValue(
         new Set(['eye', 'arm'])
@@ -193,14 +187,17 @@ describe('BodyDescriptionComposer', () => {
       });
 
       const result = await composer.composeDescription(bodyEntity);
+      const lines = result.split('\n');
 
-      expect(result).toContain('Build: slender');
+      // Body descriptor should be FIRST
+      expect(lines[0]).toBe('Build: slender');
+      // Then part descriptions
       expect(result).toContain('Hair: long black hair');
       expect(result).toContain('Eyes: piercing blue eyes');
       expect(result).toContain('Torso: a muscular torso');
       expect(result).toContain('Arms: strong arms');
       // Ensure the structure is correct
-      expect(result.split('\n')).toHaveLength(5); // Build, Hair, Eyes, Torso, Arms
+      expect(lines).toHaveLength(5); // Build, Hair, Eyes, Torso, Arms
     });
 
     it('should use default values when anatomyFormattingService not provided', async () => {
@@ -412,6 +409,57 @@ describe('BodyDescriptionComposer', () => {
 
       expect(result.size).toBe(1);
       expect(result.get('arm')).toHaveLength(1);
+    });
+  });
+
+  describe('Body descriptor ordering with new body.descriptors format', () => {
+    it('should display body.descriptors in correct order', async () => {
+      const entity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            return {
+              body: {
+                root: 'dummy-part-1',
+                descriptors: {
+                  build: 'athletic',
+                  density: 'moderate',
+                  composition: 'lean',
+                  skinColor: 'olive',
+                },
+              },
+            };
+          }
+          return null;
+        }),
+      };
+
+      // Need at least one part for composeDescription to proceed
+      mockBodyGraphService.getAllParts.mockReturnValue(['dummy-part-1']);
+      mockEntityFinder.getEntityInstance.mockReturnValue({
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockReturnValue({ subType: 'dummy' }),
+      });
+
+      mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
+        'dummy', // This part won't produce output since it's not properly configured
+        'build', // These should be ignored as they're handled first
+        'body_composition',
+        'body_hair',
+        'skin_color',
+      ]);
+      mockAnatomyFormattingService.getGroupedParts.mockReturnValue(new Set());
+
+      const result = await composer.composeDescription(entity);
+      const lines = result.split('\n').filter((line) => line.trim());
+
+      // Body descriptors should appear first in the fixed order
+      expect(lines[0]).toBe('Skin color: olive');
+      expect(lines[1]).toBe('Build: athletic');
+      expect(lines[2]).toBe('Body hair: moderate');
+      expect(lines[3]).toBe('Body composition: lean');
+      // We should have exactly 4 body descriptor lines
+      expect(lines).toHaveLength(4);
     });
   });
 
@@ -632,14 +680,22 @@ describe('BodyDescriptionComposer', () => {
         }
         return null;
       });
+
+      // Mock the part description builder to return empty for dummy parts
+      mockBodyPartDescriptionBuilder.buildMultipleDescription.mockReturnValue(
+        ''
+      );
+      mockBodyPartDescriptionBuilder.getPlural.mockReturnValue('dummies');
     });
 
     describe('All Three Body-Level Descriptors', () => {
-      it('should integrate build, body_composition, and body_hair in configured order', async () => {
+      it('should display body descriptors FIRST in fixed order (skinColor, build, body hair, composition)', async () => {
+        // Even though the config order is different, body descriptors should appear first in fixed order
         mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
-          'build',
-          'body_composition',
           'body_hair',
+          'body_composition',
+          'build',
+          'skin_color',
         ]);
 
         const entity = createEntityWithAllDescriptors();
@@ -647,26 +703,52 @@ describe('BodyDescriptionComposer', () => {
         const lines = result.split('\n');
 
         expect(lines).toHaveLength(3);
+        // Body descriptors should appear in fixed order: build, body hair, composition
         expect(lines[0]).toBe('Build: athletic');
-        expect(lines[1]).toBe('Body composition: lean');
-        expect(lines[2]).toBe('Body hair: moderate');
+        expect(lines[1]).toBe('Body hair: moderate');
+        expect(lines[2]).toBe('Body composition: lean');
       });
 
-      it('should handle reverse order', async () => {
+      it('should display all four body descriptors when skin_color is present', async () => {
+        // Add skin_color to the entity
+        const entity = {
+          hasComponent: jest.fn().mockReturnValue(true),
+          getComponentData: jest.fn().mockImplementation((componentId) => {
+            if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+              return { body: { root: 'torso-1' } };
+            }
+            if (componentId === 'descriptors:build') {
+              return { build: 'athletic' };
+            }
+            if (componentId === 'descriptors:body_composition') {
+              return { composition: 'lean' };
+            }
+            if (componentId === 'descriptors:body_hair') {
+              return { density: 'moderate' };
+            }
+            if (componentId === 'descriptors:skin_color') {
+              return { skinColor: 'olive' };
+            }
+            return null;
+          }),
+        };
+
         mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
           'body_hair',
           'body_composition',
           'build',
+          'skin_color',
         ]);
 
-        const entity = createEntityWithAllDescriptors();
         const result = await composer.composeDescription(entity);
         const lines = result.split('\n');
 
-        expect(lines).toHaveLength(3);
-        expect(lines[0]).toBe('Body hair: moderate');
-        expect(lines[1]).toBe('Body composition: lean');
-        expect(lines[2]).toBe('Build: athletic');
+        expect(lines).toHaveLength(4);
+        // Body descriptors should appear in fixed order: skinColor, build, body hair, composition
+        expect(lines[0]).toBe('Skin color: olive');
+        expect(lines[1]).toBe('Build: athletic');
+        expect(lines[2]).toBe('Body hair: moderate');
+        expect(lines[3]).toBe('Body composition: lean');
       });
 
       it('should skip missing descriptors without creating empty lines', async () => {
@@ -699,6 +781,44 @@ describe('BodyDescriptionComposer', () => {
         expect(lines).toHaveLength(2);
         expect(lines).toEqual(['Build: athletic', 'Body hair: light']);
         expect(result).not.toContain('Body composition:');
+      });
+
+      it('should display body descriptors BEFORE part descriptions', async () => {
+        // Configure order with parts before body descriptors
+        mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
+          'dummy', // Part
+          'build', // Body descriptor
+          'body_composition', // Body descriptor
+        ]);
+
+        // Create entity with body descriptors and add some part entities
+        const entity = {
+          hasComponent: jest.fn().mockReturnValue(true),
+          getComponentData: jest.fn().mockImplementation((componentId) => {
+            if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+              return { body: { root: 'dummy-part-1' } };
+            }
+            if (componentId === 'descriptors:build') {
+              return { build: 'athletic' };
+            }
+            if (componentId === 'descriptors:body_composition') {
+              return { composition: 'lean' };
+            }
+            return null;
+          }),
+        };
+
+        // Ensure the getAllParts mock is set properly
+        mockBodyGraphService.getAllParts.mockReturnValue(['dummy-part-1']);
+
+        const result = await composer.composeDescription(entity);
+        const lines = result.split('\n').filter((line) => line.trim());
+
+        // Body descriptors should be FIRST, even though dummy part is first in config
+        expect(lines[0]).toBe('Build: athletic');
+        expect(lines[1]).toBe('Body composition: lean');
+        // Should have exactly 2 body descriptor lines (no parts rendered without proper setup)
+        expect(lines).toHaveLength(2);
       });
     });
 
@@ -756,10 +876,12 @@ describe('BodyDescriptionComposer', () => {
         const result = await composer.composeDescription(entity);
         const lines = result.split('\n');
 
-        expect(lines).toHaveLength(3);
+        // All body descriptors appear first, then equipment
+        expect(lines).toHaveLength(4);
         expect(lines[0]).toBe('Build: athletic');
-        expect(lines[1]).toBe('Wearing leather armor');
+        expect(lines[1]).toBe('Body hair: moderate');
         expect(lines[2]).toBe('Body composition: lean');
+        expect(lines[3]).toBe('Wearing leather armor');
         expect(
           mockEquipmentService.generateEquipmentDescription
         ).toHaveBeenCalledWith('test-entity-id');
@@ -791,9 +913,11 @@ describe('BodyDescriptionComposer', () => {
         const result = await composer.composeDescription(entity);
         const lines = result.split('\n');
 
-        expect(lines).toHaveLength(2);
+        // All body descriptors appear (body hair is not excluded)
+        expect(lines).toHaveLength(3);
         expect(lines[0]).toBe('Build: athletic');
-        expect(lines[1]).toBe('Body composition: lean');
+        expect(lines[1]).toBe('Body hair: moderate');
+        expect(lines[2]).toBe('Body composition: lean');
         expect(result).not.toContain('equipment');
       });
 
@@ -808,10 +932,11 @@ describe('BodyDescriptionComposer', () => {
         const result = await composer.composeDescription(entity);
         const lines = result.split('\n');
 
-        // Should skip equipment when service not provided
-        expect(lines).toHaveLength(2);
+        // All body descriptors appear (body hair is not excluded)
+        expect(lines).toHaveLength(3);
         expect(lines[0]).toBe('Build: athletic');
-        expect(lines[1]).toBe('Body composition: lean');
+        expect(lines[1]).toBe('Body hair: moderate');
+        expect(lines[2]).toBe('Body composition: lean');
         expect(result).not.toContain('equipment');
       });
     });

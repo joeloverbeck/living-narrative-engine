@@ -2520,15 +2520,15 @@ describe('ActionButtonsRenderer', () => {
         type: 'core:update_available_actions',
         payload: {
           actorId: 'test-actor',
-          actions: actions
-        }
+          actions: actions,
+        },
       };
 
       // Should not throw even when DOM manipulation fails
       const subscribedCallback = mockVed.subscribe.mock.calls.find(
-        call => call[0] === 'core:update_available_actions'
+        (call) => call[0] === 'core:update_available_actions'
       )?.[1];
-      
+
       if (subscribedCallback) {
         await expect(subscribedCallback(eventPayload)).resolves.not.toThrow();
       }
@@ -2558,14 +2558,14 @@ describe('ActionButtonsRenderer', () => {
         type: 'core:update_available_actions',
         payload: {
           actorId: 'test-actor',
-          actions: actions
-        }
+          actions: actions,
+        },
       };
 
       const subscribedCallback = mockVed.subscribe.mock.calls.find(
-        call => call[0] === 'core:update_available_actions'
+        (call) => call[0] === 'core:update_available_actions'
       )?.[1];
-      
+
       if (subscribedCallback) {
         await subscribedCallback(eventPayload);
       }
@@ -2602,7 +2602,9 @@ describe('ActionButtonsRenderer', () => {
 
       // Should log the warning (either from _setThemeReadyProperties or updateButtonVisual)
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringMatching(/Failed to (set theme-ready properties|update visual styles)/),
+        expect.stringMatching(
+          /Failed to (set theme-ready properties|update visual styles)/
+        ),
         expect.any(Error)
       );
 
@@ -2630,12 +2632,12 @@ describe('ActionButtonsRenderer', () => {
         type: 'core:update_available_actions',
         payload: {
           actorId: 'test-actor',
-          actions: actions
-        }
+          actions: actions,
+        },
       };
 
       const subscribedCallback = mockVed.subscribe.mock.calls.find(
-        call => call[0] === 'core:update_available_actions'
+        (call) => call[0] === 'core:update_available_actions'
       )?.[1];
 
       // Should handle missing container
@@ -2664,14 +2666,14 @@ describe('ActionButtonsRenderer', () => {
         type: 'core:update_available_actions',
         payload: {
           actorId: 'test-actor',
-          actions: actions
-        }
+          actions: actions,
+        },
       };
 
       const subscribedCallback = mockVed.subscribe.mock.calls.find(
-        call => call[0] === 'core:update_available_actions'
+        (call) => call[0] === 'core:update_available_actions'
       )?.[1];
-      
+
       if (subscribedCallback) {
         await subscribedCallback(eventPayload);
       }
@@ -2727,14 +2729,14 @@ describe('ActionButtonsRenderer', () => {
         type: 'core:update_available_actions',
         payload: {
           actorId: 'test-actor',
-          actions: actions
-        }
+          actions: actions,
+        },
       };
 
       const subscribedCallback = mockVed.subscribe.mock.calls.find(
-        call => call[0] === 'core:update_available_actions'
+        (call) => call[0] === 'core:update_available_actions'
       )?.[1];
-      
+
       if (subscribedCallback) {
         await subscribedCallback(eventPayload);
       }
@@ -2743,9 +2745,9 @@ describe('ActionButtonsRenderer', () => {
 
       // Check if button was created
       expect(button).toBeTruthy();
-      
+
       if (button) {
-        expect(button.title).toBe(description);  // Production code sets title, not aria-label
+        expect(button.title).toBe(description); // Production code sets title, not aria-label
         expect(button.getAttribute('role')).toBe('radio'); // Note: production code sets 'radio', not 'button'
       }
     });
@@ -2767,14 +2769,14 @@ describe('ActionButtonsRenderer', () => {
         type: 'core:update_available_actions',
         payload: {
           actorId: 'test-actor',
-          actions: actions
-        }
+          actions: actions,
+        },
       };
 
       const subscribedCallback = mockVed.subscribe.mock.calls.find(
-        call => call[0] === 'core:update_available_actions'
+        (call) => call[0] === 'core:update_available_actions'
       )?.[1];
-      
+
       if (subscribedCallback) {
         await subscribedCallback(eventPayload);
       }
@@ -2783,13 +2785,15 @@ describe('ActionButtonsRenderer', () => {
 
       // Check if button was created
       expect(button).toBeTruthy();
-      
+
       if (button) {
         // Simulate focus
         button.focus();
 
         // Button should have custom colors (may be converted to rgb format)
-        expect(button.style.backgroundColor).toMatch(/ff0000|rgb\(255,\s*0,\s*0\)/);
+        expect(button.style.backgroundColor).toMatch(
+          /ff0000|rgb\(255,\s*0,\s*0\)/
+        );
         expect(button.style.color).toMatch(/ffffff|rgb\(255,\s*255,\s*255\)/);
 
         // Note: Action buttons have tabIndex -1 by default
@@ -2816,14 +2820,14 @@ describe('ActionButtonsRenderer', () => {
         type: 'core:update_available_actions',
         payload: {
           actorId: 'test-actor',
-          actions: actions
-        }
+          actions: actions,
+        },
       };
 
       const subscribedCallback = mockVed.subscribe.mock.calls.find(
-        call => call[0] === 'core:update_available_actions'
+        (call) => call[0] === 'core:update_available_actions'
       )?.[1];
-      
+
       if (subscribedCallback) {
         await subscribedCallback(eventPayload);
       }
@@ -2834,13 +2838,15 @@ describe('ActionButtonsRenderer', () => {
       buttons.forEach((button, index) => {
         // Note: Action buttons have tabIndex -1 by default
         expect(button.tabIndex).toBe(-1);
-        expect(button.title).toBe(
-          actions[index].description
-        );
+        expect(button.title).toBe(actions[index].description);
 
         // Simulate keyboard activation
-        const enterEvent = new dom.window.KeyboardEvent('keydown', { key: 'Enter' });
-        const spaceEvent = new dom.window.KeyboardEvent('keydown', { key: ' ' });
+        const enterEvent = new dom.window.KeyboardEvent('keydown', {
+          key: 'Enter',
+        });
+        const spaceEvent = new dom.window.KeyboardEvent('keydown', {
+          key: ' ',
+        });
 
         // Should be able to trigger with keyboard
         expect(() => button.dispatchEvent(enterEvent)).not.toThrow();
@@ -2868,14 +2874,14 @@ describe('ActionButtonsRenderer', () => {
         type: 'core:update_available_actions',
         payload: {
           actorId: 'test-actor',
-          actions: lowContrastActions
-        }
+          actions: lowContrastActions,
+        },
       };
 
       const subscribedCallback = mockVed.subscribe.mock.calls.find(
-        call => call[0] === 'core:update_available_actions'
+        (call) => call[0] === 'core:update_available_actions'
       )?.[1];
-      
+
       if (subscribedCallback) {
         await subscribedCallback(eventPayload);
       }
@@ -2904,14 +2910,14 @@ describe('ActionButtonsRenderer', () => {
         type: 'core:update_available_actions',
         payload: {
           actorId: 'test-actor',
-          actions: actions
-        }
+          actions: actions,
+        },
       };
 
       const subscribedCallback = mockVed.subscribe.mock.calls.find(
-        call => call[0] === 'core:update_available_actions'
+        (call) => call[0] === 'core:update_available_actions'
       )?.[1];
-      
+
       if (subscribedCallback) {
         await subscribedCallback(eventPayload);
       }
@@ -2920,7 +2926,7 @@ describe('ActionButtonsRenderer', () => {
 
       // Check if button was created
       expect(button).toBeTruthy();
-      
+
       if (button) {
         // Update visual properties
         renderer.updateButtonVisual('test:action', {
@@ -2954,14 +2960,14 @@ describe('ActionButtonsRenderer', () => {
         type: 'core:update_available_actions',
         payload: {
           actorId: 'test-actor',
-          actions: actions
-        }
+          actions: actions,
+        },
       };
 
       const subscribedCallback = mockVed.subscribe.mock.calls.find(
-        call => call[0] === 'core:update_available_actions'
+        (call) => call[0] === 'core:update_available_actions'
       )?.[1];
-      
+
       if (subscribedCallback) {
         await subscribedCallback(eventPayload);
       }
@@ -2986,14 +2992,14 @@ describe('ActionButtonsRenderer', () => {
         type: 'core:update_available_actions',
         payload: {
           actorId: 'test-actor',
-          actions: actions
-        }
+          actions: actions,
+        },
       };
 
       const subscribedCallback = mockVed.subscribe.mock.calls.find(
-        call => call[0] === 'core:update_available_actions'
+        (call) => call[0] === 'core:update_available_actions'
       )?.[1];
-      
+
       if (subscribedCallback) {
         await subscribedCallback(eventPayload);
       }
