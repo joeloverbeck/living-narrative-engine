@@ -7,5 +7,11 @@
   "required_components": {
     "actor": ["positioning:closeness"]
   },
-  "template": "lick {target}'s lips"
+  "template": "lick {target}'s lips",
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
 }

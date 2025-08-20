@@ -1,0 +1,10 @@
+{
+  "id": "visual_social_actions",
+  "version": "1.0.0",
+  "name": "Visual Social Actions Example",
+  "description": "Demonstrates visual customization for social interaction actions",
+  "author": "Living Narrative Engine Team",
+  "dependencies": ["core"],
+  "loadOrder": 100,
+  "category": "example"
+}

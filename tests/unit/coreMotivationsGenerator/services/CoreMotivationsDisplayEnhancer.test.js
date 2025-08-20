@@ -273,12 +273,16 @@ describe('CoreMotivationsDisplayEnhancer', () => {
 
       sections.forEach((section) => {
         expect(section.getAttribute('role')).toBe('section');
-        expect(section.getAttribute('aria-labelledby')).toMatch(/^(core-motivation|contradiction|central-question)-heading-/);
-        
+        expect(section.getAttribute('aria-labelledby')).toMatch(
+          /^(core-motivation|contradiction|central-question)-heading-/
+        );
+
         const heading = section.querySelector('h4');
         const paragraph = section.querySelector('p');
-        
-        expect(heading.getAttribute('id')).toBe(section.getAttribute('aria-labelledby'));
+
+        expect(heading.getAttribute('id')).toBe(
+          section.getAttribute('aria-labelledby')
+        );
         expect(paragraph.getAttribute('aria-describedby')).toBe(heading.id);
       });
     });

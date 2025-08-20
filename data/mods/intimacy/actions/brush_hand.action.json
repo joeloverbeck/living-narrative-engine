@@ -9,5 +9,11 @@
   "forbidden_components": {
     "actor": ["intimacy:kissing"]
   },
-  "template": "brush {target}'s hand with your own"
+  "template": "brush {target}'s hand with your own",
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
 }

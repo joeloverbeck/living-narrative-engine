@@ -27,5 +27,11 @@
       },
       "failure_message": "You cannot follow that target right now."
     }
-  ]
+  ],
+  "visual": {
+    "backgroundColor": "#546e7a",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#455a64",
+    "hoverTextColor": "#ffffff"
+  }
 }

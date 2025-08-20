@@ -336,7 +336,6 @@ describe('Visual Properties - Accessibility Tests', () => {
       }
     });
 
-
     it('should validate hex color to RGB conversion accuracy', async () => {
       const testCases = [
         { hex: '#000000', expectedRgb: { r: 0, g: 0, b: 0 } },

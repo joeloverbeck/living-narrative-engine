@@ -9,5 +9,11 @@
   "forbidden_components": {
     "actor": ["intimacy:kissing"]
   },
-  "template": "give {target} a peck on the lips"
+  "template": "give {target} a peck on the lips",
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
 }

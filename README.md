@@ -55,8 +55,40 @@ core:goals
 
 Purpose: Short- or long-term goals defined by designers (not LLM-generated).  
 Lifecycle: Uncapped; only designer-driven.  
-Included in Prompt: Under “<goals>” (only if non-empty).  
+Included in Prompt: Under "<goals>" (only if non-empty).  
 Schema ID: core:goals → `./data/mods/core/goals.component.json`
+
+## Character Builder Tools
+
+The Living Narrative Engine includes several specialized tools for character creation and development:
+
+### Core Motivations Generator
+
+**Purpose:** Generate deep, psychologically rich character motivations, internal contradictions, and central questions that drive character development.
+
+**Features:**
+
+- **Thematic Integration:** Works with previously generated thematic directions and clichés
+- **AI-Powered Generation:** Uses LLM to create compelling psychological profiles
+- **Accumulative Storage:** Build a library of motivations across multiple generations
+- **Export Capabilities:** Export motivations as formatted text or JSON
+
+**Access:** Available from the main menu as "Core Motivations Generator"
+
+**Workflow:**
+
+1. First generate a thematic direction using the Thematic Direction Generator
+2. Generate clichés for that direction using the Clichés Generator
+3. Navigate to Core Motivations Generator and select your direction
+4. Generate core motivations, internal contradictions, and central questions
+5. Export or save for use in character development
+
+**Technical Details:**
+
+- Fully integrated with the build system
+- Comprehensive test coverage (unit, integration, E2E)
+- WCAG AA compliant accessibility features
+- Keyboard shortcuts for power users (Ctrl+Enter to generate, Ctrl+E to export)
 
 ## Getting Started
 
@@ -398,7 +430,39 @@ To scaffold a new mod directory with a starter `mod-manifest.json` run:
 Replace `<modId>` with your desired identifier. The script creates
 `data/mods/<modId>/` and populates a minimal manifest you can edit further.
 
+## 🎨 Visual Customization
+
+Actions can now be visually customized with custom colors! Modders can specify:
+
+- Custom background and text colors for action buttons
+- Hover state colors for interactive feedback
+- Full integration with the theme system
+- Accessibility-compliant color validation
+
+See [Action Visual Customization Guide](docs/mods/action-visual-customization.md) for details.
+
+### Quick Example
+
+```json
+{
+  "id": "power_attack",
+  "name": "Power Attack",
+  "template": "deliver a powerful attack to {target}",
+  "visual": {
+    "backgroundColor": "#d32f2f",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#f44336"
+  }
+}
+```
+
 ### Documentation ▶️
+
+**Action Visual Customization ➜ docs/mods/action-visual-customization.md**  
+Complete guide for adding visual properties to action buttons in your mods.
+
+**Color Palettes Reference ➜ docs/mods/color-palettes.md**  
+Recommended color schemes and accessibility-safe combinations for actions.
 
 **JSON Logic – Composite Operators ➜ docs/json-logic/composite-logical-operators.md**  
 Quick reference for and, or, and not/!, including edge-cases and examples.

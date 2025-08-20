@@ -1,25 +1,39 @@
-ModsLoader: Load sequence for world 'default' completed successfully.
-consoleLogger.js:151 ModsLoader: Load sequence for world 'default' completed successfully.
-consoleLogger.js:151 [CharacterBuilderBootstrap] Core mod loaded successfully
-consoleLogger.js:151 ClichesGeneratorController: Successfully created with dependencies {coreServices: Array(4), additionalServices: Array(1)}
-consoleLogger.js:151 ClichesGeneratorController: Starting initialization
-consoleLogger.js:151 CharacterDatabase: Successfully opened database
-consoleLogger.js:151 CharacterStorageService: Successfully initialized
-consoleLogger.js:151 CharacterBuilderService: Successfully initialized
-consoleLogger.js:151 ClichesGeneratorController: Initialization completed in 5.20ms
-cliches-generator-main.js:31 Debug: Controller exposed on window object
-consoleLogger.js:151 [CharacterBuilderBootstrap] Page 'cliches-generator' bootstrapped in 807.20ms {metrics: {…}}
-cliches-generator-main.js:38 Clichés Generator initialized in 807.20ms
-consoleLogger.js:163 VED: EventDefinition not found for 'core:existing_cliches_loaded'. Cannot validate payload. Proceeding with dispatch.
-warn @ consoleLogger.js:163
-validatePayload_fn @ validatedEventDispatcher.js:87
-dispatch @ validatedEventDispatcher.js:219
-__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
-executeSafely_fn @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-loadExistingClichesWithErrorHandling_fn @ ClichesGeneratorController.js:1869
-await in loadExistingClichesWithErrorHandling_fn
-handleDirectionSelection_fn @ ClichesGeneratorController.js:515
-(anonymous) @ ClichesGeneratorController.js:245
-handleMouseUp_ @ unknownUnderstand this warning
-consoleLogger.js:163 VED: EventDefinition not found for 'core:existing_cliches_loaded'. Cannot validate payload. Proceeding with dispatch.
+CoreMotivationsGeneratorController: Successfully created with dependencies {coreServices: Array(4), additionalServices: Array(2)}
+dependencyUtils.js:142 Missing required dependency: CoreMotivationsGenerator.
+validateDependency @ dependencyUtils.js:142
+CoreMotivationsGeneratorController @ CoreMotivationsGeneratorController.js:48
+createController_fn @ CharacterBuilderBootstrap.js:666
+bootstrap @ CharacterBuilderBootstrap.js:108
+await in bootstrap
+initializeApp @ core-motivations-generator-main.js:24
+(anonymous) @ core-motivations-generator-main.js:92
+(anonymous) @ core-motivations-generator-main.js:93Understand this error
+consoleLogger.js:175 [CharacterBuilderBootstrap] Fatal error during initialization of 'core-motivations-generator': Missing required dependency: CoreMotivationsGenerator. InvalidArgumentError: Missing required dependency: CoreMotivationsGenerator.
+    at validateDependency (dependencyUtils.js:143:11)
+    at new CoreMotivationsGeneratorController (CoreMotivationsGeneratorController.js:48:5)
+    at CharacterBuilderBootstrap.createController_fn (CharacterBuilderBootstrap.js:666:12)
+    at CharacterBuilderBootstrap.bootstrap (CharacterBuilderBootstrap.js:108:32)
+    at async initializeApp (core-motivations-generator-main.js:24:20)
+error @ consoleLogger.js:175
+handleBootstrapError_fn @ CharacterBuilderBootstrap.js:786
+bootstrap @ CharacterBuilderBootstrap.js:132
+await in bootstrap
+initializeApp @ core-motivations-generator-main.js:24
+(anonymous) @ core-motivations-generator-main.js:92
+(anonymous) @ core-motivations-generator-main.js:93Understand this error
+core-motivations-generator-main.js:64 Failed to initialize Core Motivations Generator: InvalidArgumentError: Missing required dependency: CoreMotivationsGenerator.
+    at validateDependency (dependencyUtils.js:143:11)
+    at new CoreMotivationsGeneratorController (CoreMotivationsGeneratorController.js:48:5)
+    at CharacterBuilderBootstrap.createController_fn (CharacterBuilderBootstrap.js:666:12)
+    at CharacterBuilderBootstrap.bootstrap (CharacterBuilderBootstrap.js:108:32)
+    at async initializeApp (core-motivations-generator-main.js:24:20)
+initializeApp @ core-motivations-generator-main.js:64
+await in initializeApp
+(anonymous) @ core-motivations-generator-main.js:92
+(anonymous) @ core-motivations-generator-main.js:93Understand this error
+dependencyUtils.js:143 Uncaught (in promise) InvalidArgumentError: Missing required dependency: CoreMotivationsGenerator.
+    at validateDependency (dependencyUtils.js:143:11)
+    at new CoreMotivationsGeneratorController (CoreMotivationsGeneratorController.js:48:5)
+    at CharacterBuilderBootstrap.createController_fn (CharacterBuilderBootstrap.js:666:12)
+    at CharacterBuilderBootstrap.bootstrap (CharacterBuilderBootstrap.js:108:32)
+    at async initializeApp (core-motivations-generator-main.js:24:20)

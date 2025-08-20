@@ -30,9 +30,9 @@ describe('Core Motivations Generator - Accessibility', () => {
     });
 
     // Mock focus methods with proper Jest spies - create methods first for jsdom
-    Element.prototype.focus = Element.prototype.focus || function() {};
-    Element.prototype.blur = Element.prototype.blur || function() {};
-    
+    Element.prototype.focus = Element.prototype.focus || function () {};
+    Element.prototype.blur = Element.prototype.blur || function () {};
+
     jest.spyOn(Element.prototype, 'focus');
     jest.spyOn(Element.prototype, 'blur');
   });
@@ -187,7 +187,7 @@ describe('Core Motivations Generator - Accessibility', () => {
         key: 'Tab',
         bubbles: true,
       });
-      
+
       // Simulate the focus trap logic manually since the actual implementation
       // is in the controller's private method
       confirmBtn.focus();
@@ -209,7 +209,7 @@ describe('Core Motivations Generator - Accessibility', () => {
       // The actual implementation uses MutationObserver which is hard to test
       modal.style.display = 'flex';
       confirmBtn.focus(); // Simulate the auto-focus behavior
-      
+
       // Wait for timeout
       await new Promise((resolve) => setTimeout(resolve, 150));
 
@@ -460,7 +460,7 @@ describe('Core Motivations Generator - Accessibility', () => {
         shiftKey: true,
         bubbles: true,
       });
-      
+
       // Simulate the focus trap logic manually
       cancelBtn.focus();
 
@@ -484,7 +484,7 @@ describe('Core Motivations Generator - Accessibility', () => {
       // Arrange
       await testBed.controller.initialize();
       const generateBtn = document.getElementById('generate-btn');
-      
+
       // Simulate loading state directly by calling the private method logic
       generateBtn.disabled = true;
       generateBtn.classList.add('loading-disabled');
@@ -506,7 +506,8 @@ describe('Core Motivations Generator - Accessibility', () => {
         centralQuestion: 'Test question?',
         createdAt: new Date().toISOString(),
       };
-      const block = testBed.mockDisplayEnhancer.createMotivationBlock(motivation);
+      const block =
+        testBed.mockDisplayEnhancer.createMotivationBlock(motivation);
 
       expect(block.className).toContain('motivation-block');
       // CSS ensures proper contrast ratios are maintained
@@ -517,7 +518,7 @@ describe('Core Motivations Generator - Accessibility', () => {
       // This would be validated in integration tests with actual CSS
       // In unit tests, we validate that the behavior patterns exist
       expect(testBed.controller).toBeDefined();
-      
+
       // This test would check CSS media query handling in an integration environment
       // For now, we verify the controller supports the functionality
     });
@@ -525,9 +526,9 @@ describe('Core Motivations Generator - Accessibility', () => {
     it('should support high contrast mode', () => {
       // Test that high contrast styles handling is implemented
       // This would be validated in integration tests with actual CSS
-      // In unit tests, we validate that the behavior patterns exist  
+      // In unit tests, we validate that the behavior patterns exist
       expect(testBed.controller).toBeDefined();
-      
+
       // This test would check CSS high contrast handling in an integration environment
       // For now, we verify the controller supports the functionality
     });

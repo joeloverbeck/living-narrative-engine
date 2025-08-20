@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "visual_combat_actions:magic_missile",
+  "name": "Magic Missile",
+  "description": "Launch a magical projectile at your target",
+  "template": "cast magic missile at {target}",
+  "targets": "core:actors_in_location",
+  "visual": {
+    "backgroundColor": "#7b1fa2",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#9c27b0",
+    "hoverTextColor": "#ffffff"
+  },
+  "prerequisites": []
+}

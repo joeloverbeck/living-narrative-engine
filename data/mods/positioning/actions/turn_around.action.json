@@ -17,5 +17,11 @@
     "actor": ["intimacy:kissing"]
   },
   "template": "turn {target} around",
-  "prerequisites": []
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#00796b",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#00695c",
+    "hoverTextColor": "#ffffff"
+  }
 }

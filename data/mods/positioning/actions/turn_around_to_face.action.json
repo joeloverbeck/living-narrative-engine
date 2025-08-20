@@ -14,5 +14,11 @@
     "actor": ["positioning:closeness", "positioning:facing_away"]
   },
   "template": "turn around to face {target}",
-  "prerequisites": []
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#00796b",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#00695c",
+    "hoverTextColor": "#ffffff"
+  }
 }

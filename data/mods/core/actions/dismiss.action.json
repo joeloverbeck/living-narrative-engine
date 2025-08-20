@@ -14,5 +14,11 @@
     "actor": ["core:leading"]
   },
   "template": "dismiss {follower}",
-  "prerequisites": []
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#546e7a",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#455a64",
+    "hoverTextColor": "#ffffff"
+  }
 }

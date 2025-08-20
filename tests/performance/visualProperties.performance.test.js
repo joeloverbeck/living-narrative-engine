@@ -21,9 +21,9 @@ import DocumentContext from '../../src/domUI/documentContext.js';
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
 import ConsoleLogger from '../../src/logging/consoleLogger.js';
 import { JSDOM } from 'jsdom';
-import { 
-  createMockDOMEnvironment, 
-  createBatchVisualActions 
+import {
+  createMockDOMEnvironment,
+  createBatchVisualActions,
 } from '../common/visualPropertiesTestUtils.js';
 
 describe('Visual Properties - Performance Tests', () => {
@@ -206,7 +206,9 @@ describe('Visual Properties - Performance Tests', () => {
         get: jest.fn().mockImplementation((type, id) => {
           const actionId = id.split(':')[1];
           const actionIndex = parseInt(actionId.replace('perf_action_', ''));
-          return actions[actionIndex] ? { ...actions[actionIndex], modId: 'test_mod' } : undefined;
+          return actions[actionIndex]
+            ? { ...actions[actionIndex], modId: 'test_mod' }
+            : undefined;
         }),
       };
 

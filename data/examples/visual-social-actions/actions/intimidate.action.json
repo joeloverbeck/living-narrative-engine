@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "visual_social_actions:intimidate",
+  "name": "Intimidate",
+  "description": "Attempt to intimidate your target into submission",
+  "template": "attempt to intimidate {target}",
+  "targets": "core:actors_in_location",
+  "visual": {
+    "backgroundColor": "#bf360c",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#bf360c",
+    "hoverTextColor": "#ffffff"
+  },
+  "prerequisites": []
+}

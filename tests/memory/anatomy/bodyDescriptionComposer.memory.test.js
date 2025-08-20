@@ -165,7 +165,9 @@ describe('BodyDescriptionComposer - Memory Tests', () => {
       };
 
       // Mock entity finder to return the same reusable entity
-      mockEntityFinder.getEntityInstance.mockImplementation(() => reusableMockEntity);
+      mockEntityFinder.getEntityInstance.mockImplementation(
+        () => reusableMockEntity
+      );
 
       // Process large sets multiple times with periodic cleanup
       for (let i = 0; i < iterations; i++) {
@@ -176,7 +178,7 @@ describe('BodyDescriptionComposer - Memory Tests', () => {
           // Clear Jest mock call histories but keep the implementation
           reusableMockEntity.hasComponent.mockClear();
           reusableMockEntity.getComponentData.mockClear();
-          
+
           // Force garbage collection more frequently during high-memory operations
           if (global.gc) {
             global.gc();
@@ -204,10 +206,10 @@ describe('BodyDescriptionComposer - Memory Tests', () => {
 
       // Large entity set memory efficiency assertions - adjusted for test environment overhead
       // Note: Thresholds account for Jest mock infrastructure overhead in test environment
-      const maxLargeSetGrowthMB = global.memoryTestUtils.isCI() ? 1200 : 1000; 
-      const maxLargeSetLeakageMB = global.memoryTestUtils.isCI() ? 30 : 20; 
+      const maxLargeSetGrowthMB = global.memoryTestUtils.isCI() ? 1200 : 1000;
+      const maxLargeSetLeakageMB = global.memoryTestUtils.isCI() ? 30 : 20;
       const maxMemoryPerEntityBytes = global.memoryTestUtils.isCI()
-        ? 18000  // Increased threshold to account for Jest mock overhead
+        ? 18000 // Increased threshold to account for Jest mock overhead
         : 15000; // More lenient thresholds for test environment vs production
 
       console.log(

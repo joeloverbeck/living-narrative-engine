@@ -74,9 +74,12 @@ export class BodyDescriptionComposer {
     const bodyLevelDescriptors = this.extractBodyLevelDescriptors(bodyEntity);
     const bodyDescriptorOrder = this.getBodyDescriptorOrder(descriptionOrder);
     const processedDescriptors = new Set();
-    
+
     for (const descriptorType of bodyDescriptorOrder) {
-      if (bodyLevelDescriptors[descriptorType] && !processedDescriptors.has(descriptorType)) {
+      if (
+        bodyLevelDescriptors[descriptorType] &&
+        !processedDescriptors.has(descriptorType)
+      ) {
         lines.push(bodyLevelDescriptors[descriptorType]);
         processedDescriptors.add(descriptorType);
       }
@@ -317,7 +320,8 @@ export class BodyDescriptionComposer {
       descriptors.body_hair = `Body hair: ${bodyHairDescription}`;
     }
 
-    const compositionDescription = this.extractBodyCompositionDescription(bodyEntity);
+    const compositionDescription =
+      this.extractBodyCompositionDescription(bodyEntity);
     if (compositionDescription) {
       descriptors.body_composition = `Body composition: ${compositionDescription}`;
     }
@@ -332,8 +336,15 @@ export class BodyDescriptionComposer {
    * @returns {Array<string>} Ordered array of body descriptor types
    */
   getBodyDescriptorOrder(descriptionOrder) {
-    const bodyDescriptorTypes = ['skin_color', 'build', 'body_composition', 'body_hair'];
-    return descriptionOrder.filter(type => bodyDescriptorTypes.includes(type));
+    const bodyDescriptorTypes = [
+      'skin_color',
+      'build',
+      'body_composition',
+      'body_hair',
+    ];
+    return descriptionOrder.filter((type) =>
+      bodyDescriptorTypes.includes(type)
+    );
   }
 
   /**

@@ -14,5 +14,11 @@
     "actor": ["positioning:closeness"]
   },
   "template": "rub {target}'s penis over the clothes",
-  "prerequisites": []
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#6a1b9a",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#7b1fa2",
+    "hoverTextColor": "#f3e5f5"
+  }
 }

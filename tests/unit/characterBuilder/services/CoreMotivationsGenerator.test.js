@@ -741,4 +741,337 @@ describe('CoreMotivationsGenerator', () => {
       ).rejects.toThrow(/motivations array/);
     });
   });
+
+  describe('edge cases and extreme scenarios', () => {
+    const validParams = {
+      concept: sampleConcept,
+      direction: sampleDirection,
+      clichés: sampleClichés,
+    };
+
+    it('should handle extremely long concept descriptions', async () => {
+      const longConcept = {
+        id: 'concept-long',
+        concept: 'A'.repeat(10000), // Very long description
+      };
+
+      const result = await service.generate({
+        concept: longConcept,
+        direction: sampleDirection,
+        clichés: sampleClichés,
+      });
+
+      expect(result).toHaveLength(3);
+      expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalled();
+    });
+
+    it('should handle special characters in input', async () => {
+      const specialCharConcept = {
+        id: 'concept-special',
+        concept:
+          'A character with "quotes", \'apostrophes\', and \n newlines \t tabs',
+      };
+
+      const result = await service.generate({
+        concept: specialCharConcept,
+        direction: sampleDirection,
+        clichés: sampleClichés,
+      });
+
+      expect(result).toHaveLength(3);
+    });
+
+    it('should handle Unicode characters in responses', async () => {
+      const unicodeResponse = {
+        motivations: [
+          {
+            coreDesire: 'To find 愛 (love) in a world of chaos 🌍',
+            internalContradiction:
+              'Seeks connection but fears vulnerability ❤️',
+            centralQuestion: '¿Can one truly love without losing oneself?',
+          },
+          {
+            coreDesire: 'To discover the meaning of existence ∞',
+            internalContradiction: 'Pursues knowledge but fears the truth',
+            centralQuestion: 'What price is too high for enlightenment?',
+          },
+          {
+            coreDesire:
+              'To transcend mortal limitations and become something more',
+            internalContradiction:
+              'Seeks power but maintains humanity and compassion',
+            centralQuestion: 'Is godhood worth the isolation it brings?',
+          },
+        ],
+      };
+
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        JSON.stringify(unicodeResponse)
+      );
+
+      const result = await service.generate(validParams);
+
+      expect(result).toHaveLength(3);
+      expect(result[0].coreDesire).toContain('愛');
+      expect(result[0].internalContradiction).toContain('❤️');
+    });
+
+    it('should handle concurrent generation requests', async () => {
+      const promises = [];
+      for (let i = 0; i < 5; i++) {
+        promises.push(service.generate(validParams));
+      }
+
+      const results = await Promise.all(promises);
+
+      expect(results).toHaveLength(5);
+      results.forEach((result) => {
+        expect(result).toHaveLength(3);
+      });
+    });
+
+    it('should handle malformed JSON with recovery', async () => {
+      // First attempt returns malformed JSON
+      mockLlmStrategyFactory.getAIDecision
+        .mockResolvedValueOnce('{"motivations": [invalid json')
+        .mockResolvedValueOnce(JSON.stringify(validLlmResponse));
+
+      mockLlmJsonService.parseAndRepair
+        .mockRejectedValueOnce(new Error('Parse failed'))
+        .mockResolvedValueOnce(validLlmResponse);
+
+      const result = await service.generate(validParams, { maxRetries: 2 });
+
+      expect(result).toHaveLength(3);
+      expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle partial response with missing fields', async () => {
+      const partialResponse = {
+        motivations: [
+          {
+            coreDesire: 'Valid desire',
+            // Missing internalContradiction
+            centralQuestion: 'Valid question?',
+          },
+          {
+            coreDesire: 'Another desire',
+            internalContradiction: 'Valid contradiction',
+            centralQuestion: 'Another question?',
+          },
+          {
+            coreDesire: 'Third desire',
+            internalContradiction: 'Third contradiction',
+            centralQuestion: 'Third question?',
+          },
+        ],
+      };
+
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        JSON.stringify(partialResponse)
+      );
+
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(/internalContradiction/);
+    });
+
+    it('should handle response with duplicate motivations', async () => {
+      const duplicateResponse = {
+        motivations: [
+          {
+            coreDesire: 'To achieve greatness and leave a lasting legacy',
+            internalContradiction:
+              'Wants recognition but fears being truly seen',
+            centralQuestion: 'What defines a meaningful existence?',
+          },
+          {
+            coreDesire: 'To achieve greatness and leave a lasting legacy', // Duplicate
+            internalContradiction:
+              'Wants recognition but fears being truly seen',
+            centralQuestion: 'What defines a meaningful existence?',
+          },
+          {
+            coreDesire: 'To find peace in a world of constant conflict',
+            internalContradiction: 'Seeks tranquility but thrives in chaos',
+            centralQuestion:
+              'Can one find peace without first experiencing war?',
+          },
+        ],
+      };
+
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        JSON.stringify(duplicateResponse)
+      );
+
+      const result = await service.generate(validParams);
+
+      // Should still process but each should have unique ID
+      expect(result).toHaveLength(3);
+      const ids = result.map((m) => m.id);
+      expect(new Set(ids).size).toBe(3); // All IDs should be unique
+    });
+
+    it('should handle null/undefined in cliché categories', async () => {
+      const clichésWithNulls = {
+        categories: {
+          personalityTraits: null,
+          genericGoals: undefined,
+          validCategory: ['item1', 'item2'],
+        },
+        tropesAndStereotypes: null,
+      };
+
+      const result = await service.generate({
+        concept: sampleConcept,
+        direction: sampleDirection,
+        clichés: clichésWithNulls,
+      });
+
+      expect(result).toHaveLength(3);
+      expect(result[0].metadata.clicheIds).toEqual([
+        'validCategory_0',
+        'validCategory_1',
+      ]);
+    });
+
+    it('should handle LLM timeout with retry', async () => {
+      const timeoutError = new Error('Request timeout');
+      timeoutError.code = 'ETIMEDOUT';
+
+      mockLlmStrategyFactory.getAIDecision
+        .mockRejectedValueOnce(timeoutError)
+        .mockResolvedValueOnce(JSON.stringify(validLlmResponse));
+
+      const result = await service.generate(validParams, { maxRetries: 2 });
+
+      expect(result).toHaveLength(3);
+      expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle response with extra unexpected fields', async () => {
+      const responseWithExtras = {
+        motivations: validLlmResponse.motivations,
+        unexpectedField: 'should be ignored',
+        anotherExtra: { nested: 'data' },
+      };
+
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        JSON.stringify(responseWithExtras)
+      );
+
+      const result = await service.generate(validParams);
+
+      expect(result).toHaveLength(3);
+      // Extra fields should not cause issues
+      expect(result[0]).not.toHaveProperty('unexpectedField');
+    });
+
+    it('should handle empty strings in required fields', async () => {
+      const emptyStringResponse = {
+        motivations: [
+          {
+            coreDesire: '', // Empty string
+            internalContradiction: 'Valid contradiction',
+            centralQuestion: 'Valid question?',
+          },
+          {
+            coreDesire: 'Valid desire',
+            internalContradiction: 'Valid contradiction',
+            centralQuestion: 'Valid question?',
+          },
+          {
+            coreDesire: 'Another valid desire',
+            internalContradiction: 'Another contradiction',
+            centralQuestion: 'Another question?',
+          },
+        ],
+      };
+
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        JSON.stringify(emptyStringResponse)
+      );
+
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(/empty/i);
+    });
+
+    it('should handle whitespace-only strings in fields', async () => {
+      const whitespaceResponse = {
+        motivations: [
+          {
+            coreDesire: '   \n\t   ', // Only whitespace
+            internalContradiction: 'Valid contradiction',
+            centralQuestion: 'Valid question?',
+          },
+          {
+            coreDesire: 'Valid desire',
+            internalContradiction: 'Valid contradiction',
+            centralQuestion: 'Valid question?',
+          },
+          {
+            coreDesire: 'Another valid desire',
+            internalContradiction: 'Another contradiction',
+            centralQuestion: 'Another question?',
+          },
+        ],
+      };
+
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        JSON.stringify(whitespaceResponse)
+      );
+
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(/empty/i);
+    });
+
+    it('should handle extremely large response', async () => {
+      // Test that responses with more than 5 motivations are rejected
+      const largeResponse = {
+        motivations: Array(6)
+          .fill(null)
+          .map((_, i) => ({
+            coreDesire: `Desire ${i}: To seek understanding in a complex world full of mysteries`,
+            internalContradiction: `Contradiction ${i}: Wants answers but fears what truth might reveal`,
+            centralQuestion: `Question ${i}: What is the nature of reality and our place within it?`,
+          })),
+      };
+
+      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
+        JSON.stringify(largeResponse)
+      );
+
+      // Should reject responses with more than 5 motivations
+      await expect(
+        service.generate(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(/cannot contain more than 5 motivations/);
+    });
+
+    it('should handle configuration switching mid-generation', async () => {
+      const configSwitchPromise = service.generate(validParams, {
+        llmConfigId: 'config-1',
+      });
+
+      // Attempt to switch config during generation
+      const secondPromise = service.generate(validParams, {
+        llmConfigId: 'config-2',
+      });
+
+      const [result1, result2] = await Promise.all([
+        configSwitchPromise,
+        secondPromise,
+      ]);
+
+      expect(result1).toHaveLength(3);
+      expect(result2).toHaveLength(3);
+      expect(mockLlmConfigManager.setActiveConfiguration).toHaveBeenCalledWith(
+        'config-1'
+      );
+      expect(mockLlmConfigManager.setActiveConfiguration).toHaveBeenCalledWith(
+        'config-2'
+      );
+    });
+  });
 });
