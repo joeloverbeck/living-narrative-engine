@@ -422,6 +422,7 @@ describe('BodyDescriptionComposer', () => {
               body: {
                 root: 'dummy-part-1',
                 descriptors: {
+                  height: 'tall',
                   build: 'athletic',
                   density: 'moderate',
                   composition: 'lean',
@@ -443,6 +444,7 @@ describe('BodyDescriptionComposer', () => {
 
       mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
         'dummy', // This part won't produce output since it's not properly configured
+        'height', // Add height to the order
         'build', // These should be ignored as they're handled first
         'body_composition',
         'body_hair',
@@ -453,13 +455,72 @@ describe('BodyDescriptionComposer', () => {
       const result = await composer.composeDescription(entity);
       const lines = result.split('\n').filter((line) => line.trim());
 
-      // Body descriptors should appear first in configured order
-      expect(lines[0]).toBe('Build: athletic');
-      expect(lines[1]).toBe('Body composition: lean');
-      expect(lines[2]).toBe('Body hair: moderate');
-      expect(lines[3]).toBe('Skin color: olive');
-      // We should have exactly 4 body descriptor lines
-      expect(lines).toHaveLength(4);
+      // Body descriptors should appear first in configured order (height first)
+      expect(lines[0]).toBe('Height: tall');
+      expect(lines[1]).toBe('Build: athletic');
+      expect(lines[2]).toBe('Body composition: lean');
+      expect(lines[3]).toBe('Body hair: moderate');
+      expect(lines[4]).toBe('Skin color: olive');
+      // We should have exactly 5 body descriptor lines
+      expect(lines).toHaveLength(5);
+    });
+  });
+
+  describe('extractHeightDescription', () => {
+    it('should extract height from body.descriptors first', () => {
+      const entity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            return { body: { descriptors: { height: 'very-tall' } } };
+          }
+          if (componentId === 'descriptors:height') {
+            return { height: 'short' }; // Should be ignored
+          }
+          return null;
+        }),
+      };
+
+      const result = composer.extractHeightDescription(entity);
+      expect(result).toBe('very-tall');
+    });
+
+    it('should fallback to entity-level component when body.descriptors not present', () => {
+      const entity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            return { body: { root: 'torso-1' } }; // No descriptors
+          }
+          if (componentId === 'descriptors:height') {
+            return { height: 'petite' };
+          }
+          return null;
+        }),
+      };
+
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const result = composer.extractHeightDescription(entity);
+      expect(result).toBe('petite');
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[DEPRECATION]')
+      );
+      consoleWarnSpy.mockRestore();
+    });
+
+    it('should return empty string when no height descriptor present', () => {
+      const entity = {
+        hasComponent: jest.fn().mockReturnValue(true),
+        getComponentData: jest.fn().mockImplementation((componentId) => {
+          if (componentId === ANATOMY_BODY_COMPONENT_ID) {
+            return { body: { root: 'torso-1' } };
+          }
+          return null;
+        }),
+      };
+
+      const result = composer.extractHeightDescription(entity);
+      expect(result).toBe('');
     });
   });
 

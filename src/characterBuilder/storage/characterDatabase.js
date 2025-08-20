@@ -717,27 +717,79 @@ export class CharacterDatabase {
    * @returns {Promise<object|null>}
    */
   async getClicheByDirectionId(directionId) {
+    this.#logger.debug(
+      `DEBUG DB: getClicheByDirectionId called with directionId: ${directionId}`
+    );
+
     return new Promise((resolve, reject) => {
-      const transaction = this.#getTransaction([STORES.CLICHES]);
-      const store = transaction.objectStore(STORES.CLICHES);
-      const index = store.index('directionId');
-      const request = index.get(directionId);
-
-      request.onsuccess = () => {
-        const result = request.result || null;
+      try {
         this.#logger.debug(
-          `CharacterDatabase: Retrieved cliche for direction ${directionId}: ${result ? 'found' : 'not found'}`
+          `DEBUG DB: Creating transaction for CLICHES store`
         );
-        resolve(result);
-      };
+        
+        const transaction = this.#getTransaction([STORES.CLICHES]);
+        const store = transaction.objectStore(STORES.CLICHES);
+        
+        this.#logger.debug(
+          `DEBUG DB: Got cliches store, accessing directionId index`
+        );
+        
+        const index = store.index('directionId');
+        
+        this.#logger.debug(
+          `DEBUG DB: Creating index request for directionId: ${directionId}`
+        );
+        
+        const request = index.get(directionId);
 
-      request.onerror = () => {
-        const error = new Error(
-          `Failed to get cliche: ${request.error?.message || 'Unknown error'}`
+        request.onsuccess = () => {
+          const result = request.result || null;
+          this.#logger.debug(
+            `DEBUG DB: Index query completed for direction ${directionId}: ${result ? 'FOUND' : 'NOT_FOUND'}`
+          );
+          
+          if (result) {
+            this.#logger.debug(
+              `DEBUG DB: Found cliche with ID: ${result.id}, conceptId: ${result.conceptId}, directionId: ${result.directionId}`
+            );
+          } else {
+            this.#logger.warn(
+              `DEBUG DB: No cliche found in database for directionId: ${directionId}`
+            );
+          }
+          
+          resolve(result);
+        };
+
+        request.onerror = () => {
+          const error = new Error(
+            `Failed to get cliche: ${request.error?.message || 'Unknown error'}`
+          );
+          this.#logger.error(
+            `DEBUG DB: Error in getClicheByDirectionId for ${directionId}:`, 
+            error
+          );
+          reject(error);
+        };
+
+        transaction.onerror = () => {
+          const error = new Error(
+            `Transaction failed: ${transaction.error?.message || 'Unknown error'}`
+          );
+          this.#logger.error(
+            `DEBUG DB: Transaction error in getClicheByDirectionId for ${directionId}:`, 
+            error
+          );
+          reject(error);
+        };
+
+      } catch (error) {
+        this.#logger.error(
+          `DEBUG DB: Exception in getClicheByDirectionId for ${directionId}:`, 
+          error
         );
-        this.#logger.error('CharacterDatabase: Error getting cliche', error);
         reject(error);
-      };
+      }
     });
   }
 
@@ -1430,6 +1482,135 @@ export class CharacterDatabase {
       } catch (error) {
         this.#logger.error('Failed to get core motivations count:', error);
         resolve(0);
+      }
+    });
+  }
+
+  /**
+   * DEBUG METHOD: Dump all clichés in the database
+   * 
+   * @returns {Promise<Array>} All clichés with their details
+   */
+  async debugDumpAllCliches() {
+    this.#logger.debug('DEBUG DB: Starting to dump all clichés...');
+    
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.#getTransaction([STORES.CLICHES]);
+        const store = transaction.objectStore(STORES.CLICHES);
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+          const cliches = request.result || [];
+          this.#logger.debug(
+            `DEBUG DB: Found ${cliches.length} total clichés in database`
+          );
+          
+          cliches.forEach((cliche, index) => {
+            this.#logger.debug(
+              `DEBUG DB: Cliche ${index + 1}: ID=${cliche.id}, conceptId=${cliche.conceptId}, directionId=${cliche.directionId}, title="${cliche.title || 'N/A'}"`
+            );
+          });
+          
+          resolve(cliches);
+        };
+
+        request.onerror = () => {
+          const error = new Error(
+            `Failed to dump clichés: ${request.error?.message || 'Unknown error'}`
+          );
+          this.#logger.error('DEBUG DB: Error dumping clichés:', error);
+          reject(error);
+        };
+      } catch (error) {
+        this.#logger.error('DEBUG DB: Exception dumping clichés:', error);
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * DEBUG METHOD: Dump all thematic directions in the database
+   * 
+   * @returns {Promise<Array>} All thematic directions with their details
+   */
+  async debugDumpAllThematicDirections() {
+    this.#logger.debug('DEBUG DB: Starting to dump all thematic directions...');
+    
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.#getTransaction([STORES.THEMATIC_DIRECTIONS]);
+        const store = transaction.objectStore(STORES.THEMATIC_DIRECTIONS);
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+          const directions = request.result || [];
+          this.#logger.debug(
+            `DEBUG DB: Found ${directions.length} total thematic directions in database`
+          );
+          
+          directions.forEach((direction, index) => {
+            this.#logger.debug(
+              `DEBUG DB: Direction ${index + 1}: ID=${direction.id}, conceptId=${direction.conceptId}, title="${direction.title || 'N/A'}"`
+            );
+          });
+          
+          resolve(directions);
+        };
+
+        request.onerror = () => {
+          const error = new Error(
+            `Failed to dump directions: ${request.error?.message || 'Unknown error'}`
+          );
+          this.#logger.error('DEBUG DB: Error dumping directions:', error);
+          reject(error);
+        };
+      } catch (error) {
+        this.#logger.error('DEBUG DB: Exception dumping directions:', error);
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * DEBUG METHOD: Dump all character concepts in the database
+   * 
+   * @returns {Promise<Array>} All character concepts with their details  
+   */
+  async debugDumpAllCharacterConcepts() {
+    this.#logger.debug('DEBUG DB: Starting to dump all character concepts...');
+    
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.#getTransaction([STORES.CHARACTER_CONCEPTS]);
+        const store = transaction.objectStore(STORES.CHARACTER_CONCEPTS);
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+          const concepts = request.result || [];
+          this.#logger.debug(
+            `DEBUG DB: Found ${concepts.length} total character concepts in database`
+          );
+          
+          concepts.forEach((concept, index) => {
+            this.#logger.debug(
+              `DEBUG DB: Concept ${index + 1}: ID=${concept.id}, status=${concept.status}, createdAt=${concept.createdAt}`
+            );
+          });
+          
+          resolve(concepts);
+        };
+
+        request.onerror = () => {
+          const error = new Error(
+            `Failed to dump concepts: ${request.error?.message || 'Unknown error'}`
+          );
+          this.#logger.error('DEBUG DB: Error dumping concepts:', error);
+          reject(error);
+        };
+      } catch (error) {
+        this.#logger.error('DEBUG DB: Exception dumping concepts:', error);
+        reject(error);
       }
     });
   }

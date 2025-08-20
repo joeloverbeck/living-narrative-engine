@@ -50,6 +50,7 @@ describe('DescriptionConfiguration', () => {
       const result = config.getDescriptionOrder();
 
       expect(result).toEqual([
+        'height',
         'build',
         'body_composition',
         'body_hair',
@@ -76,8 +77,8 @@ describe('DescriptionConfiguration', () => {
       config = new DescriptionConfiguration({});
       const result = config.getDescriptionOrder();
 
-      expect(result.length).toBe(19);
-      expect(result[0]).toBe('build');
+      expect(result.length).toBe(20);
+      expect(result[0]).toBe('height');
     });
 
     it('should return a new array each time to prevent mutation', () => {

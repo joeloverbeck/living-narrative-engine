@@ -887,26 +887,58 @@ export class CharacterBuilderService {
       this.#logger
     );
 
+    this.#logger.debug(
+      `DEBUG: hasClichesForDirection called with directionId: ${directionId}`
+    );
+
     try {
       // Check cache first
-      if (this.#clicheCache.has(directionId)) {
+      const hasCachedData = this.#clicheCache.has(directionId);
+      this.#logger.debug(
+        `DEBUG: Cache check for ${directionId}: ${hasCachedData ? 'HIT' : 'MISS'}`
+      );
+
+      if (hasCachedData) {
         const cached = this.#getCachedCliches(directionId);
-        return cached !== null;
+        const result = cached !== null;
+        this.#logger.debug(
+          `DEBUG: Cache result for ${directionId}: ${result} (cached data exists: ${cached ? 'yes' : 'no'})`
+        );
+        return result;
       }
 
       // Database availability check
+      const dbAvailable = !!this.#database;
+      this.#logger.debug(
+        `DEBUG: Database availability check: ${dbAvailable ? 'AVAILABLE' : 'NOT_AVAILABLE'}`
+      );
+
       if (!this.#database) {
+        this.#logger.warn(
+          `DEBUG: Database not available for hasClichesForDirection(${directionId}), returning false`
+        );
         return false;
       }
 
       // Quick existence check
+      this.#logger.debug(
+        `DEBUG: Calling database.getClicheByDirectionId(${directionId})`
+      );
       const cliche = await this.#database.getClicheByDirectionId(directionId);
+      
+      const result = cliche !== null;
+      this.#logger.debug(
+        `DEBUG: Database query result for ${directionId}: ${result} (cliche object: ${cliche ? JSON.stringify(cliche) : 'null'})`
+      );
 
-      return cliche !== null;
+      return result;
     } catch (error) {
       this.#logger.error(
-        `Failed to check clichés existence for ${directionId}:`,
+        `DEBUG: ERROR in hasClichesForDirection for ${directionId}:`,
         error
+      );
+      this.#logger.error(
+        `DEBUG: Error details - message: ${error.message}, stack: ${error.stack}`
       );
       return false;
     }
@@ -2075,6 +2107,35 @@ export class CharacterBuilderService {
         const errors = this.#schemaValidator.formatAjvErrors();
         throw new CharacterBuilderError(`Invalid cliché data: ${errors}`);
       }
+    }
+  }
+
+  /**
+   * DEBUG METHOD: Dump all database contents for troubleshooting
+   * 
+   * @returns {Promise<void>}
+   */
+  async debugDumpDatabase() {
+    this.#logger.debug('DEBUG: Starting comprehensive database dump...');
+    
+    try {
+      if (!this.#database) {
+        this.#logger.warn('DEBUG: Database not available for debugging');
+        return;
+      }
+
+      // Dump all concepts
+      await this.#database.debugDumpAllCharacterConcepts();
+      
+      // Dump all thematic directions
+      await this.#database.debugDumpAllThematicDirections();
+      
+      // Dump all clichés
+      await this.#database.debugDumpAllCliches();
+      
+      this.#logger.debug('DEBUG: Database dump completed');
+    } catch (error) {
+      this.#logger.error('DEBUG: Error during database dump:', error);
     }
   }
 }

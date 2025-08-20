@@ -13,6 +13,7 @@ import {
 import { CharacterBuilderBootstrap } from '../../../src/characterBuilder/CharacterBuilderBootstrap.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 
 // Mock dependencies
 jest.mock('../../../src/dependencyInjection/appContainer.js');
@@ -33,6 +34,24 @@ describe('CharacterBuilderBootstrap', () => {
   let mockEventBus;
   let mockCharacterBuilderService;
   let mockController;
+  let mockLLMAdapter;
+  let mockLlmConfigLoader;
+  let mockLLMConfigurationManager;
+  let mockCharacterStorageService;
+
+  // Helper function to get all standard services
+  const getAllServices = (overrides = {}) => ({
+    [tokens.ILogger]: mockLogger,
+    [tokens.ISchemaValidator]: mockSchemaValidator,
+    [tokens.IDataRegistry]: mockDataRegistry,
+    [tokens.ISafeEventDispatcher]: mockEventBus,
+    [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+    [tokens.LLMAdapter]: mockLLMAdapter,
+    [tokens.LlmConfigLoader]: mockLlmConfigLoader,
+    [tokens.ILLMConfigurationManager]: mockLLMConfigurationManager,
+    [tokens.CharacterStorageService]: mockCharacterStorageService,
+    ...overrides,
+  });
 
   // Mock controller class
   class MockController {
@@ -87,16 +106,29 @@ describe('CharacterBuilderBootstrap', () => {
       initialize: jest.fn().mockResolvedValue(),
     };
 
+    // Mock LLM services
+    mockLLMAdapter = {
+      init: jest.fn().mockResolvedValue(),
+    };
+
+    mockLlmConfigLoader = {
+      loadConfig: jest.fn().mockResolvedValue({}),
+    };
+
+    mockLLMConfigurationManager = {
+      init: jest.fn().mockResolvedValue(),
+      isInitialized: false,
+    };
+
+    // Mock Character Storage Service
+    mockCharacterStorageService = {
+      initialize: jest.fn().mockResolvedValue(),
+    };
+
     // Mock container
     mockContainer = {
       resolve: jest.fn((token) => {
-        const services = {
-          [tokens.ILogger]: mockLogger,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        const services = getAllServices();
         return services[token];
       }),
       register: jest.fn(),
@@ -208,7 +240,12 @@ describe('CharacterBuilderBootstrap', () => {
 
     it('should skip payload schema registration when already loaded from mods', async () => {
       mockSchemaValidator.isSchemaLoaded.mockImplementation((schemaId) => {
-        return schemaId.includes('#payload');
+        // Return true for all payload schemas except the critical system error event
+        // which is always registered early
+        return (
+          schemaId.includes('#payload') &&
+          !schemaId.includes('core:system_error_occurred')
+        );
       });
 
       const config = {
@@ -218,12 +255,23 @@ describe('CharacterBuilderBootstrap', () => {
 
       await bootstrap.bootstrap(config);
 
-      // Should not call addSchema for payload schemas that are already loaded
+      // The critical system error event is registered early (twice if called multiple times)
+      // but other payload schemas should not be registered if already loaded
       const addSchemaCalls = mockSchemaValidator.addSchema.mock.calls;
       const payloadSchemaCalls = addSchemaCalls.filter(
         (call) => call[1] && call[1].includes('#payload')
       );
-      expect(payloadSchemaCalls).toHaveLength(0);
+      // Expect only the critical system error event payload schema to be registered
+      const criticalEventCalls = payloadSchemaCalls.filter((call) =>
+        call[1].includes('core:system_error_occurred')
+      );
+      expect(criticalEventCalls.length).toBeGreaterThan(0);
+
+      // No other payload schemas should be registered
+      const otherPayloadCalls = payloadSchemaCalls.filter(
+        (call) => !call[1].includes('core:system_error_occurred')
+      );
+      expect(otherPayloadCalls).toHaveLength(0);
     });
 
     it('should successfully register events when payload schemas not pre-loaded', async () => {
@@ -292,13 +340,7 @@ describe('CharacterBuilderBootstrap', () => {
 
       mockContainer.resolve.mockImplementation((token) => {
         if (token === tokens.ModsLoader) return mockModsLoader;
-        const services = {
-          [tokens.ILogger]: mockLogger,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        const services = getAllServices();
         return services[token];
       });
 
@@ -322,6 +364,10 @@ describe('CharacterBuilderBootstrap', () => {
           [tokens.IDataRegistry]: mockDataRegistry,
           [tokens.ISafeEventDispatcher]: mockEventBus,
           [tokens.CharacterBuilderService]: mockCharacterBuilderService,
+          [tokens.LLMAdapter]: mockLLMAdapter,
+          [tokens.LlmConfigLoader]: mockLlmConfigLoader,
+          [tokens.ILLMConfigurationManager]: mockLLMConfigurationManager,
+          [tokens.CharacterStorageService]: mockCharacterStorageService,
         };
         return services[token];
       });
@@ -346,13 +392,7 @@ describe('CharacterBuilderBootstrap', () => {
 
       mockContainer.resolve.mockImplementation((token) => {
         if (token === tokens.ModsLoader) return mockModsLoader;
-        const services = {
-          [tokens.ILogger]: mockLogger,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        const services = getAllServices();
         return services[token];
       });
 
@@ -376,13 +416,7 @@ describe('CharacterBuilderBootstrap', () => {
 
       mockContainer.resolve.mockImplementation((token) => {
         if (token === tokens.ModsLoader) return mockModsLoader;
-        const services = {
-          [tokens.ILogger]: mockLogger,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        const services = getAllServices();
         return services[token];
       });
 
@@ -513,7 +547,7 @@ describe('CharacterBuilderBootstrap', () => {
       await bootstrap.bootstrap(config);
 
       expect(mockEventBus.subscribe).toHaveBeenCalledWith(
-        'SYSTEM_ERROR_OCCURRED',
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.any(Function)
       );
     });
@@ -551,12 +585,7 @@ describe('CharacterBuilderBootstrap', () => {
     it('should handle missing services gracefully', async () => {
       mockContainer.resolve.mockImplementation((token) => {
         if (token === tokens.CharacterBuilderService) return null;
-        const services = {
-          [tokens.ILogger]: mockLogger,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-        };
+        const services = getAllServices();
         return services[token];
       });
 
@@ -799,7 +828,7 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Should subscribe to error events
       expect(mockEventBus.subscribe).toHaveBeenCalledWith(
-        'SYSTEM_ERROR_OCCURRED',
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.any(Function)
       );
     });
@@ -989,13 +1018,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1033,13 +1058,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1072,13 +1093,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1104,13 +1121,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1245,13 +1258,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1289,13 +1298,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1332,13 +1337,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1372,12 +1373,7 @@ describe('CharacterBuilderBootstrap', () => {
     it('should handle missing event bus gracefully', async () => {
       mockContainer.resolve.mockImplementation((token) => {
         if (token === tokens.ISafeEventDispatcher) return null;
-        const services = {
-          [tokens.ILogger]: mockLogger,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        const services = getAllServices();
         return services[token];
       });
 
@@ -1430,13 +1426,7 @@ describe('CharacterBuilderBootstrap', () => {
 
       mockContainer.resolve.mockImplementation((token) => {
         if (token === tokens.ModsLoader) return mockModsLoader;
-        const services = {
-          [tokens.ILogger]: mockLogger,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        const services = getAllServices();
         return services[token];
       });
 
@@ -1479,13 +1469,9 @@ describe('CharacterBuilderBootstrap', () => {
 
       mockContainer.resolve.mockImplementation((token) => {
         if (token === tokens.ModsLoader) return mockModsLoader;
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1513,13 +1499,9 @@ describe('CharacterBuilderBootstrap', () => {
 
       mockContainer.resolve.mockImplementation((token) => {
         if (token === tokens.ModsLoader) return null;
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1550,13 +1532,9 @@ describe('CharacterBuilderBootstrap', () => {
 
       mockContainer.resolve.mockImplementation((token) => {
         if (token === tokens.ModsLoader) return mockModsLoader;
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1633,13 +1611,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1678,13 +1652,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1731,13 +1701,9 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Mock container to return null logger
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1766,13 +1732,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1802,13 +1764,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1837,13 +1795,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -1866,13 +1820,9 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Logger will be resolved during setup, but initially null
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null, // Start with null
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         const service = services[token];
         // Return logger from ensureValidLogger mock, or service otherwise
         return token === tokens.ILogger ? mockLogger : service;
@@ -1996,13 +1946,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -2036,13 +1982,9 @@ describe('CharacterBuilderBootstrap', () => {
       ensureValidLogger.mockReturnValue(null);
 
       mockContainer.resolve.mockImplementation((token) => {
-        const services = {
+        const services = getAllServices({
           [tokens.ILogger]: null,
-          [tokens.ISchemaValidator]: mockSchemaValidator,
-          [tokens.IDataRegistry]: mockDataRegistry,
-          [tokens.ISafeEventDispatcher]: mockEventBus,
-          [tokens.CharacterBuilderService]: mockCharacterBuilderService,
-        };
+        });
         return services[token];
       });
 
@@ -2051,7 +1993,7 @@ describe('CharacterBuilderBootstrap', () => {
       // Should complete successfully without error display configuration logging
       expect(result.controller).toBeInstanceOf(MockController);
       expect(mockEventBus.subscribe).toHaveBeenCalledWith(
-        'SYSTEM_ERROR_OCCURRED',
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.any(Function)
       );
     });

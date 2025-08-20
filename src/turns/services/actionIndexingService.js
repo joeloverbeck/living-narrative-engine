@@ -6,7 +6,7 @@ import { ActionIndexingError } from './errors/actionIndexingError.js';
  *
  * @description Deduplicate discovered actions by id and params.
  * @param {import('../../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} discovered - Array of actions discovered for an actor.
- * @returns {{ uniqueArr: { actionId: string, commandString: string, params: any, description: string }[], duplicatesSuppressed: number, duplicateDetails: Array<{ actionId: string, commandString: string, params: any, count: number }> }} Object containing the unique actions, the number of suppressed duplicates, and details about the duplicates.
+ * @returns {{ uniqueArr: { actionId: string, commandString: string, params: any, description: string, visual: any }[], duplicatesSuppressed: number, duplicateDetails: Array<{ actionId: string, commandString: string, params: any, count: number }> }} Object containing the unique actions, the number of suppressed duplicates, and details about the duplicates.
  */
 function deduplicateActions(discovered) {
   const unique = new Map();
@@ -17,10 +17,11 @@ function deduplicateActions(discovered) {
     const commandString = raw.command;
     const params = raw.params ?? {};
     const description = raw.description ?? '';
+    const visual = raw.visual ?? null;
     const key = `${actionId}:${JSON.stringify(params)}`;
 
     if (!unique.has(key)) {
-      unique.set(key, { actionId, commandString, params, description });
+      unique.set(key, { actionId, commandString, params, description, visual });
       duplicateCounts.set(key, { actionId, commandString, params, count: 1 });
     } else {
       const existing = duplicateCounts.get(key);
@@ -49,8 +50,8 @@ function deduplicateActions(discovered) {
  * Limit the list of unique actions to the configured maximum.
  *
  * @description Truncate the list of unique actions if it exceeds the maximum.
- * @param {{ actionId: string, commandString: string, params: any, description: string }[]} uniqueArr - Unique actions after deduplication.
- * @returns {{ truncatedArr: { actionId: string, commandString: string, params: any, description: string }[], truncatedCount: number }} Object containing the possibly truncated array and count of removed actions.
+ * @param {{ actionId: string, commandString: string, params: any, description: string, visual: any }[]} uniqueArr - Unique actions after deduplication.
+ * @returns {{ truncatedArr: { actionId: string, commandString: string, params: any, description: string, visual: any }[], truncatedCount: number }} Object containing the possibly truncated array and count of removed actions.
  */
 function truncateActions(uniqueArr) {
   if (uniqueArr.length > MAX_AVAILABLE_ACTIONS_PER_TURN) {
@@ -67,7 +68,7 @@ function truncateActions(uniqueArr) {
  * Transform unique actions into indexed composites.
  *
  * @description Convert an array of unique actions into indexed composites.
- * @param {{ actionId: string, commandString: string, params: any, description: string }[]} uniqueArr - List of unique actions after truncation.
+ * @param {{ actionId: string, commandString: string, params: any, description: string, visual: any }[]} uniqueArr - List of unique actions after truncation.
  * @returns {import('../dtos/actionComposite.js').ActionComposite[]} Array of composites ready for indexing.
  */
 function buildComposites(uniqueArr) {
@@ -77,6 +78,7 @@ function buildComposites(uniqueArr) {
     commandString: u.commandString,
     params: u.params,
     description: u.description,
+    visual: u.visual,
   }));
 }
 
@@ -180,6 +182,18 @@ export class ActionIndexingService {
 
     /* ── build composites ─────────────────────────────────────────────── */
     const composites = buildComposites(truncatedArr);
+
+    // Debug logging for visual properties
+    const visualActions = composites.filter((c) => c.visual);
+    if (visualActions.length > 0) {
+      this.#log.info(
+        `ActionIndexingService: ${visualActions.length}/${composites.length} actions have visual properties for ${actorId}`,
+        visualActions.map((a) => ({
+          actionId: a.actionId,
+          visual: a.visual,
+        }))
+      );
+    }
 
     /* ── cache and return ─────────────────────────────────────────────── */
     this.#actorCache.set(actorId, composites);

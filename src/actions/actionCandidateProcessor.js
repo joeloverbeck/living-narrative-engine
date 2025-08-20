@@ -371,6 +371,7 @@ export class ActionCandidateProcessor {
             command: formatResult.value,
             description: actionDef.description || '',
             params: { targetId: targetContext.entityId },
+            visual: actionDef.visual || null,
           };
 
           validActions.push(actionInfo);

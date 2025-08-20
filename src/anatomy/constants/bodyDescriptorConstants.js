@@ -43,6 +43,19 @@ export const BODY_COMPOSITION_TYPES = {
 };
 
 /**
+ * Valid height categories
+ */
+export const HEIGHT_CATEGORIES = {
+  GIGANTIC: 'gigantic',
+  VERY_TALL: 'very-tall',
+  TALL: 'tall',
+  AVERAGE: 'average',
+  SHORT: 'short',
+  PETITE: 'petite',
+  TINY: 'tiny',
+};
+
+/**
  * Descriptor metadata including display labels and validation info
  */
 export const DESCRIPTOR_METADATA = {
@@ -65,6 +78,11 @@ export const DESCRIPTOR_METADATA = {
     label: 'Skin color',
     validValues: null, // Free-form string
     description: 'Skin color descriptor',
+  },
+  height: {
+    label: 'Height',
+    validValues: Object.values(HEIGHT_CATEGORIES),
+    description: 'Height category',
   },
 };
 

@@ -129,6 +129,60 @@ describe('ActionIndexingService', () => {
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
+  it('preserves visual properties from discovered actions', () => {
+    const rawActions = [
+      {
+        id: 'action1',
+        params: { x: 1 },
+        command: 'cmd1',
+        description: 'first action',
+        visual: {
+          backgroundColor: '#ff0000',
+          textColor: '#ffffff',
+          hoverBackgroundColor: '#cc0000',
+          hoverTextColor: '#ffcccc',
+        },
+      },
+      {
+        id: 'action2',
+        params: { y: 2 },
+        command: 'cmd2',
+        description: 'second action',
+        visual: {
+          backgroundColor: '#00ff00',
+          textColor: '#000000',
+        },
+      },
+      {
+        id: 'action3',
+        params: {},
+        command: 'cmd3',
+        description: 'third action without visual',
+      },
+    ];
+
+    const indexed = service.indexActions('actor1', rawActions);
+
+    expect(indexed).toHaveLength(3);
+
+    // First action should have complete visual properties
+    expect(indexed[0].visual).toEqual({
+      backgroundColor: '#ff0000',
+      textColor: '#ffffff',
+      hoverBackgroundColor: '#cc0000',
+      hoverTextColor: '#ffcccc',
+    });
+
+    // Second action should have partial visual properties
+    expect(indexed[1].visual).toEqual({
+      backgroundColor: '#00ff00',
+      textColor: '#000000',
+    });
+
+    // Third action should have null visual
+    expect(indexed[2].visual).toBeNull();
+  });
+
   it('suppresses duplicate actions and logs info', () => {
     const rawActions = [
       {
@@ -376,6 +430,7 @@ describe('ActionIndexingService', () => {
       commandString: 'cmd1',
       params: { key: 'value1' },
       description: 'desc1',
+      visual: null,
     });
 
     const resolved2 = service.resolve('actorResolve', 2);
@@ -385,6 +440,7 @@ describe('ActionIndexingService', () => {
       commandString: 'cmd2',
       params: { key: 'value2' },
       description: 'desc2',
+      visual: null,
     });
 
     const resolved3 = service.resolve('actorResolve', 3);
@@ -394,6 +450,7 @@ describe('ActionIndexingService', () => {
       commandString: 'cmd3',
       params: { key: 'value3' },
       description: 'desc3',
+      visual: null,
     });
   });
 });

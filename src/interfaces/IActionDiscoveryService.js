@@ -4,6 +4,14 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 
 /**
+ * @typedef {object} VisualProperties
+ * @property {string} [backgroundColor] - CSS color for button background
+ * @property {string} [textColor] - CSS color for button text
+ * @property {string} [hoverBackgroundColor] - CSS color for hover background
+ * @property {string} [hoverTextColor] - CSS color for hover text
+ */
+
+/**
  * @typedef {object} DiscoveredActionInfo
  * @property {string} id - The unique ID of the action definition.
  * @property {string} name - The human-readable name of the action.
@@ -11,6 +19,7 @@
  * @property {string} [description] - Optional. The detailed description of the action.
  * @property {object} params - Parameters for the action (at minimum { targetId?: string }).
  * @property {string} [params.targetId] - Optional target entity or location ID.
+ * @property {VisualProperties|null} [visual] - Optional visual customization properties for UI rendering.
  */
 
 /**

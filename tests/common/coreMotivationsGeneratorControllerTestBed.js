@@ -296,14 +296,28 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
    */
   createEnhancedEventBus() {
     return {
-      dispatch: jest.fn((event) => {
-        this.dispatchedEvents.push(event);
+      dispatch: jest.fn((eventName, payload, options) => {
+        // Store events in the format tests expect - matching ISafeEventDispatcher signature
+        this.dispatchedEvents.push({
+          type: eventName,
+          payload: payload,
+        });
+        // Return Promise<boolean> as per ISafeEventDispatcher interface
+        return Promise.resolve(true);
       }),
       subscribe: jest.fn((eventType, callback) => {
         if (!this.eventCallbacks.has(eventType)) {
           this.eventCallbacks.set(eventType, []);
         }
         this.eventCallbacks.get(eventType).push(callback);
+        // Return unsubscribe function as per ISafeEventDispatcher interface
+        return () => {
+          const callbacks = this.eventCallbacks.get(eventType) || [];
+          const index = callbacks.indexOf(callback);
+          if (index > -1) {
+            callbacks.splice(index, 1);
+          }
+        };
       }),
       unsubscribe: jest.fn(),
     };

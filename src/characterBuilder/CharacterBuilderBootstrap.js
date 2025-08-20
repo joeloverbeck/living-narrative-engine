@@ -235,7 +235,7 @@ export class CharacterBuilderBootstrap {
     }
 
     let dataRegistry, schemaValidator;
-    
+
     try {
       dataRegistry = container.resolve(tokens.IDataRegistry);
       schemaValidator = container.resolve(tokens.ISchemaValidator);
@@ -259,7 +259,8 @@ export class CharacterBuilderBootstrap {
       // Services not yet available, will register later
       if (this.#logger) {
         this.#logger.debug(
-          '[CharacterBuilderBootstrap] Services not ready for event registration: ' + error.message
+          '[CharacterBuilderBootstrap] Services not ready for event registration: ' +
+            error.message
         );
       }
       return;
@@ -267,7 +268,10 @@ export class CharacterBuilderBootstrap {
 
     // Check if event is already registered (in case this is called multiple times)
     const eventId = 'core:system_error_occurred';
-    if (dataRegistry.getEventDefinition && dataRegistry.getEventDefinition(eventId)) {
+    if (
+      dataRegistry.getEventDefinition &&
+      dataRegistry.getEventDefinition(eventId)
+    ) {
       if (this.#logger) {
         this.#logger.debug(
           `[CharacterBuilderBootstrap] Event ${eventId} already registered, skipping`
