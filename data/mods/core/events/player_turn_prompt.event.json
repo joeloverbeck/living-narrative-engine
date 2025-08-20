@@ -39,6 +39,29 @@
             "description": {
               "type": "string",
               "description": "Human-readable explanation of the action."
+            },
+            "visual": {
+              "type": ["object", "null"],
+              "description": "Visual customization properties for action buttons, or null if not defined.",
+              "properties": {
+                "backgroundColor": {
+                  "type": "string",
+                  "description": "CSS color value for button background"
+                },
+                "textColor": {
+                  "type": "string",
+                  "description": "CSS color value for button text"
+                },
+                "hoverBackgroundColor": {
+                  "type": "string",
+                  "description": "CSS color for button hover state background"
+                },
+                "hoverTextColor": {
+                  "type": "string",
+                  "description": "CSS color for button hover state text"
+                }
+              },
+              "additionalProperties": false
             }
           },
           "required": ["index", "actionId", "commandString", "description"],

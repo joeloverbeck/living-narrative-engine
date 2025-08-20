@@ -1,0 +1,26 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "descriptors:height",
+  "description": "Height descriptor for overall body stature",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "height": {
+        "type": "string",
+        "description": "The height category",
+        "enum": [
+          "gigantic",
+          "very-tall",
+          "tall",
+          "average",
+          "short",
+          "petite",
+          "tiny"
+        ],
+        "default": "average"
+      }
+    },
+    "required": ["height"],
+    "additionalProperties": false
+  }
+}

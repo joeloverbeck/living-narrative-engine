@@ -28,6 +28,7 @@ describe('Body Descriptors Integration', () => {
           torso: { partType: 'torso' },
         },
         bodyDescriptors: {
+          height: 'tall',
           build: 'athletic',
           density: 'moderate',
           composition: 'lean',
@@ -72,6 +73,7 @@ describe('Body Descriptors Integration', () => {
       expect(bodyComponent).toBeDefined();
       expect(bodyComponent.body).toBeDefined();
       expect(bodyComponent.body.descriptors).toEqual({
+        height: 'tall',
         build: 'athletic',
         density: 'moderate',
         composition: 'lean',
@@ -419,6 +421,7 @@ describe('Body Descriptors Integration', () => {
           torso: { partType: 'torso' },
         },
         bodyDescriptors: {
+          height: 'tall',
           build: 'athletic',
           density: 'moderate',
           composition: 'lean',

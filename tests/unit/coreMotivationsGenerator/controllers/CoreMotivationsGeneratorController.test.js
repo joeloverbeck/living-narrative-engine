@@ -1277,10 +1277,10 @@ describe('CoreMotivationsGeneratorController', () => {
 
       // Assert - should only dispatch once due to debounce
       const searchEvents = spy.mock.calls.filter(
-        (call) => call[0].type === 'core:motivations_search_performed'
+        (call) => call[0] === 'core:motivations_search_performed'
       );
       expect(searchEvents.length).toBe(1);
-      expect(searchEvents[0][0].payload.query).toBe('tes');
+      expect(searchEvents[0][1].query).toBe('tes');
     });
   });
 

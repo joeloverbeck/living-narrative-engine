@@ -90,12 +90,9 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       this.#updateUIState();
 
       // Dispatch initialization complete event
-      this.eventBus.dispatch({
-        type: 'core:core_motivations_ui_initialized',
-        payload: {
-          conceptId: this.#currentConceptId,
-          eligibleDirectionsCount: this.#eligibleDirections.length,
-        },
+      this.eventBus.dispatch('core:core_motivations_ui_initialized', {
+        conceptId: this.#currentConceptId,
+        eligibleDirectionsCount: this.#eligibleDirections.length,
       });
 
       this.logger.info('Core Motivations Generator Controller initialized');
@@ -114,17 +111,33 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
    */
   async #loadCurrentConcept() {
     try {
+      this.logger.debug('DEBUG: Starting to load current concept...');
+      
       const concepts =
         await this.characterBuilderService.getAllCharacterConcepts();
+      
+      this.logger.debug(
+        `DEBUG: Retrieved concepts from service: ${concepts ? concepts.length : 0} concepts`
+      );
+      
       if (concepts && concepts.length > 0) {
+        // Log all available concepts
+        this.logger.debug(
+          `DEBUG: Available concept IDs: ${concepts.map(c => c.id).join(', ')}`
+        );
+        
         // Get the most recent concept
         this.#currentConceptId = concepts[concepts.length - 1].id;
-        this.logger.info(`Loaded concept: ${this.#currentConceptId}`);
+        this.logger.info(`DEBUG: Loaded concept: ${this.#currentConceptId}`);
+        this.logger.debug(
+          `DEBUG: Selected most recent concept from ${concepts.length} available concepts`
+        );
       } else {
+        this.logger.error('DEBUG: No character concepts found in database');
         throw new Error('No character concept found');
       }
     } catch (error) {
-      this.logger.error('Failed to load character concept:', error);
+      this.logger.error('DEBUG: Failed to load character concept:', error);
       throw error;
     }
   }
@@ -134,32 +147,76 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
    */
   async #loadEligibleDirections() {
     try {
+      this.logger.debug(
+        `DEBUG: Starting to load eligible directions for concept: ${this.#currentConceptId}`
+      );
+      
       const allDirections =
         await this.characterBuilderService.getThematicDirectionsByConceptId(
           this.#currentConceptId
         );
 
+      this.logger.debug(
+        `DEBUG: Retrieved ${allDirections ? allDirections.length : 0} total directions for concept ${this.#currentConceptId}`
+      );
+
+      if (allDirections && allDirections.length > 0) {
+        this.logger.debug(
+          `DEBUG: Direction IDs to check: ${allDirections.map(d => d.id).join(', ')}`
+        );
+      }
+
       // Filter to only directions with clichés
       const eligibleDirections = [];
       for (const direction of allDirections) {
+        this.logger.debug(
+          `DEBUG: Checking direction ${direction.id} (title: "${direction.title}") for clichés...`
+        );
+        
         const hasClichés =
           await this.characterBuilderService.hasClichesForDirection(
             direction.id
           );
+          
+        this.logger.debug(
+          `DEBUG: Direction ${direction.id} has clichés: ${hasClichés}`
+        );
+        
         if (hasClichés) {
           eligibleDirections.push(direction);
+          this.logger.debug(
+            `DEBUG: Added direction ${direction.id} to eligible list`
+          );
         }
       }
 
       this.#eligibleDirections = eligibleDirections;
       this.logger.info(
-        `Found ${eligibleDirections.length} eligible directions`
+        `DEBUG: Found ${eligibleDirections.length} eligible directions out of ${allDirections.length} total directions`
       );
+
+      if (eligibleDirections.length > 0) {
+        this.logger.debug(
+          `DEBUG: Eligible direction IDs: ${eligibleDirections.map(d => d.id).join(', ')}`
+        );
+      } else {
+        this.logger.warn(
+          `DEBUG: No eligible directions found - this will show 'No eligible directions found' message`
+        );
+        
+        // DEBUG: When no eligible directions found, dump database contents
+        this.logger.warn('DEBUG: Triggering database dumps to investigate...');
+        try {
+          await this.characterBuilderService.debugDumpDatabase();
+        } catch (error) {
+          this.logger.error('DEBUG: Error during database dumps:', error);
+        }
+      }
 
       // Display directions or show empty message
       this.#displayDirections();
     } catch (error) {
-      this.logger.error('Failed to load eligible directions:', error);
+      this.logger.error('DEBUG: Failed to load eligible directions:', error);
       throw error;
     }
   }
@@ -255,12 +312,9 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     this.#updateUIState();
 
     // Dispatch selection event
-    this.eventBus.dispatch({
-      type: 'core:core_motivations_direction_selected',
-      payload: {
-        directionId,
-        conceptId: this.#currentConceptId,
-      },
+    this.eventBus.dispatch('core:core_motivations_direction_selected', {
+      directionId,
+      conceptId: this.#currentConceptId,
     });
   }
 
@@ -279,12 +333,9 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       this.#currentMotivations = motivations || [];
       this.#displayMotivations();
 
-      this.eventBus.dispatch({
-        type: 'core:core_motivations_retrieved',
-        payload: {
-          directionId,
-          count: this.#currentMotivations.length,
-        },
+      this.eventBus.dispatch('core:core_motivations_retrieved', {
+        directionId,
+        count: this.#currentMotivations.length,
       });
     } catch (error) {
       this.logger.error('Failed to load existing motivations:', error);
@@ -571,12 +622,9 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
     try {
       // Dispatch generation started event
-      this.eventBus.dispatch({
-        type: 'core:core_motivations_generation_started',
-        payload: {
-          conceptId: this.#currentConceptId,
-          directionId: this.#selectedDirectionId,
-        },
+      this.eventBus.dispatch('core:core_motivations_generation_started', {
+        conceptId: this.#currentConceptId,
+        directionId: this.#selectedDirectionId,
       });
 
       // Get required data
@@ -609,27 +657,21 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       await this.#loadExistingMotivations(this.#selectedDirectionId);
 
       // Dispatch completion event
-      this.eventBus.dispatch({
-        type: 'core:core_motivations_generation_completed',
-        payload: {
-          conceptId: this.#currentConceptId,
-          directionId: this.#selectedDirectionId,
-          motivationIds: savedIds,
-          totalCount: this.#currentMotivations.length,
-        },
+      this.eventBus.dispatch('core:core_motivations_generation_completed', {
+        conceptId: this.#currentConceptId,
+        directionId: this.#selectedDirectionId,
+        motivationIds: savedIds,
+        totalCount: this.#currentMotivations.length,
       });
 
       this.showSuccess('Core motivations generated successfully!');
     } catch (error) {
       this.logger.error('Failed to generate motivations:', error);
 
-      this.eventBus.dispatch({
-        type: 'core:core_motivations_generation_failed',
-        payload: {
-          conceptId: this.#currentConceptId,
-          directionId: this.#selectedDirectionId,
-          error: error.message,
-        },
+      this.eventBus.dispatch('core:core_motivations_generation_failed', {
+        conceptId: this.#currentConceptId,
+        directionId: this.#selectedDirectionId,
+        error: error.message,
       });
 
       this.showError('Failed to generate motivations. Please try again.');
@@ -660,13 +702,10 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
         // Reload and display
         await this.#loadExistingMotivations(this.#selectedDirectionId);
 
-        this.eventBus.dispatch({
-          type: 'core:core_motivations_deleted',
-          payload: {
-            directionId: this.#selectedDirectionId,
-            motivationId,
-            remainingCount: this.#currentMotivations.length,
-          },
+        this.eventBus.dispatch('core:core_motivations_deleted', {
+          directionId: this.#selectedDirectionId,
+          motivationId,
+          remainingCount: this.#currentMotivations.length,
         });
 
         this.showSuccess('Motivation deleted');
@@ -766,14 +805,11 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
           this.showSuccess('Motivations downloaded and copied to clipboard');
 
           // Dispatch export event
-          this.eventBus.dispatch({
-            type: 'core:core_motivations_exported',
-            payload: {
-              directionId: this.#selectedDirectionId,
-              method: 'file_and_clipboard',
-              filename,
-              motivationCount: this.#currentMotivations.length,
-            },
+          this.eventBus.dispatch('core:core_motivations_exported', {
+            directionId: this.#selectedDirectionId,
+            method: 'file_and_clipboard',
+            filename,
+            motivationCount: this.#currentMotivations.length,
           });
         })
         .catch((error) => {
@@ -781,14 +817,11 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
           // Still successful if download worked
           this.showSuccess('Motivations downloaded to file');
 
-          this.eventBus.dispatch({
-            type: 'core:core_motivations_exported',
-            payload: {
-              directionId: this.#selectedDirectionId,
-              method: 'file_only',
-              filename,
-              motivationCount: this.#currentMotivations.length,
-            },
+          this.eventBus.dispatch('core:core_motivations_exported', {
+            directionId: this.#selectedDirectionId,
+            method: 'file_only',
+            filename,
+            motivationCount: this.#currentMotivations.length,
           });
         });
     } catch (error) {
@@ -879,13 +912,9 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       this.#currentSearchQuery = query.trim();
       this.#displayMotivations();
 
-      this.eventBus.dispatch({
-        type: 'core:motivations_search_performed',
-        payload: {
-          query: this.#currentSearchQuery,
-          resultsCount: this.#filterMotivations(this.#currentMotivations)
-            .length,
-        },
+      this.eventBus.dispatch('core:motivations_search_performed', {
+        query: this.#currentSearchQuery,
+        resultsCount: this.#filterMotivations(this.#currentMotivations).length,
       });
     }, 300);
   }
@@ -907,9 +936,8 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
     this.#displayMotivations();
 
-    this.eventBus.dispatch({
-      type: 'core:motivations_sort_changed',
-      payload: { sortOrder },
+    this.eventBus.dispatch('core:motivations_sort_changed', {
+      sortOrder,
     });
   }
 
@@ -1228,12 +1256,12 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     // Enhance existing event listeners to include ARIA live announcements
 
     // Hook into existing generation events
-    this.eventBus.subscribe('CORE_MOTIVATIONS_GENERATION_STARTED', () => {
+    this.eventBus.subscribe('core:core_motivations_generation_started', () => {
       this.#announceToScreenReader('Generating core motivations...');
     });
 
     this.eventBus.subscribe(
-      'CORE_MOTIVATIONS_GENERATION_COMPLETED',
+      'core:core_motivations_generation_completed',
       (event) => {
         const count = event.payload.totalCount;
         this.#announceToScreenReader(
@@ -1242,13 +1270,13 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       }
     );
 
-    this.eventBus.subscribe('CORE_MOTIVATIONS_GENERATION_FAILED', () => {
+    this.eventBus.subscribe('core:core_motivations_generation_failed', () => {
       this.#announceToScreenReader(
         'Failed to generate motivations. Please try again.'
       );
     });
 
-    this.eventBus.subscribe('CORE_MOTIVATIONS_DELETED', (event) => {
+    this.eventBus.subscribe('core:core_motivations_deleted', (event) => {
       const remaining = event.payload.remainingCount;
       this.#announceToScreenReader(
         `Motivation deleted. ${remaining} motivations remaining.`

@@ -316,15 +316,12 @@ describe('Core Motivations Generator - Accessibility', () => {
       await testBed.controller.initialize();
 
       // Act
-      testBed.eventBus.dispatch({
-        type: 'CORE_MOTIVATIONS_GENERATION_STARTED',
-        payload: {},
-      });
+      testBed.eventBus.dispatch('core:core_motivations_generation_started', {});
 
       // Assert - Check that event was processed without errors
       expect(testBed.dispatchedEvents).toContainEqual(
         expect.objectContaining({
-          type: 'CORE_MOTIVATIONS_GENERATION_STARTED',
+          type: 'core:core_motivations_generation_started',
         })
       );
     });
@@ -334,15 +331,14 @@ describe('Core Motivations Generator - Accessibility', () => {
       await testBed.controller.initialize();
 
       // Act
-      testBed.eventBus.dispatch({
-        type: 'CORE_MOTIVATIONS_GENERATION_COMPLETED',
-        payload: { totalCount: 5 },
+      testBed.eventBus.dispatch('core:core_motivations_generation_completed', {
+        totalCount: 5,
       });
 
       // Assert - Check that event was processed
       expect(testBed.dispatchedEvents).toContainEqual(
         expect.objectContaining({
-          type: 'CORE_MOTIVATIONS_GENERATION_COMPLETED',
+          type: 'core:core_motivations_generation_completed',
           payload: { totalCount: 5 },
         })
       );
@@ -366,15 +362,14 @@ describe('Core Motivations Generator - Accessibility', () => {
       await testBed.controller.initialize();
 
       // Act
-      testBed.eventBus.dispatch({
-        type: 'CORE_MOTIVATIONS_DELETED',
-        payload: { remainingCount: 3 },
+      testBed.eventBus.dispatch('core:core_motivations_deleted', {
+        remainingCount: 3,
       });
 
       // Assert - Event processed successfully
       expect(testBed.dispatchedEvents).toContainEqual(
         expect.objectContaining({
-          type: 'CORE_MOTIVATIONS_DELETED',
+          type: 'core:core_motivations_deleted',
           payload: { remainingCount: 3 },
         })
       );

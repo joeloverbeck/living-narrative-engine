@@ -200,6 +200,37 @@ export class BodyDescriptionComposer {
   // Currently maintaining backward compatibility without strict validation
 
   /**
+   * Extract height description from body entity
+   *
+   * @param {object} bodyEntity - The body entity
+   * @returns {string} Height description
+   */
+  extractHeightDescription(bodyEntity) {
+    const bodyComponent = this.#getBodyComponent(bodyEntity);
+
+    // Check body.descriptors first
+    if (bodyComponent?.body?.descriptors?.height) {
+      return bodyComponent.body.descriptors.height;
+    }
+
+    // Fallback to entity-level component for backward compatibility
+    if (bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+      const heightComponent = bodyEntity.getComponentData('descriptors:height');
+      if (heightComponent?.height) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[DEPRECATION] Entity ${bodyEntity.id || 'unknown'} uses entity-level descriptor 'descriptors:height'. ` +
+            'Please migrate to body.descriptors.height in anatomy:body component. ' +
+            'Entity-level descriptors will be removed in a future version.'
+        );
+        return heightComponent.height;
+      }
+    }
+
+    return '';
+  }
+
+  /**
    * Extract overall build description from body entity
    *
    * @param {object} bodyEntity - The entity with anatomy:body component
@@ -305,6 +336,12 @@ export class BodyDescriptionComposer {
   extractBodyLevelDescriptors(bodyEntity) {
     const descriptors = {};
 
+    // Add height FIRST (before other descriptors)
+    const heightDescription = this.extractHeightDescription(bodyEntity);
+    if (heightDescription) {
+      descriptors.height = `Height: ${heightDescription}`;
+    }
+
     const skinColorDescription = this.extractSkinColorDescription(bodyEntity);
     if (skinColorDescription) {
       descriptors.skin_color = `Skin color: ${skinColorDescription}`;
@@ -337,6 +374,7 @@ export class BodyDescriptionComposer {
    */
   getBodyDescriptorOrder(descriptionOrder) {
     const bodyDescriptorTypes = [
+      'height', // Add height first in the list
       'skin_color',
       'build',
       'body_composition',

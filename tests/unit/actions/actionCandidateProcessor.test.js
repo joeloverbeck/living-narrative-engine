@@ -70,6 +70,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         command: 'attack enemy1',
         description: 'Attack an enemy',
         params: { targetId: 'enemy1' },
+        visual: null,
       });
       expect(result.value.actions[1]).toEqual({
         id: 'attack',
@@ -77,6 +78,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         command: 'attack enemy2',
         description: 'Attack an enemy',
         params: { targetId: 'enemy2' },
+        visual: null,
       });
       expect(result.value.errors).toHaveLength(0);
     });
@@ -213,6 +215,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         command: 'doit',
         description: '',
         params: { targetId: null },
+        visual: null,
       });
       expect(result.value.errors).toHaveLength(0);
       expect(
@@ -246,6 +249,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         command: 'doit',
         description: '',
         params: { targetId: null },
+        visual: null,
       });
       expect(result.value.errors).toHaveLength(0);
       expect(
@@ -593,6 +597,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         command: 'test target1',
         description: 'Test description',
         params: { targetId: 'target1' },
+        visual: null,
       });
 
       expect(result.value.errors).toHaveLength(2);

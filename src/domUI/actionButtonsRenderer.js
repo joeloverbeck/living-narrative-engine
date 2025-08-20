@@ -1002,6 +1002,47 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       { eventObject }
     );
 
+    // Debug logging for visual properties
+    if (
+      eventObject?.payload?.actions &&
+      Array.isArray(eventObject.payload.actions)
+    ) {
+      const actionsWithVisual = eventObject.payload.actions.filter(
+        (a) => a && a.visual !== null && typeof a.visual === 'object'
+      );
+      const actionsWithNullVisual = eventObject.payload.actions.filter(
+        (a) => a && a.visual === null
+      );
+      const actionsMissingVisual = eventObject.payload.actions.filter(
+        (a) => a && typeof a.visual === 'undefined'
+      );
+      
+      if (actionsWithVisual.length > 0) {
+        this.logger.info(
+          '[ActionButtonsRenderer] Actions with visual properties:',
+          {
+            total: eventObject.payload.actions.length,
+            withVisualProps: actionsWithVisual.length,
+            withNullVisual: actionsWithNullVisual.length,
+            missingVisual: actionsMissingVisual.length,
+            visualDetails: actionsWithVisual.map((a) => ({
+              actionId: a.actionId,
+              visual: a.visual,
+            })),
+          }
+        );
+      } else {
+        this.logger.info(
+          '[ActionButtonsRenderer] No actions have defined visual properties in this update',
+          {
+            total: eventObject.payload.actions.length,
+            withNullVisual: actionsWithNullVisual.length,
+            missingVisual: actionsMissingVisual.length,
+          }
+        );
+      }
+    }
+
     if (
       eventObject?.payload &&
       typeof eventObject.payload.actorId === 'string' &&

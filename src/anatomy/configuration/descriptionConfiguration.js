@@ -12,6 +12,7 @@ export class DescriptionConfiguration {
     // Default values extracted from BodyDescriptionComposer
     // Body-level descriptors come first, followed by body parts
     this._defaultDescriptionOrder = [
+      'height', // Add height as the first body-level descriptor
       'build',
       'body_composition',
       'body_hair',
@@ -95,6 +96,7 @@ export class DescriptionConfiguration {
  */
 export const DESCRIPTION_CONFIG_CONSTANTS = {
   DEFAULT_DESCRIPTION_ORDER: [
+    'height', // Add height first
     'build',
     'body_composition',
     'body_hair',
