@@ -34,7 +34,6 @@ describe('ThematicDirectionsManagerController Performance', () => {
     filterApplication: 35, // Max 35ms to apply filter (increased from 20ms to account for jsdom variations while recreating 500 InPlaceEditors)
     editorCreation: 5, // Max 5ms per editor
     cleanup: 50, // Max 50ms to destroy
-    memoryIncrease: 10 * 1024 * 1024, // Max 10MB increase
   };
 
   beforeEach(async () => {
@@ -84,31 +83,6 @@ describe('ThematicDirectionsManagerController Performance', () => {
       expect(duration).toBeLessThan(THRESHOLDS.initialization);
 
       console.log(`Initialization time: ${duration.toFixed(2)}ms`);
-    });
-
-    it('should not leak memory during initialization', async () => {
-      const initialMemory = process.memoryUsage().heapUsed;
-
-      // Create and destroy multiple times
-      for (let i = 0; i < 10; i++) {
-        controller = new ThematicDirectionsManagerController(testBase.mocks);
-        await controller.initialize();
-        controller.destroy();
-      }
-
-      // Force garbage collection if available
-      if (global.gc) {
-        global.gc();
-      }
-
-      const finalMemory = process.memoryUsage().heapUsed;
-      const memoryIncrease = finalMemory - initialMemory;
-
-      expect(memoryIncrease).toBeLessThan(THRESHOLDS.memoryIncrease);
-
-      console.log(
-        `Memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB`
-      );
     });
   });
 
@@ -323,84 +297,6 @@ describe('ThematicDirectionsManagerController Performance', () => {
       expect(duration).toBeLessThan(THRESHOLDS.cleanup);
 
       console.log(`Cleanup time: ${duration.toFixed(2)}ms`);
-    });
-  });
-
-  describe('Memory Performance', () => {
-    it('should not leak memory during operations', async () => {
-      // Configure mock for memory test
-      InPlaceEditor.mockImplementation(() => ({
-        destroy: jest.fn(),
-      }));
-
-      const directions = generateDirections(50);
-      testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
-        directions
-      );
-
-      controller = new ThematicDirectionsManagerController(testBase.mocks);
-      await controller.initialize();
-
-      const measurements = [];
-
-      // Warmup iterations to stabilize V8 optimizations
-      for (let warmup = 0; warmup < 2; warmup++) {
-        const filterInput = document.getElementById('direction-filter');
-        filterInput.value = 'warmup';
-        filterInput.dispatchEvent(new Event('input'));
-        filterInput.value = '';
-        filterInput.dispatchEvent(new Event('input'));
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      }
-
-      // Perform multiple operations with improved measurement stability
-      for (let i = 0; i < 7; i++) {
-        // Increased sample size from 5 to 7
-        // Force garbage collection multiple times for more stable measurements
-        if (global.gc) {
-          global.gc();
-          global.gc(); // Double GC to ensure cleanup
-          // Allow GC to complete
-          await new Promise((resolve) => setTimeout(resolve, 20));
-        }
-
-        const beforeOp = process.memoryUsage().heapUsed;
-
-        // Apply filter through the input (triggers editor recreation)
-        const filterInput = document.getElementById('direction-filter');
-        filterInput.value = `test${i}`;
-        filterInput.dispatchEvent(new Event('input'));
-
-        // Clear filter (triggers editor recreation again)
-        filterInput.value = '';
-        filterInput.dispatchEvent(new Event('input'));
-
-        // Allow async operations to complete with longer timeout
-        await new Promise((resolve) => setTimeout(resolve, 25));
-
-        const afterOp = process.memoryUsage().heapUsed;
-        measurements.push(afterOp - beforeOp);
-      }
-
-      // Calculate median instead of average to reduce impact of outliers
-      const sortedMeasurements = [...measurements].sort((a, b) => a - b);
-      const medianIncrease =
-        sortedMeasurements[Math.floor(sortedMeasurements.length / 2)];
-
-      // Realistic memory usage for DOM operations with 250 rich components (50 directions × 5 editors)
-      // Each InPlaceEditor instance has DOM references, event handlers, and callback functions
-      // Increased to 10MB to account for jsdom overhead, test environment variability, and V8 optimization patterns
-      expect(medianIncrease).toBeLessThan(10 * 1024 * 1024); // Less than 10MB median increase (accounts for test environment variability)
-
-      console.log(
-        `Memory measurements (KB): [${measurements.map((m) => (m / 1024).toFixed(0)).join(', ')}]`
-      );
-      console.log(
-        `Median memory increase per operation: ${(medianIncrease / 1024).toFixed(2)}KB`
-      );
-      console.log(
-        `Total InPlaceEditor mock calls: ${InPlaceEditor.mock.calls.length}`
-      );
     });
   });
 

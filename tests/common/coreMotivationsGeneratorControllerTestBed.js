@@ -218,12 +218,12 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     const loadingIndicator = document.createElement('div');
     loadingIndicator.id = 'loading-indicator';
     loadingIndicator.style.display = 'none';
-    
+
     // Add paragraph element for loading text
     const loadingText = document.createElement('p');
     loadingText.textContent = 'Loading...';
     loadingIndicator.appendChild(loadingText);
-    
+
     main.appendChild(loadingIndicator);
 
     // Confirmation modal
@@ -435,13 +435,15 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
       theme: 'Test theme',
       conceptId: 'concept-1',
     };
-    
+
     // Update mocks to ensure the direction is available
-    this.mockCharacterBuilderService.getThematicDirectionsByConceptId.mockResolvedValue([
-      testDirection
-    ]);
-    this.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
-    
+    this.mockCharacterBuilderService.getThematicDirectionsByConceptId.mockResolvedValue(
+      [testDirection]
+    );
+    this.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+      true
+    );
+
     // Update mock to return the specified motivations
     this.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
       motivations
@@ -456,12 +458,12 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     const directionElement = document.querySelector(
       `[data-direction-id="${directionId}"]`
     );
-    
+
     if (directionElement) {
       // Click the direction element to trigger the controller's selection logic
       // This will call #selectDirection which will load the motivations
       directionElement.click();
-      
+
       // Wait for async operations to complete
       await new Promise((resolve) => setTimeout(resolve, 50));
     }

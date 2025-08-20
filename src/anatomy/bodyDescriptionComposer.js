@@ -70,50 +70,40 @@ export class BodyDescriptionComposer {
     const descriptionOrder = this.config.getDescriptionOrder();
     const processedTypes = new Set();
 
-    // Process parts in configured order
+    // FIRST: Add body-level descriptors in specific order (MOVED BEFORE PART DESCRIPTIONS)
+    const skinColorDescription = this.extractSkinColorDescription(bodyEntity);
+    if (skinColorDescription) {
+      lines.push(`Skin color: ${skinColorDescription}`);
+    }
+
+    const buildDescription = this.extractBuildDescription(bodyEntity);
+    if (buildDescription) {
+      lines.push(`Build: ${buildDescription}`);
+    }
+
+    const compositionDescription =
+      this.extractBodyCompositionDescription(bodyEntity);
+    if (compositionDescription) {
+      lines.push(`Body composition: ${compositionDescription}`);
+    }
+
+    const bodyHairDescription = this.extractBodyHairDescription(bodyEntity);
+    if (bodyHairDescription) {
+      lines.push(`Body hair: ${bodyHairDescription}`);
+    }
+
+    // THEN: Process parts in configured order (existing logic continues)
     for (const partType of descriptionOrder) {
       if (processedTypes.has(partType)) {
         continue;
       }
 
-      // Handle overall build
-      if (partType === 'build') {
-        const buildDescription = this.extractBuildDescription(bodyEntity);
-        if (buildDescription) {
-          lines.push(`Build: ${buildDescription}`);
-        }
-        processedTypes.add(partType);
-        continue;
-      }
-
-      // Handle body composition
-      if (partType === 'body_composition') {
-        const compositionDescription =
-          this.extractBodyCompositionDescription(bodyEntity);
-        if (compositionDescription) {
-          lines.push(`Body composition: ${compositionDescription}`);
-        }
-        processedTypes.add(partType);
-        continue;
-      }
-
-      // Handle body hair
-      if (partType === 'body_hair') {
-        const bodyHairDescription = this.extractBodyHairDescription(bodyEntity);
-        if (bodyHairDescription) {
-          lines.push(`Body hair: ${bodyHairDescription}`);
-        }
-        processedTypes.add(partType);
-        continue;
-      }
-
-      // Handle skin color
-      if (partType === 'skin_color') {
-        const skinColorDescription =
-          this.extractSkinColorDescription(bodyEntity);
-        if (skinColorDescription) {
-          lines.push(`Skin color: ${skinColorDescription}`);
-        }
+      // Skip body descriptor types as they're already handled above
+      if (
+        ['build', 'body_composition', 'body_hair', 'skin_color'].includes(
+          partType
+        )
+      ) {
         processedTypes.add(partType);
         continue;
       }

@@ -369,9 +369,19 @@ describe('CoreMotivationsGeneratorController', () => {
       testBed.setupSuccessfulDirectionLoad();
       await testBed.controller.initialize();
       await testBed.selectDirection('test-direction-1');
+
+      // Mock URL and Blob APIs for file download
+      global.URL = {
+        createObjectURL: jest.fn().mockReturnValue('blob:mock-url'),
+        revokeObjectURL: jest.fn(),
+      };
+      global.Blob = jest.fn((content, options) => ({
+        content,
+        options,
+      }));
     });
 
-    it('should export motivations to text', async () => {
+    it('should export motivations to file and clipboard', async () => {
       // Arrange
       const mockMotivations = [
         { id: 'motivation-1', text: 'Seek adventure', createdAt: new Date() },
@@ -394,6 +404,27 @@ describe('CoreMotivationsGeneratorController', () => {
         },
       });
 
+      // Mock document.createElement for anchor element
+      const mockAnchor = {
+        href: '',
+        download: '',
+        style: { display: '' },
+        click: jest.fn(),
+      };
+      const originalCreateElement = document.createElement;
+      const originalAppendChild = document.body.appendChild;
+      const originalRemoveChild = document.body.removeChild;
+
+      document.createElement = jest.fn((tagName) => {
+        if (tagName === 'a') {
+          return mockAnchor;
+        }
+        return originalCreateElement.call(document, tagName);
+      });
+
+      document.body.appendChild = jest.fn();
+      document.body.removeChild = jest.fn();
+
       // Act
       const exportBtn = document.getElementById('export-btn');
       exportBtn.click();
@@ -403,8 +434,136 @@ describe('CoreMotivationsGeneratorController', () => {
       expect(
         testBed.mockDisplayEnhancer.formatMotivationsForExport
       ).toHaveBeenCalled();
+
+      // Check file download was triggered
+      expect(global.Blob).toHaveBeenCalledWith(['Exported text'], {
+        type: 'text/plain;charset=utf-8',
+      });
+      expect(global.URL.createObjectURL).toHaveBeenCalled();
+      expect(mockAnchor.click).toHaveBeenCalled();
+      expect(mockAnchor.download).toMatch(/^core-motivations_.*\.txt$/);
+      expect(global.URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
+
+      // Check clipboard was also used
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
         'Exported text'
+      );
+
+      // Restore mocked functions
+      document.createElement = originalCreateElement;
+      document.body.appendChild = originalAppendChild;
+      document.body.removeChild = originalRemoveChild;
+    });
+
+    it('should generate appropriate filename with timestamp and direction', async () => {
+      // Arrange
+      const mockMotivations = [
+        { id: 'motivation-1', text: 'Seek adventure', createdAt: new Date() },
+      ];
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        mockMotivations
+      );
+
+      await testBed.selectDirection('test-direction-1');
+
+      testBed.mockDisplayEnhancer.formatMotivationsForExport.mockReturnValue(
+        'Exported text'
+      );
+
+      // Mock clipboard API
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: jest.fn().mockResolvedValue(),
+        },
+      });
+
+      // Mock document.createElement for anchor element
+      const mockAnchor = {
+        href: '',
+        download: '',
+        style: { display: '' },
+        click: jest.fn(),
+      };
+      const originalCreateElement = document.createElement;
+      const originalAppendChild = document.body.appendChild;
+      const originalRemoveChild = document.body.removeChild;
+
+      document.createElement = jest.fn((tagName) => {
+        if (tagName === 'a') {
+          return mockAnchor;
+        }
+        return originalCreateElement.call(document, tagName);
+      });
+
+      document.body.appendChild = jest.fn();
+      document.body.removeChild = jest.fn();
+
+      // Mock Date to have predictable timestamp
+      const mockDate = new Date('2024-01-15T14:30:00');
+      mockDate.toISOString = () => '2024-01-15T14:30:00.000Z';
+      mockDate.toTimeString = () => '14:30:00 GMT+0000 (UTC)';
+      const originalDate = global.Date;
+      global.Date = jest.fn(() => mockDate);
+      global.Date.now = originalDate.now;
+
+      // Act
+      const exportBtn = document.getElementById('export-btn');
+      exportBtn.click();
+      await testBed.waitForAsyncOperations();
+
+      // Assert
+      expect(mockAnchor.download).toBe(
+        'core-motivations_heroic-journey_2024-01-15_14-30.txt'
+      );
+
+      // Restore
+      document.createElement = originalCreateElement;
+      document.body.appendChild = originalAppendChild;
+      document.body.removeChild = originalRemoveChild;
+      global.Date = originalDate;
+    });
+
+    it('should fall back to clipboard if download fails', async () => {
+      // Arrange
+      const mockMotivations = [
+        { id: 'motivation-1', text: 'Seek adventure', createdAt: new Date() },
+      ];
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        mockMotivations
+      );
+
+      await testBed.selectDirection('test-direction-1');
+
+      testBed.mockDisplayEnhancer.formatMotivationsForExport.mockReturnValue(
+        'Exported text'
+      );
+
+      // Mock clipboard API
+      Object.assign(navigator, {
+        clipboard: {
+          writeText: jest.fn().mockResolvedValue(),
+        },
+      });
+
+      // Make Blob constructor throw an error to simulate download failure
+      global.Blob = jest.fn(() => {
+        throw new Error('Blob creation failed');
+      });
+
+      // Mock showWarning
+      testBed.controller.showWarning = jest.fn();
+
+      // Act
+      const exportBtn = document.getElementById('export-btn');
+      exportBtn.click();
+      await testBed.waitForAsyncOperations();
+
+      // Assert
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        'Exported text'
+      );
+      expect(testBed.controller.showWarning).toHaveBeenCalledWith(
+        'Download failed, but copied to clipboard'
       );
     });
 
