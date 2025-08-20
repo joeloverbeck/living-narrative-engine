@@ -164,9 +164,11 @@ describe('Core Motivations Generator - HTML Structure', () => {
       expect(hint).toBeTruthy();
 
       const kbds = hint.querySelectorAll('kbd');
-      expect(kbds).toHaveLength(2);
-      expect(kbds[0].textContent).toBe('Ctrl');
-      expect(kbds[1].textContent).toBe('Enter');
+      expect(kbds).toHaveLength(8);
+      
+      // Validate all keyboard shortcuts are present
+      const kbdTexts = Array.from(kbds).map(kbd => kbd.textContent);
+      expect(kbdTexts).toEqual(['Ctrl', 'Enter', 'Ctrl', 'E', 'Ctrl', 'Shift', 'Del', 'Esc']);
     });
   });
 

@@ -90,10 +90,15 @@ export class CoreMotivationsDisplayEnhancer {
       throw error;
     }
 
-    // Create main container
+    // Create main container with accessibility attributes
     const blockElement = document.createElement('div');
     blockElement.className = 'motivation-block';
     blockElement.setAttribute('data-motivation-id', motivation.id);
+    blockElement.setAttribute('role', 'article');
+    blockElement.setAttribute(
+      'aria-label',
+      `Core motivation block created ${this.formatTimestamp(motivation.createdAt)}`
+    );
 
     // Create header
     const header = this.#createHeader(motivation);
@@ -128,12 +133,16 @@ export class CoreMotivationsDisplayEnhancer {
     const actions = document.createElement('div');
     actions.className = 'motivation-actions';
 
-    // Copy button
+    // Copy button with enhanced accessibility
     const copyBtn = document.createElement('button');
     copyBtn.type = 'button';
     copyBtn.className = 'copy-btn';
     copyBtn.textContent = 'Copy';
-    copyBtn.setAttribute('aria-label', `Copy motivation ${motivation.id}`);
+    copyBtn.setAttribute(
+      'aria-label',
+      `Copy motivation to clipboard: ${motivation.coreDesire.substring(0, 50)}${motivation.coreDesire.length > 50 ? '...' : ''}`
+    );
+    copyBtn.setAttribute('title', 'Copy this motivation to clipboard');
     // Store handler reference for cleanup
     const copyHandler = () => this.handleCopy(motivation);
     copyBtn.addEventListener('click', copyHandler);
@@ -141,13 +150,17 @@ export class CoreMotivationsDisplayEnhancer {
     copyBtn._motivation = motivation;
     actions.appendChild(copyBtn);
 
-    // Delete button
+    // Delete button with enhanced accessibility
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.className = 'delete-btn';
     deleteBtn.textContent = 'Delete';
     deleteBtn.setAttribute('data-motivation-id', motivation.id);
-    deleteBtn.setAttribute('aria-label', `Delete motivation ${motivation.id}`);
+    deleteBtn.setAttribute(
+      'aria-label',
+      `Delete motivation: ${motivation.coreDesire.substring(0, 50)}${motivation.coreDesire.length > 50 ? '...' : ''}`
+    );
+    deleteBtn.setAttribute('title', 'Delete this motivation permanently');
     actions.appendChild(deleteBtn);
 
     header.appendChild(actions);
@@ -208,13 +221,20 @@ export class CoreMotivationsDisplayEnhancer {
   #createSection(className, title, text) {
     const section = document.createElement('div');
     section.className = `motivation-section ${className}`;
+    section.setAttribute('role', 'section');
+    section.setAttribute(
+      'aria-labelledby',
+      `${className}-heading-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    );
 
     const heading = document.createElement('h4');
     heading.textContent = title;
+    heading.setAttribute('id', section.getAttribute('aria-labelledby'));
     section.appendChild(heading);
 
     const paragraph = document.createElement('p');
     paragraph.textContent = this.#sanitizeText(text || '');
+    paragraph.setAttribute('aria-describedby', heading.id);
     section.appendChild(paragraph);
 
     return section;

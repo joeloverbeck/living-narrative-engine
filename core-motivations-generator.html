@@ -24,6 +24,8 @@
     <script type="module" src="core-motivations-generator.js"></script>
   </head>
   <body>
+    <!-- Skip link for keyboard navigation -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     <div id="app" class="cb-page-container">
       <!-- Header Section -->
       <header class="cb-page-header">
@@ -37,7 +39,7 @@
       </header>
 
       <!-- Main Content Area -->
-      <main class="cb-page-main core-motivations-main">
+      <main id="main-content" class="cb-page-main core-motivations-main">
         <!-- Left Panel: Direction Selector -->
         <aside class="cb-input-panel direction-selection-panel">
           <h2 class="cb-panel-title">Select Thematic Direction</h2>
@@ -88,7 +90,12 @@
             </button>
 
             <div class="shortcut-hint">
-              <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate
+              <div><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate</div>
+              <div><kbd>Ctrl</kbd> + <kbd>E</kbd> to export</div>
+              <div>
+                <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Del</kbd> to clear all
+              </div>
+              <div><kbd>Esc</kbd> to close dialogs</div>
             </div>
           </div>
         </aside>

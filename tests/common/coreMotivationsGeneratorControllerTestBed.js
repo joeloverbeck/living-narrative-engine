@@ -84,9 +84,12 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     };
 
     this.mockDisplayEnhancer = {
-      createMotivationBlock: jest
-        .fn()
-        .mockReturnValue(document.createElement('div')),
+      createMotivationBlock: jest.fn().mockImplementation((motivation) => {
+        const div = document.createElement('div');
+        div.className = 'motivation-block';
+        div.setAttribute('data-motivation-id', motivation.id);
+        return div;
+      }),
       formatMotivationsForExport: jest
         .fn()
         .mockReturnValue('Exported motivations'),
@@ -95,6 +98,7 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
 
     // Use enhanced event bus that tracks dispatches for state management testing
     this.mockEventBus = this.createEnhancedEventBus();
+    this.eventBus = this.mockEventBus; // Expose as eventBus for consistent access
 
     this.mockSchemaValidator = {
       validate: jest.fn().mockReturnValue({ valid: true }),
@@ -137,14 +141,34 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
    * Create DOM structure for testing
    */
   createDOMStructure() {
+    // Skip link for keyboard navigation
+    const skipLink = document.createElement('a');
+    skipLink.className = 'skip-link';
+    skipLink.href = '#main-content';
+    skipLink.textContent = 'Skip to main content';
+    document.body.appendChild(skipLink);
+
     // Main container
     const main = document.createElement('main');
     main.id = 'main-content';
 
-    // Direction selector container
-    const directionSelector = document.createElement('div');
+    // Direction selector container - match actual HTML structure
+    const directionSelectorContainer = document.createElement('div');
+    directionSelectorContainer.id = 'direction-selector-container';
+
+    const directionSelector = document.createElement('select');
     directionSelector.id = 'direction-selector';
-    main.appendChild(directionSelector);
+    directionSelector.className = 'cb-select';
+    directionSelector.setAttribute('aria-label', 'Select thematic direction');
+
+    // Add default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = '-- Choose a thematic direction --';
+    directionSelector.appendChild(defaultOption);
+
+    directionSelectorContainer.appendChild(directionSelector);
+    main.appendChild(directionSelectorContainer);
 
     // No directions message
     const noDirectionsMsg = document.createElement('div');
@@ -157,17 +181,22 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     const searchInput = document.createElement('input');
     searchInput.id = 'motivation-search';
     searchInput.type = 'search';
+    searchInput.className = 'motivation-search-input';
     searchInput.placeholder = 'Search motivations...';
+    searchInput.setAttribute('aria-label', 'Search motivations');
     main.appendChild(searchInput);
 
     const searchResultsCount = document.createElement('span');
     searchResultsCount.id = 'search-results-count';
+    searchResultsCount.className = 'search-results-count';
     searchResultsCount.style.display = 'none';
     searchResultsCount.innerHTML = '<span id="search-count">0</span> results';
     main.appendChild(searchResultsCount);
 
     const sortSelect = document.createElement('select');
     sortSelect.id = 'motivation-sort';
+    sortSelect.className = 'cb-select sort-select';
+    sortSelect.setAttribute('aria-label', 'Sort motivations');
     sortSelect.innerHTML = `
       <option value="newest">Newest First</option>
       <option value="oldest">Oldest First</option>
@@ -190,21 +219,27 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     // Generate button
     const generateBtn = document.createElement('button');
     generateBtn.id = 'generate-btn';
+    generateBtn.className = 'cb-button cb-button-primary';
     generateBtn.textContent = 'Generate Motivations';
+    generateBtn.setAttribute('aria-label', 'Generate core motivations');
     generateBtn.disabled = true;
     main.appendChild(generateBtn);
 
     // Clear all button
     const clearBtn = document.createElement('button');
     clearBtn.id = 'clear-all-btn';
+    clearBtn.className = 'cb-button cb-button-danger';
     clearBtn.textContent = 'Clear All';
+    clearBtn.setAttribute('aria-label', 'Clear all motivations');
     clearBtn.disabled = true;
     main.appendChild(clearBtn);
 
     // Export button
     const exportBtn = document.createElement('button');
     exportBtn.id = 'export-btn';
+    exportBtn.className = 'cb-button cb-button-secondary';
     exportBtn.textContent = 'Export';
+    exportBtn.setAttribute('aria-label', 'Export motivations to text');
     exportBtn.disabled = true;
     main.appendChild(exportBtn);
 
@@ -217,7 +252,10 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     // Loading indicator
     const loadingIndicator = document.createElement('div');
     loadingIndicator.id = 'loading-indicator';
+    loadingIndicator.className = 'loading-indicator';
     loadingIndicator.style.display = 'none';
+    loadingIndicator.setAttribute('role', 'status');
+    loadingIndicator.setAttribute('aria-live', 'polite');
 
     // Add paragraph element for loading text
     const loadingText = document.createElement('p');
@@ -229,18 +267,37 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     // Confirmation modal
     const modal = document.createElement('div');
     modal.id = 'confirmation-modal';
+    modal.className = 'modal-overlay';
     modal.style.display = 'none';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'modal-title');
+
+    // Modal content structure
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+
+    const modalTitle = document.createElement('h3');
+    modalTitle.id = 'modal-title';
+    modalTitle.className = 'modal-title';
+    modalTitle.textContent = 'Clear All Motivations?';
+    modalContent.appendChild(modalTitle);
 
     const confirmBtn = document.createElement('button');
     confirmBtn.id = 'confirm-clear';
+    confirmBtn.className = 'cb-button cb-button-danger';
     confirmBtn.textContent = 'Confirm';
-    modal.appendChild(confirmBtn);
+    confirmBtn.setAttribute('aria-label', 'Confirm clear all');
+    modalContent.appendChild(confirmBtn);
 
     const cancelBtn = document.createElement('button');
     cancelBtn.id = 'cancel-clear';
+    cancelBtn.className = 'cb-button cb-button-secondary';
     cancelBtn.textContent = 'Cancel';
-    modal.appendChild(cancelBtn);
+    cancelBtn.setAttribute('aria-label', 'Cancel');
+    modalContent.appendChild(cancelBtn);
 
+    modal.appendChild(modalContent);
     main.appendChild(modal);
 
     document.body.appendChild(main);

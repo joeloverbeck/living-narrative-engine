@@ -10,8 +10,12 @@ export class DescriptionConfiguration {
     this.anatomyFormattingService = anatomyFormattingService;
 
     // Default values extracted from BodyDescriptionComposer
+    // Body-level descriptors come first, followed by body parts
     this._defaultDescriptionOrder = [
       'build',
+      'body_composition',
+      'body_hair',
+      'skin_color',
       'hair',
       'eye',
       'face',
@@ -92,6 +96,9 @@ export class DescriptionConfiguration {
 export const DESCRIPTION_CONFIG_CONSTANTS = {
   DEFAULT_DESCRIPTION_ORDER: [
     'build',
+    'body_composition',
+    'body_hair',
+    'skin_color',
     'hair',
     'eye',
     'face',

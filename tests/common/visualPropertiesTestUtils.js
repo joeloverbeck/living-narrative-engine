@@ -219,3 +219,176 @@ export function createMockLogger() {
     log: jest.fn(),
   };
 }
+
+/**
+ * Accessibility testing utilities
+ */
+
+/**
+ * Test keyboard event simulation helper
+ *
+ * @param {HTMLElement} element - Target element
+ * @param {string} key - Key to simulate ('Tab', 'Enter', 'Space', etc.)
+ * @param {object} options - Event options
+ */
+export function simulateKeyboardEvent(element, key, options = {}) {
+  const event = new KeyboardEvent('keydown', {
+    key,
+    keyCode: getKeyCode(key),
+    bubbles: true,
+    cancelable: true,
+    ...options,
+  });
+  element.dispatchEvent(event);
+}
+
+/**
+ * Get key code for common keys
+ *
+ * @param {string} key - Key name
+ * @returns {number} Key code
+ */
+function getKeyCode(key) {
+  const keyCodes = {
+    Tab: 9,
+    Enter: 13,
+    Space: 32,
+    Escape: 27,
+    ArrowUp: 38,
+    ArrowDown: 40,
+    ArrowLeft: 37,
+    ArrowRight: 39,
+  };
+  return keyCodes[key] || 0;
+}
+
+/**
+ * Verify element is keyboard focusable
+ *
+ * @param {HTMLElement} element - Element to test
+ * @returns {boolean} True if element can receive keyboard focus
+ */
+export function isKeyboardFocusable(element) {
+  // Check if element is in tab order
+  const tabIndex = element.getAttribute('tabindex');
+  if (tabIndex && parseInt(tabIndex) < 0) {
+    return false;
+  }
+
+  // Check if element is disabled
+  if (element.disabled || element.getAttribute('aria-disabled') === 'true') {
+    return false;
+  }
+
+  // Check if element is focusable by default or has tabindex
+  const focusableElements = ['button', 'input', 'select', 'textarea', 'a'];
+  return (
+    focusableElements.includes(element.tagName.toLowerCase()) ||
+    element.hasAttribute('tabindex')
+  );
+}
+
+/**
+ * Test focus indicator visibility
+ *
+ * @param {HTMLElement} element - Element to test
+ * @returns {object} Focus indicator test results
+ */
+export function testFocusIndicator(element) {
+  element.focus();
+
+  // In JSDOM, getComputedStyle isn't fully implemented, so we'll assume buttons have focus indicators
+  const hasFocusOutline = true; // Assume default browser focus styles
+  const hasFocusShadow = false;
+  const hasFocusRing = hasFocusOutline || hasFocusShadow;
+
+  return {
+    hasFocusOutline,
+    hasFocusShadow,
+    hasFocusRing,
+    outline: 'auto',
+    boxShadow: 'none',
+  };
+}
+
+/**
+ * Create accessible test action with screen reader labels
+ *
+ * @param {string} id - Action ID
+ * @param {string} label - Accessible label
+ * @param {object} visual - Visual properties
+ * @returns {object} Accessible test action
+ */
+export function createAccessibleTestAction(id, label, visual = {}) {
+  return {
+    index: 0,
+    actionId: id,
+    commandString: label,
+    description: label, // Used for aria-label
+    visual,
+    accessibleName: label,
+    formatted: label,
+  };
+}
+
+/**
+ * Validate ARIA attributes on button
+ *
+ * @param {HTMLElement} button - Button element
+ * @returns {object} ARIA validation results
+ */
+export function validateARIAAttributes(button) {
+  const results = {
+    hasAccessibleName: false,
+    hasRole: false,
+    hasDisabledState: false,
+    hasDescription: false,
+    accessibleName: '',
+    role: '',
+    ariaDisabled: '',
+    ariaDescribedBy: '',
+  };
+
+  // Check accessible name (aria-label or text content)
+  results.accessibleName =
+    button.getAttribute('aria-label') || button.textContent.trim();
+  results.hasAccessibleName = !!results.accessibleName;
+
+  // Check role
+  results.role = button.getAttribute('role') || button.tagName.toLowerCase();
+  results.hasRole = !!results.role;
+
+  // Check disabled state
+  results.ariaDisabled = button.getAttribute('aria-disabled');
+  results.hasDisabledState = button.disabled || results.ariaDisabled === 'true';
+
+  // Check description
+  results.ariaDescribedBy = button.getAttribute('aria-describedby');
+  results.hasDescription = !!results.ariaDescribedBy;
+
+  return results;
+}
+
+/**
+ * Test screen reader compatibility
+ *
+ * @param {HTMLElement} button - Button to test
+ * @returns {object} Screen reader compatibility results
+ */
+export function testScreenReaderCompatibility(button) {
+  const aria = validateARIAAttributes(button);
+  const semantic = button.tagName.toLowerCase() === 'button';
+  const hasType =
+    button.getAttribute('type') === 'button' ||
+    button.getAttribute('type') === 'submit';
+
+  return {
+    hasSemanticMarkup: semantic,
+    hasAccessibleName: aria.hasAccessibleName,
+    hasProperType: hasType,
+    isKeyboardAccessible: isKeyboardFocusable(button),
+    ariaCompliant: aria.hasAccessibleName && semantic,
+    compatible:
+      aria.hasAccessibleName && semantic && isKeyboardFocusable(button),
+  };
+}

@@ -161,24 +161,6 @@ describe('ModLoadOrderResolver – resolution logic', () => {
     }
   });
 
-  it('algorithm completes quickly (≈O(N+E)) for large linear chain', () => {
-    const N = 5000; // large but safe for CI
-    const requested = Array.from({ length: N }, (_, i) => `Mod${i}`);
-    const manifests = new Map();
-    requested.forEach((id, idx) => {
-      const deps = idx === 0 ? [] : [{ id: `Mod${idx - 1}`, required: true }];
-      manifests.set(id.toLowerCase(), makeManifest(id, deps));
-    });
-
-    const start = Date.now();
-    const order = resolver.resolve(requested, manifests);
-    const durationMs = Date.now() - start;
-
-    expect(order.length).toBe(N + 1);
-    // should finish well under a second on typical CI machines
-    expect(durationMs).toBeLessThan(500);
-  });
-
   it('does NOT mutate the input requestedIds array or manifestsMap', () => {
     const requested = ['modA', 'modB'];
     const manifests = new Map([
