@@ -8,5 +8,11 @@
     "actor": ["intimacy:kissing"]
   },
   "prerequisites": [],
-  "template": "cup {target}'s face while kissing"
+  "template": "cup {target}'s face while kissing",
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
 }

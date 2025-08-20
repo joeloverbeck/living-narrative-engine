@@ -78,6 +78,7 @@ describe('Index.html - Main Menu', () => {
         'Thematic Direction Generator',
         'Thematic Directions Manager',
         'Clichés Generator',
+        'Core Motivations Generator',
       ];
 
       const actualButtons = Array.from(buttons).map((btn) =>
@@ -101,6 +102,7 @@ describe('Index.html - Main Menu', () => {
           text: 'Thematic Directions Manager',
         },
         { id: 'cliches-generator-button', text: 'Clichés Generator' },
+        { id: 'core-motivations-button', text: 'Core Motivations Generator' },
       ];
 
       buttonConfigs.forEach(({ id, text }) => {
@@ -130,6 +132,10 @@ describe('Index.html - Main Menu', () => {
           href: 'thematic-directions-manager.html',
         },
         { id: 'cliches-generator-button', href: 'cliches-generator.html' },
+        {
+          id: 'core-motivations-button',
+          href: 'core-motivations-generator.html',
+        },
       ];
 
       buttonConfigs.forEach(({ id, href }) => {

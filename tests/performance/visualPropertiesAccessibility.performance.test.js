@@ -80,7 +80,9 @@ describe('Visual Properties Accessibility - Performance Tests', () => {
     it('should handle large-scale color contrast validation efficiently', async () => {
       // Test performance with various color combinations
       const colorCombinations = Array.from({ length: 500 }, (_, i) => ({
-        bg: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
+        bg: `#${Math.floor(Math.random() * 16777215)
+          .toString(16)
+          .padStart(6, '0')}`,
         text: i % 2 === 0 ? '#ffffff' : '#000000',
       }));
 
@@ -96,7 +98,7 @@ describe('Visual Properties Accessibility - Performance Tests', () => {
           'AA',
           'normal'
         );
-        
+
         if (validation.passes) {
           passCount++;
         } else {
@@ -111,7 +113,7 @@ describe('Visual Properties Accessibility - Performance Tests', () => {
 
       // Performance requirements for 500 calculations
       expect(totalTime).toBeLessThan(500); // <500ms for 500 calculations
-      
+
       const timePerCalculation = totalTime / 500;
       expect(timePerCalculation).toBeLessThan(1); // <1ms per calculation
 
@@ -123,15 +125,16 @@ describe('Visual Properties Accessibility - Performance Tests', () => {
 
     it('should perform RGB conversion calculations efficiently', async () => {
       // Test hex to RGB conversion performance
-      const hexColors = Array.from({ length: 1000 }, (_, i) => 
-        `#${i.toString(16).padStart(6, '0')}`
+      const hexColors = Array.from(
+        { length: 1000 },
+        (_, i) => `#${i.toString(16).padStart(6, '0')}`
       );
 
       const startTime = performance.now();
 
       for (const hexColor of hexColors) {
         const rgb = a11yTestBed.hexToRgb(hexColor);
-        
+
         // Verify conversion accuracy
         expect(rgb).toHaveProperty('r');
         expect(rgb).toHaveProperty('g');
@@ -149,7 +152,7 @@ describe('Visual Properties Accessibility - Performance Tests', () => {
 
       // Performance requirements for RGB conversion
       expect(totalTime).toBeLessThan(1000); // <1000ms for 1000 conversions
-      
+
       const timePerConversion = totalTime / 1000;
       expect(timePerConversion).toBeLessThan(1); // <1ms per conversion
     });
@@ -157,9 +160,21 @@ describe('Visual Properties Accessibility - Performance Tests', () => {
     it('should handle luminance calculation performance efficiently', async () => {
       // Test relative luminance calculation performance
       const testColors = [
-        '#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff',
-        '#808080', '#c0c0c0', '#800000', '#008000', '#000080',
-        '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#800080'
+        '#000000',
+        '#ffffff',
+        '#ff0000',
+        '#00ff00',
+        '#0000ff',
+        '#808080',
+        '#c0c0c0',
+        '#800000',
+        '#008000',
+        '#000080',
+        '#ffff00',
+        '#ff00ff',
+        '#00ffff',
+        '#ffa500',
+        '#800080',
       ];
 
       // Generate many luminance calculations
@@ -172,7 +187,7 @@ describe('Visual Properties Accessibility - Performance Tests', () => {
 
       for (const color of manyLuminanceTests) {
         const luminance = a11yTestBed.getRelativeLuminance(color);
-        
+
         // Verify luminance is in valid range [0, 1]
         expect(luminance).toBeGreaterThanOrEqual(0);
         expect(luminance).toBeLessThanOrEqual(1);
@@ -183,7 +198,7 @@ describe('Visual Properties Accessibility - Performance Tests', () => {
 
       // Performance requirements for luminance calculation
       expect(totalTime).toBeLessThan(200); // <200ms for 200 calculations
-      
+
       const timePerCalculation = totalTime / 200;
       expect(timePerCalculation).toBeLessThan(1); // <1ms per calculation
     });
@@ -203,8 +218,14 @@ describe('Visual Properties Accessibility - Performance Tests', () => {
 
         // Perform calculations and validations
         for (const colorPair of colors) {
-          const contrast = a11yTestBed.calculateContrastRatio(colorPair.bg, colorPair.text);
-          const validation = a11yTestBed.validateColorContrast(colorPair.bg, colorPair.text);
+          const contrast = a11yTestBed.calculateContrastRatio(
+            colorPair.bg,
+            colorPair.text
+          );
+          const validation = a11yTestBed.validateColorContrast(
+            colorPair.bg,
+            colorPair.text
+          );
           const rgb = a11yTestBed.hexToRgb(colorPair.bg);
           const luminance = a11yTestBed.getRelativeLuminance(colorPair.bg);
 

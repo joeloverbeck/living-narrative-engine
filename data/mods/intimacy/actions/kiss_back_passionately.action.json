@@ -15,5 +15,11 @@
       "failure_message": "You can only return a kiss passionately if you are not the one who initiated it."
     }
   ],
-  "template": "passionately return {target}'s kiss"
+  "template": "passionately return {target}'s kiss",
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
 }

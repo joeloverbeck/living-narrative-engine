@@ -307,7 +307,7 @@ describe('Visual Properties - End-to-End Integration', () => {
 
       // Verify mockLogger was available for potential warnings
       expect(mockLogger.warn).toBeDefined();
-      
+
       // Verify system doesn't crash with invalid properties (main assertion)
       // The rendering already happened above without throwing, so we check the result
       expect(() => actionButtonsRenderer.renderList).not.toThrow();
@@ -451,7 +451,6 @@ describe('Visual Properties - End-to-End Integration', () => {
     });
   });
 
-
   describe('visual property validation', () => {
     it('should handle all valid visual property combinations', async () => {
       const testCases = [
@@ -521,11 +520,20 @@ describe('Visual Properties - End-to-End Integration', () => {
 
         // Verify appropriate styles are applied based on what was provided
         // The 'action-button-custom-visual' class is added whenever ANY visual properties exist
-        const hasAnyVisuals = !!(testCase.visual.backgroundColor || testCase.visual.textColor || testCase.visual.hoverBackgroundColor || testCase.visual.hoverTextColor);
-        const hasHoverVisuals = !!(testCase.visual.hoverBackgroundColor || testCase.visual.hoverTextColor);
-        
-        expect(button.classList.contains('action-button-custom-visual')).toBe(hasAnyVisuals);
-        
+        const hasAnyVisuals = !!(
+          testCase.visual.backgroundColor ||
+          testCase.visual.textColor ||
+          testCase.visual.hoverBackgroundColor ||
+          testCase.visual.hoverTextColor
+        );
+        const hasHoverVisuals = !!(
+          testCase.visual.hoverBackgroundColor || testCase.visual.hoverTextColor
+        );
+
+        expect(button.classList.contains('action-button-custom-visual')).toBe(
+          hasAnyVisuals
+        );
+
         const expectedHoverValue = hasHoverVisuals ? 'true' : undefined;
         expect(button.dataset.hasCustomHover).toBe(expectedHoverValue);
       }

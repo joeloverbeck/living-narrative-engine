@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "visual_combat_actions:power_attack",
+  "name": "Power Attack",
+  "description": "A powerful attack that deals extra damage but costs stamina",
+  "template": "perform a power attack on {target}",
+  "targets": "core:actors_in_location",
+  "visual": {
+    "backgroundColor": "#d32f2f",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c62828",
+    "hoverTextColor": "#ffffff"
+  },
+  "prerequisites": []
+}

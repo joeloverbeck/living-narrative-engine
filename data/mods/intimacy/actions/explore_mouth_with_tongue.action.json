@@ -8,5 +8,11 @@
     "actor": ["intimacy:kissing"]
   },
   "prerequisites": [],
-  "template": "explore {target}'s mouth with your tongue"
+  "template": "explore {target}'s mouth with your tongue",
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
 }

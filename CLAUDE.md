@@ -317,6 +317,32 @@ npm run create-mod      # Create new mod scaffold
 npm run update-manifest # Update mod manifests
 ```
 
+### Character Builder Tools
+
+The project includes several character creation tools accessible from the main index:
+
+#### Core Motivations Generator
+
+- **Purpose**: Generate psychological profiles with core motivations, internal contradictions, and central questions
+- **Location**: `/core-motivations-generator.html`
+- **Entry Point**: `src/core-motivations-generator-main.js`
+- **Build Output**: `dist/core-motivations-generator.js`
+- **Dependencies**: Requires thematic directions with generated clichés
+- **Key Features**:
+  - AI-powered generation using LLM
+  - Accumulative storage across generations
+  - Export functionality (JSON/text)
+  - Keyboard shortcuts (Ctrl+Enter, Ctrl+E, Ctrl+Shift+Del)
+  - WCAG AA accessibility compliance
+- **Testing**: Full test coverage in `tests/unit/coreMotivationsGenerator/`, `tests/integration/coreMotivationsGenerator/`, `tests/e2e/coreMotivationsGenerator.e2e.test.js`
+
+#### Other Character Builder Tools
+
+- **Thematic Direction Generator**: Create narrative themes
+- **Clichés Generator**: Generate story clichés for themes
+- **Character Concepts Manager**: Manage character concepts
+- **Anatomy Visualizer**: Visual character anatomy system
+
 ### Development Process
 
 1. **Before coding**: Read this file completely

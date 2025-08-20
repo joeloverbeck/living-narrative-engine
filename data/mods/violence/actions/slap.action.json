@@ -10,5 +10,11 @@
       "description": "Person to slap"
     }
   },
-  "template": "slap {target}"
+  "template": "slap {target}",
+  "visual": {
+    "backgroundColor": "#cc0000",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#990000",
+    "hoverTextColor": "#ffcccc"
+  }
 }

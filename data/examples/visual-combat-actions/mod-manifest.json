@@ -1,0 +1,10 @@
+{
+  "id": "visual_combat_actions",
+  "version": "1.0.0",
+  "name": "Visual Combat Actions Example",
+  "description": "Demonstrates visual customization for combat actions",
+  "author": "Living Narrative Engine Team",
+  "dependencies": ["core"],
+  "loadOrder": 100,
+  "category": "example"
+}

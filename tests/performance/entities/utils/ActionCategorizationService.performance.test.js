@@ -41,7 +41,7 @@ describe('ActionCategorizationService - Performance Tests', () => {
         const grouped = service.groupActionsByNamespace(largeActions);
         const duration = performance.now() - startTime;
         totalDuration += duration;
-        
+
         expect(grouped.size).toBe(10);
       }
 
@@ -67,7 +67,7 @@ describe('ActionCategorizationService - Performance Tests', () => {
         const sorted = service.getSortedNamespaces(namespaces);
         const duration = performance.now() - startTime;
         totalDuration += duration;
-        
+
         expect(sorted).toHaveLength(20);
       }
 
@@ -157,7 +157,7 @@ describe('ActionCategorizationService - Performance Tests', () => {
         const sorted = service.getSortedNamespaces(namespaces);
         const duration = performance.now() - startTime;
         totalDuration += duration;
-        
+
         expect(sorted).toHaveLength(largeNamespaceCount);
       }
 

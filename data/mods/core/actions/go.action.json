@@ -18,5 +18,11 @@
       },
       "failure_message": "You cannot move without functioning legs."
     }
-  ]
+  ],
+  "visual": {
+    "backgroundColor": "#546e7a",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#455a64",
+    "hoverTextColor": "#ffffff"
+  }
 }

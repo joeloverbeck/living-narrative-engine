@@ -11,5 +11,11 @@
     "actor": ["positioning:facing_away"]
   },
   "template": "massage {target}'s back",
-  "prerequisites": []
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
 }

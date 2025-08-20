@@ -1,0 +1,15 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "visual_social_actions:friendly_greeting",
+  "name": "Greet Warmly",
+  "description": "Offer a warm, friendly greeting",
+  "template": "greet {target} with a warm smile",
+  "targets": "core:actors_in_location",
+  "visual": {
+    "backgroundColor": "#2e7d32",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#1b5e20",
+    "hoverTextColor": "#ffffff"
+  },
+  "prerequisites": []
+}

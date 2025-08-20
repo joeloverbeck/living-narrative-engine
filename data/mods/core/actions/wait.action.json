@@ -5,5 +5,11 @@
   "description": "Wait for a moment, doing nothing.",
   "targets": "none",
   "template": "wait",
-  "prerequisites": []
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#546e7a",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#455a64",
+    "hoverTextColor": "#ffffff"
+  }
 }

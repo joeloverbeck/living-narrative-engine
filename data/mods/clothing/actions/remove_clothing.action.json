@@ -14,5 +14,11 @@
     "actor": ["clothing:equipment"]
   },
   "template": "remove {target}",
-  "prerequisites": []
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#6d4c41",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#795548",
+    "hoverTextColor": "#efebe9"
+  }
 }

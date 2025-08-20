@@ -15,5 +15,11 @@
       },
       "failure_message": "You are not following anyone."
     }
-  ]
+  ],
+  "visual": {
+    "backgroundColor": "#546e7a",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#455a64",
+    "hoverTextColor": "#ffffff"
+  }
 }

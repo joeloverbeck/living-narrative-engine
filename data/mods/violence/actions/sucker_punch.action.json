@@ -10,5 +10,11 @@
       "description": "Person to punch unexpectedly"
     }
   },
-  "template": "sucker-punch {target}"
+  "template": "sucker-punch {target}",
+  "visual": {
+    "backgroundColor": "#cc0000",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#990000",
+    "hoverTextColor": "#ffcccc"
+  }
 }

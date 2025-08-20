@@ -51,6 +51,9 @@ describe('DescriptionConfiguration', () => {
 
       expect(result).toEqual([
         'build',
+        'body_composition',
+        'body_hair',
+        'skin_color',
         'hair',
         'eye',
         'face',
@@ -73,7 +76,7 @@ describe('DescriptionConfiguration', () => {
       config = new DescriptionConfiguration({});
       const result = config.getDescriptionOrder();
 
-      expect(result.length).toBe(16);
+      expect(result.length).toBe(19);
       expect(result[0]).toBe('build');
     });
 

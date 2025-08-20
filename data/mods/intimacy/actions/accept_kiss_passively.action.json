@@ -15,5 +15,11 @@
       "failure_message": "You can only passively accept a kiss if you are not the one who initiated it."
     }
   ],
-  "template": "accept {target}'s kiss passively"
+  "template": "accept {target}'s kiss passively",
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
 }
