@@ -1016,4 +1016,134 @@ describe('CharacterStorageService', () => {
       );
     });
   });
+
+  describe('Initialization State Management', () => {
+    // Test the specific issue found in core-motivations-generator initialization
+    it('should consistently track initialization state across all methods', async () => {
+      const uninitializedService = new CharacterStorageService({
+        logger: mockLogger,
+        database: mockDatabase,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      // Test all methods that should check initialization state
+      const methodTests = [
+        () =>
+          uninitializedService.storeCharacterConcept(
+            createCharacterConcept('test character concept')
+          ),
+        () => uninitializedService.listCharacterConcepts(),
+        () => uninitializedService.getCharacterConcept('test-id'),
+        () => uninitializedService.deleteCharacterConcept('test-id'),
+        () => uninitializedService.storeThematicDirections('concept-id', []),
+        () => uninitializedService.getThematicDirections('concept-id'),
+        () => uninitializedService.getAllThematicDirections(),
+        () =>
+          uninitializedService.updateThematicDirection('direction-id', {
+            field: 'value',
+          }),
+        () => uninitializedService.deleteThematicDirection('direction-id'),
+      ];
+
+      // All methods should throw the same initialization error
+      for (const methodTest of methodTests) {
+        await expect(methodTest()).rejects.toThrow(CharacterStorageError);
+        await expect(methodTest()).rejects.toThrow(
+          'CharacterStorageService not initialized. Call initialize() first.'
+        );
+      }
+    });
+
+    it('should allow methods to be called after successful initialization', async () => {
+      const service = new CharacterStorageService({
+        logger: mockLogger,
+        database: mockDatabase,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      // Initialize the service
+      await service.initialize();
+
+      // Mock successful database responses
+      mockDatabase.getAllCharacterConcepts.mockResolvedValue([]);
+      mockDatabase.getCharacterConcept.mockResolvedValue(null);
+      mockDatabase.deleteCharacterConcept.mockResolvedValue();
+      mockDatabase.getThematicDirectionsByConceptId.mockResolvedValue([]);
+      mockDatabase.getAllThematicDirections.mockResolvedValue([]);
+      mockDatabase.deleteThematicDirection.mockResolvedValue();
+
+      // All these methods should now work without initialization errors
+      await expect(service.listCharacterConcepts()).resolves.toBeDefined();
+      await expect(
+        service.getCharacterConcept('test-id')
+      ).resolves.toBeDefined();
+      await expect(
+        service.deleteCharacterConcept('test-id')
+      ).resolves.toBeUndefined();
+      await expect(
+        service.getThematicDirections('concept-id')
+      ).resolves.toBeDefined();
+      await expect(service.getAllThematicDirections()).resolves.toBeDefined();
+      await expect(
+        service.deleteThematicDirection('direction-id')
+      ).resolves.toBeUndefined();
+    });
+
+    it('should handle race conditions in initialization gracefully', async () => {
+      const service = new CharacterStorageService({
+        logger: mockLogger,
+        database: mockDatabase,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      // Start multiple initialization calls simultaneously
+      const initPromises = [
+        service.initialize(),
+        service.initialize(),
+        service.initialize(),
+      ];
+
+      // All should complete successfully
+      await Promise.all(initPromises);
+
+      // Database initialize may be called multiple times due to race conditions,
+      // but the service should handle it gracefully
+      expect(mockDatabase.initialize).toHaveBeenCalled();
+
+      // Should eventually be initialized
+      mockDatabase.getAllCharacterConcepts.mockResolvedValue([]);
+      await expect(service.listCharacterConcepts()).resolves.toBeDefined();
+    });
+
+    it('should preserve initialization state after initialization failure', async () => {
+      const service = new CharacterStorageService({
+        logger: mockLogger,
+        database: mockDatabase,
+        schemaValidator: mockSchemaValidator,
+      });
+
+      // Make database initialization fail
+      const initError = new Error('Database initialization failed');
+      mockDatabase.initialize.mockRejectedValue(initError);
+
+      // First initialization should fail
+      await expect(service.initialize()).rejects.toThrow(CharacterStorageError);
+
+      // Service should still be uninitialized, so other methods should still fail with initialization error
+      await expect(service.listCharacterConcepts()).rejects.toThrow(
+        'CharacterStorageService not initialized'
+      );
+
+      // Fix the database mock and try again
+      mockDatabase.initialize.mockReset();
+      mockDatabase.initialize.mockResolvedValue();
+
+      // Second initialization attempt should succeed
+      await service.initialize();
+
+      // Now methods should work
+      mockDatabase.getAllCharacterConcepts.mockResolvedValue([]);
+      await expect(service.listCharacterConcepts()).resolves.toBeDefined();
+    });
+  });
 });

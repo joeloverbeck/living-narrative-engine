@@ -91,7 +91,7 @@ describe('CoreMotivationsGeneratorController', () => {
 
       // Assert
       const initEvent = testBed.dispatchedEvents.find(
-        (event) => event.type === 'CORE_MOTIVATIONS_UI_INITIALIZED'
+        (event) => event.type === 'core:core_motivations_ui_initialized'
       );
       expect(initEvent).toBeDefined();
       expect(initEvent.payload.conceptId).toBeDefined();
@@ -167,7 +167,7 @@ describe('CoreMotivationsGeneratorController', () => {
 
       // Assert
       const selectionEvent = testBed.dispatchedEvents.find(
-        (event) => event.type === 'CORE_MOTIVATIONS_DIRECTION_SELECTED'
+        (event) => event.type === 'core:core_motivations_direction_selected'
       );
       expect(selectionEvent).toBeDefined();
       expect(selectionEvent.payload.directionId).toBe(directionId);
@@ -219,7 +219,7 @@ describe('CoreMotivationsGeneratorController', () => {
 
       // Assert
       const startEvent = testBed.dispatchedEvents.find(
-        (event) => event.type === 'CORE_MOTIVATIONS_GENERATION_STARTED'
+        (event) => event.type === 'core:core_motivations_generation_started'
       );
       expect(startEvent).toBeDefined();
       expect(startEvent.payload.directionId).toBe('test-direction-1');
@@ -244,7 +244,7 @@ describe('CoreMotivationsGeneratorController', () => {
 
       // Assert
       const completedEvent = testBed.dispatchedEvents.find(
-        (event) => event.type === 'CORE_MOTIVATIONS_GENERATION_COMPLETED'
+        (event) => event.type === 'core:core_motivations_generation_completed'
       );
       expect(completedEvent).toBeDefined();
       expect(completedEvent.payload.motivationIds).toEqual(['motivation-1']);
@@ -262,7 +262,7 @@ describe('CoreMotivationsGeneratorController', () => {
 
       // Assert
       const failedEvent = testBed.dispatchedEvents.find(
-        (event) => event.type === 'CORE_MOTIVATIONS_GENERATION_FAILED'
+        (event) => event.type === 'core:core_motivations_generation_failed'
       );
       expect(failedEvent).toBeDefined();
       expect(failedEvent.payload.error).toBe('Generation failed');
@@ -1277,7 +1277,7 @@ describe('CoreMotivationsGeneratorController', () => {
 
       // Assert - should only dispatch once due to debounce
       const searchEvents = spy.mock.calls.filter(
-        (call) => call[0].type === 'MOTIVATIONS_SEARCH_PERFORMED'
+        (call) => call[0].type === 'core:motivations_search_performed'
       );
       expect(searchEvents.length).toBe(1);
       expect(searchEvents[0][0].payload.query).toBe('tes');

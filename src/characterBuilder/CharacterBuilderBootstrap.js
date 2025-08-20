@@ -14,6 +14,7 @@ import {
   assertNonBlankString,
 } from '../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 
 /**
  * @typedef {object} BootstrapConfig
@@ -90,6 +91,10 @@ export class CharacterBuilderBootstrap {
       // Step 3: Load schemas (including custom)
       await this.#loadSchemas(container, config);
 
+      // Step 3.5: Try to register critical system events again if not done in setupContainer
+      // This ensures they're registered before regular event registration
+      await this.#registerCriticalSystemEvents(container, config);
+
       // Step 4: Register event definitions
       await this.#registerEvents(container, config);
 
@@ -101,16 +106,19 @@ export class CharacterBuilderBootstrap {
       // Step 6: Initialize LLM services
       await this.#initializeLLMServices(container, config);
 
-      // Step 7: Register page-specific services
+      // Step 7: Initialize Character Storage Service
+      await this.#initializeCharacterStorageService(container);
+
+      // Step 8: Register page-specific services
       await this.#registerCustomServices(container, config);
 
-      // Step 8: Instantiate controller
+      // Step 9: Instantiate controller
       const controller = await this.#createController(container, config);
 
-      // Step 9: Initialize controller
+      // Step 10: Initialize controller
       await this.#initializeController(controller, config);
 
-      // Step 10: Setup error display
+      // Step 11: Setup error display
       this.#setupErrorDisplay(container, config);
 
       const bootstrapTime = performance.now() - startTime;
@@ -187,7 +195,7 @@ export class CharacterBuilderBootstrap {
     const container = new AppContainer();
 
     // Configure minimal container with character builder support
-    configureMinimalContainer(container, {
+    await configureMinimalContainer(container, {
       includeCharacterBuilder: true,
     });
 
@@ -199,6 +207,10 @@ export class CharacterBuilderBootstrap {
     // Resolve logger early for use in other methods
     this.#logger = ensureValidLogger(container.resolve(tokens.ILogger));
 
+    // Register critical system events immediately after container setup
+    // This must happen before any services that might dispatch these events are used
+    await this.#registerCriticalSystemEvents(container, config);
+
     this.#performanceMetrics.containerSetup = performance.now() - startTime;
     if (this.#logger) {
       this.#logger.debug(
@@ -207,6 +219,144 @@ export class CharacterBuilderBootstrap {
     }
 
     return container;
+  }
+
+  /**
+   * Register critical system events early to prevent validation warnings
+   *
+   * @private
+   * @param {AppContainer} container
+   * @param {BootstrapConfig} config
+   */
+  async #registerCriticalSystemEvents(container, config) {
+    // Only register if mods are NOT being loaded (to avoid duplicate registration)
+    if (config.includeModLoading) {
+      return;
+    }
+
+    let dataRegistry, schemaValidator;
+    
+    try {
+      dataRegistry = container.resolve(tokens.IDataRegistry);
+      schemaValidator = container.resolve(tokens.ISchemaValidator);
+
+      // Check if required services are available
+      if (
+        !dataRegistry ||
+        typeof dataRegistry.setEventDefinition !== 'function' ||
+        !schemaValidator ||
+        typeof schemaValidator.addSchema !== 'function'
+      ) {
+        // Can't register events yet, services not ready
+        if (this.#logger) {
+          this.#logger.debug(
+            '[CharacterBuilderBootstrap] Services not ready for event registration, will register later'
+          );
+        }
+        return;
+      }
+    } catch (error) {
+      // Services not yet available, will register later
+      if (this.#logger) {
+        this.#logger.debug(
+          '[CharacterBuilderBootstrap] Services not ready for event registration: ' + error.message
+        );
+      }
+      return;
+    }
+
+    // Check if event is already registered (in case this is called multiple times)
+    const eventId = 'core:system_error_occurred';
+    if (dataRegistry.getEventDefinition && dataRegistry.getEventDefinition(eventId)) {
+      if (this.#logger) {
+        this.#logger.debug(
+          `[CharacterBuilderBootstrap] Event ${eventId} already registered, skipping`
+        );
+      }
+      return;
+    }
+
+    // Register the critical system error event that's used throughout initialization
+    const systemErrorEvent = {
+      id: eventId,
+      description:
+        "Fired when a general system-level error occurs that isn't tied to a specific action failure.",
+      payloadSchema: {
+        type: 'object',
+        properties: {
+          message: {
+            type: 'string',
+            description:
+              'Required. A user-facing message describing the error.',
+          },
+          details: {
+            type: 'object',
+            description:
+              'Optional. Additional technical details about the error.',
+            properties: {
+              statusCode: {
+                type: 'integer',
+                description:
+                  'Optional. Numeric code (e.g., HTTP status) associated with the error.',
+              },
+              url: {
+                type: 'string',
+                description:
+                  'Optional. URI related to the error, if applicable.',
+              },
+              raw: {
+                type: 'string',
+                description:
+                  'Optional. Raw error text or payload for debugging.',
+              },
+              stack: {
+                type: 'string',
+                description: 'Optional. Stack trace string for debugging.',
+              },
+              timestamp: {
+                type: 'string',
+                format: 'date-time',
+                description:
+                  'Optional. ISO 8601 timestamp of when the error occurred.',
+              },
+              scopeName: {
+                type: 'string',
+                description:
+                  'Optional. Name of the scope that caused the error, if applicable.',
+              },
+            },
+            additionalProperties: false,
+          },
+        },
+        required: ['message'],
+        additionalProperties: false,
+      },
+    };
+
+    try {
+      const payloadSchemaId = `${systemErrorEvent.id}#payload`;
+
+      // Register payload schema first
+      await schemaValidator.addSchema(
+        systemErrorEvent.payloadSchema,
+        payloadSchemaId
+      );
+
+      // Register event definition
+      dataRegistry.setEventDefinition(systemErrorEvent.id, systemErrorEvent);
+
+      if (this.#logger) {
+        this.#logger.debug(
+          `[CharacterBuilderBootstrap] Registered critical system event: ${systemErrorEvent.id}`
+        );
+      }
+    } catch (error) {
+      if (this.#logger) {
+        this.#logger.warn(
+          `[CharacterBuilderBootstrap] Failed to register critical system event: ${error.message}`
+        );
+      }
+    }
   }
 
   /**
@@ -300,6 +450,7 @@ export class CharacterBuilderBootstrap {
 
     // Base events used by all character builder pages
     // Only register these if mods are NOT being loaded (to avoid duplicate registration)
+    // Note: core:system_error_occurred is registered earlier in #registerCriticalSystemEvents
     const baseEvents = config.includeModLoading
       ? []
       : [
@@ -601,6 +752,34 @@ export class CharacterBuilderBootstrap {
   }
 
   /**
+   * Initialize Character Storage Service
+   *
+   * @private
+   * @param {AppContainer} container
+   */
+  async #initializeCharacterStorageService(container) {
+    try {
+      const storageService = container.resolve(tokens.CharacterStorageService);
+      if (storageService && typeof storageService.initialize === 'function') {
+        await storageService.initialize();
+        if (this.#logger) {
+          this.#logger.debug(
+            '[CharacterBuilderBootstrap] CharacterStorageService initialized successfully'
+          );
+        }
+      }
+    } catch (error) {
+      if (this.#logger) {
+        this.#logger.error(
+          `[CharacterBuilderBootstrap] Failed to initialize CharacterStorageService: ${error.message}`,
+          error
+        );
+      }
+      throw error; // Re-throw as this is critical for character builder functionality
+    }
+  }
+
+  /**
    * Register page-specific services
    *
    * @private
@@ -731,8 +910,12 @@ export class CharacterBuilderBootstrap {
     }
 
     // Listen for error events
-    eventBus.subscribe('SYSTEM_ERROR_OCCURRED', (event) => {
-      this.#displayError(event.payload.error, errorElement, errorConfig);
+    eventBus.subscribe(SYSTEM_ERROR_OCCURRED_ID, (event) => {
+      this.#displayError(
+        event.payload.error || event.payload.message,
+        errorElement,
+        errorConfig
+      );
     });
 
     if (this.#logger) {

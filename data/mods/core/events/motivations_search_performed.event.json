@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:motivations_search_performed",
+  "description": "Dispatched when user performs a search in the motivations list",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "Search query entered by user"
+      },
+      "resultsCount": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of search results found"
+      }
+    },
+    "required": ["query", "resultsCount"],
+    "additionalProperties": true
+  }
+}

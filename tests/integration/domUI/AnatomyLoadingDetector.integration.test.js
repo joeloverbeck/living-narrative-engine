@@ -244,6 +244,12 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
         expectedAnatomyData
       );
 
+      // Add the required description component to simulate complete anatomy generation
+      // The production code requires a description when a recipeId is present
+      entityManager.addComponent(actorInstance.id, 'core:description', {
+        text: 'Generated description for test actor with anatomy',
+      });
+
       // Use the detector to wait for anatomy to be ready
       const isReady = await anatomyLoadingDetector.waitForEntityWithAnatomy(
         actorInstance.id,

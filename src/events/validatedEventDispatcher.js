@@ -83,7 +83,13 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
         this.#gameDataRepository.getEventDefinition(eventName);
 
       if (!eventDefinition) {
-        if (!allowSchemaNotFound) {
+        // Special handling for core:system_error_occurred during bootstrap
+        // This event may be dispatched before it's registered during initialization
+        if (eventName === 'core:system_error_occurred') {
+          this.#logger.debug(
+            `VED: EventDefinition not found for '${eventName}' (expected during bootstrap). Proceeding with dispatch.`
+          );
+        } else if (!allowSchemaNotFound) {
           this.#logger.warn(
             `VED: EventDefinition not found for '${eventName}'. Cannot validate payload. Proceeding with dispatch.`
           );

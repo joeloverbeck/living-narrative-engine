@@ -288,7 +288,7 @@ class AnatomyLoadingDetector {
     });
 
     // Check if anatomy:body component exists and has the expected nested structure
-    const isReady = !!(
+    const hasBasicStructure = !!(
       bodyComponent &&
       bodyComponent.body &&
       bodyComponent.body.root &&
@@ -297,7 +297,31 @@ class AnatomyLoadingDetector {
       typeof bodyComponent.body.parts === 'object'
     );
 
-    this.#logger.debug?.(`Entity ${entityId} anatomy ready: ${isReady}`);
+    if (!hasBasicStructure) {
+      this.#logger.debug?.(
+        `Entity ${entityId} missing basic anatomy structure`
+      );
+      return false;
+    }
+
+    // CRITICAL FIX: For entities with anatomy recipes, ensure the complete workflow
+    // has finished by checking that a description has been generated
+    // This ensures all anatomy processing (including body descriptors) is complete
+    let descriptionReady = true;
+    if (bodyComponent.recipeId) {
+      const descriptionComponent = entity.getComponentData('core:description');
+      descriptionReady = !!(descriptionComponent && descriptionComponent.text);
+
+      this.#logger.debug?.(
+        `Entity ${entityId} description ready: ${descriptionReady}`
+      );
+    }
+
+    const isReady = hasBasicStructure && descriptionReady;
+
+    this.#logger.debug?.(
+      `Entity ${entityId} anatomy ready: ${isReady} (structure: ${hasBasicStructure}, description: ${descriptionReady})`
+    );
     return isReady;
   }
 

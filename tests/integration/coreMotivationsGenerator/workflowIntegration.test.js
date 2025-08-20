@@ -54,22 +54,49 @@ describe('Core Motivations Workflow Integration', () => {
     };
 
     // Mock all required DOM elements
-    mockDOM['direction-selector'] = createMockDOMElement('div', 'direction-selector');
-    mockDOM['no-directions-message'] = createMockDOMElement('div', 'no-directions-message');
-    mockDOM['loading-indicator'] = createMockDOMElement('div', 'loading-indicator');
+    mockDOM['direction-selector'] = createMockDOMElement(
+      'div',
+      'direction-selector'
+    );
+    mockDOM['no-directions-message'] = createMockDOMElement(
+      'div',
+      'no-directions-message'
+    );
+    mockDOM['loading-indicator'] = createMockDOMElement(
+      'div',
+      'loading-indicator'
+    );
     mockDOM['generate-btn'] = createMockDOMElement('button', 'generate-btn');
     mockDOM['clear-all-btn'] = createMockDOMElement('button', 'clear-all-btn');
     mockDOM['export-btn'] = createMockDOMElement('button', 'export-btn');
     mockDOM['back-btn'] = createMockDOMElement('button', 'back-btn');
-    mockDOM['motivation-search'] = createMockDOMElement('input', 'motivation-search');
-    mockDOM['motivation-sort'] = createMockDOMElement('select', 'motivation-sort');
-    mockDOM['motivations-container'] = createMockDOMElement('div', 'motivations-container');
+    mockDOM['motivation-search'] = createMockDOMElement(
+      'input',
+      'motivation-search'
+    );
+    mockDOM['motivation-sort'] = createMockDOMElement(
+      'select',
+      'motivation-sort'
+    );
+    mockDOM['motivations-container'] = createMockDOMElement(
+      'div',
+      'motivations-container'
+    );
     mockDOM['empty-state'] = createMockDOMElement('div', 'empty-state');
-    mockDOM['confirmation-modal'] = createMockDOMElement('div', 'confirmation-modal');
+    mockDOM['confirmation-modal'] = createMockDOMElement(
+      'div',
+      'confirmation-modal'
+    );
     mockDOM['confirm-clear'] = createMockDOMElement('button', 'confirm-clear');
     mockDOM['cancel-clear'] = createMockDOMElement('button', 'cancel-clear');
-    mockDOM['sr-announcements'] = createMockDOMElement('div', 'sr-announcements');
-    mockDOM['search-results-count'] = createMockDOMElement('span', 'search-results-count');
+    mockDOM['sr-announcements'] = createMockDOMElement(
+      'div',
+      'sr-announcements'
+    );
+    mockDOM['search-results-count'] = createMockDOMElement(
+      'span',
+      'search-results-count'
+    );
     mockDOM['search-count'] = createMockDOMElement('span', 'search-count');
 
     global.document = {
@@ -135,10 +162,10 @@ describe('Core Motivations Workflow Integration', () => {
 
     it('should handle error correctly', async () => {
       const error = new Error('Test error');
-      
+
       // Test error handling
       controller.handleError(error);
-      
+
       // Verify error was logged
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         'Core Motivations Generator error:',
@@ -150,25 +177,25 @@ describe('Core Motivations Workflow Integration', () => {
   describe('Error Recovery Workflow', () => {
     it('should show warning messages correctly', () => {
       const message = 'Test warning';
-      
+
       controller.showWarning(message);
-      
+
       expect(testBed.mocks.logger.warn).toHaveBeenCalledWith(message);
     });
 
     it('should show success messages correctly', () => {
       const message = 'Test success';
-      
+
       controller.showSuccess(message);
-      
+
       expect(testBed.mocks.logger.info).toHaveBeenCalledWith(message);
     });
 
     it('should show error messages correctly', () => {
       const message = 'Test error';
-      
+
       controller.showError(message);
-      
+
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(message);
     });
   });
@@ -186,7 +213,7 @@ describe('Core Motivations Workflow Integration', () => {
       // Verify controller can handle errors through public API
       const error = new Error('Service error');
       controller.handleError(error);
-      
+
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         'Core Motivations Generator error:',
         error
@@ -207,7 +234,7 @@ describe('Core Motivations Workflow Integration', () => {
     it('should format motivations for export', () => {
       const motivations = createMockCoreMotivations(2);
       const direction = createMockThematicDirection({ id: 'dir-1' });
-      
+
       const formatted = displayEnhancer.formatMotivationsForExport(
         motivations,
         direction
@@ -247,8 +274,9 @@ describe('Core Motivations Workflow Integration', () => {
   describe('LLM Service Integration', () => {
     it('should handle LLM service responses', async () => {
       // Verify LLM service is properly mocked
-      const response = await testBed.mocks.llmService.generateCompletion('test prompt');
-      
+      const response =
+        await testBed.mocks.llmService.generateCompletion('test prompt');
+
       expect(response).toBeDefined();
     });
   });
@@ -287,10 +315,10 @@ function createMockDOMElement(tag, id = '', className = '') {
     setAttribute: jest.fn(),
     querySelector: jest.fn(),
     querySelectorAll: jest.fn(() => []),
-    appendChild: jest.fn(function(child) {
+    appendChild: jest.fn(function (child) {
       this.children.push(child);
     }),
-    removeChild: jest.fn(function(child) {
+    removeChild: jest.fn(function (child) {
       const index = this.children.indexOf(child);
       if (index > -1) this.children.splice(index, 1);
     }),

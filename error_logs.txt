@@ -1,39 +1,12 @@
-CoreMotivationsGeneratorController: Successfully created with dependencies {coreServices: Array(4), additionalServices: Array(2)}
-dependencyUtils.js:142 Missing required dependency: CoreMotivationsGenerator.
-validateDependency @ dependencyUtils.js:142
-CoreMotivationsGeneratorController @ CoreMotivationsGeneratorController.js:48
-createController_fn @ CharacterBuilderBootstrap.js:666
-bootstrap @ CharacterBuilderBootstrap.js:108
-await in bootstrap
-initializeApp @ core-motivations-generator-main.js:24
-(anonymous) @ core-motivations-generator-main.js:92
-(anonymous) @ core-motivations-generator-main.js:93Understand this error
-consoleLogger.js:175 [CharacterBuilderBootstrap] Fatal error during initialization of 'core-motivations-generator': Missing required dependency: CoreMotivationsGenerator. InvalidArgumentError: Missing required dependency: CoreMotivationsGenerator.
-    at validateDependency (dependencyUtils.js:143:11)
-    at new CoreMotivationsGeneratorController (CoreMotivationsGeneratorController.js:48:5)
-    at CharacterBuilderBootstrap.createController_fn (CharacterBuilderBootstrap.js:666:12)
-    at CharacterBuilderBootstrap.bootstrap (CharacterBuilderBootstrap.js:108:32)
-    at async initializeApp (core-motivations-generator-main.js:24:20)
-error @ consoleLogger.js:175
-handleBootstrapError_fn @ CharacterBuilderBootstrap.js:786
-bootstrap @ CharacterBuilderBootstrap.js:132
-await in bootstrap
-initializeApp @ core-motivations-generator-main.js:24
-(anonymous) @ core-motivations-generator-main.js:92
-(anonymous) @ core-motivations-generator-main.js:93Understand this error
-core-motivations-generator-main.js:64 Failed to initialize Core Motivations Generator: InvalidArgumentError: Missing required dependency: CoreMotivationsGenerator.
-    at validateDependency (dependencyUtils.js:143:11)
-    at new CoreMotivationsGeneratorController (CoreMotivationsGeneratorController.js:48:5)
-    at CharacterBuilderBootstrap.createController_fn (CharacterBuilderBootstrap.js:666:12)
-    at CharacterBuilderBootstrap.bootstrap (CharacterBuilderBootstrap.js:108:32)
-    at async initializeApp (core-motivations-generator-main.js:24:20)
-initializeApp @ core-motivations-generator-main.js:64
-await in initializeApp
-(anonymous) @ core-motivations-generator-main.js:92
-(anonymous) @ core-motivations-generator-main.js:93Understand this error
-dependencyUtils.js:143 Uncaught (in promise) InvalidArgumentError: Missing required dependency: CoreMotivationsGenerator.
-    at validateDependency (dependencyUtils.js:143:11)
-    at new CoreMotivationsGeneratorController (CoreMotivationsGeneratorController.js:48:5)
-    at CharacterBuilderBootstrap.createController_fn (CharacterBuilderBootstrap.js:666:12)
-    at CharacterBuilderBootstrap.bootstrap (CharacterBuilderBootstrap.js:108:32)
-    at async initializeApp (core-motivations-generator-main.js:24:20)
+Entity Description
+Head: bearded
+Hair: short, brown, wavy
+Eyes: brown, almond
+Torso: hairy, thick
+Arms: hairy, muscular
+Legs: hairy, muscular
+Ass: firm, thick
+Pubic hair: curly
+Penis: large, meaty, thick
+Testicles: thick
+Wearing: brown, smooth, leather belt | green, rugged, cotton chore jacket | green, smooth, cotton button-down shirt | indigo, rugged, denim jeans, and sand-beige, velvety, leather chukka boots.

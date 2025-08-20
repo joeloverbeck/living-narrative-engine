@@ -193,12 +193,19 @@ export class AnatomyOrchestrator extends BaseService {
         ? Object.fromEntries(graphResult.partsMap)
         : graphResult.partsMap;
 
+    // Preserve any existing body descriptors from the workflow
+    const existingBodyDescriptors = existingData.body?.descriptors;
+
     const updatedData = {
       ...existingData,
       recipeId, // Ensure recipe ID is preserved
       body: {
         root: graphResult.rootId,
         parts: partsObject,
+        // Preserve descriptors if they exist (added by the workflow)
+        ...(existingBodyDescriptors && {
+          descriptors: existingBodyDescriptors,
+        }),
       },
     };
 

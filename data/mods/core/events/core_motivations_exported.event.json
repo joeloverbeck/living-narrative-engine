@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:core_motivations_exported",
+  "description": "Dispatched when core motivations are exported to file or clipboard",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "directionId": {
+        "type": "string",
+        "description": "ID of the thematic direction"
+      },
+      "method": {
+        "type": "string",
+        "enum": ["file_only", "file_and_clipboard", "clipboard_only"],
+        "description": "Export method used"
+      },
+      "filename": {
+        "type": "string",
+        "description": "Name of the exported file (if applicable)"
+      },
+      "motivationCount": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Number of motivations exported"
+      }
+    },
+    "required": ["directionId", "method", "motivationCount"],
+    "additionalProperties": true
+  }
+}

@@ -284,7 +284,7 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
         }
       );
       expect(testBed.mockLogger.debug).toHaveBeenCalledWith(
-        `Entity ${entityId} anatomy ready: true`
+        `Entity ${entityId} anatomy ready: true (structure: true, description: true)`
       );
     });
 
@@ -544,17 +544,28 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
   describe('Timeout and Retry Logic', () => {
     it('should use configurable timeout for anatomy detection', async () => {
       const entityId = 'test:entity:123';
+      let anatomyCallCount = 0;
+      const anatomyData = {
+        recipeId: 'test:recipe',
+        body: {
+          root: 'test:root:123',
+          parts: { 'test:part1': 'entity1' },
+        },
+      };
+      const descriptionData = { text: 'Generated description' };
+
       const mockEntity = {
-        getComponentData: jest
-          .fn()
-          .mockReturnValueOnce(null) // First call - not ready
-          .mockReturnValueOnce({
-            recipeId: 'test:recipe',
-            body: {
-              root: 'test:root:123',
-              parts: { 'test:part1': 'entity1' },
-            },
-          }), // Second call - ready
+        getComponentData: jest.fn().mockImplementation((componentType) => {
+          if (componentType === 'anatomy:body') {
+            anatomyCallCount++;
+            // First call returns null, second call returns data
+            return anatomyCallCount === 1 ? null : anatomyData;
+          } else if (componentType === 'core:description') {
+            // Return description when anatomy is ready (after second anatomy call)
+            return anatomyCallCount >= 2 ? descriptionData : null;
+          }
+          return null;
+        }),
       };
 
       testBed.mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
@@ -569,7 +580,8 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
       );
 
       expect(result).toBe(true);
-      expect(mockEntity.getComponentData).toHaveBeenCalledTimes(2);
+      // First attempt: anatomy call (returns null), second attempt: anatomy call (returns data) + description call
+      expect(mockEntity.getComponentData).toHaveBeenCalledTimes(3);
     });
 
     it('should timeout if anatomy is never ready', async () => {
@@ -598,18 +610,28 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
 
     it('should use exponential backoff for retries', async () => {
       const entityId = 'test:entity:123';
+      let anatomyCallCount = 0;
+      const anatomyData = {
+        recipeId: 'test:recipe',
+        body: {
+          root: 'test:root:123',
+          parts: { 'test:part1': 'entity1' },
+        },
+      };
+      const descriptionData = { text: 'Generated description' };
+
       const mockEntity = {
-        getComponentData: jest
-          .fn()
-          .mockReturnValueOnce(null)
-          .mockReturnValueOnce(null)
-          .mockReturnValueOnce({
-            recipeId: 'test:recipe',
-            body: {
-              root: 'test:root:123',
-              parts: { 'test:part1': 'entity1' },
-            },
-          }),
+        getComponentData: jest.fn().mockImplementation((componentType) => {
+          if (componentType === 'anatomy:body') {
+            anatomyCallCount++;
+            // First two calls return null, third call returns data
+            return anatomyCallCount <= 2 ? null : anatomyData;
+          } else if (componentType === 'core:description') {
+            // Return description when anatomy is ready (after third anatomy call)
+            return anatomyCallCount >= 3 ? descriptionData : null;
+          }
+          return null;
+        }),
       };
 
       testBed.mockEntityManager.getEntityInstance.mockResolvedValue(mockEntity);
@@ -625,7 +647,8 @@ describe('AnatomyLoadingDetector - Anatomy Detection', () => {
       );
 
       expect(result).toBe(true);
-      expect(mockEntity.getComponentData).toHaveBeenCalledTimes(3);
+      // Three anatomy attempts (1st: null, 2nd: null, 3rd: success) + one description call on success
+      expect(mockEntity.getComponentData).toHaveBeenCalledTimes(4);
     });
   });
 

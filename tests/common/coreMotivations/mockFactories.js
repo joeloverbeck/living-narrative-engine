@@ -499,12 +499,14 @@ export function createMockCharacterBuilderService(options = {}) {
       }
       return { ...concept, id: concept.id || 'new-concept-id' };
     }),
-    updateCharacterConcept: jest.fn().mockImplementation(async (id, updates) => {
-      if (shouldFail) {
-        throw new Error('Failed to update character concept');
-      }
-      return { id, ...updates };
-    }),
+    updateCharacterConcept: jest
+      .fn()
+      .mockImplementation(async (id, updates) => {
+        if (shouldFail) {
+          throw new Error('Failed to update character concept');
+        }
+        return { id, ...updates };
+      }),
     deleteCharacterConcept: jest.fn().mockImplementation(async (id) => {
       if (shouldFail) {
         throw new Error('Failed to delete character concept');
@@ -517,15 +519,17 @@ export function createMockCharacterBuilderService(options = {}) {
       }
       return { id, name: 'Test Concept' };
     }),
-    generateThematicDirections: jest.fn().mockImplementation(async (conceptId) => {
-      if (shouldFail) {
-        throw new Error('Failed to generate thematic directions');
-      }
-      return [
-        { id: 'dir-1', title: 'Direction 1', theme: 'Theme 1' },
-        { id: 'dir-2', title: 'Direction 2', theme: 'Theme 2' },
-      ];
-    }),
+    generateThematicDirections: jest
+      .fn()
+      .mockImplementation(async (conceptId) => {
+        if (shouldFail) {
+          throw new Error('Failed to generate thematic directions');
+        }
+        return [
+          { id: 'dir-1', title: 'Direction 1', theme: 'Theme 1' },
+          { id: 'dir-2', title: 'Direction 2', theme: 'Theme 2' },
+        ];
+      }),
     getThematicDirections: jest.fn().mockImplementation(async (conceptId) => {
       if (shouldFail) {
         throw new Error('Failed to get thematic directions');
@@ -535,11 +539,11 @@ export function createMockCharacterBuilderService(options = {}) {
         { id: 'dir-2', title: 'Direction 2', theme: 'Theme 2' },
       ];
     }),
-    
+
     // Character concept methods
-    getAllCharacterConcepts: jest.fn().mockResolvedValue([
-      { id: 'concept-1', name: 'Test Concept' },
-    ]),
+    getAllCharacterConcepts: jest
+      .fn()
+      .mockResolvedValue([{ id: 'concept-1', name: 'Test Concept' }]),
     getCharacterConceptById: jest.fn().mockImplementation(async (id) => {
       if (shouldFail) {
         throw new Error('Failed to get character concept');

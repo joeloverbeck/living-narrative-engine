@@ -126,6 +126,7 @@ export class AnatomyVisualizerUnitTestBed extends BaseTestBed {
       recipeId = 'anatomy:human_male',
       hasValidAnatomy = true,
       anatomyData = null,
+      hasDescription = true,
     } = options;
 
     const defaultAnatomyData = {
@@ -139,13 +140,29 @@ export class AnatomyVisualizerUnitTestBed extends BaseTestBed {
       },
     };
 
+    const finalAnatomyData = hasValidAnatomy
+      ? anatomyData || defaultAnatomyData
+      : null;
+
+    // Create description component if entity has recipeId and hasDescription is true
+    const shouldHaveDescription =
+      finalAnatomyData && finalAnatomyData.recipeId && hasDescription;
+    const descriptionComponent = shouldHaveDescription
+      ? { text: `Generated description for entity ${entityId}` }
+      : null;
+
     return {
       id: entityId,
-      getComponentData: jest
-        .fn()
-        .mockReturnValue(
-          hasValidAnatomy ? anatomyData || defaultAnatomyData : null
-        ),
+      getComponentData: jest.fn().mockImplementation((componentType) => {
+        switch (componentType) {
+          case 'anatomy:body':
+            return finalAnatomyData;
+          case 'core:description':
+            return descriptionComponent;
+          default:
+            return null;
+        }
+      }),
     };
   }
 

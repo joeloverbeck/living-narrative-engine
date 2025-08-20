@@ -19,6 +19,7 @@ jest.mock(
 jest.mock(
   '../../src/coreMotivationsGenerator/services/CoreMotivationsDisplayEnhancer.js'
 );
+jest.mock('../../src/characterBuilder/services/CoreMotivationsGenerator.js');
 
 describe('Core Motivations Generator Entry Point', () => {
   let mockBootstrap;
@@ -30,6 +31,7 @@ describe('Core Motivations Generator Entry Point', () => {
   let CharacterBuilderBootstrap;
   let CoreMotivationsGeneratorController;
   let CoreMotivationsDisplayEnhancer;
+  let CoreMotivationsGenerator;
   let initializeApp;
 
   beforeEach(async () => {
@@ -72,11 +74,17 @@ describe('Core Motivations Generator Entry Point', () => {
         '../../src/coreMotivationsGenerator/services/CoreMotivationsDisplayEnhancer.js'
       )
     ).CoreMotivationsDisplayEnhancer;
+    CoreMotivationsGenerator = (
+      await import(
+        '../../src/characterBuilder/services/CoreMotivationsGenerator.js'
+      )
+    ).CoreMotivationsGenerator;
 
     // Mock implementations
     CharacterBuilderBootstrap.mockImplementation(() => mockBootstrap);
     CoreMotivationsGeneratorController.mockImplementation(() => mockController);
     CoreMotivationsDisplayEnhancer.mockImplementation(() => ({}));
+    CoreMotivationsGenerator.mockImplementation(() => ({}));
 
     // Mock DOM methods
     mockGetElementById = jest.fn();
@@ -126,6 +134,7 @@ describe('Core Motivations Generator Entry Point', () => {
       customSchemas: ['/data/schemas/core-motivation.schema.json'],
       services: {
         displayEnhancer: CoreMotivationsDisplayEnhancer,
+        coreMotivationsGenerator: CoreMotivationsGenerator,
       },
       hooks: expect.objectContaining({
         postInit: expect.any(Function),
@@ -149,6 +158,7 @@ describe('Core Motivations Generator Entry Point', () => {
         includeModLoading: true,
         services: {
           displayEnhancer: CoreMotivationsDisplayEnhancer,
+          coreMotivationsGenerator: CoreMotivationsGenerator,
         },
       })
     );

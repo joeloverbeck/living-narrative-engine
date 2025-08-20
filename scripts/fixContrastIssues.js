@@ -61,7 +61,9 @@ function rgbToHsl({ r, g, b }) {
 
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
-  let h, s, l = (max + min) / 2;
+  let h,
+    s,
+    l = (max + min) / 2;
 
   if (max === min) {
     h = s = 0; // achromatic
@@ -108,17 +110,17 @@ function hslToRgb({ h, s, l }) {
     const hue2rgb = (p, q, t) => {
       if (t < 0) t += 1;
       if (t > 1) t -= 1;
-      if (t < 1/6) return p + (q - p) * 6 * t;
-      if (t < 1/2) return q;
-      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
       return p;
     };
 
     const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
     const p = 2 * l - q;
-    r = hue2rgb(p, q, h + 1/3);
+    r = hue2rgb(p, q, h + 1 / 3);
     g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1/3);
+    b = hue2rgb(p, q, h - 1 / 3);
   }
 
   return {
@@ -136,7 +138,7 @@ function hslToRgb({ h, s, l }) {
  */
 function getLuminance(hex) {
   const { r, g, b } = hexToRgb(hex);
-  
+
   const gammaCorrect = (value) => {
     value = value / 255;
     return value <= 0.03928
@@ -180,19 +182,19 @@ function getContrastRatio(color1, color2) {
 function adjustColorForContrast(color, against, targetRatio, makeLighter) {
   const rgb = hexToRgb(color);
   const hsl = rgbToHsl(rgb);
-  
+
   let bestL = hsl.l;
   let bestDiff = Infinity;
-  
+
   // Try different lightness values
   const start = makeLighter ? hsl.l : 0;
   const end = makeLighter ? 100 : hsl.l;
   const step = makeLighter ? 1 : -1;
-  
+
   for (let l = start; makeLighter ? l <= end : l >= end; l += step) {
     const testColor = rgbToHex(hslToRgb({ ...hsl, l }));
     const ratio = getContrastRatio(testColor, against);
-    
+
     if (ratio >= targetRatio) {
       const diff = Math.abs(ratio - targetRatio);
       if (diff < bestDiff) {
@@ -205,11 +207,11 @@ function adjustColorForContrast(color, against, targetRatio, makeLighter) {
       }
     }
   }
-  
+
   if (bestDiff === Infinity) {
     return null; // Couldn't achieve target contrast
   }
-  
+
   return rgbToHex(hslToRgb({ ...hsl, l: bestL }));
 }
 
@@ -223,9 +225,14 @@ function adjustColorForContrast(color, against, targetRatio, makeLighter) {
  */
 function generateFixSuggestions(bgColor, textColor, currentRatio) {
   const suggestions = [];
-  
+
   // Strategy 1: Darken background
-  const darkerBg = adjustColorForContrast(bgColor, textColor, TARGET_CONTRAST, false);
+  const darkerBg = adjustColorForContrast(
+    bgColor,
+    textColor,
+    TARGET_CONTRAST,
+    false
+  );
   if (darkerBg) {
     suggestions.push({
       strategy: 'darken-background',
@@ -235,9 +242,14 @@ function generateFixSuggestions(bgColor, textColor, currentRatio) {
       newRatio: getContrastRatio(darkerBg, textColor),
     });
   }
-  
+
   // Strategy 2: Lighten text
-  const lighterText = adjustColorForContrast(textColor, bgColor, TARGET_CONTRAST, true);
+  const lighterText = adjustColorForContrast(
+    textColor,
+    bgColor,
+    TARGET_CONTRAST,
+    true
+  );
   if (lighterText) {
     suggestions.push({
       strategy: 'lighten-text',
@@ -247,9 +259,14 @@ function generateFixSuggestions(bgColor, textColor, currentRatio) {
       newRatio: getContrastRatio(bgColor, lighterText),
     });
   }
-  
+
   // Strategy 3: Darken text (sometimes works better)
-  const darkerText = adjustColorForContrast(textColor, bgColor, TARGET_CONTRAST, false);
+  const darkerText = adjustColorForContrast(
+    textColor,
+    bgColor,
+    TARGET_CONTRAST,
+    false
+  );
   if (darkerText) {
     suggestions.push({
       strategy: 'darken-text',
@@ -259,9 +276,14 @@ function generateFixSuggestions(bgColor, textColor, currentRatio) {
       newRatio: getContrastRatio(bgColor, darkerText),
     });
   }
-  
+
   // Strategy 4: Lighten background
-  const lighterBg = adjustColorForContrast(bgColor, textColor, TARGET_CONTRAST, true);
+  const lighterBg = adjustColorForContrast(
+    bgColor,
+    textColor,
+    TARGET_CONTRAST,
+    true
+  );
   if (lighterBg) {
     suggestions.push({
       strategy: 'lighten-background',
@@ -271,16 +293,20 @@ function generateFixSuggestions(bgColor, textColor, currentRatio) {
       newRatio: getContrastRatio(lighterBg, textColor),
     });
   }
-  
+
   // Strategy 5: Balanced adjustment (adjust both slightly)
   const bgHsl = rgbToHsl(hexToRgb(bgColor));
   const textHsl = rgbToHsl(hexToRgb(textColor));
-  
+
   // Make background slightly darker and text slightly lighter
-  const balancedBg = rgbToHex(hslToRgb({ ...bgHsl, l: Math.max(0, bgHsl.l - 10) }));
-  const balancedText = rgbToHex(hslToRgb({ ...textHsl, l: Math.min(100, textHsl.l + 10) }));
+  const balancedBg = rgbToHex(
+    hslToRgb({ ...bgHsl, l: Math.max(0, bgHsl.l - 10) })
+  );
+  const balancedText = rgbToHex(
+    hslToRgb({ ...textHsl, l: Math.min(100, textHsl.l + 10) })
+  );
   const balancedRatio = getContrastRatio(balancedBg, balancedText);
-  
+
   if (balancedRatio >= WCAG_AA_NORMAL_TEXT) {
     suggestions.push({
       strategy: 'balanced',
@@ -290,14 +316,14 @@ function generateFixSuggestions(bgColor, textColor, currentRatio) {
       newRatio: balancedRatio,
     });
   }
-  
+
   // Sort by how close they are to target ratio (not too high, not too low)
   suggestions.sort((a, b) => {
     const aDiff = Math.abs(a.newRatio - TARGET_CONTRAST);
     const bDiff = Math.abs(b.newRatio - TARGET_CONTRAST);
     return aDiff - bDiff;
   });
-  
+
   return suggestions;
 }
 
@@ -312,8 +338,10 @@ function generateFixSuggestions(bgColor, textColor, currentRatio) {
  */
 async function runValidation() {
   // Import and use the validator class
-  const { VisualContrastValidator } = await import('./validateVisualContrast.js')
-    .then(module => {
+  const { VisualContrastValidator } = await import(
+    './validateVisualContrast.js'
+  )
+    .then((module) => {
       // Export the class from validateVisualContrast.js if not already exported
       return module;
     })
@@ -324,35 +352,39 @@ async function runValidation() {
 
   if (VisualContrastValidator) {
     const validator = new VisualContrastValidator();
-    
+
     // Discover and validate all mods
     const mods = await validator.discoverModsWithActions();
     for (const mod of mods) {
       await validator.validateMod(mod);
     }
-    
+
     return validator.results;
   } else {
     // Fallback: parse output from running the script
     const { exec } = await import('child_process');
     const { promisify } = await import('util');
     const execAsync = promisify(exec);
-    
+
     console.log('Running validation script...');
-    const { stdout } = await execAsync('node scripts/validateVisualContrast.js');
-    
+    const { stdout } = await execAsync(
+      'node scripts/validateVisualContrast.js'
+    );
+
     // Parse the output to extract issues
     // This is a simplified parser - would need enhancement for production
     const issues = [];
     const lines = stdout.split('\n');
-    
+
     let currentMod = null;
     for (const line of lines) {
       if (line.includes('MOD:')) {
         currentMod = line.split(' ')[0].toLowerCase();
       } else if (line.includes('contrast too low:') && currentMod) {
         // Extract file and ratio from the line
-        const match = line.match(/([^/]+\.json): .* contrast too low: ([\d.]+):1/);
+        const match = line.match(
+          /([^/]+\.json): .* contrast too low: ([\d.]+):1/
+        );
         if (match) {
           issues.push({
             mod: currentMod,
@@ -363,7 +395,7 @@ async function runValidation() {
         }
       }
     }
-    
+
     return { issues };
   }
 }
@@ -376,7 +408,13 @@ async function runValidation() {
  * @returns {Promise<object>} Action data
  */
 async function loadActionFile(modName, fileName) {
-  const filePath = path.join(__dirname, '../data/mods', modName, 'actions', fileName);
+  const filePath = path.join(
+    __dirname,
+    '../data/mods',
+    modName,
+    'actions',
+    fileName
+  );
   const content = await fs.readFile(filePath, 'utf8');
   return JSON.parse(content);
 }
@@ -389,7 +427,13 @@ async function loadActionFile(modName, fileName) {
  * @param {object} action - Updated action data
  */
 async function saveActionFile(modName, fileName, action) {
-  const filePath = path.join(__dirname, '../data/mods', modName, 'actions', fileName);
+  const filePath = path.join(
+    __dirname,
+    '../data/mods',
+    modName,
+    'actions',
+    fileName
+  );
   const content = JSON.stringify(action, null, 2) + '\n';
   await fs.writeFile(filePath, content, 'utf8');
 }
@@ -414,7 +458,7 @@ function parseArgs() {
     exclude: [],
     verbose: false,
   };
-  
+
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
       case '--apply':
@@ -436,13 +480,13 @@ function parseArgs() {
         break;
       case '--include':
         if (args[i + 1]) {
-          options.include = args[i + 1].split(',').map(s => s.trim());
+          options.include = args[i + 1].split(',').map((s) => s.trim());
           i++;
         }
         break;
       case '--exclude':
         if (args[i + 1]) {
-          options.exclude = args[i + 1].split(',').map(s => s.trim());
+          options.exclude = args[i + 1].split(',').map((s) => s.trim());
           i++;
         }
         break;
@@ -454,7 +498,7 @@ function parseArgs() {
         process.exit(0);
     }
   }
-  
+
   return options;
 }
 
@@ -498,7 +542,7 @@ async function askConfirmation(question) {
     input: process.stdin,
     output: process.stdout,
   });
-  
+
   return new Promise((resolve) => {
     rl.question(question + ' (y/n): ', (answer) => {
       rl.close();
@@ -515,9 +559,13 @@ async function askConfirmation(question) {
  */
 function displaySuggestion(suggestion, current) {
   console.log(`  Strategy: ${suggestion.description}`);
-  console.log(`    Background: ${current.backgroundColor} → ${suggestion.backgroundColor}`);
+  console.log(
+    `    Background: ${current.backgroundColor} → ${suggestion.backgroundColor}`
+  );
   console.log(`    Text:       ${current.textColor} → ${suggestion.textColor}`);
-  console.log(`    Contrast:   ${current.ratio.toFixed(2)}:1 → ${suggestion.newRatio.toFixed(2)}:1 ✅`);
+  console.log(
+    `    Contrast:   ${current.ratio.toFixed(2)}:1 → ${suggestion.newRatio.toFixed(2)}:1 ✅`
+  );
 }
 
 // ============================================================================
@@ -529,31 +577,33 @@ function displaySuggestion(suggestion, current) {
  */
 async function main() {
   const options = parseArgs();
-  
+
   console.log('🎨 Generic Contrast Fixer for WCAG AA Compliance');
   console.log('=================================================\n');
-  
+
   if (options.dryRun) {
     console.log('📋 Running in DRY-RUN mode (no files will be modified)');
     console.log('   Use --apply to actually apply fixes\n');
   }
-  
+
   // Step 1: Run validation to find issues
   console.log('🔍 Analyzing contrast issues...\n');
-  
+
   // For now, we'll run the validation script as a subprocess
   // since the class isn't exported from validateVisualContrast.js
   const { exec } = await import('child_process');
   const { promisify } = await import('util');
   const execAsync = promisify(exec);
-  
+
   let modIssues = {};
-  
+
   let validationOutput = '';
-  
+
   try {
     // Run validation and parse output
-    const { stdout } = await execAsync('node scripts/validateVisualContrast.js --verbose');
+    const { stdout } = await execAsync(
+      'node scripts/validateVisualContrast.js --verbose'
+    );
     validationOutput = stdout;
   } catch (error) {
     // Script exits with code 1 when issues are found, but we still get stdout
@@ -564,13 +614,13 @@ async function main() {
       process.exit(1);
     }
   }
-  
+
   // Parse the output to extract detailed issues
   if (validationOutput) {
     const lines = validationOutput.split('\n');
     let currentMod = null;
     let currentAction = null;
-    
+
     for (const line of lines) {
       // Match mod name
       if (line.match(/^[A-Z_]+ MOD:/)) {
@@ -596,8 +646,7 @@ async function main() {
             modIssues[currentMod][currentAction].normalRatio = ratio;
           }
         }
-      }
-      else if (line.includes('Hover:') && currentMod && currentAction) {
+      } else if (line.includes('Hover:') && currentMod && currentAction) {
         const match = line.match(/([\d.]+):1/);
         if (match) {
           const ratio = parseFloat(match[1]);
@@ -611,7 +660,7 @@ async function main() {
       }
     }
   }
-  
+
   // Filter mods based on options
   if (options.include.length > 0) {
     const filtered = {};
@@ -622,68 +671,75 @@ async function main() {
     }
     modIssues = filtered;
   }
-  
+
   if (options.exclude.length > 0) {
     for (const mod of options.exclude) {
       delete modIssues[mod];
     }
   }
-  
+
   // Check if there are any issues
   const totalIssues = Object.values(modIssues).reduce(
-    (sum, mod) => sum + Object.keys(mod).length, 0
+    (sum, mod) => sum + Object.keys(mod).length,
+    0
   );
-  
+
   if (totalIssues === 0) {
-    console.log('✅ No contrast issues found! All actions meet WCAG AA standards.');
+    console.log(
+      '✅ No contrast issues found! All actions meet WCAG AA standards.'
+    );
     process.exit(0);
   }
-  
-  console.log(`Found contrast issues in ${Object.keys(modIssues).length} mod(s)\n`);
-  
+
+  console.log(
+    `Found contrast issues in ${Object.keys(modIssues).length} mod(s)\n`
+  );
+
   // Step 2: Generate and apply fixes
   let totalFixed = 0;
   let totalSkipped = 0;
-  
+
   for (const [modName, actions] of Object.entries(modIssues)) {
     if (Object.keys(actions).length === 0) continue;
-    
+
     console.log(`\n📦 ${modName.toUpperCase()} MOD`);
     console.log('─'.repeat(40));
-    
+
     for (const [actionId, issues] of Object.entries(actions)) {
       // Remove the mod prefix to get just the action name
       const actionName = actionId.split(':')[1];
       const fileName = `${actionName}.action.json`;
-      
+
       try {
         // Load the action file
         const action = await loadActionFile(modName, fileName);
-        
+
         if (!action.visual) {
           console.log(`  ⚠️  ${actionId}: No visual properties found`);
           totalSkipped++;
           continue;
         }
-        
+
         console.log(`\n  🎯 ${actionId}`);
-        
+
         let needsUpdate = false;
         const updates = {};
-        
+
         // Fix normal state if needed
         if (issues.normalRatio) {
-          console.log(`    Normal state contrast: ${issues.normalRatio.toFixed(2)}:1 ❌`);
-          
+          console.log(
+            `    Normal state contrast: ${issues.normalRatio.toFixed(2)}:1 ❌`
+          );
+
           const suggestions = generateFixSuggestions(
             action.visual.backgroundColor,
             action.visual.textColor,
             issues.normalRatio
           );
-          
+
           if (suggestions.length > 0) {
             let chosen = suggestions[0]; // Default to best suggestion
-            
+
             if (options.interactive) {
               console.log('\n    Available fixes:');
               suggestions.forEach((s, i) => {
@@ -694,7 +750,7 @@ async function main() {
                   ratio: issues.normalRatio,
                 });
               });
-              
+
               const answer = await askConfirmation('\n    Apply fix #1?');
               if (!answer) {
                 console.log('    Skipped');
@@ -703,9 +759,11 @@ async function main() {
               }
             } else if (options.strategy !== 'auto') {
               // Find matching strategy
-              chosen = suggestions.find(s => s.strategy === options.strategy) || chosen;
+              chosen =
+                suggestions.find((s) => s.strategy === options.strategy) ||
+                chosen;
             }
-            
+
             if (options.verbose || !options.interactive) {
               console.log('    Selected fix:');
               displaySuggestion(chosen, {
@@ -714,7 +772,7 @@ async function main() {
                 ratio: issues.normalRatio,
               });
             }
-            
+
             updates.backgroundColor = chosen.backgroundColor;
             updates.textColor = chosen.textColor;
             needsUpdate = true;
@@ -723,20 +781,22 @@ async function main() {
             totalSkipped++;
           }
         }
-        
+
         // Fix hover state if needed
         if (issues.hoverRatio) {
-          console.log(`    Hover state contrast: ${issues.hoverRatio.toFixed(2)}:1 ❌`);
-          
+          console.log(
+            `    Hover state contrast: ${issues.hoverRatio.toFixed(2)}:1 ❌`
+          );
+
           const suggestions = generateFixSuggestions(
             action.visual.hoverBackgroundColor,
             action.visual.hoverTextColor,
             issues.hoverRatio
           );
-          
+
           if (suggestions.length > 0) {
             let chosen = suggestions[0];
-            
+
             if (options.interactive) {
               console.log('\n    Available hover fixes:');
               suggestions.forEach((s, i) => {
@@ -747,16 +807,18 @@ async function main() {
                   ratio: issues.hoverRatio,
                 });
               });
-              
+
               const answer = await askConfirmation('\n    Apply hover fix #1?');
               if (!answer) {
                 console.log('    Skipped hover fix');
                 continue;
               }
             } else if (options.strategy !== 'auto') {
-              chosen = suggestions.find(s => s.strategy === options.strategy) || chosen;
+              chosen =
+                suggestions.find((s) => s.strategy === options.strategy) ||
+                chosen;
             }
-            
+
             if (options.verbose || !options.interactive) {
               console.log('    Selected hover fix:');
               displaySuggestion(chosen, {
@@ -765,7 +827,7 @@ async function main() {
                 ratio: issues.hoverRatio,
               });
             }
-            
+
             updates.hoverBackgroundColor = chosen.backgroundColor;
             updates.hoverTextColor = chosen.textColor;
             needsUpdate = true;
@@ -774,7 +836,7 @@ async function main() {
             totalSkipped++;
           }
         }
-        
+
         // Apply updates if needed
         if (needsUpdate && options.apply) {
           action.visual = { ...action.visual, ...updates };
@@ -785,14 +847,13 @@ async function main() {
           console.log('    📋 Would be fixed (dry-run mode)');
           totalFixed++;
         }
-        
       } catch (error) {
         console.error(`  ❌ Error processing ${fileName}: ${error.message}`);
         totalSkipped++;
       }
     }
   }
-  
+
   // Summary
   console.log('\n' + '='.repeat(50));
   console.log('📊 Summary');
@@ -800,7 +861,7 @@ async function main() {
   console.log(`Total issues found: ${totalFixed + totalSkipped}`);
   console.log(`Fixed: ${totalFixed}`);
   console.log(`Skipped: ${totalSkipped}`);
-  
+
   if (options.dryRun) {
     console.log('\n💡 This was a dry-run. Use --apply to apply these fixes.');
   } else {
