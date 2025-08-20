@@ -512,20 +512,12 @@ class CharacterDatabase {
 
 ### 6.3 E2E Tests
 
-#### Page Navigation (`tests/e2e/coreMotivationsGenerator.e2e.test.js`)
+**Note**: E2E tests for Core Motivations Generator have been removed due to poor design (JSDOM-based instead of real browser testing). Future E2E testing should use Playwright with actual browsers.
 
-- Navigation from index.html
-- Page load and initialization
-- Bootstrap process
-- Resource loading
+For current test coverage, see:
 
-#### Generation Workflow
-
-- Direction selection
-- Generation triggering
-- Loading states
-- Success display
-- Error handling
+- Unit tests: `tests/unit/coreMotivationsGenerator/`
+- Integration tests: `tests/integration/coreMotivationsGenerator/`
 
 #### User Interactions
 

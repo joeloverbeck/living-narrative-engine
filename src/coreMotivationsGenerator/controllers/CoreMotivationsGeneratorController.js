@@ -91,7 +91,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
       // Dispatch initialization complete event
       this.eventBus.dispatch({
-        type: 'CORE_MOTIVATIONS_UI_INITIALIZED',
+        type: 'core:core_motivations_ui_initialized',
         payload: {
           conceptId: this.#currentConceptId,
           eligibleDirectionsCount: this.#eligibleDirections.length,
@@ -181,6 +181,10 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     noDirectionsMsg.style.display = 'none';
     container.innerHTML = '';
 
+    // Set accessibility attributes for the direction container
+    container.setAttribute('aria-label', 'Select thematic direction');
+    container.setAttribute('role', 'listbox');
+
     this.#eligibleDirections.forEach((direction) => {
       const element = this.#createDirectionElement(direction);
       container.appendChild(element);
@@ -197,6 +201,14 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     div.className = 'direction-item';
     div.dataset.directionId = direction.id;
 
+    // Set accessibility attributes for the direction item
+    div.setAttribute('role', 'option');
+    div.setAttribute(
+      'aria-label',
+      `Select direction: ${direction.title} - ${direction.theme}`
+    );
+    div.setAttribute('tabindex', '0');
+
     const title = document.createElement('h3');
     title.textContent = direction.title;
     div.appendChild(title);
@@ -207,6 +219,14 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     div.appendChild(theme);
 
     div.addEventListener('click', () => this.#selectDirection(direction.id));
+
+    // Add keyboard support for accessibility
+    div.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        this.#selectDirection(direction.id);
+      }
+    });
 
     return div;
   }
@@ -221,10 +241,9 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
     // Update selection UI
     document.querySelectorAll('.direction-item').forEach((item) => {
-      item.classList.toggle(
-        'selected',
-        item.dataset.directionId === directionId
-      );
+      const isSelected = item.dataset.directionId === directionId;
+      item.classList.toggle('selected', isSelected);
+      item.setAttribute('aria-selected', isSelected.toString());
     });
 
     this.#selectedDirectionId = directionId;
@@ -237,7 +256,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
     // Dispatch selection event
     this.eventBus.dispatch({
-      type: 'CORE_MOTIVATIONS_DIRECTION_SELECTED',
+      type: 'core:core_motivations_direction_selected',
       payload: {
         directionId,
         conceptId: this.#currentConceptId,
@@ -261,7 +280,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       this.#displayMotivations();
 
       this.eventBus.dispatch({
-        type: 'CORE_MOTIVATIONS_RETRIEVED',
+        type: 'core:core_motivations_retrieved',
         payload: {
           directionId,
           count: this.#currentMotivations.length,
@@ -553,7 +572,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     try {
       // Dispatch generation started event
       this.eventBus.dispatch({
-        type: 'CORE_MOTIVATIONS_GENERATION_STARTED',
+        type: 'core:core_motivations_generation_started',
         payload: {
           conceptId: this.#currentConceptId,
           directionId: this.#selectedDirectionId,
@@ -591,7 +610,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
       // Dispatch completion event
       this.eventBus.dispatch({
-        type: 'CORE_MOTIVATIONS_GENERATION_COMPLETED',
+        type: 'core:core_motivations_generation_completed',
         payload: {
           conceptId: this.#currentConceptId,
           directionId: this.#selectedDirectionId,
@@ -605,7 +624,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       this.logger.error('Failed to generate motivations:', error);
 
       this.eventBus.dispatch({
-        type: 'CORE_MOTIVATIONS_GENERATION_FAILED',
+        type: 'core:core_motivations_generation_failed',
         payload: {
           conceptId: this.#currentConceptId,
           directionId: this.#selectedDirectionId,
@@ -642,7 +661,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
         await this.#loadExistingMotivations(this.#selectedDirectionId);
 
         this.eventBus.dispatch({
-          type: 'CORE_MOTIVATIONS_DELETED',
+          type: 'core:core_motivations_deleted',
           payload: {
             directionId: this.#selectedDirectionId,
             motivationId,
@@ -748,7 +767,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
           // Dispatch export event
           this.eventBus.dispatch({
-            type: 'CORE_MOTIVATIONS_EXPORTED',
+            type: 'core:core_motivations_exported',
             payload: {
               directionId: this.#selectedDirectionId,
               method: 'file_and_clipboard',
@@ -763,7 +782,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
           this.showSuccess('Motivations downloaded to file');
 
           this.eventBus.dispatch({
-            type: 'CORE_MOTIVATIONS_EXPORTED',
+            type: 'core:core_motivations_exported',
             payload: {
               directionId: this.#selectedDirectionId,
               method: 'file_only',
@@ -861,7 +880,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       this.#displayMotivations();
 
       this.eventBus.dispatch({
-        type: 'MOTIVATIONS_SEARCH_PERFORMED',
+        type: 'core:motivations_search_performed',
         payload: {
           query: this.#currentSearchQuery,
           resultsCount: this.#filterMotivations(this.#currentMotivations)
@@ -889,7 +908,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     this.#displayMotivations();
 
     this.eventBus.dispatch({
-      type: 'MOTIVATIONS_SORT_CHANGED',
+      type: 'core:motivations_sort_changed',
       payload: { sortOrder },
     });
   }

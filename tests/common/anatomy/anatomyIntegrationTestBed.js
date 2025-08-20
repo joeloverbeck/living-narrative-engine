@@ -28,6 +28,7 @@ import { IsSocketCoveredOperator } from '../../../src/logic/operators/isSocketCo
 import {
   createMockLogger,
   createMockSafeEventDispatcher,
+  createMockValidatedEventDispatcherForIntegration,
   createMockSchemaValidator,
   createMockEventDispatchService,
   createMockEntity,
@@ -50,7 +51,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
     const mocks = {
       logger: createMockLogger(),
       registry: new InMemoryDataRegistry(),
-      eventDispatcher: createMockSafeEventDispatcher(),
+      eventDispatcher: createMockValidatedEventDispatcherForIntegration(),
       eventDispatchService: createMockEventDispatchService(),
       validator: createMockSchemaValidator(),
       idGenerator: UuidGenerator,

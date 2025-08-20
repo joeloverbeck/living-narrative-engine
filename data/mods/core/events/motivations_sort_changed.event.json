@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:motivations_sort_changed",
+  "description": "Dispatched when user changes the sort order of motivations",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "sortOrder": {
+        "type": "string",
+        "enum": ["newest", "oldest", "alphabetical"],
+        "description": "New sort order selected by user"
+      }
+    },
+    "required": ["sortOrder"],
+    "additionalProperties": true
+  }
+}

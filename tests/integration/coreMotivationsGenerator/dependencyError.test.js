@@ -17,7 +17,7 @@ describe('CoreMotivationsGenerator Dependency Error', () => {
 
     // Save original fetch
     originalFetch = global.fetch;
-    
+
     // Mock fetch for schema loading and logger config
     global.fetch = jest.fn().mockImplementation((url) => {
       if (url.includes('.schema.json')) {
@@ -101,7 +101,9 @@ describe('CoreMotivationsGenerator Dependency Error', () => {
     const MockController = jest.fn().mockImplementation((deps) => {
       // Verify the dependency is present
       if (!deps.coreMotivationsGenerator) {
-        throw new Error('Missing required dependency: CoreMotivationsGenerator');
+        throw new Error(
+          'Missing required dependency: CoreMotivationsGenerator'
+        );
       }
       return {
         initialize: jest.fn().mockResolvedValue(true),
@@ -134,6 +136,8 @@ describe('CoreMotivationsGenerator Dependency Error', () => {
     expect(result).toBeDefined();
     expect(result.controller).toBeDefined();
     // Verify the controller received the dependency
-    expect(result.controller.dependencies.coreMotivationsGenerator).toBe(mockCoreMotivationsGenerator);
+    expect(result.controller.dependencies.coreMotivationsGenerator).toBe(
+      mockCoreMotivationsGenerator
+    );
   });
 });

@@ -152,23 +152,11 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     const main = document.createElement('main');
     main.id = 'main-content';
 
-    // Direction selector container - match actual HTML structure
-    const directionSelectorContainer = document.createElement('div');
-    directionSelectorContainer.id = 'direction-selector-container';
-
-    const directionSelector = document.createElement('select');
+    // Direction selector - match production code expectation (div container, not select)
+    const directionSelector = document.createElement('div');
     directionSelector.id = 'direction-selector';
-    directionSelector.className = 'cb-select';
-    directionSelector.setAttribute('aria-label', 'Select thematic direction');
-
-    // Add default option
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = '-- Choose a thematic direction --';
-    directionSelector.appendChild(defaultOption);
-
-    directionSelectorContainer.appendChild(directionSelector);
-    main.appendChild(directionSelectorContainer);
+    directionSelector.className = 'direction-selector-container';
+    main.appendChild(directionSelector);
 
     // No directions message
     const noDirectionsMsg = document.createElement('div');

@@ -36,6 +36,15 @@ export class TestBedAnatomy extends AnatomyIntegrationTestBed {
   async setup() {
     await super.setup();
 
+    // CRITICAL FIX: Initialize the anatomy initialization service
+    // This enables automatic anatomy generation when entities are created
+    if (
+      this.anatomyInitializationService &&
+      this.anatomyInitializationService.initialize
+    ) {
+      this.anatomyInitializationService.initialize();
+    }
+
     // Ensure we have the anatomy:body_test entity definition
     this.loadEntityDefinitions({
       'anatomy:body_test': {

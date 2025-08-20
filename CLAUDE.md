@@ -334,7 +334,7 @@ The project includes several character creation tools accessible from the main i
   - Export functionality (JSON/text)
   - Keyboard shortcuts (Ctrl+Enter, Ctrl+E, Ctrl+Shift+Del)
   - WCAG AA accessibility compliance
-- **Testing**: Full test coverage in `tests/unit/coreMotivationsGenerator/`, `tests/integration/coreMotivationsGenerator/`, `tests/e2e/coreMotivationsGenerator.e2e.test.js`
+- **Testing**: Full test coverage in `tests/unit/coreMotivationsGenerator/`, `tests/integration/coreMotivationsGenerator/`
 
 #### Other Character Builder Tools
 
