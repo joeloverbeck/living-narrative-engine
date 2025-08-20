@@ -70,26 +70,16 @@ export class BodyDescriptionComposer {
     const descriptionOrder = this.config.getDescriptionOrder();
     const processedTypes = new Set();
 
-    // FIRST: Add body-level descriptors in specific order (MOVED BEFORE PART DESCRIPTIONS)
-    const skinColorDescription = this.extractSkinColorDescription(bodyEntity);
-    if (skinColorDescription) {
-      lines.push(`Skin color: ${skinColorDescription}`);
-    }
-
-    const buildDescription = this.extractBuildDescription(bodyEntity);
-    if (buildDescription) {
-      lines.push(`Build: ${buildDescription}`);
-    }
-
-    const compositionDescription =
-      this.extractBodyCompositionDescription(bodyEntity);
-    if (compositionDescription) {
-      lines.push(`Body composition: ${compositionDescription}`);
-    }
-
-    const bodyHairDescription = this.extractBodyHairDescription(bodyEntity);
-    if (bodyHairDescription) {
-      lines.push(`Body hair: ${bodyHairDescription}`);
+    // FIRST: Add body-level descriptors using configured order
+    const bodyLevelDescriptors = this.extractBodyLevelDescriptors(bodyEntity);
+    const bodyDescriptorOrder = this.getBodyDescriptorOrder(descriptionOrder);
+    const processedDescriptors = new Set();
+    
+    for (const descriptorType of bodyDescriptorOrder) {
+      if (bodyLevelDescriptors[descriptorType] && !processedDescriptors.has(descriptorType)) {
+        lines.push(bodyLevelDescriptors[descriptorType]);
+        processedDescriptors.add(descriptorType);
+      }
     }
 
     // THEN: Process parts in configured order (existing logic continues)
@@ -301,6 +291,49 @@ export class BodyDescriptionComposer {
     }
 
     return '';
+  }
+
+  /**
+   * Extract all body-level descriptors and return them as formatted strings
+   *
+   * @param {object} bodyEntity - The entity with anatomy:body component
+   * @returns {Object<string, string>} Map of descriptor type to formatted string
+   */
+  extractBodyLevelDescriptors(bodyEntity) {
+    const descriptors = {};
+
+    const skinColorDescription = this.extractSkinColorDescription(bodyEntity);
+    if (skinColorDescription) {
+      descriptors.skin_color = `Skin color: ${skinColorDescription}`;
+    }
+
+    const buildDescription = this.extractBuildDescription(bodyEntity);
+    if (buildDescription) {
+      descriptors.build = `Build: ${buildDescription}`;
+    }
+
+    const bodyHairDescription = this.extractBodyHairDescription(bodyEntity);
+    if (bodyHairDescription) {
+      descriptors.body_hair = `Body hair: ${bodyHairDescription}`;
+    }
+
+    const compositionDescription = this.extractBodyCompositionDescription(bodyEntity);
+    if (compositionDescription) {
+      descriptors.body_composition = `Body composition: ${compositionDescription}`;
+    }
+
+    return descriptors;
+  }
+
+  /**
+   * Extract the body-level descriptor order from the overall description order
+   *
+   * @param {Array<string>} descriptionOrder - Full description order array
+   * @returns {Array<string>} Ordered array of body descriptor types
+   */
+  getBodyDescriptorOrder(descriptionOrder) {
+    const bodyDescriptorTypes = ['skin_color', 'build', 'body_composition', 'body_hair'];
+    return descriptionOrder.filter(type => bodyDescriptorTypes.includes(type));
   }
 
   /**

@@ -138,10 +138,10 @@ describe('Enhanced Tracing Performance Tests', () => {
         trace.captureEnhancedActionData(
           'high_load_stage',
           `action_${i % 10}`, // Reuse action names for caching benefits
-          { 
+          {
             index: i,
             data: `payload_${i}`,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
           { category: 'performance_test' }
         );
@@ -167,7 +167,9 @@ describe('Enhanced Tracing Performance Tests', () => {
 
       for (const size of dataSizes) {
         const testData = {
-          items: Array(size).fill().map((_, i) => ({ id: i, value: i }))
+          items: Array(size)
+            .fill()
+            .map((_, i) => ({ id: i, value: i })),
         };
 
         const startTime = performance.now();
@@ -199,21 +201,23 @@ describe('Enhanced Tracing Performance Tests', () => {
       const testData = {
         complex: {
           nested: {
-            data: Array(100).fill().map((_, i) => ({ 
-              id: i, 
-              value: `item_${i}`,
-              metadata: { created: Date.now(), index: i }
-            }))
-          }
-        }
+            data: Array(100)
+              .fill()
+              .map((_, i) => ({
+                id: i,
+                value: `item_${i}`,
+                metadata: { created: Date.now(), index: i },
+              })),
+          },
+        },
       };
 
       // Test performance at different verbosity levels
       for (const level of verbosityLevels) {
         enhancedFilter.setVerbosityLevel(level);
-        
+
         const startTime = performance.now();
-        
+
         for (let i = 0; i < 50; i++) {
           trace.captureEnhancedActionData(
             'verbosity_test',
@@ -222,7 +226,7 @@ describe('Enhanced Tracing Performance Tests', () => {
             { category: 'performance' }
           );
         }
-        
+
         const endTime = performance.now();
         timings[level] = endTime - startTime;
       }
@@ -230,7 +234,7 @@ describe('Enhanced Tracing Performance Tests', () => {
       // Verify performance doesn't degrade dramatically across verbosity levels
       const minTime = Math.min(...Object.values(timings));
       const maxTime = Math.max(...Object.values(timings));
-      
+
       // Maximum verbosity should not be more than 5x slower than minimum
       expect(maxTime / minTime).toBeLessThan(5);
     });

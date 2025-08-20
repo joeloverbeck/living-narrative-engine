@@ -28,9 +28,10 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   #currentSortOrder = 'newest';
   #currentSearchQuery = '';
   #searchDebounceTimer = null;
-  #lazyLoadEnabled = false;
+  // #lazyLoadEnabled = false; // Removed - not used in current implementation
   #currentLoadedCount = 20;
   #loadMoreObserver = null;
+  #modalObserver = null; // Modal focus management observer
 
   /**
    * @param {object} _dependencies - Controller dependencies
@@ -76,6 +77,11 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
       // Set up UI event listeners
       this.#setupEventListeners();
+
+      // Set up accessibility features
+      this.#setupFocusManagement();
+      this.#setupScreenReaderIntegration();
+      this.#ensureFocusVisible();
 
       // Load user preferences
       this.#loadUserPreferences();
@@ -315,7 +321,6 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   #displayAllMotivations(container, motivations) {
     // Disconnect lazy load observer if active
     this.#disconnectLazyLoadObserver();
-    this.#lazyLoadEnabled = false;
 
     // Use DocumentFragment for better performance
     const fragment = document.createDocumentFragment();
@@ -336,7 +341,6 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
    * @param {Array} motivations - Sorted motivations
    */
   #displayWithLazyLoading(container, motivations) {
-    this.#lazyLoadEnabled = true;
     this.#currentLoadedCount = 20;
 
     // Clear container
@@ -673,7 +677,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     const cancelBtn = document.getElementById('cancel-clear');
 
     const handleConfirm = async () => {
-      modal.style.display = 'none';
+      this.#closeModal();
       this.#showLoadingState(true, 'Clearing all motivations...');
 
       try {
@@ -697,7 +701,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     };
 
     const handleCancel = () => {
-      modal.style.display = 'none';
+      this.#closeModal();
       cleanup();
     };
 
@@ -909,6 +913,57 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   }
 
   /**
+   * Set up comprehensive keyboard shortcuts with accessibility support
+   */
+  #setupKeyboardShortcuts() {
+    document.addEventListener('keydown', (event) => {
+      // Existing: Ctrl+Enter for generation
+      if (event.ctrlKey && event.key === 'Enter') {
+        event.preventDefault();
+        this.#generateMotivations();
+        this.#announceToScreenReader('Generating core motivations...');
+        return;
+      }
+
+      // New: Ctrl+E for export
+      if (event.ctrlKey && event.key === 'e') {
+        event.preventDefault();
+        this.#exportToText();
+        return;
+      }
+
+      // New: Ctrl+Shift+Delete for clear all
+      if (event.ctrlKey && event.shiftKey && event.key === 'Delete') {
+        event.preventDefault();
+        this.#clearAllMotivations();
+        return;
+      }
+
+      // Enhanced: Escape to close modal
+      if (event.key === 'Escape') {
+        const modal = document.getElementById('confirmation-modal');
+        if (modal && modal.style.display !== 'none') {
+          modal.style.display = 'none';
+          this.#announceToScreenReader('Modal closed');
+          event.preventDefault();
+
+          // Return focus to the element that triggered the modal
+          const clearBtn = document.getElementById('clear-all-btn');
+          if (clearBtn) {
+            clearBtn.focus();
+          }
+          return;
+        }
+      }
+
+      // Enhanced: Tab navigation with focus management
+      if (event.key === 'Tab') {
+        this.#ensureFocusVisible();
+      }
+    });
+  }
+
+  /**
    * Set up UI event listeners
    */
   #setupEventListeners() {
@@ -942,13 +997,8 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       window.location.href = 'index.html';
     });
 
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (event) => {
-      if (event.ctrlKey && event.key === 'Enter') {
-        event.preventDefault();
-        this.#generateMotivations();
-      }
-    });
+    // Enhanced keyboard shortcuts with accessibility support
+    this.#setupKeyboardShortcuts();
 
     // Delegation for dynamic elements
     document.addEventListener('click', (event) => {
@@ -1052,6 +1102,178 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   }
 
   /**
+   * Set up focus management and modal accessibility
+   */
+  #setupFocusManagement() {
+    const modal = document.getElementById('confirmation-modal');
+    const confirmBtn = document.getElementById('confirm-clear');
+    const cancelBtn = document.getElementById('cancel-clear');
+
+    if (!modal || !confirmBtn || !cancelBtn) {
+      return;
+    }
+
+    // Focus trap implementation for modal
+    modal.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        const focusableElements = [confirmBtn, cancelBtn].filter(
+          (el) => el && !el.disabled
+        );
+        const firstFocusable = focusableElements[0];
+        const lastFocusable = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey && document.activeElement === firstFocusable) {
+          e.preventDefault();
+          lastFocusable.focus();
+        } else if (!e.shiftKey && document.activeElement === lastFocusable) {
+          e.preventDefault();
+          firstFocusable.focus();
+        }
+      }
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        this.#closeModal();
+      }
+    });
+
+    // Auto-focus when modal opens
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (
+          mutation.type === 'attributes' &&
+          mutation.attributeName === 'style'
+        ) {
+          if (modal.style.display === 'flex') {
+            // Modal opened - focus first button after a brief delay for screen readers
+            setTimeout(() => confirmBtn.focus(), 100);
+            this.#announceToScreenReader(
+              'Confirmation dialog opened. Clear all motivations?'
+            );
+          }
+        }
+      });
+    });
+
+    observer.observe(modal, { attributes: true });
+
+    // Store observer for cleanup
+    this.#modalObserver = observer;
+  }
+
+  /**
+   * Close the confirmation modal
+   */
+  #closeModal() {
+    const modal = document.getElementById('confirmation-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      this.#announceToScreenReader('Dialog closed');
+
+      // Return focus to clear button
+      const clearBtn = document.getElementById('clear-all-btn');
+      if (clearBtn) {
+        clearBtn.focus();
+      }
+    }
+  }
+
+  /**
+   * Enhanced focus indicators for keyboard navigation
+   */
+  #ensureFocusVisible() {
+    // Add visible focus indicators that work with keyboard navigation
+    const focusableElements = document.querySelectorAll(
+      'button, select, input, [tabindex]:not([tabindex="-1"])'
+    );
+
+    focusableElements.forEach((element) => {
+      element.addEventListener('focus', () => {
+        element.classList.add('keyboard-focus');
+      });
+
+      element.addEventListener('blur', () => {
+        element.classList.remove('keyboard-focus');
+      });
+
+      element.addEventListener('mousedown', () => {
+        element.classList.remove('keyboard-focus');
+      });
+    });
+  }
+
+  /**
+   * Set up screen reader announcements for state changes
+   */
+  #setupScreenReaderIntegration() {
+    // Enhance existing event listeners to include ARIA live announcements
+
+    // Hook into existing generation events
+    this.eventBus.subscribe('CORE_MOTIVATIONS_GENERATION_STARTED', () => {
+      this.#announceToScreenReader('Generating core motivations...');
+    });
+
+    this.eventBus.subscribe(
+      'CORE_MOTIVATIONS_GENERATION_COMPLETED',
+      (event) => {
+        const count = event.payload.totalCount;
+        this.#announceToScreenReader(
+          `Generated motivations. Total: ${count} motivations available.`
+        );
+      }
+    );
+
+    this.eventBus.subscribe('CORE_MOTIVATIONS_GENERATION_FAILED', () => {
+      this.#announceToScreenReader(
+        'Failed to generate motivations. Please try again.'
+      );
+    });
+
+    this.eventBus.subscribe('CORE_MOTIVATIONS_DELETED', (event) => {
+      const remaining = event.payload.remainingCount;
+      this.#announceToScreenReader(
+        `Motivation deleted. ${remaining} motivations remaining.`
+      );
+    });
+
+    // Listen for custom copy events from DisplayEnhancer
+    document.addEventListener('motivationCopied', () => {
+      this.#announceToScreenReader('Motivation copied to clipboard');
+    });
+
+    document.addEventListener('motivationCopyFailed', () => {
+      this.#announceToScreenReader('Failed to copy motivation');
+    });
+  }
+
+  /**
+   * Announce messages to screen readers using ARIA live regions
+   *
+   * @param {string} message - Message to announce
+   */
+  #announceToScreenReader(message) {
+    // Use existing aria-live regions or create one
+    let announcer = document.getElementById('sr-announcements');
+    if (!announcer) {
+      announcer = document.createElement('div');
+      announcer.id = 'sr-announcements';
+      announcer.setAttribute('aria-live', 'polite');
+      announcer.setAttribute('aria-atomic', 'true');
+      announcer.style.position = 'absolute';
+      announcer.style.left = '-10000px';
+      announcer.style.width = '1px';
+      announcer.style.height = '1px';
+      announcer.style.overflow = 'hidden';
+      document.body.appendChild(announcer);
+    }
+
+    announcer.textContent = message;
+    setTimeout(() => {
+      announcer.textContent = '';
+    }, 1000);
+  }
+
+  /**
    * Handle errors
    *
    * @param error
@@ -1067,10 +1289,8 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
    * @param {string} message - Warning message to display
    */
   showWarning(message) {
-    // For now, use console.warn as a simple implementation
-    // This could be enhanced to use a UI notification system
-    console.warn(message);
     this.logger.warn(message);
+    this.#announceToScreenReader(message);
   }
 
   /**
@@ -1079,10 +1299,8 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
    * @param {string} message - Success message to display
    */
   showSuccess(message) {
-    // For now, use console.log as a simple implementation
-    // This could be enhanced to use a UI notification system
-    console.log(message);
     this.logger.info(message);
+    this.#announceToScreenReader(message);
   }
 
   /**
@@ -1091,10 +1309,8 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
    * @param {string} message - Error message to display
    */
   showError(message) {
-    // For now, use console.error as a simple implementation
-    // This could be enhanced to use a UI notification system
-    console.error(message);
     this.logger.error(message);
+    this.#announceToScreenReader(`Error: ${message}`);
   }
 }
 

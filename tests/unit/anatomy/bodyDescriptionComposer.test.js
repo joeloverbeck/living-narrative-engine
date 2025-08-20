@@ -453,11 +453,11 @@ describe('BodyDescriptionComposer', () => {
       const result = await composer.composeDescription(entity);
       const lines = result.split('\n').filter((line) => line.trim());
 
-      // Body descriptors should appear first in the fixed order
-      expect(lines[0]).toBe('Skin color: olive');
-      expect(lines[1]).toBe('Build: athletic');
+      // Body descriptors should appear first in configured order
+      expect(lines[0]).toBe('Build: athletic');
+      expect(lines[1]).toBe('Body composition: lean');
       expect(lines[2]).toBe('Body hair: moderate');
-      expect(lines[3]).toBe('Body composition: lean');
+      expect(lines[3]).toBe('Skin color: olive');
       // We should have exactly 4 body descriptor lines
       expect(lines).toHaveLength(4);
     });
@@ -689,8 +689,8 @@ describe('BodyDescriptionComposer', () => {
     });
 
     describe('All Three Body-Level Descriptors', () => {
-      it('should display body descriptors FIRST in fixed order (skinColor, build, body hair, composition)', async () => {
-        // Even though the config order is different, body descriptors should appear first in fixed order
+      it('should display body descriptors FIRST in configured order', async () => {
+        // Body descriptors should respect the configured order from the service
         mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
           'body_hair',
           'body_composition',
@@ -703,10 +703,10 @@ describe('BodyDescriptionComposer', () => {
         const lines = result.split('\n');
 
         expect(lines).toHaveLength(3);
-        // Body descriptors should appear in fixed order: build, body hair, composition
-        expect(lines[0]).toBe('Build: athletic');
-        expect(lines[1]).toBe('Body hair: moderate');
-        expect(lines[2]).toBe('Body composition: lean');
+        // Body descriptors should appear in configured order: body_hair, body_composition, build
+        expect(lines[0]).toBe('Body hair: moderate');
+        expect(lines[1]).toBe('Body composition: lean');
+        expect(lines[2]).toBe('Build: athletic');
       });
 
       it('should display all four body descriptors when skin_color is present', async () => {
@@ -744,11 +744,11 @@ describe('BodyDescriptionComposer', () => {
         const lines = result.split('\n');
 
         expect(lines).toHaveLength(4);
-        // Body descriptors should appear in fixed order: skinColor, build, body hair, composition
-        expect(lines[0]).toBe('Skin color: olive');
-        expect(lines[1]).toBe('Build: athletic');
-        expect(lines[2]).toBe('Body hair: moderate');
-        expect(lines[3]).toBe('Body composition: lean');
+        // Body descriptors should appear in configured order: body_hair, body_composition, build, skin_color
+        expect(lines[0]).toBe('Body hair: moderate');
+        expect(lines[1]).toBe('Body composition: lean');
+        expect(lines[2]).toBe('Build: athletic');
+        expect(lines[3]).toBe('Skin color: olive');
       });
 
       it('should skip missing descriptors without creating empty lines', async () => {
@@ -866,8 +866,9 @@ describe('BodyDescriptionComposer', () => {
 
         mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
           'build',
-          'equipment',
+          'body_hair',
           'body_composition',
+          'equipment',
         ]);
 
         const entity = Object.assign(createEntityWithAllDescriptors(), {
@@ -903,8 +904,9 @@ describe('BodyDescriptionComposer', () => {
 
         mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
           'build',
-          'equipment',
+          'body_hair',
           'body_composition',
+          'equipment',
         ]);
 
         const entity = Object.assign(createEntityWithAllDescriptors(), {
@@ -924,8 +926,9 @@ describe('BodyDescriptionComposer', () => {
       it('should handle equipment without equipmentDescriptionService', async () => {
         mockAnatomyFormattingService.getDescriptionOrder.mockReturnValue([
           'build',
-          'equipment',
+          'body_hair',
           'body_composition',
+          'equipment',
         ]);
 
         const entity = createEntityWithAllDescriptors();

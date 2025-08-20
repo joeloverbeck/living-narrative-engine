@@ -196,7 +196,7 @@ describe('Core Motivations Generator - CSS Validation', () => {
     it('should have focus-visible styles', () => {
       expect(cssContent).toContain('.cb-button:focus-visible');
       expect(cssContent).toContain(
-        'outline: 2px solid var(--narrative-purple)'
+        'outline: 3px solid var(--narrative-purple)'
       );
     });
   });
@@ -291,9 +291,14 @@ describe('Core Motivations Generator - CSS Validation', () => {
     });
 
     it('should not have duplicate selectors at root level', () => {
-      // Extract root-level selectors (not in media queries)
-      const rootCss = cssContent.replace(
+      // Extract root-level selectors (not in media queries or keyframes)
+      let rootCss = cssContent.replace(
         /@media[^{]*{[^{}]*(?:{[^}]*}[^}]*)*}/g,
+        ''
+      );
+      // Remove keyframe blocks to avoid false positives on keyframe selectors
+      rootCss = rootCss.replace(
+        /@keyframes[^{]*{[^{}]*(?:{[^}]*}[^}]*)*}/g,
         ''
       );
       const selectors = rootCss.match(/^[^{@]+(?={)/gm) || [];

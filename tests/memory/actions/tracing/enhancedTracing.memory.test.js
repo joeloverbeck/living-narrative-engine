@@ -116,7 +116,7 @@ describe('Enhanced Tracing Memory Tests', () => {
       // Memory usage should not grow excessively with verbosity
       const minimalMemory = memoryUsage.minimal || 0;
       const verboseMemory = memoryUsage.verbose || 0;
-      
+
       // Verbose should not use more than 10x the memory of minimal
       if (minimalMemory > 0) {
         expect(verboseMemory).toBeLessThan(minimalMemory * 10);
@@ -126,7 +126,7 @@ describe('Enhanced Tracing Memory Tests', () => {
     it('should not leak memory during extended operation', () => {
       const iterations = 100;
       const memoryCheckpoints = [];
-      
+
       // Take initial memory reading
       if (global.gc) global.gc();
       memoryCheckpoints.push(process.memoryUsage().heapUsed);
@@ -137,20 +137,22 @@ describe('Enhanced Tracing Memory Tests', () => {
           trace.captureEnhancedActionData(
             'leak_test',
             `action_${batch}_${i}`,
-            { 
+            {
               batch,
               iteration: i,
-              data: Array(50).fill().map((_, idx) => ({ id: idx, value: `item_${idx}` }))
+              data: Array(50)
+                .fill()
+                .map((_, idx) => ({ id: idx, value: `item_${idx}` })),
             },
             { category: 'memory_test' }
           );
         }
-        
+
         // Clear some traces to simulate normal cleanup
         if (batch > 2) {
           trace.clearEnhancedCache();
         }
-        
+
         // Force garbage collection and take reading
         if (global.gc) global.gc();
         memoryCheckpoints.push(process.memoryUsage().heapUsed);
@@ -167,21 +169,27 @@ describe('Enhanced Tracing Memory Tests', () => {
 
     it('should efficiently manage large object serialization', () => {
       const largeObject = {
-        entities: Array(500).fill().map((_, i) => ({
-          id: `entity_${i}`,
-          data: {
-            attributes: Array(20).fill().map((_, j) => ({
-              name: `attr_${j}`,
-              value: Math.random() * 1000,
-              metadata: { created: Date.now(), index: j }
-            }))
-          }
-        })),
+        entities: Array(500)
+          .fill()
+          .map((_, i) => ({
+            id: `entity_${i}`,
+            data: {
+              attributes: Array(20)
+                .fill()
+                .map((_, j) => ({
+                  name: `attr_${j}`,
+                  value: Math.random() * 1000,
+                  metadata: { created: Date.now(), index: j },
+                })),
+            },
+          })),
         metadata: {
           created: Date.now(),
           description: 'A'.repeat(1000), // 1KB string
-          tags: Array(100).fill().map((_, i) => `tag_${i}`)
-        }
+          tags: Array(100)
+            .fill()
+            .map((_, i) => `tag_${i}`),
+        },
       };
 
       const initialMemory = process.memoryUsage();
@@ -191,9 +199,9 @@ describe('Enhanced Tracing Memory Tests', () => {
         'large_object_test',
         'serialization:action',
         largeObject,
-        { 
+        {
           summarize: true,
-          targetVerbosity: 'standard' 
+          targetVerbosity: 'standard',
         }
       );
 
@@ -205,9 +213,9 @@ describe('Enhanced Tracing Memory Tests', () => {
         'large_object_test_full',
         'serialization_full:action',
         largeObject,
-        { 
+        {
           summarize: false,
-          targetVerbosity: 'verbose' 
+          targetVerbosity: 'verbose',
         }
       );
 
@@ -228,12 +236,15 @@ describe('Enhanced Tracing Memory Tests', () => {
       }
 
       // Memory growth should be reasonable
-      const serializationMemoryGrowth = afterSerializationMemory.heapUsed - initialMemory.heapUsed;
+      const serializationMemoryGrowth =
+        afterSerializationMemory.heapUsed - initialMemory.heapUsed;
       const totalMemoryGrowth = finalMemory.heapUsed - initialMemory.heapUsed;
 
       // Verify memory usage is reasonable (allow for GC timing variations)
       // Both operations should use reasonable amounts of memory
-      expect(Math.abs(serializationMemoryGrowth)).toBeLessThan(50 * 1024 * 1024); // Less than 50MB
+      expect(Math.abs(serializationMemoryGrowth)).toBeLessThan(
+        50 * 1024 * 1024
+      ); // Less than 50MB
       expect(Math.abs(totalMemoryGrowth)).toBeLessThan(100 * 1024 * 1024); // Less than 100MB
     });
   });
@@ -246,7 +257,9 @@ describe('Enhanced Tracing Memory Tests', () => {
       for (let i = 0; i < 100; i++) {
         enhancedFilter.shouldCaptureEnhanced('category', `type_${i}`, {
           index: i,
-          data: Array(10).fill().map((_, j) => ({ id: j, value: `data_${j}` }))
+          data: Array(10)
+            .fill()
+            .map((_, j) => ({ id: j, value: `data_${j}` })),
         });
       }
 
@@ -279,8 +292,10 @@ describe('Enhanced Tracing Memory Tests', () => {
       expect(enhancedFilter).toBeDefined(); // Just verify it didn't throw
 
       // Memory should have been freed after cache clear
-      const fillMemoryGrowth = afterFillMemory.heapUsed - initialMemory.heapUsed;
-      const clearMemoryGrowth = afterClearMemory.heapUsed - initialMemory.heapUsed;
+      const fillMemoryGrowth =
+        afterFillMemory.heapUsed - initialMemory.heapUsed;
+      const clearMemoryGrowth =
+        afterClearMemory.heapUsed - initialMemory.heapUsed;
 
       // After clearing, memory growth should be less than when filled
       expect(clearMemoryGrowth).toBeLessThan(fillMemoryGrowth);
@@ -295,12 +310,14 @@ describe('Enhanced Tracing Memory Tests', () => {
         trace.captureEnhancedActionData(
           'retention_test',
           `action_${i}`,
-          { 
+          {
             index: i,
-            payload: Array(20).fill().map((_, j) => ({ 
-              id: j, 
-              data: `item_${i}_${j}` 
-            }))
+            payload: Array(20)
+              .fill()
+              .map((_, j) => ({
+                id: j,
+                data: `item_${i}_${j}`,
+              })),
           },
           { category: 'retention' }
         );
@@ -311,7 +328,7 @@ describe('Enhanced Tracing Memory Tests', () => {
       // Clear older traces (simulate retention policy)
       const tracedActions = trace.getTracedActions();
       const actionIds = Array.from(tracedActions.keys());
-      
+
       // Keep only the most recent 50 traces
       for (let i = 0; i < actionIds.length - 50; i++) {
         // Simulate trace cleanup (this would be done by the trace implementation)
@@ -322,7 +339,8 @@ describe('Enhanced Tracing Memory Tests', () => {
       if (global.gc) global.gc();
       const finalMemory = process.memoryUsage();
 
-      const traceMemoryGrowth = afterTracesMemory.heapUsed - initialMemory.heapUsed;
+      const traceMemoryGrowth =
+        afterTracesMemory.heapUsed - initialMemory.heapUsed;
       const finalMemoryGrowth = finalMemory.heapUsed - initialMemory.heapUsed;
 
       // Verify traces were created
@@ -330,7 +348,7 @@ describe('Enhanced Tracing Memory Tests', () => {
 
       // Memory growth should be reasonable for the number of traces created
       const averageMemoryPerTrace = traceMemoryGrowth / maxTraces;
-      
+
       // Each trace should use a reasonable amount of memory (less than 50KB on average)
       expect(averageMemoryPerTrace).toBeLessThan(50 * 1024);
     });
@@ -341,7 +359,7 @@ describe('Enhanced Tracing Memory Tests', () => {
       const testCases = [
         { name: 'small', size: 10 },
         { name: 'medium', size: 100 },
-        { name: 'large', size: 1000 }
+        { name: 'large', size: 1000 },
       ];
 
       const memoryUsage = {};
@@ -351,11 +369,13 @@ describe('Enhanced Tracing Memory Tests', () => {
 
         // Create data of specified size
         const testData = {
-          items: Array(testCase.size).fill().map((_, i) => ({
-            id: i,
-            name: `item_${i}`,
-            metadata: { created: Date.now(), index: i }
-          }))
+          items: Array(testCase.size)
+            .fill()
+            .map((_, i) => ({
+              id: i,
+              name: `item_${i}`,
+              metadata: { created: Date.now(), index: i },
+            })),
         };
 
         trace.captureEnhancedActionData(
@@ -370,7 +390,7 @@ describe('Enhanced Tracing Memory Tests', () => {
 
         memoryUsage[testCase.name] = {
           growth: finalMemory.heapUsed - initialMemory.heapUsed,
-          size: testCase.size
+          size: testCase.size,
         };
       }
 

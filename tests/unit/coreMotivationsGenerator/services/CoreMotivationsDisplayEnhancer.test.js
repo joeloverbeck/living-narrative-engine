@@ -235,18 +235,52 @@ describe('CoreMotivationsDisplayEnhancer', () => {
       expect(questionText).not.toContain('</b>');
     });
 
-    it('should add ARIA labels to buttons', () => {
+    it('should add ARIA labels and title attributes to buttons', () => {
       const element = displayEnhancer.createMotivationBlock(mockMotivation);
 
       const copyBtn = element.querySelector('.copy-btn');
       expect(copyBtn.getAttribute('aria-label')).toBe(
-        'Copy motivation test-motivation-123'
+        'Copy motivation to clipboard: To achieve greatness and be remembered for generat...'
+      );
+      expect(copyBtn.getAttribute('title')).toBe(
+        'Copy this motivation to clipboard'
       );
 
       const deleteBtn = element.querySelector('.delete-btn');
       expect(deleteBtn.getAttribute('aria-label')).toBe(
-        'Delete motivation test-motivation-123'
+        'Delete motivation: To achieve greatness and be remembered for generat...'
       );
+      expect(deleteBtn.getAttribute('title')).toBe(
+        'Delete this motivation permanently'
+      );
+    });
+
+    it('should add accessibility attributes to main container', () => {
+      const element = displayEnhancer.createMotivationBlock(mockMotivation);
+
+      expect(element.getAttribute('role')).toBe('article');
+      expect(element.getAttribute('aria-label')).toContain(
+        'Core motivation block created'
+      );
+      expect(element.getAttribute('aria-label')).toContain('Dec 20, 2024');
+    });
+
+    it('should add accessibility attributes to content sections', () => {
+      const element = displayEnhancer.createMotivationBlock(mockMotivation);
+      const sections = element.querySelectorAll('.motivation-section');
+
+      expect(sections.length).toBe(3);
+
+      sections.forEach((section) => {
+        expect(section.getAttribute('role')).toBe('section');
+        expect(section.getAttribute('aria-labelledby')).toMatch(/^(core-motivation|contradiction|central-question)-heading-/);
+        
+        const heading = section.querySelector('h4');
+        const paragraph = section.querySelector('p');
+        
+        expect(heading.getAttribute('id')).toBe(section.getAttribute('aria-labelledby'));
+        expect(paragraph.getAttribute('aria-describedby')).toBe(heading.id);
+      });
     });
 
     it('should log debug message when creating block', () => {
