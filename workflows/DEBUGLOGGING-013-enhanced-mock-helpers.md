@@ -4,7 +4,7 @@
 **Priority**: P1 - High  
 **Phase**: 2 - Integration  
 **Component**: Test Infrastructure  
-**Estimated**: 3 hours  
+**Estimated**: 3 hours
 
 ## Description
 
@@ -13,30 +13,46 @@ Create enhanced test helpers for the mock logger that provide convenient asserti
 ## Technical Requirements
 
 ### 1. Enhanced Mock Logger Interface
+
 ```javascript
 export const createEnhancedMockLogger = () => {
   const logger = createMockLogger();
-  
+
   // Test utilities
   logger.getDebugCalls = () => logger.debug.mock.calls;
   logger.getCallsByLevel = (level) => logger[level].mock.calls;
-  logger.clearAllCalls = () => { /* ... */ };
-  
+  logger.clearAllCalls = () => {
+    /* ... */
+  };
+
   // Assertion helpers
-  logger.expectDebugMessage = (message) => { /* ... */ };
-  logger.expectNoDebugCalls = () => { /* ... */ };
-  logger.expectLogSequence = (sequence) => { /* ... */ };
-  
+  logger.expectDebugMessage = (message) => {
+    /* ... */
+  };
+  logger.expectNoDebugCalls = () => {
+    /* ... */
+  };
+  logger.expectLogSequence = (sequence) => {
+    /* ... */
+  };
+
   // Analysis utilities
-  logger.getCategories = () => { /* ... */ };
-  logger.getLogsByCategory = (category) => { /* ... */ };
-  logger.getMetadata = () => { /* ... */ };
-  
+  logger.getCategories = () => {
+    /* ... */
+  };
+  logger.getLogsByCategory = (category) => {
+    /* ... */
+  };
+  logger.getMetadata = () => {
+    /* ... */
+  };
+
   return logger;
 };
 ```
 
 ### 2. Assertion Helper Methods
+
 ```javascript
 // Check if specific message was logged
 expectDebugMessage(message, metadata?)
@@ -61,22 +77,23 @@ expectNoCategory(category)
 ```
 
 ### 3. Analysis Utilities
+
 ```javascript
 // Get logs by various criteria
-getLogsByLevel(level)
-getLogsByCategory(category)
-getLogsByPattern(regex)
-getLogsWithMetadata()
-getLogsBetween(startTime, endTime)
+getLogsByLevel(level);
+getLogsByCategory(category);
+getLogsByPattern(regex);
+getLogsWithMetadata();
+getLogsBetween(startTime, endTime);
 
 // Summary methods
-getLogSummary() // { debug: 5, info: 3, ... }
-getCategorySummary() // { engine: 10, ui: 5, ... }
-getCallTimeline() // Chronological list
+getLogSummary(); // { debug: 5, info: 3, ... }
+getCategorySummary(); // { engine: 10, ui: 5, ... }
+getCallTimeline(); // Chronological list
 
 // Debugging helpers
-printLogs() // Pretty print all logs
-exportLogs() // Export as JSON
+printLogs(); // Pretty print all logs
+exportLogs(); // Export as JSON
 ```
 
 ## Implementation Steps
@@ -88,19 +105,20 @@ exportLogs() // Export as JSON
    - [ ] Implement assertion helpers
 
 2. **Implement Assertion Helpers**
+
    ```javascript
    class LoggerAssertions {
      constructor(logger) {
        this.logger = logger;
      }
-     
+
      expectDebugMessage(message, metadata) {
        expect(this.logger.debug).toHaveBeenCalledWith(
          expect.stringContaining(message),
          metadata ? expect.objectContaining(metadata) : expect.anything()
        );
      }
-     
+
      expectLogSequence(sequence) {
        const allCalls = this.getAllCallsInOrder();
        sequence.forEach((expected, index) => {
@@ -113,47 +131,48 @@ exportLogs() // Export as JSON
    ```
 
 3. **Implement Analysis Utilities**
+
    ```javascript
    class LoggerAnalyzer {
      constructor(logger) {
        this.logger = logger;
      }
-     
+
      getLogsByCategory(category) {
        const categoryDetector = new CategoryDetector();
-       return this.getAllLogs().filter(log => 
-         categoryDetector.detect(log.message) === category
+       return this.getAllLogs().filter(
+         (log) => categoryDetector.detect(log.message) === category
        );
      }
-     
+
      getLogSummary() {
        return {
          debug: this.logger.debug.mock.calls.length,
          info: this.logger.info.mock.calls.length,
          warn: this.logger.warn.mock.calls.length,
          error: this.logger.error.mock.calls.length,
-         total: this.getTotalLogCount()
+         total: this.getTotalLogCount(),
        };
      }
    }
    ```
 
 4. **Create Matcher Extensions**
+
    ```javascript
    // Custom Jest matchers
    expect.extend({
      toHaveLoggedDebug(logger, message) {
        const calls = logger.debug.mock.calls;
-       const pass = calls.some(([msg]) => 
-         msg.includes(message)
-       );
+       const pass = calls.some(([msg]) => msg.includes(message));
        return {
          pass,
-         message: () => pass
-           ? `Expected not to log debug: "${message}"`
-           : `Expected to log debug: "${message}"`
+         message: () =>
+           pass
+             ? `Expected not to log debug: "${message}"`
+             : `Expected to log debug: "${message}"`,
        };
-     }
+     },
    });
    ```
 
@@ -213,7 +232,7 @@ logger.expectErrorMessage('Failed to connect', { code: 'ERR_001' });
 logger.expectLogSequence([
   { level: 'debug', message: 'Starting' },
   { level: 'info', message: 'Connected' },
-  { level: 'debug', message: 'Ready' }
+  { level: 'debug', message: 'Ready' },
 ]);
 
 // Analysis examples
@@ -240,10 +259,11 @@ if (testFailed) {
 
 ## Documentation Template
 
-```markdown
+````markdown
 # Logger Test Helpers
 
 ## Quick Start
+
 ```javascript
 import { createEnhancedMockLogger } from 'tests/common';
 
@@ -251,16 +271,20 @@ const logger = createEnhancedMockLogger();
 // ... use logger in tests ...
 logger.expectDebugMessage('Expected message');
 ```
+````
 
 ## Assertion Methods
+
 - `expectDebugMessage(message, metadata?)` - Assert debug was called
 - `expectLogSequence(array)` - Assert sequence of logs
 - ...
 
 ## Analysis Methods
+
 - `getLogsByCategory(category)` - Filter by category
 - `getLogSummary()` - Get count summary
 - ...
+
 ```
 
 ## Notes
@@ -276,3 +300,4 @@ logger.expectDebugMessage('Expected message');
 - **Depends On**: DEBUGLOGGING-012 (base mock)
 - **Enhances**: Test infrastructure
 - **Used By**: All future test writing
+```

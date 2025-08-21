@@ -126,13 +126,13 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Behavior', () =
       logger,
       characterBuilderService: mockCharacterBuilderService,
       eventBus: safeEventDispatcher,
-      schemaValidator: { 
-        validate: jest.fn(), 
+      schemaValidator: {
+        validate: jest.fn(),
         isSchemaLoaded: jest.fn(),
         validateAgainstSchema: jest.fn(),
         addSchema: jest.fn(),
         removeSchema: jest.fn(),
-        getValidator: jest.fn()
+        getValidator: jest.fn(),
       },
       coreMotivationsGenerator: mockCoreMotivationsGenerator,
       displayEnhancer: mockDisplayEnhancer,

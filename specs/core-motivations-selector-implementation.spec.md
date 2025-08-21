@@ -1,6 +1,7 @@
 # Core Motivations Generator - Direction Selector Implementation Specification
 
 ## Document Information
+
 - **Version**: 1.0.0
 - **Date**: January 2025
 - **Status**: Implementation Ready
@@ -28,6 +29,7 @@ The Core Motivations Generator page has a critical bug where the controller atte
 ### 1. Data Loading Requirements
 
 #### Current (Incorrect) Implementation
+
 ```javascript
 // CoreMotivationsGeneratorController.js:113-143
 async #loadCurrentConcept() {
@@ -45,19 +47,20 @@ async #loadEligibleDirections() {
 ```
 
 #### Required Implementation
+
 ```javascript
 async #loadEligibleDirections() {
   try {
     // Step 1: Get ALL directions with their concepts (matching clichés generator)
-    const directionsWithConcepts = 
+    const directionsWithConcepts =
       await this.characterBuilderService.getAllThematicDirectionsWithConcepts();
-    
+
     if (!directionsWithConcepts || directionsWithConcepts.length === 0) {
       this.#eligibleDirections = [];
       this.#showEmptyState();
       return;
     }
-    
+
     // Step 2: Filter to only those with clichés
     const eligibleDirections = [];
     for (const item of directionsWithConcepts) {
@@ -68,21 +71,21 @@ async #loadEligibleDirections() {
         eligibleDirections.push(item);
       }
     }
-    
+
     // Step 3: Store the filtered data map for later use
     this.#directionsWithConceptsMap = new Map(
       eligibleDirections.map((item) => [item.direction.id, item])
     );
-    
+
     // Step 4: Extract just the directions for organization
     const directions = eligibleDirections.map((item) => item.direction);
-    
+
     // Step 5: Organize by concept for display
     this.#eligibleDirections = await this.#organizeDirectionsByConcept(directions);
-    
+
     // Step 6: Populate the select dropdown
     this.#populateDirectionSelector(this.#eligibleDirections);
-    
+
   } catch (error) {
     this.logger.error('Failed to load eligible directions', error);
     this.#handleError(error, 'Failed to load thematic directions');
@@ -93,13 +96,14 @@ async #loadEligibleDirections() {
 ### 2. Dropdown Population Requirements
 
 #### Current (Broken) Implementation
+
 ```javascript
 // CoreMotivationsGeneratorController.js:227-248
 #displayDirections() {
   const container = document.getElementById('direction-selector');
   container.innerHTML = '';  // Clears select options
   container.setAttribute('role', 'listbox');  // Wrong role for select
-  
+
   this.#eligibleDirections.forEach((direction) => {
     // WRONG: Creates div elements for a select element
     const element = this.#createDirectionElement(direction);
@@ -109,6 +113,7 @@ async #loadEligibleDirections() {
 ```
 
 #### Required Implementation
+
 ```javascript
 #populateDirectionSelector(organizedData) {
   const selector = document.getElementById('direction-selector');
@@ -116,15 +121,15 @@ async #loadEligibleDirections() {
     this.logger.error('Direction selector element not found');
     return;
   }
-  
+
   // Clear existing options (keep default)
   selector.innerHTML = '<option value="">-- Choose a thematic direction --</option>';
-  
+
   // Add optgroups for each concept
   for (const conceptGroup of organizedData) {
     const optgroup = document.createElement('optgroup');
     optgroup.label = conceptGroup.conceptTitle;
-    
+
     for (const direction of conceptGroup.directions) {
       const option = document.createElement('option');
       option.value = direction.id;
@@ -132,10 +137,10 @@ async #loadEligibleDirections() {
       option.dataset.conceptId = conceptGroup.conceptId;
       optgroup.appendChild(option);
     }
-    
+
     selector.appendChild(optgroup);
   }
-  
+
   // Dispatch event for UI updates
   this.eventBus.dispatch('core:directions_loaded', {
     count: organizedData.reduce((sum, group) => sum + group.directions.length, 0),
@@ -152,7 +157,7 @@ Add a new method to organize directions by concept (matching clichés generator 
 async #organizeDirectionsByConcept(directions) {
   const organized = [];
   const conceptMap = new Map();
-  
+
   for (const direction of directions) {
     if (!conceptMap.has(direction.conceptId)) {
       // Get concept from our cached map first
@@ -160,7 +165,7 @@ async #organizeDirectionsByConcept(directions) {
       const directionWithConcept = this.#directionsWithConceptsMap.get(
         direction.id
       );
-      
+
       if (directionWithConcept && directionWithConcept.concept) {
         concept = directionWithConcept.concept;
       } else {
@@ -169,7 +174,7 @@ async #organizeDirectionsByConcept(directions) {
           direction.conceptId
         );
       }
-      
+
       if (concept) {
         conceptMap.set(direction.conceptId, {
           conceptId: direction.conceptId,
@@ -181,16 +186,16 @@ async #organizeDirectionsByConcept(directions) {
         continue;
       }
     }
-    
+
     // Add direction to its concept group
     const group = conceptMap.get(direction.conceptId);
     if (group) {
       group.directions.push(direction);
     }
   }
-  
+
   // Convert map to array and sort by concept title
-  return Array.from(conceptMap.values()).sort((a, b) => 
+  return Array.from(conceptMap.values()).sort((a, b) =>
     a.conceptTitle.localeCompare(b.conceptTitle)
   );
 }
@@ -199,6 +204,7 @@ async #organizeDirectionsByConcept(directions) {
 ### 4. Event Handling Requirements
 
 #### Current (Incorrect) Implementation
+
 ```javascript
 // Uses div click handlers
 #createDirectionElement(direction) {
@@ -209,6 +215,7 @@ async #organizeDirectionsByConcept(directions) {
 ```
 
 #### Required Implementation
+
 ```javascript
 #setupEventListeners() {
   // Select element change handler
@@ -221,11 +228,11 @@ async #organizeDirectionsByConcept(directions) {
       this.#clearDirectionSelection();
     }
   });
-  
+
   // Keep existing event listeners for other elements
   const generateBtn = document.getElementById('generate-btn');
   generateBtn?.addEventListener('click', () => this.#handleGenerate());
-  
+
   // ... other existing event listeners
 }
 
@@ -236,27 +243,27 @@ async #handleDirectionSelection(directionId) {
       this.#clearDirectionSelection();
       return;
     }
-    
+
     // Get direction and concept from cache
     const directionWithConcept = this.#directionsWithConceptsMap.get(directionId);
     if (!directionWithConcept) {
       throw new Error(`Direction not found: ${directionId}`);
     }
-    
+
     // Update state
     this.#selectedDirectionId = directionId;
     this.#currentDirection = directionWithConcept.direction;
     this.#currentConcept = directionWithConcept.concept;
-    
+
     // Update UI
     this.#updateUIState();
-    
+
     // Enable generate button
     const generateBtn = document.getElementById('generate-btn');
     if (generateBtn) {
       generateBtn.disabled = false;
     }
-    
+
     // Dispatch selection event
     this.eventBus.dispatch('core:direction_selected', {
       directionId,
@@ -264,7 +271,7 @@ async #handleDirectionSelection(directionId) {
       directionTitle: directionWithConcept.direction.title,
       conceptTitle: directionWithConcept.concept?.title
     });
-    
+
   } catch (error) {
     this.logger.error('Failed to handle direction selection', error);
     this.#handleError(error, 'Failed to select direction');
@@ -275,13 +282,13 @@ async #handleDirectionSelection(directionId) {
   this.#selectedDirectionId = null;
   this.#currentDirection = null;
   this.#currentConcept = null;
-  
+
   // Disable generate button
   const generateBtn = document.getElementById('generate-btn');
   if (generateBtn) {
     generateBtn.disabled = true;
   }
-  
+
   this.#updateUIState();
 }
 ```
@@ -293,18 +300,18 @@ Update class properties to support the new implementation:
 ```javascript
 class CoreMotivationsGeneratorController extends BaseCharacterBuilderController {
   // ... existing properties
-  
+
   // REMOVE or deprecate:
   // #currentConceptId = null;  // No longer needed
-  
+
   // ADD new properties:
-  #directionsWithConceptsMap = new Map();  // Cache for direction-concept pairs
-  #currentDirection = null;  // Currently selected direction object
-  #currentConcept = null;  // Concept of the selected direction
-  
+  #directionsWithConceptsMap = new Map(); // Cache for direction-concept pairs
+  #currentDirection = null; // Currently selected direction object
+  #currentConcept = null; // Concept of the selected direction
+
   // KEEP existing:
   #selectedDirectionId = null;
-  #eligibleDirections = [];  // Now stores organized groups
+  #eligibleDirections = []; // Now stores organized groups
   // ... other existing properties
 }
 ```
@@ -317,26 +324,26 @@ Update the initialization flow:
 async initialize() {
   try {
     this.logger.info('Initializing Core Motivations Generator Controller');
-    
+
     // REMOVE: await this.#loadCurrentConcept();  // No longer needed
-    
+
     // Load ALL eligible directions (those with clichés)
     await this.#loadEligibleDirections();
-    
+
     // Set up UI event listeners
     this.#setupEventListeners();
-    
+
     // Set up accessibility features
     this.#setupFocusManagement();
     this.#setupScreenReaderIntegration();
     this.#ensureFocusVisible();
-    
+
     // Load user preferences
     this.#loadUserPreferences();
-    
+
     // Initialize UI state
     this.#updateUIState();
-    
+
     // Dispatch initialization complete event
     this.eventBus.dispatch('core:core_motivations_ui_initialized', {
       eligibleDirectionsCount: this.#eligibleDirections.reduce(
@@ -344,7 +351,7 @@ async initialize() {
       ),
       conceptsCount: this.#eligibleDirections.length
     });
-    
+
     this.logger.info('Core Motivations Generator Controller initialized');
   } catch (error) {
     this.logger.error('Failed to initialize controller', error);
@@ -361,7 +368,7 @@ Remove the following methods that are no longer needed:
 // REMOVE these methods entirely:
 // - #loadCurrentConcept()
 // - #createDirectionElement()
-// - #displayDirections() 
+// - #displayDirections()
 // - Any div-specific event handlers
 ```
 
@@ -481,9 +488,10 @@ Remove the following methods that are no longer needed:
 ## Appendix: Code Comparison
 
 ### Clichés Generator (Correct Pattern)
+
 ```javascript
 // Loads ALL directions
-const directionsWithConcepts = 
+const directionsWithConcepts =
   await this.characterBuilderService.getAllThematicDirectionsWithConcepts();
 
 // Populates select with optgroups
@@ -496,6 +504,7 @@ for (const conceptGroup of organizedData) {
 ```
 
 ### Core Motivations (Current - Broken)
+
 ```javascript
 // Only loads from latest concept
 const concepts = await getAllCharacterConcepts();
@@ -503,7 +512,7 @@ this.#currentConceptId = concepts[concepts.length - 1].id;
 
 // Tries to add divs to select (INVALID!)
 const element = document.createElement('div');
-container.appendChild(element);  // container is a <select>
+container.appendChild(element); // container is a <select>
 ```
 
 ---

@@ -1,15 +1,19 @@
 # CORMOTSEL-007: Remove Deprecated Methods and Code
 
 ## Priority: P2 (Medium)
+
 ## Estimated Effort: 0.5 hour
+
 ## Status: TODO
 
 ## Problem Statement
+
 Several methods and code sections are no longer needed with the new implementation and should be removed to clean up the codebase. This includes div-based element creation, old event handlers, and single-concept loading logic.
 
 ## Implementation Details
 
 ### Step 1: Remove Deprecated Methods
+
 Delete these entire methods from the controller:
 
 ```javascript
@@ -30,7 +34,7 @@ async #loadCurrentConcept() {
   const container = document.getElementById('direction-selector');
   container.innerHTML = '';
   container.setAttribute('role', 'listbox');
-  
+
   this.#eligibleDirections.forEach((direction) => {
     const element = this.#createDirectionElement(direction);
     container.appendChild(element);
@@ -47,17 +51,17 @@ async #loadCurrentConcept() {
   element.setAttribute('tabindex', '0');
   element.setAttribute('aria-selected', 'false');
   element.dataset.directionId = direction.id;
-  
+
   element.innerHTML = `
     <div class="direction-title">${direction.title}</div>
     ${direction.description ? `<div class="direction-description">${direction.description}</div>` : ''}
   `;
-  
+
   // Add click handler
   element.addEventListener('click', () => {
     this.#selectDirection(direction.id);
   });
-  
+
   // Add keyboard handlers
   element.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -65,7 +69,7 @@ async #loadCurrentConcept() {
       this.#selectDirection(direction.id);
     }
   });
-  
+
   return element;
 }
 
@@ -88,7 +92,7 @@ async #loadCurrentConcept() {
     el.setAttribute('aria-selected', 'false');
     el.classList.remove('selected');
   });
-  
+
   const selected = document.querySelector(`[data-direction-id="${this.#selectedDirectionId}"]`);
   if (selected) {
     selected.setAttribute('aria-selected', 'true');
@@ -98,6 +102,7 @@ async #loadCurrentConcept() {
 ```
 
 ### Step 2: Remove Old Event Listener Setup
+
 Remove div-specific event listener code:
 
 ```javascript
@@ -105,7 +110,7 @@ Remove div-specific event listener code:
 
 // Old div-based listeners
 const directionItems = document.querySelectorAll('.direction-item');
-directionItems.forEach(item => {
+directionItems.forEach((item) => {
   item.addEventListener('click', (e) => {
     const directionId = e.currentTarget.dataset.directionId;
     this.#selectDirection(directionId);
@@ -121,6 +126,7 @@ document.addEventListener('keydown', (e) => {
 ```
 
 ### Step 3: Remove Old CSS Classes
+
 Remove CSS that was specific to div-based implementation:
 
 ```css
@@ -141,7 +147,7 @@ Remove CSS that was specific to div-based implementation:
   border-color: #007bff;
 }
 
-.direction-item[aria-selected="true"] {
+.direction-item[aria-selected='true'] {
   font-weight: bold;
 }
 
@@ -158,6 +164,7 @@ Remove CSS that was specific to div-based implementation:
 ```
 
 ### Step 4: Remove Unused Imports
+
 Check for and remove any imports that are no longer used:
 
 ```javascript
@@ -166,6 +173,7 @@ Check for and remove any imports that are no longer used:
 ```
 
 ### Step 5: Remove Old Method Calls
+
 Update any places that call removed methods:
 
 ```javascript
@@ -178,6 +186,7 @@ Update any places that call removed methods:
 ```
 
 ### Step 6: Clean Up Comments
+
 Remove or update outdated comments:
 
 ```javascript
@@ -192,6 +201,7 @@ Remove or update outdated comments:
 ```
 
 ### Step 7: Remove Unused Properties
+
 Remove properties that are no longer needed:
 
 ```javascript
@@ -202,6 +212,7 @@ Remove properties that are no longer needed:
 ```
 
 ## Acceptance Criteria
+
 - [ ] All deprecated methods are removed
 - [ ] No references to removed methods remain
 - [ ] Old event listeners are removed
@@ -212,40 +223,43 @@ Remove properties that are no longer needed:
 - [ ] All tests pass after cleanup
 
 ## Dependencies
+
 - **CORMOTSEL-001** through **CORMOTSEL-006**: New implementation must be complete before removing old code
 
 ## Testing Requirements
 
 ### Manual Testing
+
 1. Ensure page loads without console errors
 2. Verify all functionality works with new implementation
 3. Check that no old UI elements remain
 4. Verify no broken event listeners
 
 ### Unit Tests
+
 ```javascript
 describe('Deprecated Code Removal', () => {
   it('should not have deprecated methods', () => {
     const controller = new CoreMotivationsGeneratorController(dependencies);
-    
+
     // These methods should not exist
     expect(controller.loadCurrentConcept).toBeUndefined();
     expect(controller.displayDirections).toBeUndefined();
     expect(controller.createDirectionElement).toBeUndefined();
     expect(controller.selectDirection).toBeUndefined();
   });
-  
+
   it('should not have deprecated properties', () => {
     const controller = new CoreMotivationsGeneratorController(dependencies);
-    
+
     // These properties should not exist
     expect(controller.currentConceptId).toBeUndefined();
     expect(controller.directionElements).toBeUndefined();
   });
-  
+
   it('should not create div elements for directions', () => {
     controller.initialize();
-    
+
     const divs = document.querySelectorAll('.direction-item');
     expect(divs.length).toBe(0);
   });
@@ -253,11 +267,13 @@ describe('Deprecated Code Removal', () => {
 ```
 
 ### Code Coverage Check
+
 - Run coverage report to identify any dead code
 - Ensure no unreachable code remains
 - Verify all remaining code has test coverage
 
 ## Cleanup Checklist
+
 - [ ] `#loadCurrentConcept()` removed
 - [ ] `#displayDirections()` removed
 - [ ] `#createDirectionElement()` removed
@@ -270,11 +286,13 @@ describe('Deprecated Code Removal', () => {
 - [ ] Unused imports removed
 
 ## Related Files
+
 - **Controller**: `src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js`
 - **Styles**: `styles/core-motivations-generator.css` (if separate)
 - **HTML**: `core-motivations-generator.html`
 
 ## Notes
+
 - This cleanup should be done after all new functionality is working
 - Keep a backup of the old code temporarily in case of issues
 - Consider using version control to track these deletions

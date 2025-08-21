@@ -4,7 +4,7 @@
 **Priority**: P0 - Critical  
 **Phase**: 3 - Configuration  
 **Component**: Configuration System  
-**Estimated**: 3 hours  
+**Estimated**: 3 hours
 
 ## Description
 
@@ -13,23 +13,32 @@ Create a comprehensive configuration schema for the debug logging system with va
 ## Technical Requirements
 
 ### 1. Configuration Schema (JSON Schema)
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "enabled": { "type": "boolean" },
-    "mode": { 
-      "enum": ["console", "remote", "hybrid", "test", "none"] 
+    "mode": {
+      "enum": ["console", "remote", "hybrid", "test", "none"]
     },
     "remote": {
       "type": "object",
       "properties": {
         "endpoint": { "type": "string", "format": "uri" },
         "batchSize": { "type": "integer", "minimum": 1, "maximum": 1000 },
-        "flushInterval": { "type": "integer", "minimum": 100, "maximum": 10000 },
+        "flushInterval": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 10000
+        },
         "retryAttempts": { "type": "integer", "minimum": 0, "maximum": 5 },
-        "circuitBreakerThreshold": { "type": "integer", "minimum": 1, "maximum": 100 }
+        "circuitBreakerThreshold": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
       }
     },
     "categories": {
@@ -48,6 +57,7 @@ Create a comprehensive configuration schema for the debug logging system with va
 ```
 
 ### 2. Default Configuration
+
 ```javascript
 export const DEFAULT_CONFIG = {
   enabled: true,
@@ -62,7 +72,7 @@ export const DEFAULT_CONFIG = {
     circuitBreakerThreshold: 5,
     circuitBreakerTimeout: 60000,
     requestTimeout: 5000,
-    compression: false
+    compression: false,
   },
   categories: {
     engine: { enabled: true, level: 'debug' },
@@ -75,48 +85,49 @@ export const DEFAULT_CONFIG = {
     turns: { enabled: true, level: 'info' },
     events: { enabled: false, level: 'warn' },
     validation: { enabled: false, level: 'error' },
-    general: { enabled: true, level: 'debug' }
+    general: { enabled: true, level: 'debug' },
   },
   console: {
     enabled: true,
     useColors: true,
     showTimestamp: false,
     showCategory: true,
-    groupSimilar: true
+    groupSimilar: true,
   },
   performance: {
     enableMetrics: true,
     metricsInterval: 60000,
-    memoryWarningThreshold: 100 // MB
-  }
+    memoryWarningThreshold: 100, // MB
+  },
 };
 ```
 
 ### 3. Environment-Specific Presets
+
 ```javascript
 export const CONFIG_PRESETS = {
   production: {
     mode: 'remote',
     categories: {
       // Only errors and warnings in production
-      '*': { enabled: true, level: 'warn' }
-    }
+      '*': { enabled: true, level: 'warn' },
+    },
   },
   development: {
     mode: 'hybrid',
-    console: { enabled: true, showCategory: true }
+    console: { enabled: true, showCategory: true },
   },
   test: {
     mode: 'test',
     remote: { enabled: false },
-    console: { enabled: false }
+    console: { enabled: false },
   },
   debugging: {
     mode: 'hybrid',
     categories: {
-      '*': { enabled: true, level: 'debug' }
-    }
-  }
+      '*': { enabled: true, level: 'debug' },
+    },
+  },
 };
 ```
 
@@ -135,17 +146,18 @@ export const CONFIG_PRESETS = {
    - [ ] Document each configuration option
 
 3. **Create Configuration Validator**
+
    ```javascript
    // src/logging/config/configValidator.js
    import Ajv from 'ajv';
    import schema from 'data/schemas/debug-logging-config.schema.json';
-   
+
    export class ConfigValidator {
      constructor() {
        this.ajv = new Ajv({ allErrors: true });
        this.validate = this.ajv.compile(schema);
      }
-     
+
      validateConfig(config) {
        const valid = this.validate(config);
        if (!valid) {
@@ -153,16 +165,15 @@ export const CONFIG_PRESETS = {
        }
        return true;
      }
-     
+
      formatErrors(errors) {
-       return errors.map(err => 
-         `${err.dataPath}: ${err.message}`
-       ).join(', ');
+       return errors.map((err) => `${err.dataPath}: ${err.message}`).join(', ');
      }
    }
    ```
 
 4. **Create Configuration Merger**
+
    ```javascript
    // src/logging/config/configMerger.js
    export class ConfigMerger {
@@ -171,15 +182,16 @@ export const CONFIG_PRESETS = {
        const merged = this.deepMerge(defaults, overrides);
        return this.applyEnvironmentVariables(merged, envVars);
      }
-     
+
      deepMerge(target, source) {
        // Recursive merge implementation
      }
-     
+
      applyEnvironmentVariables(config, env) {
        // Override with env vars
        if (env.DEBUG_LOG_MODE) config.mode = env.DEBUG_LOG_MODE;
-       if (env.DEBUG_LOG_ENDPOINT) config.remote.endpoint = env.DEBUG_LOG_ENDPOINT;
+       if (env.DEBUG_LOG_ENDPOINT)
+         config.remote.endpoint = env.DEBUG_LOG_ENDPOINT;
        // ... etc
        return config;
      }
@@ -237,6 +249,7 @@ export const CONFIG_PRESETS = {
 # Debug Logging Configuration
 
 ## Basic Structure
+
 - `enabled`: Enable/disable logging system
 - `mode`: Logging mode (console|remote|hybrid|test|none)
 - `remote`: Remote logger settings
@@ -245,12 +258,14 @@ export const CONFIG_PRESETS = {
 - `performance`: Performance monitoring
 
 ## Environment Variables
+
 - `DEBUG_LOG_MODE`: Override mode
 - `DEBUG_LOG_ENDPOINT`: Override endpoint
 - `DEBUG_LOG_BATCH_SIZE`: Override batch size
 - ... (complete list)
 
 ## Presets
+
 - `production`: Minimal logging, remote only
 - `development`: Hybrid mode with console
 - `test`: Mock logger, no output
@@ -268,9 +283,9 @@ export function migrateOldConfig(oldConfig) {
     categories: {
       general: {
         enabled: oldConfig.logLevel !== 'NONE',
-        level: oldConfig.logLevel.toLowerCase()
-      }
-    }
+        level: oldConfig.logLevel.toLowerCase(),
+      },
+    },
   };
 }
 ```

@@ -48,29 +48,29 @@ describe('CoreMotivationsGenerator - Event Dispatch Errors', () => {
 
     // Override the dispatch to track calls - fix the parameter signature
     const originalDispatch = mockEventBus.dispatch;
-    mockEventBus.dispatch = jest.fn().mockImplementation((eventName, payload, options) => {
-      // Track the call with correct parameters
-      eventDispatchCalls.push({
-        type: eventName,
-        payload: payload,
+    mockEventBus.dispatch = jest
+      .fn()
+      .mockImplementation((eventName, payload, options) => {
+        // Track the call with correct parameters
+        eventDispatchCalls.push({
+          type: eventName,
+          payload: payload,
+        });
+
+        // Simulate validation - events should have proper namespace format
+        if (typeof eventName !== 'string' || !eventName.includes(':')) {
+          // This simulates validation errors for improperly formatted event names
+          console.warn(
+            `GameDataRepository: getEventDefinition called with invalid ID: ${eventName}`
+          );
+          console.warn(
+            `VED: EventDefinition not found for '${eventName}'. Cannot validate payload. Proceeding with dispatch.`
+          );
+          console.error(`EventBus: Invalid event name provided. ${eventName}`);
+        }
+
+        return originalDispatch(eventName, payload, options);
       });
-
-      // Simulate validation - events should have proper namespace format
-      if (typeof eventName !== 'string' || !eventName.includes(':')) {
-        // This simulates validation errors for improperly formatted event names
-        console.warn(
-          `GameDataRepository: getEventDefinition called with invalid ID: ${eventName}`
-        );
-        console.warn(
-          `VED: EventDefinition not found for '${eventName}'. Cannot validate payload. Proceeding with dispatch.`
-        );
-        console.error(
-          `EventBus: Invalid event name provided. ${eventName}`
-        );
-      }
-
-      return originalDispatch(eventName, payload, options);
-    });
 
     // Use testBed's mock service with specific test data
     mockCharacterBuilderService = testBed.mockCharacterBuilderService;
@@ -140,7 +140,7 @@ describe('CoreMotivationsGenerator - Event Dispatch Errors', () => {
     await controller.initialize();
 
     // Wait for any async operations to complete
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     // The selectDirection method is private, so we'll need to trigger it indirectly
     // by simulating a DOM click event on a direction element
@@ -156,7 +156,7 @@ describe('CoreMotivationsGenerator - Event Dispatch Errors', () => {
     directionDiv.click();
 
     // Wait for the async direction selection to complete
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     // Then: Verify ALL event types now use correct format
     const allEventTypes = eventDispatchCalls.map((call) => call.type);

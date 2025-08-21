@@ -18,6 +18,7 @@ The clichés generator correctly implements the direction selector as follows:
 - **Selection Logic**: Allows user to choose any direction from any concept
 
 **HTML Structure**:
+
 ```html
 <select id="direction-selector" class="cb-select">
   <option value="">-- Choose a thematic direction --</option>
@@ -26,6 +27,7 @@ The clichés generator correctly implements the direction selector as follows:
 ```
 
 **JavaScript Logic** (simplified):
+
 ```javascript
 // Load ALL directions with their concepts
 const directionsWithConcepts = await getAllThematicDirectionsWithConcepts();
@@ -48,8 +50,10 @@ for (const conceptGroup of organized) {
 The current implementation has several critical issues:
 
 #### Issue 1: Single Concept Assumption
+
 - **Problem**: Only loads the LATEST concept using `getAllCharacterConcepts()` and selecting the last one
 - **Code Location**: `CoreMotivationsGeneratorController.js:113-143`
+
 ```javascript
 async #loadCurrentConcept() {
   const concepts = await getAllCharacterConcepts();
@@ -59,8 +63,10 @@ async #loadCurrentConcept() {
 ```
 
 #### Issue 2: Limited Direction Loading
+
 - **Problem**: Only loads directions for the single selected concept
 - **Code Location**: `CoreMotivationsGeneratorController.js:148-222`
+
 ```javascript
 async #loadEligibleDirections() {
   // Only gets directions for the current (latest) concept
@@ -72,17 +78,21 @@ async #loadEligibleDirections() {
 ```
 
 #### Issue 3: Controller-HTML Mismatch (Critical Bug)
+
 - **HTML Structure**: The HTML file CORRECTLY defines a `<select>` element at lines 57-64:
+
 ```html
 <select id="direction-selector" class="cb-select">
   <option value="">-- Choose a thematic direction --</option>
 </select>
 ```
+
 - **Controller Bug**: The controller's `#displayDirections()` method incorrectly treats this select element as a div container and attempts to append div elements to it (lines 227-248)
 - **Result**: The select dropdown cannot function because div elements cannot be children of select elements
 - **Impact**: This fundamental mismatch prevents the dropdown from working at all
 
 #### Issue 4: Missing Concept Organization
+
 - **Problem**: No concept grouping since it only shows directions from one concept
 - **Missing Feature**: No optgroup organization like in clichés generator
 - **Required**: Should populate the select with proper option and optgroup elements
@@ -113,9 +123,9 @@ Replace the current two-step loading process with a unified approach:
 ```javascript
 async #loadEligibleDirections() {
   // Get ALL directions with their concepts (like clichés generator)
-  const directionsWithConcepts = 
+  const directionsWithConcepts =
     await this.characterBuilderService.getAllThematicDirectionsWithConcepts();
-  
+
   // Filter to only those with clichés
   const eligibleDirections = [];
   for (const item of directionsWithConcepts) {
@@ -126,7 +136,7 @@ async #loadEligibleDirections() {
       eligibleDirections.push(item);
     }
   }
-  
+
   // Organize by concept for display
   this.#eligibleDirections = this.#organizeByConceptForDisplay(eligibleDirections);
 }
@@ -148,15 +158,15 @@ this.#eligibleDirections.forEach((direction) => {
 // CORRECTED CODE:
 #populateDirectionSelector(organizedData) {
   const selector = document.getElementById('direction-selector');
-  
+
   // Clear existing options (keep default)
   selector.innerHTML = '<option value="">-- Choose a thematic direction --</option>';
-  
+
   // Add optgroups for each concept
   for (const conceptGroup of organizedData) {
     const optgroup = document.createElement('optgroup');
     optgroup.label = conceptGroup.conceptTitle;
-    
+
     for (const direction of conceptGroup.directions) {
       const option = document.createElement('option');
       option.value = direction.id;
@@ -164,7 +174,7 @@ this.#eligibleDirections.forEach((direction) => {
       option.dataset.conceptId = conceptGroup.conceptId;
       optgroup.appendChild(option);
     }
-    
+
     selector.appendChild(optgroup);
   }
 }
@@ -233,6 +243,7 @@ After implementation, verify:
 The Core Motivations Generator has a critical bug where the controller attempts to populate a `<select>` element with div elements, which violates HTML standards and breaks the dropdown functionality. Additionally, the implementation incorrectly focuses on a single "latest" concept instead of showing ALL thematic directions that have clichés from ALL concepts.
 
 The fix requires:
+
 1. Correcting the controller to properly populate the select element with option and optgroup elements
 2. Loading all directions from all concepts (not just the latest)
 3. Organizing directions by concept using optgroups
@@ -242,7 +253,7 @@ This is not just a feature enhancement but a critical bug fix, as the current im
 
 ## File References
 
-- **Correct Implementation Reference**: 
+- **Correct Implementation Reference**:
   - `/src/clichesGenerator/controllers/ClichesGeneratorController.js`
   - `/cliches-generator.html`
 
@@ -253,5 +264,5 @@ This is not just a feature enhancement but a critical bug fix, as the current im
 
 ---
 
-*Report Generated: January 2025*  
-*Author: Code Analysis System*
+_Report Generated: January 2025_  
+_Author: Code Analysis System_

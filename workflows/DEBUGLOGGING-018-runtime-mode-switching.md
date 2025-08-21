@@ -4,7 +4,7 @@
 **Priority**: P1 - High  
 **Phase**: 3 - Configuration  
 **Component**: Configuration System  
-**Estimated**: 3 hours  
+**Estimated**: 3 hours
 
 ## Description
 
@@ -13,6 +13,7 @@ Implement runtime mode switching capability through the existing `setLogLevel()`
 ## Technical Requirements
 
 ### 1. Enhanced setLogLevel Method
+
 ```javascript
 setLogLevel(input) {
   // Backward compatibility: traditional log levels
@@ -21,13 +22,13 @@ setLogLevel(input) {
     this.#logger.setLogLevel(input);
     return;
   }
-  
+
   // New functionality: mode switching
   if (this.#isMode(input)) {
     this.#switchMode(input);
     return;
   }
-  
+
   // New functionality: configuration object
   if (typeof input === 'object') {
     this.#applyConfiguration(input);
@@ -37,6 +38,7 @@ setLogLevel(input) {
 ```
 
 ### 2. Supported Input Types
+
 ```javascript
 // Traditional log levels (backward compatible)
 logger.setLogLevel('DEBUG');
@@ -51,24 +53,25 @@ logger.setLogLevel('console');
 logger.setLogLevel({
   mode: 'hybrid',
   categories: {
-    engine: { level: 'debug' }
-  }
+    engine: { level: 'debug' },
+  },
 });
 
 // Special commands (new)
-logger.setLogLevel('reload');  // Reload config from file
-logger.setLogLevel('reset');   // Reset to defaults
+logger.setLogLevel('reload'); // Reload config from file
+logger.setLogLevel('reset'); // Reset to defaults
 ```
 
 ### 3. Mode Transition Matrix
-| From | To | Action |
-|------|----|--------|
-| console | remote | Initialize RemoteLogger, flush console |
-| console | hybrid | Initialize RemoteLogger, keep console |
-| remote | console | Flush remote buffer, switch |
-| remote | hybrid | Keep remote, add console |
-| hybrid | console | Flush remote, keep console |
-| hybrid | remote | Remove console, keep remote |
+
+| From    | To      | Action                                 |
+| ------- | ------- | -------------------------------------- |
+| console | remote  | Initialize RemoteLogger, flush console |
+| console | hybrid  | Initialize RemoteLogger, keep console  |
+| remote  | console | Flush remote buffer, switch            |
+| remote  | hybrid  | Keep remote, add console               |
+| hybrid  | console | Flush remote, keep console             |
+| hybrid  | remote  | Remove console, keep remote            |
 
 ## Implementation Steps
 
@@ -79,18 +82,19 @@ logger.setLogLevel('reset');   // Reset to defaults
    - [ ] Add validation for inputs
 
 2. **Implement Mode Detection**
+
    ```javascript
    #isLogLevel(input) {
      const levels = ['DEBUG', 'INFO', 'WARN', 'ERROR', 'NONE'];
-     return levels.includes(input) || 
+     return levels.includes(input) ||
             Object.values(LogLevel).includes(input);
    }
-   
+
    #isMode(input) {
      const modes = ['console', 'remote', 'hybrid', 'test', 'none'];
      return modes.includes(input);
    }
-   
+
    #isSpecialCommand(input) {
      const commands = ['reload', 'reset', 'flush', 'status'];
      return commands.includes(input);
@@ -98,34 +102,36 @@ logger.setLogLevel('reset');   // Reset to defaults
    ```
 
 3. **Implement Mode Switching**
+
    ```javascript
    async #switchMode(newMode) {
      const oldMode = this.#mode;
-     
+
      // Validate transition
      if (!this.#canTransition(oldMode, newMode)) {
        throw new Error(`Cannot transition from ${oldMode} to ${newMode}`);
      }
-     
+
      // Flush current logger
      await this.#flushCurrentLogger();
-     
+
      // Create new logger
      const newLogger = await this.#createLogger(newMode, this.#config);
-     
+
      // Transition state
      await this.#transitionState(oldMode, newMode, newLogger);
-     
+
      // Update references
      this.#logger = newLogger;
      this.#mode = newMode;
-     
+
      // Notify
      this.#notifyModeChange(oldMode, newMode);
    }
    ```
 
 4. **Implement State Transition**
+
    ```javascript
    async #transitionState(oldMode, newMode, newLogger) {
      // Transfer buffered logs if applicable
@@ -133,12 +139,12 @@ logger.setLogLevel('reset');   // Reset to defaults
        const buffer = this.#drainBuffer();
        await newLogger.processBatch(buffer);
      }
-     
+
      // Clean up old logger
      if (this.#logger && this.#logger.cleanup) {
        await this.#logger.cleanup();
      }
-     
+
      // Initialize new logger
      if (newLogger.initialize) {
        await newLogger.initialize();
@@ -147,6 +153,7 @@ logger.setLogLevel('reset');   // Reset to defaults
    ```
 
 5. **Implement Configuration Updates**
+
    ```javascript
    #applyConfiguration(config) {
      // Validate configuration
@@ -154,17 +161,17 @@ logger.setLogLevel('reset');   // Reset to defaults
      if (!validation.valid) {
        throw new Error(`Invalid config: ${validation.errors}`);
      }
-     
+
      // Apply mode change if specified
      if (config.mode && config.mode !== this.#mode) {
        this.#switchMode(config.mode);
      }
-     
+
      // Apply category updates
      if (config.categories) {
        this.#updateCategories(config.categories);
      }
-     
+
      // Apply logger-specific config
      if (this.#logger.applyConfig) {
        this.#logger.applyConfig(config);
@@ -180,18 +187,18 @@ logger.setLogLevel('reset');   // Reset to defaults
          const config = await this.#loadConfiguration();
          this.#applyConfiguration(config);
          break;
-         
+
        case 'reset':
          this.#applyConfiguration(DEFAULT_CONFIG);
          break;
-         
+
        case 'flush':
          await this.#logger.flush();
          break;
-         
+
        case 'status':
          return this.#getStatus();
-         
+
        default:
          throw new Error(`Unknown command: ${command}`);
      }
@@ -246,11 +253,11 @@ logger.setLogLevel('NONE');
 
 // Map old to new if needed:
 const LEGACY_MAPPING = {
-  'NONE': { mode: 'none' },
-  'ERROR': { categories: { '*': { level: 'error' } } },
-  'WARN': { categories: { '*': { level: 'warn' } } },
-  'INFO': { categories: { '*': { level: 'info' } } },
-  'DEBUG': { categories: { '*': { level: 'debug' } } }
+  NONE: { mode: 'none' },
+  ERROR: { categories: { '*': { level: 'error' } } },
+  WARN: { categories: { '*': { level: 'warn' } } },
+  INFO: { categories: { '*': { level: 'info' } } },
+  DEBUG: { categories: { '*': { level: 'debug' } } },
 };
 ```
 
@@ -262,7 +269,7 @@ this.#eventBus.emit('logger.mode.changed', {
   from: oldMode,
   to: newMode,
   timestamp: Date.now(),
-  reason: 'runtime-switch'
+  reason: 'runtime-switch',
 });
 
 // Allow listeners to react

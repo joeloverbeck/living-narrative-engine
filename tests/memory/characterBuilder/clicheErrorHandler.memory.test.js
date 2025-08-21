@@ -1,6 +1,6 @@
 /**
  * @file Memory efficiency tests for ClicheErrorHandler service
- * 
+ *
  * Tests memory leak detection and resource management for error handling
  * operations in the cliché generation system.
  */
@@ -105,7 +105,7 @@ describe('ClicheErrorHandler - Memory Tests', () => {
         // Take memory snapshot after cycle
         if (global.gc) global.gc();
         const cycleEndMemory = process.memoryUsage().heapUsed;
-        
+
         memorySnapshots.push({
           cycle,
           memoryUsed: cycleEndMemory - cycleStartMemory,
@@ -115,10 +115,11 @@ describe('ClicheErrorHandler - Memory Tests', () => {
       // Check that memory usage doesn't grow linearly
       // Later cycles shouldn't use significantly more memory than earlier ones
       expect(memorySnapshots.length).toBeGreaterThanOrEqual(3);
-      
+
       const firstCycleMemory = memorySnapshots[0].memoryUsed;
-      const lastCycleMemory = memorySnapshots[memorySnapshots.length - 1].memoryUsed;
-      
+      const lastCycleMemory =
+        memorySnapshots[memorySnapshots.length - 1].memoryUsed;
+
       // Memory usage in last cycle should not be more than 2x the first cycle
       // This would indicate a memory leak
       const memoryGrowthRatio = lastCycleMemory / firstCycleMemory;
@@ -171,7 +172,7 @@ describe('ClicheErrorHandler - Memory Tests', () => {
         await errorHandler.handleError(error, {
           operation: `unique_operation_${i}`,
         });
-        
+
         // Periodically check statistics (simulating real usage)
         if (i % 50 === 0) {
           const stats = errorHandler.getErrorStatistics();
@@ -181,7 +182,7 @@ describe('ClicheErrorHandler - Memory Tests', () => {
 
       // Verify all statistics checks returned valid data
       expect(statsChecks.length).toBeGreaterThan(0);
-      statsChecks.forEach(stats => {
+      statsChecks.forEach((stats) => {
         expect(stats).toBeDefined();
       });
 

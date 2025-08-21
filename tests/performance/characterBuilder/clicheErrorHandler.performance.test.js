@@ -1,6 +1,6 @@
 /**
  * @file Performance tests for ClicheErrorHandler service
- * 
+ *
  * Tests processing speed, throughput, and scalability of error handling
  * operations in the cliché generation system.
  */
@@ -87,20 +87,22 @@ describe('ClicheErrorHandler - Performance Tests', () => {
 
       for (const concurrency of concurrencyLevels) {
         const startTime = Date.now();
-        
+
         const promises = [];
         for (let i = 0; i < concurrency; i++) {
           const error = new ClicheError(`Concurrent error ${i}`);
-          promises.push(errorHandler.handleError(error, {
-            operation: `concurrent_op_${i % 10}`,
-          }));
+          promises.push(
+            errorHandler.handleError(error, {
+              operation: `concurrent_op_${i % 10}`,
+            })
+          );
         }
 
         await Promise.all(promises);
-        
+
         const endTime = Date.now();
         const processingTime = endTime - startTime;
-        
+
         results.push({
           concurrency,
           time: processingTime,
@@ -119,24 +121,25 @@ describe('ClicheErrorHandler - Performance Tests', () => {
         () => new ClicheError('General error'),
         () => new ClicheLLMError('LLM error', 500),
         () => new ClicheStorageError('Storage error', 'save'),
-        () => new ClicheValidationError('Validation error', ['field1', 'field2']),
+        () =>
+          new ClicheValidationError('Validation error', ['field1', 'field2']),
       ];
 
       const typePerformance = [];
 
       for (const createError of errorTypes) {
         const startTime = Date.now();
-        
+
         const promises = [];
         for (let i = 0; i < 50; i++) {
           promises.push(errorHandler.handleError(createError()));
         }
-        
+
         await Promise.all(promises);
-        
+
         const endTime = Date.now();
         const processingTime = endTime - startTime;
-        
+
         typePerformance.push(processingTime);
       }
 
@@ -144,7 +147,7 @@ describe('ClicheErrorHandler - Performance Tests', () => {
       // No type should take more than 3x the fastest type (increased tolerance for CI environments)
       const minTime = Math.min(...typePerformance);
       const maxTime = Math.max(...typePerformance);
-      
+
       expect(maxTime / minTime).toBeLessThan(3);
     });
   });
@@ -152,7 +155,7 @@ describe('ClicheErrorHandler - Performance Tests', () => {
   describe('Circuit Breaker Performance', () => {
     it('should handle circuit breaker operations efficiently', async () => {
       const operations = Array.from({ length: 20 }, (_, i) => `operation_${i}`);
-      
+
       const startTime = Date.now();
 
       // Trigger circuit breakers for all operations
@@ -187,7 +190,10 @@ describe('ClicheErrorHandler - Performance Tests', () => {
 
     it('should reset circuit breakers quickly', async () => {
       const operationCount = 50;
-      const operations = Array.from({ length: operationCount }, (_, i) => `op_${i}`);
+      const operations = Array.from(
+        { length: operationCount },
+        (_, i) => `op_${i}`
+      );
 
       // Trigger all circuit breakers
       for (const operation of operations) {
@@ -199,11 +205,11 @@ describe('ClicheErrorHandler - Performance Tests', () => {
 
       // Measure reset performance
       const startTime = Date.now();
-      
+
       for (const operation of operations) {
         errorHandler.resetCircuitBreaker(operation);
       }
-      
+
       const endTime = Date.now();
       const resetTime = endTime - startTime;
 
@@ -216,14 +222,14 @@ describe('ClicheErrorHandler - Performance Tests', () => {
     it('should collect statistics without significant overhead', async () => {
       // Process errors without statistics collection
       const withoutStatsStart = Date.now();
-      
+
       for (let i = 0; i < 200; i++) {
         const error = new ClicheError(`No stats ${i}`);
         await errorHandler.handleError(error, {
           operation: `no_stats_op_${i % 10}`,
         });
       }
-      
+
       const withoutStatsTime = Date.now() - withoutStatsStart;
 
       // Create new handler for comparison
@@ -234,19 +240,19 @@ describe('ClicheErrorHandler - Performance Tests', () => {
 
       // Process errors with statistics collection
       const withStatsStart = Date.now();
-      
+
       for (let i = 0; i < 200; i++) {
         const error = new ClicheError(`With stats ${i}`);
         await statsHandler.handleError(error, {
           operation: `stats_op_${i % 10}`,
         });
-        
+
         // Periodically access statistics (simulating real usage)
         if (i % 20 === 0) {
           statsHandler.getErrorStatistics();
         }
       }
-      
+
       const withStatsTime = Date.now() - withStatsStart;
 
       // Statistics overhead should be minimal (less than 20% slower)
@@ -265,12 +271,12 @@ describe('ClicheErrorHandler - Performance Tests', () => {
 
       // Measure statistics retrieval time
       const startTime = Date.now();
-      
+
       for (let i = 0; i < 100; i++) {
         const stats = errorHandler.getErrorStatistics();
         expect(stats).toBeDefined();
       }
-      
+
       const endTime = Date.now();
       const retrievalTime = endTime - startTime;
 
@@ -286,21 +292,23 @@ describe('ClicheErrorHandler - Performance Tests', () => {
 
       for (const volume of volumes) {
         const startTime = Date.now();
-        
+
         const promises = [];
         for (let i = 0; i < volume; i++) {
           const error = new ClicheError(`Volume test ${i}`);
-          promises.push(errorHandler.handleError(error, {
-            operation: `volume_op_${i % 20}`,
-          }));
+          promises.push(
+            errorHandler.handleError(error, {
+              operation: `volume_op_${i % 20}`,
+            })
+          );
         }
-        
+
         await Promise.all(promises);
-        
+
         const endTime = Date.now();
         const totalTime = endTime - startTime;
         const avgTimePerError = totalTime / volume;
-        
+
         performanceMetrics.push({
           volume,
           totalTime,
@@ -311,13 +319,15 @@ describe('ClicheErrorHandler - Performance Tests', () => {
 
       // Average time per error should not increase significantly with volume
       const firstAvg = performanceMetrics[0].avgTimePerError;
-      const lastAvg = performanceMetrics[performanceMetrics.length - 1].avgTimePerError;
-      
+      const lastAvg =
+        performanceMetrics[performanceMetrics.length - 1].avgTimePerError;
+
       // Last average should not be more than 2x the first
       expect(lastAvg / firstAvg).toBeLessThan(2);
-      
+
       // Throughput should remain reasonable even at high volume
-      const lastThroughput = performanceMetrics[performanceMetrics.length - 1].throughput;
+      const lastThroughput =
+        performanceMetrics[performanceMetrics.length - 1].throughput;
       expect(lastThroughput).toBeGreaterThan(100); // At least 100 errors/second
     });
   });

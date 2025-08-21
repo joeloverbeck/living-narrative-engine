@@ -4,7 +4,7 @@
 **Priority**: P1 - High  
 **Phase**: 2 - Integration  
 **Component**: Configuration  
-**Estimated**: 2 hours  
+**Estimated**: 2 hours
 
 ## Description
 
@@ -13,6 +13,7 @@ Update the existing `loadAndApplyLoggerConfig` utility to support the new debug 
 ## Technical Requirements
 
 ### 1. Current Implementation
+
 ```javascript
 // src/configuration/utils/loggerConfigUtils.js
 export async function loadAndApplyLoggerConfig(logger) {
@@ -24,6 +25,7 @@ export async function loadAndApplyLoggerConfig(logger) {
 ```
 
 ### 2. Enhanced Implementation
+
 ```javascript
 export async function loadAndApplyLoggerConfig(logger) {
   // Try new config format first
@@ -32,7 +34,7 @@ export async function loadAndApplyLoggerConfig(logger) {
     applyDebugLogConfig(logger, debugConfig);
     return;
   }
-  
+
   // Fall back to old format
   const legacyConfig = await loadLoggerConfig();
   if (legacyConfig) {
@@ -44,6 +46,7 @@ export async function loadAndApplyLoggerConfig(logger) {
 ### 3. Configuration Formats
 
 #### New Format (debug-logging-config.json)
+
 ```json
 {
   "enabled": true,
@@ -58,6 +61,7 @@ export async function loadAndApplyLoggerConfig(logger) {
 ```
 
 #### Legacy Format (logger-config.json)
+
 ```json
 {
   "logLevel": "ERROR"
@@ -79,23 +83,24 @@ export async function loadAndApplyLoggerConfig(logger) {
    - [ ] Maintain backward compatibility
 
 3. **Config Application Logic**
+
    ```javascript
    function applyDebugLogConfig(logger, config) {
      // Apply mode if LoggerStrategy
      if (logger.setMode && config.mode) {
        logger.setMode(config.mode);
      }
-     
+
      // Apply log level (backward compatibility)
      if (config.logLevel) {
        logger.setLogLevel(config.logLevel);
      }
-     
+
      // Apply category-specific settings
      if (logger.setCategoryConfig && config.categories) {
        logger.setCategoryConfig(config.categories);
      }
-     
+
      // Apply remote configuration
      if (logger.setRemoteConfig && config.remote) {
        logger.setRemoteConfig(config.remote);
@@ -116,9 +121,9 @@ export async function loadAndApplyLoggerConfig(logger) {
        './config/debug-logging-config.json',
        './config/logger-config.json', // Legacy
        './debug-logging-config.json',
-       './logger-config.json' // Legacy
+       './logger-config.json', // Legacy
      ];
-     
+
      for (const path of paths.filter(Boolean)) {
        if (await fileExists(path)) {
          return path;
@@ -186,20 +191,25 @@ export function migrateLoggerConfig(legacyConfig) {
     categories: {
       general: {
         enabled: true,
-        level: legacyConfig.logLevel.toLowerCase()
-      }
-    }
+        level: legacyConfig.logLevel.toLowerCase(),
+      },
+    },
   };
 }
 
 function mapLogLevelToMode(logLevel) {
-  switch(logLevel) {
-    case 'NONE': return 'none';
+  switch (logLevel) {
+    case 'NONE':
+      return 'none';
     case 'ERROR':
-    case 'WARN': return 'production';
-    case 'INFO': return 'development';
-    case 'DEBUG': return 'development';
-    default: return 'console';
+    case 'WARN':
+      return 'production';
+    case 'INFO':
+      return 'development';
+    case 'DEBUG':
+      return 'development';
+    default:
+      return 'console';
   }
 }
 ```

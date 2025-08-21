@@ -34,7 +34,7 @@ describe('Core Motivations Generator - Accessibility', () => {
     if (announcer) {
       announcer.remove();
     }
-    
+
     testBed.cleanup();
     jest.clearAllMocks();
   });
@@ -81,7 +81,7 @@ describe('Core Motivations Generator - Accessibility', () => {
       await testBed.controller.initialize();
       const modal = document.getElementById('confirmation-modal');
       modal.style.display = 'flex';
-      
+
       const event = new KeyboardEvent('keydown', {
         key: 'Escape',
         bubbles: true,
@@ -208,11 +208,11 @@ describe('Core Motivations Generator - Accessibility', () => {
 
       // Act - Trigger controller methods that create screen reader announcements
       testBed.controller.showSuccess('Test success message');
-      testBed.controller.showWarning('Test warning message');  
+      testBed.controller.showWarning('Test warning message');
       testBed.controller.showError('Test error message');
 
       // Wait for any DOM updates
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Assert - Check if screen reader element was created (may be created lazily)
       const announcer = document.getElementById('sr-announcements');
@@ -220,14 +220,13 @@ describe('Core Motivations Generator - Accessibility', () => {
         expect(announcer.getAttribute('aria-live')).toBe('polite');
         expect(announcer.getAttribute('aria-atomic')).toBe('true');
       }
-      
+
       // At minimum, verify the methods were called without errors
       expect(testBed.controller.showSuccess).toHaveBeenCalled();
       expect(testBed.controller.showWarning).toHaveBeenCalled();
       expect(testBed.controller.showError).toHaveBeenCalled();
     });
   });
-
 
   describe('Modal Accessibility', () => {
     it('should have proper modal ARIA attributes', async () => {
@@ -259,16 +258,17 @@ describe('Core Motivations Generator - Accessibility', () => {
       // Arrange
       testBed.setupSuccessfulDirectionLoad();
       await testBed.controller.initialize();
-      
+
       const directionSelect = document.getElementById('direction-selector');
       expect(directionSelect.tagName.toLowerCase()).toBe('select');
-      
+
       // Act - Simulate direction selection
       await testBed.selectDirection('test-direction-1');
-      
+
       // Assert - Verify selection was processed
-      expect(testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId)
-        .toHaveBeenCalledWith('test-direction-1');
+      expect(
+        testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId
+      ).toHaveBeenCalledWith('test-direction-1');
     });
   });
 
@@ -277,7 +277,7 @@ describe('Core Motivations Generator - Accessibility', () => {
       // Arrange & Act
       testBed.setupSuccessfulDirectionLoad();
       await testBed.controller.initialize();
-      
+
       // Assert
       expect(testBed.dispatchedEvents).toContainEqual(
         expect.objectContaining({
@@ -286,7 +286,6 @@ describe('Core Motivations Generator - Accessibility', () => {
       );
     });
   });
-
 
   describe('Skip Links', () => {
     it('should provide skip link for keyboard navigation', () => {
@@ -307,12 +306,12 @@ describe('Core Motivations Generator - Accessibility', () => {
     it('should initialize with proper button states', async () => {
       // Arrange & Act
       await testBed.controller.initialize();
-      
+
       // Assert - Verify initial button states
       const generateBtn = document.getElementById('generate-btn');
       const clearBtn = document.getElementById('clear-all-btn');
       const exportBtn = document.getElementById('export-btn');
-      
+
       expect(generateBtn.disabled).toBe(true); // No direction selected
       expect(clearBtn.disabled).toBe(true); // No motivations
       expect(exportBtn.disabled).toBe(true); // No motivations

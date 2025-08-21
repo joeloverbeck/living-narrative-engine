@@ -112,20 +112,20 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   async #loadCurrentConcept() {
     try {
       this.logger.debug('DEBUG: Starting to load current concept...');
-      
+
       const concepts =
         await this.characterBuilderService.getAllCharacterConcepts();
-      
+
       this.logger.debug(
         `DEBUG: Retrieved concepts from service: ${concepts ? concepts.length : 0} concepts`
       );
-      
+
       if (concepts && concepts.length > 0) {
         // Log all available concepts
         this.logger.debug(
-          `DEBUG: Available concept IDs: ${concepts.map(c => c.id).join(', ')}`
+          `DEBUG: Available concept IDs: ${concepts.map((c) => c.id).join(', ')}`
         );
-        
+
         // Get the most recent concept
         this.#currentConceptId = concepts[concepts.length - 1].id;
         this.logger.info(`DEBUG: Loaded concept: ${this.#currentConceptId}`);
@@ -150,7 +150,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       this.logger.debug(
         `DEBUG: Starting to load eligible directions for concept: ${this.#currentConceptId}`
       );
-      
+
       const allDirections =
         await this.characterBuilderService.getThematicDirectionsByConceptId(
           this.#currentConceptId
@@ -162,7 +162,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
       if (allDirections && allDirections.length > 0) {
         this.logger.debug(
-          `DEBUG: Direction IDs to check: ${allDirections.map(d => d.id).join(', ')}`
+          `DEBUG: Direction IDs to check: ${allDirections.map((d) => d.id).join(', ')}`
         );
       }
 
@@ -172,16 +172,16 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
         this.logger.debug(
           `DEBUG: Checking direction ${direction.id} (title: "${direction.title}") for clichés...`
         );
-        
+
         const hasClichés =
           await this.characterBuilderService.hasClichesForDirection(
             direction.id
           );
-          
+
         this.logger.debug(
           `DEBUG: Direction ${direction.id} has clichés: ${hasClichés}`
         );
-        
+
         if (hasClichés) {
           eligibleDirections.push(direction);
           this.logger.debug(
@@ -197,13 +197,13 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
       if (eligibleDirections.length > 0) {
         this.logger.debug(
-          `DEBUG: Eligible direction IDs: ${eligibleDirections.map(d => d.id).join(', ')}`
+          `DEBUG: Eligible direction IDs: ${eligibleDirections.map((d) => d.id).join(', ')}`
         );
       } else {
         this.logger.warn(
           `DEBUG: No eligible directions found - this will show 'No eligible directions found' message`
         );
-        
+
         // DEBUG: When no eligible directions found, dump database contents
         this.logger.warn('DEBUG: Triggering database dumps to investigate...');
         try {
@@ -227,7 +227,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   #populateDirectionSelector() {
     const selector = document.getElementById('direction-selector');
     const noDirectionsMsg = document.getElementById('no-directions-message');
-    
+
     if (!selector) {
       this.logger.error('Direction selector element not found');
       return;
@@ -241,18 +241,21 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
     selector.style.display = 'block';
     noDirectionsMsg.style.display = 'none';
-    
+
     // Organize directions by concept for optgroups
-    const organizedData = this.#organizeDirectionsByConcept(this.#eligibleDirections);
-    
+    const organizedData = this.#organizeDirectionsByConcept(
+      this.#eligibleDirections
+    );
+
     // Clear existing options (keep default)
-    selector.innerHTML = '<option value="">-- Choose a thematic direction --</option>';
-    
+    selector.innerHTML =
+      '<option value="">-- Choose a thematic direction --</option>';
+
     // Add optgroups for each concept
     for (const conceptGroup of organizedData) {
       const optgroup = document.createElement('optgroup');
       optgroup.label = conceptGroup.conceptTitle;
-      
+
       for (const direction of conceptGroup.directions) {
         const option = document.createElement('option');
         option.value = direction.id;
@@ -260,14 +263,17 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
         option.dataset.conceptId = conceptGroup.conceptId;
         optgroup.appendChild(option);
       }
-      
+
       selector.appendChild(optgroup);
     }
-    
+
     // Dispatch event for UI updates
     this.eventBus.dispatch('core:directions_loaded', {
-      count: organizedData.reduce((sum, group) => sum + group.directions.length, 0),
-      concepts: organizedData.length
+      count: organizedData.reduce(
+        (sum, group) => sum + group.directions.length,
+        0
+      ),
+      concepts: organizedData.length,
     });
   }
 
@@ -279,23 +285,26 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
    */
   #organizeDirectionsByConcept(directions) {
     const conceptMap = new Map();
-    
+
     for (const direction of directions) {
       // Extract concept info from direction (assuming direction has concept property)
       const conceptId = direction.concept?.id || 'unknown';
-      const conceptTitle = direction.concept?.text || direction.concept?.concept || 'Unknown Concept';
-      
+      const conceptTitle =
+        direction.concept?.text ||
+        direction.concept?.concept ||
+        'Unknown Concept';
+
       if (!conceptMap.has(conceptId)) {
         conceptMap.set(conceptId, {
           conceptId,
           conceptTitle,
-          directions: []
+          directions: [],
         });
       }
-      
+
       conceptMap.get(conceptId).directions.push(direction);
     }
-    
+
     return Array.from(conceptMap.values());
   }
 
@@ -324,6 +333,27 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     // Dispatch selection event
     this.eventBus.dispatch('core:core_motivations_direction_selected', {
       directionId,
+      conceptId: this.#currentConceptId,
+    });
+  }
+
+  /**
+   * Clear the selected direction
+   */
+  #clearDirection() {
+    // Clear selection state
+    this.#selectedDirectionId = null;
+
+    // Update UI state to disable buttons
+    this.#updateUIState();
+
+    // Clear existing motivations display
+    this.#currentMotivations = [];
+    this.#currentSearchQuery = ''; // Clear search query to ensure proper display
+    this.#displayMotivations();
+
+    // Dispatch clear selection event
+    this.eventBus.dispatch('core:core_motivations_direction_cleared', {
       conceptId: this.#currentConceptId,
     });
   }
@@ -1054,6 +1084,8 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       const directionId = e.target.value;
       if (directionId) {
         this.#selectDirection(directionId);
+      } else {
+        this.#clearDirection();
       }
     });
 
@@ -1382,7 +1414,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   /**
    * Testing methods - exposed for unit tests only
    */
-  
+
   // Getters for testing
   get eligibleDirections() {
     return this.#eligibleDirections;

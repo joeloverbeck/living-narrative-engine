@@ -1,7 +1,7 @@
 /**
  * @file Performance tests for pipeline tracing system
  * @description Tests tracing overhead and throughput under load
- * 
+ *
  * Note: These tests use mocked dependencies which may not reflect
  * realistic production performance characteristics. Thresholds are
  * set to accommodate mock environment timing variability.

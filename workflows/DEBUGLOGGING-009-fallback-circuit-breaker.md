@@ -4,7 +4,7 @@
 **Priority**: P1 - High  
 **Phase**: 2 - Integration  
 **Component**: Client-Side Logger  
-**Estimated**: 4 hours  
+**Estimated**: 4 hours
 
 ## Description
 
@@ -13,18 +13,19 @@ Implement robust fallback mechanisms and a circuit breaker pattern to handle net
 ## Technical Requirements
 
 ### 1. Circuit Breaker States
+
 ```javascript
 class CircuitBreaker {
   // States
   CLOSED = 'CLOSED';       // Normal operation
   OPEN = 'OPEN';           // Too many failures, blocking calls
   HALF_OPEN = 'HALF_OPEN'; // Testing recovery
-  
+
   // Configuration
   failureThreshold: 5;     // Failures before opening
   successThreshold: 2;     // Successes to close from half-open
   timeout: 60000;          // Time before half-open (ms)
-  
+
   // Tracking
   failureCount: 0;
   successCount: 0;
@@ -34,6 +35,7 @@ class CircuitBreaker {
 ```
 
 ### 2. Fallback Chain
+
 ```
 RemoteLogger (primary)
     ↓ (on failure)
@@ -45,6 +47,7 @@ Drop logs (last resort)
 ```
 
 ### 3. Recovery Strategy
+
 - Gradual recovery from failures
 - Exponential backoff between attempts
 - Health check probes during half-open state
@@ -59,6 +62,7 @@ Drop logs (last resort)
    - [ ] Implement timeout mechanism
 
 2. **Circuit Breaker State Machine**
+
    ```javascript
    class CircuitBreaker {
      constructor(options) {
@@ -70,7 +74,7 @@ Drop logs (last resort)
        this.successCount = 0;
        this.nextAttempt = Date.now();
      }
-     
+
      async execute(fn) {
        if (this.state === 'OPEN') {
          if (Date.now() < this.nextAttempt) {
@@ -78,7 +82,7 @@ Drop logs (last resort)
          }
          this.state = 'HALF_OPEN';
        }
-       
+
        try {
          const result = await fn();
          this.onSuccess();
@@ -98,13 +102,14 @@ Drop logs (last resort)
    - [ ] Add recovery detection
 
 4. **Fallback Execution Logic**
+
    ```javascript
    class FallbackManager {
      constructor(fallbacks) {
        this.fallbacks = fallbacks;
        this.currentIndex = 0;
      }
-     
+
      async execute(operation, ...args) {
        for (let i = this.currentIndex; i < this.fallbacks.length; i++) {
          try {
@@ -196,6 +201,7 @@ Drop logs (last resort)
 ## Monitoring and Metrics
 
 Track and report:
+
 - Circuit breaker state changes
 - Failure/success rates
 - Fallback activation count
@@ -218,7 +224,7 @@ class MemoryBuffer {
     this.maxSize = maxSize;
     this.droppedCount = 0;
   }
-  
+
   add(log) {
     if (this.buffer.length >= this.maxSize) {
       this.buffer.shift(); // Remove oldest
@@ -226,7 +232,7 @@ class MemoryBuffer {
     }
     this.buffer.push(log);
   }
-  
+
   drain() {
     const logs = [...this.buffer];
     this.buffer = [];

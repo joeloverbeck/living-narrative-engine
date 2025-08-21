@@ -7,10 +7,10 @@
 import express from 'express';
 import DebugLogController from '../handlers/debugLogController.js';
 import { ConsoleLogger } from '../consoleLogger.js';
-import { 
-  validateDebugLogRequest, 
-  validateRequestHeaders, 
-  handleValidationErrors 
+import {
+  validateDebugLogRequest,
+  validateRequestHeaders,
+  handleValidationErrors,
 } from '../middleware/validation.js';
 import { createApiRateLimiter } from '../middleware/rateLimiting.js';
 
@@ -33,19 +33,20 @@ const debugLogController = new DebugLogController(logger);
  * - logs[].sessionId: Optional session UUID v4
  * - logs[].metadata: Optional additional context
  */
-router.post('/', 
+router.post(
+  '/',
   // Apply rate limiting (100 requests per 15 minutes)
   createApiRateLimiter(),
-  
+
   // Validate headers
   validateRequestHeaders(),
-  
+
   // Validate request body
   validateDebugLogRequest(),
-  
+
   // Handle validation errors
   handleValidationErrors,
-  
+
   // Handle the debug log request
   async (req, res) => {
     await debugLogController.handleDebugLog(req, res);

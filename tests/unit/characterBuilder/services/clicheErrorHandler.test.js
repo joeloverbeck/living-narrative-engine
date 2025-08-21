@@ -516,5 +516,4 @@ describe('ClicheErrorHandler', () => {
       expect(storageResult.recommendation).toBe('USE_FALLBACK_STORAGE');
     });
   });
-
 });

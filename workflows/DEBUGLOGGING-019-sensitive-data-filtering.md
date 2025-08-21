@@ -4,7 +4,7 @@
 **Priority**: P0 - Critical  
 **Phase**: 3 - Configuration  
 **Component**: Security  
-**Estimated**: 3 hours  
+**Estimated**: 3 hours
 
 ## Description
 
@@ -13,6 +13,7 @@ Implement sensitive data filtering to prevent accidental logging of passwords, A
 ## Technical Requirements
 
 ### 1. Sensitive Data Patterns
+
 ```javascript
 const SENSITIVE_PATTERNS = [
   // Authentication
@@ -20,33 +21,34 @@ const SENSITIVE_PATTERNS = [
   /(?:token|jwt|bearer)[\s:=]*["']?([^"'\s]+)/gi,
   /(?:api[_-]?key|apikey)[\s:=]*["']?([^"'\s]+)/gi,
   /(?:secret|private[_-]?key)[\s:=]*["']?([^"'\s]+)/gi,
-  
+
   // Personal Information
   /(?:ssn|social)[\s:=]*(\d{3}-?\d{2}-?\d{4})/gi,
   /(?:credit[_-]?card|cc)[\s:=]*(\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4})/gi,
-  
+
   // Headers
   /authorization:\s*bearer\s+([^\s]+)/gi,
   /x-api-key:\s*([^\s]+)/gi,
-  
+
   // URLs with credentials
   /(?:https?|ftp):\/\/[^:]+:([^@]+)@/gi,
-  
+
   // Environment variables
-  /process\.env\.([A-Z_]*(?:KEY|TOKEN|SECRET|PASSWORD)[A-Z_]*)/gi
+  /process\.env\.([A-Z_]*(?:KEY|TOKEN|SECRET|PASSWORD)[A-Z_]*)/gi,
 ];
 ```
 
 ### 2. Filtering Strategy
+
 ```javascript
 class SensitiveDataFilter {
   filter(message, metadata) {
     return {
       message: this.#filterString(message),
-      metadata: this.#filterObject(metadata)
+      metadata: this.#filterObject(metadata),
     };
   }
-  
+
   #filterString(str) {
     let filtered = str;
     for (const pattern of SENSITIVE_PATTERNS) {
@@ -56,7 +58,7 @@ class SensitiveDataFilter {
     }
     return filtered;
   }
-  
+
   #filterObject(obj) {
     // Deep clone and filter recursively
   }
@@ -64,6 +66,7 @@ class SensitiveDataFilter {
 ```
 
 ### 3. Configuration Options
+
 ```javascript
 {
   "security": {
@@ -86,50 +89,55 @@ class SensitiveDataFilter {
    - [ ] Implement deep object filtering
 
 2. **Pattern Implementation**
+
    ```javascript
    export class SensitiveDataFilter {
      constructor(config = {}) {
        this.patterns = [...SENSITIVE_PATTERNS];
        if (config.customPatterns) {
-         this.patterns.push(...config.customPatterns.map(p => new RegExp(p, 'gi')));
+         this.patterns.push(
+           ...config.customPatterns.map((p) => new RegExp(p, 'gi'))
+         );
        }
        this.placeholder = config.redactedPlaceholder || '[REDACTED]';
        this.whitelist = new Set(config.whitelist || []);
        this.deepScan = config.deepScan !== false;
      }
-     
+
      filter(message, metadata) {
        const filteredMessage = this.#filterString(message);
-       const filteredMetadata = this.deepScan 
+       const filteredMetadata = this.deepScan
          ? this.#deepFilterObject(metadata)
          : this.#shallowFilterObject(metadata);
-       
+
        return {
          message: filteredMessage,
          metadata: filteredMetadata,
-         wasFiltered: filteredMessage !== message || 
-                      JSON.stringify(filteredMetadata) !== JSON.stringify(metadata)
+         wasFiltered:
+           filteredMessage !== message ||
+           JSON.stringify(filteredMetadata) !== JSON.stringify(metadata),
        };
      }
    }
    ```
 
 3. **Deep Object Filtering**
+
    ```javascript
    #deepFilterObject(obj, visited = new WeakSet()) {
      if (!obj || typeof obj !== 'object') {
        return typeof obj === 'string' ? this.#filterString(obj) : obj;
      }
-     
+
      if (visited.has(obj)) {
        return '[Circular]';
      }
      visited.add(obj);
-     
+
      if (Array.isArray(obj)) {
        return obj.map(item => this.#deepFilterObject(item, visited));
      }
-     
+
      const filtered = {};
      for (const [key, value] of Object.entries(obj)) {
        // Check if key itself is sensitive
@@ -139,12 +147,13 @@ class SensitiveDataFilter {
          filtered[key] = this.#deepFilterObject(value, visited);
        }
      }
-     
+
      return filtered;
    }
    ```
 
 4. **Sensitive Key Detection**
+
    ```javascript
    #isSensitiveKey(key) {
      const sensitiveKeys = [
@@ -156,28 +165,29 @@ class SensitiveDataFilter {
        'ssn', 'socialSecurity',
        'creditCard', 'credit_card', 'cc'
      ];
-     
+
      const lowerKey = key.toLowerCase();
-     return sensitiveKeys.some(sensitive => 
+     return sensitiveKeys.some(sensitive =>
        lowerKey.includes(sensitive.toLowerCase())
      );
    }
    ```
 
 5. **Integration with Loggers**
+
    ```javascript
    // In RemoteLogger, HybridLogger, etc.
    debug(message, metadata) {
      if (this.#securityConfig.filterSensitiveData) {
        const filtered = this.#sensitiveDataFilter.filter(message, metadata);
-       
+
        if (filtered.wasFiltered && this.#securityConfig.strictMode) {
          this.#reportFilteredData();
        }
-       
+
        return this.#actualLog('debug', filtered.message, filtered.metadata);
      }
-     
+
      return this.#actualLog('debug', message, metadata);
    }
    ```
@@ -266,13 +276,13 @@ class FilterCache {
     this.cache = new Map();
     this.maxSize = maxSize;
   }
-  
+
   getFiltered(input) {
     const hash = this.#hash(input);
     if (this.cache.has(hash)) {
       return this.cache.get(hash);
     }
-    
+
     const filtered = this.#filter(input);
     this.#addToCache(hash, filtered);
     return filtered;
@@ -293,7 +303,7 @@ class FilterCache {
 // Warn when sensitive data is detected
 if (filtered.wasFiltered) {
   console.warn('Sensitive data was filtered from logs');
-  
+
   // In strict mode, throw error
   if (config.strictMode) {
     throw new Error('Attempted to log sensitive data');
