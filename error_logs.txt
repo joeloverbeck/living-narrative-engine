@@ -1,116 +1,869 @@
-ActionIndexingService: 10/10 actions have visual properties for p_erotica:silvia_instance (10) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
-consoleLogger.js:187 ActionIndexingService: indexed 10 actions for p_erotica:silvia_instance
-consoleLogger.js:187 [ChoicePipeline] Actor p_erotica:silvia_instance: 10 choices ready
-consoleLogger.js:187 LLMChooser.choose → actor=p_erotica:silvia_instance
-consoleLogger.js:187 AIPromptPipeline: Generating prompt for actor p_erotica:silvia_instance.
-consoleLogger.js:187 AIGameStateProvider: Orchestrating game state build for actor p_erotica:silvia_instance.
-consoleLogger.js:187 ActorStateProvider: Building actor state for p_erotica:silvia_instance
-actorDataExtractor.js:173 [DEBUG] actorDataExtractor - APPARENT_AGE_COMPONENT_ID: core:apparent_age
-actorDataExtractor.js:174 [DEBUG] actorDataExtractor - apparentAgeData: undefined
-actorDataExtractor.js:183 [DEBUG] actorDataExtractor - apparentAge NOT added. Validation failed.
-consoleLogger.js:187 PerceptionLogProvider: Retrieving perception log for actor p_erotica:silvia_instance
-consoleLogger.js:187 PerceptionLogProvider: Retrieved 1 entries for actor p_erotica:silvia_instance.
-consoleLogger.js:187 LocationSummaryProvider: Building location summary for actor p_erotica:silvia_instance
-consoleLogger.js:187 AIGameStateProvider: Successfully orchestrated game state for actor p_erotica:silvia_instance.
-consoleLogger.js:187 AIPromptContentProvider: Starting assembly of PromptData.
-consoleLogger.js:187 AIPromptContentProvider.validateGameStateForPrompting: Delegating to GameStateValidationServiceForPrompting.
-consoleLogger.js:187 PerceptionLogFormatter.format attempting to process 1 entries.
-consoleLogger.js:187 AIPromptContentProvider: Formatting character persona content with markdown structure.
-CharacterDataFormatter.js:292 [DEBUG] formatCharacterPersona - Received characterData with apparentAge: undefined
-CharacterDataFormatter.js:119 [DEBUG] formatPhysicalDescription - Checking apparentAge: undefined
-CharacterDataFormatter.js:127 [DEBUG] formatPhysicalDescription - No apparentAge found in characterData
-consoleLogger.js:187 CharacterDataFormatter: Formatted physical description section
-consoleLogger.js:187 CharacterDataFormatter: Formatted personality section
-consoleLogger.js:187 CharacterDataFormatter: Formatted profile section
-consoleLogger.js:187 CharacterDataFormatter: Formatted Likes section
-consoleLogger.js:187 CharacterDataFormatter: Formatted Dislikes section
-consoleLogger.js:187 CharacterDataFormatter: Formatted Secrets section
-consoleLogger.js:187 CharacterDataFormatter: Formatted Fears section
-consoleLogger.js:187 CharacterDataFormatter: Formatted speech patterns section
-consoleLogger.js:187 CharacterDataFormatter: Successfully formatted complete character persona
-consoleLogger.js:187 AIPromptContentProvider: Successfully formatted character persona with markdown structure.
-consoleLogger.js:187 AIPromptContentProvider: Formatting world context content with markdown structure.
-consoleLogger.js:187 AIPromptContentProvider: Formatted 1 exits for location.
-consoleLogger.js:187 AIPromptContentProvider: Formatted 1 characters for location.
-consoleLogger.js:187 AIPromptContentProvider: Formatting available actions info content.
-consoleLogger.js:187 AIPromptContentProvider: Using categorized formatting {actionCount: 10}
-consoleLogger.js:187 AIPromptContentProvider: Formatting categorized actions {actionCount: 10}
-consoleLogger.js:187 AIPromptContentProvider: Categorized formatting completed {duration: '6.20ms', namespaceCount: 4, totalActions: 10}
-consoleLogger.js:187 AIPromptContentProvider.getPromptData: goalsArray contains 4 entries.
-consoleLogger.js:187 AIPromptContentProvider.getPromptData: PromptData assembled successfully.
-consoleLogger.js:187 AIPromptContentProvider.getPromptData: Assembled PromptData keys: taskDefinitionContent, characterPersonaContent, portrayalGuidelinesContent, contentPolicyContent, worldContextContent, availableActionsInfoContent, userInputContent, finalInstructionsContent, perceptionLogArray, characterName, locationName, assistantResponsePrefix, thoughtsArray, notesArray, goalsArray
-consoleLogger.js:187 AIPromptContentProvider.getPromptData: thoughtsArray contains 0 entries.
-consoleLogger.js:187 AIPromptContentProvider.getPromptData: notesArray contains 0 entries.
-consoleLogger.js:187 PromptBuilder.build called for llmId='openrouter-claude-sonnet-4-toolcalling'.
-consoleLogger.js:187 LLMConfigurationManager: Configuration 'openrouter-claude-sonnet-4-toolcalling' loaded.
-consoleLogger.js:187 PromptDataFormatter: Formatted 1 perception log entries with simplified format
-consoleLogger.js:187 PromptDataFormatter: No thoughts to format
-consoleLogger.js:187 PromptDataFormatter: No notes to format
-consoleLogger.js:187 PromptDataFormatter: Formatted 4 goals
-consoleLogger.js:187 PromptDataFormatter: No thoughts to format
-consoleLogger.js:187 PromptDataFormatter: No notes to format
-consoleLogger.js:187 PromptDataFormatter: Formatted 4 goals
-consoleLogger.js:187 PromptDataFormatter: Successfully formatted all prompt data including conditional sections
-consoleLogger.js:187 PromptTemplateService: Processing character prompt template
-consoleLogger.js:187 PromptTemplateService: Found 12 placeholders to process
-consoleLogger.js:187 PromptBuilder.build: Completed. Final prompt length = 12382.
-consoleLogger.js:187 AIPromptPipeline: Generated final prompt string for actor p_erotica:silvia_instance using LLM config for 'openrouter-claude-sonnet-4-toolcalling'.
-consoleLogger.js:187 ConfigurableLLMAdapter.getAIDecision → called {promptChars: 12382, abortSignalProvided: true, hasRequestOptions: false, hasCustomSchema: false}
-consoleLogger.js:151 [PromptLog][Model: anthropic/claude-sonnet-4] Final prompt sent to proxy:
-<task_definition>
-Your sole focus is to BE the character detailed below. Live as them, think as them.
-Your task is to:
-1.  Decide on one action for your character to perform this turn.
-2.  Determine what, if anything, your character will say in conjunction with that action.
-Base your decisions on your character's complete persona (including their deepest traits and flaws), the current situation, recent events, and the specific actions available to you.
-</task_definition>
-
-<character_persona>
-YOU ARE Silvia.
-This is your identity. All thoughts, actions, and words must stem from this core truth.
-
-## Your Description
-**Height**: short
-**Build**: slim
-**Hair**: medium, red, ponytails
-**Right eye**: brown, almond
-**Left eye**: brown, round
-**Nose**: small
-**Breasts**: A-cup, round, firm
-**Arms**: slim
-**Legs**: slim
-**Ass**: small, bubbly
-**Pubic hair**: curly
-**Wearing**: white, smooth, cotton panties | white, smooth, cotton thigh-high socks | pink, smooth, cotton off-the-shoulder crop top | pink, smooth, cotton short flared skirt, and white, smooth, leather platform sneakers.
-
-## Your Personality
-Silvia is naturally curious and energetic, with a playful spirit that matches her youthful appearance. She's intelligent and quick-witted, though sometimes her enthusiasm can make her seem impulsive. She values authenticity and has little patience for pretense or superficiality. Despite her bright demeanor, there's a underlying intensity to her - a fierce determination to be seen for who she truly is rather than what people assume based on her appearance. She can be surprisingly mature in her observations, often catching others off guard with her perceptive insights.
-
-## Your Profile
-Silvia is a petite young woman with an unmistakably youthful appearance. Her fair skin contrasts beautifully with her vibrant red hair, which she keeps styled in playful pigtails that frame her delicate features. Her warm brown eyes sparkle with curiosity and intelligence, while her small nose adds to her endearing, youthful charm. Despite her slender build and short stature, she carries herself with quiet confidence. There's something captivating about the way she moves - graceful and deliberate, as if every gesture has been carefully considered. Her voice, when she speaks, carries a surprising depth of understanding that seems at odds with her girlish appearance.
-
-## Your Likes
-Reading adventure novels that transport her to different worlds, discovering hidden corners of the city where she can think undisturbed, solving complex puzzles that challenge her intellect, and engaging in genuine conversations where people forget about appearances. She has a particular fondness for sweet treats - especially strawberry pastries - and collects colorful flowers that she presses in books. She loves the feeling of warm sunshine on her skin and the sound of rain against windows.
-
-## Your Dislikes
-Being underestimated or patronized due to her youthful appearance, dishonesty in any form, overly formal situations that feel stifling, and being treated like a child when she's trying to be taken seriously. She also dislikes loud, chaotic environments that overwhelm her senses, people who talk down to her, and situations where she's judged solely on her looks rather than her capabilities.
-
-## Your Secrets
-Despite her youthful appearance, she sometimes feels much older inside - as if she's lived multiple lifetimes worth of experiences in her young years. She worries that people will never take her seriously, no matter what she accomplishes. She also harbors romantic feelings that she's afraid to express, concerned that others will either dismiss them as childish infatuation or worse, take advantage of her perceived naivety. Hidden in her apartment is a journal filled with profound philosophical observations and poetry that she's never shown anyone, fearing they wouldn't believe someone who looks so young could have written them.
-
-## Your Fears
-Being dismissed or ignored because of her appearance, losing her independence and being forced to rely on others, and being trapped in situations where she cannot express her true self. She fears that people will never see past her youthful exterior to recognize the depth of her thoughts and feelings. There's also a deep-seated anxiety about growing older and losing the one thing people seem to notice about her, even as she resents being defined by it.
-
-## Your Speech Patterns
-- Uses precise, articulate language that often surprises people given her youthful appearance: 'The dichotomy between perception and reality is fascinating, don't you think?'
-- Occasionally slips into more casual, playful speech when comfortable: 'Oh! That's absolutely brilliant!' or 'You've got to be kidding me!'
-- Has a habit of explaining things thoroughly, demonstrating her intelligence: 'Well, if you consider the underlying principles...' followed by detailed analysis
-
-consoleLogger.js:187 TokenEstimator: Calculated token budget {totalLimit: 200000, reservedTokens: 150, availableForPrompt: 199850}
-consoleLogger.js:187 TokenEstimator: Determined encoding for model {model: 'anthropic/claude-sonnet-4', encoding: 'cl100k_base'}
-consoleLogger.js:187 TokenEstimator: Estimated tokens {model: 'anthropic/claude-sonnet-4', encoding: 'cl100k_base', textLength: 12382, tokenCount: 2738}
-consoleLogger.js:187 TokenEstimator: Token validation result {model: 'anthropic/claude-sonnet-4', limit: 199850, estimatedTokens: 2738, isValid: true, isNearLimit: false, …}
-consoleLogger.js:187 Attempting to retrieve API key for LLM 'openrouter-claude-sonnet-4-toolcalling'.
-consoleLogger.js:187 ClientApiKeyProvider.getKey (openrouter-claude-sonnet-4-toolcalling): Configuration for cloud service 'openrouter' has required key identifier(s) for proxy usage (apiKeyEnvVar: 'OPENROUTER_API_KEY_ENV_VAR', apiKeyFileName: 'openrouter_api_key.txt').
-consoleLogger.js:187 API key not required or not found for LLM 'openrouter-claude-sonnet-4-toolcalling', proceeding. (Is Cloud API: true, Is Server: false)
-consoleLogger.js:187 LLMStrategyFactory: Determining strategy for LLM ID: 'openrouter-claude-sonnet-4-toolcalling', apiType: 'openrouter'. {configuredJsonMethod: 'openrouter_tool_calling', fullConfigJsonStrategy: {…}}
+schema://living-narrative-engine/operations/queryComponents.schema.json, schema://living-narrative-engine/operations/queryEntities.schema.json, schema://living-narrative-engine/operations/rebuildLeaderListCache.schema.json, schema://living-narrative-engine/operations/removeComponent.schema.json, schema://living-narrative-engine/operations/removeFromClosenessCircle.schema.json, schema://living-narrative-engine/operations/resolveDirection.schema.json, schema://living-narrative-engine/operations/setVariable.schema.json, schema://living-narrative-engine/operations/systemMoveEntity.schema.json, schema://living-narrative-engine/operations/unequipClothing.schema.json
+consoleLogger.js:151 — GameConfigPhase starting —
+consoleLogger.js:151 — ManifestPhase starting —
+consoleLogger.js:151 — ContentPhase starting —
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'core'.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'core'.
+consoleLogger.js:175 EventLoader [core]: Primary schema validation failed for 'directions_loaded.json' using schema 'schema://living-narrative-engine/event.schema.json'. {modId: 'core', filename: 'directions_loaded.json', resolvedPath: './data/mods/core/events/directions_loaded.json', schemaId: 'schema://living-narrative-engine/event.schema.json', validationErrors: Array(2), …}
+error @ consoleLogger.js:175
+validateAgainstSchema @ schemaValidationUtils.js:85
+_validatePrimarySchema @ baseManifestItemLoader.js:210
+validatePrimarySchema @ baseManifestItemLoader.js:408
+_processFileWrapper @ baseManifestItemLoader.js:320
+await in _processFileWrapper
+(anonymous) @ baseManifestItemLoader.js:506
+_loadItemsInternal @ baseManifestItemLoader.js:505
+loadItemsForMod @ baseManifestItemLoader.js:640
+runLoadersForMod_fn @ ModProcessor.js:164
+await in runLoadersForMod_fn
+processMod @ ModProcessor.js:80
+await in processMod
+executeModProcessing_fn @ ContentLoadManager.js:222
+processMod @ ContentLoadManager.js:212
+loadContentForPhase @ ContentLoadManager.js:174
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+loadMods_fn2 @ CharacterBuilderBootstrap.js:659
+bootstrap @ CharacterBuilderBootstrap.js:103
+await in bootstrap
+initializeApp @ core-motivations-generator-main.js:25
+(anonymous) @ core-motivations-generator-main.js:94
+(anonymous) @ core-motivations-generator-main.js:95Understand this error
+consoleLogger.js:175 Error processing file: {modId: 'core', filename: 'directions_loaded.json', path: './data/mods/core/events/directions_loaded.json', registryKey: 'events', error: 'EventLoader [core]: Primary schema validation fail…"additionalProperties": false\n      }\n    }\n  }\n]'} Error: EventLoader [core]: Primary schema validation failed for 'directions_loaded.json' using schema 'schema://living-narrative-engine/event.schema.json'.
+Details:
+[
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "name"
+    },
+    "message": "must NOT have additional properties",
+    "schema": false,
+    "parentSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "schema://living-narrative-engine/event.schema.json",
+      "title": "Event Schema",
+      "description": "Defines the structure for an individual event definition file. Specifies the event's unique ID, an optional description, and an optional schema defining the structure of the event's payload.",
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
+        },
+        "id": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+        },
+        "$id": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+        },
+        "description": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
+        },
+        "payloadSchema": {
+          "description": "Optional. A JSON Schema object defining the structure of the data payload associated with this event. If the event has no payload, this property should be omitted or set to null.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "type": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "object"
+            },
+            "required": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "items": {
+              "type": [
+                "object",
+                "boolean"
+              ]
+            },
+            "additionalProperties": {
+              "type": [
+                "object",
+                "boolean"
+              ]
+            }
+          },
+          "additionalProperties": true,
+          "default": null,
+          "$comment": "This structure allows standard JSON Schema properties (type, properties, required, etc.) within payloadSchema. Setting 'type' to ['object', 'null'] allows events with no payload. The 'additionalProperties: true' ensures flexibility for various schema structures within the payload definition."
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "id",
+            "description"
+          ]
+        },
+        {
+          "required": [
+            "$id",
+            "description"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "data": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "id": "core:directions_loaded",
+      "name": "Directions Loaded",
+      "description": "Fired when thematic directions have been loaded and organized for display",
+      "version": "1.0.0",
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of directions loaded"
+          },
+          "groups": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of concept groups"
+          }
+        },
+        "required": [
+          "count",
+          "groups"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "version"
+    },
+    "message": "must NOT have additional properties",
+    "schema": false,
+    "parentSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "schema://living-narrative-engine/event.schema.json",
+      "title": "Event Schema",
+      "description": "Defines the structure for an individual event definition file. Specifies the event's unique ID, an optional description, and an optional schema defining the structure of the event's payload.",
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
+        },
+        "id": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+        },
+        "$id": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+        },
+        "description": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
+        },
+        "payloadSchema": {
+          "description": "Optional. A JSON Schema object defining the structure of the data payload associated with this event. If the event has no payload, this property should be omitted or set to null.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "type": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "object"
+            },
+            "required": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "items": {
+              "type": [
+                "object",
+                "boolean"
+              ]
+            },
+            "additionalProperties": {
+              "type": [
+                "object",
+                "boolean"
+              ]
+            }
+          },
+          "additionalProperties": true,
+          "default": null,
+          "$comment": "This structure allows standard JSON Schema properties (type, properties, required, etc.) within payloadSchema. Setting 'type' to ['object', 'null'] allows events with no payload. The 'additionalProperties: true' ensures flexibility for various schema structures within the payload definition."
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "id",
+            "description"
+          ]
+        },
+        {
+          "required": [
+            "$id",
+            "description"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "data": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "id": "core:directions_loaded",
+      "name": "Directions Loaded",
+      "description": "Fired when thematic directions have been loaded and organized for display",
+      "version": "1.0.0",
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of directions loaded"
+          },
+          "groups": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of concept groups"
+          }
+        },
+        "required": [
+          "count",
+          "groups"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+]
+    at validateAgainstSchema (schemaValidationUtils.js:97:11)
+    at EventLoader._validatePrimarySchema (baseManifestItemLoader.js:210:12)
+    at EventLoader.validatePrimarySchema (baseManifestItemLoader.js:408:12)
+    at EventLoader._processFileWrapper (baseManifestItemLoader.js:320:10)
+    at async Promise.allSettled (index 38)
+    at async EventLoader._loadItemsInternal (baseManifestItemLoader.js:509:28)
+    at async ModProcessor.runLoadersForMod_fn (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:174:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+error @ consoleLogger.js:175
+validatePrimarySchema @ baseManifestItemLoader.js:410
+_processFileWrapper @ baseManifestItemLoader.js:320
+await in _processFileWrapper
+(anonymous) @ baseManifestItemLoader.js:506
+_loadItemsInternal @ baseManifestItemLoader.js:505
+loadItemsForMod @ baseManifestItemLoader.js:640
+runLoadersForMod_fn @ ModProcessor.js:164
+await in runLoadersForMod_fn
+processMod @ ModProcessor.js:80
+await in processMod
+executeModProcessing_fn @ ContentLoadManager.js:222
+processMod @ ContentLoadManager.js:212
+loadContentForPhase @ ContentLoadManager.js:174
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+loadMods_fn2 @ CharacterBuilderBootstrap.js:659
+bootstrap @ CharacterBuilderBootstrap.js:103
+await in bootstrap
+initializeApp @ core-motivations-generator-main.js:25
+(anonymous) @ core-motivations-generator-main.js:94
+(anonymous) @ core-motivations-generator-main.js:95Understand this error
+consoleLogger.js:175 ModsLoader [core, definitions]: events file 'directions_loaded.json' failed: EventLoader [core]: Primary schema validation failed for 'directions_loaded.json' using schema 'schema://living-narrative-engine/event.schema.json'.
+Details:
+[
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "name"
+    },
+    "message": "must NOT have additional properties",
+    "schema": false,
+    "parentSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "schema://living-narrative-engine/event.schema.json",
+      "title": "Event Schema",
+      "description": "Defines the structure for an individual event definition file. Specifies the event's unique ID, an optional description, and an optional schema defining the structure of the event's payload.",
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
+        },
+        "id": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+        },
+        "$id": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+        },
+        "description": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
+        },
+        "payloadSchema": {
+          "description": "Optional. A JSON Schema object defining the structure of the data payload associated with this event. If the event has no payload, this property should be omitted or set to null.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "type": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "object"
+            },
+            "required": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "items": {
+              "type": [
+                "object",
+                "boolean"
+              ]
+            },
+            "additionalProperties": {
+              "type": [
+                "object",
+                "boolean"
+              ]
+            }
+          },
+          "additionalProperties": true,
+          "default": null,
+          "$comment": "This structure allows standard JSON Schema properties (type, properties, required, etc.) within payloadSchema. Setting 'type' to ['object', 'null'] allows events with no payload. The 'additionalProperties: true' ensures flexibility for various schema structures within the payload definition."
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "id",
+            "description"
+          ]
+        },
+        {
+          "required": [
+            "$id",
+            "description"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "data": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "id": "core:directions_loaded",
+      "name": "Directions Loaded",
+      "description": "Fired when thematic directions have been loaded and organized for display",
+      "version": "1.0.0",
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of directions loaded"
+          },
+          "groups": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of concept groups"
+          }
+        },
+        "required": [
+          "count",
+          "groups"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "version"
+    },
+    "message": "must NOT have additional properties",
+    "schema": false,
+    "parentSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "schema://living-narrative-engine/event.schema.json",
+      "title": "Event Schema",
+      "description": "Defines the structure for an individual event definition file. Specifies the event's unique ID, an optional description, and an optional schema defining the structure of the event's payload.",
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
+        },
+        "id": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+        },
+        "$id": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+        },
+        "description": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
+        },
+        "payloadSchema": {
+          "description": "Optional. A JSON Schema object defining the structure of the data payload associated with this event. If the event has no payload, this property should be omitted or set to null.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "type": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "object"
+            },
+            "required": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "items": {
+              "type": [
+                "object",
+                "boolean"
+              ]
+            },
+            "additionalProperties": {
+              "type": [
+                "object",
+                "boolean"
+              ]
+            }
+          },
+          "additionalProperties": true,
+          "default": null,
+          "$comment": "This structure allows standard JSON Schema properties (type, properties, required, etc.) within payloadSchema. Setting 'type' to ['object', 'null'] allows events with no payload. The 'additionalProperties: true' ensures flexibility for various schema structures within the payload definition."
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "id",
+            "description"
+          ]
+        },
+        {
+          "required": [
+            "$id",
+            "description"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "data": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "id": "core:directions_loaded",
+      "name": "Directions Loaded",
+      "description": "Fired when thematic directions have been loaded and organized for display",
+      "version": "1.0.0",
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of directions loaded"
+          },
+          "groups": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of concept groups"
+          }
+        },
+        "required": [
+          "count",
+          "groups"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+] {modId: 'core', registryKey: 'events', phase: 'definitions', file: 'directions_loaded.json', error: 'EventLoader [core]: Primary schema validation fail…"additionalProperties": false\n      }\n    }\n  }\n]'} Error: EventLoader [core]: Primary schema validation failed for 'directions_loaded.json' using schema 'schema://living-narrative-engine/event.schema.json'.
+Details:
+[
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "name"
+    },
+    "message": "must NOT have additional properties",
+    "schema": false,
+    "parentSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "schema://living-narrative-engine/event.schema.json",
+      "title": "Event Schema",
+      "description": "Defines the structure for an individual event definition file. Specifies the event's unique ID, an optional description, and an optional schema defining the structure of the event's payload.",
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
+        },
+        "id": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+        },
+        "$id": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+        },
+        "description": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
+        },
+        "payloadSchema": {
+          "description": "Optional. A JSON Schema object defining the structure of the data payload associated with this event. If the event has no payload, this property should be omitted or set to null.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "type": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "object"
+            },
+            "required": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "items": {
+              "type": [
+                "object",
+                "boolean"
+              ]
+            },
+            "additionalProperties": {
+              "type": [
+                "object",
+                "boolean"
+              ]
+            }
+          },
+          "additionalProperties": true,
+          "default": null,
+          "$comment": "This structure allows standard JSON Schema properties (type, properties, required, etc.) within payloadSchema. Setting 'type' to ['object', 'null'] allows events with no payload. The 'additionalProperties: true' ensures flexibility for various schema structures within the payload definition."
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "id",
+            "description"
+          ]
+        },
+        {
+          "required": [
+            "$id",
+            "description"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "data": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "id": "core:directions_loaded",
+      "name": "Directions Loaded",
+      "description": "Fired when thematic directions have been loaded and organized for display",
+      "version": "1.0.0",
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of directions loaded"
+          },
+          "groups": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of concept groups"
+          }
+        },
+        "required": [
+          "count",
+          "groups"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "version"
+    },
+    "message": "must NOT have additional properties",
+    "schema": false,
+    "parentSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "schema://living-narrative-engine/event.schema.json",
+      "title": "Event Schema",
+      "description": "Defines the structure for an individual event definition file. Specifies the event's unique ID, an optional description, and an optional schema defining the structure of the event's payload.",
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
+        },
+        "id": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+        },
+        "$id": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+        },
+        "description": {
+          "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
+        },
+        "payloadSchema": {
+          "description": "Optional. A JSON Schema object defining the structure of the data payload associated with this event. If the event has no payload, this property should be omitted or set to null.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "type": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "object"
+            },
+            "required": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "items": {
+              "type": [
+                "object",
+                "boolean"
+              ]
+            },
+            "additionalProperties": {
+              "type": [
+                "object",
+                "boolean"
+              ]
+            }
+          },
+          "additionalProperties": true,
+          "default": null,
+          "$comment": "This structure allows standard JSON Schema properties (type, properties, required, etc.) within payloadSchema. Setting 'type' to ['object', 'null'] allows events with no payload. The 'additionalProperties: true' ensures flexibility for various schema structures within the payload definition."
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "id",
+            "description"
+          ]
+        },
+        {
+          "required": [
+            "$id",
+            "description"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "data": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "id": "core:directions_loaded",
+      "name": "Directions Loaded",
+      "description": "Fired when thematic directions have been loaded and organized for display",
+      "version": "1.0.0",
+      "payloadSchema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of directions loaded"
+          },
+          "groups": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of concept groups"
+          }
+        },
+        "required": [
+          "count",
+          "groups"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+]
+    at validateAgainstSchema (schemaValidationUtils.js:97:11)
+    at EventLoader._validatePrimarySchema (baseManifestItemLoader.js:210:12)
+    at EventLoader.validatePrimarySchema (baseManifestItemLoader.js:408:12)
+    at EventLoader._processFileWrapper (baseManifestItemLoader.js:320:10)
+    at async Promise.allSettled (index 38)
+    at async EventLoader._loadItemsInternal (baseManifestItemLoader.js:509:28)
+    at async ModProcessor.runLoadersForMod_fn (ModProcessor.js:164:15)
+    at async ModProcessor.processMod (ModProcessor.js:80:52)
+    at async ContentLoadManager.loadContentForPhase (ContentLoadManager.js:174:24)
+    at async ContentLoadManager.loadContent (ContentLoadManager.js:81:7)
+error @ consoleLogger.js:175
+runLoadersForMod_fn @ ModProcessor.js:177
+await in runLoadersForMod_fn
+processMod @ ModProcessor.js:80
+await in processMod
+executeModProcessing_fn @ ContentLoadManager.js:222
+processMod @ ContentLoadManager.js:212
+loadContentForPhase @ ContentLoadManager.js:174
+loadContent @ ContentLoadManager.js:81
+execute @ contentPhase.js:51
+run @ ModsLoadSession.js:19
+await in run
+loadMods @ modsLoader.js:85
+loadMods_fn2 @ CharacterBuilderBootstrap.js:659
+bootstrap @ CharacterBuilderBootstrap.js:103
+await in bootstrap
+initializeApp @ core-motivations-generator-main.js:25
+(anonymous) @ core-motivations-generator-main.js:94
+(anonymous) @ core-motivations-generator-main.js:95Understand this error
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'core'.
+consoleLogger.js:151 MacroLoader: Loading macros definitions for mod 'core'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'core'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'core'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'core'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'positioning'.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'positioning'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'positioning'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'positioning'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'positioning'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'positioning'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'descriptors'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'anatomy'.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'anatomy'.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomySlotLibraryLoader: Loading anatomySlotLibraries definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomyBlueprintPartLoader: Loading anatomyBlueprintParts definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomyBlueprintLoader: Loading anatomyBlueprints definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomyRecipeLoader: Loading anatomyRecipes definitions for mod 'anatomy'.
+consoleLogger.js:151 AnatomyFormattingLoader: Loading anatomyFormatting definitions for mod 'anatomy'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'clothing'.
+consoleLogger.js:151 EventLoader: Loading events definitions for mod 'clothing'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'clothing'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'clothing'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'clothing'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'clothing'.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'clothing'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'violence'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'violence'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'violence'.
+consoleLogger.js:151 ComponentLoader: Loading components definitions for mod 'intimacy'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'intimacy'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'intimacy'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'intimacy'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'intimacy'.
+consoleLogger.js:151 ConditionLoader: Loading conditions definitions for mod 'sex'.
+consoleLogger.js:151 ActionLoader: Loading actions definitions for mod 'sex'.
+consoleLogger.js:151 RuleLoader: Loading rules definitions for mod 'sex'.
+consoleLogger.js:151 ScopeLoader: Loading scopes definitions for mod 'sex'.
+consoleLogger.js:151 EntityDefinitionLoader: Loading entityDefinitions definitions for mod 'p_erotica'.
+consoleLogger.js:151 AnatomyRecipeLoader: Loading anatomyRecipes definitions for mod 'p_erotica'.
+consoleLogger.js:151 EntityInstanceLoader: Loading entityInstances definitions for mod 'p_erotica'.
+consoleLogger.js:151 — WorldPhase starting —
+consoleLogger.js:151 --- Starting World File Loading Phase ---
+consoleLogger.js:151 --- World File Loading Phase Complete ---
+consoleLogger.js:151 WorldLoader: Successfully processed and registered 2 worlds, containing 8 entity instances. All 8 definition references were resolved.
+consoleLogger.js:151 — SummaryPhase starting —
+consoleLogger.js:151 — ModsLoader Load Summary (World: 'default') —
+consoleLogger.js:151   • Requested Mods (raw): [core, positioning, anatomy, clothing, violence, intimacy, p_erotica]
+consoleLogger.js:151   • Final Load Order     : [core, positioning, descriptors, anatomy, clothing, violence, intimacy, sex, p_erotica]
+consoleLogger.js:151   • Content Loading Summary (Totals):
+consoleLogger.js:151      - actions             : 42 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyBlueprintParts: 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyBlueprints   : 2 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyFormatting   : 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomyRecipes      : 7 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - anatomySlotLibraries: 1 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - components          : 57 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - conditions          : 59 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - entityDefinitions   : 85 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - entityInstances     : 8 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - events              : 93 loaded, 0 overrides, 1 errors
+consoleLogger.js:151      - macros              : 4 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - rules               : 48 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - scopes              : 29 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - worlds              : 2 loaded, 0 overrides, 0 errors
+consoleLogger.js:151      - ----------------------------------------------
+consoleLogger.js:151      - TOTAL               : C:439, O:0, E:1
+consoleLogger.js:151 ———————————————————————————————————————————
+consoleLogger.js:151 ModsLoader: Load sequence for world 'default' completed successfully.
+consoleLogger.js:151 ModsLoader: Load sequence for world 'default' completed successfully.
+consoleLogger.js:151 [CharacterBuilderBootstrap] Core mod loaded successfully
+consoleLogger.js:151 CharacterDatabase: Successfully opened database
+consoleLogger.js:151 CharacterStorageService: Successfully initialized
+consoleLogger.js:151 CoreMotivationsGeneratorController: Successfully created with dependencies {coreServices: Array(4), additionalServices: Array(3)}
+consoleLogger.js:151 Initializing Core Motivations Generator Controller
+consoleLogger.js:151 Organized 2 directions into 2 concept groups (sorted alphabetically)
+consoleLogger.js:163 VED: EventDefinition not found for 'core:directions_loaded'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+validatePayload_fn @ validatedEventDispatcher.js:93
+dispatch @ validatedEventDispatcher.js:225
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+populateDirectionSelector_fn @ CoreMotivationsGeneratorController.js:339
+loadEligibleDirections_fn @ CoreMotivationsGeneratorController.js:211
+await in loadEligibleDirections_fn
+initialize @ CoreMotivationsGeneratorController.js:130
+initializeController_fn @ CharacterBuilderBootstrap.js:873
+bootstrap @ CharacterBuilderBootstrap.js:119
+await in bootstrap
+initializeApp @ core-motivations-generator-main.js:25
+(anonymous) @ core-motivations-generator-main.js:94
+(anonymous) @ core-motivations-generator-main.js:95Understand this warning
+consoleLogger.js:151 Loaded 2 eligible directions from all concepts
+consoleLogger.js:151 Core Motivations Generator Controller initialized
+consoleLogger.js:151 [CharacterBuilderBootstrap] Page 'core-motivations-generator' bootstrapped in 926.50ms {metrics: {…}}
+core-motivations-generator-main.js:50 Core Motivations Generator initialized in 926.50ms
+consoleLogger.js:151 Retrieved 0 motivations for direction bd1409eb-7e2a-4d4f-abd5-10af53d28df6
+consoleLogger.js:175 Failed to generate motivations: TypeError: __privateGet(...).generate is not a function
+    at CoreMotivationsGeneratorController.generateMotivations_fn (CoreMotivationsGeneratorController.js:811:67)
+error @ consoleLogger.js:175
+generateMotivations_fn @ CoreMotivationsGeneratorController.js:836
+await in generateMotivations_fn
+(anonymous) @ CoreMotivationsGeneratorController.js:1186Understand this error
+consoleLogger.js:175 Failed to generate motivations. Please try again.

@@ -833,8 +833,41 @@ export class CharacterBuilderBootstrap {
       eventBus: container.resolve(tokens.ISafeEventDispatcher),
       schemaValidator: container.resolve(tokens.ISchemaValidator),
       clicheGenerator: container.resolve(tokens.ClicheGenerator),
-      ...config.services, // Additional page-specific services
     };
+
+    // Resolve additional page-specific services from container or instantiate them
+    if (config.services) {
+      for (const [serviceName, serviceClassOrInstance] of Object.entries(config.services)) {
+        if (typeof serviceClassOrInstance === 'function') {
+          // It's a class constructor - try to resolve from container first
+          const tokenName = serviceClassOrInstance.name; // e.g., 'CoreMotivationsGenerator'
+          
+          try {
+            // Try to resolve from container using the class name as token
+            dependencies[serviceName] = container.resolve(tokenName);
+          } catch (error) {
+            // If not in container, try to instantiate for known simple services
+            const logger = dependencies.logger;
+            logger.warn(`Service '${serviceName}' (${tokenName}) not found in container. Attempting to instantiate...`);
+            
+            try {
+              // For services that only need a logger, try to instantiate them
+              if (tokenName === 'CoreMotivationsDisplayEnhancer') {
+                dependencies[serviceName] = new serviceClassOrInstance({ logger });
+                logger.info(`Successfully instantiated ${tokenName} with logger dependency.`);
+              } else {
+                logger.warn(`Unknown service '${tokenName}'. Consider registering it in the DI container.`);
+              }
+            } catch (instantiationError) {
+              logger.error(`Failed to instantiate ${tokenName}: ${instantiationError.message}`);
+            }
+          }
+        } else {
+          // It's already an instance, use it directly
+          dependencies[serviceName] = serviceClassOrInstance;
+        }
+      }
+    }
 
     // Validate required services
     if (!dependencies.characterBuilderService) {

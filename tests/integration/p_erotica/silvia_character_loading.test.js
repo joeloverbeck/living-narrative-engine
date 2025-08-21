@@ -87,19 +87,19 @@ describe('Character with Anatomy Recipe Loading - Integration', () => {
   beforeEach(() => {
     // Create temporary directory for test files
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'character-test-'));
-    
+
     // Create directory structure
     const modDir = path.join(tempDir, 'test_mod');
     const entitiesDir = path.join(modDir, 'entities', 'definitions');
     const recipesDir = path.join(modDir, 'recipes');
-    
+
     fs.mkdirSync(entitiesDir, { recursive: true });
     fs.mkdirSync(recipesDir, { recursive: true });
-    
+
     // Write test files
     characterPath = path.join(entitiesDir, 'test.character.json');
     recipePath = path.join(recipesDir, 'test.recipe.json');
-    
+
     fs.writeFileSync(characterPath, JSON.stringify(testCharacterData, null, 2));
     fs.writeFileSync(recipePath, JSON.stringify(testRecipeData, null, 2));
   });
@@ -149,14 +149,24 @@ describe('Character with Anatomy Recipe Loading - Integration', () => {
 
     it('should validate character component structure', () => {
       const characterData = JSON.parse(fs.readFileSync(characterPath, 'utf8'));
-      
+
       // Validate specific component structures
       expect(characterData.components['core:name']).toHaveProperty('text');
-      expect(characterData.components['core:personality']).toHaveProperty('traits');
-      expect(Array.isArray(characterData.components['core:personality'].traits)).toBe(true);
-      expect(characterData.components['anatomy:body']).toHaveProperty('recipeId');
-      expect(characterData.components['core:apparent_age']).toHaveProperty('minAge');
-      expect(characterData.components['core:apparent_age']).toHaveProperty('maxAge');
+      expect(characterData.components['core:personality']).toHaveProperty(
+        'traits'
+      );
+      expect(
+        Array.isArray(characterData.components['core:personality'].traits)
+      ).toBe(true);
+      expect(characterData.components['anatomy:body']).toHaveProperty(
+        'recipeId'
+      );
+      expect(characterData.components['core:apparent_age']).toHaveProperty(
+        'minAge'
+      );
+      expect(characterData.components['core:apparent_age']).toHaveProperty(
+        'maxAge'
+      );
     });
   });
 
@@ -182,9 +192,15 @@ describe('Character with Anatomy Recipe Loading - Integration', () => {
       const recipeData = JSON.parse(fs.readFileSync(recipePath, 'utf8'));
       const hairSlot = recipeData.slots.hair;
       expect(hairSlot).toBeDefined();
-      expect(hairSlot.properties['descriptors:color_basic'].color).toBe('black');
-      expect(hairSlot.properties['descriptors:length_hair'].length).toBe('long');
-      expect(hairSlot.properties['descriptors:hair_style'].style).toBe('straight');
+      expect(hairSlot.properties['descriptors:color_basic'].color).toBe(
+        'black'
+      );
+      expect(hairSlot.properties['descriptors:length_hair'].length).toBe(
+        'long'
+      );
+      expect(hairSlot.properties['descriptors:hair_style'].style).toBe(
+        'straight'
+      );
     });
 
     it('should have correct eye color for both eyes', () => {
@@ -226,10 +242,10 @@ describe('Character with Anatomy Recipe Loading - Integration', () => {
 
     it('should validate pattern structure', () => {
       const recipeData = JSON.parse(fs.readFileSync(recipePath, 'utf8'));
-      
+
       expect(Array.isArray(recipeData.patterns)).toBe(true);
       expect(recipeData.patterns.length).toBeGreaterThan(0);
-      
+
       recipeData.patterns.forEach((pattern) => {
         expect(pattern).toHaveProperty('matches');
         expect(pattern).toHaveProperty('properties');
@@ -255,14 +271,14 @@ describe('Character with Anatomy Recipe Loading - Integration', () => {
       // Simulate loading both files as would happen in production
       const characterData = JSON.parse(fs.readFileSync(characterPath, 'utf8'));
       const recipeData = JSON.parse(fs.readFileSync(recipePath, 'utf8'));
-      
+
       // Validate character references recipe
       const recipeId = characterData.components['anatomy:body'].recipeId;
       expect(recipeId).toBeDefined();
-      
+
       // Validate recipe can be found
       expect(recipeData.recipeId).toBe(recipeId);
-      
+
       // Validate recipe has required structure
       expect(recipeData.blueprintId).toBeDefined();
       expect(recipeData.bodyDescriptors).toBeDefined();

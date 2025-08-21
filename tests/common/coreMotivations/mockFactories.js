@@ -544,7 +544,7 @@ export function createMockCharacterBuilderService(options = {}) {
     getAllCharacterConcepts: jest
       .fn()
       .mockResolvedValue([{ id: 'concept-1', name: 'Test Concept' }]),
-    getCharacterConceptById: jest.fn().mockImplementation(async (id) => {
+    getCharacterConcept: jest.fn().mockImplementation(async (id) => {
       if (shouldFail) {
         throw new Error('Failed to get character concept');
       }

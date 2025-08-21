@@ -881,6 +881,61 @@ describe('CharacterBuilderService', () => {
     });
 
     describe('getCoreMotivationsByDirectionId', () => {
+      it('should dispatch event with correct format', async () => {
+        // This test reproduces the issue where event was dispatched as object instead of string
+        const directionId = 'direction-123';
+        const dbMotivations = [
+          {
+            id: 'motivation-1',
+            directionId,
+            conceptId: 'concept-1',
+            coreDesire: 'To be loved',
+            internalContradiction: 'Fears vulnerability',
+            centralQuestion: 'Is love worth the risk?',
+          },
+        ];
+
+        mockDatabase.getCoreMotivationsByDirectionId.mockResolvedValue(
+          dbMotivations
+        );
+
+        await service.getCoreMotivationsByDirectionId(directionId);
+
+        // Verify event was dispatched with correct format
+        expect(mockEventBus.dispatch).toHaveBeenCalled();
+
+        // Find the core motivations retrieved event dispatch
+        const retrievedEventCall = mockEventBus.dispatch.mock.calls.find(
+          (call) => {
+            // The first argument should be the event name string
+            const eventName = call[0];
+            return (
+              eventName ===
+                CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED ||
+              eventName === 'core:core_motivations_retrieved'
+            );
+          }
+        );
+
+        expect(retrievedEventCall).toBeDefined();
+
+        // The first argument should be a string, not an object
+        const eventNameArg = retrievedEventCall[0];
+        expect(typeof eventNameArg).toBe('string');
+        expect(eventNameArg).not.toBeNull();
+        expect(eventNameArg).not.toBeUndefined();
+
+        // Should not be an object with 'type' property
+        expect(eventNameArg).not.toHaveProperty('type');
+
+        // The second argument should be the payload
+        const payload = retrievedEventCall[1];
+        expect(payload).toBeDefined();
+        expect(payload.directionId).toBe(directionId);
+        expect(payload.source).toBe('database');
+        expect(payload.count).toBe(1);
+      });
+
       it('should return cached motivations when available', async () => {
         const directionId = 'direction-123';
         const cachedMotivations = [{ id: 'motivation-1' }];

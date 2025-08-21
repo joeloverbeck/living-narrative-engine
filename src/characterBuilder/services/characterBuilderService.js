@@ -1605,14 +1605,14 @@ export class CharacterBuilderService {
         });
       }
 
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
-        payload: {
+      this.#eventBus.dispatch(
+        CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
+        {
           directionId,
           source: 'database',
           count: motivationModels?.length || 0,
-        },
-      });
+        }
+      );
 
       return motivationModels;
     } catch (error) {

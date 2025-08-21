@@ -751,8 +751,8 @@ export class CharacterDatabase {
               `DEBUG DB: Found cliche with ID: ${result.id}, conceptId: ${result.conceptId}, directionId: ${result.directionId}`
             );
           } else {
-            this.#logger.warn(
-              `DEBUG DB: No cliche found in database for directionId: ${directionId}`
+            this.#logger.debug(
+              `No cliche found in database for directionId: ${directionId}`
             );
           }
 

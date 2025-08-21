@@ -42,10 +42,6 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
         id: 'concept-1',
         concept: 'A brave warrior',
       }),
-      getCharacterConceptById: jest.fn().mockResolvedValue({
-        id: 'concept-1',
-        concept: 'A brave warrior',
-      }),
       generateThematicDirections: jest.fn().mockResolvedValue([]),
       getThematicDirections: jest.fn().mockResolvedValue([]),
       getThematicDirectionsByConceptId: jest.fn().mockResolvedValue([

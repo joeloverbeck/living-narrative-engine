@@ -104,7 +104,21 @@ class ContentDependencyValidator extends IContentDependencyValidator {
    * @returns {void}
    */
   #validateExits(entityDefs, instanceIdSet, worldSpawnSet, worldName) {
+    // Create set of definition IDs that have instances spawned in current world
+    const instanceDefs = this.#gameDataRepository.getAllEntityInstanceDefinitions();
+    const worldSpawnedDefinitions = new Set();
+    for (const instanceDef of instanceDefs) {
+      if (worldSpawnSet.has(instanceDef.instanceId)) {
+        worldSpawnedDefinitions.add(instanceDef.definitionId);
+      }
+    }
+
+    // Only validate exits for definitions with instances in current world
     for (const def of entityDefs) {
+      if (!worldSpawnedDefinitions.has(def.id)) {
+        continue; // Skip validation for definitions not in current world
+      }
+      
       const exits = def?.components?.['core:exits'];
       if (Array.isArray(exits)) {
         for (const exit of exits) {
