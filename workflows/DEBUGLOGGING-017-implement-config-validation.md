@@ -172,6 +172,7 @@ const ERROR_MESSAGES = {
    ```
 
 5. **Create Validation Orchestrator**
+
    ```javascript
    export class ConfigValidationService {
      async validate(config, options = {}) {

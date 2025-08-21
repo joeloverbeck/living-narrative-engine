@@ -6,7 +6,7 @@
     "clothing",
     "violence",
     "intimacy",
-    "p_erotica"
+    "isekai"
   ],
-  "startWorld": "p_erotica:donostia"
+  "startWorld": "isekai:world"
 }

@@ -62,6 +62,32 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
           conceptId: 'concept-1',
         },
       ]),
+      getAllThematicDirectionsWithConcepts: jest.fn().mockResolvedValue([
+        {
+          direction: {
+            id: 'test-direction-1',
+            title: 'Heroic Journey',
+            theme: 'The call to adventure',
+            conceptId: 'concept-1',
+          },
+          concept: {
+            id: 'concept-1',
+            text: 'A brave warrior',
+          },
+        },
+        {
+          direction: {
+            id: 'test-direction-2',
+            title: 'Dark Past',
+            theme: 'Hidden secrets emerge',
+            conceptId: 'concept-1',
+          },
+          concept: {
+            id: 'concept-1',
+            text: 'A brave warrior',
+          },
+        },
+      ]),
       hasClichesForDirection: jest.fn().mockResolvedValue(true),
       getCoreMotivationsByDirectionId: jest.fn().mockResolvedValue([]),
       getClichesByDirectionId: jest

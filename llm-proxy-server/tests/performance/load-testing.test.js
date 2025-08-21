@@ -384,8 +384,116 @@ describe('Load Testing', () => {
       });
 
       // Mock service to return success 70% of the time, various errors 30%
+      // Use deterministic seeded randomization for consistent test results
+      let callCount = 0;
+      const seedValues = [
+        // Pre-calculated pattern ensuring exactly 70% success rate
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.8,
+        0.9,
+        0.0,
+        0.15, // 7 success, 2 network, 1 api
+        0.25,
+        0.35,
+        0.45,
+        0.55,
+        0.65,
+        0.75,
+        0.85,
+        0.95,
+        0.05,
+        0.1, // 7 success, 2 network, 1 api
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.11,
+        0.21,
+        0.81,
+        0.91,
+        0.01,
+        0.16, // 7 success, 2 network, 1 api
+        0.26,
+        0.36,
+        0.46,
+        0.56,
+        0.66,
+        0.12,
+        0.82,
+        0.92,
+        0.02,
+        0.17, // 7 success, 2 network, 1 api
+        0.27,
+        0.37,
+        0.47,
+        0.57,
+        0.67,
+        0.13,
+        0.83,
+        0.93,
+        0.03,
+        0.18, // 7 success, 2 network, 1 api
+        0.28,
+        0.38,
+        0.48,
+        0.58,
+        0.68,
+        0.14,
+        0.84,
+        0.94,
+        0.04,
+        0.19, // 7 success, 2 network, 1 api
+        0.29,
+        0.39,
+        0.49,
+        0.59,
+        0.69,
+        0.2,
+        0.71,
+        0.72,
+        0.73,
+        0.74, // 7 success, 1 network, 2 api
+        0.31,
+        0.41,
+        0.51,
+        0.61,
+        0.62,
+        0.63,
+        0.64,
+        0.86,
+        0.87,
+        0.88, // 7 success, 1 network, 2 api
+        0.32,
+        0.42,
+        0.52,
+        0.76,
+        0.77,
+        0.78,
+        0.79,
+        0.89,
+        0.9,
+        0.96, // 6 success, 2 network, 2 api
+        0.33,
+        0.43,
+        0.53,
+        0.06,
+        0.07,
+        0.08,
+        0.09,
+        0.97,
+        0.98,
+        0.99, // 6 success, 2 network, 2 api
+      ]; // Total: 70 success, 15 network, 15 api = 70% success rate
+
       mockLlmRequestService.forwardRequest.mockImplementation(() => {
-        const random = Math.random();
+        const random = seedValues[callCount % seedValues.length];
+        callCount++;
+
         if (random < 0.7) {
           return Promise.resolve({
             success: true,

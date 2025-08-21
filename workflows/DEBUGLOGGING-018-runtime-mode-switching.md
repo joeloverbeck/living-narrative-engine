@@ -180,6 +180,7 @@ logger.setLogLevel('reset'); // Reset to defaults
    ```
 
 6. **Implement Special Commands**
+
    ```javascript
    async #handleSpecialCommand(command) {
      switch(command) {

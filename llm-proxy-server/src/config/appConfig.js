@@ -12,6 +12,16 @@ import {
   HTTP_AGENT_FREE_SOCKET_TIMEOUT,
   HTTP_AGENT_MAX_TOTAL_SOCKETS,
   HTTP_AGENT_MAX_IDLE_TIME,
+  DEBUG_LOGGING_ENABLED,
+  DEBUG_LOGGING_DEFAULT_PATH,
+  DEBUG_LOGGING_DEFAULT_RETENTION_DAYS,
+  DEBUG_LOGGING_DEFAULT_MAX_FILE_SIZE,
+  DEBUG_LOGGING_DEFAULT_WRITE_BUFFER_SIZE,
+  DEBUG_LOGGING_DEFAULT_FLUSH_INTERVAL,
+  DEBUG_LOGGING_DEFAULT_MAX_CONCURRENT_WRITES,
+  DEBUG_LOGGING_DEFAULT_CLEANUP_SCHEDULE,
+  DEBUG_LOGGING_DEFAULT_CLEANUP_ENABLED,
+  DEBUG_LOGGING_DEFAULT_COMPRESSION,
 } from './constants.js';
 
 // Load environment variables from .env file at the very beginning
@@ -79,6 +89,28 @@ class AppConfigService {
   _httpAgentMaxTotalSockets = 0;
   /** @type {number} @private */
   _httpAgentMaxIdleTime = 60000;
+
+  // Debug Logging configuration
+  /** @type {boolean} @private */
+  _debugLoggingEnabled = true;
+  /** @type {string} @private */
+  _debugLoggingPath = './logs';
+  /** @type {number} @private */
+  _debugLoggingRetentionDays = 7;
+  /** @type {string} @private */
+  _debugLoggingMaxFileSize = '10MB';
+  /** @type {number} @private */
+  _debugLoggingWriteBufferSize = 100;
+  /** @type {number} @private */
+  _debugLoggingFlushInterval = 1000;
+  /** @type {number} @private */
+  _debugLoggingMaxConcurrentWrites = 5;
+  /** @type {string} @private */
+  _debugLoggingCleanupSchedule = '0 2 * * *';
+  /** @type {boolean} @private */
+  _debugLoggingCleanupEnabled = true;
+  /** @type {boolean} @private */
+  _debugLoggingCompression = false;
 
   /**
    * Initializes the AppConfigService. It's recommended to use the getAppConfigService
@@ -396,6 +428,149 @@ class AppConfigService {
       );
     }
 
+    // Debug Logging Configuration
+    this._logger.debug(
+      `${servicePrefix}Loading debug logging configuration...`
+    );
+
+    // DEBUG_LOGGING_ENABLED (default: true)
+    const debugLoggingEnabledEnv = process.env.DEBUG_LOGGING_ENABLED;
+    this._debugLoggingEnabled =
+      debugLoggingEnabledEnv !== undefined
+        ? debugLoggingEnabledEnv.toLowerCase() === 'true'
+        : DEBUG_LOGGING_ENABLED;
+    this._logger.debug(
+      `${servicePrefix}DEBUG_LOGGING_ENABLED: '${debugLoggingEnabledEnv || 'undefined'}'. Effective value: ${this._debugLoggingEnabled}.`
+    );
+
+    // DEBUG_LOGGING_PATH
+    const debugLoggingPathEnv = process.env.DEBUG_LOGGING_PATH;
+    this._debugLoggingPath = debugLoggingPathEnv || DEBUG_LOGGING_DEFAULT_PATH;
+    this._logger.debug(
+      `${servicePrefix}DEBUG_LOGGING_PATH: '${debugLoggingPathEnv || 'undefined'}'. Effective value: '${this._debugLoggingPath}'.`
+    );
+
+    // DEBUG_LOGGING_RETENTION_DAYS
+    const debugLoggingRetentionDaysEnv =
+      process.env.DEBUG_LOGGING_RETENTION_DAYS;
+    this._debugLoggingRetentionDays = debugLoggingRetentionDaysEnv
+      ? parseInt(debugLoggingRetentionDaysEnv, 10)
+      : DEBUG_LOGGING_DEFAULT_RETENTION_DAYS;
+    if (
+      isNaN(this._debugLoggingRetentionDays) ||
+      this._debugLoggingRetentionDays < 1 ||
+      this._debugLoggingRetentionDays > 365
+    ) {
+      this._debugLoggingRetentionDays = DEBUG_LOGGING_DEFAULT_RETENTION_DAYS;
+      this._logger.warn(
+        `${servicePrefix}DEBUG_LOGGING_RETENTION_DAYS invalid: '${debugLoggingRetentionDaysEnv}'. Using default: ${this._debugLoggingRetentionDays} days.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_RETENTION_DAYS: '${debugLoggingRetentionDaysEnv || 'undefined'}'. Effective value: ${this._debugLoggingRetentionDays} days.`
+      );
+    }
+
+    // DEBUG_LOGGING_MAX_FILE_SIZE
+    const debugLoggingMaxFileSizeEnv = process.env.DEBUG_LOGGING_MAX_FILE_SIZE;
+    this._debugLoggingMaxFileSize =
+      debugLoggingMaxFileSizeEnv || DEBUG_LOGGING_DEFAULT_MAX_FILE_SIZE;
+    this._logger.debug(
+      `${servicePrefix}DEBUG_LOGGING_MAX_FILE_SIZE: '${debugLoggingMaxFileSizeEnv || 'undefined'}'. Effective value: '${this._debugLoggingMaxFileSize}'.`
+    );
+
+    // DEBUG_LOGGING_WRITE_BUFFER_SIZE
+    const debugLoggingWriteBufferSizeEnv =
+      process.env.DEBUG_LOGGING_WRITE_BUFFER_SIZE;
+    this._debugLoggingWriteBufferSize = debugLoggingWriteBufferSizeEnv
+      ? parseInt(debugLoggingWriteBufferSizeEnv, 10)
+      : DEBUG_LOGGING_DEFAULT_WRITE_BUFFER_SIZE;
+    if (
+      isNaN(this._debugLoggingWriteBufferSize) ||
+      this._debugLoggingWriteBufferSize < 1
+    ) {
+      this._debugLoggingWriteBufferSize =
+        DEBUG_LOGGING_DEFAULT_WRITE_BUFFER_SIZE;
+      this._logger.warn(
+        `${servicePrefix}DEBUG_LOGGING_WRITE_BUFFER_SIZE invalid: '${debugLoggingWriteBufferSizeEnv}'. Using default: ${this._debugLoggingWriteBufferSize}.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_WRITE_BUFFER_SIZE: '${debugLoggingWriteBufferSizeEnv || 'undefined'}'. Effective value: ${this._debugLoggingWriteBufferSize}.`
+      );
+    }
+
+    // DEBUG_LOGGING_FLUSH_INTERVAL
+    const debugLoggingFlushIntervalEnv =
+      process.env.DEBUG_LOGGING_FLUSH_INTERVAL;
+    this._debugLoggingFlushInterval = debugLoggingFlushIntervalEnv
+      ? parseInt(debugLoggingFlushIntervalEnv, 10)
+      : DEBUG_LOGGING_DEFAULT_FLUSH_INTERVAL;
+    if (
+      isNaN(this._debugLoggingFlushInterval) ||
+      this._debugLoggingFlushInterval < 100
+    ) {
+      this._debugLoggingFlushInterval = DEBUG_LOGGING_DEFAULT_FLUSH_INTERVAL;
+      this._logger.warn(
+        `${servicePrefix}DEBUG_LOGGING_FLUSH_INTERVAL invalid: '${debugLoggingFlushIntervalEnv}'. Using default: ${this._debugLoggingFlushInterval}ms.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_FLUSH_INTERVAL: '${debugLoggingFlushIntervalEnv || 'undefined'}'. Effective value: ${this._debugLoggingFlushInterval}ms.`
+      );
+    }
+
+    // DEBUG_LOGGING_MAX_CONCURRENT_WRITES
+    const debugLoggingMaxConcurrentWritesEnv =
+      process.env.DEBUG_LOGGING_MAX_CONCURRENT_WRITES;
+    this._debugLoggingMaxConcurrentWrites = debugLoggingMaxConcurrentWritesEnv
+      ? parseInt(debugLoggingMaxConcurrentWritesEnv, 10)
+      : DEBUG_LOGGING_DEFAULT_MAX_CONCURRENT_WRITES;
+    if (
+      isNaN(this._debugLoggingMaxConcurrentWrites) ||
+      this._debugLoggingMaxConcurrentWrites < 1
+    ) {
+      this._debugLoggingMaxConcurrentWrites =
+        DEBUG_LOGGING_DEFAULT_MAX_CONCURRENT_WRITES;
+      this._logger.warn(
+        `${servicePrefix}DEBUG_LOGGING_MAX_CONCURRENT_WRITES invalid: '${debugLoggingMaxConcurrentWritesEnv}'. Using default: ${this._debugLoggingMaxConcurrentWrites}.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_MAX_CONCURRENT_WRITES: '${debugLoggingMaxConcurrentWritesEnv || 'undefined'}'. Effective value: ${this._debugLoggingMaxConcurrentWrites}.`
+      );
+    }
+
+    // DEBUG_LOGGING_CLEANUP_SCHEDULE
+    const debugLoggingCleanupScheduleEnv =
+      process.env.DEBUG_LOGGING_CLEANUP_SCHEDULE;
+    this._debugLoggingCleanupSchedule =
+      debugLoggingCleanupScheduleEnv || DEBUG_LOGGING_DEFAULT_CLEANUP_SCHEDULE;
+    this._logger.debug(
+      `${servicePrefix}DEBUG_LOGGING_CLEANUP_SCHEDULE: '${debugLoggingCleanupScheduleEnv || 'undefined'}'. Effective value: '${this._debugLoggingCleanupSchedule}'.`
+    );
+
+    // DEBUG_LOGGING_CLEANUP_ENABLED
+    const debugLoggingCleanupEnabledEnv =
+      process.env.DEBUG_LOGGING_CLEANUP_ENABLED;
+    this._debugLoggingCleanupEnabled =
+      debugLoggingCleanupEnabledEnv !== undefined
+        ? debugLoggingCleanupEnabledEnv.toLowerCase() === 'true'
+        : DEBUG_LOGGING_DEFAULT_CLEANUP_ENABLED;
+    this._logger.debug(
+      `${servicePrefix}DEBUG_LOGGING_CLEANUP_ENABLED: '${debugLoggingCleanupEnabledEnv || 'undefined'}'. Effective value: ${this._debugLoggingCleanupEnabled}.`
+    );
+
+    // DEBUG_LOGGING_COMPRESSION
+    const debugLoggingCompressionEnv = process.env.DEBUG_LOGGING_COMPRESSION;
+    this._debugLoggingCompression =
+      debugLoggingCompressionEnv !== undefined
+        ? debugLoggingCompressionEnv.toLowerCase() === 'true'
+        : DEBUG_LOGGING_DEFAULT_COMPRESSION;
+    this._logger.debug(
+      `${servicePrefix}DEBUG_LOGGING_COMPRESSION: '${debugLoggingCompressionEnv || 'undefined'}'. Effective value: ${this._debugLoggingCompression}.`
+    );
+
     this._logger.debug('AppConfigService: Configuration loading complete.');
   }
 
@@ -608,6 +783,113 @@ class AppConfigService {
       freeSocketTimeout: this._httpAgentFreeSocketTimeout,
       maxTotalSockets: this._httpAgentMaxTotalSockets,
       maxIdleTime: this._httpAgentMaxIdleTime,
+    };
+  }
+
+  // Debug Logging Configuration Getters
+
+  /**
+   * Gets whether debug logging is enabled.
+   * @returns {boolean} True if debug logging is enabled, false otherwise.
+   */
+  isDebugLoggingEnabled() {
+    return this._debugLoggingEnabled;
+  }
+
+  /**
+   * Gets the debug logging path.
+   * @returns {string} The path for debug log files.
+   */
+  getDebugLoggingPath() {
+    return this._debugLoggingPath;
+  }
+
+  /**
+   * Gets the debug logging retention days.
+   * @returns {number} The number of days to retain debug logs.
+   */
+  getDebugLoggingRetentionDays() {
+    return this._debugLoggingRetentionDays;
+  }
+
+  /**
+   * Gets the debug logging maximum file size.
+   * @returns {string} The maximum file size string (e.g., '10MB').
+   */
+  getDebugLoggingMaxFileSize() {
+    return this._debugLoggingMaxFileSize;
+  }
+
+  /**
+   * Gets the debug logging write buffer size.
+   * @returns {number} The write buffer size.
+   */
+  getDebugLoggingWriteBufferSize() {
+    return this._debugLoggingWriteBufferSize;
+  }
+
+  /**
+   * Gets the debug logging flush interval.
+   * @returns {number} The flush interval in milliseconds.
+   */
+  getDebugLoggingFlushInterval() {
+    return this._debugLoggingFlushInterval;
+  }
+
+  /**
+   * Gets the debug logging maximum concurrent writes.
+   * @returns {number} The maximum concurrent writes.
+   */
+  getDebugLoggingMaxConcurrentWrites() {
+    return this._debugLoggingMaxConcurrentWrites;
+  }
+
+  /**
+   * Gets the debug logging cleanup schedule.
+   * @returns {string} The cleanup schedule in cron format.
+   */
+  getDebugLoggingCleanupSchedule() {
+    return this._debugLoggingCleanupSchedule;
+  }
+
+  /**
+   * Gets whether debug logging cleanup is enabled.
+   * @returns {boolean} True if cleanup is enabled, false otherwise.
+   */
+  isDebugLoggingCleanupEnabled() {
+    return this._debugLoggingCleanupEnabled;
+  }
+
+  /**
+   * Gets whether debug logging compression is enabled.
+   * @returns {boolean} True if compression is enabled, false otherwise.
+   */
+  isDebugLoggingCompressionEnabled() {
+    return this._debugLoggingCompression;
+  }
+
+  /**
+   * Gets the debug logging configuration object.
+   * @returns {object} Debug logging configuration object.
+   */
+  getDebugLoggingConfig() {
+    return {
+      enabled: this._debugLoggingEnabled,
+      storage: {
+        path: this._debugLoggingPath,
+        retentionDays: this._debugLoggingRetentionDays,
+        maxFileSize: this._debugLoggingMaxFileSize,
+        compression: this._debugLoggingCompression,
+      },
+      performance: {
+        writeBufferSize: this._debugLoggingWriteBufferSize,
+        flushInterval: this._debugLoggingFlushInterval,
+        maxConcurrentWrites: this._debugLoggingMaxConcurrentWrites,
+      },
+      cleanup: {
+        schedule: this._debugLoggingCleanupSchedule,
+        enabled: this._debugLoggingCleanupEnabled,
+      },
     };
   }
 }

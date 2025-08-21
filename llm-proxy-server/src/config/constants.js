@@ -340,6 +340,70 @@ export const RATE_LIMIT_SUSPICIOUS_PATTERNS_CLEANUP_BATCH_SIZE = 100;
 export const RATE_LIMIT_SUSPICIOUS_PATTERNS_MIN_CLEANUP_INTERVAL = 60 * 1000;
 
 /**
+ * Debug Logging configuration constants
+ */
+
+/**
+ * Default enabled state for debug logging.
+ * @type {boolean}
+ */
+export const DEBUG_LOGGING_ENABLED = true;
+
+/**
+ * Default path for debug log files.
+ * @type {string}
+ */
+export const DEBUG_LOGGING_DEFAULT_PATH = './logs';
+
+/**
+ * Default retention period in days for debug logs.
+ * @type {number}
+ */
+export const DEBUG_LOGGING_DEFAULT_RETENTION_DAYS = 7;
+
+/**
+ * Default maximum file size for debug log files.
+ * @type {string}
+ */
+export const DEBUG_LOGGING_DEFAULT_MAX_FILE_SIZE = '10MB';
+
+/**
+ * Default write buffer size for batching log writes.
+ * @type {number}
+ */
+export const DEBUG_LOGGING_DEFAULT_WRITE_BUFFER_SIZE = 100;
+
+/**
+ * Default flush interval in milliseconds for writing buffered logs.
+ * @type {number}
+ */
+export const DEBUG_LOGGING_DEFAULT_FLUSH_INTERVAL = 1000;
+
+/**
+ * Default maximum concurrent write operations.
+ * @type {number}
+ */
+export const DEBUG_LOGGING_DEFAULT_MAX_CONCURRENT_WRITES = 5;
+
+/**
+ * Default cleanup schedule in cron format (daily at 2 AM).
+ * @type {string}
+ */
+export const DEBUG_LOGGING_DEFAULT_CLEANUP_SCHEDULE = '0 2 * * *';
+
+/**
+ * Default enabled state for automatic cleanup.
+ * @type {boolean}
+ */
+export const DEBUG_LOGGING_DEFAULT_CLEANUP_ENABLED = true;
+
+/**
+ * Default compression setting for log files.
+ * @type {boolean}
+ */
+export const DEBUG_LOGGING_DEFAULT_COMPRESSION = false;
+
+/**
  * Validation configuration constants
  */
 

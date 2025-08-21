@@ -6,7 +6,9 @@
 
 import express from 'express';
 import DebugLogController from '../handlers/debugLogController.js';
+import LogStorageService from '../services/logStorageService.js';
 import { ConsoleLogger } from '../consoleLogger.js';
+import { getAppConfigService } from '../config/appConfig.js';
 import {
   validateDebugLogRequest,
   validateRequestHeaders,
@@ -17,8 +19,27 @@ import { createApiRateLimiter } from '../middleware/rateLimiting.js';
 const router = express.Router();
 const logger = new ConsoleLogger();
 
-// Initialize debug log controller
-const debugLogController = new DebugLogController(logger);
+// Get AppConfigService singleton instance
+const appConfigService = getAppConfigService(logger);
+
+// Initialize log storage service with AppConfigService if debug logging is enabled
+// Skip initialization in test environment to prevent timer issues
+let logStorageService = null;
+const isTestEnvironment = process.env.NODE_ENV === 'test';
+if (appConfigService.isDebugLoggingEnabled() && !isTestEnvironment) {
+  logStorageService = new LogStorageService(logger, appConfigService);
+  logger.info(
+    'Debug routes: Debug logging enabled, initialized storage service'
+  );
+} else {
+  const reason = isTestEnvironment
+    ? 'test environment'
+    : 'debug logging disabled';
+  logger.info(`Debug routes: Using console-only logging (${reason})`);
+}
+
+// Initialize debug log controller with optional storage service
+const debugLogController = new DebugLogController(logger, logStorageService);
 
 /**
  * POST /api/debug-log

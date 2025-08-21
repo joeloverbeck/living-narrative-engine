@@ -615,6 +615,190 @@ describe('AppConfigService - Comprehensive Tests', () => {
     });
   });
 
+  describe('Debug Logging Configuration Getters', () => {
+    test('isDebugLoggingEnabled returns true by default', () => {
+      const service = getAppConfigService(logger);
+
+      expect(service.isDebugLoggingEnabled()).toBe(true);
+    });
+
+    test('isDebugLoggingEnabled returns false when DEBUG_LOGGING_ENABLED is false', () => {
+      process.env.DEBUG_LOGGING_ENABLED = 'false';
+      const service = getAppConfigService(logger);
+
+      expect(service.isDebugLoggingEnabled()).toBe(false);
+    });
+
+    test('isDebugLoggingEnabled returns true when DEBUG_LOGGING_ENABLED is true', () => {
+      process.env.DEBUG_LOGGING_ENABLED = 'true';
+      const service = getAppConfigService(logger);
+
+      expect(service.isDebugLoggingEnabled()).toBe(true);
+    });
+
+    test('getDebugLoggingPath returns default value when not set', () => {
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingPath()).toBe('./logs');
+    });
+
+    test('getDebugLoggingPath returns custom value when DEBUG_LOGGING_PATH is set', () => {
+      process.env.DEBUG_LOGGING_PATH = '/var/log/debug';
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingPath()).toBe('/var/log/debug');
+    });
+
+    test('getDebugLoggingRetentionDays returns default value when not set', () => {
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingRetentionDays()).toBe(7);
+    });
+
+    test('getDebugLoggingRetentionDays returns custom value when DEBUG_LOGGING_RETENTION_DAYS is set', () => {
+      process.env.DEBUG_LOGGING_RETENTION_DAYS = '30';
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingRetentionDays()).toBe(30);
+    });
+
+    test('getDebugLoggingRetentionDays returns default when invalid value is set', () => {
+      process.env.DEBUG_LOGGING_RETENTION_DAYS = '400'; // > 365
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingRetentionDays()).toBe(7);
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('DEBUG_LOGGING_RETENTION_DAYS invalid')
+      );
+    });
+
+    test('getDebugLoggingMaxFileSize returns default value when not set', () => {
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingMaxFileSize()).toBe('10MB');
+    });
+
+    test('getDebugLoggingMaxFileSize returns custom value when DEBUG_LOGGING_MAX_FILE_SIZE is set', () => {
+      process.env.DEBUG_LOGGING_MAX_FILE_SIZE = '50MB';
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingMaxFileSize()).toBe('50MB');
+    });
+
+    test('getDebugLoggingWriteBufferSize returns default value when not set', () => {
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingWriteBufferSize()).toBe(100);
+    });
+
+    test('getDebugLoggingWriteBufferSize returns custom value when DEBUG_LOGGING_WRITE_BUFFER_SIZE is set', () => {
+      process.env.DEBUG_LOGGING_WRITE_BUFFER_SIZE = '200';
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingWriteBufferSize()).toBe(200);
+    });
+
+    test('getDebugLoggingFlushInterval returns default value when not set', () => {
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingFlushInterval()).toBe(1000);
+    });
+
+    test('getDebugLoggingFlushInterval returns custom value when DEBUG_LOGGING_FLUSH_INTERVAL is set', () => {
+      process.env.DEBUG_LOGGING_FLUSH_INTERVAL = '5000';
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingFlushInterval()).toBe(5000);
+    });
+
+    test('getDebugLoggingMaxConcurrentWrites returns default value when not set', () => {
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingMaxConcurrentWrites()).toBe(5);
+    });
+
+    test('getDebugLoggingMaxConcurrentWrites returns custom value when DEBUG_LOGGING_MAX_CONCURRENT_WRITES is set', () => {
+      process.env.DEBUG_LOGGING_MAX_CONCURRENT_WRITES = '10';
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingMaxConcurrentWrites()).toBe(10);
+    });
+
+    test('getDebugLoggingCleanupSchedule returns default value when not set', () => {
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingCleanupSchedule()).toBe('0 2 * * *');
+    });
+
+    test('getDebugLoggingCleanupSchedule returns custom value when DEBUG_LOGGING_CLEANUP_SCHEDULE is set', () => {
+      process.env.DEBUG_LOGGING_CLEANUP_SCHEDULE = '0 0 * * *';
+      const service = getAppConfigService(logger);
+
+      expect(service.getDebugLoggingCleanupSchedule()).toBe('0 0 * * *');
+    });
+
+    test('isDebugLoggingCleanupEnabled returns true by default', () => {
+      const service = getAppConfigService(logger);
+
+      expect(service.isDebugLoggingCleanupEnabled()).toBe(true);
+    });
+
+    test('isDebugLoggingCleanupEnabled returns false when DEBUG_LOGGING_CLEANUP_ENABLED is false', () => {
+      process.env.DEBUG_LOGGING_CLEANUP_ENABLED = 'false';
+      const service = getAppConfigService(logger);
+
+      expect(service.isDebugLoggingCleanupEnabled()).toBe(false);
+    });
+
+    test('isDebugLoggingCompressionEnabled returns false by default', () => {
+      const service = getAppConfigService(logger);
+
+      expect(service.isDebugLoggingCompressionEnabled()).toBe(false);
+    });
+
+    test('isDebugLoggingCompressionEnabled returns true when DEBUG_LOGGING_COMPRESSION is true', () => {
+      process.env.DEBUG_LOGGING_COMPRESSION = 'true';
+      const service = getAppConfigService(logger);
+
+      expect(service.isDebugLoggingCompressionEnabled()).toBe(true);
+    });
+
+    test('getDebugLoggingConfig returns complete debug logging configuration object', () => {
+      process.env.DEBUG_LOGGING_ENABLED = 'false';
+      process.env.DEBUG_LOGGING_PATH = '/custom/logs';
+      process.env.DEBUG_LOGGING_RETENTION_DAYS = '14';
+      process.env.DEBUG_LOGGING_MAX_FILE_SIZE = '20MB';
+      process.env.DEBUG_LOGGING_WRITE_BUFFER_SIZE = '200';
+      process.env.DEBUG_LOGGING_FLUSH_INTERVAL = '2000';
+      process.env.DEBUG_LOGGING_MAX_CONCURRENT_WRITES = '10';
+      process.env.DEBUG_LOGGING_CLEANUP_SCHEDULE = '0 3 * * *';
+      process.env.DEBUG_LOGGING_CLEANUP_ENABLED = 'false';
+      process.env.DEBUG_LOGGING_COMPRESSION = 'true';
+
+      const service = getAppConfigService(logger);
+      const config = service.getDebugLoggingConfig();
+
+      expect(config).toEqual({
+        enabled: false,
+        storage: {
+          path: '/custom/logs',
+          retentionDays: 14,
+          maxFileSize: '20MB',
+          compression: true,
+        },
+        performance: {
+          writeBufferSize: 200,
+          flushInterval: 2000,
+          maxConcurrentWrites: 10,
+        },
+        cleanup: {
+          schedule: '0 3 * * *',
+          enabled: false,
+        },
+      });
+    });
+  });
+
   describe('Private Methods', () => {
     test('uses default message when env var undefined and finalValue provided', () => {
       const service = getAppConfigService(logger);

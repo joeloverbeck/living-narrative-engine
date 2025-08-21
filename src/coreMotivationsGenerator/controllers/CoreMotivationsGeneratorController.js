@@ -23,6 +23,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   #selectedDirectionId = null;
   #currentConceptId = null;
   #eligibleDirections = [];
+  #directionsWithConceptsMap = new Map(); // Stores full direction+concept data
   #currentMotivations = [];
   #isGenerating = false;
   #currentSortOrder = 'newest';
@@ -69,10 +70,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     try {
       this.logger.info('Initializing Core Motivations Generator Controller');
 
-      // Load current concept
-      await this.#loadCurrentConcept();
-
-      // Load eligible directions (those with clichés)
+      // Load ALL eligible directions (those with clichés) from ALL concepts
       await this.#loadEligibleDirections();
 
       // Set up UI event listeners
@@ -107,118 +105,118 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   }
 
   /**
-   * Load the current character concept
+   * Load directions that have associated clichés from ALL concepts
    */
-  async #loadCurrentConcept() {
+  async #loadEligibleDirections() {
     try {
-      this.logger.debug('DEBUG: Starting to load current concept...');
+      // Step 1: Get ALL directions with their concepts (matching clichés generator)
+      const directionsWithConcepts =
+        await this.characterBuilderService.getAllThematicDirectionsWithConcepts();
 
-      const concepts =
-        await this.characterBuilderService.getAllCharacterConcepts();
+      if (!directionsWithConcepts || directionsWithConcepts.length === 0) {
+        this.#eligibleDirections = [];
+        this.#handleNoDirectionsAvailable();
+        return;
+      }
 
-      this.logger.debug(
-        `DEBUG: Retrieved concepts from service: ${concepts ? concepts.length : 0} concepts`
+      // Step 2: Filter to only those with clichés
+      const eligibleItems = [];
+      for (const item of directionsWithConcepts) {
+        const hasClichés =
+          await this.characterBuilderService.hasClichesForDirection(
+            item.direction.id
+          );
+        if (hasClichés) {
+          eligibleItems.push(item);
+        }
+      }
+
+      if (eligibleItems.length === 0) {
+        this.#eligibleDirections = [];
+        this.#handleNoEligibleDirections();
+        return;
+      }
+
+      // Step 3: Store the filtered data map for later use
+      this.#directionsWithConceptsMap = new Map(
+        eligibleItems.map((item) => [item.direction.id, item])
       );
 
-      if (concepts && concepts.length > 0) {
-        // Log all available concepts
-        this.logger.debug(
-          `DEBUG: Available concept IDs: ${concepts.map((c) => c.id).join(', ')}`
-        );
+      // Step 4: Extract directions and attach concept data for organization
+      const directionsWithConceptData = eligibleItems.map((item) => ({
+        ...item.direction,
+        concept: item.concept, // Attach concept for #organizeDirectionsByConcept
+      }));
 
-        // Get the most recent concept
-        this.#currentConceptId = concepts[concepts.length - 1].id;
-        this.logger.info(`DEBUG: Loaded concept: ${this.#currentConceptId}`);
-        this.logger.debug(
-          `DEBUG: Selected most recent concept from ${concepts.length} available concepts`
-        );
-      } else {
-        this.logger.error('DEBUG: No character concepts found in database');
-        throw new Error('No character concept found');
-      }
+      // Step 5: Store eligible directions
+      this.#eligibleDirections = directionsWithConceptData;
+
+      // Step 6: Populate the select dropdown (uses existing #populateDirectionSelector)
+      this.#populateDirectionSelector();
+
+      this.logger.info(
+        `Loaded ${this.#eligibleDirections.length} eligible directions from all concepts`
+      );
     } catch (error) {
-      this.logger.error('DEBUG: Failed to load character concept:', error);
-      throw error;
+      this.logger.error('Failed to load eligible directions:', error);
+      this.showError(
+        'Failed to load thematic directions. Please refresh the page.'
+      );
     }
   }
 
   /**
-   * Load directions that have associated clichés
+   * Handle when no directions exist at all
    */
-  async #loadEligibleDirections() {
-    try {
-      this.logger.debug(
-        `DEBUG: Starting to load eligible directions for concept: ${this.#currentConceptId}`
-      );
+  #handleNoDirectionsAvailable() {
+    const selector = document.getElementById('direction-selector');
+    const noDirectionsMsg = document.getElementById('no-directions-message');
 
-      const allDirections =
-        await this.characterBuilderService.getThematicDirectionsByConceptId(
-          this.#currentConceptId
-        );
-
-      this.logger.debug(
-        `DEBUG: Retrieved ${allDirections ? allDirections.length : 0} total directions for concept ${this.#currentConceptId}`
-      );
-
-      if (allDirections && allDirections.length > 0) {
-        this.logger.debug(
-          `DEBUG: Direction IDs to check: ${allDirections.map((d) => d.id).join(', ')}`
-        );
-      }
-
-      // Filter to only directions with clichés
-      const eligibleDirections = [];
-      for (const direction of allDirections) {
-        this.logger.debug(
-          `DEBUG: Checking direction ${direction.id} (title: "${direction.title}") for clichés...`
-        );
-
-        const hasClichés =
-          await this.characterBuilderService.hasClichesForDirection(
-            direction.id
-          );
-
-        this.logger.debug(
-          `DEBUG: Direction ${direction.id} has clichés: ${hasClichés}`
-        );
-
-        if (hasClichés) {
-          eligibleDirections.push(direction);
-          this.logger.debug(
-            `DEBUG: Added direction ${direction.id} to eligible list`
-          );
-        }
-      }
-
-      this.#eligibleDirections = eligibleDirections;
-      this.logger.info(
-        `DEBUG: Found ${eligibleDirections.length} eligible directions out of ${allDirections.length} total directions`
-      );
-
-      if (eligibleDirections.length > 0) {
-        this.logger.debug(
-          `DEBUG: Eligible direction IDs: ${eligibleDirections.map((d) => d.id).join(', ')}`
-        );
-      } else {
-        this.logger.warn(
-          `DEBUG: No eligible directions found - this will show 'No eligible directions found' message`
-        );
-
-        // DEBUG: When no eligible directions found, dump database contents
-        this.logger.warn('DEBUG: Triggering database dumps to investigate...');
-        try {
-          await this.characterBuilderService.debugDumpDatabase();
-        } catch (error) {
-          this.logger.error('DEBUG: Error during database dumps:', error);
-        }
-      }
-
-      // Display directions or show empty message
-      this.#populateDirectionSelector();
-    } catch (error) {
-      this.logger.error('DEBUG: Failed to load eligible directions:', error);
-      throw error;
+    if (selector) {
+      selector.style.display = 'none';
     }
+
+    if (noDirectionsMsg) {
+      noDirectionsMsg.style.display = 'block';
+      noDirectionsMsg.textContent =
+        'No thematic directions found. Please create thematic directions first.';
+    }
+
+    const generateBtn = document.getElementById('generate-btn');
+    if (generateBtn) {
+      generateBtn.disabled = true;
+    }
+
+    this.logger.warn('No thematic directions available in any concept');
+    this.eventBus.dispatch('core:no_directions_available', {});
+  }
+
+  /**
+   * Handle when directions exist but none have clichés
+   */
+  #handleNoEligibleDirections() {
+    const selector = document.getElementById('direction-selector');
+    const noDirectionsMsg = document.getElementById('no-directions-message');
+
+    if (selector) {
+      selector.style.display = 'none';
+    }
+
+    if (noDirectionsMsg) {
+      noDirectionsMsg.style.display = 'block';
+      noDirectionsMsg.textContent =
+        'No thematic directions with clichés found. Please generate clichés for your directions first.';
+    }
+
+    const generateBtn = document.getElementById('generate-btn');
+    if (generateBtn) {
+      generateBtn.disabled = true;
+    }
+
+    this.logger.warn(
+      'No eligible directions found (directions without clichés)'
+    );
+    this.eventBus.dispatch('core:no_eligible_directions', {});
   }
 
   /**

@@ -45,14 +45,31 @@ describe('CoreMotivationsGeneratorController', () => {
       );
     });
 
-    it('should load current concept on initialization', async () => {
+    it('should load directions from all concepts on initialization', async () => {
       // Arrange
-      const mockConcepts = [
-        { id: 'concept-1', concept: 'A brave warrior' },
-        { id: 'concept-2', concept: 'A wise mage' },
+      const mockDirectionsWithConcepts = [
+        {
+          direction: {
+            id: 'dir1',
+            conceptId: 'concept1',
+            title: 'Direction 1',
+          },
+          concept: { id: 'concept1', text: 'Concept 1' },
+        },
+        {
+          direction: {
+            id: 'dir2',
+            conceptId: 'concept2',
+            title: 'Direction 2',
+          },
+          concept: { id: 'concept2', text: 'Concept 2' },
+        },
       ];
-      testBed.mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue(
-        mockConcepts
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
       );
 
       // Act
@@ -60,27 +77,42 @@ describe('CoreMotivationsGeneratorController', () => {
 
       // Assert
       expect(
-        testBed.mockCharacterBuilderService.getAllCharacterConcepts
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
       ).toHaveBeenCalled();
       expect(testBed.logger.info).toHaveBeenCalledWith(
-        'DEBUG: Loaded concept: concept-2'
+        'Loaded 2 eligible directions from all concepts'
       );
     });
 
-    it('should load eligible directions with clichés', async () => {
+    it('should filter directions to only those with clichés', async () => {
       // Arrange
-      const { directions } = testBed.setupSuccessfulDirectionLoad();
+      const mockDirectionsWithConcepts = [
+        {
+          direction: { id: 'dir1', title: 'Has Clichés' },
+          concept: { id: 'concept1', text: 'Concept 1' },
+        },
+        {
+          direction: { id: 'dir2', title: 'No Clichés' },
+          concept: { id: 'concept1', text: 'Concept 1' },
+        },
+      ];
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection
+        .mockResolvedValueOnce(true) // dir1 has clichés
+        .mockResolvedValueOnce(false); // dir2 doesn't have clichés
 
       // Act
       await testBed.controller.initialize();
 
       // Assert
       expect(
-        testBed.mockCharacterBuilderService.getThematicDirectionsByConceptId
-      ).toHaveBeenCalled();
-      expect(
         testBed.mockCharacterBuilderService.hasClichesForDirection
-      ).toHaveBeenCalledTimes(directions.length);
+      ).toHaveBeenCalledTimes(2);
+      expect(testBed.logger.info).toHaveBeenCalledWith(
+        'Loaded 1 eligible directions from all concepts'
+      );
     });
 
     it('should dispatch initialization event', async () => {
@@ -95,22 +127,99 @@ describe('CoreMotivationsGeneratorController', () => {
         (event) => event.type === 'core:core_motivations_ui_initialized'
       );
       expect(initEvent).toBeDefined();
-      expect(initEvent.payload.conceptId).toBeDefined();
       expect(initEvent.payload.eligibleDirectionsCount).toBeGreaterThanOrEqual(
         0
       );
     });
 
-    it('should throw error when no character concept found', async () => {
+    it('should handle when no directions exist at all', async () => {
       // Arrange
-      testBed.mockCharacterBuilderService.getAllCharacterConcepts.mockResolvedValue(
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
         []
       );
 
-      // Act & Assert
-      await expect(testBed.controller.initialize()).rejects.toThrow(
-        'No character concept found'
+      // Act
+      await testBed.controller.initialize();
+
+      // Assert
+      const noDirectionsMsg = document.getElementById('no-directions-message');
+      expect(noDirectionsMsg.style.display).toBe('block');
+      expect(noDirectionsMsg.textContent).toContain(
+        'No thematic directions found'
       );
+      expect(testBed.logger.warn).toHaveBeenCalledWith(
+        'No thematic directions available in any concept'
+      );
+    });
+
+    it('should handle when directions exist but none have clichés', async () => {
+      // Arrange
+      const mockDirectionsWithConcepts = [
+        {
+          direction: { id: 'dir1', title: 'No Clichés' },
+          concept: { id: 'concept1', text: 'Concept 1' },
+        },
+      ];
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        false
+      );
+
+      // Act
+      await testBed.controller.initialize();
+
+      // Assert
+      const noDirectionsMsg = document.getElementById('no-directions-message');
+      expect(noDirectionsMsg.style.display).toBe('block');
+      expect(noDirectionsMsg.textContent).toContain('generate clichés');
+      expect(testBed.logger.warn).toHaveBeenCalledWith(
+        'No eligible directions found (directions without clichés)'
+      );
+    });
+
+    it('should properly attach concept data to directions for organization', async () => {
+      // Arrange
+      const mockDirectionsWithConcepts = [
+        {
+          direction: {
+            id: 'dir1',
+            conceptId: 'concept1',
+            title: 'Direction 1',
+          },
+          concept: { id: 'concept1', text: 'Concept 1' },
+        },
+        {
+          direction: {
+            id: 'dir2',
+            conceptId: 'concept2',
+            title: 'Direction 2',
+          },
+          concept: { id: 'concept2', text: 'Concept 2' },
+        },
+      ];
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
+      );
+
+      // Act
+      await testBed.controller.initialize();
+
+      // Assert
+      const selector = document.getElementById('direction-selector');
+      const optgroups = selector.querySelectorAll('optgroup');
+
+      // Should have organized directions by concept
+      expect(optgroups.length).toBeGreaterThanOrEqual(1);
+
+      // Verify the internal directionsWithConceptsMap is populated
+      expect(
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
+      ).toHaveBeenCalled();
     });
   });
 
@@ -700,31 +809,40 @@ describe('CoreMotivationsGeneratorController', () => {
     it('should handle initialization errors', async () => {
       // Arrange
       const error = new Error('Initialization failed');
-      testBed.mockCharacterBuilderService.getAllCharacterConcepts.mockRejectedValue(
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(
         error
       );
       const controller = testBed.controller;
       controller.showError = jest.fn();
 
-      // Act & Assert
-      await expect(controller.initialize()).rejects.toThrow(
-        'Initialization failed'
-      );
+      // Act
+      await controller.initialize();
+
+      // Assert
       expect(controller.showError).toHaveBeenCalledWith(
-        'Failed to initialize. Please refresh the page.'
+        'Failed to load thematic directions. Please refresh the page.'
+      );
+      expect(testBed.logger.error).toHaveBeenCalledWith(
+        'Failed to load eligible directions:',
+        error
       );
     });
 
     it('should handle direction loading errors', async () => {
       // Arrange
       const error = new Error('Direction loading failed');
-      testBed.mockCharacterBuilderService.getThematicDirectionsByConceptId.mockRejectedValue(
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockRejectedValue(
         error
       );
+      const controller = testBed.controller;
+      controller.showError = jest.fn();
 
-      // Act & Assert
-      await expect(testBed.controller.initialize()).rejects.toThrow(
-        'Direction loading failed'
+      // Act
+      await controller.initialize();
+
+      // Assert
+      expect(controller.showError).toHaveBeenCalledWith(
+        'Failed to load thematic directions. Please refresh the page.'
       );
     });
   });

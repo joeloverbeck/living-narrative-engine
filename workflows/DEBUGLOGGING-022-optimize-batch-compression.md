@@ -292,6 +292,7 @@ const BATCH_METRICS = {
    ```
 
 6. **Integration with RemoteLogger**
+
    ```javascript
    // Enhanced RemoteLogger with optimization
    class OptimizedRemoteLogger extends RemoteLogger {

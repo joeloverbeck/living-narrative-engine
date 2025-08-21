@@ -107,11 +107,20 @@ describe('CoreMotivationsGenerator - Event Dispatch Errors', () => {
     expect(consoleErrors).toEqual([]);
 
     // Verify the event dispatch is now using correct format
-    expect(eventDispatchCalls).toHaveLength(1);
+    // Now we dispatch 2 events: one for no eligible directions and one for initialization
+    expect(eventDispatchCalls).toHaveLength(2);
+
+    // First event should be for no eligible directions
     expect(eventDispatchCalls[0]).toEqual({
+      type: 'core:no_eligible_directions',
+      payload: {},
+    });
+
+    // Second event should be the initialization event
+    expect(eventDispatchCalls[1]).toEqual({
       type: 'core:core_motivations_ui_initialized', // Fixed format
       payload: {
-        conceptId: 'da045af5-1f3d-4277-99d0-12226db836c7',
+        conceptId: null, // No longer loading a single concept
         eligibleDirectionsCount: 0,
       },
     });

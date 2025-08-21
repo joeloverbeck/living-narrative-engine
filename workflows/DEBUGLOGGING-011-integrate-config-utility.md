@@ -114,6 +114,7 @@ export async function loadAndApplyLoggerConfig(logger) {
    - [ ] Document all environment variables
 
 5. **Config File Resolution**
+
    ```javascript
    async function findConfigFile() {
      const paths = [

@@ -29,6 +29,8 @@ const createValidLogEntry = (overrides = {}) => ({
   sessionId: '550e8400-e29b-41d4-a716-446655440000',
   metadata: { testRun: true },
   ...overrides,
+  // Merge metadata instead of replacing it
+  metadata: { testRun: true, ...(overrides.metadata || {}) },
 });
 
 describe('LogStorageService Integration Tests', () => {
@@ -285,7 +287,7 @@ describe('LogStorageService Integration Tests', () => {
         }),
         createValidLogEntry({
           category: undefined,
-          message: 'Random system message',
+          message: 'Random unmatched message',
         }),
       ];
 
@@ -341,7 +343,7 @@ describe('LogStorageService Integration Tests', () => {
       expect(aiContent).toContain('AI: Processing LLM response');
 
       const generalContent = await fs.readFile(generalFile, 'utf8');
-      expect(generalContent).toContain('Random system message');
+      expect(generalContent).toContain('Random unmatched message');
     });
   });
 
