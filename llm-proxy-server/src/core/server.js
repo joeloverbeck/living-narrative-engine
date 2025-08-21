@@ -55,6 +55,9 @@ import {
 // Import trace routes
 import traceRoutes from '../routes/traceRoutes.js';
 
+// Import debug routes
+import debugRoutes from '../routes/debugRoutes.js';
+
 // Initialize Logger
 const proxyLogger = new ConsoleLogger();
 
@@ -259,6 +262,9 @@ app.post(
 
 // Register trace routes for action tracing system
 app.use('/api/traces', traceRoutes);
+
+// Register debug routes for debug log collection
+app.use('/api/debug-log', debugRoutes);
 
 // Store server instance for graceful shutdown
 let server;
