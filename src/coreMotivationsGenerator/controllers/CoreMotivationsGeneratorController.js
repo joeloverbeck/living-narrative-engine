@@ -13,6 +13,41 @@ import {
 /** @typedef {import('../services/CoreMotivationsDisplayEnhancer.js').CoreMotivationsDisplayEnhancer} CoreMotivationsDisplayEnhancer */
 
 /**
+ * @typedef {object} ConceptGroup
+ * @property {string} conceptId - The concept's unique identifier
+ * @property {string} conceptTitle - The concept's display title
+ * @property {Array<ThematicDirection>} directions - Directions in this concept
+ */
+
+/**
+ * @typedef {object} ThematicDirection
+ * @property {string} id - The direction's unique identifier
+ * @property {string} conceptId - The parent concept's ID
+ * @property {string} title - The direction's display title
+ * @property {string} [description] - Optional description
+ * @property {Array<string>} [tags] - Optional tags
+ */
+
+/**
+ * @typedef {object} CharacterConcept
+ * @property {string} id - The concept's unique identifier
+ * @property {string} title - The concept's display title
+ * @property {string} [description] - Optional description
+ * @property {number} createdAt - Creation timestamp
+ */
+
+/**
+ * @typedef {object} CoreMotivation
+ * @property {string} id - The motivation's unique identifier
+ * @property {string} directionId - Associated direction ID
+ * @property {string} conceptId - Associated concept ID
+ * @property {string} content - The generated motivation text
+ * @property {Array<string>} contradictions - Internal contradictions
+ * @property {string} centralQuestion - The driving question
+ * @property {number} generatedAt - Generation timestamp
+ */
+
+/**
  * Controller for Core Motivations Generator functionality
  *
  * @augments BaseCharacterBuilderController
@@ -21,7 +56,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   #coreMotivationsGenerator;
   #displayEnhancer;
   #selectedDirectionId = null;
-  #currentConceptId = null;
+  #currentConceptId = ''; // Initialize as empty string instead of null to satisfy event validation
   #eligibleDirections = [];
   #directionsWithConceptsMap = new Map(); // Stores full direction+concept data
   #currentMotivations = [];
@@ -33,6 +68,27 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   #currentLoadedCount = 20;
   #loadMoreObserver = null;
   #modalObserver = null; // Modal focus management observer
+
+  /**
+   * Currently selected direction object (cached for quick access)
+   *
+   * @type {ThematicDirection|null}
+   */
+  #currentDirection = null;
+
+  /**
+   * Concept of the currently selected direction (cached for quick access)
+   *
+   * @type {CharacterConcept|null}
+   */
+  #currentConcept = null;
+
+  /**
+   * Cache timestamp for data freshness
+   *
+   * @type {number|null}
+   */
+  #cacheTimestamp = null;
 
   /**
    * @param {object} _dependencies - Controller dependencies
@@ -89,7 +145,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
       // Dispatch initialization complete event
       this.eventBus.dispatch('core:core_motivations_ui_initialized', {
-        conceptId: this.#currentConceptId,
+        conceptId: this.#currentConceptId || '', // Ensure it's always a string
         eligibleDirectionsCount: this.#eligibleDirections.length,
       });
 
@@ -153,6 +209,9 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
       // Step 6: Populate the select dropdown (uses existing #populateDirectionSelector)
       this.#populateDirectionSelector();
+
+      // Step 7: Update cache timestamp
+      this.#cacheTimestamp = Date.now();
 
       this.logger.info(
         `Loaded ${this.#eligibleDirections.length} eligible directions from all concepts`
@@ -282,12 +341,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
         (sum, group) => sum + group.directions.length,
         0
       ),
-      concepts: organizedData.length,
-      groups: organizedData.map((g) => ({
-        conceptId: g.conceptId,
-        conceptTitle: g.conceptTitle,
-        directionCount: g.directions.length,
-      })),
+      groups: organizedData.length,
     });
   }
 
@@ -352,6 +406,14 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
     this.#selectedDirectionId = directionId;
 
+    // Update cached direction and concept
+    const item = this.#directionsWithConceptsMap.get(directionId);
+    if (item) {
+      this.#currentDirection = item.direction;
+      this.#currentConcept = item.concept;
+      this.#currentConceptId = item.concept.id;
+    }
+
     // Load existing motivations for this direction
     await this.#loadExistingMotivations(directionId);
 
@@ -361,7 +423,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     // Dispatch selection event
     this.eventBus.dispatch('core:core_motivations_direction_selected', {
       directionId,
-      conceptId: this.#currentConceptId,
+      conceptId: this.#currentConceptId || '', // Ensure it's always a string
     });
   }
 
@@ -371,6 +433,9 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   #clearDirection() {
     // Clear selection state
     this.#selectedDirectionId = null;
+    this.#currentDirection = null;
+    this.#currentConcept = null;
+    this.#currentConceptId = '';
 
     // Update UI state to disable buttons
     this.#updateUIState();
@@ -382,8 +447,43 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
     // Dispatch clear selection event
     this.eventBus.dispatch('core:core_motivations_direction_cleared', {
-      conceptId: this.#currentConceptId,
+      conceptId: this.#currentConceptId || '', // Ensure it's always a string
     });
+  }
+
+  /**
+   * Check if cached data is stale (older than 5 minutes)
+   *
+   * @returns {boolean}
+   */
+  #isCacheStale() {
+    if (!this.#cacheTimestamp) return true;
+
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    return Date.now() - this.#cacheTimestamp > CACHE_DURATION;
+  }
+
+  /**
+   * Refresh data if cache is stale
+   */
+  async #refreshIfNeeded() {
+    if (this.#isCacheStale()) {
+      this.logger.info('Cache is stale, refreshing directions...');
+      await this.#loadEligibleDirections();
+      this.#cacheTimestamp = Date.now();
+    }
+  }
+
+  /**
+   * Enhanced clear selection with optional properties
+   */
+  #clearSelectionState() {
+    this.#selectedDirectionId = null;
+    this.#currentDirection = null;
+    this.#currentConcept = null;
+
+    // Use existing #clearDirection() method for UI updates
+    this.#clearDirection();
   }
 
   /**
@@ -691,7 +791,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     try {
       // Dispatch generation started event
       this.eventBus.dispatch('core:core_motivations_generation_started', {
-        conceptId: this.#currentConceptId,
+        conceptId: this.#currentConceptId || '',
         directionId: this.#selectedDirectionId,
       });
 
@@ -699,10 +799,9 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       const direction = this.#eligibleDirections.find(
         (d) => d.id === this.#selectedDirectionId
       );
-      const concept =
-        await this.characterBuilderService.getCharacterConceptById(
-          this.#currentConceptId
-        );
+      const concept = await this.characterBuilderService.getCharacterConcept(
+        this.#currentConceptId
+      );
       const clichés =
         await this.characterBuilderService.getClichesByDirectionId(
           this.#selectedDirectionId
@@ -726,7 +825,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
       // Dispatch completion event
       this.eventBus.dispatch('core:core_motivations_generation_completed', {
-        conceptId: this.#currentConceptId,
+        conceptId: this.#currentConceptId || '',
         directionId: this.#selectedDirectionId,
         motivationIds: savedIds,
         totalCount: this.#currentMotivations.length,
@@ -737,7 +836,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       this.logger.error('Failed to generate motivations:', error);
 
       this.eventBus.dispatch('core:core_motivations_generation_failed', {
-        conceptId: this.#currentConceptId,
+        conceptId: this.#currentConceptId || '',
         directionId: this.#selectedDirectionId,
         error: error.message,
       });
@@ -1179,6 +1278,32 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     if (exportBtn) {
       exportBtn.disabled = this.#currentMotivations.length === 0;
     }
+
+    // Optional: Update direction display if UI element exists
+    const selectedDisplay = document.getElementById(
+      'selected-direction-display'
+    );
+    if (selectedDisplay) {
+      const direction = this.currentDirection; // Use getter
+      const concept = this.currentConcept; // Use getter
+
+      if (direction && concept) {
+        selectedDisplay.innerHTML = `
+          <div class="selected-info">
+            <strong>Concept:</strong> ${concept.text || concept.title || 'Unknown'}<br>
+            <strong>Direction:</strong> ${direction.title}
+          </div>
+        `;
+      } else {
+        selectedDisplay.innerHTML = '<em>No direction selected</em>';
+      }
+    }
+
+    // Optional: Add counter display
+    const directionCount = document.getElementById('direction-count');
+    if (directionCount) {
+      directionCount.textContent = `${this.#eligibleDirections.length} directions available`;
+    }
   }
 
   /**
@@ -1459,6 +1584,59 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
 
   organizeDirectionsByConcept(directions) {
     return this.#organizeDirectionsByConcept(directions);
+  }
+
+  /**
+   * Public getters for state access
+   */
+
+  /**
+   * Get the currently selected direction object from the map
+   *
+   * @returns {object | null}
+   */
+  get currentDirection() {
+    if (!this.#selectedDirectionId) return null;
+    const item = this.#directionsWithConceptsMap.get(this.#selectedDirectionId);
+    return item?.direction || null;
+  }
+
+  /**
+   * Get the concept of the current direction from the map
+   *
+   * @returns {object | null}
+   */
+  get currentConcept() {
+    if (!this.#selectedDirectionId) return null;
+    const item = this.#directionsWithConceptsMap.get(this.#selectedDirectionId);
+    return item?.concept || null;
+  }
+
+  /**
+   * Get the selected direction ID
+   *
+   * @returns {string|null}
+   */
+  get selectedDirectionId() {
+    return this.#selectedDirectionId;
+  }
+
+  /**
+   * Check if currently generating (loading)
+   *
+   * @returns {boolean}
+   */
+  get isGenerating() {
+    return this.#isGenerating;
+  }
+
+  /**
+   * Get the total count of eligible directions
+   *
+   * @returns {number}
+   */
+  get totalDirectionsCount() {
+    return this.#eligibleDirections.length;
   }
 }
 

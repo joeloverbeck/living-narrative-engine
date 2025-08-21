@@ -120,7 +120,7 @@ describe('CoreMotivationsGenerator - Event Dispatch Errors', () => {
     expect(eventDispatchCalls[1]).toEqual({
       type: 'core:core_motivations_ui_initialized', // Fixed format
       payload: {
-        conceptId: null, // No longer loading a single concept
+        conceptId: '', // Controller initializes as empty string for event validation
         eligibleDirectionsCount: 0,
       },
     });

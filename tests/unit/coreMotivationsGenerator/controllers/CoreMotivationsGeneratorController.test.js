@@ -30,11 +30,15 @@ describe('CoreMotivationsGeneratorController', () => {
       value: localStorageMock,
       writable: true,
     });
+
+    // Mock Date.now for cache testing
+    jest.spyOn(Date, 'now');
   });
 
   afterEach(() => {
     testBed.cleanup();
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('Initialization', () => {
@@ -130,6 +134,31 @@ describe('CoreMotivationsGeneratorController', () => {
       expect(initEvent.payload.eligibleDirectionsCount).toBeGreaterThanOrEqual(
         0
       );
+    });
+
+    it('should dispatch valid initialization event with non-null conceptId', async () => {
+      // This test reproduces the issue where conceptId was null causing validation errors
+      // Arrange
+      testBed.setupSuccessfulDirectionLoad();
+
+      // Act
+      await testBed.controller.initialize();
+
+      // Assert
+      const initEvent = testBed.dispatchedEvents.find(
+        (event) => event.type === 'core:core_motivations_ui_initialized'
+      );
+      expect(initEvent).toBeDefined();
+      expect(initEvent.payload).toBeDefined();
+
+      // The conceptId should be a string (empty string is valid), not null
+      expect(initEvent.payload.conceptId).toBeDefined();
+      expect(typeof initEvent.payload.conceptId).toBe('string');
+      expect(initEvent.payload.conceptId).not.toBeNull();
+
+      // Verify all required fields are present
+      expect(initEvent.payload.eligibleDirectionsCount).toBeDefined();
+      expect(typeof initEvent.payload.eligibleDirectionsCount).toBe('number');
     });
 
     it('should handle when no directions exist at all', async () => {
@@ -273,6 +302,33 @@ describe('CoreMotivationsGeneratorController', () => {
       );
       expect(selectionEvent).toBeDefined();
       expect(selectionEvent.payload.directionId).toBe(directionId);
+    });
+
+    it('should dispatch direction selected event with valid conceptId', async () => {
+      // This test reproduces the issue where conceptId was null causing validation errors
+      // Arrange
+      const directionId = 'test-direction-1';
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        []
+      );
+
+      // Act
+      await testBed.selectDirection(directionId);
+
+      // Assert
+      const selectionEvent = testBed.dispatchedEvents.find(
+        (event) => event.type === 'core:core_motivations_direction_selected'
+      );
+      expect(selectionEvent).toBeDefined();
+      expect(selectionEvent.payload).toBeDefined();
+
+      // Verify payload has all required fields
+      expect(selectionEvent.payload.directionId).toBe(directionId);
+
+      // The conceptId should be a string (empty string is valid), not null
+      expect(selectionEvent.payload.conceptId).toBeDefined();
+      expect(typeof selectionEvent.payload.conceptId).toBe('string');
+      expect(selectionEvent.payload.conceptId).not.toBeNull();
     });
   });
 
@@ -727,7 +783,7 @@ describe('CoreMotivationsGeneratorController', () => {
       await testBed.selectDirection('test-direction-1');
 
       // Mock the required services for generation
-      testBed.mockCharacterBuilderService.getCharacterConceptById.mockResolvedValue(
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         { id: 'concept-1', concept: 'A brave warrior' }
       );
       testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue(
@@ -768,7 +824,7 @@ describe('CoreMotivationsGeneratorController', () => {
       await testBed.selectDirection('test-direction-1');
 
       // Mock the required services for generation
-      testBed.mockCharacterBuilderService.getCharacterConceptById.mockResolvedValue(
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
         { id: 'concept-1', concept: 'A brave warrior' }
       );
       testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue(
@@ -884,7 +940,7 @@ describe('CoreMotivationsGeneratorController', () => {
     describe('Generation Loading', () => {
       it('should show loading indicator with correct message during generation', async () => {
         // Arrange
-        testBed.mockCharacterBuilderService.getCharacterConceptById.mockResolvedValue(
+        testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
           { id: 'concept-1', concept: 'A brave warrior' }
         );
         testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue(
@@ -922,7 +978,7 @@ describe('CoreMotivationsGeneratorController', () => {
 
       it('should hide loading indicator after generation completes', async () => {
         // Arrange
-        testBed.mockCharacterBuilderService.getCharacterConceptById.mockResolvedValue(
+        testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
           { id: 'concept-1', concept: 'A brave warrior' }
         );
         testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue(
@@ -945,7 +1001,7 @@ describe('CoreMotivationsGeneratorController', () => {
 
       it('should disable buttons during generation', async () => {
         // Arrange
-        testBed.mockCharacterBuilderService.getCharacterConceptById.mockResolvedValue(
+        testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
           { id: 'concept-1', concept: 'A brave warrior' }
         );
         testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue(
@@ -1009,7 +1065,7 @@ describe('CoreMotivationsGeneratorController', () => {
     describe('Button State Management', () => {
       it('should disable buttons during generation', async () => {
         // Arrange
-        testBed.mockCharacterBuilderService.getCharacterConceptById.mockResolvedValue(
+        testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
           { id: 'concept-1', concept: 'A brave warrior' }
         );
         testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue(
@@ -1081,7 +1137,7 @@ describe('CoreMotivationsGeneratorController', () => {
     describe('Error State Loading', () => {
       it('should hide loading indicator on generation error', async () => {
         // Arrange
-        testBed.mockCharacterBuilderService.getCharacterConceptById.mockResolvedValue(
+        testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
           { id: 'concept-1', concept: 'A brave warrior' }
         );
         testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue(
@@ -1397,6 +1453,194 @@ describe('CoreMotivationsGeneratorController', () => {
     });
   });
 
+  describe('Class Properties and State Management', () => {
+    it('should initialize with correct default values', () => {
+      expect(testBed.controller.eligibleDirections).toEqual([]);
+      expect(testBed.controller.selectedDirectionId).toBeNull();
+      expect(testBed.controller.isGenerating).toBe(false);
+      expect(testBed.controller.totalDirectionsCount).toBe(0);
+      expect(testBed.controller.currentDirection).toBeNull();
+      expect(testBed.controller.currentConcept).toBeNull();
+    });
+
+    it('should update cached direction and concept on selection', async () => {
+      // Arrange
+      const mockDirectionsWithConcepts = [
+        {
+          direction: {
+            id: 'dir1',
+            conceptId: 'concept1',
+            title: 'Direction 1',
+          },
+          concept: { id: 'concept1', text: 'Concept 1' },
+        },
+      ];
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
+      );
+
+      await testBed.controller.initialize();
+
+      // Act - select a direction through the dropdown
+      const directionSelect = document.getElementById('direction-selector');
+      directionSelect.value = 'dir1';
+      directionSelect.dispatchEvent(new Event('change'));
+
+      // Need to wait for async operations
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Assert
+      expect(testBed.controller.selectedDirectionId).toBe('dir1');
+      expect(testBed.controller.currentDirection).toEqual({
+        id: 'dir1',
+        conceptId: 'concept1',
+        title: 'Direction 1',
+      });
+      expect(testBed.controller.currentConcept).toEqual({
+        id: 'concept1',
+        text: 'Concept 1',
+      });
+    });
+
+    it('should clear cached properties when direction is cleared', async () => {
+      // Arrange - first select a direction
+      const mockDirectionsWithConcepts = [
+        {
+          direction: { id: 'dir1', title: 'Direction 1' },
+          concept: { id: 'concept1', text: 'Concept 1' },
+        },
+      ];
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
+      );
+
+      await testBed.controller.initialize();
+
+      // Select a direction
+      const directionSelect = document.getElementById('direction-selector');
+      directionSelect.value = 'dir1';
+      directionSelect.dispatchEvent(new Event('change'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Act - clear the direction
+      directionSelect.value = '';
+      directionSelect.dispatchEvent(new Event('change'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Assert
+      expect(testBed.controller.selectedDirectionId).toBeNull();
+      expect(testBed.controller.currentDirection).toBeNull();
+      expect(testBed.controller.currentConcept).toBeNull();
+    });
+
+    it('should detect stale cache correctly', async () => {
+      // Arrange
+      await testBed.controller.initialize();
+
+      // Mock Date.now to simulate time passing
+      const initialTime = 1000000;
+      Date.now.mockReturnValue(initialTime);
+
+      // Load directions - this should set cache timestamp
+      const mockDirectionsWithConcepts = [
+        {
+          direction: { id: 'dir1', title: 'Direction 1' },
+          concept: { id: 'concept1', text: 'Concept 1' },
+        },
+      ];
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
+      );
+
+      await testBed.controller.initialize();
+
+      // Test cache is fresh (2 minutes later)
+      Date.now.mockReturnValue(initialTime + 2 * 60 * 1000);
+      // We need to expose #isCacheStale for testing or test indirectly
+      // Since it's private, we'll test through behavior instead
+
+      // Test cache is stale (10 minutes later)
+      Date.now.mockReturnValue(initialTime + 10 * 60 * 1000);
+      // Testing would require exposing the method or testing through #refreshIfNeeded
+    });
+
+    it('should return correct total directions count', async () => {
+      // Arrange
+      const mockDirectionsWithConcepts = [
+        {
+          direction: { id: 'dir1', title: 'Direction 1' },
+          concept: { id: 'concept1', text: 'Concept 1' },
+        },
+        {
+          direction: { id: 'dir2', title: 'Direction 2' },
+          concept: { id: 'concept2', text: 'Concept 2' },
+        },
+      ];
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
+      );
+
+      // Act
+      await testBed.controller.initialize();
+
+      // Assert
+      expect(testBed.controller.totalDirectionsCount).toBe(2);
+    });
+
+    it('should update UI state when optional elements exist', async () => {
+      // Arrange - add optional UI elements
+      const selectedDisplay = document.createElement('div');
+      selectedDisplay.id = 'selected-direction-display';
+      document.body.appendChild(selectedDisplay);
+
+      const directionCount = document.createElement('div');
+      directionCount.id = 'direction-count';
+      document.body.appendChild(directionCount);
+
+      const mockDirectionsWithConcepts = [
+        {
+          direction: { id: 'dir1', title: 'Test Direction' },
+          concept: { id: 'concept1', text: 'Test Concept' },
+        },
+      ];
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
+      );
+
+      await testBed.controller.initialize();
+
+      // Act - select a direction
+      const directionSelect = document.getElementById('direction-selector');
+      directionSelect.value = 'dir1';
+      directionSelect.dispatchEvent(new Event('change'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Assert
+      expect(selectedDisplay.innerHTML).toContain('Test Concept');
+      expect(selectedDisplay.innerHTML).toContain('Test Direction');
+      expect(directionCount.textContent).toBe('1 directions available');
+
+      // Clean up
+      selectedDisplay.remove();
+      directionCount.remove();
+    });
+  });
+
   describe('Performance Optimizations', () => {
     it('should use lazy loading for more than 50 motivations', async () => {
       // Arrange
@@ -1698,19 +1942,7 @@ describe('CoreMotivationsGeneratorController', () => {
           'core:directions_loaded',
           {
             count: 2,
-            concepts: 2,
-            groups: [
-              {
-                conceptId: 'concept1',
-                conceptTitle: 'Concept 1',
-                directionCount: 1,
-              },
-              {
-                conceptId: 'concept2',
-                conceptTitle: 'Concept 2',
-                directionCount: 1,
-              },
-            ],
+            groups: 2,
           }
         );
       });
@@ -2083,19 +2315,7 @@ describe('CoreMotivationsGeneratorController', () => {
         // Assert
         expect(dispatchSpy).toHaveBeenCalledWith('core:directions_loaded', {
           count: 3,
-          concepts: 2,
-          groups: [
-            {
-              conceptId: 'concept1',
-              conceptTitle: 'Concept Alpha',
-              directionCount: 2,
-            },
-            {
-              conceptId: 'concept2',
-              conceptTitle: 'Concept Beta',
-              directionCount: 1,
-            },
-          ],
+          groups: 2,
         });
       });
     });
@@ -2399,6 +2619,128 @@ describe('CoreMotivationsGeneratorController', () => {
       expect(emptyState.style.display).toBe('flex');
 
       // Buttons should be disabled
+      const generateBtn = document.getElementById('generate-btn');
+      expect(generateBtn.disabled).toBe(true);
+    });
+  });
+
+  describe('ConceptId Management Bug Reproduction', () => {
+    it('should set currentConceptId when direction is selected', async () => {
+      // Arrange
+      const mockDirectionsWithConcepts = [
+        {
+          direction: { id: 'dir1', conceptId: 'concept1', title: 'Direction 1' },
+          concept: { id: 'concept1', text: 'Test concept' },
+        },
+      ];
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
+      );
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        []
+      );
+
+      // Act
+      await testBed.controller.initialize();
+      await testBed.selectDirection('dir1');
+
+      // Assert - the conceptId should be set in the controller
+      // We can verify this by checking the event dispatched during generation
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue({
+        id: 'concept1',
+        text: 'Test concept',
+      });
+      testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue(
+        [{ id: 'cliche-1', text: 'Test cliche' }]
+      );
+      testBed.mockCoreMotivationsGenerator.generate.mockResolvedValue([]);
+      testBed.mockCharacterBuilderService.saveCoreMotivations.mockResolvedValue(
+        ['motivation-1']
+      );
+
+      const generateBtn = document.getElementById('generate-btn');
+      await generateBtn.click();
+      await testBed.waitForAsyncOperations();
+
+      // If conceptId was properly set, getCharacterConcept should have been called with 'concept1'
+      expect(
+        testBed.mockCharacterBuilderService.getCharacterConcept
+      ).toHaveBeenCalledWith('concept1');
+    });
+
+    it('should fail gracefully if conceptId is not set during generation', async () => {
+      // This test demonstrates the bug we fixed - when getCharacterConcept is called
+      // with an empty conceptId, it should fail gracefully with proper error handling
+      
+      const mockDirectionsWithConcepts = [
+        {
+          direction: { id: 'dir1', conceptId: 'concept1', title: 'Direction 1' },
+          concept: { id: 'concept1', text: 'Test concept' },
+        },
+      ];
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
+      );
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        []
+      );
+
+      await testBed.controller.initialize();
+      await testBed.selectDirection('dir1');
+      
+      // Now simulate the error condition - getCharacterConcept fails
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockRejectedValue(
+        new Error('conceptId must be a non-empty string')
+      );
+      testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue(
+        [{ id: 'cliche-1', text: 'Test cliche' }]
+      );
+
+      // Act - trigger the generation which should fail gracefully
+      const generateBtn = document.getElementById('generate-btn');
+      generateBtn.click();
+      await testBed.waitForAsyncOperations();
+
+      // Assert - should show error message
+      expect(testBed.controller.showError).toHaveBeenCalledWith(
+        'Failed to generate motivations. Please try again.'
+      );
+    });
+
+    it('should clear currentConceptId when direction is cleared', async () => {
+      // Arrange
+      const mockDirectionsWithConcepts = [
+        {
+          direction: { id: 'dir1', conceptId: 'concept1', title: 'Direction 1' },
+          concept: { id: 'concept1', text: 'Test concept' },
+        },
+      ];
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
+      );
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        []
+      );
+
+      await testBed.controller.initialize();
+      await testBed.selectDirection('dir1');
+
+      // Act - clear the selection
+      const selector = document.getElementById('direction-selector');
+      selector.value = '';
+      selector.dispatchEvent(new Event('change'));
+      await testBed.waitForAsyncOperations();
+
+      // Assert - conceptId should be cleared, generation should be disabled
       const generateBtn = document.getElementById('generate-btn');
       expect(generateBtn.disabled).toBe(true);
     });

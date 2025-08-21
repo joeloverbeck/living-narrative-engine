@@ -1,0 +1,39 @@
+{
+  "enabled": true,
+  "mode": "development",
+  "fallbackToConsole": true,
+  "logLevel": "INFO",
+  "remote": {
+    "endpoint": "http://localhost:3001/api/debug-log",
+    "batchSize": 100,
+    "flushInterval": 1000,
+    "retryAttempts": 3,
+    "retryDelay": 1000
+  },
+  "categories": {
+    "engine": {
+      "enabled": true,
+      "level": "debug"
+    },
+    "ui": {
+      "enabled": true,
+      "level": "info"
+    },
+    "entities": {
+      "enabled": true,
+      "level": "info"
+    },
+    "actions": {
+      "enabled": true,
+      "level": "debug"
+    },
+    "llm": {
+      "enabled": true,
+      "level": "info"
+    }
+  },
+  "performance": {
+    "slowLogThreshold": 1000,
+    "enableMetrics": true
+  }
+}

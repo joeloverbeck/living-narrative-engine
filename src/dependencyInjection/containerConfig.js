@@ -6,6 +6,7 @@ import { Registrar } from '../utils/registrarHelpers.js';
 
 // --- Import Logger ---
 import ConsoleLogger, { LogLevel } from '../logging/consoleLogger.js';
+import LoggerStrategy from '../logging/loggerStrategy.js';
 
 // --- Import Logger Config Utility ---
 import { loadAndApplyLoggerConfig } from '../configuration/utils/loggerConfigUtils.js';
@@ -42,16 +43,20 @@ export async function configureContainer(container, uiElements) {
   const registrar = new Registrar(container);
   const { outputDiv, inputElement, titleElement, document: doc } = uiElements;
 
-  // --- Bootstrap logger with a default level (e.g., INFO) ---
-  const initialLogLevel = LogLevel.INFO;
-  const appLogger = new ConsoleLogger(initialLogLevel);
+  // --- Bootstrap logger with LoggerStrategy ---
+  // The LoggerStrategy will handle mode detection and logger selection
+  const appLogger = new LoggerStrategy({
+    dependencies: {
+      consoleLogger: new ConsoleLogger(LogLevel.INFO),
+    },
+  });
   registrar.instance(tokens.ILogger, appLogger);
 
-  const logger = /** @type {ConsoleLogger} */ (
+  const logger = /** @type {LoggerStrategy} */ (
     container.resolve(tokens.ILogger)
   );
   logger.debug(
-    `[ContainerConfig] Initial logger registered with level: ${initialLogLevel}. Attempting to load remote logger configuration...`
+    `[ContainerConfig] Initial logger registered with mode: ${logger.getMode()}. Attempting to load remote logger configuration...`
   );
 
   logger.debug(

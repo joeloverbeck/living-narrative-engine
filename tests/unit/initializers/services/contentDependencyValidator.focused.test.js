@@ -150,16 +150,20 @@ describe('ContentDependencyValidator', () => {
     );
   });
 
-  it('logs error when exit target is not spawned', async () => {
+  it('logs error when exit target is not spawned for definitions with instances in current world', async () => {
     const repo = {
       getAllEntityInstanceDefinitions: jest.fn().mockReturnValue([
         { instanceId: 'inst1', definitionId: 'def:exists' },
-        { instanceId: 'target1', definitionId: 'def:exists' },
+        { instanceId: 'target1', definitionId: 'def:target' },
       ]),
       getAllEntityDefinitions: jest.fn().mockReturnValue([
         {
           id: 'def:exists',
           components: { 'core:exits': [{ target: 'target1' }] },
+        },
+        {
+          id: 'def:target',
+          components: {},
         },
       ]),
       getWorld: jest
@@ -175,6 +179,48 @@ describe('ContentDependencyValidator', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       "Content Validation: Exit target 'target1' in definition 'def:exists' is not spawned in world 'testWorld'."
+    );
+  });
+
+  it('does not validate exits for definitions without instances in current world', async () => {
+    const repo = {
+      getAllEntityInstanceDefinitions: jest.fn().mockReturnValue([
+        { instanceId: 'inst1', definitionId: 'def:spawned' },
+        { instanceId: 'target1', definitionId: 'def:target' },
+      ]),
+      getAllEntityDefinitions: jest.fn().mockReturnValue([
+        {
+          id: 'def:spawned',
+          components: {},
+        },
+        {
+          id: 'def:not_spawned',
+          components: { 'core:exits': [{ target: 'target1' }] },
+        },
+        {
+          id: 'def:target',
+          components: {},
+        },
+      ]),
+      getWorld: jest
+        .fn()
+        .mockReturnValue({ instances: [{ instanceId: 'inst1' }] }),
+    };
+
+    const validator = new ContentDependencyValidator({
+      logger,
+      gameDataRepository: repo,
+    });
+    await validator.validate('testWorld');
+
+    // Should not log any errors about exits for def:not_spawned since it has no instances in current world
+    expect(logger.error).not.toHaveBeenCalledWith(
+      expect.stringContaining("'def:not_spawned'")
+    );
+    
+    // Should complete validation successfully
+    expect(logger.debug).toHaveBeenCalledWith(
+      'ContentDependencyValidator: Content dependency validation complete.'
     );
   });
 

@@ -56,13 +56,10 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Behavior', () =
         id: 'concept-1',
         concept: 'A brave warrior',
       }),
-      getCharacterConceptById: jest.fn().mockResolvedValue({
-        id: 'concept-1',
-        concept: 'A brave warrior',
-      }),
       generateThematicDirections: jest.fn().mockResolvedValue([]),
       getThematicDirections: jest.fn().mockResolvedValue([]),
       getThematicDirectionsByConceptId: jest.fn().mockResolvedValue([]),
+      getAllThematicDirectionsWithConcepts: jest.fn().mockResolvedValue([]),
       hasClichesForDirection: jest.fn().mockResolvedValue(false),
       getCoreMotivationsByDirectionId: jest.fn().mockResolvedValue([]),
       getClichesByDirectionId: jest
@@ -158,7 +155,7 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Behavior', () =
       expect(dispatchSpy).toHaveBeenCalledWith(
         'core:core_motivations_ui_initialized',
         expect.objectContaining({
-          conceptId: null, // No longer loading a single concept
+          conceptId: '', // Controller initializes as empty string for event validation
           eligibleDirectionsCount: expect.any(Number),
         })
       );
@@ -171,6 +168,69 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Behavior', () =
 
       // The key validation: dispatch was called with proper string event name and payload structure
       // This proves the controller is using the correct event dispatch signature
+
+      dispatchSpy.mockRestore();
+    });
+  });
+
+  describe('Event Definition Validation', () => {
+    it('should have a valid event definition for core:directions_loaded', async () => {
+      // Arrange
+      const mockDirectionsWithConcepts = [
+        {
+          direction: { id: 'dir1', conceptId: 'concept1', title: 'Direction 1' },
+          concept: { id: 'concept1', text: 'Test concept' },
+        },
+      ];
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+
+      // Track actual validation warnings
+      let validationWarnings = [];
+      consoleWarnSpy.mockImplementation((...args) => {
+        validationWarnings.push(args.join(' '));
+      });
+
+      // Act
+      await controller.initialize();
+
+      // Assert - should not have validation warnings about missing event definitions
+      const directionsLoadedWarnings = validationWarnings.filter(warning =>
+        warning.includes("EventDefinition not found for 'core:directions_loaded'")
+      );
+      
+      expect(directionsLoadedWarnings).toHaveLength(0);
+    });
+
+    it('should dispatch core:directions_loaded event with correct payload structure', async () => {
+      // Arrange
+      const mockDirectionsWithConcepts = [
+        {
+          direction: { id: 'dir1', conceptId: 'concept1', title: 'Direction 1' },
+          concept: { id: 'concept1', text: 'Test concept' },
+        },
+        {
+          direction: { id: 'dir2', conceptId: 'concept2', title: 'Direction 2' },
+          concept: { id: 'concept2', text: 'Another concept' },
+        },
+      ];
+      mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockDirectionsWithConcepts
+      );
+      mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+
+      const dispatchSpy = jest.spyOn(safeEventDispatcher, 'dispatch');
+
+      // Act
+      await controller.initialize();
+
+      // Assert - verify the event is dispatched with correct structure
+      expect(dispatchSpy).toHaveBeenCalledWith('core:directions_loaded', {
+        count: 2,
+        groups: 2,
+      });
 
       dispatchSpy.mockRestore();
     });
