@@ -152,10 +152,12 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     const main = document.createElement('main');
     main.id = 'main-content';
 
-    // Direction selector - match production code expectation (div container, not select)
-    const directionSelector = document.createElement('div');
+    // Direction selector - match production code expectation (select element)
+    const directionSelector = document.createElement('select');
     directionSelector.id = 'direction-selector';
-    directionSelector.className = 'direction-selector-container';
+    directionSelector.className = 'cb-select';
+    directionSelector.setAttribute('aria-label', 'Select thematic direction');
+    directionSelector.innerHTML = '<option value="">-- Choose a thematic direction --</option>';
     main.appendChild(directionSelector);
 
     // No directions message
@@ -358,31 +360,34 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
    * @param directionId
    */
   async selectDirection(directionId) {
-    // Create direction element if it doesn't exist
-    let directionElement = document.querySelector(
-      `[data-direction-id="${directionId}"]`
-    );
-    if (!directionElement) {
-      directionElement = document.createElement('div');
-      directionElement.className = 'direction-item';
-      directionElement.dataset.directionId = directionId;
-
-      const title = document.createElement('h3');
-      title.textContent = 'Test Direction';
-      directionElement.appendChild(title);
-
-      const theme = document.createElement('p');
-      theme.textContent = 'Test theme';
-      theme.className = 'direction-theme';
-      directionElement.appendChild(theme);
-
-      document
-        .getElementById('direction-selector')
-        .appendChild(directionElement);
+    // Get the select element
+    const directionSelector = document.getElementById('direction-selector');
+    if (!directionSelector) {
+      throw new Error('Direction selector not found');
     }
 
-    // Simulate click
-    directionElement.click();
+    // Create option if it doesn't exist (for test scenarios)
+    let option = directionSelector.querySelector(`option[value="${directionId}"]`);
+    if (!option) {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = 'Test Concept';
+      
+      option = document.createElement('option');
+      option.value = directionId;
+      option.textContent = 'Test Direction';
+      option.dataset.conceptId = 'concept-1';
+      
+      optgroup.appendChild(option);
+      directionSelector.appendChild(optgroup);
+    }
+
+    // Simulate selection change
+    directionSelector.value = directionId;
+    
+    // Trigger change event that the controller should listen for
+    const changeEvent = new Event('change', { bubbles: true });
+    directionSelector.dispatchEvent(changeEvent);
+    
     await this.waitForAsyncOperations();
   }
 
@@ -513,18 +518,13 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     await this.controller.initialize();
 
     // Now select the direction through the controller's public interface
-    // The direction should now exist in the DOM from initialization
-    const directionElement = document.querySelector(
-      `[data-direction-id="${directionId}"]`
-    );
+    // The direction should now exist in the select element from initialization
+    const directionSelector = document.getElementById('direction-selector');
+    const option = directionSelector?.querySelector(`option[value="${directionId}"]`);
 
-    if (directionElement) {
-      // Click the direction element to trigger the controller's selection logic
-      // This will call #selectDirection which will load the motivations
-      directionElement.click();
-
-      // Wait for async operations to complete
-      await new Promise((resolve) => setTimeout(resolve, 50));
+    if (option || directionSelector) {
+      // Select the direction to trigger the controller's selection logic
+      await this.selectDirection(directionId);
     }
   }
 

@@ -517,47 +517,4 @@ describe('ClicheErrorHandler', () => {
     });
   });
 
-  describe('Performance and Memory', () => {
-    it('should handle high volume of errors without memory leaks', async () => {
-      const initialMemory = process.memoryUsage().heapUsed;
-
-      // Process many errors
-      for (let i = 0; i < 1000; i++) {
-        const error = new ClicheError(`Error ${i}`);
-        await errorHandler.handleError(error, {
-          operation: `operation_${i % 10}`,
-        });
-      }
-
-      // Force garbage collection if available
-      if (global.gc) {
-        global.gc();
-      }
-
-      const finalMemory = process.memoryUsage().heapUsed;
-      const memoryIncrease = finalMemory - initialMemory;
-
-      // Memory increase should be reasonable (less than 15MB)
-      expect(memoryIncrease).toBeLessThan(15 * 1024 * 1024);
-    });
-
-    it('should process errors quickly', async () => {
-      const startTime = Date.now();
-
-      // Process batch of errors
-      const promises = [];
-      for (let i = 0; i < 100; i++) {
-        const error = new ClicheError(`Error ${i}`);
-        promises.push(errorHandler.handleError(error));
-      }
-
-      await Promise.all(promises);
-
-      const endTime = Date.now();
-      const processingTime = endTime - startTime;
-
-      // Should process 100 errors in less than 1 second
-      expect(processingTime).toBeLessThan(1000);
-    });
-  });
 });

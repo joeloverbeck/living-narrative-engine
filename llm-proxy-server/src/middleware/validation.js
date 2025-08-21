@@ -188,6 +188,117 @@ export const handleValidationErrors = (req, res, next) => {
 };
 
 /**
+ * Validation middleware for debug log requests
+ * @returns {Array} Array of validation middleware
+ */
+export const validateDebugLogRequest = () => {
+  return [
+    // Validate that logs is present and is an array
+    body('logs')
+      .exists()
+      .withMessage('logs field is required')
+      .isArray()
+      .withMessage('logs must be an array')
+      .custom((logs) => {
+        if (logs.length === 0) {
+          throw new Error('logs array cannot be empty');
+        }
+        if (logs.length > 1000) {
+          throw new Error('logs array cannot contain more than 1000 entries');
+        }
+        return true;
+      }),
+
+    // Validate each log entry in the array
+    body('logs.*')
+      .isObject()
+      .withMessage('each log entry must be an object'),
+
+    // Validate level field for each log entry
+    body('logs.*.level')
+      .exists()
+      .withMessage('level is required for each log entry')
+      .isString()
+      .withMessage('level must be a string')
+      .isIn(['debug', 'info', 'warn', 'error'])
+      .withMessage('level must be one of: debug, info, warn, error'),
+
+    // Validate message field for each log entry
+    body('logs.*.message')
+      .exists()
+      .withMessage('message is required for each log entry')
+      .isString()
+      .withMessage('message must be a string')
+      .trim()
+      .notEmpty()
+      .withMessage('message cannot be empty')
+      .isLength({ max: 10000 })
+      .withMessage('message cannot exceed 10000 characters'),
+
+    // Validate timestamp field for each log entry
+    body('logs.*.timestamp')
+      .exists()
+      .withMessage('timestamp is required for each log entry')
+      .isString()
+      .withMessage('timestamp must be a string')
+      .isISO8601()
+      .withMessage('timestamp must be a valid ISO 8601 datetime'),
+
+    // Validate optional category field
+    body('logs.*.category')
+      .optional()
+      .isString()
+      .withMessage('category must be a string if provided')
+      .isLength({ min: 1, max: 100 })
+      .withMessage('category must be between 1 and 100 characters'),
+
+    // Validate optional source field
+    body('logs.*.source')
+      .optional()
+      .isString()
+      .withMessage('source must be a string if provided')
+      .isLength({ min: 1, max: 500 })
+      .withMessage('source must be between 1 and 500 characters'),
+
+    // Validate optional sessionId field (UUID v4 format)
+    body('logs.*.sessionId')
+      .optional()
+      .isString()
+      .withMessage('sessionId must be a string if provided')
+      .isUUID(4)
+      .withMessage('sessionId must be a valid UUID v4'),
+
+    // Validate optional metadata field
+    body('logs.*.metadata')
+      .optional()
+      .isObject()
+      .withMessage('metadata must be an object if provided')
+      .custom((metadata) => {
+        // Basic size check to prevent abuse
+        const serialized = JSON.stringify(metadata);
+        if (serialized.length > 50000) {
+          throw new Error('metadata object is too large (max 50KB when serialized)');
+        }
+        return true;
+      }),
+
+    // Validate that no extra fields are present at root level
+    body().custom((value) => {
+      const allowedFields = ['logs'];
+      const providedFields = Object.keys(value);
+      const extraFields = providedFields.filter(
+        (field) => !allowedFields.includes(field)
+      );
+
+      if (extraFields.length > 0) {
+        throw new Error(`Unexpected fields in request body: ${extraFields.join(', ')}`);
+      }
+      return true;
+    }),
+  ];
+};
+
+/**
  * Enhanced IPv6 validation using comprehensive IPv6 utilities
  * These functions replace the previous incomplete regex-based validation
  * with robust ipaddr.js-based validation that handles all IPv6 edge cases

@@ -214,7 +214,7 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       }
 
       // Display directions or show empty message
-      this.#displayDirections();
+      this.#populateDirectionSelector();
     } catch (error) {
       this.logger.error('DEBUG: Failed to load eligible directions:', error);
       throw error;
@@ -222,70 +222,81 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   }
 
   /**
-   * Display eligible directions in the UI
+   * Populate direction selector dropdown with proper HTML structure
    */
-  #displayDirections() {
-    const container = document.getElementById('direction-selector');
+  #populateDirectionSelector() {
+    const selector = document.getElementById('direction-selector');
     const noDirectionsMsg = document.getElementById('no-directions-message');
+    
+    if (!selector) {
+      this.logger.error('Direction selector element not found');
+      return;
+    }
 
     if (this.#eligibleDirections.length === 0) {
-      container.style.display = 'none';
+      selector.style.display = 'none';
       noDirectionsMsg.style.display = 'block';
       return;
     }
 
-    container.style.display = 'block';
+    selector.style.display = 'block';
     noDirectionsMsg.style.display = 'none';
-    container.innerHTML = '';
-
-    // Set accessibility attributes for the direction container
-    container.setAttribute('aria-label', 'Select thematic direction');
-    container.setAttribute('role', 'listbox');
-
-    this.#eligibleDirections.forEach((direction) => {
-      const element = this.#createDirectionElement(direction);
-      container.appendChild(element);
+    
+    // Organize directions by concept for optgroups
+    const organizedData = this.#organizeDirectionsByConcept(this.#eligibleDirections);
+    
+    // Clear existing options (keep default)
+    selector.innerHTML = '<option value="">-- Choose a thematic direction --</option>';
+    
+    // Add optgroups for each concept
+    for (const conceptGroup of organizedData) {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = conceptGroup.conceptTitle;
+      
+      for (const direction of conceptGroup.directions) {
+        const option = document.createElement('option');
+        option.value = direction.id;
+        option.textContent = direction.title;
+        option.dataset.conceptId = conceptGroup.conceptId;
+        optgroup.appendChild(option);
+      }
+      
+      selector.appendChild(optgroup);
+    }
+    
+    // Dispatch event for UI updates
+    this.eventBus.dispatch('core:directions_loaded', {
+      count: organizedData.reduce((sum, group) => sum + group.directions.length, 0),
+      concepts: organizedData.length
     });
   }
 
   /**
-   * Create a direction element
+   * Organize directions by their associated concepts for optgroup display
    *
-   * @param direction
+   * @param {Array} directions - Array of direction objects
+   * @returns {Array} - Array of concept groups with nested directions
    */
-  #createDirectionElement(direction) {
-    const div = document.createElement('div');
-    div.className = 'direction-item';
-    div.dataset.directionId = direction.id;
-
-    // Set accessibility attributes for the direction item
-    div.setAttribute('role', 'option');
-    div.setAttribute(
-      'aria-label',
-      `Select direction: ${direction.title} - ${direction.theme}`
-    );
-    div.setAttribute('tabindex', '0');
-
-    const title = document.createElement('h3');
-    title.textContent = direction.title;
-    div.appendChild(title);
-
-    const theme = document.createElement('p');
-    theme.textContent = direction.theme;
-    theme.className = 'direction-theme';
-    div.appendChild(theme);
-
-    div.addEventListener('click', () => this.#selectDirection(direction.id));
-
-    // Add keyboard support for accessibility
-    div.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        this.#selectDirection(direction.id);
+  #organizeDirectionsByConcept(directions) {
+    const conceptMap = new Map();
+    
+    for (const direction of directions) {
+      // Extract concept info from direction (assuming direction has concept property)
+      const conceptId = direction.concept?.id || 'unknown';
+      const conceptTitle = direction.concept?.text || direction.concept?.concept || 'Unknown Concept';
+      
+      if (!conceptMap.has(conceptId)) {
+        conceptMap.set(conceptId, {
+          conceptId,
+          conceptTitle,
+          directions: []
+        });
       }
-    });
-
-    return div;
+      
+      conceptMap.get(conceptId).directions.push(direction);
+    }
+    
+    return Array.from(conceptMap.values());
   }
 
   /**
@@ -296,12 +307,11 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   async #selectDirection(directionId) {
     assertNonBlankString(directionId, 'Direction ID');
 
-    // Update selection UI
-    document.querySelectorAll('.direction-item').forEach((item) => {
-      const isSelected = item.dataset.directionId === directionId;
-      item.classList.toggle('selected', isSelected);
-      item.setAttribute('aria-selected', isSelected.toString());
-    });
+    // Update selection in the select element
+    const selector = document.getElementById('direction-selector');
+    if (selector) {
+      selector.value = directionId;
+    }
 
     this.#selectedDirectionId = directionId;
 
@@ -1038,6 +1048,15 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       this.#handleSortChange(e.target.value);
     });
 
+    // Direction selector
+    const directionSelect = document.getElementById('direction-selector');
+    directionSelect?.addEventListener('change', (e) => {
+      const directionId = e.target.value;
+      if (directionId) {
+        this.#selectDirection(directionId);
+      }
+    });
+
     // Back button
     const backBtn = document.getElementById('back-btn');
     backBtn?.addEventListener('click', () => {
@@ -1358,6 +1377,28 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
   showError(message) {
     this.logger.error(message);
     this.#announceToScreenReader(`Error: ${message}`);
+  }
+
+  /**
+   * Testing methods - exposed for unit tests only
+   */
+  
+  // Getters for testing
+  get eligibleDirections() {
+    return this.#eligibleDirections;
+  }
+
+  set eligibleDirections(directions) {
+    this.#eligibleDirections = directions;
+  }
+
+  // Method access for testing
+  populateDirectionSelector() {
+    return this.#populateDirectionSelector();
+  }
+
+  organizeDirectionsByConcept(directions) {
+    return this.#organizeDirectionsByConcept(directions);
   }
 }
 
