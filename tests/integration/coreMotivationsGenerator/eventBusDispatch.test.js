@@ -158,7 +158,7 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Behavior', () =
       expect(dispatchSpy).toHaveBeenCalledWith(
         'core:core_motivations_ui_initialized',
         expect.objectContaining({
-          conceptId: expect.any(String),
+          conceptId: null, // No longer loading a single concept
           eligibleDirectionsCount: expect.any(Number),
         })
       );

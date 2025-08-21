@@ -38,6 +38,40 @@
             "description": {
               "type": "string",
               "description": "Human-readable explanation of the action."
+            },
+            "visual": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "description": "Visual styling properties for action buttons",
+                  "properties": {
+                    "backgroundColor": {
+                      "type": "string",
+                      "description": "CSS color for button background",
+                      "pattern": "^(#([0-9A-Fa-f]{3}){1,2}|rgb\\(\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*\\)|rgba\\(\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*[\\d.]+\\s*\\)|[a-zA-Z]+)$"
+                    },
+                    "textColor": {
+                      "type": "string",
+                      "description": "CSS color for button text",
+                      "pattern": "^(#([0-9A-Fa-f]{3}){1,2}|rgb\\(\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*\\)|rgba\\(\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*[\\d.]+\\s*\\)|[a-zA-Z]+)$"
+                    },
+                    "hoverBackgroundColor": {
+                      "type": "string",
+                      "description": "CSS color for button background on hover",
+                      "pattern": "^(#([0-9A-Fa-f]{3}){1,2}|rgb\\(\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*\\)|rgba\\(\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*[\\d.]+\\s*\\)|[a-zA-Z]+)$"
+                    },
+                    "hoverTextColor": {
+                      "type": "string",
+                      "description": "CSS color for button text on hover",
+                      "pattern": "^(#([0-9A-Fa-f]{3}){1,2}|rgb\\(\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*\\)|rgba\\(\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*[\\d.]+\\s*\\)|[a-zA-Z]+)$"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
             }
           },
           "required": ["index", "actionId", "commandString", "description"],

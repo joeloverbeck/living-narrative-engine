@@ -7,9 +7,14 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
+import { parseFileSize } from '../config/debugLogConfigValidator.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
+ */
+
+/**
+ * @typedef {import('../config/appConfig.js').AppConfigService} AppConfigService
  */
 
 /**
@@ -60,7 +65,7 @@ const CATEGORY_PATTERNS = {
 };
 
 /**
- * Default configuration values
+ * Default configuration values (fallback if AppConfigService not provided)
  */
 const DEFAULT_CONFIG = {
   baseLogPath: 'logs',
@@ -95,19 +100,59 @@ class LogStorageService {
   /**
    * Creates a new LogStorageService instance
    * @param {ILogger} logger - Logger instance for service-side logging
-   * @param {Partial<LogStorageConfig>} [config] - Storage configuration options
+   * @param {AppConfigService|Partial<LogStorageConfig>} [configOrAppConfig] - AppConfigService instance or legacy config object
    */
-  constructor(logger, config = {}) {
+  constructor(logger, configOrAppConfig = {}) {
     this.#logger = ensureValidLogger(logger, 'LogStorageService');
-    this.#config = { ...DEFAULT_CONFIG, ...config };
     this.#writeBuffer = new Map();
     this.#flushTimer = null;
     this.#isFlushingBuffer = false;
     this.#createdDirectories = new Set();
 
-    this.#logger.debug('LogStorageService: Instance created', {
-      config: this.#config,
-    });
+    // Determine if we received AppConfigService or legacy config
+    if (
+      configOrAppConfig &&
+      typeof configOrAppConfig.getDebugLoggingConfig === 'function'
+    ) {
+      // Using AppConfigService
+      const debugConfig = configOrAppConfig.getDebugLoggingConfig();
+
+      // Parse max file size if provided as string
+      let maxFileSizeMB = DEFAULT_CONFIG.maxFileSizeMB;
+      if (debugConfig.storage && debugConfig.storage.maxFileSize) {
+        const sizeResult = parseFileSize(debugConfig.storage.maxFileSize);
+        if (sizeResult.valid) {
+          maxFileSizeMB = Math.floor(sizeResult.value / (1024 * 1024)); // Convert bytes to MB
+        }
+      }
+
+      this.#config = {
+        baseLogPath: debugConfig.storage?.path || DEFAULT_CONFIG.baseLogPath,
+        retentionDays:
+          debugConfig.storage?.retentionDays || DEFAULT_CONFIG.retentionDays,
+        maxFileSizeMB: maxFileSizeMB,
+        writeBufferSize:
+          debugConfig.performance?.writeBufferSize ||
+          DEFAULT_CONFIG.writeBufferSize,
+        flushIntervalMs:
+          debugConfig.performance?.flushInterval ||
+          DEFAULT_CONFIG.flushIntervalMs,
+      };
+
+      this.#logger.debug(
+        'LogStorageService: Initialized with AppConfigService',
+        {
+          config: this.#config,
+          debugLoggingEnabled: configOrAppConfig.isDebugLoggingEnabled(),
+        }
+      );
+    } else {
+      // Legacy configuration object
+      this.#config = { ...DEFAULT_CONFIG, ...configOrAppConfig };
+      this.#logger.debug('LogStorageService: Initialized with legacy config', {
+        config: this.#config,
+      });
+    }
 
     // Start periodic flush timer
     this.#startFlushTimer();

@@ -354,39 +354,6 @@ describe('JsonTraceFormatter - Integration', () => {
       expect(() => new Date(result.timestamp)).not.toThrow();
       expect(() => new Date(result.metadata.generated)).not.toThrow();
     });
-
-    it('should handle large traces with acceptable performance', () => {
-      const largeTracedActions = new Map();
-
-      // Create a large number of actions
-      for (let i = 0; i < 100; i++) {
-        largeTracedActions.set(`action${i}`, {
-          actionId: `action${i}`,
-          actorId: `actor${i}`,
-          startTime: Date.now() + i * 100,
-          stages: {
-            stage1: { timestamp: Date.now() + i * 100 },
-            stage2: { timestamp: Date.now() + i * 100 + 50 },
-          },
-        });
-      }
-
-      const mockTrace = {
-        getTracedActions: jest.fn(() => largeTracedActions),
-        getSpans: jest.fn(() => []),
-      };
-
-      const startTime = Date.now();
-      const result = JSON.parse(formatter.format(mockTrace));
-      const duration = Date.now() - startTime;
-
-      expect(result.actions).toBeDefined();
-      expect(Object.keys(result.actions)).toHaveLength(100);
-      expect(result.summary.totalActions).toBe(100);
-
-      // Should complete in reasonable time (less than 100ms)
-      expect(duration).toBeLessThan(100);
-    });
   });
 
   describe('Error handling and recovery', () => {

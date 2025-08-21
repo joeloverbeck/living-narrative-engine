@@ -206,9 +206,74 @@ export class TestEnvironmentManager {
 
   /**
    * Completely cleans environment (for isolated tests)
+   * @param {string[]} preserveKeys - Optional array of environment variable keys to preserve
    */
-  cleanEnvironment() {
-    process.env = {};
+  cleanEnvironment(preserveKeys = []) {
+    const preserved = {};
+    for (const key of preserveKeys) {
+      if (process.env[key] !== undefined) {
+        preserved[key] = process.env[key];
+      }
+    }
+    process.env = preserved;
+  }
+}
+
+/**
+ * Helper for managing LogStorageService instances in tests
+ */
+export class TestLogStorageManager {
+  /**
+   *
+   */
+  constructor() {
+    this.services = [];
+  }
+
+  /**
+   * Creates and tracks a LogStorageService instance
+   * @param {object} logger - Logger instance
+   * @param {object} configOrAppConfig - AppConfigService or config object
+   * @returns {object} The created LogStorageService instance
+   */
+  createService(logger, configOrAppConfig) {
+    // Import dynamically to avoid circular dependencies
+    const {
+      default: LogStorageService,
+    } = require('../../src/services/logStorageService.js');
+    const service = new LogStorageService(logger, configOrAppConfig);
+    this.services.push(service);
+    return service;
+  }
+
+  /**
+   * Tracks an existing LogStorageService instance
+   * @param {object} service - LogStorageService instance to track
+   */
+  trackService(service) {
+    if (service && typeof service.shutdown === 'function') {
+      this.services.push(service);
+    }
+  }
+
+  /**
+   * Shuts down all tracked services
+   * @returns {Promise<void>}
+   */
+  async cleanupAll() {
+    const shutdownPromises = this.services.map(async (service) => {
+      if (service && typeof service.shutdown === 'function') {
+        try {
+          await service.shutdown();
+        } catch (error) {
+          // Ignore cleanup errors
+          console.error('Error shutting down LogStorageService:', error);
+        }
+      }
+    });
+
+    await Promise.all(shutdownPromises);
+    this.services = [];
   }
 }
 

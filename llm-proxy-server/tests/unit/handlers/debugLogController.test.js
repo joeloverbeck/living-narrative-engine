@@ -18,13 +18,6 @@ jest.mock('../../../src/utils/loggerUtils.js', () => ({
   ),
 }));
 
-jest.mock('../../../src/services/logStorageService.js', () => {
-  return jest.fn().mockImplementation(() => ({
-    writeLogs: jest.fn(),
-    shutdown: jest.fn(),
-  }));
-});
-
 // Test utilities
 const createLogger = () => ({
   debug: jest.fn(),
@@ -174,15 +167,18 @@ describe('DebugLogController', () => {
     });
 
     test('should handle processing errors gracefully', async () => {
-      // Mock logger to throw an error during processing
+      // Mock logger to throw an error only during log processing, not during construction
       const faultyLogger = {
         ...createLogger(),
-        info: jest.fn().mockImplementation(() => {
-          throw new Error('Logger failure');
-        }),
+        info: jest.fn(), // Normal info logging for constructor
       };
 
       const faultyController = new DebugLogController(faultyLogger);
+
+      // Now mock info to throw error after construction
+      faultyLogger.info.mockImplementation(() => {
+        throw new Error('Logger failure');
+      });
       const req = createMockRequest({
         logs: [validLogEntry],
       });
@@ -367,7 +363,7 @@ describe('DebugLogController', () => {
         logger,
         mockStorageService
       );
-      jest.clearAllMocks();
+      // Note: Don't clear all mocks here as it clears constructor call history
     });
 
     test('should initialize with storage service', () => {

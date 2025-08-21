@@ -1,58 +1,70 @@
-SystemLogicInterpreter: 🔧 [Rule 'enable_input_on_player_turn' - Action 1/2] Using operation interpreter for DISPATCH_EVENT
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "DISPATCH_EVENT"…
-consoleLogger.js:187 DispatchEventHandler: Attempting to dispatch event "core:enable_input" with resolved payload... {payload: {…}}
-consoleLogger.js:187 VED: Validating payload for event 'core:enable_input' against schema 'core:enable_input#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:enable_input'.
-consoleLogger.js:187 VED: Dispatching event 'core:enable_input' via EventBus... {}
-consoleLogger.js:187 [InputStateController] Received 'core:enable_input' without valid 'placeholder' string in payload, using default placeholder: "Enter speech (optional)..." {receivedEvent: {…}}
-consoleLogger.js:187 [InputStateController] Input placeholder set to: "Enter speech (optional)..."
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:enable_input {payload: {…}, timestamp: 1755713995051, isAsync: true}
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:enable_input
-consoleLogger.js:187 VED: Event 'core:enable_input' dispatch successful.
-consoleLogger.js:187 DispatchEventHandler: Event "core:enable_input" dispatched (Validated).
-consoleLogger.js:187 SystemLogicInterpreter: ✅ [Rule 'enable_input_on_player_turn' - Action 1/2] Finished executing operation of type: DISPATCH_EVENT (1ms)
+SystemLogicInterpreter: ✅ [Rule 'enable_input_on_player_turn' - Action 1/2] Finished executing operation of type: DISPATCH_EVENT (2ms)
 consoleLogger.js:187 SystemLogicInterpreter: 🎯 [ActionSequence] [Rule 'enable_input_on_player_turn' - Action 2/2] Starting action: DISPATCH_EVENT
 consoleLogger.js:187 SystemLogicInterpreter: ⚡ [Rule 'enable_input_on_player_turn' - Action 2/2] About to execute operation of type: DISPATCH_EVENT
 consoleLogger.js:187 SystemLogicInterpreter: 🔧 [Rule 'enable_input_on_player_turn' - Action 2/2] Using operation interpreter for DISPATCH_EVENT
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.entityId} to: p_erotica:iker_aguirre_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.availableActions} to: [{"index":1,"actionId":"core:follow","commandString":"follow Amaia Castillo","params":{"targetIds":{"primary":["p_erotica:amaia_castillo_instance"]},"isMultiTarget":true,"targetId":"p_erotica:amaia_castillo_instance"},"description":"Commands your character to follow the specified target, becoming their companion and moving with them."},{"index":2,"actionId":"core:follow","commandString":"follow Jon Ureña","params":{"targetIds":{"primary":["p_erotica:jon_urena_instance"]},"isMultiTarget":true,"targetId":"p_erotica:jon_urena_instance"},"description":"Commands your character to follow the specified target, becoming their companion and moving with them."},{"index":3,"actionId":"core:go","commandString":"go to The Gilded Bean","params":{"targetIds":{"primary":["p_erotica:coffee_shop_instance"]},"isMultiTarget":true,"targetId":"p_erotica:coffee_shop_instance"},"description":"Moves your character to the specified location, if the way is clear."},{"index":4,"actionId":"core:wait","commandString":"wait","params":{"targetId":null},"description":"Wait for a moment, doing nothing."},{"index":5,"actionId":"positioning:get_close","commandString":"get close to Amaia Castillo","params":{"targetIds":{"primary":["p_erotica:amaia_castillo_instance"]},"isMultiTarget":true,"targetId":"p_erotica:amaia_castillo_instance"},"description":"Move closer to the target, entering their personal space."},{"index":6,"actionId":"positioning:get_close","commandString":"get close to Jon Ureña","params":{"targetIds":{"primary":["p_erotica:jon_urena_instance"]},"isMultiTarget":true,"targetId":"p_erotica:jon_urena_instance"},"description":"Move closer to the target, entering their personal space."},{"index":7,"actionId":"positioning:kneel_before","commandString":"kneel before Amaia Castillo","params":{"targetIds":{"primary":["p_erotica:amaia_castillo_instance"]},"isMultiTarget":true,"targetId":"p_erotica:amaia_castillo_instance"},"description":"Kneel before another actor as a sign of respect, submission, or reverence."},{"index":8,"actionId":"positioning:kneel_before","commandString":"kneel before Jon Ureña","params":{"targetIds":{"primary":["p_erotica:jon_urena_instance"]},"isMultiTarget":true,"targetId":"p_erotica:jon_urena_instance"},"description":"Kneel before another actor as a sign of respect, submission, or reverence."},{"index":9,"actionId":"violence:slap","commandString":"slap Amaia Castillo","params":{"targetIds":{"primary":["p_erotica:amaia_castillo_instance"]},"isMultiTarget":true,"targetId":"p_erotica:amaia_castillo_instance"},"description":"Slap someone across the face"},{"index":10,"actionId":"violence:slap","commandString":"slap Jon Ureña","params":{"targetIds":{"primary":["p_erotica:jon_urena_instance"]},"isMultiTarget":true,"targetId":"p_erotica:jon_urena_instance"},"description":"Slap someone across the face"},{"index":11,"actionId":"violence:sucker_punch","commandString":"sucker-punch Amaia Castillo","params":{"targetIds":{"primary":["p_erotica:amaia_castillo_instance"]},"isMultiTarget":true,"targetId":"p_erotica:amaia_castillo_instance"},"description":"Throw an unexpected punch at someone when they're not looking"},{"index":12,"actionId":"violence:sucker_punch","commandString":"sucker-punch Jon Ureña","params":{"targetIds":{"primary":["p_erotica:jon_urena_instance"]},"isMultiTarget":true,"targetId":"p_erotica:jon_urena_instance"},"description":"Throw an unexpected punch at someone when they're not looking"},{"index":13,"actionId":"clothing:remove_clothing","commandString":"remove fitted boxer briefs","params":{"targetIds":{"primary":["0e94dccf-602e-45b3-9665-fe342cb6bd67"]},"isMultiTarget":true,"targetId":"0e94dccf-602e-45b3-9665-fe342cb6bd67"},"description":"Remove a piece of your topmost clothing"},{"index":14,"actionId":"clothing:remove_clothing","commandString":"remove sneakers","params":{"targetIds":{"primary":["79e5c205-8cce-4d78-96df-ed0e280175e1"]},"isMultiTarget":true,"targetId":"79e5c205-8cce-4d78-96df-ed0e280175e1"},"description":"Remove a piece of your topmost clothing"},{"index":15,"actionId":"clothing:remove_clothing","commandString":"remove trucker jacket","params":{"targetIds":{"primary":["f54189da-121a-431d-a9cd-4365056d2720"]},"isMultiTarget":true,"targetId":"f54189da-121a-431d-a9cd-4365056d2720"},"description":"Remove a piece of your topmost clothing"},{"index":16,"actionId":"clothing:remove_clothing","commandString":"remove slim-tapered chinos","params":{"targetIds":{"primary":["3ae50bf5-8a69-4dce-9004-3fbfbf20d33b"]},"isMultiTarget":true,"targetId":"3ae50bf5-8a69-4dce-9004-3fbfbf20d33b"},"description":"Remove a piece of your topmost clothing"}]
+consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.entityId} to: isekai:hero_instance
+consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.availableActions} to: [{"index":1,"actionId":"core:follow","commandString":"follow Ninja Ninjason","params":{"targetIds":{"primary":["isekai:ninja_instance"]},"isMultiTarget":true,"targetId":"isekai:ninja_instance"},"description":"Commands your character to follow the specified target, becoming their companion and moving with them.","visual":{"backgroundColor":"#546e7a","textColor":"#ffffff","hoverBackgroundColor":"#455a64","hoverTextColor":"#ffffff"}},{"index":2,"actionId":"core:go","commandString":"go to Isekai Town","params":{"targetIds":{"primary":["isekai:town_instance"]},"isMultiTarget":true,"targetId":"isekai:town_instance"},"description":"Moves your character to the specified location, if the way is clear.","visual":{"backgroundColor":"#546e7a","textColor":"#ffffff","hoverBackgroundColor":"#455a64","hoverTextColor":"#ffffff"}},{"index":3,"actionId":"core:wait","commandString":"wait","params":{"targetId":null},"description":"Wait for a moment, doing nothing.","visual":{"backgroundColor":"#546e7a","textColor":"#ffffff","hoverBackgroundColor":"#455a64","hoverTextColor":"#ffffff"}},{"index":4,"actionId":"positioning:get_close","commandString":"get close to Ninja Ninjason","params":{"targetIds":{"primary":["isekai:ninja_instance"]},"isMultiTarget":true,"targetId":"isekai:ninja_instance"},"description":"Move closer to the target, entering their personal space.","visual":{"backgroundColor":"#00796b","textColor":"#ffffff","hoverBackgroundColor":"#00695c","hoverTextColor":"#ffffff"}},{"index":5,"actionId":"positioning:kneel_before","commandString":"kneel before Ninja Ninjason","params":{"targetIds":{"primary":["isekai:ninja_instance"]},"isMultiTarget":true,"targetId":"isekai:ninja_instance"},"description":"Kneel before another actor as a sign of respect, submission, or reverence.","visual":{"backgroundColor":"#00796b","textColor":"#ffffff","hoverBackgroundColor":"#00695c","hoverTextColor":"#ffffff"}},{"index":6,"actionId":"violence:sucker_punch","commandString":"sucker-punch Ninja Ninjason","params":{"targetIds":{"primary":["isekai:ninja_instance"]},"isMultiTarget":true,"targetId":"isekai:ninja_instance"},"description":"Throw an unexpected punch at someone when they're not looking","visual":{"backgroundColor":"#cc0000","textColor":"#ffffff","hoverBackgroundColor":"#990000","hoverTextColor":"#ffcccc"}},{"index":7,"actionId":"violence:slap","commandString":"slap Ninja Ninjason","params":{"targetIds":{"primary":["isekai:ninja_instance"]},"isMultiTarget":true,"targetId":"isekai:ninja_instance"},"description":"Slap someone across the face","visual":{"backgroundColor":"#cc0000","textColor":"#ffffff","hoverBackgroundColor":"#990000","hoverTextColor":"#ffcccc"}}]
 consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "DISPATCH_EVENT"…
 consoleLogger.js:187 DispatchEventHandler: Attempting to dispatch event "core:update_available_actions" with resolved payload... {payload: {…}}
 consoleLogger.js:187 VED: Validating payload for event 'core:update_available_actions' against schema 'core:update_available_actions#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:update_available_actions'.
-consoleLogger.js:187 VED: Dispatching event 'core:update_available_actions' via EventBus... {actorId: 'p_erotica:iker_aguirre_instance', actions: Array(16)}
-consoleLogger.js:187 [_ActionButtonsRenderer] Received event object for 'core:update_available_actions'. {eventObject: {…}}
-consoleLogger.js:151 [ActionButtonsRenderer] No actions have defined visual properties in this update {total: 16, withNullVisual: 0, missingVisual: 16}
-consoleLogger.js:187 [_ActionButtonsRenderer] Actions received for actor ID: p_erotica:iker_aguirre_instance
-consoleLogger.js:187 [_ActionButtonsRenderer] refreshList() called, invoking renderList().
-consoleLogger.js:187 [_ActionButtonsRenderer] renderList() called with grouping support.
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] Event received: core:update_available_actions {payload: {…}, timestamp: 1755713995052, isAsync: true}
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [SystemLogicInterpreter] No rules found for event type: core:update_available_actions
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Added DOM listener for 'click' on element. {elementPath: '... > main#center-pane > div#actions-widget > div#…buttons > div.action-group > button.action-button'}
-consoleLogger.js:187 [_ActionButtonsRenderer] Rendered 16 action buttons. Selected action: none.
-consoleLogger.js:187 VED: Event 'core:update_available_actions' dispatch successful.
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:update_available_actions'. Dispatch SKIPPED. Errors: [/actions/0]: must NOT have additional properties; [/actions/1]: must NOT have additional properties; [/actions/2]: must NOT have additional properties; [/actions/3]: must NOT have additional properties; [/actions/4]: must NOT have additional properties; [/actions/5]: must NOT have additional properties; [/actions/6]: must NOT have additional properties {payload: {…}, errors: Array(7)}errors: (7) [{…}, {…}, {…}, {…}, {…}, {…}, {…}]payload: {actorId: 'isekai:hero_instance', actions: Array(7)}[[Prototype]]: Object
+error @ consoleLogger.js:175
+validatePayload_fn @ validatedEventDispatcher.js:150
+dispatch @ validatedEventDispatcher.js:225
+dispatchViaValidatedDispatcher_fn @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:94
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:473
+processRule_fn @ systemLogicInterpreter.js:431
+handleEvent_fn @ systemLogicInterpreter.js:334
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:198
+dispatch @ validatedEventDispatcher.js:228
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+prompt @ eventBusPromptAdapter.js:110
+prompt @ promptCoordinator.js:106
+delegate @ humanDecisionProvider.js:38
+choose @ delegatingDecisionProvider.js:54
+decide @ abstractDecisionProvider.js:74
+decideAction @ genericTurnStrategy.js:47
+await in decideAction
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183
+await in finalizeGameStart_fn
+finalizeNewGameSuccess @ gameSessionManager.js:204
+finalizeInitializationSuccess_fn @ gameEngine.js:285
+startNewGame @ gameEngine.js:321
+await in startNewGame
+startGameStage @ engineStages.js:87
+beginGame @ main.js:254
+(anonymous) @ game.html:331
+Promise.then
+(anonymous) @ game.html:328Understand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:update_available_actions' due to validation failure (see error above).
 consoleLogger.js:187 DispatchEventHandler: Event "core:update_available_actions" dispatched (Validated).
-consoleLogger.js:187 SystemLogicInterpreter: ✅ [Rule 'enable_input_on_player_turn' - Action 2/2] Finished executing operation of type: DISPATCH_EVENT (2ms)
-consoleLogger.js:187 SystemLogicInterpreter: 🏁 [ActionSequence] Completed sequence: Rule 'enable_input_on_player_turn' (3ms total)
-consoleLogger.js:187 SystemLogicInterpreter: 🎉 [SystemLogicInterpreter] _executeActions: Action sequence completed for Rule 'enable_input_on_player_turn' (3ms)
-consoleLogger.js:187 SystemLogicInterpreter: 🎉 [SystemLogicInterpreter] Rule enable_input_on_player_turn: Action sequence completed (3ms)
-consoleLogger.js:187 SystemLogicInterpreter: ✅ [SystemLogicInterpreter] Rule enable_input_on_player_turn completed successfully
-consoleLogger.js:187 SystemLogicInterpreter: 🏁 [SystemLogicInterpreter] Finished processing event: core:player_turn_prompt (4ms total)
-consoleLogger.js:187 VED: Event 'core:player_turn_prompt' dispatch successful.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:player_turn_prompt'.
-consoleLogger.js:187 VED: Delegating subscription for event "core:player_turn_submitted" to EventBus.
+consoleLogger.js:187 SystemLogicInterpreter: ✅ [Rule 'enable_input_on_player_turn' - Action 2/2] Finished executing operation of type: DISPATCH_EVENT (1ms)
+consoleLogger.js:187 SystemLogicInterpreter: 🏁 [ActionSequence] Completed sequence: Rule 'enable_input_on_player_turn' (4ms total)
+consoleLogger.js:187 SystemLogicInterpreter: 🎉 [SystemLogicInterpreter] _executeActions: Action sequence completed for Rule 'enable_input_on_player_turn' (5ms)

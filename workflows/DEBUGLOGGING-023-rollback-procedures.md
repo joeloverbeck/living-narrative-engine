@@ -309,6 +309,7 @@ const VALIDATION_CHECKLIST = {
    ```
 
 6. **Create Manual Rollback Interface**
+
    ```javascript
    // CLI interface for manual rollbacks
    export class ManualRollbackInterface {

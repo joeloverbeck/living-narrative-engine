@@ -50,6 +50,86 @@ describe('Schema – core:update_available_actions payload', () => {
     expect(ok).toBe(true);
   });
 
+  // ─────────────────────── VISUAL PROPERTY SUPPORT ───────────────────────
+  test('payload with visual properties validates', () => {
+    const payload = {
+      actorId: 'core:player_42',
+      actions: [
+        {
+          index: 1,
+          actionId: 'core:wait',
+          commandString: 'wait',
+          params: {},
+          description: 'Skip your turn.',
+          visual: {
+            backgroundColor: '#546e7a',
+            textColor: '#ffffff',
+            hoverBackgroundColor: '#455a64',
+            hoverTextColor: '#ffffff',
+          },
+        },
+        {
+          index: 2,
+          actionId: 'violence:slap',
+          commandString: 'slap target',
+          params: { targetId: 'core:npc_1' },
+          description: 'Slap someone across the face',
+          visual: {
+            backgroundColor: '#cc0000',
+            textColor: '#ffffff',
+            hoverBackgroundColor: '#990000',
+            hoverTextColor: '#ffcccc',
+          },
+        },
+      ],
+    };
+    const ok = validate(payload);
+    if (!ok) console.error(validate.errors);
+    expect(ok).toBe(true);
+  });
+
+  test('payload with null visual property validates', () => {
+    const payload = {
+      actorId: 'core:player_42',
+      actions: [
+        {
+          index: 1,
+          actionId: 'core:wait',
+          commandString: 'wait',
+          params: {},
+          description: 'Skip your turn.',
+          visual: null,
+        },
+      ],
+    };
+    const ok = validate(payload);
+    if (!ok) console.error(validate.errors);
+    expect(ok).toBe(true);
+  });
+
+  test('payload with partial visual properties validates', () => {
+    const payload = {
+      actorId: 'core:player_42',
+      actions: [
+        {
+          index: 1,
+          actionId: 'core:wait',
+          commandString: 'wait',
+          params: {},
+          description: 'Skip your turn.',
+          visual: {
+            backgroundColor: '#546e7a',
+            textColor: '#ffffff',
+            // No hover colors - should still be valid
+          },
+        },
+      ],
+    };
+    const ok = validate(payload);
+    if (!ok) console.error(validate.errors);
+    expect(ok).toBe(true);
+  });
+
   // ─────────────────────── GUARDED FAILURES ───────────────────────
   test.each([
     [

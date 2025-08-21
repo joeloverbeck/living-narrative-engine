@@ -101,6 +101,7 @@ class PromptCoordinator extends IPromptCoordinator {
       commandString: c.commandString,
       params: c.params,
       description: c.description,
+      visual: c.visual,
     }));
     await this.#promptOutputPort.prompt(actor.id, actionsForPrompt);
 

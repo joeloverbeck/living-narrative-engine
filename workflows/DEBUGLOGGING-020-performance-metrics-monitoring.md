@@ -178,6 +178,7 @@ const THRESHOLDS = {
    ```
 
 6. **Performance Reporting**
+
    ```javascript
    class PerformanceReporter {
      constructor(monitor, config) {
