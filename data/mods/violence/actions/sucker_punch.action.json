@@ -12,9 +12,9 @@
   },
   "template": "sucker-punch {target}",
   "visual": {
-    "backgroundColor": "#cc0000",
+    "backgroundColor": "#8b0000",
     "textColor": "#ffffff",
-    "hoverBackgroundColor": "#990000",
-    "hoverTextColor": "#ffcccc"
+    "hoverBackgroundColor": "#b71c1c",
+    "hoverTextColor": "#ffebee"
   }
 }

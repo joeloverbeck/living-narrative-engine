@@ -2,6 +2,7 @@
   "$schema": "../../../schemas/anatomy-formatting.schema.json",
   "id": "default",
   "descriptionOrder": [
+    "height",
     "build",
     "body_composition",
     "body_hair",

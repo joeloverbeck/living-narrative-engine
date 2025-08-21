@@ -48,5 +48,11 @@
       "failure_message": "The recipient must be conscious to receive items."
     }
   ],
-  "template": "give {item} to {recipient}{note:with {note}|}"
+  "template": "give {item} to {recipient}{note:with {note}|}",
+  "visual": {
+    "backgroundColor": "#455a64",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#37474f",
+    "hoverTextColor": "#ffffff"
+  }
 }

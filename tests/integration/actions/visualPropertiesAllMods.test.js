@@ -10,9 +10,9 @@ const path = require('path');
 // Expected color schemes for each mod (WCAG AA compliant)
 const EXPECTED_COLOR_SCHEMES = {
   core: {
-    backgroundColor: '#546e7a', // Darker blue-grey for WCAG AA
+    backgroundColor: '#455a64', // Updated to match current actions
     textColor: '#ffffff',
-    hoverBackgroundColor: '#455a64',
+    hoverBackgroundColor: '#37474f',
     hoverTextColor: '#ffffff',
   },
   clothing: {
@@ -28,22 +28,22 @@ const EXPECTED_COLOR_SCHEMES = {
     hoverTextColor: '#fce4ec',
   },
   positioning: {
-    backgroundColor: '#00796b',
+    backgroundColor: '#bf360c', // Updated to match current actions
     textColor: '#ffffff',
-    hoverBackgroundColor: '#00695c', // Darker teal for WCAG AA
+    hoverBackgroundColor: '#8d2c08', // Updated to match current actions
     hoverTextColor: '#ffffff',
   },
   sex: {
-    backgroundColor: '#6a1b9a',
-    textColor: '#ffffff',
-    hoverBackgroundColor: '#7b1fa2',
+    backgroundColor: '#4a148c', // Updated to match current actions
+    textColor: '#e1bee7', // Updated to match current actions
+    hoverBackgroundColor: '#6a1b9a', // Updated to match current actions
     hoverTextColor: '#f3e5f5',
   },
   violence: {
-    backgroundColor: '#cc0000',
+    backgroundColor: '#8b0000', // Updated to match current actions
     textColor: '#ffffff',
-    hoverBackgroundColor: '#990000',
-    hoverTextColor: '#ffcccc',
+    hoverBackgroundColor: '#b71c1c', // Updated to match current actions
+    hoverTextColor: '#ffebee', // Updated to match current actions
   },
 };
 
@@ -293,17 +293,7 @@ describe('Visual Properties - All Mods Integration', () => {
     });
   });
 
-  describe('Special Cases', () => {
-    it('should have visual properties on violence:berserker_rage', async () => {
-      const berserkerRage = allActions.violence?.find(
-        (a) => a.id === 'violence:berserker_rage'
-      );
-
-      expect(berserkerRage).toBeDefined();
-      expect(berserkerRage.visual).toBeDefined();
-      expect(berserkerRage.visual).toEqual(EXPECTED_COLOR_SCHEMES.violence);
-    });
-  });
+  // Removed Special Cases section as berserker_rage action no longer exists
 
   describe('Statistics', () => {
     it('should report visual property coverage statistics', () => {

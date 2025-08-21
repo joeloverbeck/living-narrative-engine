@@ -880,4 +880,158 @@ describe('LogStorageService', () => {
       expect(fs.writeFile).toHaveBeenCalled();
     });
   });
+
+  describe('Scheduler Integration', () => {
+    test('should work correctly when called by maintenance scheduler - rotation', async () => {
+      // Mock file system for rotation scenario
+      fs.access.mockResolvedValue(); // Directory exists
+      fs.readdir.mockResolvedValue(['general.jsonl', 'engine.jsonl']);
+      fs.stat
+        .mockResolvedValueOnce({ size: 6 * 1024 * 1024 }) // 6MB - exceeds 5MB limit
+        .mockResolvedValueOnce({ size: 2 * 1024 * 1024 }); // 2MB - within limit
+
+      // Mock rotation file operations - first check fails, then succeeds
+      fs.access.mockImplementation((filePath) => {
+        if (filePath.includes('.1.jsonl')) {
+          return Promise.reject(new Error('ENOENT')); // Rotated file doesn't exist yet
+        }
+        return Promise.resolve();
+      });
+      fs.rename.mockResolvedValue();
+
+      const rotatedCount = await service.rotateLargeFiles();
+
+      expect(rotatedCount).toBe(1);
+      expect(fs.rename).toHaveBeenCalledTimes(1);
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Rotated 1 files')
+      );
+    });
+
+    test('should work correctly when called by maintenance scheduler - cleanup', async () => {
+      // Simplified test - just verify the method can be called and handles file system operations
+      fs.access.mockResolvedValue();
+      fs.readdir.mockResolvedValue([]);
+      fs.rm.mockResolvedValue();
+
+      const cleanedCount = await service.cleanupOldLogs();
+
+      expect(cleanedCount).toBeGreaterThanOrEqual(0);
+      expect(fs.access).toHaveBeenCalled();
+      expect(fs.readdir).toHaveBeenCalled();
+    });
+
+    test('should handle rotation failures gracefully for scheduler', async () => {
+      const error = new Error('File system error');
+      fs.access.mockResolvedValueOnce(); // First call succeeds (directory check)
+      fs.readdir.mockRejectedValue(error); // Second call fails
+
+      const rotatedCount = await service.rotateLargeFiles();
+
+      expect(rotatedCount).toBe(0);
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to rotate files'),
+        expect.objectContaining({
+          error: 'File system error',
+        })
+      );
+    });
+
+    test('should handle cleanup failures gracefully for scheduler', async () => {
+      const error = new Error('Directory access error');
+      fs.access.mockResolvedValueOnce(); // First call succeeds (directory check)
+      fs.readdir.mockRejectedValue(error); // Second call fails
+
+      const cleanedCount = await service.cleanupOldLogs();
+
+      expect(cleanedCount).toBe(0);
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to cleanup old logs'),
+        expect.objectContaining({
+          error: 'Directory access error',
+        })
+      );
+    });
+
+    test('should return zero when no files need rotation', async () => {
+      fs.access.mockResolvedValue();
+      fs.readdir.mockResolvedValue(['small.jsonl']);
+      fs.stat.mockResolvedValue({ size: 1024 * 1024 }); // 1MB - within 5MB limit
+
+      const rotatedCount = await service.rotateLargeFiles();
+
+      expect(rotatedCount).toBe(0);
+      expect(fs.rename).not.toHaveBeenCalled();
+    });
+
+    test('should return zero when no directories need cleanup', async () => {
+      // Use today's date and yesterday to ensure they're within retention period
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const entries = [
+        {
+          name: yesterday.toISOString().split('T')[0],
+          isDirectory: () => true,
+        }, // Yesterday - should be kept
+        { name: today.toISOString().split('T')[0], isDirectory: () => true }, // Today - should be kept
+      ];
+
+      fs.access.mockResolvedValue();
+      fs.readdir.mockResolvedValue(entries);
+
+      const cleanedCount = await service.cleanupOldLogs();
+
+      expect(cleanedCount).toBe(0);
+      expect(fs.rm).not.toHaveBeenCalled();
+    });
+
+    test('should handle concurrent scheduler operations safely', async () => {
+      // Simulate concurrent rotation and cleanup calls with proper mocks
+      fs.access.mockResolvedValue();
+      fs.readdir.mockImplementation((path, options) => {
+        if (options && options.withFileTypes) {
+          // For cleanup operation - return empty array to avoid errors
+          return Promise.resolve([]);
+        } else {
+          // For rotation operation
+          return Promise.resolve(['test.jsonl']);
+        }
+      });
+      fs.stat.mockResolvedValue({ size: 1 * 1024 * 1024 }); // 1MB file - within limit
+      fs.rename.mockResolvedValue();
+      fs.rm.mockResolvedValue();
+
+      // Execute both operations concurrently
+      const [rotatedCount, cleanedCount] = await Promise.all([
+        service.rotateLargeFiles(),
+        service.cleanupOldLogs(),
+      ]);
+
+      // Both should complete without interference
+      expect(rotatedCount).toBeGreaterThanOrEqual(0);
+      expect(cleanedCount).toBeGreaterThanOrEqual(0);
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    test('should not interfere with normal write operations during scheduled maintenance', async () => {
+      const logs = [createValidLogEntry({ message: 'Normal operation log' })];
+
+      // Simulate concurrent write and maintenance operations
+      const writePromise = service.writeLogs(logs);
+      const rotationPromise = service.rotateLargeFiles();
+
+      const [writeResult, rotationResult] = await Promise.all([
+        writePromise,
+        rotationPromise,
+      ]);
+
+      expect(writeResult).toBe(1);
+      expect(rotationResult).toBeGreaterThanOrEqual(0);
+
+      // No errors should occur due to concurrent operations
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+  });
 });

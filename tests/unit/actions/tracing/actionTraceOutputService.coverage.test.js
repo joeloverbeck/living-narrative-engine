@@ -653,8 +653,6 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
       expect(stats).toBeNull();
     });
 
-
-
     it('should shutdown rotation manager on service shutdown', async () => {
       enableMockStorageRotationManager();
 
@@ -707,7 +705,7 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
 
     it('should handle storage adapter not available error', async () => {
       let errorLogged = false;
-      
+
       service = new ActionTraceOutputService({
         logger: mockLogger,
         // Provide a custom output handler that throws the expected error
@@ -745,7 +743,6 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
       );
     });
 
-
     it('should handle queue processor shutdown timeout', async () => {
       enableMockTraceQueueProcessor();
 
@@ -772,7 +769,8 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
         // Use custom output handler that creates a long-running promise
-        outputHandler: () => new Promise((resolve) => setTimeout(resolve, 5000)),
+        outputHandler: () =>
+          new Promise((resolve) => setTimeout(resolve, 5000)),
       });
 
       // Start a write that will take too long
@@ -781,10 +779,10 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
         actorId: 'test-actor',
         toJSON: () => ({ action: 'test' }),
       };
-      
+
       // Start the write but don't await it
       service.writeTrace(trace);
-      
+
       // Give it a moment to start
       await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -851,7 +849,7 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
     it('should write trace with priority', async () => {
       let enqueueCalled = false;
       let enqueuePriority = null;
-      
+
       // Create a custom mock that tracks enqueue calls
       mockTraceQueueProcessor = class MockTraceQueueProcessor {
         constructor(dependencies) {
@@ -904,7 +902,7 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
     it('should get and reset statistics', async () => {
       let internalWriteCount = 0;
       let internalErrorCount = 0;
-      
+
       service = new ActionTraceOutputService({
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
@@ -924,7 +922,7 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
         actorId: 'test-actor',
         toJSON: () => ({ action: 'test' }),
       };
-      
+
       // Do multiple writes (some will fail)
       for (let i = 0; i < 5; i++) {
         await service.writeTrace(trace).catch(() => {});
@@ -954,13 +952,6 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
   });
 
   describe('Edge Cases', () => {
-
-
-
-
-
-
-
     it('should format traces as text with formatter errors during export', async () => {
       mockStorageAdapter.getItem.mockResolvedValue([
         {
@@ -1053,6 +1044,5 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
         'ActionTraceOutputService: Shutdown complete'
       );
     });
-
   });
 });

@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_ass_cheek_small_bubbly",
+  "description": "A small, bubbly human ass cheek",
+  "components": {
+    "anatomy:part": {
+      "subType": "ass_cheek"
+    },
+    "descriptors:projection": {
+      "projection": "bubbly"
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "core:name": {
+      "text": "ass cheek"
+    }
+  }
+}

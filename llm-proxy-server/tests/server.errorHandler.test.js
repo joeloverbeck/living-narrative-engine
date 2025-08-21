@@ -156,6 +156,7 @@ beforeEach(() => {
       freeSocketTimeout: 30000,
       maxTotalSockets: 500,
     })),
+    isDebugLoggingEnabled: jest.fn(() => false), // Debug logging disabled in tests
   };
   const getAppConfigService = jest.fn(() => appConfigServiceMock);
   jest.doMock('../src/config/appConfig.js', () => ({

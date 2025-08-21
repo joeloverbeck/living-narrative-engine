@@ -81,6 +81,39 @@
   cursor: not-allowed;
 }
 
+/* Optgroup styling for better visual hierarchy */
+#direction-selector optgroup {
+  font-weight: bold;
+  color: var(--narrative-purple);
+  background-color: var(--bg-highlight);
+  padding: 0.25rem 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#direction-selector option {
+  font-weight: normal;
+  padding-left: 1em;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  font-size: 1rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+#direction-selector option:hover {
+  background-color: var(--bg-secondary);
+  color: var(--narrative-purple);
+}
+
+/* Enhanced styling for optgroups when disabled */
+#direction-selector optgroup:disabled {
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.6;
+}
+
 .no-directions-message {
   text-align: center;
   padding: 2rem 1rem;

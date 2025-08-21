@@ -37,12 +37,17 @@
         "indigo_denim_trucker_jacket.entity.json",
         "leather_stiletto_pumps.entity.json",
         "nude_thong.entity.json",
+        "pink_off_shoulder_crop_top.entity.json",
+        "pink_short_flared_skirt.entity.json",
         "sand_beige_cotton_chinos.entity.json",
         "sand_suede_chukka_boots.entity.json",
         "underwired_plunge_bra_nude_silk.entity.json",
         "white_cotton_crew_tshirt.entity.json",
+        "white_cotton_panties.entity.json",
         "white_leather_sneakers.entity.json",
-        "white_structured_linen_blazer.entity.json"
+        "white_platform_sneakers.entity.json",
+        "white_structured_linen_blazer.entity.json",
+        "white_thigh_high_socks_pink_hearts.entity.json"
       ],
       "instances": []
     },

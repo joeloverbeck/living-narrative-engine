@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_ass_cheek_small_round",
+  "description": "A small, round human ass cheek",
+  "components": {
+    "anatomy:part": {
+      "subType": "ass_cheek"
+    },
+    "descriptors:shape_general": {
+      "shape": "round"
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "core:name": {
+      "text": "ass cheek"
+    }
+  }
+}

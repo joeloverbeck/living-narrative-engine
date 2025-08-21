@@ -1,70 +1,116 @@
-SystemLogicInterpreter: ✅ [Rule 'enable_input_on_player_turn' - Action 1/2] Finished executing operation of type: DISPATCH_EVENT (2ms)
-consoleLogger.js:187 SystemLogicInterpreter: 🎯 [ActionSequence] [Rule 'enable_input_on_player_turn' - Action 2/2] Starting action: DISPATCH_EVENT
-consoleLogger.js:187 SystemLogicInterpreter: ⚡ [Rule 'enable_input_on_player_turn' - Action 2/2] About to execute operation of type: DISPATCH_EVENT
-consoleLogger.js:187 SystemLogicInterpreter: 🔧 [Rule 'enable_input_on_player_turn' - Action 2/2] Using operation interpreter for DISPATCH_EVENT
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.entityId} to: isekai:hero_instance
-consoleLogger.js:187 OperationInterpreter: Resolved full string placeholder {event.payload.availableActions} to: [{"index":1,"actionId":"core:follow","commandString":"follow Ninja Ninjason","params":{"targetIds":{"primary":["isekai:ninja_instance"]},"isMultiTarget":true,"targetId":"isekai:ninja_instance"},"description":"Commands your character to follow the specified target, becoming their companion and moving with them.","visual":{"backgroundColor":"#546e7a","textColor":"#ffffff","hoverBackgroundColor":"#455a64","hoverTextColor":"#ffffff"}},{"index":2,"actionId":"core:go","commandString":"go to Isekai Town","params":{"targetIds":{"primary":["isekai:town_instance"]},"isMultiTarget":true,"targetId":"isekai:town_instance"},"description":"Moves your character to the specified location, if the way is clear.","visual":{"backgroundColor":"#546e7a","textColor":"#ffffff","hoverBackgroundColor":"#455a64","hoverTextColor":"#ffffff"}},{"index":3,"actionId":"core:wait","commandString":"wait","params":{"targetId":null},"description":"Wait for a moment, doing nothing.","visual":{"backgroundColor":"#546e7a","textColor":"#ffffff","hoverBackgroundColor":"#455a64","hoverTextColor":"#ffffff"}},{"index":4,"actionId":"positioning:get_close","commandString":"get close to Ninja Ninjason","params":{"targetIds":{"primary":["isekai:ninja_instance"]},"isMultiTarget":true,"targetId":"isekai:ninja_instance"},"description":"Move closer to the target, entering their personal space.","visual":{"backgroundColor":"#00796b","textColor":"#ffffff","hoverBackgroundColor":"#00695c","hoverTextColor":"#ffffff"}},{"index":5,"actionId":"positioning:kneel_before","commandString":"kneel before Ninja Ninjason","params":{"targetIds":{"primary":["isekai:ninja_instance"]},"isMultiTarget":true,"targetId":"isekai:ninja_instance"},"description":"Kneel before another actor as a sign of respect, submission, or reverence.","visual":{"backgroundColor":"#00796b","textColor":"#ffffff","hoverBackgroundColor":"#00695c","hoverTextColor":"#ffffff"}},{"index":6,"actionId":"violence:sucker_punch","commandString":"sucker-punch Ninja Ninjason","params":{"targetIds":{"primary":["isekai:ninja_instance"]},"isMultiTarget":true,"targetId":"isekai:ninja_instance"},"description":"Throw an unexpected punch at someone when they're not looking","visual":{"backgroundColor":"#cc0000","textColor":"#ffffff","hoverBackgroundColor":"#990000","hoverTextColor":"#ffcccc"}},{"index":7,"actionId":"violence:slap","commandString":"slap Ninja Ninjason","params":{"targetIds":{"primary":["isekai:ninja_instance"]},"isMultiTarget":true,"targetId":"isekai:ninja_instance"},"description":"Slap someone across the face","visual":{"backgroundColor":"#cc0000","textColor":"#ffffff","hoverBackgroundColor":"#990000","hoverTextColor":"#ffcccc"}}]
-consoleLogger.js:187 OperationInterpreter: Executing handler for operation type "DISPATCH_EVENT"…
-consoleLogger.js:187 DispatchEventHandler: Attempting to dispatch event "core:update_available_actions" with resolved payload... {payload: {…}}
-consoleLogger.js:187 VED: Validating payload for event 'core:update_available_actions' against schema 'core:update_available_actions#payload'...
-consoleLogger.js:175 VED: Payload validation FAILED for event 'core:update_available_actions'. Dispatch SKIPPED. Errors: [/actions/0]: must NOT have additional properties; [/actions/1]: must NOT have additional properties; [/actions/2]: must NOT have additional properties; [/actions/3]: must NOT have additional properties; [/actions/4]: must NOT have additional properties; [/actions/5]: must NOT have additional properties; [/actions/6]: must NOT have additional properties {payload: {…}, errors: Array(7)}errors: (7) [{…}, {…}, {…}, {…}, {…}, {…}, {…}]payload: {actorId: 'isekai:hero_instance', actions: Array(7)}[[Prototype]]: Object
-error @ consoleLogger.js:175
-validatePayload_fn @ validatedEventDispatcher.js:150
-dispatch @ validatedEventDispatcher.js:225
-dispatchViaValidatedDispatcher_fn @ dispatchEventHandler.js:138
-execute @ dispatchEventHandler.js:172
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:94
-executeActionSequence @ actionSequence.js:114
-await in executeActionSequence
-_executeActions @ systemLogicInterpreter.js:473
-processRule_fn @ systemLogicInterpreter.js:431
-handleEvent_fn @ systemLogicInterpreter.js:334
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-emitEvent_fn @ validatedEventDispatcher.js:198
-dispatch @ validatedEventDispatcher.js:228
-__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
-executeSafely_fn @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-prompt @ eventBusPromptAdapter.js:110
-prompt @ promptCoordinator.js:106
-delegate @ humanDecisionProvider.js:38
-choose @ delegatingDecisionProvider.js:54
-decide @ abstractDecisionProvider.js:74
-decideAction @ genericTurnStrategy.js:47
-await in decideAction
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183
-await in finalizeGameStart_fn
-finalizeNewGameSuccess @ gameSessionManager.js:204
-finalizeInitializationSuccess_fn @ gameEngine.js:285
-startNewGame @ gameEngine.js:321
-await in startNewGame
-startGameStage @ engineStages.js:87
-beginGame @ main.js:254
-(anonymous) @ game.html:331
-Promise.then
-(anonymous) @ game.html:328Understand this error
-consoleLogger.js:187 VED: Dispatch skipped for 'core:update_available_actions' due to validation failure (see error above).
-consoleLogger.js:187 DispatchEventHandler: Event "core:update_available_actions" dispatched (Validated).
-consoleLogger.js:187 SystemLogicInterpreter: ✅ [Rule 'enable_input_on_player_turn' - Action 2/2] Finished executing operation of type: DISPATCH_EVENT (1ms)
-consoleLogger.js:187 SystemLogicInterpreter: 🏁 [ActionSequence] Completed sequence: Rule 'enable_input_on_player_turn' (4ms total)
-consoleLogger.js:187 SystemLogicInterpreter: 🎉 [SystemLogicInterpreter] _executeActions: Action sequence completed for Rule 'enable_input_on_player_turn' (5ms)
+ActionIndexingService: 10/10 actions have visual properties for p_erotica:silvia_instance (10) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+consoleLogger.js:187 ActionIndexingService: indexed 10 actions for p_erotica:silvia_instance
+consoleLogger.js:187 [ChoicePipeline] Actor p_erotica:silvia_instance: 10 choices ready
+consoleLogger.js:187 LLMChooser.choose → actor=p_erotica:silvia_instance
+consoleLogger.js:187 AIPromptPipeline: Generating prompt for actor p_erotica:silvia_instance.
+consoleLogger.js:187 AIGameStateProvider: Orchestrating game state build for actor p_erotica:silvia_instance.
+consoleLogger.js:187 ActorStateProvider: Building actor state for p_erotica:silvia_instance
+actorDataExtractor.js:173 [DEBUG] actorDataExtractor - APPARENT_AGE_COMPONENT_ID: core:apparent_age
+actorDataExtractor.js:174 [DEBUG] actorDataExtractor - apparentAgeData: undefined
+actorDataExtractor.js:183 [DEBUG] actorDataExtractor - apparentAge NOT added. Validation failed.
+consoleLogger.js:187 PerceptionLogProvider: Retrieving perception log for actor p_erotica:silvia_instance
+consoleLogger.js:187 PerceptionLogProvider: Retrieved 1 entries for actor p_erotica:silvia_instance.
+consoleLogger.js:187 LocationSummaryProvider: Building location summary for actor p_erotica:silvia_instance
+consoleLogger.js:187 AIGameStateProvider: Successfully orchestrated game state for actor p_erotica:silvia_instance.
+consoleLogger.js:187 AIPromptContentProvider: Starting assembly of PromptData.
+consoleLogger.js:187 AIPromptContentProvider.validateGameStateForPrompting: Delegating to GameStateValidationServiceForPrompting.
+consoleLogger.js:187 PerceptionLogFormatter.format attempting to process 1 entries.
+consoleLogger.js:187 AIPromptContentProvider: Formatting character persona content with markdown structure.
+CharacterDataFormatter.js:292 [DEBUG] formatCharacterPersona - Received characterData with apparentAge: undefined
+CharacterDataFormatter.js:119 [DEBUG] formatPhysicalDescription - Checking apparentAge: undefined
+CharacterDataFormatter.js:127 [DEBUG] formatPhysicalDescription - No apparentAge found in characterData
+consoleLogger.js:187 CharacterDataFormatter: Formatted physical description section
+consoleLogger.js:187 CharacterDataFormatter: Formatted personality section
+consoleLogger.js:187 CharacterDataFormatter: Formatted profile section
+consoleLogger.js:187 CharacterDataFormatter: Formatted Likes section
+consoleLogger.js:187 CharacterDataFormatter: Formatted Dislikes section
+consoleLogger.js:187 CharacterDataFormatter: Formatted Secrets section
+consoleLogger.js:187 CharacterDataFormatter: Formatted Fears section
+consoleLogger.js:187 CharacterDataFormatter: Formatted speech patterns section
+consoleLogger.js:187 CharacterDataFormatter: Successfully formatted complete character persona
+consoleLogger.js:187 AIPromptContentProvider: Successfully formatted character persona with markdown structure.
+consoleLogger.js:187 AIPromptContentProvider: Formatting world context content with markdown structure.
+consoleLogger.js:187 AIPromptContentProvider: Formatted 1 exits for location.
+consoleLogger.js:187 AIPromptContentProvider: Formatted 1 characters for location.
+consoleLogger.js:187 AIPromptContentProvider: Formatting available actions info content.
+consoleLogger.js:187 AIPromptContentProvider: Using categorized formatting {actionCount: 10}
+consoleLogger.js:187 AIPromptContentProvider: Formatting categorized actions {actionCount: 10}
+consoleLogger.js:187 AIPromptContentProvider: Categorized formatting completed {duration: '6.20ms', namespaceCount: 4, totalActions: 10}
+consoleLogger.js:187 AIPromptContentProvider.getPromptData: goalsArray contains 4 entries.
+consoleLogger.js:187 AIPromptContentProvider.getPromptData: PromptData assembled successfully.
+consoleLogger.js:187 AIPromptContentProvider.getPromptData: Assembled PromptData keys: taskDefinitionContent, characterPersonaContent, portrayalGuidelinesContent, contentPolicyContent, worldContextContent, availableActionsInfoContent, userInputContent, finalInstructionsContent, perceptionLogArray, characterName, locationName, assistantResponsePrefix, thoughtsArray, notesArray, goalsArray
+consoleLogger.js:187 AIPromptContentProvider.getPromptData: thoughtsArray contains 0 entries.
+consoleLogger.js:187 AIPromptContentProvider.getPromptData: notesArray contains 0 entries.
+consoleLogger.js:187 PromptBuilder.build called for llmId='openrouter-claude-sonnet-4-toolcalling'.
+consoleLogger.js:187 LLMConfigurationManager: Configuration 'openrouter-claude-sonnet-4-toolcalling' loaded.
+consoleLogger.js:187 PromptDataFormatter: Formatted 1 perception log entries with simplified format
+consoleLogger.js:187 PromptDataFormatter: No thoughts to format
+consoleLogger.js:187 PromptDataFormatter: No notes to format
+consoleLogger.js:187 PromptDataFormatter: Formatted 4 goals
+consoleLogger.js:187 PromptDataFormatter: No thoughts to format
+consoleLogger.js:187 PromptDataFormatter: No notes to format
+consoleLogger.js:187 PromptDataFormatter: Formatted 4 goals
+consoleLogger.js:187 PromptDataFormatter: Successfully formatted all prompt data including conditional sections
+consoleLogger.js:187 PromptTemplateService: Processing character prompt template
+consoleLogger.js:187 PromptTemplateService: Found 12 placeholders to process
+consoleLogger.js:187 PromptBuilder.build: Completed. Final prompt length = 12382.
+consoleLogger.js:187 AIPromptPipeline: Generated final prompt string for actor p_erotica:silvia_instance using LLM config for 'openrouter-claude-sonnet-4-toolcalling'.
+consoleLogger.js:187 ConfigurableLLMAdapter.getAIDecision → called {promptChars: 12382, abortSignalProvided: true, hasRequestOptions: false, hasCustomSchema: false}
+consoleLogger.js:151 [PromptLog][Model: anthropic/claude-sonnet-4] Final prompt sent to proxy:
+<task_definition>
+Your sole focus is to BE the character detailed below. Live as them, think as them.
+Your task is to:
+1.  Decide on one action for your character to perform this turn.
+2.  Determine what, if anything, your character will say in conjunction with that action.
+Base your decisions on your character's complete persona (including their deepest traits and flaws), the current situation, recent events, and the specific actions available to you.
+</task_definition>
+
+<character_persona>
+YOU ARE Silvia.
+This is your identity. All thoughts, actions, and words must stem from this core truth.
+
+## Your Description
+**Height**: short
+**Build**: slim
+**Hair**: medium, red, ponytails
+**Right eye**: brown, almond
+**Left eye**: brown, round
+**Nose**: small
+**Breasts**: A-cup, round, firm
+**Arms**: slim
+**Legs**: slim
+**Ass**: small, bubbly
+**Pubic hair**: curly
+**Wearing**: white, smooth, cotton panties | white, smooth, cotton thigh-high socks | pink, smooth, cotton off-the-shoulder crop top | pink, smooth, cotton short flared skirt, and white, smooth, leather platform sneakers.
+
+## Your Personality
+Silvia is naturally curious and energetic, with a playful spirit that matches her youthful appearance. She's intelligent and quick-witted, though sometimes her enthusiasm can make her seem impulsive. She values authenticity and has little patience for pretense or superficiality. Despite her bright demeanor, there's a underlying intensity to her - a fierce determination to be seen for who she truly is rather than what people assume based on her appearance. She can be surprisingly mature in her observations, often catching others off guard with her perceptive insights.
+
+## Your Profile
+Silvia is a petite young woman with an unmistakably youthful appearance. Her fair skin contrasts beautifully with her vibrant red hair, which she keeps styled in playful pigtails that frame her delicate features. Her warm brown eyes sparkle with curiosity and intelligence, while her small nose adds to her endearing, youthful charm. Despite her slender build and short stature, she carries herself with quiet confidence. There's something captivating about the way she moves - graceful and deliberate, as if every gesture has been carefully considered. Her voice, when she speaks, carries a surprising depth of understanding that seems at odds with her girlish appearance.
+
+## Your Likes
+Reading adventure novels that transport her to different worlds, discovering hidden corners of the city where she can think undisturbed, solving complex puzzles that challenge her intellect, and engaging in genuine conversations where people forget about appearances. She has a particular fondness for sweet treats - especially strawberry pastries - and collects colorful flowers that she presses in books. She loves the feeling of warm sunshine on her skin and the sound of rain against windows.
+
+## Your Dislikes
+Being underestimated or patronized due to her youthful appearance, dishonesty in any form, overly formal situations that feel stifling, and being treated like a child when she's trying to be taken seriously. She also dislikes loud, chaotic environments that overwhelm her senses, people who talk down to her, and situations where she's judged solely on her looks rather than her capabilities.
+
+## Your Secrets
+Despite her youthful appearance, she sometimes feels much older inside - as if she's lived multiple lifetimes worth of experiences in her young years. She worries that people will never take her seriously, no matter what she accomplishes. She also harbors romantic feelings that she's afraid to express, concerned that others will either dismiss them as childish infatuation or worse, take advantage of her perceived naivety. Hidden in her apartment is a journal filled with profound philosophical observations and poetry that she's never shown anyone, fearing they wouldn't believe someone who looks so young could have written them.
+
+## Your Fears
+Being dismissed or ignored because of her appearance, losing her independence and being forced to rely on others, and being trapped in situations where she cannot express her true self. She fears that people will never see past her youthful exterior to recognize the depth of her thoughts and feelings. There's also a deep-seated anxiety about growing older and losing the one thing people seem to notice about her, even as she resents being defined by it.
+
+## Your Speech Patterns
+- Uses precise, articulate language that often surprises people given her youthful appearance: 'The dichotomy between perception and reality is fascinating, don't you think?'
+- Occasionally slips into more casual, playful speech when comfortable: 'Oh! That's absolutely brilliant!' or 'You've got to be kidding me!'
+- Has a habit of explaining things thoroughly, demonstrating her intelligence: 'Well, if you consider the underlying principles...' followed by detailed analysis
+
+consoleLogger.js:187 TokenEstimator: Calculated token budget {totalLimit: 200000, reservedTokens: 150, availableForPrompt: 199850}
+consoleLogger.js:187 TokenEstimator: Determined encoding for model {model: 'anthropic/claude-sonnet-4', encoding: 'cl100k_base'}
+consoleLogger.js:187 TokenEstimator: Estimated tokens {model: 'anthropic/claude-sonnet-4', encoding: 'cl100k_base', textLength: 12382, tokenCount: 2738}
+consoleLogger.js:187 TokenEstimator: Token validation result {model: 'anthropic/claude-sonnet-4', limit: 199850, estimatedTokens: 2738, isValid: true, isNearLimit: false, …}
+consoleLogger.js:187 Attempting to retrieve API key for LLM 'openrouter-claude-sonnet-4-toolcalling'.
+consoleLogger.js:187 ClientApiKeyProvider.getKey (openrouter-claude-sonnet-4-toolcalling): Configuration for cloud service 'openrouter' has required key identifier(s) for proxy usage (apiKeyEnvVar: 'OPENROUTER_API_KEY_ENV_VAR', apiKeyFileName: 'openrouter_api_key.txt').
+consoleLogger.js:187 API key not required or not found for LLM 'openrouter-claude-sonnet-4-toolcalling', proceeding. (Is Cloud API: true, Is Server: false)
+consoleLogger.js:187 LLMStrategyFactory: Determining strategy for LLM ID: 'openrouter-claude-sonnet-4-toolcalling', apiType: 'openrouter'. {configuredJsonMethod: 'openrouter_tool_calling', fullConfigJsonStrategy: {…}}

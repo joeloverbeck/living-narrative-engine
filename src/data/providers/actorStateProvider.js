@@ -14,6 +14,7 @@ import {
   SECRETS_COMPONENT_ID,
   FEARS_COMPONENT_ID,
   SPEECH_PATTERNS_COMPONENT_ID,
+  APPARENT_AGE_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
@@ -80,6 +81,19 @@ export class ActorStateProvider extends IActorStateProvider {
         actorState[SPEECH_PATTERNS_COMPONENT_ID] = { ...speechData, patterns };
       }
     }
+
+    // Extract apparent age component if present
+    if (actor.hasComponent(APPARENT_AGE_COMPONENT_ID)) {
+      const ageData = actorState.components[APPARENT_AGE_COMPONENT_ID];
+      if (
+        ageData &&
+        typeof ageData.minAge === 'number' &&
+        typeof ageData.maxAge === 'number'
+      ) {
+        actorState[APPARENT_AGE_COMPONENT_ID] = { ...ageData };
+      }
+    }
+
     return actorState;
   }
 }

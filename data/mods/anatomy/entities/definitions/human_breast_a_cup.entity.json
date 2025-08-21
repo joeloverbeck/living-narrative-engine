@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_breast_a_cup",
+  "description": "A human breast with A-cup size",
+  "components": {
+    "anatomy:part": {
+      "subType": "breast"
+    },
+    "descriptors:size_specific": {
+      "size": "A-cup"
+    },
+    "descriptors:firmness": {
+      "firmness": "firm"
+    },
+    "descriptors:shape_general": {
+      "shape": "round"
+    },
+    "core:name": {
+      "text": "breast"
+    }
+  }
+}

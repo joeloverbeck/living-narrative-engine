@@ -16,9 +16,9 @@
   "template": "rub {target}'s penis over the clothes",
   "prerequisites": [],
   "visual": {
-    "backgroundColor": "#6a1b9a",
-    "textColor": "#ffffff",
-    "hoverBackgroundColor": "#7b1fa2",
+    "backgroundColor": "#4a148c",
+    "textColor": "#e1bee7",
+    "hoverBackgroundColor": "#6a1b9a",
     "hoverTextColor": "#f3e5f5"
   }
 }
