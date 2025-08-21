@@ -157,7 +157,8 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     directionSelector.id = 'direction-selector';
     directionSelector.className = 'cb-select';
     directionSelector.setAttribute('aria-label', 'Select thematic direction');
-    directionSelector.innerHTML = '<option value="">-- Choose a thematic direction --</option>';
+    directionSelector.innerHTML =
+      '<option value="">-- Choose a thematic direction --</option>';
     main.appendChild(directionSelector);
 
     // No directions message
@@ -367,27 +368,29 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     }
 
     // Create option if it doesn't exist (for test scenarios)
-    let option = directionSelector.querySelector(`option[value="${directionId}"]`);
+    let option = directionSelector.querySelector(
+      `option[value="${directionId}"]`
+    );
     if (!option) {
       const optgroup = document.createElement('optgroup');
       optgroup.label = 'Test Concept';
-      
+
       option = document.createElement('option');
       option.value = directionId;
       option.textContent = 'Test Direction';
       option.dataset.conceptId = 'concept-1';
-      
+
       optgroup.appendChild(option);
       directionSelector.appendChild(optgroup);
     }
 
     // Simulate selection change
     directionSelector.value = directionId;
-    
+
     // Trigger change event that the controller should listen for
     const changeEvent = new Event('change', { bubbles: true });
     directionSelector.dispatchEvent(changeEvent);
-    
+
     await this.waitForAsyncOperations();
   }
 
@@ -520,7 +523,9 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
     // Now select the direction through the controller's public interface
     // The direction should now exist in the select element from initialization
     const directionSelector = document.getElementById('direction-selector');
-    const option = directionSelector?.querySelector(`option[value="${directionId}"]`);
+    const option = directionSelector?.querySelector(
+      `option[value="${directionId}"]`
+    );
 
     if (option || directionSelector) {
       // Select the direction to trigger the controller's selection logic

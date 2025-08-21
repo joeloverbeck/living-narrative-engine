@@ -237,6 +237,17 @@ describe('Server - Comprehensive Tests', () => {
       })),
     }));
 
+    // Mock the problematic route modules that use import.meta.url
+    jest.doMock('../../../src/routes/traceRoutes.js', () => ({
+      __esModule: true,
+      default: 'trace-routes-mock',
+    }));
+
+    jest.doMock('../../../src/routes/debugRoutes.js', () => ({
+      __esModule: true,
+      default: 'debug-routes-mock',
+    }));
+
     // Mock setTimeout for graceful shutdown to prevent actual 10s timeout
     global.setTimeout = jest.fn((fn, delay) => {
       if (delay === 10000) {

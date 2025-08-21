@@ -4,7 +4,7 @@
 **Priority**: P0 - Critical  
 **Phase**: 2 - Integration  
 **Component**: Test Infrastructure  
-**Estimated**: 2 hours  
+**Estimated**: 2 hours
 
 ## Description
 
@@ -13,15 +13,19 @@ Implement test mode configuration that ensures all tests use the MockLogger and 
 ## Technical Requirements
 
 ### 1. Test Mode Detection
+
 ```javascript
 function isTestMode() {
-  return process.env.NODE_ENV === 'test' ||
-         process.env.JEST_WORKER_ID !== undefined ||
-         typeof global.it === 'function';
+  return (
+    process.env.NODE_ENV === 'test' ||
+    process.env.JEST_WORKER_ID !== undefined ||
+    typeof global.it === 'function'
+  );
 }
 ```
 
 ### 2. Test Configuration
+
 ```json
 {
   "enabled": true,
@@ -36,6 +40,7 @@ function isTestMode() {
 ```
 
 ### 3. Environment Setup
+
 ```javascript
 // jest.setup.js
 beforeEach(() => {
@@ -58,6 +63,7 @@ afterEach(() => {
    - [ ] Disable console output in tests
 
 2. **Create Test Mode Configuration**
+
    ```javascript
    // src/logging/testModeConfig.js
    export const TEST_MODE_CONFIG = {
@@ -68,20 +74,21 @@ afterEach(() => {
        silent: true,
        validateCalls: true,
        trackMetadata: true,
-       maxCallHistory: 1000
+       maxCallHistory: 1000,
      },
      // Disable all external communication
      remote: {
-       enabled: false
+       enabled: false,
      },
      // Disable file I/O
      file: {
-       enabled: false
-     }
+       enabled: false,
+     },
    };
    ```
 
 3. **Update LoggerStrategy for Test Mode**
+
    ```javascript
    class LoggerStrategy {
      constructor({ mode, config, dependencies }) {
@@ -90,18 +97,21 @@ afterEach(() => {
          mode = 'test';
          config = TEST_MODE_CONFIG;
        }
-       
+
        this.#logger = this.#createLogger(mode, config, dependencies);
      }
-     
+
      #isTestEnvironment() {
-       return process.env.NODE_ENV === 'test' ||
-              process.env.JEST_WORKER_ID !== undefined;
+       return (
+         process.env.NODE_ENV === 'test' ||
+         process.env.JEST_WORKER_ID !== undefined
+       );
      }
    }
    ```
 
 4. **Create Test Mode Logger**
+
    ```javascript
    // src/logging/testModeLogger.js
    export class TestModeLogger {
@@ -109,12 +119,17 @@ afterEach(() => {
        this.config = config;
        this.calls = [];
        this.silent = config.mock.silent;
-       
+
        // Create jest mocks for all methods
-       ['debug', 'info', 'warn', 'error'].forEach(level => {
+       ['debug', 'info', 'warn', 'error'].forEach((level) => {
          this[level] = jest.fn((message, metadata) => {
            if (config.mock.captureAll) {
-             this.calls.push({ level, message, metadata, timestamp: Date.now() });
+             this.calls.push({
+               level,
+               message,
+               metadata,
+               timestamp: Date.now(),
+             });
            }
            if (!this.silent && level === 'error') {
              console.error(message); // Allow error visibility
@@ -193,15 +208,15 @@ process.env.DEBUG_LOG_NO_FILE = 'true';
 // tests/common/testEnvironment.js
 export function setupTestLogging() {
   const logger = createMockLogger();
-  
+
   // Ensure test mode
   process.env.DEBUG_LOG_MODE = 'test';
-  
+
   // Reset between tests
   beforeEach(() => {
     logger.clearAllCalls();
   });
-  
+
   return logger;
 }
 ```

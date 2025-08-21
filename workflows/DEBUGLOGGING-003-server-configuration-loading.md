@@ -4,7 +4,7 @@
 **Priority**: P0 - Critical  
 **Phase**: 1 - Infrastructure  
 **Component**: Server-Side Service  
-**Estimated**: 3 hours  
+**Estimated**: 3 hours
 
 ## Description
 
@@ -13,6 +13,7 @@ Implement configuration loading and validation for the debug logging service in 
 ## Technical Requirements
 
 ### 1. Configuration Schema
+
 ```json
 {
   "debugLogging": {
@@ -37,11 +38,13 @@ Implement configuration loading and validation for the debug logging service in 
 ```
 
 ### 2. Configuration Sources (Priority Order)
+
 1. Environment variables (highest priority)
 2. Configuration file (`config/debug-logging-server.json`)
 3. Default values (lowest priority)
 
 ### 3. Environment Variable Mapping
+
 ```
 DEBUG_LOG_ENABLED=true
 DEBUG_LOG_PATH=./logs
@@ -66,6 +69,7 @@ DEBUG_LOG_CLEANUP_ENABLED=true
    - [ ] Validate cron schedule format
 
 3. **Default Configuration**
+
    ```javascript
    const DEFAULT_CONFIG = {
      enabled: true,
@@ -73,17 +77,17 @@ DEBUG_LOG_CLEANUP_ENABLED=true
        path: './logs',
        retentionDays: 7,
        maxFileSize: '10MB',
-       compression: false
+       compression: false,
      },
      performance: {
        writeBufferSize: 100,
        flushInterval: 1000,
-       maxConcurrentWrites: 5
+       maxConcurrentWrites: 5,
      },
      cleanup: {
        schedule: '0 2 * * *', // 2 AM daily
-       enabled: true
-     }
+       enabled: true,
+     },
    };
    ```
 
@@ -154,7 +158,7 @@ DEBUG_LOG_CLEANUP_ENABLED=true
 
 4. **Cron Schedule**
    - Must be valid cron expression
-   - Default to '0 2 * * *' if invalid
+   - Default to '0 2 \* \* \*' if invalid
 
 ## Error Handling
 

@@ -4,7 +4,7 @@
 **Priority**: P0 - Critical  
 **Phase**: 1 - Infrastructure  
 **Component**: Client-Side Logger  
-**Estimated**: 5 hours  
+**Estimated**: 5 hours
 
 ## Description
 
@@ -13,26 +13,27 @@ Create the LoggerStrategy class that implements the Strategy pattern for logger 
 ## Technical Requirements
 
 ### 1. Class Structure
+
 ```javascript
 class LoggerStrategy {
   #logger; // Current logger instance
   #mode;   // Current mode
   #config; // Configuration
-  
+
   constructor({ mode, config, dependencies })
-  
+
   // ILogger interface methods
   debug(message, metadata)
   info(message, metadata)
   warn(message, metadata)
   error(message, metadata)
-  
+
   // ConsoleLogger compatibility methods
   groupCollapsed(label)
   groupEnd()
   table(data, columns)
   setLogLevel(logLevelInput) // Critical for runtime switching
-  
+
   // Private methods
   #createLogger(mode, config, dependencies)
   #validateConfig(config)
@@ -41,15 +42,17 @@ class LoggerStrategy {
 ```
 
 ### 2. Mode Selection Matrix
-| Mode | Logger Type | Use Case |
-|------|-------------|----------|
-| production | RemoteLogger | Production deployments |
-| development | HybridLogger | Local development |
-| test | MockLogger | Unit/integration tests |
-| console | ConsoleLogger | Legacy/fallback |
-| none | NoOpLogger | Logging disabled |
+
+| Mode        | Logger Type   | Use Case               |
+| ----------- | ------------- | ---------------------- |
+| production  | RemoteLogger  | Production deployments |
+| development | HybridLogger  | Local development      |
+| test        | MockLogger    | Unit/integration tests |
+| console     | ConsoleLogger | Legacy/fallback        |
+| none        | NoOpLogger    | Logging disabled       |
 
 ### 3. Dependencies Structure
+
 ```javascript
 {
   consoleLogger: ConsoleLogger instance,
@@ -170,6 +173,7 @@ class LoggerStrategy {
 ## setLogLevel() Integration
 
 The `setLogLevel()` method must support both:
+
 1. Traditional log level changes (debug, info, warn, error)
 2. Mode switching via special values:
    - `'remote'` → Switch to RemoteLogger

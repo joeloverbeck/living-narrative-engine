@@ -4,7 +4,7 @@
 **Priority**: P0 - Critical  
 **Phase**: 1 - Infrastructure  
 **Component**: Client-Side Logger  
-**Estimated**: 6 hours  
+**Estimated**: 6 hours
 
 ## Description
 
@@ -13,6 +13,7 @@ Implement the RemoteLogger class that batches debug logs and sends them to the l
 ## Technical Requirements
 
 ### 1. Class Structure
+
 ```javascript
 class RemoteLogger {
   #endpoint;           // Server endpoint URL
@@ -24,21 +25,21 @@ class RemoteLogger {
   #circuitBreaker;     // Circuit breaker state
   #sessionId;          // Unique session identifier
   #fallbackLogger;     // Console logger for failures
-  
+
   constructor(config)
-  
+
   // ILogger interface
   debug(message, metadata)
   info(message, metadata)
   warn(message, metadata)
   error(message, metadata)
-  
+
   // ConsoleLogger compatibility
   groupCollapsed(label)
   groupEnd()
   table(data, columns)
   setLogLevel(logLevelInput)
-  
+
   // Internal methods
   async #flush()
   async #sendBatch(logs)
@@ -50,12 +51,14 @@ class RemoteLogger {
 ```
 
 ### 2. Batching Strategy
+
 - Buffer logs until batch size reached (default: 100)
 - Flush on timer interval (default: 1000ms)
 - Flush immediately for error level logs
 - Flush on page unload/visibility change
 
 ### 3. Retry Logic
+
 ```javascript
 // Exponential backoff with jitter
 const delay = Math.min(
@@ -65,6 +68,7 @@ const delay = Math.min(
 ```
 
 ### 4. Circuit Breaker States
+
 - **Closed**: Normal operation, sending logs
 - **Open**: Too many failures, skip sending
 - **Half-Open**: Test with single request
@@ -90,6 +94,7 @@ const delay = Math.min(
    - [ ] Handle network errors gracefully
 
 4. **Implement Retry Mechanism**
+
    ```javascript
    async #retryWithBackoff(fn, maxAttempts) {
      for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -104,6 +109,7 @@ const delay = Math.min(
    ```
 
 5. **Implement Circuit Breaker**
+
    ```javascript
    class CircuitBreaker {
      constructor(threshold, timeout)
@@ -130,6 +136,7 @@ const delay = Math.min(
 ## Metadata Enrichment
 
 Each log entry should include:
+
 ```javascript
 {
   level: "debug|info|warn|error",

@@ -4,7 +4,7 @@
 **Priority**: P0 - Critical  
 **Phase**: 2 - Integration  
 **Component**: Dependency Injection  
-**Estimated**: 3 hours  
+**Estimated**: 3 hours
 
 ## Description
 
@@ -13,6 +13,7 @@ Update the dependency injection container to use LoggerStrategy instead of Conso
 ## Technical Requirements
 
 ### 1. Current Registration (containerConfig.js:46)
+
 ```javascript
 // Current implementation
 const logger = new ConsoleLogger();
@@ -21,6 +22,7 @@ container.register(tokens.ILogger, logger);
 ```
 
 ### 2. New Registration Pattern
+
 ```javascript
 // New implementation with LoggerStrategy
 const loggerStrategy = new LoggerStrategy({
@@ -28,13 +30,14 @@ const loggerStrategy = new LoggerStrategy({
   config: await loadDebugLogConfig(),
   dependencies: {
     consoleLogger: new ConsoleLogger(),
-    eventBus: container.resolve(tokens.IEventBus)
-  }
+    eventBus: container.resolve(tokens.IEventBus),
+  },
 });
 container.register(tokens.ILogger, loggerStrategy);
 ```
 
 ### 3. Mode Detection Logic
+
 ```javascript
 function determineLogMode() {
   // Priority order:
@@ -89,13 +92,16 @@ function determineLogMode() {
 ## Files Requiring Updates
 
 ### Primary Files
+
 - `src/dependencyInjection/containerConfig.js`
 - `src/dependencyInjection/minimalContainerConfig.js`
 
 ### Configuration Utils
+
 - `src/configuration/utils/loggerConfigUtils.js` - Update to support new config format
 
 ### Test Files
+
 - Any test files that mock or stub the logger registration
 
 ## Acceptance Criteria
@@ -146,9 +152,9 @@ import { loadDebugLogConfig } from '../configuration/utils/debugLogConfigLoader.
 
 export async function createContainer() {
   const container = new DIContainer();
-  
+
   // ... other registrations ...
-  
+
   // Logger registration with backward compatibility
   const debugLogConfig = await loadDebugLogConfig();
   const loggerStrategy = new LoggerStrategy({
@@ -158,14 +164,14 @@ export async function createContainer() {
       consoleLogger: new ConsoleLogger(),
       eventBus: container.resolve(tokens.IEventBus),
       // RemoteLogger and HybridLogger created lazily
-    }
+    },
   });
-  
+
   // Maintain existing log level setting
   loggerStrategy.setLogLevel(LogLevel.ERROR);
-  
+
   container.register(tokens.ILogger, loggerStrategy);
-  
+
   // ... rest of container setup ...
 }
 ```
@@ -178,7 +184,7 @@ export async function createContainer() {
 export async function loadAndApplyLoggerConfig(logger) {
   try {
     const config = await loadDebugLogConfig();
-    
+
     // Support both old and new config formats
     if (config.mode) {
       // New format with mode
@@ -187,7 +193,7 @@ export async function loadAndApplyLoggerConfig(logger) {
       // Old format with logLevel
       logger.setLogLevel(config.logLevel);
     }
-    
+
     // Apply category-specific settings if available
     if (config.categories && logger.setCategoryLevels) {
       logger.setCategoryLevels(config.categories);
@@ -206,6 +212,7 @@ export async function loadAndApplyLoggerConfig(logger) {
    - Monitor error rates after deployment
 
 2. **Fallback Strategy**
+
    ```javascript
    try {
      return new LoggerStrategy(config);

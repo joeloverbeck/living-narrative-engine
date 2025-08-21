@@ -210,9 +210,7 @@ export const validateDebugLogRequest = () => {
       }),
 
     // Validate each log entry in the array
-    body('logs.*')
-      .isObject()
-      .withMessage('each log entry must be an object'),
+    body('logs.*').isObject().withMessage('each log entry must be an object'),
 
     // Validate level field for each log entry
     body('logs.*.level')
@@ -277,7 +275,9 @@ export const validateDebugLogRequest = () => {
         // Basic size check to prevent abuse
         const serialized = JSON.stringify(metadata);
         if (serialized.length > 50000) {
-          throw new Error('metadata object is too large (max 50KB when serialized)');
+          throw new Error(
+            'metadata object is too large (max 50KB when serialized)'
+          );
         }
         return true;
       }),
@@ -291,7 +291,9 @@ export const validateDebugLogRequest = () => {
       );
 
       if (extraFields.length > 0) {
-        throw new Error(`Unexpected fields in request body: ${extraFields.join(', ')}`);
+        throw new Error(
+          `Unexpected fields in request body: ${extraFields.join(', ')}`
+        );
       }
       return true;
     }),

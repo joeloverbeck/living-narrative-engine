@@ -4,7 +4,7 @@
 **Priority**: P0 - Critical  
 **Phase**: 1 - Infrastructure  
 **Component**: Client-Side Logger  
-**Estimated**: 3 hours  
+**Estimated**: 3 hours
 
 ## Description
 
@@ -13,6 +13,7 @@ Implement automatic category detection based on log message patterns and enrich 
 ## Technical Requirements
 
 ### 1. Category Detection Patterns
+
 ```javascript
 const CATEGORY_PATTERNS = {
   engine: /GameEngine|engineState|gameSession|gameEngine/i,
@@ -29,12 +30,14 @@ const CATEGORY_PATTERNS = {
   initialization: /init|bootstrap|startup|initialize/i,
   error: /error|exception|failed|failure|catch/i,
   performance: /performance|timing|latency|duration|benchmark/i,
-  general: null // default fallback
+  general: null, // default fallback
 };
 ```
 
 ### 2. Source Detection
+
 Extract file and line number from stack trace:
+
 ```javascript
 // Expected format: "filename.js:123"
 function extractSource() {
@@ -45,6 +48,7 @@ function extractSource() {
 ```
 
 ### 3. Metadata Structure
+
 ```javascript
 {
   // System metadata (always added)
@@ -52,7 +56,7 @@ function extractSource() {
   sessionId: "uuid-v4",
   category: "detected-category",
   source: "file.js:line",
-  
+
   // Browser metadata (configurable)
   browser: {
     userAgent: "...",
@@ -60,7 +64,7 @@ function extractSource() {
     viewport: { width, height },
     screen: { width, height }
   },
-  
+
   // Performance metadata (configurable)
   performance: {
     memory: {
@@ -69,7 +73,7 @@ function extractSource() {
     },
     timing: "ms since page load"
   },
-  
+
   // User metadata (passed in)
   ...userProvidedMetadata
 }
@@ -84,6 +88,7 @@ function extractSource() {
    - [ ] Cache detection results for performance
 
 2. **Category Detection Algorithm**
+
    ```javascript
    class CategoryDetector {
      detectCategory(message) {
@@ -91,7 +96,7 @@ function extractSource() {
        if (this.#cache.has(message)) {
          return this.#cache.get(message);
        }
-       
+
        // Try each pattern
        for (const [category, pattern] of Object.entries(CATEGORY_PATTERNS)) {
          if (pattern && pattern.test(message)) {
@@ -99,7 +104,7 @@ function extractSource() {
            return category;
          }
        }
-       
+
        return 'general';
      }
    }
@@ -112,20 +117,21 @@ function extractSource() {
    - [ ] Handle different browser formats
 
 4. **Source Extraction Logic**
+
    ```javascript
    class SourceExtractor {
      extractSource(depth = 3) {
        const stack = new Error().stack;
        const lines = stack.split('\n');
-       
+
        // Skip Error message and logger frames
        const callerLine = lines[depth];
-       
+
        // Extract file:line from different formats
        // Chrome: "at function (file:line:col)"
        // Firefox: "function@file:line:col"
        // Safari: "function@file:line:col"
-       
+
        return this.#parseStackLine(callerLine);
      }
    }
@@ -186,6 +192,7 @@ function extractSource() {
 ## Category Priority Rules
 
 When multiple patterns match:
+
 1. Error category takes precedence (for error messages)
 2. More specific patterns override general ones
 3. First match wins for equal specificity
@@ -201,6 +208,7 @@ When multiple patterns match:
 ## Browser Compatibility
 
 Source extraction patterns:
+
 ```javascript
 // Chrome/Edge
 /at\s+(?:.*?\s+)?\(?(.+?):(\d+):(\d+)\)?/

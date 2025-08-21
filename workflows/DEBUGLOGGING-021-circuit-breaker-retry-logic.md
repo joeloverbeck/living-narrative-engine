@@ -4,7 +4,7 @@
 **Priority**: P1 - High  
 **Phase**: 4 - Monitoring  
 **Component**: Reliability  
-**Estimated**: 4 hours  
+**Estimated**: 4 hours
 
 ## Description
 
@@ -13,39 +13,41 @@ Implement comprehensive circuit breaker pattern and retry logic with exponential
 ## Technical Requirements
 
 ### 1. Enhanced Circuit Breaker
+
 ```javascript
 class CircuitBreaker {
   // States
   states = {
-    CLOSED: 'CLOSED',         // Normal operation
-    OPEN: 'OPEN',             // Blocking requests
-    HALF_OPEN: 'HALF_OPEN'    // Testing recovery
+    CLOSED: 'CLOSED', // Normal operation
+    OPEN: 'OPEN', // Blocking requests
+    HALF_OPEN: 'HALF_OPEN', // Testing recovery
   };
-  
+
   // Configuration
   config = {
-    failureThreshold: 5,      // Failures to open
-    successThreshold: 2,      // Successes to close
-    timeout: 60000,           // Time before half-open
-    volumeThreshold: 10,      // Min requests for statistics
+    failureThreshold: 5, // Failures to open
+    successThreshold: 2, // Successes to close
+    timeout: 60000, // Time before half-open
+    volumeThreshold: 10, // Min requests for statistics
     errorThresholdPercentage: 50,
-    slowCallDuration: 3000,   // Slow call threshold
-    slowCallThreshold: 5      // Slow calls to open
+    slowCallDuration: 3000, // Slow call threshold
+    slowCallThreshold: 5, // Slow calls to open
   };
-  
+
   // Statistics
   stats = {
-    requests: [],             // Rolling window
+    requests: [], // Rolling window
     failures: 0,
     successes: 0,
     slowCalls: 0,
     lastFailureTime: null,
-    stateChanges: []
+    stateChanges: [],
   };
 }
 ```
 
 ### 2. Retry Strategy
+
 ```javascript
 class RetryStrategy {
   // Exponential backoff with jitter
@@ -56,7 +58,7 @@ class RetryStrategy {
     const jitter = Math.random() * exponential * 0.1; // 10% jitter
     return exponential + jitter;
   }
-  
+
   // Retry conditions
   shouldRetry(error, attempt) {
     if (attempt >= this.config.maxAttempts) return false;
@@ -68,6 +70,7 @@ class RetryStrategy {
 ```
 
 ### 3. Error Classification
+
 ```javascript
 const ERROR_TYPES = {
   RETRIABLE: [
@@ -76,19 +79,19 @@ const ERROR_TYPES = {
     'ENOTFOUND',
     'NetworkError',
     503, // Service Unavailable
-    502  // Bad Gateway
+    502, // Bad Gateway
   ],
-  
+
   RATE_LIMIT: [
-    429  // Too Many Requests
+    429, // Too Many Requests
   ],
-  
+
   NON_RETRIABLE: [
     400, // Bad Request
     401, // Unauthorized
     403, // Forbidden
-    404  // Not Found
-  ]
+    404, // Not Found
+  ],
 };
 ```
 
@@ -101,6 +104,7 @@ const ERROR_TYPES = {
    - [ ] Implement health checks
 
 2. **Circuit Breaker Implementation**
+
    ```javascript
    export class AdvancedCircuitBreaker {
      constructor(config) {
@@ -109,15 +113,15 @@ const ERROR_TYPES = {
        this.stats = new RollingStats(this.config.windowSize);
        this.stateTimer = null;
      }
-     
+
      async execute(fn, context) {
        // Check if we should attempt
        if (!this.canAttempt()) {
          throw new CircuitOpenError('Circuit breaker is OPEN');
        }
-       
+
        const startTime = Date.now();
-       
+
        try {
          const result = await this.executeWithTimeout(fn, context);
          this.recordSuccess(Date.now() - startTime);
@@ -127,7 +131,7 @@ const ERROR_TYPES = {
          throw error;
        }
      }
-     
+
      canAttempt() {
        switch (this.state) {
          case this.states.CLOSED:
@@ -138,20 +142,20 @@ const ERROR_TYPES = {
            return this.stats.attempts < this.config.halfOpenLimit;
        }
      }
-     
+
      recordSuccess(duration) {
        this.stats.record({ success: true, duration });
-       
+
        if (this.state === this.states.HALF_OPEN) {
          if (this.stats.recentSuccesses >= this.config.successThreshold) {
            this.transitionTo(this.states.CLOSED);
          }
        }
      }
-     
+
      recordFailure(duration, error) {
        this.stats.record({ success: false, duration, error });
-       
+
        if (this.shouldOpen()) {
          this.transitionTo(this.states.OPEN);
        }
@@ -166,60 +170,61 @@ const ERROR_TYPES = {
    - [ ] Implement retry policies
 
 4. **Retry Manager Implementation**
+
    ```javascript
    export class RetryManager {
      constructor(config) {
        this.config = config;
        this.retryPolicy = new RetryPolicy(config.policy);
      }
-     
+
      async executeWithRetry(fn, context) {
        let lastError;
-       
+
        for (let attempt = 0; attempt <= this.config.maxAttempts; attempt++) {
          try {
            // Add retry metadata to context
            const enrichedContext = {
              ...context,
              retryAttempt: attempt,
-             isRetry: attempt > 0
+             isRetry: attempt > 0,
            };
-           
+
            const result = await fn(enrichedContext);
-           
+
            // Success - report if it was a retry
            if (attempt > 0) {
              this.reportRetrySuccess(attempt, context);
            }
-           
+
            return result;
          } catch (error) {
            lastError = error;
-           
+
            // Check if we should retry
            if (!this.shouldRetry(error, attempt)) {
              throw error;
            }
-           
+
            // Calculate and apply delay
            const delay = this.calculateDelay(attempt, error);
            await this.delay(delay);
-           
+
            // Log retry attempt
            this.logRetryAttempt(attempt, delay, error);
          }
        }
-       
+
        // All retries exhausted
        throw new RetryExhaustedError(lastError, this.config.maxAttempts);
      }
-     
+
      shouldRetry(error, attempt) {
        // Check attempt limit
        if (attempt >= this.config.maxAttempts) {
          return false;
        }
-       
+
        // Check error type
        return this.retryPolicy.isRetriable(error);
      }
@@ -227,6 +232,7 @@ const ERROR_TYPES = {
    ```
 
 5. **Create Error Classifier**
+
    ```javascript
    export class ErrorClassifier {
      classify(error) {
@@ -234,25 +240,29 @@ const ERROR_TYPES = {
        if (error.code && NETWORK_ERROR_CODES.includes(error.code)) {
          return { type: 'network', retriable: true };
        }
-       
+
        // HTTP status codes
        if (error.status) {
          if (ERROR_TYPES.RETRIABLE.includes(error.status)) {
            return { type: 'server', retriable: true };
          }
          if (ERROR_TYPES.RATE_LIMIT.includes(error.status)) {
-           return { type: 'rate_limit', retriable: true, delay: error.retryAfter };
+           return {
+             type: 'rate_limit',
+             retriable: true,
+             delay: error.retryAfter,
+           };
          }
          if (ERROR_TYPES.NON_RETRIABLE.includes(error.status)) {
            return { type: 'client', retriable: false };
          }
        }
-       
+
        // Timeout errors
        if (error.name === 'TimeoutError') {
          return { type: 'timeout', retriable: true };
        }
-       
+
        // Default
        return { type: 'unknown', retriable: false };
      }
@@ -354,13 +364,13 @@ this.eventBus.emit('circuit.state.change', {
   from: oldState,
   to: newState,
   reason: reason,
-  stats: this.stats.getSummary()
+  stats: this.stats.getSummary(),
 });
 
 this.eventBus.emit('retry.attempt', {
   attempt: attemptNumber,
   delay: delayMs,
-  error: error.message
+  error: error.message,
 });
 ```
 
@@ -372,14 +382,14 @@ class HealthChecker {
     try {
       const response = await fetch(`${url}/health`, {
         method: 'HEAD',
-        timeout: 1000
+        timeout: 1000,
       });
       return response.ok;
     } catch {
       return false;
     }
   }
-  
+
   scheduleHealthChecks(circuitBreaker) {
     setInterval(async () => {
       if (circuitBreaker.state === 'OPEN') {

@@ -4,7 +4,7 @@
 **Priority**: P2 - Medium  
 **Phase**: 4 - Monitoring  
 **Component**: Performance & Monitoring  
-**Estimated**: 4 hours  
+**Estimated**: 4 hours
 
 ## Description
 
@@ -13,37 +13,39 @@ Implement comprehensive performance metrics and monitoring for the debug logging
 ## Technical Requirements
 
 ### 1. Key Metrics to Track
+
 ```javascript
 const METRICS = {
   // Throughput metrics
   logsPerSecond: 0,
   bytesPerSecond: 0,
   batchesSentPerMinute: 0,
-  
+
   // Latency metrics
-  logProcessingTime: [],    // p50, p95, p99
+  logProcessingTime: [], // p50, p95, p99
   batchTransmissionTime: [], // p50, p95, p99
-  endToEndLatency: [],      // p50, p95, p99
-  
+  endToEndLatency: [], // p50, p95, p99
+
   // Resource metrics
-  memoryUsage: 0,           // MB
-  bufferSize: 0,            // Current buffer count
-  cpuUsage: 0,              // Percentage
-  
+  memoryUsage: 0, // MB
+  bufferSize: 0, // Current buffer count
+  cpuUsage: 0, // Percentage
+
   // Reliability metrics
-  successRate: 0,           // Percentage
+  successRate: 0, // Percentage
   failureCount: 0,
   retryCount: 0,
   circuitBreakerTrips: 0,
-  
+
   // Volume metrics
   totalLogsProcessed: 0,
   totalBytesSent: 0,
-  categoryCounts: {}        // Per-category counts
+  categoryCounts: {}, // Per-category counts
 };
 ```
 
 ### 2. Performance Monitor Class
+
 ```javascript
 class PerformanceMonitor {
   constructor(config) {
@@ -51,12 +53,12 @@ class PerformanceMonitor {
     this.thresholds = config.thresholds;
     this.reportingInterval = config.interval || 60000;
   }
-  
+
   // Measurement methods
   measureLogProcessing(fn)
   measureBatchTransmission(fn)
   recordMemoryUsage()
-  
+
   // Reporting methods
   getSnapshot()
   getReport()
@@ -65,13 +67,14 @@ class PerformanceMonitor {
 ```
 
 ### 3. Performance Thresholds
+
 ```javascript
 const THRESHOLDS = {
-  maxLogProcessingTime: 1,      // ms
+  maxLogProcessingTime: 1, // ms
   maxBatchTransmissionTime: 100, // ms
-  maxMemoryUsage: 50,           // MB
-  minSuccessRate: 95,           // percentage
-  maxBufferSize: 1000           // logs
+  maxMemoryUsage: 50, // MB
+  minSuccessRate: 95, // percentage
+  maxBufferSize: 1000, // logs
 };
 ```
 
@@ -84,6 +87,7 @@ const THRESHOLDS = {
    - [ ] Implement rolling windows
 
 2. **Metrics Collection Implementation**
+
    ```javascript
    class MetricsCollector {
      constructor(windowSize = 1000) {
@@ -92,25 +96,25 @@ const THRESHOLDS = {
          latencies: new RollingWindow(windowSize),
          throughput: new RollingCounter(60000), // 1 minute
          errors: new ErrorTracker(),
-         resources: new ResourceMonitor()
+         resources: new ResourceMonitor(),
        };
      }
-     
+
      recordLog(level, size) {
        const startTime = performance.now();
-       
+
        return {
          complete: () => {
            const duration = performance.now() - startTime;
            this.metrics.latencies.add(duration);
            this.metrics.throughput.increment(size);
-         }
+         },
        };
      }
-     
+
      getPercentiles(data, percentiles = [50, 95, 99]) {
        const sorted = [...data].sort((a, b) => a - b);
-       return percentiles.map(p => {
+       return percentiles.map((p) => {
          const index = Math.ceil((p / 100) * sorted.length) - 1;
          return sorted[index] || 0;
        });
@@ -125,16 +129,17 @@ const THRESHOLDS = {
    - [ ] Implement alerting
 
 4. **Performance Monitoring Integration**
+
    ```javascript
    class MonitoredLogger {
      constructor(logger, monitor) {
        this.logger = logger;
        this.monitor = monitor;
      }
-     
+
      debug(message, metadata) {
        const measurement = this.monitor.startMeasurement('log');
-       
+
        try {
          const result = this.logger.debug(message, metadata);
          measurement.success();
@@ -148,6 +153,7 @@ const THRESHOLDS = {
    ```
 
 5. **Resource Monitoring**
+
    ```javascript
    class ResourceMonitor {
      getMemoryUsage() {
@@ -155,17 +161,17 @@ const THRESHOLDS = {
          return {
            used: performance.memory.usedJSHeapSize / 1048576, // MB
            total: performance.memory.totalJSHeapSize / 1048576,
-           limit: performance.memory.jsHeapSizeLimit / 1048576
+           limit: performance.memory.jsHeapSizeLimit / 1048576,
          };
        }
        return null;
      }
-     
+
      getBufferStatus() {
        return {
          size: this.buffer.length,
          bytes: JSON.stringify(this.buffer).length,
-         oldestEntry: this.buffer[0]?.timestamp
+         oldestEntry: this.buffer[0]?.timestamp,
        };
      }
    }
@@ -179,17 +185,17 @@ const THRESHOLDS = {
        this.interval = config.reportingInterval || 60000;
        this.destinations = config.destinations || ['console'];
      }
-     
+
      start() {
        this.timer = setInterval(() => {
          const report = this.generateReport();
          this.sendReport(report);
        }, this.interval);
      }
-     
+
      generateReport() {
        const metrics = this.monitor.getSnapshot();
-       
+
        return {
          timestamp: new Date().toISOString(),
          period: this.interval,
@@ -197,10 +203,10 @@ const THRESHOLDS = {
            logsProcessed: metrics.totalLogsProcessed,
            successRate: metrics.successRate,
            avgLatency: metrics.avgLogProcessingTime,
-           p99Latency: metrics.p99LogProcessingTime
+           p99Latency: metrics.p99LogProcessingTime,
          },
          detailed: metrics,
-         health: this.assessHealth(metrics)
+         health: this.assessHealth(metrics),
        };
      }
    }
@@ -296,27 +302,28 @@ const THRESHOLDS = {
 ## Performance Optimization Recommendations
 
 Based on metrics, provide recommendations:
+
 ```javascript
 class PerformanceAdvisor {
   analyze(metrics) {
     const recommendations = [];
-    
+
     if (metrics.avgBatchSize < 20) {
       recommendations.push({
         issue: 'Small batch sizes',
         impact: 'Increased network overhead',
-        suggestion: 'Increase batchSize or flushInterval'
+        suggestion: 'Increase batchSize or flushInterval',
       });
     }
-    
+
     if (metrics.retryRate > 0.05) {
       recommendations.push({
         issue: 'High retry rate',
         impact: 'Increased latency',
-        suggestion: 'Check network stability or increase timeout'
+        suggestion: 'Check network stability or increase timeout',
       });
     }
-    
+
     return recommendations;
   }
 }

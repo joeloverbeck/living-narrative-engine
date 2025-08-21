@@ -3,21 +3,25 @@
 **Version**: 1.0.0  
 **Date**: December 2024  
 **Status**: Draft  
-**Authors**: System Architecture Team  
+**Authors**: System Architecture Team
 
 ## 1. Executive Summary
 
 ### 1.1 Problem Statement
+
 The Living Narrative Engine currently has **2,054 debug log calls** across 404 files that, when all enabled, can generate approximately **13,000 debug log entries** on startup (due to loops and repeated calls during initialization). This volume makes browser console debugging impractical, causes browser freezes, memory exhaustion, and makes finding relevant logs nearly impossible.
 
 ### 1.2 Solution Overview
+
 Implement a **Remote Debug Logging Service** integrated with the existing llm-proxy-server that:
+
 - Moves debug logs from browser console to server-side storage
 - Provides intelligent categorization and filtering
 - Maintains 100% backward compatibility with existing tests
 - Reduces browser memory usage by >95%
 
 ### 1.3 Key Benefits
+
 - **Performance**: Eliminate browser console overload
 - **Searchability**: Server-side search in <100ms
 - **Persistence**: Logs survive page refreshes
@@ -61,37 +65,38 @@ Implement a **Remote Debug Logging Service** integrated with the existing llm-pr
 
 ### 2.3 Component Responsibilities
 
-| Component | Responsibility | Location |
-|-----------|----------------|----------|
-| LoggerStrategy | Mode-based logger selection | src/logging/loggerStrategy.js |
-| RemoteLogger | Batching, transmission, fallback | src/logging/remoteLogger.js |
-| ConsoleLogger | Browser console output (existing) | src/logging/consoleLogger.js |
-| HybridLogger | Dual console + remote logging | src/logging/hybridLogger.js |
-| MockLogger | Test isolation | tests/common/mockFactories/loggerMocks.js |
-| DebugLogController | HTTP endpoint handler | llm-proxy-server/src/handlers/debugLogController.js |
-| LogStorageService | File persistence, cleanup | llm-proxy-server/src/services/logStorageService.js |
+| Component          | Responsibility                    | Location                                            |
+| ------------------ | --------------------------------- | --------------------------------------------------- |
+| LoggerStrategy     | Mode-based logger selection       | src/logging/loggerStrategy.js                       |
+| RemoteLogger       | Batching, transmission, fallback  | src/logging/remoteLogger.js                         |
+| ConsoleLogger      | Browser console output (existing) | src/logging/consoleLogger.js                        |
+| HybridLogger       | Dual console + remote logging     | src/logging/hybridLogger.js                         |
+| MockLogger         | Test isolation                    | tests/common/mockFactories/loggerMocks.js           |
+| DebugLogController | HTTP endpoint handler             | llm-proxy-server/src/handlers/debugLogController.js |
+| LogStorageService  | File persistence, cleanup         | llm-proxy-server/src/services/logStorageService.js  |
 
 ## 3. Implementation Requirements
 
 ### 3.1 Logger Strategy Pattern
 
 #### 3.1.1 Class Structure
+
 ```javascript
 class LoggerStrategy {
   constructor({ mode, config, dependencies })
-  
+
   // Core Logging Methods (ILogger interface)
   debug(message, metadata)
   info(message, metadata)
   warn(message, metadata)
   error(message, metadata)
-  
+
   // Extended Console Methods (ConsoleLogger compatibility)
   groupCollapsed(label)
   groupEnd()
   table(data, columns)
   setLogLevel(logLevelInput)  // Critical for runtime configuration
-  
+
   // Private Methods
   #createLogger(mode, config, dependencies)
   #validateConfig(config)
@@ -99,14 +104,16 @@ class LoggerStrategy {
 ```
 
 #### 3.1.2 Mode Selection Logic
-| Mode | Logger Type | Use Case |
-|------|-------------|----------|
-| production | RemoteLogger | Production deployments |
-| development | HybridLogger | Local development |
-| test | MockLogger | Unit/integration tests |
-| console | ConsoleLogger | Legacy/fallback |
+
+| Mode        | Logger Type   | Use Case               |
+| ----------- | ------------- | ---------------------- |
+| production  | RemoteLogger  | Production deployments |
+| development | HybridLogger  | Local development      |
+| test        | MockLogger    | Unit/integration tests |
+| console     | ConsoleLogger | Legacy/fallback        |
 
 #### 3.1.3 Configuration Requirements
+
 - Must load from `config/debug-logging-config.json`
 - Must support runtime mode switching via `setLogLevel()` method
 - Must validate configuration on initialization
@@ -119,6 +126,7 @@ class LoggerStrategy {
 ### 3.2 RemoteLogger Implementation
 
 #### 3.2.1 Core Features
+
 - **Batching**: Configurable batch size (default: 100)
 - **Buffering**: Time-based flush (default: 1000ms)
 - **Categorization**: Automatic pattern-based categorization
@@ -127,6 +135,7 @@ class LoggerStrategy {
 - **Circuit Breaker**: Prevent cascade failures
 
 #### 3.2.2 Category Detection Rules
+
 ```javascript
 const CATEGORY_PATTERNS = {
   engine: /GameEngine|engineState|gameSession/i,
@@ -144,7 +153,9 @@ const CATEGORY_PATTERNS = {
 ```
 
 #### 3.2.3 Metadata Enrichment
+
 Each log entry must include:
+
 - `timestamp`: ISO 8601 format
 - `level`: debug|info|warn|error
 - `category`: Detected category
@@ -157,6 +168,7 @@ Each log entry must include:
 **Note**: The llm-proxy-server already has a similar pattern implemented for trace files at `/api/traces/write`. The debug log service should follow this established pattern for consistency.
 
 #### 3.3.1 Endpoint Specification
+
 ```yaml
 endpoint: POST /api/debug-log
 content-type: application/json
@@ -165,6 +177,7 @@ rate-limit: 1000 req/min per IP
 ```
 
 #### 3.3.2 Request Schema
+
 ```json
 {
   "type": "object",
@@ -192,13 +205,14 @@ rate-limit: 1000 req/min per IP
 ```
 
 #### 3.3.3 Response Schema
+
 ```json
 {
   "type": "object",
   "properties": {
     "success": { "type": "boolean" },
     "processed": { "type": "integer" },
-    "errors": { 
+    "errors": {
       "type": "array",
       "items": { "type": "string" }
     }
@@ -210,6 +224,7 @@ rate-limit: 1000 req/min per IP
 ### 3.4 Log Storage Service
 
 #### 3.4.1 File Structure (Following Existing Trace Pattern)
+
 ```
 logs/
 ├── 2024-12-20/
@@ -229,12 +244,14 @@ logs/
 ```
 
 #### 3.4.2 JSONL Format
+
 ```jsonl
 {"level":"debug","message":"GameEngine: Constructor called","category":"engine","timestamp":"2024-12-20T10:15:30.123Z","source":"gameEngine.js:45","sessionId":"uuid-v4","metadata":{}}
 {"level":"debug","message":"EntityManager: Creating entity actor_1234","category":"ecs","timestamp":"2024-12-20T10:15:30.125Z","source":"entityManager.js:123","sessionId":"uuid-v4","metadata":{"entityId":"actor_1234"}}
 ```
 
 #### 3.4.3 Storage Management
+
 - **Retention**: Configurable (default: 7 days)
 - **Max File Size**: 10MB per file (rotate if exceeded)
 - **Compression**: Optional gzip for archived logs
@@ -243,21 +260,26 @@ logs/
 ### 3.5 Configuration System
 
 #### 3.5.1 Configuration Schema
+
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
     "enabled": { "type": "boolean" },
-    "mode": { 
-      "enum": ["console", "remote", "hybrid", "test", "none"] 
+    "mode": {
+      "enum": ["console", "remote", "hybrid", "test", "none"]
     },
     "remote": {
       "type": "object",
       "properties": {
         "endpoint": { "type": "string", "format": "uri" },
         "batchSize": { "type": "integer", "minimum": 1, "maximum": 1000 },
-        "flushInterval": { "type": "integer", "minimum": 100, "maximum": 10000 },
+        "flushInterval": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 10000
+        },
         "retryAttempts": { "type": "integer", "minimum": 0, "maximum": 5 },
         "circuitBreakerThreshold": { "type": "integer" }
       }
@@ -286,6 +308,7 @@ logs/
 ```
 
 #### 3.5.2 Default Configuration
+
 ```json
 {
   "enabled": true,
@@ -319,6 +342,7 @@ logs/
 #### Endpoint: `POST /api/debug-log`
 
 **Request Headers:**
+
 ```http
 Content-Type: application/json
 X-Session-ID: <uuid>
@@ -326,6 +350,7 @@ X-Client-Version: <version>
 ```
 
 **Request Body:**
+
 ```json
 {
   "logs": [
@@ -346,6 +371,7 @@ X-Client-Version: <version>
 ```
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -355,6 +381,7 @@ X-Client-Version: <version>
 ```
 
 **Error Response (400):**
+
 ```json
 {
   "success": false,
@@ -367,6 +394,7 @@ X-Client-Version: <version>
 ```
 
 **Error Response (503):**
+
 ```json
 {
   "success": false,
@@ -380,6 +408,7 @@ X-Client-Version: <version>
 #### Endpoint: `GET /api/debug-log/query`
 
 **Query Parameters:**
+
 - `date`: YYYY-MM-DD format
 - `category`: Category name
 - `level`: Log level filter
@@ -388,6 +417,7 @@ X-Client-Version: <version>
 - `offset`: Pagination offset
 
 **Response:**
+
 ```json
 {
   "logs": [...],
@@ -401,43 +431,54 @@ X-Client-Version: <version>
 ### 5.1 Mock Logger Requirements
 
 #### 5.1.1 Interface Compatibility
+
 The MockLogger must implement the complete ConsoleLogger interface including extended methods:
+
 ```javascript
 class MockLogger {
   // Core ILogger methods
-  debug(message, metadata) { }
-  info(message, metadata) { }
-  warn(message, metadata) { }
-  error(message, metadata) { }
-  
+  debug(message, metadata) {}
+  info(message, metadata) {}
+  warn(message, metadata) {}
+  error(message, metadata) {}
+
   // Extended ConsoleLogger methods
-  groupCollapsed(label) { }
-  groupEnd() { }
-  table(data, columns) { }
-  setLogLevel(logLevelInput) { }
+  groupCollapsed(label) {}
+  groupEnd() {}
+  table(data, columns) {}
+  setLogLevel(logLevelInput) {}
 }
 ```
 
 #### 5.1.2 Test Helper Extensions
+
 ```javascript
 // Maintain existing pattern with complete interface
 export const createMockLogger = () =>
-  createSimpleMock(['info', 'warn', 'error', 'debug', 
-                    'groupCollapsed', 'groupEnd', 'table', 'setLogLevel']);
+  createSimpleMock([
+    'info',
+    'warn',
+    'error',
+    'debug',
+    'groupCollapsed',
+    'groupEnd',
+    'table',
+    'setLogLevel',
+  ]);
 
 // Add enhanced version with helpers
 export const createEnhancedMockLogger = () => {
   const logger = createMockLogger();
-  
+
   // Test utilities
   logger.getDebugCalls = () => logger.debug.mock.calls;
   logger.getCallsByLevel = (level) => logger[level].mock.calls;
   logger.clearAllCalls = () => {
-    ['debug', 'info', 'warn', 'error'].forEach(level => 
+    ['debug', 'info', 'warn', 'error'].forEach((level) =>
       logger[level].mockClear()
     );
   };
-  
+
   // Assertion helpers
   logger.expectDebugMessage = (message) => {
     expect(logger.debug).toHaveBeenCalledWith(
@@ -445,11 +486,11 @@ export const createEnhancedMockLogger = () => {
       expect.anything()
     );
   };
-  
+
   logger.expectNoDebugCalls = () => {
     expect(logger.debug).not.toHaveBeenCalled();
   };
-  
+
   return logger;
 };
 ```
@@ -457,6 +498,7 @@ export const createEnhancedMockLogger = () => {
 ### 5.2 Test Configuration
 
 #### 5.2.1 Test Mode Configuration
+
 ```json
 {
   "enabled": true,
@@ -470,6 +512,7 @@ export const createEnhancedMockLogger = () => {
 ```
 
 #### 5.2.2 Test Setup Pattern
+
 ```javascript
 // In test setup files
 beforeEach(() => {
@@ -486,6 +529,7 @@ afterEach(() => {
 ### 6.1 Phase 1: Infrastructure (Week 1)
 
 #### Tasks:
+
 1. **Server-Side Service**
    - [ ] Create `/api/debug-log` endpoint
    - [ ] Implement LogStorageService
@@ -506,6 +550,7 @@ afterEach(() => {
 ### 6.2 Phase 2: Integration (Week 2)
 
 #### Tasks:
+
 1. **Logger DI Registration Update**
    - [ ] Modify containerConfig.js to use LoggerStrategy
    - [ ] Update minimalContainerConfig.js similarly
@@ -526,6 +571,7 @@ afterEach(() => {
 ### 6.3 Phase 3: Rollout (Week 3)
 
 #### Rollout Strategy:
+
 1. **Alpha Testing**
    - Deploy to development environment
    - Monitor performance metrics
@@ -544,6 +590,7 @@ afterEach(() => {
 ### 6.4 Phase 4: Optimization (Week 4)
 
 #### Optimization Tasks:
+
 1. **Performance Tuning**
    - [ ] Optimize batch sizes based on metrics
    - [ ] Implement compression
@@ -558,43 +605,44 @@ afterEach(() => {
 
 ### 7.1 Client-Side Performance
 
-| Metric | Current | Target | Measurement |
-|--------|---------|--------|-------------|
-| Browser Memory | ~50MB | <1MB | Chrome DevTools |
-| Console Entries | 13,000+ | <100 | console.log count |
-| Search Time | 5-10s (freezes) | N/A | Not applicable |
-| Startup Impact | +500ms | <50ms | Performance.now() |
+| Metric          | Current         | Target | Measurement       |
+| --------------- | --------------- | ------ | ----------------- |
+| Browser Memory  | ~50MB           | <1MB   | Chrome DevTools   |
+| Console Entries | 13,000+         | <100   | console.log count |
+| Search Time     | 5-10s (freezes) | N/A    | Not applicable    |
+| Startup Impact  | +500ms          | <50ms  | Performance.now() |
 
 ### 7.2 Server-Side Performance
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| Request Latency | <100ms p99 | Server metrics |
-| Throughput | 1000 req/min | Load testing |
-| Storage Write | <10ms | File system metrics |
-| Query Response | <100ms | API monitoring |
+| Metric          | Target       | Measurement         |
+| --------------- | ------------ | ------------------- |
+| Request Latency | <100ms p99   | Server metrics      |
+| Throughput      | 1000 req/min | Load testing        |
+| Storage Write   | <10ms        | File system metrics |
+| Query Response  | <100ms       | API monitoring      |
 
 ### 7.3 Network Performance
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| Batch Size | 5-10KB | Request size |
-| Compression | 70% reduction | Gzip ratio |
-| Retry Success | >95% | Success metrics |
-| Circuit Breaker | <1% trips | Error monitoring |
+| Metric          | Target        | Measurement      |
+| --------------- | ------------- | ---------------- |
+| Batch Size      | 5-10KB        | Request size     |
+| Compression     | 70% reduction | Gzip ratio       |
+| Retry Success   | >95%          | Success metrics  |
+| Circuit Breaker | <1% trips     | Error monitoring |
 
 ## 8. Security Considerations
 
 ### 8.1 Data Protection
 
 #### 8.1.1 Sensitive Data Filtering
+
 ```javascript
 const SENSITIVE_PATTERNS = [
   /api[_-]?key/i,
   /password/i,
   /token/i,
   /secret/i,
-  /credential/i
+  /credential/i,
 ];
 
 function sanitizeLog(message) {
@@ -604,6 +652,7 @@ function sanitizeLog(message) {
 ```
 
 #### 8.1.2 Access Control
+
 - Logs stored locally only (default)
 - Optional authentication for remote access
 - IP-based rate limiting
@@ -621,12 +670,14 @@ function sanitizeLog(message) {
 ### 9.1 Metrics to Track
 
 #### Client Metrics:
+
 - Log generation rate
 - Batch transmission success rate
 - Fallback activation frequency
 - Network error rate
 
 #### Server Metrics:
+
 - Request processing time
 - Storage write latency
 - File rotation frequency
@@ -634,12 +685,12 @@ function sanitizeLog(message) {
 
 ### 9.2 Alerts
 
-| Alert | Condition | Action |
-|-------|-----------|--------|
-| High Error Rate | >5% failed batches | Check network/server |
-| Storage Full | >80% disk usage | Trigger cleanup |
-| Circuit Open | Circuit breaker trips | Investigate server |
-| Performance Degradation | p99 >200ms | Scale/optimize |
+| Alert                   | Condition             | Action               |
+| ----------------------- | --------------------- | -------------------- |
+| High Error Rate         | >5% failed batches    | Check network/server |
+| Storage Full            | >80% disk usage       | Trigger cleanup      |
+| Circuit Open            | Circuit breaker trips | Investigate server   |
+| Performance Degradation | p99 >200ms            | Scale/optimize       |
 
 ## 10. Rollback Plan
 
@@ -660,6 +711,7 @@ function sanitizeLog(message) {
 ### 10.3 Rollback Testing
 
 Before deployment:
+
 1. Test mode switching at runtime
 2. Verify fallback mechanisms
 3. Confirm test compatibility
@@ -668,18 +720,21 @@ Before deployment:
 ## 11. Success Criteria
 
 ### 11.1 Functional Requirements
+
 - [ ] All 2,054 debug calls work unchanged
 - [ ] All tests pass without modification
 - [ ] Logs are categorized correctly
 - [ ] Search completes in <100ms
 
 ### 11.2 Performance Requirements
+
 - [ ] Browser memory reduced by >95%
 - [ ] No console freezing
 - [ ] Startup time impact <50ms
 - [ ] Log transmission success >95%
 
 ### 11.3 Quality Requirements
+
 - [ ] 100% backward compatibility
 - [ ] Zero test regressions
 - [ ] Full documentation
@@ -688,18 +743,21 @@ Before deployment:
 ## 12. Documentation Requirements
 
 ### 12.1 Developer Documentation
+
 - Architecture overview
 - Configuration guide
 - Debugging guide
 - API reference
 
 ### 12.2 Operations Documentation
+
 - Deployment procedures
 - Monitoring setup
 - Troubleshooting guide
 - Rollback procedures
 
 ### 12.3 User Documentation
+
 - Feature overview
 - Configuration options
 - Common use cases
@@ -708,12 +766,14 @@ Before deployment:
 ## 13. Future Enhancements
 
 ### 13.1 Short-Term (3-6 months)
+
 - Log viewer UI
 - Advanced search capabilities
 - Real-time log streaming
 - Performance profiling integration
 
 ### 13.2 Long-Term (6-12 months)
+
 - Distributed tracing
 - Log analytics dashboard
 - Machine learning insights
@@ -721,24 +781,25 @@ Before deployment:
 
 ## Appendix A: File Mappings
 
-| Current File | New/Modified File | Change Type |
-|--------------|-------------------|-------------|
-| src/logging/consoleLogger.js | (unchanged) | None |
-| - | src/logging/loggerStrategy.js | New |
-| - | src/logging/remoteLogger.js | New |
-| - | src/logging/hybridLogger.js | New |
-| src/dependencyInjection/containerConfig.js | (modified) | Update DI registration |
-| src/dependencyInjection/minimalContainerConfig.js | (modified) | Update DI registration |
-| src/configuration/utils/loggerConfigUtils.js | (modified) | Support new config format |
-| tests/common/mockFactories/loggerMocks.js | (modified) | Add extended methods |
-| config/logger-config.json | config/debug-logging-config.json | New |
-| - | llm-proxy-server/src/handlers/debugLogController.js | New |
-| - | llm-proxy-server/src/services/logStorageService.js | New |
-| - | llm-proxy-server/src/routes/debugRoutes.js | New (similar to traceRoutes.js) |
+| Current File                                      | New/Modified File                                   | Change Type                     |
+| ------------------------------------------------- | --------------------------------------------------- | ------------------------------- |
+| src/logging/consoleLogger.js                      | (unchanged)                                         | None                            |
+| -                                                 | src/logging/loggerStrategy.js                       | New                             |
+| -                                                 | src/logging/remoteLogger.js                         | New                             |
+| -                                                 | src/logging/hybridLogger.js                         | New                             |
+| src/dependencyInjection/containerConfig.js        | (modified)                                          | Update DI registration          |
+| src/dependencyInjection/minimalContainerConfig.js | (modified)                                          | Update DI registration          |
+| src/configuration/utils/loggerConfigUtils.js      | (modified)                                          | Support new config format       |
+| tests/common/mockFactories/loggerMocks.js         | (modified)                                          | Add extended methods            |
+| config/logger-config.json                         | config/debug-logging-config.json                    | New                             |
+| -                                                 | llm-proxy-server/src/handlers/debugLogController.js | New                             |
+| -                                                 | llm-proxy-server/src/services/logStorageService.js  | New                             |
+| -                                                 | llm-proxy-server/src/routes/debugRoutes.js          | New (similar to traceRoutes.js) |
 
 ## Appendix B: Dependencies
 
 ### New Dependencies
+
 ```json
 {
   "dependencies": {
@@ -751,6 +812,7 @@ Before deployment:
 ```
 
 ### Existing Dependencies Used
+
 - Built-in: fs, path, http
 - Existing: uuid (session IDs)
 - Existing: compression middleware (optional)
@@ -758,19 +820,23 @@ Before deployment:
 ## Appendix C: Architectural Integration Notes
 
 ### Dependency Injection Integration
+
 The logger is currently registered as a singleton early in the container configuration process:
+
 1. Created as `ConsoleLogger` instance in `containerConfig.js` line 46
 2. Registered via `tokens.ILogger` for all consumers
 3. Configuration loaded asynchronously via `loadAndApplyLoggerConfig`
 4. Used by 400+ files throughout the system
 
 **Critical Integration Points**:
+
 - The LoggerStrategy must be a drop-in replacement for ConsoleLogger
 - Must support all ConsoleLogger methods including extended ones
 - Must maintain the same async configuration loading flow
 - Must not break existing test infrastructure
 
 ### Test Infrastructure Considerations
+
 - No central TestBedClass exists; domain-specific test beds are used
 - MockLogger created via `createSimpleMock()` utility pattern
 - Tests expect specific method signatures and behavior
@@ -778,24 +844,26 @@ The logger is currently registered as a singleton early in the container configu
 
 ## Appendix D: Risk Matrix
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| Network failures | Medium | Low | Console fallback |
-| Storage exhaustion | Low | High | Automatic cleanup |
-| Performance regression | Low | Medium | Monitoring & rollback |
-| Test incompatibility | Low | High | Extensive testing |
-| Security breach | Low | High | Local-only default |
+| Risk                   | Probability | Impact | Mitigation            |
+| ---------------------- | ----------- | ------ | --------------------- |
+| Network failures       | Medium      | Low    | Console fallback      |
+| Storage exhaustion     | Low         | High   | Automatic cleanup     |
+| Performance regression | Low         | Medium | Monitoring & rollback |
+| Test incompatibility   | Low         | High   | Extensive testing     |
+| Security breach        | Low         | High   | Local-only default    |
 
 ---
 
 **Document Status**: This specification has been updated and corrected based on comprehensive codebase analysis. All discrepancies between initial assumptions and production reality have been addressed. The specification now accurately reflects:
+
 - 2,054 debug calls across 404 files (not 13,000 as initially stated)
 - Complete ConsoleLogger interface including extended methods
 - Existing DI container integration requirements
 - Actual test infrastructure organization
 - Leveraging existing llm-proxy-server patterns
 
-**Next Steps**: 
+**Next Steps**:
+
 1. Review and approve specification
 2. Create implementation tickets
 3. Begin Phase 1 development

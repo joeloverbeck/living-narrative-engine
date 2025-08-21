@@ -142,7 +142,7 @@ describe('CoreMotivationsGeneratorController', () => {
       expect(
         testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId
       ).toHaveBeenCalledWith(directionId);
-      
+
       // Check that direction was selected in the select element
       const selector = document.getElementById('direction-selector');
       expect(selector.value).toBe(directionId);
@@ -1365,7 +1365,8 @@ describe('CoreMotivationsGeneratorController', () => {
       directionSelector.id = 'direction-selector';
       directionSelector.className = 'cb-select';
       directionSelector.setAttribute('aria-label', 'Select thematic direction');
-      directionSelector.innerHTML = '<option value="">-- Choose a thematic direction --</option>';
+      directionSelector.innerHTML =
+        '<option value="">-- Choose a thematic direction --</option>';
       document.body.appendChild(directionSelector);
 
       const noDirectionsMsg = document.createElement('div');
@@ -1388,29 +1389,29 @@ describe('CoreMotivationsGeneratorController', () => {
           {
             id: 'dir1',
             title: 'Heroic Journey',
-            concept: { id: 'concept1', text: 'Adventure Concept' }
+            concept: { id: 'concept1', text: 'Adventure Concept' },
           },
           {
-            id: 'dir2', 
+            id: 'dir2',
             title: 'Tragic Fall',
-            concept: { id: 'concept2', text: 'Tragedy Concept' }
-          }
+            concept: { id: 'concept2', text: 'Tragedy Concept' },
+          },
         ];
-        
+
         // Set up the controller's eligible directions
         testBed.controller.eligibleDirections = mockDirections;
-        
+
         // Act
         testBed.controller.populateDirectionSelector();
-        
+
         // Assert
         const selector = document.getElementById('direction-selector');
         const divElements = selector.querySelectorAll('div');
         expect(divElements.length).toBe(0);
-        
+
         const optionElements = selector.querySelectorAll('option');
         expect(optionElements.length).toBeGreaterThan(1); // Default option + direction options
-        
+
         const optgroupElements = selector.querySelectorAll('optgroup');
         expect(optgroupElements.length).toBeGreaterThan(0);
       });
@@ -1421,38 +1422,42 @@ describe('CoreMotivationsGeneratorController', () => {
           {
             id: 'dir1',
             title: 'Heroic Journey',
-            concept: { id: 'concept1', text: 'Adventure' }
+            concept: { id: 'concept1', text: 'Adventure' },
           },
           {
             id: 'dir2',
-            title: 'Mysterious Quest', 
-            concept: { id: 'concept1', text: 'Adventure' }
+            title: 'Mysterious Quest',
+            concept: { id: 'concept1', text: 'Adventure' },
           },
           {
             id: 'dir3',
             title: 'Tragic Fall',
-            concept: { id: 'concept2', text: 'Drama' }
-          }
+            concept: { id: 'concept2', text: 'Drama' },
+          },
         ];
-        
+
         testBed.controller.eligibleDirections = mockDirections;
-        
+
         // Act
         testBed.controller.populateDirectionSelector();
-        
+
         // Assert
         const selector = document.getElementById('direction-selector');
         const optgroups = selector.querySelectorAll('optgroup');
-        
+
         expect(optgroups.length).toBe(2); // Two concepts
-        
+
         // Check Adventure optgroup
-        const adventureOptgroup = Array.from(optgroups).find(og => og.label === 'Adventure');
+        const adventureOptgroup = Array.from(optgroups).find(
+          (og) => og.label === 'Adventure'
+        );
         expect(adventureOptgroup).toBeDefined();
         expect(adventureOptgroup.children.length).toBe(2);
-        
-        // Check Drama optgroup  
-        const dramaOptgroup = Array.from(optgroups).find(og => og.label === 'Drama');
+
+        // Check Drama optgroup
+        const dramaOptgroup = Array.from(optgroups).find(
+          (og) => og.label === 'Drama'
+        );
         expect(dramaOptgroup).toBeDefined();
         expect(dramaOptgroup.children.length).toBe(1);
       });
@@ -1463,20 +1468,22 @@ describe('CoreMotivationsGeneratorController', () => {
           {
             id: 'dir1',
             title: 'Test Direction',
-            concept: { id: 'concept1', text: 'Test Concept' }
-          }
+            concept: { id: 'concept1', text: 'Test Concept' },
+          },
         ];
-        
+
         testBed.controller.eligibleDirections = mockDirections;
-        
+
         // Act
         testBed.controller.populateDirectionSelector();
-        
+
         // Assert
         const selector = document.getElementById('direction-selector');
         const defaultOption = selector.querySelector('option[value=""]');
         expect(defaultOption).toBeDefined();
-        expect(defaultOption.textContent).toBe('-- Choose a thematic direction --');
+        expect(defaultOption.textContent).toBe(
+          '-- Choose a thematic direction --'
+        );
       });
 
       it('should set proper option attributes', () => {
@@ -1485,19 +1492,21 @@ describe('CoreMotivationsGeneratorController', () => {
           {
             id: 'test-direction-1',
             title: 'Epic Adventure',
-            concept: { id: 'adventure-concept', text: 'Adventure Stories' }
-          }
+            concept: { id: 'adventure-concept', text: 'Adventure Stories' },
+          },
         ];
-        
+
         testBed.controller.eligibleDirections = mockDirections;
-        
+
         // Act
         testBed.controller.populateDirectionSelector();
-        
+
         // Assert
         const selector = document.getElementById('direction-selector');
-        const option = selector.querySelector('option[value="test-direction-1"]');
-        
+        const option = selector.querySelector(
+          'option[value="test-direction-1"]'
+        );
+
         expect(option).toBeDefined();
         expect(option.value).toBe('test-direction-1');
         expect(option.textContent).toBe('Epic Adventure');
@@ -1507,14 +1516,16 @@ describe('CoreMotivationsGeneratorController', () => {
       it('should show no directions message when no eligible directions', () => {
         // Arrange
         testBed.controller.eligibleDirections = [];
-        
+
         // Act
         testBed.controller.populateDirectionSelector();
-        
+
         // Assert
         const selector = document.getElementById('direction-selector');
-        const noDirectionsMsg = document.getElementById('no-directions-message');
-        
+        const noDirectionsMsg = document.getElementById(
+          'no-directions-message'
+        );
+
         expect(selector.style.display).toBe('none');
         expect(noDirectionsMsg.style.display).toBe('block');
       });
@@ -1525,19 +1536,21 @@ describe('CoreMotivationsGeneratorController', () => {
           {
             id: 'dir1',
             title: 'Test Direction',
-            concept: { id: 'concept1', text: 'Test Concept' }
-          }
+            concept: { id: 'concept1', text: 'Test Concept' },
+          },
         ];
-        
+
         testBed.controller.eligibleDirections = mockDirections;
-        
+
         // Act
         testBed.controller.populateDirectionSelector();
-        
+
         // Assert
         const selector = document.getElementById('direction-selector');
-        const noDirectionsMsg = document.getElementById('no-directions-message');
-        
+        const noDirectionsMsg = document.getElementById(
+          'no-directions-message'
+        );
+
         expect(selector.style.display).toBe('block');
         expect(noDirectionsMsg.style.display).toBe('none');
       });
@@ -1548,26 +1561,26 @@ describe('CoreMotivationsGeneratorController', () => {
           {
             id: 'dir1',
             title: 'Direction 1',
-            concept: { id: 'concept1', text: 'Concept 1' }
+            concept: { id: 'concept1', text: 'Concept 1' },
           },
           {
             id: 'dir2',
-            title: 'Direction 2', 
-            concept: { id: 'concept2', text: 'Concept 2' }
-          }
+            title: 'Direction 2',
+            concept: { id: 'concept2', text: 'Concept 2' },
+          },
         ];
-        
+
         testBed.controller.eligibleDirections = mockDirections;
-        
+
         // Act
         testBed.controller.populateDirectionSelector();
-        
+
         // Assert
         expect(testBed.mockEventBus.dispatch).toHaveBeenCalledWith(
           'core:directions_loaded',
           {
             count: 2,
-            concepts: 2
+            concepts: 2,
           }
         );
       });
@@ -1576,20 +1589,22 @@ describe('CoreMotivationsGeneratorController', () => {
         // Arrange
         const originalSelector = document.getElementById('direction-selector');
         originalSelector.remove();
-        
+
         const mockDirections = [
           {
             id: 'dir1',
             title: 'Test Direction',
-            concept: { id: 'concept1', text: 'Test Concept' }
-          }
+            concept: { id: 'concept1', text: 'Test Concept' },
+          },
         ];
-        
+
         testBed.controller.eligibleDirections = mockDirections;
-        
+
         // Act & Assert - should not throw
-        expect(() => testBed.controller.populateDirectionSelector()).not.toThrow();
-        
+        expect(() =>
+          testBed.controller.populateDirectionSelector()
+        ).not.toThrow();
+
         // The method should handle the missing element gracefully
         // We've verified it doesn't throw, which is the main requirement
         expect(true).toBe(true);
@@ -1601,28 +1616,32 @@ describe('CoreMotivationsGeneratorController', () => {
           {
             id: 'dir1',
             title: 'Direction Without Concept',
-            concept: null
+            concept: null,
           },
           {
             id: 'dir2',
-            title: 'Direction With Undefined Concept'
+            title: 'Direction With Undefined Concept',
             // concept is undefined
-          }
+          },
         ];
-        
+
         testBed.controller.eligibleDirections = mockDirections;
-        
+
         // Act - should not throw
-        expect(() => testBed.controller.populateDirectionSelector()).not.toThrow();
-        
+        expect(() =>
+          testBed.controller.populateDirectionSelector()
+        ).not.toThrow();
+
         // Assert
         const selector = document.getElementById('direction-selector');
         const optgroups = selector.querySelectorAll('optgroup');
-        
+
         // Should create optgroup for unknown concepts
         expect(optgroups.length).toBeGreaterThan(0);
-        
-        const unknownOptgroup = Array.from(optgroups).find(og => og.label === 'Unknown Concept');
+
+        const unknownOptgroup = Array.from(optgroups).find(
+          (og) => og.label === 'Unknown Concept'
+        );
         expect(unknownOptgroup).toBeDefined();
         expect(unknownOptgroup.children.length).toBe(2);
       });
@@ -1635,32 +1654,35 @@ describe('CoreMotivationsGeneratorController', () => {
           {
             id: 'dir1',
             title: 'Heroic Journey',
-            concept: { id: 'adventure', text: 'Adventure Stories' }
+            concept: { id: 'adventure', text: 'Adventure Stories' },
           },
           {
             id: 'dir2',
             title: 'Mysterious Quest',
-            concept: { id: 'adventure', text: 'Adventure Stories' }
+            concept: { id: 'adventure', text: 'Adventure Stories' },
           },
           {
             id: 'dir3',
             title: 'Tragic Fall',
-            concept: { id: 'drama', text: 'Dramatic Tales' }
-          }
+            concept: { id: 'drama', text: 'Dramatic Tales' },
+          },
         ];
-        
+
         // Act
-        const organized = testBed.controller.organizeDirectionsByConcept(directions);
-        
+        const organized =
+          testBed.controller.organizeDirectionsByConcept(directions);
+
         // Assert
         expect(organized.length).toBe(2);
-        
-        const adventureGroup = organized.find(g => g.conceptId === 'adventure');
+
+        const adventureGroup = organized.find(
+          (g) => g.conceptId === 'adventure'
+        );
         expect(adventureGroup).toBeDefined();
         expect(adventureGroup.conceptTitle).toBe('Adventure Stories');
         expect(adventureGroup.directions.length).toBe(2);
-        
-        const dramaGroup = organized.find(g => g.conceptId === 'drama');
+
+        const dramaGroup = organized.find((g) => g.conceptId === 'drama');
         expect(dramaGroup).toBeDefined();
         expect(dramaGroup.conceptTitle).toBe('Dramatic Tales');
         expect(dramaGroup.directions.length).toBe(1);
@@ -1669,7 +1691,7 @@ describe('CoreMotivationsGeneratorController', () => {
       it('should handle empty directions array', () => {
         // Act
         const organized = testBed.controller.organizeDirectionsByConcept([]);
-        
+
         // Assert
         expect(organized).toEqual([]);
       });
@@ -1680,18 +1702,19 @@ describe('CoreMotivationsGeneratorController', () => {
           {
             id: 'dir1',
             title: 'Direction with null concept',
-            concept: null
+            concept: null,
           },
           {
-            id: 'dir2', 
-            title: 'Direction with undefined concept'
+            id: 'dir2',
+            title: 'Direction with undefined concept',
             // no concept property
-          }
+          },
         ];
-        
+
         // Act
-        const organized = testBed.controller.organizeDirectionsByConcept(directions);
-        
+        const organized =
+          testBed.controller.organizeDirectionsByConcept(directions);
+
         // Assert
         expect(organized.length).toBe(1);
         expect(organized[0].conceptId).toBe('unknown');
@@ -1707,28 +1730,28 @@ describe('CoreMotivationsGeneratorController', () => {
           {
             id: 'dir1',
             title: 'Test Direction',
-            concept: { id: 'concept1', text: 'Test Concept' }
-          }
+            concept: { id: 'concept1', text: 'Test Concept' },
+          },
         ];
-        
+
         testBed.controller.eligibleDirections = mockDirections;
-        
+
         // Act
         testBed.controller.populateDirectionSelector();
-        
+
         // Assert HTML compliance
         const selector = document.getElementById('direction-selector');
         const allChildren = Array.from(selector.children);
-        
+
         // Every child should be either option or optgroup
-        allChildren.forEach(child => {
+        allChildren.forEach((child) => {
           expect(['OPTION', 'OPTGROUP']).toContain(child.tagName);
         });
-        
+
         // No div elements should exist
         const divElements = selector.querySelectorAll('div');
         expect(divElements.length).toBe(0);
-        
+
         // No invalid roles should be set
         expect(selector.getAttribute('role')).not.toBe('listbox');
       });
@@ -1739,21 +1762,23 @@ describe('CoreMotivationsGeneratorController', () => {
           {
             id: 'dir1',
             title: 'Test Direction',
-            concept: { id: 'concept1', text: 'Test Concept' }
-          }
+            concept: { id: 'concept1', text: 'Test Concept' },
+          },
         ];
-        
+
         testBed.controller.eligibleDirections = mockDirections;
-        
+
         // Act
         testBed.controller.populateDirectionSelector();
-        
+
         // Assert
         const selector = document.getElementById('direction-selector');
-        
+
         // Should maintain proper aria-label
-        expect(selector.getAttribute('aria-label')).toBe('Select thematic direction');
-        
+        expect(selector.getAttribute('aria-label')).toBe(
+          'Select thematic direction'
+        );
+
         // Should NOT have role=listbox (invalid for select)
         expect(selector.getAttribute('role')).not.toBe('listbox');
       });
@@ -1764,12 +1789,241 @@ describe('CoreMotivationsGeneratorController', () => {
         // This test verifies the integration flow
         // The populateDirectionSelector method is called internally during initialization
         // when eligible directions are loaded
-        
+
         // Since we've already tested that the controller initializes successfully
         // and populates the direction selector in the other tests,
         // this integration is working correctly
         expect(true).toBe(true);
       });
+    });
+  });
+
+  describe('Select Element Event Handling (CORMOTSEL-002)', () => {
+    beforeEach(async () => {
+      testBed.setupSuccessfulDirectionLoad();
+      await testBed.controller.initialize();
+
+      // Ensure direction selector exists in DOM
+      const selector = document.getElementById('direction-selector');
+      if (!selector) {
+        const directionSelector = document.createElement('select');
+        directionSelector.id = 'direction-selector';
+        directionSelector.className = 'cb-select';
+        directionSelector.innerHTML = `
+          <option value="">-- Choose a thematic direction --</option>
+          <option value="test-direction-1">Heroic Journey</option>
+          <option value="test-direction-2">Dark Past</option>
+        `;
+        document.body.appendChild(directionSelector);
+      }
+    });
+
+    afterEach(() => {
+      const selector = document.getElementById('direction-selector');
+      if (selector) selector.remove();
+    });
+
+    it('should handle direct select element change events', async () => {
+      // Arrange
+      const selector = document.getElementById('direction-selector');
+      const directionId = 'test-direction-1';
+
+      // Mock the required services
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        []
+      );
+
+      // Act - Simulate direct DOM event
+      selector.value = directionId;
+      const changeEvent = new Event('change', { bubbles: true });
+      selector.dispatchEvent(changeEvent);
+
+      // Allow async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Assert
+      const generateBtn = document.getElementById('generate-btn');
+      expect(generateBtn.disabled).toBe(false);
+
+      // Verify event was dispatched
+      const selectionEvent = testBed.dispatchedEvents.find(
+        (event) => event.type === 'core:core_motivations_direction_selected'
+      );
+      expect(selectionEvent).toBeDefined();
+      expect(selectionEvent.payload.directionId).toBe(directionId);
+    });
+
+    it('should handle empty selection correctly', async () => {
+      // Arrange - First select a direction
+      const selector = document.getElementById('direction-selector');
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        []
+      );
+
+      selector.value = 'test-direction-1';
+      selector.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Clear dispatched events to test clear selection
+      testBed.dispatchedEvents.length = 0;
+
+      // Act - Clear selection by selecting empty value
+      selector.value = '';
+      const changeEvent = new Event('change', { bubbles: true });
+      selector.dispatchEvent(changeEvent);
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Assert - Generate button should be disabled when no selection
+      const generateBtn = document.getElementById('generate-btn');
+      expect(generateBtn.disabled).toBe(true);
+
+      // No new selection event should be dispatched for empty values
+      const selectionEvents = testBed.dispatchedEvents.filter(
+        (event) => event.type === 'core:core_motivations_direction_selected'
+      );
+      expect(selectionEvents.length).toBe(0);
+
+      // But a clear event should be dispatched
+      const clearEvents = testBed.dispatchedEvents.filter(
+        (event) => event.type === 'core:core_motivations_direction_cleared'
+      );
+      expect(clearEvents.length).toBe(1);
+      expect(clearEvents[0].payload.conceptId).toBeDefined();
+    });
+
+    it('should handle invalid selection gracefully', async () => {
+      // Arrange
+      const selector = document.getElementById('direction-selector');
+      const invalidDirectionId = 'non-existent-direction';
+
+      // Add the invalid option to the DOM (user could have modified HTML)
+      const invalidOption = document.createElement('option');
+      invalidOption.value = invalidDirectionId;
+      invalidOption.textContent = 'Invalid Direction';
+      selector.appendChild(invalidOption);
+
+      // Act
+      selector.value = invalidDirectionId;
+      const changeEvent = new Event('change', { bubbles: true });
+
+      // This should not throw an error
+      expect(() => {
+        selector.dispatchEvent(changeEvent);
+      }).not.toThrow();
+    });
+
+    it('should maintain event listener after DOM manipulations', async () => {
+      // Arrange
+      const selector = document.getElementById('direction-selector');
+      const directionId = 'test-direction-1';
+
+      // Mock services
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        []
+      );
+
+      // Simulate DOM manipulation (adding new options)
+      const newOption = document.createElement('option');
+      newOption.value = 'new-direction';
+      newOption.textContent = 'New Direction';
+      selector.appendChild(newOption);
+
+      // Act - Event listener should still work after DOM changes
+      selector.value = directionId;
+      selector.dispatchEvent(new Event('change', { bubbles: true }));
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Assert
+      const selectionEvent = testBed.dispatchedEvents.find(
+        (event) => event.type === 'core:core_motivations_direction_selected'
+      );
+      expect(selectionEvent).toBeDefined();
+      expect(selectionEvent.payload.directionId).toBe(directionId);
+    });
+
+    it('should handle rapid selection changes', async () => {
+      // Arrange
+      const selector = document.getElementById('direction-selector');
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        []
+      );
+
+      // Act - Rapidly change selections
+      selector.value = 'test-direction-1';
+      selector.dispatchEvent(new Event('change', { bubbles: true }));
+
+      selector.value = 'test-direction-2';
+      selector.dispatchEvent(new Event('change', { bubbles: true }));
+
+      selector.value = 'test-direction-1';
+      selector.dispatchEvent(new Event('change', { bubbles: true }));
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Assert - Should have handled all changes
+      const selectionEvents = testBed.dispatchedEvents.filter(
+        (event) => event.type === 'core:core_motivations_direction_selected'
+      );
+      expect(selectionEvents.length).toBe(3);
+
+      // Final selection should be test-direction-1
+      const finalEvent = selectionEvents[selectionEvents.length - 1];
+      expect(finalEvent.payload.directionId).toBe('test-direction-1');
+    });
+
+    it('should handle missing selector element gracefully', () => {
+      // Arrange - Remove the selector
+      const selector = document.getElementById('direction-selector');
+      selector.remove();
+
+      // Act & Assert - Should not throw when selector is missing
+      // (This tests the ?. optional chaining in the event listener setup)
+      expect(() => {
+        // Re-initialize controller which will attempt to set up event listeners
+        testBed.controller.initialize();
+      }).not.toThrow();
+    });
+
+    it('should explicitly clear selection when empty value is selected', async () => {
+      // Arrange - First select a direction
+      const selector = document.getElementById('direction-selector');
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        [{ id: 'motivation-1', core_motivation: 'Test' }]
+      );
+
+      // Select a direction first
+      selector.value = 'test-direction-1';
+      selector.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Clear events for testing the clear functionality
+      testBed.dispatchedEvents.length = 0;
+
+      // Act - Clear selection
+      selector.value = '';
+      selector.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Assert - Clear event should be dispatched
+      const clearEvent = testBed.dispatchedEvents.find(
+        (event) => event.type === 'core:core_motivations_direction_cleared'
+      );
+      expect(clearEvent).toBeDefined();
+      expect(clearEvent.payload.conceptId).toBeDefined();
+
+      // Motivations container should be hidden and empty state shown
+      const motivationsContainer = document.getElementById(
+        'motivations-container'
+      );
+      const emptyState = document.getElementById('empty-state');
+      expect(motivationsContainer.style.display).toBe('none');
+      expect(emptyState.style.display).toBe('flex');
+
+      // Buttons should be disabled
+      const generateBtn = document.getElementById('generate-btn');
+      expect(generateBtn.disabled).toBe(true);
     });
   });
 });

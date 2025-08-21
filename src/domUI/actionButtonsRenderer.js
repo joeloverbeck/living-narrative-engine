@@ -1016,7 +1016,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       const actionsMissingVisual = eventObject.payload.actions.filter(
         (a) => a && typeof a.visual === 'undefined'
       );
-      
+
       if (actionsWithVisual.length > 0) {
         this.logger.info(
           '[ActionButtonsRenderer] Actions with visual properties:',

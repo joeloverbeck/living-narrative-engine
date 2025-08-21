@@ -192,6 +192,17 @@ beforeEach(() => {
     __esModule: true,
     default: jest.fn(() => 'compression-mw'),
   }));
+
+  // Mock the problematic route modules that use import.meta.url
+  jest.doMock('../src/routes/traceRoutes.js', () => ({
+    __esModule: true,
+    default: 'trace-routes-mock',
+  }));
+
+  jest.doMock('../src/routes/debugRoutes.js', () => ({
+    __esModule: true,
+    default: 'debug-routes-mock',
+  }));
 });
 
 afterEach(() => {

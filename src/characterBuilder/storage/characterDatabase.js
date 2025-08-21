@@ -723,23 +723,21 @@ export class CharacterDatabase {
 
     return new Promise((resolve, reject) => {
       try {
-        this.#logger.debug(
-          `DEBUG DB: Creating transaction for CLICHES store`
-        );
-        
+        this.#logger.debug(`DEBUG DB: Creating transaction for CLICHES store`);
+
         const transaction = this.#getTransaction([STORES.CLICHES]);
         const store = transaction.objectStore(STORES.CLICHES);
-        
+
         this.#logger.debug(
           `DEBUG DB: Got cliches store, accessing directionId index`
         );
-        
+
         const index = store.index('directionId');
-        
+
         this.#logger.debug(
           `DEBUG DB: Creating index request for directionId: ${directionId}`
         );
-        
+
         const request = index.get(directionId);
 
         request.onsuccess = () => {
@@ -747,7 +745,7 @@ export class CharacterDatabase {
           this.#logger.debug(
             `DEBUG DB: Index query completed for direction ${directionId}: ${result ? 'FOUND' : 'NOT_FOUND'}`
           );
-          
+
           if (result) {
             this.#logger.debug(
               `DEBUG DB: Found cliche with ID: ${result.id}, conceptId: ${result.conceptId}, directionId: ${result.directionId}`
@@ -757,7 +755,7 @@ export class CharacterDatabase {
               `DEBUG DB: No cliche found in database for directionId: ${directionId}`
             );
           }
-          
+
           resolve(result);
         };
 
@@ -766,7 +764,7 @@ export class CharacterDatabase {
             `Failed to get cliche: ${request.error?.message || 'Unknown error'}`
           );
           this.#logger.error(
-            `DEBUG DB: Error in getClicheByDirectionId for ${directionId}:`, 
+            `DEBUG DB: Error in getClicheByDirectionId for ${directionId}:`,
             error
           );
           reject(error);
@@ -777,15 +775,14 @@ export class CharacterDatabase {
             `Transaction failed: ${transaction.error?.message || 'Unknown error'}`
           );
           this.#logger.error(
-            `DEBUG DB: Transaction error in getClicheByDirectionId for ${directionId}:`, 
+            `DEBUG DB: Transaction error in getClicheByDirectionId for ${directionId}:`,
             error
           );
           reject(error);
         };
-
       } catch (error) {
         this.#logger.error(
-          `DEBUG DB: Exception in getClicheByDirectionId for ${directionId}:`, 
+          `DEBUG DB: Exception in getClicheByDirectionId for ${directionId}:`,
           error
         );
         reject(error);
@@ -1488,12 +1485,12 @@ export class CharacterDatabase {
 
   /**
    * DEBUG METHOD: Dump all clichés in the database
-   * 
+   *
    * @returns {Promise<Array>} All clichés with their details
    */
   async debugDumpAllCliches() {
     this.#logger.debug('DEBUG DB: Starting to dump all clichés...');
-    
+
     return new Promise((resolve, reject) => {
       try {
         const transaction = this.#getTransaction([STORES.CLICHES]);
@@ -1505,13 +1502,13 @@ export class CharacterDatabase {
           this.#logger.debug(
             `DEBUG DB: Found ${cliches.length} total clichés in database`
           );
-          
+
           cliches.forEach((cliche, index) => {
             this.#logger.debug(
               `DEBUG DB: Cliche ${index + 1}: ID=${cliche.id}, conceptId=${cliche.conceptId}, directionId=${cliche.directionId}, title="${cliche.title || 'N/A'}"`
             );
           });
-          
+
           resolve(cliches);
         };
 
@@ -1531,12 +1528,12 @@ export class CharacterDatabase {
 
   /**
    * DEBUG METHOD: Dump all thematic directions in the database
-   * 
+   *
    * @returns {Promise<Array>} All thematic directions with their details
    */
   async debugDumpAllThematicDirections() {
     this.#logger.debug('DEBUG DB: Starting to dump all thematic directions...');
-    
+
     return new Promise((resolve, reject) => {
       try {
         const transaction = this.#getTransaction([STORES.THEMATIC_DIRECTIONS]);
@@ -1548,13 +1545,13 @@ export class CharacterDatabase {
           this.#logger.debug(
             `DEBUG DB: Found ${directions.length} total thematic directions in database`
           );
-          
+
           directions.forEach((direction, index) => {
             this.#logger.debug(
               `DEBUG DB: Direction ${index + 1}: ID=${direction.id}, conceptId=${direction.conceptId}, title="${direction.title || 'N/A'}"`
             );
           });
-          
+
           resolve(directions);
         };
 
@@ -1574,12 +1571,12 @@ export class CharacterDatabase {
 
   /**
    * DEBUG METHOD: Dump all character concepts in the database
-   * 
-   * @returns {Promise<Array>} All character concepts with their details  
+   *
+   * @returns {Promise<Array>} All character concepts with their details
    */
   async debugDumpAllCharacterConcepts() {
     this.#logger.debug('DEBUG DB: Starting to dump all character concepts...');
-    
+
     return new Promise((resolve, reject) => {
       try {
         const transaction = this.#getTransaction([STORES.CHARACTER_CONCEPTS]);
@@ -1591,13 +1588,13 @@ export class CharacterDatabase {
           this.#logger.debug(
             `DEBUG DB: Found ${concepts.length} total character concepts in database`
           );
-          
+
           concepts.forEach((concept, index) => {
             this.#logger.debug(
               `DEBUG DB: Concept ${index + 1}: ID=${concept.id}, status=${concept.status}, createdAt=${concept.createdAt}`
             );
           });
-          
+
           resolve(concepts);
         };
 

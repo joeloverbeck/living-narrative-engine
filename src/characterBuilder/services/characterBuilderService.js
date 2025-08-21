@@ -925,7 +925,7 @@ export class CharacterBuilderService {
         `DEBUG: Calling database.getClicheByDirectionId(${directionId})`
       );
       const cliche = await this.#database.getClicheByDirectionId(directionId);
-      
+
       const result = cliche !== null;
       this.#logger.debug(
         `DEBUG: Database query result for ${directionId}: ${result} (cliche object: ${cliche ? JSON.stringify(cliche) : 'null'})`
@@ -2112,12 +2112,12 @@ export class CharacterBuilderService {
 
   /**
    * DEBUG METHOD: Dump all database contents for troubleshooting
-   * 
+   *
    * @returns {Promise<void>}
    */
   async debugDumpDatabase() {
     this.#logger.debug('DEBUG: Starting comprehensive database dump...');
-    
+
     try {
       if (!this.#database) {
         this.#logger.warn('DEBUG: Database not available for debugging');
@@ -2126,13 +2126,13 @@ export class CharacterBuilderService {
 
       // Dump all concepts
       await this.#database.debugDumpAllCharacterConcepts();
-      
+
       // Dump all thematic directions
       await this.#database.debugDumpAllThematicDirections();
-      
+
       // Dump all clichés
       await this.#database.debugDumpAllCliches();
-      
+
       this.#logger.debug('DEBUG: Database dump completed');
     } catch (error) {
       this.#logger.error('DEBUG: Error during database dump:', error);
