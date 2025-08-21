@@ -20,9 +20,9 @@
     }
   ],
   "visual": {
-    "backgroundColor": "#546e7a",
+    "backgroundColor": "#455a64",
     "textColor": "#ffffff",
-    "hoverBackgroundColor": "#455a64",
+    "hoverBackgroundColor": "#37474f",
     "hoverTextColor": "#ffffff"
   }
 }

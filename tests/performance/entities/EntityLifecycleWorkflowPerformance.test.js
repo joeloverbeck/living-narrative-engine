@@ -52,6 +52,17 @@ describe('Entity Lifecycle Workflow Performance', () => {
       const iterations = 5;
       const maxVariance = 10.0; // Max 10x variance between min and max times (accounting for test environment)
 
+      // Warmup iterations to stabilize JIT compilation
+      const warmupIterations = 2;
+      for (let i = 0; i < warmupIterations; i++) {
+        await testBed.createTestEntity(definitionId, {
+          instanceId: `warmup_consistency_${i}`,
+        });
+      }
+
+      // Clear performance metrics after warmup
+      testBed.performanceMetrics.clear();
+
       // Act - Create entities in multiple iterations
       for (let i = 0; i < iterations; i++) {
         await testBed.createTestEntity(definitionId, {

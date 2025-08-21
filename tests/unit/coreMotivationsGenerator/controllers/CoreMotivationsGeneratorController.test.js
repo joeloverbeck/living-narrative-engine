@@ -1699,6 +1699,18 @@ describe('CoreMotivationsGeneratorController', () => {
           {
             count: 2,
             concepts: 2,
+            groups: [
+              {
+                conceptId: 'concept1',
+                conceptTitle: 'Concept 1',
+                directionCount: 1,
+              },
+              {
+                conceptId: 'concept2',
+                conceptTitle: 'Concept 2',
+                directionCount: 1,
+              },
+            ],
           }
         );
       });
@@ -1838,6 +1850,253 @@ describe('CoreMotivationsGeneratorController', () => {
         expect(organized[0].conceptId).toBe('unknown');
         expect(organized[0].conceptTitle).toBe('Unknown Concept');
         expect(organized[0].directions.length).toBe(2);
+      });
+
+      it('should sort concepts alphabetically by title', () => {
+        // Arrange
+        const directions = [
+          {
+            id: 'dir1',
+            title: 'Direction 1',
+            concept: { id: 'z-concept', text: 'Z Concept' },
+          },
+          {
+            id: 'dir2',
+            title: 'Direction 2',
+            concept: { id: 'a-concept', text: 'A Concept' },
+          },
+          {
+            id: 'dir3',
+            title: 'Direction 3',
+            concept: { id: 'm-concept', text: 'M Concept' },
+          },
+        ];
+
+        // Act
+        const organized =
+          testBed.controller.organizeDirectionsByConcept(directions);
+
+        // Assert
+        expect(organized.length).toBe(3);
+        expect(organized[0].conceptTitle).toBe('A Concept');
+        expect(organized[1].conceptTitle).toBe('M Concept');
+        expect(organized[2].conceptTitle).toBe('Z Concept');
+      });
+
+      it('should sort directions within each concept group alphabetically by title', () => {
+        // Arrange
+        const directions = [
+          {
+            id: 'dir1',
+            title: 'Z Direction',
+            concept: { id: 'concept1', text: 'Test Concept' },
+          },
+          {
+            id: 'dir2',
+            title: 'A Direction',
+            concept: { id: 'concept1', text: 'Test Concept' },
+          },
+          {
+            id: 'dir3',
+            title: 'M Direction',
+            concept: { id: 'concept1', text: 'Test Concept' },
+          },
+        ];
+
+        // Act
+        const organized =
+          testBed.controller.organizeDirectionsByConcept(directions);
+
+        // Assert
+        expect(organized.length).toBe(1);
+        const group = organized[0];
+        expect(group.directions.length).toBe(3);
+        expect(group.directions[0].title).toBe('A Direction');
+        expect(group.directions[1].title).toBe('M Direction');
+        expect(group.directions[2].title).toBe('Z Direction');
+      });
+
+      it('should handle mixed sorting of concepts and directions', () => {
+        // Arrange
+        const directions = [
+          {
+            id: 'dir1',
+            title: 'Y Direction',
+            concept: { id: 'b-concept', text: 'B Concept' },
+          },
+          {
+            id: 'dir2',
+            title: 'A Direction',
+            concept: { id: 'a-concept', text: 'A Concept' },
+          },
+          {
+            id: 'dir3',
+            title: 'B Direction',
+            concept: { id: 'a-concept', text: 'A Concept' },
+          },
+          {
+            id: 'dir4',
+            title: 'X Direction',
+            concept: { id: 'b-concept', text: 'B Concept' },
+          },
+        ];
+
+        // Act
+        const organized =
+          testBed.controller.organizeDirectionsByConcept(directions);
+
+        // Assert - Check concept order
+        expect(organized.length).toBe(2);
+        expect(organized[0].conceptTitle).toBe('A Concept');
+        expect(organized[1].conceptTitle).toBe('B Concept');
+
+        // Assert - Check direction order within first concept
+        expect(organized[0].directions.length).toBe(2);
+        expect(organized[0].directions[0].title).toBe('A Direction');
+        expect(organized[0].directions[1].title).toBe('B Direction');
+
+        // Assert - Check direction order within second concept
+        expect(organized[1].directions.length).toBe(2);
+        expect(organized[1].directions[0].title).toBe('X Direction');
+        expect(organized[1].directions[1].title).toBe('Y Direction');
+      });
+    });
+
+    describe('Enhanced DOM Features', () => {
+      it('should add proper IDs to optgroups for accessibility', () => {
+        // Arrange
+        const mockDirections = [
+          {
+            id: 'dir1',
+            title: 'Test Direction 1',
+            concept: { id: 'concept1', text: 'Test Concept 1' },
+          },
+          {
+            id: 'dir2',
+            title: 'Test Direction 2',
+            concept: { id: 'concept2', text: 'Test Concept 2' },
+          },
+        ];
+
+        testBed.controller.eligibleDirections = mockDirections;
+
+        // Act
+        testBed.controller.populateDirectionSelector();
+
+        // Assert
+        const selector = document.getElementById('direction-selector');
+        const optgroups = selector.querySelectorAll('optgroup');
+
+        expect(optgroups).toHaveLength(2);
+        expect(optgroups[0].id).toBe('optgroup-concept1');
+        expect(optgroups[1].id).toBe('optgroup-concept2');
+      });
+
+      it('should add enhanced data attributes to options', () => {
+        // Arrange
+        const mockDirections = [
+          {
+            id: 'dir1',
+            title: 'Test Direction',
+            concept: { id: 'concept1', text: 'Test Concept' },
+          },
+        ];
+
+        testBed.controller.eligibleDirections = mockDirections;
+
+        // Act
+        testBed.controller.populateDirectionSelector();
+
+        // Assert
+        const selector = document.getElementById('direction-selector');
+        const option = selector.querySelector('option[value="dir1"]');
+
+        expect(option.dataset.conceptId).toBe('concept1');
+        expect(option.dataset.conceptTitle).toBe('Test Concept');
+        expect(option.dataset.directionTitle).toBe('Test Direction');
+      });
+
+      it('should add tooltip descriptions when direction has description', () => {
+        // Arrange
+        const mockDirections = [
+          {
+            id: 'dir1',
+            title: 'Test Direction',
+            description: 'This is a test direction description',
+            concept: { id: 'concept1', text: 'Test Concept' },
+          },
+          {
+            id: 'dir2',
+            title: 'Direction Without Description',
+            concept: { id: 'concept1', text: 'Test Concept' },
+          },
+        ];
+
+        testBed.controller.eligibleDirections = mockDirections;
+
+        // Act
+        testBed.controller.populateDirectionSelector();
+
+        // Assert
+        const selector = document.getElementById('direction-selector');
+        const optionWithDescription = selector.querySelector(
+          'option[value="dir1"]'
+        );
+        const optionWithoutDescription = selector.querySelector(
+          'option[value="dir2"]'
+        );
+
+        expect(optionWithDescription.title).toBe(
+          'This is a test direction description'
+        );
+        expect(optionWithoutDescription.title).toBe('');
+      });
+
+      it('should dispatch enhanced event payload with detailed group information', () => {
+        // Arrange
+        const mockDirections = [
+          {
+            id: 'dir1',
+            title: 'Direction A',
+            concept: { id: 'concept1', text: 'Concept Alpha' },
+          },
+          {
+            id: 'dir2',
+            title: 'Direction B',
+            concept: { id: 'concept1', text: 'Concept Alpha' },
+          },
+          {
+            id: 'dir3',
+            title: 'Direction C',
+            concept: { id: 'concept2', text: 'Concept Beta' },
+          },
+        ];
+
+        testBed.controller.eligibleDirections = mockDirections;
+
+        // Spy on event dispatch
+        const dispatchSpy = jest.spyOn(testBed.mockEventBus, 'dispatch');
+
+        // Act
+        testBed.controller.populateDirectionSelector();
+
+        // Assert
+        expect(dispatchSpy).toHaveBeenCalledWith('core:directions_loaded', {
+          count: 3,
+          concepts: 2,
+          groups: [
+            {
+              conceptId: 'concept1',
+              conceptTitle: 'Concept Alpha',
+              directionCount: 2,
+            },
+            {
+              conceptId: 'concept2',
+              conceptTitle: 'Concept Beta',
+              directionCount: 1,
+            },
+          ],
+        });
       });
     });
 

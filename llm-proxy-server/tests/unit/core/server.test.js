@@ -141,6 +141,7 @@ describe('Server - Comprehensive Tests', () => {
         maxTotalSockets: 500,
         maxIdleTime: 60000,
       })),
+      isDebugLoggingEnabled: jest.fn(() => false), // Debug logging disabled in tests
     };
     const getAppConfigService = jest.fn(() => appConfigServiceMock);
     jest.doMock('../../../src/config/appConfig.js', () => ({

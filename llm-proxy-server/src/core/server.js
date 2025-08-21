@@ -58,6 +58,10 @@ import traceRoutes from '../routes/traceRoutes.js';
 // Import debug routes
 import debugRoutes from '../routes/debugRoutes.js';
 
+// Import log storage and maintenance scheduler services
+import LogStorageService from '../services/logStorageService.js';
+import LogMaintenanceScheduler from '../services/logMaintenanceScheduler.js';
+
 // Initialize Logger
 const proxyLogger = new ConsoleLogger();
 
@@ -147,6 +151,30 @@ const cacheService = new CacheService(proxyLogger, {
 // Initialize HttpAgentService (if HTTP agent pooling is enabled)
 const httpAgentConfig = appConfigService.getHttpAgentConfig();
 const httpAgentService = new HttpAgentService(proxyLogger, httpAgentConfig);
+
+// Initialize LogStorageService and LogMaintenanceScheduler (if debug logging is enabled)
+let logStorageService = null;
+let logMaintenanceScheduler = null;
+const isTestEnvironment = process.env.NODE_ENV === 'test';
+
+if (appConfigService.isDebugLoggingEnabled() && !isTestEnvironment) {
+  logStorageService = new LogStorageService(proxyLogger, appConfigService);
+  logMaintenanceScheduler = new LogMaintenanceScheduler(
+    proxyLogger,
+    logStorageService,
+    appConfigService
+  );
+  proxyLogger.info(
+    'LLM Proxy Server: Debug logging enabled, initialized log storage and maintenance scheduler'
+  );
+} else {
+  const reason = isTestEnvironment
+    ? 'test environment'
+    : 'debug logging disabled';
+  proxyLogger.info(
+    `LLM Proxy Server: Log maintenance scheduler not initialized (${reason})`
+  );
+}
 
 // Initialize ApiKeyService with caching support
 const apiKeyService = new ApiKeyService(
@@ -276,10 +304,40 @@ const gracefulShutdown = (signal) => {
   );
 
   if (server) {
-    server.close(() => {
+    server.close(async () => {
       proxyLogger.info('LLM Proxy Server: HTTP server closed');
 
       // Clean up services
+      if (logMaintenanceScheduler) {
+        try {
+          await logMaintenanceScheduler.stop();
+          proxyLogger.info(
+            'LLM Proxy Server: Log maintenance scheduler stopped'
+          );
+        } catch (error) {
+          proxyLogger.error(
+            'LLM Proxy Server: Error stopping log maintenance scheduler',
+            {
+              error: error.message,
+            }
+          );
+        }
+      }
+
+      if (logStorageService && logStorageService.shutdown) {
+        try {
+          await logStorageService.shutdown();
+          proxyLogger.info('LLM Proxy Server: Log storage service shut down');
+        } catch (error) {
+          proxyLogger.error(
+            'LLM Proxy Server: Error shutting down log storage service',
+            {
+              error: error.message,
+            }
+          );
+        }
+      }
+
       if (httpAgentService && httpAgentService.cleanup) {
         httpAgentService.cleanup();
         proxyLogger.info('LLM Proxy Server: HTTP agent service cleaned up');
@@ -323,6 +381,22 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
   // as per AC3.
   // proxyLogger.info('LLM Proxy Server: Initializing LlmConfigService...'); // This is redundant as LlmConfigService logs its own start.
   await llmConfigService.initialize();
+
+  // Start log maintenance scheduler if initialized
+  if (logMaintenanceScheduler) {
+    try {
+      await logMaintenanceScheduler.start();
+    } catch (error) {
+      proxyLogger.error(
+        'LLM Proxy Server: Failed to start log maintenance scheduler',
+        {
+          error: error.message,
+          stack: error.stack,
+        }
+      );
+      // Don't fail server startup if scheduler fails
+    }
+  }
 
   server = app.listen(PORT, () => {
     proxyLogger.info('--- LLM Proxy Server Startup Summary ---');
@@ -438,6 +512,31 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
     } else {
       proxyLogger.info(
         `LLM Proxy Server: Metrics Collection DISABLED - Set METRICS_ENABLED=true to enable observability metrics`
+      );
+    }
+
+    // Log Maintenance Scheduler Status
+    if (logMaintenanceScheduler) {
+      const schedulerStatus = logMaintenanceScheduler.getStatus();
+      if (schedulerStatus.isRunning) {
+        proxyLogger.info(
+          `LLM Proxy Server: Log Maintenance Scheduler ENABLED - Next rotation check: ${schedulerStatus.nextRotationCheck}, Next cleanup: ${schedulerStatus.nextCleanup}`
+        );
+      } else if (schedulerStatus.isEnabled) {
+        proxyLogger.warn(
+          `LLM Proxy Server: Log Maintenance Scheduler ENABLED but NOT RUNNING - Check for startup errors`
+        );
+      } else {
+        proxyLogger.info(
+          `LLM Proxy Server: Log Maintenance Scheduler DISABLED in configuration`
+        );
+      }
+    } else {
+      const reason = isTestEnvironment
+        ? 'test environment'
+        : 'debug logging disabled';
+      proxyLogger.info(
+        `LLM Proxy Server: Log Maintenance Scheduler NOT INITIALIZED (${reason})`
       );
     }
 

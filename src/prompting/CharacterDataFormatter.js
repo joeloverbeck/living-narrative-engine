@@ -305,7 +305,7 @@ export class CharacterDataFormatter {
     result += `This is your identity. All thoughts, actions, and words must stem from this core truth.\n\n`;
 
     // Add each section if data exists
-    const descriptionSection = this.formatPhysicalDescription({ description });
+    const descriptionSection = this.formatPhysicalDescription(characterData);
     if (descriptionSection) {
       result += descriptionSection + '\n';
     }

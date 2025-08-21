@@ -71,19 +71,59 @@ export class BodyDescriptionComposer {
     const processedTypes = new Set();
 
     // FIRST: Add body-level descriptors using configured order
+    console.log(
+      '[DEBUG] composeDescription: Starting body-level descriptor processing'
+    );
     const bodyLevelDescriptors = this.extractBodyLevelDescriptors(bodyEntity);
+    console.log(
+      '[DEBUG] composeDescription: bodyLevelDescriptors received:',
+      bodyLevelDescriptors
+    );
+
     const bodyDescriptorOrder = this.getBodyDescriptorOrder(descriptionOrder);
+    console.log(
+      '[DEBUG] composeDescription: bodyDescriptorOrder:',
+      bodyDescriptorOrder
+    );
+
     const processedDescriptors = new Set();
 
     for (const descriptorType of bodyDescriptorOrder) {
+      console.log(
+        '[DEBUG] composeDescription: Processing descriptorType:',
+        descriptorType
+      );
+      console.log(
+        '[DEBUG] composeDescription: bodyLevelDescriptors[descriptorType]:',
+        bodyLevelDescriptors[descriptorType]
+      );
+      console.log(
+        '[DEBUG] composeDescription: already processed?',
+        processedDescriptors.has(descriptorType)
+      );
+
       if (
         bodyLevelDescriptors[descriptorType] &&
         !processedDescriptors.has(descriptorType)
       ) {
+        console.log(
+          '[DEBUG] composeDescription: Adding to lines:',
+          bodyLevelDescriptors[descriptorType]
+        );
         lines.push(bodyLevelDescriptors[descriptorType]);
         processedDescriptors.add(descriptorType);
+      } else {
+        console.log(
+          '[DEBUG] composeDescription: Skipping descriptorType:',
+          descriptorType
+        );
       }
     }
+
+    console.log(
+      '[DEBUG] composeDescription: Lines after body descriptors:',
+      lines
+    );
 
     // THEN: Process parts in configured order (existing logic continues)
     for (const partType of descriptionOrder) {
@@ -208,14 +248,46 @@ export class BodyDescriptionComposer {
   extractHeightDescription(bodyEntity) {
     const bodyComponent = this.#getBodyComponent(bodyEntity);
 
+    // Debug logging for height extraction issue
+    console.log(
+      '[DEBUG] extractHeightDescription called for entity:',
+      bodyEntity?.id
+    );
+    console.log(
+      '[DEBUG] bodyComponent:',
+      bodyComponent ? 'exists' : 'null/undefined'
+    );
+    console.log(
+      '[DEBUG] bodyComponent.body:',
+      bodyComponent?.body ? 'exists' : 'null/undefined'
+    );
+    console.log(
+      '[DEBUG] bodyComponent.body.descriptors:',
+      bodyComponent?.body?.descriptors
+    );
+    console.log(
+      '[DEBUG] bodyComponent.body.descriptors.height:',
+      bodyComponent?.body?.descriptors?.height
+    );
+
     // Check body.descriptors first
     if (bodyComponent?.body?.descriptors?.height) {
+      console.log(
+        '[DEBUG] Found height in body.descriptors:',
+        bodyComponent.body.descriptors.height
+      );
       return bodyComponent.body.descriptors.height;
     }
+
+    console.log(
+      '[DEBUG] Height not found in body.descriptors, checking entity-level components...'
+    );
 
     // Fallback to entity-level component for backward compatibility
     if (bodyEntity && typeof bodyEntity.getComponentData === 'function') {
       const heightComponent = bodyEntity.getComponentData('descriptors:height');
+      console.log('[DEBUG] Entity-level height component:', heightComponent);
+
       if (heightComponent?.height) {
         // eslint-disable-next-line no-console
         console.warn(
@@ -223,10 +295,15 @@ export class BodyDescriptionComposer {
             'Please migrate to body.descriptors.height in anatomy:body component. ' +
             'Entity-level descriptors will be removed in a future version.'
         );
+        console.log(
+          '[DEBUG] Found height in entity-level component:',
+          heightComponent.height
+        );
         return heightComponent.height;
       }
     }
 
+    console.log('[DEBUG] No height found anywhere, returning empty string');
     return '';
   }
 
@@ -334,12 +411,25 @@ export class BodyDescriptionComposer {
    * @returns {Object<string, string>} Map of descriptor type to formatted string
    */
   extractBodyLevelDescriptors(bodyEntity) {
+    console.log(
+      '[DEBUG] extractBodyLevelDescriptors called for entity:',
+      bodyEntity?.id
+    );
     const descriptors = {};
 
     // Add height FIRST (before other descriptors)
     const heightDescription = this.extractHeightDescription(bodyEntity);
+    console.log(
+      '[DEBUG] heightDescription from extract method:',
+      heightDescription
+    );
     if (heightDescription) {
       descriptors.height = `Height: ${heightDescription}`;
+      console.log('[DEBUG] Added height descriptor:', descriptors.height);
+    } else {
+      console.log(
+        '[DEBUG] Height description is empty, not adding to descriptors'
+      );
     }
 
     const skinColorDescription = this.extractSkinColorDescription(bodyEntity);
@@ -348,8 +438,13 @@ export class BodyDescriptionComposer {
     }
 
     const buildDescription = this.extractBuildDescription(bodyEntity);
+    console.log(
+      '[DEBUG] buildDescription from extract method:',
+      buildDescription
+    );
     if (buildDescription) {
       descriptors.build = `Build: ${buildDescription}`;
+      console.log('[DEBUG] Added build descriptor:', descriptors.build);
     }
 
     const bodyHairDescription = this.extractBodyHairDescription(bodyEntity);
@@ -362,6 +457,12 @@ export class BodyDescriptionComposer {
     if (compositionDescription) {
       descriptors.body_composition = `Body composition: ${compositionDescription}`;
     }
+
+    console.log(
+      '[DEBUG] Final extractBodyLevelDescriptors result:',
+      descriptors
+    );
+    console.log('[DEBUG] Height in final descriptors:', descriptors.height);
 
     return descriptors;
   }
@@ -380,9 +481,16 @@ export class BodyDescriptionComposer {
       'body_composition',
       'body_hair',
     ];
-    return descriptionOrder.filter((type) =>
+    const filtered = descriptionOrder.filter((type) =>
       bodyDescriptorTypes.includes(type)
     );
+
+    // Defensive logic: ensure height is always first if it's missing from configuration
+    if (!filtered.includes('height')) {
+      filtered.unshift('height');
+    }
+
+    return filtered;
   }
 
   /**

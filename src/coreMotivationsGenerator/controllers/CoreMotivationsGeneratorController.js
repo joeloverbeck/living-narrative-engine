@@ -253,25 +253,41 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
     for (const conceptGroup of organizedData) {
       const optgroup = document.createElement('optgroup');
       optgroup.label = conceptGroup.conceptTitle;
+      optgroup.id = `optgroup-${conceptGroup.conceptId}`;
 
       for (const direction of conceptGroup.directions) {
         const option = document.createElement('option');
         option.value = direction.id;
         option.textContent = direction.title;
+
+        // Enhanced data attributes for better context
         option.dataset.conceptId = conceptGroup.conceptId;
+        option.dataset.conceptTitle = conceptGroup.conceptTitle;
+        option.dataset.directionTitle = direction.title;
+
+        // Add tooltip description if available
+        if (direction.description) {
+          option.title = direction.description;
+        }
+
         optgroup.appendChild(option);
       }
 
       selector.appendChild(optgroup);
     }
 
-    // Dispatch event for UI updates
+    // Enhanced event payload with detailed group information
     this.eventBus.dispatch('core:directions_loaded', {
       count: organizedData.reduce(
         (sum, group) => sum + group.directions.length,
         0
       ),
       concepts: organizedData.length,
+      groups: organizedData.map((g) => ({
+        conceptId: g.conceptId,
+        conceptTitle: g.conceptTitle,
+        directionCount: g.directions.length,
+      })),
     });
   }
 
@@ -303,7 +319,21 @@ class CoreMotivationsGeneratorController extends BaseCharacterBuilderController 
       conceptMap.get(conceptId).directions.push(direction);
     }
 
-    return Array.from(conceptMap.values());
+    const organizedArray = Array.from(conceptMap.values());
+
+    // Sort concept groups alphabetically by title
+    organizedArray.sort((a, b) => a.conceptTitle.localeCompare(b.conceptTitle));
+
+    // Sort directions within each concept group alphabetically by title
+    organizedArray.forEach((group) => {
+      group.directions.sort((a, b) => a.title.localeCompare(b.title));
+    });
+
+    this.logger.info(
+      `Organized ${directions.length} directions into ${organizedArray.length} concept groups (sorted alphabetically)`
+    );
+
+    return organizedArray;
   }
 
   /**

@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_leg_slim",
+  "description": "A slim leg",
+  "components": {
+    "anatomy:part": {
+      "subType": "leg"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "ankle",
+          "allowedTypes": ["foot"],
+          "nameTpl": "{{effective_orientation}} {{type}}"
+        }
+      ]
+    },
+    "descriptors:build": {
+      "build": "slim"
+    },
+    "core:name": {
+      "text": "leg"
+    },
+    "core:movement": {
+      "locked": false,
+      "forcedOverride": false
+    }
+  }
+}

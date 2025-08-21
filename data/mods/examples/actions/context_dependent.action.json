@@ -43,5 +43,11 @@
       "failure_message": "The container is already unlocked."
     }
   ],
-  "template": "unlock {container} with {key}"
+  "template": "unlock {container} with {key}",
+  "visual": {
+    "backgroundColor": "#455a64",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#37474f",
+    "hoverTextColor": "#ffffff"
+  }
 }

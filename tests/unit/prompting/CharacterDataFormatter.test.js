@@ -446,6 +446,29 @@ describe('CharacterDataFormatter', () => {
   });
 
   describe('edge cases and error handling', () => {
+    it('should include apparent age in formatCharacterPersona when present', () => {
+      const characterData = {
+        name: 'Test Character',
+        description: 'Hair: brown; Eyes: green',
+        personality: 'Friendly',
+        apparentAge: {
+          minAge: 25,
+          maxAge: 30,
+          bestGuess: 28,
+        },
+      };
+
+      const result = formatter.formatCharacterPersona(characterData);
+
+      expect(result).toContain('YOU ARE Test Character.');
+      expect(result).toContain('## Your Description');
+      expect(result).toContain('**Apparent age**: around 28 years old');
+      expect(result).toContain('**Hair**: brown');
+      expect(result).toContain('**Eyes**: green');
+      expect(result).toContain('## Your Personality');
+      expect(result).toContain('Friendly');
+    });
+
     it('should handle empty object gracefully', () => {
       const result = formatter.formatCharacterPersona({});
       // Empty object will still get the identity header with fallback name

@@ -49,5 +49,11 @@
       "failure_message": "The target must be in the same location as you."
     }
   ],
-  "template": "throw {item} at {target}"
+  "template": "throw {item} at {target}",
+  "visual": {
+    "backgroundColor": "#455a64",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#37474f",
+    "hoverTextColor": "#ffffff"
+  }
 }

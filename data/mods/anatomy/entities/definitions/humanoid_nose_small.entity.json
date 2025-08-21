@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:humanoid_nose_small",
+  "description": "A small humanoid nose",
+  "components": {
+    "anatomy:part": {
+      "subType": "nose"
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "core:name": {
+      "text": "nose"
+    }
+  }
+}
