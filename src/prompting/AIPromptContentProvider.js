@@ -230,7 +230,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @private
    * @description Extracts notes in structured format only.
    * @param {object} notesComp - The notes component.
-   * @returns {Array<{text:string,subject:string,subjectType?:string,context?:string,tags?:string[],timestamp?:string}>} Array of structured notes.
+   * @returns {Array<{text:string,subject:string,subjectType?:string,context?:string,timestamp?:string}>} Array of structured notes.
    */
   _extractNotes(notesComp) {
     const notes = Array.isArray(notesComp?.notes) ? notesComp.notes : [];
@@ -244,12 +244,12 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
         );
       })
       .map((note) => {
-        // Return structured note with all relevant fields
+        // Return structured note with all relevant fields (excluding tags)
         const result = { text: note.text };
         if (note.subject) result.subject = note.subject;
         if (note.subjectType) result.subjectType = note.subjectType;
         if (note.context) result.context = note.context;
-        if (note.tags) result.tags = note.tags;
+        // Tags are intentionally excluded from the prompt pipeline
         if (note.timestamp) result.timestamp = note.timestamp;
         return result;
       });
@@ -355,7 +355,7 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
    * @private
    * Extracts memory-related arrays from the provided components map.
    * @param {object} componentsMap - Actor or game components.
-   * @returns {{thoughtsArray: Array<{text:string,timestamp?:string}>, notesArray: Array<{text:string,subject?:string,subjectType?:string,context?:string,tags?:string[],timestamp?:string}>, goalsArray: Array<{text:string,timestamp?:string}>}}
+   * @returns {{thoughtsArray: Array<{text:string,timestamp?:string}>, notesArray: Array<{text:string,subject?:string,subjectType?:string,context?:string,timestamp?:string}>, goalsArray: Array<{text:string,timestamp?:string}>}}
    *   Object containing memory arrays for prompt data.
    */
   _extractMemoryComponents(componentsMap) {

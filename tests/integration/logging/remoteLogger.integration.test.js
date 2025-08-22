@@ -423,13 +423,12 @@ describe('RemoteLogger Integration Tests', () => {
 
       // Should make at least one request with batched logs
       expect(mockServer.getRequestCount()).toBeGreaterThanOrEqual(1);
-      
+
       // Verify logs were processed
       const stats = remoteLogger.getStats();
       expect(stats.bufferSize).toBe(0); // All logs should be sent
     });
   });
-
 
   describe('metadata and enrichment integration', () => {
     it('should enrich logs with configurable metadata levels', async () => {
@@ -505,9 +504,9 @@ describe('RemoteLogger Integration Tests', () => {
       });
 
       remoteLogger = new RemoteLogger({
-        config: { 
+        config: {
           batchSize: 5, // Small batch to allow multiple requests
-          flushInterval: 20 // Short interval for testing
+          flushInterval: 20, // Short interval for testing
         },
         dependencies: { consoleLogger: mockConsoleLogger },
       });
@@ -517,10 +516,10 @@ describe('RemoteLogger Integration Tests', () => {
       remoteLogger.warn('EntityManager registered new entity');
       remoteLogger.debug('AI memory system updated');
       remoteLogger.error('Validation schema check failed'); // This will trigger immediate flush
-      
+
       // Wait for error flush
       await jest.runAllTimersAsync();
-      
+
       // Add more logs after error flush
       remoteLogger.info('Anatomy blueprint created');
       remoteLogger.info('Save game checkpoint created');
@@ -539,7 +538,7 @@ describe('RemoteLogger Integration Tests', () => {
       const allCategories = [];
       capturedRequests.forEach((req) => {
         const body = JSON.parse(req.config.body);
-        body.logs.forEach(log => {
+        body.logs.forEach((log) => {
           allCategories.push(log.category);
         });
       });
@@ -555,7 +554,7 @@ describe('RemoteLogger Integration Tests', () => {
       expect(allCategories).toContain('events');
       expect(allCategories).toContain('performance');
       expect(allCategories).toContain(undefined); // No match for generic message
-      
+
       // Should have all 10 logs processed
       expect(allCategories).toHaveLength(10);
     });
@@ -574,9 +573,9 @@ describe('RemoteLogger Integration Tests', () => {
       });
 
       remoteLogger = new RemoteLogger({
-        config: { 
+        config: {
           batchSize: 10, // Allow batching
-          flushInterval: 20 // Short interval for testing 
+          flushInterval: 20, // Short interval for testing
         },
         dependencies: { consoleLogger: mockConsoleLogger },
       });
@@ -597,7 +596,7 @@ describe('RemoteLogger Integration Tests', () => {
       const allCategories = [];
       capturedRequests.forEach((req) => {
         const body = JSON.parse(req.config.body);
-        body.logs.forEach(log => {
+        body.logs.forEach((log) => {
           allCategories.push(log.category);
         });
       });
@@ -607,12 +606,11 @@ describe('RemoteLogger Integration Tests', () => {
       expect(allCategories).toContain('error'); // UI failures are categorized as errors
       expect(allCategories).toContain('ai');
       expect(allCategories).toContain('network');
-      
+
       // Should have all 4 logs processed
       expect(allCategories).toHaveLength(4);
     });
   });
-
 
   describe('error recovery scenarios', () => {
     it('should recover from temporary server unavailability', async () => {
@@ -675,20 +673,20 @@ describe('RemoteLogger Integration Tests', () => {
       remoteLogger.info('Success batch log 1');
       remoteLogger.info('Success batch log 2');
       remoteLogger.info('Success batch log 3');
-      
+
       // Wait for first batch
       await jest.runAllTimersAsync();
-      
+
       // Add logs that will fail
       remoteLogger.info('Fail batch log 1');
       remoteLogger.info('Fail batch log 2');
-      
+
       // Wait for failure batch (with retry)
       await jest.runAllTimersAsync();
 
       // Should make multiple requests (success + failed attempts)
       expect(mockServer.getRequestCount()).toBeGreaterThan(1);
-      
+
       // Failed logs should fall back to console
       expect(mockConsoleLogger.warn).toHaveBeenCalled();
     });

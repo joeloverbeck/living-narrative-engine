@@ -6,6 +6,7 @@ import { Registrar } from '../utils/registrarHelpers.js';
 
 // --- Import Logger ---
 import ConsoleLogger, { LogLevel } from '../logging/consoleLogger.js';
+import LoggerStrategy from '../logging/loggerStrategy.js';
 
 // --- Import Logger Config Utility ---
 import { loadAndApplyLoggerConfig } from '../configuration/utils/loggerConfigUtils.js';
@@ -42,16 +43,27 @@ export async function configureMinimalContainer(container, options = {}) {
   const { includeCharacterBuilder = false } = options;
   const registrar = new Registrar(container);
 
-  // --- Bootstrap logger with a default level (e.g., INFO) ---
-  const initialLogLevel = LogLevel.INFO;
-  const appLogger = new ConsoleLogger(initialLogLevel);
+  // --- Bootstrap logger with LoggerStrategy ---
+  // The LoggerStrategy will handle mode detection and logger selection
+  // In test mode, we need to ensure ConsoleLogger is used for test visibility
+  const loggerMode =
+    process.env.NODE_ENV === 'test' && !process.env.DEBUG_LOG_MODE
+      ? 'console' // Force console mode in tests for visibility
+      : undefined; // Let LoggerStrategy auto-detect in other environments
+
+  const appLogger = new LoggerStrategy({
+    mode: loggerMode,
+    dependencies: {
+      consoleLogger: new ConsoleLogger(LogLevel.INFO),
+    },
+  });
   registrar.instance(tokens.ILogger, appLogger);
 
-  const logger = /** @type {ConsoleLogger} */ (
+  const logger = /** @type {LoggerStrategy} */ (
     container.resolve(tokens.ILogger)
   );
   logger.debug(
-    `[MinimalContainerConfig] Initial logger registered with level: ${initialLogLevel}.`
+    `[MinimalContainerConfig] Initial logger registered with mode: ${logger.getMode()}.`
   );
 
   // --- Configure container with base configuration ---
