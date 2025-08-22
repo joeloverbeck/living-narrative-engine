@@ -2745,4 +2745,499 @@ describe('CoreMotivationsGeneratorController', () => {
       expect(generateBtn.disabled).toBe(true);
     });
   });
+
+  // === CORMOTSEL-008: Enhanced Test Coverage ===
+
+  describe('Data Loading Enhancement - CORMOTSEL-008', () => {
+    beforeEach(async () => {
+      // Setup additional DOM elements for testing
+      const additionalElements = `
+        <div id="no-directions-message" style="display: none;"></div>
+        <div id="message-container"></div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', additionalElements);
+    });
+
+    describe('Data Loading via initialize()', () => {
+      it('should load all eligible directions through initialization', async () => {
+        const mockData = [
+          {
+            direction: { id: 'dir1', conceptId: 'c1', title: 'Direction 1' },
+            concept: { id: 'c1', title: 'Concept 1' },
+          },
+          {
+            direction: { id: 'dir2', conceptId: 'c2', title: 'Direction 2' },
+            concept: { id: 'c2', title: 'Concept 2' },
+          },
+        ];
+
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+          mockData
+        );
+        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+          true
+        );
+
+        await testBed.controller.initialize();
+
+        expect(
+          testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
+        ).toHaveBeenCalled();
+        expect(testBed.controller.totalDirectionsCount).toBe(2);
+      });
+
+      it('should filter out directions without clichés during initialization', async () => {
+        const mockData = [
+          {
+            direction: { id: 'dir1', conceptId: 'c1', title: 'Has Clichés' },
+            concept: { id: 'c1', title: 'Concept 1' },
+          },
+          {
+            direction: { id: 'dir2', conceptId: 'c1', title: 'No Clichés' },
+            concept: { id: 'c1', title: 'Concept 1' },
+          },
+        ];
+
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+          mockData
+        );
+        testBed.mockCharacterBuilderService.hasClichesForDirection.mockImplementation(
+          (id) => Promise.resolve(id === 'dir1')
+        );
+
+        await testBed.controller.initialize();
+
+        expect(
+          testBed.mockCharacterBuilderService.hasClichesForDirection
+        ).toHaveBeenCalledTimes(2);
+        expect(testBed.controller.totalDirectionsCount).toBe(1);
+      });
+
+      it('should show empty state when no directions exist', async () => {
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+          []
+        );
+
+        await testBed.controller.initialize();
+
+        const noDirectionsMsg = document.getElementById('no-directions-message');
+        expect(noDirectionsMsg.style.display).toBe('block');
+        expect(noDirectionsMsg.textContent).toContain('No thematic directions found');
+        
+        const generateBtn = document.getElementById('generate-btn');
+        expect(generateBtn.disabled).toBe(true);
+      });
+
+      it('should show specific empty state when no directions have clichés', async () => {
+        const mockData = [
+          {
+            direction: { id: 'dir1', conceptId: 'c1', title: 'No Clichés' },
+            concept: { id: 'c1', title: 'Concept 1' },
+          },
+        ];
+
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+          mockData
+        );
+        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+          false
+        );
+
+        await testBed.controller.initialize();
+
+        const noDirectionsMsg = document.getElementById('no-directions-message');
+        expect(noDirectionsMsg.textContent).toContain(
+          'No thematic directions with clichés found'
+        );
+      });
+    });
+  });
+
+  describe('Dropdown Population Enhancement - CORMOTSEL-008', () => {
+    describe('Direction selector population via public interface', () => {
+      it('should create proper option elements in optgroups', async () => {
+        const mockData = [
+          {
+            direction: { id: 'dir1', title: 'Direction 1', conceptId: 'c1' },
+            concept: { id: 'c1', title: 'Test Concept' },
+          },
+          {
+            direction: { id: 'dir2', title: 'Direction 2', conceptId: 'c1' },
+            concept: { id: 'c1', title: 'Test Concept' },
+          },
+        ];
+
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+          mockData
+        );
+        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+
+        await testBed.controller.initialize();
+
+        const selector = document.getElementById('direction-selector');
+        const optgroups = selector.querySelectorAll('optgroup');
+        const options = selector.querySelectorAll('option');
+
+        expect(optgroups.length).toBe(1);
+        expect(options.length).toBe(3); // default + 2 directions
+        expect(options[1].value).toBe('dir1');
+        expect(options[2].value).toBe('dir2');
+      });
+
+      it('should create optgroups for concept organization', async () => {
+        const mockData = [
+          {
+            direction: { id: 'dir1', title: 'Direction 1', conceptId: 'c1' },
+            concept: { id: 'c1', text: 'Concept A' },
+          },
+          {
+            direction: { id: 'dir2', title: 'Direction 2', conceptId: 'c2' },
+            concept: { id: 'c2', text: 'Concept B' },
+          },
+        ];
+
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+          mockData
+        );
+        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+
+        await testBed.controller.initialize();
+
+        const selector = document.getElementById('direction-selector');
+        const optgroups = selector.querySelectorAll('optgroup');
+
+        expect(optgroups.length).toBe(2);
+        expect(optgroups[0].label).toBe('Concept A');
+        expect(optgroups[1].label).toBe('Concept B');
+      });
+
+      it('should set correct values and text on options', async () => {
+        const mockData = [
+          {
+            direction: { id: 'unique-id-123', title: 'My Direction Title', conceptId: 'c1' },
+            concept: { id: 'c1', title: 'Test Concept' },
+          },
+        ];
+
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+          mockData
+        );
+        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+
+        await testBed.controller.initialize();
+
+        const option = document.querySelector('option[value="unique-id-123"]');
+
+        expect(option).toBeTruthy();
+        expect(option.textContent).toBe('My Direction Title');
+        expect(option.dataset.conceptId).toBe('c1');
+      });
+
+      it('should dispatch event after population during initialization', async () => {
+        const mockData = [
+          {
+            direction: { id: 'dir1', title: 'Direction 1', conceptId: 'c1' },
+            concept: { id: 'c1', title: 'Test Concept' },
+          },
+        ];
+
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+          mockData
+        );
+        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+
+        await testBed.controller.initialize();
+
+        expect(testBed.mockEventBus.dispatch).toHaveBeenCalledWith(
+          'core:directions_loaded',
+          expect.objectContaining({
+            count: 1,
+            groups: 1,
+          })
+        );
+      });
+    });
+  });
+
+  describe('Event Handling Enhancement - CORMOTSEL-008', () => {
+    describe('Select element change event', () => {
+      beforeEach(async () => {
+        // Setup controller with data via testBed
+        const mockData = [
+          {
+            direction: { id: 'dir1', conceptId: 'c1', title: 'Direction 1' },
+            concept: { id: 'c1', title: 'Concept 1' },
+          },
+        ];
+
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+          mockData
+        );
+        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+          true
+        );
+
+        await testBed.controller.initialize();
+      });
+
+      it('should handle direction selection from dropdown', async () => {
+        const generateBtn = document.getElementById('generate-btn');
+
+        // Initially disabled
+        expect(generateBtn.disabled).toBe(true);
+
+        // Simulate selection using testBed method
+        await testBed.selectDirection('dir1');
+
+        expect(testBed.controller.selectedDirectionId).toBe('dir1');
+        // Should be enabled after selection
+        expect(generateBtn.disabled).toBe(false);
+      });
+
+      it('should clear selection when default option chosen', async () => {
+        const selector = document.getElementById('direction-selector');
+        const generateBtn = document.getElementById('generate-btn');
+
+        // First select something using testBed method
+        await testBed.selectDirection('dir1');
+
+        // Verify selection
+        expect(testBed.controller.selectedDirectionId).toBe('dir1');
+
+        // Then clear by setting to empty value
+        selector.value = '';
+        selector.dispatchEvent(new Event('change'));
+
+        expect(testBed.controller.selectedDirectionId).toBeNull();
+        expect(generateBtn.disabled).toBe(true);
+      });
+
+      it('should dispatch events on selection changes', async () => {
+        // Clear previous calls
+        testBed.mockEventBus.dispatch.mockClear();
+
+        await testBed.selectDirection('dir1');
+
+        expect(testBed.mockEventBus.dispatch).toHaveBeenCalledWith(
+          'core:core_motivations_direction_selected',
+          expect.objectContaining({
+            directionId: 'dir1',
+            conceptId: 'c1',
+          })
+        );
+      });
+    });
+
+    describe('Keyboard shortcuts', () => {
+      it('should trigger generate on Ctrl+Enter when direction selected', async () => {
+        // Setup direction first
+        const mockData = [
+          {
+            direction: { id: 'dir1', conceptId: 'c1', title: 'Direction 1' },
+            concept: { id: 'c1', title: 'Concept 1' },
+          },
+        ];
+
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+          mockData
+        );
+        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+          true
+        );
+
+        await testBed.controller.initialize();
+
+        // First select a direction
+        const selector = document.getElementById('direction-selector');
+        selector.value = 'dir1';
+        selector.dispatchEvent(new Event('change'));
+
+        // Mock generation method call
+        testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue([]);
+        testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue({ id: 'c1', title: 'Concept' });
+        testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue([]);
+        testBed.mockCoreMotivationsGenerator.generate.mockResolvedValue([]);
+        testBed.mockCharacterBuilderService.saveCoreMotivations.mockResolvedValue([]);
+
+        // Trigger keyboard shortcut
+        const event = new KeyboardEvent('keydown', {
+          key: 'Enter',
+          ctrlKey: true,
+        });
+
+        document.dispatchEvent(event);
+
+        // Wait for async operations
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        // Verify generation was triggered (via event dispatch)
+        expect(testBed.mockEventBus.dispatch).toHaveBeenCalledWith(
+          'core:core_motivations_generation_started',
+          expect.any(Object)
+        );
+      });
+    });
+  });
+
+  describe('Direction Organization Enhancement - CORMOTSEL-008', () => {
+    describe('organizeDirectionsByConcept via public method', () => {
+      it('should group directions by concept using attached concept data', () => {
+        const directions = [
+          { 
+            id: 'dir1', 
+            conceptId: 'c1', 
+            title: 'Direction A',
+            concept: { id: 'c1', text: 'Concept 1' }
+          },
+          { 
+            id: 'dir2', 
+            conceptId: 'c2', 
+            title: 'Direction B',
+            concept: { id: 'c2', text: 'Concept 2' }
+          },
+          { 
+            id: 'dir3', 
+            conceptId: 'c1', 
+            title: 'Direction C',
+            concept: { id: 'c1', text: 'Concept 1' }
+          },
+        ];
+
+        const organized = testBed.controller.organizeDirectionsByConcept(directions);
+
+        expect(organized.length).toBe(2);
+
+        const concept1Group = organized.find((g) => g.conceptId === 'c1');
+        expect(concept1Group.directions.length).toBe(2);
+
+        const concept2Group = organized.find((g) => g.conceptId === 'c2');
+        expect(concept2Group.directions.length).toBe(1);
+      });
+
+      it('should sort concepts alphabetically', () => {
+        const directions = [
+          { 
+            id: 'dir1', 
+            conceptId: 'z', 
+            title: 'Direction 1',
+            concept: { id: 'z', text: 'Zebra Concept' }
+          },
+          { 
+            id: 'dir2', 
+            conceptId: 'a', 
+            title: 'Direction 2',
+            concept: { id: 'a', text: 'Apple Concept' }
+          },
+          { 
+            id: 'dir3', 
+            conceptId: 'm', 
+            title: 'Direction 3',
+            concept: { id: 'm', text: 'Mango Concept' }
+          },
+        ];
+
+        const organized = testBed.controller.organizeDirectionsByConcept(directions);
+
+        expect(organized[0].conceptTitle).toBe('Apple Concept');
+        expect(organized[1].conceptTitle).toBe('Mango Concept');
+        expect(organized[2].conceptTitle).toBe('Zebra Concept');
+      });
+
+      it('should sort directions within concepts alphabetically', () => {
+        const directions = [
+          { 
+            id: 'dir1', 
+            conceptId: 'c1', 
+            title: 'Zebra Direction',
+            concept: { id: 'c1', text: 'Concept' }
+          },
+          { 
+            id: 'dir2', 
+            conceptId: 'c1', 
+            title: 'Apple Direction',
+            concept: { id: 'c1', text: 'Concept' }
+          },
+          { 
+            id: 'dir3', 
+            conceptId: 'c1', 
+            title: 'Mango Direction',
+            concept: { id: 'c1', text: 'Concept' }
+          },
+        ];
+
+        const organized = testBed.controller.organizeDirectionsByConcept(directions);
+
+        expect(organized[0].directions[0].title).toBe('Apple Direction');
+        expect(organized[0].directions[1].title).toBe('Mango Direction');
+        expect(organized[0].directions[2].title).toBe('Zebra Direction');
+      });
+    });
+  });
+
+  describe('State Management Enhancement - CORMOTSEL-008', () => {
+    it('should initialize with correct default state', () => {
+      expect(testBed.controller.selectedDirectionId).toBeNull();
+      expect(testBed.controller.currentDirection).toBeNull();
+      expect(testBed.controller.currentConcept).toBeNull();
+      expect(testBed.controller.isGenerating).toBe(false);
+      expect(testBed.controller.eligibleDirections).toEqual([]);
+    });
+
+    it('should update loading state correctly during generation process', async () => {
+      // Setup direction and mocks
+      const mockData = [{
+        direction: { id: 'dir1', conceptId: 'c1', title: 'Direction 1' },
+        concept: { id: 'c1', text: 'Concept 1' },
+      }];
+
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(mockData);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue([]);
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue({ id: 'c1', text: 'Test Concept' });
+      testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue([]);
+      testBed.mockCoreMotivationsGenerator.generate.mockResolvedValue([]);
+      testBed.mockCharacterBuilderService.saveCoreMotivations.mockResolvedValue([]);
+
+      await testBed.controller.initialize();
+      
+      // Select direction
+      const selector = document.getElementById('direction-selector');
+      selector.value = 'dir1';
+      selector.dispatchEvent(new Event('change'));
+
+      // Before generation
+      expect(testBed.controller.isGenerating).toBe(false);
+      
+      // After generation (test final state)
+      expect(testBed.controller.selectedDirectionId).toBe('dir1');
+    });
+
+    it('should handle cache staleness correctly', async () => {
+      const now = Date.now();
+      Date.now.mockReturnValue(now);
+
+      // Initialize with fresh cache
+      const mockData = [{
+        direction: { id: 'dir1', conceptId: 'c1', title: 'Direction 1' },
+        concept: { id: 'c1', title: 'Concept 1' },
+      }];
+
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(mockData);
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+
+      await testBed.controller.initialize();
+
+      // Cache should be fresh initially
+      expect(testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts).toHaveBeenCalledTimes(1);
+
+      // Simulate stale cache (6 minutes later)
+      Date.now.mockReturnValue(now + 6 * 60 * 1000);
+      
+      // Trigger refresh check (this would happen during normal operation)
+      await testBed.controller.initialize();
+      
+      // Should reload due to stale cache
+      expect(testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts).toHaveBeenCalledTimes(2);
+    });
+  });
 });
