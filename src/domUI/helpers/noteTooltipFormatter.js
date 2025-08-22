@@ -78,7 +78,7 @@ function formatSingleNoteAsHtml(note, index = 0) {
     return '';
   }
 
-  const { text, subject, subjectType, context, tags } = note;
+  const { text, subject, subjectType, context } = note;
 
   if (!isNonBlankString(text)) {
     return '';
@@ -110,27 +110,13 @@ function formatSingleNoteAsHtml(note, index = 0) {
     headerHtml += '</div>';
   }
 
-  // Build note metadata (context and tags)
+  // Build note metadata (context)
   let metaHtml = '';
-  if (escapedContext || (Array.isArray(tags) && tags.length > 0)) {
+  if (escapedContext) {
     metaHtml += '<div class="note-meta">';
 
     if (escapedContext) {
       metaHtml += `<span class="note-context">${escapedContext}</span>`;
-    }
-
-    if (Array.isArray(tags) && tags.length > 0) {
-      const validTags = tags
-        .filter((tag) => isNonBlankString(tag))
-        .map((tag) => escapeHtml(tag.trim()));
-
-      if (validTags.length > 0) {
-        metaHtml += '<div class="note-tags">';
-        validTags.forEach((tag) => {
-          metaHtml += `<span class="note-tag">${tag}</span>`;
-        });
-        metaHtml += '</div>';
-      }
     }
 
     metaHtml += '</div>';

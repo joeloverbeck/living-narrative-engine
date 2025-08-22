@@ -31,7 +31,6 @@ describe('NotesService uncovered branches', () => {
         subject: 'test_subject',
         subjectType: 'other',
         context: undefined,
-        tags: undefined,
         timestamp: 'TS',
       },
     ]);
@@ -41,7 +40,6 @@ describe('NotesService uncovered branches', () => {
         subject: 'test_subject',
         subjectType: 'other',
         context: undefined,
-        tags: undefined,
         timestamp: 'TS',
       },
     ]);

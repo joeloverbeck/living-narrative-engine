@@ -15,6 +15,14 @@
  * @property {number} maxTraceFiles
  * @property {'age'|'count'} rotationPolicy
  * @property {number} maxFileAge
+ * @property {string[]} outputFormats
+ * @property {object} textFormatOptions
+ * @property {boolean} textFormatOptions.enableColors
+ * @property {number} textFormatOptions.lineWidth
+ * @property {number} textFormatOptions.indentSize
+ * @property {string} textFormatOptions.sectionSeparator
+ * @property {boolean} textFormatOptions.includeTimestamps
+ * @property {boolean} textFormatOptions.performanceSummary
  */
 
 /**
@@ -57,6 +65,15 @@ class ActionTracingConfigMigration {
       maxTraceFiles: 100,
       rotationPolicy: 'age',
       maxFileAge: 86400,
+      outputFormats: ['json'],
+      textFormatOptions: {
+        enableColors: false,
+        lineWidth: 120,
+        indentSize: 2,
+        sectionSeparator: '=',
+        includeTimestamps: true,
+        performanceSummary: true,
+      },
     };
   }
 
@@ -136,6 +153,12 @@ class ActionTracingConfigMigration {
       return defaults;
     }
 
+    // Merge textFormatOptions separately to handle partial objects
+    const mergedTextFormatOptions = {
+      ...defaults.textFormatOptions,
+      ...(userConfig.textFormatOptions || {}),
+    };
+
     return {
       enabled: userConfig.enabled ?? defaults.enabled,
       tracedActions: userConfig.tracedActions ?? defaults.tracedActions,
@@ -149,6 +172,8 @@ class ActionTracingConfigMigration {
       maxTraceFiles: userConfig.maxTraceFiles ?? defaults.maxTraceFiles,
       rotationPolicy: userConfig.rotationPolicy ?? defaults.rotationPolicy,
       maxFileAge: userConfig.maxFileAge ?? defaults.maxFileAge,
+      outputFormats: userConfig.outputFormats ?? defaults.outputFormats,
+      textFormatOptions: mergedTextFormatOptions,
     };
   }
 }

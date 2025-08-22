@@ -107,8 +107,27 @@ import { createDefaultContentLoadersConfig } from '../../loaders/defaultLoaderCo
  */
 export function registerLoaders(container) {
   const registrar = new Registrar(container);
-  const logger = container.resolve(tokens.ILogger);
-  logger.debug('Loaders Registration: Starting...');
+  let logger;
+
+  try {
+    logger = container.resolve(tokens.ILogger);
+    logger.debug('Loaders Registration: Starting...');
+  } catch (error) {
+    // ILogger not yet registered - use console fallback for debug messages
+    console.debug(
+      'Loaders Registration: Starting... (ILogger not yet available)'
+    );
+    logger = null;
+  }
+
+  // Helper function to safely log debug messages
+  const safeDebug = (message) => {
+    if (logger) {
+      logger.debug(message);
+    } else {
+      console.debug(`[Loaders Registration] ${message}`);
+    }
+  };
 
   // Register proxy URL from environment variables (if provided)
   registrar.value(tokens.ProxyUrl, globalThis.process?.env?.PROXY_URL);

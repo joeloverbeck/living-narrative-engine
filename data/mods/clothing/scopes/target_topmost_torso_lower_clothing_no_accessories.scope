@@ -1,0 +1,5 @@
+// Scope for accessing the topmost torso_lower clothing item of a target entity
+// excluding accessories layer (e.g., belts)
+// Used by intimate actions like fondle_ass to avoid awkward phrasing with accessory items
+// The 'target' context will be provided by the contextFrom mechanism
+clothing:target_topmost_torso_lower_clothing_no_accessories := target.topmost_clothing_no_accessories.torso_lower

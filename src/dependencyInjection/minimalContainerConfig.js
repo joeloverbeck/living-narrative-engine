@@ -9,7 +9,10 @@ import ConsoleLogger, { LogLevel } from '../logging/consoleLogger.js';
 import LoggerStrategy from '../logging/loggerStrategy.js';
 
 // --- Import Logger Config Utility ---
-import { loadAndApplyLoggerConfig } from '../configuration/utils/loggerConfigUtils.js';
+import {
+  loadAndApplyLoggerConfig,
+  loadDebugLogConfig,
+} from '../configuration/utils/loggerConfigUtils.js';
 
 // --- Import Logger Interface for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -43,9 +46,38 @@ export async function configureMinimalContainer(container, options = {}) {
   const { includeCharacterBuilder = false } = options;
   const registrar = new Registrar(container);
 
+  // --- Load debug configuration before creating LoggerStrategy ---
+  // This allows LoggerStrategy to use the configuration in its constructor
+  // Skip config loading in test environments to avoid HTTP requests
+  let debugConfig = null;
+  if (process.env.NODE_ENV !== 'test') {
+    try {
+      // Create a temporary console logger for loading config
+      const tempLogger = new ConsoleLogger(LogLevel.INFO);
+      debugConfig = await loadDebugLogConfig(tempLogger, null);
+      if (debugConfig) {
+        tempLogger.debug(
+          '[MinimalContainerConfig] Debug configuration loaded before LoggerStrategy creation.'
+        );
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[MinimalContainerConfig] Failed to load debug configuration:',
+        error
+      );
+    }
+  } else {
+    // eslint-disable-next-line no-console
+    console.debug(
+      '[MinimalContainerConfig] Skipping debug config loading in test environment.'
+    );
+  }
+
   // --- Bootstrap logger with LoggerStrategy ---
   // The LoggerStrategy will handle mode detection and logger selection
   // In test mode, we need to ensure ConsoleLogger is used for test visibility
+  /* global process */
   const loggerMode =
     process.env.NODE_ENV === 'test' && !process.env.DEBUG_LOG_MODE
       ? 'console' // Force console mode in tests for visibility
@@ -53,6 +85,7 @@ export async function configureMinimalContainer(container, options = {}) {
 
   const appLogger = new LoggerStrategy({
     mode: loggerMode,
+    config: debugConfig || {}, // Pass the loaded debug config or empty object
     dependencies: {
       consoleLogger: new ConsoleLogger(LogLevel.INFO),
     },
@@ -79,12 +112,19 @@ export async function configureMinimalContainer(container, options = {}) {
   logger.debug('[MinimalContainerConfig] All core bundles registered.');
 
   // --- Load logger configuration asynchronously ---
-  await loadAndApplyLoggerConfig(
-    container,
-    logger,
-    tokens,
-    'MinimalContainerConfig'
-  );
+  // Skip config loading in test environments to avoid HTTP requests
+  if (process.env.NODE_ENV !== 'test') {
+    await loadAndApplyLoggerConfig(
+      container,
+      logger,
+      tokens,
+      'MinimalContainerConfig'
+    );
+  } else {
+    logger.debug(
+      '[MinimalContainerConfig] Skipping logger config loading in test environment.'
+    );
+  }
 
   logger.debug('[MinimalContainerConfig] Minimal configuration complete.');
 }

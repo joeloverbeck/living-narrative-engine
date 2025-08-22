@@ -22,7 +22,6 @@ describe('NotesService.addNotes more branches', () => {
         subject: 'test_subject',
         subjectType: 'other',
         context: undefined,
-        tags: undefined,
         timestamp: 'TS',
       },
     ]);
@@ -45,7 +44,6 @@ describe('NotesService.addNotes more branches', () => {
       subject: 'test_subject',
       subjectType: 'other',
       context: undefined,
-      tags: undefined,
       timestamp: 'T',
     });
   });

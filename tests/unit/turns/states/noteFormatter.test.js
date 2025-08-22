@@ -29,11 +29,10 @@ describe('formatNotesForDisplay', () => {
         subject: 'Character',
         subjectType: 'person',
         context: 'during conversation',
-        tags: ['personality', 'mood'],
         timestamp: '2023-01-01T00:00:00Z',
       };
       expect(formatNotesForDisplay(note)).toBe(
-        '[person] Character: Detailed observation (during conversation) [personality, mood]'
+        '[person] Character: Detailed observation (during conversation)'
       );
     });
 
@@ -72,10 +71,9 @@ describe('formatNotesForDisplay', () => {
       const note = {
         text: 'Test note',
         subject: 'Test',
-        tags: ['valid', '', '  ', 'another', null, undefined],
       };
       expect(formatNotesForDisplay(note)).toBe(
-        'Test: Test note [valid, another]'
+        'Test: Test note'
       );
     });
 
@@ -94,7 +92,6 @@ describe('formatNotesForDisplay', () => {
       const note = {
         text: 'Test note',
         subject: 'Character',
-        tags: [],
       };
       expect(formatNotesForDisplay(note)).toBe('Character: Test note');
     });
@@ -122,17 +119,15 @@ describe('formatNotesForDisplay', () => {
           subject: 'John',
           subjectType: 'character',
           context: 'first meeting',
-          tags: ['personality'],
         },
         {
           text: 'Dark and mysterious',
           subject: 'Cavern',
           subjectType: 'location',
-          tags: ['atmosphere', 'danger'],
         },
       ];
       expect(formatNotesForDisplay(notes)).toBe(
-        '[character] John: Seems friendly (first meeting) [personality]\n[location] Cavern: Dark and mysterious [atmosphere, danger]'
+        '[character] John: Seems friendly (first meeting)\n[location] Cavern: Dark and mysterious'
       );
     });
 

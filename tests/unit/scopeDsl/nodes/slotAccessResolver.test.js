@@ -609,7 +609,7 @@ describe('SlotAccessResolver', () => {
 
       expect(mockContext.trace.addLog).toHaveBeenCalledWith(
         'info',
-        expect.stringContaining('Found item in slot'),
+        expect.stringContaining('Selected item from slot'),
         'SlotAccessResolver',
         expect.objectContaining({
           slotName: 'torso_upper',

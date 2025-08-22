@@ -29,6 +29,7 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
 
   const LAYER_PRIORITY = {
     topmost: ['outer', 'base', 'underwear', 'accessories'],
+    topmost_no_accessories: ['outer', 'base', 'underwear'],
     all: ['outer', 'base', 'underwear', 'accessories'],
     outer: ['outer'],
     base: ['base'],
@@ -51,6 +52,7 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
       node.parent &&
       node.parent.type === 'Step' &&
       (node.parent.field === 'topmost_clothing' ||
+        node.parent.field === 'topmost_clothing_no_accessories' ||
         node.parent.field === 'all_clothing' ||
         node.parent.field === 'outer_clothing' ||
         node.parent.field === 'base_clothing' ||
@@ -88,18 +90,65 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
 
     const layers = LAYER_PRIORITY[mode] || LAYER_PRIORITY.topmost;
 
+    // Enhanced tracing: Show what's available in each layer
+    if (trace) {
+      const layerAnalysis = {};
+      for (const layer of ['outer', 'base', 'underwear', 'accessories']) {
+        layerAnalysis[layer] = slotData[layer] || null;
+      }
+
+      trace.addLog(
+        'info',
+        `SlotAccessResolver: Analyzing slot ${slotName} with mode ${mode}`,
+        'SlotAccessResolver',
+        {
+          slotName,
+          mode,
+          layerPriority: layers,
+          availableLayers: layerAnalysis,
+          excludesAccessories: mode === 'topmost_no_accessories',
+        }
+      );
+    }
+
     for (const layer of layers) {
       if (slotData[layer]) {
         if (trace) {
           trace.addLog(
             'info',
-            `SlotAccessResolver: Found item in slot ${slotName}, layer ${layer}`,
+            `SlotAccessResolver: Selected item from slot ${slotName}, layer ${layer}`,
             'SlotAccessResolver',
-            { slotName, layer, itemId: slotData[layer] }
+            { slotName, layer, itemId: slotData[layer], mode }
           );
         }
         return slotData[layer];
       }
+    }
+
+    // Enhanced tracing: Explain why nothing was found
+    if (trace) {
+      const hasAccessoriesOnly =
+        slotData.accessories &&
+        !slotData.outer &&
+        !slotData.base &&
+        !slotData.underwear;
+      const failureReason =
+        hasAccessoriesOnly && mode === 'topmost_no_accessories'
+          ? 'Only accessories available but mode excludes accessories'
+          : 'No items found in any checked layers';
+
+      trace.addLog(
+        'info',
+        `SlotAccessResolver: No item selected from slot ${slotName} (${failureReason})`,
+        'SlotAccessResolver',
+        {
+          slotName,
+          mode,
+          failureReason,
+          hasAccessoriesOnly,
+          checkedLayers: layers,
+        }
+      );
     }
 
     return null;

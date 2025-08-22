@@ -30,7 +30,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
         description: 'Person whose ass to fondle',
       },
       secondary: {
-        scope: 'clothing:target_topmost_torso_lower_clothing',
+        scope: 'clothing:target_topmost_torso_lower_clothing_no_accessories',
         placeholder: 'secondary',
         description: 'Clothing item over which to fondle',
         contextFrom: 'primary',
@@ -232,7 +232,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
 
       // Validate secondary target
       expect(content.targets.secondary.scope).toBe(
-        'clothing:target_topmost_torso_lower_clothing'
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
       );
       expect(content.targets.secondary.placeholder).toBe('secondary');
       expect(content.targets.secondary.description).toBe(

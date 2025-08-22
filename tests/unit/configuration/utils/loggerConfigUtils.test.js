@@ -65,9 +65,15 @@ describe('loggerConfigUtils', () => {
         'CustomPrefix'
       );
 
+      // First it tries to load debug config
       expect(logger.debug).toHaveBeenCalledWith(
-        '[CustomPrefix] Starting asynchronous load of logger configuration...'
+        '[CustomPrefix] Attempting to load debug logging configuration...'
       );
+      // Then it falls back to legacy config
+      expect(logger.debug).toHaveBeenCalledWith(
+        '[CustomPrefix] Debug configuration not available or disabled. Falling back to legacy logger configuration...'
+      );
+      // Finally it loads the legacy config successfully
       expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           '[CustomPrefix] Logger configuration loaded successfully'

@@ -49,7 +49,6 @@ describe('NotesService additional coverage', () => {
       subject: 'other',
       subjectType: 'other',
       context: undefined,
-      tags: undefined,
       timestamp: 'T3',
     });
     expect(result.addedNotes).toEqual([
@@ -58,7 +57,6 @@ describe('NotesService additional coverage', () => {
         subject: 'other',
         subjectType: 'other',
         context: undefined,
-        tags: undefined,
         timestamp: 'T3',
       },
     ]);

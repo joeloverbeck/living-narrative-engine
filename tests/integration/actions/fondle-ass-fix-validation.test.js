@@ -85,6 +85,61 @@ describe('FondleAss Action Fix Validation', () => {
     expect(resolvedItems[0]).toBe('clothing:dark_brown_leather_belt');
   });
 
+  it('should exclude accessories when using topmost_clothing_no_accessories', () => {
+    // Arrange - Set up character with only belt in accessories
+    const testId = 'test:character';
+
+    entityManager.addComponent(testId, 'clothing:equipment', {
+      equipped: {
+        torso_lower: {
+          accessories: 'clothing:belt_only',
+        },
+      },
+    });
+
+    // Act - Test with topmost_clothing_no_accessories
+    const clothingAccessObject = clothingStepResolver.resolve(
+      {
+        type: 'Step',
+        field: 'topmost_clothing_no_accessories',
+        parent: { type: 'Variable', name: 'target' },
+      },
+      {
+        dispatcher: {
+          resolve: () => new Set([testId]),
+        },
+        trace: null,
+      }
+    );
+
+    const clothingAccess = Array.from(clothingAccessObject)[0];
+    expect(clothingAccess).toBeDefined();
+    expect(clothingAccess.__clothingSlotAccess).toBe(true);
+    expect(clothingAccess.mode).toBe('topmost_no_accessories');
+
+    // Test slot access resolution
+    const slotResult = slotAccessResolver.resolve(
+      {
+        type: 'Step',
+        field: 'torso_lower',
+        parent: {
+          type: 'Step',
+          field: 'topmost_clothing_no_accessories',
+        },
+      },
+      {
+        dispatcher: {
+          resolve: () => new Set([clothingAccess]),
+        },
+        trace: null,
+      }
+    );
+
+    // Should NOT find the belt since accessories are excluded
+    const resolvedItems = Array.from(slotResult);
+    expect(resolvedItems).toHaveLength(0);
+  });
+
   it('should prioritize layers correctly: outer > base > underwear > accessories', () => {
     // Arrange - Set up clothing in multiple layers
     const testId = 'test:character';
@@ -190,6 +245,59 @@ describe('FondleAss Action Fix Validation', () => {
     const resolvedItems = Array.from(slotResult);
     expect(resolvedItems).toHaveLength(1);
     expect(resolvedItems[0]).toBe('clothing:belt_only');
+  });
+
+  it('should select outer clothing over accessories with topmost_clothing_no_accessories', () => {
+    // Arrange - Set up character with both outer clothing and accessories
+    const testId = 'test:character';
+
+    entityManager.addComponent(testId, 'clothing:equipment', {
+      equipped: {
+        torso_lower: {
+          outer: 'clothing:jeans',
+          accessories: 'clothing:belt',
+        },
+      },
+    });
+
+    // Act - Test with topmost_clothing_no_accessories
+    const clothingAccessObject = clothingStepResolver.resolve(
+      {
+        type: 'Step',
+        field: 'topmost_clothing_no_accessories',
+        parent: { type: 'Variable', name: 'target' },
+      },
+      {
+        dispatcher: {
+          resolve: () => new Set([testId]),
+        },
+        trace: null,
+      }
+    );
+
+    const clothingAccess = Array.from(clothingAccessObject)[0];
+
+    const slotResult = slotAccessResolver.resolve(
+      {
+        type: 'Step',
+        field: 'torso_lower',
+        parent: {
+          type: 'Step',
+          field: 'topmost_clothing_no_accessories',
+        },
+      },
+      {
+        dispatcher: {
+          resolve: () => new Set([clothingAccess]),
+        },
+        trace: null,
+      }
+    );
+
+    // Should find the jeans (outer layer), not the belt
+    const resolvedItems = Array.from(slotResult);
+    expect(resolvedItems).toHaveLength(1);
+    expect(resolvedItems[0]).toBe('clothing:jeans');
   });
 
   it('should reproduce the original issue scenario', () => {

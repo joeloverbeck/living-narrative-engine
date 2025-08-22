@@ -41,7 +41,6 @@ describe('NotesService.addNotes additional branches', () => {
         subject: 'test_subject',
         subjectType: 'other',
         context: undefined,
-        tags: undefined,
         timestamp: 'TS',
       },
     ]);

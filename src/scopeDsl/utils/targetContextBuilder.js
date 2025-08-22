@@ -82,9 +82,10 @@ class TargetContextBuilder {
    * @param {object} baseContext - Base context from buildBaseContext
    * @param {object} resolvedTargets - Previously resolved targets by name
    * @param {object} targetDef - Target definition with contextFrom property
+   * @param {object} trace - Optional trace logger
    * @returns {object} Enhanced context object
    */
-  buildDependentContext(baseContext, resolvedTargets, targetDef) {
+  buildDependentContext(baseContext, resolvedTargets, targetDef, trace = null) {
     assertPresent(baseContext, 'Base context is required');
     assertPresent(resolvedTargets, 'Resolved targets is required');
     assertPresent(targetDef, 'Target definition is required');
@@ -98,9 +99,59 @@ class TargetContextBuilder {
       // Add specific target if contextFrom is specified
       if (targetDef.contextFrom && resolvedTargets[targetDef.contextFrom]) {
         const primaryTargets = resolvedTargets[targetDef.contextFrom];
-        if (Array.isArray(primaryTargets) && primaryTargets.length > 0) {
-          context.target = this.#buildEntityContext(primaryTargets[0].id);
+
+        if (trace) {
+          trace.addLog(
+            'info',
+            `TargetContextBuilder: Building dependent context from ${targetDef.contextFrom}`,
+            'TargetContextBuilder',
+            {
+              contextFrom: targetDef.contextFrom,
+              primaryTargetCount: Array.isArray(primaryTargets)
+                ? primaryTargets.length
+                : 0,
+              hasValidPrimaryTargets:
+                Array.isArray(primaryTargets) && primaryTargets.length > 0,
+            }
+          );
         }
+
+        if (Array.isArray(primaryTargets) && primaryTargets.length > 0) {
+          const primaryTargetId = primaryTargets[0].id;
+          context.target = this.#buildEntityContext(primaryTargetId);
+
+          if (trace) {
+            trace.addLog(
+              'info',
+              `TargetContextBuilder: Set target context to entity ${primaryTargetId}`,
+              'TargetContextBuilder',
+              {
+                targetEntityId: primaryTargetId,
+                contextFrom: targetDef.contextFrom,
+              }
+            );
+          }
+        } else if (trace) {
+          trace.addLog(
+            'warn',
+            `TargetContextBuilder: No valid primary targets found for contextFrom ${targetDef.contextFrom}`,
+            'TargetContextBuilder',
+            {
+              contextFrom: targetDef.contextFrom,
+              primaryTargets: primaryTargets,
+            }
+          );
+        }
+      } else if (trace && targetDef.contextFrom) {
+        trace.addLog(
+          'warn',
+          `TargetContextBuilder: contextFrom target ${targetDef.contextFrom} not found in resolved targets`,
+          'TargetContextBuilder',
+          {
+            contextFrom: targetDef.contextFrom,
+            availableTargets: Object.keys(resolvedTargets),
+          }
+        );
       }
 
       return context;

@@ -169,4 +169,30 @@ describe('NotesService', () => {
       TypeError
     );
   });
+
+  test('should ignore tags field if provided in input', () => {
+    const component = { notes: [] };
+    const newNotes = [
+      {
+        text: 'Note with tags',
+        subject: 'Test Subject',
+        subjectType: 'character',
+        tags: ['tag1', 'tag2'], // Tags should be ignored
+      },
+    ];
+    jest.spyOn(Date.prototype, 'toISOString').mockReturnValue('TS1');
+
+    const result = notesService.addNotes(component, newNotes);
+
+    expect(result.wasModified).toBe(true);
+    expect(result.component.notes).toHaveLength(1);
+    expect(result.component.notes[0]).toEqual({
+      text: 'Note with tags',
+      subject: 'Test Subject',
+      subjectType: 'character',
+      timestamp: 'TS1',
+    });
+    // Verify tags are not included
+    expect(result.component.notes[0].tags).toBeUndefined();
+  });
 });

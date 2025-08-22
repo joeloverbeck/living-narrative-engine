@@ -1084,10 +1084,35 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
    * @private
    */
   #cleanupInPlaceEditors() {
-    this.#inPlaceEditors.forEach((editor) => {
-      editor.destroy();
+    // Safely destroy all editor instances
+    this.#inPlaceEditors.forEach((editor, key) => {
+      try {
+        if (editor && typeof editor.destroy === 'function') {
+          editor.destroy();
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Failed to destroy InPlaceEditor instance for key: ${key}`,
+          error
+        );
+      }
     });
+
+    // Clear the map completely
     this.#inPlaceEditors.clear();
+
+    // Force a small delay to allow DOM cleanup
+    setTimeout(() => {
+      // Additional cleanup - remove any orphaned editor elements
+      const orphanedEditors = document.querySelectorAll('.in-place-editor');
+      orphanedEditors.forEach((element) => {
+        try {
+          element.remove();
+        } catch (error) {
+          this.logger.debug('Failed to remove orphaned editor element:', error);
+        }
+      });
+    }, 10);
   }
 
   /**
@@ -1727,53 +1752,109 @@ export class ThematicDirectionsManagerController extends BaseCharacterBuilderCon
 
   /**
    * Debug method to check for potential memory leaks
-   * Only active in development mode
+   * Active in development mode, with lightweight monitoring in production
    *
    * @private
    */
   #checkForLeaks() {
     /* global process */
-    if (process.env.NODE_ENV !== 'development') return;
-
+    const isDev = process.env.NODE_ENV === 'development';
     const leaks = [];
 
     // Check InPlaceEditors
     if (this.#inPlaceEditors && this.#inPlaceEditors.size > 0) {
-      leaks.push(`${this.#inPlaceEditors.size} InPlaceEditor instances`);
+      leaks.push({
+        type: 'InPlaceEditor instances',
+        count: this.#inPlaceEditors.size,
+        severity: 'high',
+      });
+    }
+
+    // Check DOM elements for orphaned editors
+    const orphanedEditors = document.querySelectorAll('.in-place-editor');
+    if (orphanedEditors.length > 0) {
+      leaks.push({
+        type: 'Orphaned editor DOM elements',
+        count: orphanedEditors.length,
+        severity: 'medium',
+      });
     }
 
     // Check notification timeout
     if (this.#notificationTimeout) {
-      leaks.push('Active notification timeout');
+      leaks.push({
+        type: 'Active notification timeout',
+        count: 1,
+        severity: 'low',
+      });
     }
 
     // Check modal state
     if (this.#activeModal) {
-      leaks.push('Active modal state');
+      leaks.push({
+        type: 'Active modal state',
+        count: 1,
+        severity: 'medium',
+      });
     }
 
     // Check pending modal action
     if (this.#pendingModalAction) {
-      leaks.push('Pending modal action');
+      leaks.push({
+        type: 'Pending modal action',
+        count: 1,
+        severity: 'medium',
+      });
     }
 
     // Check event handlers
     if (this.#modalKeyHandler) {
-      leaks.push('Active modal key handler');
+      leaks.push({
+        type: 'Active modal key handler',
+        count: 1,
+        severity: 'medium',
+      });
     }
 
     // Check dropdown instance
     if (this.#conceptDropdown) {
-      leaks.push('Active concept dropdown');
+      leaks.push({
+        type: 'Active concept dropdown',
+        count: 1,
+        severity: 'low',
+      });
     }
 
     if (leaks.length > 0) {
-      /* eslint-disable-next-line no-console */
-      console.warn('Potential memory leaks detected:', leaks);
-      this.logger.warn(
-        'ThematicDirectionsManagerController: Potential memory leaks detected',
-        { leaks }
+      const leakSummary = leaks.map((leak) => `${leak.count} ${leak.type}`);
+      const highSeverityLeaks = leaks.filter(
+        (leak) => leak.severity === 'high'
       );
+
+      if (isDev) {
+        /* eslint-disable-next-line no-console */
+        console.warn('Potential memory leaks detected:', leakSummary);
+      }
+
+      // Always log high severity leaks, even in production
+      if (highSeverityLeaks.length > 0 || isDev) {
+        this.logger.warn(
+          'ThematicDirectionsManagerController: Potential memory leaks detected',
+          {
+            leaks: leakSummary,
+            highSeverity: highSeverityLeaks.length,
+            memoryUsage: process.memoryUsage?.(),
+          }
+        );
+      }
+
+      // Trigger automatic cleanup for high severity leaks in production
+      if (!isDev && highSeverityLeaks.length > 0) {
+        this.logger.info(
+          'Triggering automatic memory cleanup due to detected leaks'
+        );
+        this.#cleanupInPlaceEditors();
+      }
     }
   }
 }

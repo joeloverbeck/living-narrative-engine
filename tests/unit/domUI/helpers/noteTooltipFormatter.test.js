@@ -70,13 +70,12 @@ describe('noteTooltipFormatter', () => {
         expect(result).toContain('👤'); // Character icon
       });
 
-      it('should handle note with all fields', () => {
+      it('should handle note with all fields (without tags)', () => {
         const note = {
           text: 'Strange sounds from the walls',
           subject: 'Old Library',
           subjectType: 'location',
           context: 'During midnight exploration',
-          tags: ['mystery', 'investigation', 'atmosphere'],
         };
 
         const result = formatNotesAsRichHtml(note);
@@ -86,9 +85,6 @@ describe('noteTooltipFormatter', () => {
         expect(result).toContain('Old Library');
         expect(result).toContain('Strange sounds from the walls');
         expect(result).toContain('During midnight exploration');
-        expect(result).toContain('note-tag">mystery');
-        expect(result).toContain('note-tag">investigation');
-        expect(result).toContain('note-tag">atmosphere');
         expect(result).toContain('📍'); // Location icon
       });
 
@@ -110,7 +106,6 @@ describe('noteTooltipFormatter', () => {
           subject: 'Evil <img src=x onerror=alert(1)>',
           subjectType: 'test<script>',
           context: 'During <iframe> test',
-          tags: ['<svg onload=alert(1)>', 'normal-tag'],
         };
 
         const result = formatNotesAsRichHtml(note);
@@ -119,8 +114,6 @@ describe('noteTooltipFormatter', () => {
         expect(result).toContain('&lt;img src=x onerror=alert(1)&gt;');
         expect(result).toContain('test&lt;script&gt;');
         expect(result).toContain('&lt;iframe&gt;');
-        expect(result).toContain('&lt;svg onload=alert(1)&gt;');
-        expect(result).toContain('normal-tag');
       });
 
       it('should handle note object with empty text', () => {
@@ -154,13 +147,11 @@ describe('noteTooltipFormatter', () => {
             subject: 'Alice',
             subjectType: 'character',
             context: 'During garden conversation',
-            tags: ['emotion', 'observation'],
           },
           {
             text: 'Dusty and abandoned, perfect for secrets',
             subject: 'Old Library',
             subjectType: 'location',
-            tags: ['atmosphere', 'discovery'],
           },
         ];
 
@@ -321,47 +312,6 @@ describe('noteTooltipFormatter', () => {
 
         expect(result).toContain('data-type="character"');
         expect(result).toContain('👤');
-      });
-    });
-
-    describe('tag handling', () => {
-      it('should handle empty tags array', () => {
-        const note = {
-          text: 'Test note',
-          subject: 'Test',
-          tags: [],
-        };
-
-        const result = formatNotesAsRichHtml(note);
-
-        expect(result).not.toContain('note-tags');
-      });
-
-      it('should filter out invalid tags', () => {
-        const note = {
-          text: 'Test note',
-          subject: 'Test',
-          tags: ['valid-tag', '', '   ', null, undefined, 'another-valid'],
-        };
-
-        const result = formatNotesAsRichHtml(note);
-
-        expect(result).toContain('valid-tag');
-        expect(result).toContain('another-valid');
-        expect(result).not.toContain('note-tag"></span>');
-        expect(result).not.toContain('note-tag">   </span>');
-      });
-
-      it('should handle non-array tags gracefully', () => {
-        const note = {
-          text: 'Test note',
-          subject: 'Test',
-          tags: 'not-an-array',
-        };
-
-        const result = formatNotesAsRichHtml(note);
-
-        expect(result).not.toContain('note-tags');
       });
     });
   });

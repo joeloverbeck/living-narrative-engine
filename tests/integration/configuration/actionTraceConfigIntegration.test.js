@@ -138,6 +138,135 @@ describe('Action Trace Config Integration', () => {
       expect(config.maxTraceFiles).toBe(50);
     });
 
+    it('should load configuration with new dual-format fields', async () => {
+      const testConfig = {
+        traceAnalysisEnabled: false,
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go', 'core:attack'],
+          outputDirectory: './test-traces',
+          verbosity: 'detailed',
+          includeComponentData: true,
+          includePrerequisites: false,
+          includeTargets: true,
+          maxTraceFiles: 50,
+          rotationPolicy: 'count',
+          maxFileAge: 7200,
+          outputFormats: ['json', 'text', 'html'],
+          textFormatOptions: {
+            enableColors: true,
+            lineWidth: 100,
+            indentSize: 4,
+            sectionSeparator: '-',
+            includeTimestamps: false,
+            performanceSummary: true,
+          },
+        },
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(testConfig, null, 2));
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        validator,
+      });
+
+      const config = await testLoader.loadConfig();
+
+      // Test new fields are loaded correctly
+      expect(config.outputFormats).toEqual(['json', 'text', 'html']);
+      expect(config.textFormatOptions).toEqual({
+        enableColors: true,
+        lineWidth: 100,
+        indentSize: 4,
+        sectionSeparator: '-',
+        includeTimestamps: false,
+        performanceSummary: true,
+      });
+
+      // Test getter methods for new fields
+      const outputFormats = await testLoader.getOutputFormats();
+      expect(outputFormats).toEqual(['json', 'text', 'html']);
+
+      const textOptions = await testLoader.getTextFormatOptions();
+      expect(textOptions.enableColors).toBe(true);
+      expect(textOptions.lineWidth).toBe(100);
+      expect(textOptions.indentSize).toBe(4);
+      expect(textOptions.sectionSeparator).toBe('-');
+      expect(textOptions.includeTimestamps).toBe(false);
+      expect(textOptions.performanceSummary).toBe(true);
+    });
+
+    it('should use default values for missing dual-format fields', async () => {
+      const testConfig = {
+        traceAnalysisEnabled: false,
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:go'],
+          outputDirectory: './test-traces',
+          verbosity: 'standard',
+          // Missing outputFormats and textFormatOptions - should use defaults
+        },
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(testConfig, null, 2));
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        validator,
+      });
+
+      const config = await testLoader.loadConfig();
+
+      // Should use default values
+      const outputFormats = await testLoader.getOutputFormats();
+      expect(outputFormats).toEqual(['json']);
+
+      const textOptions = await testLoader.getTextFormatOptions();
+      expect(textOptions).toEqual({
+        enableColors: false,
+        lineWidth: 120,
+        indentSize: 2,
+        sectionSeparator: '=',
+        includeTimestamps: true,
+        performanceSummary: true,
+      });
+    });
+
     it('should handle missing configuration file gracefully', async () => {
       // Use a non-existent config path
       const missingConfigLoader = new TraceConfigLoader({
@@ -247,6 +376,42 @@ describe('Action Trace Config Integration', () => {
       expect(merged.tracedActions).toEqual(['core:go']);
       expect(merged.verbosity).toBe('verbose');
       // Defaults should be filled in
+      expect(merged.outputDirectory).toBe('./traces/actions');
+      expect(merged.includeComponentData).toBe(true);
+      expect(merged.maxTraceFiles).toBe(100);
+      expect(merged.rotationPolicy).toBe('age');
+    });
+
+    it('should merge user config with defaults including new dual-format fields', () => {
+      const userConfig = {
+        enabled: true,
+        tracedActions: ['core:go'],
+        verbosity: 'verbose',
+        outputFormats: ['text', 'html'],
+        textFormatOptions: {
+          enableColors: true,
+          lineWidth: 90,
+        },
+      };
+
+      const merged = ActionTracingConfigMigration.mergeWithDefaults(userConfig);
+
+      expect(merged.enabled).toBe(true);
+      expect(merged.tracedActions).toEqual(['core:go']);
+      expect(merged.verbosity).toBe('verbose');
+
+      // New fields should be merged correctly
+      expect(merged.outputFormats).toEqual(['text', 'html']);
+      expect(merged.textFormatOptions.enableColors).toBe(true);
+      expect(merged.textFormatOptions.lineWidth).toBe(90);
+
+      // Missing textFormatOptions should be filled with defaults
+      expect(merged.textFormatOptions.indentSize).toBe(2); // Default value
+      expect(merged.textFormatOptions.sectionSeparator).toBe('='); // Default value
+      expect(merged.textFormatOptions.includeTimestamps).toBe(true); // Default value
+      expect(merged.textFormatOptions.performanceSummary).toBe(true); // Default value
+
+      // Original defaults should still be present
       expect(merged.outputDirectory).toBe('./traces/actions');
       expect(merged.includeComponentData).toBe(true);
       expect(merged.maxTraceFiles).toBe(100);

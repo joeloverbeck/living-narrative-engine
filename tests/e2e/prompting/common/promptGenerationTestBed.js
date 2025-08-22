@@ -64,7 +64,7 @@ export class PromptGenerationTestBed {
     this.container = new AppContainer();
 
     // Configure container with test UI elements
-    configureContainer(this.container, {
+    await configureContainer(this.container, {
       outputDiv: document.createElement('div'),
       inputElement: document.createElement('input'),
       titleElement: document.createElement('h1'),

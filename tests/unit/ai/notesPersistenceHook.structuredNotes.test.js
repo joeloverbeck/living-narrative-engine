@@ -71,7 +71,6 @@ describe('persistNotes - structured notes', () => {
           text: 'Combat encounter completed',
           subject: 'combat_summary',
           context: 'dungeon_level_2',
-          tags: ['combat', 'victory', 'experience_gained'],
         },
       ],
     };
@@ -90,7 +89,7 @@ describe('persistNotes - structured notes', () => {
     expect(addedNote.text).toBe('Combat encounter completed');
     expect(addedNote.subject).toBe('combat_summary');
     expect(addedNote.context).toBe('dungeon_level_2');
-    expect(addedNote.tags).toEqual(['combat', 'victory', 'experience_gained']);
+    expect(addedNote.subjectType).toBe('other'); // Verify auto-added default subjectType
   });
 
   test('should handle mixed array of string and structured notes', () => {
@@ -193,7 +192,6 @@ describe('persistNotes - structured notes', () => {
         {
           text: 'Third observation',
           subject: 'quest_progress',
-          tags: ['main_quest', 'chapter_2'],
         },
       ],
     };
