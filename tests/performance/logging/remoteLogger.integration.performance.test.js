@@ -186,7 +186,7 @@ describe('RemoteLogger - Performance Integration Tests', () => {
 
       // Performance assertions
       expect(metrics.totalTime).toBeLessThan(500); // Under 500ms for burst processing
-      
+
       // All logs should be processed
       const stats = remoteLogger.getStats();
       expect(stats.bufferSize).toBe(0);
@@ -243,7 +243,9 @@ describe('RemoteLogger - Performance Integration Tests', () => {
 
   describe('performance benchmarks', () => {
     it('should handle category detection with cache efficiently', async () => {
-      const benchmark = performanceTracker.startBenchmark('category-detection-cache');
+      const benchmark = performanceTracker.startBenchmark(
+        'category-detection-cache'
+      );
 
       mockServer.mockResponse({
         ok: true,
@@ -294,7 +296,9 @@ describe('RemoteLogger - Performance Integration Tests', () => {
       const results = {};
 
       for (const level of testLevels) {
-        const benchmark = performanceTracker.startBenchmark(`metadata-level-${level}`);
+        const benchmark = performanceTracker.startBenchmark(
+          `metadata-level-${level}`
+        );
 
         mockServer.reset();
         mockServer.mockResponse({
@@ -336,7 +340,9 @@ describe('RemoteLogger - Performance Integration Tests', () => {
     });
 
     it('should handle burst logging with enhanced features', async () => {
-      const benchmark = performanceTracker.startBenchmark('enhanced-burst-logging');
+      const benchmark = performanceTracker.startBenchmark(
+        'enhanced-burst-logging'
+      );
 
       mockServer.mockResponse({
         ok: true,
@@ -389,7 +395,9 @@ describe('RemoteLogger - Performance Integration Tests', () => {
       const timings = [];
 
       for (const size of testSizes) {
-        const benchmark = performanceTracker.startBenchmark(`scalability-${size}`);
+        const benchmark = performanceTracker.startBenchmark(
+          `scalability-${size}`
+        );
 
         mockServer.reset();
         mockServer.mockResponse({
@@ -398,20 +406,20 @@ describe('RemoteLogger - Performance Integration Tests', () => {
         });
 
         remoteLogger = new RemoteLogger({
-          config: { 
-            batchSize: Math.max(10, size / 10), 
+          config: {
+            batchSize: Math.max(10, size / 10),
             flushInterval: 5000,
             metadataLevel: 'standard',
-            enableCategoryCache: true
+            enableCategoryCache: true,
           },
           dependencies: { consoleLogger: mockConsoleLogger },
         });
 
         for (let i = 0; i < size; i++) {
-          remoteLogger.info('Scale test with enhanced metadata', { 
+          remoteLogger.info('Scale test with enhanced metadata', {
             index: i,
             category: 'performance',
-            data: { nested: { value: i } }
+            data: { nested: { value: i } },
           });
         }
 

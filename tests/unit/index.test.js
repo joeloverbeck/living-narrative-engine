@@ -31,15 +31,19 @@ describe('Index.html - Main Menu', () => {
     it('should have Character Concepts Manager button', () => {
       const button = document.getElementById('character-concepts-button');
       expect(button).not.toBeNull();
-      expect(button.textContent.trim()).toBe('Character Concepts Manager');
+      // Check for text content within button-text span
+      const buttonText = button.querySelector('.button-text');
+      expect(buttonText).not.toBeNull();
+      expect(buttonText.textContent.trim()).toBe('Character Concepts Manager');
       expect(button.classList.contains('menu-button')).toBe(true);
     });
 
     it('should position Character Concepts Manager button above Thematic Direction Generator', () => {
       const buttons = document.querySelectorAll('.menu-button');
-      const buttonTexts = Array.from(buttons).map((btn) =>
-        btn.textContent.trim()
-      );
+      const buttonTexts = Array.from(buttons).map((btn) => {
+        const textSpan = btn.querySelector('.button-text');
+        return textSpan ? textSpan.textContent.trim() : btn.textContent.trim();
+      });
 
       const characterConceptsIndex = buttonTexts.indexOf(
         'Character Concepts Manager'
@@ -81,9 +85,10 @@ describe('Index.html - Main Menu', () => {
         'Core Motivations Generator',
       ];
 
-      const actualButtons = Array.from(buttons).map((btn) =>
-        btn.textContent.trim()
-      );
+      const actualButtons = Array.from(buttons).map((btn) => {
+        const textSpan = btn.querySelector('.button-text');
+        return textSpan ? textSpan.textContent.trim() : btn.textContent.trim();
+      });
       expect(actualButtons).toEqual(expectedButtons);
     });
 
@@ -108,7 +113,12 @@ describe('Index.html - Main Menu', () => {
       buttonConfigs.forEach(({ id, text }) => {
         const button = document.getElementById(id);
         expect(button).not.toBeNull();
-        expect(button.textContent.trim()).toBe(text);
+        const buttonText = button.querySelector('.button-text');
+        if (buttonText) {
+          expect(buttonText.textContent.trim()).toBe(text);
+        } else {
+          expect(button.textContent.trim()).toBe(text);
+        }
       });
     });
 
@@ -141,6 +151,59 @@ describe('Index.html - Main Menu', () => {
       buttonConfigs.forEach(({ id, href }) => {
         expect(scriptContent).toContain(`getElementById('${id}')`);
         expect(scriptContent).toContain(`window.location.href = '${href}'`);
+      });
+    });
+  });
+
+  describe('UI Redesign Elements', () => {
+    it('should have header with logo and tagline', () => {
+      const header = document.querySelector('.main-header');
+      expect(header).not.toBeNull();
+
+      const logo = header.querySelector('.logo');
+      expect(logo).not.toBeNull();
+      expect(logo.getAttribute('src')).toBe('android-chrome-192x192.png');
+
+      const title = header.querySelector('.main-title');
+      expect(title).not.toBeNull();
+      expect(title.textContent.trim()).toBe('Living Narrative Engine');
+
+      const tagline = header.querySelector('.tagline');
+      expect(tagline).not.toBeNull();
+      expect(tagline.textContent.trim()).toBe('Create immersive narratives');
+    });
+
+    it('should have categorized sections', () => {
+      const gameSection = document.querySelector('.button-category--game');
+      expect(gameSection).not.toBeNull();
+
+      const anatomySection = document.querySelector(
+        '.button-category--anatomy'
+      );
+      expect(anatomySection).not.toBeNull();
+
+      const characterSection = document.querySelector(
+        '.button-category--character'
+      );
+      expect(characterSection).not.toBeNull();
+    });
+
+    it('should have icons for all buttons', () => {
+      const buttons = document.querySelectorAll('.menu-button');
+      buttons.forEach((button) => {
+        const icon = button.querySelector('.button-icon');
+        expect(icon).not.toBeNull();
+        expect(icon.textContent.trim()).not.toBe('');
+      });
+    });
+
+    it('should have proper ARIA labels', () => {
+      const sections = document.querySelectorAll('.button-category');
+      sections.forEach((section) => {
+        const ariaLabel = section.getAttribute('aria-labelledby');
+        expect(ariaLabel).not.toBeNull();
+        const labelElement = document.getElementById(ariaLabel);
+        expect(labelElement).not.toBeNull();
       });
     });
   });

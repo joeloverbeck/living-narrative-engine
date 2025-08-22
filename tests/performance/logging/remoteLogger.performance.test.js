@@ -82,7 +82,7 @@ describe('RemoteLogger - Performance Benchmarks', () => {
     jest.clearAllMocks();
     jest.clearAllTimers();
     jest.useFakeTimers();
-    
+
     // Reset mock time
     mockTime = 0;
 
@@ -133,7 +133,7 @@ describe('RemoteLogger - Performance Benchmarks', () => {
         remoteLogger.debug('debug message', { iteration: i });
         remoteLogger.warn('warning', i);
         // Don't include error as it triggers immediate flush
-        
+
         // Advance time gradually for realistic timing
         advanceMockTime(0.05); // Small increments to simulate real timing
       }
@@ -208,7 +208,7 @@ describe('RemoteLogger - Performance Benchmarks', () => {
 
       // Force final flush to ensure all batches are sent
       await remoteLogger.flush();
-      
+
       // Advance time to trigger timer-based flushes and wait for them to complete
       advanceMockTime(150); // Trigger flushInterval (100ms)
       await jest.runAllTimersAsync();
@@ -218,7 +218,9 @@ describe('RemoteLogger - Performance Benchmarks', () => {
       // Should make reasonable number of requests (batching working)
       // In test environment with fake timers, exact count may vary but should be > 1
       expect(mockFetch.mock.calls.length).toBeGreaterThanOrEqual(1);
-      expect(mockFetch.mock.calls.length).toBeLessThanOrEqual(Math.ceil(logCount / 10)); // Allow broader range
+      expect(mockFetch.mock.calls.length).toBeLessThanOrEqual(
+        Math.ceil(logCount / 10)
+      ); // Allow broader range
 
       // Total time should be reasonable (adjusted for test environment)
       expect(metrics.totalTime).toBeLessThan(5000); // Relaxed timing expectation

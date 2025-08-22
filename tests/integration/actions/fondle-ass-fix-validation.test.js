@@ -17,7 +17,7 @@ describe('FondleAss Action Fix Validation', () => {
 
   beforeEach(() => {
     entityManager = new SimpleEntityManager();
-    
+
     // Create entities gateway wrapper
     entitiesGateway = {
       getComponentData: (entityId, componentId) => {
@@ -32,7 +32,7 @@ describe('FondleAss Action Fix Validation', () => {
   it('should find accessories layer items in topmost clothing resolution', () => {
     // Arrange - Set up Jon with belt in accessories layer
     const jonId = 'p_erotica:jon_urena_instance';
-    
+
     entityManager.addComponent(jonId, 'clothing:equipment', {
       equipped: {
         torso_lower: {
@@ -88,7 +88,7 @@ describe('FondleAss Action Fix Validation', () => {
   it('should prioritize layers correctly: outer > base > underwear > accessories', () => {
     // Arrange - Set up clothing in multiple layers
     const testId = 'test:character';
-    
+
     entityManager.addComponent(testId, 'clothing:equipment', {
       equipped: {
         torso_lower: {
@@ -116,7 +116,7 @@ describe('FondleAss Action Fix Validation', () => {
     );
 
     const clothingAccess = Array.from(clothingAccessObject)[0];
-    
+
     const slotResult = slotAccessResolver.resolve(
       {
         type: 'Step',
@@ -143,7 +143,7 @@ describe('FondleAss Action Fix Validation', () => {
   it('should fall back to accessories when higher layers are empty', () => {
     // Arrange - Only accessories layer has an item
     const testId = 'test:character';
-    
+
     entityManager.addComponent(testId, 'clothing:equipment', {
       equipped: {
         torso_lower: {
@@ -168,7 +168,7 @@ describe('FondleAss Action Fix Validation', () => {
     );
 
     const clothingAccess = Array.from(clothingAccessObject)[0];
-    
+
     const slotResult = slotAccessResolver.resolve(
       {
         type: 'Step',
@@ -236,7 +236,7 @@ describe('FondleAss Action Fix Validation', () => {
 
       const clothingAccess = Array.from(clothingAccessObject)[0];
       if (!clothingAccess) return null;
-      
+
       const slotResult = slotAccessResolver.resolve(
         {
           type: 'Step',
@@ -259,7 +259,7 @@ describe('FondleAss Action Fix Validation', () => {
     };
 
     // Act - Test both directions
-    
+
     // Jon → Silvia (this always worked)
     const jonTargetingSilvia = resolveTopMostTorsoLower(silviaId);
     expect(jonTargetingSilvia).toBe('clothing:pink_short_flared_skirt');

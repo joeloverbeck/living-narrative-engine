@@ -91,26 +91,25 @@ describe('positioning:stand_up perceptible event fix', () => {
     // Set up AJV validator for perceptible events
     ajv = new Ajv({ strict: false, allErrors: true });
     addFormats(ajv);
-    
+
     // Add common schema for reference resolution
     const commonSchema = {
       $id: 'schema://living-narrative-engine/common.schema.json',
       definitions: {
         namespacedId: {
           type: 'string',
-          pattern: '^[a-zA-Z0-9_:-]+$'
+          pattern: '^[a-zA-Z0-9_:-]+$',
         },
         nullableNamespacedId: {
-          oneOf: [
-            { $ref: '#/definitions/namespacedId' },
-            { type: 'null' }
-          ]
-        }
-      }
+          oneOf: [{ $ref: '#/definitions/namespacedId' }, { type: 'null' }],
+        },
+      },
     };
     ajv.addSchema(commonSchema, commonSchema.$id);
-    
-    validatePerceptibleEvent = ajv.compile(perceptibleEventSchema.payloadSchema);
+
+    validatePerceptibleEvent = ajv.compile(
+      perceptibleEventSchema.payloadSchema
+    );
 
     const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
     const expanded = expandMacros(standUpRule.actions, {
@@ -118,33 +117,31 @@ describe('positioning:stand_up perceptible event fix', () => {
     });
 
     const dataRegistry = {
-      getAllSystemRules: jest
-        .fn()
-        .mockReturnValue([
-          { ...standUpRule, actions: expanded },
-          // Add the perceptible event logging rule
-          {
-            rule_id: 'log_perceptible_events',
-            event_type: 'core:perceptible_event',
-            actions: [
-              {
-                type: 'ADD_PERCEPTION_LOG_ENTRY',
-                parameters: {
-                  location_id: '{event.payload.locationId}',
-                  entry: {
-                    descriptionText: '{event.payload.descriptionText}',
-                    timestamp: '{event.payload.timestamp}',
-                    perceptionType: '{event.payload.perceptionType}',
-                    actorId: '{event.payload.actorId}',
-                    targetId: '{event.payload.targetId}',
-                    involvedEntities: '{event.payload.involvedEntities}'
-                  },
-                  originating_actor_id: '{event.payload.actorId}'
-                }
-              }
-            ]
-          }
-        ]),
+      getAllSystemRules: jest.fn().mockReturnValue([
+        { ...standUpRule, actions: expanded },
+        // Add the perceptible event logging rule
+        {
+          rule_id: 'log_perceptible_events',
+          event_type: 'core:perceptible_event',
+          actions: [
+            {
+              type: 'ADD_PERCEPTION_LOG_ENTRY',
+              parameters: {
+                location_id: '{event.payload.locationId}',
+                entry: {
+                  descriptionText: '{event.payload.descriptionText}',
+                  timestamp: '{event.payload.timestamp}',
+                  perceptionType: '{event.payload.perceptionType}',
+                  actorId: '{event.payload.actorId}',
+                  targetId: '{event.payload.targetId}',
+                  involvedEntities: '{event.payload.involvedEntities}',
+                },
+                originating_actor_id: '{event.payload.actorId}',
+              },
+            },
+          ],
+        },
+      ]),
       getConditionDefinition: jest.fn((id) =>
         id === 'positioning:event-is-action-stand-up'
           ? eventIsActionStandUp
@@ -171,13 +168,13 @@ describe('positioning:stand_up perceptible event fix', () => {
                   perceptionType: '{event.payload.perceptionType}',
                   actorId: '{event.payload.actorId}',
                   targetId: '{event.payload.targetId}',
-                  involvedEntities: '{event.payload.involvedEntities}'
+                  involvedEntities: '{event.payload.involvedEntities}',
                 },
-                originating_actor_id: '{event.payload.actorId}'
-              }
-            }
-          ]
-        }
+                originating_actor_id: '{event.payload.actorId}',
+              },
+            },
+          ],
+        },
       ],
       dataRegistry,
     });
@@ -224,10 +221,10 @@ describe('positioning:stand_up perceptible event fix', () => {
     );
 
     expect(perceptibleEvent).toBeDefined();
-    
+
     // Validate the perceptible event against the schema
     const isValid = validatePerceptibleEvent(perceptibleEvent.payload);
-    
+
     if (!isValid) {
       console.log('Validation errors:', validatePerceptibleEvent.errors);
     }
@@ -235,24 +232,28 @@ describe('positioning:stand_up perceptible event fix', () => {
     // This should now pass after the fix
     expect(isValid).toBe(true);
     expect(validatePerceptibleEvent.errors).toBeNull();
-    
+
     // Verify the corrected values
     expect(perceptibleEvent.payload.perceptionType).toBe('action_self_general');
     expect(perceptibleEvent.payload.targetId).toBe(null);
 
     // Verify that witness DOES receive the perceptible log entry
     const witness = testEnv.entityManager.getEntityInstance('test:witness1');
-    const logEntries = witness.components[PERCEPTION_LOG_COMPONENT_ID]?.logEntries || [];
-    
+    const logEntries =
+      witness.components[PERCEPTION_LOG_COMPONENT_ID]?.logEntries || [];
+
     // Should have one entry now because the validation passes
     expect(logEntries).toHaveLength(1);
-    expect(logEntries[0].descriptionText).toBe('Alice stands up from their kneeling position.');
+    expect(logEntries[0].descriptionText).toBe(
+      'Alice stands up from their kneeling position.'
+    );
     expect(logEntries[0].perceptionType).toBe('action_self_general');
   });
 
   it('validates perceptionType enum values from schema', () => {
-    const validTypes = perceptibleEventSchema.payloadSchema.properties.perceptionType.enum;
-    
+    const validTypes =
+      perceptibleEventSchema.payloadSchema.properties.perceptionType.enum;
+
     expect(validTypes).not.toContain('action_general'); // Invalid
     expect(validTypes).toContain('action_self_general'); // Valid for self-actions
     expect(validTypes).toContain('action_target_general'); // Valid for target-actions
@@ -269,11 +270,11 @@ describe('positioning:stand_up perceptible event fix', () => {
       actorId: 'test:actor1',
       targetId: null, // Using null instead of "none"
       involvedEntities: [],
-      contextualData: {}
+      contextualData: {},
     };
 
     const isValid = validatePerceptibleEvent(correctedPayload);
-    
+
     if (!isValid) {
       console.log('Validation errors:', validatePerceptibleEvent.errors);
     }

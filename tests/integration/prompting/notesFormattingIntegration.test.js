@@ -136,8 +136,13 @@ describe('Notes Formatting Integration', () => {
         subject: 'John',
         subjectType: SUBJECT_TYPES.CHARACTER,
         context: 'tavern conversation',
-        tags: ['emotion', 'politics'],
+        // tags are intentionally excluded from the prompt pipeline
         timestamp: '2024-01-01T10:00:00Z',
+      });
+
+      // Explicitly verify no tags property exists in any extracted note
+      promptData.notesArray.forEach((note) => {
+        expect(note).not.toHaveProperty('tags');
       });
 
       // Step 2: Format notes with grouping through PromptDataFormatter
@@ -308,6 +313,12 @@ describe('Notes Formatting Integration', () => {
       // Should process 100 notes in reasonable time (< 100ms)
       expect(processingTime).toBeLessThan(100);
       expect(promptData.notesArray).toHaveLength(100);
+
+      // Verify tags are excluded from all notes
+      promptData.notesArray.forEach((note) => {
+        expect(note).not.toHaveProperty('tags');
+      });
+
       expect(groupedContent).toContain('## Characters');
       expect(groupedContent).toContain('### Subject 1');
 

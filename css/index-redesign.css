@@ -1,0 +1,416 @@
+/* css/index-redesign.css */
+
+/* =========================
+   Container & Layout
+   ========================= */
+
+.index-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--primary-bg-color);
+}
+
+/* =========================
+   Header Section
+   ========================= */
+
+.main-header {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+  padding: var(--spacing-xl) var(--spacing-lg);
+  border-bottom: 1px solid var(--panel-border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xl);
+}
+
+.logo {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.header-text {
+  flex: 1;
+}
+
+.main-title {
+  font-size: 2.5rem;
+  font-family: var(--font-narrative);
+  margin: 0;
+  color: var(--primary-text-color);
+  font-weight: 700;
+}
+
+.tagline {
+  font-size: 1rem;
+  font-family: var(--font-ui);
+  color: var(--secondary-text-color);
+  margin: var(--spacing-xs) 0 0;
+}
+
+/* =========================
+   Main Content Area
+   ========================= */
+
+.main-content {
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-lg);
+}
+
+/* =========================
+   Category Sections
+   ========================= */
+
+.button-category {
+  margin-bottom: calc(var(--spacing-xl) * 2);
+}
+
+.category-title {
+  font-size: 1.5rem;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  margin: 0 0 var(--spacing-sm);
+  color: var(--primary-text-color);
+  text-align: center;
+}
+
+.category-description {
+  font-size: 1rem;
+  font-family: var(--font-ui);
+  color: var(--secondary-text-color);
+  text-align: center;
+  margin: 0 0 var(--spacing-xl);
+}
+
+/* =========================
+   Button Grid Layouts
+   ========================= */
+
+.button-grid {
+  display: grid;
+  gap: var(--spacing-lg);
+  justify-content: center;
+}
+
+.button-grid--1col {
+  grid-template-columns: repeat(1, minmax(180px, 200px));
+}
+
+.button-grid--2col {
+  grid-template-columns: repeat(2, minmax(180px, 200px));
+}
+
+.button-grid--4col {
+  grid-template-columns: repeat(4, minmax(180px, 200px));
+}
+
+.button-grid--centered {
+  margin-top: var(--spacing-lg);
+  justify-content: center;
+}
+
+/* =========================
+   Navigation Buttons
+   ========================= */
+
+.nav-button {
+  width: 180px;
+  height: 140px;
+  padding: var(--spacing-md);
+  border-radius: 12px;
+  border: 2px solid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+.button-icon {
+  font-size: 32px;
+  line-height: 1;
+  display: block;
+  margin-bottom: var(--spacing-sm);
+}
+
+.button-text {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+/* =========================
+   Game Operations Theme (Green)
+   ========================= */
+
+.nav-button--game {
+  background: #f1f8e9;
+  border-color: #8bc34a;
+  color: #2e7d32;
+}
+
+.nav-button--game:hover {
+  background: #8bc34a;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.nav-button--game:focus {
+  outline: 3px solid #8bc34a;
+  outline-offset: 2px;
+}
+
+.nav-button--game:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================
+   Anatomy System Theme (Blue)
+   ========================= */
+
+.nav-button--anatomy {
+  background: #e3f2fd;
+  border-color: #2196f3;
+  color: #0d47a1;
+}
+
+.nav-button--anatomy:hover {
+  background: #2196f3;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.nav-button--anatomy:focus {
+  outline: 3px solid #2196f3;
+  outline-offset: 2px;
+}
+
+.nav-button--anatomy:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================
+   Character Building Themes
+   ========================= */
+
+/* Orange Theme */
+.nav-button--orange {
+  background: #fff3e0;
+  border-color: #ff9800;
+  color: #e65100;
+}
+
+.nav-button--orange:hover {
+  background: #ff9800;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.nav-button--orange:focus {
+  outline: 3px solid #ff9800;
+  outline-offset: 2px;
+}
+
+.nav-button--orange:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Purple Theme */
+.nav-button--purple {
+  background: #f3e5f5;
+  border-color: #9c27b0;
+  color: #4a148c;
+}
+
+.nav-button--purple:hover {
+  background: #9c27b0;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.nav-button--purple:focus {
+  outline: 3px solid #9c27b0;
+  outline-offset: 2px;
+}
+
+.nav-button--purple:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================
+   Responsive Design - Tablet
+   ========================= */
+
+@media (max-width: 1199px) and (min-width: 768px) {
+  .header-content {
+    padding: 0 var(--spacing-xl);
+  }
+
+  .main-content {
+    padding: var(--spacing-xl) var(--spacing-xl);
+  }
+
+  .button-grid--4col {
+    grid-template-columns: repeat(2, minmax(180px, 200px));
+  }
+
+  .nav-button {
+    width: 100%;
+    min-width: 180px;
+  }
+}
+
+/* =========================
+   Responsive Design - Mobile
+   ========================= */
+
+@media (max-width: 767px) {
+  .main-header {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .header-content {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--spacing-md);
+  }
+
+  .logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .main-title {
+    font-size: 1.8rem;
+  }
+
+  .tagline {
+    font-size: 0.9rem;
+  }
+
+  .main-content {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+
+  .button-category {
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .category-title {
+    font-size: 1.25rem;
+  }
+
+  .category-description {
+    font-size: 0.9rem;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  /* All grids become single column on mobile */
+  .button-grid--1col,
+  .button-grid--2col,
+  .button-grid--4col {
+    grid-template-columns: 1fr;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .nav-button {
+    width: 100%;
+    height: 120px;
+  }
+
+  .button-icon {
+    font-size: 28px;
+  }
+
+  .button-text {
+    font-size: 13px;
+  }
+}
+
+/* =========================
+   Extra Small Mobile
+   ========================= */
+
+@media (max-width: 480px) {
+  .main-title {
+    font-size: 1.5rem;
+  }
+
+  .nav-button {
+    height: 100px;
+  }
+
+  .button-icon {
+    font-size: 24px;
+  }
+
+  .button-text {
+    font-size: 12px;
+  }
+}
+
+/* =========================
+   Accessibility Enhancements
+   ========================= */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .nav-button {
+    border-width: 3px;
+  }
+
+  .nav-button:focus {
+    outline-width: 4px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .nav-button {
+    transition: none;
+  }
+
+  .nav-button:hover {
+    transform: none;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+.nav-button:focus-visible {
+  outline: 3px solid var(--accent-color-primary);
+  outline-offset: 2px;
+}
+
+/* Ensure proper color contrast ratios */
+.nav-button {
+  /* Minimum 4.5:1 contrast ratio for WCAG AA compliance */
+  font-weight: 500; /* Slightly bolder text for better readability */
+}

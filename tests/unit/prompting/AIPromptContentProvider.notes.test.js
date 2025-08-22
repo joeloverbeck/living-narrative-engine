@@ -188,7 +188,7 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
     ]);
   });
 
-  test('when core:notes.notes has structured notes with subject → includes all valid fields', async () => {
+  test('when core:notes.notes has structured notes with subject → includes all valid fields EXCEPT tags', async () => {
     const now = new Date().toISOString();
     const gameStateDto = {
       actorState: {
@@ -229,7 +229,7 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
         text: 'John seems nervous',
         subject: 'John',
         context: 'tavern conversation',
-        tags: ['emotion', 'observation'],
+        // tags should NOT be included in the output
         timestamp: now,
       },
       {
@@ -237,6 +237,64 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
         subject: 'Market',
       },
     ]);
+  });
+
+  test('when core:notes.notes has tags in input data → tags are explicitly excluded from output', async () => {
+    const now = new Date().toISOString();
+    const gameStateDto = {
+      actorState: {
+        components: {
+          'core:notes': {
+            notes: [
+              {
+                text: 'Note with all fields',
+                subject: 'TestSubject',
+                subjectType: 'character',
+                context: 'testing context',
+                tags: ['tag1', 'tag2', 'tag3'], // Tags should be ignored
+                timestamp: now,
+              },
+              {
+                text: 'Note with just tags',
+                tags: ['another', 'set', 'of', 'tags'], // Tags should be ignored
+              },
+            ],
+          },
+        },
+      },
+      actorPromptData: { name: 'TagTester' },
+      currentUserInput: '',
+      perceptionLog: [],
+      currentLocation: {
+        name: 'TestArea',
+        description: 'Testing tags exclusion',
+        exits: [],
+        characters: [],
+      },
+      availableActions: [],
+    };
+
+    const result = await provider.getPromptData(gameStateDto, logger);
+
+    // Verify that the output contains the notes but WITHOUT tags
+    expect(result.notesArray).toHaveLength(2);
+    expect(result.notesArray[0]).toEqual({
+      text: 'Note with all fields',
+      subject: 'TestSubject',
+      subjectType: 'character',
+      context: 'testing context',
+      timestamp: now,
+      // NO tags property should exist
+    });
+    expect(result.notesArray[1]).toEqual({
+      text: 'Note with just tags',
+      // NO tags property should exist
+    });
+
+    // Explicitly verify no tags property exists in any note
+    result.notesArray.forEach((note) => {
+      expect(note).not.toHaveProperty('tags');
+    });
   });
 
   test('when core:notes.notes has structured notes missing required fields → filters them out', async () => {

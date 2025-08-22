@@ -30,24 +30,40 @@ describe('Clothing Component Diagnosis', () => {
       },
     };
 
-    entityManager.addComponent(silviaId, 'clothing:equipment', basicClothingSetup);
+    entityManager.addComponent(
+      silviaId,
+      'clothing:equipment',
+      basicClothingSetup
+    );
     entityManager.addComponent(jonId, 'clothing:equipment', basicClothingSetup);
 
     // Act - Retrieve clothing components
-    const silviaClothing = entityManager.getComponentData(silviaId, 'clothing:equipment');
-    const jonClothing = entityManager.getComponentData(jonId, 'clothing:equipment');
+    const silviaClothing = entityManager.getComponentData(
+      silviaId,
+      'clothing:equipment'
+    );
+    const jonClothing = entityManager.getComponentData(
+      jonId,
+      'clothing:equipment'
+    );
 
     // Assert and log for diagnosis
-    console.log('Silvia clothing component:', JSON.stringify(silviaClothing, null, 2));
-    console.log('Jon clothing component:', JSON.stringify(jonClothing, null, 2));
+    console.log(
+      'Silvia clothing component:',
+      JSON.stringify(silviaClothing, null, 2)
+    );
+    console.log(
+      'Jon clothing component:',
+      JSON.stringify(jonClothing, null, 2)
+    );
 
     expect(silviaClothing).toBeDefined();
     expect(jonClothing).toBeDefined();
-    
+
     // Check torso_lower specifically
     expect(silviaClothing.equipped.torso_lower).toBeDefined();
     expect(jonClothing.equipped.torso_lower).toBeDefined();
-    
+
     expect(silviaClothing.equipped.torso_lower.base).toBe('clothing:pants');
     expect(jonClothing.equipped.torso_lower.base).toBe('clothing:pants');
   });
@@ -64,18 +80,24 @@ describe('Clothing Component Diagnosis', () => {
     });
 
     // Act - Simulate the scope resolution: target.topmost_clothing.torso_lower
-    const clothingComponent = entityManager.getComponentData(jonId, 'clothing:equipment');
-    
-    console.log('Jon clothing component for scope test:', JSON.stringify(clothingComponent, null, 2));
-    
+    const clothingComponent = entityManager.getComponentData(
+      jonId,
+      'clothing:equipment'
+    );
+
+    console.log(
+      'Jon clothing component for scope test:',
+      JSON.stringify(clothingComponent, null, 2)
+    );
+
     // This simulates what ClothingStepResolver does
     const equipped = clothingComponent?.equipped;
     const torsoLowerSlot = equipped?.torso_lower;
-    
+
     // This simulates what SlotAccessResolver does with LAYER_PRIORITY.topmost
     const layerPriority = ['outer', 'base', 'underwear'];
     let foundItem = null;
-    
+
     for (const layer of layerPriority) {
       if (torsoLowerSlot?.[layer]) {
         foundItem = torsoLowerSlot[layer];
@@ -84,7 +106,7 @@ describe('Clothing Component Diagnosis', () => {
     }
 
     console.log('Resolved clothing item:', foundItem);
-    
+
     // Assert - The scope should find the clothing item
     expect(clothingComponent).toBeDefined();
     expect(equipped).toBeDefined();
@@ -96,7 +118,7 @@ describe('Clothing Component Diagnosis', () => {
     // This test will help us understand if the characters exist in the real system
     // We can't access the real EntityManager here, but we can at least check
     // if the entity creation follows expected patterns
-    
+
     const silviaId = 'p_erotica:silvia_instance';
     const jonId = 'p_erotica:jon_urena_instance';
 

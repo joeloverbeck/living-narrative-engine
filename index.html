@@ -9,51 +9,130 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="stylesheet" href="css/style.css" />
-    <style>
-      body {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        margin: 0;
-        text-align: center;
-      }
-
-      h1 {
-        font-size: 3rem;
-        margin-bottom: 2rem;
-      }
-
-      .menu-button {
-        font-size: 1.5rem;
-        padding: 1rem 2rem;
-        margin: 0.5rem;
-        cursor: pointer;
-      }
-    </style>
+    <link rel="stylesheet" href="css/index-redesign.css" />
   </head>
 
   <body>
-    <h1>Living Narrative Engine</h1>
-    <button id="start-button" class="menu-button">Start New Game</button>
-    <button id="load-button" class="menu-button">Load Game</button>
-    <button id="anatomy-button" class="menu-button">Anatomy Visualizer</button>
-    <button id="character-concepts-button" class="menu-button">
-      Character Concepts Manager
-    </button>
-    <button id="thematic-direction-button" class="menu-button">
-      Thematic Direction Generator
-    </button>
-    <button id="thematic-directions-manager-button" class="menu-button">
-      Thematic Directions Manager
-    </button>
-    <button id="cliches-generator-button" class="menu-button">
-      Clichés Generator
-    </button>
-    <button id="core-motivations-button" class="menu-button">
-      Core Motivations Generator
-    </button>
+    <div class="index-container">
+      <!-- Header Section -->
+      <header class="main-header">
+        <div class="header-content">
+          <img
+            src="android-chrome-192x192.png"
+            alt="Living Narrative Engine Logo"
+            class="logo"
+          />
+          <div class="header-text">
+            <h1 class="main-title">Living Narrative Engine</h1>
+            <p class="tagline">Create immersive narratives</p>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Game Operations Section -->
+        <section
+          class="button-category button-category--game"
+          aria-labelledby="game-operations-title"
+        >
+          <h2 id="game-operations-title" class="category-title">
+            Game Operations
+          </h2>
+          <p class="category-description">
+            Start playing or continue your adventure
+          </p>
+          <div class="button-grid button-grid--2col">
+            <button
+              id="start-button"
+              class="menu-button nav-button nav-button--game"
+            >
+              <span class="button-icon" aria-hidden="true">🎮</span>
+              <span class="button-text">Start New Game</span>
+            </button>
+            <button
+              id="load-button"
+              class="menu-button nav-button nav-button--game"
+            >
+              <span class="button-icon" aria-hidden="true">📁</span>
+              <span class="button-text">Load Game</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Anatomy System Section -->
+        <section
+          class="button-category button-category--anatomy"
+          aria-labelledby="anatomy-system-title"
+        >
+          <h2 id="anatomy-system-title" class="category-title">
+            Anatomy System
+          </h2>
+          <p class="category-description">
+            Visualize and manage character anatomy
+          </p>
+          <div class="button-grid button-grid--1col">
+            <button
+              id="anatomy-button"
+              class="menu-button nav-button nav-button--anatomy"
+            >
+              <span class="button-icon" aria-hidden="true">❤️</span>
+              <span class="button-text">Anatomy Visualizer</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Character Building Section -->
+        <section
+          class="button-category button-category--character"
+          aria-labelledby="character-building-title"
+        >
+          <h2 id="character-building-title" class="category-title">
+            Character Building
+          </h2>
+          <p class="category-description">Create and develop your characters</p>
+          <div class="button-grid button-grid--4col">
+            <button
+              id="character-concepts-button"
+              class="menu-button nav-button nav-button--character nav-button--orange"
+            >
+              <span class="button-icon" aria-hidden="true">👤</span>
+              <span class="button-text">Character Concepts Manager</span>
+            </button>
+            <button
+              id="thematic-direction-button"
+              class="menu-button nav-button nav-button--character nav-button--purple"
+            >
+              <span class="button-icon" aria-hidden="true">💭</span>
+              <span class="button-text">Thematic Direction Generator</span>
+            </button>
+            <button
+              id="thematic-directions-manager-button"
+              class="menu-button nav-button nav-button--character nav-button--orange"
+            >
+              <span class="button-icon" aria-hidden="true">📋</span>
+              <span class="button-text">Thematic Directions Manager</span>
+            </button>
+            <button
+              id="cliches-generator-button"
+              class="menu-button nav-button nav-button--character nav-button--purple"
+            >
+              <span class="button-icon" aria-hidden="true">✨</span>
+              <span class="button-text">Clichés Generator</span>
+            </button>
+          </div>
+          <div class="button-grid button-grid--1col button-grid--centered">
+            <button
+              id="core-motivations-button"
+              class="menu-button nav-button nav-button--character nav-button--orange"
+            >
+              <span class="button-icon" aria-hidden="true">🧠</span>
+              <span class="button-text">Core Motivations Generator</span>
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
     <script>
       document.getElementById('start-button').addEventListener('click', () => {
         window.location.href = 'game.html';

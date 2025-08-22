@@ -24,7 +24,6 @@ export default function createClothingStepResolver({ entitiesGateway }) {
     underwear: 'underwear',
   };
 
-
   /**
    * Checks if this resolver can handle the given node
    *

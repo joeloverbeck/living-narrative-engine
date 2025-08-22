@@ -634,13 +634,13 @@ describe('RemoteLogger', () => {
       // Log messages sequentially and wait for each flush to complete
       remoteLogger.info('GameEngine initialized');
       await jest.runAllTimersAsync();
-      
+
       remoteLogger.warn('EntityManager created');
       await jest.runAllTimersAsync();
-      
+
       remoteLogger.debug('AI decision made');
       await jest.runAllTimersAsync();
-      
+
       remoteLogger.error('Validation failed');
       await jest.runAllTimersAsync();
 

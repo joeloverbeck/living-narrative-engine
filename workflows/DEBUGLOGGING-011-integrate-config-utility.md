@@ -10,36 +10,65 @@
 
 Update the existing `loadAndApplyLoggerConfig` utility to support the new debug logging configuration format while maintaining backward compatibility with the existing logger configuration system.
 
+**Important Architecture Notes**:
+- LoggerStrategy is already used in all container configurations
+- LoggerStrategy accepts configuration via its constructor, NOT runtime methods
+- LoggerStrategy only has `setLogLevel()` for runtime changes (which can trigger mode switches)
+- LoggerStrategy does NOT have `setMode()`, `setCategoryConfig()`, or `setRemoteConfig()` methods
+- The debug config file (`config/debug-logging-config.json`) already exists with the correct structure
+
 ## Technical Requirements
 
 ### 1. Current Implementation
 
 ```javascript
 // src/configuration/utils/loggerConfigUtils.js
-export async function loadAndApplyLoggerConfig(logger) {
-  const config = await loadLoggerConfig();
-  if (config && config.logLevel) {
-    logger.setLogLevel(config.logLevel);
-  }
+export async function loadAndApplyLoggerConfig(
+  container,
+  logger,
+  tokens,
+  configPrefix = 'ContainerConfig'
+) {
+  // Uses LoggerConfigLoader to load legacy config
+  // Applies log level via logger.setLogLevel()
 }
 ```
 
-### 2. Enhanced Implementation
+**Note**: LoggerStrategy is already used in container configurations and accepts a config parameter in its constructor.
+
+### 2. Enhanced Implementation Strategy
+
+Since LoggerStrategy already supports configuration via its constructor, the integration should:
+
+1. **Load debug config before LoggerStrategy creation** in container configurations
+2. **Pass config to LoggerStrategy constructor** for initial setup
+3. **Use loadAndApplyLoggerConfig for runtime changes** via `setLogLevel()`
 
 ```javascript
-export async function loadAndApplyLoggerConfig(logger) {
-  // Try new config format first
+// In container configurations
+const debugConfig = await loadDebugLogConfig();
+const logger = new LoggerStrategy({
+  config: debugConfig,
+  dependencies: { consoleLogger }
+});
+
+// For runtime changes
+export async function loadAndApplyLoggerConfig(
+  container,
+  logger,
+  tokens,
+  configPrefix = 'ContainerConfig'
+) {
+  // Load debug config if available
   const debugConfig = await loadDebugLogConfig();
-  if (debugConfig) {
-    applyDebugLogConfig(logger, debugConfig);
+  if (debugConfig && debugConfig.mode) {
+    // LoggerStrategy supports mode switching via setLogLevel
+    logger.setLogLevel(debugConfig.mode);
     return;
   }
-
-  // Fall back to old format
-  const legacyConfig = await loadLoggerConfig();
-  if (legacyConfig) {
-    applyLegacyConfig(logger, legacyConfig);
-  }
+  
+  // Fall back to legacy config loading
+  // ... existing implementation
 }
 ```
 
@@ -71,79 +100,79 @@ export async function loadAndApplyLoggerConfig(logger) {
 ## Implementation Steps
 
 1. **Create Debug Config Loader**
-   - [ ] Create `src/configuration/utils/debugLogConfigLoader.js`
-   - [ ] Implement config file reading
-   - [ ] Add environment variable override
-   - [ ] Handle missing config gracefully
+   - [ ] Create `src/configuration/debugLogConfigLoader.js` (follow LoggerConfigLoader pattern)
+   - [ ] Implement config file reading from `config/debug-logging-config.json`
+   - [ ] Add environment variable override support
+   - [ ] Handle missing config gracefully with proper error reporting
 
-2. **Update loadAndApplyLoggerConfig**
-   - [ ] Add debug config loading logic
-   - [ ] Implement config format detection
-   - [ ] Apply appropriate configuration
-   - [ ] Maintain backward compatibility
+2. **Update Container Configurations**
+   - [ ] Load debug config in `minimalContainerConfig.js` before creating LoggerStrategy
+   - [ ] Load debug config in `containerConfig.js` before creating LoggerStrategy  
+   - [ ] Pass loaded config to LoggerStrategy constructor
+   - [ ] Maintain existing loadAndApplyLoggerConfig call for runtime changes
+
+3. **Update loadAndApplyLoggerConfig**
+   - [ ] Add debug config loading as alternative to legacy config
+   - [ ] Use `setLogLevel()` for mode switching (LoggerStrategy supports this)
+   - [ ] Maintain backward compatibility with legacy logger-config.json
+   - [ ] Add proper logging of config source (debug vs legacy)
 
 3. **Config Application Logic**
 
    ```javascript
    function applyDebugLogConfig(logger, config) {
-     // Apply mode if LoggerStrategy
-     if (logger.setMode && config.mode) {
-       logger.setMode(config.mode);
+     // LoggerStrategy supports mode switching via setLogLevel
+     // Special values like 'remote', 'console', 'hybrid', 'none' trigger mode switches
+     if (config.mode && logger.setLogLevel) {
+       logger.setLogLevel(config.mode);
      }
 
-     // Apply log level (backward compatibility)
-     if (config.logLevel) {
+     // Apply log level for backward compatibility
+     if (config.logLevel && logger.setLogLevel) {
        logger.setLogLevel(config.logLevel);
      }
 
-     // Apply category-specific settings
-     if (logger.setCategoryConfig && config.categories) {
-       logger.setCategoryConfig(config.categories);
-     }
-
-     // Apply remote configuration
-     if (logger.setRemoteConfig && config.remote) {
-       logger.setRemoteConfig(config.remote);
-     }
+     // Note: LoggerStrategy handles categories and remote config internally
+     // These are passed via the constructor config, not runtime methods
    }
    ```
 
+   **Important**: LoggerStrategy does NOT have `setMode()`, `setCategoryConfig()`, or `setRemoteConfig()` methods. All configuration except log level must be passed via the constructor.
+
 4. **Environment Variable Support**
-   - [ ] Check `DEBUG_LOG_CONFIG_PATH` for custom path
-   - [ ] Override specific values with env vars
-   - [ ] Document all environment variables
+   - [ ] Check `DEBUG_LOG_CONFIG_PATH` for custom config path
+   - [ ] Support `DEBUG_LOG_MODE` override (already supported by LoggerStrategy)
+   - [ ] Document all environment variables in README
+   - [ ] Ensure proper precedence: env vars > config file > defaults
 
 5. **Config File Resolution**
 
    ```javascript
-   async function findConfigFile() {
-     const paths = [
-       process.env.DEBUG_LOG_CONFIG_PATH,
-       './config/debug-logging-config.json',
-       './config/logger-config.json', // Legacy
-       './debug-logging-config.json',
-       './logger-config.json', // Legacy
-     ];
-
-     for (const path of paths.filter(Boolean)) {
-       if (await fileExists(path)) {
-         return path;
-       }
-     }
-     return null;
+   // In DebugLogConfigLoader
+   async function resolveConfigPath() {
+     // Priority order for config file resolution
+     const configPath = process.env.DEBUG_LOG_CONFIG_PATH || 
+                       'config/debug-logging-config.json';
+     
+     // The file already exists at config/debug-logging-config.json
+     // Just need to handle the case where it might be missing
+     return configPath;
    }
    ```
 
+   **Note**: The debug config file already exists at `config/debug-logging-config.json` with the correct structure.
+
 ## Acceptance Criteria
 
-- [ ] New debug config format is loaded correctly
-- [ ] Legacy config format still works
-- [ ] Environment variables override config values
-- [ ] Missing config doesn't cause errors
-- [ ] Hot reload of config works
-- [ ] All existing usage continues to work
-- [ ] Config validation provides clear errors
-- [ ] Documentation updated with new format
+- [ ] Debug config is loaded from `config/debug-logging-config.json` correctly
+- [ ] LoggerStrategy receives config via constructor in container configurations
+- [ ] Runtime mode switching works via `setLogLevel()` with special values
+- [ ] Legacy `logger-config.json` format continues to work
+- [ ] Environment variable `DEBUG_LOG_MODE` overrides config mode
+- [ ] Missing debug config falls back to legacy config gracefully
+- [ ] All existing container configurations work with new approach
+- [ ] Config validation provides clear error messages
+- [ ] Documentation updated to explain both config formats
 
 ## Dependencies
 
@@ -153,25 +182,29 @@ export async function loadAndApplyLoggerConfig(logger) {
 
 ## Testing Requirements
 
-1. **Unit Tests**
-   - [ ] Test new config loading
-   - [ ] Test legacy config loading
-   - [ ] Test environment variable override
-   - [ ] Test missing config handling
-   - [ ] Test config validation
+1. **Unit Tests** (`tests/unit/configuration/debugLogConfigLoader.test.js`)
+   - [ ] Test loading debug config from file
+   - [ ] Test environment variable path override
+   - [ ] Test missing config file handling
+   - [ ] Test config validation and error reporting
+   - [ ] Test config structure compatibility with LoggerStrategy
 
-2. **Integration Tests**
-   - [ ] Test with LoggerStrategy
-   - [ ] Test with ConsoleLogger
-   - [ ] Test config hot reload
-   - [ ] Test config migration
+2. **Integration Tests** (`tests/integration/configuration/debugLogConfigLoader.integration.test.js`)
+   - [ ] Test LoggerStrategy with debug config in constructor
+   - [ ] Test runtime mode switching via setLogLevel()
+   - [ ] Test fallback from debug to legacy config
+   - [ ] Test container configurations with debug config
+   - [ ] Test that categories and remote config are properly used by LoggerStrategy
 
 ## Files to Create/Modify
 
-- **Create**: `src/configuration/utils/debugLogConfigLoader.js`
-- **Modify**: `src/configuration/utils/loggerConfigUtils.js`
-- **Create**: `config/debug-logging-config.json`
+- **Create**: `src/configuration/debugLogConfigLoader.js` (follow LoggerConfigLoader pattern)
+- **Modify**: `src/configuration/utils/loggerConfigUtils.js` (add debug config support)
+- **Modify**: `src/dependencyInjection/minimalContainerConfig.js` (load debug config for LoggerStrategy)
+- **Modify**: `src/dependencyInjection/containerConfig.js` (load debug config for LoggerStrategy)
+- **Already Exists**: `config/debug-logging-config.json` (no creation needed)
 - **Create**: `tests/unit/configuration/debugLogConfigLoader.test.js`
+- **Create**: `tests/integration/configuration/debugLogConfigLoader.integration.test.js`
 
 ## Configuration Migration Strategy
 
@@ -181,73 +214,82 @@ export async function loadAndApplyLoggerConfig(logger) {
 4. **Log deprecation warning for legacy format**
 5. **Provide migration tool/script**
 
-## Migration Helper
+## Migration Path
 
-```javascript
-// src/configuration/utils/configMigrator.js
-export function migrateLoggerConfig(legacyConfig) {
-  return {
-    enabled: true,
-    mode: mapLogLevelToMode(legacyConfig.logLevel),
-    categories: {
-      general: {
-        enabled: true,
-        level: legacyConfig.logLevel.toLowerCase(),
-      },
-    },
-  };
-}
+Since `debug-logging-config.json` already exists with the proper structure, migration involves:
 
-function mapLogLevelToMode(logLevel) {
-  switch (logLevel) {
-    case 'NONE':
-      return 'none';
-    case 'ERROR':
-    case 'WARN':
-      return 'production';
-    case 'INFO':
-      return 'development';
-    case 'DEBUG':
-      return 'development';
-    default:
-      return 'console';
-  }
+1. **DebugLogConfigLoader attempts to load debug config first**
+2. **If not found or disabled, fall back to LoggerConfigLoader**
+3. **LoggerStrategy already handles both config formats**
+
+The existing debug config structure is already compatible with LoggerStrategy:
+```json
+{
+  "mode": "development",  // LoggerStrategy detects this
+  "logLevel": "INFO",      // Backward compatibility
+  "remote": { ... },       // Used by RemoteLogger
+  "categories": { ... }    // Category-specific settings
 }
 ```
 
 ## Error Handling
 
 ```javascript
+// In container configuration
 try {
-  const config = await loadDebugLogConfig();
-  applyConfig(logger, config);
+  const debugConfig = await loadDebugLogConfig();
+  const logger = new LoggerStrategy({
+    config: debugConfig || {},
+    dependencies: { consoleLogger }
+  });
 } catch (error) {
-  console.warn('Failed to load debug log config:', error);
-  // Use defaults
-  logger.setLogLevel(LogLevel.ERROR);
+  // LoggerStrategy constructor handles errors internally
+  // Falls back to console logger if config is invalid
+  logger.warn('Failed to load debug config:', error);
+}
+
+// In loadAndApplyLoggerConfig for runtime changes
+try {
+  const debugConfig = await loadDebugLogConfig();
+  if (debugConfig?.mode) {
+    logger.setLogLevel(debugConfig.mode); // Triggers mode switch
+  }
+} catch (error) {
+  // Fall back to legacy config loading
+  // Existing implementation handles this
 }
 ```
 
-## Hot Reload Implementation
+## Runtime Configuration Updates
+
+Since LoggerStrategy doesn't support updating categories or remote config after construction, runtime updates are limited to mode switching:
 
 ```javascript
-// Watch for config changes
-if (process.env.NODE_ENV === 'development') {
-  fs.watch(configPath, async () => {
-    console.log('Debug log config changed, reloading...');
-    const newConfig = await loadDebugLogConfig();
-    applyDebugLogConfig(logger, newConfig);
-  });
+// Runtime mode switching via loadAndApplyLoggerConfig
+const debugConfig = await loadDebugLogConfig();
+if (debugConfig?.mode) {
+  // This triggers LoggerStrategy's mode switching logic
+  logger.setLogLevel(debugConfig.mode);
 }
 ```
+
+For full config updates (categories, remote settings), the application would need to restart or recreate the LoggerStrategy instance.
+
+## Key Implementation Constraints
+
+- **LoggerStrategy Configuration**: Must be passed via constructor, not runtime methods
+- **Runtime Changes**: Limited to mode switching via `setLogLevel()` with special values
+- **Existing Config**: `debug-logging-config.json` already exists - don't recreate
+- **Container Integration**: Must load config BEFORE creating LoggerStrategy
+- **Backward Compatibility**: Must maintain support for legacy `logger-config.json`
 
 ## Notes
 
 - Ensure smooth migration path from old to new format
-- Document configuration options thoroughly
-- Consider providing config validation CLI tool
-- Test with various config combinations
-- Monitor for configuration errors in production
+- Document both configuration formats and their precedence
+- Test mode switching with special setLogLevel values ('remote', 'console', 'hybrid', 'none')
+- Validate that categories and remote config work via constructor
+- Monitor for configuration loading errors in production
 
 ## Related Tickets
 

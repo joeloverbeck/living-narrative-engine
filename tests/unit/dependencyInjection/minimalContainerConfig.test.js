@@ -11,6 +11,7 @@ import { configureMinimalContainer } from '../../../src/dependencyInjection/mini
 import { loadAndApplyLoggerConfig } from '../../../src/configuration/utils/loggerConfigUtils.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
+import LoggerStrategy from '../../../src/logging/loggerStrategy.js';
 import { LoggerConfigLoader } from '../../../src/configuration/loggerConfigLoader.js';
 
 // Mock registration bundles so configureMinimalContainer can run without side effects
@@ -46,6 +47,7 @@ jest.mock(
 describe('minimalContainerConfig logger handling', () => {
   let container;
   let setLevelSpy;
+  let loggerStrategySetLevelSpy;
   let warnSpy;
   let debugSpy;
   let errorSpy;
@@ -73,6 +75,7 @@ describe('minimalContainerConfig logger handling', () => {
       });
     });
 
+    // Spy on ConsoleLogger methods (used internally by LoggerStrategy)
     setLevelSpy = jest
       .spyOn(ConsoleLogger.prototype, 'setLogLevel')
       .mockImplementation(() => {});
@@ -86,6 +89,22 @@ describe('minimalContainerConfig logger handling', () => {
       .spyOn(ConsoleLogger.prototype, 'error')
       .mockImplementation(() => {});
 
+    // Also spy on LoggerStrategy's setLogLevel method
+    loggerStrategySetLevelSpy = jest
+      .spyOn(LoggerStrategy.prototype, 'setLogLevel')
+      .mockImplementation((level) => {
+        // Delegate to the ConsoleLogger setLogLevel spy when not a mode switch
+        if (
+          typeof level === 'string' &&
+          !['remote', 'console', 'hybrid', 'none'].includes(level.toLowerCase())
+        ) {
+          setLevelSpy(level);
+        }
+      });
+
+    // Mock LoggerStrategy's getMode method for the debug message
+    jest.spyOn(LoggerStrategy.prototype, 'getMode').mockReturnValue('test');
+
     loadConfigSpy = jest.spyOn(LoggerConfigLoader.prototype, 'loadConfig');
   });
 
@@ -97,6 +116,8 @@ describe('minimalContainerConfig logger handling', () => {
     loadConfigSpy.mockResolvedValue({ logLevel: 'WARN' });
     configureMinimalContainer(container);
     await new Promise(process.nextTick);
+    // LoggerStrategy's setLogLevel should be called, which then delegates to ConsoleLogger
+    expect(loggerStrategySetLevelSpy).toHaveBeenCalledWith('WARN');
     expect(setLevelSpy).toHaveBeenLastCalledWith('WARN');
     expect(warnSpy).not.toHaveBeenCalled();
   });
