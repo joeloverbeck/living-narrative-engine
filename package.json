@@ -41,7 +41,7 @@
     "eslint": "^9.33.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-jest": "^29.0.1",
-    "eslint-plugin-jsdoc": "^52.0.4",
+    "eslint-plugin-jsdoc": "^54.1.1",
     "fake-indexeddb": "^6.1.0",
     "fs-extra": "^11.3.0",
     "globals": "^16.3.0",
