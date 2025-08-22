@@ -9,7 +9,7 @@ import {
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import ConsoleLogger from '../../../src/logging/consoleLogger.js';
+import LoggerStrategy from '../../../src/logging/loggerStrategy.js';
 import { LoggerConfigLoader } from '../../../src/configuration/loggerConfigLoader.js';
 
 // Mock registration bundles to isolate configureContainer logic
@@ -66,16 +66,16 @@ describe('configureContainer logger configuration branches', () => {
 
     // Spies on logger instance methods
     setLevelSpy = jest
-      .spyOn(ConsoleLogger.prototype, 'setLogLevel')
+      .spyOn(LoggerStrategy.prototype, 'setLogLevel')
       .mockImplementation(() => {});
     warnSpy = jest
-      .spyOn(ConsoleLogger.prototype, 'warn')
+      .spyOn(LoggerStrategy.prototype, 'warn')
       .mockImplementation(() => {});
     debugSpy = jest
-      .spyOn(ConsoleLogger.prototype, 'debug')
+      .spyOn(LoggerStrategy.prototype, 'debug')
       .mockImplementation(() => {});
     errorSpy = jest
-      .spyOn(ConsoleLogger.prototype, 'error')
+      .spyOn(LoggerStrategy.prototype, 'error')
       .mockImplementation(() => {});
 
     // Ensure ISafeEventDispatcher resolves during configuration
@@ -95,7 +95,7 @@ describe('configureContainer logger configuration branches', () => {
     const beforeCalls = setLevelSpy.mock.calls.length;
     configureContainer(container, ui);
     await new Promise(process.nextTick);
-    expect(setLevelSpy.mock.calls.length).toBe(beforeCalls + 2);
+    expect(setLevelSpy.mock.calls.length).toBe(beforeCalls + 1);
     expect(setLevelSpy).toHaveBeenLastCalledWith('WARN');
     expect(warnSpy).not.toHaveBeenCalled();
   });
@@ -108,7 +108,7 @@ describe('configureContainer logger configuration branches', () => {
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringContaining("logLevel' is not a string")
     );
-    expect(setLevelSpy.mock.calls.length).toBe(beforeCalls + 1);
+    expect(setLevelSpy.mock.calls.length).toBe(beforeCalls);
   });
 
   it('warns when loader returns an error result', async () => {

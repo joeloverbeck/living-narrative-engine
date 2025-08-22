@@ -836,7 +836,7 @@ describe('MultiTargetActionFormatter - Integration Tests', () => {
       // The formatter now enforces strict validation - empty required targets cause an error
       expect(result.ok).toBe(false);
       expect(result.error).toContain(
-        "Required target 'secondary' could not be resolved"
+        "Target 'secondary' could not be resolved"
       );
       expect(result.error).toContain('action not available');
     });

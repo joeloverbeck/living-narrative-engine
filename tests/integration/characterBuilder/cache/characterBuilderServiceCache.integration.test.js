@@ -34,8 +34,21 @@ describe('CharacterBuilderService Cache Integration', () => {
 
     eventCaptured = [];
     mockEventBus = {
-      dispatch: jest.fn().mockImplementation((event) => {
-        eventCaptured.push(event);
+      dispatch: jest.fn().mockImplementation((eventTypeOrObject, payload) => {
+        // Handle both dispatch patterns used in the codebase
+        if (typeof eventTypeOrObject === 'string' && payload) {
+          // Two-argument pattern (used by CharacterBuilderService)
+          eventCaptured.push({
+            type: eventTypeOrObject,
+            payload: payload
+          });
+        } else if (typeof eventTypeOrObject === 'object') {
+          // Single-argument pattern (used by CoreMotivationsCacheManager)
+          eventCaptured.push(eventTypeOrObject);
+        } else {
+          // Fallback for other patterns
+          eventCaptured.push({ type: eventTypeOrObject });
+        }
       }),
     };
 

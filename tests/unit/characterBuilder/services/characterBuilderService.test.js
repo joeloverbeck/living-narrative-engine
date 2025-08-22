@@ -776,15 +776,15 @@ describe('CharacterBuilderService', () => {
           centralQuestion: 'Can violence ever be justified?',
         });
 
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-          type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_STARTED,
-          payload: {
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_STARTED,
+          {
             conceptId,
             directionId,
             directionTitle: 'The Reluctant Hero',
             timestamp: expect.any(String),
-          },
-        });
+          }
+        );
       });
 
       it('should throw error when concept not found', async () => {
@@ -868,15 +868,15 @@ describe('CharacterBuilderService', () => {
           )
         ).rejects.toThrow('Generation failed');
 
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-          type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_FAILED,
-          payload: {
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_FAILED,
+          {
             conceptId,
             directionId,
             error: 'Generation failed',
             errorCode: 'GENERATION_ERROR',
-          },
-        });
+          }
+        );
       });
     });
 
@@ -1066,16 +1066,16 @@ describe('CharacterBuilderService', () => {
 
         expect(result).toEqual(savedIds);
         expect(mockDatabase.saveCoreMotivations).toHaveBeenCalled();
-        expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-          type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_COMPLETED,
-          payload: {
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_COMPLETED,
+          {
             conceptId: 'concept-1',
             directionId,
             motivationIds: savedIds,
             totalCount: 1,
             generationTime: expect.any(Number),
-          },
-        });
+          }
+        );
       });
 
       it('should throw error for empty motivations array', async () => {

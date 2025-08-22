@@ -145,11 +145,11 @@ describe('Multi-Target Action Examples - Schema Validation', () => {
     });
   });
 
-  describe('Optional Targets Action', () => {
-    it('should validate give item to character action', () => {
+  describe('Give Item Actions', () => {
+    it('should validate give_item action', () => {
       const actionPath = join(
         process.cwd(),
-        'data/mods/examples/actions/optional_targets.action.json'
+        'data/mods/examples/actions/give_item.action.json'
       );
       const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
 
@@ -166,15 +166,25 @@ describe('Multi-Target Action Examples - Schema Validation', () => {
       expect(isValid).toBe(true);
     });
 
-    it('should have optional tertiary target', () => {
+    it('should validate give_item_with_note action', () => {
       const actionPath = join(
         process.cwd(),
-        'data/mods/examples/actions/optional_targets.action.json'
+        'data/mods/examples/actions/give_item_with_note.action.json'
       );
       const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
 
+      const validate = ajv.compile(actionSchema);
+      const isValid = validate(actionDef);
+
+      if (!isValid) {
+        console.log(
+          'Validation errors:',
+          JSON.stringify(validate.errors, null, 2)
+        );
+      }
+
+      expect(isValid).toBe(true);
       expect(actionDef.targets.tertiary).toBeDefined();
-      expect(actionDef.targets.tertiary.optional).toBe(true);
     });
   });
 
@@ -182,7 +192,8 @@ describe('Multi-Target Action Examples - Schema Validation', () => {
     const exampleFiles = [
       'basic_multi_target.action.json',
       'context_dependent.action.json',
-      'optional_targets.action.json',
+      'give_item.action.json',
+      'give_item_with_note.action.json',
     ];
 
     exampleFiles.forEach((filename) => {

@@ -74,7 +74,8 @@
       "Bash(do grep -q '\"\"\"\"targets\"\"\"\"' \"$file\")",
       "Bash(basename:*)",
       "Bash(do echo \"Run $i:\")",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(python3:*)"
     ],
     "deny": []
   }

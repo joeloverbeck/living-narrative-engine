@@ -13,6 +13,16 @@ jest.mock('../../../src/configuration/loggerConfigLoader.js', () => ({
   })),
 }));
 
+// Mock the async logger config utility
+jest.mock('../../../src/configuration/utils/loggerConfigUtils.js', () => ({
+  loadAndApplyLoggerConfig: jest.fn().mockResolvedValue(undefined),
+}));
+
+// Mock the async trace config utility
+jest.mock('../../../src/configuration/utils/traceConfigUtils.js', () => ({
+  loadAndApplyTraceConfig: jest.fn().mockResolvedValue(undefined),
+}));
+
 /**
  * Creates a mock DI container that spies on registrations.
  *
@@ -40,6 +50,7 @@ const createMockContainer = () => {
           warn: jest.fn(),
           error: jest.fn(),
           setLogLevel: jest.fn(),
+          getMode: jest.fn().mockReturnValue('test'),
         };
         resolvedInstances.set(tokens.ILogger, loggerInstance);
       }
@@ -60,7 +71,7 @@ const createMockContainer = () => {
 };
 
 describe('Dependency Injection Configuration', () => {
-  it('should register each service token exactly once to avoid overwrites', () => {
+  it('should register each service token exactly once to avoid overwrites', async () => {
     const mockContainer = createMockContainer();
 
     // Mock the essential UI elements required by the `configureContainer` function.
@@ -72,7 +83,7 @@ describe('Dependency Injection Configuration', () => {
     };
 
     // Execute the main container configuration function, which calls all the registration modules.
-    configureContainer(mockContainer, uiElements);
+    await configureContainer(mockContainer, uiElements);
 
     const allRegisteredTokens = Object.keys(mockContainer.registrations);
     const duplicates = [];

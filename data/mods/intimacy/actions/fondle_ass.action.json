@@ -2,12 +2,24 @@
   "$schema": "schema://living-narrative-engine/action.schema.json",
   "id": "intimacy:fondle_ass",
   "name": "Fondle Ass",
-  "description": "Gently fondle the target's ass.",
-  "targets": "intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+  "description": "Gently fondle the target's ass over their clothing.",
+  "targets": {
+    "primary": {
+      "scope": "intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target",
+      "placeholder": "primary",
+      "description": "Person whose ass to fondle"
+    },
+    "secondary": {
+      "scope": "clothing:target_topmost_torso_lower_clothing",
+      "placeholder": "secondary",
+      "description": "Clothing item over which to fondle",
+      "contextFrom": "primary"
+    }
+  },
   "required_components": {
     "actor": ["positioning:closeness"]
   },
-  "template": "fondle {target}'s ass",
+  "template": "fondle {primary}'s ass over the {secondary}",
   "prerequisites": [],
   "visual": {
     "backgroundColor": "#ad1457",

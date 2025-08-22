@@ -182,10 +182,10 @@ describe('MultiTargetActionFormatter', () => {
         deps
       );
 
-      // With strict validation, actions with missing required targets should fail
+      // With strict validation, actions with missing targets should fail
       expect(result.ok).toBe(false);
       expect(result.error).toContain(
-        "Required target 'primary' could not be resolved"
+        "Target 'primary' could not be resolved"
       );
     });
 
@@ -670,7 +670,7 @@ describe('MultiTargetActionFormatter', () => {
 
       expect(result.ok).toBe(false);
       expect(result.error).toContain(
-        "Required target 'secondary' could not be resolved"
+        "Target 'secondary' could not be resolved"
       );
     });
 

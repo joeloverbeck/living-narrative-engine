@@ -149,19 +149,16 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
    * @private
    */
   #formatCombinations(actionDef, resolvedTargets, targetDefinitions, _options) {
-    // Check if any required targets are missing before generating combinations
+    // Check if any targets are missing before generating combinations
     for (const [targetKey, targets] of Object.entries(resolvedTargets)) {
       if (!targets || targets.length === 0) {
-        const targetDef = targetDefinitions?.[targetKey];
-        if (targetDef && !targetDef.optional) {
-          this.#logger.debug(
-            `Required target '${targetKey}' has no resolved entities - action not available in combination generation`
-          );
-          return {
-            ok: false,
-            error: `Required target '${targetKey}' could not be resolved - action not available`,
-          };
-        }
+        this.#logger.debug(
+          `Target '${targetKey}' has no resolved entities - action not available in combination generation`
+        );
+        return {
+          ok: false,
+          error: `Target '${targetKey}' could not be resolved - action not available`,
+        };
       }
     }
 
@@ -234,21 +231,13 @@ export class MultiTargetActionFormatter extends IActionCommandFormatter {
     // Replace each placeholder
     for (const [targetKey, targets] of Object.entries(resolvedTargets)) {
       if (!targets || targets.length === 0) {
-        // Check if this target is required (not optional)
-        const targetDef = targetDefinitions?.[targetKey];
-        if (targetDef && !targetDef.optional) {
-          this.#logger.debug(
-            `Required target '${targetKey}' has no resolved entities - action not available`
-          );
-          return {
-            ok: false,
-            error: `Required target '${targetKey}' could not be resolved - action not available`,
-          };
-        }
-
-        // Skip empty target arrays - the placeholder will remain
-        this.#logger.debug(`Skipping empty target array for key: ${targetKey}`);
-        continue;
+        this.#logger.debug(
+          `Target '${targetKey}' has no resolved entities - action not available`
+        );
+        return {
+          ok: false,
+          error: `Target '${targetKey}' could not be resolved - action not available`,
+        };
       }
 
       const targetDef = targetDefinitions?.[targetKey];

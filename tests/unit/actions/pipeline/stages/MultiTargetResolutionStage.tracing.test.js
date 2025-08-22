@@ -233,45 +233,6 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
       expect(traceData.data.totalTargetCount).toBe(4);
     });
 
-    it('should capture multi-target action with optional targets', async () => {
-      const actionDef = {
-        id: 'multi_optional',
-        targets: {
-          primary: { scope: 'primary_scope' },
-          optional: { scope: 'optional_scope', optional: true },
-        },
-      };
-      mockContext.candidateActions = [actionDef];
-
-      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
-        false
-      );
-      mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
-        'primary',
-        'optional',
-      ]);
-
-      // Make optional target resolve to empty
-      mockDeps.unifiedScopeResolver.resolve
-        .mockResolvedValueOnce({ success: true, value: new Set(['entity1']) })
-        .mockResolvedValueOnce({ success: true, value: new Set() });
-
-      await stage.executeInternal(mockContext);
-
-      // Filter out performance data entries (ACTTRA-018)
-      const targetResolutionData = capturedTraceData.filter(
-        (d) => d.stage === 'target_resolution'
-      );
-
-      expect(targetResolutionData).toHaveLength(1);
-      const traceData = targetResolutionData[0];
-
-      expect(traceData.data.resolvedTargetCounts).toEqual({
-        primary: 1,
-        optional: 0,
-      });
-      expect(traceData.data.totalTargetCount).toBe(1);
-    });
   });
 
   describe('Error Handling', () => {

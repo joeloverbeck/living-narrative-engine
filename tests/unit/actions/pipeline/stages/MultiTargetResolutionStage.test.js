@@ -410,7 +410,7 @@ describe('MultiTargetResolutionStage', () => {
       );
     });
 
-    it('should handle optional targets', async () => {
+    it('should fail when any target has no candidates', async () => {
       const actionDef = {
         id: 'test:action',
         targets: {
@@ -419,24 +419,26 @@ describe('MultiTargetResolutionStage', () => {
             placeholder: 'main',
           },
           secondary: {
-            scope: 'test:optional',
+            scope: 'test:secondary',
             placeholder: 'extra',
-            optional: true,
           },
         },
       };
       mockContext.candidateActions = [actionDef];
 
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+      // Setup as multi-target action
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(false);
+      mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue(['primary', 'secondary']);
+      mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
         game: { turnNumber: 1 },
       });
 
-      // Primary resolves successfully
+      // Primary resolves successfully, secondary has no candidates
       mockDeps.unifiedScopeResolver.resolve
         .mockResolvedValueOnce(ActionResult.success(new Set(['target1'])))
-        .mockResolvedValueOnce(ActionResult.success(new Set())); // Empty for optional
+        .mockResolvedValueOnce(ActionResult.success(new Set())); // Empty for secondary
 
       mockDeps.entityManager.getEntityInstance.mockReturnValue({
         id: 'target1',
@@ -447,10 +449,8 @@ describe('MultiTargetResolutionStage', () => {
       const result = await stage.executeInternal(mockContext);
 
       expect(result.success).toBe(true);
-      expect(result.data.actionsWithTargets).toHaveLength(1);
-      const actionWithTargets = result.data.actionsWithTargets[0];
-      expect(actionWithTargets.targetContexts).toHaveLength(1);
-      expect(actionWithTargets.targetContexts[0].entityId).toBe('target1');
+      expect(result.continueProcessing).toBe(true);
+      expect(result.data.actionsWithTargets).toEqual([]);
     });
 
     it('should skip when required target has no candidates', async () => {
@@ -465,7 +465,7 @@ describe('MultiTargetResolutionStage', () => {
       };
       mockContext.candidateActions = [actionDef];
 
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({
+      mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
         game: { turnNumber: 1 },
@@ -484,35 +484,6 @@ describe('MultiTargetResolutionStage', () => {
       expect(result.data.actionsWithTargets).toEqual([]);
     });
 
-    it('should handle all optional targets with no matches', async () => {
-      const actionDef = {
-        id: 'test:action',
-        targets: {
-          primary: {
-            scope: 'test:optional1',
-            placeholder: 'opt1',
-            optional: true,
-          },
-          secondary: {
-            scope: 'test:optional2',
-            placeholder: 'opt2',
-            optional: true,
-          },
-        },
-      };
-      mockContext.candidateActions = [actionDef];
-
-      mockDeps.targetContextBuilder.buildBaseContext.mockReturnValue({});
-      mockDeps.unifiedScopeResolver.resolve.mockResolvedValue(
-        ActionResult.success(new Set())
-      );
-
-      const result = await stage.executeInternal(mockContext);
-
-      expect(result.success).toBe(true);
-      expect(result.continueProcessing).toBe(true);
-      expect(result.data.actionsWithTargets).toEqual([]);
-    });
   });
 
   describe('Resolution Order', () => {
