@@ -531,5 +531,4 @@ describe('Multi-Target Action Full Pipeline E2E', () => {
       expect(availableActions).toHaveLength(0);
     });
   });
-
 });

@@ -217,7 +217,7 @@ describe('ContentDependencyValidator', () => {
     expect(logger.error).not.toHaveBeenCalledWith(
       expect.stringContaining("'def:not_spawned'")
     );
-    
+
     // Should complete validation successfully
     expect(logger.debug).toHaveBeenCalledWith(
       'ContentDependencyValidator: Content dependency validation complete.'

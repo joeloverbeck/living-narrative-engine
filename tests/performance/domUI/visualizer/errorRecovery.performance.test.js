@@ -40,7 +40,7 @@ describe('ErrorRecovery - Performance Tests', () => {
   describe('Retry Delay Performance', () => {
     it('should calculate exponential backoff delay within performance thresholds', () => {
       const iterations = 1000;
-      
+
       errorRecovery = new ErrorRecovery(
         {
           logger: mockLogger,
@@ -54,7 +54,7 @@ describe('ErrorRecovery - Performance Tests', () => {
       );
 
       const startTime = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         // First call with no attempts should return base delay with jitter
         const initialDelay = errorRecovery.getRetryDelay('test-operation');
@@ -64,7 +64,8 @@ describe('ErrorRecovery - Performance Tests', () => {
         // Simulate first retry attempt
         errorRecovery.clearRetryAttempts('test-operation');
         // Manually set retry attempts to simulate progression
-        errorRecovery._retryAttempts = errorRecovery._retryAttempts || new Map();
+        errorRecovery._retryAttempts =
+          errorRecovery._retryAttempts || new Map();
         errorRecovery._retryAttempts.set('test-operation', 1);
 
         const delay = errorRecovery.getRetryDelay('test-operation');
@@ -81,7 +82,7 @@ describe('ErrorRecovery - Performance Tests', () => {
 
     it('should calculate linear backoff delay within performance thresholds', () => {
       const iterations = 1000;
-      
+
       errorRecovery = new ErrorRecovery(
         {
           logger: mockLogger,
@@ -95,13 +96,14 @@ describe('ErrorRecovery - Performance Tests', () => {
       );
 
       const startTime = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         expect(errorRecovery.getRetryDelay('test-operation')).toBe(1000);
 
         // Even with multiple attempts, should remain constant
         errorRecovery.clearRetryAttempts('test-operation');
-        errorRecovery._retryAttempts = errorRecovery._retryAttempts || new Map();
+        errorRecovery._retryAttempts =
+          errorRecovery._retryAttempts || new Map();
         errorRecovery._retryAttempts.set('test-operation', 2);
 
         expect(errorRecovery.getRetryDelay('test-operation')).toBe(1000);
@@ -116,9 +118,9 @@ describe('ErrorRecovery - Performance Tests', () => {
 
     it('should handle default configuration delay calculation within performance thresholds', () => {
       const iterations = 1000;
-      
+
       const startTime = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         errorRecovery = new ErrorRecovery({
           logger: mockLogger,
@@ -153,21 +155,25 @@ describe('ErrorRecovery - Performance Tests', () => {
     it('should perform retry state operations within performance thresholds', () => {
       const iterations = 1000;
       const operations = ['op1', 'op2', 'op3', 'op4', 'op5'];
-      
+
       const startTime = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         const operation = operations[i % operations.length];
-        
+
         // Test canRetry performance
         errorRecovery.canRetry(operation);
-        
+
         // Test clearRetryAttempts performance
         errorRecovery.clearRetryAttempts(operation);
-        
+
         // Simulate setting retry attempts
-        errorRecovery._retryAttempts = errorRecovery._retryAttempts || new Map();
-        errorRecovery._retryAttempts.set(operation, Math.floor(Math.random() * 3));
+        errorRecovery._retryAttempts =
+          errorRecovery._retryAttempts || new Map();
+        errorRecovery._retryAttempts.set(
+          operation,
+          Math.floor(Math.random() * 3)
+        );
       }
 
       const endTime = performance.now();

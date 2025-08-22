@@ -831,7 +831,6 @@ describe('ClicheDisplayEnhancer', () => {
 
       jest.useRealTimers();
     });
-
   });
 
   describe('Copy Error Handling', () => {
@@ -991,7 +990,6 @@ describe('ClicheDisplayEnhancer', () => {
       expect(newEnhancer).toBeDefined();
     });
   });
-
 
   describe('Event Handler Edge Cases', () => {
     beforeEach(() => {

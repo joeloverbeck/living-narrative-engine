@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "core:notes",
-  "description": "Stores an array of notes with structured context (subject, subjectType, context, tags) on an entity.",
+  "description": "Stores an array of notes with structured context (subject, subjectType, context) on an entity.",
   "dataSchema": {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
@@ -44,11 +44,6 @@
             "context": {
               "type": "string",
               "description": "Where/how this was observed (optional)."
-            },
-            "tags": {
-              "type": "array",
-              "items": { "type": "string" },
-              "description": "Additional categorization tags (optional)."
             },
             "timestamp": {
               "type": "string",

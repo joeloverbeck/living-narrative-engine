@@ -3,7 +3,7 @@
 **Priority**: High  
 **Phase**: 2 - Data Pipeline & Processing (Core Implementation)  
 **Estimated Effort**: 2.5 hours  
-**Risk Level**: Medium (Core prompt processing changes)  
+**Risk Level**: Medium (Core prompt processing changes)
 
 ## Overview
 
@@ -28,7 +28,7 @@ The `promptDataFormatter.js` currently includes tags in formatted prompts by def
 1. **`src/prompting/promptDataFormatter.js`**
    - Line 158: Remove showTags option definition
    - Line 171: Remove `showTags: true` default setting
-   - Line 245: Remove showTags processing logic  
+   - Line 245: Remove showTags processing logic
    - Line 255: Remove tag formatting logic `if (options.showTags && note.tags && note.tags.length > 0)`
 
 ### Implementation Steps
@@ -67,11 +67,13 @@ The `promptDataFormatter.js` currently includes tags in formatted prompts by def
 ### Token Impact Analysis
 
 **Expected Savings**:
+
 - 3-8 tokens per note with tags in prompts
 - Cumulative savings: 30-80 tokens for typical conversation with 10 notes
 - System-wide impact: Estimated 1-3% token usage reduction
 
 **Format Changes**:
+
 - Notes will no longer include `[tag1, tag2, tag3]` suffixes
 - Cleaner, more concise note display in prompts
 - Focused on essential note content only
@@ -79,18 +81,21 @@ The `promptDataFormatter.js` currently includes tags in formatted prompts by def
 ### Testing Requirements
 
 #### Unit Tests
+
 - [ ] Test note formatting without showTags option
 - [ ] Verify options validation handles missing showTags
 - [ ] Confirm formatted output excludes tag information
 - [ ] Test edge cases with empty/null tag arrays
 
 #### Integration Tests
+
 - [ ] Test complete prompt formatting pipeline
 - [ ] Validate formatted prompts sent to LLMs
 - [ ] Confirm prompt quality and readability
 - [ ] Test various note configurations
 
 #### Regression Tests
+
 - [ ] Ensure all other formatting options work correctly
 - [ ] Verify note display options unaffected
 - [ ] Test error handling for malformed data
@@ -99,27 +104,32 @@ The `promptDataFormatter.js` currently includes tags in formatted prompts by def
 ## Dependencies
 
 **Requires**:
+
 - RMTAGS-001 (Component schema changes) - Foundation requirement
 - RMTAGS-002 (LLM output schema changes) - Prevents validation conflicts
 - RMTAGS-003 (Remove prompt instructions) - Coordinated removal
 
 **Blocks**:
+
 - RMTAGS-006 (AI prompt content provider changes)
 - RMTAGS-014 (Unit test updates)
 
 ## Testing Validation
 
 ### Before Implementation
+
 - Document current token usage for sample prompts
 - Capture formatted output examples with tags
 - Identify all showTags usage patterns
 
 ### After Implementation
+
 - Measure token reduction for equivalent prompts
 - Validate formatted output quality
 - Confirm 3-8 token per-note savings achieved
 
 ### Test Commands
+
 ```bash
 # Test prompt formatting functionality
 npm run test:unit -- --testPathPattern="promptDataFormatter"
@@ -143,6 +153,7 @@ npm run test:unit -- --testPathPattern=".*token.*"
 ## Implementation Notes
 
 **Code Cleanup**: Ensure thorough removal of all showTags-related code, including:
+
 - Option definitions and defaults
 - Parameter passing through function calls
 - JSDoc comments and type definitions
@@ -162,6 +173,7 @@ npm run test:unit -- --testPathPattern=".*token.*"
 ## Quality Assurance
 
 **Code Review Checklist**:
+
 - [ ] All showTags references removed
 - [ ] No orphaned tag processing logic
 - [ ] Function signatures updated appropriately
@@ -169,6 +181,7 @@ npm run test:unit -- --testPathPattern=".*token.*"
 - [ ] Error handling remains robust
 
 **Output Validation**:
+
 - [ ] Formatted prompts exclude tag information
 - [ ] Note formatting remains clear and readable
 - [ ] No formatting artifacts from tag removal

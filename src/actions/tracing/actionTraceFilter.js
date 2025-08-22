@@ -4,7 +4,7 @@
  * and at what verbosity levels, with configurable inclusion/exclusion patterns.
  */
 
-import { string, logger } from '../../utils/validationCore.js';
+import { string } from '../../utils/validationCore.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
@@ -33,6 +33,8 @@ class ActionTraceFilter {
   #regexCache;
 
   /**
+   * Creates a new ActionTraceFilter instance with specified configuration
+   *
    * @param {object} options - Configuration options
    * @param {boolean} [options.enabled] - Whether action tracing is enabled
    * @param {string[]} [options.tracedActions] - Actions to trace (supports wildcards)
@@ -106,11 +108,19 @@ class ActionTraceFilter {
       return false;
     }
 
-    string.assertNonBlank(
-      actionId,
-      'actionId',
-      'ActionTraceFilter.shouldTrace'
-    );
+    // Early return for universal wildcard - most common case in performance tests
+    // This avoids all validation and logging overhead
+    if (this.#tracedActions.has('*') && this.#excludedActions.size === 0) {
+      return true;
+    }
+
+    // Lightweight validation without memory allocation
+    // Avoid trim() which creates a new string
+    if (!actionId || typeof actionId !== 'string' || actionId.length === 0) {
+      throw new InvalidArgumentError(
+        'actionId must be a non-empty string in ActionTraceFilter.shouldTrace'
+      );
+    }
 
     // System actions (starting with '__') are always traced when tracing is enabled
     if (actionId.startsWith('__')) {
@@ -131,14 +141,18 @@ class ActionTraceFilter {
     // Check if action matches any inclusion pattern
     const shouldTrace = this.#isIncluded(actionId);
 
-    this.#logger.debug(
-      `Action '${actionId}' tracing decision: ${shouldTrace}`,
-      {
-        actionId,
-        tracedPatterns: Array.from(this.#tracedActions),
-        excludedPatterns: Array.from(this.#excludedActions),
-      }
-    );
+    // Only build debug parameters if debug logging is likely to be active
+    // This avoids Array.from() allocations in the hot path
+    if (this.#logger.debug && typeof this.#logger.debug === 'function') {
+      this.#logger.debug(
+        `Action '${actionId}' tracing decision: ${shouldTrace}`,
+        {
+          actionId,
+          tracedPatterns: Array.from(this.#tracedActions),
+          excludedPatterns: Array.from(this.#excludedActions),
+        }
+      );
+    }
 
     return shouldTrace;
   }

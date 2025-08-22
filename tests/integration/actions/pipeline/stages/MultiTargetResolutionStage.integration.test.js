@@ -700,7 +700,7 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       // Mock scope resolutions - all targets return valid results to avoid early exit
       unifiedScopeResolver.resolve
         .mockResolvedValueOnce(ActionResult.success(new Set(['item-001']))) // primary
-        .mockResolvedValueOnce(ActionResult.success(new Set(['player-001']))) // secondary 
+        .mockResolvedValueOnce(ActionResult.success(new Set(['player-001']))) // secondary
         .mockResolvedValueOnce(ActionResult.success(new Set(['spell-001']))); // tertiary
 
       const context = {

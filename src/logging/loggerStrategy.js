@@ -5,6 +5,7 @@
 
 import ConsoleLogger from './consoleLogger.js';
 import NoOpLogger from './noOpLogger.js';
+import RemoteLogger from './remoteLogger.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
 
 /**
@@ -49,6 +50,12 @@ const DEFAULT_CONFIG = {
     endpoint: 'http://localhost:3001/api/debug-log',
     batchSize: 100,
     flushInterval: 1000,
+    retryAttempts: 3,
+    retryBaseDelay: 1000,
+    retryMaxDelay: 30000,
+    circuitBreakerThreshold: 5,
+    circuitBreakerTimeout: 60000,
+    requestTimeout: 5000,
   },
   categories: {
     engine: { enabled: true, level: 'debug' },
@@ -102,7 +109,7 @@ class LoggerStrategy {
    * @param {object} [options.config] - Configuration object
    * @param {object} [options.dependencies] - Logger dependencies
    * @param {ConsoleLogger} [options.dependencies.consoleLogger] - ConsoleLogger instance
-   * @param {*} [options.dependencies.remoteLogger] - RemoteLogger instance (future)
+   * @param {RemoteLogger} [options.dependencies.remoteLogger] - RemoteLogger instance (auto-created if not provided)
    * @param {*} [options.dependencies.hybridLogger] - HybridLogger instance (future)
    * @param {*} [options.dependencies.mockLogger] - MockLogger instance (for tests)
    * @param {*} [options.dependencies.eventBus] - Event bus for error reporting
@@ -202,12 +209,12 @@ class LoggerStrategy {
     try {
       switch (mode) {
         case LoggerMode.PRODUCTION:
-          // RemoteLogger will be implemented in DEBUGLOGGING-006
+          // Use provided RemoteLogger or create new instance
           if (dependencies.remoteLogger) {
             logger = dependencies.remoteLogger;
           } else {
-            // Fallback to console for now
-            logger = this.#createConsoleLogger(config);
+            // Create RemoteLogger with fallback to console logger
+            logger = this.#createRemoteLogger(config, dependencies);
           }
           break;
 
@@ -300,6 +307,45 @@ class LoggerStrategy {
     // Create new instance
     const logLevel = config.logLevel || 'INFO';
     return new ConsoleLogger(logLevel);
+  }
+
+  /**
+   * Creates a RemoteLogger instance with fallback to console logger.
+   *
+   * @private
+   * @param {object} config - Configuration object
+   * @param {object} dependencies - Logger dependencies
+   * @returns {RemoteLogger} The remote logger instance
+   */
+  #createRemoteLogger(config, dependencies) {
+    try {
+      // Create console logger as fallback
+      const consoleLogger = this.#createConsoleLogger(config);
+
+      // Prepare RemoteLogger configuration
+      const remoteConfig = {
+        ...config.remote,
+      };
+
+      // Prepare dependencies for RemoteLogger
+      const remoteDependencies = {
+        consoleLogger,
+        eventBus: dependencies.eventBus,
+      };
+
+      return new RemoteLogger({
+        config: remoteConfig,
+        dependencies: remoteDependencies,
+      });
+    } catch (error) {
+      // Log error and fall back to console logger
+      console.error(
+        '[LoggerStrategy] Failed to create RemoteLogger, falling back to console:',
+        error
+      );
+
+      return this.#createConsoleLogger(config);
+    }
   }
 
   /**

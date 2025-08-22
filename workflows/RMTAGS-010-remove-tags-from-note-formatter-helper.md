@@ -3,7 +3,7 @@
 **Priority**: Medium  
 **Phase**: 3 - UI & Display Layer (User Interface)  
 **Estimated Effort**: 1.5 hours  
-**Risk Level**: Low (Helper function changes)  
+**Risk Level**: Low (Helper function changes)
 
 ## Overview
 
@@ -60,16 +60,19 @@ The `noteFormatter.js` helper is referenced in test files and may contain tag ha
 ### Helper Function Impact
 
 **Before Change**:
+
 - Helper functions may process or format tag data
 - Tag-related parameters in function signatures
 - Tag handling logic in utility functions
 
 **After Change**:
+
 - Helper functions focus on functional note content
 - Streamlined function signatures without tag parameters
 - Simplified logic without tag processing overhead
 
 **Integration Effects**:
+
 - Consistent behavior with main formatter changes
 - Helper functions align with schema modifications
 - Cleaner utility function interfaces
@@ -77,18 +80,21 @@ The `noteFormatter.js` helper is referenced in test files and may contain tag ha
 ### Testing Requirements
 
 #### Unit Tests
+
 - [ ] Test helper functions without tag data
 - [ ] Verify function signatures and parameter handling
 - [ ] Confirm helper integration with main components
 - [ ] Test error handling for various input types
 
 #### Integration Tests
+
 - [ ] Test helper usage in note formatting pipeline
 - [ ] Validate integration with turn state processing
 - [ ] Confirm helper function performance
 - [ ] Test various note configuration scenarios
 
 #### Helper Function Tests
+
 - [ ] Verify utility function correctness
 - [ ] Test function parameter validation
 - [ ] Confirm error handling and edge cases
@@ -97,26 +103,31 @@ The `noteFormatter.js` helper is referenced in test files and may contain tag ha
 ## Dependencies
 
 **Requires**:
+
 - RMTAGS-009 (Note tooltip formatter changes) - UI layer consistency
 - RMTAGS-007 (Notes service changes) - Data layer consistency
 
 **Blocks**:
+
 - RMTAGS-014 (Unit test updates) - Test updates for helper functions
 - RMTAGS-015 (Integration test updates) - Integration testing changes
 
 ## Testing Validation
 
 ### Before Implementation
+
 - Document current helper function signatures
 - Capture tag processing logic in helpers
 - Identify helper integration points
 
 ### After Implementation
+
 - Validate helper functions work without tag data
 - Confirm function signatures streamlined
 - Test helper integration with main components
 
 ### Test Commands
+
 ```bash
 # Test note formatter helper functionality
 npm run test:unit -- --testPathPattern="noteFormatter"
@@ -157,6 +168,7 @@ npm run test:unit -- --testPathPattern=".*helper.*"
 ## Quality Assurance
 
 **Code Review Checklist**:
+
 - [ ] All tag processing logic removed
 - [ ] Function signatures appropriately simplified
 - [ ] JSDoc documentation updated correctly
@@ -164,12 +176,14 @@ npm run test:unit -- --testPathPattern=".*helper.*"
 - [ ] Error handling preserved and functional
 
 **Helper Function Validation**:
+
 - [ ] Helper functions process notes without tags correctly
 - [ ] Integration with main components seamless
 - [ ] Function performance maintained
 - [ ] Edge cases handled appropriately
 
 **Documentation Validation**:
+
 - [ ] Function documentation accurate and complete
 - [ ] Parameter descriptions reflect actual usage
 - [ ] Type definitions exclude tag references

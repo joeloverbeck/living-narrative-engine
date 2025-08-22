@@ -3,7 +3,7 @@
 **Priority**: High  
 **Phase**: 1 - Schema & LLM Integration (Foundation)  
 **Estimated Effort**: 2 hours  
-**Risk Level**: Low-Medium (Prompt modification)  
+**Risk Level**: Low-Medium (Prompt modification)
 
 ## Overview
 
@@ -11,9 +11,10 @@ Remove tag generation instructions and examples from the core prompt text. This 
 
 ## Problem Statement
 
-The `finalLlmInstructionText` in `data/prompts/corePromptText.json` (line 5) contains explicit instructions for LLMs to generate tags with detailed examples. This consumes approximately 200+ characters of prompt space and ~50-75 tokens per prompt, instructing LLMs to generate data that is subsequently ignored.
+The `finalLlmInstructionText` in `data/prompts/corePromptText.json` (line 5) contains explicit instructions for LLMs to generate tags with detailed examples. This consumes approximately 200+ characters of prompt space and ~50-75 tokens per prompt, instructing LLMs to generate data that is no longer validated or processed by the backend schema (tags field removed in schema v4).
 
 Current prompt includes:
+
 - Instructions to "Use tags for categorization"
 - Detailed examples showing tag usage (e.g., "combat", "relationship", "location")
 - Complete example format with tags array
@@ -38,12 +39,13 @@ Current prompt includes:
      - Example format:
        {
          "text": "Seems nervous about the council meeting",
-         "subject": "John", 
+         "subject": "John",
          "subjectType": "character",
          "context": "tavern conversation",
          "tags": ["emotion", "politics"]
        }
      ```
+   - **Note**: Backend schema (v4) already excludes tags field - this change aligns prompt with current validation
 
 ### Implementation Steps
 
@@ -62,7 +64,7 @@ Current prompt includes:
    - Modify existing note examples to exclude tags field
    - Ensure remaining examples show proper format for:
      - `text` (required)
-     - `subject` (required) 
+     - `subject` (required)
      - `subjectType` (required)
      - `context` (optional)
    - Maintain clear formatting and readability
@@ -75,17 +77,20 @@ Current prompt includes:
 ### Prompt Impact Analysis
 
 **Token Savings**:
+
 - Estimated 50-75 tokens per prompt reduction
 - Approximately 200+ character reduction in prompt text
 - Cumulative savings across all LLM interactions
 
 **Content Preserved**:
+
 - Core note formatting instructions
 - Required field specifications (`text`, `subject`, `subjectType`)
 - Optional field guidance (`context`)
 - JSON structure examples
 
 **Content Removed**:
+
 - Tag categorization instructions
 - Tag example lists
 - Tag field in example JSON objects
@@ -94,16 +99,19 @@ Current prompt includes:
 ### Testing Requirements
 
 #### Unit Tests
+
 - [ ] Validate prompt JSON structure remains valid
 - [ ] Confirm prompt loading and parsing successful
 - [ ] Verify example JSON objects are valid without tags
 
 #### Integration Tests
+
 - [ ] Test LLM instruction processing with updated prompts
 - [ ] Validate note generation follows updated format
-- [ ] Confirm LLM responses exclude tag attempts
+- [ ] Confirm prompt clarity and backend schema alignment (schema v4 validation)
 
 #### Prompt Quality Tests
+
 - [ ] Manual review of prompt clarity and coherence
 - [ ] Validate instruction completeness without tags
 - [ ] Test LLM understanding of updated format requirements
@@ -111,30 +119,35 @@ Current prompt includes:
 ## Dependencies
 
 **Requires**:
-- RMTAGS-002 (Remove tags from LLM output schemas) - Should be completed first to avoid validation conflicts
+
+- ✅ RMTAGS-002 (Remove tags from LLM output schemas) - **COMPLETED** - Schema v4 already excludes tags field
 
 **Blocks**:
+
 - RMTAGS-005 (Remove tags from prompt data formatter)
 - Phase 2 implementation tickets
 
 ## Token Usage Validation
 
 ### Before Implementation
+
 - Measure baseline token usage for typical prompts
 - Document current prompt character count
 - Identify specific tag-related content sections
 
-### After Implementation  
+### After Implementation
+
 - Measure post-removal token usage
 - Validate 50-75 token reduction achieved
 - Confirm prompt quality maintained
 
 ### Measurement Commands
+
 ```bash
 # Test prompt loading and token estimation
 npm run test:unit -- --testPathPattern=".*prompt.*"
 
-# Validate prompt parsing and structure  
+# Validate prompt parsing and structure
 npm run test:integration -- --testPathPattern=".*prompt.*processing"
 ```
 
@@ -143,9 +156,10 @@ npm run test:integration -- --testPathPattern=".*prompt.*processing"
 - [ ] Prompt JSON remains syntactically valid
 - [ ] Estimated 50-75 token reduction per prompt achieved
 - [ ] LLM instruction quality maintained without tags
-- [ ] Note formatting examples clear and complete
+- [ ] Note formatting examples align with schema v4 structure
 - [ ] No references to tags in prompt content
 - [ ] Integration tests pass with updated prompts
+- [ ] Prompt examples match backend validation requirements
 
 ## Implementation Notes
 
@@ -164,6 +178,7 @@ npm run test:integration -- --testPathPattern=".*prompt.*processing"
 ## Quality Assurance
 
 **Manual Review Checklist**:
+
 - [ ] Prompt reads naturally without tag content
 - [ ] JSON examples are complete and valid
 - [ ] Instruction clarity maintained
@@ -171,6 +186,7 @@ npm run test:integration -- --testPathPattern=".*prompt.*processing"
 - [ ] Overall prompt length appropriately reduced
 
 **Automated Testing**:
+
 - [ ] JSON structure validation passes
-- [ ] Prompt loading tests successful  
+- [ ] Prompt loading tests successful
 - [ ] LLM integration tests with updated prompts pass

@@ -178,14 +178,20 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Behavior', () =
       // Arrange
       const mockDirectionsWithConcepts = [
         {
-          direction: { id: 'dir1', conceptId: 'concept1', title: 'Direction 1' },
+          direction: {
+            id: 'dir1',
+            conceptId: 'concept1',
+            title: 'Direction 1',
+          },
           concept: { id: 'concept1', text: 'Test concept' },
         },
       ];
       mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
         mockDirectionsWithConcepts
       );
-      mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+      mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
+      );
 
       // Track actual validation warnings
       let validationWarnings = [];
@@ -197,10 +203,12 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Behavior', () =
       await controller.initialize();
 
       // Assert - should not have validation warnings about missing event definitions
-      const directionsLoadedWarnings = validationWarnings.filter(warning =>
-        warning.includes("EventDefinition not found for 'core:directions_loaded'")
+      const directionsLoadedWarnings = validationWarnings.filter((warning) =>
+        warning.includes(
+          "EventDefinition not found for 'core:directions_loaded'"
+        )
       );
-      
+
       expect(directionsLoadedWarnings).toHaveLength(0);
     });
 
@@ -208,18 +216,28 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Behavior', () =
       // Arrange
       const mockDirectionsWithConcepts = [
         {
-          direction: { id: 'dir1', conceptId: 'concept1', title: 'Direction 1' },
+          direction: {
+            id: 'dir1',
+            conceptId: 'concept1',
+            title: 'Direction 1',
+          },
           concept: { id: 'concept1', text: 'Test concept' },
         },
         {
-          direction: { id: 'dir2', conceptId: 'concept2', title: 'Direction 2' },
+          direction: {
+            id: 'dir2',
+            conceptId: 'concept2',
+            title: 'Direction 2',
+          },
           concept: { id: 'concept2', text: 'Another concept' },
         },
       ];
       mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
         mockDirectionsWithConcepts
       );
-      mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+      mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
+      );
 
       const dispatchSpy = jest.spyOn(safeEventDispatcher, 'dispatch');
 

@@ -3,7 +3,7 @@
 **Priority**: Medium  
 **Phase**: 3 - UI & Display Layer (User Interface)  
 **Estimated Effort**: 2.5 hours  
-**Risk Level**: Low (Documentation and type safety)  
+**Risk Level**: Low (Documentation and type safety)
 
 ## Overview
 
@@ -28,7 +28,7 @@ Multiple files contain JSDoc type definitions that include tags, which will beco
 1. **`src/turns/context/turnContext.js`** (line 53)
    - Remove tags from `#decisionMeta` type definition
 
-2. **`src/turns/ports/ILLMChooser.js`** (lines 7, 14)  
+2. **`src/turns/ports/ILLMChooser.js`** (lines 7, 14)
    - Remove tags from method signature types
 
 3. **`src/turns/services/LLMResponseProcessor.js`** (line 162)
@@ -76,16 +76,19 @@ Multiple files contain JSDoc type definitions that include tags, which will beco
 ### Type Definition Impact
 
 **Before Changes**:
+
 - JSDoc types include tags in note objects
 - IDE autocomplete suggests tag properties
 - Type definitions inconsistent with actual data
 
 **After Changes**:
+
 - JSDoc types accurately reflect data structures
 - IDE autocomplete excludes tag properties
 - Clean type consistency throughout codebase
 
 **Developer Experience**:
+
 - Accurate IDE suggestions and documentation
 - Clear understanding of available properties
 - Reduced confusion about system capabilities
@@ -95,7 +98,7 @@ Multiple files contain JSDoc type definitions that include tags, which will beco
 ```bash
 # Search for JSDoc type definitions with tags
 grep -r "@typedef.*tags" src/
-grep -r "@param.*tags" src/  
+grep -r "@param.*tags" src/
 grep -r "@returns.*tags" src/
 grep -r "tags:" src/ | grep -E "(\/\*\*|\/\*|\*)"
 
@@ -106,18 +109,21 @@ grep -r "tags.*{" src/ | grep -E "(\/\*\*|\/\*|\*)"
 ### Testing Requirements
 
 #### Type Definition Tests
+
 - [ ] Verify JSDoc parsing and validation
 - [ ] Test IDE autocomplete functionality
 - [ ] Confirm type checking passes (if applicable)
 - [ ] Validate documentation generation
 
 #### Integration Tests
+
 - [ ] Test type consistency across components
 - [ ] Verify no type-related runtime errors
 - [ ] Confirm method signatures align with implementations
 - [ ] Test IDE support and developer experience
 
 #### Documentation Tests
+
 - [ ] Verify generated documentation excludes tags
 - [ ] Test JSDoc processing and output
 - [ ] Confirm type reference accuracy
@@ -126,26 +132,31 @@ grep -r "tags.*{" src/ | grep -E "(\/\*\*|\/\*|\*)"
 ## Dependencies
 
 **Requires**:
+
 - RMTAGS-007 (Notes service changes) - Data structure changes
 - RMTAGS-008 (Persistence listener changes) - Related type work
 
 **Blocks**:
+
 - RMTAGS-018 (Documentation updates) - Documentation consistency
 - Development team onboarding - Accurate type information
 
 ## Testing Validation
 
 ### Before Implementation
+
 - Document current JSDoc type definitions
 - Capture IDE autocomplete behavior with tags
 - Identify all type references in documentation
 
 ### After Implementation
+
 - Validate JSDoc types exclude tag references
 - Test IDE autocomplete accuracy
 - Confirm type checking passes
 
 ### Test Commands
+
 ```bash
 # Test JSDoc processing (if available)
 npm run docs 2>/dev/null || echo "JSDoc not configured"
@@ -186,6 +197,7 @@ npm run lint -- --fix
 ## Quality Assurance
 
 **Code Review Checklist**:
+
 - [ ] All identified type definitions updated
 - [ ] No orphaned tag references in JSDoc comments
 - [ ] Type consistency across related interfaces
@@ -193,6 +205,7 @@ npm run lint -- --fix
 - [ ] JSDoc syntax remains valid
 
 **Type System Validation**:
+
 - [ ] IDE autocomplete accuracy verified
 - [ ] No type-related warnings or errors
 - [ ] Type checking passes (if applicable)
@@ -200,6 +213,7 @@ npm run lint -- --fix
 - [ ] Cross-references maintain consistency
 
 **Developer Experience Validation**:
+
 - [ ] IDE suggestions helpful and accurate
 - [ ] No confusion about available properties
 - [ ] Type definitions match actual usage patterns

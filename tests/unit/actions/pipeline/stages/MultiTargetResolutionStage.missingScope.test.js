@@ -207,13 +207,15 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
       mockDeps.unifiedScopeResolver.resolve
         .mockReturnValueOnce(ActionResult.success(new Set(['player'])))
         .mockReturnValueOnce(
-          ActionResult.failure([{
-            message:
-              "Missing scope definition: Scope 'missing:scope' not found",
-            name: 'ScopeNotFoundError',
-            phase: 'VALIDATION',
-            scopeName: 'missing:scope',
-          }])
+          ActionResult.failure([
+            {
+              message:
+                "Missing scope definition: Scope 'missing:scope' not found",
+              name: 'ScopeNotFoundError',
+              phase: 'VALIDATION',
+              scopeName: 'missing:scope',
+            },
+          ])
         );
 
       // Act
@@ -222,7 +224,7 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(result.data.actionsWithTargets).toEqual([]); // No actions due to scope error
-      
+
       // Production code logs errors twice: once in #resolveScope and once in catch block
       expect(mockDeps.logger.error).toHaveBeenCalledTimes(2);
       expect(mockDeps.logger.error).toHaveBeenCalledWith(

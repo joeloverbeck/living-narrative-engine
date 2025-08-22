@@ -3,7 +3,7 @@
 **Priority**: High  
 **Phase**: 5 - Testing & Validation (Quality Assurance)  
 **Estimated Effort**: 2.5 hours  
-**Risk Level**: Medium (Schema compatibility validation)  
+**Risk Level**: Medium (Schema compatibility validation)
 
 ## Overview
 
@@ -49,24 +49,25 @@ The removal of tags from the component schema creates a breaking change that nee
 ### Implementation Steps
 
 1. **Create Schema Validation Tests**
+
    ```javascript
    // Test notes component schema rejects tags
    describe('Notes Component Schema - Tag Removal', () => {
      it('should reject note data containing tags field', () => {
        const noteWithTags = {
-         text: "Test note",
-         subject: "character",
-         subjectType: "character",
-         tags: ["combat", "dialogue"]
+         text: 'Test note',
+         subject: 'character',
+         subjectType: 'character',
+         tags: ['combat', 'dialogue'],
        };
        expect(() => validateNoteSchema(noteWithTags)).toThrow();
      });
-     
+
      it('should accept note data without tags field', () => {
        const noteWithoutTags = {
-         text: "Test note", 
-         subject: "character",
-         subjectType: "character"
+         text: 'Test note',
+         subject: 'character',
+         subjectType: 'character',
        };
        expect(() => validateNoteSchema(noteWithoutTags)).not.toThrow();
      });
@@ -74,16 +75,19 @@ The removal of tags from the component schema creates a breaking change that nee
    ```
 
 2. **Create Backwards Compatibility Tests**
+
    ```javascript
    describe('Save Data Backwards Compatibility', () => {
      it('should load save data containing tagged notes', () => {
        const saveDataWithTags = {
-         notes: [{
-           text: "Legacy note",
-           subject: "character", 
-           subjectType: "character",
-           tags: ["legacy", "tagged"]
-         }]
+         notes: [
+           {
+             text: 'Legacy note',
+             subject: 'character',
+             subjectType: 'character',
+             tags: ['legacy', 'tagged'],
+           },
+         ],
        };
        expect(() => loadSaveData(saveDataWithTags)).not.toThrow();
      });
@@ -91,16 +95,19 @@ The removal of tags from the component schema creates a breaking change that nee
    ```
 
 3. **Create LLM Schema Validation Tests**
+
    ```javascript
    describe('LLM Output Schema Validation', () => {
      it('should reject LLM responses containing tags', () => {
        const llmResponseWithTags = {
-         notes: [{
-           text: "AI generated note",
-           subject: "character",
-           subjectType: "character", 
-           tags: ["ai", "generated"]
-         }]
+         notes: [
+           {
+             text: 'AI generated note',
+             subject: 'character',
+             subjectType: 'character',
+             tags: ['ai', 'generated'],
+           },
+         ],
        };
        expect(() => validateLLMResponse(llmResponseWithTags)).toThrow();
      });
@@ -115,24 +122,28 @@ The removal of tags from the component schema creates a breaking change that nee
 ### Test Scenarios
 
 #### Valid Data Scenarios
+
 - [ ] Notes without tags validate successfully
-- [ ] Complete note objects with all required fields pass validation  
+- [ ] Complete note objects with all required fields pass validation
 - [ ] LLM responses without tags process correctly
 - [ ] Save data without tags loads and saves properly
 
 #### Invalid Data Scenarios (Should be Rejected)
+
 - [ ] Notes containing tags field
 - [ ] LLM responses with tags field
 - [ ] Malformed data with invalid tag structures
 - [ ] Mixed data with some tagged and some untagged notes
 
 #### Backwards Compatibility Scenarios
+
 - [ ] Save data containing tagged notes loads without errors
 - [ ] Tagged notes in save data are ignored during processing
 - [ ] Gameplay functions normally with legacy tagged data
 - [ ] System handles mixed legacy and new data gracefully
 
 #### Error Handling Scenarios
+
 - [ ] Clear error messages for schema violations
 - [ ] Graceful handling of malformed input data
 - [ ] System stability maintained during validation errors
@@ -141,18 +152,21 @@ The removal of tags from the component schema creates a breaking change that nee
 ### Testing Requirements
 
 #### Schema Validation Tests
+
 - [ ] Component schema validation works correctly
 - [ ] LLM output schema validation functions properly
 - [ ] Error messages are clear and helpful
 - [ ] Validation performance is acceptable
 
-#### Data Loading Tests  
+#### Data Loading Tests
+
 - [ ] Legacy save data loads without errors
 - [ ] New save data processes correctly
 - [ ] Mixed data scenarios handled appropriately
 - [ ] No gameplay functionality lost
 
 #### Integration Tests
+
 - [ ] End-to-end data flow validates correctly
 - [ ] Schema changes integrate properly with system components
 - [ ] Performance impact of validation changes is minimal
@@ -161,17 +175,20 @@ The removal of tags from the component schema creates a breaking change that nee
 ## Dependencies
 
 **Requires**:
+
 - RMTAGS-001 (Component schema changes) - Schema modifications completed
 - RMTAGS-002 (LLM output schema changes) - LLM schema modifications completed
 - RMTAGS-014 and RMTAGS-015 - Test infrastructure updated
 
 **Blocks**:
+
 - RMTAGS-017 (Performance validation) - Schema performance baseline needed
 - System deployment readiness - Schema compatibility confirmed
 
 ## Testing Commands
 
 ### Schema Validation Testing
+
 ```bash
 # Test component schema validation
 npm run test:unit -- --testPathPattern=".*schema.*validation"
@@ -184,6 +201,7 @@ npm run test:unit -- --testPathPattern=".*llm.*schema"
 ```
 
 ### Error Handling Testing
+
 ```bash
 # Test error handling scenarios
 npm run test:unit -- --testPathPattern=".*error.*handling"
@@ -193,6 +211,7 @@ npm run test:integration -- --testPathPattern=".*validation.*"
 ```
 
 ### Complete Validation Testing
+
 ```bash
 # Run all schema-related tests
 npm run test:ci | grep -E "(schema|validation)"
@@ -224,18 +243,21 @@ npm run test:integration -- --testPathPattern=".*legacy.*"
 ## Quality Assurance
 
 **Schema Validation Quality**:
+
 - [ ] Validation logic correctly implements new schema requirements
 - [ ] Error messages are helpful and specific
 - [ ] Validation performance is acceptable
 - [ ] Edge cases and malformed data handled gracefully
 
 **Backwards Compatibility Quality**:
+
 - [ ] Legacy data loads without any errors or warnings
 - [ ] Functionality remains intact with legacy data
 - [ ] Mixed scenarios (legacy and new data) work properly
 - [ ] No user experience disruption for existing players
 
 **Error Handling Quality**:
+
 - [ ] System remains stable during validation errors
 - [ ] Error logging provides useful debugging information
 - [ ] User-facing error messages are clear and actionable

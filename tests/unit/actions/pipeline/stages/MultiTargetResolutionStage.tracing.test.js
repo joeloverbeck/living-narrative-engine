@@ -232,7 +232,6 @@ describe('MultiTargetResolutionStage - Action Tracing', () => {
       });
       expect(traceData.data.totalTargetCount).toBe(4);
     });
-
   });
 
   describe('Error Handling', () => {

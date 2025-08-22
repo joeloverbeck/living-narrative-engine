@@ -72,4 +72,141 @@ describe('LLM_TURN_ACTION_RESPONSE_SCHEMA contract', () => {
     expect(isValid).toBe(true);
     expect(validate.errors).toBeNull();
   });
+
+  describe('notes validation', () => {
+    test('should validate notes without tags property', () => {
+      const data = {
+        chosenIndex: 1,
+        speech: 'Hello',
+        thoughts: 'Internal monologue',
+        notes: [
+          {
+            text: 'This is a note',
+            subject: 'Test Subject',
+            subjectType: 'character',
+            context: 'Testing context',
+          },
+        ],
+      };
+
+      const isValid = validate(data);
+      expect(isValid).toBe(true);
+      expect(validate.errors).toBeNull();
+    });
+
+    test('should reject notes containing tags property', () => {
+      const data = {
+        chosenIndex: 1,
+        speech: 'Hello',
+        thoughts: 'Internal monologue',
+        notes: [
+          {
+            text: 'This is a note',
+            subject: 'Test Subject',
+            subjectType: 'character',
+            context: 'Testing context',
+            tags: ['emotion', 'politics'], // This should cause validation failure
+          },
+        ],
+      };
+
+      const isValid = validate(data);
+      expect(isValid).toBe(false);
+      expect(validate.errors).toBeDefined();
+
+      // Find the specific error about additional properties (tags)
+      const additionalPropsError = validate.errors.find(
+        (err) =>
+          err.keyword === 'additionalProperties' &&
+          err.params?.additionalProperty === 'tags'
+      );
+      expect(additionalPropsError).toBeTruthy();
+    });
+
+    test('should validate notes with minimal required fields only', () => {
+      const data = {
+        chosenIndex: 1,
+        speech: 'Hello',
+        thoughts: 'Internal monologue',
+        notes: [
+          {
+            text: 'Minimal note',
+            subject: 'Subject',
+            subjectType: 'event',
+          },
+        ],
+      };
+
+      const isValid = validate(data);
+      expect(isValid).toBe(true);
+      expect(validate.errors).toBeNull();
+    });
+
+    test('should reject notes with missing required fields', () => {
+      const data = {
+        chosenIndex: 1,
+        speech: 'Hello',
+        thoughts: 'Internal monologue',
+        notes: [
+          {
+            text: 'Note without subject',
+            // Missing subject and subjectType
+            context: 'Test context',
+          },
+        ],
+      };
+
+      const isValid = validate(data);
+      expect(isValid).toBe(false);
+      expect(validate.errors).toBeDefined();
+
+      // Should have errors for missing required fields
+      const missingSubjectError = validate.errors.find(
+        (err) =>
+          err.keyword === 'required' &&
+          err.params?.missingProperty === 'subject'
+      );
+      const missingSubjectTypeError = validate.errors.find(
+        (err) =>
+          err.keyword === 'required' &&
+          err.params?.missingProperty === 'subjectType'
+      );
+
+      expect(missingSubjectError).toBeTruthy();
+      expect(missingSubjectTypeError).toBeTruthy();
+    });
+
+    test('should handle multiple notes with mixed valid/invalid properties', () => {
+      const data = {
+        chosenIndex: 1,
+        speech: 'Hello',
+        thoughts: 'Internal monologue',
+        notes: [
+          {
+            text: 'Valid note',
+            subject: 'Valid Subject',
+            subjectType: 'character',
+          },
+          {
+            text: 'Invalid note with tags',
+            subject: 'Invalid Subject',
+            subjectType: 'event',
+            tags: ['should-fail'], // This should cause validation failure
+          },
+        ],
+      };
+
+      const isValid = validate(data);
+      expect(isValid).toBe(false);
+      expect(validate.errors).toBeDefined();
+
+      // Should reject due to tags in the second note
+      const additionalPropsError = validate.errors.find(
+        (err) =>
+          err.keyword === 'additionalProperties' &&
+          err.params?.additionalProperty === 'tags'
+      );
+      expect(additionalPropsError).toBeTruthy();
+    });
+  });
 });
