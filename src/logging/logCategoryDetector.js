@@ -17,6 +17,7 @@ class LRUCache {
 
   /**
    * Get a value from the cache
+   *
    * @param {string} key - Cache key
    * @returns {*} Cached value or undefined
    */
@@ -33,6 +34,7 @@ class LRUCache {
 
   /**
    * Set a value in the cache
+   *
    * @param {string} key - Cache key
    * @param {*} value - Value to cache
    */
@@ -52,6 +54,7 @@ class LRUCache {
 
   /**
    * Check if cache has a key
+   *
    * @param {string} key - Cache key
    * @returns {boolean} True if key exists
    */
@@ -68,6 +71,7 @@ class LRUCache {
 
   /**
    * Get cache statistics
+   *
    * @returns {object} Cache stats
    */
   getStats() {
@@ -127,6 +131,7 @@ class LogCategoryDetector {
 
   /**
    * Creates a LogCategoryDetector instance
+   *
    * @param {DetectorConfig} [config] - Configuration options
    */
   constructor(config = {}) {
@@ -148,6 +153,7 @@ class LogCategoryDetector {
 
   /**
    * Initialize category detection patterns
+   *
    * @private
    * @param {object} customPatterns - Custom patterns to merge
    */
@@ -260,6 +266,7 @@ class LogCategoryDetector {
 
   /**
    * Detect category from log message
+   *
    * @param {string} message - Log message
    * @returns {string|undefined} Detected category or undefined
    */
@@ -301,6 +308,7 @@ class LogCategoryDetector {
 
   /**
    * Batch detect categories for multiple messages
+   *
    * @param {string[]} messages - Array of log messages
    * @returns {(string|undefined)[]} Array of detected categories
    */
@@ -321,6 +329,7 @@ class LogCategoryDetector {
 
   /**
    * Get detector statistics
+   *
    * @returns {object} Statistics about detection and caching
    */
   getStats() {
@@ -342,9 +351,10 @@ class LogCategoryDetector {
 
   /**
    * Add or update a category pattern
+   *
    * @param {string} category - Category name
    * @param {RegExp} pattern - Pattern to match
-   * @param {number} [priority=50] - Priority level
+   * @param {number} [priority] - Priority level
    */
   addPattern(category, pattern, priority = 50) {
     this.#patterns.set(category, { pattern, priority });
@@ -354,6 +364,7 @@ class LogCategoryDetector {
 
   /**
    * Remove a category pattern
+   *
    * @param {string} category - Category to remove
    */
   removePattern(category) {
@@ -364,6 +375,7 @@ class LogCategoryDetector {
 
   /**
    * Get all registered patterns
+   *
    * @returns {object} Object mapping categories to patterns
    */
   getPatterns() {

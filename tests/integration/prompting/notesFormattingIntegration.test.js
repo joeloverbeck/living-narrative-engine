@@ -165,15 +165,15 @@ describe('Notes Formatting Integration', () => {
       expect(groupedNotesContent).toContain('## Events');
       expect(groupedNotesContent).toContain('### The Missing Shipment');
 
-      // Verify content and formatting
+      // Verify content and formatting (tags no longer displayed)
       expect(groupedNotesContent).toContain(
-        '- John seems nervous about the council meeting (tavern conversation) [emotion, politics]'
+        '- John seems nervous about the council meeting (tavern conversation)'
       );
       expect(groupedNotesContent).toContain(
-        '- Always carries that strange medallion (morning observation) [mystery, artifact]'
+        '- Always carries that strange medallion (morning observation)'
       );
       expect(groupedNotesContent).toContain(
-        '- Guards doubled at the north gate (morning patrol) [security, observation]'
+        '- Guards doubled at the north gate (morning patrol)'
       );
 
       // Step 4: Test complete notes section with grouping
@@ -435,10 +435,10 @@ describe('Notes Formatting Integration', () => {
         '### Template Subject'
       );
       expect(formattedPromptData.notesContent).toContain(
-        '- Test note for template (template context) [template, test]'
+        '- Test note for template (template context)'
       );
       expect(formattedPromptData.notesSection).toContain(
-        '<notes>\n## Characters\n### Template Subject\n- Test note for template (template context) [template, test]\n</notes>'
+        '<notes>\n## Characters\n### Template Subject\n- Test note for template (template context)\n</notes>'
       );
 
       // Test that grouped section formatting can be applied
@@ -451,7 +451,7 @@ describe('Notes Formatting Integration', () => {
       expect(groupedNotesSection).toContain('## Characters');
       expect(groupedNotesSection).toContain('### Template Subject');
       expect(groupedNotesSection).toContain(
-        '- Test note for template (template context) [template, test]'
+        '- Test note for template (template context)'
       );
       expect(groupedNotesSection).toContain('</notes>');
     });
@@ -498,19 +498,18 @@ describe('Notes Formatting Integration', () => {
           options: {
             groupBySubject: true,
             showContext: false,
-            showTags: false,
           },
           expectedContent: '- Note with options test',
-          expectedNotToContain: ['(options context)', '[option1, option2]'],
+          expectedNotToContain: ['(options context)'],
         },
         {
-          options: { groupBySubject: true, showContext: true, showTags: false },
+          options: { groupBySubject: true, showContext: true },
           expectedContent: '- Note with options test (options context)',
-          expectedNotToContain: ['[option1, option2]'],
+          expectedNotToContain: [],
         },
         {
-          options: { groupBySubject: true, showContext: false, showTags: true },
-          expectedContent: '- Note with options test [option1, option2]',
+          options: { groupBySubject: true, showContext: false },
+          expectedContent: '- Note with options test',
           expectedNotToContain: ['(options context)'],
         },
       ];

@@ -80,6 +80,7 @@ class LogMetadataEnricher {
 
   /**
    * Creates a LogMetadataEnricher instance
+   *
    * @param {EnricherConfig} [config] - Configuration options
    */
   constructor(config = {}) {
@@ -110,6 +111,7 @@ class LogMetadataEnricher {
 
   /**
    * Enrich log entry with metadata
+   *
    * @param {object} logEntry - Basic log entry
    * @param {any[]} [originalArgs] - Original log arguments
    * @returns {Promise<object>} Enriched log entry
@@ -137,6 +139,7 @@ class LogMetadataEnricher {
 
   /**
    * Synchronous version of enrichLogEntry
+   *
    * @param {object} logEntry - Basic log entry
    * @param {any[]} [originalArgs] - Original log arguments
    * @returns {object} Enriched log entry
@@ -164,6 +167,7 @@ class LogMetadataEnricher {
 
   /**
    * Collect metadata based on configuration level (async)
+   *
    * @private
    * @param {any[]} originalArgs - Original log arguments
    * @returns {Promise<object>} Collected metadata
@@ -262,6 +266,7 @@ class LogMetadataEnricher {
 
   /**
    * Collect metadata synchronously
+   *
    * @private
    * @param {any[]} originalArgs - Original log arguments
    * @returns {object} Collected metadata
@@ -314,6 +319,7 @@ class LogMetadataEnricher {
 
   /**
    * Collect browser-specific metadata
+   *
    * @private
    * @returns {BrowserMetadata} Browser metadata
    */
@@ -352,6 +358,7 @@ class LogMetadataEnricher {
 
   /**
    * Collect performance metadata
+   *
    * @private
    * @returns {PerformanceMetadata} Performance metadata
    */
@@ -387,7 +394,8 @@ class LogMetadataEnricher {
 
   /**
    * Detect source location from stack trace
-   * @param {number} [skipFrames=4] - Number of stack frames to skip
+   *
+   * @param {number} [skipFrames] - Number of stack frames to skip
    * @returns {string|undefined} Source location as "file:line"
    */
   detectSource(skipFrames = 4) {
@@ -415,6 +423,7 @@ class LogMetadataEnricher {
 
   /**
    * Check if a stack frame is internal to the logger
+   *
    * @private
    * @param {string} line - Stack trace line
    * @returns {boolean} True if internal frame
@@ -433,6 +442,7 @@ class LogMetadataEnricher {
 
   /**
    * Parse a stack trace line to extract file and line number
+   *
    * @private
    * @param {string} line - Stack trace line
    * @returns {string|undefined} Parsed source location
@@ -457,6 +467,7 @@ class LogMetadataEnricher {
 
   /**
    * Get current configuration
+   *
    * @returns {object} Current configuration
    */
   getConfig() {
@@ -471,6 +482,7 @@ class LogMetadataEnricher {
 
   /**
    * Update configuration
+   *
    * @param {EnricherConfig} config - New configuration
    */
   updateConfig(config) {

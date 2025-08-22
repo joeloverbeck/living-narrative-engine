@@ -53,13 +53,13 @@ describe('PromptDataFormatter - Grouped Notes Functionality', () => {
       expect(result).toContain('## Locations');
       expect(result).toContain('### The North Gate');
       expect(result).toContain(
-        '- John seems nervous about the meeting (tavern conversation) [emotion, politics]'
+        '- John seems nervous about the meeting (tavern conversation)'
       );
       expect(result).toContain(
-        '- The north gate has extra guards (morning patrol) [security]'
+        '- The north gate has extra guards (morning patrol)'
       );
       expect(result).toContain(
-        '- John always carries a medallion (observation) [mystery, artifact]'
+        '- John always carries a medallion (observation)'
       );
     });
 
@@ -90,7 +90,7 @@ describe('PromptDataFormatter - Grouped Notes Functionality', () => {
       expect(result).toContain(
         '- Note with context only (overheard conversation)'
       );
-      expect(result).toContain('- Note with tags only [important]');
+      expect(result).toContain('- Note with tags only');
     });
 
     test('should group multiple subjects under correct categories', () => {
@@ -225,29 +225,22 @@ describe('PromptDataFormatter - Grouped Notes Functionality', () => {
       const resultNoContext = formatter.formatNotes(notes, {
         groupBySubject: true,
         showContext: false,
-        showTags: true,
       });
-      expect(resultNoContext).toContain('- Test note [test, tag]');
+      expect(resultNoContext).toContain('- Test note');
       expect(resultNoContext).not.toContain('(test context)');
 
-      // Test with tags disabled
-      const resultNoTags = formatter.formatNotes(notes, {
+      // Test with context enabled (default behavior)
+      const resultWithContext = formatter.formatNotes(notes, {
         groupBySubject: true,
         showContext: true,
-        showTags: false,
       });
-      expect(resultNoTags).toContain('- Test note (test context)');
-      expect(resultNoTags).not.toContain('[test, tag]');
+      expect(resultWithContext).toContain('- Test note (test context)');
 
-      // Test with both disabled
-      const resultNoBoth = formatter.formatNotes(notes, {
+      // Test with default options
+      const resultDefault = formatter.formatNotes(notes, {
         groupBySubject: true,
-        showContext: false,
-        showTags: false,
       });
-      expect(resultNoBoth).toContain('- Test note');
-      expect(resultNoBoth).not.toContain('(test context)');
-      expect(resultNoBoth).not.toContain('[test, tag]');
+      expect(resultDefault).toContain('- Test note (test context)');
     });
   });
 
@@ -373,7 +366,6 @@ describe('PromptDataFormatter - Grouped Notes Functionality', () => {
       expect(result).toContain('- Note with "quotes" and [brackets]');
       expect(result).toContain('### Subject (with parentheses)');
       expect(result).toContain('(Context with "quotes")');
-      expect(result).toContain('[tag-with-dash, tag [with] brackets]');
     });
   });
 

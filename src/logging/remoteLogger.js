@@ -150,6 +150,12 @@ class RemoteLogger {
   #metadataEnricher;
 
   /**
+   * @private
+   * @type {Promise<void>|null}
+   */
+  #currentFlushPromise;
+
+  /**
    * Creates a RemoteLogger instance compatible with LoggerStrategy dependency injection.
    *
    * @param {object} options - Configuration options
@@ -195,6 +201,7 @@ class RemoteLogger {
     this.#sessionId = uuidv4();
     this.#isUnloading = false;
     this.#abortController = null;
+    this.#currentFlushPromise = null;
 
     // Initialize circuit breaker
     this.#circuitBreaker = new CircuitBreaker({
@@ -430,6 +437,11 @@ class RemoteLogger {
    * @returns {Promise<void>}
    */
   async #flush() {
+    // Prevent concurrent flushes
+    if (this.#currentFlushPromise) {
+      return this.#currentFlushPromise;
+    }
+
     if (this.#buffer.length === 0) {
       return;
     }
@@ -447,11 +459,17 @@ class RemoteLogger {
       return;
     }
 
-    try {
-      await this.#sendBatch(logsToSend);
-    } catch (error) {
-      this.#handleSendFailure(error, logsToSend);
-    }
+    this.#currentFlushPromise = (async () => {
+      try {
+        await this.#sendBatch(logsToSend);
+      } catch (error) {
+        this.#handleSendFailure(error, logsToSend);
+      } finally {
+        this.#currentFlushPromise = null;
+      }
+    })();
+
+    return this.#currentFlushPromise;
   }
 
   /**

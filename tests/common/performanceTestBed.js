@@ -87,7 +87,8 @@ export function createPerformanceTestBed() {
     createPerformanceTracker() {
       return {
         startBenchmark(name, options = {}) {
-          const startTime = process.hrtime.bigint();
+          // Use performance.now() for consistency with mocked timing in tests
+          const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
           let baselineMemory = null;
           let startMemoryPromise = null;
 
@@ -100,12 +101,13 @@ export function createPerformanceTestBed() {
 
           return {
             end() {
-              const endTime = process.hrtime.bigint();
+              // Use performance.now() for consistency with mocked timing in tests
+              const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
               const endMemory = options.trackMemory
                 ? process.memoryUsage()
                 : null;
 
-              const totalTime = Number(endTime - startTime) / 1000000; // Convert to milliseconds
+              const totalTime = endTime - startTime; // Already in milliseconds
 
               const metrics = {
                 name,
@@ -125,8 +127,9 @@ export function createPerformanceTestBed() {
             },
 
             async endWithAdvancedMemoryTracking() {
-              const endTime = process.hrtime.bigint();
-              const totalTime = Number(endTime - startTime) / 1000000; // Convert to milliseconds
+              // Use performance.now() for consistency with mocked timing in tests
+              const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+              const totalTime = endTime - startTime; // Already in milliseconds
 
               const metrics = {
                 name,

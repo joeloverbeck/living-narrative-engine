@@ -24,24 +24,6 @@ export default function createClothingStepResolver({ entitiesGateway }) {
     underwear: 'underwear',
   };
 
-  const CLOTHING_SLOTS = [
-    'torso_upper',
-    'torso_lower',
-    'legs',
-    'feet',
-    'head_gear',
-    'hands',
-    'left_arm_clothing',
-    'right_arm_clothing',
-  ];
-
-  const LAYER_PRIORITY = {
-    topmost: ['outer', 'base', 'underwear'],
-    all: ['outer', 'base', 'underwear', 'accessories'],
-    outer: ['outer'],
-    base: ['base'],
-    underwear: ['underwear'],
-  };
 
   /**
    * Checks if this resolver can handle the given node
@@ -74,9 +56,9 @@ export default function createClothingStepResolver({ entitiesGateway }) {
       if (trace) {
         trace.addLog(
           'info',
-          `ClothingStepResolver: No equipment component found for entity ${entityId}`,
+          `ClothingStepResolver: No equipped items found for entity ${entityId} (equipment component: ${equipment ? 'present' : 'missing'})`,
           'ClothingStepResolver',
-          { entityId }
+          { entityId, hasEquipmentComponent: !!equipment }
         );
       }
       // Return empty clothing access object

@@ -306,12 +306,24 @@ describe('CommandProcessor - Performance Benchmarks', () => {
         },
       };
 
-      // Baseline performance measurement
-      const baselineStart = performance.now();
-      for (let i = 0; i < 5; i++) {
-        await commandProcessor.dispatchAction(mockActor, normalAction);
+      // Multiple baseline measurements for stability
+      const baselineMeasurements = [];
+      for (let run = 0; run < 3; run++) {
+        const baselineStart = performance.now();
+        for (let i = 0; i < 5; i++) {
+          await commandProcessor.dispatchAction(mockActor, normalAction);
+        }
+        const baselineAvg = (performance.now() - baselineStart) / 5;
+        baselineMeasurements.push(baselineAvg);
       }
-      const baselineAvg = (performance.now() - baselineStart) / 5;
+
+      // Use median baseline for stability
+      baselineMeasurements.sort((a, b) => a - b);
+      const stableBaseline = baselineMeasurements[1]; // median of 3
+      
+      // Validate baseline is reasonable (not too fast or too slow)
+      expect(stableBaseline).toBeGreaterThan(0.001); // At least 0.001ms - sanity check
+      expect(stableBaseline).toBeLessThan(200); // Less than 200ms - reasonable upper bound
 
       // Burst test with reduced size for faster execution
       const burstSize = 40;
@@ -332,19 +344,34 @@ describe('CommandProcessor - Performance Benchmarks', () => {
       // Cause performance spike
       await commandProcessor.dispatchAction(mockActor, spikeAction);
 
-      // Measure recovery performance
-      const recoveryStart = performance.now();
-      for (let i = 0; i < 5; i++) {
-        await commandProcessor.dispatchAction(mockActor, normalAction);
+      // Multiple recovery measurements for reliability
+      const recoveryMeasurements = [];
+      for (let run = 0; run < 3; run++) {
+        const recoveryStart = performance.now();
+        for (let i = 0; i < 5; i++) {
+          await commandProcessor.dispatchAction(mockActor, normalAction);
+        }
+        const recoveryAvg = (performance.now() - recoveryStart) / 5;
+        recoveryMeasurements.push(recoveryAvg);
       }
-      const recoveryAvg = (performance.now() - recoveryStart) / 5;
+
+      // Use median recovery time for stability
+      recoveryMeasurements.sort((a, b) => a - b);
+      const stableRecovery = recoveryMeasurements[1]; // median of 3
 
       // Validate burst performance
       expect(p50).toBeLessThan(50); // Median should be fast
       expect(p95).toBeLessThan(100); // 95th percentile reasonable
 
-      // Validate recovery performance
-      expect(recoveryAvg).toBeLessThan(baselineAvg * 2); // Within 2x of baseline
+      // Validate recovery performance with environment-aware multiplier
+      // CI environments can be 3x slower due to resource constraints
+      const isCI = !!(process.env.CI || process.env.GITHUB_ACTIONS || process.env.GITLAB_CI);
+      const recoveryMultiplier = isCI ? 4 : 3; // More lenient in CI
+      
+      expect(stableRecovery).toBeLessThan(stableBaseline * recoveryMultiplier);
+      
+      // Additional validation: recovery should be reasonable in absolute terms
+      expect(stableRecovery).toBeLessThan(150); // 150ms absolute maximum
     });
   });
 

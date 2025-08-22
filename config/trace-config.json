@@ -2,9 +2,9 @@
   "$schema": "../data/schemas/trace-config.schema.json",
   "traceAnalysisEnabled": false,
   "actionTracing": {
-    "enabled": false,
-    "tracedActions": ["positioning:get_close"],
-    "outputDirectory": "./traces/get-close",
+    "enabled": true,
+    "tracedActions": ["intimacy:fondle_ass"],
+    "outputDirectory": "./traces/fondle-ass",
     "verbosity": "verbose",
     "includeComponentData": true,
     "includePrerequisites": true,

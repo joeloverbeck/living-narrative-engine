@@ -180,8 +180,8 @@ describe('positioning:stand_up action integration', () => {
     );
     expect(perceptibleEvent.payload.locationId).toBe('castle_hall');
     expect(perceptibleEvent.payload.actorId).toBe('test:actor1');
-    expect(perceptibleEvent.payload.targetId).toBe('none');
-    expect(perceptibleEvent.payload.perceptionType).toBe('action_general');
+    expect(perceptibleEvent.payload.targetId).toBe(null);
+    expect(perceptibleEvent.payload.perceptionType).toBe('action_self_general');
   });
 
   it('only fires for correct action ID', async () => {
