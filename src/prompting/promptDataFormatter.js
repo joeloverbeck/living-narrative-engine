@@ -155,7 +155,6 @@ export class PromptDataFormatter {
    * @param {object} options - Formatting options
    * @param {boolean} options.groupBySubject - Enable subject grouping (default: false for backward compatibility)
    * @param {boolean} options.showContext - Show context information (default: true)
-   * @param {boolean} options.showTags - Show tags (default: true)
    * @returns {string} Formatted notes content
    */
   formatNotes(notesArray, options = {}) {
@@ -168,7 +167,6 @@ export class PromptDataFormatter {
     const opts = {
       groupBySubject: true,
       showContext: true,
-      showTags: true,
       ...options,
     };
 
@@ -242,7 +240,6 @@ export class PromptDataFormatter {
    * @param {{text: string, context?: string, tags?: string[]}} note - The note to format
    * @param {object} options - Formatting options
    * @param {boolean} options.showContext - Show context information
-   * @param {boolean} options.showTags - Show tags
    * @returns {string} Formatted note string
    */
   formatNoteWithContext(note, options) {
@@ -250,10 +247,6 @@ export class PromptDataFormatter {
 
     if (options.showContext && note.context) {
       formatted += ` (${note.context})`;
-    }
-
-    if (options.showTags && note.tags && note.tags.length > 0) {
-      formatted += ` [${note.tags.join(', ')}]`;
     }
 
     return formatted;

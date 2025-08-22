@@ -18,7 +18,7 @@ The `AIPromptContentProvider.js` includes tags in structured note data processin
 - [ ] Remove tags from structured note handling in AI prompt content provider
 - [ ] Eliminate tag data flow through prompt pipeline
 - [ ] Maintain all other note data processing functionality
-- [ ] Ensure consistency with prompt formatter changes (RMTAGS-005)
+- [ ] Ensure consistency with prompt formatter (tags already excluded from formatted output)
 - [ ] Verify no downstream components receive tag data
 
 ## Technical Implementation
@@ -58,6 +58,11 @@ The `AIPromptContentProvider.js` includes tags in structured note data processin
 
 ### Data Flow Impact
 
+**Current Reality**: 
+- Tags are passed through AIPromptContentProvider._extractNotes()
+- PromptDataFormatter receives tag data but excludes it from formatted output
+- Template system receives structured data without tags
+
 **Before Change**:
 
 - Note objects with tags → AIPromptContentProvider → Structured data with tags → Prompt formatting
@@ -67,6 +72,7 @@ The `AIPromptContentProvider.js` includes tags in structured note data processin
 
 - Note objects (tags ignored) → AIPromptContentProvider → Structured data without tags → Prompt formatting
 - Tags blocked at content provider level
+- Consistent tag exclusion throughout pipeline
 
 **Downstream Effects**:
 
@@ -76,33 +82,33 @@ The `AIPromptContentProvider.js` includes tags in structured note data processin
 
 ### Testing Requirements
 
-#### Unit Tests
+**Note**: Comprehensive test suite already exists (24+ test files for AIPromptContentProvider).
 
-- [ ] Test structured note data creation without tags
-- [ ] Verify result objects exclude tag properties
-- [ ] Confirm other note properties preserved correctly
-- [ ] Test edge cases with null/undefined notes
+#### Unit Tests (Update Existing)
+- [ ] Update AIPromptContentProvider.notes.test.js to verify tag exclusion
+- [ ] Verify result objects exclude tag properties in existing test cases
+- [ ] Update structured note test expectations
+- [ ] Ensure edge case tests still pass with tag removal
 
-#### Integration Tests
+#### Integration Tests (Update Existing)  
+- [ ] Update notesFormattingIntegration.test.js for tag exclusion
+- [ ] Verify complete prompt pipeline excludes tag data
+- [ ] Update PromptAssembly.test.js expectations
+- [ ] Test various note configurations maintain functionality
 
-- [ ] Test complete prompt content pipeline
-- [ ] Validate integration with prompt data formatter
-- [ ] Confirm no tag data reaches downstream components
-- [ ] Test various note configurations and structures
-
-#### Data Flow Tests
-
-- [ ] Verify structured data consistency
-- [ ] Test prompt content generation end-to-end
-- [ ] Validate data pipeline integrity
-- [ ] Confirm error handling for invalid data
+#### Data Flow Tests (Leverage Existing)
+- [ ] Verify structured data consistency in existing performance tests
+- [ ] Test prompt content generation end-to-end using existing integration tests
+- [ ] Validate data pipeline integrity with existing test coverage
+- [ ] Confirm error handling for invalid data remains intact
 
 ## Dependencies
 
 **Requires**:
 
-- RMTAGS-005 (Remove tags from prompt data formatter) - Natural coordination
 - RMTAGS-001 (Component schema changes) - Foundation requirement
+
+**Note**: This change coordinates with prompt data formatter modifications (tags are already excluded from formatted output).
 
 **Blocks**:
 
@@ -129,11 +135,11 @@ The `AIPromptContentProvider.js` includes tags in structured note data processin
 # Test AI prompt content provider functionality
 npm run test:unit -- --testPathPattern="AIPromptContentProvider"
 
-# Test prompt content integration
-npm run test:integration -- --testPathPattern=".*prompt.*content.*"
+# Test specific notes handling  
+npm run test:unit -- --testPathPattern="AIPromptContentProvider\.notes"
 
-# Validate structured data creation
-npm run test:unit -- --testPathPattern=".*structured.*note.*"
+# Test notes formatting integration
+npm run test:integration -- --testPathPattern="notesFormattingIntegration"
 ```
 
 ## Success Metrics
@@ -149,7 +155,7 @@ npm run test:unit -- --testPathPattern=".*structured.*note.*"
 
 **Data Consistency**: Ensure the removal creates a consistent data flow where no component downstream expects or receives tag data. This prevents potential errors or unexpected behavior.
 
-**Pipeline Integration**: Coordinate with RMTAGS-005 to ensure the prompt data formatter changes align with the content provider changes - neither should expect tag data from the other.
+**Pipeline Integration**: Ensure coordination with prompt data formatter changes - the formatter already excludes tags from output, and this change ensures no tag data reaches it.
 
 **Object Structure**: Verify that removing tag assignment doesn't affect the overall structure or validity of result objects created by the content provider.
 

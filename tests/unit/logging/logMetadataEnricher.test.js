@@ -65,7 +65,7 @@ describe('LogMetadataEnricher', () => {
   beforeEach(() => {
     // Setup global mocks - jsdom provides window.location, we'll work with its defaults
     // Note: jsdom's window.location is not configurable, so tests will use http://localhost/
-    
+
     // Mock window dimensions
     window.innerWidth = mockWindow.innerWidth;
     window.innerHeight = mockWindow.innerHeight;
@@ -76,31 +76,31 @@ describe('LogMetadataEnricher', () => {
       writable: true,
       configurable: true,
     });
-    
+
     Object.defineProperty(navigator, 'language', {
       value: mockNavigator.language,
       writable: true,
       configurable: true,
     });
-    
+
     Object.defineProperty(navigator, 'platform', {
       value: mockNavigator.platform,
       writable: true,
       configurable: true,
     });
-    
+
     Object.defineProperty(navigator, 'cookieEnabled', {
       value: mockNavigator.cookieEnabled,
       writable: true,
       configurable: true,
     });
-    
+
     Object.defineProperty(navigator, 'onLine', {
       value: mockNavigator.onLine,
       writable: true,
       configurable: true,
     });
-    
+
     Object.defineProperty(navigator, 'doNotTrack', {
       value: mockNavigator.doNotTrack,
       writable: true,
@@ -109,10 +109,10 @@ describe('LogMetadataEnricher', () => {
 
     // Mock screen
     global.screen = mockScreen;
-    
+
     // Mock performance with memory support
     global.performance = mockPerformance;
-    
+
     global.requestIdleCallback = jest.fn((callback) => {
       setTimeout(() => callback({ timeRemaining: () => 50 }), 0);
       return 1;
@@ -132,7 +132,7 @@ describe('LogMetadataEnricher', () => {
     global.screen = originalScreen;
     global.performance = originalPerformance;
     global.requestIdleCallback = originalRequestIdleCallback;
-    
+
     // Clear any fake timers if they were used
     if (jest.isMockFunction(setTimeout)) {
       jest.useRealTimers();
@@ -326,11 +326,11 @@ describe('LogMetadataEnricher', () => {
     beforeEach(() => {
       jest.useFakeTimers();
     });
-    
+
     afterEach(() => {
       jest.useRealTimers();
     });
-    
+
     it('should use requestIdleCallback for expensive operations', async () => {
       enricher = new LogMetadataEnricher({
         level: 'full',
@@ -350,7 +350,10 @@ describe('LogMetadataEnricher', () => {
       const enriched = await enrichedPromise;
 
       // Navigation timing should be present if performance.getEntriesByType works
-      if (enriched.metadata.performance && enriched.metadata.performance.navigation) {
+      if (
+        enriched.metadata.performance &&
+        enriched.metadata.performance.navigation
+      ) {
         expect(enriched.metadata.performance.navigation).toEqual({
           domContentLoaded: 500,
           loadComplete: 800,
@@ -375,7 +378,10 @@ describe('LogMetadataEnricher', () => {
       const enriched = await enricher.enrichLogEntry(logEntry);
 
       // Navigation timing should be present if performance.getEntriesByType works
-      if (enriched.metadata.performance && enriched.metadata.performance.navigation) {
+      if (
+        enriched.metadata.performance &&
+        enriched.metadata.performance.navigation
+      ) {
         expect(enriched.metadata.performance.navigation).toEqual({
           domContentLoaded: 500,
           loadComplete: 800,

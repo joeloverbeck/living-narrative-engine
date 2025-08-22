@@ -360,7 +360,7 @@ describe('PromptDataFormatter - Subject Type Mapping', () => {
   });
 
   describe('formatNoteWithContext', () => {
-    test('should format note with context and tags when enabled', () => {
+    test('should format note with context when enabled', () => {
       const note = {
         text: 'Test note',
         context: 'test context',
@@ -369,11 +369,10 @@ describe('PromptDataFormatter - Subject Type Mapping', () => {
 
       const options = {
         showContext: true,
-        showTags: true,
       };
 
       const result = formatter.formatNoteWithContext(note, options);
-      expect(result).toBe('- Test note (test context) [tag1, tag2]');
+      expect(result).toBe('- Test note (test context)');
     });
 
     test('should format note with only context when tags disabled', () => {
@@ -392,7 +391,7 @@ describe('PromptDataFormatter - Subject Type Mapping', () => {
       expect(result).toBe('- Test note (test context)');
     });
 
-    test('should format note with only tags when context disabled', () => {
+    test('should format note without context when context disabled', () => {
       const note = {
         text: 'Test note',
         context: 'test context',
@@ -401,14 +400,13 @@ describe('PromptDataFormatter - Subject Type Mapping', () => {
 
       const options = {
         showContext: false,
-        showTags: true,
       };
 
       const result = formatter.formatNoteWithContext(note, options);
-      expect(result).toBe('- Test note [tag1, tag2]');
+      expect(result).toBe('- Test note');
     });
 
-    test('should format note with text only when both context and tags disabled', () => {
+    test('should format note with text only when context disabled', () => {
       const note = {
         text: 'Test note',
         context: 'test context',
@@ -417,7 +415,6 @@ describe('PromptDataFormatter - Subject Type Mapping', () => {
 
       const options = {
         showContext: false,
-        showTags: false,
       };
 
       const result = formatter.formatNoteWithContext(note, options);
@@ -432,11 +429,10 @@ describe('PromptDataFormatter - Subject Type Mapping', () => {
 
       const options = {
         showContext: true,
-        showTags: true,
       };
 
       const result = formatter.formatNoteWithContext(note, options);
-      expect(result).toBe('- Test note [tag1]');
+      expect(result).toBe('- Test note');
     });
 
     test('should handle note without tags gracefully', () => {
@@ -447,7 +443,6 @@ describe('PromptDataFormatter - Subject Type Mapping', () => {
 
       const options = {
         showContext: true,
-        showTags: true,
       };
 
       const result = formatter.formatNoteWithContext(note, options);
@@ -463,14 +458,13 @@ describe('PromptDataFormatter - Subject Type Mapping', () => {
 
       const options = {
         showContext: true,
-        showTags: true,
       };
 
       const result = formatter.formatNoteWithContext(note, options);
       expect(result).toBe('- Test note (test context)');
     });
 
-    test('should handle single tag correctly', () => {
+    test('should handle single tag correctly without displaying it', () => {
       const note = {
         text: 'Test note',
         tags: ['single-tag'],
@@ -478,11 +472,10 @@ describe('PromptDataFormatter - Subject Type Mapping', () => {
 
       const options = {
         showContext: false,
-        showTags: true,
       };
 
       const result = formatter.formatNoteWithContext(note, options);
-      expect(result).toBe('- Test note [single-tag]');
+      expect(result).toBe('- Test note');
     });
   });
 
@@ -528,10 +521,9 @@ describe('PromptDataFormatter - Subject Type Mapping', () => {
       // Step 3: Format individual notes
       const formattedNote = formatter.formatNoteWithContext(notes[0], {
         showContext: true,
-        showTags: true,
       });
       expect(formattedNote).toBe(
-        '- Mayor Thompson avoids meetings (city hall observation) [politics, behavior]'
+        '- Mayor Thompson avoids meetings (city hall observation)'
       );
     });
   });

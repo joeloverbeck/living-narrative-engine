@@ -28,7 +28,7 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
   ];
 
   const LAYER_PRIORITY = {
-    topmost: ['outer', 'base', 'underwear'],
+    topmost: ['outer', 'base', 'underwear', 'accessories'],
     all: ['outer', 'base', 'underwear', 'accessories'],
     outer: ['outer'],
     base: ['base'],
@@ -75,11 +75,12 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
 
     if (!slotData) {
       if (trace) {
+        const availableSlots = Object.keys(equipped || {});
         trace.addLog(
           'info',
-          `SlotAccessResolver: No data found for slot ${slotName}`,
+          `SlotAccessResolver: No data found for slot ${slotName}. Available slots: ${availableSlots.join(', ') || 'none'}`,
           'SlotAccessResolver',
-          { slotName }
+          { slotName, availableSlots, mode }
         );
       }
       return null;

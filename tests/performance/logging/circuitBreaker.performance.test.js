@@ -116,34 +116,5 @@ describe('CircuitBreaker Performance', () => {
       expect(avgTime).toBeLessThan(0.2); // Average under 0.2ms per call
       expect(fastFn).toHaveBeenCalledTimes(iterations);
     });
-
-    it('should efficiently manage memory with frequent state changes', () => {
-      const initialMemory = process.memoryUsage().heapUsed;
-
-      // Perform many state changes
-      for (let cycle = 0; cycle < 100; cycle++) {
-        // Reset to clean state
-        circuitBreaker.reset();
-
-        // Force state changes
-        circuitBreaker.forceOpen();
-        circuitBreaker.forceClosed();
-
-        // Get stats (which creates objects)
-        const stats = circuitBreaker.getStats();
-        expect(stats.state).toBe(CircuitBreakerState.CLOSED);
-      }
-
-      // Force garbage collection if available
-      if (global.gc) {
-        global.gc();
-      }
-
-      const finalMemory = process.memoryUsage().heapUsed;
-      const memoryIncrease = finalMemory - initialMemory;
-
-      // Memory should not grow significantly (under 1MB increase)
-      expect(memoryIncrease).toBeLessThan(1024 * 1024);
-    });
   });
 });

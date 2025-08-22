@@ -313,7 +313,7 @@ describe('ClothingStepResolver', () => {
 
       expect(mockContext.trace.addLog).toHaveBeenCalledWith(
         'info',
-        expect.stringContaining('No equipment component found'),
+        expect.stringContaining('No equipped items found for entity actor_1'),
         'ClothingStepResolver',
         expect.objectContaining({ entityId: 'actor_1' })
       );
