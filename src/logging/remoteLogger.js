@@ -4,6 +4,8 @@
  */
 
 import CircuitBreaker from './circuitBreaker.js';
+import LogCategoryDetector from './logCategoryDetector.js';
+import LogMetadataEnricher from './logMetadataEnricher.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -33,6 +35,9 @@ import { v4 as uuidv4 } from 'uuid';
  * @property {number} [circuitBreakerThreshold] - Circuit breaker failure threshold
  * @property {number} [circuitBreakerTimeout] - Circuit breaker timeout
  * @property {number} [requestTimeout] - HTTP request timeout
+ * @property {'minimal'|'standard'|'full'} [metadataLevel] - Metadata collection level
+ * @property {boolean} [enableCategoryCache] - Enable category detection caching
+ * @property {number} [categoryCacheSize] - Category cache size
  */
 
 /**
@@ -133,6 +138,18 @@ class RemoteLogger {
   #abortController;
 
   /**
+   * @private
+   * @type {LogCategoryDetector}
+   */
+  #categoryDetector;
+
+  /**
+   * @private
+   * @type {LogMetadataEnricher}
+   */
+  #metadataEnricher;
+
+  /**
    * Creates a RemoteLogger instance compatible with LoggerStrategy dependency injection.
    *
    * @param {object} options - Configuration options
@@ -157,6 +174,9 @@ class RemoteLogger {
       circuitBreakerThreshold: 5,
       circuitBreakerTimeout: 60000,
       requestTimeout: 5000,
+      metadataLevel: 'standard',
+      enableCategoryCache: true,
+      categoryCacheSize: 1000,
     };
 
     const mergedConfig = { ...defaultConfig, ...config };
@@ -180,6 +200,21 @@ class RemoteLogger {
     this.#circuitBreaker = new CircuitBreaker({
       failureThreshold: mergedConfig.circuitBreakerThreshold,
       timeout: mergedConfig.circuitBreakerTimeout,
+    });
+
+    // Initialize category detector
+    this.#categoryDetector = new LogCategoryDetector({
+      cacheSize: mergedConfig.categoryCacheSize,
+      enableCache: mergedConfig.enableCategoryCache,
+    });
+
+    // Initialize metadata enricher
+    this.#metadataEnricher = new LogMetadataEnricher({
+      level: mergedConfig.metadataLevel,
+      enableSource: true,
+      enablePerformance: true,
+      enableBrowser: true,
+      lazyLoadExpensive: mergedConfig.metadataLevel === 'full',
     });
 
     // Set up page lifecycle handling
@@ -353,119 +388,25 @@ class RemoteLogger {
   #enrichLogEntry(level, message, metadata) {
     const timestamp = new Date().toISOString();
 
-    // Auto-detect category from message content
-    const category = this.#detectCategory(message);
+    // Use enhanced category detector
+    const category = this.#categoryDetector.detectCategory(message);
 
-    // Build metadata object
-    const enrichedMetadata = {
-      originalArgs: metadata.length > 0 ? metadata : undefined,
-    };
-
-    // Add browser-specific metadata if available
-    if (typeof window !== 'undefined') {
-      enrichedMetadata.userAgent = navigator.userAgent;
-      enrichedMetadata.url = window.location.href;
-
-      // Performance metadata
-      if (performance) {
-        enrichedMetadata.performance = {
-          timing: performance.now(),
-        };
-
-        // Memory information (if available)
-        if (performance.memory) {
-          enrichedMetadata.performance.memory =
-            performance.memory.usedJSHeapSize;
-        }
-      }
-    }
-
-    // Try to detect source location from stack trace
-    const source = this.#detectSource();
-
-    return {
+    // Create base log entry
+    const baseEntry = {
       level,
       message: String(message),
       timestamp,
       category,
-      source,
       sessionId: this.#sessionId,
-      metadata: enrichedMetadata,
     };
-  }
 
-  /**
-   * Auto-detects log category from message content.
-   *
-   * @private
-   * @param {string} message - Log message
-   * @returns {string|undefined} Detected category
-   */
-  #detectCategory(message) {
-    const msg = message.toLowerCase();
+    // Use metadata enricher for comprehensive metadata
+    const enrichedEntry = this.#metadataEnricher.enrichLogEntrySync(
+      baseEntry,
+      metadata
+    );
 
-    // Engine-related logs
-    if (
-      msg.includes('engine') ||
-      msg.includes('ecs') ||
-      msg.includes('entity')
-    ) {
-      return 'engine';
-    }
-
-    // UI-related logs
-    if (
-      msg.includes('ui') ||
-      msg.includes('dom') ||
-      msg.includes('component')
-    ) {
-      return 'ui';
-    }
-
-    // AI-related logs
-    if (msg.includes('ai') || msg.includes('llm') || msg.includes('memory')) {
-      return 'ai';
-    }
-
-    // Network-related logs
-    if (
-      msg.includes('fetch') ||
-      msg.includes('http') ||
-      msg.includes('request')
-    ) {
-      return 'network';
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Attempts to detect source location from stack trace.
-   *
-   * @private
-   * @returns {string|undefined} Source location
-   */
-  #detectSource() {
-    try {
-      const stack = new Error().stack;
-      if (stack) {
-        const lines = stack.split('\n');
-        // Skip first few lines (Error, this method, addToBuffer, logger method)
-        for (let i = 4; i < lines.length; i++) {
-          const line = lines[i].trim();
-          if (line && !line.includes('remoteLogger.js')) {
-            // Extract filename and line number
-            const match = line.match(/([^/\\]+\.js):(\d+):\d+/);
-            if (match) {
-              return `${match[1]}:${match[2]}`;
-            }
-          }
-        }
-      }
-    } catch (error) {
-      // Ignore source detection errors
-    }
-    return undefined;
+    return enrichedEntry;
   }
 
   /**
@@ -813,6 +754,8 @@ class RemoteLogger {
       bufferSize: this.#buffer.length,
       endpoint: this.#endpoint,
       circuitBreaker: this.#circuitBreaker.getStats(),
+      categoryDetector: this.#categoryDetector.getStats(),
+      metadataEnricher: this.#metadataEnricher.getConfig(),
       configuration: {
         batchSize: this.#batchSize,
         flushInterval: this.#flushInterval,
@@ -853,6 +796,11 @@ class RemoteLogger {
 
     // Clear buffer
     this.#buffer.length = 0;
+
+    // Clear category cache
+    if (this.#categoryDetector) {
+      this.#categoryDetector.clearCache();
+    }
   }
 }
 

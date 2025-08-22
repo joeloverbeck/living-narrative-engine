@@ -49,6 +49,7 @@ The `noteTooltipFormatter.js` currently displays tags in note tooltips with comp
 
 3. **Remove Tag Display HTML**
    - Delete the complete tag display block (lines 122-132):
+
      ```javascript
      if (Array.isArray(tags) && tags.length > 0) {
        const validTags = tags

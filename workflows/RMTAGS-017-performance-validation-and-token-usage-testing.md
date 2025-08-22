@@ -98,6 +98,7 @@ The analysis estimated significant token savings (2-5% of total usage) and proce
    ```
 
 3. **Create System-Wide Performance Tests**
+
    ```javascript
    describe('System Performance - Overall Impact', () => {
      it('should achieve 2-5% system-wide token reduction', async () => {

@@ -529,8 +529,115 @@ describe('RemoteLogger Integration Tests', () => {
   });
 
   describe('metadata and enrichment integration', () => {
-    // Removed: Metadata enrichment test
-    // This test has jsdom environment limitations with performance.memory API
+    it('should enrich logs with configurable metadata levels', async () => {
+      // Test minimal level
+      let remoteLoggerMin = new RemoteLogger({
+        config: {
+          batchSize: 1,
+          metadataLevel: 'minimal',
+        },
+        dependencies: { consoleLogger: mockConsoleLogger },
+      });
+
+      mockServer.mockResponse({
+        ok: true,
+        json: () => Promise.resolve({ success: true, processed: 1 }),
+      });
+
+      remoteLoggerMin.info('Minimal metadata test');
+      await jest.runAllTimersAsync();
+
+      let requestBody = JSON.parse(global.fetch.mock.calls[0][1].body);
+      let logEntry = requestBody.logs[0];
+
+      expect(logEntry.metadata.url).toBeDefined();
+      expect(logEntry.metadata.browser).toBeUndefined();
+
+      remoteLoggerMin.destroy();
+
+      // Test full level
+      let remoteLoggerFull = new RemoteLogger({
+        config: {
+          batchSize: 1,
+          metadataLevel: 'full',
+        },
+        dependencies: { consoleLogger: mockConsoleLogger },
+      });
+
+      global.fetch.mockClear();
+      mockServer.mockResponse({
+        ok: true,
+        json: () => Promise.resolve({ success: true, processed: 1 }),
+      });
+
+      remoteLoggerFull.info('Full metadata test');
+      await jest.runAllTimersAsync();
+
+      requestBody = JSON.parse(global.fetch.mock.calls[0][1].body);
+      logEntry = requestBody.logs[0];
+
+      expect(logEntry.metadata.browser).toBeDefined();
+      expect(logEntry.metadata.browser.viewport).toBeDefined();
+      expect(logEntry.metadata.performance).toBeDefined();
+
+      remoteLoggerFull.destroy();
+    });
+
+    it('should detect enhanced categories with priority rules', async () => {
+      let capturedRequests = [];
+
+      // Set up multiple responses for different categories
+      for (let i = 0; i < 10; i++) {
+        mockServer.mockResponse({
+          ok: true,
+          json: () => Promise.resolve({ success: true, processed: 1 }),
+        });
+      }
+
+      global.fetch = jest.fn().mockImplementation(async (url, config) => {
+        capturedRequests.push({ url, config });
+        return await mockServer.handleRequest();
+      });
+
+      remoteLogger = new RemoteLogger({
+        config: { batchSize: 1 },
+        dependencies: { consoleLogger: mockConsoleLogger },
+      });
+
+      // Test enhanced category patterns
+      remoteLogger.info('GameEngine initialization complete');
+      remoteLogger.warn('EntityManager registered new entity');
+      remoteLogger.debug('AI memory system updated');
+      remoteLogger.error('Validation schema check failed');
+      remoteLogger.info('Anatomy blueprint created');
+      remoteLogger.info('Save game checkpoint created');
+      remoteLogger.info('Turn 5 started');
+      remoteLogger.info('Event dispatched: PLAYER_ACTION');
+      remoteLogger.info('Performance benchmark: 150ms');
+      remoteLogger.info('Random message without category');
+
+      await jest.runAllTimersAsync();
+
+      expect(capturedRequests).toHaveLength(10);
+
+      const categories = capturedRequests.map((req) => {
+        const body = JSON.parse(req.config.body);
+        return body.logs[0].category;
+      });
+
+      expect(categories).toEqual([
+        'engine',
+        'ecs',
+        'ai',
+        'error', // Error has highest priority
+        'anatomy',
+        'persistence',
+        'turns',
+        'events',
+        'performance',
+        undefined, // No match
+      ]);
+    });
 
     it('should detect and include appropriate categories', async () => {
       let capturedRequests = [];
@@ -563,9 +670,9 @@ describe('RemoteLogger Integration Tests', () => {
       });
 
       remoteLogger.info('Engine startup completed');
-      remoteLogger.warn('UI component failed to render');
+      remoteLogger.warn('UI modal failed to render');
       remoteLogger.debug('AI model generated response');
-      remoteLogger.error('HTTP request timed out');
+      remoteLogger.info('HTTP request sent');
 
       await jest.runAllTimersAsync();
 
@@ -576,7 +683,139 @@ describe('RemoteLogger Integration Tests', () => {
         return body.logs[0].category;
       });
 
-      expect(categories).toEqual(['engine', 'ui', 'ai', 'network']);
+      expect(categories).toEqual(['engine', 'error', 'ai', 'network']);
+    });
+  });
+
+  describe('performance benchmarks', () => {
+    it('should handle category detection with cache efficiently', async () => {
+      mockServer.mockResponse({
+        ok: true,
+        json: () => Promise.resolve({ success: true, processed: 100 }),
+      });
+
+      remoteLogger = new RemoteLogger({
+        config: {
+          batchSize: 100,
+          enableCategoryCache: true,
+          categoryCacheSize: 1000,
+        },
+        dependencies: { consoleLogger: mockConsoleLogger },
+      });
+
+      const startTime = Date.now();
+
+      // Generate 13000+ unique messages with some repetition for cache testing
+      const uniqueMessages = 1000;
+      const totalMessages = 13000;
+
+      for (let i = 0; i < totalMessages; i++) {
+        const messageIndex = i % uniqueMessages;
+        const message = `Test message ${messageIndex} with engine component ui network`;
+        remoteLogger.info(message);
+      }
+
+      await jest.runAllTimersAsync();
+
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+
+      // Should process 13000+ messages quickly with cache
+      expect(duration).toBeLessThan(500); // Less than 500ms
+
+      const stats = remoteLogger.getStats();
+      expect(stats.categoryDetector.detectionCount).toBe(totalMessages);
+      expect(stats.categoryDetector.cacheHits).toBeGreaterThan(0);
+
+      // Calculate cache hit rate
+      const hitRate = parseFloat(stats.categoryDetector.cacheHitRate);
+      expect(hitRate).toBeGreaterThan(90); // Should have >90% cache hit rate
+    });
+
+    it('should maintain performance with different metadata levels', async () => {
+      const testLevels = ['minimal', 'standard', 'full'];
+      const results = {};
+
+      for (const level of testLevels) {
+        mockServer.reset();
+        mockServer.mockResponse({
+          ok: true,
+          json: () => Promise.resolve({ success: true, processed: 50 }),
+        });
+
+        const logger = new RemoteLogger({
+          config: {
+            batchSize: 50,
+            metadataLevel: level,
+          },
+          dependencies: { consoleLogger: mockConsoleLogger },
+        });
+
+        const startTime = Date.now();
+
+        // Send 500 logs
+        for (let i = 0; i < 500; i++) {
+          logger.info(`Performance test message ${i}`);
+        }
+
+        await jest.runAllTimersAsync();
+
+        const endTime = Date.now();
+        results[level] = endTime - startTime;
+
+        logger.destroy();
+      }
+
+      // Minimal should be fastest
+      expect(results.minimal).toBeLessThanOrEqual(results.standard);
+      expect(results.standard).toBeLessThanOrEqual(results.full);
+
+      // All levels should be reasonably fast
+      expect(results.full).toBeLessThan(200); // Even full level should be <200ms for 500 logs
+    });
+
+    it('should handle burst logging with enhanced features', async () => {
+      mockServer.mockResponse({
+        ok: true,
+        json: () => Promise.resolve({ success: true, processed: 100 }),
+      });
+
+      remoteLogger = new RemoteLogger({
+        config: {
+          batchSize: 100,
+          flushInterval: 10,
+          enableCategoryCache: true,
+          metadataLevel: 'standard',
+        },
+        dependencies: { consoleLogger: mockConsoleLogger },
+      });
+
+      const startTime = Date.now();
+
+      // Burst of 1000 logs with repeated messages for cache testing
+      const messages = [
+        'Engine operation performed',
+        'UI component rendered',
+        'AI decision made',
+        'Network request sent',
+        'Event dispatched',
+      ];
+      for (let i = 0; i < 1000; i++) {
+        const message = messages[i % messages.length];
+        remoteLogger.info(message);
+      }
+
+      await jest.runAllTimersAsync();
+
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+
+      // Should handle burst efficiently
+      expect(duration).toBeLessThan(300); // Less than 300ms for 1000 logs
+
+      const stats = remoteLogger.getStats();
+      expect(stats.bufferSize).toBe(0); // All logs should be sent
+      expect(stats.categoryDetector.cacheHits).toBeGreaterThan(0);
     });
   });
 
