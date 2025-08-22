@@ -10,24 +10,29 @@
 
 Create a HybridLogger that sends logs to both the console and remote server simultaneously. This is ideal for development mode where developers want immediate console feedback while also capturing logs server-side for analysis.
 
+## Important Implementation Notes
+
+The ILogger interface in the codebase uses variadic arguments (`...args`) for all logging methods, not a single `metadata` parameter. Both ConsoleLogger and RemoteLogger follow this pattern. The HybridLogger must maintain compatibility with this existing interface signature.
+
 ## Technical Requirements
 
 ### 1. Class Structure
 
 ```javascript
 class HybridLogger {
-  #consoleLogger;     // ConsoleLogger instance
-  #remoteLogger;      // RemoteLogger instance
-  #config;            // Configuration
-  #filters;           // Category/level filters
+  #consoleLogger;         // ConsoleLogger instance
+  #remoteLogger;          // RemoteLogger instance
+  #categoryDetector;      // LogCategoryDetector instance
+  #config;                // Configuration
+  #filters;               // Category/level filters
 
-  constructor({ consoleLogger, remoteLogger, config })
+  constructor({ consoleLogger, remoteLogger, categoryDetector, config })
 
-  // ILogger interface
-  debug(message, metadata)
-  info(message, metadata)
-  warn(message, metadata)
-  error(message, metadata)
+  // ILogger interface (matches actual signature)
+  debug(message, ...args)
+  info(message, ...args)
+  warn(message, ...args)
+  error(message, ...args)
 
   // ConsoleLogger compatibility
   groupCollapsed(label)
@@ -72,21 +77,21 @@ class HybridLogger {
 1. **Create HybridLogger Class**
    - [ ] Create `src/logging/hybridLogger.js`
    - [ ] Implement constructor with dependency injection
-   - [ ] Initialize both logger instances
+   - [ ] Initialize both logger instances and category detector
    - [ ] Set up default filters
 
 2. **Implement Dual Logging**
 
    ```javascript
-   debug(message, metadata) {
-     const category = this.#detectCategory(message);
+   debug(message, ...args) {
+     const category = this.#categoryDetector.detectCategory(message);
 
      if (this.#shouldLogToConsole('debug', category)) {
-       this.#consoleLogger.debug(message, metadata);
+       this.#consoleLogger.debug(message, ...args);
      }
 
      if (this.#shouldLogToRemote('debug', category)) {
-       this.#remoteLogger.debug(message, metadata);
+       this.#remoteLogger.debug(message, ...args);
      }
    }
    ```
@@ -173,8 +178,9 @@ class HybridLogger {
 ## Dependencies
 
 - **Requires**: ConsoleLogger (existing)
-- **Requires**: DEBUGLOGGING-006 (RemoteLogger)
-- **Requires**: DEBUGLOGGING-007 (category detection)
+- **Requires**: RemoteLogger (existing in src/logging/remoteLogger.js)
+- **Requires**: LogCategoryDetector (existing in src/logging/logCategoryDetector.js)
+- **Requires**: LogMetadataEnricher (existing in src/logging/logMetadataEnricher.js)
 - **Used By**: DEBUGLOGGING-005 (LoggerStrategy)
 
 ## Testing Requirements
@@ -195,9 +201,9 @@ class HybridLogger {
 ## Files to Create/Modify
 
 - **Create**: `src/logging/hybridLogger.js`
-- **Create**: `src/logging/filterMatcher.js`
 - **Create**: `tests/unit/logging/hybridLogger.test.js`
-- **Create**: `config/hybrid-logger-presets.json`
+- **Create**: `tests/integration/logging/hybridLogger.integration.test.js`
+- **Optional**: `data/config/logging-presets.json` (if configuration presets are needed)
 
 ## Console Output Enhancement
 
@@ -207,8 +213,9 @@ Add category and level prefixes for clarity:
 // Instead of: "GameEngine: Constructor called"
 // Display as: "[ENGINE:DEBUG] GameEngine: Constructor called"
 
-formatConsoleMessage(level, category, message) {
-  const prefix = `[${category.toUpperCase()}:${level.toUpperCase()}]`;
+#formatConsoleMessage(level, category, message) {
+  const categoryStr = category ? category.toUpperCase() : 'GENERAL';
+  const prefix = `[${categoryStr}:${level.toUpperCase()}]`;
   return `${prefix} ${message}`;
 }
 ```
@@ -245,6 +252,6 @@ categories: ['engine*', '*ui', '*error*'];
 
 ## Related Tickets
 
-- **Depends On**: DEBUGLOGGING-006, DEBUGLOGGING-007
+- **Depends On**: Existing RemoteLogger, ConsoleLogger, LogCategoryDetector
 - **Used By**: DEBUGLOGGING-005 (LoggerStrategy)
 - **Related**: DEBUGLOGGING-016 (configuration)

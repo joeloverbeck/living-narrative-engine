@@ -1,0 +1,495 @@
+/**
+ * @file Log metadata enrichment utility with configurable collection levels
+ * @see remoteLogger.js
+ */
+
+/**
+ * @typedef {object} SourceLocation
+ * @property {string} file - File name
+ * @property {number} line - Line number
+ * @property {number} [column] - Column number
+ */
+
+/**
+ * @typedef {object} BrowserMetadata
+ * @property {string} userAgent - Browser user agent
+ * @property {string} url - Current page URL
+ * @property {object} [viewport] - Viewport dimensions
+ * @property {object} [screen] - Screen dimensions
+ */
+
+/**
+ * @typedef {object} PerformanceMetadata
+ * @property {number} timing - Performance.now() value
+ * @property {object} [memory] - Memory usage information
+ * @property {object} [navigation] - Navigation timing data
+ */
+
+/**
+ * @typedef {'minimal'|'standard'|'full'} MetadataLevel
+ */
+
+/**
+ * @typedef {object} EnricherConfig
+ * @property {MetadataLevel} [level] - Metadata collection level
+ * @property {boolean} [enableSource] - Enable source detection
+ * @property {boolean} [enablePerformance] - Enable performance metrics
+ * @property {boolean} [enableBrowser] - Enable browser metadata
+ * @property {boolean} [lazyLoadExpensive] - Use requestIdleCallback for expensive operations
+ */
+
+/**
+ * Log metadata enricher with configurable collection levels
+ */
+class LogMetadataEnricher {
+  /**
+   * @private
+   * @type {MetadataLevel}
+   */
+  #level;
+
+  /**
+   * @private
+   * @type {boolean}
+   */
+  #enableSource;
+
+  /**
+   * @private
+   * @type {boolean}
+   */
+  #enablePerformance;
+
+  /**
+   * @private
+   * @type {boolean}
+   */
+  #enableBrowser;
+
+  /**
+   * @private
+   * @type {boolean}
+   */
+  #lazyLoadExpensive;
+
+  /**
+   * @private
+   * @type {Map<string, RegExp>}
+   */
+  #browserPatterns;
+
+  /**
+   * Creates a LogMetadataEnricher instance
+   * @param {EnricherConfig} [config] - Configuration options
+   */
+  constructor(config = {}) {
+    const {
+      level = 'standard',
+      enableSource = true,
+      enablePerformance = true,
+      enableBrowser = true,
+      lazyLoadExpensive = false,
+    } = config;
+
+    this.#level = level;
+    this.#enableSource = enableSource;
+    this.#enablePerformance = enablePerformance;
+    this.#enableBrowser = enableBrowser;
+    this.#lazyLoadExpensive = lazyLoadExpensive;
+
+    // Initialize browser-specific regex patterns for stack parsing
+    this.#browserPatterns = new Map([
+      // Chrome/Edge: "at function (file:line:col)" or "at file:line:col"
+      ['chrome', /at\s+(?:.*?\s+)?\(?(.+?):(\d+):(\d+)\)?/],
+      // Firefox: "function@file:line:col"
+      ['firefox', /@(.+?):(\d+):(\d+)/],
+      // Safari: "function@file:line:col" or "file:line:col"
+      ['safari', /(?:.*?@)?(.+?):(\d+)(?::(\d+))?/],
+    ]);
+  }
+
+  /**
+   * Enrich log entry with metadata
+   * @param {object} logEntry - Basic log entry
+   * @param {any[]} [originalArgs] - Original log arguments
+   * @returns {Promise<object>} Enriched log entry
+   */
+  async enrichLogEntry(logEntry, originalArgs = []) {
+    const enriched = { ...logEntry };
+
+    // Build metadata object based on level
+    const metadata = await this.#collectMetadata(originalArgs);
+
+    // Add source location if enabled
+    if (
+      this.#enableSource &&
+      (this.#level !== 'minimal' || logEntry.level === 'error')
+    ) {
+      const source = this.detectSource();
+      if (source) {
+        enriched.source = source;
+      }
+    }
+
+    enriched.metadata = metadata;
+    return enriched;
+  }
+
+  /**
+   * Synchronous version of enrichLogEntry
+   * @param {object} logEntry - Basic log entry
+   * @param {any[]} [originalArgs] - Original log arguments
+   * @returns {object} Enriched log entry
+   */
+  enrichLogEntrySync(logEntry, originalArgs = []) {
+    const enriched = { ...logEntry };
+
+    // Build metadata object based on level
+    const metadata = this.#collectMetadataSync(originalArgs);
+
+    // Add source location if enabled
+    if (
+      this.#enableSource &&
+      (this.#level !== 'minimal' || logEntry.level === 'error')
+    ) {
+      const source = this.detectSource();
+      if (source) {
+        enriched.source = source;
+      }
+    }
+
+    enriched.metadata = metadata;
+    return enriched;
+  }
+
+  /**
+   * Collect metadata based on configuration level (async)
+   * @private
+   * @param {any[]} originalArgs - Original log arguments
+   * @returns {Promise<object>} Collected metadata
+   */
+  async #collectMetadata(originalArgs) {
+    const metadata = {};
+
+    // Always include original args if present
+    if (originalArgs.length > 0) {
+      metadata.originalArgs = originalArgs;
+    }
+
+    // Minimal level: only essential data
+    if (this.#level === 'minimal') {
+      if (typeof window !== 'undefined' && window.location) {
+        metadata.url = window.location.href;
+      }
+      return metadata;
+    }
+
+    // Standard level: balanced metadata
+    if (this.#level === 'standard' || this.#level === 'full') {
+      // Browser metadata
+      if (this.#enableBrowser && typeof window !== 'undefined') {
+        metadata.browser = this.#collectBrowserMetadata();
+      }
+
+      // Performance metadata
+      if (this.#enablePerformance && typeof performance !== 'undefined') {
+        metadata.performance = this.#collectPerformanceMetadata();
+      }
+    }
+
+    // Full level: comprehensive metadata
+    if (this.#level === 'full') {
+      // Additional expensive operations
+      if (
+        this.#lazyLoadExpensive &&
+        typeof requestIdleCallback !== 'undefined'
+      ) {
+        await new Promise((resolve) => {
+          requestIdleCallback(
+            () => {
+              // Collect expensive metadata during idle time
+              if (
+                typeof performance !== 'undefined' &&
+                performance.getEntriesByType
+              ) {
+                const navigationTiming =
+                  performance.getEntriesByType('navigation')[0];
+                if (navigationTiming && metadata.performance) {
+                  metadata.performance.navigation = {
+                    domContentLoaded: navigationTiming.domContentLoadedEventEnd,
+                    loadComplete: navigationTiming.loadEventEnd,
+                    responseTime:
+                      navigationTiming.responseEnd -
+                      navigationTiming.requestStart,
+                  };
+                }
+              }
+              resolve();
+            },
+            { timeout: 50 }
+          ); // 50ms timeout for idle callback
+        });
+      } else if (
+        typeof performance !== 'undefined' &&
+        performance.getEntriesByType
+      ) {
+        // Collect immediately if not using lazy loading
+        const navigationTiming = performance.getEntriesByType('navigation')[0];
+        if (navigationTiming && metadata.performance) {
+          metadata.performance.navigation = {
+            domContentLoaded: navigationTiming.domContentLoadedEventEnd,
+            loadComplete: navigationTiming.loadEventEnd,
+            responseTime:
+              navigationTiming.responseEnd - navigationTiming.requestStart,
+          };
+        }
+      }
+
+      // Environment information
+      if (typeof window !== 'undefined') {
+        metadata.environment = {
+          language: navigator.language,
+          platform: navigator.platform,
+          cookieEnabled: navigator.cookieEnabled,
+          onLine: navigator.onLine,
+          doNotTrack: navigator.doNotTrack,
+        };
+      }
+    }
+
+    return metadata;
+  }
+
+  /**
+   * Collect metadata synchronously
+   * @private
+   * @param {any[]} originalArgs - Original log arguments
+   * @returns {object} Collected metadata
+   */
+  #collectMetadataSync(originalArgs) {
+    const metadata = {};
+
+    // Always include original args if present
+    if (originalArgs.length > 0) {
+      metadata.originalArgs = originalArgs;
+    }
+
+    // Minimal level: only essential data
+    if (this.#level === 'minimal') {
+      if (typeof window !== 'undefined' && window.location) {
+        metadata.url = window.location.href;
+      }
+      return metadata;
+    }
+
+    // Standard level: balanced metadata
+    if (this.#level === 'standard' || this.#level === 'full') {
+      // Browser metadata
+      if (this.#enableBrowser && typeof window !== 'undefined') {
+        metadata.browser = this.#collectBrowserMetadata();
+      }
+
+      // Performance metadata
+      if (this.#enablePerformance && typeof performance !== 'undefined') {
+        metadata.performance = this.#collectPerformanceMetadata();
+      }
+    }
+
+    // Full level: comprehensive metadata (skip expensive async operations in sync mode)
+    if (this.#level === 'full') {
+      // Environment information
+      if (typeof window !== 'undefined') {
+        metadata.environment = {
+          language: navigator.language,
+          platform: navigator.platform,
+          cookieEnabled: navigator.cookieEnabled,
+          onLine: navigator.onLine,
+          doNotTrack: navigator.doNotTrack,
+        };
+      }
+    }
+
+    return metadata;
+  }
+
+  /**
+   * Collect browser-specific metadata
+   * @private
+   * @returns {BrowserMetadata} Browser metadata
+   */
+  #collectBrowserMetadata() {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      return undefined;
+    }
+
+    const browser = {
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+    };
+
+    // Add viewport dimensions
+    if (this.#level !== 'minimal') {
+      browser.viewport = {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
+
+      // Add screen dimensions for full level
+      if (this.#level === 'full' && typeof screen !== 'undefined') {
+        browser.screen = {
+          width: screen.width,
+          height: screen.height,
+          availWidth: screen.availWidth,
+          availHeight: screen.availHeight,
+          colorDepth: screen.colorDepth,
+          pixelDepth: screen.pixelDepth,
+        };
+      }
+    }
+
+    return browser;
+  }
+
+  /**
+   * Collect performance metadata
+   * @private
+   * @returns {PerformanceMetadata} Performance metadata
+   */
+  #collectPerformanceMetadata() {
+    if (typeof performance === 'undefined') {
+      return undefined;
+    }
+
+    const perf = {
+      timing: performance.now(),
+    };
+
+    // Memory information (if available)
+    if (performance.memory) {
+      perf.memory = {
+        used: performance.memory.usedJSHeapSize,
+        total: performance.memory.totalJSHeapSize,
+        limit: performance.memory.jsHeapSizeLimit,
+      };
+
+      // Calculate memory usage percentage for full level
+      if (this.#level === 'full') {
+        perf.memory.usagePercent = (
+          (performance.memory.usedJSHeapSize /
+            performance.memory.jsHeapSizeLimit) *
+          100
+        ).toFixed(2);
+      }
+    }
+
+    return perf;
+  }
+
+  /**
+   * Detect source location from stack trace
+   * @param {number} [skipFrames=4] - Number of stack frames to skip
+   * @returns {string|undefined} Source location as "file:line"
+   */
+  detectSource(skipFrames = 4) {
+    try {
+      const stack = new Error().stack;
+      if (!stack) return undefined;
+
+      const lines = stack.split('\n');
+
+      // Dynamic depth detection - skip internal frames
+      for (let i = skipFrames; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line && !this.#isInternalFrame(line)) {
+          const parsed = this.#parseStackLine(line);
+          if (parsed) {
+            return parsed;
+          }
+        }
+      }
+    } catch (error) {
+      // Ignore source detection errors
+    }
+    return undefined;
+  }
+
+  /**
+   * Check if a stack frame is internal to the logger
+   * @private
+   * @param {string} line - Stack trace line
+   * @returns {boolean} True if internal frame
+   */
+  #isInternalFrame(line) {
+    const internalFiles = [
+      'remoteLogger.js',
+      'logMetadataEnricher.js',
+      'logCategoryDetector.js',
+      'consoleLogger.js',
+      'loggerStrategy.js',
+    ];
+
+    return internalFiles.some((file) => line.includes(file));
+  }
+
+  /**
+   * Parse a stack trace line to extract file and line number
+   * @private
+   * @param {string} line - Stack trace line
+   * @returns {string|undefined} Parsed source location
+   */
+  #parseStackLine(line) {
+    // Try each browser pattern
+    for (const [browser, pattern] of this.#browserPatterns) {
+      const match = line.match(pattern);
+      if (match) {
+        const file = match[1];
+        const lineNumber = match[2];
+
+        // Extract just the filename from the path
+        const fileName = file.split('/').pop().split('\\').pop();
+
+        return `${fileName}:${lineNumber}`;
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Get current configuration
+   * @returns {object} Current configuration
+   */
+  getConfig() {
+    return {
+      level: this.#level,
+      enableSource: this.#enableSource,
+      enablePerformance: this.#enablePerformance,
+      enableBrowser: this.#enableBrowser,
+      lazyLoadExpensive: this.#lazyLoadExpensive,
+    };
+  }
+
+  /**
+   * Update configuration
+   * @param {EnricherConfig} config - New configuration
+   */
+  updateConfig(config) {
+    if (config.level !== undefined) {
+      this.#level = config.level;
+    }
+    if (config.enableSource !== undefined) {
+      this.#enableSource = config.enableSource;
+    }
+    if (config.enablePerformance !== undefined) {
+      this.#enablePerformance = config.enablePerformance;
+    }
+    if (config.enableBrowser !== undefined) {
+      this.#enableBrowser = config.enableBrowser;
+    }
+    if (config.lazyLoadExpensive !== undefined) {
+      this.#lazyLoadExpensive = config.lazyLoadExpensive;
+    }
+  }
+}
+
+export default LogMetadataEnricher;

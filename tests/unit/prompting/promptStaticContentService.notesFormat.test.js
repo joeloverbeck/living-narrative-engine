@@ -24,30 +24,26 @@ const enhancedPromptData = {
 - Each note MUST identify its subject (who/what the note is about)
 - Each note MUST include a subjectType from: character, location, item, creature, event, concept, relationship, organization, quest, skill, emotion, other
 - Include context when relevant (where/when observed)
-- Use tags for categorization (e.g., "combat", "relationship", "location")
 - Example format:
   {
     "text": "Seems nervous about the council meeting",
     "subject": "John",
     "subjectType": "character",
-    "context": "tavern conversation",
-    "tags": ["emotion", "politics"]
+    "context": "tavern conversation"
   }
 - Another example:
   {
     "text": "Guards doubled at the north gate",
     "subject": "City defenses",
     "subjectType": "location",
-    "context": "morning patrol",
-    "tags": ["security", "observation"]
+    "context": "morning patrol"
   }
 - Subject type example:
   {
     "text": "Discovered new spell for healing wounds",
     "subject": "Healing Magic",
     "subjectType": "skill",
-    "context": "library research",
-    "tags": ["magic", "learning"]
+    "context": "library research"
   }
 
 Now, based on all the information provided, decide on your character's action and what they will say. Remember: *only visible actions go inside asterisks – never internal thoughts.* Fully BE the character.`,
@@ -107,7 +103,6 @@ describe('PromptStaticContentService - Enhanced Notes Format', () => {
       expect(finalInstructions).toContain('"subject": "John"');
       expect(finalInstructions).toContain('"subjectType": "character"');
       expect(finalInstructions).toContain('"context": "tavern conversation"');
-      expect(finalInstructions).toContain('"tags": ["emotion", "politics"]');
     });
 
     test('should include location example with subjectType', () => {
@@ -116,9 +111,6 @@ describe('PromptStaticContentService - Enhanced Notes Format', () => {
       expect(finalInstructions).toContain('"subject": "City defenses"');
       expect(finalInstructions).toContain('"subjectType": "location"');
       expect(finalInstructions).toContain('"context": "morning patrol"');
-      expect(finalInstructions).toContain(
-        '"tags": ["security", "observation"]'
-      );
     });
 
     test('should include skill example with subjectType', () => {
@@ -127,7 +119,6 @@ describe('PromptStaticContentService - Enhanced Notes Format', () => {
       expect(finalInstructions).toContain('"subject": "Healing Magic"');
       expect(finalInstructions).toContain('"subjectType": "skill"');
       expect(finalInstructions).toContain('"context": "library research"');
-      expect(finalInstructions).toContain('"tags": ["magic", "learning"]');
     });
 
     test('should include all three example types for comprehensive guidance', () => {
@@ -151,13 +142,19 @@ describe('PromptStaticContentService - Enhanced Notes Format', () => {
         'Each note MUST identify its subject (who/what the note is about)'
       );
 
-      // Should still mention context and tags
+      // Should still mention context
       expect(finalInstructions).toContain(
         'Include context when relevant (where/when observed)'
       );
-      expect(finalInstructions).toContain(
-        'Use tags for categorization (e.g., "combat", "relationship", "location")'
-      );
+    });
+
+    test('should NOT include tags in notes format', () => {
+      const finalInstructions = service.getFinalLlmInstructionText();
+
+      // Should not mention tags anywhere
+      expect(finalInstructions).not.toContain('tags');
+      expect(finalInstructions).not.toContain('"tags"');
+      expect(finalInstructions).not.toContain('Use tags for categorization');
     });
 
     test('should preserve action tag rules at the end', () => {
@@ -189,7 +186,6 @@ describe('PromptStaticContentService - Enhanced Notes Format', () => {
       expect(finalInstructions).toContain('"subject":');
       expect(finalInstructions).toContain('"subjectType":');
       expect(finalInstructions).toContain('"context":');
-      expect(finalInstructions).toContain('"tags":');
     });
   });
 

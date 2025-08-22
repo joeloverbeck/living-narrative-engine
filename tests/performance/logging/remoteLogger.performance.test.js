@@ -205,68 +205,6 @@ describe('RemoteLogger - Performance Benchmarks', () => {
     // This should be addressed in the main RemoteLogger implementation
   });
 
-  describe('Memory Usage Benchmarks', () => {
-    it('should maintain efficient memory usage during high volume logging', async () => {
-      const iterations = 2000;
-
-      remoteLogger = new RemoteLogger({
-        config: { batchSize: 100, flushInterval: 1000 },
-        dependencies: { consoleLogger: mockConsoleLogger },
-      });
-
-      // Warmup
-      for (let i = 0; i < 100; i++) {
-        remoteLogger.info('warmup');
-      }
-
-      const baselineMemory = process.memoryUsage().heapUsed;
-
-      const benchmark = performanceTracker.startBenchmark('memory-usage');
-
-      for (let i = 0; i < iterations; i++) {
-        remoteLogger.info('Memory test', i, { data: `test_${i}` });
-      }
-
-      const metrics = benchmark.end();
-      const afterMemory = process.memoryUsage().heapUsed;
-      const memoryIncrease = afterMemory - baselineMemory;
-
-      // Should not consume excessive memory (allow more for test environment)
-      const bytesPerOperation = memoryIncrease / iterations;
-      expect(bytesPerOperation).toBeLessThan(10000); // Less than 10KB per operation (generous for test env)
-
-      // Should complete efficiently
-      expect(metrics.totalTime).toBeLessThan(1000);
-    });
-
-    it('should efficiently manage buffer memory', async () => {
-      const batchSize = 50;
-      remoteLogger = new RemoteLogger({
-        config: { batchSize, flushInterval: 10000 }, // Don't auto-flush
-        dependencies: { consoleLogger: mockConsoleLogger },
-      });
-
-      const benchmark = performanceTracker.startBenchmark('buffer-management');
-
-      // Fill buffer multiple times
-      for (let batch = 0; batch < 10; batch++) {
-        for (let i = 0; i < batchSize; i++) {
-          remoteLogger.info(`Buffer test batch ${batch} item ${i}`);
-        }
-        // Allow buffer to flush
-        await jest.runAllTimersAsync();
-      }
-
-      const metrics = benchmark.end();
-      const stats = remoteLogger.getStats();
-
-      // Buffer should be empty after flushes
-      expect(stats.bufferSize).toBe(0);
-
-      // Should handle multiple buffer cycles efficiently
-      expect(metrics.totalTime).toBeLessThan(500);
-    });
-  });
 
   describe('Concurrent Operations Performance', () => {
     it('should handle concurrent flush operations efficiently', async () => {

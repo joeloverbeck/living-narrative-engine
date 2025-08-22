@@ -334,7 +334,10 @@ describe('RemoteLogger', () => {
   describe('metadata enrichment', () => {
     beforeEach(() => {
       remoteLogger = new RemoteLogger({
-        config: { batchSize: 1 }, // Flush immediately for testing
+        config: {
+          batchSize: 1, // Flush immediately for testing
+          metadataLevel: 'standard',
+        },
         dependencies: { consoleLogger: mockConsoleLogger },
       });
     });
@@ -364,7 +367,7 @@ describe('RemoteLogger', () => {
       const logEntry = requestBody.logs[0];
 
       expect(logEntry.metadata.performance.timing).toBe(1000);
-      expect(logEntry.metadata.performance.memory).toBe(1024000);
+      expect(logEntry.metadata.performance.memory.used).toBe(1024000);
     });
 
     it('should preserve original arguments in metadata', async () => {
@@ -616,6 +619,93 @@ describe('RemoteLogger', () => {
     });
   });
 
+  describe('enhanced category detection', () => {
+    beforeEach(() => {
+      remoteLogger = new RemoteLogger({
+        config: {
+          batchSize: 1,
+          enableCategoryCache: true,
+        },
+        dependencies: { consoleLogger: mockConsoleLogger },
+      });
+    });
+
+    it('should detect enhanced categories', async () => {
+      remoteLogger.info('GameEngine initialized');
+      remoteLogger.warn('EntityManager created');
+      remoteLogger.debug('AI decision made');
+      remoteLogger.error('Validation failed');
+
+      await jest.runAllTimersAsync();
+
+      const calls = mockFetch.mock.calls;
+      expect(calls).toHaveLength(4);
+
+      const categories = calls.map((call) => {
+        const body = JSON.parse(call[1].body);
+        return body.logs[0].category;
+      });
+
+      expect(categories).toEqual(['engine', 'ecs', 'ai', 'error']);
+    });
+
+    it('should handle unmatched categories', async () => {
+      remoteLogger.info('Random message without category');
+
+      await jest.runAllTimersAsync();
+
+      const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      const logEntry = requestBody.logs[0];
+
+      expect(logEntry.category).toBeUndefined();
+    });
+  });
+
+  describe('configurable metadata levels', () => {
+    it('should collect minimal metadata', async () => {
+      remoteLogger = new RemoteLogger({
+        config: {
+          batchSize: 1,
+          metadataLevel: 'minimal',
+        },
+        dependencies: { consoleLogger: mockConsoleLogger },
+      });
+
+      remoteLogger.info('Test message');
+
+      await jest.runAllTimersAsync();
+
+      const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      const logEntry = requestBody.logs[0];
+
+      expect(logEntry.metadata.url).toBeDefined(); // URL is set but may vary in test environment
+      expect(logEntry.metadata.browser).toBeUndefined();
+      expect(logEntry.metadata.performance).toBeUndefined();
+    });
+
+    it('should collect full metadata', async () => {
+      remoteLogger = new RemoteLogger({
+        config: {
+          batchSize: 1,
+          metadataLevel: 'full',
+        },
+        dependencies: { consoleLogger: mockConsoleLogger },
+      });
+
+      remoteLogger.info('Test message');
+
+      await jest.runAllTimersAsync();
+
+      const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      const logEntry = requestBody.logs[0];
+
+      expect(logEntry.metadata.browser).toBeDefined();
+      expect(logEntry.metadata.browser.viewport).toBeDefined();
+      expect(logEntry.metadata.performance).toBeDefined();
+      expect(logEntry.metadata.environment).toBeDefined();
+    });
+  });
+
   describe('manual operations', () => {
     beforeEach(() => {
       remoteLogger = new RemoteLogger({
@@ -653,6 +743,12 @@ describe('RemoteLogger', () => {
           state: CircuitBreakerState.CLOSED,
         }),
       });
+
+      // Should include new utility statistics
+      expect(stats.categoryDetector).toBeDefined();
+      expect(stats.categoryDetector.cacheEnabled).toBe(true);
+      expect(stats.metadataEnricher).toBeDefined();
+      expect(stats.metadataEnricher.level).toBe('standard');
     });
   });
 
