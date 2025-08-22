@@ -105,7 +105,8 @@ class ContentDependencyValidator extends IContentDependencyValidator {
    */
   #validateExits(entityDefs, instanceIdSet, worldSpawnSet, worldName) {
     // Create set of definition IDs that have instances spawned in current world
-    const instanceDefs = this.#gameDataRepository.getAllEntityInstanceDefinitions();
+    const instanceDefs =
+      this.#gameDataRepository.getAllEntityInstanceDefinitions();
     const worldSpawnedDefinitions = new Set();
     for (const instanceDef of instanceDefs) {
       if (worldSpawnSet.has(instanceDef.instanceId)) {
@@ -118,7 +119,7 @@ class ContentDependencyValidator extends IContentDependencyValidator {
       if (!worldSpawnedDefinitions.has(def.id)) {
         continue; // Skip validation for definitions not in current world
       }
-      
+
       const exits = def?.components?.['core:exits'];
       if (Array.isArray(exits)) {
         for (const exit of exits) {

@@ -3,7 +3,7 @@
 **Priority**: High  
 **Phase**: 4 - Service Cleanup (Infrastructure)  
 **Estimated Effort**: 3 hours  
-**Risk Level**: Medium (Service removal/major refactoring)  
+**Risk Level**: Medium (Service removal/major refactoring)
 
 ## Overview
 
@@ -30,7 +30,7 @@ The `notesQueryService.js` provides comprehensive tag querying capabilities (`qu
    - **Option A**: Delete entire file
    - **Option B**: Remove tag-related methods only:
      - `queryByTags(notes, tags, options)` (lines 75-102)
-     - `getAllTags(notes)` (lines 284-297) 
+     - `getAllTags(notes)` (lines 284-297)
      - Tag filtering in multi-criteria queries (lines 227-232)
 
 ### Implementation Steps (Option A - Recommended)
@@ -85,6 +85,7 @@ The `notesQueryService.js` provides comprehensive tag querying capabilities (`qu
 **Recommendation: Option A (Complete Removal)**
 
 **Rationale**:
+
 - Service verified as completely unused in production
 - 370+ lines of maintenance overhead with zero functional value
 - Primary functionality (tag querying) being eliminated
@@ -92,6 +93,7 @@ The `notesQueryService.js` provides comprehensive tag querying capabilities (`qu
 - Simplifies codebase and reduces maintenance burden
 
 **Risk Assessment**:
+
 - **Low Risk**: Service not integrated into production system
 - **High Value**: Eliminates significant dead code
 - **Clean Implementation**: Complete removal cleaner than partial modification
@@ -99,22 +101,26 @@ The `notesQueryService.js` provides comprehensive tag querying capabilities (`qu
 ### Testing Requirements
 
 #### Verification Tests (Before Implementation)
+
 - [ ] Confirm service not imported in production code
 - [ ] Verify no dependency injection registration
 - [ ] Search for any runtime references to service
 - [ ] Validate analysis findings about service usage
 
 #### Unit Tests (Option A)
+
 - [ ] Remove service test file entirely
 - [ ] Clean up any test utilities referencing service
 - [ ] Verify no broken test imports
 
-#### Unit Tests (Option B)  
+#### Unit Tests (Option B)
+
 - [ ] Remove tag-related test cases
 - [ ] Update tests for modified service interface
 - [ ] Ensure remaining functionality tested properly
 
 #### Integration Tests
+
 - [ ] Verify no integration dependencies on service
 - [ ] Confirm system functions normally without service
 - [ ] Test note processing pipeline remains intact
@@ -122,21 +128,25 @@ The `notesQueryService.js` provides comprehensive tag querying capabilities (`qu
 ## Dependencies
 
 **Requires**:
+
 - Verification of analysis findings (service truly unused)
 - RMTAGS-001 through RMTAGS-011 completed for consistency
 
 **Blocks**:
+
 - RMTAGS-013 (Clean up unused query methods) - May be unnecessary if service removed
 - RMTAGS-016 (Schema validation) - Service removal validation
 
 ## Testing Validation
 
 ### Before Implementation
+
 - **Critical**: Verify service is truly unused in production
 - Search entire codebase for NotesQueryService references
 - Confirm no hidden dependencies or dynamic imports
 
 ### Implementation Validation Commands
+
 ```bash
 # Search for any service usage (should find none in production)
 grep -r "NotesQueryService" src/ --exclude-dir=tests
@@ -151,11 +161,13 @@ grep -r "NotesQueryService" src/dependencyInjection/
 ```
 
 ### After Implementation
+
 - Confirm no broken imports or references
 - Verify system functionality unaffected
 - Test note processing pipeline
 
 ### Test Commands
+
 ```bash
 # Run full test suite to catch any broken dependencies
 npm run test:ci
@@ -170,6 +182,7 @@ npm run typecheck
 ## Success Metrics
 
 ### Option A (Complete Removal)
+
 - [ ] NotesQueryService file completely removed
 - [ ] No references to service in codebase
 - [ ] All tests pass without service
@@ -177,6 +190,7 @@ npm run typecheck
 - [ ] 370+ lines of dead code eliminated
 
 ### Option B (Partial Removal)
+
 - [ ] Tag-related methods removed from service
 - [ ] Basic query functionality preserved
 - [ ] Service interface updated appropriately
@@ -196,11 +210,13 @@ npm run typecheck
 ## Rollback Procedure
 
 ### Option A Rollback
+
 1. **Git Revert**: Restore service file and tests
 2. **Dependency Verification**: Confirm service functionality restored
 3. **Integration Test**: Verify tag querying works if needed
 
-### Option B Rollback  
+### Option B Rollback
+
 1. **Git Revert**: Restore tag-related methods
 2. **Method Validation**: Confirm tag querying functionality restored
 3. **Test Validation**: Verify tag-related tests pass
@@ -208,12 +224,14 @@ npm run typecheck
 ## Quality Assurance
 
 **Pre-Implementation Validation**:
+
 - [ ] Service usage analysis verified through multiple search methods
 - [ ] No dependency injection registration confirmed
 - [ ] Production code import search confirms no usage
 - [ ] Test-only usage pattern validated
 
 **Post-Implementation Validation**:
+
 - [ ] No broken imports or references
 - [ ] Full test suite passes
 - [ ] System functionality verified

@@ -4,20 +4,53 @@
 **Priority**: P0 - Critical  
 **Phase**: 1 - Infrastructure  
 **Component**: Client-Side Logger  
-**Estimated**: 3 hours
+**Estimated**: 1.5 hours
 
 ## Description
 
-Implement automatic category detection based on log message patterns and enrich log entries with contextual metadata. This will help organize logs and provide better debugging context.
+**UPDATED**: Enhance existing category detection and metadata enrichment in RemoteLogger. The base functionality already exists but needs expansion with comprehensive patterns, caching, and performance optimizations. This will improve log organization and provide better debugging context.
+
+## Current Implementation Status
+
+✅ **Already Implemented in RemoteLogger**:
+
+- Basic category detection (`#detectCategory()`) with engine, ui, ai, network patterns
+- Source extraction (`#detectSource()`) with stack trace parsing
+- Metadata enrichment (`#enrichLogEntry()`) with session, browser, and performance data
+
+🔄 **Needs Enhancement**:
+
+- Expand category patterns to include all domains
+- Add caching and pattern priority rules
+- Improve browser compatibility for source extraction
+- Add configurable metadata collection
 
 ## Technical Requirements
 
-### 1. Category Detection Patterns
+### 1. Enhanced Category Detection Patterns
+
+**Current Implementation** (simple keyword matching):
 
 ```javascript
-const CATEGORY_PATTERNS = {
-  engine: /GameEngine|engineState|gameSession|gameEngine/i,
-  ui: /UI|Renderer|domUI|display|modal|button|widget/i,
+// In RemoteLogger #detectCategory()
+if (msg.includes('engine') || msg.includes('ecs') || msg.includes('entity'))
+  return 'engine';
+if (msg.includes('ui') || msg.includes('dom') || msg.includes('component'))
+  return 'ui';
+if (msg.includes('ai') || msg.includes('llm') || msg.includes('memory'))
+  return 'ai';
+if (msg.includes('fetch') || msg.includes('http') || msg.includes('request'))
+  return 'network';
+return undefined; // Note: returns undefined, not 'general'
+```
+
+**Enhanced Patterns** (to be added):
+
+```javascript
+const ENHANCED_CATEGORY_PATTERNS = {
+  engine:
+    /GameEngine|engineState|gameSession|gameEngine|ecs|entity(?!Manager)/i,
+  ui: /UI|Renderer|domUI|display|modal|button|widget|component/i,
   ecs: /Entity|Component|System|entityManager|entity\s+\w+/i,
   ai: /AI|LLM|notes|thoughts|memory|prompt|decision/i,
   persistence: /Save|Load|persist|storage|serialize|deserialize/i,
@@ -30,124 +63,186 @@ const CATEGORY_PATTERNS = {
   initialization: /init|bootstrap|startup|initialize/i,
   error: /error|exception|failed|failure|catch/i,
   performance: /performance|timing|latency|duration|benchmark/i,
-  general: null, // default fallback
+  network: /fetch|http|request|response|xhr/i, // Extend existing
+  general: null, // default fallback (change from undefined)
 };
 ```
 
-### 2. Source Detection
+### 2. Enhanced Source Detection
 
-Extract file and line number from stack trace:
+**Current Implementation** (already working):
 
 ```javascript
-// Expected format: "filename.js:123"
-function extractSource() {
+// In RemoteLogger #detectSource()
+#detectSource() {
   const stack = new Error().stack;
-  // Parse stack to find calling location
-  // Skip internal logger frames
+  const lines = stack.split('\n');
+  // Skip first 4 lines (Error, this method, addToBuffer, logger method)
+  for (let i = 4; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line && !line.includes('remoteLogger.js')) {
+      const match = line.match(/([^/\\]+\.js):(\d+):\d+/);
+      if (match) return `${match[1]}:${match[2]}`;
+    }
+  }
+  return undefined;
 }
 ```
 
-### 3. Metadata Structure
+**Enhancements Needed**:
+
+- Add browser-specific regex patterns for better compatibility
+- Improve stack frame filtering for different logger depths
+- Handle minified source maps if needed
+
+### 3. Enhanced Metadata Structure
+
+**Current Implementation** (already working):
+
+```javascript
+// In RemoteLogger #enrichLogEntry()
+{
+  level: "info|warn|error|debug",
+  message: String(message),
+  timestamp: new Date().toISOString(),
+  category: this.#detectCategory(message), // or undefined
+  source: this.#detectSource(), // or undefined
+  sessionId: this.#sessionId, // UUID v4
+  metadata: {
+    originalArgs: metadata.length > 0 ? metadata : undefined,
+    userAgent: navigator.userAgent,
+    url: window.location.href,
+    performance: {
+      timing: performance.now(),
+      memory: performance.memory?.usedJSHeapSize // if available
+    }
+  }
+}
+```
+
+**Enhancements Needed**:
 
 ```javascript
 {
-  // System metadata (always added)
-  timestamp: "2024-12-20T10:15:30.123Z",
-  sessionId: "uuid-v4",
-  category: "detected-category",
-  source: "file.js:line",
-
-  // Browser metadata (configurable)
+  // Enhanced browser metadata (configurable)
   browser: {
     userAgent: "...",
     url: "current URL",
-    viewport: { width, height },
-    screen: { width, height }
+    viewport: { width: window.innerWidth, height: window.innerHeight },
+    screen: { width: screen.width, height: screen.height }
   },
 
-  // Performance metadata (configurable)
+  // Enhanced performance metadata (configurable)
   performance: {
     memory: {
-      used: "JS heap size",
-      total: "Total heap size"
+      used: performance.memory?.usedJSHeapSize,
+      total: performance.memory?.totalJSHeapSize,
+      limit: performance.memory?.jsHeapSizeLimit
     },
-    timing: "ms since page load"
-  },
-
-  // User metadata (passed in)
-  ...userProvidedMetadata
+    timing: performance.now(),
+    navigation: performance.getEntriesByType?.('navigation')?.[0]
+  }
 }
 ```
 
 ## Implementation Steps
 
-1. **Create Category Detector**
-   - [ ] Create `src/logging/categoryDetector.js`
-   - [ ] Implement pattern matching logic
+1. **Enhance Category Detection in RemoteLogger**
+   - [ ] Extend `#detectCategory()` method with comprehensive patterns
    - [ ] Add category scoring for ambiguous matches
-   - [ ] Cache detection results for performance
+   - [ ] Implement LRU cache for detection results
+   - [ ] Add pattern priority rules (error > specific > general)
 
-2. **Category Detection Algorithm**
+2. **Enhanced Category Detection Algorithm**
 
    ```javascript
-   class CategoryDetector {
-     detectCategory(message) {
-       // Check cache first
-       if (this.#cache.has(message)) {
-         return this.#cache.get(message);
-       }
-
-       // Try each pattern
-       for (const [category, pattern] of Object.entries(CATEGORY_PATTERNS)) {
-         if (pattern && pattern.test(message)) {
-           this.#cache.set(message, category);
-           return category;
-         }
-       }
-
-       return 'general';
+   // Enhancement to existing #detectCategory() in RemoteLogger
+   #detectCategory(message) {
+     // Check cache first
+     if (this.#categoryCache?.has(message)) {
+       return this.#categoryCache.get(message);
      }
+
+     const msg = message.toLowerCase();
+     let detectedCategory = undefined;
+
+     // Priority 1: Error patterns (highest priority)
+     if (/error|exception|failed|failure|catch/i.test(message)) {
+       detectedCategory = 'error';
+     }
+     // Priority 2: Specific domain patterns
+     else if (/GameEngine|engineState|gameSession|ecs|entity(?!Manager)/i.test(message)) {
+       detectedCategory = 'engine';
+     }
+     // ... continue with existing + new patterns
+
+     // Cache result (LRU with max 1000 entries)
+     if (this.#categoryCache) {
+       this.#categoryCache.set(message, detectedCategory);
+     }
+
+     return detectedCategory; // Keep returning undefined for unmatched
    }
    ```
 
-3. **Create Source Extractor**
-   - [ ] Create `src/logging/sourceExtractor.js`
-   - [ ] Parse Error stack traces
-   - [ ] Filter out logger internal frames
-   - [ ] Handle different browser formats
+3. **Enhance Source Extraction in RemoteLogger**
+   - [ ] Add browser-specific regex patterns to `#detectSource()`
+   - [ ] Improve stack frame filtering for different call depths
+   - [ ] Add error handling for different browser formats
+   - [ ] Test with minified code scenarios
 
-4. **Source Extraction Logic**
+4. **Enhanced Source Extraction Logic**
 
    ```javascript
-   class SourceExtractor {
-     extractSource(depth = 3) {
+   // Enhancement to existing #detectSource() in RemoteLogger
+   #detectSource() {
+     try {
        const stack = new Error().stack;
+       if (!stack) return undefined;
+
        const lines = stack.split('\n');
 
-       // Skip Error message and logger frames
-       const callerLine = lines[depth];
-
-       // Extract file:line from different formats
-       // Chrome: "at function (file:line:col)"
-       // Firefox: "function@file:line:col"
-       // Safari: "function@file:line:col"
-
-       return this.#parseStackLine(callerLine);
+       // Dynamic depth detection (skip internal logger frames)
+       for (let i = 4; i < lines.length; i++) {
+         const line = lines[i].trim();
+         if (line && !this.#isInternalLoggerFrame(line)) {
+           return this.#parseStackLine(line);
+         }
+       }
+     } catch (error) {
+       // Ignore source detection errors
      }
+     return undefined;
+   }
+
+   #parseStackLine(line) {
+     // Chrome/Edge: "at function (file:line:col)"
+     let match = line.match(/at\s+(?:.*?\s+)?\(?(.+?):(\d+):(\d+)\)?/);
+     if (match) return `${match[1].split('/').pop()}:${match[2]}`;
+
+     // Firefox: "function@file:line:col"
+     match = line.match(/@(.+?):(\d+):(\d+)/);
+     if (match) return `${match[1].split('/').pop()}:${match[2]}`;
+
+     // Safari: "function@file:line:col" or "file:line:col"
+     match = line.match(/(?:.*?@)?(.+?):(\d+)(?::(\d+))?/);
+     if (match) return `${match[1].split('/').pop()}:${match[2]}`;
+
+     return undefined;
    }
    ```
 
-5. **Create Metadata Enricher**
-   - [ ] Create `src/logging/metadataEnricher.js`
-   - [ ] Collect browser information
-   - [ ] Collect performance metrics
-   - [ ] Merge with user metadata
+5. **Enhance Metadata Enrichment in RemoteLogger**
+   - [ ] Extend `#enrichLogEntry()` with configurable metadata collection
+   - [ ] Add viewport and screen dimensions to browser metadata
+   - [ ] Enhance performance metrics collection
+   - [ ] Implement lazy loading for expensive metadata operations
 
-6. **Performance Optimization**
-   - [ ] Implement LRU cache for category detection
-   - [ ] Lazy load heavy metadata
-   - [ ] Batch metadata collection
-   - [ ] Use WeakMap for object associations
+6. **Performance Optimization Enhancements**
+   - [ ] Add LRU cache to existing category detection
+   - [ ] Implement configurable metadata collection (enable/disable expensive operations)
+   - [ ] Add requestIdleCallback for non-critical metadata
+   - [ ] Optimize stack trace parsing performance
 
 ## Acceptance Criteria
 
@@ -167,27 +262,26 @@ function extractSource() {
 
 ## Testing Requirements
 
-1. **Unit Tests**
-   - [ ] Test category detection for each pattern
-   - [ ] Test ambiguous message handling
-   - [ ] Test source extraction in different browsers
-   - [ ] Test metadata merging
-   - [ ] Test cache functionality
+1. **Enhanced Unit Tests**
+   - [ ] Test enhanced category detection patterns (extend existing tests)
+   - [ ] Test pattern priority rules (error > specific > general)
+   - [ ] Test LRU cache functionality and hit rates
+   - [ ] Test improved source extraction across browsers
+   - [ ] Test configurable metadata collection
+   - [ ] Test backward compatibility with existing log format
 
 2. **Performance Tests**
-   - [ ] Test category detection speed
-   - [ ] Test cache hit rate
-   - [ ] Test metadata collection overhead
-   - [ ] Test with 13,000+ unique messages
+   - [ ] Benchmark enhanced category detection vs. current implementation
+   - [ ] Test cache effectiveness with 13,000+ unique messages
+   - [ ] Test metadata collection overhead with different configurations
+   - [ ] Test stack trace parsing performance across browsers
 
 ## Files to Create/Modify
 
-- **Create**: `src/logging/categoryDetector.js`
-- **Create**: `src/logging/sourceExtractor.js`
-- **Create**: `src/logging/metadataEnricher.js`
-- **Create**: `tests/unit/logging/categoryDetector.test.js`
-- **Create**: `tests/unit/logging/sourceExtractor.test.js`
-- **Create**: `tests/unit/logging/metadataEnricher.test.js`
+- **Modify**: `src/logging/remoteLogger.js` (enhance existing methods)
+- **Enhance**: `tests/unit/logging/remoteLogger.test.js` (add tests for new patterns)
+- **Enhance**: `tests/integration/logging/remoteLogger.integration.test.js` (performance tests)
+- **Optional**: Create separate utility classes if RemoteLogger becomes too large (>500 lines)
 
 ## Category Priority Rules
 
@@ -222,11 +316,19 @@ Source extraction patterns:
 
 ## Notes
 
-- Consider adding custom category registration API
-- May need to handle minified source maps
-- Test with different build tools (esbuild output)
-- Consider adding category statistics/analytics
-- Cache invalidation strategy needed
+- **Backward Compatibility**: Maintain existing log format and API
+- **Migration Path**: Enhanced patterns should not break existing category detection
+- **Performance**: Current implementation already handles production load
+- **Testing**: Focus on enhancements rather than building from scratch
+- **Configuration**: Add configuration options for metadata collection levels
+- **Future**: Consider extracting to separate classes if RemoteLogger exceeds 500 lines
+
+## Compatibility Considerations
+
+- Existing logs will continue to work with enhanced patterns
+- Undefined category return (current) vs. 'general' (proposed) - keep current behavior
+- Enhanced patterns should be additive, not replacement
+- Cache implementation should be optional and not affect existing functionality
 
 ## Related Tickets
 

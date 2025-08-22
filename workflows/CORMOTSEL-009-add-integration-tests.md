@@ -21,19 +21,33 @@ Create: `tests/integration/coreMotivationsGenerator/coreMotivationsSelector.inte
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { JSDOM } from 'jsdom';
-import CoreMotivationsGeneratorController from '../../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js';
-import CharacterBuilderService from '../../../src/characterBuilder/services/characterBuilderService.js';
-import {
-  saveCharacterConcept,
-  saveThematicDirection,
-  saveClichés,
-  clearAllData,
-} from '../../../src/characterBuilder/repositories/storageRepository.js';
+import { CoreMotivationsGeneratorController } from '../../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js';
+import { CharacterBuilderService } from '../../../src/characterBuilder/services/characterBuilderService.js';
+import { CharacterDatabase } from '../../../src/characterBuilder/storage/characterDatabase.js';
+import { createCharacterConcept } from '../../../src/characterBuilder/models/characterConcept.js';
+import { createThematicDirection } from '../../../src/characterBuilder/models/thematicDirection.js';
+import { Cliche } from '../../../src/characterBuilder/models/cliche.js';
+
+// Test utilities
+const clearAllTestData = async (database) => {
+  // Helper function to clear all test data
+  const concepts = await database.getAllCharacterConcepts();
+  const directions = await database.getAllThematicDirections();
+
+  for (const direction of directions) {
+    await database.deleteThematicDirection(direction.id);
+  }
+
+  for (const concept of concepts) {
+    await database.deleteCharacterConcept(concept.id);
+  }
+};
 
 describe('Core Motivations Selector - Integration Tests', () => {
   let dom;
   let controller;
   let characterBuilderService;
+  let database;
 
   beforeEach(async () => {
     // Setup DOM environment
@@ -56,13 +70,20 @@ describe('Core Motivations Selector - Integration Tests', () => {
     global.document = dom.window.document;
     global.window = dom.window;
 
-    // Clear any existing data
-    await clearAllData();
+    // Initialize database
+    database = new CharacterDatabase({ logger: console });
+    await database.initialize();
+
+    // Clear any existing test data
+    await clearAllTestData(database);
 
     // Initialize real service
     characterBuilderService = new CharacterBuilderService({
       logger: console,
-      llmService: mockLLMService,
+      database: database,
+      storageService: mockStorageService,
+      directionGenerator: mockDirectionGenerator,
+      eventBus: mockEventBus,
     });
 
     // Initialize controller with real service
@@ -70,60 +91,85 @@ describe('Core Motivations Selector - Integration Tests', () => {
       characterBuilderService,
       eventBus: mockEventBus,
       logger: console,
+      coreMotivationsGenerator: mockCoreMotivationsGenerator,
+      displayEnhancer: mockDisplayEnhancer,
     });
   });
 
   afterEach(async () => {
-    await clearAllData();
+    await clearAllTestData(database);
+    database.close();
     dom.window.close();
   });
 
   describe('Complete User Flow', () => {
     it('should load directions from multiple concepts with clichés', async () => {
-      // Setup test data
-      const concept1 = await saveCharacterConcept({
-        id: 'concept-1',
+      // Setup test data - create concepts
+      const concept1 = createCharacterConcept({
         title: 'Adventure Hero',
         description: 'A brave adventurer',
       });
+      concept1.id = 'concept-1';
+      await database.saveCharacterConcept(concept1);
 
-      const concept2 = await saveCharacterConcept({
-        id: 'concept-2',
+      const concept2 = createCharacterConcept({
         title: 'Dark Villain',
         description: 'An evil mastermind',
       });
+      concept2.id = 'concept-2';
+      await database.saveCharacterConcept(concept2);
 
-      const direction1 = await saveThematicDirection({
-        id: 'dir-1',
+      // Create thematic directions
+      const direction1 = createThematicDirection({
         conceptId: 'concept-1',
         title: 'The Reluctant Hero',
         description: 'Forced into adventure',
       });
+      direction1.id = 'dir-1';
 
-      const direction2 = await saveThematicDirection({
-        id: 'dir-2',
+      const direction2 = createThematicDirection({
         conceptId: 'concept-2',
         title: 'Power at Any Cost',
         description: 'Seeking ultimate power',
       });
+      direction2.id = 'dir-2';
 
-      const direction3 = await saveThematicDirection({
-        id: 'dir-3',
+      const direction3 = createThematicDirection({
         conceptId: 'concept-1',
         title: 'Seeking Glory',
         description: 'Fame and fortune',
       });
+      direction3.id = 'dir-3';
 
-      // Add clichés only to some directions
-      await saveClichés('dir-1', [
-        { text: 'The call to adventure', category: 'plot' },
-        { text: 'Mentor figure appears', category: 'character' },
+      // Save directions as array using the actual database method
+      await database.saveThematicDirections([
+        direction1,
+        direction2,
+        direction3,
       ]);
 
-      await saveClichés('dir-2', [
-        { text: 'Corruption by power', category: 'theme' },
-        { text: 'Betrayal of allies', category: 'plot' },
-      ]);
+      // Add clichés only to some directions using individual save method
+      const cliche1 = new Cliche({
+        directionId: 'dir-1',
+        conceptId: 'concept-1',
+        title: 'Hero Journey Clichés',
+        cliches: [
+          { text: 'The call to adventure', category: 'plot' },
+          { text: 'Mentor figure appears', category: 'character' },
+        ],
+      });
+      await database.saveCliche(cliche1);
+
+      const cliche2 = new Cliche({
+        directionId: 'dir-2',
+        conceptId: 'concept-2',
+        title: 'Villain Power Clichés',
+        cliches: [
+          { text: 'Corruption by power', category: 'theme' },
+          { text: 'Betrayal of allies', category: 'plot' },
+        ],
+      });
+      await database.saveCliche(cliche2);
 
       // direction 3 has no clichés - should be filtered out
 
@@ -159,18 +205,26 @@ describe('Core Motivations Selector - Integration Tests', () => {
 
     it('should handle direction selection and enable generation', async () => {
       // Setup minimal test data
-      await saveCharacterConcept({
-        id: 'test-concept',
+      const concept = createCharacterConcept({
         title: 'Test Concept',
       });
+      concept.id = 'test-concept';
+      await database.saveCharacterConcept(concept);
 
-      await saveThematicDirection({
-        id: 'test-dir',
+      const direction = createThematicDirection({
         conceptId: 'test-concept',
         title: 'Test Direction',
       });
+      direction.id = 'test-dir';
+      await database.saveThematicDirections([direction]);
 
-      await saveClichés('test-dir', [{ text: 'Test cliché' }]);
+      const cliche = new Cliche({
+        directionId: 'test-dir',
+        conceptId: 'test-concept',
+        title: 'Test Clichés',
+        cliches: [{ text: 'Test cliché' }],
+      });
+      await database.saveCliche(cliche);
 
       await controller.initialize();
 
@@ -206,33 +260,43 @@ describe('Core Motivations Selector - Integration Tests', () => {
 
       // Create 3 concepts
       for (let i = 1; i <= 3; i++) {
-        concepts.push(
-          await saveCharacterConcept({
-            id: `concept-${i}`,
-            title: `Concept ${String.fromCharCode(67 - i + 1)}`, // C, B, A for reverse alpha
-          })
-        );
+        const concept = createCharacterConcept({
+          title: `Concept ${String.fromCharCode(67 - i + 1)}`, // C, B, A for reverse alpha
+        });
+        concept.id = `concept-${i}`;
+        await database.saveCharacterConcept(concept);
+        concepts.push(concept);
       }
 
       // Create multiple directions per concept
+      const directionsToSave = [];
       for (let c = 1; c <= 3; c++) {
         for (let d = 1; d <= 3; d++) {
           const dirId = `dir-${c}-${d}`;
-          directions.push(
-            await saveThematicDirection({
-              id: dirId,
-              conceptId: `concept-${c}`,
-              title: `Direction ${c}-${String.fromCharCode(67 - d + 1)}`, // C, B, A
-            })
-          );
+          const direction = createThematicDirection({
+            conceptId: `concept-${c}`,
+            title: `Direction ${c}-${String.fromCharCode(67 - d + 1)}`, // C, B, A
+          });
+          direction.id = dirId;
+          directionsToSave.push(direction);
+          directions.push(direction);
 
           // Only add clichés to some directions
           if (d !== 2) {
             // Skip middle direction in each concept
-            await saveClichés(dirId, [{ text: `Cliché for ${dirId}` }]);
+            const cliche = new Cliche({
+              directionId: dirId,
+              conceptId: `concept-${c}`,
+              title: `Clichés for ${dirId}`,
+              cliches: [{ text: `Cliché for ${dirId}` }],
+            });
+            await database.saveCliche(cliche);
           }
         }
       }
+
+      // Save all directions at once
+      await database.saveThematicDirections(directionsToSave);
 
       await controller.initialize();
 
@@ -274,16 +338,18 @@ describe('Core Motivations Selector - Integration Tests', () => {
 
     it('should show specific message when directions exist but have no clichés', async () => {
       // Create directions without clichés
-      await saveCharacterConcept({
-        id: 'concept-1',
+      const concept = createCharacterConcept({
         title: 'Test Concept',
       });
+      concept.id = 'concept-1';
+      await database.saveCharacterConcept(concept);
 
-      await saveThematicDirection({
-        id: 'dir-1',
+      const direction = createThematicDirection({
         conceptId: 'concept-1',
         title: 'Direction without clichés',
       });
+      direction.id = 'dir-1';
+      await database.saveThematicDirections([direction]);
 
       await controller.initialize();
 
@@ -300,18 +366,26 @@ describe('Core Motivations Selector - Integration Tests', () => {
   describe('Data Persistence', () => {
     it('should maintain selection state across operations', async () => {
       // Setup data
-      await saveCharacterConcept({
-        id: 'persist-concept',
+      const concept = createCharacterConcept({
         title: 'Persistent Concept',
       });
+      concept.id = 'persist-concept';
+      await database.saveCharacterConcept(concept);
 
-      await saveThematicDirection({
-        id: 'persist-dir',
+      const direction = createThematicDirection({
         conceptId: 'persist-concept',
         title: 'Persistent Direction',
       });
+      direction.id = 'persist-dir';
+      await database.saveThematicDirections([direction]);
 
-      await saveClichés('persist-dir', [{ text: 'Persistent cliché' }]);
+      const cliche = new Cliche({
+        directionId: 'persist-dir',
+        conceptId: 'persist-concept',
+        title: 'Persistent Clichés',
+        cliches: [{ text: 'Persistent cliché' }],
+      });
+      await database.saveCliche(cliche);
 
       await controller.initialize();
 
@@ -325,11 +399,10 @@ describe('Core Motivations Selector - Integration Tests', () => {
       expect(controller.currentDirection.title).toBe('Persistent Direction');
       expect(controller.currentConcept.title).toBe('Persistent Concept');
 
-      // Simulate some operation that might affect state
-      await controller.refreshIfNeeded();
-
-      // State should persist
+      // Verify current state persists (no need to call private method)
       expect(controller.selectedDirectionId).toBe('persist-dir');
+      expect(controller.currentDirection.title).toBe('Persistent Direction');
+      expect(controller.currentConcept.title).toBe('Persistent Concept');
     });
   });
 });
@@ -343,26 +416,38 @@ describe('Performance Tests', () => {
     const startTime = Date.now();
 
     // Create many concepts and directions
+    const allDirections = [];
     for (let c = 1; c <= 10; c++) {
-      await saveCharacterConcept({
-        id: `perf-concept-${c}`,
+      const concept = createCharacterConcept({
         title: `Performance Concept ${c}`,
       });
+      concept.id = `perf-concept-${c}`;
+      await database.saveCharacterConcept(concept);
 
       for (let d = 1; d <= 10; d++) {
         const dirId = `perf-dir-${c}-${d}`;
-        await saveThematicDirection({
-          id: dirId,
+        const direction = createThematicDirection({
           conceptId: `perf-concept-${c}`,
           title: `Direction ${c}-${d}`,
         });
+        direction.id = dirId;
+        allDirections.push(direction);
 
         // Add clichés to 80% of directions
         if (Math.random() > 0.2) {
-          await saveClichés(dirId, [{ text: `Cliché for ${dirId}` }]);
+          const cliche = new Cliche({
+            directionId: dirId,
+            conceptId: `perf-concept-${c}`,
+            title: `Clichés for ${dirId}`,
+            cliches: [{ text: `Cliché for ${dirId}` }],
+          });
+          await database.saveCliche(cliche);
         }
       }
     }
+
+    // Save all directions at once for better performance
+    await database.saveThematicDirections(allDirections);
 
     // Initialize and measure time
     await controller.initialize();
@@ -387,22 +472,22 @@ describe('Performance Tests', () => {
 ```javascript
 describe('Error Recovery', () => {
   it('should handle missing concepts gracefully', async () => {
-    // Create orphaned direction (concept doesn't exist)
-    localStorage.setItem(
-      'thematic-directions',
-      JSON.stringify([
-        {
-          id: 'orphan-dir',
-          conceptId: 'non-existent-concept',
-          title: 'Orphaned Direction',
-        },
-      ])
-    );
+    // Create orphaned direction (concept doesn't exist) by directly inserting into database
+    const orphanDirection = createThematicDirection({
+      conceptId: 'non-existent-concept',
+      title: 'Orphaned Direction',
+    });
+    orphanDirection.id = 'orphan-dir';
+    await database.saveThematicDirections([orphanDirection]);
 
-    localStorage.setItem(
-      'cliches-orphan-dir',
-      JSON.stringify([{ text: 'Some cliché' }])
-    );
+    // Add cliché for orphaned direction
+    const orphanCliche = new Cliche({
+      directionId: 'orphan-dir',
+      conceptId: 'non-existent-concept',
+      title: 'Orphaned Clichés',
+      cliches: [{ text: 'Some cliché' }],
+    });
+    await database.saveCliche(orphanCliche);
 
     await controller.initialize();
 
@@ -478,6 +563,32 @@ const mockEventBus = {
   dispatch: jest.fn(),
   subscribe: jest.fn(),
 };
+
+const mockStorageService = {
+  initialize: jest.fn().mockResolvedValue(),
+  storeCharacterConcept: jest.fn().mockResolvedValue(),
+  listCharacterConcepts: jest.fn().mockResolvedValue([]),
+  getCharacterConcept: jest.fn().mockResolvedValue(null),
+  deleteCharacterConcept: jest.fn().mockResolvedValue(),
+  storeThematicDirections: jest.fn().mockResolvedValue(),
+  getThematicDirections: jest.fn().mockResolvedValue([]),
+};
+
+const mockDirectionGenerator = {
+  generateDirections: jest.fn().mockResolvedValue([]),
+};
+
+const mockCoreMotivationsGenerator = {
+  generate: jest.fn().mockResolvedValue([]),
+};
+
+const mockDisplayEnhancer = {
+  createMotivationBlock: jest
+    .fn()
+    .mockReturnValue(document.createElement('div')),
+  formatMotivationsForExport: jest.fn().mockReturnValue('test export'),
+  formatSingleMotivation: jest.fn().mockReturnValue('test motivation'),
+};
 ```
 
 ## Running Tests
@@ -512,13 +623,19 @@ After automated tests pass, perform manual testing:
 
 ## Related Files
 
-- **Test Data Helpers**: `tests/common/helpers/testDataBuilder.js`
-- **Storage Repository**: `src/characterBuilder/repositories/storageRepository.js`
+- **Test Helpers**: `tests/common/characterBuilder/characterBuilderIntegrationTestBed.js`
+- **Core Motivations Helpers**: `tests/common/coreMotivations/testHelpers.js`
+- **Character Database**: `src/characterBuilder/storage/characterDatabase.js`
 - **Character Builder Service**: `src/characterBuilder/services/characterBuilderService.js`
+- **Controller**: `src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js`
+- **Character Models**: `src/characterBuilder/models/characterConcept.js`, `src/characterBuilder/models/thematicDirection.js`, `src/characterBuilder/models/cliche.js`
 
 ## Notes
 
-- Integration tests use real services where possible
-- Mock only external dependencies (LLM service)
-- Test realistic user scenarios
+- Integration tests use real `CharacterDatabase` and `CharacterBuilderService` instances
+- Mock only external dependencies (LLM service, storage service, direction generator)
+- Use actual model classes (`createCharacterConcept`, `createThematicDirection`, `Cliche`)
+- Test realistic user scenarios with proper database initialization
 - Include edge cases and error conditions
+- Database operations use IndexedDB with proper cleanup between tests
+- All test data creation follows the actual API patterns used in production code

@@ -2629,7 +2629,11 @@ describe('CoreMotivationsGeneratorController', () => {
       // Arrange
       const mockDirectionsWithConcepts = [
         {
-          direction: { id: 'dir1', conceptId: 'concept1', title: 'Direction 1' },
+          direction: {
+            id: 'dir1',
+            conceptId: 'concept1',
+            title: 'Direction 1',
+          },
           concept: { id: 'concept1', text: 'Test concept' },
         },
       ];
@@ -2649,10 +2653,12 @@ describe('CoreMotivationsGeneratorController', () => {
 
       // Assert - the conceptId should be set in the controller
       // We can verify this by checking the event dispatched during generation
-      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue({
-        id: 'concept1',
-        text: 'Test concept',
-      });
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
+        {
+          id: 'concept1',
+          text: 'Test concept',
+        }
+      );
       testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue(
         [{ id: 'cliche-1', text: 'Test cliche' }]
       );
@@ -2674,10 +2680,14 @@ describe('CoreMotivationsGeneratorController', () => {
     it('should fail gracefully if conceptId is not set during generation', async () => {
       // This test demonstrates the bug we fixed - when getCharacterConcept is called
       // with an empty conceptId, it should fail gracefully with proper error handling
-      
+
       const mockDirectionsWithConcepts = [
         {
-          direction: { id: 'dir1', conceptId: 'concept1', title: 'Direction 1' },
+          direction: {
+            id: 'dir1',
+            conceptId: 'concept1',
+            title: 'Direction 1',
+          },
           concept: { id: 'concept1', text: 'Test concept' },
         },
       ];
@@ -2693,7 +2703,7 @@ describe('CoreMotivationsGeneratorController', () => {
 
       await testBed.controller.initialize();
       await testBed.selectDirection('dir1');
-      
+
       // Now simulate the error condition - getCharacterConcept fails
       testBed.mockCharacterBuilderService.getCharacterConcept.mockRejectedValue(
         new Error('conceptId must be a non-empty string')
@@ -2717,7 +2727,11 @@ describe('CoreMotivationsGeneratorController', () => {
       // Arrange
       const mockDirectionsWithConcepts = [
         {
-          direction: { id: 'dir1', conceptId: 'concept1', title: 'Direction 1' },
+          direction: {
+            id: 'dir1',
+            conceptId: 'concept1',
+            title: 'Direction 1',
+          },
           concept: { id: 'concept1', text: 'Test concept' },
         },
       ];
@@ -2781,7 +2795,8 @@ describe('CoreMotivationsGeneratorController', () => {
         await testBed.controller.initialize();
 
         expect(
-          testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
+          testBed.mockCharacterBuilderService
+            .getAllThematicDirectionsWithConcepts
         ).toHaveBeenCalled();
         expect(testBed.controller.totalDirectionsCount).toBe(2);
       });
@@ -2820,10 +2835,14 @@ describe('CoreMotivationsGeneratorController', () => {
 
         await testBed.controller.initialize();
 
-        const noDirectionsMsg = document.getElementById('no-directions-message');
+        const noDirectionsMsg = document.getElementById(
+          'no-directions-message'
+        );
         expect(noDirectionsMsg.style.display).toBe('block');
-        expect(noDirectionsMsg.textContent).toContain('No thematic directions found');
-        
+        expect(noDirectionsMsg.textContent).toContain(
+          'No thematic directions found'
+        );
+
         const generateBtn = document.getElementById('generate-btn');
         expect(generateBtn.disabled).toBe(true);
       });
@@ -2845,7 +2864,9 @@ describe('CoreMotivationsGeneratorController', () => {
 
         await testBed.controller.initialize();
 
-        const noDirectionsMsg = document.getElementById('no-directions-message');
+        const noDirectionsMsg = document.getElementById(
+          'no-directions-message'
+        );
         expect(noDirectionsMsg.textContent).toContain(
           'No thematic directions with clichés found'
         );
@@ -2870,7 +2891,9 @@ describe('CoreMotivationsGeneratorController', () => {
         testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
           mockData
         );
-        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+          true
+        );
 
         await testBed.controller.initialize();
 
@@ -2899,7 +2922,9 @@ describe('CoreMotivationsGeneratorController', () => {
         testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
           mockData
         );
-        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+          true
+        );
 
         await testBed.controller.initialize();
 
@@ -2914,7 +2939,11 @@ describe('CoreMotivationsGeneratorController', () => {
       it('should set correct values and text on options', async () => {
         const mockData = [
           {
-            direction: { id: 'unique-id-123', title: 'My Direction Title', conceptId: 'c1' },
+            direction: {
+              id: 'unique-id-123',
+              title: 'My Direction Title',
+              conceptId: 'c1',
+            },
             concept: { id: 'c1', title: 'Test Concept' },
           },
         ];
@@ -2922,7 +2951,9 @@ describe('CoreMotivationsGeneratorController', () => {
         testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
           mockData
         );
-        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+          true
+        );
 
         await testBed.controller.initialize();
 
@@ -2944,7 +2975,9 @@ describe('CoreMotivationsGeneratorController', () => {
         testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
           mockData
         );
-        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+        testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+          true
+        );
 
         await testBed.controller.initialize();
 
@@ -3053,11 +3086,19 @@ describe('CoreMotivationsGeneratorController', () => {
         selector.dispatchEvent(new Event('change'));
 
         // Mock generation method call
-        testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue([]);
-        testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue({ id: 'c1', title: 'Concept' });
-        testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue([]);
+        testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+          []
+        );
+        testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
+          { id: 'c1', title: 'Concept' }
+        );
+        testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue(
+          []
+        );
         testBed.mockCoreMotivationsGenerator.generate.mockResolvedValue([]);
-        testBed.mockCharacterBuilderService.saveCoreMotivations.mockResolvedValue([]);
+        testBed.mockCharacterBuilderService.saveCoreMotivations.mockResolvedValue(
+          []
+        );
 
         // Trigger keyboard shortcut
         const event = new KeyboardEvent('keydown', {
@@ -3068,7 +3109,7 @@ describe('CoreMotivationsGeneratorController', () => {
         document.dispatchEvent(event);
 
         // Wait for async operations
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise((resolve) => setTimeout(resolve, 0));
 
         // Verify generation was triggered (via event dispatch)
         expect(testBed.mockEventBus.dispatch).toHaveBeenCalledWith(
@@ -3083,27 +3124,28 @@ describe('CoreMotivationsGeneratorController', () => {
     describe('organizeDirectionsByConcept via public method', () => {
       it('should group directions by concept using attached concept data', () => {
         const directions = [
-          { 
-            id: 'dir1', 
-            conceptId: 'c1', 
+          {
+            id: 'dir1',
+            conceptId: 'c1',
             title: 'Direction A',
-            concept: { id: 'c1', text: 'Concept 1' }
+            concept: { id: 'c1', text: 'Concept 1' },
           },
-          { 
-            id: 'dir2', 
-            conceptId: 'c2', 
+          {
+            id: 'dir2',
+            conceptId: 'c2',
             title: 'Direction B',
-            concept: { id: 'c2', text: 'Concept 2' }
+            concept: { id: 'c2', text: 'Concept 2' },
           },
-          { 
-            id: 'dir3', 
-            conceptId: 'c1', 
+          {
+            id: 'dir3',
+            conceptId: 'c1',
             title: 'Direction C',
-            concept: { id: 'c1', text: 'Concept 1' }
+            concept: { id: 'c1', text: 'Concept 1' },
           },
         ];
 
-        const organized = testBed.controller.organizeDirectionsByConcept(directions);
+        const organized =
+          testBed.controller.organizeDirectionsByConcept(directions);
 
         expect(organized.length).toBe(2);
 
@@ -3116,27 +3158,28 @@ describe('CoreMotivationsGeneratorController', () => {
 
       it('should sort concepts alphabetically', () => {
         const directions = [
-          { 
-            id: 'dir1', 
-            conceptId: 'z', 
+          {
+            id: 'dir1',
+            conceptId: 'z',
             title: 'Direction 1',
-            concept: { id: 'z', text: 'Zebra Concept' }
+            concept: { id: 'z', text: 'Zebra Concept' },
           },
-          { 
-            id: 'dir2', 
-            conceptId: 'a', 
+          {
+            id: 'dir2',
+            conceptId: 'a',
             title: 'Direction 2',
-            concept: { id: 'a', text: 'Apple Concept' }
+            concept: { id: 'a', text: 'Apple Concept' },
           },
-          { 
-            id: 'dir3', 
-            conceptId: 'm', 
+          {
+            id: 'dir3',
+            conceptId: 'm',
             title: 'Direction 3',
-            concept: { id: 'm', text: 'Mango Concept' }
+            concept: { id: 'm', text: 'Mango Concept' },
           },
         ];
 
-        const organized = testBed.controller.organizeDirectionsByConcept(directions);
+        const organized =
+          testBed.controller.organizeDirectionsByConcept(directions);
 
         expect(organized[0].conceptTitle).toBe('Apple Concept');
         expect(organized[1].conceptTitle).toBe('Mango Concept');
@@ -3145,27 +3188,28 @@ describe('CoreMotivationsGeneratorController', () => {
 
       it('should sort directions within concepts alphabetically', () => {
         const directions = [
-          { 
-            id: 'dir1', 
-            conceptId: 'c1', 
+          {
+            id: 'dir1',
+            conceptId: 'c1',
             title: 'Zebra Direction',
-            concept: { id: 'c1', text: 'Concept' }
+            concept: { id: 'c1', text: 'Concept' },
           },
-          { 
-            id: 'dir2', 
-            conceptId: 'c1', 
+          {
+            id: 'dir2',
+            conceptId: 'c1',
             title: 'Apple Direction',
-            concept: { id: 'c1', text: 'Concept' }
+            concept: { id: 'c1', text: 'Concept' },
           },
-          { 
-            id: 'dir3', 
-            conceptId: 'c1', 
+          {
+            id: 'dir3',
+            conceptId: 'c1',
             title: 'Mango Direction',
-            concept: { id: 'c1', text: 'Concept' }
+            concept: { id: 'c1', text: 'Concept' },
           },
         ];
 
-        const organized = testBed.controller.organizeDirectionsByConcept(directions);
+        const organized =
+          testBed.controller.organizeDirectionsByConcept(directions);
 
         expect(organized[0].directions[0].title).toBe('Apple Direction');
         expect(organized[0].directions[1].title).toBe('Mango Direction');
@@ -3185,21 +3229,35 @@ describe('CoreMotivationsGeneratorController', () => {
 
     it('should update loading state correctly during generation process', async () => {
       // Setup direction and mocks
-      const mockData = [{
-        direction: { id: 'dir1', conceptId: 'c1', title: 'Direction 1' },
-        concept: { id: 'c1', text: 'Concept 1' },
-      }];
+      const mockData = [
+        {
+          direction: { id: 'dir1', conceptId: 'c1', title: 'Direction 1' },
+          concept: { id: 'c1', text: 'Concept 1' },
+        },
+      ];
 
-      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(mockData);
-      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
-      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue([]);
-      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue({ id: 'c1', text: 'Test Concept' });
-      testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue([]);
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockData
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
+      );
+      testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
+        []
+      );
+      testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
+        { id: 'c1', text: 'Test Concept' }
+      );
+      testBed.mockCharacterBuilderService.getClichesByDirectionId.mockResolvedValue(
+        []
+      );
       testBed.mockCoreMotivationsGenerator.generate.mockResolvedValue([]);
-      testBed.mockCharacterBuilderService.saveCoreMotivations.mockResolvedValue([]);
+      testBed.mockCharacterBuilderService.saveCoreMotivations.mockResolvedValue(
+        []
+      );
 
       await testBed.controller.initialize();
-      
+
       // Select direction
       const selector = document.getElementById('direction-selector');
       selector.value = 'dir1';
@@ -3207,7 +3265,7 @@ describe('CoreMotivationsGeneratorController', () => {
 
       // Before generation
       expect(testBed.controller.isGenerating).toBe(false);
-      
+
       // After generation (test final state)
       expect(testBed.controller.selectedDirectionId).toBe('dir1');
     });
@@ -3217,27 +3275,37 @@ describe('CoreMotivationsGeneratorController', () => {
       Date.now.mockReturnValue(now);
 
       // Initialize with fresh cache
-      const mockData = [{
-        direction: { id: 'dir1', conceptId: 'c1', title: 'Direction 1' },
-        concept: { id: 'c1', title: 'Concept 1' },
-      }];
+      const mockData = [
+        {
+          direction: { id: 'dir1', conceptId: 'c1', title: 'Direction 1' },
+          concept: { id: 'c1', title: 'Concept 1' },
+        },
+      ];
 
-      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(mockData);
-      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(true);
+      testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+        mockData
+      );
+      testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+        true
+      );
 
       await testBed.controller.initialize();
 
       // Cache should be fresh initially
-      expect(testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts).toHaveBeenCalledTimes(1);
+      expect(
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
+      ).toHaveBeenCalledTimes(1);
 
       // Simulate stale cache (6 minutes later)
       Date.now.mockReturnValue(now + 6 * 60 * 1000);
-      
+
       // Trigger refresh check (this would happen during normal operation)
       await testBed.controller.initialize();
-      
+
       // Should reload due to stale cache
-      expect(testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts).toHaveBeenCalledTimes(2);
+      expect(
+        testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts
+      ).toHaveBeenCalledTimes(2);
     });
   });
 });

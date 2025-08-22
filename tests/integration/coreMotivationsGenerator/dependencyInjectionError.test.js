@@ -26,18 +26,20 @@ describe('Core Motivations Generator - Dependency Injection Issues', () => {
       const mockController = {
         // This simulates the controller having the class constructor as a property
         '#coreMotivationsGenerator': CoreMotivationsGenerator, // Class, not instance
-        
+
         // This simulates what happens in the actual error
-        tryGenerateMotivations: function() {
+        tryGenerateMotivations: function () {
           try {
             // This is what happens in CoreMotivationsGeneratorController.js:811
             // __privateGet(...) returns the class constructor, not an instance
             const generator = this['#coreMotivationsGenerator'];
-            return generator.generate({ /* params */ }); // This fails because it's a class, not instance
+            return generator.generate({
+              /* params */
+            }); // This fails because it's a class, not instance
           } catch (error) {
             return error;
           }
-        }
+        },
       };
 
       // Act - Try to call generate on what's actually a class constructor
@@ -45,24 +47,30 @@ describe('Core Motivations Generator - Dependency Injection Issues', () => {
 
       // Assert - Should fail with "generate is not a function" or similar
       expect(result).toBeInstanceOf(Error);
-      expect(result.message).toMatch(/generate is not a function|Cannot read.*generate/);
+      expect(result.message).toMatch(
+        /generate is not a function|Cannot read.*generate/
+      );
     });
 
     it('should work correctly when instance is passed instead of class', () => {
       // Arrange - Create proper mock with instance
       const mockGeneratorInstance = {
-        generate: jest.fn().mockReturnValue(Promise.resolve(['motivation1', 'motivation2']))
+        generate: jest
+          .fn()
+          .mockReturnValue(Promise.resolve(['motivation1', 'motivation2'])),
       };
 
       const mockController = {
         // This simulates having a proper instance
         '#coreMotivationsGenerator': mockGeneratorInstance,
-        
+
         // This simulates what should happen when correctly configured
-        tryGenerateMotivations: function() {
+        tryGenerateMotivations: function () {
           const generator = this['#coreMotivationsGenerator'];
-          return generator.generate({ /* params */ });
-        }
+          return generator.generate({
+            /* params */
+          });
+        },
       };
 
       // Act - Try to call generate on the instance
@@ -88,7 +96,7 @@ describe('Core Motivations Generator - Dependency Injection Issues', () => {
 
       const mockContainer = testBed.container;
       const bootstrap = new CharacterBuilderBootstrap();
-      
+
       // Act - Create controller with current problematic approach
       const dependencies = {
         logger: testBed.logger,
@@ -100,10 +108,14 @@ describe('Core Motivations Generator - Dependency Injection Issues', () => {
       };
 
       // Assert - Dependencies should contain the class, not instance
-      expect(dependencies.coreMotivationsGenerator).toBe(CoreMotivationsGenerator);
+      expect(dependencies.coreMotivationsGenerator).toBe(
+        CoreMotivationsGenerator
+      );
       expect(typeof dependencies.coreMotivationsGenerator).toBe('function');
-      expect(dependencies.coreMotivationsGenerator.prototype.generate).toBeDefined();
-      
+      expect(
+        dependencies.coreMotivationsGenerator.prototype.generate
+      ).toBeDefined();
+
       // This is the root cause - class is passed where instance is expected
     });
   });

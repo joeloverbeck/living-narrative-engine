@@ -40,7 +40,7 @@ describe('CharacterBuilderService Cache Integration', () => {
           // Two-argument pattern (used by CharacterBuilderService)
           eventCaptured.push({
             type: eventTypeOrObject,
-            payload: payload
+            payload: payload,
           });
         } else if (typeof eventTypeOrObject === 'object') {
           // Single-argument pattern (used by CoreMotivationsCacheManager)

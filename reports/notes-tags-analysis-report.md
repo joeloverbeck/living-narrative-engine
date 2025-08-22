@@ -34,6 +34,7 @@ The `tags` parameter in the notes component system is currently fully integrated
 ### LLM Integration Points
 
 #### 1. Output Schema Requirements
+
 **File**: `src/turns/schemas/llmOutputSchemas.js`  
 **Lines**: 80-83
 
@@ -48,6 +49,7 @@ tags: {
 ```
 
 #### 2. Prompt Instructions
+
 **File**: `data/prompts/corePromptText.json`  
 **Line**: 5 (finalLlmInstructionText)
 
@@ -59,7 +61,7 @@ tags: {
   {
     "text": "Seems nervous about the council meeting",
     "subject": "John",
-    "subjectType": "character", 
+    "subjectType": "character",
     "context": "tavern conversation",
     "tags": ["emotion", "politics"]
   }
@@ -68,6 +70,7 @@ tags: {
 The prompt includes three complete examples showing tag usage, consuming approximately 200+ characters of prompt space.
 
 #### 3. Prompt Formatting (Tags Sent TO LLMs)
+
 **File**: `src/prompting/promptDataFormatter.js`  
 **Lines**: 255 (single line, not 255-256)
 
@@ -121,12 +124,14 @@ if (Array.isArray(tags) && tags.length > 0) {
 ### Token Cost Analysis
 
 **Current Token Impact**:
+
 1. **Outgoing Prompts**: Tags are included in every prompt sent to LLMs when notes exist
 2. **LLM Instructions**: Prompt instructs LLMs to generate tags with examples (~50 tokens)
 3. **Incoming Responses**: LLMs generate tags that consume response tokens
 4. **Cyclical Cost**: Generated tags are included in future prompts, compounding cost
 
 **Estimated Token Waste** (Based on Current Implementation):
+
 - **Prompt Instructions**: ~50-75 tokens for tag generation examples and rules in every prompt
 - **Per-Note Cost in Prompts**: 3-8 tokens per note with tags (format: `[tag1, tag2, tag3]`)
 - **Per-Note Generation Cost**: 5-15 tokens per note in LLM responses
@@ -135,12 +140,14 @@ if (Array.isArray(tags) && tags.length > 0) {
 
 ### Functional Value Assessment
 
-**Current Benefits**: 
+**Current Benefits**:
+
 - Provides some categorization metadata
 - Could theoretically enable note searching/filtering
 - May help LLMs understand note context slightly better
 
 **Current Drawbacks**:
+
 - No functional search/filtering implementation
 - Tags often too specific (as user noted)
 - No clear relationship to dialogue/actions
@@ -191,11 +198,13 @@ if (Array.isArray(tags) && tags.length > 0) {
 ### Files Requiring Modification
 
 #### Core Schema and Component Definition
+
 1. **`data/mods/core/components/notes.component.json`**
    - Remove `tags` property (lines 48-51)
    - **Impact**: Schema breaking change, requires version bump
 
 #### LLM Integration
+
 2. **`src/turns/schemas/llmOutputSchemas.js`**
    - Remove `tags` property (lines 80-83)
    - **Impact**: LLM response validation will reject tag fields
@@ -204,6 +213,7 @@ if (Array.isArray(tags) && tags.length > 0) {
    - Remove tag instructions and examples from `finalLlmInstructionText`
 
 #### Prompt System
+
 4. **`src/prompting/promptDataFormatter.js`**
    - Remove `showTags` option and related logic (lines 158, 171, 245, 255)
    - **Impact**: Eliminates tag display in all prompts sent to LLMs
@@ -213,6 +223,7 @@ if (Array.isArray(tags) && tags.length > 0) {
    - **Impact**: Tags will no longer be passed through prompt data pipeline
 
 #### UI Components
+
 6. **`src/domUI/helpers/noteTooltipFormatter.js`**
    - Remove tags extraction and display logic (lines 81, 115, 122-132)
    - **Impact**: Note tooltips will no longer show tag information
@@ -221,6 +232,7 @@ if (Array.isArray(tags) && tags.length > 0) {
    - Remove any tags handling (referenced in tests)
 
 #### Service Layer
+
 8. **`src/ai/notesQueryService.js`**
    - **OPTION A**: Delete entirely (recommended - unused)
    - **OPTION B**: Remove tag-related methods only
@@ -234,6 +246,7 @@ if (Array.isArray(tags) && tags.length > 0) {
     - **Impact**: Event handling will no longer expect tags in note data
 
 #### Type Definitions and Interfaces
+
 11. **Multiple interface files** - Remove tags from JSDoc type definitions:
     - `src/turns/context/turnContext.js` (line 53: `#decisionMeta` type definition)
     - `src/turns/ports/ILLMChooser.js` (lines 7, 14: method signature types)
@@ -241,6 +254,7 @@ if (Array.isArray(tags) && tags.length > 0) {
     - **Impact**: Type safety enforcement will prevent tags usage across the system
 
 #### Test Files (27+ files)
+
 12. **Unit Tests**:
     - `tests/unit/ai/notesQueryService.test.js` - Delete or gut tag tests
     - `tests/unit/prompting/promptDataFormatter.*.test.js` - Remove showTags tests
@@ -253,28 +267,33 @@ if (Array.isArray(tags) && tags.length > 0) {
 
 ### Breaking Changes Assessment
 
-**Schema Breaking Changes**: 
+**Schema Breaking Changes**:
+
 - Notes component schema version bump required
 - **Existing saved games**: Will gracefully handle tagged notes (tags retained in save data but ignored by engine)
 - **Game compatibility**: No functional impact on loading/saving - games remain fully playable
 - **Migration path**: No data migration required - removal is additive in terms of functionality
 
 **API Breaking Changes**:
+
 - Any external code expecting tags field will break
 - LLM responses may still include tags (harmless but ignored)
 
 **UI Breaking Changes**:
+
 - Note tooltips will no longer show tags
 - No visual indicator of note categories
 
 ### Migration Strategy
 
 **Recommended Approach**:
+
 1. **Phase 1**: Remove tag generation (prompts and schemas)
 2. **Phase 2**: Remove tag display and processing
 3. **Phase 3**: Clean up unused query service and tests
 
 **Rollback Strategy**:
+
 - Git revert capability
 - Tags in existing saves remain intact
 - Re-enabling requires schema version management
@@ -284,6 +303,7 @@ if (Array.isArray(tags) && tags.length > 0) {
 ### Primary Recommendation: Complete Removal
 
 **Rationale**:
+
 - No current functional value
 - Significant token cost
 - System complexity without benefit
@@ -322,6 +342,7 @@ If tags must be retained, recommend:
 This analysis has been thoroughly verified against the production codebase (as of 2025-01-27):
 
 ### ✅ Confirmed Findings
+
 - **Schema Integration**: Tags are fully integrated into component schema (lines 48-51) and LLM output schema (lines 80-83)
 - **Prompt Integration**: Tags are actively generated via LLM instructions and displayed in prompts by default
 - **UI Integration**: Tags are rendered in tooltips with proper HTML formatting and XSS protection
@@ -329,10 +350,13 @@ This analysis has been thoroughly verified against the production codebase (as o
 - **Unused Infrastructure**: NotesQueryService (370+ lines) exists but is not registered in DI and never used in production
 
 ### ✅ File Path Verification
+
 All 25+ referenced files exist and have been verified for accurate line numbers and implementation status.
 
 ### ✅ Token Impact Confirmation
+
 Based on actual prompt analysis:
+
 - Tag instruction overhead: ~50-75 tokens per prompt
 - Per-note overhead: 3-8 tokens for tag display, 5-15 tokens for generation
 - System-wide impact: Estimated 2-5% of total token usage
@@ -342,6 +366,7 @@ Based on actual prompt analysis:
 The tags system represents a verified case of over-engineering without demonstrable user value. The comprehensive infrastructure exists for sophisticated tag-based searching and categorization, but this functionality is completely unused in production code. Meanwhile, tags consume significant tokens in every LLM interaction without providing measurable benefits.
 
 The evidence strongly supports complete removal:
+
 - ✅ **No functional search implementation** - NotesQueryService verified as dead code
 - ✅ **Significant token overhead** - 2-5% of total token usage confirmed
 - ✅ **User feedback confirms poor utility** - Tags described as "too specific" and not valuable

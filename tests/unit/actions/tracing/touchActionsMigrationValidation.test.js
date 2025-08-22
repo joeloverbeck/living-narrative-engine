@@ -24,16 +24,17 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
       'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target',
     fondle_ass: {
       primary: {
-        scope: 'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target',
+        scope:
+          'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target',
         placeholder: 'primary',
-        description: 'Person whose ass to fondle'
+        description: 'Person whose ass to fondle',
       },
       secondary: {
         scope: 'clothing:target_topmost_torso_lower_clothing',
         placeholder: 'secondary',
         description: 'Clothing item over which to fondle',
-        contextFrom: 'primary'
-      }
+        contextFrom: 'primary',
+      },
     },
     massage_back: 'intimacy:close_actors_facing_away',
     massage_shoulders:
@@ -53,15 +54,19 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
 
         // Should have targets property
         expect(content.targets).toBeDefined();
-        
+
         // Handle both string and object formats
         if (actionName === 'fondle_ass') {
           // fondle_ass uses multi-target format
           expect(typeof content.targets).toBe('object');
           expect(content.targets.primary).toBeDefined();
           expect(content.targets.secondary).toBeDefined();
-          expect(content.targets.primary.scope).toBe(EXPECTED_TARGETS[actionName].primary.scope);
-          expect(content.targets.secondary.scope).toBe(EXPECTED_TARGETS[actionName].secondary.scope);
+          expect(content.targets.primary.scope).toBe(
+            EXPECTED_TARGETS[actionName].primary.scope
+          );
+          expect(content.targets.secondary.scope).toBe(
+            EXPECTED_TARGETS[actionName].secondary.scope
+          );
         } else {
           // Other actions use simple string format
           expect(typeof content.targets).toBe('string');
@@ -100,12 +105,14 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         expect(content.targets).toBeDefined();
-        
+
         // Handle both formats
         if (name === 'fondle_ass') {
           // fondle_ass uses multi-target format - check primary target's scope
           expect(content.targets.primary).toBeDefined();
-          expect(content.targets.primary.scope.length).toBeGreaterThan(minLength);
+          expect(content.targets.primary.scope.length).toBeGreaterThan(
+            minLength
+          );
           expect(content.targets.primary.scope).toMatch(
             /^intimacy:actors_with_.*_facing_each_other_or_behind_target$/
           );
@@ -192,7 +199,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         expect(content.template).toBe(expectedTemplates[actionName]);
-        
+
         // Check for appropriate placeholder based on action format
         if (actionName === 'fondle_ass') {
           expect(content.template).toMatch(/\{primary\}/);
@@ -213,28 +220,36 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
       expect(typeof content.targets).toBe('object');
       expect(content.targets.primary).toBeDefined();
       expect(content.targets.secondary).toBeDefined();
-      
+
       // Validate primary target
       expect(content.targets.primary.scope).toBe(
         'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target'
       );
       expect(content.targets.primary.placeholder).toBe('primary');
-      expect(content.targets.primary.description).toBe('Person whose ass to fondle');
-      
+      expect(content.targets.primary.description).toBe(
+        'Person whose ass to fondle'
+      );
+
       // Validate secondary target
-      expect(content.targets.secondary.scope).toBe('clothing:target_topmost_torso_lower_clothing');
+      expect(content.targets.secondary.scope).toBe(
+        'clothing:target_topmost_torso_lower_clothing'
+      );
       expect(content.targets.secondary.placeholder).toBe('secondary');
-      expect(content.targets.secondary.description).toBe('Clothing item over which to fondle');
+      expect(content.targets.secondary.description).toBe(
+        'Clothing item over which to fondle'
+      );
       expect(content.targets.secondary.contextFrom).toBe('primary');
     });
 
     it('should maintain legacy single-target format for other actions', async () => {
-      const singleTargetActions = MIGRATED_ACTIONS.filter(a => a !== 'fondle_ass');
-      
+      const singleTargetActions = MIGRATED_ACTIONS.filter(
+        (a) => a !== 'fondle_ass'
+      );
+
       for (const actionName of singleTargetActions) {
         const filePath = path.join(ACTIONS_DIR, `${actionName}.action.json`);
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
-        
+
         expect(typeof content.targets).toBe('string');
         expect(content.targets).toMatch(/^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$/);
       }

@@ -44,9 +44,7 @@
       "suck_on_tongue.action.json",
       "thumb_wipe_cheek.action.json"
     ],
-    "components": [
-      "kissing.component.json"
-    ],
+    "components": ["kissing.component.json"],
     "conditions": [
       "actor-is-in-closeness.condition.json",
       "actor-is-kiss-receiver.condition.json",

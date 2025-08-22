@@ -3,7 +3,7 @@
 **Priority**: Low  
 **Phase**: 4 - Service Cleanup (Infrastructure)  
 **Estimated Effort**: 1 hour  
-**Risk Level**: Very Low (Cleanup task)  
+**Risk Level**: Very Low (Cleanup task)
 
 ## Overview
 
@@ -32,19 +32,20 @@ After removing the main NotesQueryService, there may be other service files or u
    - Locate any orphaned tag processing code
 
 2. **Common Search Patterns**
+
    ```bash
    # Search for tag-related query methods
    grep -r "queryByTag" src/
    grep -r "filterByTag" src/
    grep -r "searchByTag" src/
    grep -r "findByTag" src/
-   
+
    # Search for tag utility functions
    grep -r "getTag" src/
    grep -r "extractTag" src/
    grep -r "processTag" src/
    grep -r "parseTag" src/
-   
+
    # Search for tag filtering logic
    grep -r "\.tags\." src/
    grep -r "\.tag\b" src/
@@ -80,18 +81,21 @@ After removing the main NotesQueryService, there may be other service files or u
 ### Potential Areas to Review
 
 **Service Files**:
+
 - Any AI-related services with query capabilities
 - Search utilities or helper functions
 - Data processing services that may filter by tags
 - Caching services that may index by tags
 
 **Utility Functions**:
+
 - Query builders or data processors
 - Filtering utilities that may include tag logic
 - Search helpers that may use tag criteria
 - Data transformation functions
 
 **Configuration Files**:
+
 - Query configuration that may specify tag handling
 - Search settings that include tag options
 - Filter definitions that reference tags
@@ -99,18 +103,21 @@ After removing the main NotesQueryService, there may be other service files or u
 ### Testing Requirements
 
 #### Discovery Tests
+
 - [ ] Comprehensive search for tag-related functionality
 - [ ] Manual review of search results for relevance
 - [ ] Validation that identified methods are actually unused
 - [ ] Confirmation that removal won't break existing functionality
 
 #### Unit Tests
+
 - [ ] Test remaining query methods function correctly
 - [ ] Verify error handling for modified method signatures
 - [ ] Confirm utility functions work without tag parameters
 - [ ] Test edge cases for updated functionality
 
 #### Integration Tests
+
 - [ ] Validate search and query integration still works
 - [ ] Test data processing pipeline with tag references removed
 - [ ] Confirm no regression in query performance or functionality
@@ -119,10 +126,12 @@ After removing the main NotesQueryService, there may be other service files or u
 ## Dependencies
 
 **Requires**:
+
 - RMTAGS-012 (NotesQueryService removal) - Main service cleanup completed
 - Completion of core tag removal tickets for context
 
 **Blocks**:
+
 - Final system validation and testing
 - Complete cleanup verification
 
@@ -139,7 +148,7 @@ After removing the main NotesQueryService, there may be other service files or u
 ## Success Metrics
 
 - [ ] Comprehensive search completed for tag-related query methods
-- [ ] All identified unused tag query functionality removed  
+- [ ] All identified unused tag query functionality removed
 - [ ] Documentation updated to reflect actual system capabilities
 - [ ] No regression in non-tag query functionality
 - [ ] Codebase search returns no orphaned tag query methods
@@ -148,9 +157,10 @@ After removing the main NotesQueryService, there may be other service files or u
 ## Testing Validation
 
 ### Discovery Phase
+
 ```bash
 # Comprehensive search for tag-related methods
-grep -rn "tag" src/ | grep -E "(query|filter|search|find)" 
+grep -rn "tag" src/ | grep -E "(query|filter|search|find)"
 
 # Check for tag processing in utility files
 find src/ -name "*util*" -exec grep -l "tag" {} \;
@@ -160,6 +170,7 @@ grep -r "tag" src/ | grep -E "(config|setting|option)"
 ```
 
 ### Validation Phase
+
 ```bash
 # Test remaining query functionality
 npm run test:unit -- --testPathPattern=".*query.*"
@@ -174,18 +185,21 @@ npm run lint && npm run typecheck
 ## Quality Assurance
 
 **Search Thoroughness**:
+
 - [ ] Multiple search patterns used to find tag-related code
 - [ ] Manual review conducted to avoid false positives
 - [ ] Cross-reference with known system architecture
 - [ ] Validation that discovered code is actually unused
 
 **Cleanup Quality**:
+
 - [ ] Only unused tag-related functionality removed
 - [ ] Non-tag functionality preserved and tested
 - [ ] Documentation accurately reflects system capabilities
 - [ ] No orphaned references or broken imports
 
 **System Integrity**:
+
 - [ ] Full test suite passes after cleanup
 - [ ] No performance regression in query functionality
 - [ ] Error handling remains robust

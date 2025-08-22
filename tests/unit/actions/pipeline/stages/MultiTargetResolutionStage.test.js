@@ -427,8 +427,13 @@ describe('MultiTargetResolutionStage', () => {
       mockContext.candidateActions = [actionDef];
 
       // Setup as multi-target action
-      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(false);
-      mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue(['primary', 'secondary']);
+      mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
+        false
+      );
+      mockDeps.targetDependencyResolver.getResolutionOrder.mockReturnValue([
+        'primary',
+        'secondary',
+      ]);
       mockDeps.scopeContextBuilder.buildScopeContext.mockReturnValue({
         actor: { id: 'player', components: {} },
         location: { id: 'room', components: {} },
@@ -483,7 +488,6 @@ describe('MultiTargetResolutionStage', () => {
       expect(result.continueProcessing).toBe(true);
       expect(result.data.actionsWithTargets).toEqual([]);
     });
-
   });
 
   describe('Resolution Order', () => {

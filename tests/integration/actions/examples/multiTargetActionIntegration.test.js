@@ -138,7 +138,7 @@ describe('Multi-Target Action Examples - Integration', () => {
 
       // The formatter now enforces strict validation - empty required targets cause an error
       expect(result.ok).toBe(false);
-      expect(result.error).toContain('Target \'primary\' could not be resolved');
+      expect(result.error).toContain("Target 'primary' could not be resolved");
       expect(result.error).toContain('action not available');
     });
   });
@@ -308,7 +308,9 @@ describe('Multi-Target Action Examples - Integration', () => {
             : result.value[0].command;
         expect(command).toBe('give Red Apple to Merchant with Thank You Note');
       } else {
-        expect(result.value).toBe('give Red Apple to Merchant with Thank You Note');
+        expect(result.value).toBe(
+          'give Red Apple to Merchant with Thank You Note'
+        );
       }
     });
   });

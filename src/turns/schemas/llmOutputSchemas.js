@@ -77,11 +77,6 @@ export const LLM_TURN_ACTION_RESPONSE_SCHEMA = {
             type: 'string',
             description: 'Where/how this was observed (optional)',
           },
-          tags: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Additional categorization tags (optional)',
-          },
         },
         required: ['text', 'subject', 'subjectType'],
         additionalProperties: false,

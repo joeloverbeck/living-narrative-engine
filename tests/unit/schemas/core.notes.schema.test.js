@@ -59,7 +59,6 @@ describe('JSON-Schema – core:notes component', () => {
               subject: 'player',
               subjectType: 'character',
               context: 'During combat',
-              tags: ['combat', 'observation'],
               timestamp: '2025-06-04T12:00:00Z',
             },
           ],
@@ -198,6 +197,23 @@ describe('JSON-Schema – core:notes component', () => {
               subjectType: 'other',
               timestamp: '2025-06-04T12:00:00Z',
               extra: 123,
+            },
+          ],
+        },
+      },
+    ],
+    [
+      'tags field (no longer supported)',
+      {
+        'core:notes': {
+          notes: [
+            {
+              text: 'A note about player',
+              subject: 'player',
+              subjectType: 'character',
+              context: 'During combat',
+              tags: ['combat', 'observation'],
+              timestamp: '2025-06-04T12:00:00Z',
             },
           ],
         },

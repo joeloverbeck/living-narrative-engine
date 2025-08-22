@@ -184,9 +184,7 @@ describe('MultiTargetActionFormatter', () => {
 
       // With strict validation, actions with missing targets should fail
       expect(result.ok).toBe(false);
-      expect(result.error).toContain(
-        "Target 'primary' could not be resolved"
-      );
+      expect(result.error).toContain("Target 'primary' could not be resolved");
     });
 
     it('should use entity ID as fallback for display name', () => {
