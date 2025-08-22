@@ -250,7 +250,7 @@ describe('MultiTargetActionFormatter - contextFrom bug', () => {
       // Should fail with error when required targets are missing
       expect(result.ok).toBe(false);
       expect(result.error).toContain(
-        "Required target 'secondary' could not be resolved"
+        "Target 'secondary' could not be resolved - action not available"
       );
     });
 

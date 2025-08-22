@@ -648,7 +648,15 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
         },
       });
 
-      entityTestBed.setupDefinitions(locationDef, actorDef, itemDef);
+      const spellDef = new EntityDefinition('test:spell', {
+        description: 'Test spell',
+        components: {
+          'core:name': { text: 'Fireball' },
+          'core:spell': { type: 'fire', cost: 10 },
+        },
+      });
+
+      entityTestBed.setupDefinitions(locationDef, actorDef, itemDef, spellDef);
 
       await entityManager.createEntityInstance('test:location', {
         instanceId: 'location-001',
@@ -659,6 +667,9 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       await entityManager.createEntityInstance('test:item', {
         instanceId: 'item-001',
       });
+      await entityManager.createEntityInstance('test:spell', {
+        instanceId: 'spell-001',
+      });
 
       // Complex action that exercises all services
       const complexActionDef = {
@@ -666,33 +677,31 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
         name: 'Cast Complex Spell',
         template: 'cast {spell} using {focus} targeting {target}',
         targets: {
-          focus: {
+          primary: {
             scope: 'actor.inventory.items[magical=true]',
             placeholder: 'focus',
             description: 'Magical focus item',
           },
-          target: {
+          secondary: {
             scope: 'location.actors[!=actor]',
             placeholder: 'target',
             description: 'Target for spell',
-            contextFrom: 'focus', // Depends on focus
-            optional: true,
+            contextFrom: 'primary', // Depends on primary
           },
-          spell: {
-            scope: 'focus.spells[]',
+          tertiary: {
+            scope: 'primary.spells[]',
             placeholder: 'spell',
             description: 'Available spells',
-            contextFrom: 'focus', // Depends on focus
-            optional: true,
+            contextFrom: 'primary', // Depends on primary
           },
         },
       };
 
-      // Mock scope resolutions
+      // Mock scope resolutions - all targets return valid results to avoid early exit
       unifiedScopeResolver.resolve
-        .mockResolvedValueOnce(ActionResult.success(new Set(['item-001']))) // focus
-        .mockResolvedValueOnce(ActionResult.success(new Set())) // target (empty)
-        .mockResolvedValueOnce(ActionResult.success(new Set())); // spell (empty)
+        .mockResolvedValueOnce(ActionResult.success(new Set(['item-001']))) // primary
+        .mockResolvedValueOnce(ActionResult.success(new Set(['player-001']))) // secondary 
+        .mockResolvedValueOnce(ActionResult.success(new Set(['spell-001']))); // tertiary
 
       const context = {
         candidateActions: [complexActionDef],
@@ -712,9 +721,10 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       const actionWithTargets = result.data.actionsWithTargets[0];
       expect(actionWithTargets.actionDef).toBe(complexActionDef);
 
-      // At least the focus target should be resolved
-      expect(actionWithTargets.targetContexts.length).toBeGreaterThan(0);
+      // All three targets should be resolved
+      expect(actionWithTargets.targetContexts.length).toBe(3);
 
+      // Check primary target (focus)
       const focusTarget = actionWithTargets.targetContexts.find(
         (tc) => tc.placeholder === 'focus'
       );
@@ -722,11 +732,25 @@ describe('MultiTargetResolutionStage - Integration Tests', () => {
       expect(focusTarget.entityId).toBe('item-001');
       expect(focusTarget.displayName).toBe('Magic Wand');
 
+      // Check secondary target (target)
+      const targetTarget = actionWithTargets.targetContexts.find(
+        (tc) => tc.placeholder === 'target'
+      );
+      expect(targetTarget).toBeDefined();
+      expect(targetTarget.entityId).toBe('player-001');
+
+      // Check tertiary target (spell)
+      const spellTarget = actionWithTargets.targetContexts.find(
+        (tc) => tc.placeholder === 'spell'
+      );
+      expect(spellTarget).toBeDefined();
+      expect(spellTarget.entityId).toBe('spell-001');
+
       // Verify TargetDependencyResolver determined correct resolution order
-      // (focus should be resolved before target and spell since they depend on it)
+      // (primary should be resolved before secondary and tertiary since they depend on it)
       expect(unifiedScopeResolver.resolve).toHaveBeenCalledTimes(3);
 
-      // First call should be for the independent target (focus)
+      // First call should be for the independent target (primary)
       expect(unifiedScopeResolver.resolve.mock.calls[0][0]).toBe(
         'actor.inventory.items[magical=true]'
       );

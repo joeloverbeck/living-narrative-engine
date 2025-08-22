@@ -22,8 +22,19 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     brush_hand: 'positioning:close_actors',
     feel_arm_muscles:
       'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target',
-    fondle_ass:
-      'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target',
+    fondle_ass: {
+      primary: {
+        scope: 'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target',
+        placeholder: 'primary',
+        description: 'Person whose ass to fondle'
+      },
+      secondary: {
+        scope: 'clothing:target_topmost_torso_lower_clothing',
+        placeholder: 'secondary',
+        description: 'Clothing item over which to fondle',
+        contextFrom: 'primary'
+      }
+    },
     massage_back: 'intimacy:close_actors_facing_away',
     massage_shoulders:
       'intimacy:actors_with_arms_facing_each_other_or_behind_target',
@@ -42,10 +53,20 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
 
         // Should have targets property
         expect(content.targets).toBeDefined();
-        expect(typeof content.targets).toBe('string');
-
-        // Should have correct targets value
-        expect(content.targets).toBe(EXPECTED_TARGETS[actionName]);
+        
+        // Handle both string and object formats
+        if (actionName === 'fondle_ass') {
+          // fondle_ass uses multi-target format
+          expect(typeof content.targets).toBe('object');
+          expect(content.targets.primary).toBeDefined();
+          expect(content.targets.secondary).toBeDefined();
+          expect(content.targets.primary.scope).toBe(EXPECTED_TARGETS[actionName].primary.scope);
+          expect(content.targets.secondary.scope).toBe(EXPECTED_TARGETS[actionName].secondary.scope);
+        } else {
+          // Other actions use simple string format
+          expect(typeof content.targets).toBe('string');
+          expect(content.targets).toBe(EXPECTED_TARGETS[actionName]);
+        }
       }
     );
   });
@@ -79,10 +100,22 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         expect(content.targets).toBeDefined();
-        expect(content.targets.length).toBeGreaterThan(minLength);
-        expect(content.targets).toMatch(
-          /^intimacy:actors_with_.*_facing_each_other_or_behind_target$/
-        );
+        
+        // Handle both formats
+        if (name === 'fondle_ass') {
+          // fondle_ass uses multi-target format - check primary target's scope
+          expect(content.targets.primary).toBeDefined();
+          expect(content.targets.primary.scope.length).toBeGreaterThan(minLength);
+          expect(content.targets.primary.scope).toMatch(
+            /^intimacy:actors_with_.*_facing_each_other_or_behind_target$/
+          );
+        } else {
+          // Other actions use string format
+          expect(content.targets.length).toBeGreaterThan(minLength);
+          expect(content.targets).toMatch(
+            /^intimacy:actors_with_.*_facing_each_other_or_behind_target$/
+          );
+        }
       }
     );
   });
@@ -146,7 +179,7 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
     const expectedTemplates = {
       brush_hand: "brush {target}'s hand with your own",
       feel_arm_muscles: "feel the hard swell of {target}'s muscles",
-      fondle_ass: "fondle {target}'s ass",
+      fondle_ass: "fondle {primary}'s ass over the {secondary}",
       massage_back: "massage {target}'s back",
       massage_shoulders: "massage {target}'s shoulders",
       place_hand_on_waist: "place a hand on {target}'s waist",
@@ -159,9 +192,53 @@ describe('INTMIG-003 Touch Actions Migration Validation', () => {
         const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
 
         expect(content.template).toBe(expectedTemplates[actionName]);
-        expect(content.template).toMatch(/\{target\}/);
+        
+        // Check for appropriate placeholder based on action format
+        if (actionName === 'fondle_ass') {
+          expect(content.template).toMatch(/\{primary\}/);
+          expect(content.template).toMatch(/\{secondary\}/);
+        } else {
+          expect(content.template).toMatch(/\{target\}/);
+        }
       }
     );
+  });
+
+  describe('Multi-Target Validation', () => {
+    it('should have proper multi-target structure for fondle_ass', async () => {
+      const filePath = path.join(ACTIONS_DIR, 'fondle_ass.action.json');
+      const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
+
+      // Validate multi-target structure
+      expect(typeof content.targets).toBe('object');
+      expect(content.targets.primary).toBeDefined();
+      expect(content.targets.secondary).toBeDefined();
+      
+      // Validate primary target
+      expect(content.targets.primary.scope).toBe(
+        'intimacy:actors_with_ass_cheeks_facing_each_other_or_behind_target'
+      );
+      expect(content.targets.primary.placeholder).toBe('primary');
+      expect(content.targets.primary.description).toBe('Person whose ass to fondle');
+      
+      // Validate secondary target
+      expect(content.targets.secondary.scope).toBe('clothing:target_topmost_torso_lower_clothing');
+      expect(content.targets.secondary.placeholder).toBe('secondary');
+      expect(content.targets.secondary.description).toBe('Clothing item over which to fondle');
+      expect(content.targets.secondary.contextFrom).toBe('primary');
+    });
+
+    it('should maintain legacy single-target format for other actions', async () => {
+      const singleTargetActions = MIGRATED_ACTIONS.filter(a => a !== 'fondle_ass');
+      
+      for (const actionName of singleTargetActions) {
+        const filePath = path.join(ACTIONS_DIR, `${actionName}.action.json`);
+        const content = JSON.parse(await fs.readFile(filePath, 'utf8'));
+        
+        expect(typeof content.targets).toBe('string');
+        expect(content.targets).toMatch(/^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$/);
+      }
+    });
   });
 
   describe('JSON Schema Compliance', () => {

@@ -27,11 +27,6 @@
           "type": "string",
           "enum": ["primary"],
           "description": "Use another target as context for scope evaluation (currently only 'primary' supported)"
-        },
-        "optional": {
-          "type": "boolean",
-          "default": false,
-          "description": "Whether this target is optional (action available even if no targets found)"
         }
       },
       "required": ["scope", "placeholder"],
@@ -288,10 +283,10 @@
       ]
     },
     {
-      "$comment": "Multi-target action with optional tertiary target",
+      "$comment": "Multi-target action with three required targets",
       "id": "magic:cast_spell",
       "name": "Cast Spell",
-      "description": "Cast a spell with optional focus item",
+      "description": "Cast a spell using a focus item",
       "targets": {
         "primary": {
           "scope": "magic:known_spells",
@@ -306,8 +301,7 @@
         "tertiary": {
           "scope": "magic:focus_items",
           "placeholder": "focus",
-          "description": "Optional magical focus item",
-          "optional": true
+          "description": "Magical focus item to channel the spell"
         }
       },
       "template": "cast {spell} on {target} using {focus}",

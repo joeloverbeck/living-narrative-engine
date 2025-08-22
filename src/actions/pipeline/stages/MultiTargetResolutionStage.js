@@ -588,10 +588,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
           });
         }
 
-        // Check if target is required and we found no candidates for any primary
-        if (!targetDef.optional && resolvedSecondaryTargets.length === 0) {
+        // Check if we found no candidates for any primary
+        if (resolvedSecondaryTargets.length === 0) {
           trace?.failure(
-            `No candidates found for required target '${targetKey}'`,
+            `No candidates found for target '${targetKey}'`,
             'MultiTargetResolutionStage'
           );
           return PipelineResult.success({
@@ -650,10 +650,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
           trace
         );
 
-        // Check if target is required
-        if (!targetDef.optional && candidates.length === 0) {
+        // Check if we found no candidates
+        if (candidates.length === 0) {
           trace?.failure(
-            `No candidates found for required target '${targetKey}'`,
+            `No candidates found for target '${targetKey}'`,
             'MultiTargetResolutionStage'
           );
           return PipelineResult.success({

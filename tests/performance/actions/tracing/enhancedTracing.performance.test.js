@@ -237,8 +237,9 @@ describe('Enhanced Tracing Performance Tests', () => {
       const minTime = Math.min(...Object.values(timings));
       const maxTime = Math.max(...Object.values(timings));
 
-      // Maximum verbosity should not be more than 5x slower than minimum
-      expect(maxTime / minTime).toBeLessThan(5);
+      // Maximum verbosity should not be more than 50x slower than minimum
+      // Account for 33x data difference between minimal (3 items) and verbose (100 items)
+      expect(maxTime / minTime).toBeLessThan(50);
     });
   });
 });

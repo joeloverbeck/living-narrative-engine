@@ -1,8 +1,8 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "examples:give_item_to_character",
-  "name": "Give Item to Character",
-  "description": "Give an item to another character, optionally with a message",
+  "id": "examples:give_item_with_note",
+  "name": "Give Item with Note",
+  "description": "Give an item to another character with an accompanying message",
   "targets": {
     "primary": {
       "scope": "examples:transferable_items",
@@ -17,8 +17,7 @@
     "tertiary": {
       "scope": "examples:notes",
       "placeholder": "note",
-      "description": "Optional note to include with the gift",
-      "optional": true
+      "description": "Note to include with the gift"
     }
   },
   "generateCombinations": false,
@@ -48,7 +47,7 @@
       "failure_message": "The recipient must be conscious to receive items."
     }
   ],
-  "template": "give {item} to {recipient}{note:with {note}|}",
+  "template": "give {item} to {recipient} with {note}",
   "visual": {
     "backgroundColor": "#455a64",
     "textColor": "#ffffff",

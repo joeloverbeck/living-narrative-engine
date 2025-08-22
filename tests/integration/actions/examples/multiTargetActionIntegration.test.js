@@ -138,8 +138,7 @@ describe('Multi-Target Action Examples - Integration', () => {
 
       // The formatter now enforces strict validation - empty required targets cause an error
       expect(result.ok).toBe(false);
-      expect(result.error).toContain('Required target');
-      expect(result.error).toContain('could not be resolved');
+      expect(result.error).toContain('Target \'primary\' could not be resolved');
       expect(result.error).toContain('action not available');
     });
   });
@@ -234,28 +233,22 @@ describe('Multi-Target Action Examples - Integration', () => {
     });
   });
 
-  describe('Optional Targets Action Formatting', () => {
-    let actionDef;
-
-    beforeEach(() => {
+  describe('Multiple Action Files', () => {
+    it('should format give_item action', () => {
       const actionPath = join(
         process.cwd(),
-        'data/mods/examples/actions/optional_targets.action.json'
+        'data/mods/examples/actions/give_item.action.json'
       );
-      actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
-    });
+      const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
 
-    it('should format give action without optional target', () => {
       const resolvedTargets = {
         primary: [{ id: 'apple_001', displayName: 'Red Apple' }],
         secondary: [{ id: 'npc_001', displayName: 'Merchant' }],
-        tertiary: [], // Empty optional target
       };
 
       const targetDefinitions = {
         primary: { placeholder: 'item' },
         secondary: { placeholder: 'recipient' },
-        tertiary: { placeholder: 'note', optional: true },
       };
 
       const result = formatter.formatMultiTarget(
@@ -266,27 +259,26 @@ describe('Multi-Target Action Examples - Integration', () => {
         { targetDefinitions }
       );
 
-      // Note: This might fail if the formatter doesn't handle conditional placeholders like {note:with {note}|}
-      // The template "give {item} to {recipient}{note:with {note}|}" contains conditional syntax
-      if (result.ok) {
-        if (actionDef.generateCombinations || Array.isArray(result.value)) {
-          expect(result.value).toHaveLength(1);
-          // Extract command from the object structure
-          const command =
-            typeof result.value[0] === 'string'
-              ? result.value[0]
-              : result.value[0].command;
-          expect(command).toContain('give Red Apple to Merchant');
-        } else {
-          expect(result.value).toContain('give Red Apple to Merchant');
-        }
+      expect(result.ok).toBe(true);
+      if (actionDef.generateCombinations || Array.isArray(result.value)) {
+        expect(result.value).toHaveLength(1);
+        const command =
+          typeof result.value[0] === 'string'
+            ? result.value[0]
+            : result.value[0].command;
+        expect(command).toBe('give Red Apple to Merchant');
       } else {
-        // If formatting fails due to conditional placeholder syntax, that's expected
-        expect(result.error).toContain('unresolved placeholders');
+        expect(result.value).toBe('give Red Apple to Merchant');
       }
     });
 
-    it('should format give action with optional target', () => {
+    it('should format give_item_with_note action', () => {
+      const actionPath = join(
+        process.cwd(),
+        'data/mods/examples/actions/give_item_with_note.action.json'
+      );
+      const actionDef = JSON.parse(readFileSync(actionPath, 'utf8'));
+
       const resolvedTargets = {
         primary: [{ id: 'apple_001', displayName: 'Red Apple' }],
         secondary: [{ id: 'npc_001', displayName: 'Merchant' }],
@@ -296,7 +288,7 @@ describe('Multi-Target Action Examples - Integration', () => {
       const targetDefinitions = {
         primary: { placeholder: 'item' },
         secondary: { placeholder: 'recipient' },
-        tertiary: { placeholder: 'note', optional: true },
+        tertiary: { placeholder: 'note' },
       };
 
       const result = formatter.formatMultiTarget(
@@ -307,25 +299,16 @@ describe('Multi-Target Action Examples - Integration', () => {
         { targetDefinitions }
       );
 
-      // Note: This might fail if the formatter doesn't handle conditional placeholders like {note:with {note}|}
-      // The template "give {item} to {recipient}{note:with {note}|}" contains conditional syntax
-      if (result.ok) {
-        if (actionDef.generateCombinations || Array.isArray(result.value)) {
-          expect(result.value).toHaveLength(1);
-          // Extract command from the object structure
-          const command =
-            typeof result.value[0] === 'string'
-              ? result.value[0]
-              : result.value[0].command;
-          expect(command).toContain('give Red Apple to Merchant');
-          expect(command).toContain('Thank You Note');
-        } else {
-          expect(result.value).toContain('give Red Apple to Merchant');
-          expect(result.value).toContain('Thank You Note');
-        }
+      expect(result.ok).toBe(true);
+      if (actionDef.generateCombinations || Array.isArray(result.value)) {
+        expect(result.value).toHaveLength(1);
+        const command =
+          typeof result.value[0] === 'string'
+            ? result.value[0]
+            : result.value[0].command;
+        expect(command).toBe('give Red Apple to Merchant with Thank You Note');
       } else {
-        // If formatting fails due to conditional placeholder syntax, that's expected
-        expect(result.error).toContain('unresolved placeholders');
+        expect(result.value).toBe('give Red Apple to Merchant with Thank You Note');
       }
     });
   });

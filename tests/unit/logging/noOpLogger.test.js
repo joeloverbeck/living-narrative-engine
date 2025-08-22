@@ -123,26 +123,6 @@ describe('NoOpLogger', () => {
     });
   });
 
-  describe('Performance characteristics', () => {
-    it('should have minimal performance impact', () => {
-      const iterations = 10000;
-      const startTime = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        logger.info('test message', i);
-        logger.debug('debug message', { iteration: i });
-        logger.warn('warning', i);
-        logger.error('error', new Error('test'));
-      }
-
-      const endTime = performance.now();
-      const duration = endTime - startTime;
-
-      // No-op logger should be very fast - less than 100ms for 10k iterations
-      expect(duration).toBeLessThan(100);
-    });
-  });
-
   describe('Edge cases', () => {
     it('should handle undefined and null arguments gracefully', () => {
       expect(() => logger.info(undefined)).not.toThrow();

@@ -154,7 +154,6 @@ describe('Multi-Target Action Schema Validation', () => {
           tertiary: {
             scope: 'test:focus_items',
             placeholder: 'focus',
-            optional: true,
           },
         },
         template: 'cast {spell} on {target} using {focus}',
@@ -541,54 +540,6 @@ describe('Multi-Target Action Schema Validation', () => {
         },
         template: 'use {item}',
         // generateCombinations omitted, should default to false
-      };
-
-      const isValid = validate(action);
-      if (!isValid) console.error('Validation errors:', validate.errors);
-      expect(isValid).toBe(true);
-    });
-  });
-
-  // ── OPTIONAL TARGET TESTS ─────────────────────────────────────────────────
-
-  describe('Optional Targets', () => {
-    test('✓ should accept optional target flag', () => {
-      const action = {
-        id: 'test:optional_target',
-        name: 'Optional Target',
-        description: 'Test with optional target',
-        targets: {
-          primary: {
-            scope: 'test:spells',
-            placeholder: 'spell',
-          },
-          secondary: {
-            scope: 'test:focus_items',
-            placeholder: 'focus',
-            optional: true,
-          },
-        },
-        template: 'cast {spell} with {focus}',
-      };
-
-      const isValid = validate(action);
-      if (!isValid) console.error('Validation errors:', validate.errors);
-      expect(isValid).toBe(true);
-    });
-
-    test('✓ should default optional to false when omitted', () => {
-      const action = {
-        id: 'test:optional_default',
-        name: 'Optional Default',
-        description: 'Test with optional omitted',
-        targets: {
-          primary: {
-            scope: 'test:items',
-            placeholder: 'item',
-            // optional omitted, should default to false
-          },
-        },
-        template: 'use {item}',
       };
 
       const isValid = validate(action);

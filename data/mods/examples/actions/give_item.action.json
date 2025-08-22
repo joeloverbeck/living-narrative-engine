@@ -1,0 +1,52 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "examples:give_item",
+  "name": "Give Item",
+  "description": "Give an item to another character",
+  "targets": {
+    "primary": {
+      "scope": "examples:transferable_items",
+      "placeholder": "item",
+      "description": "Item to give away"
+    },
+    "secondary": {
+      "scope": "examples:nearby_characters",
+      "placeholder": "recipient",
+      "description": "Character to receive the item"
+    }
+  },
+  "generateCombinations": false,
+  "required_components": {
+    "actor": ["core:inventory", "core:position"]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "!=": [{ "var": "recipient.id" }, { "var": "actor.id" }]
+      },
+      "failure_message": "You cannot give items to yourself."
+    },
+    {
+      "logic": {
+        "==": [
+          { "var": "recipient.components.core:position.locationId" },
+          { "var": "actor.components.core:position.locationId" }
+        ]
+      },
+      "failure_message": "The recipient must be in the same location as you."
+    },
+    {
+      "logic": {
+        "==": [{ "var": "recipient.components.core:actor.conscious" }, true]
+      },
+      "failure_message": "The recipient must be conscious to receive items."
+    }
+  ],
+  "template": "give {item} to {recipient}",
+  "visual": {
+    "backgroundColor": "#455a64",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#37474f",
+    "hoverTextColor": "#ffffff"
+  }
+}

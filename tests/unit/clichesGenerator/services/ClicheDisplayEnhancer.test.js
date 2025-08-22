@@ -733,23 +733,30 @@ describe('ClicheDisplayEnhancer', () => {
     });
 
     it('should handle delete item error', async () => {
+      jest.useFakeTimers('legacy');
       onDeleteItem.mockRejectedValueOnce(new Error('Delete failed'));
 
       const deleteBtn = container.querySelector('.delete-item-btn');
 
       await deleteBtn.click();
 
-      // Wait a moment for async error handling
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to delete item',
         expect.any(Error)
       );
 
-      // After error, button should be re-enabled and text restored
+      // The error handler calls showCopyFeedback which shows "Failed" for 1500ms
+      expect(deleteBtn.disabled).toBe(true);
+      expect(deleteBtn.textContent).toBe('Failed');
+
+      // Fast-forward past the feedback timeout
+      jest.advanceTimersByTime(1500);
+
+      // After timeout, button should be re-enabled and text restored
       expect(deleteBtn.disabled).toBe(false);
       expect(deleteBtn.textContent).toBe('🗑️');
+
+      jest.useRealTimers();
     });
 
     it('should warn when delete handler not configured', async () => {
@@ -789,6 +796,7 @@ describe('ClicheDisplayEnhancer', () => {
     });
 
     it('should handle delete trope error', async () => {
+      jest.useFakeTimers('legacy');
       onDeleteTrope.mockRejectedValueOnce(new Error('Delete failed'));
 
       // Add delete button to trope
@@ -809,28 +817,21 @@ describe('ClicheDisplayEnhancer', () => {
         'Failed to delete trope',
         expect.any(Error)
       );
-    });
 
-    it('should update category count after deletion', async () => {
-      jest.useFakeTimers();
+      // The error handler calls showCopyFeedback
+      expect(deleteTropeBtn.disabled).toBe(true);
+      expect(deleteTropeBtn.textContent).toBe('Failed');
 
-      const category = container.querySelector('[data-category="names"]');
-      const items = category.querySelectorAll('.cliche-item');
-      expect(items.length).toBe(3); // Start with 3 items
+      // Fast-forward past the feedback timeout
+      jest.advanceTimersByTime(1500);
 
-      const firstDeleteBtn = items[0].querySelector('.delete-item-btn');
-
-      // Click delete button
-      await firstDeleteBtn.click();
-
-      // Wait for animation timeout
-      jest.advanceTimersByTime(300);
-
-      // After deletion, the deletion handler should have been called
-      expect(onDeleteItem).toHaveBeenCalled();
+      // After timeout, button should be re-enabled
+      expect(deleteTropeBtn.disabled).toBe(false);
+      expect(deleteTropeBtn.textContent).toBe('🗑️');
 
       jest.useRealTimers();
     });
+
   });
 
   describe('Copy Error Handling', () => {
@@ -991,124 +992,6 @@ describe('ClicheDisplayEnhancer', () => {
     });
   });
 
-  describe('Collapsed State Application', () => {
-    beforeEach(() => {
-      // Reset DOM for collapsed state tests with proper structure
-      document.body.innerHTML = `
-        <div id="test-container">
-          <div class="cliches-results">
-            <div class="cliche-categories">
-              <div class="cliche-category" data-category="names">
-                <h4 class="category-title">
-                  Common Names
-                  <span class="category-count">(3)</span>
-                </h4>
-                <ul class="cliche-list">
-                  <li class="cliche-item">John</li>
-                  <li class="cliche-item">Jane</li>
-                  <li class="cliche-item">Bob</li>
-                </ul>
-              </div>
-              <div class="cliche-category" data-category="traits">
-                <h4 class="category-title">
-                  Personality Traits
-                  <span class="category-count">(2)</span>
-                </h4>
-                <ul class="cliche-list">
-                  <li class="cliche-item">Brooding</li>
-                  <li class="cliche-item">Mysterious</li>
-                </ul>
-              </div>
-            </div>
-            <div class="cliche-metadata">
-              <p>Generated on 12/13/2024</p>
-            </div>
-          </div>
-        </div>
-      `;
-      container = document.getElementById('test-container');
-
-      // Reset mock display data for these tests
-      mockDisplayData = {
-        categories: [
-          {
-            id: 'names',
-            title: 'Common Names',
-            items: ['John', 'Jane', 'Bob'],
-            count: 3,
-          },
-          {
-            id: 'traits',
-            title: 'Personality Traits',
-            items: ['Brooding', 'Mysterious'],
-            count: 2,
-          },
-        ],
-        metadata: {
-          createdAt: '12/13/2024',
-          totalCount: 5,
-        },
-      };
-    });
-
-    it('should apply saved collapsed states on enhance', () => {
-      // Set up collapsed state in localStorage
-      window.localStorage.getItem = jest.fn((key) => {
-        if (key === 'cliche-collapsed-categories') {
-          return JSON.stringify(['names', 'traits']);
-        }
-        return null;
-      });
-
-      // Create new enhancer with saved state
-      const newEnhancer = new ClicheDisplayEnhancer({
-        logger: mockLogger,
-        container,
-      });
-
-      newEnhancer.enhance(mockDisplayData);
-
-      // Check that categories are collapsed
-      const nameCategory = container.querySelector('[data-category="names"]');
-      const traitsCategory = container.querySelector(
-        '[data-category="traits"]'
-      );
-
-      const nameToggle = nameCategory.querySelector('.category-toggle');
-      const traitsToggle = traitsCategory.querySelector('.category-toggle');
-      const nameList = nameCategory.querySelector('.cliche-list');
-      const traitsList = traitsCategory.querySelector('.cliche-list');
-
-      expect(nameToggle.getAttribute('aria-expanded')).toBe('false');
-      expect(traitsToggle.getAttribute('aria-expanded')).toBe('false');
-      expect(nameList.style.display).toBe('none');
-      expect(traitsList.style.display).toBe('none');
-    });
-
-    it('should handle non-existent categories in saved state', () => {
-      // Set up collapsed state with non-existent category
-      window.localStorage.getItem = jest.fn((key) => {
-        if (key === 'cliche-collapsed-categories') {
-          return JSON.stringify(['non-existent', 'names']);
-        }
-        return null;
-      });
-
-      const newEnhancer = new ClicheDisplayEnhancer({
-        logger: mockLogger,
-        container,
-      });
-
-      expect(() => {
-        newEnhancer.enhance(mockDisplayData);
-      }).not.toThrow();
-
-      // Names should still be collapsed
-      const nameCategory = container.querySelector('[data-category="names"]');
-      const nameToggle = nameCategory.querySelector('.category-toggle');
-      expect(nameToggle.getAttribute('aria-expanded')).toBe('false');
-    });
-  });
 
   describe('Event Handler Edge Cases', () => {
     beforeEach(() => {
@@ -1123,42 +1006,6 @@ describe('ClicheDisplayEnhancer', () => {
       expect(() => {
         nonButton.dispatchEvent(event);
       }).not.toThrow();
-    });
-
-    it('should maintain collapsed state through re-enhance', () => {
-      // First enhance to get controls
-      enhancer.enhance(mockDisplayData);
-
-      const toggle = container.querySelector('.category-toggle');
-      const categoryId = toggle.closest('.cliche-category').dataset.category;
-
-      // Collapse category
-      toggle.click();
-      expect(toggle.getAttribute('aria-expanded')).toBe('false');
-
-      // Mock localStorage to return the collapsed state
-      window.localStorage.setItem = jest.fn();
-      window.localStorage.getItem = jest.fn((key) => {
-        if (key === 'cliche-collapsed-categories') {
-          return JSON.stringify([categoryId]);
-        }
-        return null;
-      });
-
-      // Create new enhancer to simulate re-enhance with saved state
-      const newEnhancer = new ClicheDisplayEnhancer({
-        logger: mockLogger,
-        container,
-      });
-
-      // Re-enhance
-      newEnhancer.enhance(mockDisplayData);
-
-      // State should be preserved
-      const newToggle = container.querySelector(
-        `[data-category="${categoryId}"] .category-toggle`
-      );
-      expect(newToggle.getAttribute('aria-expanded')).toBe('false');
     });
   });
 

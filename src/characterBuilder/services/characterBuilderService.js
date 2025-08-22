@@ -1453,15 +1453,15 @@ export class CharacterBuilderService {
       }
 
       // Dispatch generation started event
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_STARTED,
-        payload: {
+      this.#eventBus.dispatch(
+        CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_STARTED,
+        {
           conceptId,
           directionId,
           directionTitle: direction.title,
           timestamp: new Date().toISOString(),
-        },
-      });
+        }
+      );
 
       const startTime = Date.now();
 
@@ -1505,15 +1505,15 @@ export class CharacterBuilderService {
         return motivations;
       } catch (error) {
         // Dispatch generation failed event
-        this.#eventBus.dispatch({
-          type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_FAILED,
-          payload: {
+        this.#eventBus.dispatch(
+          CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_FAILED,
+          {
             conceptId,
             directionId,
             error: error.message,
             errorCode: error.code || 'GENERATION_ERROR',
-          },
-        });
+          }
+        );
 
         throw error;
       }
@@ -1539,10 +1539,10 @@ export class CharacterBuilderService {
       try {
         const cached = this.#cacheManager.get(cacheKey);
         if (cached) {
-          this.#eventBus.dispatch({
-            type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
-            payload: { directionId, source: 'cache', count: cached.length },
-          });
+          this.#eventBus.dispatch(
+            CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
+            { directionId, source: 'cache', count: cached.length }
+          );
           return cached;
         }
       } catch (cacheError) {
@@ -1556,14 +1556,14 @@ export class CharacterBuilderService {
       const cached = this.#motivationCache?.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < this.#motivationCacheTTL) {
         this.#logger.info('Returning cached core motivations');
-        this.#eventBus.dispatch({
-          type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
-          payload: {
+        this.#eventBus.dispatch(
+          CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
+          {
             directionId,
-            count: cached.data.length,
             source: 'cache',
-          },
-        });
+            count: cached.data.length,
+          }
+        );
         return cached.data;
       }
     }
@@ -1575,10 +1575,10 @@ export class CharacterBuilderService {
 
       // Handle case where database returns null/undefined
       if (!motivations || !Array.isArray(motivations)) {
-        this.#eventBus.dispatch({
-          type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
-          payload: { directionId, source: 'database', count: 0 },
-        });
+        this.#eventBus.dispatch(
+          CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_RETRIEVED,
+          { directionId, source: 'database', count: 0 }
+        );
         return [];
       }
 
@@ -1693,16 +1693,16 @@ export class CharacterBuilderService {
       }
 
       // Dispatch completion event
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_COMPLETED,
-        payload: {
+      this.#eventBus.dispatch(
+        CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_COMPLETED,
+        {
           conceptId: motivationData[0].conceptId,
           directionId,
           motivationIds: savedIds,
           totalCount: await this.#database.getCoreMotivationsCount(directionId),
           generationTime: Date.now(),
-        },
-      });
+        }
+      );
 
       this.#logger.info(`Saved ${savedIds.length} core motivations`);
 

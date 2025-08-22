@@ -175,25 +175,24 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
       );
     });
 
-    it('should fail even for optional targets when scope itself is missing', async () => {
+    it('should fail when any target scope is missing', async () => {
       // Arrange
-      const actionWithOptionalMissingScope = {
-        id: 'test:optional_target_missing_scope',
-        name: 'Action with Optional Target',
+      const actionWithMissingScope = {
+        id: 'test:target_missing_scope',
+        name: 'Action with Missing Target Scope',
         targets: {
           primary: {
             scope: 'self',
             placeholder: 'actor',
           },
           secondary: {
-            scope: 'missing:optional_scope',
-            placeholder: 'optional_target',
-            optional: true,
+            scope: 'missing:scope',
+            placeholder: 'target',
           },
         },
       };
 
-      mockContext.candidateActions = [actionWithOptionalMissingScope];
+      mockContext.candidateActions = [actionWithMissingScope];
 
       // Setup as multi-target action
       mockDeps.legacyTargetCompatibilityLayer.isLegacyAction.mockReturnValue(
@@ -208,13 +207,13 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
       mockDeps.unifiedScopeResolver.resolve
         .mockReturnValueOnce(ActionResult.success(new Set(['player'])))
         .mockReturnValueOnce(
-          ActionResult.failure({
+          ActionResult.failure([{
             message:
-              "Missing scope definition: Scope 'missing:optional_scope' not found",
+              "Missing scope definition: Scope 'missing:scope' not found",
             name: 'ScopeNotFoundError',
             phase: 'VALIDATION',
-            scopeName: 'missing:optional_scope',
-          })
+            scopeName: 'missing:scope',
+          }])
         );
 
       // Act
@@ -223,13 +222,20 @@ describe('MultiTargetResolutionStage - Missing Scope Handling', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(result.data.actionsWithTargets).toEqual([]); // No actions due to scope error
+      
+      // Production code logs errors twice: once in #resolveScope and once in catch block
+      expect(mockDeps.logger.error).toHaveBeenCalledTimes(2);
       expect(mockDeps.logger.error).toHaveBeenCalledWith(
-        "Failed to resolve scope 'missing:optional_scope':",
+        "Failed to resolve scope 'missing:scope':",
         expect.arrayContaining([
           expect.objectContaining({
             message: expect.stringContaining('Missing scope definition'),
           }),
         ])
+      );
+      expect(mockDeps.logger.error).toHaveBeenCalledWith(
+        expect.stringContaining("Error evaluating scope 'missing:scope':"),
+        expect.any(Error)
       );
     });
 
