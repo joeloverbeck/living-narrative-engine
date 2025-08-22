@@ -39,7 +39,7 @@ export async function setupDIContainerStage(
   log.debug('Bootstrap Stage: setupDIContainerStage starting...');
 
   try {
-    containerConfigFunc(container, uiReferences);
+    await containerConfigFunc(container, uiReferences);
   } catch (registrationError) {
     const errorMsg = `Fatal Error during service registration: ${registrationError.message}.`;
     log.error(

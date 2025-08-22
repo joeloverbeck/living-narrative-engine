@@ -76,7 +76,7 @@ export class CommonBootstrapper {
         }
         await configureContainer(container, uiElements);
       } else {
-        configureMinimalContainer(container, { includeCharacterBuilder });
+        await configureMinimalContainer(container, { includeCharacterBuilder });
       }
 
       // Step 2: Resolve core services

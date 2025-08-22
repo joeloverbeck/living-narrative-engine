@@ -25,12 +25,11 @@ describe('formatNotesForDisplay', () => {
           subject: 'Iker Aguirre',
           subjectType: 'character',
           context: 'The Gilded Bean terrace',
-          tags: ['potential', 'young'],
         },
       ];
       const result = formatNotesForDisplay(notes);
       expect(result).toBe(
-        '[character] Iker Aguirre: Young man observed (The Gilded Bean terrace) [potential, young]'
+        '[character] Iker Aguirre: Young man observed (The Gilded Bean terrace)'
       );
     });
 
@@ -70,10 +69,9 @@ describe('formatNotesForDisplay', () => {
       const note = {
         text: 'Single observation',
         subject: 'Entity',
-        tags: ['tag1', 'tag2'],
       };
       const result = formatNotesForDisplay(note);
-      expect(result).toBe('Entity: Single observation [tag1, tag2]');
+      expect(result).toBe('Entity: Single observation');
     });
 
     it('should format single object note with subjectType', () => {
@@ -81,16 +79,14 @@ describe('formatNotesForDisplay', () => {
         text: 'Single observation',
         subject: 'Entity',
         subjectType: 'location',
-        tags: ['tag1', 'tag2'],
       };
       const result = formatNotesForDisplay(note);
-      expect(result).toBe('[location] Entity: Single observation [tag1, tag2]');
+      expect(result).toBe('[location] Entity: Single observation');
     });
 
     it('should return null for object without text', () => {
       const note = {
         subject: 'Entity',
-        tags: ['tag1'],
       };
       const result = formatNotesForDisplay(note);
       expect(result).toBeNull();
@@ -103,11 +99,10 @@ describe('formatNotesForDisplay', () => {
         {
           text: 'Note',
           subject: 'Subject',
-          tags: ['  ', '', 'valid', '   '],
         },
       ];
       const result = formatNotesForDisplay(notes);
-      expect(result).toBe('Subject: Note [valid]');
+      expect(result).toBe('Subject: Note');
     });
 
     it('should handle boolean or number inputs gracefully', () => {

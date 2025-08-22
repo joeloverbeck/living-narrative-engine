@@ -10,7 +10,6 @@ import { isNonBlankString } from '../../../utils/textUtils.js';
  * @property {string} subject - Primary subject of the note.
  * @property {string} [subjectType] - Type of subject (character, location, etc).
  * @property {string} [context] - Where/how this was observed.
- * @property {string[]} [tags] - Additional categorization tags.
  * @property {string} [timestamp] - When the note was created.
  */
 
@@ -25,7 +24,7 @@ function formatSingleNote(note) {
     return '';
   }
 
-  const { text, subject, subjectType, context, tags } = note;
+  const { text, subject, subjectType, context } = note;
 
   if (!isNonBlankString(text)) {
     return '';
@@ -43,13 +42,6 @@ function formatSingleNote(note) {
 
   if (isNonBlankString(context)) {
     formatted = `${formatted} (${context.trim()})`;
-  }
-
-  if (Array.isArray(tags) && tags.length > 0) {
-    const validTags = tags.filter((tag) => isNonBlankString(tag));
-    if (validTags.length > 0) {
-      formatted = `${formatted} [${validTags.join(', ')}]`;
-    }
   }
 
   return formatted;

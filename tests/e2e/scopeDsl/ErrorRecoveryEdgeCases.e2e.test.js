@@ -51,7 +51,7 @@ describe('ScopeDSL Error Recovery and Edge Cases E2E', () => {
   beforeEach(async () => {
     // Create real container and configure it
     container = new AppContainer();
-    configureContainer(container, {
+    await configureContainer(container, {
       outputDiv: document.createElement('div'),
       inputElement: document.createElement('input'),
       titleElement: document.createElement('h1'),

@@ -77,7 +77,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
     document.body.appendChild(inputElement);
     document.body.appendChild(titleElement);
 
-    configureContainer(container, {
+    await configureContainer(container, {
       outputDiv,
       inputElement,
       titleElement,

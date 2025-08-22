@@ -133,7 +133,6 @@ describe('buildSpeechMeta', () => {
       text: 'Character seems nervous',
       subject: 'Alice',
       subjectType: 'character',
-      tags: ['emotion'],
     };
 
     const fragment = buildSpeechMeta(doc, mockDomFactory, {
@@ -154,7 +153,6 @@ describe('buildSpeechMeta', () => {
     expect(tooltip.innerHTML).toContain('note-subject-type');
     expect(tooltip.innerHTML).toContain('Alice');
     expect(tooltip.innerHTML).toContain('Character seems nervous');
-    expect(tooltip.innerHTML).toContain('emotion');
     expect(tooltip.innerHTML).toContain('👤'); // Character icon
   });
 

@@ -61,7 +61,7 @@ export class EntityWorkflowTestBed extends BaseTestBed {
 
     // Create and configure container
     this.container = new AppContainer();
-    configureContainer(this.container, {
+    await configureContainer(this.container, {
       outputDiv: document.createElement('div'),
       inputElement: document.createElement('input'),
       titleElement: document.createElement('h1'),

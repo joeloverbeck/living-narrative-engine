@@ -244,17 +244,23 @@ export class MultiTargetResolutionStage extends PipelineStage {
               }
             }
 
-            this.#captureTargetResolutionData(trace, actionDef, actor, {
-              isLegacy: false,
-              resolutionSuccess: result.success,
-              resolutionTimeMs: Date.now() - resolutionStartTime,
-              targetKeys,
-              resolvedTargetCounts,
-              totalTargetCount: Object.values(resolvedTargetCounts).reduce(
-                (sum, count) => sum + count,
-                0
-              ),
-            });
+            this.#captureTargetResolutionData(
+              trace,
+              actionDef,
+              actor,
+              {
+                isLegacy: false,
+                resolutionSuccess: result.success,
+                resolutionTimeMs: Date.now() - resolutionStartTime,
+                targetKeys,
+                resolvedTargetCounts,
+                totalTargetCount: Object.values(resolvedTargetCounts).reduce(
+                  (sum, count) => sum + count,
+                  0
+                ),
+              },
+              result.data?.detailedResolutionResults
+            );
             tracedActionCount++;
           }
 
@@ -531,6 +537,9 @@ export class MultiTargetResolutionStage extends PipelineStage {
     const resolvedCounts = {};
     const allTargetContexts = []; // For backward compatibility
 
+    // Track detailed resolution information for enhanced tracing
+    const detailedResolutionResults = {};
+
     for (const targetKey of resolutionOrder) {
       const targetDef = targetDefs[targetKey];
       const scopeStartTime = Date.now();
@@ -545,6 +554,18 @@ export class MultiTargetResolutionStage extends PipelineStage {
         // Resolve this target for each instance of the contextFrom target
         const primaryTargets = resolvedTargets[targetDef.contextFrom];
         const resolvedSecondaryTargets = [];
+
+        // Initialize detailed results for this target
+        detailedResolutionResults[targetKey] = {
+          scopeId: targetDef.scope,
+          contextFrom: targetDef.contextFrom,
+          primaryTargetCount: primaryTargets.length,
+          candidatesFound: 0,
+          candidatesResolved: 0,
+          contextEntityIds: primaryTargets.map((t) => t.id),
+          failureReason: null,
+          evaluationTimeMs: 0,
+        };
 
         trace?.info(
           `Resolving ${targetKey} for each ${targetDef.contextFrom} target (${primaryTargets.length} instances)`,
@@ -571,6 +592,9 @@ export class MultiTargetResolutionStage extends PipelineStage {
             trace
           );
 
+          detailedResolutionResults[targetKey].candidatesFound +=
+            candidates.length;
+
           // Store resolved targets with reference to their primary
           candidates.forEach((entityId) => {
             const entity = this.#entityManager.getEntityInstance(entityId);
@@ -588,8 +612,16 @@ export class MultiTargetResolutionStage extends PipelineStage {
           });
         }
 
+        detailedResolutionResults[targetKey].candidatesResolved =
+          resolvedSecondaryTargets.length;
+        detailedResolutionResults[targetKey].evaluationTimeMs =
+          Date.now() - scopeStartTime;
+
         // Check if we found no candidates for any primary
         if (resolvedSecondaryTargets.length === 0) {
+          detailedResolutionResults[targetKey].failureReason =
+            `No candidates found for target '${targetKey}' across ${primaryTargets.length} primary target(s)`;
+
           trace?.failure(
             `No candidates found for target '${targetKey}'`,
             'MultiTargetResolutionStage'
@@ -598,6 +630,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
             data: {
               ...context.data,
               actionsWithTargets: [],
+              detailedResolutionResults, // Include detailed results even on failure
             },
             continueProcessing: false,
           });
@@ -633,6 +666,16 @@ export class MultiTargetResolutionStage extends PipelineStage {
         );
       } else {
         // Original logic for targets without contextFrom
+        // Initialize detailed results for this target
+        detailedResolutionResults[targetKey] = {
+          scopeId: targetDef.scope,
+          contextFrom: null,
+          candidatesFound: 0,
+          candidatesResolved: 0,
+          failureReason: null,
+          evaluationTimeMs: 0,
+        };
+
         // Build scope context
         const scopeContext = this.#contextBuilder.buildScopeContext(
           actor,
@@ -650,8 +693,16 @@ export class MultiTargetResolutionStage extends PipelineStage {
           trace
         );
 
+        detailedResolutionResults[targetKey].candidatesFound =
+          candidates.length;
+
         // Check if we found no candidates
         if (candidates.length === 0) {
+          detailedResolutionResults[targetKey].failureReason =
+            `No candidates found for scope '${targetDef.scope}' with actor context`;
+          detailedResolutionResults[targetKey].evaluationTimeMs =
+            Date.now() - scopeStartTime;
+
           trace?.failure(
             `No candidates found for target '${targetKey}'`,
             'MultiTargetResolutionStage'
@@ -660,6 +711,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
             data: {
               ...context.data,
               actionsWithTargets: [],
+              detailedResolutionResults, // Include detailed results even on failure
             },
             continueProcessing: false,
           });
@@ -685,6 +737,10 @@ export class MultiTargetResolutionStage extends PipelineStage {
           .filter(Boolean); // Remove null entries
 
         resolvedCounts[targetKey] = resolvedTargets[targetKey].length;
+        detailedResolutionResults[targetKey].candidatesResolved =
+          resolvedTargets[targetKey].length;
+        detailedResolutionResults[targetKey].evaluationTimeMs =
+          Date.now() - scopeStartTime;
 
         // Capture scope evaluation if trace supports it
         if (isActionAwareTrace && trace.captureScopeEvaluation) {
@@ -741,6 +797,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
         data: {
           ...context.data,
           actionsWithTargets: [],
+          detailedResolutionResults, // Include detailed results even when no targets found
         },
         continueProcessing: false,
       });
@@ -752,6 +809,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
         resolvedTargets,
         targetContexts: allTargetContexts, // Backward compatibility
         targetDefinitions: targetDefs, // Pass definitions for formatting
+        detailedResolutionResults, // Include detailed resolution results
         actionsWithTargets: [
           {
             actionDef,
@@ -857,8 +915,15 @@ export class MultiTargetResolutionStage extends PipelineStage {
    * @param {object} actionDef - Action definition
    * @param {object} actor - Actor entity
    * @param {object} data - Resolution data to capture
+   * @param {object} [detailedResults] - Optional detailed resolution results per target
    */
-  #captureTargetResolutionData(trace, actionDef, actor, data) {
+  #captureTargetResolutionData(
+    trace,
+    actionDef,
+    actor,
+    data,
+    detailedResults = null
+  ) {
     try {
       const traceData = {
         stage: 'target_resolution',
@@ -866,6 +931,11 @@ export class MultiTargetResolutionStage extends PipelineStage {
         ...data,
         timestamp: Date.now(),
       };
+
+      // Add detailed target resolution information if available
+      if (detailedResults) {
+        traceData.targetResolutionDetails = detailedResults;
+      }
 
       trace.captureActionData('target_resolution', actionDef.id, traceData);
 
@@ -875,6 +945,7 @@ export class MultiTargetResolutionStage extends PipelineStage {
           actionId: actionDef.id,
           isLegacy: data.isLegacy,
           success: data.resolutionSuccess,
+          hasDetailedResults: !!detailedResults,
         }
       );
     } catch (error) {

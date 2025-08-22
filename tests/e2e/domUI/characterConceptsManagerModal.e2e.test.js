@@ -215,7 +215,7 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       document: document,
     };
 
-    configureContainer(container, mockUiElements);
+    await configureContainer(container, mockUiElements);
 
     // Get services
     logger = container.resolve(tokens.ILogger);

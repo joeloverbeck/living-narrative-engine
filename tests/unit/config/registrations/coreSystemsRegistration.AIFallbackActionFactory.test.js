@@ -22,7 +22,7 @@ import {
 describe('Core Systems Registrations: Turn Handler Creation', () => {
   let container;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset DOM for UI registrations
     document.body.innerHTML = '';
     const outputDiv = document.createElement('div');
@@ -37,7 +37,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
 
     // Create & configure the real container
     container = new AppContainer();
-    configureContainer(container, {
+    await configureContainer(container, {
       outputDiv,
       inputElement,
       titleElement,
@@ -62,7 +62,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       tokens.TurnStrategyFactory,
       () => ({
         create: () => ({
-          // dummy strategy; TurnHandlerResolver doesn’t execute it here
+          // dummy strategy; TurnHandlerResolver doesn't execute it here
         }),
       }),
       { lifecycle: 'singletonFactory' }
@@ -97,10 +97,10 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
     expect(handler).toBeInstanceOf(ActorTurnHandler);
   });
 
-  it('should throw an error if ActorTurnHandler constructor dependencies are manually misconfigured', () => {
+  it('should throw an error if ActorTurnHandler constructor dependencies are manually misconfigured', async () => {
     // Arrange
     const brokenContainer = new AppContainer();
-    configureContainer(brokenContainer, {
+    await configureContainer(brokenContainer, {
       outputDiv: document.getElementById('outputDiv'),
       inputElement: document.getElementById('inputElement'),
       titleElement: document.getElementById('titleElement'),
@@ -140,7 +140,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       { lifecycle: 'singletonFactory' }
     );
 
-    // Override ActorTurnHandler without turnContextFactory
+    // Override ActorTurnHandler without turnContextBuilder
     brokenContainer.register(
       tokens.ActorTurnHandler,
       (c) =>

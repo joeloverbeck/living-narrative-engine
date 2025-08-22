@@ -1,14 +1,14 @@
 # DEBUGLOGGING-012: Update MockLogger with Complete Interface
 
 **Status**: Not Started  
-**Priority**: P0 - Critical  
+**Priority**: P1 - High  
 **Phase**: 2 - Integration  
 **Component**: Test Infrastructure  
 **Estimated**: 3 hours
 
 ## Description
 
-Update the MockLogger implementation to include all ConsoleLogger methods, ensuring complete interface compatibility. This is critical for maintaining test infrastructure integrity with 2,000+ tests.
+Update the MockLogger implementation to include all ConsoleLogger methods, ensuring complete interface compatibility. This is important for maintaining test infrastructure integrity, particularly for logging infrastructure tests that use extended logger features.
 
 ## Technical Requirements
 
@@ -65,6 +65,7 @@ export const createMockLogger = () =>
 2. **Verify createSimpleMock Compatibility**
 
    ```javascript
+   // Located in tests/common/mockFactories/coreServices.js
    // Ensure createSimpleMock handles all methods
    export function createSimpleMock(methods) {
      const mock = {};
@@ -144,7 +145,7 @@ export const createMockLogger = () =>
 ## Dependencies
 
 - **Required By**: All test files using mock logger
-- **Affects**: 2,000+ test files potentially
+- **Affects**: Primarily logging infrastructure tests, performance tests, and debug configuration tests. Most application tests use basic logging methods only.
 
 ## Testing Requirements
 
@@ -167,7 +168,7 @@ export const createMockLogger = () =>
 ## Files to Modify
 
 - **Primary**: `tests/common/mockFactories/loggerMocks.js`
-- **Secondary**: `tests/common/createSimpleMock.js` (if exists)
+- **Secondary**: `tests/common/mockFactories/coreServices.js` (contains createSimpleMock function)
 - **Check**: Any test files with custom logger mocks
 
 ## Search Patterns for Impact Analysis
@@ -182,8 +183,9 @@ grep -r "jest.fn.*logger" tests/
 # Find setLogLevel usage in tests
 grep -r "setLogLevel" tests/
 
-# Find group method usage
-grep -r "groupCollapsed\|groupEnd" tests/
+# Find group method usage - more targeted search
+grep -r "\.groupCollapsed\|\.groupEnd\|\.table\|\.setLogLevel" tests/
+grep -r "logger\." tests/ | grep -E "(groupCollapsed|groupEnd|table|setLogLevel)"
 ```
 
 ## Migration Guide for Test Authors
@@ -231,11 +233,16 @@ expect(logger.groupCollapsed).toHaveBeenCalled();
 
 ## Notes
 
-- Critical for test infrastructure stability
+- Important for test infrastructure stability, particularly for logging infrastructure tests
+- Extended methods are primarily used in:
+  - Performance logging tests (noOpLogger.performance.test.js)
+  - Logger strategy integration tests
+  - Debug logging configuration utilities
+- Most application tests (majority of the 2,000+ tests) use only basic logging methods
 - Must be done before LoggerStrategy integration
-- Coordinate with QA team for validation
+- Focus validation on logging infrastructure tests that actually use extended methods
 - Document changes in test guidelines
-- Consider automated test migration script
+- Consider creating createCompleteMockLogger() alongside existing basic version for backward compatibility
 
 ## Related Tickets
 

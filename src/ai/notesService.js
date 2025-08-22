@@ -46,7 +46,7 @@ export default class NotesService {
    * Supports structured note format only.
    *
    * @param {object} notesComp - The notes component data to update. This object is mutated in place.
-   * @param {Array<{text: string, subject: string, subjectType?: string, context?: string, tags?: string[], timestamp?: string}>} notesComp.notes - The list of existing notes.
+   * @param {Array<{text: string, subject: string, subjectType?: string, context?: string, timestamp?: string}>} notesComp.notes - The list of existing notes.
    * @param {object[]} newNotes - An array of new structured note objects to add.
    * @param {Date} [now] - The current date/time; defaults to new Date().
    * @returns {{wasModified: boolean, component: object, addedNotes: Array}} - An object containing the
@@ -86,7 +86,6 @@ export default class NotesService {
           subject: note.subject,
           subjectType: note.subjectType || DEFAULT_SUBJECT_TYPE,
           context: note.context,
-          tags: note.tags,
           timestamp: note.timestamp || now.toISOString(),
         };
 

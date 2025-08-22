@@ -67,6 +67,57 @@
           "minimum": 3600,
           "description": "Maximum age of trace files in seconds (when using age policy)",
           "default": 86400
+        },
+        "outputFormats": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["json", "text", "html", "markdown"]
+          },
+          "default": ["json"],
+          "description": "Formats to generate for trace output. Default is JSON only for backward compatibility."
+        },
+        "textFormatOptions": {
+          "type": "object",
+          "properties": {
+            "enableColors": {
+              "type": "boolean",
+              "default": false,
+              "description": "Enable ANSI color codes in text output"
+            },
+            "lineWidth": {
+              "type": "integer",
+              "minimum": 80,
+              "maximum": 200,
+              "default": 120,
+              "description": "Maximum line width for text formatting"
+            },
+            "indentSize": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8,
+              "default": 2,
+              "description": "Number of spaces for indentation"
+            },
+            "sectionSeparator": {
+              "type": "string",
+              "maxLength": 1,
+              "default": "=",
+              "description": "Character used for section separators"
+            },
+            "includeTimestamps": {
+              "type": "boolean",
+              "default": true,
+              "description": "Include timing information in output"
+            },
+            "performanceSummary": {
+              "type": "boolean",
+              "default": true,
+              "description": "Add performance summary section at the end"
+            }
+          },
+          "description": "Options for text format output",
+          "additionalProperties": false
         }
       },
       "required": ["enabled", "tracedActions", "outputDirectory"],

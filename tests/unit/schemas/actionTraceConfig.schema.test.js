@@ -317,4 +317,343 @@ describe('Action Trace Config Schema', () => {
     const ok = validate(config);
     expect(ok).toBe(true);
   });
+
+  describe('outputFormats validation', () => {
+    test('should accept valid output formats', () => {
+      const validFormats = [
+        ['json'],
+        ['text'],
+        ['html'],
+        ['markdown'],
+        ['json', 'text'],
+        ['json', 'text', 'html', 'markdown'],
+      ];
+
+      validFormats.forEach((formats) => {
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: [],
+            outputDirectory: './traces',
+            outputFormats: formats,
+          },
+        };
+
+        const ok = validate(config);
+        if (!ok) {
+          console.error(
+            `Failed for formats: ${JSON.stringify(formats)}`,
+            validate.errors
+          );
+        }
+        expect(ok).toBe(true);
+      });
+    });
+
+    test('should reject invalid output formats', () => {
+      const invalidFormats = [
+        ['xml'],
+        ['pdf'],
+        ['csv'],
+        ['json', 'invalid'],
+        ['text', 'xml'],
+      ];
+
+      invalidFormats.forEach((formats) => {
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: [],
+            outputDirectory: './traces',
+            outputFormats: formats,
+          },
+        };
+
+        const ok = validate(config);
+        expect(ok).toBe(false);
+        expect(validate.errors).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              message: expect.stringContaining(
+                'equal to one of the allowed values'
+              ),
+            }),
+          ])
+        );
+      });
+    });
+
+    test('should accept empty outputFormats array', () => {
+      const config = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: [],
+          outputDirectory: './traces',
+          outputFormats: [],
+        },
+      };
+
+      const ok = validate(config);
+      expect(ok).toBe(true);
+    });
+
+    test('should default to json format', () => {
+      const config = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: [],
+          outputDirectory: './traces',
+          // outputFormats not specified - should use default
+        },
+      };
+
+      const ok = validate(config);
+      expect(ok).toBe(true);
+    });
+  });
+
+  describe('textFormatOptions validation', () => {
+    test('should accept valid textFormatOptions', () => {
+      const config = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: [],
+          outputDirectory: './traces',
+          textFormatOptions: {
+            enableColors: true,
+            lineWidth: 120,
+            indentSize: 4,
+            sectionSeparator: '-',
+            includeTimestamps: false,
+            performanceSummary: true,
+          },
+        },
+      };
+
+      const ok = validate(config);
+      if (!ok) {
+        console.error('textFormatOptions validation failed:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate lineWidth boundaries', () => {
+      // Test minimum boundary
+      let config = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: [],
+          outputDirectory: './traces',
+          textFormatOptions: {
+            lineWidth: 80, // Minimum allowed
+          },
+        },
+      };
+
+      let ok = validate(config);
+      expect(ok).toBe(true);
+
+      // Test maximum boundary
+      config.actionTracing.textFormatOptions.lineWidth = 200; // Maximum allowed
+      ok = validate(config);
+      expect(ok).toBe(true);
+
+      // Test below minimum
+      config.actionTracing.textFormatOptions.lineWidth = 79;
+      ok = validate(config);
+      expect(ok).toBe(false);
+      expect(validate.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining('must be >= 80'),
+          }),
+        ])
+      );
+
+      // Test above maximum
+      config.actionTracing.textFormatOptions.lineWidth = 201;
+      ok = validate(config);
+      expect(ok).toBe(false);
+      expect(validate.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining('must be <= 200'),
+          }),
+        ])
+      );
+    });
+
+    test('should validate indentSize boundaries', () => {
+      // Test minimum boundary
+      let config = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: [],
+          outputDirectory: './traces',
+          textFormatOptions: {
+            indentSize: 0, // Minimum allowed
+          },
+        },
+      };
+
+      let ok = validate(config);
+      expect(ok).toBe(true);
+
+      // Test maximum boundary
+      config.actionTracing.textFormatOptions.indentSize = 8; // Maximum allowed
+      ok = validate(config);
+      expect(ok).toBe(true);
+
+      // Test below minimum (negative)
+      config.actionTracing.textFormatOptions.indentSize = -1;
+      ok = validate(config);
+      expect(ok).toBe(false);
+
+      // Test above maximum
+      config.actionTracing.textFormatOptions.indentSize = 9;
+      ok = validate(config);
+      expect(ok).toBe(false);
+    });
+
+    test('should validate boolean fields in textFormatOptions', () => {
+      const booleanFields = [
+        'enableColors',
+        'includeTimestamps',
+        'performanceSummary',
+      ];
+
+      booleanFields.forEach((field) => {
+        const config = {
+          actionTracing: {
+            enabled: true,
+            tracedActions: [],
+            outputDirectory: './traces',
+            textFormatOptions: {
+              [field]: 'not-a-boolean', // Invalid type
+            },
+          },
+        };
+
+        const ok = validate(config);
+        expect(ok).toBe(false);
+        expect(validate.errors).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              message: expect.stringContaining('boolean'),
+            }),
+          ])
+        );
+      });
+    });
+
+    test('should validate sectionSeparator maxLength constraint', () => {
+      // Valid single character
+      let config = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: [],
+          outputDirectory: './traces',
+          textFormatOptions: {
+            sectionSeparator: '=',
+          },
+        },
+      };
+
+      let ok = validate(config);
+      expect(ok).toBe(true);
+
+      // Invalid - too long
+      config.actionTracing.textFormatOptions.sectionSeparator = '==';
+      ok = validate(config);
+      expect(ok).toBe(false);
+      expect(validate.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining(
+              'must NOT have more than 1 characters'
+            ),
+          }),
+        ])
+      );
+    });
+
+    test('should reject additional properties in textFormatOptions', () => {
+      const config = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: [],
+          outputDirectory: './traces',
+          textFormatOptions: {
+            unknownProperty: 'should not be allowed',
+          },
+        },
+      };
+
+      const ok = validate(config);
+      expect(ok).toBe(false);
+      expect(validate.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining('additional properties'),
+          }),
+        ])
+      );
+    });
+
+    test('should accept partial textFormatOptions', () => {
+      const config = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: [],
+          outputDirectory: './traces',
+          textFormatOptions: {
+            enableColors: true,
+            // Only specify some options - others should use defaults
+          },
+        },
+      };
+
+      const ok = validate(config);
+      expect(ok).toBe(true);
+    });
+
+    test('should accept empty textFormatOptions object', () => {
+      const config = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: [],
+          outputDirectory: './traces',
+          textFormatOptions: {},
+        },
+      };
+
+      const ok = validate(config);
+      expect(ok).toBe(true);
+    });
+  });
+
+  test('should accept configuration with both new fields', () => {
+    const config = {
+      actionTracing: {
+        enabled: true,
+        tracedActions: ['core:*'],
+        outputDirectory: './traces/actions',
+        outputFormats: ['json', 'text', 'html'],
+        textFormatOptions: {
+          enableColors: true,
+          lineWidth: 100,
+          indentSize: 2,
+          sectionSeparator: '-',
+          includeTimestamps: true,
+          performanceSummary: false,
+        },
+      },
+    };
+
+    const ok = validate(config);
+    if (!ok) {
+      console.error('Combined new fields validation failed:', validate.errors);
+    }
+    expect(ok).toBe(true);
+  });
 });

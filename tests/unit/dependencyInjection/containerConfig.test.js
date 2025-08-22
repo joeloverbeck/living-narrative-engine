@@ -54,6 +54,18 @@ jest.mock(
 jest.mock(
   '../../../src/dependencyInjection/registrations/orchestrationRegistrations.js'
 );
+jest.mock(
+  '../../../src/dependencyInjection/registrations/actionTracingRegistrations.js'
+);
+jest.mock(
+  '../../../src/dependencyInjection/registrations/pipelineServiceRegistrations.js'
+);
+jest.mock(
+  '../../../src/dependencyInjection/registrations/actionCategorizationRegistrations.js'
+);
+jest.mock(
+  '../../../src/dependencyInjection/registrations/characterBuilderRegistrations.js'
+);
 
 // We need the real LoggerConfigLoader to be instantiated.
 // We will mock the 'fetch' call it makes instead.
@@ -68,7 +80,22 @@ jest.mock('../../../src/configuration/loggerConfigLoader.js', () => {
 });
 
 // Import the mocked modules so we can control their behavior
+import { registerLoaders } from '../../../src/dependencyInjection/registrations/loadersRegistrations.js';
 import { registerInfrastructure } from '../../../src/dependencyInjection/registrations/infrastructureRegistrations.js';
+import { registerActionTracing } from '../../../src/dependencyInjection/registrations/actionTracingRegistrations.js';
+import { registerPersistence } from '../../../src/dependencyInjection/registrations/persistenceRegistrations.js';
+import { registerWorldAndEntity } from '../../../src/dependencyInjection/registrations/worldAndEntityRegistrations.js';
+import { registerPipelineServices } from '../../../src/dependencyInjection/registrations/pipelineServiceRegistrations.js';
+import { registerCommandAndAction } from '../../../src/dependencyInjection/registrations/commandAndActionRegistrations.js';
+import { registerInterpreters } from '../../../src/dependencyInjection/registrations/interpreterRegistrations.js';
+import { registerActionCategorization } from '../../../src/dependencyInjection/registrations/actionCategorizationRegistrations.js';
+import { registerAI } from '../../../src/dependencyInjection/registrations/aiRegistrations.js';
+import { registerTurnLifecycle } from '../../../src/dependencyInjection/registrations/turnLifecycleRegistrations.js';
+import { registerEventBusAdapters } from '../../../src/dependencyInjection/registrations/eventBusAdapterRegistrations.js';
+import { registerUI } from '../../../src/dependencyInjection/registrations/uiRegistrations.js';
+import { registerInitializers } from '../../../src/dependencyInjection/registrations/initializerRegistrations.js';
+import { registerRuntime } from '../../../src/dependencyInjection/registrations/runtimeRegistrations.js';
+import { registerOrchestration } from '../../../src/dependencyInjection/registrations/orchestrationRegistrations.js';
 
 describe('configureContainer', () => {
   let container;
@@ -97,11 +124,66 @@ describe('configureContainer', () => {
       })
     );
 
-    // Provide a mock implementation for the function that registers the service
-    // which was previously failing to resolve (ISafeEventDispatcher).
+    // Mock all registration functions to be no-ops or minimal implementations
+    // This isolates the test to just the configureContainer logic
+    // However, we need to register the critical services that configureContainer validates
+    registerLoaders.mockImplementation((c) => {
+      // Register ISchemaValidator that configureContainer validates
+      const mockValidator = { validate: jest.fn(() => ({ valid: true })) };
+      c.register(tokens.ISchemaValidator, mockValidator, {
+        lifecycle: 'singleton',
+      });
+    });
+
+    registerActionTracing.mockImplementation(() => {});
+
+    registerPersistence.mockImplementation((c) => {
+      // Register IDataRegistry that configureContainer validates
+      const mockRegistry = { get: jest.fn(), has: jest.fn(() => true) };
+      c.register(tokens.IDataRegistry, mockRegistry, {
+        lifecycle: 'singleton',
+      });
+    });
+
+    registerWorldAndEntity.mockImplementation((c) => {
+      // Register IEntityManager that configureContainer validates
+      const mockEntityManager = {
+        createEntity: jest.fn(),
+        getEntity: jest.fn(),
+        hasEntity: jest.fn(() => true),
+      };
+      c.register(tokens.IEntityManager, mockEntityManager, {
+        lifecycle: 'singleton',
+      });
+    });
+
+    registerPipelineServices.mockImplementation(() => {});
+    registerCommandAndAction.mockImplementation(() => {});
+    registerInterpreters.mockImplementation(() => {});
+    registerActionCategorization.mockImplementation(() => {});
+    registerAI.mockImplementation(() => {});
+    registerTurnLifecycle.mockImplementation(() => {});
+    registerEventBusAdapters.mockImplementation(() => {});
+    registerUI.mockImplementation(() => {});
+    registerInitializers.mockImplementation(() => {});
+    registerRuntime.mockImplementation(() => {});
+    registerOrchestration.mockImplementation(() => {});
+
+    // Since configureContainer already registers the logger before calling
+    // registerInfrastructure, we need to ensure our mock doesn't break the flow.
+    // The mock should preserve the ability to resolve ILogger.
     registerInfrastructure.mockImplementation((c) => {
+      // The real registerInfrastructure expects ILogger to already be registered
+      const logger = c.resolve(tokens.ILogger);
+
+      // Register a minimal SafeEventDispatcher for testing
       const mockDispatcher = { dispatch: jest.fn() };
       c.register(tokens.ISafeEventDispatcher, mockDispatcher, {
+        lifecycle: 'singleton',
+      });
+
+      // Register other critical services that might be needed
+      c.register(tokens.IValidatedEventDispatcher, mockDispatcher, {
         lifecycle: 'singleton',
       });
     });
@@ -114,10 +196,11 @@ describe('configureContainer', () => {
 
   it('should configure the container without logging critical async errors', async () => {
     // Act: Execute the function we are testing.
-    configureContainer(container, mockUiElements);
+    // configureContainer is now async, so we need to await it
+    await configureContainer(container, mockUiElements);
 
     // Assert: Check for the specific error that was occurring.
-    // We give the event loop a chance to run the async block.
+    // We give the event loop a chance to run any remaining async operations.
     await new Promise(process.nextTick);
 
     // The test passes if the specific critical error was NOT logged.
@@ -131,8 +214,9 @@ describe('configureContainer', () => {
 
   it('should allow ISafeEventDispatcher to be resolved after configuration', async () => {
     // Act
-    configureContainer(container, mockUiElements);
-    await new Promise(process.nextTick); // Let async operations settle
+    // configureContainer is now async, so we need to await it
+    await configureContainer(container, mockUiElements);
+    await new Promise(process.nextTick); // Let any remaining async operations settle
 
     // Assert
     let dispatcher;
@@ -146,9 +230,10 @@ describe('configureContainer', () => {
     expect(typeof dispatcher.dispatch).toBe('function');
   });
 
-  it('should still register the ILogger service correctly', () => {
+  it('should still register the ILogger service correctly', async () => {
     // Act
-    configureContainer(container, mockUiElements);
+    // configureContainer is now async, so we need to await it
+    await configureContainer(container, mockUiElements);
 
     // Assert
     const logger = container.resolve(tokens.ILogger);

@@ -38,7 +38,6 @@ describe('NotesService extra branch coverage', () => {
         subject: 'test_subject',
         subjectType: 'other',
         context: undefined,
-        tags: undefined,
         timestamp: 'TS',
       },
     ]);

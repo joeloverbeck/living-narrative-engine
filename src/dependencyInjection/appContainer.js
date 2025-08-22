@@ -326,6 +326,13 @@ class AppContainer {
     this.#registrations.clear();
     this.#instances.clear();
   }
+
+  /** Cleanup method for tests - disposes singletons and clears overrides */
+  cleanup() {
+    console.log('AppContainer: Cleaning up container for tests...');
+    this.disposeSingletons();
+    this.clearOverrides();
+  }
 }
 
 export default AppContainer;

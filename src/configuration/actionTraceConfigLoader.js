@@ -24,6 +24,14 @@ import ActionTraceConfigValidator from './actionTraceConfigValidator.js';
  * @property {number} maxTraceFiles - Maximum number of trace files to keep
  * @property {'age'|'count'} rotationPolicy - How to rotate old trace files
  * @property {number} maxFileAge - Maximum age of trace files in seconds
+ * @property {string[]} outputFormats - Output formats array (json, text, html, markdown)
+ * @property {object} textFormatOptions - Text formatting options
+ * @property {boolean} textFormatOptions.enableColors - Enable ANSI color codes in text output
+ * @property {number} textFormatOptions.lineWidth - Maximum line width for text formatting (80-200)
+ * @property {number} textFormatOptions.indentSize - Number of spaces for indentation (0-8)
+ * @property {string} textFormatOptions.sectionSeparator - Character used for section separators (max 1 char)
+ * @property {boolean} textFormatOptions.includeTimestamps - Include timing information in output
+ * @property {boolean} textFormatOptions.performanceSummary - Add performance summary section at the end
  */
 
 /**
@@ -236,6 +244,15 @@ class ActionTraceConfigLoader {
       maxTraceFiles: 100,
       rotationPolicy: 'age',
       maxFileAge: 86400,
+      outputFormats: ['json'],
+      textFormatOptions: {
+        enableColors: false,
+        lineWidth: 120,
+        indentSize: 2,
+        sectionSeparator: '=',
+        includeTimestamps: true,
+        performanceSummary: true,
+      },
     };
   }
 
@@ -323,6 +340,35 @@ class ActionTraceConfigLoader {
       maxTraceFiles: config.maxTraceFiles,
       maxFileAge: config.maxFileAge,
     };
+  }
+
+  /**
+   * Get output formats configuration
+   *
+   * @returns {Promise<string[]>} Array of output formats (json, text, html, markdown)
+   */
+  async getOutputFormats() {
+    const config = await this.loadConfig();
+    return config.outputFormats || ['json'];
+  }
+
+  /**
+   * Get text format options configuration
+   *
+   * @returns {Promise<{enableColors: boolean, lineWidth: number, indentSize: number, sectionSeparator: string, includeTimestamps: boolean, performanceSummary: boolean}>}
+   */
+  async getTextFormatOptions() {
+    const config = await this.loadConfig();
+    return (
+      config.textFormatOptions || {
+        enableColors: false,
+        lineWidth: 120,
+        indentSize: 2,
+        sectionSeparator: '=',
+        includeTimestamps: true,
+        performanceSummary: true,
+      }
+    );
   }
 
   /**

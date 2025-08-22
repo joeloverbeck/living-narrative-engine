@@ -18,6 +18,7 @@ export default function createClothingStepResolver({ entitiesGateway }) {
 
   const CLOTHING_FIELDS = {
     topmost_clothing: 'topmost',
+    topmost_clothing_no_accessories: 'topmost_no_accessories',
     all_clothing: 'all',
     outer_clothing: 'outer',
     base_clothing: 'base',
@@ -72,6 +73,34 @@ export default function createClothingStepResolver({ entitiesGateway }) {
     }
 
     const mode = CLOTHING_FIELDS[field];
+
+    // Enhanced tracing: Log detailed clothing information
+    if (trace) {
+      const slotSummary = {};
+      for (const [slotName, slotData] of Object.entries(equipment.equipped)) {
+        slotSummary[slotName] = {};
+        for (const [layer, item] of Object.entries(slotData || {})) {
+          if (item) {
+            slotSummary[slotName][layer] = Array.isArray(item)
+              ? item.length + ' items'
+              : item;
+          }
+        }
+      }
+
+      trace.addLog(
+        'info',
+        `ClothingStepResolver: Found clothing for entity ${entityId}, mode: ${mode}`,
+        'ClothingStepResolver',
+        {
+          entityId,
+          mode,
+          field,
+          slotCount: Object.keys(equipment.equipped).length,
+          clothingSlotSummary: slotSummary,
+        }
+      );
+    }
 
     // Return a clothing access object that can be processed by either:
     // 1. SlotAccessResolver for .slot syntax

@@ -13,7 +13,7 @@ import * as ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
 import { tokens } from '../tokens.js';
 import { actionTracingTokens } from '../tokens/actionTracingTokens.js';
 import { Registrar } from '../../utils/registrarHelpers.js';
-import { ActionIndexingService } from '../../turns/services/actionIndexingService';
+import { ActionIndexingService } from '../../turns/services/actionIndexingService.js';
 import ScopeRegistry from '../../scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../scopeDsl/engine.js';
 import DefaultDslParser from '../../scopeDsl/parser/defaultDslParser.js';
@@ -51,24 +51,38 @@ import { TraceConfigLoader } from '../../configuration/traceConfigLoader.js';
 export function registerInfrastructure(container) {
   const registrar = new Registrar(container);
   /** @type {ILogger} */
-  const log = container.resolve(tokens.ILogger);
+  let log;
 
-  log.debug('Infrastructure Registration: starting…');
+  try {
+    log = container.resolve(tokens.ILogger);
+    log.debug('Infrastructure Registration: starting…');
+  } catch (error) {
+    // ILogger not yet registered - use console fallback for debug messages
+    console.debug(
+      'Infrastructure Registration: starting… (ILogger not yet available)'
+    );
+    log = null;
+  }
+
+  // Helper function to safely log debug messages
+  const safeDebug = (message) => {
+    if (log) {
+      log.debug(message);
+    } else {
+      console.debug(`[Infrastructure Registration] ${message}`);
+    }
+  };
 
   // Register ServiceSetup as a reusable utility
   registrar.instance(tokens.ServiceSetup, new ServiceSetup());
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.ServiceSetup)}.`
-  );
+  safeDebug(`Registered ${String(tokens.ServiceSetup)}.`);
 
   // Register path configuration
   registrar.instance(
     tokens.IPathConfiguration,
     new ProductionPathConfiguration()
   );
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.IPathConfiguration)}.`
-  );
+  safeDebug(`Registered ${String(tokens.IPathConfiguration)}.`);
 
   // Register trace configuration loader
   container.register(
@@ -80,9 +94,7 @@ export function registerInfrastructure(container) {
       }),
     { lifecycle: 'singleton' }
   );
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.ITraceConfigLoader)}.`
-  );
+  safeDebug(`Registered ${String(tokens.ITraceConfigLoader)}.`);
 
   // ─── Shared ActionIndexingService ─────────────────────────────
   registrar.singletonFactory(
@@ -93,19 +105,22 @@ export function registerInfrastructure(container) {
         logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
       })
   );
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.ActionIndexingService)}.`
-  );
+  safeDebug(`Registered ${String(tokens.ActionIndexingService)}.`);
 
-  const eventBusInstance = new EventBus({ logger: log });
-  registrar.instance(tokens.EventBus, eventBusInstance);
-  container.register(tokens.IEventBus, () => eventBusInstance, {
+  // Register EventBus with lazy logger resolution to handle missing ILogger
+  container.register(
+    tokens.EventBus,
+    (c) => {
+      const logger = c.resolve(tokens.ILogger);
+      return new EventBus({ logger });
+    },
+    { lifecycle: 'singleton' }
+  );
+  container.register(tokens.IEventBus, (c) => c.resolve(tokens.EventBus), {
     lifecycle: 'singleton',
   });
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.EventBus)} and ${String(
-      tokens.IEventBus
-    )}.`
+  safeDebug(
+    `Registered ${String(tokens.EventBus)} and ${String(tokens.IEventBus)}.`
   );
 
   container.register(
@@ -113,9 +128,7 @@ export function registerInfrastructure(container) {
     (c) => new SpatialIndexManager({ logger: c.resolve(tokens.ILogger) }),
     { lifecycle: 'singleton' }
   );
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.ISpatialIndexManager)}.`
-  );
+  safeDebug(`Registered ${String(tokens.ISpatialIndexManager)}.`);
 
   container.register(
     tokens.IGameDataRepository,
@@ -126,9 +139,7 @@ export function registerInfrastructure(container) {
       ),
     { lifecycle: 'singleton' }
   );
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.IGameDataRepository)}.`
-  );
+  safeDebug(`Registered ${String(tokens.IGameDataRepository)}.`);
 
   container.register(
     tokens.IValidatedEventDispatcher,
@@ -143,9 +154,7 @@ export function registerInfrastructure(container) {
       }),
     { lifecycle: 'singleton' }
   );
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.IValidatedEventDispatcher)}.`
-  );
+  safeDebug(`Registered ${String(tokens.IValidatedEventDispatcher)}.`);
 
   registrar.singletonFactory(
     tokens.ISafeEventDispatcher,
@@ -157,9 +166,7 @@ export function registerInfrastructure(container) {
         logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
       })
   );
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.ISafeEventDispatcher)}.`
-  );
+  safeDebug(`Registered ${String(tokens.ISafeEventDispatcher)}.`);
 
   // Event Dispatch Service
   registrar.singletonFactory(tokens.EventDispatchService, (c) => {
@@ -185,21 +192,15 @@ export function registerInfrastructure(container) {
       ),
     });
   });
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.EventDispatchService)}.`
-  );
+  safeDebug(`Registered ${String(tokens.EventDispatchService)}.`);
 
   // Scope DSL Engine
   registrar.single(tokens.ScopeEngine, ScopeEngine);
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.ScopeEngine)}.`
-  );
+  safeDebug(`Registered ${String(tokens.ScopeEngine)}.`);
 
   // DSL Parser
   registrar.single(tokens.DslParser, DefaultDslParser);
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.DslParser)}.`
-  );
+  safeDebug(`Registered ${String(tokens.DslParser)}.`);
 
   // Register ScopeEngine as the IScopeEngine implementation
   container.register(
@@ -209,9 +210,7 @@ export function registerInfrastructure(container) {
       lifecycle: 'singleton',
     }
   );
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.IScopeEngine)} -> ScopeEngine.`
-  );
+  safeDebug(`Registered ${String(tokens.IScopeEngine)} -> ScopeEngine.`);
 
-  log.debug('Infrastructure Registration: complete.');
+  safeDebug('Infrastructure Registration: complete.');
 }

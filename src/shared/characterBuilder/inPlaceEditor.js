@@ -18,6 +18,8 @@ export class InPlaceEditor {
   #handleOutsideClickBound;
 
   /**
+   * Creates a new InPlaceEditor instance for inline editing
+   *
    * @param {object} config - Configuration object
    * @param {HTMLElement} config.element - Element to make editable
    * @param {string} config.originalValue - Original value
@@ -92,6 +94,9 @@ export class InPlaceEditor {
       // Exit editing mode
       this.#exitEditingMode();
     } catch (error) {
+      // Note: Using console.error is appropriate here as this is a component error
+      // and the containing application should handle it appropriately
+      /* eslint-disable-next-line no-console */
       console.error('InPlaceEditor: Save failed:', error);
       this.#showValidationError('Failed to save changes. Please try again.');
       this.#setSavingState(false);
@@ -140,8 +145,25 @@ export class InPlaceEditor {
       this.cancelEditing();
     }
 
-    // Remove event listeners
-    this.#element.removeEventListener('click', this.#handleClickBound);
+    // Remove all event listeners to prevent memory leaks
+    if (this.#handleClickBound) {
+      this.#element.removeEventListener('click', this.#handleClickBound);
+      this.#handleClickBound = null;
+    }
+
+    if (this.#handleOutsideClickBound) {
+      document.removeEventListener('click', this.#handleOutsideClickBound, {
+        capture: true,
+      });
+      this.#handleOutsideClickBound = null;
+    }
+
+    // Clear all references to prevent memory leaks
+    this.#element = null;
+    this.#onSave = null;
+    this.#onCancel = null;
+    this.#validator = null;
+    this.#editor = null;
   }
 
   /**
@@ -159,7 +181,7 @@ export class InPlaceEditor {
   /**
    * Handle click to start editing
    *
-   * @param event
+   * @param {Event} event - Click event
    * @private
    */
   #handleClick(event) {
@@ -293,7 +315,7 @@ export class InPlaceEditor {
   /**
    * Handle clicks outside editor
    *
-   * @param event
+   * @param {Event} event - Click event
    * @private
    */
   #handleOutsideClick(event) {
@@ -378,17 +400,28 @@ export class InPlaceEditor {
     if (!this.#isEditing) return;
 
     this.#isEditing = false;
-    this.#element.classList.remove('editing');
+    this.#element?.classList.remove('editing');
 
     // Show original element
-    this.#element.style.display = '';
+    if (this.#element) {
+      this.#element.style.display = '';
+    }
 
-    // Remove editor
+    // Remove editor and all its event listeners
     if (this.#editor) {
-      document.removeEventListener('click', this.#handleOutsideClickBound, {
-        capture: true,
-      });
-      this.#editor.container.remove();
+      // Remove outside click listener
+      if (this.#handleOutsideClickBound) {
+        document.removeEventListener('click', this.#handleOutsideClickBound, {
+          capture: true,
+        });
+      }
+
+      // Remove editor element from DOM
+      if (this.#editor.container && this.#editor.container.parentNode) {
+        this.#editor.container.remove();
+      }
+
+      // Clear editor references
       this.#editor = null;
     }
   }

@@ -56,85 +56,117 @@ export async function configureBaseContainer(container, options = {}) {
     );
   }
 
-  // --- Core Registration (always needed) ---
-  // These services are required by both game and tools
-  registerLoaders(container);
-  registerInfrastructure(container);
-  registerActionTracing(container);
-  registerPersistence(container);
-  registerWorldAndEntity(container);
-  registerPipelineServices(container);
-  registerCommandAndAction(container);
-  registerInterpreters(container);
+  try {
+    // --- Core Registration (always needed) ---
+    // These services are required by both game and tools
+    if (logger) logger.debug('[BaseContainerConfig] Registering loaders...');
+    registerLoaders(container);
 
-  // --- Conditionally register game-specific services ---
-  if (includeGameSystems) {
-    if (logger) {
-      logger.debug(
-        '[BaseContainerConfig] Registering game-specific systems...'
-      );
-    }
-    registerAI(container);
-    registerTurnLifecycle(container);
-  }
+    if (logger)
+      logger.debug('[BaseContainerConfig] Registering infrastructure...');
+    registerInfrastructure(container);
 
-  // --- Conditionally register character builder services ---
-  if (includeCharacterBuilder) {
-    if (logger) {
-      logger.debug(
-        '[BaseContainerConfig] Registering character builder services...'
-      );
-    }
-    // Character builder needs minimal AI services (LlmJsonService, LLMAdapter, etc.)
-    // If game systems aren't included, register only the minimal AI services needed
-    if (!includeGameSystems) {
+    if (logger)
+      logger.debug('[BaseContainerConfig] Registering action tracing...');
+    registerActionTracing(container);
+
+    if (logger)
+      logger.debug('[BaseContainerConfig] Registering persistence...');
+    registerPersistence(container);
+
+    if (logger)
+      logger.debug('[BaseContainerConfig] Registering world and entity...');
+    registerWorldAndEntity(container);
+
+    if (logger)
+      logger.debug('[BaseContainerConfig] Registering pipeline services...');
+    registerPipelineServices(container);
+
+    if (logger)
+      logger.debug('[BaseContainerConfig] Registering command and action...');
+    registerCommandAndAction(container);
+
+    if (logger)
+      logger.debug('[BaseContainerConfig] Registering interpreters...');
+    registerInterpreters(container);
+
+    // --- Conditionally register game-specific services ---
+    if (includeGameSystems) {
       if (logger) {
         logger.debug(
-          '[BaseContainerConfig] Registering minimal AI services for character builder...'
+          '[BaseContainerConfig] Registering game-specific systems...'
         );
       }
-      registerMinimalAIForCharacterBuilder(container, logger);
+      registerAI(container);
+      registerTurnLifecycle(container);
     }
-    registerCharacterBuilder(container);
-  }
 
-  // Continue with core registrations
-  registerEventBusAdapters(container);
-
-  // Register action categorization services
-  registerActionCategorization(container);
-
-  // --- Conditionally register UI ---
-  if (includeUI && uiElements) {
-    if (logger) {
-      logger.debug('[BaseContainerConfig] Registering UI components...');
+    // --- Conditionally register character builder services ---
+    if (includeCharacterBuilder) {
+      if (logger) {
+        logger.debug(
+          '[BaseContainerConfig] Registering character builder services...'
+        );
+      }
+      // Character builder needs minimal AI services (LlmJsonService, LLMAdapter, etc.)
+      // If game systems aren't included, register only the minimal AI services needed
+      if (!includeGameSystems) {
+        if (logger) {
+          logger.debug(
+            '[BaseContainerConfig] Registering minimal AI services for character builder...'
+          );
+        }
+        registerMinimalAIForCharacterBuilder(container, logger);
+      }
+      registerCharacterBuilder(container);
     }
-    registerUI(container, uiElements);
-  }
 
-  // Continue with final core registrations
-  registerInitializers(container);
-  registerRuntime(container);
+    // Continue with core registrations
+    registerEventBusAdapters(container);
 
-  // --- Register orchestration if game systems are included ---
-  if (includeGameSystems) {
-    registerOrchestration(container);
-  }
+    // Register action categorization services
+    registerActionCategorization(container);
 
-  // --- Initialize anatomy systems if requested (for testing) ---
-  if (includeAnatomySystems) {
+    // --- Conditionally register UI ---
+    if (includeUI && uiElements) {
+      if (logger) {
+        logger.debug('[BaseContainerConfig] Registering UI components...');
+      }
+      registerUI(container, uiElements);
+    }
+
+    // Continue with final core registrations
+    registerInitializers(container);
+    registerRuntime(container);
+
+    // --- Register orchestration if game systems are included ---
+    if (includeGameSystems) {
+      registerOrchestration(container);
+    }
+
+    // --- Initialize anatomy systems if requested (for testing) ---
+    if (includeAnatomySystems) {
+      if (logger) {
+        logger.debug(
+          '[BaseContainerConfig] Anatomy systems included, will be initialized by SystemInitializer'
+        );
+      }
+      // AnatomyInitializationService is tagged with INITIALIZABLE and will be
+      // automatically initialized by SystemInitializer during the standard initialization process
+    }
+
     if (logger) {
       logger.debug(
-        '[BaseContainerConfig] Anatomy systems included, will be initialized by SystemInitializer'
+        '[BaseContainerConfig] Base container configuration complete.'
       );
     }
-    // AnatomyInitializationService is tagged with INITIALIZABLE and will be
-    // automatically initialized by SystemInitializer during the standard initialization process
-  }
-
-  if (logger) {
-    logger.debug(
-      '[BaseContainerConfig] Base container configuration complete.'
-    );
+  } catch (error) {
+    if (logger) {
+      logger.error('[BaseContainerConfig] Configuration failed:', error);
+    } else {
+      // eslint-disable-next-line no-console
+      console.error('[BaseContainerConfig] Configuration failed:', error);
+    }
+    throw error;
   }
 }

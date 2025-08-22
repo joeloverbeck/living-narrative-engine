@@ -172,8 +172,83 @@ describe('registerInfrastructure', () => {
     );
     expect(dispatcherInstance).toBeInstanceOf(ValidatedEventDispatcher);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `Infrastructure Registration: Registered ${String(tokens.IValidatedEventDispatcher)}.`
+      `Registered ${String(tokens.IValidatedEventDispatcher)}.`
     );
+  });
+
+  test('should register ServiceSetup correctly', () => {
+    registerInfrastructure(container);
+    expect(() => container.resolve(tokens.ServiceSetup)).not.toThrow();
+    const serviceSetup = container.resolve(tokens.ServiceSetup);
+    expect(serviceSetup).toBeDefined();
+  });
+
+  test('should register IPathConfiguration correctly', () => {
+    registerInfrastructure(container);
+    expect(() => container.resolve(tokens.IPathConfiguration)).not.toThrow();
+    const pathConfig = container.resolve(tokens.IPathConfiguration);
+    expect(pathConfig).toBeDefined();
+  });
+
+  test('should register ITraceConfigLoader correctly', () => {
+    registerInfrastructure(container);
+    expect(() => container.resolve(tokens.ITraceConfigLoader)).not.toThrow();
+    const traceConfigLoader = container.resolve(tokens.ITraceConfigLoader);
+    expect(traceConfigLoader).toBeDefined();
+  });
+
+  test('should register ActionIndexingService correctly', () => {
+    registerInfrastructure(container);
+    expect(() => container.resolve(tokens.ActionIndexingService)).not.toThrow();
+    const actionIndexingService = container.resolve(
+      tokens.ActionIndexingService
+    );
+    expect(actionIndexingService).toBeDefined();
+  });
+
+  test('should register ISafeEventDispatcher correctly', () => {
+    registerInfrastructure(container);
+    expect(() => container.resolve(tokens.ISafeEventDispatcher)).not.toThrow();
+    const safeEventDispatcher = container.resolve(tokens.ISafeEventDispatcher);
+    expect(safeEventDispatcher).toBeDefined();
+  });
+
+  test('should register EventDispatchService correctly', () => {
+    registerInfrastructure(container);
+    expect(() => container.resolve(tokens.EventDispatchService)).not.toThrow();
+    const eventDispatchService = container.resolve(tokens.EventDispatchService);
+    expect(eventDispatchService).toBeDefined();
+  });
+
+  test('should register ScopeEngine correctly', () => {
+    registerInfrastructure(container);
+    expect(() => container.resolve(tokens.ScopeEngine)).not.toThrow();
+    const scopeEngine = container.resolve(tokens.ScopeEngine);
+    expect(scopeEngine).toBeDefined();
+  });
+
+  test('should register DslParser correctly', () => {
+    registerInfrastructure(container);
+    expect(() => container.resolve(tokens.DslParser)).not.toThrow();
+    const dslParser = container.resolve(tokens.DslParser);
+    expect(dslParser).toBeDefined();
+  });
+
+  test('should register IScopeEngine correctly', () => {
+    registerInfrastructure(container);
+    expect(() => container.resolve(tokens.IScopeEngine)).not.toThrow();
+    const scopeEngine = container.resolve(tokens.IScopeEngine);
+    expect(scopeEngine).toBeDefined();
+    // Should be the same instance as ScopeEngine
+    expect(scopeEngine).toBe(container.resolve(tokens.ScopeEngine));
+  });
+
+  test('should handle optional dependencies gracefully', () => {
+    // Test that EventDispatchService can resolve even when action tracing tokens are not available
+    registerInfrastructure(container);
+    expect(() => container.resolve(tokens.EventDispatchService)).not.toThrow();
+    const eventDispatchService = container.resolve(tokens.EventDispatchService);
+    expect(eventDispatchService).toBeDefined();
   });
 
   test('should log completion message', () => {

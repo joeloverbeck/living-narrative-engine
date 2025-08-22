@@ -62,6 +62,7 @@
     "conditions": ["event-is-action-remove-clothing.condition.json"],
     "scopes": [
       "target_topmost_torso_lower_clothing.scope",
+      "target_topmost_torso_lower_clothing_no_accessories.scope",
       "target_topmost_torso_upper_clothing.scope",
       "topmost_clothing.scope"
     ]

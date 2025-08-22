@@ -91,10 +91,11 @@ describe('ActionDefinitionBuilder Performance', () => {
         );
       });
 
-      // Check that performance scales reasonably (within 2x factor)
-      const baselineAvg = results[0].avgTime;
-      results.forEach(({ size, avgTime }) => {
-        expect(avgTime).toBeLessThan(baselineAvg * 2);
+      // Check that performance remains within acceptable bounds for all scales
+      // Use absolute thresholds rather than relative scaling to avoid flakiness
+      // due to JIT compilation, system load, and WSL2 overhead variations
+      results.forEach(({ avgTime }) => {
+        expect(avgTime).toBeLessThan(0.3); // Should remain under 0.3ms per action regardless of batch size
       });
     });
   });
