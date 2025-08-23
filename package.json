@@ -63,7 +63,7 @@
     "lint": "eslint . --fix",
     "scope:lint": "node scripts/lintScopes.js",
     "depcruise": "dependency-cruiser src",
-    "test:unit": "jest --config jest.config.unit.js --env=jsdom --silent --coverage --forceExit",
+    "test:unit": "NODE_OPTIONS='--max-old-space-size=4096' jest --config jest.config.unit.js --env=jsdom --silent --coverage --forceExit --maxWorkers=2",
     "test:unit:debug": "jest --config jest.config.unit.js --env=jsdom --silent=false --detectOpenHandles",
     "test:integration": "jest --config jest.config.integration.js --env=jsdom --silent --coverage",
     "test:e2e": "jest --config jest.config.e2e.js --env=jsdom --silent --coverage",

@@ -1,0 +1,222 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/trait.schema.json",
+  "title": "Character Trait",
+  "description": "Schema for a comprehensive character trait with multiple categories",
+  "type": "object",
+  "required": [
+    "id",
+    "names",
+    "physicalDescription",
+    "personality",
+    "strengths",
+    "weaknesses",
+    "likes",
+    "dislikes",
+    "fears",
+    "goals",
+    "notes",
+    "profile",
+    "secrets",
+    "generatedAt"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the trait",
+      "pattern": "^[a-f0-9-]+$"
+    },
+    "names": {
+      "type": "array",
+      "description": "Array of name options with justifications",
+      "minItems": 3,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["name", "justification"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The character name",
+            "minLength": 1
+          },
+          "justification": {
+            "type": "string",
+            "description": "Justification for the name choice",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "physicalDescription": {
+      "type": "string",
+      "description": "Physical description of the character",
+      "minLength": 100,
+      "maxLength": 500
+    },
+    "personality": {
+      "type": "array",
+      "description": "Array of personality traits with explanations",
+      "minItems": 3,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["trait", "explanation"],
+        "properties": {
+          "trait": {
+            "type": "string",
+            "description": "The personality trait",
+            "minLength": 1
+          },
+          "explanation": {
+            "type": "string",
+            "description": "Explanation of how this trait manifests",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "strengths": {
+      "type": "array",
+      "description": "Array of character strengths",
+      "minItems": 2,
+      "maxItems": 4,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "weaknesses": {
+      "type": "array",
+      "description": "Array of character weaknesses",
+      "minItems": 2,
+      "maxItems": 4,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "likes": {
+      "type": "array",
+      "description": "Array of things the character likes",
+      "minItems": 3,
+      "maxItems": 5,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "dislikes": {
+      "type": "array",
+      "description": "Array of things the character dislikes",
+      "minItems": 3,
+      "maxItems": 5,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "fears": {
+      "type": "array",
+      "description": "Array of character fears",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "goals": {
+      "type": "object",
+      "description": "Character goals",
+      "required": ["shortTerm", "longTerm"],
+      "properties": {
+        "shortTerm": {
+          "type": "array",
+          "description": "Array of short-term goals",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "longTerm": {
+          "type": "string",
+          "description": "Long-term goal description",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "notes": {
+      "type": "array",
+      "description": "Array of additional notes",
+      "minItems": 2,
+      "maxItems": 3,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "profile": {
+      "type": "string",
+      "description": "Character profile summary",
+      "minLength": 200,
+      "maxLength": 800
+    },
+    "secrets": {
+      "type": "array",
+      "description": "Array of character secrets",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "generatedAt": {
+      "type": "string",
+      "description": "ISO 8601 timestamp of when the trait was generated",
+      "format": "date-time"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata for the trait",
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "The AI model used for generation"
+        },
+        "temperature": {
+          "type": "number",
+          "description": "The temperature setting used for generation",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "tokens": {
+          "type": "number",
+          "description": "Token count for generation",
+          "minimum": 0
+        },
+        "responseTime": {
+          "type": "number",
+          "description": "Generation time in ms",
+          "minimum": 0
+        },
+        "promptVersion": {
+          "type": "string",
+          "description": "Version of prompt used"
+        },
+        "generationPrompt": {
+          "type": "string",
+          "description": "The prompt used for generation (for debugging)"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

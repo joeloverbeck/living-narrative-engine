@@ -85,7 +85,9 @@
       "mcp__serena__create_text_file",
       "mcp__serena__get_symbols_overview",
       "mcp__serena__find_symbol",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "mcp__serena__prepare_for_new_conversation",
+      "Bash(dmesg:*)"
     ],
     "deny": []
   }

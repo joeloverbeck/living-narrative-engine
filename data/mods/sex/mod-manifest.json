@@ -12,6 +12,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "clothing",
+      "version": "^1.0.0"
+    },
+    {
       "id": "intimacy",
       "version": "^1.0.0"
     }

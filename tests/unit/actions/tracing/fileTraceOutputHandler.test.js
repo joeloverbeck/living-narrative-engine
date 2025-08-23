@@ -107,7 +107,21 @@ describe('FileTraceOutputHandler', () => {
     global.window = originalWindow;
     global.document = originalDocument;
     global.fetch = originalFetch;
+    
+    // Enhanced cleanup to prevent memory leaks
     jest.clearAllMocks();
+    jest.clearAllTimers();
+    jest.runOnlyPendingTimers();
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
+    
+    // Clear any remaining references
+    handler = null;
+    mockLogger = null;
+    mockTraceDirectoryManager = null;
   });
 
   describe('constructor', () => {
@@ -786,6 +800,12 @@ describe('FileTraceOutputHandler', () => {
         hasDirectoryManager: true,
         hasDirectoryHandle: false,
         supportsFileSystemAPI: true,
+        batchOperations: {
+          totalBatches: 0,
+          totalBatchedTraces: 0,
+          batchSuccessRate: 0,
+          avgBatchSize: 0,
+        }
       });
     });
 
@@ -940,6 +960,259 @@ describe('FileTraceOutputHandler', () => {
         'Could not establish directory handle',
         expect.stringContaining('User denied permission')
       );
+    });
+  });
+
+  describe('Batch Operations', () => {
+    beforeEach(() => {
+      handler = new FileTraceOutputHandler({
+        outputDirectory: './test-traces',
+        traceDirectoryManager: mockTraceDirectoryManager,
+        logger: mockLogger,
+      });
+    });
+
+    describe('writeBatch method', () => {
+      it('should successfully write batch via server endpoint', async () => {
+        const mockBatchResponse = {
+          success: true,
+          successCount: 2,
+          failureCount: 0,
+          totalSize: 2048
+        };
+
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockBatchResponse,
+        });
+
+        const traceBatch = [
+          {
+            content: 'trace content 1',
+            originalTrace: { actionId: 'action1', actorId: 'actor1' }
+          },
+          {
+            content: 'trace content 2', 
+            originalTrace: { actionId: 'action2', actorId: 'actor2', _outputFormat: 'text' }
+          }
+        ];
+
+        const result = await handler.writeBatch(traceBatch);
+
+        expect(result).toBe(true);
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:3001/api/traces/write-batch',
+          expect.objectContaining({
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: expect.stringContaining('traces')
+          })
+        );
+
+        const callArgs = global.fetch.mock.calls[0];
+        const requestBody = JSON.parse(callArgs[1].body);
+        expect(requestBody.traces).toHaveLength(2);
+        expect(requestBody.outputDirectory).toBe('./test-traces');
+        expect(requestBody.traces[0].traceData).toBe('trace content 1');
+      });
+
+      it('should fall back to individual writes when batch endpoint returns 404', async () => {
+        // Mock batch endpoint returning 404
+        global.fetch
+          .mockResolvedValueOnce({
+            ok: false,
+            status: 404,
+            json: async () => ({ error: 'Not Found' })
+          })
+          // Mock individual write success
+          .mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ success: true, path: './trace1' })
+          })
+          .mockResolvedValueOnce({
+            ok: true, 
+            json: async () => ({ success: true, path: './trace2' })
+          });
+
+        const traceBatch = [
+          { content: 'content1', originalTrace: { actionId: 'action1' } },
+          { content: 'content2', originalTrace: { actionId: 'action2' } }
+        ];
+
+        const result = await handler.writeBatch(traceBatch);
+
+        // Wait for queue processing of individual writes
+        await waitForQueueProcessing(handler);
+
+        expect(result).toBe(true);
+        expect(global.fetch).toHaveBeenCalledTimes(3); // 1 batch + 2 individual
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          'Batch endpoint unavailable, falling back to individual writes'
+        );
+        
+        // Check that this was counted as a successful batch operation
+        const stats = handler.getStatistics();
+        expect(stats.batchOperations.totalBatches).toBe(1);
+        expect(stats.batchOperations.batchSuccessRate).toBe(100);
+      });
+
+      it('should handle empty batch array', async () => {
+        const result = await handler.writeBatch([]);
+
+        expect(result).toBe(false);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'writeBatch requires non-empty array'
+        );
+        expect(global.fetch).not.toHaveBeenCalled();
+      });
+
+      it('should handle invalid batch input', async () => {
+        const result = await handler.writeBatch(null);
+
+        expect(result).toBe(false);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'writeBatch requires non-empty array'
+        );
+        expect(global.fetch).not.toHaveBeenCalled();
+      });
+
+      it('should handle batch server errors gracefully', async () => {
+        global.fetch
+          .mockResolvedValueOnce({
+            ok: false,
+            status: 500,
+            json: async () => ({ error: 'Internal Server Error' })
+          })
+          // Individual write also fails
+          .mockRejectedValueOnce(new Error('Individual write failed'));
+
+        const traceBatch = [
+          { content: 'content', originalTrace: { actionId: 'action1' } }
+        ];
+
+        const result = await handler.writeBatch(traceBatch);
+
+        expect(result).toBe(false);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Batch write failed',
+          expect.objectContaining({
+            status: 500,
+            error: 'Internal Server Error'
+          })
+        );
+      });
+
+      it('should handle network errors in batch operation', async () => {
+        // First call - batch endpoint network error
+        global.fetch.mockRejectedValueOnce(new Error('Network error'));
+
+        const traceBatch = [
+          { content: 'content', originalTrace: { actionId: 'action1' } }
+        ];
+
+        const result = await handler.writeBatch(traceBatch);
+
+        expect(result).toBe(false);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Batch server write failed',
+          expect.objectContaining({
+            error: 'Network error',
+            batchSize: 1
+          })
+        );
+      });
+
+      it('should track batch statistics correctly', async () => {
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true, successCount: 2 })
+        });
+
+        const traceBatch = [
+          { content: 'content1', originalTrace: { actionId: 'action1' } },
+          { content: 'content2', originalTrace: { actionId: 'action2' } }
+        ];
+
+        await handler.writeBatch(traceBatch);
+
+        const stats = handler.getStatistics();
+        expect(stats.batchOperations.totalBatches).toBe(1);
+        expect(stats.batchOperations.totalBatchedTraces).toBe(2);
+        expect(stats.batchOperations.batchSuccessRate).toBe(100);
+        expect(stats.batchOperations.avgBatchSize).toBe(2);
+      });
+
+      it('should handle mixed success/failure in fallback mode', async () => {
+        // Mock batch endpoint 404, then individual write responses
+        global.fetch
+          .mockResolvedValueOnce({
+            ok: false,
+            status: 404
+          })
+          // First individual write succeeds
+          .mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ success: true })
+          })
+          // Second individual write fails
+          .mockRejectedValueOnce(new Error('Write failed'));
+
+        const traceBatch = [
+          { content: 'content1', originalTrace: { actionId: 'action1' } },
+          { content: 'content2', originalTrace: { actionId: 'action2' } }
+        ];
+
+        const result = await handler.writeBatch(traceBatch);
+
+        // Wait for queue processing
+        await waitForQueueProcessing(handler);
+
+        expect(result).toBe(true); // Should return true if at least one succeeds
+      });
+    });
+
+    describe('batch statistics', () => {
+      beforeEach(() => {
+        handler = new FileTraceOutputHandler({
+          outputDirectory: './test-traces',
+          logger: mockLogger,
+        });
+      });
+
+      it('should return zero stats for new handler', () => {
+        const stats = handler.getStatistics();
+        
+        expect(stats.batchOperations.totalBatches).toBe(0);
+        expect(stats.batchOperations.totalBatchedTraces).toBe(0);
+        expect(stats.batchOperations.batchSuccessRate).toBe(0);
+        expect(stats.batchOperations.avgBatchSize).toBe(0);
+      });
+
+      it('should calculate success rate correctly', async () => {
+        // First batch succeeds
+        global.fetch.mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true })
+        });
+
+        await handler.writeBatch([
+          { content: 'content1', originalTrace: { actionId: 'action1' } }
+        ]);
+
+        // Second batch fails
+        global.fetch.mockResolvedValueOnce({
+          ok: false,
+          status: 500
+        });
+
+        await handler.writeBatch([
+          { content: 'content2', originalTrace: { actionId: 'action2' } }
+        ]);
+
+        const stats = handler.getStatistics();
+        expect(stats.batchOperations.totalBatches).toBe(2);
+        expect(stats.batchOperations.batchSuccessRate).toBe(50);
+      });
     });
   });
 });
