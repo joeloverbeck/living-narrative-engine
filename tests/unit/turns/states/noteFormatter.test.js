@@ -72,9 +72,7 @@ describe('formatNotesForDisplay', () => {
         text: 'Test note',
         subject: 'Test',
       };
-      expect(formatNotesForDisplay(note)).toBe(
-        'Test: Test note'
-      );
+      expect(formatNotesForDisplay(note)).toBe('Test: Test note');
     });
 
     it('trims whitespace from subject and context', () => {

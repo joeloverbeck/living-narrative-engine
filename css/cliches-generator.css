@@ -9,7 +9,7 @@
   grid-template-columns: 1fr 2fr;
   gap: 2rem;
   padding: 2rem;
-  min-height: calc(100vh - 120px);
+  min-height: calc(100vh - 200px);
 }
 
 /* ===== Panel Styles ===== */
@@ -20,7 +20,7 @@
   padding: 2rem;
   box-shadow: var(--shadow-card);
   border: 1px solid rgba(108, 92, 231, 0.1);
-  max-height: calc(100vh - 160px);
+  max-height: calc(100vh - 240px);
   overflow-y: auto;
   transition: all 0.3s ease;
 }

@@ -1103,9 +1103,9 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
 
       // Assert
       expect(traceLogs.length).toBeGreaterThan(0);
-      expect(traceLogs.some((log) => log.source === 'ClothingStepResolver')).toBe(
-        true
-      );
+      expect(
+        traceLogs.some((log) => log.source === 'ClothingStepResolver')
+      ).toBe(true);
       expect(
         traceLogs.some((log) => log.message.includes('topmost_no_accessories'))
       ).toBe(true);

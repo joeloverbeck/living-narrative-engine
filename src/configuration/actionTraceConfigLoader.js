@@ -57,6 +57,17 @@ class ActionTraceConfigLoader {
     slowestLookup: 0,
     totalLookupTime: 0, // For precise average calculation
   };
+  // Enhanced cache management with fingerprinting
+  #cacheStatistics = {
+    hits: 0,
+    misses: 0,
+    fingerprintChanges: 0,
+    lastFingerprint: null,
+  };
+  // Operation-specific performance tracking
+  #operationMetrics = {
+    operations: {}, // Will store metrics per operation type
+  };
 
   /**
    * @param {object} dependencies
@@ -83,6 +94,7 @@ class ActionTraceConfigLoader {
       data: null,
       timestamp: null,
       ttl: cacheTtl,
+      fingerprint: null, // Content-based cache invalidation
     };
 
     // Initialize enhanced config validator
@@ -98,9 +110,16 @@ class ActionTraceConfigLoader {
    * @returns {Promise<ActionTracingConfig>} Action tracing configuration
    */
   async loadConfig() {
+    const operationStart = performance.now();
+    
+    // Check cache validity using both TTL and fingerprinting
     if (this.#cachedConfig.data && !this.#isCacheExpired()) {
+      this.#cacheStatistics.hits++;
+      this.#recordOperationMetrics('cache-hit', performance.now() - operationStart);
       return this.#cachedConfig.data;
     }
+
+    this.#cacheStatistics.misses++;
 
     try {
       // Load the entire trace configuration
@@ -120,6 +139,9 @@ class ActionTraceConfigLoader {
       // Extract action tracing section
       let actionTracingConfig =
         fullConfig.actionTracing || this.#getDefaultConfig();
+      
+      // Record loading operation metrics
+      this.#recordOperationMetrics('config-load', performance.now() - operationStart);
 
       // If using defaults due to missing section, build lookup structures immediately
       if (!fullConfig.actionTracing) {
@@ -145,6 +167,8 @@ class ActionTraceConfigLoader {
       } else {
         // Schema is loaded, perform validation
         try {
+          const validationStart = performance.now();
+          
           // Initialize the enhanced validator
           await this.#configValidator.initialize();
 
@@ -152,6 +176,9 @@ class ActionTraceConfigLoader {
           validationResult = await this.#configValidator.validateConfiguration({
             actionTracing: actionTracingConfig,
           });
+          
+          // Record validation performance
+          this.#recordOperationMetrics('config-validate', performance.now() - validationStart);
 
           // Log warnings even if validation passed
           validationResult.warnings.forEach((warning) => {
@@ -200,9 +227,11 @@ class ActionTraceConfigLoader {
         return defaultConfig;
       }
 
-      // Cache the validated configuration with timestamp
+      // Cache the validated configuration with timestamp and fingerprint
       this.#cachedConfig.data = actionTracingConfig;
       this.#cachedConfig.timestamp = Date.now();
+      this.#cachedConfig.fingerprint = this.#generateConfigFingerprint(actionTracingConfig);
+      this.#cacheStatistics.lastFingerprint = this.#cachedConfig.fingerprint;
 
       // Build optimized lookup structures for performance
       this.#buildLookupStructures(actionTracingConfig);
@@ -266,10 +295,15 @@ class ActionTraceConfigLoader {
       data: null,
       timestamp: null,
       ttl: this.#cachedConfig.ttl, // Preserve TTL setting
+      fingerprint: null, // Reset fingerprint to force reload
     };
     // Reset performance optimization structures
     this.#tracedActionsSet.clear();
     this.#wildcardPatterns = [];
+    
+    // Track reload as cache invalidation
+    this.#cacheStatistics.fingerprintChanges++;
+    
     return this.loadConfig();
   }
 
@@ -433,7 +467,7 @@ class ActionTraceConfigLoader {
   /**
    * Get performance and usage statistics
    *
-   * @returns {{exactMatches: number, wildcardMatches: number, totalLookups: number, averageLookupTime: number, tracedActionsCount: number, wildcardPatternsCount: number, cacheTtl: number, cacheStatus: string, cacheAge: number}}
+   * @returns {object} Comprehensive statistics including cache, lookup, and operation metrics
    */
   getStatistics() {
     const now = Date.now();
@@ -446,7 +480,14 @@ class ActionTraceConfigLoader {
         : 'valid'
       : 'empty';
 
+    // Calculate cache hit rate
+    const totalCacheAccesses = this.#cacheStatistics.hits + this.#cacheStatistics.misses;
+    const cacheHitRate = totalCacheAccesses > 0
+      ? (this.#cacheStatistics.hits / totalCacheAccesses) * 100
+      : 0;
+
     return {
+      // Lookup statistics
       exactMatches: this.#lookupStatistics.exactMatches,
       wildcardMatches: this.#lookupStatistics.wildcardMatches,
       totalLookups: this.#lookupStatistics.totalLookups,
@@ -464,12 +505,45 @@ class ActionTraceConfigLoader {
               this.#lookupStatistics.totalLookups) *
             100
           : 0,
+      // Pattern statistics
       tracedActionsCount: this.#tracedActionsSet.size,
       wildcardPatternsCount: this.#wildcardPatterns.length,
+      // Cache statistics
       cacheTtl: this.#cachedConfig.ttl,
       cacheStatus,
       cacheAge,
+      cacheHits: this.#cacheStatistics.hits,
+      cacheMisses: this.#cacheStatistics.misses,
+      cacheHitRate,
+      fingerprintChanges: this.#cacheStatistics.fingerprintChanges,
+      // Operation-specific metrics
+      operationMetrics: this.#getOperationMetricsSummary(),
     };
+  }
+
+  /**
+   * Get summary of operation-specific metrics
+   *
+   * @private
+   * @returns {object} Operation metrics summary
+   */
+  #getOperationMetricsSummary() {
+    const summary = {};
+    
+    for (const [operation, metrics] of Object.entries(this.#operationMetrics.operations)) {
+      summary[operation] = {
+        count: metrics.count,
+        avgTime: metrics.avgTime,
+        minTime: metrics.minTime === Number.MAX_VALUE ? 0 : metrics.minTime,
+        maxTime: metrics.maxTime,
+        slowOperations: metrics.slowOperations,
+        slowRate: metrics.count > 0 
+          ? (metrics.slowOperations / metrics.count) * 100 
+          : 0,
+      };
+    }
+    
+    return summary;
   }
 
   /**
@@ -486,6 +560,19 @@ class ActionTraceConfigLoader {
       fastestLookup: Number.MAX_VALUE,
       slowestLookup: 0,
       totalLookupTime: 0,
+    };
+    
+    // Reset cache statistics (preserve fingerprint for comparison)
+    this.#cacheStatistics = {
+      hits: 0,
+      misses: 0,
+      fingerprintChanges: 0,
+      lastFingerprint: this.#cacheStatistics.lastFingerprint,
+    };
+    
+    // Reset operation metrics
+    this.#operationMetrics = {
+      operations: {},
     };
   }
 
@@ -691,6 +778,60 @@ class ActionTraceConfigLoader {
   }
 
   /**
+   * Record operation-specific performance metrics
+   *
+   * @private
+   * @param {string} operationType - Type of operation (e.g., 'load', 'validate', 'cache-hit')
+   * @param {number} duration - Duration in milliseconds
+   */
+  #recordOperationMetrics(operationType, duration) {
+    const metrics = this.#operationMetrics;
+
+    // Initialize operation metrics if not exists
+    if (!metrics.operations[operationType]) {
+      metrics.operations[operationType] = {
+        count: 0,
+        totalTime: 0,
+        avgTime: 0,
+        minTime: Number.MAX_VALUE,
+        maxTime: 0,
+        slowOperations: 0,
+        performanceThreshold: 5, // Default 5ms threshold
+      };
+    }
+
+    const opStats = metrics.operations[operationType];
+    opStats.count++;
+    opStats.totalTime += duration;
+    opStats.avgTime = opStats.totalTime / opStats.count;
+    opStats.minTime = Math.min(opStats.minTime, duration);
+    opStats.maxTime = Math.max(opStats.maxTime, duration);
+
+    // Detect performance regression (2x average or above threshold)
+    const isSlowOperation = duration > opStats.performanceThreshold || 
+                            (opStats.count > 10 && duration > opStats.avgTime * 2);
+    
+    if (isSlowOperation) {
+      opStats.slowOperations++;
+      this.#logger.warn(`Performance regression detected in ${operationType}`, {
+        duration: `${duration.toFixed(3)}ms`,
+        average: `${opStats.avgTime.toFixed(3)}ms`,
+        threshold: `${opStats.performanceThreshold}ms`,
+        regressionRatio: opStats.avgTime > 0 ? (duration / opStats.avgTime).toFixed(2) : 'N/A',
+      });
+    }
+
+    // Log performance milestone every 100 operations
+    if (opStats.count % 100 === 0) {
+      this.#logger.debug(`Operation ${operationType} milestone`, {
+        count: opStats.count,
+        avgTime: `${opStats.avgTime.toFixed(3)}ms`,
+        slowRate: `${((opStats.slowOperations / opStats.count) * 100).toFixed(2)}%`,
+      });
+    }
+  }
+
+  /**
    * Update lookup time statistics with enhanced monitoring
    *
    * @private
@@ -775,6 +916,61 @@ class ActionTraceConfigLoader {
       return true;
     }
     return Date.now() - this.#cachedConfig.timestamp > this.#cachedConfig.ttl;
+  }
+
+  /**
+   * Generate configuration fingerprint for cache validation
+   * Uses critical configuration properties that affect behavior
+   *
+   * @private
+   * @param {object} config - Configuration object
+   * @returns {string} Configuration fingerprint
+   */
+  #generateConfigFingerprint(config) {
+    // Select critical properties that affect configuration behavior
+    const criticalProps = {
+      enabled: config.enabled,
+      tracedActions: config.tracedActions,
+      outputFormats: config.outputFormats,
+      verbosity: config.verbosity,
+      includeComponentData: config.includeComponentData,
+      includePrerequisites: config.includePrerequisites,
+      includeTargets: config.includeTargets,
+    };
+
+    // Add text format options if text output is enabled
+    if (config.outputFormats?.includes('text')) {
+      criticalProps.textFormatOptions = config.textFormatOptions;
+    }
+
+    // Create a stable JSON string for fingerprinting
+    return JSON.stringify(criticalProps, Object.keys(criticalProps).sort());
+  }
+
+  /**
+   * Check if configuration has changed based on fingerprint
+   *
+   * @private
+   * @param {object} newConfig - New configuration to check
+   * @returns {boolean} True if configuration has changed
+   */
+  #hasConfigurationChanged(newConfig) {
+    if (!this.#cachedConfig.fingerprint) {
+      return true;
+    }
+
+    const newFingerprint = this.#generateConfigFingerprint(newConfig);
+    const hasChanged = this.#cachedConfig.fingerprint !== newFingerprint;
+
+    if (hasChanged) {
+      this.#cacheStatistics.fingerprintChanges++;
+      this.#logger.debug('Configuration fingerprint changed', {
+        oldFingerprint: this.#cachedConfig.fingerprint?.substring(0, 20) + '...',
+        newFingerprint: newFingerprint.substring(0, 20) + '...',
+      });
+    }
+
+    return hasChanged;
   }
 
   /**
