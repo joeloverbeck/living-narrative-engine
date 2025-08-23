@@ -4402,9 +4402,7 @@
                 "positioning:closeness",
                 "core:current_actor"
               ],
-              "requiredComponents": [
-                "positioning:closeness"
-              ],
+              "requiredComponents": ["positioning:closeness"],
               "forbiddenComponents": [],
               "componentMatchPassed": true,
               "missingComponents": [],
@@ -4501,10 +4499,7 @@
               "timestamp": 1755892371613,
               "stage": "target_resolution",
               "actorId": "p_erotica:silvia_instance",
-              "targetKeys": [
-                "primary",
-                "secondary"
-              ],
+              "targetKeys": ["primary", "secondary"],
               "isLegacy": false,
               "resolutionSuccess": true,
               "resolutionTimeMs": 1,
@@ -4525,9 +4520,7 @@
                   "primaryTargetCount": 1,
                   "candidatesFound": 0,
                   "candidatesResolved": 0,
-                  "contextEntityIds": [
-                    "p_erotica:jon_urena_instance"
-                  ],
+                  "contextEntityIds": ["p_erotica:jon_urena_instance"],
                   "failureReason": "No candidates found for target 'secondary' across 1 primary target(s)",
                   "evaluationTimeMs": 0
                 }
@@ -4583,17 +4576,13 @@
                     "feet",
                     "torso_lower"
                   ],
-                  "potentialCoveringSlots": [
-                    "torso_lower"
-                  ],
+                  "potentialCoveringSlots": ["torso_lower"],
                   "slotChecks": {
                     "torso_lower": {
                       "hasItems": true,
                       "hasCoveringItems": false,
                       "slotExists": true,
-                      "layers": [
-                        "accessories"
-                      ],
+                      "layers": ["accessories"],
                       "itemCounts": {
                         "accessories": 1
                       }
@@ -4618,17 +4607,13 @@
                     "feet",
                     "torso_lower"
                   ],
-                  "potentialCoveringSlots": [
-                    "torso_lower"
-                  ],
+                  "potentialCoveringSlots": ["torso_lower"],
                   "slotChecks": {
                     "torso_lower": {
                       "hasItems": true,
                       "hasCoveringItems": false,
                       "slotExists": true,
-                      "layers": [
-                        "accessories"
-                      ],
+                      "layers": ["accessories"],
                       "itemCounts": {
                         "accessories": 1
                       }
@@ -4658,9 +4643,7 @@
           "createdAt": 1755892371600,
           "type": "operator_evaluations"
         },
-        "stageOrder": [
-          "operator_evaluations"
-        ],
+        "stageOrder": ["operator_evaluations"],
         "totalDuration": 0
       },
       "__stage_summary": {
@@ -4706,9 +4689,7 @@
           },
           "createdAt": 1755892371600
         },
-        "stageOrder": [
-          "formatting"
-        ],
+        "stageOrder": ["formatting"],
         "totalDuration": 0
       }
     },

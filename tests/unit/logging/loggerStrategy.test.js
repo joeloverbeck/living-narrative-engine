@@ -16,6 +16,7 @@ import LoggerStrategy, {
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import NoOpLogger from '../../../src/logging/noOpLogger.js';
 import RemoteLogger from '../../../src/logging/remoteLogger.js';
+import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 
 describe('LoggerStrategy', () => {
   let originalEnv;
@@ -222,16 +223,7 @@ describe('LoggerStrategy', () => {
     let mockLogger;
 
     beforeEach(() => {
-      mockLogger = {
-        info: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
-        debug: jest.fn(),
-        groupCollapsed: jest.fn(),
-        groupEnd: jest.fn(),
-        table: jest.fn(),
-        setLogLevel: jest.fn(),
-      };
+      mockLogger = createMockLogger();
       strategy = new LoggerStrategy({
         mode: LoggerMode.TEST,
         dependencies: { mockLogger },
@@ -516,16 +508,7 @@ describe('LoggerStrategy', () => {
     });
 
     it('should work with custom mock logger', () => {
-      const customLogger = {
-        info: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
-        debug: jest.fn(),
-        groupCollapsed: jest.fn(),
-        groupEnd: jest.fn(),
-        table: jest.fn(),
-        setLogLevel: jest.fn(),
-      };
+      const customLogger = createMockLogger();
 
       const strategy = new LoggerStrategy({
         mode: LoggerMode.TEST,

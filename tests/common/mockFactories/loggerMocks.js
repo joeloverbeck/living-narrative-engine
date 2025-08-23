@@ -1,4 +1,15 @@
 import { createSimpleMock } from './coreServices.js';
 
 export const createMockLogger = () =>
-  createSimpleMock(['info', 'warn', 'error', 'debug']);
+  createSimpleMock([
+    // Core ILogger methods
+    'info',
+    'warn',
+    'error',
+    'debug',
+    // Extended ConsoleLogger methods
+    'groupCollapsed',
+    'groupEnd',
+    'table',
+    'setLogLevel',
+  ]);
