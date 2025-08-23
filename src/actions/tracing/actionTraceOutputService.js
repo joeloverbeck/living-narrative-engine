@@ -6,13 +6,9 @@
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { TraceQueueProcessor } from './traceQueueProcessor.js';
-import { TracePriority, DEFAULT_PRIORITY } from './tracePriority.js';
+import { DEFAULT_PRIORITY } from './tracePriority.js';
 import { StorageRotationManager } from './storageRotationManager.js';
-import {
-  TraceIdGenerator,
-  NamingStrategy,
-  TimestampFormat,
-} from './traceIdGenerator.js';
+import { TraceIdGenerator } from './traceIdGenerator.js';
 import { defaultTimerService } from './timerService.js';
 import FileTraceOutputHandler from './fileTraceOutputHandler.js';
 
@@ -25,7 +21,6 @@ export { NamingStrategy, TimestampFormat } from './traceIdGenerator.js';
 export class ActionTraceOutputService {
   #storageAdapter;
   #logger;
-  #actionTraceFilter;
   #jsonFormatter;
   #humanReadableFormatter;
   #outputQueue;
@@ -52,7 +47,7 @@ export class ActionTraceOutputService {
   /**
    * Constructor
    *
-   * @param {object} dependencies
+   * @param {object} dependencies - Dependency injection container
    * @param {object} [dependencies.storageAdapter] - Storage interface for IndexedDB
    * @param {object} [dependencies.logger] - Logger interface
    * @param {object} [dependencies.actionTraceFilter] - Trace filter
@@ -127,7 +122,6 @@ export class ActionTraceOutputService {
 
     this.#storageAdapter = storageAdapter;
     this.#logger = ensureValidLogger(logger, 'ActionTraceOutputService');
-    this.#actionTraceFilter = actionTraceFilter;
     this.#jsonFormatter = jsonFormatter;
     this.#humanReadableFormatter = humanReadableFormatter;
     this.#eventBus = eventBus;
@@ -152,8 +146,8 @@ export class ActionTraceOutputService {
       (queueConfig && queueConfig.timerService) ||
       defaultTimerService;
 
-    // Extract timerService from queueConfig if provided (used by both queue processor and rotation manager)
-    const { timerService: configTimerService, ...remainingConfig } =
+    // Extract remaining config (timerService already extracted above)
+    const { timerService: _configTimerService, ...remainingConfig } =
       queueConfig || {};
 
     // Initialize file output handler if enabled
@@ -560,10 +554,11 @@ export class ActionTraceOutputService {
     }
 
     // Fallback to console logging (original behavior)
-    if (
-      process.env.NODE_ENV === 'development' ||
-      process.env.NODE_ENV === 'test'
-    ) {
+    /* global process */
+    const isDevelopment = typeof process !== 'undefined' && process?.env?.NODE_ENV === 'development';
+    const isTest = typeof process !== 'undefined' && process?.env?.NODE_ENV === 'test';
+    
+    if (isDevelopment || isTest) {
       this.#logger.debug('ACTION_TRACE', {
         actionId: trace.actionId,
         actorId: trace.actorId,
@@ -595,9 +590,25 @@ export class ActionTraceOutputService {
 
     // Write text format if configured
     if (outputFormats.includes('text') && this.#fileOutputHandler) {
-      // Create a modified trace object with text format indicator
+      // Get formatted data first to extract actionId and actorId
+      const formattedData = this.#formatTraceData(trace);
+      
+      // Extract actionId and actorId from the formatted data
+      let actionId, actorId;
+      if (formattedData.actions) {
+        // For structured traces, get the first action's data
+        const firstActionKey = Object.keys(formattedData.actions)[0];
+        if (firstActionKey && formattedData.actions[firstActionKey]) {
+          actionId = firstActionKey;
+          actorId = formattedData.actions[firstActionKey].actorId;
+        }
+      }
+      
+      // Create a modified trace object with text format indicator and proper IDs
       const textTrace = {
         ...trace,
+        actionId: actionId || trace.actionId || 'unknown',
+        actorId: actorId || trace.actorId || 'unknown',
         _outputFormat: 'text', // Indicator for file handler
       };
 
@@ -605,7 +616,7 @@ export class ActionTraceOutputService {
       const textData = this.#formatTraceAsText({
         id: this.#generateTraceId(trace),
         timestamp: Date.now(),
-        data: this.#formatTraceData(trace),
+        data: formattedData,
       });
 
       await this.#fileOutputHandler.writeTrace(textData, textTrace);
@@ -903,7 +914,8 @@ export class ActionTraceOutputService {
   /**
    * Legacy export method - redirects to new implementation
    *
-   * @param format
+   * @param {string} [format] - Export format (json or txt), defaults to 'json'
+   * @returns {Promise<boolean>} True if export succeeded
    * @deprecated Use exportTracesToFileSystem or exportTracesAsDownload
    */
   async exportTraces(format = 'json') {
@@ -1087,7 +1099,7 @@ export class ActionTraceOutputService {
     const result = {
       timestamp: new Date().toISOString(),
       traceType: 'pipeline',
-      spans: trace.getSpans ? trace.getSpans() : [],
+      spans: trace.getSpans ? trace.getSpans().map(span => this.#serializeSpan(span)) : [],
       actions: {},
       operatorEvaluations: null, // Will be populated if present
     };
@@ -1136,6 +1148,55 @@ export class ActionTraceOutputService {
     if (timestamps.length < 2) return 0;
 
     return Math.max(...timestamps) - Math.min(...timestamps);
+  }
+
+  /**
+   * Serialize a Span object for JSON output
+   *
+   * @private
+   * @param {object} span - Span object to serialize
+   * @returns {object} Serialized span data
+   */
+  #serializeSpan(span) {
+    if (!span) {
+      return {
+        name: null,
+        startTime: null,
+        endTime: null,
+        duration: null,
+        data: null,
+      };
+    }
+
+    // Extract span information safely
+    const name = span.operation || span.name || null;
+    const startTime = span.startTime !== undefined ? span.startTime : null;
+    const endTime = span.endTime !== undefined ? span.endTime : null;
+    
+    // Calculate duration safely
+    let duration = null;
+    if (span.duration !== undefined && span.duration !== null) {
+      duration = span.duration;
+    } else if (startTime !== null && endTime !== null) {
+      duration = endTime - startTime;
+    }
+    
+    // Ensure duration is not negative
+    if (duration !== null && duration < 0) {
+      this.#logger.warn(`Span "${name}" has negative duration: ${duration}ms, setting to 0`);
+      duration = 0;
+    }
+
+    // Extract span attributes or data
+    const data = span.attributes || span.data || null;
+
+    return {
+      name,
+      startTime,
+      endTime,
+      duration,
+      data,
+    };
   }
 
   /**

@@ -39,10 +39,24 @@ export class PipelineStage {
     // If trace supports structured spans, we need to handle it manually
     // to properly set error status when stages return failure results
     if (trace?.startSpan && trace?.endSpan) {
-      const span = trace.startSpan(`${this.name}Stage`, { stage: this.name });
+      const span = trace.startSpan(`${this.name}Stage`, { 
+        stage: this.name,
+        actor: context.actor?.id || 'unknown',
+        candidateCount: context.candidateActions?.length || 0
+      });
 
       try {
         const result = await this.executeInternal(context);
+
+        // Add result attributes to span if setAttribute method is available
+        if (typeof span.setAttribute === 'function') {
+          span.setAttribute('success', result.success);
+          span.setAttribute('processedCount', result.processedCount || 0);
+          
+          if (result.errors && result.errors.length > 0) {
+            span.setAttribute('errorCount', result.errors.length);
+          }
+        }
 
         // If the stage failed, mark the span as error
         if (!result.success && result.errors && result.errors.length > 0) {
@@ -72,14 +86,10 @@ export class PipelineStage {
    * Internal execution method that derived classes must implement
    *
    * @abstract
-   * @param {object} context - The pipeline context containing all data
-   * @param {import('../../entities/entity.js').default} context.actor - The actor entity
-   * @param {import('../actionTypes.js').ActionContext} context.actionContext - The action context
-   * @param {import('../../interfaces/IGameDataRepository.js').ActionDefinition[]} context.candidateActions - Candidate action definitions
-   * @param {import('../tracing/traceContext.js').TraceContext|import('../tracing/structuredTrace.js').StructuredTrace} [context.trace] - Optional trace context
+   * @param {object} _context - The pipeline context containing all data (unused in abstract method)
    * @returns {Promise<import('./PipelineResult.js').PipelineResult>} The result of this stage
    */
-  async executeInternal(context) {
+  async executeInternal(_context) {
     throw new Error(
       `Stage ${this.name} must implement executeInternal() method`
     );

@@ -72,10 +72,10 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["json", "text", "html", "markdown"]
+            "enum": ["json", "text"]
           },
           "default": ["json"],
-          "description": "Formats to generate for trace output. Default is JSON only for backward compatibility."
+          "description": "Formats to generate for trace output. Only JSON and text formats are supported."
         },
         "textFormatOptions": {
           "type": "object",

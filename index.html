@@ -121,13 +121,20 @@
               <span class="button-text">Clichés Generator</span>
             </button>
           </div>
-          <div class="button-grid button-grid--1col button-grid--centered">
+          <div class="button-grid button-grid--2col button-grid--centered">
             <button
               id="core-motivations-button"
               class="menu-button nav-button nav-button--character nav-button--orange"
             >
               <span class="button-icon" aria-hidden="true">🧠</span>
               <span class="button-text">Core Motivations Generator</span>
+            </button>
+            <button
+              id="traits-generator-button"
+              class="menu-button nav-button nav-button--character nav-button--purple"
+            >
+              <span class="button-icon" aria-hidden="true">🎭</span>
+              <span class="button-text">Traits Generator</span>
             </button>
           </div>
         </section>
@@ -169,6 +176,11 @@
         .getElementById('core-motivations-button')
         .addEventListener('click', () => {
           window.location.href = 'core-motivations-generator.html';
+        });
+      document
+        .getElementById('traits-generator-button')
+        .addEventListener('click', () => {
+          window.location.href = 'traits-generator.html';
         });
     </script>
   </body>

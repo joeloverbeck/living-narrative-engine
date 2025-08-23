@@ -94,7 +94,12 @@
       "mcp__serena__execute_shell_command",
       "mcp__serena__write_memory",
       "mcp__serena__insert_before_symbol",
-      "Bash(time npm run test:unit tests/unit/characterBuilder/services/TraitsGenerator.test.js)"
+      "Bash(time npm run test:unit tests/unit/characterBuilder/services/TraitsGenerator.test.js)",
+      "Bash(do echo \"=== Run $i ===\")",
+      "Bash(NODE_ENV=test timeout 30 npx jest tests/performance/actions/tracing/pipelineTracing.performance.test.js --config jest.config.performance.js --env=jsdom --testNamePattern=\"should have minimal tracing overhead under 5% baseline\" --silent)",
+      "Bash(http-server:*)",
+      "mcp__serena__replace_regex",
+      "Bash(curl:*)"
     ],
     "deny": []
   }

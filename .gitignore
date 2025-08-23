@@ -203,3 +203,8 @@ coverage-temp/
 
 # Build test lock file
 .build-test.lock
+
+# Serena MCP Server cache directories
+.serena/cache/
+*/.serena/cache/
+**/.serena/cache/

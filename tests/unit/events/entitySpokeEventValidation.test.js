@@ -1,5 +1,4 @@
 import { describe, it, expect } from '@jest/globals';
-import { buildSpeechPayload } from '../../../src/turns/states/helpers/buildSpeechPayload.js';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import fs from 'fs';
@@ -137,7 +136,6 @@ describe('Entity Spoke Event - Schema Validation', () => {
             subject: 'Iker Aguirre',
             subjectType: 'character',
             context: 'outside The Gilded Bean',
-            tags: ['potential', 'observation', 'young'],
           },
         ],
       };

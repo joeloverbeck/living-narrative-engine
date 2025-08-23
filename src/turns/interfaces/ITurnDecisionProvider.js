@@ -6,7 +6,7 @@
  * @property {number}        chosenIndex  - 1-based selection index
  * @property {string|null}   speech       - Optional speech the actor utters
  * @property {string|null}   thoughts     - Optional internal monologue
- * @property {Array<{text: string, subject: string, context?: string, tags?: string[], timestamp?: string}>|null} notes        - Optional structured notes
+ * @property {Array<{text: string, subject: string, context?: string, timestamp?: string}>|null} notes        - Optional structured notes
  */
 
 /**

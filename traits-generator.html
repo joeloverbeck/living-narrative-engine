@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Generate comprehensive character traits based on core motivations and thematic directions"
+    />
+    <title>Traits Generator - Living Narrative Engine</title>
+
+    <!-- Styles (matching existing character builder pages) -->
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/traits-generator.css" />
+
+    <!-- Favicon (matching existing pages) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- JavaScript bundle will be loaded here after build -->
+    <script type="module" src="traits-generator.js"></script>
+  </head>
+  <body>
+    <!-- Skip link for keyboard navigation -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div id="app" class="cb-page-container">
+      <!-- Header Section -->
+      <header class="cb-page-header">
+        <div class="header-content">
+          <h1>Traits Generator</h1>
+          <p class="header-subtitle">
+            Generate comprehensive character traits based on core motivations and thematic directions
+          </p>
+        </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main id="main-content" class="cb-page-main traits-main">
+        <!-- Left Panel: Input Controls -->
+        <aside class="cb-input-panel traits-input-panel">
+          <h2 class="cb-panel-title">Character Traits Generation</h2>
+
+          <!-- Direction Selection -->
+          <div class="direction-selection-section">
+            <label for="direction-selector" class="cb-label">
+              Select Thematic Direction *
+            </label>
+            <select
+              id="direction-selector"
+              class="cb-select"
+              aria-label="Select thematic direction"
+            >
+              <option value="">-- Choose a thematic direction --</option>
+              <!-- Dynamically populated -->
+            </select>
+            <div id="direction-selector-error" class="cb-error-text" role="alert"></div>
+            <p class="cb-help-text">
+              Only directions with both clichés and core motivations are available
+            </p>
+          </div>
+
+          <!-- Selected Direction Display -->
+          <div id="selected-direction-display" class="selected-direction-display" style="display: none">
+            <h3 id="direction-title" class="direction-title"></h3>
+            <p id="direction-description" class="direction-description"></p>
+          </div>
+
+          <!-- User Input Fields -->
+          <div class="user-inputs-section">
+            <h3 class="section-title">Your Character Inputs (All Required)</h3>
+            
+            <div class="cb-form-group">
+              <label for="core-motivation-input" class="cb-label">
+                Core Motivation *
+              </label>
+              <textarea
+                id="core-motivation-input"
+                class="cb-textarea"
+                rows="3"
+                placeholder="Enter the character's core motivation..."
+                aria-describedby="core-motivation-help"
+              ></textarea>
+              <p id="core-motivation-help" class="cb-help-text">
+                What drives this character at their core?
+              </p>
+            </div>
+
+            <div class="cb-form-group">
+              <label for="internal-contradiction-input" class="cb-label">
+                Internal Contradiction *
+              </label>
+              <textarea
+                id="internal-contradiction-input"
+                class="cb-textarea"
+                rows="3"
+                placeholder="Enter the character's internal contradiction..."
+                aria-describedby="contradiction-help"
+              ></textarea>
+              <p id="contradiction-help" class="cb-help-text">
+                What internal conflict makes this character complex?
+              </p>
+            </div>
+
+            <div class="cb-form-group">
+              <label for="central-question-input" class="cb-label">
+                Central Question *
+              </label>
+              <textarea
+                id="central-question-input"
+                class="cb-textarea"
+                rows="3"
+                placeholder="Enter the character's central question..."
+                aria-describedby="question-help"
+              ></textarea>
+              <p id="question-help" class="cb-help-text">
+                What fundamental question does this character grapple with?
+              </p>
+            </div>
+
+            <div id="input-validation-error" class="cb-error-text" role="alert"></div>
+          </div>
+
+          <!-- Generation Controls -->
+          <div class="generation-controls">
+            <button
+              id="generate-btn"
+              class="cb-button-primary"
+              disabled
+              aria-label="Generate character traits"
+            >
+              <span class="button-icon">✨</span>
+              <span class="button-text">Generate Traits</span>
+            </button>
+
+            <button
+              id="clear-btn"
+              class="cb-button-secondary"
+              aria-label="Clear all inputs"
+            >
+              <span class="button-icon">🗑️</span>
+              <span class="button-text">Clear All</span>
+            </button>
+
+            <div class="shortcut-hint">
+              <div><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate</div>
+              <div><kbd>Ctrl</kbd> + <kbd>E</kbd> to export</div>
+              <div><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Del</kbd> to clear all</div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Right Panel: Results Display -->
+        <section class="cb-output-panel traits-display-panel">
+          <div class="cb-panel-header">
+            <h2 class="cb-panel-title">Character Traits</h2>
+            <div class="panel-actions">
+              <button
+                id="export-btn"
+                class="cb-button-secondary"
+                style="display: none"
+                aria-label="Export traits to text file"
+              >
+                <span class="button-icon">📄</span>
+                <span class="button-text">Export</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Core Motivations Context Panel -->
+          <div id="core-motivations-panel" class="core-motivations-panel" style="display: none">
+            <h3>Associated Core Motivations</h3>
+            <div id="core-motivations-list" class="core-motivations-list">
+              <!-- Populated by controller -->
+            </div>
+          </div>
+
+          <!-- User Input Summary -->
+          <div id="user-input-summary" class="user-input-summary" style="display: none">
+            <!-- Populated by controller -->
+          </div>
+
+          <!-- Empty State -->
+          <div id="empty-state" class="empty-state">
+            <div class="empty-state-icon">🎭</div>
+            <p class="empty-state-text">
+              Select a thematic direction and fill in your character inputs to begin
+            </p>
+            <p class="empty-state-subtext">
+              Traits will be generated based on your specific character inputs and available clichés
+            </p>
+          </div>
+
+          <!-- Loading State -->
+          <div
+            id="loading-state"
+            class="loading-indicator"
+            style="display: none"
+            role="status"
+            aria-live="polite"
+          >
+            <div class="spinner" aria-hidden="true"></div>
+            <p id="loading-message">Generating character traits...</p>
+          </div>
+
+          <!-- Error State -->
+          <div id="error-state" class="error-container" role="alert" style="display: none">
+            <div class="error-icon" aria-hidden="true">⚠️</div>
+            <div class="error-content">
+              <h3 class="error-title">Generation Failed</h3>
+              <p id="error-message-text" class="error-message">
+                <!-- Error message populated by controller -->
+              </p>
+            </div>
+          </div>
+
+          <!-- Results Container -->
+          <div
+            id="results-state"
+            class="results-container"
+            style="display: none"
+            role="region"
+            aria-label="Generated character traits"
+          >
+            <div id="traits-results" class="traits-results">
+              <!-- Trait results will be dynamically populated here -->
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer class="cb-page-footer">
+        <nav class="footer-navigation">
+          <button
+            id="back-btn"
+            class="cb-button cb-button-navigation"
+            aria-label="Back to Character Builder"
+          >
+            ← Back to Character Builder
+          </button>
+        </nav>
+
+        <div class="footer-info">
+          <span class="generation-info" id="generation-info">
+            Ready to generate character traits
+          </span>
+        </div>
+      </footer>
+
+      <!-- Screen Reader Announcements -->
+      <div
+        id="screen-reader-announcement"
+        class="sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <!-- Announcements populated by controller -->
+      </div>
+    </div>
+  </body>
+</html>

@@ -845,8 +845,8 @@ export class CharacterBuilderBootstrap {
           const tokenName = serviceClassOrInstance.name; // e.g., 'CoreMotivationsGenerator'
 
           try {
-            // Try to resolve from container using the class name as token
-            dependencies[serviceName] = container.resolve(tokenName);
+            // Try to resolve from container using the service name as token first
+            dependencies[serviceName] = container.resolve(serviceName);
           } catch (error) {
             // If not in container, try to instantiate for known simple services
             const logger = dependencies.logger;
@@ -856,7 +856,7 @@ export class CharacterBuilderBootstrap {
 
             try {
               // For services that only need a logger, try to instantiate them
-              if (tokenName === 'CoreMotivationsDisplayEnhancer') {
+              if (tokenName === 'CoreMotivationsDisplayEnhancer' || tokenName === 'TraitsDisplayEnhancer') {
                 dependencies[serviceName] = new serviceClassOrInstance({
                   logger,
                 });

@@ -2,17 +2,21 @@
   "$schema": "../data/schemas/trace-config.schema.json",
   "traceAnalysisEnabled": false,
   "actionTracing": {
-    "enabled": false,
-    "tracedActions": ["intimacy:fondle_ass"],
-    "outputDirectory": "./traces/fondle-ass",
+    "enabled": true,
+    "tracedActions": [
+      "positioning:turn_your_back"
+    ],
+    "outputDirectory": "./traces/turn-your-back",
     "verbosity": "verbose",
     "includeComponentData": true,
     "includePrerequisites": true,
     "includeTargets": true,
     "maxTraceFiles": 100,
-    "rotationPolicy": "age",
-    "maxFileAge": 86400,
-    "outputFormats": ["json", "text"],
+    "rotationPolicy": "count",
+    "outputFormats": [
+      "json",
+      "text"
+    ],
     "textFormatOptions": {
       "enableColors": false,
       "lineWidth": 120,

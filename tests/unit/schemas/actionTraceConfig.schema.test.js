@@ -323,10 +323,7 @@ describe('Action Trace Config Schema', () => {
       const validFormats = [
         ['json'],
         ['text'],
-        ['html'],
-        ['markdown'],
         ['json', 'text'],
-        ['json', 'text', 'html', 'markdown'],
       ];
 
       validFormats.forEach((formats) => {
@@ -352,11 +349,14 @@ describe('Action Trace Config Schema', () => {
 
     test('should reject invalid output formats', () => {
       const invalidFormats = [
+        ['html'],
+        ['markdown'],
         ['xml'],
         ['pdf'],
         ['csv'],
         ['json', 'invalid'],
-        ['text', 'xml'],
+        ['text', 'html'],
+        ['json', 'markdown'],
       ];
 
       invalidFormats.forEach((formats) => {
@@ -638,7 +638,7 @@ describe('Action Trace Config Schema', () => {
         enabled: true,
         tracedActions: ['core:*'],
         outputDirectory: './traces/actions',
-        outputFormats: ['json', 'text', 'html'],
+        outputFormats: ['json', 'text'],
         textFormatOptions: {
           enableColors: true,
           lineWidth: 100,

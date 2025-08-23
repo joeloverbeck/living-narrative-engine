@@ -1,0 +1,59 @@
+{
+  "$schema": "../../../data/schemas/trace-config.schema.json",
+  "traceAnalysisEnabled": false,
+  "actionTracing": {
+    "enabled": true,
+    "tracedActions": ["core:critical_action", "combat:*"],
+    "outputDirectory": "./logs/traces",
+    "verbosity": "standard",
+    "includeComponentData": false,
+    "includePrerequisites": true,
+    "includeTargets": false,
+    "maxTraceFiles": 1000,
+    "rotationPolicy": "count",
+    "maxFileAge": 86400,
+    "outputFormats": ["json"],
+    "textFormatOptions": {
+      "enableColors": false,
+      "lineWidth": 120,
+      "indentSize": 2,
+      "sectionSeparator": "=",
+      "includeTimestamps": true,
+      "performanceSummary": false
+    }
+  },
+  "performanceMonitoring": {
+    "enabled": true,
+    "thresholds": {
+      "slowOperationMs": 200,
+      "criticalOperationMs": 1000,
+      "maxConcurrency": 10,
+      "maxTotalDurationMs": 10000,
+      "maxErrorRate": 2,
+      "maxMemoryUsageMB": 50
+    },
+    "sampling": {
+      "rate": 0.1,
+      "strategy": "random",
+      "alwaysSampleErrors": true,
+      "alwaysSampleSlow": true,
+      "slowThresholdMs": 2000
+    }
+  },
+  "visualization": {
+    "enabled": false,
+    "options": {
+      "showAttributes": false,
+      "showTimings": true,
+      "showErrors": true,
+      "showCriticalPath": false,
+      "maxDepth": 0,
+      "minDuration": 100,
+      "colorsEnabled": false
+    }
+  },
+  "analysis": {
+    "enabled": true,
+    "bottleneckThresholdMs": 200
+  }
+}

@@ -50,7 +50,7 @@ export class TurnContext extends ITurnContext {
 
   /** @type {ITurnAction|null}    */ #chosenAction = null;
   /** @type {AbortController}     */ #promptAbortController;
-  /** @type {{speech:string|null, thoughts:string|null, notes:Array<{text: string, subject: string, context?: string, tags?: string[], timestamp?: string}>|null}|null} */
+  /** @type {{speech:string|null, thoughts:string|null, notes:Array<{text: string, subject: string, context?: string, timestamp?: string}>|null}|null} */
   #decisionMeta = null;
 
   /**
