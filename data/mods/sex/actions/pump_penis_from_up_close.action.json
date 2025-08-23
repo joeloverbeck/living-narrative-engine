@@ -1,8 +1,8 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "sex:pump_penis",
-  "name": "Pump Penis",
-  "description": "Pump the target's penis sensually while kneeling before them.",
+  "id": "sex:pump_penis_from_up_close",
+  "name": "Pump Penis From Up Close",
+  "description": "Pump the target's penis sensually while kneeling before them from up close.",
   "targets": {
     "primary": {
       "scope": "sex:actor_kneeling_before_target_with_penis",
@@ -13,7 +13,7 @@
   "required_components": {
     "actor": ["positioning:closeness", "positioning:kneeling_before"]
   },
-  "template": "pump {target}'s penis",
+  "template": "pump {target}'s penis from up close",
   "prerequisites": [],
   "visual": {
     "backgroundColor": "#4a148c",

@@ -180,6 +180,10 @@ describe('Build System Integration', () => {
       type: 'file',
       size: 1024,
     });
+    mockFiles.set('src/traits-generator-main.js', {
+      type: 'file',
+      size: 1024,
+    });
 
     // Setup HTML files
     mockFiles.set('index.html', { type: 'file', size: 512 });
@@ -205,6 +209,10 @@ describe('Build System Integration', () => {
       type: 'file',
       size: 520,
     });
+    mockFiles.set('traits-generator.html', {
+      type: 'file',
+      size: 520,
+    });
 
     // Setup static directories (source)
     mockFiles.set('css', { type: 'directory' });
@@ -223,7 +231,7 @@ describe('Build System Integration', () => {
     mockFiles.set('dist/config', { type: 'directory' });
     mockFiles.set('dist/config/settings.json', { type: 'file', size: 128 });
 
-    // Pre-create all expected JavaScript output files that esbuild would create
+    // Expected JavaScript output files that esbuild would create
     const expectedBundles = [
       'dist/bundle.js',
       'dist/anatomy-visualizer.js',
@@ -232,12 +240,8 @@ describe('Build System Integration', () => {
       'dist/character-concepts-manager.js',
       'dist/cliches-generator-main.js',
       'dist/core-motivations-generator.js',
+      'dist/traits-generator.js',
     ];
-
-    for (const bundle of expectedBundles) {
-      mockFiles.set(bundle, { type: 'file', size: 2048 });
-      mockFiles.set(bundle + '.map', { type: 'file', size: 512 }); // sourcemaps
-    }
 
     // Mock successful esbuild execution
     const mockProcess = {
@@ -246,10 +250,17 @@ describe('Build System Integration', () => {
     };
     spawn.mockReturnValue(mockProcess);
 
-    // Simulate successful build - just return success immediately
+    // Simulate successful build - create files in callback to match real esbuild behavior
     mockProcess.on.mockImplementation((event, callback) => {
       if (event === 'close') {
-        setTimeout(() => callback(0), 1); // Exit code 0 = success, minimal delay
+        // Create the bundle files when esbuild "completes"
+        setTimeout(() => {
+          for (const bundle of expectedBundles) {
+            mockFiles.set(bundle, { type: 'file', size: 2048 });
+            mockFiles.set(bundle + '.map', { type: 'file', size: 512 }); // sourcemaps
+          }
+          callback(0); // Exit code 0 = success
+        }, 1);
       }
     });
 
@@ -263,6 +274,7 @@ describe('Build System Integration', () => {
       'dist/thematic-directions-manager.html',
       'dist/cliches-generator.html',
       'dist/core-motivations-generator.html',
+      'dist/traits-generator.html',
     ];
 
     for (const htmlFile of expectedHtmlFiles) {
@@ -291,7 +303,7 @@ describe('Build System Integration', () => {
         expect.arrayContaining(['esbuild']),
         expect.any(Object)
       );
-      expect(spawn).toHaveBeenCalledTimes(7); // 7 bundles
+      expect(spawn).toHaveBeenCalledTimes(8); // 8 bundles
 
       // Verify HTML files were copied
       expect(fs.copy).toHaveBeenCalledWith('index.html', 'dist/index.html', {
@@ -354,7 +366,7 @@ describe('Build System Integration', () => {
       await buildSystem.build();
 
       // All bundles should be processed (parallel execution)
-      expect(spawn).toHaveBeenCalledTimes(7);
+      expect(spawn).toHaveBeenCalledTimes(8);
     });
 
     it('should build bundles sequentially when parallel disabled', async () => {
@@ -366,7 +378,7 @@ describe('Build System Integration', () => {
       await buildSystem.build();
 
       // Still processes all bundles, but with concurrency of 1
-      expect(spawn).toHaveBeenCalledTimes(7);
+      expect(spawn).toHaveBeenCalledTimes(8);
     });
   });
 
@@ -386,17 +398,47 @@ describe('Build System Integration', () => {
       expect(mockFiles.has('dist/character-concepts-manager.js')).toBe(true);
       expect(mockFiles.has('dist/cliches-generator-main.js')).toBe(true);
       expect(mockFiles.has('dist/core-motivations-generator.js')).toBe(true);
+      expect(mockFiles.has('dist/traits-generator.js')).toBe(true);
 
       // Verify HTML files were copied
       expect(mockFiles.has('dist/index.html')).toBe(true);
       expect(mockFiles.has('dist/character-concepts-manager.html')).toBe(true);
       expect(mockFiles.has('dist/cliches-generator.html')).toBe(true);
       expect(mockFiles.has('dist/core-motivations-generator.html')).toBe(true);
+      expect(mockFiles.has('dist/traits-generator.html')).toBe(true);
     });
 
     it('should detect missing output files', async () => {
-      // Remove one expected bundle to simulate build failure
-      mockFiles.delete('dist/bundle.js');
+      // Override the mock to simulate a missing output file
+      const incompleteBundles = [
+        'dist/anatomy-visualizer.js',
+        'dist/thematic-direction.js',
+        'dist/thematic-directions-manager.js',
+        'dist/character-concepts-manager.js',
+        'dist/cliches-generator-main.js',
+        'dist/core-motivations-generator.js',
+        'dist/traits-generator.js',
+        // Intentionally omit 'dist/bundle.js' to simulate build failure
+      ];
+
+      const mockProcess = {
+        on: jest.fn(),
+        stderr: { on: jest.fn() },
+      };
+      spawn.mockReturnValue(mockProcess);
+
+      // Mock esbuild to create files but skip dist/bundle.js
+      mockProcess.on.mockImplementation((event, callback) => {
+        if (event === 'close') {
+          setTimeout(() => {
+            for (const bundle of incompleteBundles) {
+              mockFiles.set(bundle, { type: 'file', size: 2048 });
+              mockFiles.set(bundle + '.map', { type: 'file', size: 512 });
+            }
+            callback(0); // Return success, but validation should catch missing file
+          }, 1);
+        }
+      });
 
       const buildSystem = new BuildSystem(buildConfig, {
         // Don't use fast mode to enable validation
@@ -409,7 +451,24 @@ describe('Build System Integration', () => {
 
   describe('File Size Validation', () => {
     it('should warn about large bundle sizes', async () => {
-      // Create a very large bundle - BuildValidator doesn't actually check for large files
+      // First create all expected files 
+      const expectedBundles = [
+        'dist/bundle.js',
+        'dist/anatomy-visualizer.js',
+        'dist/thematic-direction.js',
+        'dist/thematic-directions-manager.js',
+        'dist/character-concepts-manager.js',
+        'dist/cliches-generator-main.js',
+        'dist/core-motivations-generator.js',
+        'dist/traits-generator.js',
+      ];
+
+      for (const bundle of expectedBundles) {
+        mockFiles.set(bundle, { type: 'file', size: 2048 });
+        mockFiles.set(bundle + '.map', { type: 'file', size: 512 });
+      }
+
+      // Then create one very large bundle - BuildValidator doesn't actually check for large files  
       // This test should check that validation passes for large files
       mockFiles.set('dist/bundle.js', { type: 'file', size: 15000000 }); // 15MB
 
@@ -444,12 +503,22 @@ describe('Build System Integration', () => {
 
   describe('Error Recovery', () => {
     it('should handle esbuild errors gracefully', async () => {
-      // Remove all JavaScript bundles to simulate esbuild failure
-      mockFiles.delete('dist/bundle.js');
-      mockFiles.delete('dist/anatomy-visualizer.js');
-      mockFiles.delete('dist/thematic-direction.js');
-      mockFiles.delete('dist/thematic-directions-manager.js');
-      mockFiles.delete('dist/character-concepts-manager.js');
+      // Mock esbuild to simulate failure
+      const mockProcess = {
+        on: jest.fn(),
+        stderr: { on: jest.fn() },
+      };
+      spawn.mockReturnValue(mockProcess);
+
+      // Simulate esbuild failure (exit code 1, no files created)
+      mockProcess.on.mockImplementation((event, callback) => {
+        if (event === 'close') {
+          setTimeout(() => {
+            // Don't create any files - simulate esbuild failure
+            callback(1); // Exit code 1 = failure
+          }, 1);
+        }
+      });
 
       const buildSystem = new BuildSystem(buildConfig, {
         // Don't use fast mode to enable validation
@@ -557,6 +626,8 @@ describe('Build System Integration', () => {
         'src/thematicDirectionsManager/thematicDirectionsManagerMain.js',
         'src/character-concepts-manager-entry.js',
         'src/cliches-generator-main.js',
+        'src/core-motivations-generator-main.js',
+        'src/traits-generator-main.js',
       ];
 
       const expectedHtmlFiles = [
@@ -567,6 +638,8 @@ describe('Build System Integration', () => {
         'thematic-direction-generator.html',
         'thematic-directions-manager.html',
         'cliches-generator.html',
+        'core-motivations-generator.html',
+        'traits-generator.html',
       ];
 
       // Verify all source files exist
@@ -595,6 +668,8 @@ describe('Build System Integration', () => {
         'dist/thematic-directions-manager.js',
         'dist/character-concepts-manager.js',
         'dist/cliches-generator-main.js',
+        'dist/core-motivations-generator.js',
+        'dist/traits-generator.js',
       ];
 
       for (const file of expectedOutputFiles) {

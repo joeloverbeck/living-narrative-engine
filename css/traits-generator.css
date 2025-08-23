@@ -1,0 +1,717 @@
+/**
+ * Traits Generator Specific Styles
+ * Page-specific styles for the traits generator, integrating with the cb-* design system
+ */
+
+/* ===== Main Layout ===== */
+
+.traits-main {
+  gap: 2rem;
+}
+
+.traits-input-panel {
+  min-width: 400px;
+}
+
+.traits-display-panel {
+  flex: 1;
+}
+
+/* ===== Direction Selection ===== */
+
+.direction-selection-section {
+  margin-bottom: 1.5rem;
+}
+
+.selected-direction-display {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-highlight);
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+}
+
+.direction-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: var(--narrative-purple);
+}
+
+.direction-description {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+/* ===== User Input Section ===== */
+
+.user-inputs-section {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.cb-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.cb-help-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+.cb-error-text {
+  color: var(--status-error);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+.cb-error-text:empty {
+  display: none;
+}
+
+/* ===== Generation Controls ===== */
+
+.generation-controls {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-primary);
+}
+
+.generation-controls .cb-button-primary,
+.generation-controls .cb-button-secondary {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.shortcut-hint {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.shortcut-hint div {
+  margin-bottom: 0.25rem;
+}
+
+.shortcut-hint div:last-child {
+  margin-bottom: 0;
+}
+
+.shortcut-hint kbd {
+  display: inline-block;
+  padding: 0.2em 0.4em;
+  font-size: 0.7em;
+  line-height: 1;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 3px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+}
+
+/* ===== Right Panel Layout ===== */
+
+.cb-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.panel-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ===== Core Motivations Panel ===== */
+
+.core-motivations-panel {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.core-motivations-panel h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+}
+
+.core-motivations-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.core-motivation-item {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border: 1px solid var(--border-primary);
+}
+
+.core-motivation-item:last-child {
+  margin-bottom: 0;
+}
+
+.motivation-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--narrative-purple);
+}
+
+.motivation-text {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
+}
+
+.motivation-details {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.motivation-details > div {
+  margin-bottom: 0.5rem;
+}
+
+.motivation-details > div:last-child {
+  margin-bottom: 0;
+}
+
+.motivation-details strong {
+  color: var(--text-primary);
+}
+
+/* ===== User Input Summary ===== */
+
+.user-input-summary {
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.user-input-summary h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+}
+
+.input-item {
+  margin-bottom: 0.75rem;
+}
+
+.input-item:last-child {
+  margin-bottom: 0;
+}
+
+.input-item strong {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.input-item p {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* ===== State Containers ===== */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  min-height: 300px;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.6;
+}
+
+.empty-state-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-state-subtext {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 400px;
+  line-height: 1.4;
+}
+
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  min-height: 300px;
+}
+
+.loading-indicator .spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid var(--bg-tertiary);
+  border-top-color: var(--narrative-purple);
+  margin-bottom: 1.5rem;
+}
+
+.loading-indicator p {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--narrative-purple);
+  margin: 0;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  min-height: 300px;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--status-error);
+  margin: 0 0 0.75rem 0;
+}
+
+.error-message {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 400px;
+  line-height: 1.4;
+}
+
+.results-container {
+  animation: fadeIn 0.3s ease;
+}
+
+/* ===== Trait Results Styling ===== */
+
+.traits-results-container {
+  /* Container for all trait results */
+}
+
+.results-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--narrative-gold);
+}
+
+.results-header h2 {
+  font-family: var(--font-narrative);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+}
+
+.results-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.traits-categories {
+  /* Container for all trait category sections */
+}
+
+/* Trait Category Styling */
+.trait-category {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-card);
+}
+
+.trait-category h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--narrative-purple);
+  border-bottom: 2px solid var(--narrative-gold);
+  padding-bottom: 0.5rem;
+  margin: 0 0 1rem 0;
+}
+
+.trait-category h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.trait-category p {
+  line-height: 1.5;
+  margin: 0 0 0.75rem 0;
+  color: var(--text-primary);
+}
+
+.trait-category p:last-child {
+  margin-bottom: 0;
+}
+
+.trait-category ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.trait-category li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.trait-category li:last-child {
+  border-bottom: none;
+}
+
+/* Two Column Layout for Strengths/Weaknesses and Likes/Dislikes */
+.two-column-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.strengths-column,
+.weaknesses-column,
+.likes-column,
+.dislikes-column {
+  /* Individual column styling handled by trait-category base styles */
+}
+
+.strengths-column h3 {
+  color: var(--narrative-gold);
+}
+
+.weaknesses-column h3 {
+  color: var(--status-error);
+}
+
+/* Names Category Specific */
+.names-list {
+  /* Container for name items */
+}
+
+.name-item {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: var(--bg-highlight);
+  border-radius: 6px;
+  border: 1px solid rgba(108, 92, 231, 0.2);
+}
+
+.name-item:last-child {
+  margin-bottom: 0;
+}
+
+.name-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--narrative-purple);
+  margin: 0 0 0.5rem 0;
+}
+
+.name-justification {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Personality Category Specific */
+.personality-list {
+  /* Container for personality items */
+}
+
+.personality-item {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: var(--bg-highlight);
+  border-radius: 6px;
+  border-left: 4px solid var(--narrative-purple);
+}
+
+.personality-item:last-child {
+  margin-bottom: 0;
+}
+
+.trait-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.trait-explanation {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Goals Category Specific */
+.short-term-goals,
+.long-term-goals {
+  margin-bottom: 1rem;
+}
+
+.short-term-goals:last-child,
+.long-term-goals:last-child {
+  margin-bottom: 0;
+}
+
+.short-term-goals h4,
+.long-term-goals h4 {
+  color: var(--narrative-gold);
+  border-bottom: 1px solid var(--narrative-gold);
+  padding-bottom: 0.25rem;
+}
+
+/* User Inputs Category in Results */
+.user-inputs-category {
+  background: var(--bg-highlight);
+  border: 2px solid rgba(108, 92, 231, 0.2);
+}
+
+.user-inputs-summary {
+  /* Styling handled by base styles */
+}
+
+.input-summary-item {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border-left: 4px solid var(--narrative-gold);
+}
+
+.input-summary-item:last-child {
+  margin-bottom: 0;
+}
+
+.input-summary-item h4 {
+  color: var(--narrative-gold);
+  border-bottom: 1px solid var(--narrative-gold);
+  padding-bottom: 0.25rem;
+}
+
+.input-summary-item p {
+  color: var(--text-primary);
+  font-style: italic;
+}
+
+/* ===== Button Styling ===== */
+
+.button-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.5rem;
+}
+
+.button-text {
+  display: inline-flex;
+  align-items: center;
+}
+
+.cb-button-navigation {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cb-button-navigation:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--narrative-purple);
+  color: var(--narrative-purple);
+}
+
+/* ===== Accessibility ===== */
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===== Responsive Design ===== */
+
+@media (max-width: 1024px) {
+  .traits-main {
+    gap: 1.5rem;
+  }
+
+  .trait-category {
+    padding: 1.25rem;
+  }
+
+  .two-column-layout {
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .cb-page-main.traits-main {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .traits-input-panel {
+    min-width: auto;
+  }
+  
+  .two-column-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .results-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .trait-category {
+    padding: 1rem;
+  }
+
+  .empty-state,
+  .loading-indicator,
+  .error-container {
+    padding: 2rem 1rem;
+    min-height: 250px;
+  }
+
+  .empty-state-icon {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .trait-category h3 {
+    font-size: 1.1rem;
+  }
+
+  .shortcut-hint {
+    font-size: 0.75rem;
+  }
+
+  .shortcut-hint kbd {
+    font-size: 0.65em;
+    padding: 0.1em 0.3em;
+  }
+
+  .generation-controls .cb-button-primary,
+  .generation-controls .cb-button-secondary {
+    font-size: 0.9rem;
+    padding: 0.875rem 1.5rem;
+  }
+}
+
+/* ===== Animation ===== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .results-container,
+  .trait-category {
+    animation: none;
+  }
+  
+  .cb-button-primary,
+  .cb-button-secondary,
+  .cb-button-navigation {
+    transition: none;
+  }
+}

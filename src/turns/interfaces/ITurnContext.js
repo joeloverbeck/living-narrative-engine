@@ -138,7 +138,7 @@ export class ITurnContext {
   /**
    * Stores metadata extracted from a turn decision, such as speech, thoughts, or notes.
    *
-   * @param {{ speech:string|null, thoughts:string|null, notes:Array<{text: string, subject: string, context?: string, tags?: string[], timestamp?: string}>|null }|null} meta - The metadata object to store.
+   * @param {{ speech:string|null, thoughts:string|null, notes:Array<{text: string, subject: string, context?: string, timestamp?: string}>|null }|null} meta - The metadata object to store.
    * @returns {void}
    */
   setDecisionMeta(meta) {
@@ -148,7 +148,7 @@ export class ITurnContext {
   /**
    * Retrieves the decision metadata that was stored for the current turn.
    *
-   * @returns {{ speech:string|null, thoughts:string|null, notes:Array<{text: string, subject: string, context?: string, tags?: string[], timestamp?: string}>|null }|null} The stored metadata object.
+   * @returns {{ speech:string|null, thoughts:string|null, notes:Array<{text: string, subject: string, context?: string, timestamp?: string}>|null }|null} The stored metadata object.
    */
   getDecisionMeta() {
     throw new Error("Method 'getDecisionMeta()' must be implemented.");

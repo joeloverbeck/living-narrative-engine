@@ -1,0 +1,92 @@
+{
+  "actionId": "core:move",
+  "actorId": "player_character",
+  "timestamp": "2025-08-23T14:30:22.123Z",
+  "sessionId": "game-session-uuid-12345",
+  "components": {
+    "core:position": {
+      "x": 10,
+      "y": 20,
+      "z": 0,
+      "facingDirection": "north"
+    },
+    "core:velocity": {
+      "x": 1.5,
+      "y": 0,
+      "z": 0,
+      "speed": 1.5
+    },
+    "core:actor": {
+      "name": "Player",
+      "health": 100,
+      "stamina": 85
+    }
+  },
+  "prerequisites": [
+    {
+      "type": "component",
+      "id": "core:position",
+      "satisfied": true,
+      "evaluation": "Component exists and valid",
+      "evaluationTime": 0.8
+    },
+    {
+      "type": "state",
+      "id": "movement_allowed",
+      "satisfied": true,
+      "evaluation": "Movement is currently allowed",
+      "evaluationTime": 0.5
+    },
+    {
+      "type": "condition",
+      "id": "has_stamina",
+      "satisfied": true,
+      "evaluation": "Actor has sufficient stamina (85 >= 10)",
+      "evaluationTime": 0.3
+    }
+  ],
+  "targets": [
+    {
+      "entityId": "target_location",
+      "components": ["core:position"],
+      "relationship": "spatial_proximity",
+      "distance": 2.3,
+      "valid": true
+    }
+  ],
+  "execution": {
+    "startTime": "2025-08-23T14:30:22.125Z",
+    "endTime": "2025-08-23T14:30:22.137Z",
+    "result": "success",
+    "effects": [
+      {
+        "type": "component_update",
+        "component": "core:position",
+        "oldValue": { "x": 10, "y": 20, "z": 0 },
+        "newValue": { "x": 11.5, "y": 20, "z": 0 }
+      },
+      {
+        "type": "component_update",
+        "component": "core:actor",
+        "field": "stamina",
+        "oldValue": 85,
+        "newValue": 83
+      }
+    ]
+  },
+  "performance": {
+    "totalTime": 12.5,
+    "componentLookup": 2.1,
+    "prerequisiteCheck": 3.2,
+    "targetResolution": 1.8,
+    "execution": 7.2,
+    "cleanup": 0.2
+  },
+  "metadata": {
+    "gameVersion": "1.2.3",
+    "engineVersion": "2.1.0",
+    "traceVersion": "1.0",
+    "verbosity": "verbose",
+    "generatedBy": "ActionTraceOutputService"
+  }
+}

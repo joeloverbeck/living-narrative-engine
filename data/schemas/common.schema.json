@@ -100,11 +100,6 @@
           "type": "string",
           "description": "Where/how this was observed (optional)"
         },
-        "tags": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Additional categorization tags (optional)"
-        },
         "timestamp": {
           "type": "string",
           "format": "date-time",

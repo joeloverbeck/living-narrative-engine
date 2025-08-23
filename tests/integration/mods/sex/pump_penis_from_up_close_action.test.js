@@ -1,14 +1,14 @@
 /**
- * @file Integration tests for the sex:pump_penis action and rule.
- * @description Tests the rule execution after the pump_penis action is performed.
+ * @file Integration tests for the sex:pump_penis_from_up_close action and rule.
+ * @description Tests the rule execution after the pump_penis_from_up_close action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly. For action discovery tests,
  * see pumpPenisActionDiscovery.integration.test.js.
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import pumpPenisRule from '../../../../data/mods/sex/rules/handle_pump_penis.rule.json';
-import eventIsActionPumpPenis from '../../../../data/mods/sex/conditions/event-is-action-pump-penis.condition.json';
+import pumpPenisFromUpCloseRule from '../../../../data/mods/sex/rules/handle_pump_penis_from_up_close.rule.json';
+import eventIsActionPumpPenisFromUpClose from '../../../../data/mods/sex/conditions/event-is-action-pump-penis-from-up-close.condition.json';
 import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -25,7 +25,7 @@ import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
 import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
 
 /**
- * Creates handlers needed for the pump_penis rule.
+ * Creates handlers needed for the pump_penis_from_up_close rule.
  *
  * @param {object} entityManager - Entity manager instance
  * @param {object} eventBus - Event bus instance
@@ -65,22 +65,22 @@ function createHandlers(entityManager, eventBus, logger) {
   };
 }
 
-describe('sex:pump_penis action integration', () => {
+describe('sex:pump_penis_from_up_close action integration', () => {
   let testEnv;
 
   beforeEach(() => {
     const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(pumpPenisRule.actions, {
+    const expanded = expandMacros(pumpPenisFromUpCloseRule.actions, {
       get: (type, id) => (type === 'macros' ? macros[id] : undefined),
     });
 
     const dataRegistry = {
       getAllSystemRules: jest
         .fn()
-        .mockReturnValue([{ ...pumpPenisRule, actions: expanded }]),
+        .mockReturnValue([{ ...pumpPenisFromUpCloseRule, actions: expanded }]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'sex:event-is-action-pump-penis'
-          ? eventIsActionPumpPenis
+        id === 'sex:event-is-action-pump-penis-from-up-close'
+          ? eventIsActionPumpPenisFromUpClose
           : undefined
       ),
     };
@@ -88,7 +88,7 @@ describe('sex:pump_penis action integration', () => {
     testEnv = createRuleTestEnvironment({
       createHandlers,
       entities: [],
-      rules: [{ ...pumpPenisRule, actions: expanded }],
+      rules: [{ ...pumpPenisFromUpCloseRule, actions: expanded }],
       dataRegistry,
     });
   });
@@ -99,7 +99,7 @@ describe('sex:pump_penis action integration', () => {
     }
   });
 
-  it('should handle pump_penis action with correct perceptible event', async () => {
+  it('should handle pump_penis_from_up_close action with correct perceptible event', async () => {
     // Setup entities
     const actorId = 'test:actor';
     const targetId = 'test:target';
@@ -136,13 +136,13 @@ describe('sex:pump_penis action integration', () => {
     );
     testEnv.eventBus.subscribe('core:turn_ended', turnEndHandler);
 
-    // Dispatch the pump_penis action
+    // Dispatch the pump_penis_from_up_close action
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId,
-      actionId: 'sex:pump_penis',
+      actionId: 'sex:pump_penis_from_up_close',
       targetId,
-      originalInput: 'pump_penis bob',
+      originalInput: 'pump_penis_from_up_close bob',
     });
 
     // Check what events were dispatched
@@ -162,7 +162,7 @@ describe('sex:pump_penis action integration', () => {
     // which needs to be properly configured in the test environment
   });
 
-  it('should handle pump_penis action with different actor and target names', async () => {
+  it('should handle pump_penis_from_up_close action with different actor and target names', async () => {
     // Setup entities with different names
     const actorId = 'test:actor2';
     const targetId = 'test:target2';
@@ -194,9 +194,9 @@ describe('sex:pump_penis action integration', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId,
-      actionId: 'sex:pump_penis',
+      actionId: 'sex:pump_penis_from_up_close',
       targetId,
-      originalInput: 'pump_penis david',
+      originalInput: 'pump_penis_from_up_close david',
     });
 
     // Verify events were dispatched
@@ -240,9 +240,9 @@ describe('sex:pump_penis action integration', () => {
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId,
-      actionId: 'sex:pump_penis',
+      actionId: 'sex:pump_penis_from_up_close',
       targetId,
-      originalInput: 'pump_penis frank',
+      originalInput: 'pump_penis_from_up_close frank',
     });
 
     // Verify events were dispatched

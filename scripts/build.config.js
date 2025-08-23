@@ -46,6 +46,11 @@ module.exports = {
       entry: 'src/core-motivations-generator-main.js',
       output: 'core-motivations-generator.js',
     },
+    {
+      name: 'traits-generator',
+      entry: 'src/traits-generator-main.js',
+      output: 'traits-generator.js',
+    },
   ],
 
   // HTML files (explicit list to prevent missing files)
@@ -58,6 +63,7 @@ module.exports = {
     'thematic-directions-manager.html',
     'cliches-generator.html',
     'core-motivations-generator.html',
+    'traits-generator.html',
   ],
 
   // Static asset directories

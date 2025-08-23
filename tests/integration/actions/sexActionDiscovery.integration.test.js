@@ -10,14 +10,13 @@ import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperator
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
-import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 import fs from 'fs';
 import path from 'path';
 
 // Import actual action and scope files
-import pumpPenisAction from '../../../data/mods/sex/actions/pump_penis.action.json';
+import pumpPenisFromUpCloseAction from '../../../data/mods/sex/actions/pump_penis_from_up_close.action.json';
 const pumpPenisScopeContent = fs.readFileSync(
   path.resolve(
     process.cwd(),
@@ -58,7 +57,7 @@ describe('Sex Action Discovery Integration Tests', () => {
 
     // Create real data registry and register actions
     dataRegistry = new InMemoryDataRegistry({ logger });
-    dataRegistry.store('actions', pumpPenisAction.id, pumpPenisAction);
+    dataRegistry.store('actions', pumpPenisFromUpCloseAction.id, pumpPenisFromUpCloseAction);
 
     // Create real JSON Logic operators and evaluation service
     const jsonLogicCustomOperators = new JsonLogicCustomOperators({
@@ -77,7 +76,6 @@ describe('Sex Action Discovery Integration Tests', () => {
     jsonLogicCustomOperators.registerOperators(jsonLogicEval);
 
     // Create real scope system
-    const parser = new DefaultDslParser();
     scopeRegistry = new ScopeRegistry();
 
     // Register actual scope definitions
@@ -94,7 +92,7 @@ describe('Sex Action Discovery Integration Tests', () => {
     });
   });
 
-  describe('Pump Penis Action - Scope Evaluation', () => {
+  describe('Pump Penis From Up Close Action - Scope Evaluation', () => {
     it('should correctly evaluate scope when all conditions are met', () => {
       // Arrange
       const actorId = 'test:actor';

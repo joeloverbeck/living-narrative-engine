@@ -96,7 +96,6 @@ describe('Schema – core:action_decided payload', () => {
             subject: 'player-1',
             subjectType: 'character',
             context: 'dialogue interaction',
-            tags: ['behavior', 'observation'],
           },
         ],
       },

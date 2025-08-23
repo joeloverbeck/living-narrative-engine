@@ -255,6 +255,197 @@ The engine includes powerful trace analysis tools for debugging and performance 
 
 To enable trace analysis tools, set `"traceAnalysisEnabled": true`. See `docs/trace-analysis-configuration.md` for detailed configuration options.
 
+## Action Tracing
+
+The Living Narrative Engine provides comprehensive action tracing capabilities to help developers debug gameplay logic, understand entity interactions, and analyze system behavior.
+
+### Configuration
+
+Action tracing is configured via `config/trace-config.json`:
+
+#### Basic Configuration (JSON-only)
+
+```json
+{
+  "actionTracing": {
+    "enabled": true,
+    "tracedActions": ["core:move", "intimacy:fondle_ass"],
+    "outputDirectory": "./traces",
+    "verbosity": "verbose",
+    "includeComponentData": true,
+    "includePrerequisites": true,
+    "includeTargets": true,
+    "maxTraceFiles": 100,
+    "rotationPolicy": "age",
+    "maxFileAge": 86400
+  }
+}
+```
+
+#### Dual-Format Configuration (JSON + Human-Readable Text)
+
+```json
+{
+  "actionTracing": {
+    "enabled": true,
+    "tracedActions": ["intimacy:fondle_ass"],
+    "outputDirectory": "./traces/fondle-ass",
+    "verbosity": "verbose",
+    "includeComponentData": true,
+    "includePrerequisites": true,
+    "includeTargets": true,
+    "maxTraceFiles": 100,
+    "rotationPolicy": "age",
+    "maxFileAge": 86400,
+    "outputFormats": ["json", "text"],
+    "textFormatOptions": {
+      "enableColors": false,
+      "lineWidth": 120,
+      "indentSize": 2,
+      "sectionSeparator": "=",
+      "includeTimestamps": true,
+      "performanceSummary": true
+    }
+  }
+}
+```
+
+### Output Formats
+
+#### JSON Format
+
+Perfect for programmatic analysis, tool integration, and detailed debugging:
+
+- Machine-readable structured data
+- Complete component state information
+- Prerequisite and target analysis
+- Performance timing data
+
+#### Text Format (Human-Readable)
+
+Optimized for quick debugging and human review:
+
+- Formatted for readability
+- Configurable line width and indentation
+- Optional performance summaries
+- No ANSI color codes in file output
+
+### File Output
+
+When `outputFormats` includes multiple formats, files are generated with appropriate extensions:
+
+```
+traces/
+├── trace_discovery_p_erotica_silvia_instance_2025-08-22T19-52-51_621Z.json
+├── trace_discovery_p_erotica_silvia_instance_2025-08-22T19-52-51_621Z.txt
+├── trace_fondle_ass_player_20250822_143045.json
+└── trace_fondle_ass_player_20250822_143045.txt
+```
+
+### Text Format Options
+
+| Option               | Type    | Default | Description                               |
+| -------------------- | ------- | ------- | ----------------------------------------- |
+| `enableColors`       | boolean | `false` | ANSI color codes (forced false for files) |
+| `lineWidth`          | number  | `120`   | Maximum line width (80-200)               |
+| `indentSize`         | number  | `2`     | Indentation spaces (0-8)                  |
+| `sectionSeparator`   | string  | `"="`   | Character for section headers             |
+| `includeTimestamps`  | boolean | `true`  | Include timing information                |
+| `performanceSummary` | boolean | `true`  | Add performance summary                   |
+
+### Performance Impact
+
+Dual-format tracing has minimal performance overhead:
+
+- JSON generation: ~1-2ms per trace
+- Text generation: ~2-3ms per trace
+- File writing: ~5-10ms per file (network dependent)
+- Total overhead: <10ms additional per trace
+
+### Migration from JSON-only
+
+Existing configurations continue to work unchanged. To enable dual-format:
+
+1. **Add output formats**: Include `"outputFormats": ["json", "text"]`
+2. **Configure text options**: Add `textFormatOptions` object (optional)
+3. **Update tooling**: Modify any scripts that expect only JSON files
+
+### LLM Proxy Server Integration
+
+Action tracing integrates with the LLM proxy server running on port 3001. The server provides three endpoints:
+
+#### Single Trace Writing
+```bash
+POST http://localhost:3001/api/traces/write
+Content-Type: application/json
+
+{
+  "traceData": "{\"actionId\":\"core:move\",\"timestamp\":\"2025-08-23T10:30:00Z\"}",
+  "fileName": "trace_move_player.json",
+  "outputDirectory": "./traces"
+}
+```
+
+#### Batch Trace Writing
+```bash
+POST http://localhost:3001/api/traces/write-batch
+Content-Type: application/json
+
+{
+  "traces": [
+    {
+      "traceData": "{\"actionId\":\"core:move\"}",
+      "fileName": "trace1.json"
+    },
+    {
+      "traceData": "{\"actionId\":\"core:attack\"}",
+      "fileName": "trace2.json"
+    }
+  ],
+  "outputDirectory": "./traces"
+}
+```
+
+#### Trace Listing
+```bash
+GET http://localhost:3001/api/traces/list?directory=./traces
+```
+
+### Troubleshooting
+
+#### Common Issues
+
+**Q: Text files contain ANSI color codes**
+A: `enableColors` is automatically forced to `false` for file output, regardless of configuration.
+
+**Q: Files not being generated**
+A: Check LLM proxy server logs at `llm-proxy-server/logs/`, verify output directory permissions, and ensure LLM proxy server is running on port 3001.
+
+**Q: Performance degradation**
+A: Dual-format adds <10ms per trace. Consider using JSON-only for high-frequency actions if needed.
+
+**Q: Invalid configuration**
+A: Check configuration against schema using AJV validation or examine schema file at `data/schemas/actionTraceConfig.schema.json`
+
+**Q: Connection refused errors**
+A: Start the LLM proxy server: `npm run dev --prefix llm-proxy-server` (development) or `npm start --prefix llm-proxy-server` (production)
+
+### Configuration Schema
+
+The action tracing configuration follows the schema defined in `data/schemas/actionTraceConfig.schema.json`. Key properties include:
+
+- `enabled`: Boolean to enable/disable tracing
+- `tracedActions`: Array of action IDs to trace (supports wildcards like `"mod:*"`)
+- `outputDirectory`: Directory for trace files (relative to project root)
+- `outputFormats`: Array of formats - `"json"`, `"text"`, `"html"`, `"markdown"`
+- `textFormatOptions`: Object configuring text output formatting
+- `verbosity`: Level of detail - `"minimal"`, `"standard"`, `"detailed"`, `"verbose"`
+- `includeComponentData`: Include entity component data in traces
+- `includePrerequisites`: Include prerequisite evaluation details
+- `includeTargets`: Include target resolution information
+
+For complete schema documentation, see `docs/action-tracing/` directory.
+
 ## Dependency & Conflict Validation
 
 A robust modding system relies on clearly defined dependencies and the ability to handle potential conflicts. The Living

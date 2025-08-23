@@ -203,7 +203,7 @@ export class PromptDataFormatter {
   /**
    * Group notes by subject using explicit subject types
    *
-   * @param {Array<{text: string, subject?: string, subjectType?: string, context?: string, tags?: string[], timestamp?: string}>} notes - Array of structured notes
+   * @param {Array<{text: string, subject?: string, subjectType?: string, context?: string, timestamp?: string}>} notes - Array of structured notes
    * @returns {Map<string, {subjectType: string, displayCategory: string, priority: number, notes: Array}>}
    */
   groupNotesBySubject(notes) {
@@ -237,7 +237,7 @@ export class PromptDataFormatter {
   /**
    * Format individual note with context and tags
    *
-   * @param {{text: string, context?: string, tags?: string[]}} note - The note to format
+   * @param {{text: string, context?: string}} note - The note to format
    * @param {object} options - Formatting options
    * @param {boolean} options.showContext - Show context information
    * @returns {string} Formatted note string
@@ -290,7 +290,7 @@ export class PromptDataFormatter {
   /**
    * Format notes with subject grouping and context display
    *
-   * @param {Array<{text: string, subject?: string, subjectType?: string, context?: string, tags?: string[], timestamp?: string}>} notesArray - Array of structured notes
+   * @param {Array<{text: string, subject?: string, subjectType?: string, context?: string, timestamp?: string}>} notesArray - Array of structured notes
    * @param {object} options - Formatting options
    * @returns {string} Formatted notes content with grouping
    */

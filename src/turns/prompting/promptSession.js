@@ -18,7 +18,7 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * @property {number} chosenIndex
  * @property {string|null} speech
  * @property {string|null} thoughts - Optional thoughts from the player.
- * @property {Array<{text: string, subject: string, context?: string, tags?: string[], timestamp?: string}>|null} notes  - Optional structured notes from the player.
+ * @property {Array<{text: string, subject: string, context?: string, timestamp?: string}>|null} notes  - Optional structured notes from the player.
  */
 
 /**

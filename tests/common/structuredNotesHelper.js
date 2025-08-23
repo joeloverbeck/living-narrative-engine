@@ -9,15 +9,22 @@ import { v4 as uuid } from 'uuid';
 
 /**
  * Valid subject types for structured notes
+ * Must match exactly with common.schema.json structuredNote definition
  *
  * @type {string[]}
  */
 const VALID_SUBJECT_TYPES = [
   'character',
   'location',
-  'object',
+  'item',
+  'creature',
   'event',
   'concept',
+  'relationship',
+  'organization',
+  'quest',
+  'skill',
+  'emotion',
   'other',
 ];
 
@@ -29,7 +36,6 @@ const VALID_SUBJECT_TYPES = [
  * @param {string} subjectType - The type of subject (required, must be valid enum value)
  * @param {object} [options] - Optional additional fields
  * @param {string} [options.context] - Contextual information about the note
- * @param {string[]} [options.tags] - Array of tags for categorization
  * @param {string} [options.timestamp] - ISO timestamp for the note
  * @returns {object} A valid structured note object
  * @throws {Error} If required parameters are invalid
@@ -38,7 +44,7 @@ const VALID_SUBJECT_TYPES = [
  *   'Player is acting suspicious',
  *   'player-001',
  *   'character',
- *   { context: 'dialogue', tags: ['behavior', 'suspicion'] }
+ *   { context: 'dialogue' }
  * );
  */
 export function createValidNote(text, subject, subjectType, options = {}) {
@@ -70,10 +76,6 @@ export function createValidNote(text, subject, subjectType, options = {}) {
   // Add optional fields if provided
   if (options.context && typeof options.context === 'string') {
     note.context = options.context;
-  }
-
-  if (options.tags && Array.isArray(options.tags)) {
-    note.tags = options.tags;
   }
 
   if (options.timestamp && typeof options.timestamp === 'string') {
@@ -173,7 +175,6 @@ export const NOTE_TEMPLATES = {
   characterObservation: (characterId, observation) =>
     createValidNote(observation, characterId, 'character', {
       context: 'character observation',
-      tags: ['behavior', 'observation'],
     }),
 
   /**
@@ -186,7 +187,6 @@ export const NOTE_TEMPLATES = {
   locationDescription: (locationId, description) =>
     createValidNote(description, locationId, 'location', {
       context: 'environmental description',
-      tags: ['description', 'environment'],
     }),
 
   /**
@@ -203,7 +203,6 @@ export const NOTE_TEMPLATES = {
       'event',
       {
         context: 'event documentation',
-        tags: ['event', 'timeline'],
         timestamp: new Date().toISOString(),
       }
     ),
@@ -218,7 +217,6 @@ export const NOTE_TEMPLATES = {
   dialogueNote: (speakerId, dialogueContext) =>
     createValidNote(dialogueContext, speakerId, 'character', {
       context: 'dialogue interaction',
-      tags: ['dialogue', 'speech'],
     }),
 };
 
@@ -255,10 +253,6 @@ export function isValidStructuredNote(note) {
 
   // Check optional fields if present
   if (note.context && typeof note.context !== 'string') {
-    return false;
-  }
-
-  if (note.tags && !Array.isArray(note.tags)) {
     return false;
   }
 

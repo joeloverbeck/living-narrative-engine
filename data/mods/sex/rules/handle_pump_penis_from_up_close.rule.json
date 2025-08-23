@@ -1,9 +1,9 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_pump_penis",
-  "comment": "Handles the 'sex:pump_penis' action. Dispatches descriptive text and ends the turn.",
+  "rule_id": "handle_pump_penis_from_up_close",
+  "comment": "Handles the 'sex:pump_penis_from_up_close' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "sex:event-is-action-pump-penis" },
+  "condition": { "condition_ref": "sex:event-is-action-pump-penis-from-up-close" },
   "actions": [
     {
       "type": "GET_NAME",
@@ -25,7 +25,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} pumps {context.targetName}'s penis sensually."
+        "value": "From up close, {context.actorName}'s breath hot against {context.targetName}'s genitals, {context.actorName} pumps {context.targetName}'s penis sensually while kneeling."
       }
     },
     {

@@ -156,6 +156,13 @@ export class Span {
     this.#endTime = performance.now();
     this.#duration = this.#endTime - this.#startTime;
 
+    // Validate duration to prevent negative values
+    if (this.#duration < 0) {
+      // eslint-disable-next-line no-console
+      console.warn(`Span "${this.#operation}" (${this.#id}) has negative duration: ${this.#duration}ms. Setting to 0.`);
+      this.#duration = 0;
+    }
+
     // Set status to success if it's still active
     if (this.#status === 'active') {
       this.#status = 'success';
