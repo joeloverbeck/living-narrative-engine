@@ -11,11 +11,13 @@ This report analyzes the current implementation of the `kneel_before` and `stand
 ### Kneel_Before Action
 
 **File**: `data/mods/positioning/actions/kneel_before.action.json`
+
 - **Purpose**: Allows an actor to kneel before another actor
 - **Components Added**: `positioning:kneeling_before` with target entity ID
 - **Movement Lock**: ❌ **NOT IMPLEMENTED**
 
 **Rule**: `data/mods/positioning/rules/kneel_before.rule.json`
+
 - Adds the `positioning:kneeling_before` component
 - Dispatches perception event
 - Ends turn
@@ -24,12 +26,14 @@ This report analyzes the current implementation of the `kneel_before` and `stand
 ### Stand_Up Action
 
 **File**: `data/mods/positioning/actions/stand_up.action.json`
+
 - **Purpose**: Allows an actor to stand up from kneeling position
 - **Required Components**: `positioning:kneeling_before`
 - **Components Removed**: `positioning:kneeling_before`
 - **Movement Unlock**: ❌ **NOT IMPLEMENTED**
 
 **Rule**: `data/mods/positioning/rules/stand_up.rule.json`
+
 - Removes the `positioning:kneeling_before` component
 - Dispatches perception event
 - Ends turn
@@ -42,6 +46,7 @@ This report analyzes the current implementation of the `kneel_before` and `stand
 The `get_close` and `step_back` actions use a sophisticated movement locking system:
 
 #### Get_Close Implementation
+
 1. **Operation Used**: `MERGE_CLOSENESS_CIRCLE`
 2. **Handler**: `src/logic/operationHandlers/mergeClosenessCircleHandler.js`
 3. **Movement Lock Process**:
@@ -50,6 +55,7 @@ The `get_close` and `step_back` actions use a sophisticated movement locking sys
    - Sets `core:movement.locked = true`
 
 #### Step_Back Implementation
+
 1. **Operation Used**: `REMOVE_FROM_CLOSENESS_CIRCLE`
 2. **Handler**: `src/logic/operationHandlers/removeFromClosenessCircleHandler.js`
 3. **Movement Unlock Process**:
@@ -60,12 +66,14 @@ The `get_close` and `step_back` actions use a sophisticated movement locking sys
 ### Movement Lock Mechanism
 
 **Component Location in Anatomy System**:
+
 - **Legacy Entities**: `core:movement` component directly on the actor entity
 - **Anatomy-Based Entities**: `core:movement` components on individual body parts (legs)
   - Example: `anatomy:human_leg` entities have `core:movement` component
   - Root entity has `anatomy:body` component that references body parts via `body.parts` map
 
 **Movement Component Structure**:
+
 ```json
 {
   "locked": boolean,      // If true, voluntary movement is blocked
@@ -74,6 +82,7 @@ The `get_close` and `step_back` actions use a sophisticated movement locking sys
 ```
 
 **Utility Function**: `src/utils/movementUtils.js::updateMovementLock()`
+
 ```javascript
 // Key implementation details:
 // 1. Checks for anatomy:body component on root entity
@@ -83,6 +92,7 @@ The `get_close` and `step_back` actions use a sophisticated movement locking sys
 ```
 
 This utility correctly handles the anatomy system by:
+
 - Detecting anatomy-based entities via the `anatomy:body` component
 - Iterating through the `body.parts` map to find all body parts
 - Checking each part for `core:movement` component (found on legs)
@@ -95,6 +105,7 @@ This utility correctly handles the anatomy system by:
 **Why this approach doesn't work for anatomy-based entities:**
 
 The `MODIFY_COMPONENT` operation can only modify components on a single specified entity. For anatomy-based entities, we need to:
+
 1. Access the `anatomy:body` component on the root entity
 2. Iterate through the `body.parts` map
 3. Update `core:movement` on each leg entity
@@ -123,12 +134,12 @@ class LockMovementHandler extends BaseOperationHandler {
       logger: { value: logger },
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getComponentData', 'addComponent']
+        requiredMethods: ['getComponentData', 'addComponent'],
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
-        requiredMethods: ['dispatch']
-      }
+        requiredMethods: ['dispatch'],
+      },
     });
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
@@ -137,7 +148,7 @@ class LockMovementHandler extends BaseOperationHandler {
   async execute(params, executionContext) {
     const logger = this.getLogger(executionContext);
     const { actor_id } = params || {};
-    
+
     if (!actor_id) {
       safeDispatchError(
         this.#dispatcher,
@@ -219,7 +230,7 @@ operationMap.set('UNLOCK_MOVEMENT', 'UnlockMovementHandler');
 
 **Critical Understanding**: The anatomy system fundamentally changes how movement is handled:
 
-1. **Legacy Entities**: 
+1. **Legacy Entities**:
    - Have `core:movement` component directly on the actor entity
    - Simple direct update of the movement component
 
@@ -230,6 +241,7 @@ operationMap.set('UNLOCK_MOVEMENT', 'UnlockMovementHandler');
    - Each leg entity has its own `core:movement` component with `locked` and `forcedOverride` fields
 
 **How `updateMovementLock` Handles This**:
+
 ```javascript
 // Simplified flow:
 if (entity has anatomy:body) {
@@ -295,6 +307,7 @@ This is why custom operations are necessary - the rules engine cannot iterate th
 5. **Consistency**: Aligns with how movement locking is already implemented in the codebase
 
 **Why NOT Option 1**:
+
 - `MODIFY_COMPONENT` cannot iterate through dynamic entity collections
 - Cannot update multiple leg entities based on runtime data
 - Would only work for legacy entities, breaking anatomy-based characters
@@ -332,9 +345,10 @@ This is why custom operations are necessary - the rules engine cannot iterate th
 
 ## Conclusion
 
-The movement locking mechanism is well-established in the codebase through the closeness circle implementation. However, the anatomy system's architecture requires using custom operations rather than simple component modification. 
+The movement locking mechanism is well-established in the codebase through the closeness circle implementation. However, the anatomy system's architecture requires using custom operations rather than simple component modification.
 
 **Key Corrections from Original Report**:
+
 1. Movement components are NOT on the root entity for anatomy-based characters - they're on individual body parts (legs)
 2. The `MODIFY_COMPONENT` approach cannot work for anatomy entities due to the need for dynamic iteration
 3. Custom operations following the `MERGE_CLOSENESS_CIRCLE` pattern are the only viable solution

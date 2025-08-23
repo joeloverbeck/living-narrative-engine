@@ -39,9 +39,11 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
-        expect.stringContaining("Text format options are configured but 'text' is not in outputFormats")
+        expect.stringContaining(
+          "Text format options are configured but 'text' is not in outputFormats"
+        )
       );
     });
 
@@ -58,9 +60,11 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
-        expect.stringContaining('ANSI colors are enabled but HTML output is selected')
+        expect.stringContaining(
+          'ANSI colors are enabled but HTML output is selected'
+        )
       );
     });
 
@@ -78,12 +82,16 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.errors).toContainEqual(
-        expect.stringContaining('Text format lineWidth 350 is out of recommended range')
+        expect.stringContaining(
+          'Text format lineWidth 350 is out of recommended range'
+        )
       );
       expect(result.errors).toContainEqual(
-        expect.stringContaining('Text format indentSize 10 is out of valid range')
+        expect.stringContaining(
+          'Text format indentSize 10 is out of valid range'
+        )
       );
     });
 
@@ -100,9 +108,11 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
-        expect.stringContaining("Verbosity is set to 'minimal' but detailed inclusions are enabled")
+        expect.stringContaining(
+          "Verbosity is set to 'minimal' but detailed inclusions are enabled"
+        )
       );
     });
 
@@ -118,9 +128,11 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
-        expect.stringContaining("Both 'count' rotation policy and maxFileAge are specified")
+        expect.stringContaining(
+          "Both 'count' rotation policy and maxFileAge are specified"
+        )
       );
     });
 
@@ -133,9 +145,11 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
-        expect.stringContaining('Tracing is disabled but 3 actions are configured')
+        expect.stringContaining(
+          'Tracing is disabled but 3 actions are configured'
+        )
       );
     });
   });
@@ -157,9 +171,11 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
-        expect.stringContaining("Consider using 'core:*' wildcard instead of 4 individual actions")
+        expect.stringContaining(
+          "Consider using 'core:*' wildcard instead of 4 individual actions"
+        )
       );
     });
 
@@ -174,9 +190,11 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
-        expect.stringContaining("'verbose' verbosity with JSON output may create large files")
+        expect.stringContaining(
+          "'verbose' verbosity with JSON output may create large files"
+        )
       );
     });
 
@@ -190,9 +208,11 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
-        expect.stringContaining("Tracing all actions with 'detailed' verbosity will impact performance")
+        expect.stringContaining(
+          "Tracing all actions with 'detailed' verbosity will impact performance"
+        )
       );
     });
 
@@ -209,9 +229,11 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
-        expect.stringContaining("Enable 'performanceSummary' in textFormatOptions for better performance insights")
+        expect.stringContaining(
+          "Enable 'performanceSummary' in textFormatOptions for better performance insights"
+        )
       );
     });
 
@@ -226,9 +248,11 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
-        expect.stringContaining('High maxTraceFiles (300) may impact directory performance')
+        expect.stringContaining(
+          'High maxTraceFiles (300) may impact directory performance'
+        )
       );
     });
 
@@ -244,9 +268,11 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
-        expect.stringContaining("Enable 'includeTimestamps' in textFormatOptions for better trace correlation")
+        expect.stringContaining(
+          "Enable 'includeTimestamps' in textFormatOptions for better trace correlation"
+        )
       );
     });
   });
@@ -263,7 +289,7 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.isValid).toBe(true);
       // Should not crash, defaults should be applied
     });
@@ -281,7 +307,7 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
         expect.stringContaining('Invalid section separator for Markdown output')
       );
@@ -293,7 +319,7 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       // Should handle gracefully with defaults
       expect(result.normalizedConfig).toBeDefined();
     });
@@ -302,12 +328,14 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: Array(100).fill(null).map((_, i) => `mod${i}:action`),
+          tracedActions: Array(100)
+            .fill(null)
+            .map((_, i) => `mod${i}:action`),
         },
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
         expect.stringContaining('Tracing 100 actions may impact performance')
       );
@@ -324,7 +352,7 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.normalizedConfig.actionTracing.tracedActions).toEqual([
         'core:move',
         'core:attack',
@@ -342,7 +370,7 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.normalizedConfig.actionTracing.maxTraceFiles).toBe(100);
     });
 
@@ -357,7 +385,7 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.normalizedConfig.actionTracing.maxFileAge).toBe(86400);
     });
   });
@@ -376,9 +404,11 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       };
 
       const result = await validator.validateConfiguration(config);
-      
+
       expect(result.warnings).toContainEqual(
-        expect.stringContaining('High performance impact configuration detected')
+        expect.stringContaining(
+          'High performance impact configuration detected'
+        )
       );
     });
   });

@@ -47,6 +47,7 @@ export class ActionTraceOutputService {
   #timerService;
   #fileOutputHandler;
   #outputToFiles;
+  #actionTraceConfig;
 
   /**
    * Constructor
@@ -65,6 +66,7 @@ export class ActionTraceOutputService {
    * @param {object} [dependencies.timerService] - Timer service for scheduling operations
    * @param {string} [dependencies.outputDirectory] - Directory for file output (enables file output mode)
    * @param {boolean} [dependencies.outputToFiles] - Whether to output traces to files instead of IndexedDB
+   * @param {object} [dependencies.actionTraceConfig] - Action trace configuration
    */
   constructor({
     storageAdapter,
@@ -80,6 +82,7 @@ export class ActionTraceOutputService {
     timerService,
     outputDirectory,
     outputToFiles = false,
+    actionTraceConfig,
   } = {}) {
     // Validate dependencies if provided
     if (storageAdapter) {
@@ -130,6 +133,12 @@ export class ActionTraceOutputService {
     this.#eventBus = eventBus;
     this.#traceDirectoryManager = traceDirectoryManager;
     this.#exportInProgress = false;
+
+    // Store configuration
+    this.#actionTraceConfig = actionTraceConfig || {
+      outputFormats: ['json'],
+      textFormatOptions: {},
+    };
 
     // Store naming options for later use
     this.#namingOptions = namingOptions || {};
@@ -272,9 +281,12 @@ export class ActionTraceOutputService {
     // When file output is enabled, bypass queue processor and write directly to files
     if (this.#outputToFiles && this.#fileOutputHandler) {
       this.#logger.debug(
-        'ActionTraceOutputService: Using file output mode, bypassing queue processor'
+        'ActionTraceOutputService: Using file output mode with formats',
+        { formats: this.#actionTraceConfig?.outputFormats || ['json'] }
       );
-      const writePromise = this.#performWrite(trace);
+
+      // Use multi-format writing
+      const writePromise = this.#writeTraceMultiFormat(trace);
       this.#pendingWrites.add(writePromise);
 
       try {
@@ -564,6 +576,40 @@ export class ActionTraceOutputService {
 
     // Simulate async write operation
     await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+
+  /**
+   * Write trace in multiple formats
+   *
+   * @private
+   * @param {object} trace - Trace to write
+   */
+  async #writeTraceMultiFormat(trace) {
+    const outputFormats = this.#actionTraceConfig?.outputFormats || ['json'];
+
+    // Write JSON format if configured
+    if (outputFormats.includes('json') && this.#fileOutputHandler) {
+      const jsonData = this.#formatTraceData(trace);
+      await this.#fileOutputHandler.writeTrace(jsonData, trace);
+    }
+
+    // Write text format if configured
+    if (outputFormats.includes('text') && this.#fileOutputHandler) {
+      // Create a modified trace object with text format indicator
+      const textTrace = {
+        ...trace,
+        _outputFormat: 'text', // Indicator for file handler
+      };
+
+      // Format as text (note: can't pass options to formatter)
+      const textData = this.#formatTraceAsText({
+        id: this.#generateTraceId(trace),
+        timestamp: Date.now(),
+        data: this.#formatTraceData(trace),
+      });
+
+      await this.#fileOutputHandler.writeTrace(textData, textTrace);
+    }
   }
 
   /**
@@ -1313,6 +1359,24 @@ export class ActionTraceOutputService {
         error
       );
       return false;
+    }
+  }
+
+  /**
+   * Update trace configuration
+   *
+   * @param {object} config - Action trace configuration
+   */
+  updateConfiguration(config) {
+    if (config) {
+      this.#actionTraceConfig = {
+        outputFormats: config.outputFormats || ['json'],
+        textFormatOptions: config.textFormatOptions || {},
+      };
+
+      this.#logger.debug('ActionTraceOutputService: Configuration updated', {
+        outputFormats: this.#actionTraceConfig.outputFormats,
+      });
     }
   }
 }

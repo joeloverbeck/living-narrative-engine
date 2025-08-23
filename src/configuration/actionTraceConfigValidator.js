@@ -227,14 +227,16 @@ class ActionTraceConfigValidator {
     const performanceResult =
       this.#validatePerformanceImpact(actionTraceConfig);
     warnings.push(...performanceResult.warnings);
-    
+
     // NEW: Cross-field validation
-    const crossFieldResult = this.#validateCrossFieldConstraints(actionTraceConfig);
+    const crossFieldResult =
+      this.#validateCrossFieldConstraints(actionTraceConfig);
     errors.push(...crossFieldResult.errors);
     warnings.push(...crossFieldResult.warnings);
-    
+
     // NEW: Generate configuration recommendations
-    const recommendations = this.#generateConfigurationRecommendations(actionTraceConfig);
+    const recommendations =
+      this.#generateConfigurationRecommendations(actionTraceConfig);
     warnings.push(...recommendations);
 
     return {
@@ -521,40 +523,50 @@ class ActionTraceConfigValidator {
     const warnings = [];
 
     // Check if text format options are specified when text format is not enabled
-    if (config.textFormatOptions && 
-        (!config.outputFormats || !config.outputFormats.includes('text'))) {
+    if (
+      config.textFormatOptions &&
+      (!config.outputFormats || !config.outputFormats.includes('text'))
+    ) {
       warnings.push(
         `Text format options are configured but 'text' is not in outputFormats. ` +
-        `These options will be ignored unless text output is enabled.`
+          `These options will be ignored unless text output is enabled.`
       );
     }
 
     // Check for HTML/Markdown format without appropriate text options
     if (config.outputFormats) {
-      if (config.outputFormats.includes('html') && 
-          config.textFormatOptions?.enableColors === true) {
+      if (
+        config.outputFormats.includes('html') &&
+        config.textFormatOptions?.enableColors === true
+      ) {
         warnings.push(
           `ANSI colors are enabled but HTML output is selected. ` +
-          `Colors may not render correctly in HTML format.`
+            `Colors may not render correctly in HTML format.`
         );
       }
 
-      if (config.outputFormats.includes('markdown') && 
-          config.textFormatOptions?.sectionSeparator && 
-          config.textFormatOptions.sectionSeparator.length !== 1) {
+      if (
+        config.outputFormats.includes('markdown') &&
+        config.textFormatOptions?.sectionSeparator &&
+        config.textFormatOptions.sectionSeparator.length !== 1
+      ) {
         warnings.push(
           `Invalid section separator for Markdown output. ` +
-          `Separator should be a single character.`
+            `Separator should be a single character.`
         );
       }
     }
 
     // Validate verbosity vs inclusion settings
-    if (config.verbosity === 'minimal' && 
-        (config.includeComponentData || config.includePrerequisites || config.includeTargets)) {
+    if (
+      config.verbosity === 'minimal' &&
+      (config.includeComponentData ||
+        config.includePrerequisites ||
+        config.includeTargets)
+    ) {
       warnings.push(
         `Verbosity is set to 'minimal' but detailed inclusions are enabled. ` +
-        `These inclusions will be ignored at minimal verbosity level.`
+          `These inclusions will be ignored at minimal verbosity level.`
       );
     }
 
@@ -562,30 +574,34 @@ class ActionTraceConfigValidator {
     if (config.rotationPolicy === 'count' && config.maxFileAge) {
       warnings.push(
         `Both 'count' rotation policy and maxFileAge are specified. ` +
-        `maxFileAge will be ignored when using count-based rotation.`
+          `maxFileAge will be ignored when using count-based rotation.`
       );
     }
 
     if (config.rotationPolicy === 'age' && config.maxTraceFiles) {
       warnings.push(
         `Both 'age' rotation policy and maxTraceFiles are specified. ` +
-        `maxTraceFiles will be ignored when using age-based rotation.`
+          `maxTraceFiles will be ignored when using age-based rotation.`
       );
     }
 
     // Validate text format options ranges
     if (config.textFormatOptions) {
       const opts = config.textFormatOptions;
-      
-      if (opts.lineWidth !== undefined && 
-          (opts.lineWidth < 40 || opts.lineWidth > 300)) {
+
+      if (
+        opts.lineWidth !== undefined &&
+        (opts.lineWidth < 40 || opts.lineWidth > 300)
+      ) {
         errors.push(
           `Text format lineWidth ${opts.lineWidth} is out of recommended range (40-300).`
         );
       }
 
-      if (opts.indentSize !== undefined && 
-          (opts.indentSize < 0 || opts.indentSize > 8)) {
+      if (
+        opts.indentSize !== undefined &&
+        (opts.indentSize < 0 || opts.indentSize > 8)
+      ) {
         errors.push(
           `Text format indentSize ${opts.indentSize} is out of valid range (0-8).`
         );
@@ -593,10 +609,14 @@ class ActionTraceConfigValidator {
     }
 
     // Check for disabled tracing with extensive configuration
-    if (!config.enabled && config.tracedActions && config.tracedActions.length > 0) {
+    if (
+      !config.enabled &&
+      config.tracedActions &&
+      config.tracedActions.length > 0
+    ) {
       warnings.push(
         `Tracing is disabled but ${config.tracedActions.length} actions are configured. ` +
-        `Consider removing traced actions or enabling tracing.`
+          `Consider removing traced actions or enabling tracing.`
       );
     }
 
@@ -633,37 +653,49 @@ class ActionTraceConfigValidator {
     }
 
     // Recommend appropriate verbosity for output formats
-    if (config.outputFormats && config.outputFormats.includes('json') && 
-        config.verbosity === 'verbose') {
+    if (
+      config.outputFormats &&
+      config.outputFormats.includes('json') &&
+      config.verbosity === 'verbose'
+    ) {
       recommendations.push(
         `Recommendation: 'verbose' verbosity with JSON output may create large files. ` +
-        `Consider 'detailed' for better balance.`
+          `Consider 'detailed' for better balance.`
       );
     }
 
     // Recommend performance settings based on traced actions count
-    if (config.tracedActions && config.tracedActions.includes('*') && 
-        config.verbosity !== 'minimal') {
+    if (
+      config.tracedActions &&
+      config.tracedActions.includes('*') &&
+      config.verbosity !== 'minimal'
+    ) {
       recommendations.push(
         `Recommendation: Tracing all actions with '${config.verbosity}' verbosity will impact performance. ` +
-        `Consider using 'minimal' verbosity or specific action patterns.`
+          `Consider using 'minimal' verbosity or specific action patterns.`
       );
     }
 
     // Recommend text format optimization
-    if (config.outputFormats && config.outputFormats.includes('text') && 
-        config.textFormatOptions?.performanceSummary === false) {
+    if (
+      config.outputFormats &&
+      config.outputFormats.includes('text') &&
+      config.textFormatOptions?.performanceSummary === false
+    ) {
       recommendations.push(
         `Recommendation: Enable 'performanceSummary' in textFormatOptions for better performance insights.`
       );
     }
 
     // Recommend appropriate rotation settings
-    if (config.maxTraceFiles && config.maxTraceFiles > 200 && 
-        config.rotationPolicy === 'count') {
+    if (
+      config.maxTraceFiles &&
+      config.maxTraceFiles > 200 &&
+      config.rotationPolicy === 'count'
+    ) {
       recommendations.push(
         `Recommendation: High maxTraceFiles (${config.maxTraceFiles}) may impact directory performance. ` +
-        `Consider age-based rotation or lower file count.`
+          `Consider age-based rotation or lower file count.`
       );
     }
 
