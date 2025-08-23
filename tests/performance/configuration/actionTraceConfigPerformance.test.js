@@ -3,12 +3,19 @@
  * @see src/configuration/actionTraceConfigLoader.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import ActionTraceConfigLoader from '../../../src/configuration/actionTraceConfigLoader.js';
 import ActionTraceConfigValidator from '../../../src/configuration/actionTraceConfigValidator.js';
-import { 
+import {
   createMockTraceConfigLoader,
-  createMockSchemaValidator 
+  createMockSchemaValidator,
 } from '../../common/mockFactories/traceConfigMocks.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 
@@ -151,7 +158,7 @@ describe('ActionTraceConfigLoader Performance Benchmarks', () => {
 
       const stats = loader.getStatistics();
       expect(stats.operationMetrics).toBeDefined();
-      
+
       // Check for operation-specific metrics
       const configLoadMetrics = stats.operationMetrics['config-load'];
       if (configLoadMetrics) {
@@ -166,7 +173,9 @@ describe('ActionTraceConfigLoader Performance Benchmarks', () => {
       const mockConfig = {
         actionTracing: {
           enabled: true,
-          tracedActions: Array(100).fill(null).map((_, i) => `mod${i}:action`),
+          tracedActions: Array(100)
+            .fill(null)
+            .map((_, i) => `mod${i}:action`),
           outputFormats: ['json', 'text', 'html'],
           verbosity: 'verbose',
         },
@@ -180,7 +189,7 @@ describe('ActionTraceConfigLoader Performance Benchmarks', () => {
       }
 
       const stats = loader.getStatistics();
-      
+
       // Check if any slow operations were detected
       if (stats.operationMetrics['config-load']) {
         const metrics = stats.operationMetrics['config-load'];
@@ -212,7 +221,7 @@ describe('ActionTraceConfigLoader Performance Benchmarks', () => {
 
       const stats = loader.getStatistics();
       const hitRate = stats.cacheHitRate;
-      
+
       // Expect high cache hit rate (> 90%)
       expect(hitRate).toBeGreaterThan(90);
     });
@@ -325,7 +334,7 @@ describe('ActionTraceConfigLoader Performance Benchmarks', () => {
     it('should reset statistics without memory leaks', () => {
       // Generate some statistics
       loader.resetStatistics();
-      
+
       const stats1 = loader.getStatistics();
       expect(stats1.totalLookups).toBe(0);
       expect(stats1.cacheHits).toBe(0);
@@ -333,14 +342,16 @@ describe('ActionTraceConfigLoader Performance Benchmarks', () => {
 
       // Reset should clear all metrics
       loader.resetStatistics();
-      
+
       const stats2 = loader.getStatistics();
-      expect(stats2).toEqual(expect.objectContaining({
-        totalLookups: 0,
-        cacheHits: 0,
-        cacheMisses: 0,
-        fingerprintChanges: 0,
-      }));
+      expect(stats2).toEqual(
+        expect.objectContaining({
+          totalLookups: 0,
+          cacheHits: 0,
+          cacheMisses: 0,
+          fingerprintChanges: 0,
+        })
+      );
     });
   });
 
@@ -389,7 +400,7 @@ describe('ActionTraceConfigLoader Performance Benchmarks', () => {
 
       // Get final statistics
       const stats = loader.getStatistics();
-      
+
       console.log('Performance Benchmark Results:', {
         initialLoadTime: `${loadTime.toFixed(2)}ms`,
         cacheHitTime: `${cacheTime.toFixed(2)}ms`,

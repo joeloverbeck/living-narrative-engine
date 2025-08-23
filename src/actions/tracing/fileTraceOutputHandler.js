@@ -399,20 +399,27 @@ class FileTraceOutputHandler {
    * @private
    * @param {object} trace - Original trace object
    * @param {number} timestamp - Write timestamp
+   * @param {string} [format] - Output format
    * @returns {string} Generated filename
    */
-  #generateFileName(trace, timestamp) {
+  #generateFileName(trace, timestamp, format = 'json') {
     const date = new Date(timestamp);
     const dateStr = date.toISOString().replace(/:/g, '-').replace(/\./g, '_');
 
     const actionId = trace?.actionId || 'unknown';
     const actorId = trace?.actorId || 'unknown';
 
+    // Handle format indicator
+    const outputFormat = trace?._outputFormat || format;
+
+    // Extension based on format
+    const extension = outputFormat === 'text' ? 'txt' : 'json';
+
     // Create safe filename
     const safeActionId = actionId.replace(/[^a-z0-9_-]/gi, '_');
     const safeActorId = actorId.replace(/[^a-z0-9_-]/gi, '_');
 
-    return `trace_${safeActionId}_${safeActorId}_${dateStr}.json`;
+    return `trace_${safeActionId}_${safeActorId}_${dateStr}.${extension}`;
   }
 
   /**
@@ -424,6 +431,15 @@ class FileTraceOutputHandler {
    * @returns {string} Formatted content
    */
   #formatTraceContent(traceData, originalTrace) {
+    // Check if this is text format
+    if (originalTrace?._outputFormat === 'text') {
+      // For text format, return the data as-is (already formatted as text)
+      return typeof traceData === 'string'
+        ? traceData
+        : JSON.stringify(traceData, null, 2);
+    }
+
+    // For JSON format, wrap with metadata
     const output = {
       timestamp: new Date().toISOString(),
       outputDirectory: this.#outputDirectory,

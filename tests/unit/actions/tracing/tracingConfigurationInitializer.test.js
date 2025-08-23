@@ -32,6 +32,7 @@ describe('TracingConfigurationInitializer', () => {
 
     mockActionTraceOutputService = {
       enableFileOutput: jest.fn(),
+      updateConfiguration: jest.fn(),
     };
 
     mockLogger = {

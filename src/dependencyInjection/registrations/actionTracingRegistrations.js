@@ -188,6 +188,11 @@ export function registerActionTracing(container) {
         // later by TracingConfigurationInitializer when config is loaded
         outputToFiles: true,
         outputDirectory: './traces/rub-vagina-debugging', // Default directory
+        // Configuration will be updated by TracingConfigurationInitializer
+        actionTraceConfig: {
+          outputFormats: ['json'], // Default to JSON only
+          textFormatOptions: {},
+        },
       }),
     { lifecycle: 'singleton' }
   );

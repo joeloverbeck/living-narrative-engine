@@ -238,6 +238,9 @@ describe('ComponentName - Feature', () => {
 
 - Unit tests: `/tests/unit/` (mirror src structure)
 - Integration tests: `/tests/integration/`
+- E2E tests: `/tests/e2e/`
+- Performance tests: `/tests/performance/`
+- Memory tests: `/tests/memory/`
 - Test utilities: `/tests/common/`
 - Use descriptive test suite functions when available
 
@@ -247,7 +250,7 @@ describe('ComponentName - Feature', () => {
 
 ```json
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "modId:componentId",
   "description": "Human-readable description",
   "dataSchema": {
@@ -306,7 +309,6 @@ npm run scope:lint      # Validate scope DSL files
 npm run test:unit        # Run unit tests with coverage
 npm run test:integration # Run integration tests with coverage
 npm run test:e2e        # Run end-to-end tests with coverage
-npm run test:ci         # Run all tests (unit + integration + e2e)
 npm run test:single     # Sequential tests for debugging
 
 # Build
@@ -456,3 +458,12 @@ The project includes several character creation tools accessible from the main i
 ---
 
 _This is the complete project context for Living Narrative Engine. Follow these guidelines for consistent, high-quality contributions._
+
+# important-instruction-reminders
+
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (\*.md) or README files. Only create documentation files if explicitly requested by the User.
+
+      IMPORTANT: this context may or may not be relevant to your tasks. You should not respond to this context unless it is highly relevant to your task.

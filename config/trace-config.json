@@ -3,7 +3,9 @@
   "traceAnalysisEnabled": false,
   "actionTracing": {
     "enabled": false,
-    "tracedActions": ["intimacy:fondle_ass"],
+    "tracedActions": [
+      "intimacy:fondle_ass"
+    ],
     "outputDirectory": "./traces/fondle-ass",
     "verbosity": "verbose",
     "includeComponentData": true,
@@ -12,7 +14,10 @@
     "maxTraceFiles": 100,
     "rotationPolicy": "age",
     "maxFileAge": 86400,
-    "outputFormats": ["json"],
+    "outputFormats": [
+      "json",
+      "text"
+    ],
     "textFormatOptions": {
       "enableColors": false,
       "lineWidth": 120,

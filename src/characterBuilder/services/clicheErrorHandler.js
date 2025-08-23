@@ -44,6 +44,14 @@ const CIRCUIT_BREAKER_CONFIG = {
 };
 
 /**
+ * Cleanup throttling configuration to prevent O(n) performance issues
+ */
+const CLEANUP_THROTTLE_CONFIG = {
+  operationsThreshold: 100, // Cleanup after this many error operations
+  timeThreshold: 300000, // Or after 5 minutes, whichever comes first
+};
+
+/**
  * Error categorization for recovery strategy selection
  */
 const ERROR_CATEGORIES = {
@@ -57,7 +65,8 @@ const ERROR_CATEGORIES = {
  * Centralized error handler for cliché operations
  *
  * Provides intelligent error handling with context-aware recovery strategies,
- * retry logic, and graceful degradation options.
+ * retry logic, and graceful degradation options. Features throttled cleanup
+ * of error statistics to prevent O(n) performance degradation.
  */
 export class ClicheErrorHandler {
   #logger;
@@ -65,6 +74,10 @@ export class ClicheErrorHandler {
   #retryConfig;
   #circuitBreakers = new Map();
   #errorStatistics = new Map();
+  #cleanupThrottle = {
+    operationCount: 0,
+    lastCleanup: 0,
+  };
 
   /**
    * @param {object} dependencies - Handler dependencies
@@ -444,8 +457,11 @@ export class ClicheErrorHandler {
     stats.count++;
     stats.lastOccurrence = context.timestamp;
 
-    // Cleanup old statistics (keep only last 24 hours)
-    this.#cleanupOldStatistics();
+    // Increment operation count for throttling
+    this.#cleanupThrottle.operationCount++;
+
+    // Throttled cleanup to prevent O(n) performance issues
+    this.#throttledCleanupStatistics();
   }
 
   /**
@@ -874,7 +890,36 @@ export class ClicheErrorHandler {
   }
 
   /**
-   * Clean up old error statistics
+   * Throttled cleanup of old statistics to prevent O(n) performance issues
+   *
+   * Only performs cleanup when operation count or time thresholds are exceeded,
+   * preventing the previous O(n) issue where cleanup ran on every error.
+   *
+   * @private
+   */
+  #throttledCleanupStatistics() {
+    const now = Date.now();
+    const timeSinceLastCleanup = now - this.#cleanupThrottle.lastCleanup;
+    
+    const shouldCleanupByOperations = this.#cleanupThrottle.operationCount >= CLEANUP_THROTTLE_CONFIG.operationsThreshold;
+    const shouldCleanupByTime = timeSinceLastCleanup >= CLEANUP_THROTTLE_CONFIG.timeThreshold;
+    
+    if (shouldCleanupByOperations || shouldCleanupByTime) {
+      this.#cleanupOldStatistics();
+      
+      // Reset throttling counters
+      this.#cleanupThrottle.operationCount = 0;
+      this.#cleanupThrottle.lastCleanup = now;
+      
+      this.#logger.debug(`Error statistics cleanup performed`, {
+        triggerReason: shouldCleanupByOperations ? 'operations_threshold' : 'time_threshold',
+        statisticsCount: this.#errorStatistics.size,
+      });
+    }
+  }
+
+  /**
+   * Clean up old error statistics (internal implementation)
    *
    * @private
    */

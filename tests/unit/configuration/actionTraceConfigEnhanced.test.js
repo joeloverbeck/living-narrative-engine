@@ -7,10 +7,10 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import ActionTraceConfigLoader from '../../../src/configuration/actionTraceConfigLoader.js';
 import ActionTraceConfigValidator from '../../../src/configuration/actionTraceConfigValidator.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
-import { 
-  createMockTraceConfigLoader, 
+import {
+  createMockTraceConfigLoader,
   createMockSchemaValidator,
-  createSampleConfig 
+  createSampleConfig,
 } from '../../common/mockFactories/traceConfigMocks.js';
 
 // Mock the ActionTraceConfigValidator
@@ -55,7 +55,7 @@ describe('ActionTraceConfigLoader Enhancements', () => {
       // Load config twice
       await loader.loadConfig();
       const stats1 = loader.getStatistics();
-      
+
       await loader.loadConfig();
       const stats2 = loader.getStatistics();
 
@@ -75,7 +75,7 @@ describe('ActionTraceConfigLoader Enhancements', () => {
         .mockResolvedValueOnce(config2);
 
       await loader.loadConfig();
-      
+
       // Force reload with different config
       await loader.reloadConfig();
 
@@ -123,7 +123,7 @@ describe('ActionTraceConfigLoader Enhancements', () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
 
       await loader.loadConfig();
-      
+
       // The fingerprint should not include text options
       const stats = loader.getStatistics();
       expect(stats.cacheMisses).toBe(1);
@@ -142,7 +142,7 @@ describe('ActionTraceConfigLoader Enhancements', () => {
 
       const stats = loader.getStatistics();
       expect(stats.operationMetrics).toBeDefined();
-      
+
       // Should have metrics for config-load
       if (stats.operationMetrics['config-load']) {
         const metrics = stats.operationMetrics['config-load'];
@@ -161,14 +161,16 @@ describe('ActionTraceConfigLoader Enhancements', () => {
 
     it('should detect performance regressions', async () => {
       const config = createSampleConfig({
-        tracedActions: Array(100).fill(null).map((_, i) => `mod:action${i}`),
+        tracedActions: Array(100)
+          .fill(null)
+          .map((_, i) => `mod:action${i}`),
       });
 
       mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
 
       // Simulate slow operation
       mockTraceConfigLoader.loadConfig.mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
         return config;
       });
 
@@ -192,7 +194,7 @@ describe('ActionTraceConfigLoader Enhancements', () => {
 
       const stats = loader.getStatistics();
       const configLoadMetrics = stats.operationMetrics['config-load'];
-      
+
       if (configLoadMetrics) {
         expect(configLoadMetrics.count).toBe(5);
         expect(configLoadMetrics.slowRate).toBeDefined();
@@ -233,10 +235,10 @@ describe('ActionTraceConfigLoader Enhancements', () => {
       });
 
       await loader.loadConfig();
-      
+
       // Wait for cache to expire
-      await new Promise(resolve => setTimeout(resolve, 20));
-      
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
       await loader.loadConfig();
 
       const stats = loader.getStatistics();
@@ -252,10 +254,10 @@ describe('ActionTraceConfigLoader Enhancements', () => {
       // Generate some statistics
       await loader.loadConfig();
       await loader.shouldTraceAction('core:move');
-      
+
       // Reset statistics
       loader.resetStatistics();
-      
+
       const stats = loader.getStatistics();
       expect(stats.totalLookups).toBe(0);
       expect(stats.cacheHits).toBe(0);
@@ -269,13 +271,13 @@ describe('ActionTraceConfigLoader Enhancements', () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
 
       await loader.loadConfig();
-      
+
       // Reset statistics
       loader.resetStatistics();
-      
+
       // Load again - should still use cache if fingerprint matches
       await loader.loadConfig();
-      
+
       const stats = loader.getStatistics();
       expect(stats.cacheHits).toBe(1);
     });
@@ -292,12 +294,12 @@ describe('ActionTraceConfigLoader Enhancements', () => {
       }
 
       const stats = loader.getStatistics();
-      
+
       // Check that metrics are being tracked
       if (stats.operationMetrics['cache-hit']) {
         const metrics = stats.operationMetrics['cache-hit'];
         expect(metrics.count).toBeGreaterThan(0);
-        
+
         // Performance should be good for cache hits
         expect(metrics.avgTime).toBeLessThan(5); // Should be very fast
       }
@@ -329,7 +331,7 @@ describe('ActionTraceConfigLoader Enhancements', () => {
       mockTraceConfigLoader.loadConfig.mockResolvedValue(config);
 
       const result = await errorLoader.loadConfig();
-      
+
       // Should return default config on validation error
       expect(result.enabled).toBe(false);
       expect(result.tracedActions).toEqual([]);
@@ -341,7 +343,7 @@ describe('ActionTraceConfigLoader Enhancements', () => {
       });
 
       const result = await loader.loadConfig();
-      
+
       // Should return default config on loader error
       expect(result.enabled).toBe(false);
       expect(mockLogger.warn).toHaveBeenCalledWith(

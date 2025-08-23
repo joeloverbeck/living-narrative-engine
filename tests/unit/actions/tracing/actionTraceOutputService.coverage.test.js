@@ -272,10 +272,10 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
       expect(mockFileHandler.writeTrace).toHaveBeenCalled();
     });
 
-    it('should fallback to console when file write fails', async () => {
+    it('should write trace using multi-format when file output enabled', async () => {
       const mockFileHandler = {
         initialize: jest.fn().mockResolvedValue(true),
-        writeTrace: jest.fn().mockResolvedValue(false),
+        writeTrace: jest.fn().mockResolvedValue(true),
         setOutputDirectory: jest.fn(),
       };
       FileTraceOutputHandler.mockImplementation(() => mockFileHandler);
@@ -287,6 +287,10 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
         storageAdapter: mockStorageAdapter,
         logger: mockLogger,
         outputToFiles: true,
+        actionTraceConfig: {
+          outputFormats: ['json', 'text'],
+          textFormatOptions: {},
+        },
       });
 
       const trace = {
@@ -297,12 +301,10 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
 
       await service.writeTrace(trace);
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'File output failed, falling back to console logging',
-        expect.any(Object)
-      );
+      // Should write twice - once for JSON, once for text
+      expect(mockFileHandler.writeTrace).toHaveBeenCalledTimes(2);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'ACTION_TRACE',
+        'ActionTraceOutputService: Using file output mode with formats',
         expect.any(Object)
       );
 
@@ -329,12 +331,12 @@ describe('ActionTraceOutputService - Coverage Improvements', () => {
         toJSON: () => ({ action: 'test' }),
       };
 
-      await service.writeTrace(trace);
+      // When using file output mode directly, errors propagate to the caller
+      // The service doesn't log the error in this path - it lets the caller handle it
+      await expect(service.writeTrace(trace)).rejects.toThrow('Write failed');
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'File output error, falling back to console logging',
-        expect.any(Object)
-      );
+      // Verify that writeTrace was attempted
+      expect(mockFileHandler.writeTrace).toHaveBeenCalled();
     });
 
     it('should set output directory', () => {

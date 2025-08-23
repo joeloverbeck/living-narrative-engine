@@ -111,11 +111,14 @@ class ActionTraceConfigLoader {
    */
   async loadConfig() {
     const operationStart = performance.now();
-    
+
     // Check cache validity using both TTL and fingerprinting
     if (this.#cachedConfig.data && !this.#isCacheExpired()) {
       this.#cacheStatistics.hits++;
-      this.#recordOperationMetrics('cache-hit', performance.now() - operationStart);
+      this.#recordOperationMetrics(
+        'cache-hit',
+        performance.now() - operationStart
+      );
       return this.#cachedConfig.data;
     }
 
@@ -139,9 +142,12 @@ class ActionTraceConfigLoader {
       // Extract action tracing section
       let actionTracingConfig =
         fullConfig.actionTracing || this.#getDefaultConfig();
-      
+
       // Record loading operation metrics
-      this.#recordOperationMetrics('config-load', performance.now() - operationStart);
+      this.#recordOperationMetrics(
+        'config-load',
+        performance.now() - operationStart
+      );
 
       // If using defaults due to missing section, build lookup structures immediately
       if (!fullConfig.actionTracing) {
@@ -168,7 +174,7 @@ class ActionTraceConfigLoader {
         // Schema is loaded, perform validation
         try {
           const validationStart = performance.now();
-          
+
           // Initialize the enhanced validator
           await this.#configValidator.initialize();
 
@@ -176,9 +182,12 @@ class ActionTraceConfigLoader {
           validationResult = await this.#configValidator.validateConfiguration({
             actionTracing: actionTracingConfig,
           });
-          
+
           // Record validation performance
-          this.#recordOperationMetrics('config-validate', performance.now() - validationStart);
+          this.#recordOperationMetrics(
+            'config-validate',
+            performance.now() - validationStart
+          );
 
           // Log warnings even if validation passed
           validationResult.warnings.forEach((warning) => {
@@ -230,7 +239,8 @@ class ActionTraceConfigLoader {
       // Cache the validated configuration with timestamp and fingerprint
       this.#cachedConfig.data = actionTracingConfig;
       this.#cachedConfig.timestamp = Date.now();
-      this.#cachedConfig.fingerprint = this.#generateConfigFingerprint(actionTracingConfig);
+      this.#cachedConfig.fingerprint =
+        this.#generateConfigFingerprint(actionTracingConfig);
       this.#cacheStatistics.lastFingerprint = this.#cachedConfig.fingerprint;
 
       // Build optimized lookup structures for performance
@@ -300,10 +310,10 @@ class ActionTraceConfigLoader {
     // Reset performance optimization structures
     this.#tracedActionsSet.clear();
     this.#wildcardPatterns = [];
-    
+
     // Track reload as cache invalidation
     this.#cacheStatistics.fingerprintChanges++;
-    
+
     return this.loadConfig();
   }
 
@@ -481,10 +491,12 @@ class ActionTraceConfigLoader {
       : 'empty';
 
     // Calculate cache hit rate
-    const totalCacheAccesses = this.#cacheStatistics.hits + this.#cacheStatistics.misses;
-    const cacheHitRate = totalCacheAccesses > 0
-      ? (this.#cacheStatistics.hits / totalCacheAccesses) * 100
-      : 0;
+    const totalCacheAccesses =
+      this.#cacheStatistics.hits + this.#cacheStatistics.misses;
+    const cacheHitRate =
+      totalCacheAccesses > 0
+        ? (this.#cacheStatistics.hits / totalCacheAccesses) * 100
+        : 0;
 
     return {
       // Lookup statistics
@@ -529,20 +541,23 @@ class ActionTraceConfigLoader {
    */
   #getOperationMetricsSummary() {
     const summary = {};
-    
-    for (const [operation, metrics] of Object.entries(this.#operationMetrics.operations)) {
+
+    for (const [operation, metrics] of Object.entries(
+      this.#operationMetrics.operations
+    )) {
       summary[operation] = {
         count: metrics.count,
         avgTime: metrics.avgTime,
         minTime: metrics.minTime === Number.MAX_VALUE ? 0 : metrics.minTime,
         maxTime: metrics.maxTime,
         slowOperations: metrics.slowOperations,
-        slowRate: metrics.count > 0 
-          ? (metrics.slowOperations / metrics.count) * 100 
-          : 0,
+        slowRate:
+          metrics.count > 0
+            ? (metrics.slowOperations / metrics.count) * 100
+            : 0,
       };
     }
-    
+
     return summary;
   }
 
@@ -561,7 +576,7 @@ class ActionTraceConfigLoader {
       slowestLookup: 0,
       totalLookupTime: 0,
     };
-    
+
     // Reset cache statistics (preserve fingerprint for comparison)
     this.#cacheStatistics = {
       hits: 0,
@@ -569,7 +584,7 @@ class ActionTraceConfigLoader {
       fingerprintChanges: 0,
       lastFingerprint: this.#cacheStatistics.lastFingerprint,
     };
-    
+
     // Reset operation metrics
     this.#operationMetrics = {
       operations: {},
@@ -808,16 +823,18 @@ class ActionTraceConfigLoader {
     opStats.maxTime = Math.max(opStats.maxTime, duration);
 
     // Detect performance regression (2x average or above threshold)
-    const isSlowOperation = duration > opStats.performanceThreshold || 
-                            (opStats.count > 10 && duration > opStats.avgTime * 2);
-    
+    const isSlowOperation =
+      duration > opStats.performanceThreshold ||
+      (opStats.count > 10 && duration > opStats.avgTime * 2);
+
     if (isSlowOperation) {
       opStats.slowOperations++;
       this.#logger.warn(`Performance regression detected in ${operationType}`, {
         duration: `${duration.toFixed(3)}ms`,
         average: `${opStats.avgTime.toFixed(3)}ms`,
         threshold: `${opStats.performanceThreshold}ms`,
-        regressionRatio: opStats.avgTime > 0 ? (duration / opStats.avgTime).toFixed(2) : 'N/A',
+        regressionRatio:
+          opStats.avgTime > 0 ? (duration / opStats.avgTime).toFixed(2) : 'N/A',
       });
     }
 
@@ -965,7 +982,8 @@ class ActionTraceConfigLoader {
     if (hasChanged) {
       this.#cacheStatistics.fingerprintChanges++;
       this.#logger.debug('Configuration fingerprint changed', {
-        oldFingerprint: this.#cachedConfig.fingerprint?.substring(0, 20) + '...',
+        oldFingerprint:
+          this.#cachedConfig.fingerprint?.substring(0, 20) + '...',
         newFingerprint: newFingerprint.substring(0, 20) + '...',
       });
     }

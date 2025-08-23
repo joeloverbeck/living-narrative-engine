@@ -112,8 +112,15 @@ class TracingConfigurationInitializer {
           'Configuring trace output service for file output...',
           {
             outputDirectory: config.outputDirectory,
+            outputFormats: config.outputFormats,
           }
         );
+
+        // Update configuration with output formats
+        this.#actionTraceOutputService.updateConfiguration({
+          outputFormats: config.outputFormats || ['json'],
+          textFormatOptions: config.textFormatOptions || {},
+        });
 
         // Enable file output with the configured directory
         const fileOutputEnabled =
@@ -123,6 +130,7 @@ class TracingConfigurationInitializer {
         if (fileOutputEnabled) {
           this.#logger.info('File output configured successfully', {
             outputDirectory: config.outputDirectory,
+            outputFormats: config.outputFormats || ['json'],
           });
         } else {
           this.#logger.warn(
