@@ -37,6 +37,7 @@ const RETRY_CONFIG = {
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('./characterStorageService.js').CharacterStorageService} CharacterStorageService
  * @typedef {import('./thematicDirectionGenerator.js').ThematicDirectionGenerator} ThematicDirectionGenerator
+ * @typedef {import('./TraitsGenerator.js').TraitsGenerator} TraitsGenerator
  * @typedef {import('../models/characterConcept.js').CharacterConcept} CharacterConcept
  * @typedef {import('../models/thematicDirection.js').ThematicDirection} ThematicDirection
  * @typedef {import('../storage/characterDatabase.js').CharacterDatabase} CharacterDatabase
@@ -100,6 +101,7 @@ export class CharacterBuilderService {
   #database;
   #schemaValidator;
   #clicheGenerator;
+  #traitsGenerator;
   #container;
   #cacheManager;
   #circuitBreakers = new Map(); // For circuit breaker pattern
@@ -117,6 +119,7 @@ export class CharacterBuilderService {
    * @param {CharacterDatabase} [dependencies.database] - Database instance
    * @param {object} [dependencies.schemaValidator] - Schema validator
    * @param {object} [dependencies.clicheGenerator] - Cliché generator (CLIGEN-003)
+   * @param {TraitsGenerator} [dependencies.traitsGenerator] - Traits generator service
    * @param {object} [dependencies.container] - DI container for resolving dependencies
    * @param {import('../cache/CoreMotivationsCacheManager.js').default} [dependencies.cacheManager] - Cache manager for Core Motivations
    */
@@ -128,6 +131,7 @@ export class CharacterBuilderService {
     database = null,
     schemaValidator = null,
     clicheGenerator = null,
+    traitsGenerator = null,
     container = null,
     cacheManager = null,
   }) {
@@ -164,6 +168,7 @@ export class CharacterBuilderService {
     this.#database = database;
     this.#schemaValidator = schemaValidator;
     this.#clicheGenerator = clicheGenerator;
+    this.#traitsGenerator = traitsGenerator;
     this.#container = container;
     this.#cacheManager = cacheManager;
 
@@ -2087,6 +2092,66 @@ export class CharacterBuilderService {
    */
   #clearClicheCache() {
     this.#clicheCache.clear();
+  }
+
+  /**
+   * Generate character traits using the TraitsGenerator service
+   *
+   * @param {object} params - Generation parameters
+   * @param {object} params.concept - Character concept object
+   * @param {object} params.direction - Thematic direction object  
+   * @param {object} params.userInputs - User-provided core motivation, contradiction, question
+   * @param {Array} params.cliches - Array of cliche objects to avoid
+   * @param {object} [options] - Generation options
+   * @param {string} [options.llmConfigId] - Specific LLM config to use
+   * @param {number} [options.maxRetries] - Maximum retry attempts
+   * @returns {Promise<object>} Generated traits data
+   * @throws {CharacterBuilderError} If TraitsGenerator is not available or generation fails
+   */
+  async generateTraits(params, options = {}) {
+    if (!this.#traitsGenerator) {
+      throw new CharacterBuilderError(
+        'TraitsGenerator service not available. Please ensure it is properly injected.'
+      );
+    }
+
+    try {
+      this.#logger.info('CharacterBuilderService: Delegating traits generation', {
+        conceptId: params.concept?.id,
+        directionId: params.direction?.id,
+        clichesCount: params.cliches?.length || 0,
+      });
+
+      // Delegate to the TraitsGenerator service
+      const result = await this.#traitsGenerator.generateTraits(params, options);
+
+      this.#logger.info('CharacterBuilderService: Traits generation completed', {
+        conceptId: params.concept?.id,
+        success: true,
+      });
+
+      return result;
+    } catch (error) {
+      this.#logger.error('CharacterBuilderService: Traits generation failed', error);
+      
+      // Dispatch error event
+      this.#eventBus.dispatch({
+        type: CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED,
+        payload: {
+          error: error.message,
+          operation: 'generateTraits',
+          context: {
+            conceptId: params.concept?.id,
+            directionId: params.direction?.id,
+          },
+        },
+      });
+
+      throw new CharacterBuilderError(
+        `Failed to generate traits: ${error.message}`,
+        error
+      );
+    }
   }
 
   /**

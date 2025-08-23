@@ -6,6 +6,7 @@
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { ConfigurationError } from '../errors/configurationError.js';
 import ActionTraceConfigValidator from './actionTraceConfigValidator.js';
+import ActionTracingConfigMigration from './actionTracingMigration.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -134,14 +135,23 @@ class ActionTraceConfigLoader {
           'Failed to load trace configuration, using defaults',
           fullConfig
         );
-        const defaultConfig = this.#getDefaultConfig();
+        const defaultConfig =
+          ActionTracingConfigMigration.mergeWithDefaults(null);
         this.#buildLookupStructures(defaultConfig);
         return defaultConfig;
       }
 
-      // Extract action tracing section
-      let actionTracingConfig =
-        fullConfig.actionTracing || this.#getDefaultConfig();
+      // Extract action tracing section and merge with defaults
+      let actionTracingConfig;
+      if (fullConfig.actionTracing) {
+        // Merge user config with defaults to ensure all fields are present
+        actionTracingConfig = ActionTracingConfigMigration.mergeWithDefaults(
+          fullConfig.actionTracing
+        );
+      } else {
+        // No action tracing config found, use defaults
+        actionTracingConfig = this.#getDefaultConfig();
+      }
 
       // Record loading operation metrics
       this.#recordOperationMetrics(
@@ -228,7 +238,8 @@ class ActionTraceConfigLoader {
           { errors: validationResult.errors }
         );
         // Return safe defaults on validation error
-        const defaultConfig = this.#getDefaultConfig();
+        const defaultConfig =
+          ActionTracingConfigMigration.mergeWithDefaults(null);
         this.#buildLookupStructures(defaultConfig);
         // Cache the default config to prevent re-validation
         this.#cachedConfig.data = defaultConfig;
@@ -259,7 +270,8 @@ class ActionTraceConfigLoader {
       this.#logger.error('Failed to load action tracing configuration', error);
 
       // Return safe defaults on error
-      const defaultConfig = this.#getDefaultConfig();
+      const defaultConfig =
+        ActionTracingConfigMigration.mergeWithDefaults(null);
       this.#buildLookupStructures(defaultConfig);
       return defaultConfig;
     }

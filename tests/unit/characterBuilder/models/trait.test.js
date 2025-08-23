@@ -12,28 +12,63 @@ describe('Trait Model', () => {
   beforeEach(() => {
     validTraitData = {
       names: [
-        { name: 'Alexander', justification: 'Strong, classic name meaning defender' },
+        {
+          name: 'Alexander',
+          justification: 'Strong, classic name meaning defender',
+        },
         { name: 'Kai', justification: 'Modern, simple name meaning ocean' },
-        { name: 'Marcus', justification: 'Roman name suggesting strength' }
+        { name: 'Marcus', justification: 'Roman name suggesting strength' },
       ],
-      physicalDescription: 'A tall, athletic figure with piercing green eyes and dark hair that falls just past their shoulders. Their hands are calloused from years of training, and a small scar runs across their left cheek.',
+      physicalDescription:
+        'A tall, athletic figure with piercing green eyes and dark hair that falls just past their shoulders. Their hands are calloused from years of training, and a small scar runs across their left cheek.',
       personality: [
-        { trait: 'Determined', explanation: 'Never gives up on important goals, even when facing overwhelming odds' },
-        { trait: 'Compassionate', explanation: 'Always puts others needs before their own, sometimes to a fault' },
-        { trait: 'Quick-witted', explanation: 'Thinks fast on their feet and can come up with creative solutions under pressure' }
+        {
+          trait: 'Determined',
+          explanation:
+            'Never gives up on important goals, even when facing overwhelming odds',
+        },
+        {
+          trait: 'Compassionate',
+          explanation:
+            'Always puts others needs before their own, sometimes to a fault',
+        },
+        {
+          trait: 'Quick-witted',
+          explanation:
+            'Thinks fast on their feet and can come up with creative solutions under pressure',
+        },
       ],
-      strengths: ['Combat skills', 'Leadership abilities', 'Strategic thinking'],
+      strengths: [
+        'Combat skills',
+        'Leadership abilities',
+        'Strategic thinking',
+      ],
       weaknesses: ['Impulsive decisions', 'Trusts too easily'],
-      likes: ['Training at dawn', 'Reading ancient texts', 'Helping others', 'Quiet moments in nature'],
-      dislikes: ['Injustice', 'Dishonesty', 'Unnecessary violence', 'Being idle'],
+      likes: [
+        'Training at dawn',
+        'Reading ancient texts',
+        'Helping others',
+        'Quiet moments in nature',
+      ],
+      dislikes: [
+        'Injustice',
+        'Dishonesty',
+        'Unnecessary violence',
+        'Being idle',
+      ],
       fears: ['Failing to protect loved ones'],
       goals: {
         shortTerm: ['Master the advanced combat techniques'],
-        longTerm: 'Become a legendary protector and establish a school for training future guardians'
+        longTerm:
+          'Become a legendary protector and establish a school for training future guardians',
       },
-      notes: ['Has a habit of humming when concentrating', 'Prefers vegetarian meals'],
-      profile: 'A noble warrior with a strong moral compass, dedicated to protecting the innocent and upholding justice. Their past experiences have shaped them into a formidable fighter, but their true strength lies in their unwavering compassion and ability to inspire others.',
-      secrets: ['Secretly fears they inherited their fathers dark tendencies']
+      notes: [
+        'Has a habit of humming when concentrating',
+        'Prefers vegetarian meals',
+      ],
+      profile:
+        'A noble warrior with a strong moral compass, dedicated to protecting the innocent and upholding justice. Their past experiences have shaped them into a formidable fighter, but their true strength lies in their unwavering compassion and ability to inspire others.',
+      secrets: ['Secretly fears they inherited their fathers dark tendencies'],
     };
   });
 
@@ -42,7 +77,9 @@ describe('Trait Model', () => {
       const trait = new Trait(validTraitData);
 
       expect(trait.names).toEqual(validTraitData.names);
-      expect(trait.physicalDescription).toBe(validTraitData.physicalDescription);
+      expect(trait.physicalDescription).toBe(
+        validTraitData.physicalDescription
+      );
       expect(trait.personality).toEqual(validTraitData.personality);
       expect(trait.strengths).toEqual(validTraitData.strengths);
       expect(trait.weaknesses).toEqual(validTraitData.weaknesses);
@@ -110,7 +147,7 @@ describe('Trait Model', () => {
 
     it('should handle empty data by providing defaults', () => {
       const trait = new Trait({});
-      
+
       expect(Array.isArray(trait.names)).toBe(true);
       expect(trait.names).toEqual([]);
       expect(trait.physicalDescription).toBe('');
@@ -139,7 +176,9 @@ describe('Trait Model', () => {
     it('should validate required fields', () => {
       expect(() => new Trait()).toThrow('Trait data is required');
       expect(() => new Trait(null)).toThrow('Trait data is required');
-      expect(() => new Trait('invalid')).toThrow('Trait data must be an object');
+      expect(() => new Trait('invalid')).toThrow(
+        'Trait data must be an object'
+      );
     });
 
     it('should freeze the trait object', () => {
@@ -177,7 +216,9 @@ describe('Trait Model', () => {
       const trait = Trait.fromLLMResponse(mockLLMResponse, metadata);
 
       expect(trait.names).toEqual(validTraitData.names);
-      expect(trait.physicalDescription).toBe(validTraitData.physicalDescription);
+      expect(trait.physicalDescription).toBe(
+        validTraitData.physicalDescription
+      );
       expect(trait.personality).toEqual(validTraitData.personality);
       expect(trait.strengths).toEqual(validTraitData.strengths);
       expect(trait.weaknesses).toEqual(validTraitData.weaknesses);
@@ -208,13 +249,15 @@ describe('Trait Model', () => {
       };
 
       const trait = Trait.fromLLMResponse(altResponse);
-      expect(trait.physicalDescription).toBe(validTraitData.physicalDescription);
+      expect(trait.physicalDescription).toBe(
+        validTraitData.physicalDescription
+      );
       expect(trait.profile).toBe(validTraitData.profile);
     });
 
     it('should handle missing fields with empty defaults', () => {
       const trait = Trait.fromLLMResponse({});
-      
+
       expect(trait.names).toEqual([]);
       expect(trait.physicalDescription).toBe('');
       expect(trait.personality).toEqual([]);
@@ -230,9 +273,15 @@ describe('Trait Model', () => {
     });
 
     it('should throw error for invalid input', () => {
-      expect(() => Trait.fromLLMResponse(null)).toThrow('Raw traits data is required and must be an object');
-      expect(() => Trait.fromLLMResponse(undefined)).toThrow('Raw traits data is required and must be an object');
-      expect(() => Trait.fromLLMResponse('invalid')).toThrow('Raw traits data is required and must be an object');
+      expect(() => Trait.fromLLMResponse(null)).toThrow(
+        'Raw traits data is required and must be an object'
+      );
+      expect(() => Trait.fromLLMResponse(undefined)).toThrow(
+        'Raw traits data is required and must be an object'
+      );
+      expect(() => Trait.fromLLMResponse('invalid')).toThrow(
+        'Raw traits data is required and must be an object'
+      );
     });
   });
 
@@ -240,7 +289,9 @@ describe('Trait Model', () => {
     it('should create trait from raw data', () => {
       const trait = Trait.fromRawData(validTraitData);
       expect(trait.names).toEqual(validTraitData.names);
-      expect(trait.physicalDescription).toBe(validTraitData.physicalDescription);
+      expect(trait.physicalDescription).toBe(
+        validTraitData.physicalDescription
+      );
       expect(trait.profile).toBe(validTraitData.profile);
     });
   });
@@ -293,35 +344,43 @@ describe('Trait Model', () => {
         const trait = new Trait({ ...validTraitData, names: [] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Names must be an array with 3-5 items');
+        expect(result.errors).toContain(
+          'Names must be an array with 3-5 items'
+        );
       });
 
       it('should validate name object structure', () => {
-        const trait = new Trait({ 
-          ...validTraitData, 
+        const trait = new Trait({
+          ...validTraitData,
           names: [
             { name: 'Test' }, // missing justification
             { name: 'Test2', justification: 'test' },
-            { name: 'Test3', justification: 'test' }
-          ]
+            { name: 'Test3', justification: 'test' },
+          ],
         });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors.some(e => e.includes('Names[0].justification is required'))).toBe(true);
+        expect(
+          result.errors.some((e) =>
+            e.includes('Names[0].justification is required')
+          )
+        ).toBe(true);
       });
 
       it('should validate name fields are non-empty strings', () => {
-        const trait = new Trait({ 
-          ...validTraitData, 
+        const trait = new Trait({
+          ...validTraitData,
           names: [
-            { name: '', justification: 'test' }, 
+            { name: '', justification: 'test' },
             { name: 'Test2', justification: 'test' },
-            { name: 'Test3', justification: 'test' }
-          ]
+            { name: 'Test3', justification: 'test' },
+          ],
         });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors.some(e => e.includes('Names[0].name is required'))).toBe(true);
+        expect(
+          result.errors.some((e) => e.includes('Names[0].name is required'))
+        ).toBe(true);
       });
     });
 
@@ -330,21 +389,33 @@ describe('Trait Model', () => {
         const trait = new Trait({ ...validTraitData, physicalDescription: '' });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Physical description is required and must be a string');
+        expect(result.errors).toContain(
+          'Physical description is required and must be a string'
+        );
       });
 
       it('should require minimum 100 characters', () => {
-        const trait = new Trait({ ...validTraitData, physicalDescription: 'Short' });
+        const trait = new Trait({
+          ...validTraitData,
+          physicalDescription: 'Short',
+        });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Physical description is too short (min 100 characters)');
+        expect(result.errors).toContain(
+          'Physical description is too short (min 100 characters)'
+        );
       });
 
       it('should warn for very long descriptions', () => {
         const longDescription = 'A'.repeat(501);
-        const trait = new Trait({ ...validTraitData, physicalDescription: longDescription });
+        const trait = new Trait({
+          ...validTraitData,
+          physicalDescription: longDescription,
+        });
         const result = trait.validate();
-        expect(result.warnings).toContain('Physical description is very long (max recommended 500 characters)');
+        expect(result.warnings).toContain(
+          'Physical description is very long (max recommended 500 characters)'
+        );
       });
     });
 
@@ -353,21 +424,27 @@ describe('Trait Model', () => {
         const trait = new Trait({ ...validTraitData, personality: [] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Personality must be an array with 3-5 items');
+        expect(result.errors).toContain(
+          'Personality must be an array with 3-5 items'
+        );
       });
 
       it('should validate personality object structure', () => {
-        const trait = new Trait({ 
-          ...validTraitData, 
+        const trait = new Trait({
+          ...validTraitData,
           personality: [
             { trait: 'Test' }, // missing explanation
             { trait: 'Test2', explanation: 'test' },
-            { trait: 'Test3', explanation: 'test' }
-          ]
+            { trait: 'Test3', explanation: 'test' },
+          ],
         });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors.some(e => e.includes('Personality[0].explanation is required'))).toBe(true);
+        expect(
+          result.errors.some((e) =>
+            e.includes('Personality[0].explanation is required')
+          )
+        ).toBe(true);
       });
     });
 
@@ -376,14 +453,23 @@ describe('Trait Model', () => {
         const trait = new Trait({ ...validTraitData, strengths: ['Only one'] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Strengths must be an array with 2-4 items');
+        expect(result.errors).toContain(
+          'Strengths must be an array with 2-4 items'
+        );
       });
 
       it('should validate strength items are non-empty strings', () => {
-        const trait = new Trait({ ...validTraitData, strengths: ['Valid', ''] });
+        const trait = new Trait({
+          ...validTraitData,
+          strengths: ['Valid', ''],
+        });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors.some(e => e.includes('Strengths[1] must be a non-empty string'))).toBe(true);
+        expect(
+          result.errors.some((e) =>
+            e.includes('Strengths[1] must be a non-empty string')
+          )
+        ).toBe(true);
       });
     });
 
@@ -392,7 +478,9 @@ describe('Trait Model', () => {
         const trait = new Trait({ ...validTraitData, weaknesses: [] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Weaknesses must be an array with 2-4 items');
+        expect(result.errors).toContain(
+          'Weaknesses must be an array with 2-4 items'
+        );
       });
     });
 
@@ -401,7 +489,9 @@ describe('Trait Model', () => {
         const trait = new Trait({ ...validTraitData, likes: ['Only', 'Two'] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Likes must be an array with 3-5 items');
+        expect(result.errors).toContain(
+          'Likes must be an array with 3-5 items'
+        );
       });
     });
 
@@ -410,7 +500,9 @@ describe('Trait Model', () => {
         const trait = new Trait({ ...validTraitData, dislikes: [] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Dislikes must be an array with 3-5 items');
+        expect(result.errors).toContain(
+          'Dislikes must be an array with 3-5 items'
+        );
       });
     });
 
@@ -419,14 +511,21 @@ describe('Trait Model', () => {
         const trait = new Trait({ ...validTraitData, fears: [] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Fears must be an array with 1-2 items');
+        expect(result.errors).toContain(
+          'Fears must be an array with 1-2 items'
+        );
       });
 
       it('should reject too many fears', () => {
-        const trait = new Trait({ ...validTraitData, fears: ['Fear1', 'Fear2', 'Fear3'] });
+        const trait = new Trait({
+          ...validTraitData,
+          fears: ['Fear1', 'Fear2', 'Fear3'],
+        });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Fears must be an array with 1-2 items');
+        expect(result.errors).toContain(
+          'Fears must be an array with 1-2 items'
+        );
       });
     });
 
@@ -435,27 +534,33 @@ describe('Trait Model', () => {
         const trait = new Trait({ ...validTraitData, goals: null });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Goals must be an object with shortTerm and longTerm properties');
+        expect(result.errors).toContain(
+          'Goals must be an object with shortTerm and longTerm properties'
+        );
       });
 
       it('should validate shortTerm array with 1-2 items', () => {
-        const trait = new Trait({ 
-          ...validTraitData, 
-          goals: { shortTerm: [], longTerm: 'Test' }
+        const trait = new Trait({
+          ...validTraitData,
+          goals: { shortTerm: [], longTerm: 'Test' },
         });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Goals.shortTerm must be an array with 1-2 items');
+        expect(result.errors).toContain(
+          'Goals.shortTerm must be an array with 1-2 items'
+        );
       });
 
       it('should validate longTerm is non-empty string', () => {
-        const trait = new Trait({ 
-          ...validTraitData, 
-          goals: { shortTerm: ['Test'], longTerm: '' }
+        const trait = new Trait({
+          ...validTraitData,
+          goals: { shortTerm: ['Test'], longTerm: '' },
         });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Goals.longTerm is required and must be a non-empty string');
+        expect(result.errors).toContain(
+          'Goals.longTerm is required and must be a non-empty string'
+        );
       });
     });
 
@@ -464,7 +569,9 @@ describe('Trait Model', () => {
         const trait = new Trait({ ...validTraitData, notes: ['Only one'] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Notes must be an array with 2-3 items');
+        expect(result.errors).toContain(
+          'Notes must be an array with 2-3 items'
+        );
       });
     });
 
@@ -473,21 +580,27 @@ describe('Trait Model', () => {
         const trait = new Trait({ ...validTraitData, profile: '' });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Profile is required and must be a string');
+        expect(result.errors).toContain(
+          'Profile is required and must be a string'
+        );
       });
 
       it('should require minimum 200 characters', () => {
         const trait = new Trait({ ...validTraitData, profile: 'Short' });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Profile is too short (min 200 characters)');
+        expect(result.errors).toContain(
+          'Profile is too short (min 200 characters)'
+        );
       });
 
       it('should warn for very long profiles', () => {
         const longProfile = 'A'.repeat(801);
         const trait = new Trait({ ...validTraitData, profile: longProfile });
         const result = trait.validate();
-        expect(result.warnings).toContain('Profile is very long (max recommended 800 characters)');
+        expect(result.warnings).toContain(
+          'Profile is very long (max recommended 800 characters)'
+        );
       });
     });
 
@@ -496,14 +609,21 @@ describe('Trait Model', () => {
         const trait = new Trait({ ...validTraitData, secrets: [] });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Secrets must be an array with 1-2 items');
+        expect(result.errors).toContain(
+          'Secrets must be an array with 1-2 items'
+        );
       });
 
       it('should reject too many secrets', () => {
-        const trait = new Trait({ ...validTraitData, secrets: ['Secret1', 'Secret2', 'Secret3'] });
+        const trait = new Trait({
+          ...validTraitData,
+          secrets: ['Secret1', 'Secret2', 'Secret3'],
+        });
         const result = trait.validate();
         expect(result.valid).toBe(false);
-        expect(result.errors).toContain('Secrets must be an array with 1-2 items');
+        expect(result.errors).toContain(
+          'Secrets must be an array with 1-2 items'
+        );
       });
     });
   });
@@ -515,7 +635,9 @@ describe('Trait Model', () => {
 
       expect(exportText).toContain('CHARACTER NAMES:');
       expect(exportText).toContain('1. Alexander');
-      expect(exportText).toContain('Justification: Strong, classic name meaning defender');
+      expect(exportText).toContain(
+        'Justification: Strong, classic name meaning defender'
+      );
       expect(exportText).toContain('PHYSICAL DESCRIPTION:');
       expect(exportText).toContain('PERSONALITY TRAITS:');
       expect(exportText).toContain('STRENGTHS:');
@@ -534,7 +656,7 @@ describe('Trait Model', () => {
     it('should handle empty arrays gracefully', () => {
       const emptyTrait = new Trait({});
       const exportText = emptyTrait.toExportText();
-      
+
       expect(exportText).toContain('CHARACTER NAMES:');
       expect(exportText).toContain('PHYSICAL DESCRIPTION:');
       // Should not crash with empty arrays

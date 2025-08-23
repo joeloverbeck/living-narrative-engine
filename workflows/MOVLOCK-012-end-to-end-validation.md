@@ -3,7 +3,7 @@
 **Status**: NOT_STARTED  
 **Priority**: HIGH  
 **Dependencies**: MOVLOCK-001 through MOVLOCK-011  
-**Estimated Effort**: 1.5 hours  
+**Estimated Effort**: 1.5 hours
 
 ## Context
 
@@ -33,7 +33,7 @@ describe('Movement Lock - End-to-End Flow', () => {
   beforeEach(async () => {
     testBed = TestBedFactory.create('full-game');
     await testBed.initialize();
-    
+
     gameFlow = new GameFlowTestHelper(testBed);
     entityManager = testBed.getService('IEntityManager');
     actionExecutor = testBed.getService('IActionExecutor');
@@ -55,57 +55,61 @@ describe('Movement Lock - End-to-End Flow', () => {
 describe('legacy entity complete flow', () => {
   it('should complete full kneel-stand-move cycle for legacy entity', async () => {
     // Phase 1: Setup - Create game world
-    const { actorId, targetId, locationA, locationB } = await gameFlow.createBasicWorld({
-      actorType: 'legacy',
-      withLocations: true
-    });
-    
+    const { actorId, targetId, locationA, locationB } =
+      await gameFlow.createBasicWorld({
+        actorType: 'legacy',
+        withLocations: true,
+      });
+
     // Verify initial state
     await gameFlow.verifyActorAt(actorId, locationA);
     await gameFlow.verifyMovementUnlocked(actorId);
-    
+
     // Phase 2: Actor approaches target
     await gameFlow.moveActor(actorId, targetId);
-    
+
     // Phase 3: Actor kneels before target
-    const kneelResult = await actionExecutor.execute('positioning:kneel_before', {
-      actorId: actorId,
-      targetId: targetId
-    });
-    
+    const kneelResult = await actionExecutor.execute(
+      'positioning:kneel_before',
+      {
+        actorId: actorId,
+        targetId: targetId,
+      }
+    );
+
     expect(kneelResult.success).toBe(true);
-    
+
     // Verify kneeling state
     await gameFlow.verifyActorKneeling(actorId, targetId);
     await gameFlow.verifyMovementLocked(actorId);
-    
+
     // Phase 4: Attempt movement while kneeling (should fail)
     const failedMoveResult = await actionExecutor.execute('core:go', {
       actorId: actorId,
-      destinationId: locationB
+      destinationId: locationB,
     });
-    
+
     expect(failedMoveResult.success).toBe(false);
     expect(failedMoveResult.reason).toContain('movement locked');
     await gameFlow.verifyActorAt(actorId, locationA); // Still at original location
-    
+
     // Phase 5: Actor stands up
     const standResult = await actionExecutor.execute('positioning:stand_up', {
-      actorId: actorId
+      actorId: actorId,
     });
-    
+
     expect(standResult.success).toBe(true);
-    
+
     // Verify standing state
     await gameFlow.verifyActorStanding(actorId);
     await gameFlow.verifyMovementUnlocked(actorId);
-    
+
     // Phase 6: Movement now allowed
     const successMoveResult = await actionExecutor.execute('core:go', {
       actorId: actorId,
-      destinationId: locationB
+      destinationId: locationB,
     });
-    
+
     expect(successMoveResult.success).toBe(true);
     await gameFlow.verifyActorAt(actorId, locationB);
   });
@@ -118,47 +122,51 @@ describe('legacy entity complete flow', () => {
 describe('anatomy entity complete flow', () => {
   it('should complete full kneel-stand-move cycle for anatomy entity', async () => {
     // Phase 1: Setup - Create anatomy-based world
-    const { actorId, targetId, locationA, locationB } = await gameFlow.createBasicWorld({
-      actorType: 'anatomy',
-      withLocations: true
-    });
-    
+    const { actorId, targetId, locationA, locationB } =
+      await gameFlow.createBasicWorld({
+        actorType: 'anatomy',
+        withLocations: true,
+      });
+
     // Verify anatomy structure
     await gameFlow.verifyAnatomyStructure(actorId, ['left_leg', 'right_leg']);
     await gameFlow.verifyAllLegsUnlocked(actorId);
-    
+
     // Phase 2: Full interaction flow
     await gameFlow.moveActor(actorId, targetId);
-    
-    const kneelResult = await actionExecutor.execute('positioning:kneel_before', {
-      actorId: actorId,
-      targetId: targetId
-    });
-    
+
+    const kneelResult = await actionExecutor.execute(
+      'positioning:kneel_before',
+      {
+        actorId: actorId,
+        targetId: targetId,
+      }
+    );
+
     expect(kneelResult.success).toBe(true);
-    
+
     // Verify all legs locked
     await gameFlow.verifyAllLegsLocked(actorId);
-    
+
     // Movement blocked
     const blockedMove = await actionExecutor.execute('core:go', {
       actorId: actorId,
-      destinationId: locationB
+      destinationId: locationB,
     });
     expect(blockedMove.success).toBe(false);
-    
+
     // Stand and verify unlock
     const standResult = await actionExecutor.execute('positioning:stand_up', {
-      actorId: actorId
+      actorId: actorId,
     });
     expect(standResult.success).toBe(true);
-    
+
     await gameFlow.verifyAllLegsUnlocked(actorId);
-    
+
     // Movement allowed
     const allowedMove = await actionExecutor.execute('core:go', {
       actorId: actorId,
-      destinationId: locationB
+      destinationId: locationB,
     });
     expect(allowedMove.success).toBe(true);
   });
@@ -174,32 +182,32 @@ describe('multi-actor scenarios', () => {
     const legacyActor = 'legacy-player';
     const anatomyActor = 'anatomy-npc';
     const targetId = 'shrine';
-    
+
     await gameFlow.createActor(legacyActor, 'legacy');
     await gameFlow.createActor(anatomyActor, 'anatomy');
     await gameFlow.createTarget(targetId);
-    
+
     // Both actors kneel
     await Promise.all([
       actionExecutor.execute('positioning:kneel_before', {
         actorId: legacyActor,
-        targetId: targetId
+        targetId: targetId,
       }),
       actionExecutor.execute('positioning:kneel_before', {
         actorId: anatomyActor,
-        targetId: targetId
-      })
+        targetId: targetId,
+      }),
     ]);
-    
+
     // Verify both locked
     await gameFlow.verifyMovementLocked(legacyActor);
     await gameFlow.verifyAllLegsLocked(anatomyActor);
-    
+
     // One stands, one remains kneeling
     await actionExecutor.execute('positioning:stand_up', {
-      actorId: legacyActor
+      actorId: legacyActor,
     });
-    
+
     // Verify states are independent
     await gameFlow.verifyMovementUnlocked(legacyActor);
     await gameFlow.verifyAllLegsLocked(anatomyActor); // Still kneeling
@@ -216,23 +224,29 @@ describe('error integration', () => {
   it('should handle errors gracefully throughout the system', async () => {
     // Test error propagation and recovery
     const actorId = 'error-test-actor';
-    
+
     // Test 1: Missing target
-    const missingTargetResult = await actionExecutor.execute('positioning:kneel_before', {
-      actorId: actorId,
-      targetId: 'non-existent-target'
-    });
-    
+    const missingTargetResult = await actionExecutor.execute(
+      'positioning:kneel_before',
+      {
+        actorId: actorId,
+        targetId: 'non-existent-target',
+      }
+    );
+
     expect(missingTargetResult.success).toBe(false);
-    
+
     // Test 2: Invalid actor
-    const invalidActorResult = await actionExecutor.execute('positioning:kneel_before', {
-      actorId: 'non-existent-actor',
-      targetId: 'valid-target'
-    });
-    
+    const invalidActorResult = await actionExecutor.execute(
+      'positioning:kneel_before',
+      {
+        actorId: 'non-existent-actor',
+        targetId: 'valid-target',
+      }
+    );
+
     expect(invalidActorResult.success).toBe(false);
-    
+
     // Verify system remains stable
     await gameFlow.verifySystemStability();
   });
@@ -264,43 +278,51 @@ const checks = {
     execSync('npm run lint', { stdio: 'inherit' });
     console.log('✅ Lint passed\n');
   },
-  
+
   format: () => {
     console.log('🎨 Running Prettier...');
     execSync('npm run format', { stdio: 'inherit' });
     console.log('✅ Format passed\n');
   },
-  
+
   typecheck: () => {
     console.log('📝 Running TypeScript check...');
     execSync('npm run typecheck', { stdio: 'inherit' });
     console.log('✅ Type check passed\n');
   },
-  
+
   unitTests: () => {
     console.log('🧪 Running unit tests...');
-    execSync('npm run test:unit tests/unit/logic/operationHandlers/*MovementHandler.test.js', { stdio: 'inherit' });
+    execSync(
+      'npm run test:unit tests/unit/logic/operationHandlers/*MovementHandler.test.js',
+      { stdio: 'inherit' }
+    );
     console.log('✅ Unit tests passed\n');
   },
-  
+
   integrationTests: () => {
     console.log('🔧 Running integration tests...');
-    execSync('npm run test:integration tests/integration/positioning/', { stdio: 'inherit' });
+    execSync('npm run test:integration tests/integration/positioning/', {
+      stdio: 'inherit',
+    });
     console.log('✅ Integration tests passed\n');
   },
-  
+
   e2eTests: () => {
     console.log('🌐 Running E2E tests...');
     execSync('npm run test:e2e tests/e2e/positioning/', { stdio: 'inherit' });
     console.log('✅ E2E tests passed\n');
   },
-  
+
   coverage: () => {
     console.log('📊 Checking test coverage...');
-    const result = execSync('npm run test:ci -- --coverage --testPathPattern="MovementHandler"', { 
-      encoding: 'utf8' 
-    });
-    
+    const result = execSync(
+      'npm run test:ci -- --coverage --testPathPattern="MovementHandler"',
+      {
+        encoding: 'utf8',
+      }
+    );
+
     // Parse coverage report (implementation depends on your coverage tool)
     if (result.includes('90%') || result.includes('100%')) {
       console.log('✅ Coverage target met (90%+)\n');
@@ -308,10 +330,10 @@ const checks = {
       throw new Error('❌ Coverage below 90%');
     }
   },
-  
+
   fileValidation: () => {
     console.log('📁 Validating created files...');
-    
+
     const requiredFiles = [
       'src/logic/operationHandlers/lockMovementHandler.js',
       'src/logic/operationHandlers/unlockMovementHandler.js',
@@ -320,50 +342,71 @@ const checks = {
       'tests/integration/positioning/movementLockAnatomyEntities.test.js',
       'tests/integration/positioning/movementLockLegacyEntities.test.js',
       'tests/integration/positioning/movementLockEdgeCases.test.js',
-      'tests/e2e/positioning/movementLockFlow.test.js'
+      'tests/e2e/positioning/movementLockFlow.test.js',
     ];
-    
+
     for (const file of requiredFiles) {
       if (!fs.existsSync(file)) {
         throw new Error(`❌ Required file missing: ${file}`);
       }
     }
-    
+
     console.log('✅ All required files present\n');
   },
-  
+
   registrationValidation: () => {
     console.log('🔗 Validating registrations...');
-    
+
     // Check token definitions
-    const tokensContent = fs.readFileSync('src/dependencyInjection/tokens.js', 'utf8');
-    if (!tokensContent.includes('LockMovementHandler') || !tokensContent.includes('UnlockMovementHandler')) {
+    const tokensContent = fs.readFileSync(
+      'src/dependencyInjection/tokens.js',
+      'utf8'
+    );
+    if (
+      !tokensContent.includes('LockMovementHandler') ||
+      !tokensContent.includes('UnlockMovementHandler')
+    ) {
       throw new Error('❌ Handler tokens not found in tokens.js');
     }
-    
+
     // Check handler registrations
-    const handlersContent = fs.readFileSync('src/dependencyInjection/registrations/operationHandlerRegistrations.js', 'utf8');
-    if (!handlersContent.includes('LockMovementHandler') || !handlersContent.includes('UnlockMovementHandler')) {
-      throw new Error('❌ Handlers not registered in operationHandlerRegistrations.js');
+    const handlersContent = fs.readFileSync(
+      'src/dependencyInjection/registrations/operationHandlerRegistrations.js',
+      'utf8'
+    );
+    if (
+      !handlersContent.includes('LockMovementHandler') ||
+      !handlersContent.includes('UnlockMovementHandler')
+    ) {
+      throw new Error(
+        '❌ Handlers not registered in operationHandlerRegistrations.js'
+      );
     }
-    
+
     // Check interpreter registrations
-    const interpreterContent = fs.readFileSync('src/dependencyInjection/registrations/interpreterRegistrations.js', 'utf8');
-    if (!interpreterContent.includes('LOCK_MOVEMENT') || !interpreterContent.includes('UNLOCK_MOVEMENT')) {
-      throw new Error('❌ Operations not registered in interpreterRegistrations.js');
+    const interpreterContent = fs.readFileSync(
+      'src/dependencyInjection/registrations/interpreterRegistrations.js',
+      'utf8'
+    );
+    if (
+      !interpreterContent.includes('LOCK_MOVEMENT') ||
+      !interpreterContent.includes('UNLOCK_MOVEMENT')
+    ) {
+      throw new Error(
+        '❌ Operations not registered in interpreterRegistrations.js'
+      );
     }
-    
+
     console.log('✅ All registrations validated\n');
-  }
+  },
 };
 
 try {
   // Run all checks
-  Object.values(checks).forEach(check => check());
-  
+  Object.values(checks).forEach((check) => check());
+
   console.log('🎉 ALL QUALITY CHECKS PASSED!');
   console.log('✅ Movement Lock implementation is ready for production');
-  
 } catch (error) {
   console.error('❌ Quality check failed:', error.message);
   process.exit(1);

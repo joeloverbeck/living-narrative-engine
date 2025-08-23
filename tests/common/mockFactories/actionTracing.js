@@ -439,5 +439,130 @@ export function createMockHumanReadableFormatter() {
   };
 }
 
+/**
+ * Create mock FileTraceOutputHandler with batch operation support
+ *
+ * @returns {object} Mock FileTraceOutputHandler instance
+ */
+export function createMockFileTraceOutputHandler() {
+  return {
+    writeBatch: jest.fn().mockImplementation(async (formattedTraces) => {
+      // Simulate successful batch write
+      return true;
+    }),
+    writeTrace: jest
+      .fn()
+      .mockImplementation(async (traceData, originalTrace) => {
+        // Simulate successful single trace write
+        return true;
+      }),
+    isReady: jest.fn().mockReturnValue(true),
+    getStatistics: jest.fn().mockReturnValue({
+      isInitialized: true,
+      queuedTraces: 0,
+      isProcessingQueue: false,
+    }),
+    initialize: jest.fn().mockResolvedValue(true),
+    setOutputDirectory: jest.fn(),
+  };
+}
+
+/**
+ * Create mock JsonFormatter for dual-format testing
+ *
+ * @returns {object} Mock JsonFormatter instance
+ */
+export function createMockJsonFormatter() {
+  return {
+    format: jest.fn().mockImplementation((trace) => {
+      return JSON.stringify(
+        {
+          mock: 'json',
+          actionId: trace?.actionId || 'unknown',
+          timestamp: new Date().toISOString(),
+        },
+        null,
+        2
+      );
+    }),
+  };
+}
+
+/**
+ * Create mock HumanReadableFormatter with configurable options
+ *
+ * @returns {object} Mock HumanReadableFormatter instance
+ */
+export function createMockHumanReadableFormatterWithOptions() {
+  return {
+    format: jest.fn().mockImplementation((trace, options = {}) => {
+      const lineWidth = options.lineWidth || 120;
+      const enableColors = options.enableColors || false;
+      const separator = '='.repeat(Math.min(lineWidth, 80));
+
+      return `${separator}\n=== Mock Trace ===\nAction: ${trace?.actionId || 'unknown'}\n${separator}`;
+    }),
+  };
+}
+
+/**
+ * Create mock fetch for server endpoint testing
+ *
+ * @param {object} [options] - Configuration options
+ * @param {boolean} [options.shouldFail] - Whether fetch should fail
+ * @param {number} [options.status] - HTTP status code to return
+ * @returns {Function} Mock fetch function
+ */
+export function createMockFetch(options = {}) {
+  const { shouldFail = false, status = 200 } = options;
+
+  return jest.fn().mockImplementation(async (url, config) => {
+    if (shouldFail) {
+      throw new Error('Network error');
+    }
+
+    if (status === 404) {
+      return {
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({ error: 'Not found' }),
+      };
+    }
+
+    return {
+      ok: status >= 200 && status < 300,
+      status,
+      json: () =>
+        Promise.resolve({
+          success: true,
+          path: '/test/path',
+          size: 1024,
+          fileName: 'test-file.json',
+        }),
+    };
+  });
+}
+
+/**
+ * Create performance test helpers
+ *
+ * @returns {object} Performance test utilities
+ */
+export function createPerformanceTestHelpers() {
+  return {
+    measureExecutionTime: (fn) => {
+      const start = performance.now();
+      const result = fn();
+      const end = performance.now();
+      return { result, duration: end - start };
+    },
+
+    expectExecutionTimeUnder: (fn, maxMs) => {
+      const { duration } = this.measureExecutionTime(fn);
+      expect(duration).toBeLessThan(maxMs);
+    },
+  };
+}
+
 // Note: createMockEventDispatchService, createMockLogger, and createMockSafeEventDispatcher
 // are already defined in coreServices.js and should be imported from there

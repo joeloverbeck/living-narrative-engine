@@ -77,7 +77,8 @@ export class Trait {
     this.likes = data?.likes || [];
     this.dislikes = data?.dislikes || [];
     this.fears = data?.fears || [];
-    this.goals = data?.goals !== undefined ? data.goals : { shortTerm: [], longTerm: '' };
+    this.goals =
+      data?.goals !== undefined ? data.goals : { shortTerm: [], longTerm: '' };
     this.notes = data?.notes || [];
     this.profile = (data?.profile || '').trim();
     this.secrets = data?.secrets || [];
@@ -136,7 +137,8 @@ export class Trait {
     // Transform LLM response to trait structure
     const traitData = {
       names: rawTraits.names || [],
-      physicalDescription: rawTraits.physicalDescription || rawTraits.physical || '',
+      physicalDescription:
+        rawTraits.physicalDescription || rawTraits.physical || '',
       personality: rawTraits.personality || [],
       strengths: rawTraits.strengths || [],
       weaknesses: rawTraits.weaknesses || [],
@@ -201,74 +203,135 @@ export class Trait {
     const warnings = [];
 
     // Validate names
-    if (!Array.isArray(this.names) || this.names.length < 3 || this.names.length > 5) {
+    if (
+      !Array.isArray(this.names) ||
+      this.names.length < 3 ||
+      this.names.length > 5
+    ) {
       errors.push('Names must be an array with 3-5 items');
     } else {
       this.names.forEach((nameItem, index) => {
         if (!nameItem || typeof nameItem !== 'object') {
-          errors.push(`Names[${index}] must be an object with name and justification`);
+          errors.push(
+            `Names[${index}] must be an object with name and justification`
+          );
         } else {
-          if (!nameItem.name || typeof nameItem.name !== 'string' || nameItem.name.trim() === '') {
-            errors.push(`Names[${index}].name is required and must be a non-empty string`);
+          if (
+            !nameItem.name ||
+            typeof nameItem.name !== 'string' ||
+            nameItem.name.trim() === ''
+          ) {
+            errors.push(
+              `Names[${index}].name is required and must be a non-empty string`
+            );
           }
-          if (!nameItem.justification || typeof nameItem.justification !== 'string' || nameItem.justification.trim() === '') {
-            errors.push(`Names[${index}].justification is required and must be a non-empty string`);
+          if (
+            !nameItem.justification ||
+            typeof nameItem.justification !== 'string' ||
+            nameItem.justification.trim() === ''
+          ) {
+            errors.push(
+              `Names[${index}].justification is required and must be a non-empty string`
+            );
           }
         }
       });
     }
 
     // Validate physical description
-    if (!this.physicalDescription || typeof this.physicalDescription !== 'string') {
+    if (
+      !this.physicalDescription ||
+      typeof this.physicalDescription !== 'string'
+    ) {
       errors.push('Physical description is required and must be a string');
     } else if (this.physicalDescription.length < 100) {
       errors.push('Physical description is too short (min 100 characters)');
     } else if (this.physicalDescription.length > 500) {
-      warnings.push('Physical description is very long (max recommended 500 characters)');
+      warnings.push(
+        'Physical description is very long (max recommended 500 characters)'
+      );
     }
 
     // Validate personality
-    if (!Array.isArray(this.personality) || this.personality.length < 3 || this.personality.length > 5) {
+    if (
+      !Array.isArray(this.personality) ||
+      this.personality.length < 3 ||
+      this.personality.length > 5
+    ) {
       errors.push('Personality must be an array with 3-5 items');
     } else {
       this.personality.forEach((personalityItem, index) => {
         if (!personalityItem || typeof personalityItem !== 'object') {
-          errors.push(`Personality[${index}] must be an object with trait and explanation`);
+          errors.push(
+            `Personality[${index}] must be an object with trait and explanation`
+          );
         } else {
-          if (!personalityItem.trait || typeof personalityItem.trait !== 'string' || personalityItem.trait.trim() === '') {
-            errors.push(`Personality[${index}].trait is required and must be a non-empty string`);
+          if (
+            !personalityItem.trait ||
+            typeof personalityItem.trait !== 'string' ||
+            personalityItem.trait.trim() === ''
+          ) {
+            errors.push(
+              `Personality[${index}].trait is required and must be a non-empty string`
+            );
           }
-          if (!personalityItem.explanation || typeof personalityItem.explanation !== 'string' || personalityItem.explanation.trim() === '') {
-            errors.push(`Personality[${index}].explanation is required and must be a non-empty string`);
+          if (
+            !personalityItem.explanation ||
+            typeof personalityItem.explanation !== 'string' ||
+            personalityItem.explanation.trim() === ''
+          ) {
+            errors.push(
+              `Personality[${index}].explanation is required and must be a non-empty string`
+            );
           }
         }
       });
     }
 
     // Validate strengths
-    if (!Array.isArray(this.strengths) || this.strengths.length < 2 || this.strengths.length > 4) {
+    if (
+      !Array.isArray(this.strengths) ||
+      this.strengths.length < 2 ||
+      this.strengths.length > 4
+    ) {
       errors.push('Strengths must be an array with 2-4 items');
     } else {
       this.strengths.forEach((strength, index) => {
-        if (!strength || typeof strength !== 'string' || strength.trim() === '') {
+        if (
+          !strength ||
+          typeof strength !== 'string' ||
+          strength.trim() === ''
+        ) {
           errors.push(`Strengths[${index}] must be a non-empty string`);
         }
       });
     }
 
     // Validate weaknesses
-    if (!Array.isArray(this.weaknesses) || this.weaknesses.length < 2 || this.weaknesses.length > 4) {
+    if (
+      !Array.isArray(this.weaknesses) ||
+      this.weaknesses.length < 2 ||
+      this.weaknesses.length > 4
+    ) {
       errors.push('Weaknesses must be an array with 2-4 items');
     } else {
       this.weaknesses.forEach((weakness, index) => {
-        if (!weakness || typeof weakness !== 'string' || weakness.trim() === '') {
+        if (
+          !weakness ||
+          typeof weakness !== 'string' ||
+          weakness.trim() === ''
+        ) {
           errors.push(`Weaknesses[${index}] must be a non-empty string`);
         }
       });
     }
 
     // Validate likes
-    if (!Array.isArray(this.likes) || this.likes.length < 3 || this.likes.length > 5) {
+    if (
+      !Array.isArray(this.likes) ||
+      this.likes.length < 3 ||
+      this.likes.length > 5
+    ) {
       errors.push('Likes must be an array with 3-5 items');
     } else {
       this.likes.forEach((like, index) => {
@@ -279,7 +342,11 @@ export class Trait {
     }
 
     // Validate dislikes
-    if (!Array.isArray(this.dislikes) || this.dislikes.length < 3 || this.dislikes.length > 5) {
+    if (
+      !Array.isArray(this.dislikes) ||
+      this.dislikes.length < 3 ||
+      this.dislikes.length > 5
+    ) {
       errors.push('Dislikes must be an array with 3-5 items');
     } else {
       this.dislikes.forEach((dislike, index) => {
@@ -290,7 +357,11 @@ export class Trait {
     }
 
     // Validate fears
-    if (!Array.isArray(this.fears) || this.fears.length < 1 || this.fears.length > 2) {
+    if (
+      !Array.isArray(this.fears) ||
+      this.fears.length < 1 ||
+      this.fears.length > 2
+    ) {
       errors.push('Fears must be an array with 1-2 items');
     } else {
       this.fears.forEach((fear, index) => {
@@ -301,10 +372,20 @@ export class Trait {
     }
 
     // Validate goals
-    if (!this.goals || typeof this.goals !== 'object' || Array.isArray(this.goals)) {
-      errors.push('Goals must be an object with shortTerm and longTerm properties');
+    if (
+      !this.goals ||
+      typeof this.goals !== 'object' ||
+      Array.isArray(this.goals)
+    ) {
+      errors.push(
+        'Goals must be an object with shortTerm and longTerm properties'
+      );
     } else {
-      if (!Array.isArray(this.goals.shortTerm) || this.goals.shortTerm.length < 1 || this.goals.shortTerm.length > 2) {
+      if (
+        !Array.isArray(this.goals.shortTerm) ||
+        this.goals.shortTerm.length < 1 ||
+        this.goals.shortTerm.length > 2
+      ) {
         errors.push('Goals.shortTerm must be an array with 1-2 items');
       } else {
         this.goals.shortTerm.forEach((goal, index) => {
@@ -313,14 +394,24 @@ export class Trait {
           }
         });
       }
-      
-      if (!this.goals.longTerm || typeof this.goals.longTerm !== 'string' || this.goals.longTerm.trim() === '') {
-        errors.push('Goals.longTerm is required and must be a non-empty string');
+
+      if (
+        !this.goals.longTerm ||
+        typeof this.goals.longTerm !== 'string' ||
+        this.goals.longTerm.trim() === ''
+      ) {
+        errors.push(
+          'Goals.longTerm is required and must be a non-empty string'
+        );
       }
     }
 
     // Validate notes
-    if (!Array.isArray(this.notes) || this.notes.length < 2 || this.notes.length > 3) {
+    if (
+      !Array.isArray(this.notes) ||
+      this.notes.length < 2 ||
+      this.notes.length > 3
+    ) {
       errors.push('Notes must be an array with 2-3 items');
     } else {
       this.notes.forEach((note, index) => {
@@ -340,7 +431,11 @@ export class Trait {
     }
 
     // Validate secrets
-    if (!Array.isArray(this.secrets) || this.secrets.length < 1 || this.secrets.length > 2) {
+    if (
+      !Array.isArray(this.secrets) ||
+      this.secrets.length < 1 ||
+      this.secrets.length > 2
+    ) {
       errors.push('Secrets must be an array with 1-2 items');
     } else {
       this.secrets.forEach((secret, index) => {
@@ -364,7 +459,7 @@ export class Trait {
    */
   toExportText() {
     let text = '';
-    
+
     // Names section
     text += 'CHARACTER NAMES:\n';
     this.names.forEach((nameItem, index) => {
@@ -463,7 +558,7 @@ export class Trait {
     return {
       physicalDescription: truncate(this.physicalDescription),
       profile: truncate(this.profile),
-      names: this.names.map(n => n.name).join(', '),
+      names: this.names.map((n) => n.name).join(', '),
       personalityCount: this.personality.length,
       strengthsCount: this.strengths.length,
       weaknessesCount: this.weaknesses.length,
@@ -487,17 +582,19 @@ export class Trait {
    */
   matchesSearch(searchTerm) {
     const term = searchTerm.toLowerCase();
-    
+
     // Search in string fields
-    if (this.physicalDescription.toLowerCase().includes(term) ||
-        this.profile.toLowerCase().includes(term)) {
+    if (
+      this.physicalDescription.toLowerCase().includes(term) ||
+      this.profile.toLowerCase().includes(term)
+    ) {
       return true;
     }
 
     // Search in array fields
     const searchArrays = [
-      this.names.map(n => n.name + ' ' + n.justification),
-      this.personality.map(p => p.trait + ' ' + p.explanation),
+      this.names.map((n) => n.name + ' ' + n.justification),
+      this.personality.map((p) => p.trait + ' ' + p.explanation),
       this.strengths,
       this.weaknesses,
       this.likes,
@@ -509,8 +606,8 @@ export class Trait {
       this.secrets,
     ];
 
-    return searchArrays.some(array => 
-      array.some(item => item.toLowerCase().includes(term))
+    return searchArrays.some((array) =>
+      array.some((item) => item.toLowerCase().includes(term))
     );
   }
 }

@@ -141,6 +141,98 @@ class ActionTracingConfigMigration {
   }
 
   /**
+   * Sanitize and validate individual configuration values
+   *
+   * @param {*} value - Value to sanitize
+   * @param {string} fieldName - Name of the field being sanitized
+   * @param {*} defaultValue - Default value to use if invalid
+   * @returns {*} Sanitized value
+   */
+  static #sanitizeValue(value, fieldName, defaultValue) {
+    switch (fieldName) {
+      case 'outputFormats':
+        if (!Array.isArray(value)) {
+          return defaultValue;
+        }
+        // Check if all formats are valid - if any are invalid, fallback to defaults
+        const validFormats = ['json', 'text', 'html', 'markdown'];
+        const hasInvalidFormat = value.some(
+          (format) => !validFormats.includes(format)
+        );
+        return hasInvalidFormat ? defaultValue : value;
+
+      case 'textFormatOptions':
+        if (!value || typeof value !== 'object') {
+          return defaultValue;
+        }
+        return {
+          enableColors:
+            typeof value.enableColors === 'boolean'
+              ? value.enableColors
+              : defaultValue.enableColors,
+          lineWidth:
+            typeof value.lineWidth === 'number' &&
+            value.lineWidth >= 80 &&
+            value.lineWidth <= 200
+              ? value.lineWidth
+              : defaultValue.lineWidth,
+          indentSize:
+            typeof value.indentSize === 'number' &&
+            value.indentSize >= 0 &&
+            value.indentSize <= 8
+              ? value.indentSize
+              : defaultValue.indentSize,
+          sectionSeparator:
+            typeof value.sectionSeparator === 'string' &&
+            value.sectionSeparator.length === 1
+              ? value.sectionSeparator
+              : defaultValue.sectionSeparator,
+          includeTimestamps:
+            typeof value.includeTimestamps === 'boolean'
+              ? value.includeTimestamps
+              : defaultValue.includeTimestamps,
+          performanceSummary:
+            typeof value.performanceSummary === 'boolean'
+              ? value.performanceSummary
+              : defaultValue.performanceSummary,
+        };
+
+      case 'verbosity':
+        const validVerbosity = ['minimal', 'standard', 'detailed', 'verbose'];
+        return validVerbosity.includes(value) ? value : defaultValue;
+
+      case 'rotationPolicy':
+        const validPolicies = ['age', 'count'];
+        return validPolicies.includes(value) ? value : defaultValue;
+
+      case 'maxTraceFiles':
+        return typeof value === 'number' && value >= 1 && value <= 1000
+          ? value
+          : defaultValue;
+
+      case 'maxFileAge':
+        return typeof value === 'number' && value >= 3600
+          ? value
+          : defaultValue;
+
+      case 'enabled':
+      case 'includeComponentData':
+      case 'includePrerequisites':
+      case 'includeTargets':
+        return typeof value === 'boolean' ? value : defaultValue;
+
+      case 'tracedActions':
+        return Array.isArray(value) ? value : defaultValue;
+
+      case 'outputDirectory':
+        return typeof value === 'string' && value.trim() ? value : defaultValue;
+
+      default:
+        return value ?? defaultValue;
+    }
+  }
+
+  /**
    * Merge user configuration with defaults
    *
    * @param {Partial<ActionTracingConfig>} userConfig - User-provided configuration
@@ -153,27 +245,81 @@ class ActionTracingConfigMigration {
       return defaults;
     }
 
-    // Merge textFormatOptions separately to handle partial objects
-    const mergedTextFormatOptions = {
-      ...defaults.textFormatOptions,
-      ...(userConfig.textFormatOptions || {}),
-    };
+    // Sanitize and merge each field
+    const enabled = this.#sanitizeValue(
+      userConfig.enabled,
+      'enabled',
+      defaults.enabled
+    );
+    const tracedActions = this.#sanitizeValue(
+      userConfig.tracedActions,
+      'tracedActions',
+      defaults.tracedActions
+    );
+    const outputDirectory = this.#sanitizeValue(
+      userConfig.outputDirectory,
+      'outputDirectory',
+      defaults.outputDirectory
+    );
+    const verbosity = this.#sanitizeValue(
+      userConfig.verbosity,
+      'verbosity',
+      defaults.verbosity
+    );
+    const includeComponentData = this.#sanitizeValue(
+      userConfig.includeComponentData,
+      'includeComponentData',
+      defaults.includeComponentData
+    );
+    const includePrerequisites = this.#sanitizeValue(
+      userConfig.includePrerequisites,
+      'includePrerequisites',
+      defaults.includePrerequisites
+    );
+    const includeTargets = this.#sanitizeValue(
+      userConfig.includeTargets,
+      'includeTargets',
+      defaults.includeTargets
+    );
+    const maxTraceFiles = this.#sanitizeValue(
+      userConfig.maxTraceFiles,
+      'maxTraceFiles',
+      defaults.maxTraceFiles
+    );
+    const rotationPolicy = this.#sanitizeValue(
+      userConfig.rotationPolicy,
+      'rotationPolicy',
+      defaults.rotationPolicy
+    );
+    const maxFileAge = this.#sanitizeValue(
+      userConfig.maxFileAge,
+      'maxFileAge',
+      defaults.maxFileAge
+    );
+    const outputFormats = this.#sanitizeValue(
+      userConfig.outputFormats,
+      'outputFormats',
+      defaults.outputFormats
+    );
+    const textFormatOptions = this.#sanitizeValue(
+      userConfig.textFormatOptions,
+      'textFormatOptions',
+      defaults.textFormatOptions
+    );
 
     return {
-      enabled: userConfig.enabled ?? defaults.enabled,
-      tracedActions: userConfig.tracedActions ?? defaults.tracedActions,
-      outputDirectory: userConfig.outputDirectory ?? defaults.outputDirectory,
-      verbosity: userConfig.verbosity ?? defaults.verbosity,
-      includeComponentData:
-        userConfig.includeComponentData ?? defaults.includeComponentData,
-      includePrerequisites:
-        userConfig.includePrerequisites ?? defaults.includePrerequisites,
-      includeTargets: userConfig.includeTargets ?? defaults.includeTargets,
-      maxTraceFiles: userConfig.maxTraceFiles ?? defaults.maxTraceFiles,
-      rotationPolicy: userConfig.rotationPolicy ?? defaults.rotationPolicy,
-      maxFileAge: userConfig.maxFileAge ?? defaults.maxFileAge,
-      outputFormats: userConfig.outputFormats ?? defaults.outputFormats,
-      textFormatOptions: mergedTextFormatOptions,
+      enabled,
+      tracedActions,
+      outputDirectory,
+      verbosity,
+      includeComponentData,
+      includePrerequisites,
+      includeTargets,
+      maxTraceFiles,
+      rotationPolicy,
+      maxFileAge,
+      outputFormats,
+      textFormatOptions,
     };
   }
 }

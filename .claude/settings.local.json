@@ -87,7 +87,14 @@
       "mcp__serena__find_symbol",
       "Bash(npm run:*)",
       "mcp__serena__prepare_for_new_conversation",
-      "Bash(dmesg:*)"
+      "Bash(dmesg:*)",
+      "mcp__serena__replace_regex",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/pumpPenisActionDiscovery.integration.test.js --no-coverage --verbose)",
+      "Bash(node:*)",
+      "mcp__serena__execute_shell_command",
+      "mcp__serena__write_memory",
+      "mcp__serena__insert_before_symbol",
+      "Bash(time npm run test:unit tests/unit/characterBuilder/services/TraitsGenerator.test.js)"
     ],
     "deny": []
   }

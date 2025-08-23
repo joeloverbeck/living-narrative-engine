@@ -54,7 +54,7 @@ class UnlockMovementHandler extends BaseOperationHandler {
   #validateParams(params, executionContext) {
     const { actor_id } = params || {};
     const log = this.getLogger(executionContext);
-    
+
     if (typeof actor_id !== 'string' || !actor_id.trim()) {
       safeDispatchError(
         this.#dispatcher,
@@ -64,7 +64,7 @@ class UnlockMovementHandler extends BaseOperationHandler {
       );
       return null;
     }
-    
+
     return {
       actorId: actor_id.trim(),
       logger: log,
@@ -80,7 +80,7 @@ class UnlockMovementHandler extends BaseOperationHandler {
   async execute(params, executionContext) {
     const validated = this.#validateParams(params, executionContext);
     if (!validated) return;
-    
+
     const { actorId, logger } = validated;
 
     try {

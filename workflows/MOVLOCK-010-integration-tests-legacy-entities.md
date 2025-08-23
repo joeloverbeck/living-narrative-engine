@@ -3,7 +3,7 @@
 **Status**: NOT_STARTED  
 **Priority**: MEDIUM  
 **Dependencies**: MOVLOCK-001 through MOVLOCK-006  
-**Estimated Effort**: 1.5 hours  
+**Estimated Effort**: 1.5 hours
 
 ## Context
 
@@ -31,7 +31,7 @@ describe('Movement Lock - Legacy Entities', () => {
   beforeEach(async () => {
     testBed = TestBedFactory.create('positioning');
     await testBed.initialize();
-    
+
     entityManager = testBed.getService('IEntityManager');
     actionExecutor = testBed.getService('IActionExecutor');
     eventBus = testBed.getService('IEventBus');
@@ -55,27 +55,33 @@ describe('kneeling locks movement - legacy', () => {
     // Setup: Create legacy actor (no anatomy:body component)
     const actorId = 'legacy-actor-001';
     const targetId = 'target-001';
-    
+
     await entityManager.createEntity(actorId);
     await entityManager.addComponent(actorId, 'core:movement', {
       locked: false,
-      forcedOverride: false
+      forcedOverride: false,
     });
-    
+
     await entityManager.createEntity(targetId);
-    
+
     // Execute: Kneel before action
     await actionExecutor.execute('positioning:kneel_before', {
       actorId: actorId,
-      targetId: targetId
+      targetId: targetId,
     });
-    
+
     // Assert: Movement component is locked
-    const movementData = await entityManager.getComponentData(actorId, 'core:movement');
+    const movementData = await entityManager.getComponentData(
+      actorId,
+      'core:movement'
+    );
     expect(movementData.locked).toBe(true);
-    
+
     // Assert: Kneeling component was added
-    const kneelingData = await entityManager.getComponentData(actorId, 'positioning:kneeling');
+    const kneelingData = await entityManager.getComponentData(
+      actorId,
+      'positioning:kneeling'
+    );
     expect(kneelingData).toBeDefined();
     expect(kneelingData.target_id).toBe(targetId);
   });
@@ -84,13 +90,13 @@ describe('kneeling locks movement - legacy', () => {
     // Setup: Create kneeling legacy entity
     const actorId = await createKneelingLegacyActor();
     const destinationId = 'location-001';
-    
+
     // Attempt: Try to move while kneeling
     const moveResult = await actionExecutor.execute('core:go', {
       actorId: actorId,
-      destinationId: destinationId
+      destinationId: destinationId,
     });
-    
+
     // Assert: Movement should be blocked
     expect(moveResult.success).toBe(false);
     expect(moveResult.reason).toContain('movement locked');
@@ -105,22 +111,31 @@ describe('standing unlocks movement - legacy', () => {
   it('should unlock movement component when legacy entity stands', async () => {
     // Setup: Create kneeling legacy entity
     const actorId = await createKneelingLegacyActor();
-    
+
     // Verify locked state
-    let movementData = await entityManager.getComponentData(actorId, 'core:movement');
+    let movementData = await entityManager.getComponentData(
+      actorId,
+      'core:movement'
+    );
     expect(movementData.locked).toBe(true);
-    
+
     // Execute: Stand up action
     await actionExecutor.execute('positioning:stand_up', {
-      actorId: actorId
+      actorId: actorId,
     });
-    
+
     // Assert: Movement component is unlocked
-    movementData = await entityManager.getComponentData(actorId, 'core:movement');
+    movementData = await entityManager.getComponentData(
+      actorId,
+      'core:movement'
+    );
     expect(movementData.locked).toBe(false);
-    
+
     // Assert: Kneeling component was removed
-    const kneelingData = await entityManager.getComponentData(actorId, 'positioning:kneeling');
+    const kneelingData = await entityManager.getComponentData(
+      actorId,
+      'positioning:kneeling'
+    );
     expect(kneelingData).toBeUndefined();
   });
 
@@ -128,19 +143,19 @@ describe('standing unlocks movement - legacy', () => {
     // Setup: Create kneeling legacy entity then stand
     const actorId = await createKneelingLegacyActor();
     await actionExecutor.execute('positioning:stand_up', {
-      actorId: actorId
+      actorId: actorId,
     });
-    
+
     // Setup: Create destination
     const destinationId = 'location-001';
     await entityManager.createEntity(destinationId);
-    
+
     // Attempt: Try to move after standing
     const moveResult = await actionExecutor.execute('core:go', {
       actorId: actorId,
-      destinationId: destinationId
+      destinationId: destinationId,
     });
-    
+
     // Assert: Movement should be allowed
     expect(moveResult.success).toBe(true);
   });
@@ -155,40 +170,52 @@ describe('mixed entity scenarios', () => {
     // Setup: Create three legacy actors
     const actors = ['actor-1', 'actor-2', 'actor-3'];
     const target = 'shared-target';
-    
+
     await entityManager.createEntity(target);
-    
+
     for (const actorId of actors) {
       await entityManager.createEntity(actorId);
       await entityManager.addComponent(actorId, 'core:movement', {
-        locked: false
+        locked: false,
       });
     }
-    
+
     // Execute: All actors kneel
     for (const actorId of actors) {
       await actionExecutor.execute('positioning:kneel_before', {
         actorId: actorId,
-        targetId: target
+        targetId: target,
       });
     }
-    
+
     // Assert: All actors have locked movement
     for (const actorId of actors) {
-      const movement = await entityManager.getComponentData(actorId, 'core:movement');
+      const movement = await entityManager.getComponentData(
+        actorId,
+        'core:movement'
+      );
       expect(movement.locked).toBe(true);
     }
-    
+
     // Execute: Middle actor stands
     await actionExecutor.execute('positioning:stand_up', {
-      actorId: 'actor-2'
+      actorId: 'actor-2',
     });
-    
+
     // Assert: Only standing actor has unlocked movement
-    const actor1Movement = await entityManager.getComponentData('actor-1', 'core:movement');
-    const actor2Movement = await entityManager.getComponentData('actor-2', 'core:movement');
-    const actor3Movement = await entityManager.getComponentData('actor-3', 'core:movement');
-    
+    const actor1Movement = await entityManager.getComponentData(
+      'actor-1',
+      'core:movement'
+    );
+    const actor2Movement = await entityManager.getComponentData(
+      'actor-2',
+      'core:movement'
+    );
+    const actor3Movement = await entityManager.getComponentData(
+      'actor-3',
+      'core:movement'
+    );
+
     expect(actor1Movement.locked).toBe(true);
     expect(actor2Movement.locked).toBe(false);
     expect(actor3Movement.locked).toBe(true);
@@ -199,34 +226,43 @@ describe('mixed entity scenarios', () => {
     const legacyId = 'legacy-actor';
     const anatomyId = 'anatomy-actor';
     const targetId = 'shared-target';
-    
+
     // Create legacy entity
     await createLegacyActor(legacyId);
-    
+
     // Create anatomy entity
     await createSimpleAnatomyActor(anatomyId);
-    
+
     // Create target
     await entityManager.createEntity(targetId);
-    
+
     // Execute: Both kneel
     await actionExecutor.execute('positioning:kneel_before', {
       actorId: legacyId,
-      targetId: targetId
+      targetId: targetId,
     });
-    
+
     await actionExecutor.execute('positioning:kneel_before', {
       actorId: anatomyId,
-      targetId: targetId
+      targetId: targetId,
     });
-    
+
     // Assert: Legacy entity movement locked
-    const legacyMovement = await entityManager.getComponentData(legacyId, 'core:movement');
+    const legacyMovement = await entityManager.getComponentData(
+      legacyId,
+      'core:movement'
+    );
     expect(legacyMovement.locked).toBe(true);
-    
+
     // Assert: Anatomy entity legs locked
-    const leftLegMovement = await entityManager.getComponentData(`${anatomyId}-left-leg`, 'core:movement');
-    const rightLegMovement = await entityManager.getComponentData(`${anatomyId}-right-leg`, 'core:movement');
+    const leftLegMovement = await entityManager.getComponentData(
+      `${anatomyId}-left-leg`,
+      'core:movement'
+    );
+    const rightLegMovement = await entityManager.getComponentData(
+      `${anatomyId}-right-leg`,
+      'core:movement'
+    );
     expect(leftLegMovement.locked).toBe(true);
     expect(rightLegMovement.locked).toBe(true);
   });
@@ -241,21 +277,24 @@ describe('legacy entity edge cases', () => {
     // Setup: Create entity without movement component
     const actorId = 'no-movement-actor';
     const targetId = 'target-001';
-    
+
     await entityManager.createEntity(actorId);
     await entityManager.createEntity(targetId);
     // Note: No movement component added
-    
+
     // Execute: Should not throw error
     await expect(
       actionExecutor.execute('positioning:kneel_before', {
         actorId: actorId,
-        targetId: targetId
+        targetId: targetId,
       })
     ).resolves.not.toThrow();
-    
+
     // Assert: Kneeling component still added
-    const kneelingData = await entityManager.getComponentData(actorId, 'positioning:kneeling');
+    const kneelingData = await entityManager.getComponentData(
+      actorId,
+      'positioning:kneeling'
+    );
     expect(kneelingData).toBeDefined();
   });
 
@@ -263,16 +302,19 @@ describe('legacy entity edge cases', () => {
     // Setup: Create standing legacy entity
     const actorId = 'standing-actor';
     await createLegacyActor(actorId);
-    
+
     // Execute: Stand up without kneeling first
     await expect(
       actionExecutor.execute('positioning:stand_up', {
-        actorId: actorId
+        actorId: actorId,
       })
     ).resolves.not.toThrow();
-    
+
     // Assert: Movement remains unlocked
-    const movement = await entityManager.getComponentData(actorId, 'core:movement');
+    const movement = await entityManager.getComponentData(
+      actorId,
+      'core:movement'
+    );
     expect(movement.locked).toBe(false);
   });
 
@@ -280,25 +322,28 @@ describe('legacy entity edge cases', () => {
     // Setup: Legacy entity with custom movement data
     const actorId = 'custom-movement-actor';
     const targetId = 'target-001';
-    
+
     await entityManager.createEntity(actorId);
     await entityManager.addComponent(actorId, 'core:movement', {
       locked: false,
       forcedOverride: false,
       customField: 'preserve-me',
-      speed: 5
+      speed: 5,
     });
-    
+
     await entityManager.createEntity(targetId);
-    
+
     // Execute: Kneel
     await actionExecutor.execute('positioning:kneel_before', {
       actorId: actorId,
-      targetId: targetId
+      targetId: targetId,
     });
-    
+
     // Assert: Custom fields preserved, only locked changed
-    const movement = await entityManager.getComponentData(actorId, 'core:movement');
+    const movement = await entityManager.getComponentData(
+      actorId,
+      'core:movement'
+    );
     expect(movement.locked).toBe(true);
     expect(movement.customField).toBe('preserve-me');
     expect(movement.speed).toBe(5);
@@ -314,7 +359,7 @@ async function createLegacyActor(actorId) {
   await entityManager.createEntity(actorId);
   await entityManager.addComponent(actorId, 'core:movement', {
     locked: false,
-    forcedOverride: false
+    forcedOverride: false,
   });
   return actorId;
 }
@@ -323,43 +368,43 @@ async function createLegacyActor(actorId) {
 async function createKneelingLegacyActor() {
   const actorId = 'legacy-actor-' + Date.now();
   const targetId = 'target-' + Date.now();
-  
+
   await createLegacyActor(actorId);
   await entityManager.createEntity(targetId);
-  
+
   await actionExecutor.execute('positioning:kneel_before', {
     actorId: actorId,
-    targetId: targetId
+    targetId: targetId,
   });
-  
+
   return actorId;
 }
 
 // Helper to create simple anatomy actor for comparison tests
 async function createSimpleAnatomyActor(actorId) {
   await entityManager.createEntity(actorId);
-  
+
   const leftLegId = `${actorId}-left-leg`;
   const rightLegId = `${actorId}-right-leg`;
-  
+
   await entityManager.addComponent(actorId, 'anatomy:body', {
     recipe: 'humanoid',
     parts: {
       left_leg: leftLegId,
-      right_leg: rightLegId
-    }
+      right_leg: rightLegId,
+    },
   });
-  
+
   await entityManager.createEntity(leftLegId);
   await entityManager.addComponent(leftLegId, 'core:movement', {
-    locked: false
+    locked: false,
   });
-  
+
   await entityManager.createEntity(rightLegId);
   await entityManager.addComponent(rightLegId, 'core:movement', {
-    locked: false
+    locked: false,
   });
-  
+
   return actorId;
 }
 ```

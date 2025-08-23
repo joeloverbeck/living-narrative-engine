@@ -1,0 +1,14 @@
+// Scope for actors in closeness where the actor is kneeling before the target who has an uncovered penis
+// Used by actions that require the actor to be in a kneeling position before the target with exposed anatomy
+sex:actor_kneeling_before_target_with_penis := actor.components.positioning:closeness.partners[][{
+  "and": [
+    {"hasPartOfType": [".", "penis"]},
+    {"not": {"isSocketCovered": [".", "penis"]}},
+    {
+      "==": [
+        {"var": "actor.components.positioning:kneeling_before.entityId"},
+        {"var": "id"}
+      ]
+    }
+  ]
+}]

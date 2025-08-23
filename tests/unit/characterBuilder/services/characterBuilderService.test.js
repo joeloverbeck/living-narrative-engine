@@ -28,6 +28,7 @@ describe('CharacterBuilderService', () => {
   let mockStorageService;
   let mockDirectionGenerator;
   let mockEventBus;
+  let mockTraitsGenerator;
 
   beforeEach(() => {
     // Create mocks for all dependencies
@@ -54,6 +55,10 @@ describe('CharacterBuilderService', () => {
 
     mockEventBus = {
       dispatch: jest.fn(),
+    };
+
+    mockTraitsGenerator = {
+      generateTraits: jest.fn(),
     };
   });
 
@@ -1380,6 +1385,178 @@ describe('CharacterBuilderService', () => {
         await expect(
           service.getThematicDirectionsByConceptId(conceptId)
         ).rejects.toThrow('Storage error');
+      });
+    });
+
+    describe('generateTraits', () => {
+      beforeEach(() => {
+        service = new CharacterBuilderService({
+          logger: mockLogger,
+          storageService: mockStorageService,
+          directionGenerator: mockDirectionGenerator,
+          eventBus: mockEventBus,
+          traitsGenerator: mockTraitsGenerator,
+        });
+      });
+
+      it('should successfully generate traits using TraitsGenerator', async () => {
+        const params = {
+          concept: { id: 'concept-123', concept: 'A brave warrior' },
+          direction: { id: 'direction-456', title: 'Hero' },
+          userInputs: {
+            coreMotivation: 'Protect the innocent',
+            internalContradiction: 'Fears abandonment',
+            centralQuestion: 'Can someone be brave while afraid?'
+          },
+          cliches: [{ id: 'cliche-789', text: 'Chosen one' }]
+        };
+
+        const options = {
+          llmConfigId: 'test-config',
+          maxRetries: 3
+        };
+
+        const expectedResult = {
+          traits: {
+            physical: ['Strong', 'Tall'],
+            mental: ['Determined', 'Brave'],
+            emotional: ['Compassionate', 'Loyal']
+          },
+          metadata: {
+            generated: true,
+            timestamp: '2023-01-01T00:00:00.000Z'
+          }
+        };
+
+        mockTraitsGenerator.generateTraits.mockResolvedValue(expectedResult);
+
+        const result = await service.generateTraits(params, options);
+
+        expect(result).toEqual(expectedResult);
+        expect(mockTraitsGenerator.generateTraits).toHaveBeenCalledWith(params, options);
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          'CharacterBuilderService: Delegating traits generation',
+          {
+            conceptId: 'concept-123',
+            directionId: 'direction-456',
+            clichesCount: 1
+          }
+        );
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          'CharacterBuilderService: Traits generation completed',
+          {
+            conceptId: 'concept-123',
+            success: true
+          }
+        );
+      });
+
+      it('should throw CharacterBuilderError when TraitsGenerator is not available', async () => {
+        // Create service without TraitsGenerator
+        const serviceWithoutTraits = new CharacterBuilderService({
+          logger: mockLogger,
+          storageService: mockStorageService,
+          directionGenerator: mockDirectionGenerator,
+          eventBus: mockEventBus,
+          // traitsGenerator intentionally omitted
+        });
+
+        const params = {
+          concept: { id: 'concept-123' },
+          direction: { id: 'direction-456' },
+          userInputs: {},
+          cliches: []
+        };
+
+        await expect(serviceWithoutTraits.generateTraits(params))
+          .rejects
+          .toThrow(CharacterBuilderError);
+
+        await expect(serviceWithoutTraits.generateTraits(params))
+          .rejects
+          .toThrow('TraitsGenerator service not available');
+      });
+
+      it('should handle TraitsGenerator errors and dispatch error event', async () => {
+        const params = {
+          concept: { id: 'concept-123', concept: 'A brave warrior' },
+          direction: { id: 'direction-456', title: 'Hero' },
+          userInputs: {},
+          cliches: []
+        };
+
+        const generatorError = new Error('LLM service unavailable');
+        mockTraitsGenerator.generateTraits.mockRejectedValue(generatorError);
+
+        await expect(service.generateTraits(params))
+          .rejects
+          .toThrow(CharacterBuilderError);
+
+        await expect(service.generateTraits(params))
+          .rejects
+          .toThrow('Failed to generate traits: LLM service unavailable');
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'CharacterBuilderService: Traits generation failed',
+          generatorError
+        );
+
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith({
+          type: CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED,
+          payload: {
+            error: 'LLM service unavailable',
+            operation: 'generateTraits',
+            context: {
+              conceptId: 'concept-123',
+              directionId: 'direction-456',
+            },
+          },
+        });
+      });
+
+      it('should handle params without concept or direction IDs gracefully', async () => {
+        const params = {
+          concept: { concept: 'A brave warrior' }, // no id
+          direction: { title: 'Hero' }, // no id
+          userInputs: {},
+          cliches: []
+        };
+
+        const expectedResult = { traits: {} };
+        mockTraitsGenerator.generateTraits.mockResolvedValue(expectedResult);
+
+        const result = await service.generateTraits(params);
+
+        expect(result).toEqual(expectedResult);
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          'CharacterBuilderService: Delegating traits generation',
+          {
+            conceptId: undefined,
+            directionId: undefined,
+            clichesCount: 0
+          }
+        );
+      });
+
+      it('should pass through options to TraitsGenerator', async () => {
+        const params = {
+          concept: { id: 'concept-123' },
+          direction: { id: 'direction-456' },
+          userInputs: {},
+          cliches: []
+        };
+
+        const options = {
+          llmConfigId: 'custom-config',
+          maxRetries: 5
+        };
+
+        const expectedResult = { traits: {} };
+        mockTraitsGenerator.generateTraits.mockResolvedValue(expectedResult);
+
+        await service.generateTraits(params, options);
+
+        expect(mockTraitsGenerator.generateTraits).toHaveBeenCalledWith(params, options);
       });
     });
   });

@@ -2,7 +2,7 @@
 
 **Priority**: Medium  
 **Phase**: 3 - UI & Display Layer (User Interface)  
-**Estimated Effort**: 2.5 hours  
+**Estimated Effort**: 4-5 hours  
 **Risk Level**: Low (Documentation and type safety)
 
 ## Overview
@@ -25,53 +25,90 @@ Multiple files contain JSDoc type definitions that include tags, which will beco
 
 ### Files to Modify
 
-1. **`src/turns/context/turnContext.js`** (line 53)
+#### JSDoc Type Definition Files (13 files)
+
+1. **`src/prompting/promptDataFormatter.js`**
+   - Remove tags from note type definitions
+
+2. **`src/turns/adapters/llmChooser.js`**
+   - Remove tags from adapter type definitions
+
+3. **`src/turns/context/turnContext.js`** (line 53)
    - Remove tags from `#decisionMeta` type definition
 
-2. **`src/turns/ports/ILLMChooser.js`** (lines 7, 14)
+4. **`src/turns/interfaces/ILLMResponseProcessor.js`**
+   - Remove tags from interface type definitions
+
+5. **`src/turns/interfaces/ITurnContext.js`**
+   - Remove tags from context interface types
+
+6. **`src/turns/interfaces/ITurnDecisionProvider.js`**
+   - Remove tags from decision provider types
+
+7. **`src/turns/interfaces/ITurnDecisionResult.js`**
+   - Remove tags from decision result types
+
+8. **`src/turns/ports/ILLMChooser.js`** (lines 7, 14)
    - Remove tags from method signature types
 
-3. **`src/turns/services/LLMResponseProcessor.js`** (line 162)
-   - Remove tags from `#extractData` return type
+9. **`src/turns/prompting/promptSession.js`**
+   - Remove tags from prompt session types
 
-4. **Additional files** (discovered during implementation)
-   - Search for other JSDoc references to note tags
-   - Update any other type definitions found
+10. **`src/turns/providers/abstractDecisionProvider.js`**
+    - Remove tags from abstract provider types
+
+11. **`src/turns/providers/delegatingDecisionProvider.js`**
+    - Remove tags from delegating provider types
+
+12. **`src/turns/services/LLMResponseProcessor.js`** (line 162)
+    - Remove tags from `#extractData` return type
+
+13. **`src/utils/registrarHelpers.js`**
+    - Remove tags from registrar helper types
+
+#### Schema Files (1 file)
+
+14. **`data/schemas/common.schema.json`** (lines 103-107)
+    - Remove tags property from `structuredNote` definition
+    - Ensure consistency with component schema
 
 ### Implementation Steps
 
-1. **Identify All Type Definitions**
-   - Search codebase for JSDoc type definitions containing tags
-   - Review the identified files for complete tag references
-   - Map all type definitions that need updating
+1. **Update Common Schema Definition**
+   - Open `data/schemas/common.schema.json`
+   - Remove tags property from `structuredNote` definition (lines 103-107)
+   - Ensure schema remains valid and consistent
 
-2. **Update TurnContext Type Definitions**
-   - Open `src/turns/context/turnContext.js`
-   - Find line 53 with `#decisionMeta` type definition
-   - Remove tags property from the type definition
-   - Ensure remaining type structure is valid
+2. **Update Turn-Related Type Definitions**
+   - Update `src/turns/context/turnContext.js` (line 53)
+   - Update `src/turns/ports/ILLMChooser.js` (lines 7, 14)
+   - Update `src/turns/services/LLMResponseProcessor.js` (line 162)
+   - Update all interface files in `src/turns/interfaces/`:
+     - ILLMResponseProcessor.js
+     - ITurnContext.js
+     - ITurnDecisionProvider.js
+     - ITurnDecisionResult.js
 
-3. **Update ILLMChooser Interface**
-   - Open `src/turns/ports/ILLMChooser.js`
-   - Find lines 7 and 14 with method signature types
-   - Remove tags from parameter or return type definitions
-   - Verify interface consistency
+3. **Update Provider Type Definitions**
+   - Update `src/turns/providers/abstractDecisionProvider.js`
+   - Update `src/turns/providers/delegatingDecisionProvider.js`
+   - Remove tags from all provider-related types
 
-4. **Update LLMResponseProcessor Types**
-   - Open `src/turns/services/LLMResponseProcessor.js`
-   - Find line 162 with `#extractData` return type
-   - Remove tags from return type definition
-   - Ensure method documentation accuracy
+4. **Update Remaining Type Definitions**
+   - Update `src/prompting/promptDataFormatter.js`
+   - Update `src/turns/adapters/llmChooser.js`
+   - Update `src/turns/prompting/promptSession.js`
+   - Update `src/utils/registrarHelpers.js`
 
-5. **Search for Additional References**
-   - Use codebase search for "tags" in JSDoc comments
-   - Identify any missed type definitions
-   - Update all discovered references
+5. **Validate Consistency Across All Files**
+   - Ensure component schema, common schema, and JSDoc types all align
+   - Verify no orphaned tag references remain
+   - Confirm type definitions match actual data structures
 
-6. **Validate Type Consistency**
+6. **Test Type System Integration**
    - Run TypeScript type checking if available
-   - Verify IDE autocomplete works correctly
-   - Confirm no type-related warnings
+   - Verify IDE autocomplete excludes tags
+   - Confirm no type-related warnings or errors
 
 ### Type Definition Impact
 
@@ -179,13 +216,17 @@ npm run lint -- --fix
 
 ## Implementation Notes
 
-**Search Strategy**: Use comprehensive search patterns to identify all JSDoc references to tags, not just the specifically identified files. New references may exist that weren't caught in the initial analysis.
+**Expanded Scope**: This workflow has been updated to include all 13 JSDoc files containing tag references (originally only 3 were identified) plus the common.schema.json file. The complete list has been verified against the current codebase.
+
+**Schema Consistency**: The common.schema.json file contains a `structuredNote` definition that also needs tags removed. This ensures consistency between the component schema and the shared type definitions.
+
+**Search Strategy**: While all known files have been identified, use comprehensive search patterns to verify no additional JSDoc references to tags exist that weren't caught in the analysis.
 
 **IDE Support**: Ensure changes improve developer experience by providing accurate autocomplete and preventing attempts to use non-existent tag properties.
 
 **Documentation Quality**: Focus on making type definitions clear and accurate, helping developers understand what data is actually available.
 
-**Consistency**: Ensure all type definitions align with the actual data structures after tag removal.
+**Consistency**: Ensure all type definitions align with the actual data structures after tag removal, including both component schemas and shared schemas.
 
 ## Rollback Procedure
 

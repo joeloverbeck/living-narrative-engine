@@ -11,9 +11,10 @@ This report provides a comprehensive architectural analysis of the existing char
 All three existing LLM-powered character-builder pages (`cliches-generator.html`, `core-motivations-generator.html`, `thematic-direction-generator.html`) follow a consistent architectural pattern:
 
 #### 1. Controller Layer Pattern
+
 - **Base Class**: All controllers extend `BaseCharacterBuilderController`
 - **Location**: `src/characterBuilder/controllers/BaseCharacterBuilderController.js`
-- **Features**: 
+- **Features**:
   - Standardized dependency injection
   - Common error handling and validation
   - UI state management with `UIStateManager`
@@ -21,12 +22,15 @@ All three existing LLM-powered character-builder pages (`cliches-generator.html`
   - DOM element caching and manipulation utilities
 
 #### 2. Service Layer Pattern
+
 Each page has a dedicated service generator following this structure:
+
 - **Core Motivations**: `src/characterBuilder/services/CoreMotivationsGenerator.js`
-- **Cliches**: `src/characterBuilder/services/ClicheGenerator.js`  
+- **Cliches**: `src/characterBuilder/services/ClicheGenerator.js`
 - **Thematic Directions**: `src/characterBuilder/services/thematicDirectionGenerator.js`
 
 **Common Service Features**:
+
 - LLM integration with `LlmJsonService`
 - Configuration management via `ILLMConfigurationManager`
 - Event dispatching for analytics and monitoring
@@ -34,7 +38,9 @@ Each page has a dedicated service generator following this structure:
 - Comprehensive error handling with custom error types
 
 #### 3. Model Layer Pattern
+
 Models follow a consistent structure:
+
 - **Location**: `src/characterBuilder/models/`
 - **Pattern**: Immutable classes with validation
 - **Features**:
@@ -45,7 +51,9 @@ Models follow a consistent structure:
   - Content validation and quality scoring
 
 #### 4. Prompt Structure Pattern
+
 All prompts follow a standardized format:
+
 - **Location**: `src/characterBuilder/prompts/`
 - **Structure**:
   ```xml
@@ -62,10 +70,12 @@ All prompts follow a standardized format:
 ### Page-Specific Analysis
 
 #### Thematic Direction Generator (Template Recommendation)
+
 **File**: `thematic-direction-generator.html`
 **Controller**: `src/thematicDirection/controllers/thematicDirectionController.js`
 
 **Why Use as Template**:
+
 - Most sophisticated concept selection UI
 - Robust error handling for empty states
 - Clean results display with card-based layout
@@ -73,19 +83,23 @@ All prompts follow a standardized format:
 - Comprehensive validation and user feedback
 
 #### Core Motivations Generator (Service Pattern Reference)
+
 **Service**: `src/characterBuilder/services/CoreMotivationsGenerator.js`
 **Prompt**: `src/characterBuilder/prompts/coreMotivationsGenerationPrompt.js`
 
 **Reusable Patterns**:
+
 - Complex input validation (character concept + thematic direction + cliches)
 - Structured LLM response handling
 - Comprehensive error categorization
 - Metadata tracking for generation analysis
 
 #### Cliches Generator (Prompt Sophistication Reference)
+
 **Prompt**: `src/characterBuilder/prompts/clicheGenerationPrompt.js`
 
 **Advanced Features**:
+
 - Enhanced prompt building with configurable options
 - Few-shot examples for consistency
 - Genre-specific context adaptation
@@ -97,10 +111,12 @@ All prompts follow a standardized format:
 ### Phase 1: Model Layer Implementation
 
 #### File: `src/characterBuilder/models/trait.js`
+
 **Purpose**: Define trait data structure and validation
 **Template**: Follow `coreMotivation.js` pattern
 
 **Required Features**:
+
 ```javascript
 class Trait {
   constructor(data) {
@@ -115,11 +131,11 @@ class Trait {
     this.createdAt = data.createdAt || new Date().toISOString();
     this.metadata = data.metadata || {};
   }
-  
+
   static fromLLMResponse({ conceptId, directionId, rawTrait, metadata }) {
     // Transform LLM response into trait instance
   }
-  
+
   validate() {
     // Quality validation similar to coreMotivation.js
   }
@@ -129,18 +145,21 @@ class Trait {
 ### Phase 2: Service Layer Implementation
 
 #### File: `src/characterBuilder/services/TraitGenerator.js`
+
 **Purpose**: Handle LLM-powered trait generation
 **Template**: Follow `CoreMotivationsGenerator.js` pattern
 
 **Required Dependencies**:
+
 - `ILogger` - Logging service
 - `LlmJsonService` - JSON processing
-- `ConfigurableLLMAdapter` - LLM integration  
+- `ConfigurableLLMAdapter` - LLM integration
 - `ILLMConfigurationManager` - Configuration management
 - `ISafeEventDispatcher` - Event dispatching
 - `ITokenEstimator` - Optional token estimation
 
 **Key Methods**:
+
 ```javascript
 async generateTraits(conceptId, directionId, cliches = null) {
   // 1. Load character concept and thematic direction
@@ -156,10 +175,12 @@ async generateTraits(conceptId, directionId, cliches = null) {
 ### Phase 3: Prompt Implementation
 
 #### File: `src/characterBuilder/prompts/traitsGenerationPrompt.js`
+
 **Purpose**: LLM prompt templates and validation
 **Template**: Follow `coreMotivationsGenerationPrompt.js` structure
 
 **Required Exports**:
+
 ```javascript
 // Configuration
 export const TRAITS_LLM_PARAMS = {
@@ -180,18 +201,31 @@ export const TRAITS_RESPONSE_SCHEMA = {
         properties: {
           traitName: { type: 'string', minLength: 3, maxLength: 50 },
           description: { type: 'string', minLength: 50, maxLength: 300 },
-          gameplayImplications: { type: 'string', minLength: 30, maxLength: 200 },
-          narrativePotential: { type: 'string', minLength: 30, maxLength: 200 }
+          gameplayImplications: {
+            type: 'string',
+            minLength: 30,
+            maxLength: 200,
+          },
+          narrativePotential: { type: 'string', minLength: 30, maxLength: 200 },
         },
-        required: ['traitName', 'description', 'gameplayImplications', 'narrativePotential']
-      }
-    }
+        required: [
+          'traitName',
+          'description',
+          'gameplayImplications',
+          'narrativePotential',
+        ],
+      },
+    },
   },
-  required: ['traits']
+  required: ['traits'],
 };
 
 // Prompt builder function
-export function buildTraitsGenerationPrompt(characterConcept, direction, cliches) {
+export function buildTraitsGenerationPrompt(
+  characterConcept,
+  direction,
+  cliches
+) {
   // Build structured prompt following established pattern
 }
 
@@ -207,6 +241,7 @@ export function createTraitsGenerationLlmConfig(baseLlmConfig) {
 ```
 
 **Prompt Structure** (based on existing patterns):
+
 ```xml
 <role>
 You are a character trait specialist for RPGs and narrative games, focusing on creating gameplay-relevant traits that enhance both mechanical systems and storytelling potential.
@@ -270,10 +305,12 @@ NC-21 (ADULTS ONLY) mature content guidelines following existing pattern...
 ### Phase 4: Controller Implementation
 
 #### File: `src/traitsGenerator/controllers/TraitsGeneratorController.js`
+
 **Purpose**: UI controller for traits generation page
 **Template**: Follow `thematicDirectionController.js` structure
 
 **Required Features**:
+
 - Extend `BaseCharacterBuilderController`
 - Concept selection dropdown (reuse existing pattern)
 - Generate button with validation
@@ -282,6 +319,7 @@ NC-21 (ADULTS ONLY) mature content guidelines following existing pattern...
 - Event dispatching for analytics
 
 **Key Methods**:
+
 ```javascript
 class TraitsGeneratorController extends BaseCharacterBuilderController {
   async _handleGenerateTraits() {
@@ -291,11 +329,11 @@ class TraitsGeneratorController extends BaseCharacterBuilderController {
     // 4. Display results or handle errors
     // 5. Dispatch events
   }
-  
+
   _displayResults(concept, traits) {
     // Render trait cards following existing patterns
   }
-  
+
   _renderTraitCard(trait, index) {
     // Individual trait card HTML generation
   }
@@ -305,10 +343,12 @@ class TraitsGeneratorController extends BaseCharacterBuilderController {
 ### Phase 5: HTML Page Implementation
 
 #### File: `traits-generator.html`
+
 **Purpose**: User interface for trait generation
 **Template**: Use `thematic-direction-generator.html` as base
 
 **Required Sections**:
+
 - Header with navigation
 - Concept selection form (reuse existing)
 - Generation controls
@@ -321,7 +361,9 @@ class TraitsGeneratorController extends BaseCharacterBuilderController {
 #### Modifications Required:
 
 ##### File: `src/characterBuilder/services/characterBuilderService.js`
+
 Add trait generation method:
+
 ```javascript
 async generateTraits(conceptId, options = {}) {
   // 1. Load concept and direction data
@@ -337,6 +379,7 @@ async getTraits(conceptId) {
 ```
 
 ##### File: Project build configuration
+
 Add traits-generator to build targets following existing pattern in `package.json` scripts.
 
 ## Code Reuse Opportunities
@@ -344,16 +387,19 @@ Add traits-generator to build targets following existing pattern in `package.jso
 ### Maximum Reuse Components
 
 #### 1. BaseCharacterBuilderController (100% Reuse)
+
 - **File**: `src/characterBuilder/controllers/BaseCharacterBuilderController.js`
 - **Features**: Complete controller infrastructure
 - **Usage**: Extend class for TraitsGeneratorController
 
 #### 2. UI State Management (100% Reuse)
+
 - **File**: `src/shared/characterBuilder/uiStateManager.js`
 - **Features**: Loading, error, results state management
 - **Usage**: Inherited through base controller
 
 #### 3. Character Concept Selection (95% Reuse)
+
 - **Source**: `thematicDirectionController.js` methods:
   - `_populateConceptSelector()`
   - `_handleConceptSelection()`
@@ -361,11 +407,13 @@ Add traits-generator to build targets following existing pattern in `package.jso
   - `_loadDirectionCount()` (adapt to trait count)
 
 #### 4. Service Architecture (90% Reuse)
+
 - **Template**: `CoreMotivationsGenerator.js`
 - **Reusable**: Constructor, validation, error handling, event dispatching
 - **Adapt**: Core generation logic and response processing
 
 #### 5. Model Pattern (85% Reuse)
+
 - **Template**: `coreMotivation.js`
 - **Reusable**: Validation, serialization, static methods, metadata tracking
 - **Adapt**: Property names and validation rules
@@ -373,16 +421,19 @@ Add traits-generator to build targets following existing pattern in `package.jso
 ### Partial Reuse Components
 
 #### 1. Prompt Structure (80% Reuse)
+
 - **Base Template**: Any existing prompt file
 - **Reusable**: XML structure, role/task/instructions pattern, content policy
 - **Customize**: Task definition, response schema, validation logic
 
 #### 2. HTML Structure (75% Reuse)
+
 - **Template**: `thematic-direction-generator.html`
 - **Reusable**: Layout, concept selection form, state containers, styling
 - **Customize**: Results container for trait-specific display
 
 #### 3. Results Display (70% Reuse)
+
 - **Template**: Direction cards rendering from `thematicDirectionController.js`
 - **Reusable**: Card container structure, responsive layout, DOM utilities
 - **Customize**: Trait-specific content and styling
@@ -390,22 +441,26 @@ Add traits-generator to build targets following existing pattern in `package.jso
 ## Integration Points
 
 ### 1. CharacterBuilderService Integration
+
 - Add `generateTraits()` method
 - Add `getTraits()` retrieval method
 - Integrate with existing storage service
 - Follow established error handling patterns
 
 ### 2. Event System Integration
+
 - Dispatch generation events: `core:traits_generated`
 - Follow existing event patterns from other generators
 - Include analytics data: concept ID, trait count, generation time
 
 ### 3. LLM Service Integration
+
 - Use existing `LlmJsonService` for response processing
 - Follow established LLM configuration patterns
 - Integrate with token estimation services
 
 ### 4. Build System Integration
+
 - Add traits-generator build target to `package.json`
 - Follow existing esbuild configuration patterns
 - Ensure proper entry point configuration
@@ -413,18 +468,22 @@ Add traits-generator to build targets following existing pattern in `package.jso
 ## Testing Strategy
 
 ### Required Test Files
+
 Following established testing patterns:
 
 #### 1. Unit Tests
+
 - `tests/unit/characterBuilder/models/trait.test.js`
 - `tests/unit/characterBuilder/services/TraitGenerator.test.js`
 - `tests/unit/characterBuilder/prompts/traitsGenerationPrompt.test.js`
 - `tests/unit/traitsGenerator/controllers/TraitsGeneratorController.test.js`
 
 #### 2. Integration Tests
+
 - `tests/integration/traitsGenerator/traitsGeneratorIntegration.test.js`
 
 #### 3. Common Test Utilities
+
 - Reuse existing test beds and mocks from `tests/common/`
 - Follow established service mocking patterns
 - Use existing LLM response fixtures as templates
@@ -432,6 +491,7 @@ Following established testing patterns:
 ## Quality Assurance Checklist
 
 ### Code Quality Standards
+
 - [ ] Follow existing naming conventions (camelCase files, PascalCase classes)
 - [ ] Implement comprehensive JSDoc documentation
 - [ ] Use dependency injection pattern consistently
@@ -440,6 +500,7 @@ Following established testing patterns:
 - [ ] Implement proper cleanup in controllers
 
 ### Architectural Consistency
+
 - [ ] Extend BaseCharacterBuilderController properly
 - [ ] Follow established service pattern with proper validation
 - [ ] Use consistent model structure with immutability
@@ -447,6 +508,7 @@ Following established testing patterns:
 - [ ] Integrate with existing event system
 
 ### User Experience Consistency
+
 - [ ] Maintain consistent UI patterns with other generators
 - [ ] Implement proper loading and error states
 - [ ] Follow established keyboard shortcut patterns
@@ -454,6 +516,7 @@ Following established testing patterns:
 - [ ] Apply consistent styling and theming
 
 ### Testing Requirements
+
 - [ ] Achieve 80%+ test coverage following project standards
 - [ ] Test all error conditions and edge cases
 - [ ] Include integration tests for LLM service interaction
@@ -463,31 +526,37 @@ Following established testing patterns:
 ## Implementation Timeline
 
 ### Phase 1: Foundation (Days 1-2)
+
 - Create trait model with validation
 - Set up basic service structure
 - Implement prompt template
 
 ### Phase 2: Core Logic (Days 3-4)
+
 - Complete service implementation
 - Add LLM integration and error handling
 - Implement response validation
 
 ### Phase 3: UI Implementation (Days 5-6)
+
 - Create HTML page structure
 - Implement controller with concept selection
 - Add results display functionality
 
 ### Phase 4: Integration (Day 7)
+
 - Integrate with CharacterBuilderService
 - Add build configuration
 - Implement event dispatching
 
 ### Phase 5: Testing & Polish (Days 8-9)
+
 - Create comprehensive test suite
 - Fix bugs and edge cases
 - Polish UI and user experience
 
 ### Phase 6: Documentation (Day 10)
+
 - Update project documentation
 - Add usage examples
 - Create developer notes
@@ -497,9 +566,10 @@ Following established testing patterns:
 The existing character-builder architecture provides an excellent foundation for implementing traits generation with maximum code reuse. The consistent patterns across controllers, services, models, and prompts enable rapid development while maintaining architectural integrity and user experience consistency.
 
 Key success factors:
+
 1. **Leverage BaseCharacterBuilderController** for 100% infrastructure reuse
 2. **Follow established service patterns** for reliable LLM integration
-3. **Reuse concept selection UI** for consistent user experience  
+3. **Reuse concept selection UI** for consistent user experience
 4. **Adapt existing prompt structures** for efficient LLM communication
 5. **Maintain testing standards** for reliable functionality
 

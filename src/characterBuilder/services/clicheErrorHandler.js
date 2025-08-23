@@ -900,19 +900,24 @@ export class ClicheErrorHandler {
   #throttledCleanupStatistics() {
     const now = Date.now();
     const timeSinceLastCleanup = now - this.#cleanupThrottle.lastCleanup;
-    
-    const shouldCleanupByOperations = this.#cleanupThrottle.operationCount >= CLEANUP_THROTTLE_CONFIG.operationsThreshold;
-    const shouldCleanupByTime = timeSinceLastCleanup >= CLEANUP_THROTTLE_CONFIG.timeThreshold;
-    
+
+    const shouldCleanupByOperations =
+      this.#cleanupThrottle.operationCount >=
+      CLEANUP_THROTTLE_CONFIG.operationsThreshold;
+    const shouldCleanupByTime =
+      timeSinceLastCleanup >= CLEANUP_THROTTLE_CONFIG.timeThreshold;
+
     if (shouldCleanupByOperations || shouldCleanupByTime) {
       this.#cleanupOldStatistics();
-      
+
       // Reset throttling counters
       this.#cleanupThrottle.operationCount = 0;
       this.#cleanupThrottle.lastCleanup = now;
-      
+
       this.#logger.debug(`Error statistics cleanup performed`, {
-        triggerReason: shouldCleanupByOperations ? 'operations_threshold' : 'time_threshold',
+        triggerReason: shouldCleanupByOperations
+          ? 'operations_threshold'
+          : 'time_threshold',
         statisticsCount: this.#errorStatistics.size,
       });
     }

@@ -107,17 +107,17 @@ describe('FileTraceOutputHandler', () => {
     global.window = originalWindow;
     global.document = originalDocument;
     global.fetch = originalFetch;
-    
+
     // Enhanced cleanup to prevent memory leaks
     jest.clearAllMocks();
     jest.clearAllTimers();
     jest.runOnlyPendingTimers();
-    
+
     // Force garbage collection if available
     if (global.gc) {
       global.gc();
     }
-    
+
     // Clear any remaining references
     handler = null;
     mockLogger = null;
@@ -805,7 +805,7 @@ describe('FileTraceOutputHandler', () => {
           totalBatchedTraces: 0,
           batchSuccessRate: 0,
           avgBatchSize: 0,
-        }
+        },
       });
     });
 
@@ -978,7 +978,7 @@ describe('FileTraceOutputHandler', () => {
           success: true,
           successCount: 2,
           failureCount: 0,
-          totalSize: 2048
+          totalSize: 2048,
         };
 
         global.fetch.mockResolvedValueOnce({
@@ -989,12 +989,16 @@ describe('FileTraceOutputHandler', () => {
         const traceBatch = [
           {
             content: 'trace content 1',
-            originalTrace: { actionId: 'action1', actorId: 'actor1' }
+            originalTrace: { actionId: 'action1', actorId: 'actor1' },
           },
           {
-            content: 'trace content 2', 
-            originalTrace: { actionId: 'action2', actorId: 'actor2', _outputFormat: 'text' }
-          }
+            content: 'trace content 2',
+            originalTrace: {
+              actionId: 'action2',
+              actorId: 'actor2',
+              _outputFormat: 'text',
+            },
+          },
         ];
 
         const result = await handler.writeBatch(traceBatch);
@@ -1005,7 +1009,7 @@ describe('FileTraceOutputHandler', () => {
           expect.objectContaining({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: expect.stringContaining('traces')
+            body: expect.stringContaining('traces'),
           })
         );
 
@@ -1022,21 +1026,21 @@ describe('FileTraceOutputHandler', () => {
           .mockResolvedValueOnce({
             ok: false,
             status: 404,
-            json: async () => ({ error: 'Not Found' })
+            json: async () => ({ error: 'Not Found' }),
           })
           // Mock individual write success
           .mockResolvedValueOnce({
             ok: true,
-            json: async () => ({ success: true, path: './trace1' })
+            json: async () => ({ success: true, path: './trace1' }),
           })
           .mockResolvedValueOnce({
-            ok: true, 
-            json: async () => ({ success: true, path: './trace2' })
+            ok: true,
+            json: async () => ({ success: true, path: './trace2' }),
           });
 
         const traceBatch = [
           { content: 'content1', originalTrace: { actionId: 'action1' } },
-          { content: 'content2', originalTrace: { actionId: 'action2' } }
+          { content: 'content2', originalTrace: { actionId: 'action2' } },
         ];
 
         const result = await handler.writeBatch(traceBatch);
@@ -1049,7 +1053,7 @@ describe('FileTraceOutputHandler', () => {
         expect(mockLogger.info).toHaveBeenCalledWith(
           'Batch endpoint unavailable, falling back to individual writes'
         );
-        
+
         // Check that this was counted as a successful batch operation
         const stats = handler.getStatistics();
         expect(stats.batchOperations.totalBatches).toBe(1);
@@ -1081,13 +1085,13 @@ describe('FileTraceOutputHandler', () => {
           .mockResolvedValueOnce({
             ok: false,
             status: 500,
-            json: async () => ({ error: 'Internal Server Error' })
+            json: async () => ({ error: 'Internal Server Error' }),
           })
           // Individual write also fails
           .mockRejectedValueOnce(new Error('Individual write failed'));
 
         const traceBatch = [
-          { content: 'content', originalTrace: { actionId: 'action1' } }
+          { content: 'content', originalTrace: { actionId: 'action1' } },
         ];
 
         const result = await handler.writeBatch(traceBatch);
@@ -1097,7 +1101,7 @@ describe('FileTraceOutputHandler', () => {
           'Batch write failed',
           expect.objectContaining({
             status: 500,
-            error: 'Internal Server Error'
+            error: 'Internal Server Error',
           })
         );
       });
@@ -1107,7 +1111,7 @@ describe('FileTraceOutputHandler', () => {
         global.fetch.mockRejectedValueOnce(new Error('Network error'));
 
         const traceBatch = [
-          { content: 'content', originalTrace: { actionId: 'action1' } }
+          { content: 'content', originalTrace: { actionId: 'action1' } },
         ];
 
         const result = await handler.writeBatch(traceBatch);
@@ -1117,7 +1121,7 @@ describe('FileTraceOutputHandler', () => {
           'Batch server write failed',
           expect.objectContaining({
             error: 'Network error',
-            batchSize: 1
+            batchSize: 1,
           })
         );
       });
@@ -1125,12 +1129,12 @@ describe('FileTraceOutputHandler', () => {
       it('should track batch statistics correctly', async () => {
         global.fetch.mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ success: true, successCount: 2 })
+          json: async () => ({ success: true, successCount: 2 }),
         });
 
         const traceBatch = [
           { content: 'content1', originalTrace: { actionId: 'action1' } },
-          { content: 'content2', originalTrace: { actionId: 'action2' } }
+          { content: 'content2', originalTrace: { actionId: 'action2' } },
         ];
 
         await handler.writeBatch(traceBatch);
@@ -1147,19 +1151,19 @@ describe('FileTraceOutputHandler', () => {
         global.fetch
           .mockResolvedValueOnce({
             ok: false,
-            status: 404
+            status: 404,
           })
           // First individual write succeeds
           .mockResolvedValueOnce({
             ok: true,
-            json: async () => ({ success: true })
+            json: async () => ({ success: true }),
           })
           // Second individual write fails
           .mockRejectedValueOnce(new Error('Write failed'));
 
         const traceBatch = [
           { content: 'content1', originalTrace: { actionId: 'action1' } },
-          { content: 'content2', originalTrace: { actionId: 'action2' } }
+          { content: 'content2', originalTrace: { actionId: 'action2' } },
         ];
 
         const result = await handler.writeBatch(traceBatch);
@@ -1181,7 +1185,7 @@ describe('FileTraceOutputHandler', () => {
 
       it('should return zero stats for new handler', () => {
         const stats = handler.getStatistics();
-        
+
         expect(stats.batchOperations.totalBatches).toBe(0);
         expect(stats.batchOperations.totalBatchedTraces).toBe(0);
         expect(stats.batchOperations.batchSuccessRate).toBe(0);
@@ -1192,21 +1196,21 @@ describe('FileTraceOutputHandler', () => {
         // First batch succeeds
         global.fetch.mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ success: true })
+          json: async () => ({ success: true }),
         });
 
         await handler.writeBatch([
-          { content: 'content1', originalTrace: { actionId: 'action1' } }
+          { content: 'content1', originalTrace: { actionId: 'action1' } },
         ]);
 
         // Second batch fails
         global.fetch.mockResolvedValueOnce({
           ok: false,
-          status: 500
+          status: 500,
         });
 
         await handler.writeBatch([
-          { content: 'content2', originalTrace: { actionId: 'action2' } }
+          { content: 'content2', originalTrace: { actionId: 'action2' } },
         ]);
 
         const stats = handler.getStatistics();
