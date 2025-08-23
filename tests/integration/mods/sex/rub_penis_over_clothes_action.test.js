@@ -261,8 +261,8 @@ describe('sex:rub_penis_over_clothes action integration', () => {
       'sex:event-is-action-rub-penis-over-clothes'
     );
 
-    // Verify the rule has the correct number of actions (7 + 1 macro = 8 steps)
-    expect(rubPenisOverClothesRule.actions).toHaveLength(8);
+    // Verify the rule has the correct number of actions (8 + 1 macro = 9 steps)
+    expect(rubPenisOverClothesRule.actions).toHaveLength(9);
 
     // Verify the macro is the last action
     const lastAction =

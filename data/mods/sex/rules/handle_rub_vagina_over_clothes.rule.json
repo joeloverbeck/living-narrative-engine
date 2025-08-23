@@ -13,7 +13,11 @@
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+      "parameters": { "entity_ref": "primary", "result_variable": "primaryName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "secondary", "result_variable": "clothingName" }
     },
     {
       "type": "QUERY_COMPONENT",
@@ -27,7 +31,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} rubs {context.targetName}'s vagina over the clothes."
+        "value": "{context.actorName} rubs {context.primaryName}'s vagina over the {context.clothingName}."
       }
     },
     {
@@ -48,7 +52,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "targetId",
-        "value": "{event.payload.targetId}"
+        "value": "{event.payload.primaryId}"
       }
     },
     { "macro": "core:logSuccessAndEndTurn" }

@@ -20,23 +20,26 @@ Create comprehensive tests for enhanced configuration loader:
 // tests/unit/configuration/actionTraceConfigLoader.dualFormat.test.js
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { ActionTraceConfigLoader } from '../../../src/configuration/actionTraceConfigLoader.js';
-import { TestBedClass } from '../../common/testbed.js';
+import { createTestBed } from '../../common/testBed.js';
 
 describe('ActionTraceConfigLoader - Dual Format Support', () => {
   let testBed;
   let configLoader;
 
   beforeEach(() => {
-    testBed = new TestBedClass();
-    configLoader = testBed.createActionTraceConfigLoader();
+    testBed = createTestBed();
+    configLoader = new ActionTraceConfigLoader({
+      logger: testBed.createMockLogger(),
+      validator: testBed.createMockValidator(),
+    });
   });
 
   describe('Configuration Normalization', () => {
     it('should default to JSON-only when outputFormats not specified', () => {
       const config = { actionTracing: { enabled: true } };
-      const normalized = configLoader.normalizeConfig(config);
+      const result = configLoader.loadConfig(config);
 
-      expect(normalized.actionTracing.outputFormats).toEqual(['json']);
+      expect(result.actionTracing.outputFormats).toEqual(['json']);
     });
 
     it('should preserve valid output formats', () => {
@@ -46,9 +49,9 @@ describe('ActionTraceConfigLoader - Dual Format Support', () => {
           outputFormats: ['json', 'text'],
         },
       };
-      const normalized = configLoader.normalizeConfig(config);
+      const result = configLoader.loadConfig(config);
 
-      expect(normalized.actionTracing.outputFormats).toEqual(['json', 'text']);
+      expect(result.actionTracing.outputFormats).toEqual(['json', 'text']);
     });
 
     it('should filter out invalid formats and warn', () => {
@@ -58,9 +61,9 @@ describe('ActionTraceConfigLoader - Dual Format Support', () => {
           outputFormats: ['json', 'invalid', 'text', 'unsupported'],
         },
       };
-      const normalized = configLoader.normalizeConfig(config);
+      const result = configLoader.loadConfig(config);
 
-      expect(normalized.actionTracing.outputFormats).toEqual(['json', 'text']);
+      expect(result.actionTracing.outputFormats).toEqual(['json', 'text']);
     });
 
     it('should default to JSON-only when all formats invalid', () => {
@@ -70,9 +73,9 @@ describe('ActionTraceConfigLoader - Dual Format Support', () => {
           outputFormats: ['invalid', 'unsupported'],
         },
       };
-      const normalized = configLoader.normalizeConfig(config);
+      const result = configLoader.loadConfig(config);
 
-      expect(normalized.actionTracing.outputFormats).toEqual(['json']);
+      expect(result.actionTracing.outputFormats).toEqual(['json']);
     });
 
     it('should normalize text format options when text format enabled', () => {
@@ -85,9 +88,9 @@ describe('ActionTraceConfigLoader - Dual Format Support', () => {
           },
         },
       };
-      const normalized = configLoader.normalizeConfig(config);
+      const result = configLoader.loadConfig(config);
 
-      expect(normalized.actionTracing.textFormatOptions).toEqual({
+      expect(result.actionTracing.textFormatOptions).toEqual({
         enableColors: false,
         lineWidth: 100,
         indentSize: 2,
@@ -107,9 +110,9 @@ describe('ActionTraceConfigLoader - Dual Format Support', () => {
           },
         },
       };
-      const normalized = configLoader.normalizeConfig(config);
+      const result = configLoader.loadConfig(config);
 
-      expect(normalized.actionTracing.textFormatOptions.enableColors).toBe(
+      expect(result.actionTracing.textFormatOptions.enableColors).toBe(
         false
       );
     });
@@ -127,9 +130,7 @@ describe('ActionTraceConfigLoader - Dual Format Support', () => {
         },
       };
 
-      expect(() =>
-        configLoader.validateNormalizedConfig(config.actionTracing)
-      ).toThrow(/lineWidth must be between 80 and 200/);
+      expect(() => configLoader.loadConfig(config)).toThrow(/lineWidth must be between 80 and 200/);
     });
 
     it('should validate indent size constraints', () => {
@@ -143,9 +144,7 @@ describe('ActionTraceConfigLoader - Dual Format Support', () => {
         },
       };
 
-      expect(() =>
-        configLoader.validateNormalizedConfig(config.actionTracing)
-      ).toThrow(/indentSize must be between 0 and 8/);
+      expect(() => configLoader.loadConfig(config)).toThrow(/indentSize must be between 0 and 8/);
     });
 
     it('should validate section separator is single character', () => {
@@ -159,9 +158,7 @@ describe('ActionTraceConfigLoader - Dual Format Support', () => {
         },
       };
 
-      expect(() =>
-        configLoader.validateNormalizedConfig(config.actionTracing)
-      ).toThrow(/sectionSeparator must be a single character/);
+      expect(() => configLoader.loadConfig(config)).toThrow(/sectionSeparator must be a single character/);
     });
   });
 });
@@ -176,18 +173,18 @@ Create tests for multi-format output generation:
 describe('ActionTraceOutputService - Multi-Format Support', () => {
   let testBed;
   let outputService;
-  let mockFileHandler;
+  let mockFileOutputHandler;
   let mockJsonFormatter;
   let mockHumanReadableFormatter;
 
   beforeEach(() => {
-    testBed = new TestBedClass();
-    mockFileHandler = testBed.createMockFileTraceOutputHandler();
-    mockJsonFormatter = testBed.createMockJsonFormatter();
-    mockHumanReadableFormatter = testBed.createMockHumanReadableFormatter();
+    testBed = createTestBed();
+    mockFileOutputHandler = testBed.createMock('fileOutputHandler', ['writeBatch']);
+    mockJsonFormatter = testBed.createMock('jsonFormatter', ['format']);
+    mockHumanReadableFormatter = testBed.createMock('humanReadableFormatter', ['format']);
 
     outputService = new ActionTraceOutputService({
-      fileHandler: mockFileHandler,
+      fileOutputHandler: mockFileOutputHandler,
       jsonFormatter: mockJsonFormatter,
       humanReadableFormatter: mockHumanReadableFormatter,
       logger: testBed.createMockLogger(),
@@ -202,13 +199,12 @@ describe('ActionTraceOutputService - Multi-Format Support', () => {
       mockJsonFormatter.format.mockReturnValue('{"test": "json"}');
       outputService.initialize(config);
 
-      const outputs = outputService.generateFormattedOutputs(trace);
+      const result = outputService.outputTrace(trace);
 
-      expect(outputs).toHaveLength(1);
-      expect(outputs[0]).toMatchObject({
+      expect(mockFileOutputHandler.writeBatch).toHaveBeenCalledWith([{
         content: '{"test": "json"}',
         fileName: expect.stringMatching(/\.json$/),
-      });
+      }]);
     });
 
     it('should generate dual-format output when both formats configured', () => {
@@ -223,11 +219,14 @@ describe('ActionTraceOutputService - Multi-Format Support', () => {
       mockHumanReadableFormatter.format.mockReturnValue('=== Test Trace ===');
       outputService.initialize(config);
 
-      const outputs = outputService.generateFormattedOutputs(trace);
+      const result = outputService.outputTrace(trace);
 
-      expect(outputs).toHaveLength(2);
-      expect(outputs[0].fileName).toMatch(/\.json$/);
-      expect(outputs[1].fileName).toMatch(/\.txt$/);
+      expect(mockFileOutputHandler.writeBatch).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ fileName: expect.stringMatching(/\.json$/) }),
+          expect.objectContaining({ fileName: expect.stringMatching(/\.txt$/) }),
+        ])
+      );
       expect(mockHumanReadableFormatter.format).toHaveBeenCalledWith(
         trace,
         expect.objectContaining({
@@ -247,11 +246,14 @@ describe('ActionTraceOutputService - Multi-Format Support', () => {
       });
       outputService.initialize(config);
 
-      const outputs = outputService.generateFormattedOutputs(trace);
+      const result = outputService.outputTrace(trace);
 
-      // Should still have JSON output despite text formatting failure
-      expect(outputs).toHaveLength(1);
-      expect(outputs[0].fileName).toMatch(/\.json$/);
+      // Should still attempt to write JSON output despite text formatting failure
+      expect(mockFileOutputHandler.writeBatch).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ fileName: expect.stringMatching(/\.json$/) }),
+        ])
+      );
     });
   });
 
@@ -261,31 +263,20 @@ describe('ActionTraceOutputService - Multi-Format Support', () => {
         actionId: 'test_action',
         actorId: 'test_actor',
       });
+      const config = { outputFormats: ['json', 'text'], outputToFile: true };
+      
+      mockJsonFormatter.format.mockReturnValue('{"test": "json"}');
+      mockHumanReadableFormatter.format.mockReturnValue('=== Test Trace ===');
+      outputService.initialize(config);
 
-      expect(
-        outputService.getFileNameForFormat(
-          'trace_test_action_test_actor_123.json',
-          'json'
-        )
-      ).toBe('trace_test_action_test_actor_123.json');
-      expect(
-        outputService.getFileNameForFormat(
-          'trace_test_action_test_actor_123.json',
-          'text'
-        )
-      ).toBe('trace_test_action_test_actor_123.txt');
-      expect(
-        outputService.getFileNameForFormat(
-          'trace_test_action_test_actor_123.json',
-          'html'
-        )
-      ).toBe('trace_test_action_test_actor_123.html');
-      expect(
-        outputService.getFileNameForFormat(
-          'trace_test_action_test_actor_123.json',
-          'markdown'
-        )
-      ).toBe('trace_test_action_test_actor_123.md');
+      outputService.outputTrace(trace);
+
+      expect(mockFileOutputHandler.writeBatch).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ fileName: expect.stringMatching(/\.json$/) }),
+          expect.objectContaining({ fileName: expect.stringMatching(/\.txt$/) }),
+        ])
+      );
     });
   });
 
@@ -295,7 +286,7 @@ describe('ActionTraceOutputService - Multi-Format Support', () => {
       const config = { outputFormats: ['json', 'html', 'unsupported'] };
 
       outputService = new ActionTraceOutputService({
-        fileHandler: mockFileHandler,
+        fileOutputHandler: mockFileOutputHandler,
         jsonFormatter: mockJsonFormatter,
         humanReadableFormatter: mockHumanReadableFormatter,
         logger: mockLogger,
@@ -326,12 +317,13 @@ describe('FileTraceOutputHandler - Multi-Format Support', () => {
   let mockFetch;
 
   beforeEach(() => {
-    testBed = new TestBedClass();
-    mockFetch = testBed.mockGlobalFetch();
+    testBed = createTestBed();
+    mockFetch = jest.fn();
+    global.fetch = mockFetch;
 
     handler = new FileTraceOutputHandler({
       config: { outputDirectory: './test-traces' },
-      serverUrl: 'http://localhost:3000',
+      serverUrl: 'http://localhost:3001',
       logger: testBed.createMockLogger(),
     });
   });
@@ -349,19 +341,19 @@ describe('FileTraceOutputHandler - Multi-Format Support', () => {
           Promise.resolve({ success: true, filePath: '/path/to/file' }),
       });
 
-      const result = await handler.writeFormattedTraces(formattedTraces);
+      const result = await handler.writeBatch(formattedTraces);
 
       expect(result).toBe(true);
       expect(mockFetch).toHaveBeenCalledTimes(2);
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:3000/api/traces/write',
+        'http://localhost:3001/api/traces/write',
         expect.objectContaining({
           method: 'POST',
           body: expect.stringContaining('test.json'),
         })
       );
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:3000/api/traces/write',
+        'http://localhost:3001/api/traces/write',
         expect.objectContaining({
           method: 'POST',
           body: expect.stringContaining('test.txt'),
@@ -382,7 +374,7 @@ describe('FileTraceOutputHandler - Multi-Format Support', () => {
         })
         .mockRejectedValueOnce(new Error('Network error'));
 
-      const result = await handler.writeFormattedTraces(formattedTraces);
+      const result = await handler.writeBatch(formattedTraces);
 
       // Should succeed if at least one format writes successfully
       expect(result).toBe(true);
@@ -395,7 +387,7 @@ describe('FileTraceOutputHandler - Multi-Format Support', () => {
 
       mockFetch.mockRejectedValue(new Error('Server down'));
 
-      const result = await handler.writeFormattedTraces(formattedTraces);
+      const result = await handler.writeBatch(formattedTraces);
 
       expect(result).toBe(false);
     });
@@ -431,15 +423,15 @@ describe('FileTraceOutputHandler - Multi-Format Support', () => {
           json: () => Promise.resolve({ success: true }),
         });
 
-      const result = await handler.writeFormattedTraces(formattedTraces);
+      const result = await handler.writeBatch(formattedTraces);
 
       expect(result).toBe(true);
       expect(mockFetch).toHaveBeenCalledTimes(3);
     }, 10000); // Longer timeout for retry delays
 
     it('should validate input parameters', async () => {
-      await expect(handler.writeFormattedTraces(null)).resolves.toBe(false);
-      await expect(handler.writeFormattedTraces([])).resolves.toBe(false);
+      await expect(handler.writeBatch(null)).resolves.toBe(false);
+      await expect(handler.writeBatch([])).resolves.toBe(false);
     });
   });
 });
@@ -448,10 +440,10 @@ describe('FileTraceOutputHandler - Multi-Format Support', () => {
 ## Implementation Steps
 
 1. **Set Up Test Infrastructure**
-   - [ ] Create test bed helpers for dual-format components
-   - [ ] Set up mock factories for formatters and handlers
+   - [ ] Update existing test bed to support dual-format components
+   - [ ] Set up mock factories using existing mock patterns
    - [ ] Create sample trace data for testing
-   - [ ] Set up fetch mocking utilities
+   - [ ] Set up fetch mocking utilities with current patterns
 
 2. **Implement Configuration Loader Tests**
    - [ ] Test configuration normalization logic
@@ -525,40 +517,73 @@ describe('FileTraceOutputHandler - Multi-Format Support', () => {
 - **New**: `tests/unit/configuration/actionTraceConfigLoader.dualFormat.test.js`
 - **New**: `tests/unit/actions/tracing/actionTraceOutputService.multiFormat.test.js`
 - **New**: `tests/unit/actions/tracing/fileTraceOutputHandler.multiFormat.test.js`
-- **Modify**: `tests/common/testbed.js` (add dual-format helpers)
-- **Modify**: `tests/common/mockFactories/tracingMocks.js` (add new mocks)
+- **Modify**: `tests/common/testBed.js` (add dual-format helpers)
+- **Modify**: `tests/common/mockFactories/tracingMocks.js` (add new mocks using existing patterns)
 
 ## Test Helper Enhancements
 
 ```javascript
-// tests/common/testbed.js additions
-export class TestBedClass {
-  createMockDualFormatConfig() {
-    return {
-      outputFormats: ['json', 'text'],
-      textFormatOptions: {
-        enableColors: false,
-        lineWidth: 120,
-        indentSize: 2,
-        sectionSeparator: '=',
-        includeTimestamps: true,
-        performanceSummary: true,
-      },
-    };
-  }
+// tests/common/testBed.js additions
+export function createTestBed() {
+  const testBed = {
+    createMockDualFormatConfig() {
+      return {
+        outputFormats: ['json', 'text'],
+        textFormatOptions: {
+          enableColors: false,
+          lineWidth: 120,
+          indentSize: 2,
+          sectionSeparator: '=',
+          includeTimestamps: true,
+          performanceSummary: true,
+        },
+      };
+    },
 
-  createFormattedTraceArray() {
-    return [
-      { content: '{"test": "json"}', fileName: 'test.json' },
-      { content: '=== Test Trace ===', fileName: 'test.txt' },
-    ];
-  }
+    createFormattedTraceArray() {
+      return [
+        { content: '{"test": "json"}', fileName: 'test.json' },
+        { content: '=== Test Trace ===', fileName: 'test.txt' },
+      ];
+    },
 
-  mockGlobalFetch() {
-    const mockFetch = jest.fn();
-    global.fetch = mockFetch;
-    return mockFetch;
-  }
+    createMock(name, methods) {
+      const mock = {};
+      methods.forEach(method => {
+        mock[method] = jest.fn();
+      });
+      return mock;
+    },
+
+    createMockLogger() {
+      return {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      };
+    },
+
+    createMockValidator() {
+      return {
+        validate: jest.fn(),
+        validateSchema: jest.fn(),
+      };
+    },
+
+    createMockTrace(overrides = {}) {
+      return {
+        id: 'test-trace-123',
+        actionId: 'test_action',
+        actorId: 'test_actor',
+        timestamp: new Date().toISOString(),
+        data: { test: 'data' },
+        ...overrides,
+      };
+    },
+  };
+
+  return testBed;
 }
 ```
 
@@ -567,9 +592,9 @@ export class TestBedClass {
 ```javascript
 // tests/common/mockFactories/tracingMocks.js additions
 export const createMockFileTraceOutputHandler = () => ({
-  writeFormattedTraces: jest.fn(),
+  writeBatch: jest.fn(),
   writeTrace: jest.fn(),
-  ...createSimpleMock(['writeFormattedTraces', 'writeTrace']),
+  isReady: jest.fn().mockReturnValue(true),
 });
 
 export const createMockJsonFormatter = () => ({
@@ -589,13 +614,13 @@ describe('Performance Impact', () => {
     const startTime = performance.now();
 
     // Run dual-format generation
-    const outputs = outputService.generateFormattedOutputs(trace);
+    const result = outputService.outputTrace(trace);
 
     const endTime = performance.now();
     const duration = endTime - startTime;
 
     expect(duration).toBeLessThan(10); // <10ms per spec requirement
-    expect(outputs).toHaveLength(2);
+    expect(result).toBeDefined();
   });
 });
 ```
