@@ -33,25 +33,50 @@ export const PROMPT_VERSION_INFO = {
 /**
  * Default parameters for traits generation LLM requests
  */
-export const TRAITS_LLM_PARAMS = {
+export const TRAITS_GENERATION_LLM_PARAMS = {
   temperature: 0.8,
   max_tokens: 4000,
 };
 
 /**
- * LLM response schema for traits generation validation
+ * Import existing trait schema from JSON schema file
+ */
+import traitSchema from '../../data/schemas/trait.schema.json' with { type: 'json' };
+
+/**
+ * LLM response schema for traits generation validation (derived from trait.schema.json)
+ * Note: This is the response schema for LLM validation, excluding id and generatedAt fields
  */
 export const TRAITS_RESPONSE_SCHEMA = {
-  // Detailed schema implementation
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    names: traitSchema.properties.names,
+    physicalDescription: traitSchema.properties.physicalDescription,
+    personality: traitSchema.properties.personality,
+    strengths: traitSchema.properties.strengths,
+    weaknesses: traitSchema.properties.weaknesses,
+    likes: traitSchema.properties.likes,
+    dislikes: traitSchema.properties.dislikes,
+    fears: traitSchema.properties.fears,
+    goals: traitSchema.properties.goals,
+    notes: traitSchema.properties.notes,
+    profile: traitSchema.properties.profile,
+    secrets: traitSchema.properties.secrets
+  },
+  required: [
+    'names', 'physicalDescription', 'personality', 'strengths', 'weaknesses',
+    'likes', 'dislikes', 'fears', 'goals', 'notes', 'profile', 'secrets'
+  ]
 };
 ```
 
 ### Core Function Implementation
 Implement these required functions:
 
-1. **`buildTraitsGenerationPrompt(concept, direction, userInputs, cliches)`**
+1. **`buildTraitsGenerationPrompt(characterConcept, direction, coreMotivations, cliches)`**
    - Build structured XML prompt with all required elements
-   - Include concept, thematic direction, user inputs, and cliches
+   - Include concept, thematic direction, core motivations output, and cliches
    - Follow specification prompt structure exactly
    - Apply proper escaping and formatting
 
@@ -66,112 +91,14 @@ Implement these required functions:
    - Follow similar pattern to cliches-generator.html export format
    - Ensure proper context for cliché avoidance
 
-### Response Schema Requirements
-Implement comprehensive schema based on specification requirements:
+4. **`createTraitsGenerationLlmConfig(baseLlmConfig)`**
+   - Creates enhanced LLM config with traits generation JSON schema
+   - Follows template pattern from coreMotivationsGenerationPrompt.js
+   - Includes TRAITS_GENERATION_LLM_PARAMS as default parameters
+   - Returns config with jsonOutputStrategy for structured response
 
-```javascript
-export const TRAITS_RESPONSE_SCHEMA = {
-  type: 'object',
-  additionalProperties: false,
-  properties: {
-    names: { 
-      type: 'array', 
-      items: { 
-        type: 'object',
-        properties: {
-          name: { type: 'string' },
-          justification: { type: 'string' }
-        },
-        required: ['name', 'justification']
-      },
-      minItems: 3, 
-      maxItems: 5 
-    },
-    physicalDescription: { 
-      type: 'string', 
-      minLength: 100, 
-      maxLength: 500 
-    },
-    personality: { 
-      type: 'array', 
-      items: {
-        type: 'object',
-        properties: {
-          trait: { type: 'string' },
-          explanation: { type: 'string' }
-        },
-        required: ['trait', 'explanation']
-      },
-      minItems: 3, 
-      maxItems: 5 
-    },
-    strengths: { 
-      type: 'array', 
-      items: { type: 'string' }, 
-      minItems: 2, 
-      maxItems: 4 
-    },
-    weaknesses: { 
-      type: 'array', 
-      items: { type: 'string' }, 
-      minItems: 2, 
-      maxItems: 4 
-    },
-    likes: { 
-      type: 'array', 
-      items: { type: 'string' }, 
-      minItems: 3, 
-      maxItems: 5 
-    },
-    dislikes: { 
-      type: 'array', 
-      items: { type: 'string' }, 
-      minItems: 3, 
-      maxItems: 5 
-    },
-    fears: { 
-      type: 'array', 
-      items: { type: 'string' }, 
-      minItems: 1, 
-      maxItems: 2 
-    },
-    goals: { 
-      type: 'object', 
-      properties: { 
-        shortTerm: { 
-          type: 'array', 
-          items: { type: 'string' }, 
-          minItems: 1, 
-          maxItems: 2 
-        }, 
-        longTerm: { type: 'string' } 
-      },
-      required: ['shortTerm', 'longTerm']
-    },
-    notes: { 
-      type: 'array', 
-      items: { type: 'string' }, 
-      minItems: 2, 
-      maxItems: 3 
-    },
-    profile: { 
-      type: 'string', 
-      minLength: 200, 
-      maxLength: 800 
-    },
-    secrets: { 
-      type: 'array', 
-      items: { type: 'string' }, 
-      minItems: 1, 
-      maxItems: 2 
-    }
-  },
-  required: [
-    'names', 'physicalDescription', 'personality', 'strengths', 'weaknesses',
-    'likes', 'dislikes', 'fears', 'goals', 'notes', 'profile', 'secrets'
-  ]
-};
-```
+### Response Schema Requirements
+The schema is now derived from the existing `/data/schemas/trait.schema.json` file to ensure consistency and avoid duplication. The TRAITS_RESPONSE_SCHEMA uses the trait schema properties but excludes the `id`, `generatedAt`, and `metadata` fields which are handled by the service layer.
 
 ## Prompt Structure Requirements
 
@@ -195,11 +122,11 @@ ${concept data}
 ${direction data with all elements}
 </thematic_direction>
 
-<user_inputs>
-Core Motivation: ${userInputs.coreMotivation}
-Internal Contradiction: ${userInputs.internalContradiction}  
-Central Question: ${userInputs.centralQuestion}
-</user_inputs>
+<core_motivations>
+Core Motivation: ${coreMotivations.coreMotivation}
+Internal Contradiction: ${coreMotivations.internalContradiction}  
+Central Question: ${coreMotivations.centralQuestion}
+</core_motivations>
 
 <cliches_to_avoid>
 ${formatted cliches list}
@@ -273,11 +200,12 @@ Ensure prompt instructions cover all 12 categories with specific requirements:
 ### Functional Requirements
 - [ ] `buildTraitsGenerationPrompt()` creates properly formatted XML prompt
 - [ ] All required prompt elements included in correct order
-- [ ] User inputs properly integrated into prompt structure
+- [ ] Core motivations properly integrated into prompt structure  
 - [ ] Cliches formatted correctly for context inclusion
 - [ ] Content policy uses exact specification text
-- [ ] Response schema validates all 12 trait categories
+- [ ] Response schema validates all 12 trait categories using existing trait.schema.json
 - [ ] Schema enforces min/max requirements for all properties
+- [ ] `createTraitsGenerationLlmConfig()` creates enhanced LLM config with JSON schema
 
 ### Validation Requirements
 - [ ] `validateTraitsGenerationResponse()` properly validates LLM responses
@@ -295,9 +223,11 @@ Ensure prompt instructions cover all 12 categories with specific requirements:
 ### Testing Requirements
 - [ ] Create `tests/unit/characterBuilder/prompts/traitsGenerationPrompt.test.js`
 - [ ] Test prompt building with various input combinations
-- [ ] Test response validation with valid/invalid responses
+- [ ] Test response validation with valid/invalid responses  
 - [ ] Test cliche formatting with different cliche structures
 - [ ] Test error handling for malformed inputs
+- [ ] Test `createTraitsGenerationLlmConfig()` function
+- [ ] Test integration with existing trait.schema.json
 - [ ] Achieve 90%+ test coverage
 
 ## Files Modified
@@ -311,6 +241,10 @@ This prompt implementation is required for:
 
 ## Notes
 - Reference `coreMotivationsGenerationPrompt.js` for established patterns
+- Use existing `/data/schemas/trait.schema.json` for schema consistency
+- Parameter `coreMotivations` refers to the output from core motivations generation, not user inputs
+- Follow `TRAITS_GENERATION_LLM_PARAMS` naming convention (not `TRAITS_LLM_PARAMS`)
+- Include `createTraitsGenerationLlmConfig()` function following template pattern
 - Ensure exact compliance with content policy text from specification
 - Pay special attention to all 12 trait categories and their requirements
 - Consider token optimization while maintaining prompt effectiveness
