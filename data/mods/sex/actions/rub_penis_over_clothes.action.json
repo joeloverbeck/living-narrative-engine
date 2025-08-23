@@ -6,14 +6,20 @@
   "targets": {
     "primary": {
       "scope": "sex:actors_with_penis_facing_each_other_covered",
-      "placeholder": "target",
+      "placeholder": "primary",
       "description": "Person with clothed penis to rub"
+    },
+    "secondary": {
+      "scope": "clothing:target_topmost_torso_lower_clothing_no_accessories",
+      "placeholder": "secondary",
+      "description": "Clothing item over which to rub",
+      "contextFrom": "primary"
     }
   },
   "required_components": {
     "actor": ["positioning:closeness"]
   },
-  "template": "rub {target}'s penis over the clothes",
+  "template": "rub {primary}'s penis over the {secondary}",
   "prerequisites": [],
   "visual": {
     "backgroundColor": "#4a148c",
