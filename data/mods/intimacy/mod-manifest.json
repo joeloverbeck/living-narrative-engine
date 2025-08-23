@@ -40,6 +40,7 @@
       "place_hand_on_waist.action.json",
       "pull_back_breathlessly.action.json",
       "pull_back_in_revulsion.action.json",
+      "run_fingers_through_hair.action.json",
       "suck_on_neck_to_leave_hickey.action.json",
       "suck_on_tongue.action.json",
       "thumb_wipe_cheek.action.json"
@@ -70,6 +71,7 @@
       "event-is-action-place-hand-on-waist.condition.json",
       "event-is-action-pull-back-breathlessly.condition.json",
       "event-is-action-pull-back-in-revulsion.condition.json",
+      "event-is-action-run-fingers-through-hair.condition.json",
       "event-is-action-suck-on-neck-to-leave-hickey.condition.json",
       "event-is-action-suck-on-tongue.condition.json",
       "event-is-action-thumb-wipe-cheek.condition.json",
@@ -93,6 +95,7 @@
       "handle_kiss_neck_sensually.rule.json",
       "handle_massage_shoulders.rule.json",
       "handle_nibble_earlobe_playfully.rule.json",
+      "handle_run_fingers_through_hair.rule.json",
       "handle_suck_on_neck_to_leave_hickey.rule.json",
       "kiss_back_passionately.rule.json",
       "kiss_cheek.rule.json",

@@ -14,6 +14,7 @@ import { expandMacros } from '../../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
 import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
+import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
 import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
@@ -52,6 +53,7 @@ function createHandlers(entityManager, eventBus, logger) {
       safeEventDispatcher: safeDispatcher,
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,
       logger,
@@ -261,8 +263,8 @@ describe('sex:rub_vagina_over_clothes action integration', () => {
       'sex:event-is-action-rub-vagina-over-clothes'
     );
 
-    // Verify the rule has the correct number of actions (7 + 1 macro = 8 steps)
-    expect(rubVaginaOverClothesRule.actions).toHaveLength(8);
+    // Verify the rule has the correct number of actions (8 + 1 macro = 9 steps)
+    expect(rubVaginaOverClothesRule.actions).toHaveLength(9);
 
     // Verify the macro is the last action
     const lastAction =

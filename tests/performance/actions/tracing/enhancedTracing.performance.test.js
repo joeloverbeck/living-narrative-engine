@@ -215,20 +215,26 @@ describe('Enhanced Tracing Performance Tests', () => {
       // Verify reasonable scaling (allowing for algorithmic complexity and measurement variance)
       // Adjusted from 3x to 6x to account for:
       // - O(n) serialization complexity
-      // - Memory allocation overhead 
+      // - Memory allocation overhead
       // - Statistical measurement variance
       // - System-level factors (GC, scheduling, etc.)
       for (let i = 1; i < timings.length; i++) {
         const scalingFactor = timings[i] / timings[i - 1];
         const dataScalingFactor = dataSizes[i] / dataSizes[i - 1];
-        
+
         if (scalingFactor >= 6) {
           console.log(`Performance scaling analysis:`);
-          console.log(`  Data sizes: ${dataSizes[i - 1]} → ${dataSizes[i]} (${dataScalingFactor.toFixed(1)}x data)`);
-          console.log(`  Timings: ${timings[i - 1].toFixed(3)}ms → ${timings[i].toFixed(3)}ms (${scalingFactor.toFixed(1)}x time)`);
-          console.log(`  All timings: [${timings.map(t => t.toFixed(2)).join(', ')}]ms`);
+          console.log(
+            `  Data sizes: ${dataSizes[i - 1]} → ${dataSizes[i]} (${dataScalingFactor.toFixed(1)}x data)`
+          );
+          console.log(
+            `  Timings: ${timings[i - 1].toFixed(3)}ms → ${timings[i].toFixed(3)}ms (${scalingFactor.toFixed(1)}x time)`
+          );
+          console.log(
+            `  All timings: [${timings.map((t) => t.toFixed(2)).join(', ')}]ms`
+          );
         }
-        
+
         expect(scalingFactor).toBeLessThan(6);
       }
     });

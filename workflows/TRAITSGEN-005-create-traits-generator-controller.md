@@ -1,40 +1,50 @@
 # TRAITSGEN-005: Create Traits Generator Controller
 
 ## Ticket Overview
+
 - **Epic**: Traits Generator Implementation
 - **Type**: UI/Controller Layer
 - **Priority**: High
 - **Estimated Effort**: 2.5 days
-- **Dependencies**: TRAITSGEN-001 (Trait Model), TRAITSGEN-003 (Service), TRAITSGEN-004 (Display Enhancer)
+- **Dependencies**: 
+  - ✅ Trait Model (`src/characterBuilder/models/trait.js`)
+  - ✅ TraitsGenerator Service (`src/characterBuilder/services/TraitsGenerator.js`)
+  - ✅ TraitsDisplayEnhancer Service (`src/characterBuilder/services/TraitsDisplayEnhancer.js`)
+  - ❌ **BLOCKING**: TRAITSGEN-007 (CharacterBuilderService integration) - MUST BE COMPLETED FIRST
 
 ## Description
+
 Create the main UI controller that orchestrates the traits generation user interface. This controller handles concept selection, user input validation, generation workflow, and results display.
 
 ## Requirements
 
 ### File Creation
-- **File**: `src/traitsGenerator/controllers/TraitsGeneratorController.js`
+
+- **File**: `src/characterBuilder/controllers/TraitsGeneratorController.js`
 - **Template**: Extend `src/characterBuilder/controllers/BaseCharacterBuilderController.js`
 - **Pattern**: Follow `src/thematicDirection/controllers/thematicDirectionController.js` for UI patterns
 
 ### Controller Architecture
+
 Implement full controller extending base class:
 
 ```javascript
 /**
- * @typedef {import('../../characterBuilder/controllers/BaseCharacterBuilderController.js').BaseCharacterBuilderController} BaseCharacterBuilderController
- * @typedef {import('../../characterBuilder/services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService
+ * @typedef {import('./BaseCharacterBuilderController.js').BaseCharacterBuilderController} BaseCharacterBuilderController
+ * @typedef {import('../services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService
  * @typedef {import('../services/TraitsDisplayEnhancer.js').TraitsDisplayEnhancer} TraitsDisplayEnhancer
+ * @typedef {import('../services/TraitsGenerator.js').TraitsGenerator} TraitsGenerator
  */
 
 class TraitsGeneratorController extends BaseCharacterBuilderController {
   constructor(dependencies) {
     // Validate all required dependencies
     super(dependencies);
-    
+
     // Traits-specific dependencies
     this.#traitsDisplayEnhancer = dependencies.traitsDisplayEnhancer;
-    
+    this.#traitsGenerator = dependencies.traitsGenerator; // Direct service access (until TRAITSGEN-007)
+
     // UI state
     this.#selectedDirection = null;
     this.#userInputs = {};
@@ -44,6 +54,7 @@ class TraitsGeneratorController extends BaseCharacterBuilderController {
 ```
 
 ### Required Dependencies
+
 Based on specification requirements:
 
 ```javascript
@@ -52,15 +63,17 @@ const requiredDependencies = {
   logger: 'ILogger',
   characterBuilderService: 'CharacterBuilderService',
   uiStateManager: 'UIStateManager',
-  
+
   // Traits-specific dependencies
-  traitsDisplayEnhancer: 'TraitsDisplayEnhancer'
+  traitsDisplayEnhancer: 'TraitsDisplayEnhancer',
+  traitsGenerator: 'TraitsGenerator', // Direct service (until TRAITSGEN-007)
 };
 ```
 
 ### Core Functionality Implementation
 
 #### 1. Direction Selection with Dual Filtering
+
 ```javascript
 /**
  * Load thematic directions that have both clichés AND core motivations
@@ -94,6 +107,7 @@ async #selectDirection(directionId) {
 ```
 
 #### 2. User Input Validation
+
 ```javascript
 /**
  * Validate all required user input fields
@@ -105,11 +119,11 @@ async #selectDirection(directionId) {
     internalContradiction: this.#getInternalContradictionInput(),
     centralQuestion: this.#getCentralQuestionInput()
   };
-  
+
   // Validate each field is non-empty string
   // Show specific error messages for invalid fields
   // Update UI state based on validation results
-  
+
   return isValid;
 }
 
@@ -119,13 +133,14 @@ async #selectDirection(directionId) {
 #getUserInputs() {
   return {
     coreMotivation: this.#getCoreMotivationInput(),
-    internalContradiction: this.#getInternalContradictionInput(), 
+    internalContradiction: this.#getInternalContradictionInput(),
     centralQuestion: this.#getCentralQuestionInput()
   };
 }
 ```
 
 #### 3. Generation Workflow
+
 ```javascript
 /**
  * Main traits generation workflow
@@ -136,7 +151,15 @@ async #generateTraits() {
     // 2. Validate user inputs
     // 3. Show loading state with progress message
     // 4. Get concept and clichés data
-    // 5. Call characterBuilderService.generateTraitsForDirection()
+    // 5. Call generation service:
+    //    Option A: Wait for TRAITSGEN-007 to add characterBuilderService.generateTraitsForDirection()
+    //    Option B: Use traitsGenerator.generateTraits() directly:
+    //    const traits = await this.#traitsGenerator.generateTraits({
+    //      concept: this.#selectedConcept,
+    //      direction: this.#selectedDirection,
+    //      userInputs: this.#getUserInputs(),
+    //      cliches: this.#loadedCliches
+    //    });
     // 6. Process and display results
     // 7. Update UI state and enable export
   } catch (error) {
@@ -157,6 +180,7 @@ async #generateTraits() {
 ```
 
 #### 4. Results Display Implementation
+
 Create comprehensive results display covering all 12 trait categories:
 
 ```javascript
@@ -166,7 +190,7 @@ Create comprehensive results display covering all 12 trait categories:
 #renderTraitsResults(enhancedTraits) {
   // Create container for all trait categories
   const resultsContainer = this.#getResultsContainer();
-  
+
   // Render each category with specific formatting:
   this.#renderNames(enhancedTraits.names);
   this.#renderPhysicalDescription(enhancedTraits.physicalDescription);
@@ -178,7 +202,7 @@ Create comprehensive results display covering all 12 trait categories:
   this.#renderNotes(enhancedTraits.notes);
   this.#renderProfile(enhancedTraits.profile);
   this.#renderSecrets(enhancedTraits.secrets);
-  
+
   // Add user input summary
   this.#renderUserInputSummary(enhancedTraits.userInputs);
 }
@@ -201,6 +225,7 @@ Create comprehensive results display covering all 12 trait categories:
 ```
 
 #### 5. Export Functionality
+
 ```javascript
 /**
  * Export traits to text file
@@ -225,6 +250,7 @@ Create comprehensive results display covering all 12 trait categories:
 ### UI Event Handling
 
 #### Event Listeners Setup
+
 ```javascript
 /**
  * Setup all UI event listeners
@@ -234,20 +260,20 @@ Create comprehensive results display covering all 12 trait categories:
   this.#directionSelector.addEventListener('change', (e) => {
     this.#selectDirection(e.target.value);
   });
-  
+
   // User input validation on change
   this.#setupInputValidation();
-  
+
   // Generate button click
   this.#generateButton.addEventListener('click', () => {
     this.#generateTraits();
   });
-  
+
   // Export button click
   this.#exportButton.addEventListener('click', () => {
     this.#exportToText();
   });
-  
+
   // Clear/reset functionality
   this.#clearButton.addEventListener('click', () => {
     this.#clearDirection();
@@ -267,6 +293,7 @@ Create comprehensive results display covering all 12 trait categories:
 ### Accessibility Implementation
 
 #### Screen Reader Support
+
 ```javascript
 /**
  * Setup screen reader integration
@@ -287,6 +314,7 @@ Create comprehensive results display covering all 12 trait categories:
 ```
 
 #### Focus Management
+
 ```javascript
 /**
  * Setup proper focus management
@@ -301,6 +329,7 @@ Create comprehensive results display covering all 12 trait categories:
 ### UI State Management
 
 #### State Updates
+
 ```javascript
 /**
  * Update UI state based on current conditions
@@ -309,13 +338,13 @@ Create comprehensive results display covering all 12 trait categories:
   const hasDirection = this.#selectedDirection !== null;
   const hasValidInputs = this.#validateUserInputs();
   const hasResults = this.#lastGeneratedTraits !== null;
-  
+
   // Enable/disable generate button
   this.#generateButton.disabled = !hasDirection || !hasValidInputs;
-  
+
   // Show/hide export button
   this.#exportButton.style.display = hasResults ? 'block' : 'none';
-  
+
   // Update loading states
   this.#updateLoadingState();
 }
@@ -333,6 +362,7 @@ Create comprehensive results display covering all 12 trait categories:
 ### Core Motivations Display (Right Panel)
 
 #### Display Implementation
+
 ```javascript
 /**
  * Display core motivations for selected direction (read-only)
@@ -342,7 +372,7 @@ async #displayCoreMotivations(directionId) {
   // 2. Create scrollable list display
   // 3. Format for read-only presentation
   // 4. Handle empty state if no motivations
-  
+
   // Reference: Use existing core motivations display patterns
 }
 
@@ -359,6 +389,7 @@ async #displayCoreMotivations(directionId) {
 ## Technical Implementation
 
 ### Error Handling
+
 Implement comprehensive error handling:
 
 ```javascript
@@ -368,7 +399,7 @@ Implement comprehensive error handling:
 #handleGenerationError(error) {
   // Log technical error details
   this.#logger.error('Traits generation failed', error);
-  
+
   // Show user-friendly error message
   // Provide recovery options (retry, clear, select different direction)
   // Dispatch error events for analytics
@@ -385,6 +416,7 @@ Implement comprehensive error handling:
 ```
 
 ### Code Quality Requirements
+
 - Extend BaseCharacterBuilderController properly
 - Follow established controller patterns exactly
 - Implement comprehensive JSDoc documentation
@@ -395,6 +427,7 @@ Implement comprehensive error handling:
 ## Acceptance Criteria
 
 ### Functional Requirements
+
 - [ ] Direction selector shows only directions with both clichés and core motivations
 - [ ] User input validation prevents generation with empty fields
 - [ ] Core motivations display shows read-only list for selected direction
@@ -404,6 +437,7 @@ Implement comprehensive error handling:
 - [ ] Clear/reset functionality properly cleans form state
 
 ### UI/UX Requirements
+
 - [ ] Consistent styling with other character-builder pages
 - [ ] Proper loading states during generation
 - [ ] Error messages clear and actionable
@@ -412,6 +446,7 @@ Implement comprehensive error handling:
 - [ ] Form validation provides real-time feedback
 
 ### Accessibility Requirements
+
 - [ ] Proper ARIA labeling for all form fields
 - [ ] Screen reader announcements for state changes
 - [ ] Keyboard navigation support with shortcuts
@@ -419,13 +454,15 @@ Implement comprehensive error handling:
 - [ ] High contrast support for visual elements
 
 ### Error Handling Requirements
+
 - [ ] Graceful handling of generation failures
 - [ ] User-friendly error messages for all failure scenarios
 - [ ] Recovery options provided for errors
 - [ ] Proper error logging for debugging
 
 ### Testing Requirements
-- [ ] Create `tests/unit/traitsGenerator/controllers/TraitsGeneratorController.test.js`
+
+- [ ] Create `tests/unit/characterBuilder/controllers/TraitsGeneratorController.test.js`
 - [ ] Test direction filtering and selection
 - [ ] Test user input validation scenarios
 - [ ] Test generation workflow (success and failure)
@@ -435,15 +472,23 @@ Implement comprehensive error handling:
 - [ ] Achieve 85%+ test coverage
 
 ## Files Modified
-- **NEW**: `src/traitsGenerator/controllers/TraitsGeneratorController.js`
-- **NEW**: `tests/unit/traitsGenerator/controllers/TraitsGeneratorController.test.js`
+
+- **NEW**: `src/characterBuilder/controllers/TraitsGeneratorController.js`
+- **NEW**: `tests/unit/characterBuilder/controllers/TraitsGeneratorController.test.js`
 
 ## Dependencies For Next Tickets
+
 This controller is required for:
+
 - TRAITSGEN-006 (HTML Page Implementation)
 - TRAITSGEN-008 (Build Configuration)
 
 ## Notes
+
+- **IMPORTANT**: Complete TRAITSGEN-007 first for CharacterBuilderService integration
+- Controller location is `src/characterBuilder/controllers/` (not `src/traitsGenerator/`)
+- TraitsGenerator service method is `generateTraits()` not `generateTraitsForDirection()`
+- Test location is `tests/unit/characterBuilder/controllers/`
 - Reference thematicDirectionController.js for UI patterns
 - Pay special attention to dual filtering requirement (clichés + core motivations)
 - Ensure all 12 trait categories are properly displayed

@@ -214,6 +214,7 @@ export const coreTokens = freeze({
   ClicheGenerator: 'ClicheGenerator',
   ICoreMotivationsGenerator: 'ICoreMotivationsGenerator',
   CoreMotivationsGenerator: 'CoreMotivationsGenerator',
+  TraitsGenerator: 'TraitsGenerator',
   CharacterDatabase: 'CharacterDatabase',
   ICoreMotivationsCacheManager: 'ICoreMotivationsCacheManager',
   CoreMotivationsCacheManager: 'CoreMotivationsCacheManager',

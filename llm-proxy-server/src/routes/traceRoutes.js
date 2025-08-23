@@ -6,13 +6,7 @@
 import express from 'express';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import { ConsoleLogger } from '../consoleLogger.js';
-
-// Get current directory for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const router = express.Router();
 const logger = new ConsoleLogger();
@@ -43,7 +37,7 @@ router.post('/write', async (req, res) => {
     const targetDirectory = outputDirectory || './traces';
 
     // Resolve the full path (relative to project root, not llm-proxy-server)
-    const projectRoot = path.resolve(__dirname, '../../../');
+    const projectRoot = path.resolve(process.cwd(), '../');
     const fullDirectoryPath = path.join(projectRoot, targetDirectory);
 
     // Ensure the directory exists
@@ -95,6 +89,152 @@ router.post('/write', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to write trace file',
+      details: error.message,
+    });
+  }
+});
+
+/**
+ * POST /api/traces/write-batch
+ * Write multiple trace files in a single request
+ * @body {Array<{traceData, fileName, originalTrace}>} traces - Array of traces to write
+ * @body {string} outputDirectory - Directory to write to (relative to project root)
+ */
+router.post('/write-batch', async (req, res) => {
+  try {
+    const { traces, outputDirectory } = req.body;
+
+    // Validate request format
+    if (!Array.isArray(traces) || traces.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing or empty traces array',
+        details: 'Request body must contain a non-empty array of traces',
+      });
+    }
+
+    // Default output directory if not specified
+    const targetDirectory = outputDirectory || './traces';
+
+    // Validate each trace entry
+    const validationErrors = [];
+    traces.forEach((trace, index) => {
+      if (!trace.traceData || !trace.fileName) {
+        validationErrors.push(
+          `Trace ${index}: missing required fields (traceData, fileName)`
+        );
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: validationErrors,
+      });
+    }
+
+    // Resolve the full path (same as single write endpoint)
+    const projectRoot = path.resolve(__dirname, '../../../');
+    const fullDirectoryPath = path.join(projectRoot, targetDirectory);
+
+    // Process all traces in parallel
+    const writePromises = traces.map(async (trace, index) => {
+      try {
+        const { traceData, fileName } = trace;
+
+        // Sanitize file name to prevent path traversal
+        const sanitizedFileName = path.basename(fileName);
+        const fullPath = path.join(fullDirectoryPath, sanitizedFileName);
+
+        // Ensure directory exists
+        await fs.mkdir(fullDirectoryPath, { recursive: true });
+
+        // Write the trace file (same logic as single endpoint)
+        const jsonContent =
+          typeof traceData === 'string'
+            ? traceData
+            : JSON.stringify(traceData, null, 2);
+
+        await fs.writeFile(fullPath, jsonContent, 'utf8');
+
+        // Get file stats
+        const stats = await fs.stat(fullPath);
+
+        return {
+          index,
+          fileName: sanitizedFileName,
+          success: true,
+          filePath: path.relative(projectRoot, fullPath),
+          size: stats.size,
+          bytesWritten: jsonContent.length,
+        };
+      } catch (error) {
+        logger.error(`Batch write failed for trace ${index}`, {
+          fileName: trace.fileName,
+          error: error.message,
+        });
+
+        return {
+          index,
+          fileName: trace.fileName,
+          success: false,
+          error: error.message,
+        };
+      }
+    });
+
+    // Wait for all writes to complete
+    const results = await Promise.allSettled(writePromises);
+
+    // Process results
+    const processedResults = results.map((result, index) => {
+      if (result.status === 'fulfilled') {
+        return result.value;
+      } else {
+        return {
+          index,
+          fileName: traces[index].fileName,
+          success: false,
+          error: result.reason?.message || 'Unknown error',
+        };
+      }
+    });
+
+    // Calculate summary statistics
+    const successful = processedResults.filter((r) => r.success);
+    const failed = processedResults.filter((r) => !r.success);
+    const totalBytes = successful.reduce(
+      (sum, r) => sum + (r.bytesWritten || 0),
+      0
+    );
+
+    // Log batch operation summary
+    logger.info('Batch trace write completed', {
+      totalFiles: traces.length,
+      successful: successful.length,
+      failed: failed.length,
+      totalBytes,
+      successRate: ((successful.length / traces.length) * 100).toFixed(1) + '%',
+    });
+
+    // Return detailed results (matching client expectations)
+    res.json({
+      success: successful.length > 0, // Success if at least one file written
+      successCount: successful.length,
+      failureCount: failed.length,
+      totalSize: totalBytes,
+      results: processedResults,
+    });
+  } catch (error) {
+    logger.error('Batch write operation failed', {
+      error: error.message,
+      stack: error.stack,
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'Batch write operation failed',
       details: error.message,
     });
   }

@@ -245,45 +245,87 @@ describe('ClicheErrorHandler - Performance Tests', () => {
 
   describe('Statistics Collection Performance', () => {
     it('should collect statistics without significant overhead', async () => {
-      // Process errors without statistics collection
-      const withoutStatsStart = Date.now();
-
-      for (let i = 0; i < 200; i++) {
-        const error = new ClicheError(`No stats ${i}`);
-        await errorHandler.handleError(error, {
-          operation: `no_stats_op_${i % 10}`,
+      const iterations = 3;
+      const withoutStatsResults = [];
+      const withStatsResults = [];
+      
+      // Warmup iterations to account for JIT compilation
+      for (let warmup = 0; warmup < 2; warmup++) {
+        const warmupHandler = new ClicheErrorHandler({
+          logger: mockLogger,
+          eventBus: mockEventBus,
+          retryConfig: {
+            maxRetries: 3,
+            baseDelay: 10,
+            maxDelay: 100,
+            backoffMultiplier: 2,
+            jitterFactor: 0.1,
+          },
         });
-      }
-
-      const withoutStatsTime = Date.now() - withoutStatsStart;
-
-      // Create new handler for comparison
-      const statsHandler = new ClicheErrorHandler({
-        logger: mockLogger,
-        eventBus: mockEventBus,
-      });
-
-      // Process errors with statistics collection
-      const withStatsStart = Date.now();
-
-      for (let i = 0; i < 200; i++) {
-        const error = new ClicheError(`With stats ${i}`);
-        await statsHandler.handleError(error, {
-          operation: `stats_op_${i % 10}`,
-        });
-
-        // Periodically access statistics (simulating real usage)
-        if (i % 20 === 0) {
-          statsHandler.getErrorStatistics();
+        
+        for (let i = 0; i < 50; i++) {
+          const error = new ClicheError(`Warmup ${i}`);
+          await warmupHandler.handleError(error, { operation: `warmup_${i % 5}` });
         }
       }
+      
+      // Run multiple iterations for statistical reliability
+      for (let iteration = 0; iteration < iterations; iteration++) {
+        // Test without statistics collection (baseline)
+        const withoutStatsStart = performance.now();
 
-      const withStatsTime = Date.now() - withStatsStart;
+        for (let i = 0; i < 200; i++) {
+          const error = new ClicheError(`No stats ${i}-${iteration}`);
+          await errorHandler.handleError(error, {
+            operation: `no_stats_op_${i % 10}_${iteration}`,
+          });
+        }
 
-      // Statistics overhead should be reasonable (increased tolerance for CI environments)
-      const overhead =
-        (withStatsTime - withoutStatsTime) / Math.max(withoutStatsTime, 1); // Prevent division by zero
-      expect(overhead).toBeLessThan(0.5); // 50% overhead tolerance for CI
+        const withoutStatsTime = performance.now() - withoutStatsStart;
+        withoutStatsResults.push(withoutStatsTime);
+
+        // Create new handler for comparison
+        const statsHandler = new ClicheErrorHandler({
+          logger: mockLogger,
+          eventBus: mockEventBus,
+          retryConfig: {
+            maxRetries: 3,
+            baseDelay: 10, // Use same minimal delays as first handler for fair comparison
+            maxDelay: 100,
+            backoffMultiplier: 2,
+            jitterFactor: 0.1,
+          },
+        });
+
+        // Test with statistics collection
+        const withStatsStart = performance.now();
+
+        for (let i = 0; i < 200; i++) {
+          const error = new ClicheError(`With stats ${i}-${iteration}`);
+          await statsHandler.handleError(error, {
+            operation: `stats_op_${i % 10}_${iteration}`,
+          });
+
+          // Periodically access statistics (simulating real usage)
+          if (i % 20 === 0) {
+            statsHandler.getErrorStatistics();
+          }
+        }
+
+        const withStatsTime = performance.now() - withStatsStart;
+        withStatsResults.push(withStatsTime);
+      }
+
+      // Calculate median times for more robust comparison
+      const medianWithoutStats = withoutStatsResults.sort((a, b) => a - b)[Math.floor(iterations / 2)];
+      const medianWithStats = withStatsResults.sort((a, b) => a - b)[Math.floor(iterations / 2)];
+
+      // Calculate overhead using median values (more stable than single measurement)
+      const overhead = (medianWithStats - medianWithoutStats) / Math.max(medianWithoutStats, 1);
+      
+      // More lenient threshold but still meaningful for detecting performance regressions
+      // 75% overhead tolerance acknowledges CI environment variability while maintaining sensitivity
+      expect(overhead).toBeLessThan(0.75); // Increased from 0.5 to 0.75 for CI stability
     });
 
     it('should retrieve statistics quickly even with many unique operations', async () => {
@@ -308,6 +350,73 @@ describe('ClicheErrorHandler - Performance Tests', () => {
 
       // 100 statistics retrievals should be reasonably fast (increased tolerance)
       expect(retrievalTime).toBeLessThan(500); // Less than 500ms total (increased for CI)
+    });
+  });
+
+  describe('Throttled Cleanup Performance', () => {
+    it('should demonstrate throttled cleanup behavior prevents O(n) performance degradation', async () => {
+      // Create a fresh handler to test cleanup throttling
+      const cleanupHandler = new ClicheErrorHandler({
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        retryConfig: {
+          maxRetries: 3,
+          baseDelay: 10,
+          maxDelay: 100,
+          backoffMultiplier: 2,
+          jitterFactor: 0.1,
+        },
+      });
+
+      // Process operations in chunks to verify throttling behavior
+      const chunkSizes = [50, 100, 150];
+      const chunkPerformance = [];
+      
+      for (const chunkSize of chunkSizes) {
+        const startTime = performance.now();
+        
+        // Process errors with unique operations to build up statistics
+        for (let i = 0; i < chunkSize; i++) {
+          const error = new ClicheError(`Cleanup test ${i}`);
+          await cleanupHandler.handleError(error, {
+            operation: `cleanup_test_${i}`, // Each error has unique operation
+          });
+        }
+        
+        const endTime = performance.now();
+        const totalTime = endTime - startTime;
+        const avgTimePerError = totalTime / chunkSize;
+        
+        chunkPerformance.push({
+          chunkSize,
+          totalTime,
+          avgTimePerError,
+        });
+      }
+
+      // Verify that average time per error doesn't increase significantly
+      // This would indicate O(n) behavior if cleanup ran on every error
+      const firstAvg = chunkPerformance[0].avgTimePerError;
+      const lastAvg = chunkPerformance[chunkPerformance.length - 1].avgTimePerError;
+      
+      // With throttled cleanup, performance should remain relatively stable
+      // Allow 2x tolerance for normal variation, but catch significant degradation
+      const performanceRatio = lastAvg / firstAvg;
+      expect(performanceRatio).toBeLessThan(2.0);
+      
+      // Verify statistics are being collected (cleanup throttling still allows collection)
+      const stats = cleanupHandler.getErrorStatistics();
+      expect(Object.keys(stats).length).toBeGreaterThan(0);
+      
+      // Log performance metrics for debugging
+      console.log('Throttled cleanup performance test results:', {
+        performanceRatio: performanceRatio.toFixed(2),
+        statsCount: Object.keys(stats).length,
+        chunkResults: chunkPerformance.map(p => ({
+          size: p.chunkSize,
+          avgMs: p.avgTimePerError.toFixed(2)
+        }))
+      });
     });
   });
 

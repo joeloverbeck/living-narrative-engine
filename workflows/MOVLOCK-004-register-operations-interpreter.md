@@ -41,12 +41,14 @@ UnlockMovementHandler: 'UnlockMovementHandler',
 **Status**: Currently missing from codebase
 
 Add imports at the top:
+
 ```javascript
 import LockMovementHandler from '../../logic/operationHandlers/lockMovementHandler.js';
 import UnlockMovementHandler from '../../logic/operationHandlers/unlockMovementHandler.js';
 ```
 
 Add to `handlerFactories` array:
+
 ```javascript
 [
   tokens.LockMovementHandler,
@@ -77,10 +79,11 @@ Add to `handlerFactories` array:
 #### Step 3.1: Fix Broken Reference (Current Bug)
 
 **Line 83-85** currently has a broken reference:
+
 ```javascript
 registry.register(
   'RESOLVE_DIRECTION',
-  bind(tokens.ResolveDirectionHandler)  // ← This token doesn't exist
+  bind(tokens.ResolveDirectionHandler) // ← This token doesn't exist
 );
 ```
 
@@ -118,12 +121,14 @@ import { tokens } from '../tokens.js';
 ### 5. Implementation Checklist
 
 **Prerequisites (MOVLOCK-003 items - MUST be completed first):**
+
 - [ ] Add `LockMovementHandler` token to `tokens-core.js`
 - [ ] Add `UnlockMovementHandler` token to `tokens-core.js`
 - [ ] Add imports for both handlers in `operationHandlerRegistrations.js`
 - [ ] Add factory configurations for both handlers in `handlerFactories` array
 
 **Main Implementation (MOVLOCK-004 items):**
+
 - [ ] Fix or remove broken `ResolveDirectionHandler` reference (line 83-85)
 - [ ] Open `src/dependencyInjection/registrations/interpreterRegistrations.js`
 - [ ] Locate the OperationRegistry factory (around line 49)
@@ -150,6 +155,7 @@ import { tokens } from '../tokens.js';
 After completing all prerequisites and implementation:
 
 1. **Syntax Validation**:
+
    ```bash
    npm run build
    npm run lint
@@ -157,9 +163,11 @@ After completing all prerequisites and implementation:
    ```
 
 2. **Runtime Validation**:
+
    ```bash
    npm run dev
    ```
+
    - Check console for any registration errors
    - Verify no "Cannot resolve token" errors
    - Confirm both operations are available in the registry
@@ -228,7 +236,7 @@ return registry;
 - **Token Definitions**: `src/dependencyInjection/tokens/tokens-core.js` (not `tokens.js`)
 - **Handler Registrations**: `src/dependencyInjection/registrations/operationHandlerRegistrations.js`
 - **Interpreter Registrations**: `src/dependencyInjection/registrations/interpreterRegistrations.js`
-- **Handler Implementations**: 
+- **Handler Implementations**:
   - `src/logic/operationHandlers/lockMovementHandler.js`
   - `src/logic/operationHandlers/unlockMovementHandler.js`
 - **Rule Files** (will use these operations):

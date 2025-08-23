@@ -139,7 +139,9 @@ class FileTraceOutputHandler {
 
     this.#logger.debug('Writing trace batch', {
       batchSize: traceBatch.length,
-      fileNames: traceBatch.map(t => this.#generateFileName(t.originalTrace, Date.now()))
+      fileNames: traceBatch.map((t) =>
+        this.#generateFileName(t.originalTrace, Date.now())
+      ),
     });
 
     if (!this.#isInitialized) {
@@ -152,35 +154,38 @@ class FileTraceOutputHandler {
 
       // Try batch endpoint first
       const batchResult = await this.#writeBatchToServer(traceBatch);
-      
+
       if (batchResult === true) {
         // Batch endpoint succeeded
         this.#batchSuccesses++;
         return true;
       } else if (batchResult === 'fallback') {
         // Batch endpoint returned 404, fallback to individual writes
-        this.#logger.info('Batch endpoint unavailable, falling back to individual writes');
-        const writePromises = traceBatch.map(({ content, originalTrace }) => 
+        this.#logger.info(
+          'Batch endpoint unavailable, falling back to individual writes'
+        );
+        const writePromises = traceBatch.map(({ content, originalTrace }) =>
           this.writeTrace(content, originalTrace)
         );
-        
+
         const results = await Promise.allSettled(writePromises);
-        const successes = results.filter(r => r.status === 'fulfilled' && r.value === true);
-        
+        const successes = results.filter(
+          (r) => r.status === 'fulfilled' && r.value === true
+        );
+
         // Only consider this a success if at least one write succeeded
         if (successes.length > 0) {
           this.#batchSuccesses++;
           return true;
         }
       }
-      
+
       // Batch failed and no fallback needed
       return false;
-
     } catch (error) {
       this.#logger.error('Failed to write trace batch', {
         error: error.message,
-        batchSize: traceBatch.length
+        batchSize: traceBatch.length,
       });
       return false;
     }
@@ -377,27 +382,33 @@ class FileTraceOutputHandler {
         originalTrace: {
           actionId: originalTrace?.actionId,
           actorId: originalTrace?.actorId,
-          _outputFormat: originalTrace?._outputFormat
-        }
+          _outputFormat: originalTrace?._outputFormat,
+        },
       }));
 
       const requestBody = {
         traces: batchPayload,
-        outputDirectory: this.#outputDirectory
+        outputDirectory: this.#outputDirectory,
       };
 
-      this.#logger.info('FileTraceOutputHandler: Attempting batch write to server', {
-        batchSize: traceBatch.length,
-        endpoint: 'http://localhost:3001/api/traces/write-batch'
-      });
+      this.#logger.info(
+        'FileTraceOutputHandler: Attempting batch write to server',
+        {
+          batchSize: traceBatch.length,
+          endpoint: 'http://localhost:3001/api/traces/write-batch',
+        }
+      );
 
-      const response = await fetch('http://localhost:3001/api/traces/write-batch', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await fetch(
+        'http://localhost:3001/api/traces/write-batch',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
 
       if (!response.ok) {
         // If batch endpoint doesn't exist (404), return 'fallback' to trigger individual writes
@@ -409,7 +420,7 @@ class FileTraceOutputHandler {
         const errorData = await response.json().catch(() => ({}));
         this.#logger.error('Batch write failed', {
           status: response.status,
-          error: errorData.error || 'Unknown error'
+          error: errorData.error || 'Unknown error',
         });
         return false;
       }
@@ -418,15 +429,14 @@ class FileTraceOutputHandler {
       this.#logger.info('Batch write successful', {
         successCount: result.successCount || 0,
         failureCount: result.failureCount || 0,
-        totalSize: result.totalSize || 0
+        totalSize: result.totalSize || 0,
       });
 
       return result.success === true;
-
     } catch (error) {
       this.#logger.error('Batch server write failed', {
         error: error.message,
-        batchSize: traceBatch.length
+        batchSize: traceBatch.length,
       });
       return false;
     }
@@ -608,7 +618,7 @@ class FileTraceOutputHandler {
         totalBatchedTraces: this.#batchedTraceCount || 0,
         batchSuccessRate: this.#calculateBatchSuccessRate(),
         avgBatchSize: this.#calculateAverageBatchSize(),
-      }
+      },
     };
   }
 

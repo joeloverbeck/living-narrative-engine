@@ -17,6 +17,7 @@ import { CharacterStorageService } from '../../characterBuilder/services/charact
 import { ThematicDirectionGenerator } from '../../characterBuilder/services/thematicDirectionGenerator.js';
 import { ClicheGenerator } from '../../characterBuilder/services/ClicheGenerator.js';
 import { CoreMotivationsGenerator } from '../../characterBuilder/services/CoreMotivationsGenerator.js';
+import { TraitsGenerator } from '../../characterBuilder/services/TraitsGenerator.js';
 import { CharacterBuilderService } from '../../characterBuilder/services/characterBuilderService.js';
 
 /**
@@ -94,6 +95,20 @@ function registerCharacterBuilderServices(registrar, logger) {
     `Character Builder Registration: Registered ${tokens.CoreMotivationsGenerator}.`
   );
 
+  registrar.singletonFactory(tokens.TraitsGenerator, (c) => {
+    return new TraitsGenerator({
+      logger: c.resolve(tokens.ILogger),
+      llmJsonService: c.resolve(tokens.LlmJsonService),
+      llmStrategyFactory: c.resolve(tokens.LLMAdapter), // Use the ConfigurableLLMAdapter
+      llmConfigManager: c.resolve(tokens.ILLMConfigurationManager),
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),
+      tokenEstimator: c.resolve(tokens.ITokenEstimator),
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.TraitsGenerator}.`
+  );
+
   registrar.singletonFactory(tokens.CharacterBuilderService, (c) => {
     return new CharacterBuilderService({
       logger: c.resolve(tokens.ILogger),
@@ -103,6 +118,7 @@ function registerCharacterBuilderServices(registrar, logger) {
       database: c.resolve(tokens.CharacterDatabase),
       schemaValidator: c.resolve(tokens.ISchemaValidator),
       clicheGenerator: c.resolve(tokens.ClicheGenerator), // Replace null with actual service
+      traitsGenerator: c.resolve(tokens.TraitsGenerator), // Traits generator service
     });
   });
 

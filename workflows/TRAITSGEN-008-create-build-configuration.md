@@ -1,6 +1,7 @@
 # TRAITSGEN-008: Create Build Configuration and Entry Point
 
 ## Ticket Overview
+
 - **Epic**: Traits Generator Implementation
 - **Type**: Build System Integration
 - **Priority**: High
@@ -8,16 +9,19 @@
 - **Dependencies**: TRAITSGEN-005 (Controller), TRAITSGEN-006 (HTML Page)
 
 ## Description
+
 Create build configuration and entry point for the traits generator page following established patterns from other character-builder pages. This ensures the traits generator integrates seamlessly with the existing build system.
 
 ## Requirements
 
 ### Entry Point Creation
+
 - **File**: `src/traits-generator-main.js`
 - **Template**: Follow `src/core-motivations-generator-main.js` pattern
 - **Purpose**: Initialize traits generator page and dependency injection
 
 ### Entry Point Implementation
+
 ```javascript
 /**
  * @file Traits Generator main entry point
@@ -52,16 +56,18 @@ async function initializeTraitsGenerator() {
 
     // Set up global error handling
     window.addEventListener('unhandledrejection', (event) => {
-      logger.error('Unhandled promise rejection in Traits Generator', event.reason);
+      logger.error(
+        'Unhandled promise rejection in Traits Generator',
+        event.reason
+      );
     });
 
     window.addEventListener('error', (event) => {
       logger.error('Unhandled error in Traits Generator', event.error);
     });
-
   } catch (error) {
     console.error('Failed to initialize Traits Generator:', error);
-    
+
     // Show user-friendly error message
     const errorContainer = document.getElementById('error-container');
     if (errorContainer) {
@@ -91,6 +97,7 @@ export { initializeTraitsGenerator };
 ### Build Configuration Updates
 
 #### Package.json Script Addition
+
 Add build script to `package.json` following existing patterns:
 
 ```json
@@ -103,6 +110,7 @@ Add build script to `package.json` following existing patterns:
 ```
 
 #### Build Script Configuration
+
 Ensure `scripts/build.js` handles the new entry point correctly:
 
 ```javascript
@@ -110,26 +118,27 @@ Ensure `scripts/build.js` handles the new entry point correctly:
 const buildConfigs = {
   'core-motivations-generator': {
     entry: 'src/core-motivations-generator-main.js',
-    outfile: 'dist/core-motivations-generator.js'
+    outfile: 'dist/core-motivations-generator.js',
   },
   'cliches-generator': {
-    entry: 'src/cliches-generator-main.js', 
-    outfile: 'dist/cliches-generator.js'
+    entry: 'src/cliches-generator-main.js',
+    outfile: 'dist/cliches-generator.js',
   },
   'thematic-direction-generator': {
     entry: 'src/thematic-direction-generator-main.js',
-    outfile: 'dist/thematic-direction-generator.js'
+    outfile: 'dist/thematic-direction-generator.js',
   },
   'traits-generator': {
     entry: 'src/traits-generator-main.js',
-    outfile: 'dist/traits-generator.js'
-  }
+    outfile: 'dist/traits-generator.js',
+  },
 };
 ```
 
 ### Dependency Injection Registration
 
 #### Service Registration
+
 Ensure all required services are registered in the DI container:
 
 ```javascript
@@ -142,27 +151,28 @@ container.register('traitsGenerator', TraitsGenerator, {
   dependencies: [
     'logger',
     'llmJsonService',
-    'llmStrategyFactory', 
+    'llmStrategyFactory',
     'llmConfigManager',
-    'eventBus'
-  ]
+    'eventBus',
+  ],
 });
 
 // Register TraitsDisplayEnhancer service
 container.register('traitsDisplayEnhancer', TraitsDisplayEnhancer, {
-  dependencies: ['logger']
+  dependencies: ['logger'],
 });
 
 // Update CharacterBuilderService to include traitsGenerator
 container.updateRegistration('characterBuilderService', {
   dependencies: [
     // Existing dependencies...
-    'traitsGenerator'
-  ]
+    'traitsGenerator',
+  ],
 });
 ```
 
 #### Registration Validation
+
 Verify all dependencies are properly registered:
 
 ```javascript
@@ -170,14 +180,14 @@ Verify all dependencies are properly registered:
 function validateTraitsGeneratorDependencies() {
   const requiredServices = [
     'logger',
-    'characterBuilderService', 
+    'characterBuilderService',
     'uiStateManager',
     'traitsDisplayEnhancer',
     'traitsGenerator',
     'llmJsonService',
     'llmStrategyFactory',
     'llmConfigManager',
-    'eventBus'
+    'eventBus',
   ];
 
   for (const service of requiredServices) {
@@ -191,36 +201,45 @@ function validateTraitsGeneratorDependencies() {
 ### HTML Integration
 
 #### Script Tag Addition
+
 Update `traits-generator.html` to include the built JavaScript:
 
 ```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <!-- Existing head content -->
-</head>
-<body>
-  <!-- Existing body content -->
-  
-  <!-- Load traits generator bundle -->
-  <script src="dist/traits-generator.js"></script>
-</body>
+  <head>
+    <!-- Existing head content -->
+  </head>
+  <body>
+    <!-- Existing body content -->
+
+    <!-- Load traits generator bundle -->
+    <script src="dist/traits-generator.js"></script>
+  </body>
 </html>
 ```
 
 #### Development vs Production Loading
+
 Handle different loading strategies:
 
 ```html
 <!-- Development mode (load individual modules) -->
-<script type="module" src="src/traits-generator-main.js" data-env="development"></script>
+<script
+  type="module"
+  src="src/traits-generator-main.js"
+  data-env="development"
+></script>
 
 <!-- Production mode (load built bundle) -->
 <script src="dist/traits-generator.js" data-env="production"></script>
 
 <script>
   // Load appropriate script based on environment
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  if (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+  ) {
     document.querySelector('script[data-env="production"]').remove();
   } else {
     document.querySelector('script[data-env="development"]').remove();
@@ -231,6 +250,7 @@ Handle different loading strategies:
 ### Build Process Integration
 
 #### ESBuild Configuration
+
 Ensure proper ESBuild configuration for traits generator:
 
 ```javascript
@@ -244,13 +264,16 @@ const traitsGeneratorConfig = {
   minify: process.env.NODE_ENV === 'production',
   sourcemap: process.env.NODE_ENV === 'development',
   define: {
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+    'process.env.NODE_ENV': JSON.stringify(
+      process.env.NODE_ENV || 'development'
+    ),
   },
-  external: [] // Include all dependencies in bundle
+  external: [], // Include all dependencies in bundle
 };
 ```
 
 #### Build Verification
+
 Add build verification steps:
 
 ```javascript
@@ -258,23 +281,26 @@ Add build verification steps:
 function verifyBuild(outfile) {
   const fs = require('fs');
   const path = require('path');
-  
+
   if (!fs.existsSync(outfile)) {
     throw new Error(`Build output not found: ${outfile}`);
   }
-  
+
   const stats = fs.statSync(outfile);
   if (stats.size === 0) {
     throw new Error(`Build output is empty: ${outfile}`);
   }
-  
-  console.log(`✅ Build successful: ${outfile} (${(stats.size / 1024).toFixed(2)}KB)`);
+
+  console.log(
+    `✅ Build successful: ${outfile} (${(stats.size / 1024).toFixed(2)}KB)`
+  );
 }
 ```
 
 ### Development Workflow Integration
 
 #### Watch Mode Support
+
 Add watch mode for development:
 
 ```json
@@ -287,16 +313,20 @@ Add watch mode for development:
 ```
 
 #### Hot Reload Support
+
 Integrate with existing hot reload system:
 
 ```javascript
 // Hot reload configuration for traits generator
 if (process.env.NODE_ENV === 'development') {
   if (module.hot) {
-    module.hot.accept('./traitsGenerator/controllers/TraitsGeneratorController.js', () => {
-      // Re-initialize controller on changes
-      initializeTraitsGenerator();
-    });
+    module.hot.accept(
+      './traitsGenerator/controllers/TraitsGeneratorController.js',
+      () => {
+        // Re-initialize controller on changes
+        initializeTraitsGenerator();
+      }
+    );
   }
 }
 ```
@@ -304,6 +334,7 @@ if (process.env.NODE_ENV === 'development') {
 ## Testing Integration
 
 ### Build Testing
+
 Add tests for build configuration:
 
 ```javascript
@@ -316,6 +347,7 @@ describe('Traits Generator Build Configuration', () => {
 ```
 
 ### Entry Point Testing
+
 Test entry point initialization:
 
 ```javascript
@@ -330,42 +362,49 @@ describe('Traits Generator Entry Point', () => {
 ## Acceptance Criteria
 
 ### Entry Point Requirements
+
 - [ ] `src/traits-generator-main.js` created following established patterns
 - [ ] Entry point initializes TraitsGeneratorController with proper dependencies
 - [ ] Global error handling set up for unhandled errors and promise rejections
 - [ ] Graceful error display if initialization fails
 
-### Build Configuration Requirements  
+### Build Configuration Requirements
+
 - [ ] Build script added to `package.json` following naming conventions
 - [ ] ESBuild configuration handles traits generator properly
 - [ ] Built bundle includes all required dependencies
 - [ ] Build verification confirms successful output
 
 ### Dependency Injection Requirements
+
 - [ ] All required services registered in DI container
 - [ ] Service dependencies properly configured
 - [ ] Dependency validation prevents missing services
 - [ ] Container integration tested and working
 
 ### HTML Integration Requirements
+
 - [ ] `traits-generator.html` loads built JavaScript bundle
 - [ ] Development vs production loading handled correctly
 - [ ] Script loading does not block page rendering
 - [ ] Error fallbacks work if JavaScript fails to load
 
 ### Development Workflow Requirements
+
 - [ ] Watch mode works for development
-- [ ] Hot reload integration functional (if applicable)  
+- [ ] Hot reload integration functional (if applicable)
 - [ ] Build process integrates with existing workflow
 - [ ] Development and production modes both functional
 
 ### Testing Requirements
+
 - [ ] Build configuration tests pass
 - [ ] Entry point initialization tests pass
 - [ ] Dependency injection integration tests pass
 - [ ] End-to-end build and load test successful
 
 ## Files Modified
+
 - **NEW**: `src/traits-generator-main.js`
 - **MODIFIED**: `package.json` (add build scripts)
 - **MODIFIED**: `scripts/build.js` (add configuration)
@@ -373,11 +412,14 @@ describe('Traits Generator Entry Point', () => {
 - **MODIFIED**: `traits-generator.html` (add script loading)
 
 ## Dependencies For Next Tickets
+
 This build configuration is required for:
+
 - TRAITSGEN-009 (Integration Testing)
 - TRAITSGEN-012 (End-to-End Testing)
 
 ## Notes
+
 - Follow exact patterns from existing character-builder pages
 - Ensure proper dependency injection registration
 - Test both development and production build modes

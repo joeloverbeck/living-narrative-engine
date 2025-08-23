@@ -1,23 +1,27 @@
 # TRAITSGEN-009: Create Integration Tests
 
 ## Ticket Overview
+
 - **Epic**: Traits Generator Implementation
-- **Type**: Testing/Quality Assurance  
+- **Type**: Testing/Quality Assurance
 - **Priority**: High
 - **Estimated Effort**: 1.5 days
 - **Dependencies**: TRAITSGEN-003 (Service), TRAITSGEN-005 (Controller), TRAITSGEN-007 (Service Integration)
 
 ## Description
+
 Create comprehensive integration tests that validate the complete traits generation workflow from user input through LLM integration to results display. These tests ensure all components work together correctly and handle various scenarios.
 
 ## Requirements
 
 ### Test File Creation
+
 - **File**: `tests/integration/traitsGenerator/traitsGeneratorIntegration.test.js`
 - **Template**: Follow existing integration test patterns from other character-builder tests
 - **Coverage**: End-to-end workflow testing with mocked LLM services
 
 ### Test Architecture
+
 Follow established integration testing patterns:
 
 ```javascript
@@ -43,6 +47,7 @@ describe('Traits Generator Integration Tests', () => {
 ### Required Test Suites
 
 #### 1. End-to-End Workflow Tests
+
 ```javascript
 describe('Complete Traits Generation Workflow', () => {
   it('should complete full generation workflow with valid inputs', async () => {
@@ -57,9 +62,9 @@ describe('Complete Traits Generation Workflow', () => {
 
     // Act: Execute full workflow
     const result = await testBed.executeTraitsGeneration(
-      concept, 
-      direction, 
-      userInputs, 
+      concept,
+      direction,
+      userInputs,
       cliches
     );
 
@@ -75,8 +80,8 @@ describe('Complete Traits Generation Workflow', () => {
     // Test with minimum required inputs
     const minimalUserInputs = {
       coreMotivation: 'Simple motivation',
-      internalContradiction: 'Basic contradiction', 
-      centralQuestion: 'Simple question'
+      internalContradiction: 'Basic contradiction',
+      centralQuestion: 'Simple question',
     };
 
     const result = await testBed.executeTraitsGeneration(
@@ -93,10 +98,10 @@ describe('Complete Traits Generation Workflow', () => {
   it('should handle generation with extensive user inputs', async () => {
     // Test with lengthy, complex user inputs
     const complexUserInputs = testBed.createComplexUserInputs();
-    
+
     const result = await testBed.executeTraitsGeneration(
       testBed.createValidConcept(),
-      testBed.createValidDirection(), 
+      testBed.createValidDirection(),
       complexUserInputs,
       testBed.createExtensiveCliches()
     );
@@ -108,6 +113,7 @@ describe('Complete Traits Generation Workflow', () => {
 ```
 
 #### 2. Service Integration Tests
+
 ```javascript
 describe('Service Layer Integration', () => {
   it('should integrate CharacterBuilderService with TraitsGenerator', async () => {
@@ -121,7 +127,7 @@ describe('Service Layer Integration', () => {
 
     const result = await characterBuilderService.generateTraitsForDirection(
       concept,
-      direction, 
+      direction,
       userInputs,
       []
     );
@@ -141,11 +147,11 @@ describe('Service Layer Integration', () => {
 
     // Should only return directions with both clichés AND core motivations
     expect(eligibleDirections).toHaveLength(2); // Based on test data setup
-    
+
     for (const directionData of eligibleDirections) {
       const hasClichés = await characterBuilderService.hasClichesForDirection(directionData.direction.id);
       const hasMotivations = await characterBuilderService.hasCoreMot­ivationsForDirection(directionData.direction.id);
-      
+
       expect(hasClichés).toBe(true);
       expect(hasMotivations).toBe(true);
     }
@@ -172,12 +178,13 @@ describe('Service Layer Integration', () => {
 ```
 
 #### 3. Controller Integration Tests
+
 ```javascript
 describe('Controller Integration', () => {
   it('should integrate controller with service layer', async () => {
     // Test controller-to-service communication
     const controller = testBed.getTraitsGeneratorController();
-    
+
     // Set up UI state
     testBed.setupValidUIState();
     testBed.mockLLMResponse(testBed.createValidTraitsResponse());
@@ -193,7 +200,7 @@ describe('Controller Integration', () => {
 
   it('should handle controller error states properly', async () => {
     const controller = testBed.getTraitsGeneratorController();
-    
+
     // Mock LLM service failure
     testBed.mockLLMServiceFailure(new Error('LLM service unavailable'));
 
@@ -226,11 +233,12 @@ describe('Controller Integration', () => {
 ```
 
 #### 4. LLM Integration Tests
+
 ```javascript
 describe('LLM Service Integration', () => {
   it('should handle successful LLM response', async () => {
     const traitsGenerator = testBed.getTraitsGeneratorService();
-    
+
     const validResponse = testBed.createValidTraitsResponse();
     testBed.mockLLMResponse(validResponse);
 
@@ -247,35 +255,39 @@ describe('LLM Service Integration', () => {
 
   it('should handle malformed LLM responses', async () => {
     const traitsGenerator = testBed.getTraitsGeneratorService();
-    
+
     // Mock malformed JSON response
     testBed.mockLLMResponse('{ "incomplete": true, "names": ['); // Invalid JSON
 
-    await expect(traitsGenerator.generateTraits(
-      testBed.createValidConcept(),
-      testBed.createValidDirection(),
-      testBed.createValidUserInputs(),
-      []
-    )).rejects.toThrow('Invalid LLM response');
+    await expect(
+      traitsGenerator.generateTraits(
+        testBed.createValidConcept(),
+        testBed.createValidDirection(),
+        testBed.createValidUserInputs(),
+        []
+      )
+    ).rejects.toThrow('Invalid LLM response');
   });
 
   it('should handle LLM service timeout', async () => {
     const traitsGenerator = testBed.getTraitsGeneratorService();
-    
+
     // Mock service timeout
     testBed.mockLLMTimeout();
 
-    await expect(traitsGenerator.generateTraits(
-      testBed.createValidConcept(),
-      testBed.createValidDirection(),
-      testBed.createValidUserInputs(),
-      []
-    )).rejects.toThrow('Request timeout');
+    await expect(
+      traitsGenerator.generateTraits(
+        testBed.createValidConcept(),
+        testBed.createValidDirection(),
+        testBed.createValidUserInputs(),
+        []
+      )
+    ).rejects.toThrow('Request timeout');
   });
 
   it('should handle LLM response validation failures', async () => {
     const traitsGenerator = testBed.getTraitsGeneratorService();
-    
+
     // Mock response missing required fields
     const invalidResponse = {
       names: [{ name: 'Test', justification: 'Test' }],
@@ -283,17 +295,20 @@ describe('LLM Service Integration', () => {
     };
     testBed.mockLLMResponse(invalidResponse);
 
-    await expect(traitsGenerator.generateTraits(
-      testBed.createValidConcept(),
-      testBed.createValidDirection(),
-      testBed.createValidUserInputs(),
-      []
-    )).rejects.toThrow('Response validation failed');
+    await expect(
+      traitsGenerator.generateTraits(
+        testBed.createValidConcept(),
+        testBed.createValidDirection(),
+        testBed.createValidUserInputs(),
+        []
+      )
+    ).rejects.toThrow('Response validation failed');
   });
 });
 ```
 
 #### 5. Event System Integration Tests
+
 ```javascript
 describe('Event System Integration', () => {
   it('should dispatch events throughout generation workflow', async () => {
@@ -324,19 +339,21 @@ describe('Event System Integration', () => {
 
     testBed.mockLLMServiceFailure(new Error('Service failure'));
 
-    await expect(characterBuilderService.generateTraitsForDirection(
-      testBed.createValidConcept(),
-      testBed.createValidDirection(),
-      testBed.createValidUserInputs(),
-      []
-    )).rejects.toThrow();
+    await expect(
+      characterBuilderService.generateTraitsForDirection(
+        testBed.createValidConcept(),
+        testBed.createValidDirection(),
+        testBed.createValidUserInputs(),
+        []
+      )
+    ).rejects.toThrow();
 
     expect(eventBus.dispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ 
+      expect.objectContaining({
         type: 'traits_generation_failed',
-        payload: expect.objectContaining({ 
-          error: 'Service failure' 
-        })
+        payload: expect.objectContaining({
+          error: 'Service failure',
+        }),
       })
     );
   });
@@ -347,7 +364,7 @@ describe('Event System Integration', () => {
 
     const concept = testBed.createValidConcept();
     const direction = testBed.createValidDirection();
-    
+
     testBed.mockLLMResponse(testBed.createValidTraitsResponse());
 
     await characterBuilderService.generateTraitsForDirection(
@@ -363,8 +380,8 @@ describe('Event System Integration', () => {
         payload: expect.objectContaining({
           conceptId: concept.id,
           directionId: direction.id,
-          timestamp: expect.any(String)
-        })
+          timestamp: expect.any(String),
+        }),
       })
     );
   });
@@ -372,6 +389,7 @@ describe('Event System Integration', () => {
 ```
 
 #### 6. Display and Export Integration Tests
+
 ```javascript
 describe('Display and Export Integration', () => {
   it('should integrate display enhancer with controller', async () => {
@@ -385,7 +403,7 @@ describe('Display and Export Integration', () => {
 
     // Verify display enhancer was called
     expect(displayEnhancer.enhanceForDisplay).toHaveBeenCalled();
-    
+
     // Verify UI displays enhanced data
     testBed.verifyEnhancedResultsDisplayed();
   });
@@ -396,7 +414,7 @@ describe('Display and Export Integration', () => {
 
     // Set up generated traits
     testBed.setupGeneratedTraits();
-    
+
     // Mock file download
     const downloadSpy = testBed.mockFileDownload();
 
@@ -411,7 +429,7 @@ describe('Display and Export Integration', () => {
 
   it('should handle export with all trait categories', async () => {
     const displayEnhancer = testBed.getTraitsDisplayEnhancer();
-    
+
     const completeTraits = testBed.createCompleteTraitsData();
     const exportText = displayEnhancer.formatForExport(completeTraits);
 
@@ -436,6 +454,7 @@ describe('Display and Export Integration', () => {
 ### Test Bed Implementation
 
 #### Integration Test Bed Class
+
 Create comprehensive test bed for integration testing:
 
 ```javascript
@@ -473,16 +492,32 @@ export class TraitsGeneratorIntegrationTestBed {
   }
 
   // Helper methods for test data creation and verification
-  createValidConcept() { /* Implementation */ }
-  createValidDirection() { /* Implementation */ }
-  createValidUserInputs() { /* Implementation */ }
-  createValidCliches() { /* Implementation */ }
-  createValidTraitsResponse() { /* Implementation */ }
-  
+  createValidConcept() {
+    /* Implementation */
+  }
+  createValidDirection() {
+    /* Implementation */
+  }
+  createValidUserInputs() {
+    /* Implementation */
+  }
+  createValidCliches() {
+    /* Implementation */
+  }
+  createValidTraitsResponse() {
+    /* Implementation */
+  }
+
   // Verification methods
-  verifyAllTraitCategoriesPresent(traits) { /* Implementation */ }
-  verifyTraitsStructure(traits) { /* Implementation */ }
-  verifyEnhancedResultsDisplayed() { /* Implementation */ }
+  verifyAllTraitCategoriesPresent(traits) {
+    /* Implementation */
+  }
+  verifyTraitsStructure(traits) {
+    /* Implementation */
+  }
+  verifyEnhancedResultsDisplayed() {
+    /* Implementation */
+  }
 
   async cleanup() {
     // Clean up test environment
@@ -495,13 +530,14 @@ export class TraitsGeneratorIntegrationTestBed {
 ## Performance Testing
 
 ### Load Testing
+
 Include basic load testing for integration:
 
 ```javascript
 describe('Performance Integration Tests', () => {
   it('should handle multiple concurrent generation requests', async () => {
     const promises = [];
-    
+
     for (let i = 0; i < 5; i++) {
       promises.push(
         testBed.executeTraitsGeneration(
@@ -514,9 +550,9 @@ describe('Performance Integration Tests', () => {
     }
 
     const results = await Promise.all(promises);
-    
+
     expect(results).toHaveLength(5);
-    results.forEach(result => {
+    results.forEach((result) => {
       expect(result).toBeDefined();
       testBed.verifyAllTraitCategoriesPresent(result);
     });
@@ -524,14 +560,14 @@ describe('Performance Integration Tests', () => {
 
   it('should complete generation within reasonable time', async () => {
     const startTime = Date.now();
-    
+
     await testBed.executeTraitsGeneration(
       testBed.createValidConcept(),
-      testBed.createValidDirection(), 
+      testBed.createValidDirection(),
       testBed.createValidUserInputs(),
       []
     );
-    
+
     const elapsedTime = Date.now() - startTime;
     expect(elapsedTime).toBeLessThan(5000); // 5 second timeout
   });
@@ -541,6 +577,7 @@ describe('Performance Integration Tests', () => {
 ## Acceptance Criteria
 
 ### Functional Integration Requirements
+
 - [ ] Complete end-to-end workflow tests pass with valid inputs
 - [ ] Service integration tests validate proper component communication
 - [ ] Controller integration tests verify UI state management
@@ -548,39 +585,47 @@ describe('Performance Integration Tests', () => {
 - [ ] Event system integration tests verify proper event flow
 
 ### Error Handling Integration Requirements
+
 - [ ] All error scenarios tested with proper error propagation
 - [ ] UI error states properly displayed for integration failures
 - [ ] Service failures handled gracefully without breaking application state
 - [ ] Error recovery mechanisms tested and functional
 
 ### Storage Policy Compliance Testing
+
 - [ ] Integration tests verify no persistent storage occurs
 - [ ] Tests confirm traits are not automatically associated with concepts
 - [ ] Storage policy compliance validated through database mock verification
 
-### Performance Integration Requirements  
+### Performance Integration Requirements
+
 - [ ] Concurrent request handling tested and functional
 - [ ] Generation workflow completes within reasonable time limits
 - [ ] Memory usage remains stable during integration testing
 - [ ] No memory leaks detected in integration test scenarios
 
 ### Testing Quality Requirements
+
 - [ ] Integration tests achieve 80%+ coverage of integration scenarios
 - [ ] Test bed provides comprehensive testing utilities
 - [ ] All integration test scenarios documented and reproducible
 - [ ] Tests run reliably in CI/CD environment
 
 ## Files Modified
+
 - **NEW**: `tests/integration/traitsGenerator/traitsGeneratorIntegration.test.js`
 - **NEW**: `tests/common/testBeds/traitsGeneratorIntegrationTestBed.js`
 - **NEW**: Mock services and utilities for integration testing
 
 ## Dependencies For Next Tickets
+
 This integration testing is required for:
+
 - TRAITSGEN-010 (Unit Test Suite)
 - TRAITSGEN-012 (End-to-End Testing)
 
 ## Notes
+
 - Follow existing integration test patterns from other character-builder components
 - Focus on testing component interactions and data flow
 - Ensure storage policy compliance is thoroughly tested

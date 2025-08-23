@@ -2,6 +2,8 @@
  * @file General purpose test bed for integration tests
  */
 
+import { jest } from '@jest/globals';
+
 // Action tracing classes imported dynamically to avoid circular dependencies
 
 /**
@@ -260,6 +262,72 @@ export function createTestBed() {
         clearTraces: () => {
           writtenTraces.length = 0;
         },
+      };
+    },
+
+    createMockDualFormatConfig() {
+      return {
+        outputFormats: ['json', 'text'],
+        textFormatOptions: {
+          enableColors: false,
+          lineWidth: 120,
+          indentSize: 2,
+          sectionSeparator: '=',
+          includeTimestamps: true,
+          performanceSummary: true,
+        },
+      };
+    },
+
+    createFormattedTraceArray() {
+      return [
+        { content: '{"test": "json"}', fileName: 'test.json' },
+        { content: '=== Test Trace ===', fileName: 'test.txt' },
+      ];
+    },
+
+    createMock(name, methods) {
+      const mock = {};
+      methods.forEach((method) => {
+        mock[method] = jest.fn();
+      });
+      return mock;
+    },
+
+    createMockLogger() {
+      return {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      };
+    },
+
+    createMockValidator() {
+      return {
+        validate: jest.fn(),
+        validateSchema: jest.fn(),
+        addSchema: jest.fn(),
+        removeSchema: jest.fn(),
+        isSchemaLoaded: jest.fn().mockReturnValue(false),
+      };
+    },
+
+    createMockTrace(overrides = {}) {
+      return {
+        id: 'test-trace-123',
+        actionId: 'test_action',
+        actorId: 'test_actor',
+        timestamp: new Date().toISOString(),
+        data: { test: 'data' },
+        toJSON: jest.fn().mockReturnValue({
+          id: 'test-trace-123',
+          actionId: 'test_action',
+          actorId: 'test_actor',
+          timestamp: new Date().toISOString(),
+          data: { test: 'data' },
+        }),
+        ...overrides,
       };
     },
 

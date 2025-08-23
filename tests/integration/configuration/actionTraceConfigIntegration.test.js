@@ -1020,4 +1020,272 @@ describe('Action Trace Config Integration', () => {
       expect(avgTimePerOperation).toBeLessThan(1); // <1ms per operation including action tracing
     });
   });
+
+  describe('Dual-Format Configuration Validation', () => {
+    it('should load and validate complete dual-format configuration', async () => {
+      // Create realistic dual-format configuration
+      const dualFormatConfig = {
+        traceAnalysisEnabled: false,
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['intimacy:fondle_ass', 'core:move'],
+          outputDirectory: './traces/integration',
+          verbosity: 'verbose',
+          includeComponentData: true,
+          includePrerequisites: true,
+          includeTargets: true,
+          maxTraceFiles: 100,
+          rotationPolicy: 'age',
+          maxFileAge: 86400,
+          outputFormats: ['json', 'text'],
+          textFormatOptions: {
+            enableColors: false,
+            lineWidth: 120,
+            indentSize: 2,
+            sectionSeparator: '=',
+            includeTimestamps: true,
+            performanceSummary: true,
+          },
+        },
+      };
+
+      await fs.writeFile(
+        testConfigPath,
+        JSON.stringify(dualFormatConfig, null, 2)
+      );
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        validator,
+      });
+
+      const config = await testLoader.loadConfig();
+
+      expect(config.outputFormats).toEqual(['json', 'text']);
+      expect(config.textFormatOptions).toEqual(
+        expect.objectContaining({
+          enableColors: false,
+          lineWidth: 120,
+          indentSize: 2,
+        })
+      );
+    });
+
+    it('should handle malformed dual-format configuration gracefully', async () => {
+      const mockLogger = {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+      };
+
+      const malformedConfig = {
+        actionTracing: {
+          enabled: true,
+          outputFormats: ['json', 'invalid_format', 'text', 'unsupported'],
+          textFormatOptions: {
+            lineWidth: 500, // Invalid - too large
+            indentSize: -1, // Invalid - negative
+            sectionSeparator: 'too-long-separator', // Invalid - too long
+            enableColors: 'not-boolean', // Invalid type
+          },
+        },
+      };
+
+      await fs.writeFile(
+        testConfigPath,
+        JSON.stringify(malformedConfig, null, 2)
+      );
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: mockLogger,
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: mockLogger,
+        validator,
+      });
+
+      // Should handle malformed config by falling back to defaults
+      const config = await testLoader.loadConfig();
+
+      // Should fallback to safe defaults
+      expect(config.outputFormats).toEqual(['json']); // Default fallback
+      expect(config.textFormatOptions.lineWidth).toBe(120); // Default value
+      expect(config.textFormatOptions.indentSize).toBe(2); // Default value
+      expect(config.textFormatOptions.sectionSeparator).toBe('='); // Default value
+      expect(config.textFormatOptions.enableColors).toBe(false); // Default value
+    });
+
+    it('should normalize partial dual-format configuration with defaults', async () => {
+      const partialConfig = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['core:test'],
+          outputFormats: ['text'],
+          // Missing textFormatOptions - should get defaults
+        },
+      };
+
+      await fs.writeFile(
+        testConfigPath,
+        JSON.stringify(partialConfig, null, 2)
+      );
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        validator,
+      });
+
+      const config = await testLoader.loadConfig();
+
+      expect(config.outputFormats).toEqual(['text']);
+      expect(config.textFormatOptions).toEqual({
+        enableColors: false,
+        lineWidth: 120,
+        indentSize: 2,
+        sectionSeparator: '=',
+        includeTimestamps: true,
+        performanceSummary: true,
+      });
+    });
+
+    it('should validate text format options boundaries', async () => {
+      const boundaryConfig = {
+        actionTracing: {
+          enabled: true,
+          outputFormats: ['json', 'text'],
+          textFormatOptions: {
+            lineWidth: 80, // Minimum valid
+            indentSize: 1, // Minimum valid
+            sectionSeparator: '~', // Single char valid
+          },
+        },
+      };
+
+      await fs.writeFile(
+        testConfigPath,
+        JSON.stringify(boundaryConfig, null, 2)
+      );
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        validator,
+      });
+
+      const config = await testLoader.loadConfig();
+
+      expect(config.textFormatOptions.lineWidth).toBe(80);
+      expect(config.textFormatOptions.indentSize).toBe(1);
+      expect(config.textFormatOptions.sectionSeparator).toBe('~');
+    });
+
+    it('should support configuration evolution with version handling', async () => {
+      // Test config that might come from an older version
+      const legacyConfig = {
+        actionTracing: {
+          enabled: true,
+          tracedActions: ['legacy:action'],
+          outputDirectory: './old-traces',
+          // No outputFormats or textFormatOptions (pre dual-format)
+        },
+      };
+
+      await fs.writeFile(testConfigPath, JSON.stringify(legacyConfig, null, 2));
+
+      const testTraceConfigLoader = new TraceConfigLoader({
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        safeEventDispatcher: { dispatch: jest.fn() },
+        configPath: testConfigPath,
+      });
+
+      const testLoader = new ActionTraceConfigLoader({
+        traceConfigLoader: testTraceConfigLoader,
+        logger: {
+          info: jest.fn(),
+          error: jest.fn(),
+          warn: jest.fn(),
+          debug: jest.fn(),
+        },
+        validator,
+      });
+
+      const config = await testLoader.loadConfig();
+
+      // Should maintain backward compatibility
+      expect(config.enabled).toBe(true);
+      expect(config.tracedActions).toEqual(['legacy:action']);
+      expect(config.outputDirectory).toBe('./old-traces');
+
+      // Should provide sensible defaults for new fields
+      expect(config.outputFormats).toEqual(['json']); // Default to JSON-only
+      expect(config.textFormatOptions).toEqual({
+        enableColors: false,
+        lineWidth: 120,
+        indentSize: 2,
+        sectionSeparator: '=',
+        includeTimestamps: true,
+        performanceSummary: true,
+      });
+    });
+  });
 });

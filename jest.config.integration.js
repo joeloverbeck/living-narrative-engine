@@ -22,6 +22,7 @@ module.exports = {
   ],
   // Integration tests may take longer
   testTimeout: 30000,
+  maxWorkers: 8, // Limit concurrent workers
   // Integration tests have moderate coverage expectations
   coverageThreshold: {
     global: {
