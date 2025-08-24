@@ -95,6 +95,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       generateBtn: '#generate-btn',
       exportBtn: '#export-btn',
       clearBtn: '#clear-btn',
+      backBtn: '#back-btn',
 
       // State containers
       emptyState: '#empty-state',
@@ -146,6 +147,13 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     if (this._getElement('clearBtn')) {
       this._addEventListener('clearBtn', 'click', () => {
         this.#clearDirection();
+      });
+    }
+
+    // Back button
+    if (this._getElement('backBtn')) {
+      this._addEventListener('backBtn', 'click', () => {
+        window.location.href = 'index.html';
       });
     }
 
@@ -208,7 +216,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       const directionsWithCliches = [];
       for (const direction of allDirections) {
         try {
-          const cliches = await this.characterBuilderService.getCliches(direction.id);
+          const cliches = await this.characterBuilderService.getClichesByDirectionId(direction.id);
           if (cliches && cliches.length > 0) {
             directionsWithCliches.push(direction);
           }
@@ -221,7 +229,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       this.#eligibleDirections = [];
       for (const direction of directionsWithCliches) {
         try {
-          const coreMotivations = await this.characterBuilderService.getCoreMotivations(direction.id);
+          const coreMotivations = await this.characterBuilderService.getCoreMotivationsByDirectionId(direction.id);
           if (coreMotivations && coreMotivations.length > 0) {
             this.#eligibleDirections.push(direction);
           }
@@ -266,10 +274,10 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       }
 
       // Group directions by concept
-      const directionsByGoncept = this.#groupDirectionsByConcept(this.#eligibleDirections);
+      const directionsByConcept = this.#groupDirectionsByConcept(this.#eligibleDirections);
 
       // Add optgroups and options
-      Object.entries(directionsByGoncept).forEach(([conceptName, directions]) => {
+      Object.entries(directionsByConcept).forEach(([conceptName, directions]) => {
         if (directions.length === 1) {
           // Single direction - add directly
           const option = document.createElement('option');
@@ -420,7 +428,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
    */
   async #loadAndDisplayCoreMotivations(directionId) {
     try {
-      this.#loadedCoreMotivations = await this.characterBuilderService.getCoreMotivations(directionId);
+      this.#loadedCoreMotivations = await this.characterBuilderService.getCoreMotivationsByDirectionId(directionId);
       this.#displayCoreMotivations(this.#loadedCoreMotivations);
     } catch (error) {
       this.logger.error('Failed to load core motivations:', error);
@@ -449,7 +457,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     container.innerHTML = coreMotivations.map((motivation, index) => `
       <div class="core-motivation-item" data-index="${index}">
         <h4 class="motivation-title">Core Motivation ${index + 1}</h4>
-        <p class="motivation-text">${DomUtils.escapeHtml(motivation.coreMotivation)}</p>
+        <p class="motivation-text">${DomUtils.escapeHtml(motivation.coreDesire)}</p>
         <div class="motivation-details">
           <div class="internal-contradiction">
             <strong>Internal Contradiction:</strong>
@@ -739,7 +747,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
         concept: this.#selectedDirection.concept,
         direction: this.#selectedDirection,
         userInputs: this.#getUserInputs(),
-        cliches: await this.characterBuilderService.getCliches(this.#selectedDirection.id)
+        cliches: await this.characterBuilderService.getClichesByDirectionId(this.#selectedDirection.id)
       };
 
       // Call generation service

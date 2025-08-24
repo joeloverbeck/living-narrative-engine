@@ -269,7 +269,7 @@ describe('Core Motivations Generator - HTML Structure', () => {
       const backBtn = footer.querySelector('#back-btn');
       expect(backBtn).toBeTruthy();
       expect(backBtn.getAttribute('aria-label')).toBe(
-        'Back to Character Builder'
+        'Back to Main Menu'
       );
     });
 

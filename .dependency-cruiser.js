@@ -41,7 +41,6 @@ module.exports = {
           '^src/types/.*\\.js$', // All TypeScript type definition files
           '^src/interfaces/.*\\.js$', // All interface definition files
           '^src/ports/.*\\.js$', // All port/interface definitions
-          '^src/ai/notesQueryService\\.js$', // Keep for future use
           '^src/scopeDsl/nodes/nodeResolver\\.js$', // Scope DSL node resolver typedef
           '^src/scopeDsl/core/gateways\\.js$', // Scope DSL gateway typedefs
           '^src/logic/defs\\.js$', // Logic system definitions

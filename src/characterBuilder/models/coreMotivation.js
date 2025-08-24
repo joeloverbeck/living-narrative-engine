@@ -55,6 +55,16 @@ export class CoreMotivation {
     // Optional metadata
     this.metadata = data.metadata || {};
 
+    // Add compatibility getter for coreMotivation (maps to coreDesire)
+    // This ensures backward compatibility with UI components expecting coreMotivation
+    Object.defineProperty(this, 'coreMotivation', {
+      get() {
+        return this.coreDesire;
+      },
+      enumerable: false,
+      configurable: false,
+    });
+
     // Freeze to prevent mutation
     Object.freeze(this);
     Object.freeze(this.metadata);

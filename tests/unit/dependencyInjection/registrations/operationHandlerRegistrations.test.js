@@ -64,6 +64,8 @@ describe('registerOperationHandlers', () => {
       tokens.RemoveFromClosenessCircleHandler,
       tokens.HasBodyPartWithComponentValueHandler,
       tokens.UnequipClothingHandler,
+      tokens.LockMovementHandler,
+      tokens.UnlockMovementHandler,
     ];
 
     handlerTokens.forEach((token) => {
@@ -760,6 +762,72 @@ describe('registerOperationHandlers', () => {
       expect(mockContainer.resolve).toHaveBeenCalledWith(
         tokens.BodyGraphService
       );
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.ISafeEventDispatcher
+      );
+    });
+
+    it('creates UnequipClothingHandler with correct dependencies', () => {
+      // Register the EquipmentOrchestrator dependency
+      mockContainer.register(
+        tokens.EquipmentOrchestrator,
+        createSimpleMock(['orchestrateUnequipment'])
+      );
+
+      registerOperationHandlers(registrar);
+
+      const factoryCall = registerSpy.mock.calls.find(
+        (c) => c[0] === tokens.UnequipClothingHandler
+      );
+      const factory = factoryCall[1];
+
+      const handler = factory(mockContainer);
+
+      expect(handler).toBeDefined();
+      expect(handler.constructor.name).toBe('UnequipClothingHandler');
+      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.ISafeEventDispatcher
+      );
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.EquipmentOrchestrator
+      );
+    });
+
+    it('creates LockMovementHandler with correct dependencies', () => {
+      registerOperationHandlers(registrar);
+
+      const factoryCall = registerSpy.mock.calls.find(
+        (c) => c[0] === tokens.LockMovementHandler
+      );
+      const factory = factoryCall[1];
+
+      const handler = factory(mockContainer);
+
+      expect(handler).toBeDefined();
+      expect(handler.constructor.name).toBe('LockMovementHandler');
+      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.ISafeEventDispatcher
+      );
+    });
+
+    it('creates UnlockMovementHandler with correct dependencies', () => {
+      registerOperationHandlers(registrar);
+
+      const factoryCall = registerSpy.mock.calls.find(
+        (c) => c[0] === tokens.UnlockMovementHandler
+      );
+      const factory = factoryCall[1];
+
+      const handler = factory(mockContainer);
+
+      expect(handler).toBeDefined();
+      expect(handler.constructor.name).toBe('UnlockMovementHandler');
+      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
       expect(mockContainer.resolve).toHaveBeenCalledWith(
         tokens.ISafeEventDispatcher
       );

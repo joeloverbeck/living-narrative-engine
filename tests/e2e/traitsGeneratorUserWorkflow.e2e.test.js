@@ -424,7 +424,7 @@ describe('Traits Generator User Workflow E2E', () => {
       const backBtn = document.getElementById('back-btn');
       expect(backBtn).toBeTruthy();
       expect(backBtn.classList.contains('cb-button-navigation')).toBe(true);
-      expect(backBtn.textContent).toContain('Back to Character Builder');
+      expect(backBtn.textContent).toContain('Back to Main Menu');
 
       // Test back button click
       expect(() => {
