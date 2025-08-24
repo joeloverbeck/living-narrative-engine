@@ -1406,26 +1406,26 @@ describe('CharacterBuilderService', () => {
           userInputs: {
             coreMotivation: 'Protect the innocent',
             internalContradiction: 'Fears abandonment',
-            centralQuestion: 'Can someone be brave while afraid?'
+            centralQuestion: 'Can someone be brave while afraid?',
           },
-          cliches: [{ id: 'cliche-789', text: 'Chosen one' }]
+          cliches: [{ id: 'cliche-789', text: 'Chosen one' }],
         };
 
         const options = {
           llmConfigId: 'test-config',
-          maxRetries: 3
+          maxRetries: 3,
         };
 
         const expectedResult = {
           traits: {
             physical: ['Strong', 'Tall'],
             mental: ['Determined', 'Brave'],
-            emotional: ['Compassionate', 'Loyal']
+            emotional: ['Compassionate', 'Loyal'],
           },
           metadata: {
             generated: true,
-            timestamp: '2023-01-01T00:00:00.000Z'
-          }
+            timestamp: '2023-01-01T00:00:00.000Z',
+          },
         };
 
         mockTraitsGenerator.generateTraits.mockResolvedValue(expectedResult);
@@ -1433,20 +1433,23 @@ describe('CharacterBuilderService', () => {
         const result = await service.generateTraits(params, options);
 
         expect(result).toEqual(expectedResult);
-        expect(mockTraitsGenerator.generateTraits).toHaveBeenCalledWith(params, options);
+        expect(mockTraitsGenerator.generateTraits).toHaveBeenCalledWith(
+          params,
+          options
+        );
         expect(mockLogger.info).toHaveBeenCalledWith(
           'CharacterBuilderService: Delegating traits generation',
           {
             conceptId: 'concept-123',
             directionId: 'direction-456',
-            clichesCount: 1
+            clichesCount: 1,
           }
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
           'CharacterBuilderService: Traits generation completed',
           {
             conceptId: 'concept-123',
-            success: true
+            success: true,
           }
         );
       });
@@ -1465,16 +1468,16 @@ describe('CharacterBuilderService', () => {
           concept: { id: 'concept-123' },
           direction: { id: 'direction-456' },
           userInputs: {},
-          cliches: []
+          cliches: [],
         };
 
-        await expect(serviceWithoutTraits.generateTraits(params))
-          .rejects
-          .toThrow(CharacterBuilderError);
+        await expect(
+          serviceWithoutTraits.generateTraits(params)
+        ).rejects.toThrow(CharacterBuilderError);
 
-        await expect(serviceWithoutTraits.generateTraits(params))
-          .rejects
-          .toThrow('TraitsGenerator service not available');
+        await expect(
+          serviceWithoutTraits.generateTraits(params)
+        ).rejects.toThrow('TraitsGenerator service not available');
       });
 
       it('should handle TraitsGenerator errors and dispatch error event', async () => {
@@ -1482,19 +1485,19 @@ describe('CharacterBuilderService', () => {
           concept: { id: 'concept-123', concept: 'A brave warrior' },
           direction: { id: 'direction-456', title: 'Hero' },
           userInputs: {},
-          cliches: []
+          cliches: [],
         };
 
         const generatorError = new Error('LLM service unavailable');
         mockTraitsGenerator.generateTraits.mockRejectedValue(generatorError);
 
-        await expect(service.generateTraits(params))
-          .rejects
-          .toThrow(CharacterBuilderError);
+        await expect(service.generateTraits(params)).rejects.toThrow(
+          CharacterBuilderError
+        );
 
-        await expect(service.generateTraits(params))
-          .rejects
-          .toThrow('Failed to generate traits: LLM service unavailable');
+        await expect(service.generateTraits(params)).rejects.toThrow(
+          'Failed to generate traits: LLM service unavailable'
+        );
 
         expect(mockLogger.error).toHaveBeenCalledWith(
           'CharacterBuilderService: Traits generation failed',
@@ -1519,7 +1522,7 @@ describe('CharacterBuilderService', () => {
           concept: { concept: 'A brave warrior' }, // no id
           direction: { title: 'Hero' }, // no id
           userInputs: {},
-          cliches: []
+          cliches: [],
         };
 
         const expectedResult = { traits: {} };
@@ -1533,7 +1536,7 @@ describe('CharacterBuilderService', () => {
           {
             conceptId: undefined,
             directionId: undefined,
-            clichesCount: 0
+            clichesCount: 0,
           }
         );
       });
@@ -1543,12 +1546,12 @@ describe('CharacterBuilderService', () => {
           concept: { id: 'concept-123' },
           direction: { id: 'direction-456' },
           userInputs: {},
-          cliches: []
+          cliches: [],
         };
 
         const options = {
           llmConfigId: 'custom-config',
-          maxRetries: 5
+          maxRetries: 5,
         };
 
         const expectedResult = { traits: {} };
@@ -1556,7 +1559,10 @@ describe('CharacterBuilderService', () => {
 
         await service.generateTraits(params, options);
 
-        expect(mockTraitsGenerator.generateTraits).toHaveBeenCalledWith(params, options);
+        expect(mockTraitsGenerator.generateTraits).toHaveBeenCalledWith(
+          params,
+          options
+        );
       });
     });
   });

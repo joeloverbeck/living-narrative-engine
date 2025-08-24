@@ -6,7 +6,10 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import { ActionTraceOutputService } from '../../../../src/actions/tracing/actionTraceOutputService.js';
-import { createMockJsonFormatter, createMockHumanReadableFormatterWithOptions } from '../../../common/mockFactories/actionTracing.js';
+import {
+  createMockJsonFormatter,
+  createMockHumanReadableFormatterWithOptions,
+} from '../../../common/mockFactories/actionTracing.js';
 
 // Memory test utilities
 const getMemoryUsage = () => {
@@ -61,10 +64,10 @@ describe('Dual-Format Memory Efficiency Tests', () => {
       await actionTraceOutputService.shutdown();
     }
     testBed.cleanup?.();
-    
+
     // Force cleanup after each test
     if (forceGarbageCollection()) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   });
 
@@ -72,10 +75,10 @@ describe('Dual-Format Memory Efficiency Tests', () => {
     it('should not leak memory during continuous dual-format generation', async () => {
       const iterations = 200;
       const memorySnapshots = [];
-      
+
       // Baseline measurement
       forceGarbageCollection();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       const baselineMemory = getMemoryUsage();
       memorySnapshots.push({ iteration: 0, ...baselineMemory });
 
@@ -86,13 +89,13 @@ describe('Dual-Format Memory Efficiency Tests', () => {
           verbosity: 'standard',
           includeComponentData: false,
         });
-        
+
         await actionTraceOutputService.writeTrace(trace);
 
         // Take memory snapshot every 50 iterations
         if ((i + 1) % 50 === 0) {
           forceGarbageCollection();
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
           const currentMemory = getMemoryUsage();
           memorySnapshots.push({ iteration: i + 1, ...currentMemory });
         }
@@ -100,7 +103,7 @@ describe('Dual-Format Memory Efficiency Tests', () => {
 
       // Final memory measurement
       forceGarbageCollection();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       const finalMemory = getMemoryUsage();
       memorySnapshots.push({ iteration: iterations, ...finalMemory });
 
@@ -108,10 +111,18 @@ describe('Dual-Format Memory Efficiency Tests', () => {
       const heapIncreasePerTrace = totalHeapIncrease / iterations;
 
       console.log('Memory leak detection results:');
-      console.log(`  Baseline heap: ${(baselineMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`);
-      console.log(`  Final heap: ${(finalMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`);
-      console.log(`  Total heap increase: ${(totalHeapIncrease / 1024).toFixed(2)} KB`);
-      console.log(`  Heap increase per trace: ${heapIncreasePerTrace.toFixed(0)} bytes`);
+      console.log(
+        `  Baseline heap: ${(baselineMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`
+      );
+      console.log(
+        `  Final heap: ${(finalMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`
+      );
+      console.log(
+        `  Total heap increase: ${(totalHeapIncrease / 1024).toFixed(2)} KB`
+      );
+      console.log(
+        `  Heap increase per trace: ${heapIncreasePerTrace.toFixed(0)} bytes`
+      );
 
       // Analyze memory growth pattern
       if (memorySnapshots.length >= 3) {
@@ -125,14 +136,19 @@ describe('Dual-Format Memory Efficiency Tests', () => {
           growthRates.push(growthRate);
         }
 
-        const avgGrowthRate = growthRates.reduce((sum, rate) => sum + rate, 0) / growthRates.length;
-        console.log(`  Average growth rate: ${avgGrowthRate.toFixed(0)} bytes/trace`);
+        const avgGrowthRate =
+          growthRates.reduce((sum, rate) => sum + rate, 0) / growthRates.length;
+        console.log(
+          `  Average growth rate: ${avgGrowthRate.toFixed(0)} bytes/trace`
+        );
 
         // Memory growth should not indicate a continuous leak (only if finite)
         if (Number.isFinite(avgGrowthRate)) {
           expect(Math.abs(avgGrowthRate)).toBeLessThan(50000); // <50KB average growth per trace
         } else {
-          console.log('  Memory growth rate calculation resulted in non-finite value - skipping trend check');
+          console.log(
+            '  Memory growth rate calculation resulted in non-finite value - skipping trend check'
+          );
         }
       }
 
@@ -147,7 +163,7 @@ describe('Dual-Format Memory Efficiency Tests', () => {
 
       // Initial baseline
       forceGarbageCollection();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       const initialMemory = getMemoryUsage();
       memorySnapshots.push({ phase: 'initial', ...initialMemory });
 
@@ -163,32 +179,49 @@ describe('Dual-Format Memory Efficiency Tests', () => {
         }
 
         // Process all traces in the batch
-        await Promise.all(traces.map(trace => actionTraceOutputService.writeTrace(trace)));
+        await Promise.all(
+          traces.map((trace) => actionTraceOutputService.writeTrace(trace))
+        );
 
         // Memory snapshot after batch processing
         forceGarbageCollection();
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         const afterBatchMemory = getMemoryUsage();
-        memorySnapshots.push({ phase: `after_batch_${batch}`, ...afterBatchMemory });
+        memorySnapshots.push({
+          phase: `after_batch_${batch}`,
+          ...afterBatchMemory,
+        });
 
         // Clear references to traces
         traces.length = 0;
 
         // Memory snapshot after clearing references
         forceGarbageCollection();
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         const afterCleanupMemory = getMemoryUsage();
-        memorySnapshots.push({ phase: `after_cleanup_${batch}`, ...afterCleanupMemory });
+        memorySnapshots.push({
+          phase: `after_cleanup_${batch}`,
+          ...afterCleanupMemory,
+        });
 
-        const batchMemoryIncrease = afterBatchMemory.heapUsed - initialMemory.heapUsed;
-        const cleanupMemoryIncrease = afterCleanupMemory.heapUsed - initialMemory.heapUsed;
-        const memoryRecovered = afterBatchMemory.heapUsed - afterCleanupMemory.heapUsed;
+        const batchMemoryIncrease =
+          afterBatchMemory.heapUsed - initialMemory.heapUsed;
+        const cleanupMemoryIncrease =
+          afterCleanupMemory.heapUsed - initialMemory.heapUsed;
+        const memoryRecovered =
+          afterBatchMemory.heapUsed - afterCleanupMemory.heapUsed;
         const recoveryRate = (memoryRecovered / batchMemoryIncrease) * 100;
 
         console.log(`Batch ${batch + 1} memory analysis:`);
-        console.log(`  Memory after batch: +${(batchMemoryIncrease / 1024).toFixed(2)} KB`);
-        console.log(`  Memory after cleanup: +${(cleanupMemoryIncrease / 1024).toFixed(2)} KB`);
-        console.log(`  Memory recovered: ${(memoryRecovered / 1024).toFixed(2)} KB (${recoveryRate.toFixed(1)}%)`);
+        console.log(
+          `  Memory after batch: +${(batchMemoryIncrease / 1024).toFixed(2)} KB`
+        );
+        console.log(
+          `  Memory after cleanup: +${(cleanupMemoryIncrease / 1024).toFixed(2)} KB`
+        );
+        console.log(
+          `  Memory recovered: ${(memoryRecovered / 1024).toFixed(2)} KB (${recoveryRate.toFixed(1)}%)`
+        );
 
         // Memory should be recoverable when references are cleared
         if (batchMemoryIncrease > 0) {
@@ -209,9 +242,17 @@ describe('Dual-Format Memory Efficiency Tests', () => {
     it('should measure memory footprint of different trace configurations', async () => {
       const configurations = [
         { name: 'minimal', verbosity: 'minimal', includeComponentData: false },
-        { name: 'standard', verbosity: 'standard', includeComponentData: false },
+        {
+          name: 'standard',
+          verbosity: 'standard',
+          includeComponentData: false,
+        },
         { name: 'verbose', verbosity: 'verbose', includeComponentData: false },
-        { name: 'verbose_with_components', verbosity: 'verbose', includeComponentData: true },
+        {
+          name: 'verbose_with_components',
+          verbosity: 'verbose',
+          includeComponentData: true,
+        },
       ];
 
       const configResults = [];
@@ -222,7 +263,7 @@ describe('Dual-Format Memory Efficiency Tests', () => {
 
         // Measure baseline
         forceGarbageCollection();
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
         const beforeMemory = getMemoryUsage();
 
         // Create traces with specific configuration
@@ -234,13 +275,13 @@ describe('Dual-Format Memory Efficiency Tests', () => {
             includeComponentData: config.includeComponentData,
           });
           traces.push(trace);
-          
+
           await actionTraceOutputService.writeTrace(trace);
         }
 
         // Measure after processing
         forceGarbageCollection();
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
         const afterMemory = getMemoryUsage();
 
         const memoryIncrease = afterMemory.heapUsed - beforeMemory.heapUsed;
@@ -252,30 +293,37 @@ describe('Dual-Format Memory Efficiency Tests', () => {
           totalIncrease: memoryIncrease,
         });
 
-        console.log(`Configuration '${config.name}': ${memoryPerTrace.toFixed(0)} bytes/trace`);
+        console.log(
+          `Configuration '${config.name}': ${memoryPerTrace.toFixed(0)} bytes/trace`
+        );
 
         // Clear traces for next iteration
         traces.length = 0;
         forceGarbageCollection();
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Analyze memory efficiency patterns
       configResults.sort((a, b) => a.memoryPerTrace - b.memoryPerTrace);
-      
-      const minimalConfig = configResults.find(r => r.config === 'minimal');
-      const verboseConfig = configResults.find(r => r.config === 'verbose_with_components');
-      
+
+      const minimalConfig = configResults.find((r) => r.config === 'minimal');
+      const verboseConfig = configResults.find(
+        (r) => r.config === 'verbose_with_components'
+      );
+
       if (minimalConfig && verboseConfig) {
-        const memoryMultiplier = verboseConfig.memoryPerTrace / minimalConfig.memoryPerTrace;
-        console.log(`Memory multiplier (verbose vs minimal): ${memoryMultiplier.toFixed(1)}x`);
-        
+        const memoryMultiplier =
+          verboseConfig.memoryPerTrace / minimalConfig.memoryPerTrace;
+        console.log(
+          `Memory multiplier (verbose vs minimal): ${memoryMultiplier.toFixed(1)}x`
+        );
+
         // Verbose configuration should not be excessively memory-intensive
         expect(memoryMultiplier).toBeLessThan(10); // <10x memory usage for verbose vs minimal
       }
 
       // All configurations should have reasonable memory usage
-      expect(configResults.every(r => r.memoryPerTrace < 100000)).toBe(true); // <100KB per trace
+      expect(configResults.every((r) => r.memoryPerTrace < 100000)).toBe(true); // <100KB per trace
     });
 
     it('should handle memory pressure gracefully', async () => {
@@ -300,9 +348,9 @@ describe('Dual-Format Memory Efficiency Tests', () => {
           // Monitor memory at intervals
           if ((i + 1) % 100 === 0) {
             if (forceGarbageCollection()) {
-              await new Promise(resolve => setTimeout(resolve, 50));
+              await new Promise((resolve) => setTimeout(resolve, 50));
             }
-            
+
             const currentMemory = getMemoryUsage();
             memoryCheckpoints.push({
               iteration: i + 1,
@@ -310,23 +358,26 @@ describe('Dual-Format Memory Efficiency Tests', () => {
               heapTotal: currentMemory.heapTotal,
             });
 
-            console.log(`Memory checkpoint ${i + 1}: ${(currentMemory.heapUsed / 1024 / 1024).toFixed(2)} MB heap used`);
+            console.log(
+              `Memory checkpoint ${i + 1}: ${(currentMemory.heapUsed / 1024 / 1024).toFixed(2)} MB heap used`
+            );
           }
-
         } catch (error) {
           consecutiveFailures++;
           console.warn(`Iteration ${i} failed: ${error.message}`);
 
           // If too many consecutive failures, the system might be under too much pressure
           if (consecutiveFailures >= 10) {
-            console.log('Too many consecutive failures - stopping memory pressure test');
+            console.log(
+              'Too many consecutive failures - stopping memory pressure test'
+            );
             break;
           }
         }
       }
 
       const successRate = (totalSuccesses / memoryPressureIterations) * 100;
-      
+
       console.log('Memory pressure test results:');
       console.log(`  Total iterations attempted: ${memoryPressureIterations}`);
       console.log(`  Successful operations: ${totalSuccesses}`);
@@ -338,11 +389,14 @@ describe('Dual-Format Memory Efficiency Tests', () => {
         const firstCheckpoint = memoryCheckpoints[0];
         const lastCheckpoint = memoryCheckpoints[memoryCheckpoints.length - 1];
         const memoryGrowth = lastCheckpoint.heapUsed - firstCheckpoint.heapUsed;
-        const iterationSpan = lastCheckpoint.iteration - firstCheckpoint.iteration;
+        const iterationSpan =
+          lastCheckpoint.iteration - firstCheckpoint.iteration;
         const memoryGrowthRate = memoryGrowth / iterationSpan;
 
-        console.log(`  Memory growth rate: ${memoryGrowthRate.toFixed(0)} bytes/iteration`);
-        
+        console.log(
+          `  Memory growth rate: ${memoryGrowthRate.toFixed(0)} bytes/iteration`
+        );
+
         // Memory growth under pressure should not be excessive
         expect(memoryGrowthRate).toBeLessThan(20000); // <20KB growth per iteration under pressure
       }
@@ -368,13 +422,13 @@ describe('Dual-Format Memory Efficiency Tests', () => {
 
         const beforeWrite = getMemoryUsage();
         await actionTraceOutputService.writeTrace(trace);
-        
+
         // Force GC every 10 iterations to get cleaner measurements
         if (i % 10 === 9) {
           forceGarbageCollection();
-          await new Promise(resolve => setTimeout(resolve, 20));
+          await new Promise((resolve) => setTimeout(resolve, 20));
         }
-        
+
         const afterWrite = getMemoryUsage();
 
         measurements.push({
@@ -386,9 +440,14 @@ describe('Dual-Format Memory Efficiency Tests', () => {
       }
 
       // Analyze allocation patterns
-      const increases = measurements.map(m => m.increase);
-      const avgIncrease = increases.reduce((sum, inc) => sum + inc, 0) / increases.length;
-      const variance = increases.reduce((acc, inc) => acc + Math.pow(inc - avgIncrease, 2), 0) / increases.length;
+      const increases = measurements.map((m) => m.increase);
+      const avgIncrease =
+        increases.reduce((sum, inc) => sum + inc, 0) / increases.length;
+      const variance =
+        increases.reduce(
+          (acc, inc) => acc + Math.pow(inc - avgIncrease, 2),
+          0
+        ) / increases.length;
       const stdDev = Math.sqrt(variance);
       const coefficientOfVariation = (stdDev / Math.abs(avgIncrease)) * 100;
 
@@ -397,23 +456,32 @@ describe('Dual-Format Memory Efficiency Tests', () => {
       const movingAverages = [];
       for (let i = windowSize - 1; i < measurements.length; i++) {
         const window = measurements.slice(i - windowSize + 1, i + 1);
-        const avgHeap = window.reduce((sum, m) => sum + m.afterHeap, 0) / window.length;
+        const avgHeap =
+          window.reduce((sum, m) => sum + m.afterHeap, 0) / window.length;
         movingAverages.push({ iteration: i, avgHeap });
       }
 
       console.log('Memory allocation pattern analysis:');
-      console.log(`  Average memory increase per trace: ${avgIncrease.toFixed(0)} bytes`);
+      console.log(
+        `  Average memory increase per trace: ${avgIncrease.toFixed(0)} bytes`
+      );
       console.log(`  Standard deviation: ${stdDev.toFixed(0)} bytes`);
-      console.log(`  Coefficient of variation: ${coefficientOfVariation.toFixed(1)}%`);
+      console.log(
+        `  Coefficient of variation: ${coefficientOfVariation.toFixed(1)}%`
+      );
 
       // Check for memory leak trends
       if (movingAverages.length >= 2) {
         const firstMA = movingAverages[0];
         const lastMA = movingAverages[movingAverages.length - 1];
-        const trendSlope = (lastMA.avgHeap - firstMA.avgHeap) / (lastMA.iteration - firstMA.iteration);
-        
-        console.log(`  Memory trend slope: ${trendSlope.toFixed(0)} bytes/iteration`);
-        
+        const trendSlope =
+          (lastMA.avgHeap - firstMA.avgHeap) /
+          (lastMA.iteration - firstMA.iteration);
+
+        console.log(
+          `  Memory trend slope: ${trendSlope.toFixed(0)} bytes/iteration`
+        );
+
         // Memory should not have a strong upward trend (indicating leaks)
         expect(Math.abs(trendSlope)).toBeLessThan(5000); // <5KB trend per iteration
       }

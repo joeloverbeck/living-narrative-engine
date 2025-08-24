@@ -23,18 +23,22 @@ const mockService = {
       title: 'Test Direction',
       description: 'Test',
       createdAt: new Date().toISOString(),
-    }
+    },
   ],
   getCliches: async () => ['test cliché'],
   getCoreMotivationsByDirectionId: async (directionId) => {
-    console.log(`✅ SUCCESS: getCoreMotivationsByDirectionId was called with: ${directionId}`);
-    return [{
-      id: 'test-motivation',
-      directionId: directionId,
-      coreMotivation: 'Test motivation',
-      internalContradiction: 'Test contradiction',
-      centralQuestion: 'Test question?'
-    }];
+    console.log(
+      `✅ SUCCESS: getCoreMotivationsByDirectionId was called with: ${directionId}`
+    );
+    return [
+      {
+        id: 'test-motivation',
+        directionId: directionId,
+        coreMotivation: 'Test motivation',
+        internalContradiction: 'Test contradiction',
+        centralQuestion: 'Test question?',
+      },
+    ];
   },
   generateTraits: () => {},
   getThematicDirectionsByConcept: async () => [],
@@ -43,7 +47,9 @@ const mockService = {
 
 // Add the incorrect method that should NOT be called
 mockService.getCoreMotivations = async () => {
-  console.error('❌ ERROR: getCoreMotivations was called (this method should not exist!)');
+  console.error(
+    '❌ ERROR: getCoreMotivations was called (this method should not exist!)'
+  );
   throw new Error('Wrong method called!');
 };
 
@@ -110,15 +116,19 @@ try {
   });
 
   console.log('🔍 Testing TraitsGeneratorController...');
-  
+
   // Initialize the controller
   await controller.initialize();
-  
-  console.log('✅ Test completed successfully! The fix is working - getCoreMotivationsByDirectionId is being called correctly.');
+
+  console.log(
+    '✅ Test completed successfully! The fix is working - getCoreMotivationsByDirectionId is being called correctly.'
+  );
 } catch (error) {
   console.error('❌ Test failed:', error.message);
   if (error.message.includes('getCoreMotivations')) {
-    console.error('The bug still exists - the controller is trying to call getCoreMotivations instead of getCoreMotivationsByDirectionId');
+    console.error(
+      'The bug still exists - the controller is trying to call getCoreMotivations instead of getCoreMotivationsByDirectionId'
+    );
   }
   process.exit(1);
 }

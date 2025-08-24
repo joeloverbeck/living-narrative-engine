@@ -37,13 +37,13 @@ describe('Traits Generator Schema Validation E2E', () => {
           compile: jest.fn(),
           validate: jest.fn(),
           addSchema: jest.fn(),
-          getSchema: jest.fn()
+          getSchema: jest.fn(),
         };
 
         // Mock the schema loading functionality
         window.fetch = jest.fn();
         setupSchemaValidationMocks(window.fetch, mockAjv);
-      }
+      },
     });
 
     window = dom.window;
@@ -61,21 +61,29 @@ describe('Traits Generator Schema Validation E2E', () => {
     it('should reference correct schema file path in application configuration', () => {
       // The traits generator should be configured to load trait.schema.json
       // This test verifies the correct schema path is referenced
-      
+
       // Since we can't test the actual bootstrap without running the app,
       // we verify that the expected schema file exists
-      const schemaPath = path.resolve(process.cwd(), 'data/schemas/trait.schema.json');
+      const schemaPath = path.resolve(
+        process.cwd(),
+        'data/schemas/trait.schema.json'
+      );
       expect(fs.existsSync(schemaPath)).toBe(true);
     });
 
     it('should have valid trait schema structure', () => {
-      const schemaPath = path.resolve(process.cwd(), 'data/schemas/trait.schema.json');
+      const schemaPath = path.resolve(
+        process.cwd(),
+        'data/schemas/trait.schema.json'
+      );
       const schemaContent = fs.readFileSync(schemaPath, 'utf8');
       const schema = JSON.parse(schemaContent);
 
       // Verify essential schema properties
       expect(schema.$schema).toBe('http://json-schema.org/draft-07/schema#');
-      expect(schema.$id).toBe('schema://living-narrative-engine/trait.schema.json');
+      expect(schema.$id).toBe(
+        'schema://living-narrative-engine/trait.schema.json'
+      );
       expect(schema.title).toBe('Character Trait');
       expect(schema.type).toBe('object');
 
@@ -94,14 +102,17 @@ describe('Traits Generator Schema Validation E2E', () => {
         'notes',
         'profile',
         'secrets',
-        'generatedAt'
+        'generatedAt',
       ];
 
       expect(schema.required).toEqual(expect.arrayContaining(requiredFields));
     });
 
     it('should define correct data types for trait properties', () => {
-      const schemaPath = path.resolve(process.cwd(), 'data/schemas/trait.schema.json');
+      const schemaPath = path.resolve(
+        process.cwd(),
+        'data/schemas/trait.schema.json'
+      );
       const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
 
       const properties = schema.properties;
@@ -138,7 +149,10 @@ describe('Traits Generator Schema Validation E2E', () => {
     });
 
     it('should define proper constraints for trait data', () => {
-      const schemaPath = path.resolve(process.cwd(), 'data/schemas/trait.schema.json');
+      const schemaPath = path.resolve(
+        process.cwd(),
+        'data/schemas/trait.schema.json'
+      );
       const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
 
       const properties = schema.properties;
@@ -164,7 +178,10 @@ describe('Traits Generator Schema Validation E2E', () => {
     });
 
     it('should include metadata schema for generation tracking', () => {
-      const schemaPath = path.resolve(process.cwd(), 'data/schemas/trait.schema.json');
+      const schemaPath = path.resolve(
+        process.cwd(),
+        'data/schemas/trait.schema.json'
+      );
       const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
 
       const metadata = schema.properties.metadata;
@@ -211,11 +228,15 @@ describe('Traits Generator Schema Validation E2E', () => {
 
     it('should support schema validation feedback in UI', () => {
       // Check that the UI is structured to display detailed validation errors
-      const inputValidationError = document.getElementById('input-validation-error');
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
       expect(inputValidationError.getAttribute('role')).toBe('alert');
 
       // Should support detailed error messaging
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
       expect(screenReaderAnnouncement.getAttribute('aria-live')).toBe('polite');
     });
   });
@@ -235,7 +256,9 @@ describe('Traits Generator Schema Validation E2E', () => {
       const resultsState = document.getElementById('results-state');
       expect(resultsState).toBeTruthy();
       expect(resultsState.getAttribute('role')).toBe('region');
-      expect(resultsState.getAttribute('aria-label')).toBe('Generated character traits');
+      expect(resultsState.getAttribute('aria-label')).toBe(
+        'Generated character traits'
+      );
     });
   });
 
@@ -243,16 +266,16 @@ describe('Traits Generator Schema Validation E2E', () => {
     it('should be configured for schema loading during bootstrap', () => {
       // The traits-generator-main.js should reference the correct schema path
       // This test validates that the expected configuration exists
-      
+
       // Check that the page loads the correct JavaScript bundle
       const scriptTags = Array.from(document.querySelectorAll('script[src]'));
-      const hasTraitsGeneratorScript = scriptTags.some(script => 
+      const hasTraitsGeneratorScript = scriptTags.some((script) =>
         script.src.includes('traits-generator.js')
       );
       expect(hasTraitsGeneratorScript).toBe(true);
 
       // The script should be a module for proper ES6 import handling
-      const moduleScript = scriptTags.find(script => 
+      const moduleScript = scriptTags.find((script) =>
         script.src.includes('traits-generator.js')
       );
       expect(moduleScript.type).toBe('module');
@@ -274,9 +297,15 @@ describe('Traits Generator Schema Validation E2E', () => {
   describe('Validation Integration with User Input', () => {
     it('should validate user inputs against expected formats', () => {
       // Test that input fields are structured for validation
-      const coreMotivationInput = document.getElementById('core-motivation-input');
-      const internalContradictionInput = document.getElementById('internal-contradiction-input');
-      const centralQuestionInput = document.getElementById('central-question-input');
+      const coreMotivationInput = document.getElementById(
+        'core-motivation-input'
+      );
+      const internalContradictionInput = document.getElementById(
+        'internal-contradiction-input'
+      );
+      const centralQuestionInput = document.getElementById(
+        'central-question-input'
+      );
 
       expect(coreMotivationInput).toBeTruthy();
       expect(internalContradictionInput).toBeTruthy();
@@ -289,13 +318,17 @@ describe('Traits Generator Schema Validation E2E', () => {
 
       // Should have minimum row counts for adequate input
       expect(parseInt(coreMotivationInput.rows)).toBeGreaterThanOrEqual(3);
-      expect(parseInt(internalContradictionInput.rows)).toBeGreaterThanOrEqual(3);
+      expect(parseInt(internalContradictionInput.rows)).toBeGreaterThanOrEqual(
+        3
+      );
       expect(parseInt(centralQuestionInput.rows)).toBeGreaterThanOrEqual(3);
     });
 
     it('should prepare for real-time validation feedback', () => {
-      const inputValidationError = document.getElementById('input-validation-error');
-      
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
+
       expect(inputValidationError).toBeTruthy();
       expect(inputValidationError.getAttribute('role')).toBe('alert');
       expect(inputValidationError.textContent).toBe(''); // Initially empty
@@ -306,13 +339,13 @@ describe('Traits Generator Schema Validation E2E', () => {
       const requiredFields = [
         'core-motivation-input',
         'internal-contradiction-input',
-        'central-question-input'
+        'central-question-input',
       ];
 
-      requiredFields.forEach(fieldId => {
+      requiredFields.forEach((fieldId) => {
         const field = document.getElementById(fieldId);
         const label = document.querySelector(`label[for="${fieldId}"]`);
-        
+
         expect(field).toBeTruthy();
         expect(label).toBeTruthy();
         expect(label.textContent).toContain('*'); // Required field indicator
@@ -322,14 +355,18 @@ describe('Traits Generator Schema Validation E2E', () => {
 
   describe('Schema-driven Error Handling', () => {
     it('should display validation errors in accessible format', () => {
-      const inputValidationError = document.getElementById('input-validation-error');
-      const directionSelectorError = document.getElementById('direction-selector-error');
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
+      const directionSelectorError = document.getElementById(
+        'direction-selector-error'
+      );
       const errorMessageText = document.getElementById('error-message-text');
 
       // All error display elements should have proper accessibility
       expect(inputValidationError.getAttribute('role')).toBe('alert');
       expect(directionSelectorError.getAttribute('role')).toBe('alert');
-      
+
       // Error message text should be in a structured container
       expect(errorMessageText).toBeTruthy();
       expect(errorMessageText.closest('.error-container')).toBeTruthy();
@@ -337,12 +374,16 @@ describe('Traits Generator Schema Validation E2E', () => {
 
     it('should support detailed validation error reporting', () => {
       // The UI should support displaying multiple validation errors
-      const inputValidationError = document.getElementById('input-validation-error');
-      
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
+
       expect(inputValidationError).toBeTruthy();
-      
+
       // Should be able to handle multiple error messages
-      expect(inputValidationError.classList.contains('cb-error-text')).toBe(true);
+      expect(inputValidationError.classList.contains('cb-error-text')).toBe(
+        true
+      );
     });
   });
 });
@@ -359,34 +400,35 @@ function setupSchemaValidationMocks(fetchMock, ajvMock) {
     if (url.includes('trait.schema.json')) {
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({
-          $schema: 'http://json-schema.org/draft-07/schema#',
-          $id: 'schema://living-narrative-engine/trait.schema.json',
-          title: 'Character Trait',
-          type: 'object',
-          required: ['id', 'names', 'physicalDescription'],
-          properties: {
-            id: { type: 'string' },
-            names: {
-              type: 'array',
-              minItems: 3,
-              maxItems: 5,
-              items: {
-                type: 'object',
-                required: ['name', 'justification'],
-                properties: {
-                  name: { type: 'string' },
-                  justification: { type: 'string' }
-                }
-              }
+        json: () =>
+          Promise.resolve({
+            $schema: 'http://json-schema.org/draft-07/schema#',
+            $id: 'schema://living-narrative-engine/trait.schema.json',
+            title: 'Character Trait',
+            type: 'object',
+            required: ['id', 'names', 'physicalDescription'],
+            properties: {
+              id: { type: 'string' },
+              names: {
+                type: 'array',
+                minItems: 3,
+                maxItems: 5,
+                items: {
+                  type: 'object',
+                  required: ['name', 'justification'],
+                  properties: {
+                    name: { type: 'string' },
+                    justification: { type: 'string' },
+                  },
+                },
+              },
+              physicalDescription: {
+                type: 'string',
+                minLength: 100,
+                maxLength: 500,
+              },
             },
-            physicalDescription: {
-              type: 'string',
-              minLength: 100,
-              maxLength: 500
-            }
-          }
-        })
+          }),
       });
     }
 

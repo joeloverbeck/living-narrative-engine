@@ -155,7 +155,6 @@ describe('Timing Integration', () => {
     });
   });
 
-
   describe('Backward Compatibility', () => {
     it('should maintain compatibility with existing ActionExecutionTrace usage', () => {
       // Test that existing code patterns still work

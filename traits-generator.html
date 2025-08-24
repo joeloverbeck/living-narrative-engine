@@ -32,7 +32,8 @@
         <div class="header-content">
           <h1>Traits Generator</h1>
           <p class="header-subtitle">
-            Generate comprehensive character traits based on core motivations and thematic directions
+            Generate comprehensive character traits based on core motivations
+            and thematic directions
           </p>
         </div>
       </header>
@@ -56,14 +57,23 @@
               <option value="">-- Choose a thematic direction --</option>
               <!-- Dynamically populated -->
             </select>
-            <div id="direction-selector-error" class="cb-error-text" role="alert"></div>
+            <div
+              id="direction-selector-error"
+              class="cb-error-text"
+              role="alert"
+            ></div>
             <p class="cb-help-text">
-              Only directions with both clichés and core motivations are available
+              Only directions with both clichés and core motivations are
+              available
             </p>
           </div>
 
           <!-- Selected Direction Display -->
-          <div id="selected-direction-display" class="selected-direction-display" style="display: none">
+          <div
+            id="selected-direction-display"
+            class="selected-direction-display"
+            style="display: none"
+          >
             <h3 id="direction-title" class="direction-title"></h3>
             <p id="direction-description" class="direction-description"></p>
           </div>
@@ -71,7 +81,7 @@
           <!-- User Input Fields -->
           <div class="user-inputs-section">
             <h3 class="section-title">Your Character Inputs (All Required)</h3>
-            
+
             <div class="cb-form-group">
               <label for="core-motivation-input" class="cb-label">
                 Core Motivation *
@@ -120,7 +130,11 @@
               </p>
             </div>
 
-            <div id="input-validation-error" class="cb-error-text" role="alert"></div>
+            <div
+              id="input-validation-error"
+              class="cb-error-text"
+              role="alert"
+            ></div>
           </div>
 
           <!-- Generation Controls -->
@@ -147,7 +161,9 @@
             <div class="shortcut-hint">
               <div><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate</div>
               <div><kbd>Ctrl</kbd> + <kbd>E</kbd> to export</div>
-              <div><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Del</kbd> to clear all</div>
+              <div>
+                <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Del</kbd> to clear all
+              </div>
             </div>
           </div>
         </aside>
@@ -170,7 +186,11 @@
           </div>
 
           <!-- Core Motivations Context Panel -->
-          <div id="core-motivations-panel" class="core-motivations-panel" style="display: none">
+          <div
+            id="core-motivations-panel"
+            class="core-motivations-panel"
+            style="display: none"
+          >
             <h3>Associated Core Motivations</h3>
             <div id="core-motivations-list" class="core-motivations-list">
               <!-- Populated by controller -->
@@ -178,7 +198,11 @@
           </div>
 
           <!-- User Input Summary -->
-          <div id="user-input-summary" class="user-input-summary" style="display: none">
+          <div
+            id="user-input-summary"
+            class="user-input-summary"
+            style="display: none"
+          >
             <!-- Populated by controller -->
           </div>
 
@@ -186,10 +210,12 @@
           <div id="empty-state" class="empty-state">
             <div class="empty-state-icon">🎭</div>
             <p class="empty-state-text">
-              Select a thematic direction and fill in your character inputs to begin
+              Select a thematic direction and fill in your character inputs to
+              begin
             </p>
             <p class="empty-state-subtext">
-              Traits will be generated based on your specific character inputs and available clichés
+              Traits will be generated based on your specific character inputs
+              and available clichés
             </p>
           </div>
 
@@ -206,7 +232,12 @@
           </div>
 
           <!-- Error State -->
-          <div id="error-state" class="error-container" role="alert" style="display: none">
+          <div
+            id="error-state"
+            class="error-container"
+            role="alert"
+            style="display: none"
+          >
             <div class="error-icon" aria-hidden="true">⚠️</div>
             <div class="error-content">
               <h3 class="error-title">Generation Failed</h3>

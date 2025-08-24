@@ -451,7 +451,7 @@ describe('Build System Integration', () => {
 
   describe('File Size Validation', () => {
     it('should warn about large bundle sizes', async () => {
-      // First create all expected files 
+      // First create all expected files
       const expectedBundles = [
         'dist/bundle.js',
         'dist/anatomy-visualizer.js',
@@ -468,7 +468,7 @@ describe('Build System Integration', () => {
         mockFiles.set(bundle + '.map', { type: 'file', size: 512 });
       }
 
-      // Then create one very large bundle - BuildValidator doesn't actually check for large files  
+      // Then create one very large bundle - BuildValidator doesn't actually check for large files
       // This test should check that validation passes for large files
       mockFiles.set('dist/bundle.js', { type: 'file', size: 15000000 }); // 15MB
 

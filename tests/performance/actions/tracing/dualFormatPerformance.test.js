@@ -6,7 +6,10 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import { ActionTraceOutputService } from '../../../../src/actions/tracing/actionTraceOutputService.js';
-import { createMockJsonFormatter, createMockHumanReadableFormatterWithOptions } from '../../../common/mockFactories/actionTracing.js';
+import {
+  createMockJsonFormatter,
+  createMockHumanReadableFormatterWithOptions,
+} from '../../../common/mockFactories/actionTracing.js';
 
 describe('Dual-Format Action Tracing Performance', () => {
   let testBed;
@@ -63,14 +66,18 @@ describe('Dual-Format Action Tracing Performance', () => {
         const startTime = performance.now();
         await actionTraceOutputService.writeTrace(trace);
         const endTime = performance.now();
-        
+
         times.push(endTime - startTime);
       }
 
       const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
-      const p95Time = times.sort((a, b) => a - b)[Math.floor(times.length * 0.95)];
+      const p95Time = times.sort((a, b) => a - b)[
+        Math.floor(times.length * 0.95)
+      ];
 
-      console.log(`Performance metrics: avg=${avgTime.toFixed(2)}ms, p95=${p95Time.toFixed(2)}ms`);
+      console.log(
+        `Performance metrics: avg=${avgTime.toFixed(2)}ms, p95=${p95Time.toFixed(2)}ms`
+      );
 
       // Adjusted performance expectations based on current system capabilities
       expect(avgTime).toBeLessThan(5); // Dual format generation <5ms average
@@ -101,7 +108,7 @@ describe('Dual-Format Action Tracing Performance', () => {
         outputToFiles: false,
       });
 
-      // Test JSON-only service  
+      // Test JSON-only service
       const jsonConfig = { outputFormats: ['json'] };
       const jsonService = new ActionTraceOutputService({
         jsonFormatter: createMockJsonFormatter(),
@@ -126,11 +133,15 @@ describe('Dual-Format Action Tracing Performance', () => {
         jsonOnlyTimes.push(endTime - startTime);
       }
 
-      const avgDualTime = dualTimes.reduce((a, b) => a + b, 0) / dualTimes.length;
-      const avgJsonTime = jsonOnlyTimes.reduce((a, b) => a + b, 0) / jsonOnlyTimes.length;
+      const avgDualTime =
+        dualTimes.reduce((a, b) => a + b, 0) / dualTimes.length;
+      const avgJsonTime =
+        jsonOnlyTimes.reduce((a, b) => a + b, 0) / jsonOnlyTimes.length;
       const overhead = avgDualTime - avgJsonTime;
 
-      console.log(`Dual: ${avgDualTime.toFixed(2)}ms, JSON: ${avgJsonTime.toFixed(2)}ms, Overhead: ${overhead.toFixed(2)}ms`);
+      console.log(
+        `Dual: ${avgDualTime.toFixed(2)}ms, JSON: ${avgJsonTime.toFixed(2)}ms, Overhead: ${overhead.toFixed(2)}ms`
+      );
 
       // Realistic overhead expectations
       expect(overhead).toBeLessThan(10); // <10ms additional overhead per spec
@@ -141,7 +152,7 @@ describe('Dual-Format Action Tracing Performance', () => {
   describe('Memory Usage Performance', () => {
     it('should not leak memory during continuous dual-format generation', async () => {
       const iterations = 200;
-      
+
       // Measure memory before
       if (global.gc) global.gc();
       const memBefore = process.memoryUsage();
@@ -151,7 +162,7 @@ describe('Dual-Format Action Tracing Performance', () => {
           actorId: `memory-test-${i}`,
           tracedActions: ['memory_test'],
         });
-        
+
         await actionTraceOutputService.writeTrace(trace);
       }
 
@@ -162,7 +173,9 @@ describe('Dual-Format Action Tracing Performance', () => {
       const heapIncrease = memAfter.heapUsed - memBefore.heapUsed;
       const heapIncreasePerTrace = heapIncrease / iterations;
 
-      console.log(`Heap increase: ${heapIncrease} bytes total, ${heapIncreasePerTrace} bytes per trace`);
+      console.log(
+        `Heap increase: ${heapIncrease} bytes total, ${heapIncreasePerTrace} bytes per trace`
+      );
 
       expect(heapIncreasePerTrace).toBeLessThan(50000); // <50KB per trace (adjusted for realistic expectations)
     });
@@ -189,8 +202,8 @@ describe('Dual-Format Action Tracing Performance', () => {
 
       // Calculate percentiles
       const sortedTimes = times.sort((a, b) => a - b);
-      const p50 = sortedTimes[Math.floor(times.length * 0.50)];
-      const p90 = sortedTimes[Math.floor(times.length * 0.90)];
+      const p50 = sortedTimes[Math.floor(times.length * 0.5)];
+      const p90 = sortedTimes[Math.floor(times.length * 0.9)];
       const p95 = sortedTimes[Math.floor(times.length * 0.95)];
       const p99 = sortedTimes[Math.floor(times.length * 0.99)];
       const min = Math.min(...times);
@@ -237,15 +250,24 @@ describe('Dual-Format Action Tracing Performance', () => {
         runResults.push(avg);
       }
 
-      const overallAvg = runResults.reduce((a, b) => a + b, 0) / runResults.length;
-      const variance = runResults.reduce((acc, val) => acc + Math.pow(val - overallAvg, 2), 0) / runResults.length;
+      const overallAvg =
+        runResults.reduce((a, b) => a + b, 0) / runResults.length;
+      const variance =
+        runResults.reduce(
+          (acc, val) => acc + Math.pow(val - overallAvg, 2),
+          0
+        ) / runResults.length;
       const stdDev = Math.sqrt(variance);
       const coefficientOfVariation = (stdDev / overallAvg) * 100;
 
-      console.log(`Run averages: ${runResults.map(r => r.toFixed(2)).join(', ')}ms`);
+      console.log(
+        `Run averages: ${runResults.map((r) => r.toFixed(2)).join(', ')}ms`
+      );
       console.log(`Overall average: ${overallAvg.toFixed(2)}ms`);
       console.log(`Standard deviation: ${stdDev.toFixed(2)}ms`);
-      console.log(`Coefficient of variation: ${coefficientOfVariation.toFixed(1)}%`);
+      console.log(
+        `Coefficient of variation: ${coefficientOfVariation.toFixed(1)}%`
+      );
 
       // Performance should be consistent (low coefficient of variation)
       expect(coefficientOfVariation).toBeLessThan(50); // <50% variation between runs

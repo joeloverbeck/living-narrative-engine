@@ -1,0 +1,76 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "TRAITS_GENERATION_COMPLETED",
+  "description": "Dispatched when character traits generation completes successfully",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "type": "string",
+        "description": "ID of the character concept that was used for traits generation"
+      },
+      "directionId": {
+        "type": "string",
+        "description": "ID of the thematic direction that was applied"
+      },
+      "generationTime": {
+        "type": "number",
+        "description": "Time taken to generate traits in milliseconds"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO 8601 timestamp when traits generation completed"
+      },
+      "metadata": {
+        "type": "object",
+        "description": "Detailed generation metadata and metrics",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "LLM model identifier used for generation"
+          },
+          "promptTokens": {
+            "type": "number",
+            "description": "Number of tokens in the prompt"
+          },
+          "responseTokens": {
+            "type": "number",
+            "description": "Number of tokens in the response"
+          },
+          "totalTokens": {
+            "type": "number",
+            "description": "Total token count (prompt + response)"
+          },
+          "responseTime": {
+            "type": "number",
+            "description": "Response time in milliseconds"
+          },
+          "retryAttempts": {
+            "type": "number",
+            "description": "Number of retry attempts configured"
+          },
+          "promptVersion": {
+            "type": "string",
+            "description": "Version of the traits generation prompt"
+          },
+          "qualityChecks": {
+            "type": "array",
+            "description": "List of quality checks performed",
+            "items": {
+              "type": "string"
+            }
+          },
+          "generationPrompt": {
+            "type": "string",
+            "description": "Truncated version of the generation prompt for logging"
+          }
+        },
+        "required": ["model", "totalTokens", "responseTime", "promptVersion"],
+        "additionalProperties": true
+      }
+    },
+    "required": ["conceptId", "directionId", "generationTime", "timestamp", "metadata"],
+    "additionalProperties": true
+  }
+}

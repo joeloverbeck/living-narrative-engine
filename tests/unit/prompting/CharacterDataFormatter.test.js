@@ -317,6 +317,24 @@ describe('CharacterDataFormatter', () => {
       expect(result).toContain('I fear heights and public speaking.');
     });
 
+    it('should format strengths section with proper header', () => {
+      const content = 'I am excellent at problem-solving and leadership.';
+
+      const result = formatter.formatOptionalSection('Strengths', content);
+
+      expect(result).toContain('## Your Strengths');
+      expect(result).toContain('I am excellent at problem-solving and leadership.');
+    });
+
+    it('should format weaknesses section with proper header', () => {
+      const content = 'I struggle with patience and tend to be overly critical.';
+
+      const result = formatter.formatOptionalSection('Weaknesses', content);
+
+      expect(result).toContain('## Your Weaknesses');
+      expect(result).toContain('I struggle with patience and tend to be overly critical.');
+    });
+
     it('should return empty string for null content', () => {
       const result = formatter.formatOptionalSection('Likes', null);
       expect(result).toBe('');
@@ -341,6 +359,8 @@ describe('CharacterDataFormatter', () => {
         profile: 'Born in the mountains, I travel the world sharing tales.',
         likes: 'Music, stories, and warm fires.',
         dislikes: 'Silence and cold weather.',
+        strengths: 'Leadership, storytelling, and inspiring others.',
+        weaknesses: 'Impatience and perfectionism.',
         secrets: 'I can speak to animals.',
         fears: 'Being forgotten.',
         speechPatterns: [
@@ -368,6 +388,10 @@ describe('CharacterDataFormatter', () => {
       expect(result).toContain('Music, stories, and warm fires.');
       expect(result).toContain('## Your Dislikes');
       expect(result).toContain('Silence and cold weather.');
+      expect(result).toContain('## Your Strengths');
+      expect(result).toContain('Leadership, storytelling, and inspiring others.');
+      expect(result).toContain('## Your Weaknesses');
+      expect(result).toContain('Impatience and perfectionism.');
       expect(result).toContain('## Your Secrets');
       expect(result).toContain('I can speak to animals.');
       expect(result).toContain('## Your Fears');

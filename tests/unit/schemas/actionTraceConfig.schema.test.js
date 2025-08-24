@@ -320,11 +320,7 @@ describe('Action Trace Config Schema', () => {
 
   describe('outputFormats validation', () => {
     test('should accept valid output formats', () => {
-      const validFormats = [
-        ['json'],
-        ['text'],
-        ['json', 'text'],
-      ];
+      const validFormats = [['json'], ['text'], ['json', 'text']];
 
       validFormats.forEach((formats) => {
         const config = {

@@ -806,7 +806,7 @@ export class CharacterBuilderBootstrap {
           // Register as a value or factory function
           container.register(token, service);
         }
-        
+
         if (this.#logger) {
           this.#logger.debug(
             `[CharacterBuilderBootstrap] Registered custom service: ${String(token)}`
@@ -856,12 +856,27 @@ export class CharacterBuilderBootstrap {
           try {
             // Try to resolve from container using the service name as token first
             // For known services, use the proper token
-            if (serviceName === 'traitsDisplayEnhancer' && tokenName === 'TraitsDisplayEnhancer') {
-              dependencies[serviceName] = container.resolve(tokens.TraitsDisplayEnhancer);
-            } else if (serviceName === 'displayEnhancer' && tokenName === 'CoreMotivationsDisplayEnhancer') {
-              dependencies[serviceName] = container.resolve(tokens.CoreMotivationsDisplayEnhancer);
-            } else if (serviceName === 'coreMotivationsGenerator' && tokenName === 'CoreMotivationsGenerator') {
-              dependencies[serviceName] = container.resolve(tokens.CoreMotivationsGenerator);
+            if (
+              serviceName === 'traitsDisplayEnhancer' &&
+              tokenName === 'TraitsDisplayEnhancer'
+            ) {
+              dependencies[serviceName] = container.resolve(
+                tokens.TraitsDisplayEnhancer
+              );
+            } else if (
+              serviceName === 'displayEnhancer' &&
+              tokenName === 'CoreMotivationsDisplayEnhancer'
+            ) {
+              dependencies[serviceName] = container.resolve(
+                tokens.CoreMotivationsDisplayEnhancer
+              );
+            } else if (
+              serviceName === 'coreMotivationsGenerator' &&
+              tokenName === 'CoreMotivationsGenerator'
+            ) {
+              dependencies[serviceName] = container.resolve(
+                tokens.CoreMotivationsGenerator
+              );
             } else {
               dependencies[serviceName] = container.resolve(serviceName);
             }
@@ -874,7 +889,10 @@ export class CharacterBuilderBootstrap {
 
             try {
               // For services that only need a logger, try to instantiate them
-              if (tokenName === 'CoreMotivationsDisplayEnhancer' || tokenName === 'TraitsDisplayEnhancer') {
+              if (
+                tokenName === 'CoreMotivationsDisplayEnhancer' ||
+                tokenName === 'TraitsDisplayEnhancer'
+              ) {
                 dependencies[serviceName] = new serviceClassOrInstance({
                   logger,
                 });

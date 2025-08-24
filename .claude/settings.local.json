@@ -99,7 +99,8 @@
       "Bash(NODE_ENV=test timeout 30 npx jest tests/performance/actions/tracing/pipelineTracing.performance.test.js --config jest.config.performance.js --env=jsdom --testNamePattern=\"should have minimal tracing overhead under 5% baseline\" --silent)",
       "Bash(http-server:*)",
       "mcp__serena__replace_regex",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/traitsGeneratorConceptHandling.integration.test.js --no-coverage --verbose)"
     ],
     "deny": []
   }

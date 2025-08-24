@@ -159,7 +159,9 @@ export class Span {
     // Validate duration to prevent negative values
     if (this.#duration < 0) {
       // eslint-disable-next-line no-console
-      console.warn(`Span "${this.#operation}" (${this.#id}) has negative duration: ${this.#duration}ms. Setting to 0.`);
+      console.warn(
+        `Span "${this.#operation}" (${this.#id}) has negative duration: ${this.#duration}ms. Setting to 0.`
+      );
       this.#duration = 0;
     }
 

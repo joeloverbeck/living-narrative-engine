@@ -52,6 +52,7 @@ if (!valid) console.log('Errors:', ajv.errors);
 **Symptoms**: Actions execute but no trace files appear in output directory
 
 **Possible Causes**:
+
 1. Action tracing disabled
 2. Actions not in traced list
 3. LLM proxy server not running
@@ -61,30 +62,33 @@ if (!valid) console.log('Errors:', ajv.errors);
 **Solutions**:
 
 1. **Check configuration**:
+
    ```json
    {
      "actionTracing": {
-       "enabled": true,  // Must be true
-       "tracedActions": ["*"]  // Use "*" to trace all actions for testing
+       "enabled": true, // Must be true
+       "tracedActions": ["*"] // Use "*" to trace all actions for testing
      }
    }
    ```
 
 2. **Verify LLM proxy server**:
+
    ```bash
    # Start proxy server if not running
    cd llm-proxy-server
    npm run dev
-   
+
    # Check server status
    curl http://localhost:3001/health
    ```
 
 3. **Check directory permissions**:
+
    ```bash
    # Create directory with proper permissions
    mkdir -p traces && chmod 755 traces
-   
+
    # Verify write permissions
    touch traces/test.txt && rm traces/test.txt
    ```
@@ -99,6 +103,7 @@ if (!valid) console.log('Errors:', ajv.errors);
 **Symptoms**: Text format files show escape sequences or unreadable characters
 
 **Possible Causes**:
+
 1. Incorrect file encoding
 2. Color codes in file output (should be disabled automatically)
 3. Terminal encoding issues when viewing
@@ -106,27 +111,30 @@ if (!valid) console.log('Errors:', ajv.errors);
 **Solutions**:
 
 1. **Verify text format configuration**:
+
    ```json
    {
      "textFormatOptions": {
-       "enableColors": false  // This should be false for file output
+       "enableColors": false // This should be false for file output
      }
    }
    ```
 
 2. **Check file encoding**:
+
    ```bash
    # Check file encoding
    file traces/*.txt
-   
+
    # Should show: UTF-8 Unicode text
    ```
 
 3. **View with proper encoding**:
+
    ```bash
    # Use UTF-8 encoding when viewing
    cat traces/trace_file.txt
-   
+
    # Or specify encoding in your editor
    ```
 
@@ -137,53 +145,61 @@ if (!valid) console.log('Errors:', ajv.errors);
 **Common Errors and Solutions**:
 
 **Invalid line width**:
+
 ```
 ❌ textFormatOptions.lineWidth must be between 80 and 200, got: 300
 ✅ Solution: Set lineWidth to value between 80-200
 ```
+
 ```json
 {
   "textFormatOptions": {
-    "lineWidth": 120  // Valid range: 80-200
+    "lineWidth": 120 // Valid range: 80-200
   }
 }
 ```
 
 **Invalid output formats**:
+
 ```
-❌ Invalid output formats: [html, unsupported] 
+❌ Invalid output formats: [html, unsupported]
 ✅ Solution: Use only: json, text (html/markdown planned)
 ```
+
 ```json
 {
-  "outputFormats": ["json", "text"]  // Only json and text currently supported
+  "outputFormats": ["json", "text"] // Only json and text currently supported
 }
 ```
 
 **Invalid section separator**:
+
 ```
 ❌ textFormatOptions.sectionSeparator must be a single character
 ✅ Solution: Use single character like "=", "-", or "*"
 ```
+
 ```json
 {
   "textFormatOptions": {
-    "sectionSeparator": "="  // Must be exactly one character
+    "sectionSeparator": "=" // Must be exactly one character
   }
 }
 ```
 
 **Missing required fields**:
+
 ```
 ❌ Missing required property: enabled
 ✅ Solution: Add enabled property
 ```
+
 ```json
 {
   "actionTracing": {
-    "enabled": true,  // Required
-    "tracedActions": [],  // Required
-    "outputDirectory": "./traces"  // Required
+    "enabled": true, // Required
+    "tracedActions": [], // Required
+    "outputDirectory": "./traces" // Required
   }
 }
 ```
@@ -197,38 +213,42 @@ if (!valid) console.log('Errors:', ajv.errors);
 **Solutions**:
 
 1. **Start LLM proxy server**:
+
    ```bash
    # Development mode
    cd llm-proxy-server
    npm run dev
-   
+
    # Production mode
    npm start --prefix llm-proxy-server
    ```
 
 2. **Check port configuration**:
+
    ```bash
    # Verify server is listening on port 3001
    netstat -tlnp | grep 3001
-   
+
    # Or check with curl
    curl http://localhost:3001/health
    ```
 
 3. **Verify firewall settings**:
+
    ```bash
    # Check if port 3001 is blocked
    sudo ufw status | grep 3001
-   
+
    # Allow port if needed (be careful with production systems)
    sudo ufw allow 3001
    ```
 
 4. **Check server logs**:
+
    ```bash
    # View server startup logs
    tail -f llm-proxy-server/logs/server.log
-   
+
    # Check for startup errors
    grep ERROR llm-proxy-server/logs/server.log
    ```
@@ -240,6 +260,7 @@ if (!valid) console.log('Errors:', ajv.errors);
 **Solutions**:
 
 1. **Verify endpoint availability**:
+
    ```bash
    # Test batch endpoint
    curl -X POST http://localhost:3001/api/traces/write-batch \
@@ -253,15 +274,17 @@ if (!valid) console.log('Errors:', ajv.errors);
    ```
 
 2. **Check request format**:
+
    ```json
    {
-     "traces": [  // Must be an array
+     "traces": [
+       // Must be an array
        {
-         "traceData": "...",  // Required
-         "fileName": "..."    // Required
+         "traceData": "...", // Required
+         "fileName": "..." // Required
        }
      ],
-     "outputDirectory": "./traces"  // Optional
+     "outputDirectory": "./traces" // Optional
    }
    ```
 
@@ -277,16 +300,18 @@ if (!valid) console.log('Errors:', ajv.errors);
 **Solutions**:
 
 1. **Check network connectivity**:
+
    ```bash
    # Test connection speed
    curl -w "@curl-format.txt" -o /dev/null http://localhost:3001/health
    ```
 
 2. **Monitor server resource usage**:
+
    ```bash
    # Check CPU and memory usage
    htop
-   
+
    # Check disk I/O
    iotop
    ```
@@ -296,7 +321,7 @@ if (!valid) console.log('Errors:', ajv.errors);
    {
      "actionTracing": {
        "useBatchEndpoint": true,
-       "batchTimeout": 120000  // Increase timeout to 2 minutes
+       "batchTimeout": 120000 // Increase timeout to 2 minutes
      }
    }
    ```
@@ -310,16 +335,18 @@ if (!valid) console.log('Errors:', ajv.errors);
 **Solutions**:
 
 1. **Check directory permissions**:
+
    ```bash
    # Check current permissions
    ls -la traces/
-   
+
    # Set correct permissions
    chmod 755 traces/
    chmod 644 traces/*.json traces/*.txt
    ```
 
 2. **Create directory with proper permissions**:
+
    ```bash
    # Create directory structure
    mkdir -p traces/dev traces/production traces/test
@@ -327,10 +354,11 @@ if (!valid) console.log('Errors:', ajv.errors);
    ```
 
 3. **Check disk space**:
+
    ```bash
    # Check available space
    df -h
-   
+
    # Check inode usage
    df -i
    ```
@@ -348,17 +376,20 @@ if (!valid) console.log('Errors:', ajv.errors);
 **Solutions**:
 
 1. **Check available disk space**:
+
    ```bash
    df -h
    ```
 
 2. **Monitor for concurrent write issues**:
+
    ```bash
    # Check for file locking issues
    lsof +D traces/
    ```
 
 3. **Verify file integrity**:
+
    ```bash
    # Check JSON files for validity
    for file in traces/*.json; do
@@ -381,31 +412,35 @@ if (!valid) console.log('Errors:', ajv.errors);
 **Solutions**:
 
 1. **Reduce traced actions**:
+
    ```json
    {
-     "tracedActions": ["specific:action"]  // Instead of ["*"]
+     "tracedActions": ["specific:action"] // Instead of ["*"]
    }
    ```
 
 2. **Use JSON-only format**:
+
    ```json
    {
-     "outputFormats": ["json"]  // Remove "text" format
+     "outputFormats": ["json"] // Remove "text" format
    }
    ```
 
 3. **Decrease verbosity**:
+
    ```json
    {
-     "verbosity": "minimal"  // Instead of "verbose"
+     "verbosity": "minimal" // Instead of "verbose"
    }
    ```
 
 4. **Optimize file rotation**:
+
    ```json
    {
-     "maxTraceFiles": 50,  // Reduce from default 100
-     "rotationPolicy": "count"  // More predictable than "age"
+     "maxTraceFiles": 50, // Reduce from default 100
+     "rotationPolicy": "count" // More predictable than "age"
    }
    ```
 
@@ -423,25 +458,28 @@ if (!valid) console.log('Errors:', ajv.errors);
 **Solutions**:
 
 1. **Configure aggressive file rotation**:
+
    ```json
    {
      "maxTraceFiles": 25,
      "rotationPolicy": "count",
-     "maxFileAge": 3600  // 1 hour
+     "maxFileAge": 3600 // 1 hour
    }
    ```
 
 2. **Reduce included data**:
+
    ```json
    {
      "includeComponentData": false,
-     "includePrerequisites": false,  
+     "includePrerequisites": false,
      "includeTargets": false,
      "verbosity": "minimal"
    }
    ```
 
 3. **Use compression** (if implementing):
+
    ```json
    {
      "compression": {
@@ -504,7 +542,7 @@ curl -X POST http://localhost:3001/api/traces/write \
 # Terminal 1: Server logs
 tail -f llm-proxy-server/logs/server.log
 
-# Terminal 2: Error logs  
+# Terminal 2: Error logs
 tail -f llm-proxy-server/logs/error.log
 
 # Terminal 3: Execute test actions
@@ -531,19 +569,22 @@ const path = require('path');
 
 async function debugTracing() {
   console.log('🔍 Action Tracing Debug Tool');
-  
+
   // 1. Check configuration file
   try {
     const config = require('./config/trace-config.json');
     console.log('✅ Configuration file loaded');
     console.log('   - Tracing enabled:', config.actionTracing?.enabled);
     console.log('   - Output formats:', config.actionTracing?.outputFormats);
-    console.log('   - Output directory:', config.actionTracing?.outputDirectory);
+    console.log(
+      '   - Output directory:',
+      config.actionTracing?.outputDirectory
+    );
   } catch (error) {
     console.log('❌ Configuration error:', error.message);
     return;
   }
-  
+
   // 2. Test server connectivity
   try {
     const fetch = require('node-fetch');
@@ -553,34 +594,41 @@ async function debugTracing() {
     console.log('❌ Server connectivity error:', error.message);
     return;
   }
-  
+
   // 3. Test trace writing
   try {
     const fetch = require('node-fetch');
     const testTrace = {
-      traceData: JSON.stringify({ test: true, timestamp: new Date().toISOString() }),
+      traceData: JSON.stringify({
+        test: true,
+        timestamp: new Date().toISOString(),
+      }),
       fileName: 'debug-test.json',
-      outputDirectory: './traces'
+      outputDirectory: './traces',
     };
-    
+
     const response = await fetch('http://localhost:3001/api/traces/write', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(testTrace)
+      body: JSON.stringify(testTrace),
     });
-    
+
     if (response.ok) {
       console.log('✅ Test trace written successfully');
       const result = await response.json();
       console.log('   - File path:', result.path);
       console.log('   - File size:', result.size, 'bytes');
     } else {
-      console.log('❌ Trace write failed:', response.status, await response.text());
+      console.log(
+        '❌ Trace write failed:',
+        response.status,
+        await response.text()
+      );
     }
   } catch (error) {
     console.log('❌ Trace write error:', error.message);
   }
-  
+
   // 4. Check output directory
   const outputDir = './traces';
   if (fs.existsSync(outputDir)) {
@@ -592,7 +640,7 @@ async function debugTracing() {
   } else {
     console.log('❌ Output directory does not exist');
   }
-  
+
   console.log('🔍 Debug complete');
 }
 
@@ -631,6 +679,7 @@ If issues persist after following this guide:
    - Minimal reproduction case
 
 2. **Enable Debug Logging**:
+
    ```json
    {
      "logging": {

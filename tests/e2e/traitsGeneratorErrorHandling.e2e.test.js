@@ -69,7 +69,7 @@ describe('Traits Generator Error Handling E2E', () => {
           }
           return { content, type: options?.type || 'text/plain' };
         });
-      }
+      },
     });
 
     window = dom.window;
@@ -122,29 +122,35 @@ describe('Traits Generator Error Handling E2E', () => {
       expect(errorMessageText).toBeTruthy();
 
       // Should support different error message types
-      expect(errorMessageText.parentElement.classList.contains('error-content')).toBe(true);
+      expect(
+        errorMessageText.parentElement.classList.contains('error-content')
+      ).toBe(true);
     });
   });
 
   describe('Validation Error Handling', () => {
     it('should display input validation errors clearly', () => {
-      const inputValidationError = document.getElementById('input-validation-error');
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
       expect(inputValidationError).toBeTruthy();
       expect(inputValidationError.getAttribute('role')).toBe('alert');
-      expect(inputValidationError.classList.contains('cb-error-text')).toBe(true);
+      expect(inputValidationError.classList.contains('cb-error-text')).toBe(
+        true
+      );
     });
 
     it('should handle required field validation', () => {
       const requiredInputs = [
         'core-motivation-input',
         'internal-contradiction-input',
-        'central-question-input'
+        'central-question-input',
       ];
 
-      requiredInputs.forEach(inputId => {
+      requiredInputs.forEach((inputId) => {
         const input = document.getElementById(inputId);
         const label = document.querySelector(`label[for="${inputId}"]`);
-        
+
         expect(input).toBeTruthy();
         expect(label).toBeTruthy();
         expect(label.textContent).toContain('*'); // Required indicator
@@ -152,8 +158,12 @@ describe('Traits Generator Error Handling E2E', () => {
     });
 
     it('should handle minimum length validation errors', () => {
-      const coreMotivationInput = document.getElementById('core-motivation-input');
-      const inputValidationError = document.getElementById('input-validation-error');
+      const coreMotivationInput = document.getElementById(
+        'core-motivation-input'
+      );
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
 
       expect(coreMotivationInput).toBeTruthy();
       expect(inputValidationError).toBeTruthy();
@@ -161,13 +171,17 @@ describe('Traits Generator Error Handling E2E', () => {
       // Test validation on blur event
       expect(() => {
         coreMotivationInput.value = 'short'; // Too short
-        coreMotivationInput.dispatchEvent(new window.Event('blur', { bubbles: true }));
+        coreMotivationInput.dispatchEvent(
+          new window.Event('blur', { bubbles: true })
+        );
       }).not.toThrow();
     });
 
     it('should handle direction selection validation', () => {
       const directionSelector = document.getElementById('direction-selector');
-      const directionSelectorError = document.getElementById('direction-selector-error');
+      const directionSelectorError = document.getElementById(
+        'direction-selector-error'
+      );
 
       expect(directionSelector).toBeTruthy();
       expect(directionSelectorError).toBeTruthy();
@@ -180,7 +194,7 @@ describe('Traits Generator Error Handling E2E', () => {
     it('should prevent generation with invalid inputs', () => {
       const generateBtn = document.getElementById('generate-btn');
       expect(generateBtn).toBeTruthy();
-      
+
       // Should be disabled with invalid inputs
       expect(generateBtn.disabled).toBe(true);
     });
@@ -194,14 +208,16 @@ describe('Traits Generator Error Handling E2E', () => {
 
       expect(errorState).toBeTruthy();
       expect(errorMessageText).toBeTruthy();
-      
+
       // Should support detailed error messaging
       expect(errorState.getAttribute('role')).toBe('alert');
     });
 
     it('should handle schema validation failures', () => {
       // Test that validation errors can be displayed to users
-      const inputValidationError = document.getElementById('input-validation-error');
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
       expect(inputValidationError).toBeTruthy();
       expect(inputValidationError.getAttribute('role')).toBe('alert');
     });
@@ -209,7 +225,9 @@ describe('Traits Generator Error Handling E2E', () => {
     it('should handle malformed response data', () => {
       // The error handling should support malformed data scenarios
       const errorState = document.getElementById('error-state');
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
 
       expect(errorState).toBeTruthy();
       expect(screenReaderAnnouncement).toBeTruthy();
@@ -241,10 +259,10 @@ describe('Traits Generator Error Handling E2E', () => {
       const inputs = [
         'core-motivation-input',
         'internal-contradiction-input',
-        'central-question-input'
+        'central-question-input',
       ];
 
-      inputs.forEach(inputId => {
+      inputs.forEach((inputId) => {
         const input = document.getElementById(inputId);
         expect(input).toBeTruthy();
         expect(input.disabled).toBe(false); // Should remain enabled for editing
@@ -254,11 +272,11 @@ describe('Traits Generator Error Handling E2E', () => {
     it('should provide clear error recovery guidance', () => {
       const errorState = document.getElementById('error-state');
       const errorTitle = errorState.querySelector('.error-title');
-      
+
       expect(errorState).toBeTruthy();
       expect(errorTitle).toBeTruthy();
       expect(errorTitle.textContent).toBe('Generation Failed');
-      
+
       // Error state should be accessible
       expect(errorState.getAttribute('role')).toBe('alert');
     });
@@ -278,7 +296,9 @@ describe('Traits Generator Error Handling E2E', () => {
     });
 
     it('should handle extremely long input values', () => {
-      const coreMotivationInput = document.getElementById('core-motivation-input');
+      const coreMotivationInput = document.getElementById(
+        'core-motivation-input'
+      );
       expect(coreMotivationInput).toBeTruthy();
       expect(coreMotivationInput.tagName).toBe('TEXTAREA');
 
@@ -293,12 +313,12 @@ describe('Traits Generator Error Handling E2E', () => {
       const inputs = [
         document.getElementById('core-motivation-input'),
         document.getElementById('internal-contradiction-input'),
-        document.getElementById('central-question-input')
+        document.getElementById('central-question-input'),
       ];
 
       const specialText = 'Character with special chars: ñáéíóú @#$%^&*()';
-      
-      inputs.forEach(input => {
+
+      inputs.forEach((input) => {
         expect(() => {
           input.value = specialText;
           input.dispatchEvent(new window.Event('input', { bubbles: true }));
@@ -332,7 +352,9 @@ describe('Traits Generator Error Handling E2E', () => {
   describe('Export Error Handling', () => {
     it('should handle export failures gracefully', () => {
       const exportBtn = document.getElementById('export-btn');
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
 
       expect(exportBtn).toBeTruthy();
       expect(screenReaderAnnouncement).toBeTruthy();
@@ -347,12 +369,16 @@ describe('Traits Generator Error Handling E2E', () => {
       expect(exportBtn).toBeTruthy();
 
       // Export button should be accessible
-      expect(exportBtn.getAttribute('aria-label')).toBe('Export traits to text file');
+      expect(exportBtn.getAttribute('aria-label')).toBe(
+        'Export traits to text file'
+      );
     });
 
     it('should handle file system errors', () => {
       // Test that file system errors during export are handled
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
       expect(screenReaderAnnouncement).toBeTruthy();
       expect(screenReaderAnnouncement.classList.contains('sr-only')).toBe(true);
     });
@@ -360,7 +386,9 @@ describe('Traits Generator Error Handling E2E', () => {
 
   describe('Accessibility Error Handling', () => {
     it('should announce errors to screen readers', () => {
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
       expect(screenReaderAnnouncement).toBeTruthy();
       expect(screenReaderAnnouncement.getAttribute('aria-live')).toBe('polite');
       expect(screenReaderAnnouncement.getAttribute('aria-atomic')).toBe('true');
@@ -368,8 +396,12 @@ describe('Traits Generator Error Handling E2E', () => {
 
     it('should maintain focus management during errors', () => {
       const errorState = document.getElementById('error-state');
-      const inputValidationError = document.getElementById('input-validation-error');
-      const directionSelectorError = document.getElementById('direction-selector-error');
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
+      const directionSelectorError = document.getElementById(
+        'direction-selector-error'
+      );
 
       expect(errorState.getAttribute('role')).toBe('alert');
       expect(inputValidationError.getAttribute('role')).toBe('alert');
@@ -395,13 +427,19 @@ describe('Traits Generator Error Handling E2E', () => {
         'core-motivation-input',
         'internal-contradiction-input',
         'central-question-input',
-        'direction-selector'
+        'direction-selector',
       ];
 
-      interactiveElements.forEach(elementId => {
+      interactiveElements.forEach((elementId) => {
         const element = document.getElementById(elementId);
         expect(element).toBeTruthy();
-        expect(element.tabIndex >= 0 || element.tagName === 'BUTTON' || element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.tagName === 'SELECT').toBe(true);
+        expect(
+          element.tabIndex >= 0 ||
+            element.tagName === 'BUTTON' ||
+            element.tagName === 'INPUT' ||
+            element.tagName === 'TEXTAREA' ||
+            element.tagName === 'SELECT'
+        ).toBe(true);
       });
     });
   });
@@ -409,8 +447,12 @@ describe('Traits Generator Error Handling E2E', () => {
   describe('Error State Recovery', () => {
     it('should clear error states when user takes corrective action', () => {
       const errorState = document.getElementById('error-state');
-      const inputValidationError = document.getElementById('input-validation-error');
-      const directionSelectorError = document.getElementById('direction-selector-error');
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
+      const directionSelectorError = document.getElementById(
+        'direction-selector-error'
+      );
 
       expect(errorState).toBeTruthy();
       expect(inputValidationError).toBeTruthy();
@@ -428,7 +470,7 @@ describe('Traits Generator Error Handling E2E', () => {
       const inputs = [
         'core-motivation-input',
         'internal-contradiction-input',
-        'central-question-input'
+        'central-question-input',
       ];
 
       expect(generateBtn).toBeTruthy();
@@ -437,7 +479,7 @@ describe('Traits Generator Error Handling E2E', () => {
       // Controls should be available for recovery
       expect(clearBtn.disabled).toBe(false);
 
-      inputs.forEach(inputId => {
+      inputs.forEach((inputId) => {
         const input = document.getElementById(inputId);
         expect(input.disabled).toBe(false);
       });
@@ -445,7 +487,9 @@ describe('Traits Generator Error Handling E2E', () => {
 
     it('should maintain user data during error scenarios', () => {
       // Form inputs should retain user data even when errors occur
-      const coreMotivationInput = document.getElementById('core-motivation-input');
+      const coreMotivationInput = document.getElementById(
+        'core-motivation-input'
+      );
       expect(coreMotivationInput).toBeTruthy();
 
       const testValue = 'User input that should be preserved';
@@ -475,7 +519,9 @@ describe('Traits Generator Error Handling E2E', () => {
 
       // Should have appropriate fallback content
       const emptyStateText = emptyState.querySelector('.empty-state-text');
-      expect(emptyStateText.textContent).toContain('Select a thematic direction');
+      expect(emptyStateText.textContent).toContain(
+        'Select a thematic direction'
+      );
     });
 
     it('should maintain basic functionality without advanced features', () => {
@@ -485,10 +531,10 @@ describe('Traits Generator Error Handling E2E', () => {
         'core-motivation-input',
         'internal-contradiction-input',
         'central-question-input',
-        'clear-btn'
+        'clear-btn',
       ];
 
-      basicElements.forEach(elementId => {
+      basicElements.forEach((elementId) => {
         const element = document.getElementById(elementId);
         expect(element).toBeTruthy();
       });
@@ -506,7 +552,7 @@ function setupErrorTestingMocks() {
     log: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    debug: jest.fn()
+    debug: jest.fn(),
   };
 
   const errorConfig = {
@@ -514,7 +560,7 @@ function setupErrorTestingMocks() {
     simulateTimeout: false,
     simulateServiceError: false,
     simulateExportError: false,
-    simulateValidationError: false
+    simulateValidationError: false,
   };
 
   const mockFetch = jest.fn().mockImplementation((url, options) => {
@@ -531,25 +577,32 @@ function setupErrorTestingMocks() {
       });
     }
 
-    if (errorConfig.simulateServiceError && urlString.includes('generate-traits')) {
+    if (
+      errorConfig.simulateServiceError &&
+      urlString.includes('generate-traits')
+    ) {
       return Promise.resolve({
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
-        json: () => Promise.resolve({ error: 'Service unavailable' })
+        json: () => Promise.resolve({ error: 'Service unavailable' }),
       });
     }
 
     // Simulate validation errors
-    if (errorConfig.simulateValidationError && urlString.includes('generate-traits')) {
+    if (
+      errorConfig.simulateValidationError &&
+      urlString.includes('generate-traits')
+    ) {
       return Promise.resolve({
         ok: false,
         status: 400,
         statusText: 'Bad Request',
-        json: () => Promise.resolve({ 
-          error: 'Validation failed',
-          details: ['Input too short', 'Invalid format']
-        })
+        json: () =>
+          Promise.resolve({
+            error: 'Validation failed',
+            details: ['Input too short', 'Invalid format'],
+          }),
       });
     }
 
@@ -558,15 +611,16 @@ function setupErrorTestingMocks() {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve([
-          {
-            id: 'error-test-direction',
-            title: 'Test Direction',
-            description: 'Direction for error testing',
-            concept: 'Testing',
-            createdAt: new Date().toISOString()
-          }
-        ])
+        json: () =>
+          Promise.resolve([
+            {
+              id: 'error-test-direction',
+              title: 'Test Direction',
+              description: 'Direction for error testing',
+              concept: 'Testing',
+              createdAt: new Date().toISOString(),
+            },
+          ]),
       });
     }
 
@@ -574,9 +628,10 @@ function setupErrorTestingMocks() {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve([
-          { id: '1', text: 'Test cliche for error handling' }
-        ])
+        json: () =>
+          Promise.resolve([
+            { id: '1', text: 'Test cliche for error handling' },
+          ]),
       });
     }
 
@@ -584,14 +639,15 @@ function setupErrorTestingMocks() {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve([
-          {
-            id: '1',
-            coreMotivation: 'Test motivation',
-            internalContradiction: 'Test contradiction',
-            centralQuestion: 'Test question?'
-          }
-        ])
+        json: () =>
+          Promise.resolve([
+            {
+              id: '1',
+              coreMotivation: 'Test motivation',
+              internalContradiction: 'Test contradiction',
+              centralQuestion: 'Test question?',
+            },
+          ]),
       });
     }
 
@@ -602,6 +658,6 @@ function setupErrorTestingMocks() {
     fetch: mockFetch,
     console: mockConsole,
     errorConfig,
-    simulateExportError: errorConfig.simulateExportError
+    simulateExportError: errorConfig.simulateExportError,
   };
 }

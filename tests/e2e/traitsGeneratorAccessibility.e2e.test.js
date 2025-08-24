@@ -38,19 +38,26 @@ describe('Traits Generator Accessibility E2E', () => {
       beforeParse(window) {
         // Mock keyboard event handling
         const originalAddEventListener = window.document.addEventListener;
-        window.document.addEventListener = jest.fn((event, handler, options) => {
-          if (event === 'keydown') {
-            keyboardEvents.push({ type: 'keydown', handler, options });
+        window.document.addEventListener = jest.fn(
+          (event, handler, options) => {
+            if (event === 'keydown') {
+              keyboardEvents.push({ type: 'keydown', handler, options });
+            }
+            return originalAddEventListener.call(
+              window.document,
+              event,
+              handler,
+              options
+            );
           }
-          return originalAddEventListener.call(window.document, event, handler, options);
-        });
+        );
 
         // Mock focus management
-        window.HTMLElement.prototype.focus = jest.fn(function() {
+        window.HTMLElement.prototype.focus = jest.fn(function () {
           this.setAttribute('data-focused', 'true');
         });
 
-        window.HTMLElement.prototype.blur = jest.fn(function() {
+        window.HTMLElement.prototype.blur = jest.fn(function () {
           this.removeAttribute('data-focused');
         });
 
@@ -62,10 +69,10 @@ describe('Traits Generator Accessibility E2E', () => {
           ...window.navigator,
           clipboard: {
             writeText: jest.fn().mockResolvedValue(),
-            readText: jest.fn().mockResolvedValue('')
-          }
+            readText: jest.fn().mockResolvedValue(''),
+          },
         };
-      }
+      },
     });
 
     window = dom.window;
@@ -90,10 +97,10 @@ describe('Traits Generator Accessibility E2E', () => {
 
       // Should have proper heading structure
       expect(h2s.length).toBeGreaterThan(0);
-      
+
       // Panel titles should be h2
       const panelTitles = document.querySelectorAll('.cb-panel-title');
-      panelTitles.forEach(title => {
+      panelTitles.forEach((title) => {
         expect(title.tagName).toBe('H2');
       });
     });
@@ -103,13 +110,13 @@ describe('Traits Generator Accessibility E2E', () => {
         'core-motivation-input',
         'internal-contradiction-input',
         'central-question-input',
-        'direction-selector'
+        'direction-selector',
       ];
 
-      requiredInputs.forEach(inputId => {
+      requiredInputs.forEach((inputId) => {
         const input = document.getElementById(inputId);
         const label = document.querySelector(`label[for="${inputId}"]`);
-        
+
         expect(input).toBeTruthy();
         expect(label).toBeTruthy();
         expect(label.textContent.trim()).not.toBe('');
@@ -121,22 +128,19 @@ describe('Traits Generator Accessibility E2E', () => {
       const errorElements = [
         'direction-selector-error',
         'input-validation-error',
-        'error-state'
+        'error-state',
       ];
 
-      errorElements.forEach(elementId => {
+      errorElements.forEach((elementId) => {
         const element = document.getElementById(elementId);
         expect(element).toBeTruthy();
         expect(element.getAttribute('role')).toBe('alert');
       });
 
       // Test live regions
-      const liveRegions = [
-        'loading-state',
-        'screen-reader-announcement'
-      ];
+      const liveRegions = ['loading-state', 'screen-reader-announcement'];
 
-      liveRegions.forEach(regionId => {
+      liveRegions.forEach((regionId) => {
         const region = document.getElementById(regionId);
         expect(region).toBeTruthy();
         expect(region.getAttribute('aria-live')).toBeTruthy();
@@ -144,14 +148,9 @@ describe('Traits Generator Accessibility E2E', () => {
     });
 
     it('should have proper button accessibility', () => {
-      const buttons = [
-        'generate-btn',
-        'export-btn',
-        'clear-btn',
-        'back-btn'
-      ];
+      const buttons = ['generate-btn', 'export-btn', 'clear-btn', 'back-btn'];
 
-      buttons.forEach(buttonId => {
+      buttons.forEach((buttonId) => {
         const button = document.getElementById(buttonId);
         expect(button).toBeTruthy();
         expect(button.tagName).toBe('BUTTON');
@@ -183,18 +182,22 @@ describe('Traits Generator Accessibility E2E', () => {
       const helpTexts = [
         'core-motivation-help',
         'contradiction-help',
-        'question-help'
+        'question-help',
       ];
 
-      helpTexts.forEach(helpId => {
+      helpTexts.forEach((helpId) => {
         const helpElement = document.getElementById(helpId);
         expect(helpElement).toBeTruthy();
         expect(helpElement.classList.contains('cb-help-text')).toBe(true);
       });
 
       // Input fields should reference their help text
-      const coreMotivationInput = document.getElementById('core-motivation-input');
-      expect(coreMotivationInput.getAttribute('aria-describedby')).toBe('core-motivation-help');
+      const coreMotivationInput = document.getElementById(
+        'core-motivation-input'
+      );
+      expect(coreMotivationInput.getAttribute('aria-describedby')).toBe(
+        'core-motivation-help'
+      );
     });
 
     it('should have proper color contrast indicators', () => {
@@ -202,7 +205,7 @@ describe('Traits Generator Accessibility E2E', () => {
       const requiredLabels = document.querySelectorAll('label');
       let hasRequiredIndicator = false;
 
-      requiredLabels.forEach(label => {
+      requiredLabels.forEach((label) => {
         if (label.textContent.includes('*')) {
           hasRequiredIndicator = true;
         }
@@ -222,13 +225,13 @@ describe('Traits Generator Accessibility E2E', () => {
         'generate-btn',
         'clear-btn',
         'export-btn',
-        'back-btn'
+        'back-btn',
       ];
 
-      focusableElements.forEach(elementId => {
+      focusableElements.forEach((elementId) => {
         const element = document.getElementById(elementId);
         expect(element).toBeTruthy();
-        
+
         // Should be focusable (not have tabindex="-1" unless intentionally hidden)
         const tabIndex = element.getAttribute('tabindex');
         if (tabIndex !== null) {
@@ -252,25 +255,27 @@ describe('Traits Generator Accessibility E2E', () => {
       const buttons = document.querySelectorAll('button');
 
       // All form elements should be keyboard accessible
-      [...textareas, ...selects, ...buttons].forEach(element => {
-        expect(element.tabIndex >= 0 || element.getAttribute('tabindex') === null).toBe(true);
+      [...textareas, ...selects, ...buttons].forEach((element) => {
+        expect(
+          element.tabIndex >= 0 || element.getAttribute('tabindex') === null
+        ).toBe(true);
       });
     });
 
     it('should handle Enter key on buttons', () => {
       const buttons = document.querySelectorAll('button');
-      
-      buttons.forEach(button => {
+
+      buttons.forEach((button) => {
         expect(button).toBeTruthy();
         expect(button.tagName).toBe('BUTTON');
-        
+
         // Buttons should be activatable with Enter key
         expect(() => {
           const enterEvent = new window.KeyboardEvent('keydown', {
             key: 'Enter',
             code: 'Enter',
             keyCode: 13,
-            bubbles: true
+            bubbles: true,
           });
           button.dispatchEvent(enterEvent);
         }).not.toThrow();
@@ -279,14 +284,14 @@ describe('Traits Generator Accessibility E2E', () => {
 
     it('should handle Space key on buttons', () => {
       const buttons = document.querySelectorAll('button');
-      
-      buttons.forEach(button => {
+
+      buttons.forEach((button) => {
         expect(() => {
           const spaceEvent = new window.KeyboardEvent('keydown', {
             key: ' ',
             code: 'Space',
             keyCode: 32,
-            bubbles: true
+            bubbles: true,
           });
           button.dispatchEvent(spaceEvent);
         }).not.toThrow();
@@ -300,7 +305,7 @@ describe('Traits Generator Accessibility E2E', () => {
           key: 'Escape',
           code: 'Escape',
           keyCode: 27,
-          bubbles: true
+          bubbles: true,
         });
         document.dispatchEvent(escapeEvent);
       }).not.toThrow();
@@ -327,7 +332,7 @@ describe('Traits Generator Accessibility E2E', () => {
           code: 'Enter',
           keyCode: 13,
           ctrlKey: true,
-          bubbles: true
+          bubbles: true,
         });
         document.dispatchEvent(ctrlEnterEvent);
       }).not.toThrow();
@@ -346,7 +351,7 @@ describe('Traits Generator Accessibility E2E', () => {
           code: 'KeyE',
           keyCode: 69,
           ctrlKey: true,
-          bubbles: true
+          bubbles: true,
         });
         document.dispatchEvent(ctrlEEvent);
       }).not.toThrow();
@@ -367,7 +372,7 @@ describe('Traits Generator Accessibility E2E', () => {
           keyCode: 46,
           ctrlKey: true,
           shiftKey: true,
-          bubbles: true
+          bubbles: true,
         });
         document.dispatchEvent(ctrlShiftDelEvent);
       }).not.toThrow();
@@ -381,7 +386,7 @@ describe('Traits Generator Accessibility E2E', () => {
       expect(kbdElements.length).toBeGreaterThan(0);
 
       // Should have proper semantic markup for keyboard keys
-      kbdElements.forEach(kbd => {
+      kbdElements.forEach((kbd) => {
         expect(kbd.tagName).toBe('KBD');
         expect(kbd.textContent.trim()).not.toBe('');
       });
@@ -394,7 +399,7 @@ describe('Traits Generator Accessibility E2E', () => {
 
       // Should use Ctrl modifier to avoid conflicts
       expect(shortcuts).toContain('Ctrl');
-      
+
       // Should not use common browser shortcuts alone
       expect(shortcuts).not.toMatch(/^F5|^F12|^Tab|^Alt$/);
     });
@@ -402,7 +407,9 @@ describe('Traits Generator Accessibility E2E', () => {
 
   describe('Screen Reader Support', () => {
     it('should have screen reader announcement area', () => {
-      const announcement = document.getElementById('screen-reader-announcement');
+      const announcement = document.getElementById(
+        'screen-reader-announcement'
+      );
       expect(announcement).toBeTruthy();
       expect(announcement.getAttribute('aria-live')).toBe('polite');
       expect(announcement.getAttribute('aria-atomic')).toBe('true');
@@ -417,7 +424,9 @@ describe('Traits Generator Accessibility E2E', () => {
 
       const resultsState = document.getElementById('results-state');
       expect(resultsState.getAttribute('role')).toBe('region');
-      expect(resultsState.getAttribute('aria-label')).toBe('Generated character traits');
+      expect(resultsState.getAttribute('aria-label')).toBe(
+        'Generated character traits'
+      );
     });
 
     it('should have descriptive button text', () => {
@@ -425,7 +434,7 @@ describe('Traits Generator Accessibility E2E', () => {
         { id: 'generate-btn', expectedLabel: 'Generate character traits' },
         { id: 'export-btn', expectedLabel: 'Export traits to text file' },
         { id: 'clear-btn', expectedLabel: 'Clear all inputs' },
-        { id: 'back-btn', expectedLabel: 'Back to Main Menu' }
+        { id: 'back-btn', expectedLabel: 'Back to Main Menu' },
       ];
 
       buttons.forEach(({ id, expectedLabel }) => {
@@ -440,10 +449,10 @@ describe('Traits Generator Accessibility E2E', () => {
       const formGroups = document.querySelectorAll('.cb-form-group');
       expect(formGroups.length).toBeGreaterThan(0);
 
-      formGroups.forEach(group => {
+      formGroups.forEach((group) => {
         const label = group.querySelector('label');
         const input = group.querySelector('input, textarea, select');
-        
+
         if (label && input) {
           expect(label.getAttribute('for')).toBe(input.id);
         }
@@ -465,7 +474,9 @@ describe('Traits Generator Accessibility E2E', () => {
     it('should provide context for complex interactions', () => {
       // Direction selector should have helpful context
       const directionSelector = document.getElementById('direction-selector');
-      expect(directionSelector.getAttribute('aria-label')).toBe('Select thematic direction');
+      expect(directionSelector.getAttribute('aria-label')).toBe(
+        'Select thematic direction'
+      );
 
       // Help text should provide additional context
       const helpText = document.querySelector('.cb-help-text');
@@ -488,9 +499,11 @@ describe('Traits Generator Accessibility E2E', () => {
     });
 
     it('should maintain logical focus order', () => {
-      const focusableElements = document.querySelectorAll('button, input, textarea, select');
-      
-      focusableElements.forEach(element => {
+      const focusableElements = document.querySelectorAll(
+        'button, input, textarea, select'
+      );
+
+      focusableElements.forEach((element) => {
         // Should not have tabindex values that break logical order
         const tabIndex = element.getAttribute('tabindex');
         if (tabIndex !== null) {
@@ -523,14 +536,20 @@ describe('Traits Generator Accessibility E2E', () => {
 
   describe('Error Message Accessibility', () => {
     it('should associate error messages with form fields', () => {
-      const inputValidationError = document.getElementById('input-validation-error');
-      const directionSelectorError = document.getElementById('direction-selector-error');
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
+      const directionSelectorError = document.getElementById(
+        'direction-selector-error'
+      );
 
       expect(inputValidationError.getAttribute('role')).toBe('alert');
       expect(directionSelectorError.getAttribute('role')).toBe('alert');
 
       // Errors should be announced immediately when they appear
-      expect(inputValidationError.classList.contains('cb-error-text')).toBe(true);
+      expect(inputValidationError.classList.contains('cb-error-text')).toBe(
+        true
+      );
     });
 
     it('should provide clear error descriptions', () => {
@@ -547,7 +566,9 @@ describe('Traits Generator Accessibility E2E', () => {
     });
 
     it('should announce errors to screen readers', () => {
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
       expect(screenReaderAnnouncement).toBeTruthy();
       expect(screenReaderAnnouncement.getAttribute('aria-live')).toBe('polite');
 
@@ -565,8 +586,8 @@ describe('Traits Generator Accessibility E2E', () => {
 
     it('should have touch-friendly interactive elements', () => {
       const buttons = document.querySelectorAll('button');
-      
-      buttons.forEach(button => {
+
+      buttons.forEach((button) => {
         // Buttons should have sufficient size for touch interaction
         expect(button.tagName).toBe('BUTTON');
         expect(button.classList.length).toBeGreaterThan(0); // Should have styling classes
@@ -603,7 +624,7 @@ describe('Traits Generator Accessibility E2E', () => {
       // Required fields should have text indicators
       const labels = document.querySelectorAll('label');
       let hasRequiredIndicator = false;
-      labels.forEach(label => {
+      labels.forEach((label) => {
         if (label.textContent.includes('*')) {
           hasRequiredIndicator = true;
         }
@@ -613,8 +634,8 @@ describe('Traits Generator Accessibility E2E', () => {
 
     it('should use icons with text labels', () => {
       const buttons = document.querySelectorAll('button');
-      
-      buttons.forEach(button => {
+
+      buttons.forEach((button) => {
         const buttonText = button.querySelector('.button-text');
         if (buttonText) {
           expect(buttonText.textContent.trim()).not.toBe('');
@@ -624,9 +645,11 @@ describe('Traits Generator Accessibility E2E', () => {
 
     it('should have proper focus indicators', () => {
       // Interactive elements should be focusable
-      const interactiveElements = document.querySelectorAll('button, input, textarea, select');
-      
-      interactiveElements.forEach(element => {
+      const interactiveElements = document.querySelectorAll(
+        'button, input, textarea, select'
+      );
+
+      interactiveElements.forEach((element) => {
         expect(element).toBeTruthy();
         // Should not have CSS that removes focus indicators
         expect(element.style.outline).not.toBe('none');

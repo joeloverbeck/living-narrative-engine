@@ -317,7 +317,9 @@ describe('TraitsGenerator', () => {
     };
 
     it('should successfully generate traits with valid inputs', async () => {
-      const result = await traitsGenerator.generateTraits(validParams, { maxRetries: 0 });
+      const result = await traitsGenerator.generateTraits(validParams, {
+        maxRetries: 0,
+      });
 
       expect(result).toMatchObject(mockValidResponse);
       expect(result.metadata).toBeDefined();
@@ -328,20 +330,34 @@ describe('TraitsGenerator', () => {
 
       // Verify events were dispatched
       expect(mockEventBus.dispatch).toHaveBeenCalledTimes(2);
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'TRAITS_GENERATION_STARTED',
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'TRAITS_GENERATION_STARTED',
+        expect.objectContaining({
           conceptId: 'concept-123',
           directionId: 'direction-456',
-        }),
-      });
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'TRAITS_GENERATION_COMPLETED',
-        payload: expect.objectContaining({
+          timestamp: expect.any(String),
+          metadata: expect.objectContaining({
+            conceptLength: 40,
+            clichesCount: 2,
+            promptVersion: '1.0.0',
+          }),
+        })
+      );
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'TRAITS_GENERATION_COMPLETED',
+        expect.objectContaining({
           conceptId: 'concept-123',
           directionId: 'direction-456',
-        }),
-      });
+          generationTime: expect.any(Number),
+          timestamp: expect.any(String),
+          metadata: expect.objectContaining({
+            model: 'gpt-4',
+            promptTokens: 1500,
+            responseTokens: 1500,
+            totalTokens: 3000,
+          }),
+        })
+      );
     });
 
     it('should work with empty cliches array', async () => {
@@ -361,7 +377,10 @@ describe('TraitsGenerator', () => {
     it('should use specified LLM config', async () => {
       const options = { llmConfigId: 'claude-3' };
 
-      await traitsGenerator.generateTraits(validParams, { ...options, maxRetries: 0 });
+      await traitsGenerator.generateTraits(validParams, {
+        ...options,
+        maxRetries: 0,
+      });
 
       expect(mockLlmConfigManager.setActiveConfiguration).toHaveBeenCalledWith(
         'claude-3'
@@ -376,7 +395,10 @@ describe('TraitsGenerator', () => {
 
       const options = { maxRetries: 0 }; // No retries, just test options passing
 
-      const result = await traitsGenerator.generateTraits(validParams, { ...options, maxRetries: 0 });
+      const result = await traitsGenerator.generateTraits(validParams, {
+        ...options,
+        maxRetries: 0,
+      });
 
       expect(result).toMatchObject(mockValidResponse);
       expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledTimes(1);
@@ -392,17 +414,17 @@ describe('TraitsGenerator', () => {
     };
 
     it('should throw error for missing parameters', async () => {
-      await expect(traitsGenerator.generateTraits(null, { maxRetries: 0 })).rejects.toThrow(
-        'Generation parameters are required'
-      );
+      await expect(
+        traitsGenerator.generateTraits(null, { maxRetries: 0 })
+      ).rejects.toThrow('Generation parameters are required');
     });
 
     describe('concept validation', () => {
       it('should throw error for missing concept', async () => {
         const params = { ...validParams, concept: null };
-        await expect(traitsGenerator.generateTraits(params, { maxRetries: 0 })).rejects.toThrow(
-          TraitsGenerationError
-        );
+        await expect(
+          traitsGenerator.generateTraits(params, { maxRetries: 0 })
+        ).rejects.toThrow(TraitsGenerationError);
       });
 
       it('should throw error for concept without id', async () => {
@@ -410,9 +432,9 @@ describe('TraitsGenerator', () => {
           ...validParams,
           concept: { concept: 'Some concept' },
         };
-        await expect(traitsGenerator.generateTraits(params, { maxRetries: 0 })).rejects.toThrow(
-          TraitsGenerationError
-        );
+        await expect(
+          traitsGenerator.generateTraits(params, { maxRetries: 0 })
+        ).rejects.toThrow(TraitsGenerationError);
       });
 
       it('should throw error for concept without concept text', async () => {
@@ -420,9 +442,9 @@ describe('TraitsGenerator', () => {
           ...validParams,
           concept: { id: 'concept-123' },
         };
-        await expect(traitsGenerator.generateTraits(params, { maxRetries: 0 })).rejects.toThrow(
-          TraitsGenerationError
-        );
+        await expect(
+          traitsGenerator.generateTraits(params, { maxRetries: 0 })
+        ).rejects.toThrow(TraitsGenerationError);
       });
 
       it('should throw error for empty concept text', async () => {
@@ -430,18 +452,18 @@ describe('TraitsGenerator', () => {
           ...validParams,
           concept: { id: 'concept-123', concept: '   ' },
         };
-        await expect(traitsGenerator.generateTraits(params, { maxRetries: 0 })).rejects.toThrow(
-          TraitsGenerationError
-        );
+        await expect(
+          traitsGenerator.generateTraits(params, { maxRetries: 0 })
+        ).rejects.toThrow(TraitsGenerationError);
       });
     });
 
     describe('direction validation', () => {
       it('should throw error for missing direction', async () => {
         const params = { ...validParams, direction: null };
-        await expect(traitsGenerator.generateTraits(params, { maxRetries: 0 })).rejects.toThrow(
-          TraitsGenerationError
-        );
+        await expect(
+          traitsGenerator.generateTraits(params, { maxRetries: 0 })
+        ).rejects.toThrow(TraitsGenerationError);
       });
 
       it('should throw error for direction without required fields', async () => {
@@ -449,18 +471,18 @@ describe('TraitsGenerator', () => {
           ...validParams,
           direction: { id: 'dir-123' }, // missing title, description, coreTension
         };
-        await expect(traitsGenerator.generateTraits(params, { maxRetries: 0 })).rejects.toThrow(
-          TraitsGenerationError
-        );
+        await expect(
+          traitsGenerator.generateTraits(params, { maxRetries: 0 })
+        ).rejects.toThrow(TraitsGenerationError);
       });
     });
 
     describe('userInputs validation', () => {
       it('should throw error for missing userInputs', async () => {
         const params = { ...validParams, userInputs: null };
-        await expect(traitsGenerator.generateTraits(params, { maxRetries: 0 })).rejects.toThrow(
-          TraitsGenerationError
-        );
+        await expect(
+          traitsGenerator.generateTraits(params, { maxRetries: 0 })
+        ).rejects.toThrow(TraitsGenerationError);
       });
 
       it('should throw error for missing coreMotivation', async () => {
@@ -471,9 +493,9 @@ describe('TraitsGenerator', () => {
             centralQuestion: 'Some question?',
           },
         };
-        await expect(traitsGenerator.generateTraits(params, { maxRetries: 0 })).rejects.toThrow(
-          'Invalid coreMotivation'
-        );
+        await expect(
+          traitsGenerator.generateTraits(params, { maxRetries: 0 })
+        ).rejects.toThrow('Invalid coreMotivation');
       });
 
       it('should throw error for empty coreMotivation', async () => {
@@ -485,7 +507,9 @@ describe('TraitsGenerator', () => {
             centralQuestion: 'Some question?',
           },
         };
-        await expect(traitsGenerator.generateTraits(params, { maxRetries: 0 })).rejects.toThrow();
+        await expect(
+          traitsGenerator.generateTraits(params, { maxRetries: 0 })
+        ).rejects.toThrow();
       });
 
       it('should throw error for missing internalContradiction', async () => {
@@ -496,9 +520,9 @@ describe('TraitsGenerator', () => {
             centralQuestion: 'Some question?',
           },
         };
-        await expect(traitsGenerator.generateTraits(params, { maxRetries: 0 })).rejects.toThrow(
-          'Invalid internalContradiction'
-        );
+        await expect(
+          traitsGenerator.generateTraits(params, { maxRetries: 0 })
+        ).rejects.toThrow('Invalid internalContradiction');
       });
 
       it('should throw error for missing centralQuestion', async () => {
@@ -509,18 +533,18 @@ describe('TraitsGenerator', () => {
             internalContradiction: 'Some contradiction',
           },
         };
-        await expect(traitsGenerator.generateTraits(params, { maxRetries: 0 })).rejects.toThrow(
-          'Invalid centralQuestion'
-        );
+        await expect(
+          traitsGenerator.generateTraits(params, { maxRetries: 0 })
+        ).rejects.toThrow('Invalid centralQuestion');
       });
     });
 
     describe('cliches validation', () => {
       it('should throw error for non-array cliches', async () => {
         const params = { ...validParams, cliches: 'not an array' };
-        await expect(traitsGenerator.generateTraits(params, { maxRetries: 0 })).rejects.toThrow(
-          TraitsGenerationError
-        );
+        await expect(
+          traitsGenerator.generateTraits(params, { maxRetries: 0 })
+        ).rejects.toThrow(TraitsGenerationError);
       });
     });
   });
@@ -538,18 +562,21 @@ describe('TraitsGenerator', () => {
         new Error('LLM service unavailable')
       );
 
-      await expect(traitsGenerator.generateTraits(validParams, { maxRetries: 0 })).rejects.toThrow(
-        TraitsGenerationError
-      );
+      await expect(
+        traitsGenerator.generateTraits(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(TraitsGenerationError);
 
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'TRAITS_GENERATION_FAILED',
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'TRAITS_GENERATION_FAILED',
+        expect.objectContaining({
           conceptId: 'concept-123',
           directionId: 'direction-456',
+          error: expect.any(String),
+          processingTime: expect.any(Number),
           failureStage: 'llm_request',
-        }),
-      });
+          timestamp: expect.any(String),
+        })
+      );
     });
 
     it('should handle JSON parsing failures', async () => {
@@ -558,9 +585,9 @@ describe('TraitsGenerator', () => {
         new Error('Invalid JSON format')
       );
 
-      await expect(traitsGenerator.generateTraits(validParams, { maxRetries: 0 })).rejects.toThrow(
-        TraitsGenerationError
-      );
+      await expect(
+        traitsGenerator.generateTraits(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(TraitsGenerationError);
     });
 
     it('should handle response validation failures', async () => {
@@ -575,9 +602,9 @@ describe('TraitsGenerator', () => {
       );
       mockLlmJsonService.parseAndRepair.mockResolvedValue(invalidResponse);
 
-      await expect(traitsGenerator.generateTraits(validParams, { maxRetries: 0 })).rejects.toThrow(
-        TraitsGenerationError
-      );
+      await expect(
+        traitsGenerator.generateTraits(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(TraitsGenerationError);
     });
 
     it('should handle quality validation failures', async () => {
@@ -592,9 +619,9 @@ describe('TraitsGenerator', () => {
       );
       mockLlmJsonService.parseAndRepair.mockResolvedValue(lowQualityResponse);
 
-      await expect(traitsGenerator.generateTraits(validParams, { maxRetries: 0 })).rejects.toThrow(
-        TraitsGenerationError
-      );
+      await expect(
+        traitsGenerator.generateTraits(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(TraitsGenerationError);
     });
 
     it('should handle transient LLM request scenarios', async () => {
@@ -603,7 +630,9 @@ describe('TraitsGenerator', () => {
         JSON.stringify(mockValidResponse)
       );
 
-      const result = await traitsGenerator.generateTraits(validParams, { maxRetries: 0 });
+      const result = await traitsGenerator.generateTraits(validParams, {
+        maxRetries: 0,
+      });
 
       expect(result).toMatchObject(mockValidResponse);
       expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledTimes(1);
@@ -665,7 +694,9 @@ describe('TraitsGenerator', () => {
       );
 
       // Test that not specifying maxRetries works (but we disable it for speed)
-      const result = await traitsGenerator.generateTraits(validParams, { maxRetries: 0 });
+      const result = await traitsGenerator.generateTraits(validParams, {
+        maxRetries: 0,
+      });
 
       expect(result).toMatchObject(mockValidResponse);
     });
@@ -682,7 +713,9 @@ describe('TraitsGenerator', () => {
     it('should use TokenEstimator when available', async () => {
       mockTokenEstimator.estimateTokens.mockResolvedValue(2000);
 
-      const result = await traitsGenerator.generateTraits(validParams, { maxRetries: 0 });
+      const result = await traitsGenerator.generateTraits(validParams, {
+        maxRetries: 0,
+      });
 
       expect(mockTokenEstimator.estimateTokens).toHaveBeenCalled();
       expect(result.metadata.promptTokens).toBe(2000);
@@ -693,7 +726,9 @@ describe('TraitsGenerator', () => {
         new Error('Token estimation failed')
       );
 
-      const result = await traitsGenerator.generateTraits(validParams, { maxRetries: 0 });
+      const result = await traitsGenerator.generateTraits(validParams, {
+        maxRetries: 0,
+      });
 
       expect(result.metadata.promptTokens).toBeGreaterThan(0);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -712,8 +747,10 @@ describe('TraitsGenerator', () => {
         // no tokenEstimator
       });
 
-      const result =
-        await generatorWithoutTokenEstimator.generateTraits(validParams, { maxRetries: 0 });
+      const result = await generatorWithoutTokenEstimator.generateTraits(
+        validParams,
+        { maxRetries: 0 }
+      );
 
       expect(result.metadata.promptTokens).toBeGreaterThan(0);
       expect(result.metadata.responseTokens).toBeGreaterThan(0);
@@ -731,9 +768,9 @@ describe('TraitsGenerator', () => {
     it('should handle missing LLM configuration', async () => {
       mockLlmConfigManager.getActiveConfiguration.mockResolvedValue(null);
 
-      await expect(traitsGenerator.generateTraits(validParams, { maxRetries: 0 })).rejects.toThrow(
-        /No active LLM configuration/
-      );
+      await expect(
+        traitsGenerator.generateTraits(validParams, { maxRetries: 0 })
+      ).rejects.toThrow(/No active LLM configuration/);
     });
 
     it('should handle LLM configuration loading failures', async () => {
@@ -743,7 +780,10 @@ describe('TraitsGenerator', () => {
       const options = { llmConfigId: 'nonexistent-config' };
 
       await expect(
-        traitsGenerator.generateTraits(validParams, { ...options, maxRetries: 0 })
+        traitsGenerator.generateTraits(validParams, {
+          ...options,
+          maxRetries: 0,
+        })
       ).rejects.toThrow(/LLM configuration not found/);
     });
   });
@@ -797,7 +837,9 @@ describe('TraitsGenerator', () => {
         direction: minimalDirection,
       };
 
-      const result = await traitsGenerator.generateTraits(params, { maxRetries: 0 });
+      const result = await traitsGenerator.generateTraits(params, {
+        maxRetries: 0,
+      });
       expect(result).toMatchObject(mockValidResponse);
     });
 
@@ -811,7 +853,9 @@ describe('TraitsGenerator', () => {
 
       mockLlmJsonService.parseAndRepair.mockResolvedValue(largeResponse);
 
-      const result = await traitsGenerator.generateTraits(validParams, { maxRetries: 0 });
+      const result = await traitsGenerator.generateTraits(validParams, {
+        maxRetries: 0,
+      });
 
       expect(result.metadata).toBeDefined();
       expect(result.metadata.model).toBe('gpt-4');
@@ -819,7 +863,9 @@ describe('TraitsGenerator', () => {
 
     it('should handle zero-length strings in token estimation', async () => {
       // This tests the internal #estimateTokens method indirectly
-      const result = await traitsGenerator.generateTraits(validParams, { maxRetries: 0 });
+      const result = await traitsGenerator.generateTraits(validParams, {
+        maxRetries: 0,
+      });
 
       expect(result.metadata.promptTokens).toBeGreaterThan(0);
       expect(result.metadata.responseTokens).toBeGreaterThan(0);
@@ -843,7 +889,9 @@ describe('TraitsGenerator', () => {
       };
 
       // Ensure no storage operations are called
-      const result = await traitsGenerator.generateTraits(validParams, { maxRetries: 0 });
+      const result = await traitsGenerator.generateTraits(validParams, {
+        maxRetries: 0,
+      });
 
       expect(mockStorage.save).not.toHaveBeenCalled();
       expect(mockStorage.update).not.toHaveBeenCalled();
@@ -862,7 +910,9 @@ describe('TraitsGenerator', () => {
         cliches: mockCliches,
       };
 
-      const result = await traitsGenerator.generateTraits(validParams, { maxRetries: 0 });
+      const result = await traitsGenerator.generateTraits(validParams, {
+        maxRetries: 0,
+      });
 
       // Traits should be returned directly
       expect(result.names).toBeDefined();

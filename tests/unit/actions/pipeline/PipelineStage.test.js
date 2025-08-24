@@ -144,7 +144,7 @@ describe('PipelineStage', () => {
         expect(mockTrace.startSpan).toHaveBeenCalledWith('MyStageStage', {
           stage: 'MyStage',
           actor: 'test-actor',
-          candidateCount: 0
+          candidateCount: 0,
         });
         expect(stage.executeInternalFn).toHaveBeenCalledWith(mockContext);
         expect(mockSpan.setStatus).toHaveBeenCalledWith('success');
@@ -166,7 +166,7 @@ describe('PipelineStage', () => {
         expect(mockTrace.startSpan).toHaveBeenCalledWith('FailingStageStage', {
           stage: 'FailingStage',
           actor: 'test-actor',
-          candidateCount: 0
+          candidateCount: 0,
         });
         expect(mockSpan.setError).toHaveBeenCalledWith(expect.any(Error));
         expect(mockTrace.endSpan).toHaveBeenCalledWith(mockSpan);
@@ -225,7 +225,7 @@ describe('PipelineStage', () => {
         expect(mockTrace.startSpan).toHaveBeenCalledWith('ThrowingStageStage', {
           stage: 'ThrowingStage',
           actor: 'test-actor',
-          candidateCount: 0
+          candidateCount: 0,
         });
         expect(mockSpan.setError).toHaveBeenCalledWith(thrownError);
         expect(mockTrace.endSpan).toHaveBeenCalledWith(mockSpan);
@@ -345,10 +345,10 @@ describe('PipelineStage', () => {
       // Should still properly manage span lifecycle
       expect(mockTrace.startSpan).toHaveBeenCalledWith(
         'TracedIncompleteStage',
-        { 
+        {
           stage: 'TracedIncomplete',
           actor: 'test-actor',
-          candidateCount: 0
+          candidateCount: 0,
         }
       );
       expect(mockSpan.setError).toHaveBeenCalledWith(expect.any(Error));

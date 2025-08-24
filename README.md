@@ -375,6 +375,7 @@ Existing configurations continue to work unchanged. To enable dual-format:
 Action tracing integrates with the LLM proxy server running on port 3001. The server provides three endpoints:
 
 #### Single Trace Writing
+
 ```bash
 POST http://localhost:3001/api/traces/write
 Content-Type: application/json
@@ -387,6 +388,7 @@ Content-Type: application/json
 ```
 
 #### Batch Trace Writing
+
 ```bash
 POST http://localhost:3001/api/traces/write-batch
 Content-Type: application/json
@@ -407,6 +409,7 @@ Content-Type: application/json
 ```
 
 #### Trace Listing
+
 ```bash
 GET http://localhost:3001/api/traces/list?directory=./traces
 ```

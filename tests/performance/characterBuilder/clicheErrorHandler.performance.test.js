@@ -248,7 +248,7 @@ describe('ClicheErrorHandler - Performance Tests', () => {
       const iterations = 3;
       const withoutStatsResults = [];
       const withStatsResults = [];
-      
+
       // Warmup iterations to account for JIT compilation
       for (let warmup = 0; warmup < 2; warmup++) {
         const warmupHandler = new ClicheErrorHandler({
@@ -262,13 +262,15 @@ describe('ClicheErrorHandler - Performance Tests', () => {
             jitterFactor: 0.1,
           },
         });
-        
+
         for (let i = 0; i < 50; i++) {
           const error = new ClicheError(`Warmup ${i}`);
-          await warmupHandler.handleError(error, { operation: `warmup_${i % 5}` });
+          await warmupHandler.handleError(error, {
+            operation: `warmup_${i % 5}`,
+          });
         }
       }
-      
+
       // Run multiple iterations for statistical reliability
       for (let iteration = 0; iteration < iterations; iteration++) {
         // Test without statistics collection (baseline)
@@ -317,12 +319,18 @@ describe('ClicheErrorHandler - Performance Tests', () => {
       }
 
       // Calculate median times for more robust comparison
-      const medianWithoutStats = withoutStatsResults.sort((a, b) => a - b)[Math.floor(iterations / 2)];
-      const medianWithStats = withStatsResults.sort((a, b) => a - b)[Math.floor(iterations / 2)];
+      const medianWithoutStats = withoutStatsResults.sort((a, b) => a - b)[
+        Math.floor(iterations / 2)
+      ];
+      const medianWithStats = withStatsResults.sort((a, b) => a - b)[
+        Math.floor(iterations / 2)
+      ];
 
       // Calculate overhead using median values (more stable than single measurement)
-      const overhead = (medianWithStats - medianWithoutStats) / Math.max(medianWithoutStats, 1);
-      
+      const overhead =
+        (medianWithStats - medianWithoutStats) /
+        Math.max(medianWithoutStats, 1);
+
       // More lenient threshold but still meaningful for detecting performance regressions
       // 75% overhead tolerance acknowledges CI environment variability while maintaining sensitivity
       expect(overhead).toBeLessThan(0.75); // Increased from 0.5 to 0.75 for CI stability
@@ -371,10 +379,10 @@ describe('ClicheErrorHandler - Performance Tests', () => {
       // Process operations in chunks to verify throttling behavior
       const chunkSizes = [50, 100, 150];
       const chunkPerformance = [];
-      
+
       for (const chunkSize of chunkSizes) {
         const startTime = performance.now();
-        
+
         // Process errors with unique operations to build up statistics
         for (let i = 0; i < chunkSize; i++) {
           const error = new ClicheError(`Cleanup test ${i}`);
@@ -382,11 +390,11 @@ describe('ClicheErrorHandler - Performance Tests', () => {
             operation: `cleanup_test_${i}`, // Each error has unique operation
           });
         }
-        
+
         const endTime = performance.now();
         const totalTime = endTime - startTime;
         const avgTimePerError = totalTime / chunkSize;
-        
+
         chunkPerformance.push({
           chunkSize,
           totalTime,
@@ -397,25 +405,26 @@ describe('ClicheErrorHandler - Performance Tests', () => {
       // Verify that average time per error doesn't increase significantly
       // This would indicate O(n) behavior if cleanup ran on every error
       const firstAvg = chunkPerformance[0].avgTimePerError;
-      const lastAvg = chunkPerformance[chunkPerformance.length - 1].avgTimePerError;
-      
+      const lastAvg =
+        chunkPerformance[chunkPerformance.length - 1].avgTimePerError;
+
       // With throttled cleanup, performance should remain relatively stable
       // Allow 2x tolerance for normal variation, but catch significant degradation
       const performanceRatio = lastAvg / firstAvg;
       expect(performanceRatio).toBeLessThan(2.0);
-      
+
       // Verify statistics are being collected (cleanup throttling still allows collection)
       const stats = cleanupHandler.getErrorStatistics();
       expect(Object.keys(stats).length).toBeGreaterThan(0);
-      
+
       // Log performance metrics for debugging
       console.log('Throttled cleanup performance test results:', {
         performanceRatio: performanceRatio.toFixed(2),
         statsCount: Object.keys(stats).length,
-        chunkResults: chunkPerformance.map(p => ({
+        chunkResults: chunkPerformance.map((p) => ({
           size: p.chunkSize,
-          avgMs: p.avgTimePerError.toFixed(2)
-        }))
+          avgMs: p.avgTimePerError.toFixed(2),
+        })),
       });
     });
   });

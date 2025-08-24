@@ -6,7 +6,9 @@
 
 import { BaseCharacterBuilderController } from './BaseCharacterBuilderController.js';
 import { DomUtils } from '../../utils/domUtils.js';
-import { validateDependency, assertNonBlankString } from '../../utils/dependencyUtils.js';
+import {
+  validateDependency,
+} from '../../utils/dependencyUtils.js';
 
 /**
  * @typedef {import('./BaseCharacterBuilderController.js').BaseCharacterBuilderController} BaseCharacterBuilderController
@@ -33,13 +35,14 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
   /** @private @type {ThematicDirection|null} */
   #selectedDirection = null;
 
-  /** @private @type {object} */
-  #userInputs = {};
+  /** @private @type {object|null} */
+  #selectedConcept = null;
+
 
   /** @private @type {TraitData|null} */
   #lastGeneratedTraits = null;
 
-  /** @private @type {Array<ThematicDirection>} */
+  /** @private @type {Array<{direction: ThematicDirection, concept: object|null}>} */
   #eligibleDirections = [];
 
   /** @private @type {Array<CoreMotivation>} */
@@ -59,9 +62,18 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     super(dependencies);
 
     // Validate traits-specific dependencies
-    validateDependency(dependencies.traitsDisplayEnhancer, 'TraitsDisplayEnhancer', null, {
-      requiredMethods: ['enhanceForDisplay', 'generateExportFilename', 'formatForExport'],
-    });
+    validateDependency(
+      dependencies.traitsDisplayEnhancer,
+      'TraitsDisplayEnhancer',
+      null,
+      {
+        requiredMethods: [
+          'enhanceForDisplay',
+          'generateExportFilename',
+          'formatForExport',
+        ],
+      }
+    );
 
     this.#traitsDisplayEnhancer = dependencies.traitsDisplayEnhancer;
   }
@@ -109,7 +121,10 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       loadingMessage: '#loading-message',
 
       // Accessibility elements
-      screenReaderAnnouncement: { selector: '#screen-reader-announcement', required: false },
+      screenReaderAnnouncement: {
+        selector: '#screen-reader-announcement',
+        required: false,
+      },
     });
   }
 
@@ -209,36 +224,73 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
    */
   async #loadEligibleDirections() {
     try {
-      // Get all thematic directions
-      const allDirections = await this.characterBuilderService.getAllThematicDirections();
-      
-      // Filter for directions with clichés
+      // Get all thematic directions WITH concept data (matching core motivations generator)
+      const allDirectionsWithConcepts =
+        await this.characterBuilderService.getAllThematicDirectionsWithConcepts();
+
+      // Filter out directions with invalid concepts
+      const directionsWithValidConcepts = allDirectionsWithConcepts.filter(item => {
+        // Concept must exist and have required properties
+        if (!item.concept || typeof item.concept !== 'object') {
+          this.logger.debug(`Filtering out direction ${item.direction.id}: missing or invalid concept`);
+          return false;
+        }
+        
+        // Concept must have id and concept text
+        if (!item.concept.id || !item.concept.concept) {
+          this.logger.debug(`Filtering out direction ${item.direction.id}: concept missing required fields`);
+          return false;
+        }
+        
+        return true;
+      });
+
+      this.logger.debug(
+        `Filtered ${allDirectionsWithConcepts.length - directionsWithValidConcepts.length} directions with invalid concepts`
+      );
+
+      // Filter for directions with clichés (using efficient existence check)
       const directionsWithCliches = [];
-      for (const direction of allDirections) {
+      for (const item of directionsWithValidConcepts) {
         try {
-          const cliches = await this.characterBuilderService.getClichesByDirectionId(direction.id);
-          if (cliches && cliches.length > 0) {
-            directionsWithCliches.push(direction);
+          const hasClichés =
+            await this.characterBuilderService.hasClichesForDirection(
+              item.direction.id
+            );
+          if (hasClichés) {
+            directionsWithCliches.push(item);
           }
         } catch (error) {
-          this.logger.debug(`No clichés found for direction ${direction.id}:`, error);
+          this.logger.debug(
+            `No clichés found for direction ${item.direction.id}:`,
+            error
+          );
         }
       }
 
       // Filter for directions with core motivations
       this.#eligibleDirections = [];
-      for (const direction of directionsWithCliches) {
+      for (const item of directionsWithCliches) {
         try {
-          const coreMotivations = await this.characterBuilderService.getCoreMotivationsByDirectionId(direction.id);
+          const coreMotivations =
+            await this.characterBuilderService.getCoreMotivationsByDirectionId(
+              item.direction.id
+            );
           if (coreMotivations && coreMotivations.length > 0) {
-            this.#eligibleDirections.push(direction);
+            // Store the full item with direction and concept data
+            this.#eligibleDirections.push(item);
           }
         } catch (error) {
-          this.logger.debug(`No core motivations found for direction ${direction.id}:`, error);
+          this.logger.debug(
+            `No core motivations found for direction ${item.direction.id}:`,
+            error
+          );
         }
       }
 
-      this.logger.info(`Loaded ${this.#eligibleDirections.length} eligible directions with both clichés and core motivations`);
+      this.logger.info(
+        `Loaded ${this.#eligibleDirections.length} eligible directions with both clichés and core motivations`
+      );
     } catch (error) {
       this.logger.error('Failed to load eligible directions:', error);
       throw error;
@@ -257,7 +309,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     }
 
     const selector = this._getElement('directionSelector');
-    
+
     // Show loading state
     selector.classList.add('loading');
     selector.disabled = true;
@@ -274,33 +326,39 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       }
 
       // Group directions by concept
-      const directionsByConcept = this.#groupDirectionsByConcept(this.#eligibleDirections);
+      const directionsByConcept = this.#groupDirectionsByConcept(
+        this.#eligibleDirections
+      );
 
       // Add optgroups and options
-      Object.entries(directionsByConcept).forEach(([conceptName, directions]) => {
-        if (directions.length === 1) {
-          // Single direction - add directly
-          const option = document.createElement('option');
-          option.value = directions[0].id;
-          option.textContent = `${conceptName}: ${this.#truncateText(directions[0].title, 60)}`;
-          selector.appendChild(option);
-        } else {
-          // Multiple directions - use optgroup
-          const optgroup = document.createElement('optgroup');
-          optgroup.label = conceptName;
-          
-          directions.forEach((direction, index) => {
+      Object.entries(directionsByConcept).forEach(
+        ([conceptName, directions]) => {
+          if (directions.length === 1) {
+            // Single direction - add directly
             const option = document.createElement('option');
-            option.value = direction.id;
-            option.textContent = `${index + 1}. ${this.#truncateText(direction.title, 50)}`;
-            optgroup.appendChild(option);
-          });
-          
-          selector.appendChild(optgroup);
-        }
-      });
+            option.value = directions[0].id;
+            option.textContent = `${conceptName}: ${this.#truncateText(directions[0].title, 60)}`;
+            selector.appendChild(option);
+          } else {
+            // Multiple directions - use optgroup
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = conceptName;
 
-      this.logger.info(`Populated direction selector with ${this.#eligibleDirections.length} eligible directions`);
+            directions.forEach((direction, index) => {
+              const option = document.createElement('option');
+              option.value = direction.id;
+              option.textContent = `${index + 1}. ${this.#truncateText(direction.title, 50)}`;
+              optgroup.appendChild(option);
+            });
+
+            selector.appendChild(optgroup);
+          }
+        }
+      );
+
+      this.logger.info(
+        `Populated direction selector with ${this.#eligibleDirections.length} eligible directions`
+      );
     } finally {
       selector.classList.remove('loading');
       selector.disabled = false;
@@ -311,23 +369,27 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
    * Group directions by their concept
    *
    * @private
-   * @param {Array<ThematicDirection>} directions
+   * @param {Array<{direction: ThematicDirection, concept: object|null}>} items
    * @returns {object} Directions grouped by concept name
    */
-  #groupDirectionsByConcept(directions) {
+  #groupDirectionsByConcept(items) {
     const groups = {};
-    
-    directions.forEach((direction) => {
-      const conceptName = direction.concept || 'Unknown Concept';
+
+    items.forEach((item) => {
+      // Get concept name from the concept object, or use the conceptId as fallback
+      const conceptName =
+        item.concept?.name || item.direction.concept || 'Unknown Concept';
       if (!groups[conceptName]) {
         groups[conceptName] = [];
       }
-      groups[conceptName].push(direction);
+      groups[conceptName].push(item.direction);
     });
 
     // Sort directions within each group by creation date (newest first)
     Object.values(groups).forEach((groupDirections) => {
-      groupDirections.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      groupDirections.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
     });
 
     return groups;
@@ -363,33 +425,36 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
    * @param {string} directionId
    */
   async #selectDirection(directionId) {
-    const direction = this.#eligibleDirections.find(d => d.id === directionId);
-    
-    if (!direction) {
+    const item = this.#eligibleDirections.find(
+      (item) => item.direction.id === directionId
+    );
+
+    if (!item) {
       this.logger.warn(`Direction not found: ${directionId}`);
       this.#showDirectionError('Selected direction not found');
       return;
     }
 
-    // Set selected direction
-    this.#selectedDirection = direction;
-    
+    // Set selected direction and concept
+    this.#selectedDirection = item.direction;
+    this.#selectedConcept = item.concept;
+
     // Display selected direction
-    this.#displaySelectedDirection(direction);
-    
+    this.#displaySelectedDirection(item.direction);
+
     // Load and display core motivations
     await this.#loadAndDisplayCoreMotivations(directionId);
-    
+
     // Clear previous user inputs
     this.#clearUserInputs();
-    
+
     // Update UI state
     this.#updateUIState();
-    
+
     // Clear any previous errors
     this.#clearDirectionError();
-    
-    this.logger.debug(`Selected direction: ${direction.title}`);
+
+    this.logger.debug(`Selected direction: ${item.direction.title}`);
   }
 
   /**
@@ -428,7 +493,10 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
    */
   async #loadAndDisplayCoreMotivations(directionId) {
     try {
-      this.#loadedCoreMotivations = await this.characterBuilderService.getCoreMotivationsByDirectionId(directionId);
+      this.#loadedCoreMotivations =
+        await this.characterBuilderService.getCoreMotivationsByDirectionId(
+          directionId
+        );
       this.#displayCoreMotivations(this.#loadedCoreMotivations);
     } catch (error) {
       this.logger.error('Failed to load core motivations:', error);
@@ -448,13 +516,16 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     }
 
     const container = this._getElement('coreMotivationsList');
-    
+
     if (!coreMotivations || coreMotivations.length === 0) {
-      container.innerHTML = '<p class="no-motivations">No core motivations available</p>';
+      container.innerHTML =
+        '<p class="no-motivations">No core motivations available</p>';
       return;
     }
 
-    container.innerHTML = coreMotivations.map((motivation, index) => `
+    container.innerHTML = coreMotivations
+      .map(
+        (motivation, index) => `
       <div class="core-motivation-item" data-index="${index}">
         <h4 class="motivation-title">Core Motivation ${index + 1}</h4>
         <p class="motivation-text">${DomUtils.escapeHtml(motivation.coreDesire)}</p>
@@ -469,7 +540,9 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
           </div>
         </div>
       </div>
-    `).join('');
+    `
+      )
+      .join('');
 
     // Show the panel
     if (this._getElement('coreMotivationsPanel')) {
@@ -484,7 +557,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
    */
   #displayCoreMotivationsError() {
     if (this._getElement('coreMotivationsList')) {
-      this._getElement('coreMotivationsList').innerHTML = 
+      this._getElement('coreMotivationsList').innerHTML =
         '<p class="error-message">Failed to load core motivations</p>';
     }
   }
@@ -497,6 +570,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
   #clearDirection() {
     // Clear selection state
     this.#selectedDirection = null;
+    this.#selectedConcept = null;
     this.#loadedCoreMotivations = [];
 
     // Clear UI elements
@@ -533,17 +607,16 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
   #clearUserInputs() {
     const inputs = [
       'coreMotivationInput',
-      'internalContradictionInput', 
-      'centralQuestionInput'
+      'internalContradictionInput',
+      'centralQuestionInput',
     ];
 
-    inputs.forEach(inputId => {
+    inputs.forEach((inputId) => {
       if (this._getElement(inputId)) {
         this._getElement(inputId).value = '';
       }
     });
 
-    this.#userInputs = {};
     this.#updateUserInputSummary();
   }
 
@@ -556,10 +629,10 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     const inputs = [
       'coreMotivationInput',
       'internalContradictionInput',
-      'centralQuestionInput'
+      'centralQuestionInput',
     ];
 
-    inputs.forEach(inputId => {
+    inputs.forEach((inputId) => {
       if (this._getElement(inputId)) {
         this._addEventListener(inputId, 'input', () => {
           this.#updateUserInputs();
@@ -581,11 +654,8 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
    * @private
    */
   #updateUserInputs() {
-    this.#userInputs = {
-      coreMotivation: this.#getCoreMotivationInput(),
-      internalContradiction: this.#getInternalContradictionInput(),
-      centralQuestion: this.#getCentralQuestionInput()
-    };
+    // This method is called when input values change
+    // We don't need to store values since #getUserInputs() gets them directly from DOM
   }
 
   /**
@@ -602,23 +672,32 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     const inputs = this.#getUserInputs();
     const validationResults = {
       isValid: true,
-      errors: []
+      errors: [],
     };
 
     // Validate each required field
     if (!inputs.coreMotivation || inputs.coreMotivation.trim().length < 10) {
       validationResults.isValid = false;
-      validationResults.errors.push('Core motivation must be at least 10 characters');
+      validationResults.errors.push(
+        'Core motivation must be at least 10 characters'
+      );
     }
 
-    if (!inputs.internalContradiction || inputs.internalContradiction.trim().length < 10) {
+    if (
+      !inputs.internalContradiction ||
+      inputs.internalContradiction.trim().length < 10
+    ) {
       validationResults.isValid = false;
-      validationResults.errors.push('Internal contradiction must be at least 10 characters');
+      validationResults.errors.push(
+        'Internal contradiction must be at least 10 characters'
+      );
     }
 
     if (!inputs.centralQuestion || inputs.centralQuestion.trim().length < 10) {
       validationResults.isValid = false;
-      validationResults.errors.push('Central question must be at least 10 characters');
+      validationResults.errors.push(
+        'Central question must be at least 10 characters'
+      );
     }
 
     // Show validation errors
@@ -641,7 +720,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     return {
       coreMotivation: this.#getCoreMotivationInput(),
       internalContradiction: this.#getInternalContradictionInput(),
-      centralQuestion: this.#getCentralQuestionInput()
+      centralQuestion: this.#getCentralQuestionInput(),
     };
   }
 
@@ -688,7 +767,11 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     const inputs = this.#getUserInputs();
     const container = this._getElement('userInputSummary');
 
-    if (!inputs.coreMotivation && !inputs.internalContradiction && !inputs.centralQuestion) {
+    if (
+      !inputs.coreMotivation &&
+      !inputs.internalContradiction &&
+      !inputs.centralQuestion
+    ) {
       container.style.display = 'none';
       return;
     }
@@ -697,24 +780,36 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     container.innerHTML = `
       <div class="user-input-summary">
         <h4>Your Inputs</h4>
-        ${inputs.coreMotivation ? `
+        ${
+          inputs.coreMotivation
+            ? `
           <div class="input-item">
             <strong>Core Motivation:</strong>
             <p>${DomUtils.escapeHtml(inputs.coreMotivation)}</p>
           </div>
-        ` : ''}
-        ${inputs.internalContradiction ? `
+        `
+            : ''
+        }
+        ${
+          inputs.internalContradiction
+            ? `
           <div class="input-item">
             <strong>Internal Contradiction:</strong>
             <p>${DomUtils.escapeHtml(inputs.internalContradiction)}</p>
           </div>
-        ` : ''}
-        ${inputs.centralQuestion ? `
+        `
+            : ''
+        }
+        ${
+          inputs.centralQuestion
+            ? `
           <div class="input-item">
             <strong>Central Question:</strong>
             <p>${DomUtils.escapeHtml(inputs.centralQuestion)}</p>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
     `;
   }
@@ -734,7 +829,9 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
 
       // Validate user inputs
       if (!this.#validateUserInputs()) {
-        this.#announceToScreenReader('Please fix validation errors before generating traits');
+        this.#announceToScreenReader(
+          'Please fix validation errors before generating traits'
+        );
         return;
       }
 
@@ -743,11 +840,19 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       this.#clearInputValidationError();
 
       // Prepare generation parameters
+      const clicheData = await this.characterBuilderService.getClichesByDirectionId(
+        this.#selectedDirection.id
+      );
+      
+      // Convert single Cliche object to array format expected by TraitsGenerator
+      // If no cliches found, use empty array instead of null
+      const cliches = clicheData ? this.#convertClicheToArray(clicheData) : [];
+      
       const params = {
-        concept: this.#selectedDirection.concept,
+        concept: this.#selectedConcept,
         direction: this.#selectedDirection,
         userInputs: this.#getUserInputs(),
-        cliches: await this.characterBuilderService.getClichesByDirectionId(this.#selectedDirection.id)
+        cliches: cliches,
       };
 
       // Call generation service
@@ -756,7 +861,8 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
         () => this.characterBuilderService.generateTraits(params),
         'generate character traits',
         {
-          userErrorMessage: 'Failed to generate character traits. Please try again.',
+          userErrorMessage:
+            'Failed to generate character traits. Please try again.',
           retries: 2,
           retryDelay: 1000,
         }
@@ -770,7 +876,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
 
       // Update UI state and enable export
       this.#updateUIState();
-      
+
       // Announce success to screen readers
       this.#announceToScreenReader('Character traits generated successfully');
 
@@ -778,7 +884,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       this.eventBus.dispatch('core:traits_generated', {
         directionId: this.#selectedDirection.id,
         success: true,
-        traitsCount: this.#getTraitsCount(traits)
+        traitsCount: this.#getTraitsCount(traits),
       });
 
       this.logger.info('Traits generation completed successfully');
@@ -797,10 +903,13 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
   async #displayResults(traits) {
     try {
       // Enhance traits for display
-      const enhancedTraits = this.#traitsDisplayEnhancer.enhanceForDisplay(traits, {
-        includeMetadata: false,
-        expandStructuredData: true
-      });
+      const enhancedTraits = this.#traitsDisplayEnhancer.enhanceForDisplay(
+        traits,
+        {
+          includeMetadata: false,
+          expandStructuredData: true,
+        }
+      );
 
       // Render results
       this.#renderTraitsResults(enhancedTraits);
@@ -813,7 +922,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
         if (this._getElement('traitsResults')) {
           this._getElement('traitsResults').scrollIntoView({
             behavior: 'smooth',
-            block: 'start'
+            block: 'start',
           });
         }
       }, 100);
@@ -874,14 +983,22 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       <section class="trait-category names-category">
         <h3>Character Names</h3>
         <div class="names-list">
-          ${names.map((nameItem, index) => `
+          ${names
+            .map(
+              (nameItem, index) => `
             <div class="name-item" data-index="${index}">
               <h4 class="name-value">${DomUtils.escapeHtml(nameItem.name || nameItem)}</h4>
-              ${nameItem.justification ? `
+              ${
+                nameItem.justification
+                  ? `
                 <p class="name-justification">${DomUtils.escapeHtml(nameItem.justification)}</p>
-              ` : ''}
+              `
+                  : ''
+              }
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
       </section>
     `;
@@ -919,14 +1036,22 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       <section class="trait-category personality-category">
         <h3>Personality Traits</h3>
         <div class="personality-list">
-          ${personality.map((traitItem, index) => `
+          ${personality
+            .map(
+              (traitItem, index) => `
             <div class="personality-item" data-index="${index}">
               <h4 class="trait-name">${DomUtils.escapeHtml(traitItem.trait || traitItem)}</h4>
-              ${traitItem.explanation ? `
+              ${
+                traitItem.explanation
+                  ? `
                 <p class="trait-explanation">${DomUtils.escapeHtml(traitItem.explanation)}</p>
-              ` : ''}
+              `
+                  : ''
+              }
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
       </section>
     `;
@@ -946,26 +1071,42 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     return `
       <section class="trait-category strengths-weaknesses-category">
         <div class="two-column-layout">
-          ${strengths && strengths.length > 0 ? `
+          ${
+            strengths && strengths.length > 0
+              ? `
             <div class="strengths-column">
               <h3>Strengths</h3>
               <ul class="strengths-list">
-                ${strengths.map(strength => `
+                ${strengths
+                  .map(
+                    (strength) => `
                   <li class="strength-item">${DomUtils.escapeHtml(strength)}</li>
-                `).join('')}
+                `
+                  )
+                  .join('')}
               </ul>
             </div>
-          ` : ''}
-          ${weaknesses && weaknesses.length > 0 ? `
+          `
+              : ''
+          }
+          ${
+            weaknesses && weaknesses.length > 0
+              ? `
             <div class="weaknesses-column">
               <h3>Weaknesses</h3>
               <ul class="weaknesses-list">
-                ${weaknesses.map(weakness => `
+                ${weaknesses
+                  .map(
+                    (weakness) => `
                   <li class="weakness-item">${DomUtils.escapeHtml(weakness)}</li>
-                `).join('')}
+                `
+                  )
+                  .join('')}
               </ul>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       </section>
     `;
@@ -985,26 +1126,42 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     return `
       <section class="trait-category likes-dislikes-category">
         <div class="two-column-layout">
-          ${likes && likes.length > 0 ? `
+          ${
+            likes && likes.length > 0
+              ? `
             <div class="likes-column">
               <h3>Likes</h3>
               <ul class="likes-list">
-                ${likes.map(like => `
+                ${likes
+                  .map(
+                    (like) => `
                   <li class="like-item">${DomUtils.escapeHtml(like)}</li>
-                `).join('')}
+                `
+                  )
+                  .join('')}
               </ul>
             </div>
-          ` : ''}
-          ${dislikes && dislikes.length > 0 ? `
+          `
+              : ''
+          }
+          ${
+            dislikes && dislikes.length > 0
+              ? `
             <div class="dislikes-column">
               <h3>Dislikes</h3>
               <ul class="dislikes-list">
-                ${dislikes.map(dislike => `
+                ${dislikes
+                  .map(
+                    (dislike) => `
                   <li class="dislike-item">${DomUtils.escapeHtml(dislike)}</li>
-                `).join('')}
+                `
+                  )
+                  .join('')}
               </ul>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       </section>
     `;
@@ -1024,9 +1181,13 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       <section class="trait-category fears-category">
         <h3>Fears</h3>
         <ul class="fears-list">
-          ${fears.map(fear => `
+          ${fears
+            .map(
+              (fear) => `
             <li class="fear-item">${DomUtils.escapeHtml(fear)}</li>
-          `).join('')}
+          `
+            )
+            .join('')}
         </ul>
       </section>
     `;
@@ -1045,22 +1206,34 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     return `
       <section class="trait-category goals-category">
         <h3>Goals</h3>
-        ${goals.shortTerm && goals.shortTerm.length > 0 ? `
+        ${
+          goals.shortTerm && goals.shortTerm.length > 0
+            ? `
           <div class="short-term-goals">
             <h4>Short-term Goals</h4>
             <ul class="short-term-goals-list">
-              ${goals.shortTerm.map(goal => `
+              ${goals.shortTerm
+                .map(
+                  (goal) => `
                 <li class="short-term-goal">${DomUtils.escapeHtml(goal)}</li>
-              `).join('')}
+              `
+                )
+                .join('')}
             </ul>
           </div>
-        ` : ''}
-        ${goals.longTerm ? `
+        `
+            : ''
+        }
+        ${
+          goals.longTerm
+            ? `
           <div class="long-term-goals">
             <h4>Long-term Goal</h4>
             <p class="long-term-goal">${DomUtils.escapeHtml(goals.longTerm)}</p>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
       </section>
     `;
   }
@@ -1079,9 +1252,13 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       <section class="trait-category notes-category">
         <h3>Additional Notes</h3>
         <ul class="notes-list">
-          ${notes.map(note => `
+          ${notes
+            .map(
+              (note) => `
             <li class="note-item">${DomUtils.escapeHtml(note)}</li>
-          `).join('')}
+          `
+            )
+            .join('')}
         </ul>
       </section>
     `;
@@ -1119,9 +1296,13 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       <section class="trait-category secrets-category">
         <h3>Character Secrets</h3>
         <ul class="secrets-list">
-          ${secrets.map(secret => `
+          ${secrets
+            .map(
+              (secret) => `
             <li class="secret-item">${DomUtils.escapeHtml(secret)}</li>
-          `).join('')}
+          `
+            )
+            .join('')}
         </ul>
       </section>
     `;
@@ -1135,7 +1316,12 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
    * @returns {string}
    */
   #renderUserInputSummaryResults(userInputs) {
-    if (!userInputs || (!userInputs.coreMotivation && !userInputs.internalContradiction && !userInputs.centralQuestion)) {
+    if (
+      !userInputs ||
+      (!userInputs.coreMotivation &&
+        !userInputs.internalContradiction &&
+        !userInputs.centralQuestion)
+    ) {
       return '';
     }
 
@@ -1143,24 +1329,36 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       <section class="trait-category user-inputs-category">
         <h3>Based on Your Inputs</h3>
         <div class="user-inputs-summary">
-          ${userInputs.coreMotivation ? `
+          ${
+            userInputs.coreMotivation
+              ? `
             <div class="input-summary-item">
               <h4>Core Motivation</h4>
               <p>${DomUtils.escapeHtml(userInputs.coreMotivation)}</p>
             </div>
-          ` : ''}
-          ${userInputs.internalContradiction ? `
+          `
+              : ''
+          }
+          ${
+            userInputs.internalContradiction
+              ? `
             <div class="input-summary-item">
               <h4>Internal Contradiction</h4>
               <p>${DomUtils.escapeHtml(userInputs.internalContradiction)}</p>
             </div>
-          ` : ''}
-          ${userInputs.centralQuestion ? `
+          `
+              : ''
+          }
+          ${
+            userInputs.centralQuestion
+              ? `
             <div class="input-summary-item">
               <h4>Central Question</h4>
               <p>${DomUtils.escapeHtml(userInputs.centralQuestion)}</p>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       </section>
     `;
@@ -1185,7 +1383,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
         {
           includeUserInputs: this.#getUserInputs(),
           includeDirection: this.#selectedDirection,
-          includeTimestamp: true
+          includeTimestamp: true,
         }
       );
 
@@ -1199,7 +1397,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
 
       // Announce success
       this.#announceToScreenReader(`Traits exported to ${filename}`);
-      
+
       this.logger.info('Traits exported successfully:', filename);
     } catch (error) {
       this.logger.error('Export failed:', error);
@@ -1217,16 +1415,16 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
   #downloadTextFile(content, filename) {
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
     link.style.display = 'none';
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     // Clean up URL object
     setTimeout(() => URL.revokeObjectURL(url), 100);
   }
@@ -1245,7 +1443,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
           this.#generateTraits();
         }
       }
-      
+
       // Ctrl+E: Export to text
       if (e.ctrlKey && e.key === 'e') {
         e.preventDefault();
@@ -1253,7 +1451,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
           this.#exportToText();
         }
       }
-      
+
       // Ctrl+Shift+Del: Clear all
       if (e.ctrlKey && e.shiftKey && e.key === 'Delete') {
         e.preventDefault();
@@ -1277,7 +1475,9 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
 
     // Show/hide export button
     if (this._getElement('exportBtn')) {
-      this._getElement('exportBtn').style.display = hasResults ? 'inline-block' : 'none';
+      this._getElement('exportBtn').style.display = hasResults
+        ? 'inline-block'
+        : 'none';
     }
   }
 
@@ -1306,7 +1506,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       if (this._getElement('loadingMessage')) {
         this._setElementText('loadingMessage', message);
       }
-      
+
       // Disable form inputs during generation
       this.#setFormInputsEnabled(false);
     } else {
@@ -1327,10 +1527,10 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       'internalContradictionInput',
       'centralQuestionInput',
       'generateBtn',
-      'clearBtn'
+      'clearBtn',
     ];
 
-    inputs.forEach(inputId => {
+    inputs.forEach((inputId) => {
       const element = this._getElement(inputId);
       if (element) {
         element.disabled = !enabled;
@@ -1361,11 +1561,12 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
 
     // Insert after the direction selector
     if (this._getElement('directionSelector')) {
-      const formGroup = this._getElement('directionSelector').closest('.cb-form-group');
+      const formGroup =
+        this._getElement('directionSelector').closest('.cb-form-group');
       if (formGroup) {
         formGroup.insertAdjacentElement('afterend', messageDiv);
       }
-      
+
       // Disable form
       this._getElement('directionSelector').disabled = true;
       this.#updateGenerateButton(false);
@@ -1383,9 +1584,12 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     const urlParams = new URLSearchParams(window.location.search);
     const directionId = urlParams.get('directionId');
 
-    if (directionId && this.#eligibleDirections.some(d => d.id === directionId)) {
+    if (
+      directionId &&
+      this.#eligibleDirections.some((item) => item.direction.id === directionId)
+    ) {
       this.#selectDirection(directionId);
-      
+
       // Update selector if element exists
       if (this._getElement('directionSelector')) {
         this._getElement('directionSelector').value = directionId;
@@ -1456,16 +1660,21 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
 
     // Show user-friendly error message
     let userMessage = 'Failed to generate character traits. Please try again.';
-    
-    if (error.message.includes('network') || error.message.includes('timeout')) {
-      userMessage = 'Network error occurred. Please check your connection and try again.';
+
+    if (
+      error.message.includes('network') ||
+      error.message.includes('timeout')
+    ) {
+      userMessage =
+        'Network error occurred. Please check your connection and try again.';
     } else if (error.message.includes('validation')) {
-      userMessage = 'Invalid input provided. Please check your entries and try again.';
+      userMessage =
+        'Invalid input provided. Please check your entries and try again.';
     }
 
     this._showError(userMessage, {
       showRetry: true,
-      showClear: true
+      showClear: true,
     });
 
     // Announce error to screen readers
@@ -1474,7 +1683,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     // Dispatch error event
     this.eventBus.dispatch('core:traits_generation_failed', {
       directionId: this.#selectedDirection?.id,
-      error: error.message
+      error: error.message,
     });
   }
 
@@ -1488,7 +1697,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     if (this._getElement('screenReaderAnnouncement')) {
       const announcement = this._getElement('screenReaderAnnouncement');
       announcement.textContent = message;
-      
+
       // Clear after a short delay
       setTimeout(() => {
         announcement.textContent = '';
@@ -1518,19 +1727,72 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
    */
   #getTraitsCount(traits) {
     if (!traits) return 0;
-    
+
     let count = 0;
-    if (traits.names) count += Array.isArray(traits.names) ? traits.names.length : 1;
-    if (traits.personality) count += Array.isArray(traits.personality) ? traits.personality.length : 1;
-    if (traits.strengths) count += Array.isArray(traits.strengths) ? traits.strengths.length : 1;
-    if (traits.weaknesses) count += Array.isArray(traits.weaknesses) ? traits.weaknesses.length : 1;
-    if (traits.likes) count += Array.isArray(traits.likes) ? traits.likes.length : 1;
-    if (traits.dislikes) count += Array.isArray(traits.dislikes) ? traits.dislikes.length : 1;
-    if (traits.fears) count += Array.isArray(traits.fears) ? traits.fears.length : 1;
-    if (traits.notes) count += Array.isArray(traits.notes) ? traits.notes.length : 1;
-    if (traits.secrets) count += Array.isArray(traits.secrets) ? traits.secrets.length : 1;
-    
+    if (traits.names)
+      count += Array.isArray(traits.names) ? traits.names.length : 1;
+    if (traits.personality)
+      count += Array.isArray(traits.personality)
+        ? traits.personality.length
+        : 1;
+    if (traits.strengths)
+      count += Array.isArray(traits.strengths) ? traits.strengths.length : 1;
+    if (traits.weaknesses)
+      count += Array.isArray(traits.weaknesses) ? traits.weaknesses.length : 1;
+    if (traits.likes)
+      count += Array.isArray(traits.likes) ? traits.likes.length : 1;
+    if (traits.dislikes)
+      count += Array.isArray(traits.dislikes) ? traits.dislikes.length : 1;
+    if (traits.fears)
+      count += Array.isArray(traits.fears) ? traits.fears.length : 1;
+    if (traits.notes)
+      count += Array.isArray(traits.notes) ? traits.notes.length : 1;
+    if (traits.secrets)
+      count += Array.isArray(traits.secrets) ? traits.secrets.length : 1;
+
     return count;
+  }
+
+  /**
+   * Convert Cliche object to array format expected by TraitsGenerator
+   *
+   * @private
+   * @param {Cliche} cliche - Cliche object from characterBuilderService
+   * @returns {Array} Array of cliche objects in format expected by TraitsGenerator
+   */
+  #convertClicheToArray(cliche) {
+    if (!cliche || !cliche.categories) {
+      return [];
+    }
+
+    const clicheArray = [];
+    let itemId = 1;
+
+    // Convert each category from the Cliche object to the format expected by TraitsGenerator
+    for (const [categoryName, items] of Object.entries(cliche.categories)) {
+      if (Array.isArray(items)) {
+        for (const item of items) {
+          clicheArray.push({
+            id: `cliche-${itemId++}`,
+            category: categoryName,
+            content: item,
+          });
+        }
+      }
+    }
+
+    // Also add tropes and stereotypes if they exist
+    if (Array.isArray(cliche.tropesAndStereotypes)) {
+      for (const trope of cliche.tropesAndStereotypes) {
+        clicheArray.push({
+          id: `cliche-${itemId++}`,
+          category: 'tropesAndStereotypes',
+          content: trope,
+        });
+      }
+    }
+
+    return clicheArray;
   }
 }
 

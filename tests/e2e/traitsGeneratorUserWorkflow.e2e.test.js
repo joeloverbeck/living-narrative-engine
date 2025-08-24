@@ -50,16 +50,16 @@ describe('Traits Generator User Workflow E2E', () => {
           createObjectURL: jest.fn(() => 'mock-blob-url'),
           revokeObjectURL: jest.fn(),
         };
-        
+
         window.Blob = jest.fn().mockImplementation((content, options) => ({
           content,
           type: options?.type || 'text/plain',
-          size: content[0]?.length || 0
+          size: content[0]?.length || 0,
         }));
 
         // Mock performance for timing
         window.performance = { now: jest.fn(() => Date.now()) };
-      }
+      },
     });
 
     window = dom.window;
@@ -102,7 +102,9 @@ describe('Traits Generator User Workflow E2E', () => {
 
       expect(emptyStateText).toBeTruthy();
       expect(emptyStateSubtext).toBeTruthy();
-      expect(emptyStateText.textContent).toContain('Select a thematic direction');
+      expect(emptyStateText.textContent).toContain(
+        'Select a thematic direction'
+      );
       expect(emptyStateSubtext.textContent).toContain('character inputs');
     });
   });
@@ -110,7 +112,9 @@ describe('Traits Generator User Workflow E2E', () => {
   describe('Direction Selection Workflow', () => {
     it('should handle direction selection process', () => {
       const directionSelector = document.getElementById('direction-selector');
-      const selectedDirectionDisplay = document.getElementById('selected-direction-display');
+      const selectedDirectionDisplay = document.getElementById(
+        'selected-direction-display'
+      );
 
       expect(directionSelector).toBeTruthy();
       expect(selectedDirectionDisplay).toBeTruthy();
@@ -121,13 +125,17 @@ describe('Traits Generator User Workflow E2E', () => {
       // Test direction selection event handling
       expect(() => {
         directionSelector.value = 'test-direction-1';
-        directionSelector.dispatchEvent(new window.Event('change', { bubbles: true }));
+        directionSelector.dispatchEvent(
+          new window.Event('change', { bubbles: true })
+        );
       }).not.toThrow();
     });
 
     it('should show direction details after selection', () => {
       const directionTitle = document.getElementById('direction-title');
-      const directionDescription = document.getElementById('direction-description');
+      const directionDescription = document.getElementById(
+        'direction-description'
+      );
 
       expect(directionTitle).toBeTruthy();
       expect(directionDescription).toBeTruthy();
@@ -138,8 +146,12 @@ describe('Traits Generator User Workflow E2E', () => {
     });
 
     it('should display core motivations panel when direction selected', () => {
-      const coreMotivationsPanel = document.getElementById('core-motivations-panel');
-      const coreMotivationsList = document.getElementById('core-motivations-list');
+      const coreMotivationsPanel = document.getElementById(
+        'core-motivations-panel'
+      );
+      const coreMotivationsList = document.getElementById(
+        'core-motivations-list'
+      );
 
       expect(coreMotivationsPanel).toBeTruthy();
       expect(coreMotivationsList).toBeTruthy();
@@ -149,7 +161,9 @@ describe('Traits Generator User Workflow E2E', () => {
     });
 
     it('should handle direction selection errors', () => {
-      const directionSelectorError = document.getElementById('direction-selector-error');
+      const directionSelectorError = document.getElementById(
+        'direction-selector-error'
+      );
       expect(directionSelectorError).toBeTruthy();
       expect(directionSelectorError.getAttribute('role')).toBe('alert');
       expect(directionSelectorError.textContent).toBe(''); // Initially empty
@@ -158,9 +172,15 @@ describe('Traits Generator User Workflow E2E', () => {
 
   describe('User Input Workflow', () => {
     it('should handle user input field interactions', () => {
-      const coreMotivationInput = document.getElementById('core-motivation-input');
-      const internalContradictionInput = document.getElementById('internal-contradiction-input');
-      const centralQuestionInput = document.getElementById('central-question-input');
+      const coreMotivationInput = document.getElementById(
+        'core-motivation-input'
+      );
+      const internalContradictionInput = document.getElementById(
+        'internal-contradiction-input'
+      );
+      const centralQuestionInput = document.getElementById(
+        'central-question-input'
+      );
 
       expect(coreMotivationInput).toBeTruthy();
       expect(internalContradictionInput).toBeTruthy();
@@ -170,18 +190,24 @@ describe('Traits Generator User Workflow E2E', () => {
       const testInputs = [
         'A character driven by the need to prove themselves',
         'They fear vulnerability and emotional intimacy',
-        'Can they learn to trust others without losing themselves?'
+        'Can they learn to trust others without losing themselves?',
       ];
 
       expect(() => {
         coreMotivationInput.value = testInputs[0];
-        coreMotivationInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+        coreMotivationInput.dispatchEvent(
+          new window.Event('input', { bubbles: true })
+        );
 
         internalContradictionInput.value = testInputs[1];
-        internalContradictionInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+        internalContradictionInput.dispatchEvent(
+          new window.Event('input', { bubbles: true })
+        );
 
         centralQuestionInput.value = testInputs[2];
-        centralQuestionInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+        centralQuestionInput.dispatchEvent(
+          new window.Event('input', { bubbles: true })
+        );
       }).not.toThrow();
 
       // Verify inputs were set
@@ -197,15 +223,21 @@ describe('Traits Generator User Workflow E2E', () => {
     });
 
     it('should handle input validation feedback', () => {
-      const inputValidationError = document.getElementById('input-validation-error');
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
       expect(inputValidationError).toBeTruthy();
       expect(inputValidationError.getAttribute('role')).toBe('alert');
 
       // Test blur events that would trigger validation
-      const coreMotivationInput = document.getElementById('core-motivation-input');
+      const coreMotivationInput = document.getElementById(
+        'core-motivation-input'
+      );
       expect(() => {
         coreMotivationInput.value = 'short'; // Too short input
-        coreMotivationInput.dispatchEvent(new window.Event('blur', { bubbles: true }));
+        coreMotivationInput.dispatchEvent(
+          new window.Event('blur', { bubbles: true })
+        );
       }).not.toThrow();
     });
 
@@ -213,10 +245,10 @@ describe('Traits Generator User Workflow E2E', () => {
       const inputs = [
         document.getElementById('core-motivation-input'),
         document.getElementById('internal-contradiction-input'),
-        document.getElementById('central-question-input')
+        document.getElementById('central-question-input'),
       ];
 
-      inputs.forEach(input => {
+      inputs.forEach((input) => {
         expect(input).toBeTruthy();
         expect(input.tagName).toBe('TEXTAREA');
         expect(parseInt(input.rows)).toBeGreaterThanOrEqual(3);
@@ -249,7 +281,9 @@ describe('Traits Generator User Workflow E2E', () => {
       expect(loadingMessage).toBeTruthy();
       expect(spinner).toBeTruthy();
 
-      expect(loadingMessage.textContent).toContain('Generating character traits');
+      expect(loadingMessage.textContent).toContain(
+        'Generating character traits'
+      );
       expect(spinner.getAttribute('aria-hidden')).toBe('true');
     });
 
@@ -280,7 +314,9 @@ describe('Traits Generator User Workflow E2E', () => {
 
       // Results state should be properly configured
       expect(resultsState.getAttribute('role')).toBe('region');
-      expect(resultsState.getAttribute('aria-label')).toBe('Generated character traits');
+      expect(resultsState.getAttribute('aria-label')).toBe(
+        'Generated character traits'
+      );
 
       // Export button should initially be hidden
       expect(exportBtn.style.display).toBe('none');
@@ -289,7 +325,9 @@ describe('Traits Generator User Workflow E2E', () => {
     it('should show export functionality after generation', () => {
       const exportBtn = document.getElementById('export-btn');
       expect(exportBtn).toBeTruthy();
-      expect(exportBtn.getAttribute('aria-label')).toBe('Export traits to text file');
+      expect(exportBtn.getAttribute('aria-label')).toBe(
+        'Export traits to text file'
+      );
 
       const buttonIcon = exportBtn.querySelector('.button-icon');
       const buttonText = exportBtn.querySelector('.button-text');
@@ -325,7 +363,9 @@ describe('Traits Generator User Workflow E2E', () => {
     });
 
     it('should handle network and service errors', () => {
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
       expect(screenReaderAnnouncement).toBeTruthy();
       expect(screenReaderAnnouncement.getAttribute('aria-live')).toBe('polite');
     });
@@ -356,8 +396,12 @@ describe('Traits Generator User Workflow E2E', () => {
 
     it('should reset form state when clearing', () => {
       const directionSelector = document.getElementById('direction-selector');
-      const selectedDirectionDisplay = document.getElementById('selected-direction-display');
-      const coreMotivationsPanel = document.getElementById('core-motivations-panel');
+      const selectedDirectionDisplay = document.getElementById(
+        'selected-direction-display'
+      );
+      const coreMotivationsPanel = document.getElementById(
+        'core-motivations-panel'
+      );
 
       expect(directionSelector).toBeTruthy();
       expect(selectedDirectionDisplay).toBeTruthy();
@@ -369,8 +413,12 @@ describe('Traits Generator User Workflow E2E', () => {
     });
 
     it('should clear input validation errors', () => {
-      const inputValidationError = document.getElementById('input-validation-error');
-      const directionSelectorError = document.getElementById('direction-selector-error');
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
+      const directionSelectorError = document.getElementById(
+        'direction-selector-error'
+      );
 
       expect(inputValidationError).toBeTruthy();
       expect(directionSelectorError).toBeTruthy();
@@ -383,9 +431,14 @@ describe('Traits Generator User Workflow E2E', () => {
 
   describe('State Transitions Workflow', () => {
     it('should handle state transitions properly', () => {
-      const states = ['empty-state', 'loading-state', 'results-state', 'error-state'];
-      
-      states.forEach(stateId => {
+      const states = [
+        'empty-state',
+        'loading-state',
+        'results-state',
+        'error-state',
+      ];
+
+      states.forEach((stateId) => {
         const stateElement = document.getElementById(stateId);
         expect(stateElement).toBeTruthy();
       });
@@ -411,7 +464,9 @@ describe('Traits Generator User Workflow E2E', () => {
     });
 
     it('should handle accessibility announcements during workflow', () => {
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
       expect(screenReaderAnnouncement).toBeTruthy();
       expect(screenReaderAnnouncement.getAttribute('aria-live')).toBe('polite');
       expect(screenReaderAnnouncement.getAttribute('aria-atomic')).toBe('true');
@@ -453,10 +508,10 @@ describe('Traits Generator User Workflow E2E', () => {
         'generate-btn',
         'traits-results',
         'export-btn',
-        'clear-btn'
+        'clear-btn',
       ];
 
-      workflowElements.forEach(elementId => {
+      workflowElements.forEach((elementId) => {
         const element = document.getElementById(elementId);
         expect(element).toBeTruthy();
       });
@@ -464,8 +519,12 @@ describe('Traits Generator User Workflow E2E', () => {
 
     it('should handle workflow validation checkpoints', () => {
       const generateBtn = document.getElementById('generate-btn');
-      const inputValidationError = document.getElementById('input-validation-error');
-      const directionSelectorError = document.getElementById('direction-selector-error');
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
+      const directionSelectorError = document.getElementById(
+        'direction-selector-error'
+      );
 
       expect(generateBtn).toBeTruthy();
       expect(inputValidationError).toBeTruthy();
@@ -481,16 +540,18 @@ describe('Traits Generator User Workflow E2E', () => {
         'loading-message',
         'error-message-text',
         'generation-info',
-        'screen-reader-announcement'
+        'screen-reader-announcement',
       ];
 
-      feedbackElements.forEach(elementId => {
+      feedbackElements.forEach((elementId) => {
         const element = document.getElementById(elementId);
         expect(element).toBeTruthy();
       });
 
       // Screen reader support should be comprehensive
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
       expect(screenReaderAnnouncement.getAttribute('aria-live')).toBe('polite');
     });
   });
@@ -515,66 +576,88 @@ function setupWorkflowMocks() {
           resolve({
             ok: true,
             status: 200,
-            json: () => Promise.resolve([
-              {
-                id: 'workflow-direction-1',
-                title: 'The Reluctant Leader',
-                description: 'A character who must lead despite preferring to follow',
-                concept: 'Leadership',
-                createdAt: new Date().toISOString()
-              }
-            ])
+            json: () =>
+              Promise.resolve([
+                {
+                  id: 'workflow-direction-1',
+                  title: 'The Reluctant Leader',
+                  description:
+                    'A character who must lead despite preferring to follow',
+                  concept: 'Leadership',
+                  createdAt: new Date().toISOString(),
+                },
+              ]),
           });
         } else if (urlString.includes('cliches')) {
           resolve({
             ok: true,
             status: 200,
-            json: () => Promise.resolve([
-              { id: '1', text: 'Thrust into leadership against their will' }
-            ])
+            json: () =>
+              Promise.resolve([
+                { id: '1', text: 'Thrust into leadership against their will' },
+              ]),
           });
         } else if (urlString.includes('core-motivations')) {
           resolve({
             ok: true,
             status: 200,
-            json: () => Promise.resolve([
-              {
-                id: '1',
-                coreMotivation: 'To serve others while maintaining personal integrity',
-                internalContradiction: 'Fears the isolation that comes with leadership',
-                centralQuestion: 'Can one lead effectively while remaining true to themselves?'
-              }
-            ])
+            json: () =>
+              Promise.resolve([
+                {
+                  id: '1',
+                  coreMotivation:
+                    'To serve others while maintaining personal integrity',
+                  internalContradiction:
+                    'Fears the isolation that comes with leadership',
+                  centralQuestion:
+                    'Can one lead effectively while remaining true to themselves?',
+                },
+              ]),
           });
         } else if (urlString.includes('generate-traits')) {
           resolve({
             ok: true,
             status: 200,
-            json: () => Promise.resolve({
-              id: 'workflow-trait-result',
-              names: [
-                { name: 'Elena', justification: 'Strong yet approachable leader' },
-                { name: 'Marcus', justification: 'Reluctant but capable commander' }
-              ],
-              physicalDescription: 'A composed figure with tired eyes that reflect the weight of unwanted responsibility.',
-              personality: [
-                { trait: 'Reluctant', explanation: 'Prefers collaboration over command' },
-                { trait: 'Decisive', explanation: 'Makes hard choices when necessary' }
-              ],
-              strengths: ['Empathy', 'Strategic thinking'],
-              weaknesses: ['Self-doubt', 'Reluctance to delegate'],
-              likes: ['Team consensus', 'Quiet reflection'],
-              dislikes: ['Authoritarian approaches', 'Isolation'],
-              fears: ['Leading others to harm'],
-              goals: {
-                shortTerm: ['Build team trust'],
-                longTerm: 'Create sustainable leadership structure'
-              },
-              notes: ['Natural mediator', 'Prefers leading by example'],
-              profile: 'A reluctant leader who embodies servant leadership principles.',
-              secrets: ['Imposter syndrome despite proven competence'],
-              generatedAt: new Date().toISOString()
-            })
+            json: () =>
+              Promise.resolve({
+                id: 'workflow-trait-result',
+                names: [
+                  {
+                    name: 'Elena',
+                    justification: 'Strong yet approachable leader',
+                  },
+                  {
+                    name: 'Marcus',
+                    justification: 'Reluctant but capable commander',
+                  },
+                ],
+                physicalDescription:
+                  'A composed figure with tired eyes that reflect the weight of unwanted responsibility.',
+                personality: [
+                  {
+                    trait: 'Reluctant',
+                    explanation: 'Prefers collaboration over command',
+                  },
+                  {
+                    trait: 'Decisive',
+                    explanation: 'Makes hard choices when necessary',
+                  },
+                ],
+                strengths: ['Empathy', 'Strategic thinking'],
+                weaknesses: ['Self-doubt', 'Reluctance to delegate'],
+                likes: ['Team consensus', 'Quiet reflection'],
+                dislikes: ['Authoritarian approaches', 'Isolation'],
+                fears: ['Leading others to harm'],
+                goals: {
+                  shortTerm: ['Build team trust'],
+                  longTerm: 'Create sustainable leadership structure',
+                },
+                notes: ['Natural mediator', 'Prefers leading by example'],
+                profile:
+                  'A reluctant leader who embodies servant leadership principles.',
+                secrets: ['Imposter syndrome despite proven competence'],
+                generatedAt: new Date().toISOString(),
+              }),
           });
         } else {
           resolve({ ok: false, status: 404 });
@@ -584,6 +667,6 @@ function setupWorkflowMocks() {
   });
 
   return {
-    fetch: mockFetch
+    fetch: mockFetch,
   };
 }

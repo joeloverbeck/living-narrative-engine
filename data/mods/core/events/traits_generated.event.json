@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:traits_generated",
+  "description": "Dispatched when character traits have been successfully generated and displayed",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "directionId": {
+        "type": "string",
+        "description": "ID of the thematic direction used for traits generation"
+      },
+      "success": {
+        "type": "boolean",
+        "description": "Whether the traits generation was successful"
+      },
+      "traitsCount": {
+        "type": "number",
+        "description": "Number of traits generated (calculated by counting trait categories)"
+      }
+    },
+    "required": ["directionId", "success", "traitsCount"],
+    "additionalProperties": true
+  }
+}

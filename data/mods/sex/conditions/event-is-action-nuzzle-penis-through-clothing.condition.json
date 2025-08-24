@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex:event-is-action-nuzzle-penis-through-clothing",
+  "description": "Checks if the triggering event is for the 'sex:nuzzle_penis_through_clothing' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "sex:nuzzle_penis_through_clothing"
+    ]
+  }
+}

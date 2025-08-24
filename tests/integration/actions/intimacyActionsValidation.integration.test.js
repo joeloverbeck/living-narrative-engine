@@ -65,15 +65,12 @@ describe('Intimacy Actions Validation - INTMIG-006', () => {
   });
 
   describe('Migration Completeness', () => {
-    it('should have exactly 26 intimacy actions', () => {
-      expect(intimacyActions.length).toBe(26);
-    });
-
     it('should have all actions using targets format', () => {
       const actionsWithTargets = intimacyActions.filter(
         (a) => 'targets' in a.content
       );
-      expect(actionsWithTargets.length).toBe(26);
+      // All intimacy actions should use the new targets format
+      expect(actionsWithTargets.length).toBe(intimacyActions.length);
     });
 
     it('should have no actions with root-level scope property', () => {

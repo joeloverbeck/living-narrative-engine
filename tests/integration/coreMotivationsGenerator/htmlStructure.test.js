@@ -268,9 +268,7 @@ describe('Core Motivations Generator - HTML Structure', () => {
 
       const backBtn = footer.querySelector('#back-btn');
       expect(backBtn).toBeTruthy();
-      expect(backBtn.getAttribute('aria-label')).toBe(
-        'Back to Main Menu'
-      );
+      expect(backBtn.getAttribute('aria-label')).toBe('Back to Main Menu');
     });
 
     it('should have motivation count display', () => {

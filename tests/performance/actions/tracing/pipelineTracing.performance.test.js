@@ -122,9 +122,15 @@ describe('Pipeline Tracing Performance', () => {
         }
       } else {
         // Standard logging for normal cases
-        console.log(`Baseline avg: ${baselineAvg.toFixed(2)}ms (median: ${baselineMedian.toFixed(2)}ms)`);
-        console.log(`Tracing avg: ${tracingAvg.toFixed(2)}ms (median: ${tracingMedian.toFixed(2)}ms)`);
-        console.log(`Overhead: ${overheadAvg.toFixed(2)}% (median: ${overheadMedian.toFixed(2)}%)`);
+        console.log(
+          `Baseline avg: ${baselineAvg.toFixed(2)}ms (median: ${baselineMedian.toFixed(2)}ms)`
+        );
+        console.log(
+          `Tracing avg: ${tracingAvg.toFixed(2)}ms (median: ${tracingMedian.toFixed(2)}ms)`
+        );
+        console.log(
+          `Overhead: ${overheadAvg.toFixed(2)}% (median: ${overheadMedian.toFixed(2)}%)`
+        );
       }
 
       // IMPORTANT: Mock environment performance characteristics

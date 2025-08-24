@@ -20,7 +20,7 @@
   "prerequisites": [],
   "visual": {
     "backgroundColor": "#bf360c",
-    "textColor": "#ffffff", 
+    "textColor": "#ffffff",
     "hoverBackgroundColor": "#8d2c08",
     "hoverTextColor": "#ffffff"
   }

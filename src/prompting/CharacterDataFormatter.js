@@ -292,6 +292,8 @@ export class CharacterDataFormatter {
       profile,
       likes,
       dislikes,
+      strengths,
+      weaknesses,
       secrets,
       fears,
       speechPatterns,
@@ -328,6 +330,16 @@ export class CharacterDataFormatter {
     const dislikesSection = this.formatOptionalSection('Dislikes', dislikes);
     if (dislikesSection) {
       result += dislikesSection + '\n';
+    }
+
+    const strengthsSection = this.formatOptionalSection('Strengths', strengths);
+    if (strengthsSection) {
+      result += strengthsSection + '\n';
+    }
+
+    const weaknessesSection = this.formatOptionalSection('Weaknesses', weaknesses);
+    if (weaknessesSection) {
+      result += weaknessesSection + '\n';
     }
 
     const secretsSection = this.formatOptionalSection('Secrets', secrets);

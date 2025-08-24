@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:weaknesses",
+  "description": "Stores a character's weaknesses, written from their first-person perspective.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["text"],
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "A string describing the character's weaknesses, written from their first-person perspective. For example: 'I struggle with patience and tend to be overly critical of myself when things don't go perfectly.' or using a delimited list format: 'My main weaknesses: Impatience + Self-criticism + Perfectionism'."
+      }
+    }
+  }
+}

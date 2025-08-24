@@ -34,13 +34,13 @@ describe('CharacterBuilderBootstrap - Custom Service Registration', () => {
       }
 
       class TestGenerator {
-        constructor({ 
-          logger, 
-          llmJsonService, 
-          llmStrategyFactory, 
-          llmConfigManager, 
+        constructor({
+          logger,
+          llmJsonService,
+          llmStrategyFactory,
+          llmConfigManager,
           eventBus,
-          tokenEstimator 
+          tokenEstimator,
         }) {
           this.logger = logger;
           this.type = 'generator';
@@ -94,7 +94,7 @@ describe('CharacterBuilderBootstrap - Custom Service Registration', () => {
       // The services should be available in the controller's dependencies
       // or resolvable from the container
       const controllerDeps = result.controller.dependencies;
-      
+
       if (controllerDeps) {
         displayEnhancer = controllerDeps.displayEnhancer;
         generator = controllerDeps.generator;
@@ -264,7 +264,9 @@ describe('CharacterBuilderBootstrap - Custom Service Registration', () => {
       // Check if service was instantiated
       const deps = result.controller.dependencies;
       if (deps && deps.displayEnhancer) {
-        expect(deps.displayEnhancer).toBeInstanceOf(CoreMotivationsDisplayEnhancer);
+        expect(deps.displayEnhancer).toBeInstanceOf(
+          CoreMotivationsDisplayEnhancer
+        );
       }
     });
   });

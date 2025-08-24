@@ -79,10 +79,7 @@ export function registerInterpreters(container) {
     );
     registry.register('GET_TIMESTAMP', bind(tokens.GetTimestampHandler));
     registry.register('GET_NAME', bind(tokens.GetNameHandler));
-    registry.register(
-      'RESOLVE_DIRECTION',
-      bind(tokens.ResolveDirectionHandler)
-    );
+
     registry.register(
       'REBUILD_LEADER_LIST_CACHE',
       bind(tokens.RebuildLeaderListCacheHandler)
@@ -131,6 +128,8 @@ export function registerInterpreters(container) {
       bind(tokens.HasBodyPartWithComponentValueHandler)
     );
     registry.register('UNEQUIP_CLOTHING', bind(tokens.UnequipClothingHandler));
+    registry.register('LOCK_MOVEMENT', bind(tokens.LockMovementHandler));
+    registry.register('UNLOCK_MOVEMENT', bind(tokens.UnlockMovementHandler));
 
     return registry;
   });

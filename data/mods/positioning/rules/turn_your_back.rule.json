@@ -15,7 +15,7 @@
       }
     },
     {
-      "type": "GET_NAME", 
+      "type": "GET_NAME",
       "parameters": {
         "entity_ref": "target",
         "result_variable": "targetName"
@@ -50,7 +50,7 @@
     {
       "type": "SET_VARIABLE",
       "parameters": {
-        "variable_name": "perceptionType", 
+        "variable_name": "perceptionType",
         "value": "action_target_general"
       }
     },

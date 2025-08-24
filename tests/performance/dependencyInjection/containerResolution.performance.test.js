@@ -1,33 +1,33 @@
 /**
  * @file Performance tests for dependency injection container resolution
  * @description Tests performance characteristics of service resolution from the container
- * 
+ *
  * Test Methodology:
  * ================
- * 
+ *
  * This test suite separates two distinct performance scenarios:
- * 
+ *
  * 1. **Cold Start Performance**: Measures the time to resolve services for the first time,
  *    including the full dependency resolution chain. This reflects production startup performance.
  *    - Threshold: 100ms for initial resolution of 6 services
  *    - Critical for application startup time
- * 
+ *
  * 2. **Warm Cache Performance**: Measures repeated resolution of already-cached singleton services.
  *    This reflects ongoing application runtime performance.
  *    - Threshold: 50ms for 6000 cached resolutions (1000 iterations × 6 services)
  *    - Critical for application runtime efficiency
- * 
+ *
  * 3. **Mixed Performance**: Tests the original flaky scenario of cold start + warm cache combined.
  *    - Threshold: 150ms for 600 total resolutions (accounts for test environment overhead)
  *    - Includes both expensive initial resolutions and cheap cached lookups
- * 
+ *
  * Timing Considerations:
  * =====================
  * - Test environment (Jest + jsdom) adds 10-50ms overhead compared to production
  * - Initial service resolution triggers dependency chain resolution
  * - Singleton caching makes subsequent resolutions very fast (map lookups)
  * - System variability (CPU scheduling, GC) affects timing consistency
- * 
+ *
  * Previous Issue:
  * ==============
  * The original test was flaky because it expected 50ms for mixed cold/warm performance,
@@ -99,10 +99,10 @@ describe('Container Performance', () => {
     // This test measures cold start performance - the production-critical scenario
     // where services are resolved for the first time during application startup
     const maxColdStartMs = 100; // Allow more time for initial dependency resolution
-    
+
     const servicesToTest = [
       tokens.IPipelineServiceFactory,
-      tokens.IPipelineServiceRegistry, 
+      tokens.IPipelineServiceRegistry,
       tokens.ITargetDependencyResolver,
       tokens.ILegacyTargetCompatibilityLayer,
       tokens.IScopeContextBuilder,
@@ -110,12 +110,12 @@ describe('Container Performance', () => {
     ];
 
     const start = performance.now();
-    
+
     // Resolve each service once (simulating application startup)
-    servicesToTest.forEach(token => {
+    servicesToTest.forEach((token) => {
       container.resolve(token);
     });
-    
+
     const elapsed = performance.now() - start;
     expect(elapsed).toBeLessThan(maxColdStartMs);
   });
@@ -125,24 +125,24 @@ describe('Container Performance', () => {
     const servicesToTest = [
       tokens.IPipelineServiceFactory,
       tokens.IPipelineServiceRegistry,
-      tokens.ITargetDependencyResolver, 
+      tokens.ITargetDependencyResolver,
       tokens.ILegacyTargetCompatibilityLayer,
       tokens.IScopeContextBuilder,
       tokens.ITargetDisplayNameResolver,
     ];
 
-    servicesToTest.forEach(token => container.resolve(token));
+    servicesToTest.forEach((token) => container.resolve(token));
 
     // Now measure warm cache performance
     const iterations = 1000; // More iterations to emphasize cache performance
     const maxWarmCacheMs = 50; // Should be much faster with cached singletons
 
     const start = performance.now();
-    
+
     for (let i = 0; i < iterations; i++) {
-      servicesToTest.forEach(token => container.resolve(token));
+      servicesToTest.forEach((token) => container.resolve(token));
     }
-    
+
     const elapsed = performance.now() - start;
     expect(elapsed).toBeLessThan(maxWarmCacheMs);
   });

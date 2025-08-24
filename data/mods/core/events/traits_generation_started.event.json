@@ -1,0 +1,45 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "TRAITS_GENERATION_STARTED",
+  "description": "Dispatched when character traits generation begins",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "type": "string",
+        "description": "ID of the character concept being used for traits generation"
+      },
+      "directionId": {
+        "type": "string",
+        "description": "ID of the thematic direction being applied"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO 8601 timestamp when traits generation started"
+      },
+      "metadata": {
+        "type": "object",
+        "description": "Additional generation metadata",
+        "properties": {
+          "conceptLength": {
+            "type": "number",
+            "description": "Length of the character concept text"
+          },
+          "clichesCount": {
+            "type": "number",
+            "description": "Number of cliches being avoided"
+          },
+          "promptVersion": {
+            "type": "string",
+            "description": "Version of the traits generation prompt"
+          }
+        },
+        "required": ["conceptLength", "clichesCount", "promptVersion"],
+        "additionalProperties": true
+      }
+    },
+    "required": ["conceptId", "directionId", "timestamp", "metadata"],
+    "additionalProperties": true
+  }
+}

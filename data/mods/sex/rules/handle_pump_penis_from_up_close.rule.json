@@ -3,7 +3,9 @@
   "rule_id": "handle_pump_penis_from_up_close",
   "comment": "Handles the 'sex:pump_penis_from_up_close' action. Dispatches descriptive text and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "sex:event-is-action-pump-penis-from-up-close" },
+  "condition": {
+    "condition_ref": "sex:event-is-action-pump-penis-from-up-close"
+  },
   "actions": [
     {
       "type": "GET_NAME",

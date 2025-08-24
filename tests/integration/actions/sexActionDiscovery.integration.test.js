@@ -25,7 +25,6 @@ const pumpPenisScopeContent = fs.readFileSync(
   'utf8'
 );
 
-
 describe('Sex Action Discovery Integration Tests', () => {
   let entityManager;
   let logger;
@@ -57,7 +56,11 @@ describe('Sex Action Discovery Integration Tests', () => {
 
     // Create real data registry and register actions
     dataRegistry = new InMemoryDataRegistry({ logger });
-    dataRegistry.store('actions', pumpPenisFromUpCloseAction.id, pumpPenisFromUpCloseAction);
+    dataRegistry.store(
+      'actions',
+      pumpPenisFromUpCloseAction.id,
+      pumpPenisFromUpCloseAction
+    );
 
     // Create real JSON Logic operators and evaluation service
     const jsonLogicCustomOperators = new JsonLogicCustomOperators({
@@ -71,7 +74,7 @@ describe('Sex Action Discovery Integration Tests', () => {
       customOperators: jsonLogicCustomOperators,
       logger,
     });
-    
+
     // Register the custom operators with JsonLogic
     jsonLogicCustomOperators.registerOperators(jsonLogicEval);
 
@@ -142,16 +145,15 @@ describe('Sex Action Discovery Integration Tests', () => {
       const scopeDef = scopeRegistry.getScope(
         'sex:actor_kneeling_before_target_with_penis'
       );
-      
+
       // Debug: Check if scope was found
       expect(scopeDef).toBeDefined();
       expect(scopeDef.ast).toBeDefined();
-      
+
       const result = scopeEngine.resolve(scopeDef.ast, actorEntity, {
         entityManager,
         jsonLogicEval,
       });
-
 
       // Assert
       expect(result.size).toBe(1);

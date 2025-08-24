@@ -24,16 +24,33 @@ const ajv = new Ajv({ strict: true, allErrors: true });
 addFormats(ajv);
 ajv.addSchema(commonSchema, commonSchema.$id);
 
-const componentDir = path.resolve(
+const coreComponentDir = path.resolve(
   __dirname,
   '../../../data/mods/core/components'
 );
 
-fs.readdirSync(componentDir)
+const anatomyComponentDir = path.resolve(
+  __dirname,
+  '../../../data/mods/anatomy/components'
+);
+
+// Load core components
+fs.readdirSync(coreComponentDir)
   .filter((f) => f.endsWith('.json'))
   .forEach((file) => {
     const { id, validate } = compileComponentSchema(
-      path.join(componentDir, file),
+      path.join(coreComponentDir, file),
+      ajv
+    );
+    validators[id] = validate;
+  });
+
+// Load anatomy components
+fs.readdirSync(anatomyComponentDir)
+  .filter((f) => f.endsWith('.json'))
+  .forEach((file) => {
+    const { id, validate } = compileComponentSchema(
+      path.join(anatomyComponentDir, file),
       ajv
     );
     validators[id] = validate;
@@ -65,11 +82,14 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:position': { locationId: 'core:room' },
     'core:short_term_memory': { thoughts: [], maxEntries: 5 },
     'core:speech_patterns': { patterns: ['hello'] },
+    'core:strengths': { text: 'I am good at problem solving' },
+    'core:weaknesses': { text: 'I tend to be impatient' },
     'core:exits': [],
     'anatomy:part': { subType: 'leg' },
     'anatomy:sockets': { sockets: [{ id: 'ankle', allowedTypes: ['foot'] }] },
     'anatomy:joint': { parentId: 'entity-123', socketId: 'ankle' },
     'anatomy:body': { recipeId: 'anatomy:human_female' },
+    'anatomy:blueprintSlot': { slotId: 'left_breast' },
     'core:owned_by': { ownerId: 'entity-123' },
     'core:material': { material: 'cotton' },
   };
@@ -99,13 +119,16 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:position': {},
     'core:short_term_memory': {},
     'core:speech_patterns': {},
+    'core:strengths': {},
+    'core:weaknesses': {},
     'core:exits': {},
     'anatomy:part': {},
     'anatomy:sockets': {},
     'anatomy:joint': {},
     'anatomy:body': {},
+    'anatomy:blueprintSlot': {},
     'core:owned_by': {},
-    'core:material': { material: 'invalid_material' },
+    'core:material': { material: 'invalid_material_not_in_enum' },
   };
 
   Object.entries(validators).forEach(([id, validate]) => {

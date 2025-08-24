@@ -24,6 +24,7 @@
     "actions": [
       "fondle_breasts.action.json",
       "fondle_penis.action.json",
+      "nuzzle_penis_through_clothing.action.json",
       "pump_penis_from_up_close.action.json",
       "rub_penis_over_clothes.action.json",
       "rub_vagina_over_clothes.action.json"
@@ -31,6 +32,7 @@
     "conditions": [
       "event-is-action-fondle-breasts.condition.json",
       "event-is-action-fondle-penis.condition.json",
+      "event-is-action-nuzzle-penis-through-clothing.condition.json",
       "event-is-action-pump-penis-from-up-close.condition.json",
       "event-is-action-rub-penis-over-clothes.condition.json",
       "event-is-action-rub-vagina-over-clothes.condition.json"
@@ -38,11 +40,13 @@
     "rules": [
       "handle_fondle_breasts.rule.json",
       "handle_fondle_penis.rule.json",
+      "handle_nuzzle_penis_through_clothing.rule.json",
       "handle_pump_penis_from_up_close.rule.json",
       "handle_rub_penis_over_clothes.rule.json",
       "handle_rub_vagina_over_clothes.rule.json"
     ],
     "scopes": [
+      "actor_kneeling_before_target_with_covered_penis.scope",
       "actor_kneeling_before_target_with_penis.scope",
       "actors_with_breasts_facing_each_other.scope",
       "actors_with_breasts_in_intimacy.scope",

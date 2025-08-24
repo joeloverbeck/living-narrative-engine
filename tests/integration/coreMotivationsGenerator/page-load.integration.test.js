@@ -17,7 +17,7 @@ describe('Core Motivations Generator Page - Load Test', () => {
     // Spy on console to catch errors
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    
+
     // Set up required DOM elements
     document.body.innerHTML = `
       <div id="core-motivations-container"></div>
@@ -32,15 +32,13 @@ describe('Core Motivations Generator Page - Load Test', () => {
 
   it('should bootstrap without "cannot be invoked without \'new\'" errors', async () => {
     const bootstrap = new CharacterBuilderBootstrap();
-    
+
     // This mimics what happens in core-motivations-generator-main.js
     const result = await bootstrap.bootstrap({
       pageName: 'core-motivations-generator',
       controllerClass: CoreMotivationsGeneratorController,
       includeModLoading: true,
-      customSchemas: [
-        '/data/schemas/core-motivation.schema.json',
-      ],
+      customSchemas: ['/data/schemas/core-motivation.schema.json'],
       services: {
         displayEnhancer: CoreMotivationsDisplayEnhancer,
         coreMotivationsGenerator: CoreMotivationsGenerator,
@@ -53,10 +51,14 @@ describe('Core Motivations Generator Page - Load Test', () => {
 
     // Check that no "cannot be invoked without 'new'" errors occurred
     const errorCalls = consoleErrorSpy.mock.calls;
-    const criticalErrors = errorCalls.filter(call => {
+    const criticalErrors = errorCalls.filter((call) => {
       const errorMessage = call.join(' ');
-      return errorMessage.includes('cannot be invoked without \'new\'') ||
-             errorMessage.includes('Missing required dependency: CoreMotivationsGenerator');
+      return (
+        errorMessage.includes("cannot be invoked without 'new'") ||
+        errorMessage.includes(
+          'Missing required dependency: CoreMotivationsGenerator'
+        )
+      );
     });
 
     expect(criticalErrors).toHaveLength(0);
@@ -64,7 +66,7 @@ describe('Core Motivations Generator Page - Load Test', () => {
 
   it('should properly instantiate CoreMotivationsDisplayEnhancer', async () => {
     const bootstrap = new CharacterBuilderBootstrap();
-    
+
     const result = await bootstrap.bootstrap({
       pageName: 'test-page',
       controllerClass: CoreMotivationsGeneratorController,
@@ -77,13 +79,15 @@ describe('Core Motivations Generator Page - Load Test', () => {
 
     // The service should be instantiated without errors
     expect(result).toBeDefined();
-    
+
     // Check no critical errors
     const errorCalls = consoleErrorSpy.mock.calls;
-    const displayEnhancerErrors = errorCalls.filter(call => {
+    const displayEnhancerErrors = errorCalls.filter((call) => {
       const errorMessage = call.join(' ');
-      return errorMessage.includes('CoreMotivationsDisplayEnhancer') &&
-             errorMessage.includes('cannot be invoked');
+      return (
+        errorMessage.includes('CoreMotivationsDisplayEnhancer') &&
+        errorMessage.includes('cannot be invoked')
+      );
     });
 
     expect(displayEnhancerErrors).toHaveLength(0);
@@ -91,7 +95,7 @@ describe('Core Motivations Generator Page - Load Test', () => {
 
   it('should properly instantiate CoreMotivationsGenerator', async () => {
     const bootstrap = new CharacterBuilderBootstrap();
-    
+
     const result = await bootstrap.bootstrap({
       pageName: 'test-page',
       controllerClass: CoreMotivationsGeneratorController,
@@ -104,13 +108,15 @@ describe('Core Motivations Generator Page - Load Test', () => {
 
     // The service should be instantiated without errors
     expect(result).toBeDefined();
-    
+
     // Check no critical errors
     const errorCalls = consoleErrorSpy.mock.calls;
-    const generatorErrors = errorCalls.filter(call => {
+    const generatorErrors = errorCalls.filter((call) => {
       const errorMessage = call.join(' ');
-      return errorMessage.includes('CoreMotivationsGenerator') &&
-             errorMessage.includes('cannot be invoked');
+      return (
+        errorMessage.includes('CoreMotivationsGenerator') &&
+        errorMessage.includes('cannot be invoked')
+      );
     });
 
     expect(generatorErrors).toHaveLength(0);
