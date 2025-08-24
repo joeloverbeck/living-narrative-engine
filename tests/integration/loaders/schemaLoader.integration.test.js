@@ -321,6 +321,57 @@ describe('SchemaLoader Integration Tests', () => {
       expect(worldLoaded).toBe(true);
       expect(entityInstanceLoaded).toBe(true);
     });
+
+    it('should include unlockMovement schema in configuration', async () => {
+      // Test that the configuration includes the unlockMovement schema
+      const realConfig = new StaticConfiguration();
+      const schemaFiles = realConfig.getSchemaFiles();
+
+      // Verify that unlockMovement.schema.json is included in the operation schemas
+      expect(schemaFiles).toContain('operations/unlockMovement.schema.json');
+
+      // Also verify all the other operation schemas referenced in operation.schema.json are included
+      const expectedOperationSchemas = [
+        'operations/queryComponent.schema.json',
+        'operations/queryComponents.schema.json',
+        'operations/modifyComponent.schema.json',
+        'operations/addComponent.schema.json',
+        'operations/removeComponent.schema.json',
+        'operations/dispatchEvent.schema.json',
+        'operations/dispatchPerceptibleEvent.schema.json',
+        'operations/dispatchSpeech.schema.json',
+        'operations/endTurn.schema.json',
+        'operations/if.schema.json',
+        'operations/forEach.schema.json',
+        'operations/log.schema.json',
+        'operations/setVariable.schema.json',
+        'operations/getTimestamp.schema.json',
+        'operations/getName.schema.json',
+        'operations/resolveDirection.schema.json',
+        'operations/systemMoveEntity.schema.json',
+        'operations/rebuildLeaderListCache.schema.json',
+        'operations/checkFollowCycle.schema.json',
+        'operations/establishFollowRelation.schema.json',
+        'operations/breakFollowRelation.schema.json',
+        'operations/addPerceptionLogEntry.schema.json',
+        'operations/hasComponent.schema.json',
+        'operations/queryEntities.schema.json',
+        'operations/modifyArrayField.schema.json',
+        'operations/ifCoLocated.schema.json',
+        'operations/math.schema.json',
+        'operations/modifyContextArray.schema.json',
+        'operations/autoMoveFollowers.schema.json',
+        'operations/removeFromClosenessCircle.schema.json',
+        'operations/mergeClosenessCircle.schema.json',
+        'operations/unequipClothing.schema.json',
+        'operations/lockMovement.schema.json',
+        'operations/unlockMovement.schema.json',
+      ];
+
+      expectedOperationSchemas.forEach((schema) => {
+        expect(schemaFiles).toContain(schema);
+      });
+    });
   });
 
   describe('Error Handling', () => {

@@ -1494,6 +1494,10 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
   #updateGenerateButton(enabled) {
     if (this._getElement('generateBtn')) {
       this._getElement('generateBtn').disabled = !enabled;
+      this._getElement('generateBtn').setAttribute(
+        'aria-disabled',
+        !enabled ? 'true' : 'false'
+      );
     }
   }
 

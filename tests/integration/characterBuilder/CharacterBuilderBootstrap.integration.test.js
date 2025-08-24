@@ -312,6 +312,165 @@ describe('CharacterBuilderBootstrap Integration', () => {
   });
 
   describe('Mod Loading Integration', () => {
+    it('should load events from mods when includeModLoading is true', async () => {
+      // Setup schema fetches
+      mockFetch.mockImplementation((url) => {
+        // Mock successful schema loading for all schemas
+        return Promise.resolve({
+          ok: true,
+          json: async () => {
+            if (url.includes('operation.schema.json')) {
+              return {
+                $id: 'schema://living-narrative-engine/operation.schema.json',
+                $defs: {
+                  Operation: {
+                    anyOf: [
+                      { $ref: './operations/unlockMovement.schema.json' },
+                    ],
+                  },
+                },
+              };
+            } else if (url.includes('unlockMovement.schema.json')) {
+              return {
+                $id: 'schema://living-narrative-engine/operations/unlockMovement.schema.json',
+                type: 'object',
+                properties: {
+                  type: { const: 'UNLOCK_MOVEMENT' },
+                  parameters: {
+                    type: 'object',
+                    properties: {
+                      actor_id: { type: 'string' },
+                    },
+                    required: ['actor_id'],
+                  },
+                },
+                required: ['type', 'parameters'],
+              };
+            } else {
+              // Return generic schema for other files
+              return {
+                $id: `schema://living-narrative-engine/${url.split('/').pop()}`,
+                type: 'object',
+              };
+            }
+          },
+        });
+      });
+
+      // Mock DataRegistry to verify events are registered
+      const mockDataRegistry = {
+        // Event-related methods
+        setEventDefinition: jest.fn(),
+        getEventDefinition: jest.fn((id) => {
+          if (id === 'core:core_motivations_retrieved') {
+            return {
+              id: 'core:core_motivations_retrieved',
+              description: 'Test event',
+              payloadSchema: { type: 'object' },
+            };
+          }
+          return null;
+        }),
+        // Core storage methods
+        store: jest.fn(),
+        get: jest.fn(() => null),
+        getAll: jest.fn(() => []),
+        clear: jest.fn(),
+        // World-related methods
+        getWorldDefinition: jest.fn(() => null),
+        getAllWorldDefinitions: jest.fn(() => []),
+        // Entity-related methods
+        getEntityDefinition: jest.fn(() => null),
+        getAllEntityDefinitions: jest.fn(() => []),
+        // Action-related methods
+        getActionDefinition: jest.fn(() => null),
+        getAllActionDefinitions: jest.fn(() => []),
+        // Component-related methods
+        getComponentDefinition: jest.fn(() => null),
+        getAllComponentDefinitions: jest.fn(() => []),
+        // Event-related methods
+        getAllEventDefinitions: jest.fn(() => []),
+        // Condition-related methods
+        getConditionDefinition: jest.fn(() => null),
+        getAllConditionDefinitions: jest.fn(() => []),
+        // Goal-related methods
+        getGoalDefinition: jest.fn(() => null),
+        getAllGoalDefinitions: jest.fn(() => []),
+        // Entity instance methods
+        getEntityInstanceDefinition: jest.fn(() => null),
+        getAllEntityInstanceDefinitions: jest.fn(() => []),
+        // Manifest methods
+        getStartingPlayerId: jest.fn(() => null),
+        getStartingLocationId: jest.fn(() => null),
+        // System rules
+        getAllSystemRules: jest.fn(() => []),
+      };
+
+      // Mock ModsLoader that successfully loads mods and registers events
+      const mockModsLoader = {
+        loadMods: jest.fn(async () => {
+          // Simulate that mods are loaded and events are registered
+          mockDataRegistry.setEventDefinition(
+            'core:core_motivations_retrieved',
+            {
+              id: 'core:core_motivations_retrieved',
+              description:
+                'Dispatched when core motivations are loaded from storage',
+              payloadSchema: { type: 'object' },
+            }
+          );
+          mockDataRegistry.setEventDefinition('core:ui_state_changed', {
+            id: 'core:ui_state_changed',
+            description: 'UI state changed event',
+            payloadSchema: { type: 'object' },
+          });
+          mockDataRegistry.setEventDefinition('core:controller_initialized', {
+            id: 'core:controller_initialized',
+            description: 'Controller initialized event',
+            payloadSchema: { type: 'object' },
+          });
+        }),
+      };
+
+      class TestController {
+        constructor(deps) {
+          this.logger = deps.logger;
+          this.characterBuilderService = deps.characterBuilderService;
+          this.eventBus = deps.eventBus;
+        }
+        async initialize() {}
+      }
+
+      const config = {
+        pageName: 'Event Loading Test Page',
+        controllerClass: TestController,
+        includeModLoading: true,
+        hooks: {
+          preContainer: (container) => {
+            // Set up mocks using the container's proper override mechanism
+            container.setOverride(tokens.ModsLoader, mockModsLoader);
+            container.setOverride(tokens.IDataRegistry, mockDataRegistry);
+          },
+        },
+      };
+
+      const result = await bootstrap.bootstrap(config);
+      expect(result).toBeDefined();
+
+      // Verify that mods were loaded
+      expect(mockModsLoader.loadMods).toHaveBeenCalledWith('default', [
+        'core',
+      ]);
+
+      // Verify that events were registered
+      expect(mockDataRegistry.setEventDefinition).toHaveBeenCalledWith(
+        'core:core_motivations_retrieved',
+        expect.objectContaining({
+          id: 'core:core_motivations_retrieved',
+        })
+      );
+    });
+
     it('should handle missing ModsLoader gracefully', async () => {
       // Setup schema fetch
       mockFetch.mockResolvedValue({

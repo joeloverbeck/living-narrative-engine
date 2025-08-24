@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "schema://living-narrative-engine/operations/lockMovement.schema.json",
-  "title": "LOCK_MOVEMENT Operation",
+  "$id": "schema://living-narrative-engine/operations/unlockMovement.schema.json",
+  "title": "UNLOCK_MOVEMENT Operation",
   "allOf": [
     {
       "$ref": "../base-operation.schema.json"
@@ -9,7 +9,7 @@
     {
       "properties": {
         "type": {
-          "const": "LOCK_MOVEMENT"
+          "const": "UNLOCK_MOVEMENT"
         },
         "parameters": {
           "$ref": "#/$defs/Parameters"
@@ -20,11 +20,11 @@
   "$defs": {
     "Parameters": {
       "type": "object",
-      "description": "Parameters for the LOCK_MOVEMENT operation. Locks movement for the specified actor.",
+      "description": "Parameters for the UNLOCK_MOVEMENT operation. Unlocks movement for the specified actor.",
       "properties": {
         "actor_id": {
           "type": "string",
-          "description": "The ID of the actor to lock movement for"
+          "description": "The ID of the actor to unlock movement for"
         }
       },
       "required": ["actor_id"],
