@@ -195,12 +195,12 @@ describe('BaseCharacterBuilderController - Using Test Infrastructure', () => {
         message: 'must not be empty',
       });
 
-      mockValidator.validateAgainstSchema.mockReturnValue({
+      mockValidator.validate.mockReturnValue({
         isValid: false,
         errors: [error],
       });
 
-      const result = mockValidator.validateAgainstSchema({
+      const result = mockValidator.validate('character-concept', {
         characterConcept: '',
       });
 
@@ -213,12 +213,12 @@ describe('BaseCharacterBuilderController - Using Test Infrastructure', () => {
     it('should handle successful validation', () => {
       const mockValidator = testBase.mockDependencies.schemaValidator;
 
-      mockValidator.validateAgainstSchema.mockReturnValue({
+      mockValidator.validate.mockReturnValue({
         isValid: true,
         errors: [],
       });
 
-      const result = mockValidator.validateAgainstSchema({
+      const result = mockValidator.validate('character-concept', {
         characterConcept: 'A valid concept',
       });
 

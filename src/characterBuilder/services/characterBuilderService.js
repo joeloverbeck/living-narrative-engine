@@ -65,6 +65,8 @@ export const CHARACTER_BUILDER_EVENTS = {
   CLICHES_GENERATION_COMPLETED: 'core:cliches_generation_completed',
   CLICHES_GENERATION_FAILED: 'core:cliches_generation_failed',
   CLICHES_DELETED: 'core:cliches_deleted',
+  CLICHE_ITEM_DELETED: 'core:cliche_item_deleted',
+  CLICHE_TROPE_DELETED: 'core:cliche_trope_deleted',
   // Core motivations events
   CORE_MOTIVATIONS_GENERATION_STARTED:
     'core:core_motivations_generation_started',
@@ -1320,7 +1322,7 @@ export class CharacterBuilderService {
       this.#cacheCliches(directionId, updatedCliche);
 
       // Dispatch event
-      this.#eventBus.dispatch('CLICHE_ITEM_DELETED', {
+      this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.CLICHE_ITEM_DELETED, {
         conceptId: updatedCliche.conceptId,
         directionId: updatedCliche.directionId,
         categoryId,
@@ -1388,7 +1390,7 @@ export class CharacterBuilderService {
       this.#cacheCliches(directionId, updatedCliche);
 
       // Dispatch event
-      this.#eventBus.dispatch('CLICHE_TROPE_DELETED', {
+      this.#eventBus.dispatch(CHARACTER_BUILDER_EVENTS.CLICHE_TROPE_DELETED, {
         conceptId: updatedCliche.conceptId,
         directionId: updatedCliche.directionId,
         tropeText,

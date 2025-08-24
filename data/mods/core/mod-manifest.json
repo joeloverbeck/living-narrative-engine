@@ -75,6 +75,8 @@
       "character_concept_saved.event.json",
       "character_concept_updated.event.json",
       "cliche_error_occurred.event.json",
+      "cliche_item_deleted.event.json",
+      "cliche_trope_deleted.event.json",
       "cliches_deleted.event.json",
       "cliches_generation_completed.event.json",
       "cliches_generation_failed.event.json",

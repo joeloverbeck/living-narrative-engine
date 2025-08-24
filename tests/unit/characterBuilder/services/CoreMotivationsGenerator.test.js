@@ -200,23 +200,23 @@ describe('CoreMotivationsGenerator', () => {
       expect(result[0]).toHaveProperty('metadata');
 
       // Verify event dispatching
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'CORE_MOTIVATIONS_GENERATION_STARTED',
-        payload: {
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'core:core_motivations_generation_started',
+        {
           conceptId: sampleConcept.id,
           directionId: sampleDirection.id,
-        },
-      });
+        }
+      );
 
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'CORE_MOTIVATIONS_GENERATION_COMPLETED',
-        payload: {
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'core:core_motivations_generation_completed',
+        {
           conceptId: sampleConcept.id,
           directionId: sampleDirection.id,
           motivationIds: expect.any(Array),
           totalCount: 3,
-        },
-      });
+        }
+      );
     });
 
     it('should handle French spelling of clichés parameter', async () => {
@@ -333,16 +333,16 @@ describe('CoreMotivationsGenerator', () => {
         service.generate(validParams, { maxRetries: 0 })
       ).rejects.toThrow(CoreMotivationsGenerationError);
 
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'CORE_MOTIVATIONS_GENERATION_FAILED',
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'core:core_motivations_generation_failed',
+        expect.objectContaining({
           conceptId: sampleConcept.id,
           directionId: sampleDirection.id,
           error: expect.stringContaining('Invalid JSON'),
           processingTime: expect.any(Number),
           failureStage: expect.any(String),
-        }),
-      });
+        })
+      );
     });
 
     it('should handle LLM request failures', async () => {
@@ -355,16 +355,16 @@ describe('CoreMotivationsGenerator', () => {
         service.generate(validParams, { maxRetries: 0 })
       ).rejects.toThrow(CoreMotivationsGenerationError);
 
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'CORE_MOTIVATIONS_GENERATION_FAILED',
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'core:core_motivations_generation_failed',
+        expect.objectContaining({
           conceptId: sampleConcept.id,
           directionId: sampleDirection.id,
           error: expect.stringContaining('Network timeout'),
           processingTime: expect.any(Number),
           failureStage: expect.any(String),
-        }),
-      });
+        })
+      );
     });
 
     it('should handle invalid response structure', async () => {

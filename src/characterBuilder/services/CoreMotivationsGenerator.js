@@ -12,6 +12,7 @@ import {
   PROMPT_VERSION_INFO,
 } from '../prompts/coreMotivationsGenerationPrompt.js';
 import { CoreMotivation } from '../models/coreMotivation.js';
+import { CHARACTER_BUILDER_EVENTS } from './characterBuilderService.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -175,13 +176,13 @@ export class CoreMotivationsGenerator {
     const startTime = Date.now();
 
     // Dispatch generation started event
-    this.#eventBus.dispatch({
-      type: 'CORE_MOTIVATIONS_GENERATION_STARTED',
-      payload: {
+    await this.#eventBus.dispatch(
+      CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_STARTED,
+      {
         conceptId: concept.id,
         directionId: direction.id,
-      },
-    });
+      }
+    );
 
     try {
       // Use retry mechanism with configurable retry count
@@ -257,15 +258,15 @@ export class CoreMotivationsGenerator {
       );
 
       // Dispatch completion event
-      this.#eventBus.dispatch({
-        type: 'CORE_MOTIVATIONS_GENERATION_COMPLETED',
-        payload: {
+      await this.#eventBus.dispatch(
+        CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_COMPLETED,
+        {
           conceptId: concept.id,
           directionId: direction.id,
           motivationIds: coreMotivations.map((m) => m.id),
           totalCount: coreMotivations.length,
-        },
-      });
+        }
+      );
 
       return coreMotivations;
     } catch (error) {
@@ -281,16 +282,16 @@ export class CoreMotivationsGenerator {
       });
 
       // Dispatch failure event with enhanced details
-      this.#eventBus.dispatch({
-        type: 'CORE_MOTIVATIONS_GENERATION_FAILED',
-        payload: {
+      await this.#eventBus.dispatch(
+        CHARACTER_BUILDER_EVENTS.CORE_MOTIVATIONS_GENERATION_FAILED,
+        {
           conceptId: concept.id,
           directionId: direction.id,
           error: error.message,
           processingTime,
           failureStage,
-        },
-      });
+        }
+      );
 
       if (error instanceof CoreMotivationsGenerationError) {
         throw error;

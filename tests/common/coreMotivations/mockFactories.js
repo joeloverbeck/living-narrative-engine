@@ -431,6 +431,21 @@ export function createMockSchemaValidator(options = {}) {
   const { alwaysValid = true } = options;
 
   return {
+    // Primary method expected by BaseCharacterBuilderController
+    validate: jest.fn().mockImplementation((data, schemaId) => {
+      if (!alwaysValid && !data.coreDesire) {
+        return {
+          valid: false,
+          errors: ['coreDesire is required'],
+        };
+      }
+
+      return {
+        valid: true,
+        errors: [],
+      };
+    }),
+    // Legacy methods for backward compatibility
     validateSchema: jest.fn().mockImplementation((data, schemaId) => {
       if (!alwaysValid && !data.coreDesire) {
         return {
@@ -561,6 +576,27 @@ export function createMockCharacterBuilderService(options = {}) {
         return [
           { id: 'dir-1', title: 'Direction 1', theme: 'Theme 1' },
           { id: 'dir-2', title: 'Direction 2', theme: 'Theme 2' },
+        ];
+      }),
+    getAllThematicDirectionsWithConcepts: jest
+      .fn()
+      .mockImplementation(async () => {
+        if (shouldFail) {
+          throw new Error('Failed to get all thematic directions with concepts');
+        }
+        return [
+          {
+            direction: { id: 'dir-1', title: 'Direction 1', theme: 'Theme 1' },
+            concept: { id: 'concept-1', text: 'Test Concept 1', title: 'Test Concept 1' }
+          },
+          {
+            direction: { id: 'dir-2', title: 'Direction 2', theme: 'Theme 2' },
+            concept: { id: 'concept-1', text: 'Test Concept 1', title: 'Test Concept 1' }
+          },
+          {
+            direction: { id: 'dir-3', title: 'Direction 3', theme: 'Theme 3' },
+            concept: { id: 'concept-2', text: 'Test Concept 2', title: 'Test Concept 2' }
+          }
         ];
       }),
     getThematicDirectionById: jest.fn().mockImplementation(async (id) => {

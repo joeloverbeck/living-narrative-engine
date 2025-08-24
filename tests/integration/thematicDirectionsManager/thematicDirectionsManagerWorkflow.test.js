@@ -252,6 +252,7 @@ describe('Thematic Directions Manager Integration Tests', () => {
     };
 
     mockSchemaValidator = {
+      validate: jest.fn(() => true),
       validateAgainstSchema: jest.fn(() => true),
       formatAjvErrors: jest.fn(() => ''),
     };

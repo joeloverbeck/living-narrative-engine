@@ -82,6 +82,7 @@ describe('BaseCharacterBuilderController', () => {
 
     mockSchemaValidator = {
       validateAgainstSchema: jest.fn(),
+      validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
     };
   });
 

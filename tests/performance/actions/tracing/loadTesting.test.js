@@ -3,7 +3,14 @@
  * @description Tests system performance under sustained load with high-frequency trace generation
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import fs from 'node:fs/promises';
 import { createTestBed } from '../../../common/testBed.js';
 import { ActionTraceOutputService } from '../../../../src/actions/tracing/actionTraceOutputService.js';
@@ -28,12 +35,13 @@ describe('High-Frequency Action Tracing Load Tests', () => {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({
-          success: true,
-          path: './traces/performance-test/mock-trace.json',
-          size: 1024,
-          fileName: 'mock-trace.json'
-        })
+        json: () =>
+          Promise.resolve({
+            success: true,
+            path: './traces/performance-test/mock-trace.json',
+            size: 1024,
+            fileName: 'mock-trace.json',
+          }),
       });
     });
 

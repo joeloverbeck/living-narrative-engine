@@ -1,0 +1,28 @@
+CoreMotivationsGenerator: Starting generation for concept 69c92cd7-0909-492e-8137-95ddccbe9dfc {conceptId: '69c92cd7-0909-492e-8137-95ddccbe9dfc', directionId: '59c55b7d-eda8-4489-9007-4bcbc2f00d86', conceptLength: 2643, directionTitle: 'The Collector of Beautiful Things'}
+consoleLogger.js:163 GameDataRepository: getEventDefinition called with invalid ID: [object Object]
+warn @ consoleLogger.js:163
+warn @ loggerStrategy.js:442
+getDef_fn @ gameDataRepository.js:45
+getEventDefinition @ gameDataRepository.js:211
+validatePayload_fn @ validatedEventDispatcher.js:83
+dispatch @ validatedEventDispatcher.js:225
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+generate @ CoreMotivationsGenerator.js:178
+generateMotivations_fn @ CoreMotivationsGeneratorController.js:811
+await in generateMotivations_fn
+(anonymous) @ CoreMotivationsGeneratorController.js:1186Understand this warning
+consoleLogger.js:163 VED: EventDefinition not found for '[object Object]'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+warn @ loggerStrategy.js:442
+validatePayload_fn @ validatedEventDispatcher.js:93
+dispatch @ validatedEventDispatcher.js:225
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+generate @ CoreMotivationsGenerator.js:178
+generateMotivations_fn @ CoreMotivationsGeneratorController.js:811
+await in generateMotivations_fn
+(anonymous) @ CoreMotivationsGeneratorController.js:1186Understand this warning
+consoleLogger.js:175 EventBus: Invalid event name provided. {type: 'CORE_MOTIVATIONS_GENERATION_STARTED', payload: {…}}

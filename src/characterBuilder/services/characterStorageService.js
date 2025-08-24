@@ -75,7 +75,7 @@ export class CharacterStorageService {
       ],
     });
     validateDependency(schemaValidator, 'ISchemaValidator', logger, {
-      requiredMethods: ['validateAgainstSchema', 'formatAjvErrors'],
+      requiredMethods: ['validate', 'formatAjvErrors'],
     });
 
     this.#logger = logger;
@@ -144,12 +144,14 @@ export class CharacterStorageService {
         const serializedConcept = serializeCharacterConcept(concept);
 
         // Validate the serialized concept against schema
-        const isValid = this.#schemaValidator.validateAgainstSchema(
-          serializedConcept,
-          'schema://living-narrative-engine/character-concept.schema.json'
+        const validationResult = this.#schemaValidator.validate(
+          'schema://living-narrative-engine/character-concept.schema.json',
+          serializedConcept
         );
-        if (!isValid) {
-          const errorMsg = this.#schemaValidator.formatAjvErrors();
+        if (!validationResult.isValid) {
+          const errorMsg = this.#schemaValidator.formatAjvErrors(
+            validationResult.errors
+          );
           const detailedErrorMsg =
             errorMsg || 'Schema validation failed without specific details';
 
@@ -245,12 +247,14 @@ export class CharacterStorageService {
       try {
         // Validate all directions
         for (const direction of directions) {
-          const isValid = this.#schemaValidator.validateAgainstSchema(
-            direction,
-            'schema://living-narrative-engine/thematic-direction.schema.json'
+          const validationResult = this.#schemaValidator.validate(
+            'schema://living-narrative-engine/thematic-direction.schema.json',
+            direction
           );
-          if (!isValid) {
-            const errorMsg = this.#schemaValidator.formatAjvErrors();
+          if (!validationResult.isValid) {
+            const errorMsg = this.#schemaValidator.formatAjvErrors(
+              validationResult.errors
+            );
             throw new CharacterStorageError(
               `Thematic direction validation failed: ${errorMsg}`
             );
@@ -517,12 +521,14 @@ export class CharacterStorageService {
       );
 
       // Validate updated direction
-      const isValid = this.#schemaValidator.validateAgainstSchema(
-        updatedDirection,
-        'schema://living-narrative-engine/thematic-direction.schema.json'
+      const validationResult = this.#schemaValidator.validate(
+        'schema://living-narrative-engine/thematic-direction.schema.json',
+        updatedDirection
       );
-      if (!isValid) {
-        const errorMsg = this.#schemaValidator.formatAjvErrors();
+      if (!validationResult.isValid) {
+        const errorMsg = this.#schemaValidator.formatAjvErrors(
+          validationResult.errors
+        );
         throw new CharacterStorageError(
           `Updated thematic direction validation failed: ${errorMsg}`
         );

@@ -837,6 +837,79 @@ export class IntegrationTestBed extends BaseTestBed {
             additionalProperties: true,
           },
         },
+        {
+          id: 'core:cliche_item_deleted',
+          description:
+            'Fired when an individual item is removed from a cliché category',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: {
+                type: 'string',
+                description:
+                  'The ID of the character concept associated with the cliché',
+              },
+              directionId: {
+                type: 'string',
+                description: 'The ID of the thematic direction',
+              },
+              categoryId: {
+                type: 'string',
+                description:
+                  "The category from which the item was removed (e.g., 'names', 'personalityTraits')",
+              },
+              itemText: {
+                type: 'string',
+                description: 'The text of the item that was removed',
+              },
+              remainingCount: {
+                type: 'integer',
+                minimum: 0,
+                description:
+                  'The total number of items remaining across all categories',
+              },
+            },
+            required: [
+              'conceptId',
+              'directionId',
+              'categoryId',
+              'itemText',
+              'remainingCount',
+            ],
+            additionalProperties: false,
+          },
+        },
+        {
+          id: 'core:cliche_trope_deleted',
+          description:
+            'Fired when a trope or stereotype is removed from a cliché',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              conceptId: {
+                type: 'string',
+                description:
+                  'The ID of the character concept associated with the cliché',
+              },
+              directionId: {
+                type: 'string',
+                description: 'The ID of the thematic direction',
+              },
+              tropeText: {
+                type: 'string',
+                description: 'The text of the trope that was removed',
+              },
+              remainingCount: {
+                type: 'integer',
+                minimum: 0,
+                description:
+                  'The total number of items remaining across all categories and tropes',
+              },
+            },
+            required: ['conceptId', 'directionId', 'tropeText', 'remainingCount'],
+            additionalProperties: false,
+          },
+        },
       ];
 
       // Register event definitions with the data registry
