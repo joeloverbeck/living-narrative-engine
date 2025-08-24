@@ -184,6 +184,10 @@ describe('Build System Integration', () => {
       type: 'file',
       size: 1024,
     });
+    mockFiles.set('src/speech-patterns-generator-main.js', {
+      type: 'file',
+      size: 1024,
+    });
 
     // Setup HTML files
     mockFiles.set('index.html', { type: 'file', size: 512 });
@@ -210,6 +214,10 @@ describe('Build System Integration', () => {
       size: 520,
     });
     mockFiles.set('traits-generator.html', {
+      type: 'file',
+      size: 520,
+    });
+    mockFiles.set('speech-patterns-generator.html', {
       type: 'file',
       size: 520,
     });
@@ -241,6 +249,7 @@ describe('Build System Integration', () => {
       'dist/cliches-generator-main.js',
       'dist/core-motivations-generator.js',
       'dist/traits-generator.js',
+      'dist/speech-patterns-generator.js',
     ];
 
     // Mock successful esbuild execution
@@ -275,6 +284,7 @@ describe('Build System Integration', () => {
       'dist/cliches-generator.html',
       'dist/core-motivations-generator.html',
       'dist/traits-generator.html',
+      'dist/speech-patterns-generator.html',
     ];
 
     for (const htmlFile of expectedHtmlFiles) {
@@ -303,7 +313,7 @@ describe('Build System Integration', () => {
         expect.arrayContaining(['esbuild']),
         expect.any(Object)
       );
-      expect(spawn).toHaveBeenCalledTimes(8); // 8 bundles
+      expect(spawn).toHaveBeenCalledTimes(9); // 9 bundles
 
       // Verify HTML files were copied
       expect(fs.copy).toHaveBeenCalledWith('index.html', 'dist/index.html', {
@@ -320,6 +330,7 @@ describe('Build System Integration', () => {
       expect(mockFiles.has('dist/character-concepts-manager.js')).toBe(true);
       expect(mockFiles.has('dist/cliches-generator-main.js')).toBe(true);
       expect(mockFiles.has('dist/core-motivations-generator.js')).toBe(true);
+      expect(mockFiles.has('dist/speech-patterns-generator.js')).toBe(true);
     });
 
     it('should handle production build mode', async () => {
@@ -366,7 +377,7 @@ describe('Build System Integration', () => {
       await buildSystem.build();
 
       // All bundles should be processed (parallel execution)
-      expect(spawn).toHaveBeenCalledTimes(8);
+      expect(spawn).toHaveBeenCalledTimes(9);
     });
 
     it('should build bundles sequentially when parallel disabled', async () => {
@@ -378,7 +389,7 @@ describe('Build System Integration', () => {
       await buildSystem.build();
 
       // Still processes all bundles, but with concurrency of 1
-      expect(spawn).toHaveBeenCalledTimes(8);
+      expect(spawn).toHaveBeenCalledTimes(9);
     });
   });
 
@@ -399,6 +410,7 @@ describe('Build System Integration', () => {
       expect(mockFiles.has('dist/cliches-generator-main.js')).toBe(true);
       expect(mockFiles.has('dist/core-motivations-generator.js')).toBe(true);
       expect(mockFiles.has('dist/traits-generator.js')).toBe(true);
+      expect(mockFiles.has('dist/speech-patterns-generator.js')).toBe(true);
 
       // Verify HTML files were copied
       expect(mockFiles.has('dist/index.html')).toBe(true);
@@ -406,6 +418,7 @@ describe('Build System Integration', () => {
       expect(mockFiles.has('dist/cliches-generator.html')).toBe(true);
       expect(mockFiles.has('dist/core-motivations-generator.html')).toBe(true);
       expect(mockFiles.has('dist/traits-generator.html')).toBe(true);
+      expect(mockFiles.has('dist/speech-patterns-generator.html')).toBe(true);
     });
 
     it('should detect missing output files', async () => {
@@ -418,6 +431,7 @@ describe('Build System Integration', () => {
         'dist/cliches-generator-main.js',
         'dist/core-motivations-generator.js',
         'dist/traits-generator.js',
+        'dist/speech-patterns-generator.js',
         // Intentionally omit 'dist/bundle.js' to simulate build failure
       ];
 
@@ -461,6 +475,7 @@ describe('Build System Integration', () => {
         'dist/cliches-generator-main.js',
         'dist/core-motivations-generator.js',
         'dist/traits-generator.js',
+        'dist/speech-patterns-generator.js',
       ];
 
       for (const bundle of expectedBundles) {
@@ -628,6 +643,7 @@ describe('Build System Integration', () => {
         'src/cliches-generator-main.js',
         'src/core-motivations-generator-main.js',
         'src/traits-generator-main.js',
+        'src/speech-patterns-generator-main.js',
       ];
 
       const expectedHtmlFiles = [
@@ -640,6 +656,7 @@ describe('Build System Integration', () => {
         'cliches-generator.html',
         'core-motivations-generator.html',
         'traits-generator.html',
+        'speech-patterns-generator.html',
       ];
 
       // Verify all source files exist
@@ -670,6 +687,7 @@ describe('Build System Integration', () => {
         'dist/cliches-generator-main.js',
         'dist/core-motivations-generator.js',
         'dist/traits-generator.js',
+        'dist/speech-patterns-generator.js',
       ];
 
       for (const file of expectedOutputFiles) {

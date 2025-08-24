@@ -70,7 +70,13 @@
         "additionalProperties": true
       }
     },
-    "required": ["conceptId", "directionId", "generationTime", "timestamp", "metadata"],
+    "required": [
+      "conceptId",
+      "directionId",
+      "generationTime",
+      "timestamp",
+      "metadata"
+    ],
     "additionalProperties": true
   }
 }

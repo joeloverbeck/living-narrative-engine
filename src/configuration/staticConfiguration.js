@@ -24,6 +24,7 @@ const OPERATION_SCHEMA_FILES = [
   'hasComponent.schema.json',
   'if.schema.json',
   'ifCoLocated.schema.json',
+  'lockMovement.schema.json',
   'log.schema.json',
   'math.schema.json',
   'mergeClosenessCircle.schema.json',

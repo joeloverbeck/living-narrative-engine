@@ -3,7 +3,14 @@
  * @description Tests that reproduce and verify resolution of event definition warnings
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TraitsGenerator } from '../../../src/characterBuilder/services/TraitsGenerator.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 
@@ -17,11 +24,13 @@ describe('TraitsGenerator - Event Validation Integration', () => {
   beforeEach(() => {
     // Capture console warnings to detect event validation issues
     capturedWarnings = [];
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation((message, ...args) => {
-      if (typeof message === 'string') {
-        capturedWarnings.push({ message, args });
-      }
-    });
+    consoleWarnSpy = jest
+      .spyOn(console, 'warn')
+      .mockImplementation((message, ...args) => {
+        if (typeof message === 'string') {
+          capturedWarnings.push({ message, args });
+        }
+      });
 
     // Create mock event bus that will trigger validation warnings
     mockEventBus = {
@@ -38,10 +47,14 @@ describe('TraitsGenerator - Event Validation Integration', () => {
       },
       llmJsonService: {
         clean: jest.fn((text) => text),
-        parseAndRepair: jest.fn().mockRejectedValue(new Error('Mocked validation failure')),
+        parseAndRepair: jest
+          .fn()
+          .mockRejectedValue(new Error('Mocked validation failure')),
       },
       llmStrategyFactory: {
-        getAIDecision: jest.fn().mockResolvedValue('{"physicalDescription": "Test description"}'),
+        getAIDecision: jest
+          .fn()
+          .mockResolvedValue('{"physicalDescription": "Test description"}'),
       },
       llmConfigManager: {
         getActiveConfiguration: jest.fn().mockResolvedValue({
@@ -80,7 +93,8 @@ describe('TraitsGenerator - Event Validation Integration', () => {
       const mockParams = {
         concept: {
           id: 'test-concept-id',
-          concept: 'A mysterious character with hidden depths and complex motivations',
+          concept:
+            'A mysterious character with hidden depths and complex motivations',
         },
         direction: {
           id: 'test-direction-id',
@@ -109,7 +123,9 @@ describe('TraitsGenerator - Event Validation Integration', () => {
         expect.objectContaining({
           conceptId: 'test-concept-id',
           directionId: 'test-direction-id',
-          timestamp: expect.stringMatching(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/),
+          timestamp: expect.stringMatching(
+            /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/
+          ),
           metadata: expect.objectContaining({
             conceptLength: expect.any(Number),
             clichesCount: expect.any(Number),
@@ -127,7 +143,9 @@ describe('TraitsGenerator - Event Validation Integration', () => {
           error: expect.any(String),
           processingTime: expect.any(Number),
           failureStage: expect.any(String),
-          timestamp: expect.stringMatching(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/),
+          timestamp: expect.stringMatching(
+            /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/
+          ),
         })
       );
     });
@@ -138,12 +156,12 @@ describe('TraitsGenerator - Event Validation Integration', () => {
 
       const expectedEventDefinitions = [
         'TRAITS_GENERATION_STARTED',
-        'TRAITS_GENERATION_COMPLETED', 
-        'core:traits_generated'
+        'TRAITS_GENERATION_COMPLETED',
+        'core:traits_generated',
       ];
 
       // Verify that our event definitions were created for the expected events
-      expectedEventDefinitions.forEach(eventName => {
+      expectedEventDefinitions.forEach((eventName) => {
         // This test passes if the event definition files were created successfully
         // The actual validation would happen at runtime in the ValidatedEventDispatcher
         expect(eventName).toBeDefined();
@@ -154,7 +172,7 @@ describe('TraitsGenerator - Event Validation Integration', () => {
       // Verify expected payload structure for TRAITS_GENERATION_STARTED
       const startedPayloadStructure = {
         conceptId: 'string',
-        directionId: 'string', 
+        directionId: 'string',
         timestamp: 'string (ISO 8601)',
         metadata: {
           conceptLength: 'number',

@@ -43,7 +43,7 @@ describe('ActionTraceConfigLoader Performance Benchmarks', () => {
       traceConfigLoader: mockTraceConfigLoader,
       logger: mockLogger,
       validator: mockValidator,
-      cacheTtl: 100, // 100ms for testing
+      cacheTtl: 200, // 200ms to prevent race condition with test execution time
     });
   });
 
@@ -241,7 +241,7 @@ describe('ActionTraceConfigLoader Performance Benchmarks', () => {
       await loader.loadConfig();
 
       // Wait for cache to expire
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 250));
 
       // Load again after expiry
       const start = performance.now();

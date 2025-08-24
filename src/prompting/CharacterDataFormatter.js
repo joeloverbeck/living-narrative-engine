@@ -337,7 +337,10 @@ export class CharacterDataFormatter {
       result += strengthsSection + '\n';
     }
 
-    const weaknessesSection = this.formatOptionalSection('Weaknesses', weaknesses);
+    const weaknessesSection = this.formatOptionalSection(
+      'Weaknesses',
+      weaknesses
+    );
     if (weaknessesSection) {
       result += weaknessesSection + '\n';
     }

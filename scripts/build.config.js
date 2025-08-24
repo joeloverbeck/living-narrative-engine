@@ -51,6 +51,11 @@ module.exports = {
       entry: 'src/traits-generator-main.js',
       output: 'traits-generator.js',
     },
+    {
+      name: 'speech-patterns-generator',
+      entry: 'src/speech-patterns-generator-main.js',
+      output: 'speech-patterns-generator.js',
+    },
   ],
 
   // HTML files (explicit list to prevent missing files)
@@ -64,6 +69,7 @@ module.exports = {
     'cliches-generator.html',
     'core-motivations-generator.html',
     'traits-generator.html',
+    'speech-patterns-generator.html',
   ],
 
   // Static asset directories

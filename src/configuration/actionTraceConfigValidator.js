@@ -608,7 +608,6 @@ class ActionTraceConfigValidator {
       }
     }
 
-
     return { errors, warnings };
   }
 

@@ -4,46 +4,51 @@
 
 **IMPORTANT: This describes planned functionality that has NOT been implemented.**
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| HTML Page | ❌ Not Implemented | `speech-patterns-generator.html` does not exist |
-| Controller | ❌ Not Implemented | `SpeechPatternsGeneratorController.js` does not exist |
-| Display Service | ❌ Not Implemented | `SpeechPatternsDisplayEnhancer.js` does not exist |
-| CSS Styles | ❌ Not Implemented | `css/speech-patterns-generator.css` does not exist |
-| Index Integration | ❌ Not Implemented | No button in index.html |
-| Build Config | ❌ Not Implemented | No entry point in build system |
-| Component Schema | ✅ Exists | `data/mods/core/components/speech_patterns.component.json` |
-| Requirements Doc | ✅ Exists | `reports/speech-patterns-generator.md` |
+| Component         | Status             | Notes                                                      |
+| ----------------- | ------------------ | ---------------------------------------------------------- |
+| HTML Page         | ❌ Not Implemented | `speech-patterns-generator.html` does not exist            |
+| Controller        | ❌ Not Implemented | `SpeechPatternsGeneratorController.js` does not exist      |
+| Display Service   | ❌ Not Implemented | `SpeechPatternsDisplayEnhancer.js` does not exist          |
+| CSS Styles        | ❌ Not Implemented | `css/speech-patterns-generator.css` does not exist         |
+| Index Integration | ❌ Not Implemented | No button in index.html                                    |
+| Build Config      | ❌ Not Implemented | No entry point in build system                             |
+| Component Schema  | ✅ Exists          | `data/mods/core/components/speech_patterns.component.json` |
+| Requirements Doc  | ✅ Exists          | `reports/speech-patterns-generator.md`                     |
 
 **This specification serves as an implementation guide for future development.**
 
 ## Implementation Roadmap
 
 ### Phase 1: Foundation Setup
+
 1. Create basic HTML structure (`speech-patterns-generator.html`)
 2. Set up CSS file (`css/speech-patterns-generator.css`) with base styling
 3. Add button to index.html and navigation handler
 4. Configure build system entry point
 
 ### Phase 2: Core Implementation
+
 1. Implement `SpeechPatternsGeneratorController.js` with input validation
 2. Create `SpeechPatternsDisplayEnhancer.js` for display formatting
 3. Implement LLM prompt generation and service integration
 4. Create response schema and validation (`data/schemas/speech-patterns-response.schema.json`)
 
 ### Phase 3: Polish & Testing
+
 1. Complete UI styling and responsive design
 2. Implement keyboard shortcuts and accessibility features
 3. Add comprehensive test coverage (unit, integration, e2e)
 4. Performance optimization and error handling
 
 ### Phase 4: Enhancement
+
 1. Export functionality implementation
 2. Advanced validation and error messaging
 3. Loading states and user feedback
 4. Integration with existing character builder ecosystem
 
 ### Dependencies
+
 - ✅ **CharacterBuilderBootstrap**: Already exists for unified initialization
 - ✅ **BaseCharacterBuilderController**: Already exists for common functionality
 - ✅ **LLM Service**: Already integrated in other character builders
@@ -57,7 +62,7 @@ This specification describes a planned Character Builder page that would generat
 ## Planned Requirements Summary
 
 - **Input**: Single textarea for JSON character definition
-- **Output**: ~20 speech pattern examples with character voice snippets and circumstance indicators  
+- **Output**: ~20 speech pattern examples with character voice snippets and circumstance indicators
 - **Content Policy**: NC-21 (Adults Only) content guidelines used verbatim
 - **Export**: Text export functionality (no permanent storage)
 - **Integration**: New button in index.html after existing Character Builder tools
@@ -90,6 +95,7 @@ This specification describes a planned Character Builder page that would generat
 ### Dependencies and Reuse Strategy
 
 **Existing Components to Leverage:**
+
 - `CharacterBuilderBootstrap` - Unified initialization system
 - `BaseCharacterBuilderController` - Common controller functionality
 - Character builder CSS classes and layouts
@@ -97,6 +103,7 @@ This specification describes a planned Character Builder page that would generat
 - LLM service integration and prompt system
 
 **New Components to Implement:**
+
 - `SpeechPatternsGeneratorController` - Would handle page-specific controller logic
 - `SpeechPatternsDisplayEnhancer` - Would format results for display and export
 - Page-specific HTML template and CSS customizations
@@ -110,179 +117,218 @@ This specification describes a planned Character Builder page that would generat
 ```html
 <!doctype html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Generate unique speech patterns for your character based on their complete persona" />
+    <meta
+      name="description"
+      content="Generate unique speech patterns for your character based on their complete persona"
+    />
     <title>Speech Patterns Generator - Living Narrative Engine</title>
-    
+
     <!-- Reuse existing character builder styles -->
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/components.css" />
     <link rel="stylesheet" href="css/speech-patterns-generator.css" />
-    
+
     <!-- Standard favicon links (matching other pages) -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    
+
     <script type="module" src="speech-patterns-generator.js"></script>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Skip link for accessibility -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    
+
     <div id="app" class="cb-page-container">
-        <!-- Header Section -->
-        <header class="cb-page-header">
-            <div class="header-content">
-                <h1>Speech Patterns Generator</h1>
-                <p class="header-subtitle">
-                    Generate unique speech patterns for your character based on their complete persona
-                </p>
-            </div>
-        </header>
-
-        <!-- Main Content Area -->
-        <main id="main-content" class="cb-page-main speech-patterns-main">
-            <!-- Left Panel: Character Input -->
-            <aside class="cb-input-panel character-input-panel">
-                <h2 class="cb-panel-title">Character Definition</h2>
-                
-                <!-- Content Guidelines Notice -->
-                <div class="content-guidelines-notice">
-                    <div class="notice-header">
-                        <span class="notice-icon">⚠️</span>
-                        <strong>Content Guidelines: NC-21 (Adults Only)</strong>
-                    </div>
-                    <p class="notice-text">
-                        This application is for mature users. All topics, themes, and content are permissible 
-                        if they serve authentic character portrayal, however dark, explicit, or controversial.
-                    </p>
-                </div>
-
-                <!-- Character Input Section -->
-                <div class="character-input-section">
-                    <label for="character-definition" class="input-label">
-                        Character Definition (JSON)
-                    </label>
-                    <p class="input-description">
-                        Paste your complete character definition in JSON format. The generator will analyze 
-                        their personality, background, and traits to create distinctive speech patterns.
-                    </p>
-                    
-                    <textarea
-                        id="character-definition"
-                        class="character-definition-input"
-                        placeholder="Paste your character JSON definition here..."
-                        rows="20"
-                        aria-label="Character definition in JSON format"
-                        aria-describedby="character-input-help"
-                    ></textarea>
-                    
-                    <div id="character-input-help" class="input-help">
-                        <p>Expected format: Complete character entity with components like core:name, 
-                        core:personality, core:profile, etc.</p>
-                    </div>
-                    
-                    <!-- Validation Error Display -->
-                    <div id="character-input-error" class="cb-error-message" style="display: none" role="alert">
-                        <!-- Error messages will be inserted here -->
-                    </div>
-                </div>
-
-                <!-- Generation Controls -->
-                <div class="generation-controls">
-                    <button
-                        id="generate-btn"
-                        class="cb-button cb-button-primary"
-                        disabled
-                        aria-label="Generate speech patterns"
-                    >
-                        <span class="button-icon">🎭</span>
-                        <span class="button-text">Generate Speech Patterns</span>
-                    </button>
-
-                    <!-- Keyboard Shortcuts Help -->
-                    <div class="shortcut-hint">
-                        <div><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate</div>
-                        <div><kbd>Ctrl</kbd> + <kbd>E</kbd> to export</div>
-                        <div><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Del</kbd> to clear</div>
-                        <div><kbd>Esc</kbd> to close dialogs</div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Right Panel: Results Display -->
-            <section class="cb-output-panel speech-patterns-display-panel">
-                <div class="cb-panel-header">
-                    <h2 class="cb-panel-title">Generated Speech Patterns</h2>
-                    <div class="panel-actions">
-                        <button
-                            id="clear-all-btn"
-                            class="cb-button cb-button-danger"
-                            disabled
-                            aria-label="Clear character input and results"
-                        >
-                            <span class="button-icon">🗑️</span>
-                            <span class="button-text">Clear All</span>
-                        </button>
-                        <button
-                            id="export-btn"
-                            class="cb-button cb-button-secondary"
-                            disabled
-                            aria-label="Export speech patterns to text file"
-                        >
-                            <span class="button-icon">📄</span>
-                            <span class="button-text">Export</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Loading Indicator -->
-                <div id="loading-indicator" class="loading-indicator" style="display: none" role="status" aria-live="polite">
-                    <div class="spinner" aria-hidden="true"></div>
-                    <p id="loading-message">Generating speech patterns...</p>
-                </div>
-
-                <!-- Speech Patterns Results Container -->
-                <div id="speech-patterns-container" class="speech-patterns-container" role="region" aria-label="Generated speech patterns">
-                    <!-- Speech pattern results will be dynamically added here -->
-                </div>
-
-                <!-- Empty State -->
-                <div id="empty-state" class="empty-state">
-                    <div class="empty-state-icon">🎭</div>
-                    <p class="empty-state-text">
-                        Paste a character definition and click "Generate Speech Patterns" to begin
-                    </p>
-                    <p class="empty-state-subtext">
-                        The generator will create ~20 unique speech patterns with character voice examples
-                    </p>
-                </div>
-            </section>
-        </main>
-
-        <!-- Footer -->
-        <footer class="cb-page-footer">
-            <nav class="footer-navigation">
-                <button id="back-btn" class="cb-button cb-button-navigation" aria-label="Back to Main Menu">
-                    ← Back to Main Menu
-                </button>
-            </nav>
-            
-            <div class="footer-info">
-                <span class="pattern-count" id="pattern-count">0 patterns generated</span>
-            </div>
-        </footer>
-
-        <!-- Screen Reader Announcements -->
-        <div id="screen-reader-announcement" class="screen-reader-only" aria-live="polite" aria-atomic="true">
-            <!-- Dynamic announcements for screen readers -->
+      <!-- Header Section -->
+      <header class="cb-page-header">
+        <div class="header-content">
+          <h1>Speech Patterns Generator</h1>
+          <p class="header-subtitle">
+            Generate unique speech patterns for your character based on their
+            complete persona
+          </p>
         </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main id="main-content" class="cb-page-main speech-patterns-main">
+        <!-- Left Panel: Character Input -->
+        <aside class="cb-input-panel character-input-panel">
+          <h2 class="cb-panel-title">Character Definition</h2>
+
+          <!-- Content Guidelines Notice -->
+          <div class="content-guidelines-notice">
+            <div class="notice-header">
+              <span class="notice-icon">⚠️</span>
+              <strong>Content Guidelines: NC-21 (Adults Only)</strong>
+            </div>
+            <p class="notice-text">
+              This application is for mature users. All topics, themes, and
+              content are permissible if they serve authentic character
+              portrayal, however dark, explicit, or controversial.
+            </p>
+          </div>
+
+          <!-- Character Input Section -->
+          <div class="character-input-section">
+            <label for="character-definition" class="input-label">
+              Character Definition (JSON)
+            </label>
+            <p class="input-description">
+              Paste your complete character definition in JSON format. The
+              generator will analyze their personality, background, and traits
+              to create distinctive speech patterns.
+            </p>
+
+            <textarea
+              id="character-definition"
+              class="character-definition-input"
+              placeholder="Paste your character JSON definition here..."
+              rows="20"
+              aria-label="Character definition in JSON format"
+              aria-describedby="character-input-help"
+            ></textarea>
+
+            <div id="character-input-help" class="input-help">
+              <p>
+                Expected format: Complete character entity with components like
+                core:name, core:personality, core:profile, etc.
+              </p>
+            </div>
+
+            <!-- Validation Error Display -->
+            <div
+              id="character-input-error"
+              class="cb-error-message"
+              style="display: none"
+              role="alert"
+            >
+              <!-- Error messages will be inserted here -->
+            </div>
+          </div>
+
+          <!-- Generation Controls -->
+          <div class="generation-controls">
+            <button
+              id="generate-btn"
+              class="cb-button cb-button-primary"
+              disabled
+              aria-label="Generate speech patterns"
+            >
+              <span class="button-icon">🎭</span>
+              <span class="button-text">Generate Speech Patterns</span>
+            </button>
+
+            <!-- Keyboard Shortcuts Help -->
+            <div class="shortcut-hint">
+              <div><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate</div>
+              <div><kbd>Ctrl</kbd> + <kbd>E</kbd> to export</div>
+              <div>
+                <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Del</kbd> to clear
+              </div>
+              <div><kbd>Esc</kbd> to close dialogs</div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Right Panel: Results Display -->
+        <section class="cb-output-panel speech-patterns-display-panel">
+          <div class="cb-panel-header">
+            <h2 class="cb-panel-title">Generated Speech Patterns</h2>
+            <div class="panel-actions">
+              <button
+                id="clear-all-btn"
+                class="cb-button cb-button-danger"
+                disabled
+                aria-label="Clear character input and results"
+              >
+                <span class="button-icon">🗑️</span>
+                <span class="button-text">Clear All</span>
+              </button>
+              <button
+                id="export-btn"
+                class="cb-button cb-button-secondary"
+                disabled
+                aria-label="Export speech patterns to text file"
+              >
+                <span class="button-icon">📄</span>
+                <span class="button-text">Export</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Loading Indicator -->
+          <div
+            id="loading-indicator"
+            class="loading-indicator"
+            style="display: none"
+            role="status"
+            aria-live="polite"
+          >
+            <div class="spinner" aria-hidden="true"></div>
+            <p id="loading-message">Generating speech patterns...</p>
+          </div>
+
+          <!-- Speech Patterns Results Container -->
+          <div
+            id="speech-patterns-container"
+            class="speech-patterns-container"
+            role="region"
+            aria-label="Generated speech patterns"
+          >
+            <!-- Speech pattern results will be dynamically added here -->
+          </div>
+
+          <!-- Empty State -->
+          <div id="empty-state" class="empty-state">
+            <div class="empty-state-icon">🎭</div>
+            <p class="empty-state-text">
+              Paste a character definition and click "Generate Speech Patterns"
+              to begin
+            </p>
+            <p class="empty-state-subtext">
+              The generator will create ~20 unique speech patterns with
+              character voice examples
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer class="cb-page-footer">
+        <nav class="footer-navigation">
+          <button
+            id="back-btn"
+            class="cb-button cb-button-navigation"
+            aria-label="Back to Main Menu"
+          >
+            ← Back to Main Menu
+          </button>
+        </nav>
+
+        <div class="footer-info">
+          <span class="pattern-count" id="pattern-count"
+            >0 patterns generated</span
+          >
+        </div>
+      </footer>
+
+      <!-- Screen Reader Announcements -->
+      <div
+        id="screen-reader-announcement"
+        class="screen-reader-only"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <!-- Dynamic announcements for screen readers -->
+      </div>
     </div>
-</body>
+  </body>
 </html>
 ```
 
@@ -311,133 +357,144 @@ import { validateDependency } from '../../utils/dependencyUtils.js';
  * Handles character input validation, generation workflow, and results display
  */
 export class SpeechPatternsGeneratorController extends BaseCharacterBuilderController {
-    // Dependencies
-    /** @private @type {SpeechPatternsDisplayEnhancer} */
-    #displayEnhancer;
+  // Dependencies
+  /** @private @type {SpeechPatternsDisplayEnhancer} */
+  #displayEnhancer;
 
-    // UI State
-    /** @private @type {object|null} */
-    #characterDefinition = null;
-    
-    /** @private @type {Array<object>|null} */
-    #lastGeneratedPatterns = null;
+  // UI State
+  /** @private @type {object|null} */
+  #characterDefinition = null;
 
-    /**
-     * Create a new SpeechPatternsGeneratorController instance
-     * @param {object} dependencies - Service dependencies
-     */
-    constructor(dependencies) {
-        super(dependencies);
-        
-        validateDependency(dependencies.speechPatternsDisplayEnhancer, 'SpeechPatternsDisplayEnhancer', null, {
-            requiredMethods: ['enhanceForDisplay', 'formatForExport', 'generateExportFilename']
-        });
-        
-        this.#displayEnhancer = dependencies.speechPatternsDisplayEnhancer;
+  /** @private @type {Array<object>|null} */
+  #lastGeneratedPatterns = null;
+
+  /**
+   * Create a new SpeechPatternsGeneratorController instance
+   * @param {object} dependencies - Service dependencies
+   */
+  constructor(dependencies) {
+    super(dependencies);
+
+    validateDependency(
+      dependencies.speechPatternsDisplayEnhancer,
+      'SpeechPatternsDisplayEnhancer',
+      null,
+      {
+        requiredMethods: [
+          'enhanceForDisplay',
+          'formatForExport',
+          'generateExportFilename',
+        ],
+      }
+    );
+
+    this.#displayEnhancer = dependencies.speechPatternsDisplayEnhancer;
+  }
+
+  /**
+   * Cache DOM elements specific to speech patterns generation
+   * @protected
+   */
+  _cacheElements() {
+    this._cacheElementsFromMap({
+      // Input elements
+      characterDefinition: '#character-definition',
+      characterInputError: '#character-input-error',
+
+      // Controls
+      generateBtn: '#generate-btn',
+      exportBtn: '#export-btn',
+      clearBtn: '#clear-all-btn',
+      backBtn: '#back-btn',
+
+      // Display elements
+      speechPatternsContainer: '#speech-patterns-container',
+      loadingIndicator: '#loading-indicator',
+      loadingMessage: '#loading-message',
+      emptyState: '#empty-state',
+      patternCount: '#pattern-count',
+
+      // Screen reader support
+      screenReaderAnnouncement: {
+        selector: '#screen-reader-announcement',
+        required: false,
+      },
+    });
+  }
+
+  /**
+   * Set up event listeners for speech patterns generation UI
+   * @protected
+   */
+  _setupEventListeners() {
+    // Character input validation
+    if (this._getElement('characterDefinition')) {
+      this._addEventListener('characterDefinition', 'input', () => {
+        this.#handleCharacterInput();
+      });
+
+      this._addEventListener('characterDefinition', 'blur', () => {
+        this.#validateCharacterInput();
+      });
     }
 
-    /**
-     * Cache DOM elements specific to speech patterns generation
-     * @protected
-     */
-    _cacheElements() {
-        this._cacheElementsFromMap({
-            // Input elements
-            characterDefinition: '#character-definition',
-            characterInputError: '#character-input-error',
-            
-            // Controls
-            generateBtn: '#generate-btn',
-            exportBtn: '#export-btn',
-            clearBtn: '#clear-all-btn',
-            backBtn: '#back-btn',
-            
-            // Display elements
-            speechPatternsContainer: '#speech-patterns-container',
-            loadingIndicator: '#loading-indicator',
-            loadingMessage: '#loading-message',
-            emptyState: '#empty-state',
-            patternCount: '#pattern-count',
-            
-            // Screen reader support
-            screenReaderAnnouncement: {
-                selector: '#screen-reader-announcement',
-                required: false
-            }
-        });
+    // Generate button
+    if (this._getElement('generateBtn')) {
+      this._addEventListener('generateBtn', 'click', () => {
+        this.#generateSpeechPatterns();
+      });
     }
 
-    /**
-     * Set up event listeners for speech patterns generation UI
-     * @protected
-     */
-    _setupEventListeners() {
-        // Character input validation
-        if (this._getElement('characterDefinition')) {
-            this._addEventListener('characterDefinition', 'input', () => {
-                this.#handleCharacterInput();
-            });
-            
-            this._addEventListener('characterDefinition', 'blur', () => {
-                this.#validateCharacterInput();
-            });
-        }
-
-        // Generate button
-        if (this._getElement('generateBtn')) {
-            this._addEventListener('generateBtn', 'click', () => {
-                this.#generateSpeechPatterns();
-            });
-        }
-
-        // Export button  
-        if (this._getElement('exportBtn')) {
-            this._addEventListener('exportBtn', 'click', () => {
-                this.#exportToText();
-            });
-        }
-
-        // Clear button
-        if (this._getElement('clearBtn')) {
-            this._addEventListener('clearBtn', 'click', () => {
-                this.#clearAll();
-            });
-        }
-
-        // Back button
-        if (this._getElement('backBtn')) {
-            this._addEventListener('backBtn', 'click', () => {
-                window.location.href = 'index.html';
-            });
-        }
-
-        // Keyboard shortcuts
-        this.#setupKeyboardShortcuts();
+    // Export button
+    if (this._getElement('exportBtn')) {
+      this._addEventListener('exportBtn', 'click', () => {
+        this.#exportToText();
+      });
     }
 
-    /**
-     * Load initial data (minimal for this generator)
-     * @protected  
-     */
-    async _loadInitialData() {
-        // No initial data loading required for this generator
-        this.logger.debug('Speech patterns generator initialized - no initial data required');
+    // Clear button
+    if (this._getElement('clearBtn')) {
+      this._addEventListener('clearBtn', 'click', () => {
+        this.#clearAll();
+      });
     }
 
-    /**
-     * Initialize UI state
-     * @protected
-     */
-    async _initializeUIState() {
-        await super._initializeUIState();
-        
-        // Set initial empty state
-        this._showState('empty');
-        this.#updateUIState();
+    // Back button
+    if (this._getElement('backBtn')) {
+      this._addEventListener('backBtn', 'click', () => {
+        window.location.href = 'index.html';
+      });
     }
 
-    // Implementation methods would continue here...
-    // Including input validation, generation workflow, display rendering, etc.
+    // Keyboard shortcuts
+    this.#setupKeyboardShortcuts();
+  }
+
+  /**
+   * Load initial data (minimal for this generator)
+   * @protected
+   */
+  async _loadInitialData() {
+    // No initial data loading required for this generator
+    this.logger.debug(
+      'Speech patterns generator initialized - no initial data required'
+    );
+  }
+
+  /**
+   * Initialize UI state
+   * @protected
+   */
+  async _initializeUIState() {
+    await super._initializeUIState();
+
+    // Set initial empty state
+    this._showState('empty');
+    this.#updateUIState();
+  }
+
+  // Implementation methods would continue here...
+  // Including input validation, generation workflow, display rendering, etc.
 }
 ```
 
@@ -478,7 +535,7 @@ NO RESTRICTIONS: This is a mature application. All topics, themes, and content a
 
 This includes, but is not limited to:
 - Explicit language and profanity.
-- Graphic violence and gore (physical and psychological).  
+- Graphic violence and gore (physical and psychological).
 - Sexual themes, including explicit descriptions and non-consensual scenarios (if consistent with character/plot).
 - Substance use and abuse.
 - Challenging moral and ethical dilemmas.
@@ -528,7 +585,7 @@ The planned LLM response would be validated against this JSON schema:
             "description": "Description of the speech pattern or characteristic"
           },
           "example": {
-            "type": "string", 
+            "type": "string",
             "description": "Example of character's voice with this pattern"
           },
           "circumstances": {
@@ -568,89 +625,89 @@ This service would need to be created with the following structure:
 import { validateDependency } from '../../utils/dependencyUtils.js';
 
 export class SpeechPatternsDisplayEnhancer {
-    /** @private @type {ILogger} */
-    #logger;
+  /** @private @type {ILogger} */
+  #logger;
 
-    constructor(dependencies) {
-        validateDependency(dependencies.logger, 'ILogger');
-        this.#logger = dependencies.logger;
+  constructor(dependencies) {
+    validateDependency(dependencies.logger, 'ILogger');
+    this.#logger = dependencies.logger;
+  }
+
+  /**
+   * Enhance speech patterns for display
+   * @param {object} patterns - Raw patterns from LLM
+   * @param {object} options - Display options
+   * @returns {object} Enhanced patterns for display
+   */
+  enhanceForDisplay(patterns, options = {}) {
+    // Format patterns with HTML-safe content and improved structure
+    return {
+      patterns: patterns.speechPatterns.map((pattern, index) => ({
+        id: `pattern-${index + 1}`,
+        index: index + 1,
+        pattern: pattern.pattern,
+        example: pattern.example,
+        circumstances: pattern.circumstances || null,
+        htmlSafeExample: this.#escapeHtml(pattern.example),
+        htmlSafePattern: this.#escapeHtml(pattern.pattern),
+      })),
+      characterName: patterns.characterName || 'Character',
+      totalCount: patterns.speechPatterns.length,
+    };
+  }
+
+  /**
+   * Format patterns for text export
+   * @param {object} patterns - Generated patterns
+   * @param {object} options - Export options
+   * @returns {string} Formatted text for export
+   */
+  formatForExport(patterns, options = {}) {
+    const timestamp = new Date().toISOString();
+    const characterName = patterns.characterName || 'Character';
+
+    let exportText = `SPEECH PATTERNS FOR ${characterName.toUpperCase()}\n`;
+    exportText += `Generated: ${timestamp}\n`;
+    exportText += `Total Patterns: ${patterns.speechPatterns.length}\n\n`;
+
+    patterns.speechPatterns.forEach((pattern, index) => {
+      exportText += `${index + 1}. ${pattern.pattern}\n`;
+      if (pattern.circumstances) {
+        exportText += `   Context: ${pattern.circumstances}\n`;
+      }
+      exportText += `   Example: ${pattern.example}\n\n`;
+    });
+
+    if (options.includeCharacterData && options.characterDefinition) {
+      exportText += '\n---\nCHARACTER DEFINITION:\n';
+      exportText += JSON.stringify(options.characterDefinition, null, 2);
     }
 
-    /**
-     * Enhance speech patterns for display
-     * @param {object} patterns - Raw patterns from LLM
-     * @param {object} options - Display options
-     * @returns {object} Enhanced patterns for display
-     */
-    enhanceForDisplay(patterns, options = {}) {
-        // Format patterns with HTML-safe content and improved structure
-        return {
-            patterns: patterns.speechPatterns.map((pattern, index) => ({
-                id: `pattern-${index + 1}`,
-                index: index + 1,
-                pattern: pattern.pattern,
-                example: pattern.example,
-                circumstances: pattern.circumstances || null,
-                htmlSafeExample: this.#escapeHtml(pattern.example),
-                htmlSafePattern: this.#escapeHtml(pattern.pattern)
-            })),
-            characterName: patterns.characterName || 'Character',
-            totalCount: patterns.speechPatterns.length
-        };
-    }
+    return exportText;
+  }
 
-    /**
-     * Format patterns for text export
-     * @param {object} patterns - Generated patterns  
-     * @param {object} options - Export options
-     * @returns {string} Formatted text for export
-     */
-    formatForExport(patterns, options = {}) {
-        const timestamp = new Date().toISOString();
-        const characterName = patterns.characterName || 'Character';
-        
-        let exportText = `SPEECH PATTERNS FOR ${characterName.toUpperCase()}\n`;
-        exportText += `Generated: ${timestamp}\n`;
-        exportText += `Total Patterns: ${patterns.speechPatterns.length}\n\n`;
-        
-        patterns.speechPatterns.forEach((pattern, index) => {
-            exportText += `${index + 1}. ${pattern.pattern}\n`;
-            if (pattern.circumstances) {
-                exportText += `   Context: ${pattern.circumstances}\n`;
-            }
-            exportText += `   Example: ${pattern.example}\n\n`;
-        });
+  /**
+   * Generate filename for export
+   * @param {string} characterName - Character name
+   * @returns {string} Export filename
+   */
+  generateExportFilename(characterName = 'Character') {
+    const sanitized = characterName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    const timestamp = new Date().toISOString().slice(0, 10);
+    return `speech_patterns_${sanitized}_${timestamp}.txt`;
+  }
 
-        if (options.includeCharacterData && options.characterDefinition) {
-            exportText += '\n---\nCHARACTER DEFINITION:\n';
-            exportText += JSON.stringify(options.characterDefinition, null, 2);
-        }
-        
-        return exportText;
-    }
-
-    /**
-     * Generate filename for export
-     * @param {string} characterName - Character name
-     * @returns {string} Export filename
-     */
-    generateExportFilename(characterName = 'Character') {
-        const sanitized = characterName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-        const timestamp = new Date().toISOString().slice(0, 10);
-        return `speech_patterns_${sanitized}_${timestamp}.txt`;
-    }
-
-    /**
-     * Escape HTML for safe display
-     * @private
-     * @param {string} text
-     * @returns {string}
-     */
-    #escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+  /**
+   * Escape HTML for safe display
+   * @private
+   * @param {string} text
+   * @returns {string}
+   */
+  #escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 }
 ```
 
@@ -664,249 +721,251 @@ export class SpeechPatternsDisplayEnhancer {
 /* Speech Patterns Generator Specific Styles */
 
 .speech-patterns-main {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    min-height: calc(100vh - var(--header-height) - var(--footer-height));
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  min-height: calc(100vh - var(--header-height) - var(--footer-height));
 }
 
 /* Character Input Panel */
 .character-input-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .content-guidelines-notice {
-    background: var(--warning-bg-color, #fff3cd);
-    border: 1px solid var(--warning-border-color, #ffeaa7);
-    border-radius: 6px;
-    padding: 1rem;
-    margin-bottom: 1rem;
+  background: var(--warning-bg-color, #fff3cd);
+  border: 1px solid var(--warning-border-color, #ffeaa7);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
 
 .notice-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    color: var(--warning-text-color, #856404);
-    margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--warning-text-color, #856404);
+  margin-bottom: 0.5rem;
 }
 
 .notice-text {
-    font-size: 0.9rem;
-    color: var(--warning-text-color, #856404);
-    margin: 0;
-    line-height: 1.4;
+  font-size: 0.9rem;
+  color: var(--warning-text-color, #856404);
+  margin: 0;
+  line-height: 1.4;
 }
 
 /* Character Input Section */
 .character-input-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .input-label {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--primary-text-color);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--primary-text-color);
 }
 
 .input-description {
-    font-size: 0.9rem;
-    color: var(--secondary-text-color);
-    margin-bottom: 1rem;
-    line-height: 1.4;
+  font-size: 0.9rem;
+  color: var(--secondary-text-color);
+  margin-bottom: 1rem;
+  line-height: 1.4;
 }
 
 .character-definition-input {
-    flex: 1;
-    min-height: 400px;
-    padding: 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.875rem;
-    line-height: 1.4;
-    resize: vertical;
-    background: var(--input-bg-color, #ffffff);
-    color: var(--primary-text-color);
-    transition: border-color 0.2s ease;
+  flex: 1;
+  min-height: 400px;
+  padding: 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  resize: vertical;
+  background: var(--input-bg-color, #ffffff);
+  color: var(--primary-text-color);
+  transition: border-color 0.2s ease;
 }
 
 .character-definition-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-color-alpha);
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-color-alpha);
 }
 
 .character-definition-input.error {
-    border-color: var(--error-color);
+  border-color: var(--error-color);
 }
 
 .input-help {
-    margin-top: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .input-help p {
-    font-size: 0.8rem;
-    color: var(--secondary-text-color);
-    margin: 0;
-    line-height: 1.3;
+  font-size: 0.8rem;
+  color: var(--secondary-text-color);
+  margin: 0;
+  line-height: 1.3;
 }
 
 /* Speech Patterns Display */
 .speech-patterns-container {
-    max-height: 70vh;
-    overflow-y: auto;
-    padding-right: 0.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
 }
 
 .speech-patterns-results {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .results-header {
-    text-align: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid var(--border-color);
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-color);
 }
 
 .results-header h2 {
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
 }
 
 .results-subtitle {
-    color: var(--secondary-text-color);
-    font-style: italic;
+  color: var(--secondary-text-color);
+  font-style: italic;
 }
 
 /* Individual Speech Pattern Display */
 .speech-pattern-item {
-    background: var(--card-bg-color, #ffffff);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1.5rem;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: var(--card-bg-color, #ffffff);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .speech-pattern-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--shadow-color, rgba(0, 0, 0, 0.1));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow-color, rgba(0, 0, 0, 0.1));
 }
 
 .pattern-number {
-    display: inline-block;
-    background: var(--primary-color);
-    color: white;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    text-align: center;
-    line-height: 32px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
+  display: inline-block;
+  background: var(--primary-color);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 32px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
 }
 
 .pattern-description {
-    font-size: 1rem;
-    color: var(--primary-text-color);
-    margin-bottom: 1rem;
-    font-weight: 500;
-    line-height: 1.5;
+  font-size: 1rem;
+  color: var(--primary-text-color);
+  margin-bottom: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 .pattern-example {
-    background: var(--code-bg-color, #f8f9fa);
-    border-left: 4px solid var(--accent-color, #6c757d);
-    padding: 1rem;
-    border-radius: 4px;
-    font-style: italic;
-    color: var(--secondary-text-color);
-    margin-bottom: 0.5rem;
+  background: var(--code-bg-color, #f8f9fa);
+  border-left: 4px solid var(--accent-color, #6c757d);
+  padding: 1rem;
+  border-radius: 4px;
+  font-style: italic;
+  color: var(--secondary-text-color);
+  margin-bottom: 0.5rem;
 }
 
 .pattern-circumstances {
-    font-size: 0.85rem;
-    color: var(--tertiary-text-color);
-    margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--tertiary-text-color);
+  margin-top: 0.5rem;
 }
 
 .pattern-circumstances::before {
-    content: "Context: ";
-    font-weight: 600;
+  content: 'Context: ';
+  font-weight: 600;
 }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-    .speech-patterns-main {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-    
-    .character-definition-input {
-        min-height: 300px;
-    }
+  .speech-patterns-main {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .character-definition-input {
+    min-height: 300px;
+  }
 }
 
 @media (max-width: 768px) {
-    .speech-patterns-main {
-        gap: 1rem;
-        padding: 1rem;
-    }
-    
-    .character-definition-input {
-        min-height: 250px;
-        font-size: 0.8rem;
-    }
-    
-    .speech-pattern-item {
-        padding: 1rem;
-    }
+  .speech-patterns-main {
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .character-definition-input {
+    min-height: 250px;
+    font-size: 0.8rem;
+  }
+
+  .speech-pattern-item {
+    padding: 1rem;
+  }
 }
 
 /* Loading and Empty States */
 .loading-indicator {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem;
-    text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
 }
 
 .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem;
-    text-align: center;
-    color: var(--secondary-text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  color: var(--secondary-text-color);
 }
 
 .empty-state-icon {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
 }
 
 .empty-state-text {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
-    color: var(--primary-text-color);
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: var(--primary-text-color);
 }
 
 .empty-state-subtext {
-    font-size: 0.9rem;
-    line-height: 1.4;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 ```
 
@@ -930,42 +989,41 @@ import { SpeechPatternsDisplayEnhancer } from './characterBuilder/services/Speec
  * Initialize the speech patterns generator page
  */
 async function initializeSpeechPatternsGenerator() {
-    try {
-        const bootstrap = new CharacterBuilderBootstrap();
-        
-        const config = {
-            pageName: 'Speech Patterns Generator',
-            controllerClass: SpeechPatternsGeneratorController,
-            includeModLoading: false, // No mod data needed
-            
-            // Page-specific services
-            services: {
-                speechPatternsDisplayEnhancer: SpeechPatternsDisplayEnhancer
-            },
-            
-            // Custom schemas for validation
-            customSchemas: [
-                '/data/schemas/speech-patterns-response.schema.json'
-            ],
-            
-            // Error display configuration
-            errorDisplay: {
-                elementId: 'character-input-error',
-                displayDuration: 8000,
-                dismissible: true
-            }
-        };
-        
-        const result = await bootstrap.bootstrap(config);
-        
-        // Page successfully initialized
-        console.log(`Speech Patterns Generator initialized in ${result.bootstrapTime.toFixed(2)}ms`);
-        
-    } catch (error) {
-        console.error('Failed to initialize Speech Patterns Generator:', error);
-        
-        // Show user-friendly error
-        document.body.innerHTML = `
+  try {
+    const bootstrap = new CharacterBuilderBootstrap();
+
+    const config = {
+      pageName: 'Speech Patterns Generator',
+      controllerClass: SpeechPatternsGeneratorController,
+      includeModLoading: false, // No mod data needed
+
+      // Page-specific services
+      services: {
+        speechPatternsDisplayEnhancer: SpeechPatternsDisplayEnhancer,
+      },
+
+      // Custom schemas for validation
+      customSchemas: ['/data/schemas/speech-patterns-response.schema.json'],
+
+      // Error display configuration
+      errorDisplay: {
+        elementId: 'character-input-error',
+        displayDuration: 8000,
+        dismissible: true,
+      },
+    };
+
+    const result = await bootstrap.bootstrap(config);
+
+    // Page successfully initialized
+    console.log(
+      `Speech Patterns Generator initialized in ${result.bootstrapTime.toFixed(2)}ms`
+    );
+  } catch (error) {
+    console.error('Failed to initialize Speech Patterns Generator:', error);
+
+    // Show user-friendly error
+    document.body.innerHTML = `
             <div style="text-align: center; padding: 2rem; color: var(--error-color, #d32f2f);">
                 <h1>⚠️ Initialization Failed</h1>
                 <p>The Speech Patterns Generator could not be started.</p>
@@ -976,14 +1034,17 @@ async function initializeSpeechPatternsGenerator() {
                 </details>
             </div>
         `;
-    }
+  }
 }
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeSpeechPatternsGenerator);
+  document.addEventListener(
+    'DOMContentLoaded',
+    initializeSpeechPatternsGenerator
+  );
 } else {
-    initializeSpeechPatternsGenerator();
+  initializeSpeechPatternsGenerator();
 }
 ```
 
@@ -996,11 +1057,11 @@ if (document.readyState === 'loading') {
 ```html
 <!-- Add after the traits-generator-button -->
 <button
-    id="speech-patterns-generator-button" 
-    class="menu-button nav-button nav-button--character nav-button--orange"
+  id="speech-patterns-generator-button"
+  class="menu-button nav-button nav-button--character nav-button--orange"
 >
-    <span class="button-icon" aria-hidden="true">💬</span>
-    <span class="button-text">Speech Patterns Generator</span>
+  <span class="button-icon" aria-hidden="true">💬</span>
+  <span class="button-text">Speech Patterns Generator</span>
 </button>
 ```
 
@@ -1009,10 +1070,11 @@ if (document.readyState === 'loading') {
 **Status**: ❌ Not Implemented - This would need to be added to the existing script section in `index.html`:
 
 ```javascript
-document.getElementById('speech-patterns-generator-button')
-    .addEventListener('click', () => {
-        window.location.href = 'speech-patterns-generator.html';
-    });
+document
+  .getElementById('speech-patterns-generator-button')
+  .addEventListener('click', () => {
+    window.location.href = 'speech-patterns-generator.html';
+  });
 ```
 
 ## Planned Build Configuration
@@ -1087,7 +1149,7 @@ This schema would need to be created for response validation:
           "maxLength": 500
         },
         "example": {
-          "type": "string", 
+          "type": "string",
           "description": "Example of character's voice demonstrating this pattern",
           "minLength": 5,
           "maxLength": 1000
@@ -1117,7 +1179,7 @@ This schema would need to be created for response validation:
 
 2. **Display Enhancer Tests** (`tests/unit/characterBuilder/services/SpeechPatternsDisplayEnhancer.test.js`)
    - Format for display
-   - Export formatting 
+   - Export formatting
    - Filename generation
    - HTML escaping
 
@@ -1243,12 +1305,14 @@ Create test fixtures with sample character definitions and expected speech patte
 This specification provides a complete implementation guide for the **planned** Speech Patterns Generator that would maximize code reuse from existing Character Builder infrastructure while meeting all the specific requirements outlined in the original feature request in `reports/speech-patterns-generator.md`.
 
 ### Current Reality Check
+
 - **No implementation exists** - all described functionality would need to be built from scratch
 - **Existing foundation** - Character Builder infrastructure and component schema provide a solid base
 - **Implementation ready** - This specification provides detailed guidance for development
 - **Testing required** - Comprehensive test coverage would be needed for all new components
 
 ### Next Steps for Implementation
+
 1. Review this specification against current project architecture
 2. Validate technical approach with existing character builder patterns
 3. Begin with Phase 1: Foundation Setup as outlined in the Implementation Roadmap

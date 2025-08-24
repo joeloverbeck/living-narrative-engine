@@ -6,9 +6,7 @@
 
 import { BaseCharacterBuilderController } from './BaseCharacterBuilderController.js';
 import { DomUtils } from '../../utils/domUtils.js';
-import {
-  validateDependency,
-} from '../../utils/dependencyUtils.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
 
 /**
  * @typedef {import('./BaseCharacterBuilderController.js').BaseCharacterBuilderController} BaseCharacterBuilderController
@@ -37,7 +35,6 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
 
   /** @private @type {object|null} */
   #selectedConcept = null;
-
 
   /** @private @type {TraitData|null} */
   #lastGeneratedTraits = null;
@@ -229,21 +226,27 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
         await this.characterBuilderService.getAllThematicDirectionsWithConcepts();
 
       // Filter out directions with invalid concepts
-      const directionsWithValidConcepts = allDirectionsWithConcepts.filter(item => {
-        // Concept must exist and have required properties
-        if (!item.concept || typeof item.concept !== 'object') {
-          this.logger.debug(`Filtering out direction ${item.direction.id}: missing or invalid concept`);
-          return false;
+      const directionsWithValidConcepts = allDirectionsWithConcepts.filter(
+        (item) => {
+          // Concept must exist and have required properties
+          if (!item.concept || typeof item.concept !== 'object') {
+            this.logger.debug(
+              `Filtering out direction ${item.direction.id}: missing or invalid concept`
+            );
+            return false;
+          }
+
+          // Concept must have id and concept text
+          if (!item.concept.id || !item.concept.concept) {
+            this.logger.debug(
+              `Filtering out direction ${item.direction.id}: concept missing required fields`
+            );
+            return false;
+          }
+
+          return true;
         }
-        
-        // Concept must have id and concept text
-        if (!item.concept.id || !item.concept.concept) {
-          this.logger.debug(`Filtering out direction ${item.direction.id}: concept missing required fields`);
-          return false;
-        }
-        
-        return true;
-      });
+      );
 
       this.logger.debug(
         `Filtered ${allDirectionsWithConcepts.length - directionsWithValidConcepts.length} directions with invalid concepts`
@@ -840,14 +843,15 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
       this.#clearInputValidationError();
 
       // Prepare generation parameters
-      const clicheData = await this.characterBuilderService.getClichesByDirectionId(
-        this.#selectedDirection.id
-      );
-      
+      const clicheData =
+        await this.characterBuilderService.getClichesByDirectionId(
+          this.#selectedDirection.id
+        );
+
       // Convert single Cliche object to array format expected by TraitsGenerator
       // If no cliches found, use empty array instead of null
       const cliches = clicheData ? this.#convertClicheToArray(clicheData) : [];
-      
+
       const params = {
         concept: this.#selectedConcept,
         direction: this.#selectedDirection,

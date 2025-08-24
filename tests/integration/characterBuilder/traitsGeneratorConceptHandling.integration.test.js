@@ -78,8 +78,12 @@ describe('TraitsGeneratorController Integration - Concept Handling', () => {
       deleteCharacterConcept: jest.fn(),
       storeThematicDirections: jest.fn(),
       getThematicDirections: jest.fn(),
-      getAllThematicDirections: jest.fn().mockResolvedValue([mockDirectionWithConcept.direction]),
-      getCharacterConcept: jest.fn().mockResolvedValue(mockDirectionWithConcept.concept),
+      getAllThematicDirections: jest
+        .fn()
+        .mockResolvedValue([mockDirectionWithConcept.direction]),
+      getCharacterConcept: jest
+        .fn()
+        .mockResolvedValue(mockDirectionWithConcept.concept),
     };
 
     mockDirectionGenerator = {
@@ -115,7 +119,7 @@ describe('TraitsGeneratorController Integration - Concept Handling', () => {
       <div id="error-message-text"></div>
       <div id="loading-message"></div>
     `;
-    
+
     // Mock DOM methods that might not exist in jsdom
     Element.prototype.scrollIntoView = jest.fn();
     document.body.appendChild(container);
@@ -211,11 +215,11 @@ describe('TraitsGeneratorController Integration - Concept Handling', () => {
         metadata: {
           totalTokens: 1500,
           processingTime: 2000,
-          promptVersion: '1.0.0'
-        }
+          promptVersion: '1.0.0',
+        },
       }),
       getLLMParameters: jest.fn().mockReturnValue({}),
-      getPromptVersionInfo: jest.fn().mockReturnValue({ version: '1.0.0' })
+      getPromptVersionInfo: jest.fn().mockReturnValue({ version: '1.0.0' }),
     };
 
     // Mock the database operations
@@ -245,9 +249,15 @@ describe('TraitsGeneratorController Integration - Concept Handling', () => {
     });
 
     // Mock the service methods used by the controller
-    characterBuilderService.hasClichesForDirection = jest.fn().mockResolvedValue(true);
-    characterBuilderService.getCoreMotivationsByDirectionId = jest.fn().mockResolvedValue(mockCoreMotivations);
-    characterBuilderService.getClichesByDirectionId = jest.fn().mockResolvedValue(mockCliches[0]);
+    characterBuilderService.hasClichesForDirection = jest
+      .fn()
+      .mockResolvedValue(true);
+    characterBuilderService.getCoreMotivationsByDirectionId = jest
+      .fn()
+      .mockResolvedValue(mockCoreMotivations);
+    characterBuilderService.getClichesByDirectionId = jest
+      .fn()
+      .mockResolvedValue(mockCliches[0]);
 
     // Create controller with real service
     controller = new TraitsGeneratorController({
@@ -302,8 +312,8 @@ describe('TraitsGeneratorController Integration - Concept Handling', () => {
 
     // Wait for generation to complete with longer timeout and additional async ticks
     await new Promise((resolve) => setTimeout(resolve, 500));
-    await new Promise(resolve => setImmediate(resolve));
-    await new Promise(resolve => process.nextTick(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
+    await new Promise((resolve) => process.nextTick(resolve));
 
     // Clean up temp logging
     // console.log('All dispatched events:', mockEventBus.dispatch.mock.calls);

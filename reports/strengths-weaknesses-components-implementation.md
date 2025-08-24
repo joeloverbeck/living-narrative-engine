@@ -2,7 +2,7 @@
 
 **Date**: 2025-08-24  
 **Analysis Type**: Architecture Analysis and Implementation  
-**Focus**: Component Creation and LLM Integration  
+**Focus**: Component Creation and LLM Integration
 
 ## Executive Summary
 
@@ -33,12 +33,14 @@ The existing likes/dislikes components are integrated through a well-established
 ### New Components Created
 
 #### 1. `core:strengths` Component
+
 - **File**: `data/mods/core/components/strengths.component.json`
 - **Schema**: Simple text field matching likes/dislikes pattern
 - **Purpose**: Stores character strengths in first-person perspective
 - **Example**: "I am particularly good at solving complex problems and inspiring others with my passion for innovation."
 
-#### 2. `core:weaknesses` Component  
+#### 2. `core:weaknesses` Component
+
 - **File**: `data/mods/core/components/weaknesses.component.json`
 - **Schema**: Simple text field matching likes/dislikes pattern
 - **Purpose**: Stores character weaknesses in first-person perspective
@@ -47,28 +49,37 @@ The existing likes/dislikes components are integrated through a well-established
 ### Code Changes Made
 
 #### Constants Update
+
 **File**: `src/constants/componentIds.js`
+
 - Added `STRENGTHS_COMPONENT_ID = 'core:strengths'`
 - Added `WEAKNESSES_COMPONENT_ID = 'core:weaknesses'`
 
 #### Data Extraction Integration
+
 **File**: `src/turns/services/actorDataExtractor.js`
+
 - Imported new component ID constants
 - Added strengths and weaknesses to `optionalTextAttributes` array
 - Automatic extraction when components are present in actor state
 
 #### Prompt Formatting Integration
+
 **File**: `src/prompting/CharacterDataFormatter.js`
+
 - Added strengths and weaknesses to character data destructuring
 - Created "## Your Strengths" and "## Your Weaknesses" sections
 - Positioned logically after likes/dislikes, before secrets/fears
 
 #### Test Coverage Updates
+
 **Files Updated**:
+
 - `tests/unit/turns/services/actorDataExtractor.test.js`
 - `tests/unit/prompting/CharacterDataFormatter.test.js`
 
 **Test Coverage Added**:
+
 - Data extraction validation for new components
 - Trimming and optional behavior testing
 - Markdown formatting validation
@@ -77,43 +88,53 @@ The existing likes/dislikes components are integrated through a well-established
 ## Integration Flow
 
 ### Data Pipeline
+
 ```
 Component Files → Actor State → ActorDataExtractor → CharacterDataFormatter → LLM Prompt
 ```
 
 ### LLM Prompt Structure
+
 When both components are present, the character prompt now includes:
 
 ```markdown
 ## Your Likes
+
 [Character likes content]
 
-## Your Dislikes  
+## Your Dislikes
+
 [Character dislikes content]
 
 ## Your Strengths
+
 [Character strengths content]
 
 ## Your Weaknesses
+
 [Character weaknesses content]
 
 ## Your Secrets
+
 [Character secrets content]
 ```
 
 ## Benefits
 
 ### 1. Enhanced Character Depth
+
 - LLMs now have explicit knowledge of character strengths and weaknesses
 - More nuanced and realistic character portrayal in AI responses
 - Better consistency in character behavior across interactions
 
 ### 2. Improved AI Decision Making
+
 - LLMs can make more informed character choices based on strengths/weaknesses
 - Character actions will be more aligned with their capabilities and limitations
 - Enhanced narrative consistency and believability
 
 ### 3. Seamless Integration
+
 - No breaking changes to existing systems
 - Follows established component patterns
 - Optional components - only appear when defined
@@ -122,13 +143,17 @@ When both components are present, the character prompt now includes:
 ## Future Enhancements
 
 ### Character Builder Integration
+
 The existing traits generation system already produces strengths and weaknesses as arrays. A future enhancement could:
+
 - Add conversion logic from trait arrays to component text format
 - Bridge character builder tools with core game components
 - Enable automatic population of components from generated traits
 
 ### Enhanced Prompt Templates
+
 Future improvements could include:
+
 - Dynamic prompt ordering based on character importance
 - Conditional formatting for different character types
 - Integration with mood/emotional state systems
@@ -136,6 +161,7 @@ Future improvements could include:
 ## Quality Assurance
 
 ### Testing Coverage
+
 - ✅ Component schema validation
 - ✅ Data extraction functionality
 - ✅ Optional behavior (components may be absent)
@@ -145,6 +171,7 @@ Future improvements could include:
 - ✅ Backward compatibility
 
 ### Code Quality
+
 - ✅ Follows established patterns exactly
 - ✅ Consistent naming conventions
 - ✅ Proper error handling
@@ -164,10 +191,12 @@ The implementation of `core:strengths` and `core:weaknesses` components has been
 The components are now ready for use in character definitions and will automatically appear in LLM prompts when present, providing enhanced character depth and more realistic AI-driven character behavior.
 
 ## Files Created (2)
+
 - `data/mods/core/components/strengths.component.json`
 - `data/mods/core/components/weaknesses.component.json`
 
 ## Files Modified (5)
+
 - `src/constants/componentIds.js`
 - `src/turns/services/actorDataExtractor.js`
 - `src/prompting/CharacterDataFormatter.js`

@@ -14,40 +14,101 @@ describe('TraitsDisplayEnhancer - Data Structure Compatibility Fixes', () => {
   // Sample complete traits data as would come from TraitsGenerator
   const completeTraitsData = {
     names: [
-      { name: 'Alexandra', justification: 'Strong name reflecting her determination' },
-      { name: 'Luna', justification: 'Mysterious name matching her enigmatic nature' },
-      { name: 'Sofia', justification: 'Wisdom-based name for her insightful character' }
+      {
+        name: 'Alexandra',
+        justification: 'Strong name reflecting her determination',
+      },
+      {
+        name: 'Luna',
+        justification: 'Mysterious name matching her enigmatic nature',
+      },
+      {
+        name: 'Sofia',
+        justification: 'Wisdom-based name for her insightful character',
+      },
     ],
-    physicalDescription: 'A tall, athletic young woman with dark curly hair and intense brown eyes. She has a confident posture and quick, purposeful movements.',
+    physicalDescription:
+      'A tall, athletic young woman with dark curly hair and intense brown eyes. She has a confident posture and quick, purposeful movements.',
     personality: [
-      { trait: 'Determined', explanation: 'Never gives up on her goals, even when faced with obstacles' },
-      { trait: 'Analytical', explanation: 'Approaches problems with logic and systematic thinking' },
-      { trait: 'Empathetic', explanation: 'Deeply understands others\' emotions and motivations' }
+      {
+        trait: 'Determined',
+        explanation:
+          'Never gives up on her goals, even when faced with obstacles',
+      },
+      {
+        trait: 'Analytical',
+        explanation: 'Approaches problems with logic and systematic thinking',
+      },
+      {
+        trait: 'Empathetic',
+        explanation: "Deeply understands others' emotions and motivations",
+      },
     ],
-    strengths: ['Strategic thinking', 'Leadership abilities', 'Emotional intelligence', 'Quick problem-solving'],
-    weaknesses: ['Impatience', 'Perfectionism', 'Difficulty delegating', 'Tendency to overthink'],
-    likes: ['Chess', 'Historical novels', 'Mountain hiking', 'Meaningful conversations', 'Classical music'],
-    dislikes: ['Dishonesty', 'Injustice', 'Loud parties', 'Procrastination', 'Superficial relationships'],
-    fears: ['Failure', 'Losing loved ones', 'Being misunderstood', 'Loss of independence'],
+    strengths: [
+      'Strategic thinking',
+      'Leadership abilities',
+      'Emotional intelligence',
+      'Quick problem-solving',
+    ],
+    weaknesses: [
+      'Impatience',
+      'Perfectionism',
+      'Difficulty delegating',
+      'Tendency to overthink',
+    ],
+    likes: [
+      'Chess',
+      'Historical novels',
+      'Mountain hiking',
+      'Meaningful conversations',
+      'Classical music',
+    ],
+    dislikes: [
+      'Dishonesty',
+      'Injustice',
+      'Loud parties',
+      'Procrastination',
+      'Superficial relationships',
+    ],
+    fears: [
+      'Failure',
+      'Losing loved ones',
+      'Being misunderstood',
+      'Loss of independence',
+    ],
     goals: {
-      shortTerm: ['Master advanced strategy techniques', 'Build stronger team relationships', 'Complete leadership training'],
-      longTerm: 'Become a respected leader who creates positive change while maintaining personal authenticity'
+      shortTerm: [
+        'Master advanced strategy techniques',
+        'Build stronger team relationships',
+        'Complete leadership training',
+      ],
+      longTerm:
+        'Become a respected leader who creates positive change while maintaining personal authenticity',
     },
-    notes: ['Keeps a strategic journal', 'Has a photographic memory for faces', 'Practices meditation daily'],
-    profile: 'A natural leader with a strong moral compass, Alexandra combines analytical prowess with deep empathy. Her determination drives her to excel, but she struggles with perfectionism and the need to control outcomes.',
-    secrets: ['Secretly writes poetry to process emotions', 'Has a deep fear of not living up to her potential', 'Sometimes feels overwhelmed by others\' expectations'],
+    notes: [
+      'Keeps a strategic journal',
+      'Has a photographic memory for faces',
+      'Practices meditation daily',
+    ],
+    profile:
+      'A natural leader with a strong moral compass, Alexandra combines analytical prowess with deep empathy. Her determination drives her to excel, but she struggles with perfectionism and the need to control outcomes.',
+    secrets: [
+      'Secretly writes poetry to process emotions',
+      'Has a deep fear of not living up to her potential',
+      "Sometimes feels overwhelmed by others' expectations",
+    ],
     metadata: {
       model: 'anthropic/claude-sonnet-4',
       totalTokens: 3014,
       responseTime: 2500,
-      promptVersion: '1.0.0'
-    }
+      promptVersion: '1.0.0',
+    },
   };
 
   // Minimal traits data to test defaults
   const minimalTraitsData = {
     names: [{ name: 'Test', justification: 'Test justification' }],
-    physicalDescription: 'Basic description'
+    physicalDescription: 'Basic description',
     // Missing most properties to test defaults
   };
 
@@ -65,7 +126,9 @@ describe('TraitsDisplayEnhancer - Data Structure Compatibility Fixes', () => {
 
       // Verify all expected properties exist and match input
       expect(result.names).toEqual(completeTraitsData.names);
-      expect(result.physicalDescription).toEqual(completeTraitsData.physicalDescription);
+      expect(result.physicalDescription).toEqual(
+        completeTraitsData.physicalDescription
+      );
       expect(result.personality).toEqual(completeTraitsData.personality);
       expect(result.strengths).toEqual(completeTraitsData.strengths);
       expect(result.weaknesses).toEqual(completeTraitsData.weaknesses);
@@ -96,7 +159,9 @@ describe('TraitsDisplayEnhancer - Data Structure Compatibility Fixes', () => {
 
       // Properties that exist in input should be preserved
       expect(result.names).toEqual(minimalTraitsData.names);
-      expect(result.physicalDescription).toEqual(minimalTraitsData.physicalDescription);
+      expect(result.physicalDescription).toEqual(
+        minimalTraitsData.physicalDescription
+      );
 
       // Missing properties should have appropriate defaults
       expect(result.personality).toEqual([]);
@@ -115,7 +180,7 @@ describe('TraitsDisplayEnhancer - Data Structure Compatibility Fixes', () => {
       const dataWithIdAndTimestamp = {
         ...completeTraitsData,
         id: 'test-id-123',
-        generatedAt: '2024-01-01T12:00:00Z'
+        generatedAt: '2024-01-01T12:00:00Z',
       };
 
       const result = enhancer.enhanceForDisplay(dataWithIdAndTimestamp, {
@@ -140,7 +205,7 @@ describe('TraitsDisplayEnhancer - Data Structure Compatibility Fixes', () => {
         goals: null,
         notes: undefined,
         profile: null,
-        secrets: undefined
+        secrets: undefined,
       };
 
       const result = enhancer.enhanceForDisplay(dataWithNullsButSomeContent, {
@@ -182,10 +247,14 @@ describe('TraitsDisplayEnhancer - Data Structure Compatibility Fixes', () => {
     });
 
     it('should accept data with at least one content property', () => {
-      const minimalValidData = { names: [{ name: 'Test', justification: 'Test' }] }; // Non-empty array counts as content
-      
+      const minimalValidData = {
+        names: [{ name: 'Test', justification: 'Test' }],
+      }; // Non-empty array counts as content
+
       expect(() => {
-        enhancer.enhanceForDisplay(minimalValidData, { includeMetadata: false });
+        enhancer.enhanceForDisplay(minimalValidData, {
+          includeMetadata: false,
+        });
       }).not.toThrow();
     });
   });
@@ -196,7 +265,7 @@ describe('TraitsDisplayEnhancer - Data Structure Compatibility Fixes', () => {
         includeUserInputs: {
           coreMotivation: 'Test motivation',
           internalContradiction: 'Test contradiction',
-          centralQuestion: 'Test question?'
+          centralQuestion: 'Test question?',
         },
         includeDirection: 'Test Direction',
         includeTimestamp: true,
@@ -212,10 +281,12 @@ describe('TraitsDisplayEnhancer - Data Structure Compatibility Fixes', () => {
 
     it('should generate appropriate export filename', () => {
       const filename = enhancer.generateExportFilename(completeTraitsData, {
-        direction: 'Test Direction Name'
+        direction: 'Test Direction Name',
       });
 
-      expect(filename).toMatch(/^traits_test-direction-name_\d{4}-\d{2}-\d{2}_\d{6}\.txt$/);
+      expect(filename).toMatch(
+        /^traits_test-direction-name_\d{4}-\d{2}-\d{2}_\d{6}\.txt$/
+      );
     });
   });
 });
