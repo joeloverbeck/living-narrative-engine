@@ -136,6 +136,13 @@
               <span class="button-icon" aria-hidden="true">🎭</span>
               <span class="button-text">Traits Generator</span>
             </button>
+            <button
+              id="speech-patterns-generator-button"
+              class="menu-button nav-button nav-button--character nav-button--orange"
+            >
+              <span class="button-icon" aria-hidden="true">💬</span>
+              <span class="button-text">Speech Patterns Generator</span>
+            </button>
           </div>
         </section>
       </main>
@@ -181,6 +188,11 @@
         .getElementById('traits-generator-button')
         .addEventListener('click', () => {
           window.location.href = 'traits-generator.html';
+        });
+      document
+        .getElementById('speech-patterns-generator-button')
+        .addEventListener('click', () => {
+          window.location.href = 'speech-patterns-generator.html';
         });
     </script>
   </body>

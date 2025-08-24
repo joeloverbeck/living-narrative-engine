@@ -3,7 +3,14 @@
  * @description Tests complete workflow from UI interaction to results display
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TraitsGeneratorTestBed } from '../../common/traitsGeneratorTestBed.js';
 
 describe('Traits Generator End-to-End Integration Tests', () => {
@@ -86,7 +93,10 @@ describe('Traits Generator End-to-End Integration Tests', () => {
     it('should handle generation with minimal inputs', async () => {
       // Set only required inputs
       testBed.simulateUserInput('coreMotivation', 'Basic motivation');
-      testBed.simulateUserInput('internalContradiction', 'Simple contradiction');
+      testBed.simulateUserInput(
+        'internalContradiction',
+        'Simple contradiction'
+      );
       testBed.simulateUserInput('centralQuestion', 'Simple question?');
 
       // Mock response
@@ -184,7 +194,7 @@ describe('Traits Generator End-to-End Integration Tests', () => {
       // Verify structure
       expect(exportText).toMatch(/^=== CHARACTER TRAITS ===/);
       expect(exportText).toContain('NAMES:');
-      traits.names.forEach(name => {
+      traits.names.forEach((name) => {
         expect(exportText).toContain(name.name);
       });
       expect(exportText).toContain(traits.physicalDescription);
@@ -198,7 +208,9 @@ describe('Traits Generator End-to-End Integration Tests', () => {
 
       // Mock error response
       const error = new Error('Generation failed');
-      testBed.mockCharacterBuilderService.generateTraits.mockRejectedValue(error);
+      testBed.mockCharacterBuilderService.generateTraits.mockRejectedValue(
+        error
+      );
 
       // Trigger generation
       await testBed.simulateButtonClick('generateButton');
@@ -324,7 +336,7 @@ describe('Traits Generator End-to-End Integration Tests', () => {
       const userInputs = {
         coreMotivation: 'Specific test motivation',
         internalContradiction: 'Specific test contradiction',
-        centralQuestion: 'Specific test question?'
+        centralQuestion: 'Specific test question?',
       };
 
       // Set inputs
@@ -337,9 +349,15 @@ describe('Traits Generator End-to-End Integration Tests', () => {
       await testBed.simulateButtonClick('generateButton');
 
       // Verify inputs were used
-      expect(testBed.uiElements.coreMotivation.value).toBe(userInputs.coreMotivation);
-      expect(testBed.uiElements.internalContradiction.value).toBe(userInputs.internalContradiction);
-      expect(testBed.uiElements.centralQuestion.value).toBe(userInputs.centralQuestion);
+      expect(testBed.uiElements.coreMotivation.value).toBe(
+        userInputs.coreMotivation
+      );
+      expect(testBed.uiElements.internalContradiction.value).toBe(
+        userInputs.internalContradiction
+      );
+      expect(testBed.uiElements.centralQuestion.value).toBe(
+        userInputs.centralQuestion
+      );
     });
 
     it('should include concept and direction in generation', async () => {
@@ -386,7 +404,10 @@ describe('Traits Generator End-to-End Integration Tests', () => {
     it('should handle complete user journey from start to export', async () => {
       // Step 1: User enters inputs
       testBed.simulateUserInput('coreMotivation', 'Journey motivation');
-      testBed.simulateUserInput('internalContradiction', 'Journey contradiction');
+      testBed.simulateUserInput(
+        'internalContradiction',
+        'Journey contradiction'
+      );
       testBed.simulateUserInput('centralQuestion', 'Journey question?');
 
       // Step 2: User clicks generate
@@ -425,7 +446,10 @@ describe('Traits Generator End-to-End Integration Tests', () => {
 
       // Second generation with different inputs
       testBed.simulateUserInput('coreMotivation', 'Different motivation');
-      testBed.simulateUserInput('internalContradiction', 'Different contradiction');
+      testBed.simulateUserInput(
+        'internalContradiction',
+        'Different contradiction'
+      );
       testBed.simulateUserInput('centralQuestion', 'Different question?');
 
       // Mock different response
@@ -440,7 +464,9 @@ describe('Traits Generator End-to-End Integration Tests', () => {
       testBed.setGeneratedTraits(secondResponse);
 
       // Verify second generation replaced first
-      expect(testBed.uiState.generatedTraits.names[0].name).toBe('Different Name');
+      expect(testBed.uiState.generatedTraits.names[0].name).toBe(
+        'Different Name'
+      );
     });
   });
 });

@@ -68,6 +68,8 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       dispatch: jest.fn((event) => {
         this.dispatchedEvents.push(event);
       }),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
     };
 
     // Mock storage service - No database mock needed per policy
@@ -81,10 +83,23 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
 
     // Mock character builder service
     this.mockCharacterBuilderService = {
+      // Required methods for BaseCharacterBuilderController
+      initialize: jest.fn().mockResolvedValue(true),
+      getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
+      createCharacterConcept: jest.fn().mockResolvedValue({}),
+      updateCharacterConcept: jest.fn().mockResolvedValue({}),
+      deleteCharacterConcept: jest.fn().mockResolvedValue(true),
+      getCharacterConcept: jest.fn().mockResolvedValue({}),
+      generateThematicDirections: jest.fn().mockResolvedValue([]),
+      getThematicDirections: jest.fn().mockResolvedValue([]),
+      // Methods for TraitsGeneratorController
       generateTraits: jest.fn(),
       getDirectionsWithClichesAndMotivations: jest.fn().mockResolvedValue([]),
+      getAllThematicDirectionsWithConcepts: jest.fn().mockResolvedValue([]),
       hasClichesForDirection: jest.fn().mockResolvedValue(true),
       hasCoreMotivationsForDirection: jest.fn().mockResolvedValue(true),
+      getCoreMotivationsByDirectionId: jest.fn().mockResolvedValue([]),
+      getClichesByDirectionId: jest.fn().mockResolvedValue([]),
     };
 
     // Mock traits generator service
@@ -121,48 +136,48 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
   setupUIElements() {
     // Create mock UI elements
     this.uiElements = {
-      generateButton: { 
-        onclick: null, 
+      generateButton: {
+        onclick: null,
         disabled: false,
-        id: 'generateButton'
+        id: 'generateButton',
       },
-      exportButton: { 
-        onclick: null, 
+      exportButton: {
+        onclick: null,
         disabled: false,
         hidden: true,
-        id: 'exportButton'
+        id: 'exportButton',
       },
       retryButton: {
         onclick: null,
         disabled: false,
-        id: 'retryButton'
+        id: 'retryButton',
       },
-      coreMotivation: { 
-        value: '', 
+      coreMotivation: {
+        value: '',
         oninput: null,
-        id: 'coreMotivation'
+        id: 'coreMotivation',
       },
-      internalContradiction: { 
-        value: '', 
+      internalContradiction: {
+        value: '',
         oninput: null,
-        id: 'internalContradiction'
+        id: 'internalContradiction',
       },
-      centralQuestion: { 
-        value: '', 
+      centralQuestion: {
+        value: '',
         oninput: null,
-        id: 'centralQuestion'
+        id: 'centralQuestion',
       },
       resultsContainer: {
         hidden: true,
-        innerHTML: ''
+        innerHTML: '',
       },
       errorContainer: {
         hidden: true,
-        textContent: ''
+        textContent: '',
       },
       loadingIndicator: {
-        hidden: true
-      }
+        hidden: true,
+      },
     };
   }
 
@@ -242,7 +257,7 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     this.uiState.errorVisible = false;
     this.uiState.errorMessage = '';
     // Clear UI element values
-    Object.keys(this.uiElements).forEach(key => {
+    Object.keys(this.uiElements).forEach((key) => {
       if (this.uiElements[key].value !== undefined) {
         this.uiElements[key].value = '';
       }
@@ -269,7 +284,7 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     return {
       id: `concept-${uuidv4()}`,
       concept: 'A battle-scarred veteran seeking redemption',
-      description: 'A complex character with a troubled past'
+      description: 'A complex character with a troubled past',
     };
   }
 
@@ -285,7 +300,7 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       theme: 'Exploring themes of guilt and forgiveness',
       description: 'A journey from darkness to light',
       coreTension: 'The struggle between past and future',
-      uniqueTwist: 'Redemption through helping others'
+      uniqueTwist: 'Redemption through helping others',
     };
   }
 
@@ -297,8 +312,10 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
   createValidUserInputs() {
     return {
       coreMotivation: 'To atone for past mistakes by protecting the innocent',
-      internalContradiction: 'Believes they deserve punishment yet knows others need protection',
-      centralQuestion: 'Can someone who has caused great harm ever truly be redeemed?'
+      internalContradiction:
+        'Believes they deserve punishment yet knows others need protection',
+      centralQuestion:
+        'Can someone who has caused great harm ever truly be redeemed?',
     };
   }
 
@@ -311,7 +328,7 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     return [
       { id: 'cliche-1', text: 'Brooding antihero with dark past' },
       { id: 'cliche-2', text: 'Reluctant mentor figure' },
-      { id: 'cliche-3', text: 'Sacrificial hero complex' }
+      { id: 'cliche-3', text: 'Sacrificial hero complex' },
     ];
   }
 
@@ -325,38 +342,42 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       names: [
         {
           name: 'Alaric Ironward',
-          justification: 'A strong name suggesting nobility and military prowess'
+          justification:
+            'A strong name suggesting nobility and military prowess',
         },
         {
           name: 'Marcus Thornfield',
-          justification: 'Classic warrior name with grounded surname'
+          justification: 'Classic warrior name with grounded surname',
         },
         {
           name: 'Gareth Soulstone',
-          justification: 'Evokes strength and weight of past experiences'
-        }
+          justification: 'Evokes strength and weight of past experiences',
+        },
       ],
-      physicalDescription: 'A weathered man in his early forties with silver-streaked dark hair...',
+      physicalDescription:
+        'A weathered man in his early forties with silver-streaked dark hair...',
       personality: [
         {
           trait: 'Protective Instinct',
           explanation: 'Driven to shield others from harm',
-          behavioral_examples: ['Always positions himself between danger and innocents']
-        }
+          behavioral_examples: [
+            'Always positions himself between danger and innocents',
+          ],
+        },
       ],
       strengths: [
         {
           strength: 'Combat Experience',
           explanation: 'Years of battle have honed skills',
-          application_examples: ['Can assess threats instantly']
-        }
+          application_examples: ['Can assess threats instantly'],
+        },
       ],
       weaknesses: [
         {
           weakness: 'Self-Punishment',
           explanation: 'Believes deserves suffering',
-          manifestation_examples: ['Refuses comfort']
-        }
+          manifestation_examples: ['Refuses comfort'],
+        },
       ],
       likes: ['Quiet moments', 'Helping others', 'Simple pleasures'],
       dislikes: ['Unnecessary violence', 'Arrogance', 'Waste'],
@@ -364,15 +385,15 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
         {
           fear: 'Repeating past mistakes',
           root_cause: 'Traumatic event',
-          behavioral_impact: 'Overly cautious'
-        }
+          behavioral_impact: 'Overly cautious',
+        },
       ],
       goals: [
         {
           goal: 'Find redemption',
           motivation: 'Guilt over past',
-          obstacles: ['Self-doubt', 'Past enemies']
-        }
+          obstacles: ['Self-doubt', 'Past enemies'],
+        },
       ],
       notes: 'Additional character notes and background details',
       profile: 'Character profile summary combining all traits',
@@ -380,9 +401,9 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
         {
           secret: 'Hidden past identity',
           reason_for_hiding: 'Protect loved ones',
-          consequences_if_revealed: 'Endangers allies'
-        }
-      ]
+          consequences_if_revealed: 'Endangers allies',
+        },
+      ],
     };
   }
 
@@ -393,6 +414,46 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
    */
   createCompleteTraitsData() {
     return this.createValidTraitsResponse();
+  }
+
+  /**
+   * Create valid direction with concept for controller testing
+   *
+   * @returns {object} Direction with concept data
+   */
+  createValidDirectionWithConcept() {
+    return {
+      direction: {
+        id: 'test-direction-id',
+        title: 'Test Thematic Direction',
+        description: 'A test thematic direction for unit testing',
+        conceptId: 'test-concept-id',
+        coreTension: 'Test core tension',
+        uniqueTwist: 'Test unique twist',
+        narrativePotential: 'Test narrative potential',
+      },
+      concept: {
+        id: 'test-concept-id',
+        concept: 'A battle-scarred veteran seeking redemption',
+        name: 'Redeemed Veteran',
+      },
+    };
+  }
+
+  /**
+   * Create valid core motivation for controller testing
+   *
+   * @returns {object} Valid core motivation data
+   */
+  createValidCoreMotivation() {
+    return {
+      id: 'motivation-1',
+      coreDesire: 'To find redemption for past mistakes',
+      internalContradiction: 'Wants to help but fears discovery of dark past',
+      centralQuestion:
+        'Can someone who has done terrible things ever truly be redeemed?',
+      directionId: 'test-direction-id',
+    };
   }
 
   // ============= Mock Response Methods =============
@@ -415,8 +476,23 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     const timeoutError = new Error('Request timeout');
     timeoutError.code = 'TIMEOUT';
     this.mockLLMService.mockRejectedValue(timeoutError);
-    this.mockTraitsGeneratorService.generateTraits.mockRejectedValue(timeoutError);
-    this.mockCharacterBuilderService.generateTraits.mockRejectedValue(timeoutError);
+    this.mockTraitsGeneratorService.generateTraits.mockRejectedValue(
+      timeoutError
+    );
+    this.mockCharacterBuilderService.generateTraits.mockRejectedValue(
+      timeoutError
+    );
+  }
+
+  /**
+   * Mock LLM service failure
+   *
+   * @param {Error} error - Error to throw
+   */
+  mockLLMServiceFailure(error) {
+    this.mockLLMService.mockRejectedValue(error);
+    this.mockTraitsGeneratorService.generateTraits.mockRejectedValue(error);
+    this.mockCharacterBuilderService.generateTraits.mockRejectedValue(error);
   }
 
   /**
@@ -430,8 +506,8 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       createElement: jest.fn(() => ({
         click: downloadSpy,
         href: '',
-        download: ''
-      }))
+        download: '',
+      })),
     };
     return downloadSpy;
   }
@@ -549,7 +625,7 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     // Return a mock controller with UI interaction methods
     return {
       initialize: jest.fn(),
-      generateTraits: jest.fn()
+      generateTraits: jest.fn(),
     };
   }
 
@@ -603,31 +679,34 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       {
         direction: { id: 'dir-1', title: 'Direction with both' },
         hasClichés: true,
-        hasMotivations: true
+        hasMotivations: true,
       },
       {
         direction: { id: 'dir-2', title: 'Direction with clichés only' },
         hasClichés: true,
-        hasMotivations: false
+        hasMotivations: false,
       },
       {
         direction: { id: 'dir-3', title: 'Direction with motivations only' },
         hasClichés: false,
-        hasMotivations: true
-      }
+        hasMotivations: true,
+      },
     ];
 
     // Setup mock responses
-    directions.forEach(dir => {
-      this.mockCharacterBuilderService.hasClichesForDirection
-        .mockImplementation(id => id === 'dir-1' || id === 'dir-2');
-      this.mockCharacterBuilderService.hasCoreMotivationsForDirection
-        .mockImplementation(id => id === 'dir-1' || id === 'dir-3');
+    directions.forEach((dir) => {
+      this.mockCharacterBuilderService.hasClichesForDirection.mockImplementation(
+        (id) => id === 'dir-1' || id === 'dir-2'
+      );
+      this.mockCharacterBuilderService.hasCoreMotivationsForDirection.mockImplementation(
+        (id) => id === 'dir-1' || id === 'dir-3'
+      );
     });
 
     // Only dir-1 should be eligible (has both)
-    this.mockCharacterBuilderService.getDirectionsWithClichesAndMotivations
-      .mockResolvedValue([directions[0]]);
+    this.mockCharacterBuilderService.getDirectionsWithClichesAndMotivations.mockResolvedValue(
+      [directions[0]]
+    );
   }
 
   // ============= Verification Methods =============
@@ -698,18 +777,18 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
    */
   getExportedText() {
     if (!this.uiState.generatedTraits) return '';
-    
+
     // Simulate export formatting
     let text = '=== CHARACTER TRAITS ===\n\n';
-    
+
     text += 'NAMES:\n';
-    this.uiState.generatedTraits.names?.forEach(n => {
+    this.uiState.generatedTraits.names?.forEach((n) => {
       text += `- ${n.name}\n`;
     });
-    
+
     text += '\nPHYSICAL DESCRIPTION:\n';
     text += this.uiState.generatedTraits.physicalDescription + '\n';
-    
+
     text += '\nPERSONALITY:\n';
     text += '\nSTRENGTHS:\n';
     text += '\nWEAKNESSES:\n';
@@ -721,7 +800,7 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     text += '\nPROFILE:\n';
     text += '\nSECRETS:\n';
     text += '\nUSER INPUTS:\n';
-    
+
     return text;
   }
 
@@ -737,14 +816,14 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
   async executeTraitsGeneration(concept, direction, userInputs, clichés) {
     // Simulate the generation process
     this.mockLLMResponse(this.createValidTraitsResponse());
-    
+
     const params = {
       concept,
       direction,
       userInputs,
-      cliches: clichés
+      cliches: clichés,
     };
-    
+
     return await this.mockCharacterBuilderService.generateTraits(params);
   }
 
