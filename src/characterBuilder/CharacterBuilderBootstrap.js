@@ -797,7 +797,16 @@ export class CharacterBuilderBootstrap {
 
     for (const [token, service] of Object.entries(config.services)) {
       try {
-        container.register(token, service);
+        // Check if it's a class constructor (function with prototype)
+        if (typeof service === 'function' && service.prototype) {
+          // Register as a class with empty dependencies array
+          // This tells the container to instantiate with 'new'
+          container.register(token, service, { dependencies: [] });
+        } else {
+          // Register as a value or factory function
+          container.register(token, service);
+        }
+        
         if (this.#logger) {
           this.#logger.debug(
             `[CharacterBuilderBootstrap] Registered custom service: ${String(token)}`
@@ -846,7 +855,16 @@ export class CharacterBuilderBootstrap {
 
           try {
             // Try to resolve from container using the service name as token first
-            dependencies[serviceName] = container.resolve(serviceName);
+            // For known services, use the proper token
+            if (serviceName === 'traitsDisplayEnhancer' && tokenName === 'TraitsDisplayEnhancer') {
+              dependencies[serviceName] = container.resolve(tokens.TraitsDisplayEnhancer);
+            } else if (serviceName === 'displayEnhancer' && tokenName === 'CoreMotivationsDisplayEnhancer') {
+              dependencies[serviceName] = container.resolve(tokens.CoreMotivationsDisplayEnhancer);
+            } else if (serviceName === 'coreMotivationsGenerator' && tokenName === 'CoreMotivationsGenerator') {
+              dependencies[serviceName] = container.resolve(tokens.CoreMotivationsGenerator);
+            } else {
+              dependencies[serviceName] = container.resolve(serviceName);
+            }
           } catch (error) {
             // If not in container, try to instantiate for known simple services
             const logger = dependencies.logger;

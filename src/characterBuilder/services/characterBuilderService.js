@@ -667,6 +667,26 @@ export class CharacterBuilderService {
   }
 
   /**
+   * Get all thematic directions
+   * 
+   * @returns {Promise<Array<ThematicDirection>>}
+   * @throws {CharacterBuilderError} If retrieval fails
+   */
+  async getAllThematicDirections() {
+    try {
+      const allDirections = await this.#storageService.getAllThematicDirections();
+      this.#logger.debug(
+        `CharacterBuilderService: Retrieved ${allDirections.length} thematic directions`
+      );
+      return allDirections;
+    } catch (error) {
+      const message = `Failed to get all thematic directions: ${error.message}`;
+      this.#logger.error(message, error);
+      throw new CharacterBuilderError(message, error);
+    }
+  }
+
+  /**
    * Get all thematic directions with their associated concepts
    *
    * @returns {Promise<Array<{direction: ThematicDirection, concept: CharacterConcept|null}>>}

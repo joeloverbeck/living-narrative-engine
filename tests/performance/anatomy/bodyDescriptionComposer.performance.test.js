@@ -15,16 +15,16 @@ describe('BodyDescriptionComposer - Performance Tests', () => {
     hasComponent: jest.fn().mockReturnValue(true),
     getComponentData: jest.fn().mockImplementation((componentId) => {
       if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-        return { body: { root: 'torso-1' } };
-      }
-      if (componentId === 'descriptors:build') {
-        return { build: 'athletic' };
-      }
-      if (componentId === 'descriptors:body_composition') {
-        return { composition: 'lean' };
-      }
-      if (componentId === 'descriptors:body_hair') {
-        return { density: 'moderate' };
+        return {
+          body: {
+            root: 'torso-1',
+            descriptors: {
+              build: 'athletic',
+              composition: 'lean',
+              density: 'moderate', // body hair density
+            },
+          },
+        };
       }
       return null;
     }),
@@ -165,10 +165,14 @@ describe('BodyDescriptionComposer - Performance Tests', () => {
           hasComponent: jest.fn().mockReturnValue(true),
           getComponentData: jest.fn().mockImplementation((componentId) => {
             if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-              return { body: { root: 'torso-1' } };
-            }
-            if (componentId === 'descriptors:build') {
-              return { build: 'athletic' };
+              return {
+                body: {
+                  root: 'torso-1',
+                  descriptors: {
+                    build: 'athletic',
+                  },
+                },
+              };
             }
             return null;
           }),
@@ -178,13 +182,15 @@ describe('BodyDescriptionComposer - Performance Tests', () => {
           hasComponent: jest.fn().mockReturnValue(true),
           getComponentData: jest.fn().mockImplementation((componentId) => {
             if (componentId === ANATOMY_BODY_COMPONENT_ID) {
-              return { body: { root: 'torso-1' } };
-            }
-            if (componentId === 'descriptors:build') {
-              return { build: 'athletic' };
-            }
-            if (componentId === 'descriptors:body_composition') {
-              return { composition: 'lean' };
+              return {
+                body: {
+                  root: 'torso-1',
+                  descriptors: {
+                    build: 'athletic',
+                    composition: 'lean',
+                  },
+                },
+              };
             }
             return null;
           }),

@@ -422,7 +422,7 @@ describe('Traits Generator E2E Tests', () => {
       const backBtn = document.getElementById('back-btn');
       expect(backBtn).toBeTruthy();
       expect(backBtn.classList.contains('cb-button-navigation')).toBe(true);
-      expect(backBtn.textContent).toContain('Back to Character Builder');
+      expect(backBtn.textContent).toContain('Back to Main Menu');
     });
 
     it('should have generation info display', () => {

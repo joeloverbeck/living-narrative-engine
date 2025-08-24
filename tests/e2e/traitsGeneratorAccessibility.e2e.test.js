@@ -425,7 +425,7 @@ describe('Traits Generator Accessibility E2E', () => {
         { id: 'generate-btn', expectedLabel: 'Generate character traits' },
         { id: 'export-btn', expectedLabel: 'Export traits to text file' },
         { id: 'clear-btn', expectedLabel: 'Clear all inputs' },
-        { id: 'back-btn', expectedLabel: 'Back to Character Builder' }
+        { id: 'back-btn', expectedLabel: 'Back to Main Menu' }
       ];
 
       buttons.forEach(({ id, expectedLabel }) => {

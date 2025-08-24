@@ -19,14 +19,14 @@ import EndTurnHandler from '../../logic/operationHandlers/endTurnHandler.js';
 import SystemMoveEntityHandler from '../../logic/operationHandlers/systemMoveEntityHandler.js';
 import GetTimestampHandler from '../../logic/operationHandlers/getTimestampHandler.js';
 import GetNameHandler from '../../logic/operationHandlers/getNameHandler.js';
-import RebuildLeaderListCacheHandler from '../../logic/operationHandlers/rebuildLeaderListCacheHandler';
-import CheckFollowCycleHandler from '../../logic/operationHandlers/checkFollowCycleHandler';
+import RebuildLeaderListCacheHandler from '../../logic/operationHandlers/rebuildLeaderListCacheHandler.js';
+import CheckFollowCycleHandler from '../../logic/operationHandlers/checkFollowCycleHandler.js';
 import EstablishFollowRelationHandler from '../../logic/operationHandlers/establishFollowRelationHandler.js';
 import BreakFollowRelationHandler from '../../logic/operationHandlers/breakFollowRelationHandler.js';
-import AddPerceptionLogEntryHandler from '../../logic/operationHandlers/addPerceptionLogEntryHandler';
+import AddPerceptionLogEntryHandler from '../../logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import QueryEntitiesHandler from '../../logic/operationHandlers/queryEntitiesHandler.js';
-import HasComponentHandler from '../../logic/operationHandlers/hasComponentHandler';
-import ModifyArrayFieldHandler from '../../logic/operationHandlers/modifyArrayFieldHandler';
+import HasComponentHandler from '../../logic/operationHandlers/hasComponentHandler.js';
+import ModifyArrayFieldHandler from '../../logic/operationHandlers/modifyArrayFieldHandler.js';
 import MathHandler from '../../logic/operationHandlers/mathHandler.js';
 import IfCoLocatedHandler from '../../logic/operationHandlers/ifCoLocatedHandler.js';
 import ModifyContextArrayHandler from '../../logic/operationHandlers/modifyContextArrayHandler.js';
@@ -35,6 +35,8 @@ import MergeClosenessCircleHandler from '../../logic/operationHandlers/mergeClos
 import RemoveFromClosenessCircleHandler from '../../logic/operationHandlers/removeFromClosenessCircleHandler.js';
 import HasBodyPartWithComponentValueHandler from '../../logic/operationHandlers/hasBodyPartWithComponentValueHandler.js';
 import UnequipClothingHandler from '../../logic/operationHandlers/unequipClothingHandler.js';
+import LockMovementHandler from '../../logic/operationHandlers/lockMovementHandler.js';
+import UnlockMovementHandler from '../../logic/operationHandlers/unlockMovementHandler.js';
 import jsonLogic from 'json-logic-js';
 
 /**
@@ -349,6 +351,26 @@ export function registerOperationHandlers(registrar) {
           logger: c.resolve(tokens.ILogger),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
           equipmentOrchestrator: c.resolve(tokens.EquipmentOrchestrator),
+        }),
+    ],
+    [
+      tokens.LockMovementHandler,
+      LockMovementHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.UnlockMovementHandler,
+      UnlockMovementHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
   ];

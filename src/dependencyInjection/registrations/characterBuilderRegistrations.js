@@ -17,7 +17,9 @@ import { CharacterStorageService } from '../../characterBuilder/services/charact
 import { ThematicDirectionGenerator } from '../../characterBuilder/services/thematicDirectionGenerator.js';
 import { ClicheGenerator } from '../../characterBuilder/services/ClicheGenerator.js';
 import { CoreMotivationsGenerator } from '../../characterBuilder/services/CoreMotivationsGenerator.js';
+import { CoreMotivationsDisplayEnhancer } from '../../coreMotivationsGenerator/services/CoreMotivationsDisplayEnhancer.js';
 import { TraitsGenerator } from '../../characterBuilder/services/TraitsGenerator.js';
+import { TraitsDisplayEnhancer } from '../../characterBuilder/services/TraitsDisplayEnhancer.js';
 import { CharacterBuilderService } from '../../characterBuilder/services/characterBuilderService.js';
 
 /**
@@ -95,6 +97,15 @@ function registerCharacterBuilderServices(registrar, logger) {
     `Character Builder Registration: Registered ${tokens.CoreMotivationsGenerator}.`
   );
 
+  registrar.singletonFactory(tokens.CoreMotivationsDisplayEnhancer, (c) => {
+    return new CoreMotivationsDisplayEnhancer({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.CoreMotivationsDisplayEnhancer}.`
+  );
+
   registrar.singletonFactory(tokens.TraitsGenerator, (c) => {
     return new TraitsGenerator({
       logger: c.resolve(tokens.ILogger),
@@ -107,6 +118,15 @@ function registerCharacterBuilderServices(registrar, logger) {
   });
   logger.debug(
     `Character Builder Registration: Registered ${tokens.TraitsGenerator}.`
+  );
+
+  registrar.singletonFactory(tokens.TraitsDisplayEnhancer, (c) => {
+    return new TraitsDisplayEnhancer({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.TraitsDisplayEnhancer}.`
   );
 
   registrar.singletonFactory(tokens.CharacterBuilderService, (c) => {
