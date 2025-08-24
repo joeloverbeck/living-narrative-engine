@@ -89,7 +89,9 @@ describe('TraitsGenerator - Null Cliches Reproduction', () => {
 
     mockLlmConfigManager = {
       loadConfiguration: jest.fn(),
-      getActiveConfiguration: jest.fn().mockResolvedValue({ configId: 'test-config' }),
+      getActiveConfiguration: jest
+        .fn()
+        .mockResolvedValue({ configId: 'test-config' }),
       setActiveConfiguration: jest.fn(),
     };
 
@@ -132,7 +134,8 @@ describe('TraitsGenerator - Null Cliches Reproduction', () => {
         },
         userInputs: {
           coreMotivation: 'To find redemption through helping others',
-          internalContradiction: 'Wants to help but fears discovery of dark past',
+          internalContradiction:
+            'Wants to help but fears discovery of dark past',
           centralQuestion: 'Can someone truly change their nature?',
           additionalNotes: 'Test notes',
         },
@@ -166,7 +169,8 @@ describe('TraitsGenerator - Null Cliches Reproduction', () => {
         },
         userInputs: {
           coreMotivation: 'To find redemption through helping others',
-          internalContradiction: 'Wants to help but fears discovery of dark past',
+          internalContradiction:
+            'Wants to help but fears discovery of dark past',
           centralQuestion: 'Can someone truly change their nature?',
           additionalNotes: 'Test notes',
         },
@@ -186,25 +190,42 @@ describe('TraitsGenerator - Null Cliches Reproduction', () => {
     it('should NOT throw error when cliches is empty array', async () => {
       // Arrange: Create parameters with empty array cliches (should work)
       const mockParsedResponse = {
-        names: [{ name: 'Test Name', justification: 'This is a test justification that meets the minimum length requirement.' }],
-        physicalDescription: 'This is a test physical description that meets the minimum length requirement of 100 characters for validation purposes.',
-        personality: [{ trait: 'friendly', explanation: 'This person is naturally friendly and welcoming to others' }],
+        names: [
+          {
+            name: 'Test Name',
+            justification:
+              'This is a test justification that meets the minimum length requirement.',
+          },
+        ],
+        physicalDescription:
+          'This is a test physical description that meets the minimum length requirement of 100 characters for validation purposes.',
+        personality: [
+          {
+            trait: 'friendly',
+            explanation:
+              'This person is naturally friendly and welcoming to others',
+          },
+        ],
         strengths: ['brave'],
         weaknesses: ['stubborn'],
         likes: ['reading'],
         dislikes: ['noise'],
         fears: ['heights'],
-        goals: { primary: 'test goal', longTerm: 'What will they achieve in life?' },
+        goals: {
+          primary: 'test goal',
+          longTerm: 'What will they achieve in life?',
+        },
         notes: ['test note'],
-        profile: 'This is a comprehensive test profile that meets the minimum 200 character requirement for validation. It provides detailed information about the character including their background, personality traits, and motivations.',
+        profile:
+          'This is a comprehensive test profile that meets the minimum 200 character requirement for validation. It provides detailed information about the character including their background, personality traits, and motivations.',
         secrets: ['test secret'],
       };
-      
+
       const mockResponse = JSON.stringify(mockParsedResponse);
-      
+
       // Mock the correct LLM strategy factory method
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockResponse);
-      
+
       // Mock the JSON service to return parsed response
       mockLlmJsonService.clean.mockReturnValue(mockResponse);
       mockLlmJsonService.parseAndRepair.mockResolvedValue(mockParsedResponse);
@@ -224,7 +245,8 @@ describe('TraitsGenerator - Null Cliches Reproduction', () => {
         },
         userInputs: {
           coreMotivation: 'To find redemption through helping others',
-          internalContradiction: 'Wants to help but fears discovery of dark past',
+          internalContradiction:
+            'Wants to help but fears discovery of dark past',
           centralQuestion: 'Can someone truly change their nature?',
           additionalNotes: 'Test notes',
         },
@@ -236,7 +258,13 @@ describe('TraitsGenerator - Null Cliches Reproduction', () => {
 
       // Assert: Should have successfully generated traits
       expect(result).toBeDefined();
-      expect(result.names).toEqual([{ name: 'Test Name', justification: 'This is a test justification that meets the minimum length requirement.' }]);
+      expect(result.names).toEqual([
+        {
+          name: 'Test Name',
+          justification:
+            'This is a test justification that meets the minimum length requirement.',
+        },
+      ]);
       expect(result.metadata).toBeDefined();
     });
   });

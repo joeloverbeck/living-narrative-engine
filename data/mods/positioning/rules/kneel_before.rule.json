@@ -32,6 +32,13 @@
       }
     },
     {
+      "type": "LOCK_MOVEMENT",
+      "comment": "Lock movement while kneeling (handles both legacy and anatomy entities)",
+      "parameters": {
+        "actor_id": "{event.payload.actorId}"
+      }
+    },
+    {
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",

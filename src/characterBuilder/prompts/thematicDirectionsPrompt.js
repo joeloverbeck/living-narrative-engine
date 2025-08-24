@@ -48,7 +48,6 @@ export const THEMATIC_DIRECTIONS_RESPONSE_SCHEMA = {
           narrativePotential: {
             type: 'string',
             minLength: 30,
-            maxLength: 300,
           },
         },
         required: [
@@ -221,15 +220,25 @@ export function validateThematicDirectionsResponse(response) {
       description: { min: 50, max: 500 },
       coreTension: { min: 20, max: 200 },
       uniqueTwist: { min: 20, max: 1000 },
-      narrativePotential: { min: 30, max: 300 },
+      narrativePotential: { min: 30 },
     };
 
     for (const [field, constraints] of Object.entries(fieldLengths)) {
       const value = direction[field].trim();
-      if (value.length < constraints.min || value.length > constraints.max) {
-        throw new Error(
-          `ThematicDirectionsPrompt: Direction at index ${i} field '${field}' must be between ${constraints.min} and ${constraints.max} characters`
-        );
+      if (constraints.max) {
+        // Fields with both min and max constraints
+        if (value.length < constraints.min || value.length > constraints.max) {
+          throw new Error(
+            `ThematicDirectionsPrompt: Direction at index ${i} field '${field}' must be between ${constraints.min} and ${constraints.max} characters`
+          );
+        }
+      } else {
+        // Fields with only min constraint (like narrativePotential)
+        if (value.length < constraints.min) {
+          throw new Error(
+            `ThematicDirectionsPrompt: Direction at index ${i} field '${field}' must be at least ${constraints.min} characters`
+          );
+        }
       }
     }
   }

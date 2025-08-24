@@ -208,9 +208,9 @@ describe('JsonTraceFormatter Performance', () => {
             stages: { formatting: { timestamp: Date.now() } },
           });
         }
-        formatter.format({ 
-          getTracedActions: () => warmupTrace, 
-          getSpans: () => [] 
+        formatter.format({
+          getTracedActions: () => warmupTrace,
+          getSpans: () => [],
         });
       }
 
@@ -244,12 +244,14 @@ describe('JsonTraceFormatter Performance', () => {
           const duration = performance.now() - startTime;
           durations.push(duration);
         }
-        
+
         durations.sort((a, b) => a - b);
         const medianDuration = durations[1]; // Middle value
-        
+
         measurements.push({ size, duration: medianDuration });
-        console.log(`Trace size ${size}: ${medianDuration.toFixed(2)}ms (median of 3 runs)`);
+        console.log(
+          `Trace size ${size}: ${medianDuration.toFixed(2)}ms (median of 3 runs)`
+        );
       }
 
       // Check that performance scales reasonably (not exponentially)

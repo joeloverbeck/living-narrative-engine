@@ -70,7 +70,7 @@ describe('TraitsGeneratorController - Concept Access', () => {
     directionId: 'dir-123',
     conceptId: 'concept-456',
     categories: {
-      names: ['Generic fantasy names']
+      names: ['Generic fantasy names'],
     },
     tropesAndStereotypes: [],
     createdAt: '2023-01-01T00:00:00.000Z',
@@ -79,12 +79,11 @@ describe('TraitsGeneratorController - Concept Access', () => {
       temperature: 0.8,
       tokens: 100,
       responseTime: 1000,
-      promptVersion: '1.0'
-    }
+      promptVersion: '1.0',
+    },
   };
 
   beforeEach(() => {
-
     // Create mock services
     mockCharacterBuilderService = {
       // Required methods for BaseCharacterBuilderController
@@ -265,7 +264,7 @@ describe('TraitsGeneratorController - Concept Access', () => {
               id: 'cliche-1',
               category: 'names',
               content: 'Generic fantasy names',
-            }
+            },
           ],
         })
       );

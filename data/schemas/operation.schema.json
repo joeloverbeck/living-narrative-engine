@@ -130,6 +130,9 @@
         },
         {
           "$ref": "./operations/unequipClothing.schema.json"
+        },
+        {
+          "$ref": "./operations/lockMovement.schema.json"
         }
       ]
     }

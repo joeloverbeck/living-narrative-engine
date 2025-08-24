@@ -52,7 +52,7 @@
   flex-direction: column;
   background: var(--bg-primary);
   color: var(--text-primary);
-  overflow: hidden; /* Prevent content from escaping bounds */
+  overflow-y: auto; /* Allow vertical scrolling when content exceeds viewport */
   box-sizing: border-box;
 }
 

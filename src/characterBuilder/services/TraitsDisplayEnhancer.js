@@ -64,7 +64,7 @@ export class TraitsDisplayEnhancer {
       // Core properties
       id: traitsData.id,
       generatedAt: traitsData.generatedAt,
-      
+
       // Pass through all trait properties directly for backward compatibility
       names: traitsData.names || [],
       physicalDescription: traitsData.physicalDescription || '',
@@ -78,7 +78,7 @@ export class TraitsDisplayEnhancer {
       notes: traitsData.notes || [],
       profile: traitsData.profile || '',
       secrets: traitsData.secrets || [],
-      
+
       // Add organized display structure for UI components that need it
       categories: this.#organizeCategories(traitsData, expandStructuredData),
       summary: this.#generateSummary(traitsData),

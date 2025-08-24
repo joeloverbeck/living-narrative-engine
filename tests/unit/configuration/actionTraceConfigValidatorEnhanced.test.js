@@ -135,7 +135,6 @@ describe('ActionTraceConfigValidator Enhancements', () => {
         )
       );
     });
-
   });
 
   describe('Configuration Recommendations', () => {

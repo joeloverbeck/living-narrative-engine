@@ -87,7 +87,7 @@ describe('ThematicDirectionsPrompt', () => {
         expect(properties.uniqueTwist.minLength).toBe(20);
         expect(properties.uniqueTwist.maxLength).toBe(1000);
         expect(properties.narrativePotential.minLength).toBe(30);
-        expect(properties.narrativePotential.maxLength).toBe(300);
+        expect(properties.narrativePotential.maxLength).toBeUndefined();
       });
     });
 
@@ -452,7 +452,7 @@ describe('ThematicDirectionsPrompt', () => {
         description: { min: 50, max: 500 },
         coreTension: { min: 20, max: 200 },
         uniqueTwist: { min: 20, max: 1000 },
-        narrativePotential: { min: 30, max: 300 },
+        narrativePotential: { min: 30 }, // No max constraint
       };
 
       Object.entries(fieldConstraints).forEach(([field, { min, max }]) => {
@@ -466,29 +466,49 @@ describe('ThematicDirectionsPrompt', () => {
               validResponse.thematicDirections[2],
             ],
           };
+
+          const expectedError = max
+            ? `ThematicDirectionsPrompt: Direction at index 0 field '${field}' must be between ${min} and ${max} characters`
+            : `ThematicDirectionsPrompt: Direction at index 0 field '${field}' must be at least ${min} characters`;
+
           expect(() =>
             validateThematicDirectionsResponse(invalidResponse)
-          ).toThrow(
-            `ThematicDirectionsPrompt: Direction at index 0 field '${field}' must be between ${min} and ${max} characters`
-          );
+          ).toThrow(expectedError);
         });
 
-        it(`should throw error for ${field} field too long`, () => {
-          const invalidDirection = { ...validResponse.thematicDirections[0] };
-          invalidDirection[field] = 'x'.repeat(max + 1);
-          const invalidResponse = {
-            thematicDirections: [
-              invalidDirection,
-              validResponse.thematicDirections[1],
-              validResponse.thematicDirections[2],
-            ],
-          };
-          expect(() =>
-            validateThematicDirectionsResponse(invalidResponse)
-          ).toThrow(
-            `ThematicDirectionsPrompt: Direction at index 0 field '${field}' must be between ${min} and ${max} characters`
-          );
-        });
+        if (max) {
+          it(`should throw error for ${field} field too long`, () => {
+            const invalidDirection = { ...validResponse.thematicDirections[0] };
+            invalidDirection[field] = 'x'.repeat(max + 1);
+            const invalidResponse = {
+              thematicDirections: [
+                invalidDirection,
+                validResponse.thematicDirections[1],
+                validResponse.thematicDirections[2],
+              ],
+            };
+            expect(() =>
+              validateThematicDirectionsResponse(invalidResponse)
+            ).toThrow(
+              `ThematicDirectionsPrompt: Direction at index 0 field '${field}' must be between ${min} and ${max} characters`
+            );
+          });
+        } else {
+          it(`should accept ${field} field at very long length`, () => {
+            const validDirection = { ...validResponse.thematicDirections[0] };
+            validDirection[field] = 'x'.repeat(1000); // Test with a very long string
+            const testResponse = {
+              thematicDirections: [
+                validDirection,
+                validResponse.thematicDirections[1],
+                validResponse.thematicDirections[2],
+              ],
+            };
+            expect(() =>
+              validateThematicDirectionsResponse(testResponse)
+            ).not.toThrow();
+          });
+        }
 
         it(`should accept ${field} field at minimum length`, () => {
           const validDirection = { ...validResponse.thematicDirections[0] };
@@ -503,18 +523,20 @@ describe('ThematicDirectionsPrompt', () => {
           expect(validateThematicDirectionsResponse(testResponse)).toBe(true);
         });
 
-        it(`should accept ${field} field at maximum length`, () => {
-          const validDirection = { ...validResponse.thematicDirections[0] };
-          validDirection[field] = 'x'.repeat(max);
-          const testResponse = {
-            thematicDirections: [
-              validDirection,
-              validResponse.thematicDirections[1],
-              validResponse.thematicDirections[2],
-            ],
-          };
-          expect(validateThematicDirectionsResponse(testResponse)).toBe(true);
-        });
+        if (max) {
+          it(`should accept ${field} field at maximum length`, () => {
+            const validDirection = { ...validResponse.thematicDirections[0] };
+            validDirection[field] = 'x'.repeat(max);
+            const testResponse = {
+              thematicDirections: [
+                validDirection,
+                validResponse.thematicDirections[1],
+                validResponse.thematicDirections[2],
+              ],
+            };
+            expect(validateThematicDirectionsResponse(testResponse)).toBe(true);
+          });
+        }
       });
     });
 
