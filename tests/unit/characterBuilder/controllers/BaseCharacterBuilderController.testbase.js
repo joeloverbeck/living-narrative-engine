@@ -150,6 +150,10 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
    */
   createMockSchemaValidator() {
     return {
+      validate: jest.fn().mockReturnValue({
+        isValid: true,
+        errors: [],
+      }),
       validateAgainstSchema: jest.fn().mockReturnValue({
         isValid: true,
         errors: [],

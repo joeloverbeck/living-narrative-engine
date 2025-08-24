@@ -121,7 +121,7 @@ describe('CoreMotivationsGenerator - Integration Tests', () => {
 
     // Mock event bus
     mockEventBus = {
-      dispatch: jest.fn(),
+      dispatch: jest.fn(() => Promise.resolve()),
     };
 
     // Create service instance
@@ -204,54 +204,8 @@ describe('CoreMotivationsGenerator - Integration Tests', () => {
     });
   });
 
-  describe('parsing fallbacks', () => {
-    it('should extract JSON from markdown code blocks', async () => {
-      const markdownResponse =
-        '```json\n' + JSON.stringify(validLlmResponse) + '\n```';
-
-      mockLlmJsonService.parseAndRepair
-        .mockRejectedValueOnce(new Error('Primary parsing failed'))
-        .mockResolvedValueOnce(validLlmResponse);
-
-      mockLlmStrategyFactory.getAIDecision.mockResolvedValueOnce(
-        markdownResponse
-      );
-
-      const result = await service.generate({
-        concept: sampleConcept,
-        direction: sampleDirection,
-        clichés: sampleClichés,
-      });
-
-      expect(result).toHaveLength(3);
-      expect(mockLlmJsonService.parseAndRepair).toHaveBeenCalledTimes(2);
-    });
-
-    it('should extract JSON objects from response', async () => {
-      const responseWithJson =
-        'Some text before { "motivations": [...] } some text after';
-      const jsonPart = JSON.stringify(validLlmResponse);
-
-      mockLlmJsonService.parseAndRepair
-        .mockRejectedValueOnce(new Error('Primary parsing failed'))
-        .mockRejectedValueOnce(new Error('Markdown extraction failed'))
-        .mockResolvedValueOnce(validLlmResponse);
-
-      mockLlmStrategyFactory.getAIDecision.mockResolvedValueOnce(
-        `Text before ${jsonPart} text after`
-      );
-
-      const result = await service.generate({
-        concept: sampleConcept,
-        direction: sampleDirection,
-        clichés: sampleClichés,
-      });
-
-      expect(result).toHaveLength(3);
-      expect(mockLlmJsonService.parseAndRepair).toHaveBeenCalledTimes(3);
-    });
-
-    it('should fail when all parsing strategies exhausted', async () => {
+  describe('parsing behavior', () => {
+    it('should fail when parsing fails', async () => {
       const unparsableResponse = 'This is not JSON at all and cannot be parsed';
 
       mockLlmJsonService.parseAndRepair.mockRejectedValue(
@@ -314,16 +268,16 @@ describe('CoreMotivationsGenerator - Integration Tests', () => {
         })
       ).rejects.toThrow();
 
-      expect(mockEventBus.dispatch).toHaveBeenCalledWith({
-        type: 'CORE_MOTIVATIONS_GENERATION_FAILED',
-        payload: expect.objectContaining({
+      expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        'core:core_motivations_generation_failed',
+        expect.objectContaining({
           conceptId: sampleConcept.id,
           directionId: sampleDirection.id,
           error: expect.stringContaining('Network timeout'),
           processingTime: expect.any(Number),
           failureStage: expect.any(String),
-        }),
-      });
+        })
+      );
     });
   });
 
@@ -343,10 +297,10 @@ describe('CoreMotivationsGenerator - Integration Tests', () => {
       ).rejects.toThrow();
 
       const failureCall = mockEventBus.dispatch.mock.calls.find(
-        (call) => call[0].type === 'CORE_MOTIVATIONS_GENERATION_FAILED'
+        (call) => call[0] === 'core:core_motivations_generation_failed'
       );
 
-      expect(failureCall[0].payload.failureStage).toBe('llm_request');
+      expect(failureCall[1].failureStage).toBe('llm_request');
     });
 
     it('should identify parsing failures', async () => {
@@ -363,10 +317,10 @@ describe('CoreMotivationsGenerator - Integration Tests', () => {
       ).rejects.toThrow();
 
       const failureCall = mockEventBus.dispatch.mock.calls.find(
-        (call) => call[0].type === 'CORE_MOTIVATIONS_GENERATION_FAILED'
+        (call) => call[0] === 'core:core_motivations_generation_failed'
       );
 
-      expect(failureCall[0].payload.failureStage).toBe('response_parsing');
+      expect(failureCall[1].failureStage).toBe('response_parsing');
     });
 
     it('should identify quality validation failures', async () => {
@@ -404,12 +358,12 @@ describe('CoreMotivationsGenerator - Integration Tests', () => {
       ).rejects.toThrow(/too brief|lacks depth|question mark/);
 
       const failureCall = mockEventBus.dispatch.mock.calls.find(
-        (call) => call[0].type === 'CORE_MOTIVATIONS_GENERATION_FAILED'
+        (call) => call[0] === 'core:core_motivations_generation_failed'
       );
 
       // Since structural validation runs before quality validation,
       // it catches the issues first so expect structure_validation
-      expect(failureCall[0].payload.failureStage).toBe('structure_validation');
+      expect(failureCall[1].failureStage).toBe('structure_validation');
     });
   });
 

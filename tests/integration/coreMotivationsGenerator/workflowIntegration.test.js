@@ -101,8 +101,7 @@ describe('Core Motivations Workflow Integration', () => {
 
     global.document = {
       getElementById: jest.fn((id) => {
-        // Map kebab-case to camelCase for mockDOM lookup
-        const key = id.replace(/-/g, '-');
+        // Return the DOM element directly using the id
         return mockDOM[id] || null;
       }),
       createElement: jest.fn((tag) => createMockDOMElement(tag)),

@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:cliche_item_deleted",
+  "description": "Fired when an individual item is removed from a cliché category",
+  "payloadSchema": {
+    "type": "object",
+    "required": [
+      "conceptId",
+      "directionId",
+      "categoryId",
+      "itemText",
+      "remainingCount"
+    ],
+    "properties": {
+      "conceptId": {
+        "type": "string",
+        "description": "The ID of the character concept associated with the cliché"
+      },
+      "directionId": {
+        "type": "string",
+        "description": "The ID of the thematic direction"
+      },
+      "categoryId": {
+        "type": "string",
+        "description": "The category from which the item was removed (e.g., 'names', 'personalityTraits')"
+      },
+      "itemText": {
+        "type": "string",
+        "description": "The text of the item that was removed"
+      },
+      "remainingCount": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "The total number of items remaining across all categories"
+      }
+    },
+    "additionalProperties": false
+  }
+}

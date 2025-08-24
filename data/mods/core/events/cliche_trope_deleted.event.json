@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:cliche_trope_deleted",
+  "description": "Fired when a trope or stereotype is removed from a cliché",
+  "payloadSchema": {
+    "type": "object",
+    "required": ["conceptId", "directionId", "tropeText", "remainingCount"],
+    "properties": {
+      "conceptId": {
+        "type": "string",
+        "description": "The ID of the character concept associated with the cliché"
+      },
+      "directionId": {
+        "type": "string",
+        "description": "The ID of the thematic direction"
+      },
+      "tropeText": {
+        "type": "string",
+        "description": "The text of the trope that was removed"
+      },
+      "remainingCount": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "The total number of items remaining across all categories and tropes"
+      }
+    },
+    "additionalProperties": false
+  }
+}

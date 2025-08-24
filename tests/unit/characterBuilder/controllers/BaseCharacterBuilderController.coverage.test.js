@@ -212,6 +212,7 @@ describe('BaseCharacterBuilderController - Coverage Tests', () => {
 
     mockSchemaValidator = {
       validateAgainstSchema: jest.fn(),
+      validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
     };
   });
 

@@ -153,6 +153,7 @@ persona"
    ```
 
 2. **JavaScript Event Handlers** (in existing script section):
+
    ```javascript
    <script>
        // Existing event handlers...

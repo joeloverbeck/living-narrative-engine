@@ -36,7 +36,7 @@
     "uniqueTwist": {
       "type": "string",
       "minLength": 10,
-      "maxLength": 500,
+      "maxLength": 1000,
       "description": "Suggested unique twist or deeper archetype"
     },
     "narrativePotential": {

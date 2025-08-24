@@ -266,7 +266,7 @@ export class BaseCharacterBuilderController {
     // Validate SchemaValidator
     try {
       validateDependency(schemaValidator, 'ISchemaValidator', logger, {
-        requiredMethods: ['validateAgainstSchema'],
+        requiredMethods: ['validate'],
       });
     } catch (error) {
       throw new InvalidDependencyError(

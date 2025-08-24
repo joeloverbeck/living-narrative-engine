@@ -52,6 +52,7 @@ describe('CharacterStorageService', () => {
 
     mockSchemaValidator = {
       validateAgainstSchema: jest.fn().mockReturnValue(true),
+      validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
       formatAjvErrors: jest.fn().mockReturnValue(''),
     };
 
@@ -99,7 +100,10 @@ describe('CharacterStorageService', () => {
     });
 
     it('should throw error when schemaValidator is missing required methods', () => {
-      const invalidValidator = { validateAgainstSchema: jest.fn() }; // Missing formatAjvErrors
+      const invalidValidator = {
+        validateAgainstSchema: jest.fn(),
+        validate: jest.fn(),
+      }; // Missing formatAjvErrors
 
       expect(() => {
         new CharacterStorageService({
@@ -172,12 +176,12 @@ describe('CharacterStorageService', () => {
       const result = await service.storeCharacterConcept(mockConcept);
 
       expect(result).toEqual(mockConcept);
-      expect(mockSchemaValidator.validateAgainstSchema).toHaveBeenCalledWith(
+      expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
+        'schema://living-narrative-engine/character-concept.schema.json',
         expect.objectContaining({
           id: mockConcept.id,
           concept: mockConcept.concept,
-        }),
-        'schema://living-narrative-engine/character-concept.schema.json'
+        })
       );
       expect(mockDatabase.saveCharacterConcept).toHaveBeenCalledWith(
         mockConcept
@@ -213,7 +217,10 @@ describe('CharacterStorageService', () => {
     });
 
     it('should throw error if concept validation fails', async () => {
-      mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: false,
+        errors: [{ message: 'Invalid concept format' }],
+      });
       mockSchemaValidator.formatAjvErrors.mockReturnValue(
         'Invalid concept format'
       );
@@ -227,7 +234,10 @@ describe('CharacterStorageService', () => {
     });
 
     it('should handle validation error without specific details', async () => {
-      mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: false,
+        errors: [],
+      });
       mockSchemaValidator.formatAjvErrors.mockReturnValue('');
 
       await expect(service.storeCharacterConcept(mockConcept)).rejects.toThrow(
@@ -251,7 +261,10 @@ describe('CharacterStorageService', () => {
     });
 
     it('should not retry validation errors', async () => {
-      mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: false,
+        errors: [{ message: 'Validation failed' }],
+      });
       mockSchemaValidator.formatAjvErrors.mockReturnValue('Validation failed');
 
       await expect(service.storeCharacterConcept(mockConcept)).rejects.toThrow(
@@ -305,9 +318,7 @@ describe('CharacterStorageService', () => {
       );
 
       expect(result).toEqual(mockDirections);
-      expect(mockSchemaValidator.validateAgainstSchema).toHaveBeenCalledTimes(
-        2
-      );
+      expect(mockSchemaValidator.validate).toHaveBeenCalledTimes(2);
       expect(mockDatabase.saveThematicDirections).toHaveBeenCalledWith(
         mockDirections
       );
@@ -340,9 +351,12 @@ describe('CharacterStorageService', () => {
     });
 
     it('should throw error if direction validation fails', async () => {
-      mockSchemaValidator.validateAgainstSchema
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(false);
+      mockSchemaValidator.validate
+        .mockReturnValueOnce({ isValid: true, errors: null })
+        .mockReturnValueOnce({
+          isValid: false,
+          errors: [{ message: 'Invalid direction format' }],
+        });
       mockSchemaValidator.formatAjvErrors.mockReturnValue(
         'Invalid direction format'
       );
@@ -698,9 +712,9 @@ describe('CharacterStorageService', () => {
         'dir1',
         updates
       );
-      expect(mockSchemaValidator.validateAgainstSchema).toHaveBeenCalledWith(
-        mockDirection,
-        'schema://living-narrative-engine/thematic-direction.schema.json'
+      expect(mockSchemaValidator.validate).toHaveBeenCalledWith(
+        'schema://living-narrative-engine/thematic-direction.schema.json',
+        mockDirection
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
         'CharacterStorageService: Successfully updated thematic direction',
@@ -727,7 +741,10 @@ describe('CharacterStorageService', () => {
     });
 
     it('should throw error if validation fails', async () => {
-      mockSchemaValidator.validateAgainstSchema.mockReturnValue(false);
+      mockSchemaValidator.validate.mockReturnValue({
+        isValid: false,
+        errors: [{ message: 'Invalid format' }],
+      });
       mockSchemaValidator.formatAjvErrors.mockReturnValue('Invalid format');
 
       await expect(service.updateThematicDirection('dir1', {})).rejects.toThrow(

@@ -55,7 +55,7 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
     };
 
     mockSchemaValidator = {
-      validateAgainstSchema: jest.fn().mockReturnValue(true),
+      validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
       formatAjvErrors: jest.fn(),
     };
 

@@ -55,7 +55,12 @@ describe('ThematicDirectionController - Debug', () => {
     };
 
     mockSchemaValidator = {
-      validateAgainstSchema: jest.fn().mockReturnValue(true),
+      validate: jest.fn().mockReturnValue({
+        isValid: true,
+        errors: [],
+      }),
+      loadSchema: jest.fn().mockResolvedValue(true),
+      hasSchema: jest.fn().mockReturnValue(true),
     };
 
     // Mock all DOM elements to return valid objects mapped by ID
