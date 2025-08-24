@@ -555,9 +555,12 @@ export class ActionTraceOutputService {
 
     // Fallback to console logging (original behavior)
     /* global process */
-    const isDevelopment = typeof process !== 'undefined' && process?.env?.NODE_ENV === 'development';
-    const isTest = typeof process !== 'undefined' && process?.env?.NODE_ENV === 'test';
-    
+    const isDevelopment =
+      typeof process !== 'undefined' &&
+      process?.env?.NODE_ENV === 'development';
+    const isTest =
+      typeof process !== 'undefined' && process?.env?.NODE_ENV === 'test';
+
     if (isDevelopment || isTest) {
       this.#logger.debug('ACTION_TRACE', {
         actionId: trace.actionId,
@@ -592,7 +595,7 @@ export class ActionTraceOutputService {
     if (outputFormats.includes('text') && this.#fileOutputHandler) {
       // Get formatted data first to extract actionId and actorId
       const formattedData = this.#formatTraceData(trace);
-      
+
       // Extract actionId and actorId from the formatted data
       let actionId, actorId;
       if (formattedData.actions) {
@@ -603,7 +606,7 @@ export class ActionTraceOutputService {
           actorId = formattedData.actions[firstActionKey].actorId;
         }
       }
-      
+
       // Create a modified trace object with text format indicator and proper IDs
       const textTrace = {
         ...trace,
@@ -1099,7 +1102,9 @@ export class ActionTraceOutputService {
     const result = {
       timestamp: new Date().toISOString(),
       traceType: 'pipeline',
-      spans: trace.getSpans ? trace.getSpans().map(span => this.#serializeSpan(span)) : [],
+      spans: trace.getSpans
+        ? trace.getSpans().map((span) => this.#serializeSpan(span))
+        : [],
       actions: {},
       operatorEvaluations: null, // Will be populated if present
     };
@@ -1172,7 +1177,7 @@ export class ActionTraceOutputService {
     const name = span.operation || span.name || null;
     const startTime = span.startTime !== undefined ? span.startTime : null;
     const endTime = span.endTime !== undefined ? span.endTime : null;
-    
+
     // Calculate duration safely
     let duration = null;
     if (span.duration !== undefined && span.duration !== null) {
@@ -1180,10 +1185,12 @@ export class ActionTraceOutputService {
     } else if (startTime !== null && endTime !== null) {
       duration = endTime - startTime;
     }
-    
+
     // Ensure duration is not negative
     if (duration !== null && duration < 0) {
-      this.#logger.warn(`Span "${name}" has negative duration: ${duration}ms, setting to 0`);
+      this.#logger.warn(
+        `Span "${name}" has negative duration: ${duration}ms, setting to 0`
+      );
       duration = 0;
     }
 

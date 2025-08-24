@@ -8,7 +8,12 @@ import { describe, it, expect, jest } from '@jest/globals';
 describe('CharacterBuilderService - Method Existence Tests', () => {
   it('should verify that getAllThematicDirections method exists', async () => {
     // Arrange: Create comprehensive mock dependencies matching production requirements
-    const mockLogger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
     const mockEventBus = { dispatch: jest.fn() };
     const mockStorageService = {
       // Required methods from validateDependency check
@@ -20,18 +25,20 @@ describe('CharacterBuilderService - Method Existence Tests', () => {
       storeThematicDirections: jest.fn(),
       getThematicDirections: jest.fn(),
       // Method actually used by getAllThematicDirections
-      getAllThematicDirections: jest.fn().mockResolvedValue([])
+      getAllThematicDirections: jest.fn().mockResolvedValue([]),
     };
     const mockDirectionGenerator = { generateDirections: jest.fn() };
 
     // Import and create CharacterBuilderService
-    const { CharacterBuilderService } = await import('../../../../src/characterBuilder/services/characterBuilderService.js');
-    
+    const { CharacterBuilderService } = await import(
+      '../../../../src/characterBuilder/services/characterBuilderService.js'
+    );
+
     const service = new CharacterBuilderService({
       logger: mockLogger,
       eventBus: mockEventBus,
       storageService: mockStorageService,
-      directionGenerator: mockDirectionGenerator
+      directionGenerator: mockDirectionGenerator,
     });
 
     // Act & Assert: The method should exist and be a function
@@ -41,7 +48,12 @@ describe('CharacterBuilderService - Method Existence Tests', () => {
 
   it('should verify that getAllThematicDirectionsWithConcepts method exists', async () => {
     // Arrange: Create comprehensive mock dependencies
-    const mockLogger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
     const mockEventBus = { dispatch: jest.fn() };
     const mockStorageService = {
       initialize: jest.fn().mockResolvedValue(true),
@@ -51,32 +63,41 @@ describe('CharacterBuilderService - Method Existence Tests', () => {
       deleteCharacterConcept: jest.fn(),
       storeThematicDirections: jest.fn(),
       getThematicDirections: jest.fn(),
-      getAllThematicDirections: jest.fn().mockResolvedValue([])
+      getAllThematicDirections: jest.fn().mockResolvedValue([]),
     };
     const mockDirectionGenerator = { generateDirections: jest.fn() };
 
     // Import and create CharacterBuilderService
-    const { CharacterBuilderService } = await import('../../../../src/characterBuilder/services/characterBuilderService.js');
-    
+    const { CharacterBuilderService } = await import(
+      '../../../../src/characterBuilder/services/characterBuilderService.js'
+    );
+
     const service = new CharacterBuilderService({
       logger: mockLogger,
       eventBus: mockEventBus,
       storageService: mockStorageService,
-      directionGenerator: mockDirectionGenerator
+      directionGenerator: mockDirectionGenerator,
     });
 
     // Act & Assert: The actual method should exist
     expect(service.getAllThematicDirectionsWithConcepts).toBeDefined();
-    expect(typeof service.getAllThematicDirectionsWithConcepts).toBe('function');
+    expect(typeof service.getAllThematicDirectionsWithConcepts).toBe(
+      'function'
+    );
   });
 
   it('should successfully call getAllThematicDirections and return data from storage', async () => {
     // Arrange: Create mock dependencies with test data
-    const mockLogger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
     const mockEventBus = { dispatch: jest.fn() };
     const testDirections = [
       { id: 'dir1', title: 'Direction 1' },
-      { id: 'dir2', title: 'Direction 2' }
+      { id: 'dir2', title: 'Direction 2' },
     ];
     const mockStorageService = {
       initialize: jest.fn().mockResolvedValue(true),
@@ -86,17 +107,19 @@ describe('CharacterBuilderService - Method Existence Tests', () => {
       deleteCharacterConcept: jest.fn(),
       storeThematicDirections: jest.fn(),
       getThematicDirections: jest.fn(),
-      getAllThematicDirections: jest.fn().mockResolvedValue(testDirections)
+      getAllThematicDirections: jest.fn().mockResolvedValue(testDirections),
     };
     const mockDirectionGenerator = { generateDirections: jest.fn() };
 
-    const { CharacterBuilderService } = await import('../../../../src/characterBuilder/services/characterBuilderService.js');
-    
+    const { CharacterBuilderService } = await import(
+      '../../../../src/characterBuilder/services/characterBuilderService.js'
+    );
+
     const service = new CharacterBuilderService({
       logger: mockLogger,
       eventBus: mockEventBus,
       storageService: mockStorageService,
-      directionGenerator: mockDirectionGenerator
+      directionGenerator: mockDirectionGenerator,
     });
 
     // Act: Call the method
@@ -104,7 +127,9 @@ describe('CharacterBuilderService - Method Existence Tests', () => {
 
     // Assert: Should return data from storage service
     expect(result).toEqual(testDirections);
-    expect(mockStorageService.getAllThematicDirections).toHaveBeenCalledTimes(1);
+    expect(mockStorageService.getAllThematicDirections).toHaveBeenCalledTimes(
+      1
+    );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'CharacterBuilderService: Retrieved 2 thematic directions'
     );

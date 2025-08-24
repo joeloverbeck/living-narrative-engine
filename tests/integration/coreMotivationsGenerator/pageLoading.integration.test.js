@@ -61,13 +61,13 @@ describe('Core Motivations Generator Page Loading', () => {
     if (result && result.controller && result.controller.cleanup) {
       await result.controller.cleanup();
     }
-    
+
     // Restore console.error
     console.error = originalConsoleError;
-    
+
     // Clear DOM
     document.body.innerHTML = '';
-    
+
     bootstrap = null;
     result = null;
   });
@@ -78,25 +78,24 @@ describe('Core Motivations Generator Page Loading', () => {
       pageName: 'core-motivations-generator',
       controllerClass: CoreMotivationsGeneratorController,
       includeModLoading: true,
-      customSchemas: [
-        '/data/schemas/core-motivation.schema.json'
-      ],
+      customSchemas: ['/data/schemas/core-motivation.schema.json'],
       services: {
         displayEnhancer: CoreMotivationsDisplayEnhancer,
         coreMotivationsGenerator: CoreMotivationsGenerator,
-      }
+      },
     });
 
     // Assert
     expect(result).toBeDefined();
     expect(result.controller).toBeDefined();
     expect(result.container).toBeDefined();
-    
+
     // Verify no dependency injection errors occurred
-    const diErrors = consoleErrors.filter(error => 
-      error.includes('Missing required dependency') ||
-      error.includes('not found in container') ||
-      error.includes('Failed to instantiate')
+    const diErrors = consoleErrors.filter(
+      (error) =>
+        error.includes('Missing required dependency') ||
+        error.includes('not found in container') ||
+        error.includes('Failed to instantiate')
     );
     expect(diErrors).toEqual([]);
   });
@@ -107,21 +106,19 @@ describe('Core Motivations Generator Page Loading', () => {
       pageName: 'core-motivations-generator',
       controllerClass: CoreMotivationsGeneratorController,
       includeModLoading: true,
-      customSchemas: [
-        '/data/schemas/core-motivation.schema.json'
-      ],
+      customSchemas: ['/data/schemas/core-motivation.schema.json'],
       services: {
         displayEnhancer: CoreMotivationsDisplayEnhancer,
         coreMotivationsGenerator: CoreMotivationsGenerator,
-      }
+      },
     });
 
     // Assert - Check that services were resolved from DI container
-    const warnings = consoleErrors.filter(error => 
-      error.includes('Service') && 
-      error.includes('not found in container')
+    const warnings = consoleErrors.filter(
+      (error) =>
+        error.includes('Service') && error.includes('not found in container')
     );
-    
+
     // There should be no warnings about services not being found
     expect(warnings).toEqual([]);
   });
@@ -132,17 +129,17 @@ describe('Core Motivations Generator Page Loading', () => {
       pageName: 'core-motivations-generator',
       controllerClass: CoreMotivationsGeneratorController,
       includeModLoading: true,
-      customSchemas: [
-        '/data/schemas/core-motivation.schema.json'
-      ],
+      customSchemas: ['/data/schemas/core-motivation.schema.json'],
       services: {
         displayEnhancer: CoreMotivationsDisplayEnhancer,
         coreMotivationsGenerator: CoreMotivationsGenerator,
-      }
+      },
     });
 
     // Assert
-    expect(result.controller).toBeInstanceOf(CoreMotivationsGeneratorController);
+    expect(result.controller).toBeInstanceOf(
+      CoreMotivationsGeneratorController
+    );
     expect(typeof result.controller.initialize).toBe('function');
   });
 
@@ -152,22 +149,20 @@ describe('Core Motivations Generator Page Loading', () => {
       pageName: 'core-motivations-generator',
       controllerClass: CoreMotivationsGeneratorController,
       includeModLoading: true,
-      customSchemas: [
-        '/data/schemas/core-motivation.schema.json'
-      ],
+      customSchemas: ['/data/schemas/core-motivation.schema.json'],
       services: {
         displayEnhancer: CoreMotivationsDisplayEnhancer,
         coreMotivationsGenerator: CoreMotivationsGenerator,
-      }
+      },
     });
 
     // Assert - Controller should be initialized
     expect(result.controller).toBeDefined();
-    
+
     // Check that initialization didn't throw any critical errors
-    const criticalErrors = consoleErrors.filter(error => 
-      error.includes('Failed to initialize') ||
-      error.includes('Fatal error')
+    const criticalErrors = consoleErrors.filter(
+      (error) =>
+        error.includes('Failed to initialize') || error.includes('Fatal error')
     );
     expect(criticalErrors).toEqual([]);
   });
@@ -178,13 +173,11 @@ describe('Core Motivations Generator Page Loading', () => {
       pageName: 'core-motivations-generator',
       controllerClass: CoreMotivationsGeneratorController,
       includeModLoading: true,
-      customSchemas: [
-        '/data/schemas/core-motivation.schema.json'
-      ],
+      customSchemas: ['/data/schemas/core-motivation.schema.json'],
       services: {
         displayEnhancer: CoreMotivationsDisplayEnhancer,
         coreMotivationsGenerator: CoreMotivationsGenerator,
-      }
+      },
     });
 
     // Assert
@@ -202,13 +195,11 @@ describe('Core Motivations Generator Page Loading', () => {
       pageName: 'core-motivations-generator',
       controllerClass: CoreMotivationsGeneratorController,
       includeModLoading: true,
-      customSchemas: [
-        '/data/schemas/core-motivation.schema.json'
-      ],
+      customSchemas: ['/data/schemas/core-motivation.schema.json'],
       services: {
         displayEnhancer: CoreMotivationsDisplayEnhancer,
         coreMotivationsGenerator: CoreMotivationsGenerator,
-      }
+      },
     });
 
     // Assert - Should still bootstrap without crashing
@@ -222,21 +213,19 @@ describe('Core Motivations Generator Page Loading', () => {
       pageName: 'core-motivations-generator',
       controllerClass: CoreMotivationsGeneratorController,
       includeModLoading: true,
-      customSchemas: [
-        '/data/schemas/core-motivation.schema.json'
-      ],
+      customSchemas: ['/data/schemas/core-motivation.schema.json'],
       services: {
         displayEnhancer: CoreMotivationsDisplayEnhancer,
         coreMotivationsGenerator: CoreMotivationsGenerator,
-      }
+      },
     });
 
     // Assert - Check that the correct services were resolved
     // This is verified by the absence of fallback instantiation messages
-    const fallbackMessages = consoleErrors.filter(error => 
+    const fallbackMessages = consoleErrors.filter((error) =>
       error.includes('Attempting to instantiate')
     );
-    
+
     // The services should be resolved from DI container, not instantiated as fallback
     expect(fallbackMessages).toEqual([]);
   });

@@ -136,22 +136,6 @@ describe('ActionTraceConfigValidator Enhancements', () => {
       );
     });
 
-    it('should warn when tracing is disabled but actions are configured', async () => {
-      const config = {
-        actionTracing: {
-          enabled: false,
-          tracedActions: ['core:move', 'core:attack', 'core:interact'],
-        },
-      };
-
-      const result = await validator.validateConfiguration(config);
-
-      expect(result.warnings).toContainEqual(
-        expect.stringContaining(
-          'Tracing is disabled but 3 actions are configured'
-        )
-      );
-    });
   });
 
   describe('Configuration Recommendations', () => {

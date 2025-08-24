@@ -21,7 +21,7 @@ describe('CoreMotivation Field Name Mismatch Bug', () => {
 
       // The model has coreDesire field
       expect(motivation.coreDesire).toBe('To find true meaning in life');
-      
+
       // And now it also has coreMotivation as a getter
       expect(motivation.coreMotivation).toBe('To find true meaning in life');
     });
@@ -46,17 +46,19 @@ describe('CoreMotivation Field Name Mismatch Bug', () => {
       ];
 
       // Simulate the FIXED rendering logic using coreDesire
-      const htmlOutput = motivations.map((motivation, index) => {
-        // FIXED: Now using motivation.coreDesire (or motivation.coreMotivation which is a getter)
-        const coreMotivationText = motivation.coreDesire; // This works!
-        
-        return `
+      const htmlOutput = motivations
+        .map((motivation, index) => {
+          // FIXED: Now using motivation.coreDesire (or motivation.coreMotivation which is a getter)
+          const coreMotivationText = motivation.coreDesire; // This works!
+
+          return `
           <div class="core-motivation-item" data-index="${index}">
             <h4 class="motivation-title">Core Motivation ${index + 1}</h4>
             <p class="motivation-text">${DomUtils.escapeHtml(coreMotivationText)}</p>
           </div>
         `;
-      }).join('');
+        })
+        .join('');
 
       // The HTML now contains the actual values
       expect(htmlOutput).not.toContain('undefined');
@@ -77,7 +79,7 @@ describe('CoreMotivation Field Name Mismatch Bug', () => {
       const correctHtml = `
         <p class="motivation-text">${DomUtils.escapeHtml(motivation.coreDesire)}</p>
       `;
-      
+
       expect(correctHtml).toContain('To achieve greatness');
       expect(correctHtml).not.toContain('undefined');
     });
@@ -95,10 +97,10 @@ describe('CoreMotivation Field Name Mismatch Bug', () => {
           centralQuestion: 'Question?',
         },
       });
-      
+
       // It should store it as coreDesire internally
       expect(motivation1.coreDesire).toBe('Motivation from UI');
-      
+
       // Test with coreDesire (internal field name)
       const motivation2 = CoreMotivation.fromLLMResponse({
         directionId: 'dir2',
@@ -109,9 +111,8 @@ describe('CoreMotivation Field Name Mismatch Bug', () => {
           centralQuestion: 'Another question?',
         },
       });
-      
+
       expect(motivation2.coreDesire).toBe('Desire from internal');
     });
   });
-
 });

@@ -55,17 +55,31 @@ export class TraitsDisplayEnhancer {
       throw error;
     }
 
-    const {
-      includeMetadata = true,
-      expandStructuredData = true,
-    } = options;
+    const { includeMetadata = true, expandStructuredData = true } = options;
 
     this.#logger.debug('Enhancing traits data for display');
 
-    // Organize traits into logical display sections
+    // Build enhanced data structure with backward-compatible flat properties
     const enhancedData = {
+      // Core properties
       id: traitsData.id,
       generatedAt: traitsData.generatedAt,
+      
+      // Pass through all trait properties directly for backward compatibility
+      names: traitsData.names || [],
+      physicalDescription: traitsData.physicalDescription || '',
+      personality: traitsData.personality || [],
+      strengths: traitsData.strengths || [],
+      weaknesses: traitsData.weaknesses || [],
+      likes: traitsData.likes || [],
+      dislikes: traitsData.dislikes || [],
+      fears: traitsData.fears || [],
+      goals: traitsData.goals || {},
+      notes: traitsData.notes || [],
+      profile: traitsData.profile || '',
+      secrets: traitsData.secrets || [],
+      
+      // Add organized display structure for UI components that need it
       categories: this.#organizeCategories(traitsData, expandStructuredData),
       summary: this.#generateSummary(traitsData),
     };
@@ -107,7 +121,9 @@ export class TraitsDisplayEnhancer {
     sections.push('');
 
     // Generation info
-    sections.push(`Generated: ${this.#formatTimestamp(traitsData.generatedAt || new Date().toISOString())}`);
+    sections.push(
+      `Generated: ${this.#formatTimestamp(traitsData.generatedAt || new Date().toISOString())}`
+    );
     if (metadata.concept) {
       sections.push(`Concept: ${metadata.concept}`);
     }
@@ -131,7 +147,9 @@ export class TraitsDisplayEnhancer {
     // Physical description
     sections.push('PHYSICAL DESCRIPTION');
     sections.push('-'.repeat(30));
-    sections.push(traitsData.physicalDescription || 'No physical description provided');
+    sections.push(
+      traitsData.physicalDescription || 'No physical description provided'
+    );
     sections.push('');
 
     // Personality
@@ -219,7 +237,9 @@ export class TraitsDisplayEnhancer {
         sections.push('• No short-term goals');
       }
       sections.push('');
-      sections.push(`Long-term: ${traitsData.goals.longTerm || 'No long-term goal'}`);
+      sections.push(
+        `Long-term: ${traitsData.goals.longTerm || 'No long-term goal'}`
+      );
     } else {
       sections.push('• No goals specified');
     }
@@ -263,10 +283,14 @@ export class TraitsDisplayEnhancer {
         sections.push(`Core Motivation: ${metadata.userInputs.coreMotivation}`);
       }
       if (metadata.userInputs.internalContradiction) {
-        sections.push(`Internal Contradiction: ${metadata.userInputs.internalContradiction}`);
+        sections.push(
+          `Internal Contradiction: ${metadata.userInputs.internalContradiction}`
+        );
       }
       if (metadata.userInputs.centralQuestion) {
-        sections.push(`Central Question: ${metadata.userInputs.centralQuestion}`);
+        sections.push(
+          `Central Question: ${metadata.userInputs.centralQuestion}`
+        );
       }
       sections.push('');
     }
@@ -338,7 +362,7 @@ export class TraitsDisplayEnhancer {
     }
 
     // Check for at least some content
-    const hasContent = 
+    const hasContent =
       (data.names && data.names.length > 0) ||
       data.physicalDescription ||
       (data.personality && data.personality.length > 0) ||
@@ -366,15 +390,15 @@ export class TraitsDisplayEnhancer {
         id: 'names',
         title: 'Character Names',
         type: 'structured',
-        items: expandStructured 
-          ? traitsData.names.map(n => ({
+        items: expandStructured
+          ? traitsData.names.map((n) => ({
               primary: n.name,
               secondary: n.justification,
-              type: 'name-justification'
+              type: 'name-justification',
             }))
           : traitsData.names,
         count: traitsData.names.length,
-        priority: 1
+        priority: 1,
       });
     }
 
@@ -385,7 +409,7 @@ export class TraitsDisplayEnhancer {
         title: 'Physical Description',
         type: 'text',
         content: traitsData.physicalDescription,
-        priority: 2
+        priority: 2,
       });
     }
 
@@ -396,14 +420,14 @@ export class TraitsDisplayEnhancer {
         title: 'Personality Traits',
         type: 'structured',
         items: expandStructured
-          ? traitsData.personality.map(p => ({
+          ? traitsData.personality.map((p) => ({
               primary: p.trait,
               secondary: p.explanation,
-              type: 'trait-explanation'
+              type: 'trait-explanation',
             }))
           : traitsData.personality,
         count: traitsData.personality.length,
-        priority: 3
+        priority: 3,
       });
     }
 
@@ -415,7 +439,7 @@ export class TraitsDisplayEnhancer {
         type: 'list',
         items: traitsData.strengths,
         count: traitsData.strengths.length,
-        priority: 4
+        priority: 4,
       });
     }
 
@@ -427,7 +451,7 @@ export class TraitsDisplayEnhancer {
         type: 'list',
         items: traitsData.weaknesses,
         count: traitsData.weaknesses.length,
-        priority: 5
+        priority: 5,
       });
     }
 
@@ -439,7 +463,7 @@ export class TraitsDisplayEnhancer {
         type: 'list',
         items: traitsData.likes,
         count: traitsData.likes.length,
-        priority: 6
+        priority: 6,
       });
     }
 
@@ -451,7 +475,7 @@ export class TraitsDisplayEnhancer {
         type: 'list',
         items: traitsData.dislikes,
         count: traitsData.dislikes.length,
-        priority: 7
+        priority: 7,
       });
     }
 
@@ -463,7 +487,7 @@ export class TraitsDisplayEnhancer {
         type: 'list',
         items: traitsData.fears,
         count: traitsData.fears.length,
-        priority: 8
+        priority: 8,
       });
     }
 
@@ -475,9 +499,9 @@ export class TraitsDisplayEnhancer {
         type: 'structured',
         content: {
           shortTerm: traitsData.goals.shortTerm || [],
-          longTerm: traitsData.goals.longTerm || ''
+          longTerm: traitsData.goals.longTerm || '',
         },
-        priority: 9
+        priority: 9,
       });
     }
 
@@ -489,7 +513,7 @@ export class TraitsDisplayEnhancer {
         type: 'list',
         items: traitsData.notes,
         count: traitsData.notes.length,
-        priority: 10
+        priority: 10,
       });
     }
 
@@ -500,7 +524,7 @@ export class TraitsDisplayEnhancer {
         title: 'Character Profile',
         type: 'text',
         content: traitsData.profile,
-        priority: 11
+        priority: 11,
       });
     }
 
@@ -512,7 +536,7 @@ export class TraitsDisplayEnhancer {
         type: 'list',
         items: traitsData.secrets,
         count: traitsData.secrets.length,
-        priority: 12
+        priority: 12,
       });
     }
 
@@ -536,7 +560,7 @@ export class TraitsDisplayEnhancer {
       personalityCount: 0,
       hasPhysicalDescription: false,
       hasProfile: false,
-      completeness: 0
+      completeness: 0,
     };
 
     // Count populated categories
@@ -567,7 +591,10 @@ export class TraitsDisplayEnhancer {
     if (traitsData.fears && traitsData.fears.length > 0) {
       summary.totalCategories++;
     }
-    if (traitsData.goals && (traitsData.goals.shortTerm?.length > 0 || traitsData.goals.longTerm)) {
+    if (
+      traitsData.goals &&
+      (traitsData.goals.shortTerm?.length > 0 || traitsData.goals.longTerm)
+    ) {
       summary.totalCategories++;
     }
     if (traitsData.notes && traitsData.notes.length > 0) {
@@ -630,7 +657,7 @@ export class TraitsDisplayEnhancer {
 
     try {
       const date = new Date(isoString);
-      
+
       if (isNaN(date.getTime())) {
         this.#logger.warn(`Invalid date string: ${isoString}`);
         return 'Invalid date';

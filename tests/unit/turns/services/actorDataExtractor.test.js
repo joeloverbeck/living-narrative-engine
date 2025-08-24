@@ -9,6 +9,8 @@ import {
   PROFILE_COMPONENT_ID,
   LIKES_COMPONENT_ID,
   DISLIKES_COMPONENT_ID,
+  STRENGTHS_COMPONENT_ID,
+  WEAKNESSES_COMPONENT_ID,
   SECRETS_COMPONENT_ID,
   SPEECH_PATTERNS_COMPONENT_ID,
   APPARENT_AGE_COMPONENT_ID,
@@ -148,6 +150,8 @@ describe('ActorDataExtractor', () => {
         [PROFILE_COMPONENT_ID]: { text: 'A mysterious individual.' },
         [LIKES_COMPONENT_ID]: { text: '  Apples, Pears  ' },
         [DISLIKES_COMPONENT_ID]: { text: 'Rain' },
+        [STRENGTHS_COMPONENT_ID]: { text: '  Leadership, Problem-solving  ' },
+        [WEAKNESSES_COMPONENT_ID]: { text: 'Impatience' },
         [SECRETS_COMPONENT_ID]: { text: 'Is secretly a cat.' },
       };
       const result = extractor.extractPromptData(actorState);
@@ -155,6 +159,8 @@ describe('ActorDataExtractor', () => {
       expect(result.profile).toBe('A mysterious individual.');
       expect(result.likes).toBe('Apples, Pears');
       expect(result.dislikes).toBe('Rain');
+      expect(result.strengths).toBe('Leadership, Problem-solving');
+      expect(result.weaknesses).toBe('Impatience');
       expect(result.secrets).toBe('Is secretly a cat.');
     });
 
@@ -163,6 +169,8 @@ describe('ActorDataExtractor', () => {
       { field: 'profile', componentId: PROFILE_COMPONENT_ID },
       { field: 'likes', componentId: LIKES_COMPONENT_ID },
       { field: 'dislikes', componentId: DISLIKES_COMPONENT_ID },
+      { field: 'strengths', componentId: STRENGTHS_COMPONENT_ID },
+      { field: 'weaknesses', componentId: WEAKNESSES_COMPONENT_ID },
       { field: 'secrets', componentId: SECRETS_COMPONENT_ID },
     ];
 

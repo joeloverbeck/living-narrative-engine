@@ -226,7 +226,7 @@ describe('ActionTraceConfigLoader', () => {
 
       const config = await loader.loadConfig();
 
-      // When validation fails after merging, production returns pure defaults  
+      // When validation fails after merging, production returns pure defaults
       expect(config).toEqual({
         enabled: false,
         tracedActions: [],

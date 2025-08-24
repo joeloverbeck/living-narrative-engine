@@ -668,13 +668,14 @@ export class CharacterBuilderService {
 
   /**
    * Get all thematic directions
-   * 
+   *
    * @returns {Promise<Array<ThematicDirection>>}
    * @throws {CharacterBuilderError} If retrieval fails
    */
   async getAllThematicDirections() {
     try {
-      const allDirections = await this.#storageService.getAllThematicDirections();
+      const allDirections =
+        await this.#storageService.getAllThematicDirections();
       this.#logger.debug(
         `CharacterBuilderService: Retrieved ${allDirections.length} thematic directions`
       );
@@ -2119,7 +2120,7 @@ export class CharacterBuilderService {
    *
    * @param {object} params - Generation parameters
    * @param {object} params.concept - Character concept object
-   * @param {object} params.direction - Thematic direction object  
+   * @param {object} params.direction - Thematic direction object
    * @param {object} params.userInputs - User-provided core motivation, contradiction, question
    * @param {Array} params.cliches - Array of cliche objects to avoid
    * @param {object} [options] - Generation options
@@ -2136,24 +2137,36 @@ export class CharacterBuilderService {
     }
 
     try {
-      this.#logger.info('CharacterBuilderService: Delegating traits generation', {
-        conceptId: params.concept?.id,
-        directionId: params.direction?.id,
-        clichesCount: params.cliches?.length || 0,
-      });
+      this.#logger.info(
+        'CharacterBuilderService: Delegating traits generation',
+        {
+          conceptId: params.concept?.id,
+          directionId: params.direction?.id,
+          clichesCount: params.cliches?.length || 0,
+        }
+      );
 
       // Delegate to the TraitsGenerator service
-      const result = await this.#traitsGenerator.generateTraits(params, options);
+      const result = await this.#traitsGenerator.generateTraits(
+        params,
+        options
+      );
 
-      this.#logger.info('CharacterBuilderService: Traits generation completed', {
-        conceptId: params.concept?.id,
-        success: true,
-      });
+      this.#logger.info(
+        'CharacterBuilderService: Traits generation completed',
+        {
+          conceptId: params.concept?.id,
+          success: true,
+        }
+      );
 
       return result;
     } catch (error) {
-      this.#logger.error('CharacterBuilderService: Traits generation failed', error);
-      
+      this.#logger.error(
+        'CharacterBuilderService: Traits generation failed',
+        error
+      );
+
       // Dispatch error event
       this.#eventBus.dispatch({
         type: CHARACTER_BUILDER_EVENTS.ERROR_OCCURRED,

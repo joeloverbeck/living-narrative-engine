@@ -3,13 +3,7 @@
  * @see ../../../../src/characterBuilder/services/TraitsDisplayEnhancer.js
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TraitsDisplayEnhancer } from '../../../../src/characterBuilder/services/TraitsDisplayEnhancer.js';
 
 describe('TraitsDisplayEnhancer', () => {
@@ -23,10 +17,14 @@ describe('TraitsDisplayEnhancer', () => {
       { name: 'Shadow Walker', justification: 'Reflects stealthy nature' },
       { name: 'Marcus Vale', justification: 'Noble sounding for trust' },
     ],
-    physicalDescription: 'Tall and lean with piercing blue eyes, weathered face showing years of hardship',
+    physicalDescription:
+      'Tall and lean with piercing blue eyes, weathered face showing years of hardship',
     personality: [
       { trait: 'Cautious', explanation: 'Years of danger have made them wary' },
-      { trait: 'Compassionate', explanation: 'Despite hardships, maintains empathy' },
+      {
+        trait: 'Compassionate',
+        explanation: 'Despite hardships, maintains empathy',
+      },
       { trait: 'Determined', explanation: 'Never gives up on their goals' },
     ],
     strengths: ['Strategic thinking', 'Physical endurance', 'Loyalty'],
@@ -39,8 +37,9 @@ describe('TraitsDisplayEnhancer', () => {
       longTerm: 'Achieve redemption for past mistakes',
     },
     notes: ['Has a hidden talent for music', 'Speaks three languages'],
-    profile: 'A complex individual shaped by a difficult past, seeking redemption while struggling with trust. Their experiences have made them both cautious and compassionate.',
-    secrets: ['Former assassin', 'Has a child they\'ve never met'],
+    profile:
+      'A complex individual shaped by a difficult past, seeking redemption while struggling with trust. Their experiences have made them both cautious and compassionate.',
+    secrets: ['Former assassin', "Has a child they've never met"],
     generatedAt: '2024-03-15T10:30:00Z',
     metadata: {
       model: 'gpt-4',
@@ -69,13 +68,16 @@ describe('TraitsDisplayEnhancer', () => {
     });
 
     it('should throw error without logger', () => {
-      expect(() => new TraitsDisplayEnhancer({})).toThrow('Missing required dependency: ILogger');
+      expect(() => new TraitsDisplayEnhancer({})).toThrow(
+        'Missing required dependency: ILogger'
+      );
     });
 
     it('should validate logger has required methods', () => {
       const invalidLogger = { debug: jest.fn() }; // Missing other methods
-      expect(() => new TraitsDisplayEnhancer({ logger: invalidLogger }))
-        .toThrow('Invalid or missing method');
+      expect(
+        () => new TraitsDisplayEnhancer({ logger: invalidLogger })
+      ).toThrow('Invalid or missing method');
     });
   });
 
@@ -96,39 +98,60 @@ describe('TraitsDisplayEnhancer', () => {
       const traitsData = createMockTraitsData();
       const result = enhancer.enhanceForDisplay(traitsData);
 
-      const categoryIds = result.categories.map(c => c.id);
+      const categoryIds = result.categories.map((c) => c.id);
       const expectedOrder = [
-        'names', 'physical', 'personality', 'strengths', 'weaknesses',
-        'likes', 'dislikes', 'fears', 'goals', 'notes', 'profile', 'secrets'
+        'names',
+        'physical',
+        'personality',
+        'strengths',
+        'weaknesses',
+        'likes',
+        'dislikes',
+        'fears',
+        'goals',
+        'notes',
+        'profile',
+        'secrets',
       ];
 
       // Check that categories appear in expected order
-      const actualOrder = expectedOrder.filter(id => categoryIds.includes(id));
+      const actualOrder = expectedOrder.filter((id) =>
+        categoryIds.includes(id)
+      );
       expect(categoryIds).toEqual(actualOrder);
     });
 
     it('should expand structured data when option is true', () => {
       const traitsData = createMockTraitsData();
-      const result = enhancer.enhanceForDisplay(traitsData, { expandStructuredData: true });
+      const result = enhancer.enhanceForDisplay(traitsData, {
+        expandStructuredData: true,
+      });
 
-      const namesCategory = result.categories.find(c => c.id === 'names');
+      const namesCategory = result.categories.find((c) => c.id === 'names');
       expect(namesCategory.items[0]).toHaveProperty('primary');
       expect(namesCategory.items[0]).toHaveProperty('secondary');
-      expect(namesCategory.items[0]).toHaveProperty('type', 'name-justification');
+      expect(namesCategory.items[0]).toHaveProperty(
+        'type',
+        'name-justification'
+      );
     });
 
     it('should not expand structured data when option is false', () => {
       const traitsData = createMockTraitsData();
-      const result = enhancer.enhanceForDisplay(traitsData, { expandStructuredData: false });
+      const result = enhancer.enhanceForDisplay(traitsData, {
+        expandStructuredData: false,
+      });
 
-      const namesCategory = result.categories.find(c => c.id === 'names');
+      const namesCategory = result.categories.find((c) => c.id === 'names');
       expect(namesCategory.items[0]).toHaveProperty('name');
       expect(namesCategory.items[0]).toHaveProperty('justification');
     });
 
     it('should include metadata when option is true', () => {
       const traitsData = createMockTraitsData();
-      const result = enhancer.enhanceForDisplay(traitsData, { includeMetadata: true });
+      const result = enhancer.enhanceForDisplay(traitsData, {
+        includeMetadata: true,
+      });
 
       expect(result).toHaveProperty('metadata');
       expect(result.metadata).toHaveProperty('model', 'gpt-4');
@@ -137,7 +160,9 @@ describe('TraitsDisplayEnhancer', () => {
 
     it('should exclude metadata when option is false', () => {
       const traitsData = createMockTraitsData();
-      const result = enhancer.enhanceForDisplay(traitsData, { includeMetadata: false });
+      const result = enhancer.enhanceForDisplay(traitsData, {
+        includeMetadata: false,
+      });
 
       expect(result).not.toHaveProperty('metadata');
     });
@@ -167,11 +192,13 @@ describe('TraitsDisplayEnhancer', () => {
     });
 
     it('should throw error for invalid traits data', () => {
-      expect(() => enhancer.enhanceForDisplay(null))
-        .toThrow('Traits data must be a valid object');
-      
-      expect(() => enhancer.enhanceForDisplay({}))
-        .toThrow('Traits data must contain at least some content');
+      expect(() => enhancer.enhanceForDisplay(null)).toThrow(
+        'Traits data must be a valid object'
+      );
+
+      expect(() => enhancer.enhanceForDisplay({})).toThrow(
+        'Traits data must contain at least some content'
+      );
     });
   });
 
@@ -256,7 +283,7 @@ describe('TraitsDisplayEnhancer', () => {
       ];
 
       let lastIndex = -1;
-      expectedSections.forEach(section => {
+      expectedSections.forEach((section) => {
         const index = result.indexOf(section);
         expect(index).toBeGreaterThan(lastIndex);
         lastIndex = index;
@@ -264,8 +291,9 @@ describe('TraitsDisplayEnhancer', () => {
     });
 
     it('should throw error for invalid traits data', () => {
-      expect(() => enhancer.formatForExport(null))
-        .toThrow('Traits data must be a valid object');
+      expect(() => enhancer.formatForExport(null)).toThrow(
+        'Traits data must be a valid object'
+      );
     });
 
     it('should format timestamp correctly', () => {
@@ -273,7 +301,9 @@ describe('TraitsDisplayEnhancer', () => {
       const result = enhancer.formatForExport(traitsData);
 
       // Should format as "March 15 at 2024 at 10:30 AM" (based on UTC)
-      expect(result).toMatch(/Generated: \w+ \d+ at \d{4} at \d{1,2}:\d{2} [AP]M/);
+      expect(result).toMatch(
+        /Generated: \w+ \d+ at \d{4} at \d{1,2}:\d{2} [AP]M/
+      );
     });
   });
 
@@ -284,7 +314,9 @@ describe('TraitsDisplayEnhancer', () => {
         direction: 'Haunted Detective Story',
       });
 
-      expect(result).toMatch(/^traits_haunted-detective-story_\d{4}-\d{2}-\d{2}_\d{6}\.txt$/);
+      expect(result).toMatch(
+        /^traits_haunted-detective-story_\d{4}-\d{2}-\d{2}_\d{6}\.txt$/
+      );
     });
 
     it('should generate filename without direction', () => {
@@ -300,7 +332,9 @@ describe('TraitsDisplayEnhancer', () => {
         direction: 'Complex! Story @ with #Special$ Characters & Symbols',
       });
 
-      expect(result).toMatch(/^traits_complex-story-with-special-characters-symbols_/);
+      expect(result).toMatch(
+        /^traits_complex-story-with-special-characters-symbols_/
+      );
     });
 
     it('should limit direction slug length', () => {
@@ -316,8 +350,10 @@ describe('TraitsDisplayEnhancer', () => {
 
     it('should handle empty or invalid direction', () => {
       const traitsData = createMockTraitsData();
-      
-      let result = enhancer.generateExportFilename(traitsData, { direction: '' });
+
+      let result = enhancer.generateExportFilename(traitsData, {
+        direction: '',
+      });
       expect(result).toMatch(/^traits_\d{4}-\d{2}-\d{2}_\d{6}\.txt$/);
 
       result = enhancer.generateExportFilename(traitsData, { direction: null });
@@ -358,7 +394,7 @@ describe('TraitsDisplayEnhancer', () => {
       });
 
       const result = enhancer.enhanceForDisplay(traitsData);
-      const goalsCategory = result.categories.find(c => c.id === 'goals');
+      const goalsCategory = result.categories.find((c) => c.id === 'goals');
       expect(goalsCategory.content.shortTerm).toEqual([]);
     });
 
@@ -378,10 +414,12 @@ describe('TraitsDisplayEnhancer', () => {
 
     it('should handle special characters in text', () => {
       const traitsData = createMockTraitsData({
-        names: [{ 
-          name: 'John "The Shadow" O\'Brien', 
-          justification: 'Irish heritage & nickname' 
-        }],
+        names: [
+          {
+            name: 'John "The Shadow" O\'Brien',
+            justification: 'Irish heritage & nickname',
+          },
+        ],
         profile: 'Character with <special> & "unusual" marks',
       });
 
@@ -397,7 +435,9 @@ describe('TraitsDisplayEnhancer', () => {
 
       const result = enhancer.formatForExport(traitsData);
       expect(result).toContain('Generated: Invalid date');
-      expect(mockLogger.warn).toHaveBeenCalledWith('Invalid date string: invalid-date');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Invalid date string: invalid-date'
+      );
     });
 
     it('should handle null/undefined values in arrays', () => {
@@ -408,8 +448,10 @@ describe('TraitsDisplayEnhancer', () => {
 
       const displayResult = enhancer.enhanceForDisplay(traitsData);
       expect(displayResult).toBeDefined();
-      
-      const strengthsCategory = displayResult.categories.find(c => c.id === 'strengths');
+
+      const strengthsCategory = displayResult.categories.find(
+        (c) => c.id === 'strengths'
+      );
       expect(strengthsCategory.items).toContain(null);
     });
   });
@@ -419,8 +461,12 @@ describe('TraitsDisplayEnhancer', () => {
       const traitsData = createMockTraitsData();
       enhancer.enhanceForDisplay(traitsData);
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('Enhancing traits data for display');
-      expect(mockLogger.debug).toHaveBeenCalledWith('Traits data enhanced successfully');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Enhancing traits data for display'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Traits data enhanced successfully'
+      );
     });
 
     it('should log errors for invalid data', () => {
@@ -434,8 +480,12 @@ describe('TraitsDisplayEnhancer', () => {
       const traitsData = createMockTraitsData();
       const filename = enhancer.generateExportFilename(traitsData);
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('Generating export filename');
-      expect(mockLogger.debug).toHaveBeenCalledWith(`Generated filename: ${filename}`);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Generating export filename'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        `Generated filename: ${filename}`
+      );
     });
   });
 });

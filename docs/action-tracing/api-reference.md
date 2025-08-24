@@ -37,6 +37,7 @@ All endpoints return consistent error responses:
 ```
 
 Common HTTP status codes:
+
 - `200` - Success
 - `400` - Bad Request (validation errors)
 - `403` - Forbidden (security violations)
@@ -73,6 +74,7 @@ Write a single trace file to the filesystem.
 #### Request Examples
 
 **JSON String Data**:
+
 ```bash
 curl -X POST http://localhost:3001/api/traces/write \
   -H "Content-Type: application/json" \
@@ -84,6 +86,7 @@ curl -X POST http://localhost:3001/api/traces/write \
 ```
 
 **JSON Object Data**:
+
 ```bash
 curl -X POST http://localhost:3001/api/traces/write \
   -H "Content-Type: application/json" \
@@ -100,6 +103,7 @@ curl -X POST http://localhost:3001/api/traces/write \
 ```
 
 **Text Format Data**:
+
 ```bash
 curl -X POST http://localhost:3001/api/traces/write \
   -H "Content-Type: application/json" \
@@ -113,17 +117,19 @@ curl -X POST http://localhost:3001/api/traces/write \
 #### Response
 
 **Success Response** (200):
+
 ```json
 {
   "success": true,
   "message": "Trace file written successfully",
   "path": "traces/trace_move_player_20250823.json",
-  "fileName": "trace_move_player_20250823.json", 
+  "fileName": "trace_move_player_20250823.json",
   "size": 156
 }
 ```
 
 **Error Response** (400):
+
 ```json
 {
   "success": false,
@@ -132,6 +138,7 @@ curl -X POST http://localhost:3001/api/traces/write \
 ```
 
 **Error Response** (403):
+
 ```json
 {
   "success": false,
@@ -171,6 +178,7 @@ Write multiple trace files in a single request for improved performance.
 #### Request Examples
 
 **Multiple JSON Traces**:
+
 ```bash
 curl -X POST http://localhost:3001/api/traces/write-batch \
   -H "Content-Type: application/json" \
@@ -194,6 +202,7 @@ curl -X POST http://localhost:3001/api/traces/write-batch \
 ```
 
 **Mixed Format Traces**:
+
 ```bash
 curl -X POST http://localhost:3001/api/traces/write-batch \
   -H "Content-Type: application/json" \
@@ -220,6 +229,7 @@ curl -X POST http://localhost:3001/api/traces/write-batch \
 #### Response
 
 **Success Response** (200):
+
 ```json
 {
   "success": true,
@@ -241,7 +251,7 @@ curl -X POST http://localhost:3001/api/traces/write-batch \
     },
     {
       "index": 1,
-      "fileName": "trace_attack_001.json", 
+      "fileName": "trace_attack_001.json",
       "success": true,
       "filePath": "traces/batch-session/trace_attack_001.json",
       "size": 198,
@@ -260,6 +270,7 @@ curl -X POST http://localhost:3001/api/traces/write-batch \
 ```
 
 **Partial Success Response** (200):
+
 ```json
 {
   "success": true,
@@ -289,7 +300,7 @@ curl -X POST http://localhost:3001/api/traces/write-batch \
       "index": 2,
       "fileName": "trace_another.json",
       "success": true,
-      "filePath": "traces/trace_another.json", 
+      "filePath": "traces/trace_another.json",
       "size": 198,
       "bytesWritten": 198
     }
@@ -298,6 +309,7 @@ curl -X POST http://localhost:3001/api/traces/write-batch \
 ```
 
 **Error Response** (400):
+
 ```json
 {
   "success": false,
@@ -307,6 +319,7 @@ curl -X POST http://localhost:3001/api/traces/write-batch \
 ```
 
 **Validation Error Response** (400):
+
 ```json
 {
   "success": false,
@@ -327,21 +340,25 @@ List trace files in a specified directory with metadata.
 **Method**: `GET`  
 **URL**: `/api/traces/list`  
 **Query Parameters**:
+
 - `directory` (optional): Directory to list, relative to project root (defaults to `"./traces"`)
 
 #### Request Examples
 
 **Default Directory**:
+
 ```bash
 curl "http://localhost:3001/api/traces/list"
 ```
 
 **Specific Directory**:
+
 ```bash
 curl "http://localhost:3001/api/traces/list?directory=./traces/combat"
 ```
 
 **URL Encoded Directory**:
+
 ```bash
 curl "http://localhost:3001/api/traces/list?directory=./traces/fondle-ass"
 ```
@@ -349,6 +366,7 @@ curl "http://localhost:3001/api/traces/list?directory=./traces/fondle-ass"
 #### Response
 
 **Success Response** (200):
+
 ```json
 {
   "success": true,
@@ -378,6 +396,7 @@ curl "http://localhost:3001/api/traces/list?directory=./traces/fondle-ass"
 ```
 
 **Empty Directory Response** (200):
+
 ```json
 {
   "success": true,
@@ -389,6 +408,7 @@ curl "http://localhost:3001/api/traces/list?directory=./traces/fondle-ass"
 ```
 
 **Error Response** (403):
+
 ```json
 {
   "success": false,
@@ -409,6 +429,7 @@ All endpoints include security checks to prevent path traversal attacks:
 ### Examples of Blocked Requests
 
 **Path Traversal Attempt**:
+
 ```bash
 # This will fail with 403 Forbidden
 curl -X POST http://localhost:3001/api/traces/write \
@@ -421,8 +442,9 @@ curl -X POST http://localhost:3001/api/traces/write \
 ```
 
 **Directory Traversal**:
+
 ```bash
-# This will fail with 403 Forbidden  
+# This will fail with 403 Forbidden
 curl "http://localhost:3001/api/traces/list?directory=../../../etc"
 ```
 
@@ -430,16 +452,16 @@ curl "http://localhost:3001/api/traces/list?directory=../../../etc"
 
 ### Write Performance
 
-| Operation | Typical Time | Factors |
-|-----------|-------------|---------|
-| Single Write | 5-15ms | File size, disk I/O |
-| Batch Write (10 files) | 20-50ms | Parallel processing |
-| Batch Write (100 files) | 100-300ms | System resources |
+| Operation               | Typical Time | Factors             |
+| ----------------------- | ------------ | ------------------- |
+| Single Write            | 5-15ms       | File size, disk I/O |
+| Batch Write (10 files)  | 20-50ms      | Parallel processing |
+| Batch Write (100 files) | 100-300ms    | System resources    |
 
 ### Best Practices
 
 1. **Use Batch Writes**: For multiple files, batch operations are more efficient
-2. **Reasonable Batch Sizes**: Keep batches under 50-100 files for optimal performance  
+2. **Reasonable Batch Sizes**: Keep batches under 50-100 files for optimal performance
 3. **Monitor Disk Space**: Trace files can accumulate quickly
 4. **Network Considerations**: Large traces may take longer over slow connections
 
@@ -456,21 +478,22 @@ async function writeTraceWithRetry(traceData, fileName, maxRetries = 3) {
       const response = await fetch('http://localhost:3001/api/traces/write', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ traceData, fileName })
+        body: JSON.stringify({ traceData, fileName }),
       });
-      
+
       if (response.ok) {
         return await response.json();
       }
-      
+
       if (response.status === 403 || response.status === 400) {
         // Don't retry client errors
         throw new Error(`HTTP ${response.status}: ${await response.text()}`);
       }
-      
     } catch (error) {
       if (i === maxRetries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1000 * Math.pow(2, i))
+      );
     }
   }
 }
@@ -483,14 +506,14 @@ Process batch responses to handle partial failures:
 ```javascript
 function processBatchResponse(response) {
   const { results } = response;
-  const successful = results.filter(r => r.success);
-  const failed = results.filter(r => !r.success);
-  
+  const successful = results.filter((r) => r.success);
+  const failed = results.filter((r) => !r.success);
+
   if (failed.length > 0) {
     console.warn(`${failed.length} traces failed to write:`, failed);
     // Implement retry logic for failed traces
   }
-  
+
   console.log(`Successfully wrote ${successful.length} trace files`);
   return { successful, failed };
 }
@@ -505,44 +528,44 @@ class TraceClient {
   constructor(baseUrl = 'http://localhost:3001') {
     this.baseUrl = baseUrl;
   }
-  
+
   async writeSingle(traceData, fileName, outputDirectory = './traces') {
     const response = await fetch(`${this.baseUrl}/api/traces/write`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ traceData, fileName, outputDirectory })
+      body: JSON.stringify({ traceData, fileName, outputDirectory }),
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${await response.text()}`);
     }
-    
+
     return response.json();
   }
-  
+
   async writeBatch(traces, outputDirectory = './traces') {
     const response = await fetch(`${this.baseUrl}/api/traces/write-batch`, {
-      method: 'POST', 
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ traces, outputDirectory })
+      body: JSON.stringify({ traces, outputDirectory }),
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${await response.text()}`);
     }
-    
+
     return response.json();
   }
-  
+
   async listFiles(directory = './traces') {
     const response = await fetch(
       `${this.baseUrl}/api/traces/list?directory=${encodeURIComponent(directory)}`
     );
-    
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${await response.text()}`);
     }
-    
+
     return response.json();
   }
 }
@@ -558,8 +581,8 @@ from typing import List, Dict, Any, Optional
 class TraceClient:
     def __init__(self, base_url: str = "http://localhost:3001"):
         self.base_url = base_url
-    
-    def write_single(self, trace_data: Any, file_name: str, 
+
+    def write_single(self, trace_data: Any, file_name: str,
                     output_directory: str = "./traces") -> Dict[str, Any]:
         """Write a single trace file."""
         data = {
@@ -567,7 +590,7 @@ class TraceClient:
             "fileName": file_name,
             "outputDirectory": output_directory
         }
-        
+
         response = requests.post(
             f"{self.base_url}/api/traces/write",
             json=data,
@@ -575,15 +598,15 @@ class TraceClient:
         )
         response.raise_for_status()
         return response.json()
-    
-    def write_batch(self, traces: List[Dict[str, Any]], 
+
+    def write_batch(self, traces: List[Dict[str, Any]],
                    output_directory: str = "./traces") -> Dict[str, Any]:
         """Write multiple trace files in batch."""
         data = {
             "traces": traces,
             "outputDirectory": output_directory
         }
-        
+
         response = requests.post(
             f"{self.base_url}/api/traces/write-batch",
             json=data,
@@ -591,7 +614,7 @@ class TraceClient:
         )
         response.raise_for_status()
         return response.json()
-    
+
     def list_files(self, directory: str = "./traces") -> Dict[str, Any]:
         """List trace files in directory."""
         response = requests.get(
@@ -610,23 +633,26 @@ The LLM Proxy Server logs all trace operations. Monitor logs at:
 # Server logs
 tail -f llm-proxy-server/logs/server.log
 
-# Error logs  
+# Error logs
 tail -f llm-proxy-server/logs/error.log
 ```
 
 ### Log Entry Examples
 
 **Successful Write**:
+
 ```
 [INFO] Trace file written successfully {"fileName":"trace_move.json","directory":"./traces","size":156}
 ```
 
 **Security Violation**:
+
 ```
 [ERROR] Attempted to write trace file outside project directory {"attemptedPath":"/etc/passwd","projectRoot":"/home/user/project"}
 ```
 
 **Batch Processing**:
+
 ```
 [INFO] Batch trace write completed {"total":10,"successful":9,"failed":1,"totalBytes":15420}
 ```

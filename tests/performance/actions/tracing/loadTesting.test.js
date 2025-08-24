@@ -7,7 +7,10 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import fs from 'node:fs/promises';
 import { createTestBed } from '../../../common/testBed.js';
 import { ActionTraceOutputService } from '../../../../src/actions/tracing/actionTraceOutputService.js';
-import { createMockJsonFormatter, createMockHumanReadableFormatterWithOptions } from '../../../common/mockFactories/actionTracing.js';
+import {
+  createMockJsonFormatter,
+  createMockHumanReadableFormatterWithOptions,
+} from '../../../common/mockFactories/actionTracing.js';
 
 describe('High-Frequency Action Tracing Load Tests', () => {
   let testBed;
@@ -39,7 +42,10 @@ describe('High-Frequency Action Tracing Load Tests', () => {
 
     // Clean up test traces
     try {
-      await fs.rm('./traces/performance-test', { recursive: true, force: true });
+      await fs.rm('./traces/performance-test', {
+        recursive: true,
+        force: true,
+      });
     } catch (err) {
       // Directory might not exist
     }
@@ -67,7 +73,9 @@ describe('High-Frequency Action Tracing Load Tests', () => {
 
       const successful = results.filter((r) => r.status === 'fulfilled').length;
 
-      console.log(`Load test: ${successful}/${traces.length} successful, ${timePerTrace.toFixed(2)}ms per trace`);
+      console.log(
+        `Load test: ${successful}/${traces.length} successful, ${timePerTrace.toFixed(2)}ms per trace`
+      );
 
       expect(successful).toBeGreaterThanOrEqual(95); // ≥95% success rate
       expect(timePerTrace).toBeLessThan(100); // <100ms per trace (adjusted for realistic expectations)
@@ -79,46 +87,61 @@ describe('High-Frequency Action Tracing Load Tests', () => {
       const batchSize = 20;
       const totalTraces = concurrentBatches * batchSize;
 
-      const batchPromises = Array.from({ length: concurrentBatches }, async (_, batchIndex) => {
-        const traces = await Promise.all(
-          Array.from({ length: batchSize }, async (_, i) =>
-            testBed.createActionAwareTrace({
-              actorId: `concurrent-actor-${batchIndex}-${i}`,
-              tracedActions: [`concurrent_${batchIndex}_${i}`],
-            })
-          )
-        );
+      const batchPromises = Array.from(
+        { length: concurrentBatches },
+        async (_, batchIndex) => {
+          const traces = await Promise.all(
+            Array.from({ length: batchSize }, async (_, i) =>
+              testBed.createActionAwareTrace({
+                actorId: `concurrent-actor-${batchIndex}-${i}`,
+                tracedActions: [`concurrent_${batchIndex}_${i}`],
+              })
+            )
+          );
 
-        const batchStartTime = performance.now();
-        const promises = traces.map((trace) => outputService.writeTrace(trace));
-        const results = await Promise.allSettled(promises);
-        const batchEndTime = performance.now();
+          const batchStartTime = performance.now();
+          const promises = traces.map((trace) =>
+            outputService.writeTrace(trace)
+          );
+          const results = await Promise.allSettled(promises);
+          const batchEndTime = performance.now();
 
-        return {
-          batchIndex,
-          results,
-          batchTime: batchEndTime - batchStartTime,
-          successful: results.filter((r) => r.status === 'fulfilled').length,
-          failed: results.filter((r) => r.status === 'rejected').length,
-        };
-      });
+          return {
+            batchIndex,
+            results,
+            batchTime: batchEndTime - batchStartTime,
+            successful: results.filter((r) => r.status === 'fulfilled').length,
+            failed: results.filter((r) => r.status === 'rejected').length,
+          };
+        }
+      );
 
       const startTime = performance.now();
       const batchResults = await Promise.all(batchPromises);
       const endTime = performance.now();
 
       const totalTime = endTime - startTime;
-      const totalSuccessful = batchResults.reduce((sum, batch) => sum + batch.successful, 0);
-      const totalFailed = batchResults.reduce((sum, batch) => sum + batch.failed, 0);
+      const totalSuccessful = batchResults.reduce(
+        (sum, batch) => sum + batch.successful,
+        0
+      );
+      const totalFailed = batchResults.reduce(
+        (sum, batch) => sum + batch.failed,
+        0
+      );
       const successRate = (totalSuccessful / totalTraces) * 100;
       const errorRate = (totalFailed / totalTraces) * 100;
 
       console.log(`Concurrent load test results:`);
       console.log(`  Total traces: ${totalTraces}`);
-      console.log(`  Successful: ${totalSuccessful} (${successRate.toFixed(1)}%)`);
+      console.log(
+        `  Successful: ${totalSuccessful} (${successRate.toFixed(1)}%)`
+      );
       console.log(`  Failed: ${totalFailed} (${errorRate.toFixed(1)}%)`);
       console.log(`  Total time: ${totalTime.toFixed(2)}ms`);
-      console.log(`  Average batch time: ${batchResults.reduce((sum, b) => sum + b.batchTime, 0) / batchResults.length}ms`);
+      console.log(
+        `  Average batch time: ${batchResults.reduce((sum, b) => sum + b.batchTime, 0) / batchResults.length}ms`
+      );
 
       // Performance assertions
       expect(successRate).toBeGreaterThanOrEqual(90); // ≥90% success rate under concurrent load
@@ -147,7 +170,7 @@ describe('High-Frequency Action Tracing Load Tests', () => {
         const promises = traces.map((trace) => outputService.writeTrace(trace));
         await Promise.all(promises);
         const batchEndTime = performance.now();
-        
+
         const batchTime = batchEndTime - batchStartTime;
         batchTimes.push(batchTime);
 
@@ -162,7 +185,8 @@ describe('High-Frequency Action Tracing Load Tests', () => {
       const lastBatchTime = batchTimes[batchTimes.length - 1];
       const degradation = (lastBatchTime - firstBatchTime) / firstBatchTime;
 
-      const avgBatchTime = batchTimes.reduce((sum, time) => sum + time, 0) / batchTimes.length;
+      const avgBatchTime =
+        batchTimes.reduce((sum, time) => sum + time, 0) / batchTimes.length;
       const maxBatchTime = Math.max(...batchTimes);
       const minBatchTime = Math.min(...batchTimes);
       const timeVariance = ((maxBatchTime - minBatchTime) / avgBatchTime) * 100;
@@ -172,7 +196,9 @@ describe('High-Frequency Action Tracing Load Tests', () => {
       console.log(`  Min batch time: ${minBatchTime.toFixed(2)}ms`);
       console.log(`  Max batch time: ${maxBatchTime.toFixed(2)}ms`);
       console.log(`  Time variance: ${timeVariance.toFixed(1)}%`);
-      console.log(`  Performance degradation: ${(degradation * 100).toFixed(1)}%`);
+      console.log(
+        `  Performance degradation: ${(degradation * 100).toFixed(1)}%`
+      );
 
       expect(degradation).toBeLessThan(1.0); // <100% performance degradation (adjusted)
       expect(timeVariance).toBeLessThan(300); // <300% variance in batch times (adjusted for realistic expectations)
@@ -183,11 +209,11 @@ describe('High-Frequency Action Tracing Load Tests', () => {
       const totalTraces = 500;
       const batchSize = 25;
       const batches = totalTraces / batchSize;
-      
+
       // Measure initial memory
       if (global.gc) global.gc();
       const initialMemory = process.memoryUsage();
-      
+
       const memorySnapshots = [];
       let totalProcessed = 0;
 
@@ -202,14 +228,14 @@ describe('High-Frequency Action Tracing Load Tests', () => {
         );
 
         const batchStartTime = performance.now();
-        
+
         for (const trace of traces) {
           await outputService.writeTrace(trace);
           totalProcessed++;
         }
 
         const batchEndTime = performance.now();
-        
+
         // Take memory snapshot every few batches
         if (batch % 4 === 0) {
           if (global.gc) global.gc();
@@ -232,23 +258,28 @@ describe('High-Frequency Action Tracing Load Tests', () => {
 
       console.log('Extended operation memory analysis:');
       console.log(`  Total traces processed: ${totalProcessed}`);
-      console.log(`  Total memory increase: ${(totalMemoryIncrease / 1024 / 1024).toFixed(2)} MB`);
+      console.log(
+        `  Total memory increase: ${(totalMemoryIncrease / 1024 / 1024).toFixed(2)} MB`
+      );
       console.log(`  Memory per trace: ${memoryPerTrace.toFixed(0)} bytes`);
 
       // Memory growth should be reasonable
       expect(memoryPerTrace).toBeLessThan(100000); // <100KB per trace for extended operation
       expect(totalMemoryIncrease).toBeLessThan(100 * 1024 * 1024); // <100MB total increase
-      
+
       // Check for memory leak patterns
       if (memorySnapshots.length >= 2) {
         const earlySnapshot = memorySnapshots[0];
         const lateSnapshot = memorySnapshots[memorySnapshots.length - 1];
-        
-        const memoryGrowthRate = (lateSnapshot.heapUsed - earlySnapshot.heapUsed) / 
-                                (lateSnapshot.processed - earlySnapshot.processed);
-        
-        console.log(`  Memory growth rate: ${memoryGrowthRate.toFixed(0)} bytes/trace`);
-        
+
+        const memoryGrowthRate =
+          (lateSnapshot.heapUsed - earlySnapshot.heapUsed) /
+          (lateSnapshot.processed - earlySnapshot.processed);
+
+        console.log(
+          `  Memory growth rate: ${memoryGrowthRate.toFixed(0)} bytes/trace`
+        );
+
         // Memory growth rate should not indicate a leak
         expect(memoryGrowthRate).toBeLessThan(50000); // <50KB growth per trace over time
       }
@@ -272,7 +303,8 @@ describe('High-Frequency Action Tracing Load Tests', () => {
           tracedActions: [`throughput_action_${traces.length}`],
         });
 
-        const writePromise = outputService.writeTrace(trace)
+        const writePromise = outputService
+          .writeTrace(trace)
           .then(() => {
             processedCount++;
           })
@@ -282,9 +314,9 @@ describe('High-Frequency Action Tracing Load Tests', () => {
 
         traces.push(writePromise);
         currentTime = performance.now();
-        
+
         // Small delay to prevent overwhelming the system
-        await new Promise(resolve => setTimeout(resolve, 1));
+        await new Promise((resolve) => setTimeout(resolve, 1));
       }
 
       // Wait for all traces to complete

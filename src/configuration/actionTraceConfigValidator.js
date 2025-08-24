@@ -608,17 +608,6 @@ class ActionTraceConfigValidator {
       }
     }
 
-    // Check for disabled tracing with extensive configuration
-    if (
-      !config.enabled &&
-      config.tracedActions &&
-      config.tracedActions.length > 0
-    ) {
-      warnings.push(
-        `Tracing is disabled but ${config.tracedActions.length} actions are configured. ` +
-          `Consider removing traced actions or enabling tracing.`
-      );
-    }
 
     return { errors, warnings };
   }

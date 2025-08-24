@@ -18,13 +18,18 @@ describe('ActionTraceFilter Performance', () => {
    * @param {number} maxRetries - Maximum retry attempts
    * @returns {number} Final measured duration
    */
-  const executePerformanceTest = (testFunction, expectedThreshold, testName, maxRetries = 3) => {
+  const executePerformanceTest = (
+    testFunction,
+    expectedThreshold,
+    testName,
+    maxRetries = 3
+  ) => {
     let lastDuration = Infinity;
     let attempt = 0;
 
     while (attempt < maxRetries) {
       attempt++;
-      
+
       // Force GC before timing
       if (global.gc) {
         global.gc();
@@ -51,7 +56,7 @@ describe('ActionTraceFilter Performance', () => {
       }
 
       lastDuration = Math.min(lastDuration, duration);
-      
+
       // Exponential backoff between retries
       if (attempt < maxRetries) {
         const delay = Math.pow(2, attempt - 1) * 10;
@@ -62,7 +67,9 @@ describe('ActionTraceFilter Performance', () => {
       }
     }
 
-    console.warn(`${testName} failed after ${maxRetries} attempts. Best duration: ${lastDuration.toFixed(2)}ms`);
+    console.warn(
+      `${testName} failed after ${maxRetries} attempts. Best duration: ${lastDuration.toFixed(2)}ms`
+    );
     return lastDuration;
   };
 
@@ -95,8 +102,8 @@ describe('ActionTraceFilter Performance', () => {
       };
 
       const duration = executePerformanceTest(
-        testFunction, 
-        25, 
+        testFunction,
+        25,
         'Exact match 10k operations'
       );
 
@@ -118,11 +125,11 @@ describe('ActionTraceFilter Performance', () => {
       };
 
       const duration = executePerformanceTest(
-        testFunction, 
-        35, 
+        testFunction,
+        35,
         'Non-matching exact 10k operations'
       );
-      
+
       console.log(
         `Non-matching exact 10k operations: ${duration.toFixed(2)}ms`
       );

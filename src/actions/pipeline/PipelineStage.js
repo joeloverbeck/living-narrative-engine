@@ -39,10 +39,10 @@ export class PipelineStage {
     // If trace supports structured spans, we need to handle it manually
     // to properly set error status when stages return failure results
     if (trace?.startSpan && trace?.endSpan) {
-      const span = trace.startSpan(`${this.name}Stage`, { 
+      const span = trace.startSpan(`${this.name}Stage`, {
         stage: this.name,
         actor: context.actor?.id || 'unknown',
-        candidateCount: context.candidateActions?.length || 0
+        candidateCount: context.candidateActions?.length || 0,
       });
 
       try {
@@ -52,7 +52,7 @@ export class PipelineStage {
         if (typeof span.setAttribute === 'function') {
           span.setAttribute('success', result.success);
           span.setAttribute('processedCount', result.processedCount || 0);
-          
+
           if (result.errors && result.errors.length > 0) {
             span.setAttribute('errorCount', result.errors.length);
           }

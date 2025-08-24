@@ -23,11 +23,11 @@ describe('TraitsGeneratorController - Eligibility Detection', () => {
   beforeEach(async () => {
     logger = createMockLogger();
     eventBus = createEventBus();
-    
+
     // Set up database
     database = new CharacterDatabase({ logger });
     await database.initialize();
-    
+
     // Create mock dependencies
     const storageService = {
       initialize: jest.fn(),
@@ -39,23 +39,23 @@ describe('TraitsGeneratorController - Eligibility Detection', () => {
       getThematicDirections: jest.fn(),
       getAllThematicDirections: jest.fn().mockResolvedValue([]),
     };
-    
+
     const directionGenerator = {
       generateDirections: jest.fn(),
     };
-    
+
     const schemaValidator = {
       validateAgainstSchema: jest.fn().mockReturnValue({ valid: true }),
     };
-    
+
     const clicheGenerator = {
       generate: jest.fn(),
     };
-    
+
     const traitsGenerator = {
       generate: jest.fn(),
     };
-    
+
     // Create character builder service
     characterBuilderService = new CharacterBuilderService({
       logger,
@@ -67,7 +67,7 @@ describe('TraitsGeneratorController - Eligibility Detection', () => {
       clicheGenerator,
       traitsGenerator,
     });
-    
+
     // Create test data
     await setupTestData();
   });
@@ -91,7 +91,7 @@ describe('TraitsGeneratorController - Eligibility Detection', () => {
       createdAt: new Date().toISOString(),
     };
     await database.saveCharacterConcept(concept);
-    
+
     // Create a test thematic direction
     const directionId = uuidv4();
     const direction = {
@@ -103,19 +103,19 @@ describe('TraitsGeneratorController - Eligibility Detection', () => {
       createdAt: new Date().toISOString(),
     };
     await database.saveThematicDirections([direction]);
-    
+
     // Create test clichés
     const cliche = {
       id: uuidv4(),
       directionId: directionId,
       conceptId: conceptId,
       categories: {
-        personalConflicts: ['Test cliché 1', 'Test cliché 2']
+        personalConflicts: ['Test cliché 1', 'Test cliché 2'],
       },
       createdAt: new Date().toISOString(),
     };
     await database.saveCliche(cliche);
-    
+
     // Create test core motivations with correct field names
     const motivations = [
       {
@@ -123,7 +123,8 @@ describe('TraitsGeneratorController - Eligibility Detection', () => {
         directionId: directionId,
         conceptId: conceptId,
         coreDesire: 'To find true meaning and purpose in life',
-        internalContradiction: 'Seeks meaning but fears the responsibility it brings',
+        internalContradiction:
+          'Seeks meaning but fears the responsibility it brings',
         centralQuestion: 'What makes a life worth living?',
         createdAt: new Date().toISOString(),
       },
@@ -132,7 +133,8 @@ describe('TraitsGeneratorController - Eligibility Detection', () => {
         directionId: directionId,
         conceptId: conceptId,
         coreDesire: 'To protect innocence while exploring the unknown',
-        internalContradiction: 'Wants to preserve purity but is drawn to corruption',
+        internalContradiction:
+          'Wants to preserve purity but is drawn to corruption',
         centralQuestion: 'Can innocence survive in a corrupt world?',
         createdAt: new Date().toISOString(),
       },
@@ -145,23 +147,26 @@ describe('TraitsGeneratorController - Eligibility Detection', () => {
       // Get all directions from database directly
       const directions = await database.getAllThematicDirections();
       expect(directions).toHaveLength(1);
-      
+
       const direction = directions[0];
-      
+
       // Get core motivations for the direction
-      const motivations = await characterBuilderService.getCoreMotivationsByDirectionId(direction.id);
+      const motivations =
+        await characterBuilderService.getCoreMotivationsByDirectionId(
+          direction.id
+        );
       expect(motivations).toHaveLength(2);
-      
+
       // Check that the CoreMotivation model has coreDesire field
       const motivation = motivations[0];
       expect(motivation.coreDesire).toBeDefined();
-      
+
       // Check that at least one motivation has the expected value
-      const hasExpectedMotivation = motivations.some(m => 
-        m.coreDesire === 'To find true meaning and purpose in life'
+      const hasExpectedMotivation = motivations.some(
+        (m) => m.coreDesire === 'To find true meaning and purpose in life'
       );
       expect(hasExpectedMotivation).toBe(true);
-      
+
       // The coreMotivation getter provides backward compatibility
       expect(motivation.coreMotivation).toBeDefined();
       expect(motivation.coreMotivation).toBe(motivation.coreDesire);
@@ -176,11 +181,11 @@ describe('TraitsGeneratorController - Eligibility Detection', () => {
         internalContradiction: 'Test contradiction',
         centralQuestion: 'Test question?',
       });
-      
+
       // The coreMotivation getter provides backward compatibility
       const displayValue = mockMotivation.coreMotivation;
       expect(displayValue).toBe('Test desire'); // Works due to compatibility getter
-      
+
       // The correct field name
       const correctValue = mockMotivation.coreDesire;
       expect(correctValue).toBe('Test desire');
@@ -191,22 +196,27 @@ describe('TraitsGeneratorController - Eligibility Detection', () => {
     it('should correctly identify directions with both clichés and core motivations as eligible', async () => {
       const directions = await database.getAllThematicDirections();
       const direction = directions[0];
-      
+
       // Check if direction has clichés
-      const cliche = await characterBuilderService.getClichesByDirectionId(direction.id);
+      const cliche = await characterBuilderService.getClichesByDirectionId(
+        direction.id
+      );
       expect(cliche).toBeDefined();
       expect(cliche).not.toBeNull();
-      
+
       // Check if direction has core motivations
-      const motivations = await characterBuilderService.getCoreMotivationsByDirectionId(direction.id);
+      const motivations =
+        await characterBuilderService.getCoreMotivationsByDirectionId(
+          direction.id
+        );
       expect(motivations).toBeDefined();
       expect(motivations.length).toBeGreaterThan(0);
-      
+
       // Direction should be eligible
       const hasCliches = cliche !== null && cliche !== undefined;
       const hasMotivations = motivations && motivations.length > 0;
       const isEligible = hasCliches && hasMotivations;
-      
+
       expect(isEligible).toBe(true);
     });
 
@@ -222,27 +232,31 @@ describe('TraitsGeneratorController - Eligibility Detection', () => {
         createdAt: new Date().toISOString(),
       };
       await database.saveThematicDirections([direction]);
-      
+
       // Add clichés
       const testCliche = {
         id: uuidv4(),
         directionId: directionId,
         conceptId: direction.conceptId,
         categories: {
-          personalConflicts: ['Cliché without motivation']
+          personalConflicts: ['Cliché without motivation'],
         },
         createdAt: new Date().toISOString(),
       };
       await database.saveCliche(testCliche);
-      
+
       // Check eligibility
-      const cliche = await characterBuilderService.getClichesByDirectionId(directionId);
-      const motivations = await characterBuilderService.getCoreMotivationsByDirectionId(directionId);
-      
+      const cliche =
+        await characterBuilderService.getClichesByDirectionId(directionId);
+      const motivations =
+        await characterBuilderService.getCoreMotivationsByDirectionId(
+          directionId
+        );
+
       const hasCliches = cliche !== null && cliche !== undefined;
       const hasMotivations = motivations && motivations.length > 0;
       const isEligible = hasCliches && hasMotivations;
-      
+
       expect(hasCliches).toBe(true);
       expect(hasMotivations).toBe(false);
       expect(isEligible).toBe(false);
@@ -262,7 +276,7 @@ describe('TraitsGeneratorController - Eligibility Detection', () => {
         },
       });
       expect(motivation1.coreDesire).toBe('Desire text');
-      
+
       // Test with coreMotivation (UI field name)
       const motivation2 = CoreMotivation.fromLLMResponse({
         directionId: 'dir2',
@@ -274,7 +288,7 @@ describe('TraitsGeneratorController - Eligibility Detection', () => {
         },
       });
       expect(motivation2.coreDesire).toBe('Motivation text');
-      
+
       // Test with motivation (fallback field name)
       const motivation3 = CoreMotivation.fromLLMResponse({
         directionId: 'dir3',

@@ -35,11 +35,13 @@ Action tracing is configured through the `actionTracing` section of `config/trac
 - **Description**: Array of action IDs to trace. Supports wildcards.
 
 **Wildcard Patterns**:
+
 - `"*"` - Trace all actions
 - `"mod:*"` - Trace all actions from a specific mod
 - `"core:move"` - Trace specific action
 
 **Examples**:
+
 ```json
 {
   "tracedActions": ["core:move", "core:attack"]
@@ -80,6 +82,7 @@ Action tracing is configured through the `actionTracing` section of `config/trac
 - **Supported Values**: `"json"`, `"text"`, `"html"`, `"markdown"`
 
 **Single Format**:
+
 ```json
 {
   "outputFormats": ["json"]
@@ -87,6 +90,7 @@ Action tracing is configured through the `actionTracing` section of `config/trac
 ```
 
 **Dual Format**:
+
 ```json
 {
   "outputFormats": ["json", "text"]
@@ -94,6 +98,7 @@ Action tracing is configured through the `actionTracing` section of `config/trac
 ```
 
 **Multiple Formats**:
+
 ```json
 {
   "outputFormats": ["json", "text", "html", "markdown"]
@@ -108,6 +113,7 @@ Action tracing is configured through the `actionTracing` section of `config/trac
 - **Description**: Level of detail included in traces
 
 **Values**:
+
 - `"minimal"` - Basic action information only
 - `"standard"` - Standard detail level with key information
 - `"detailed"` - Extended information with additional context
@@ -182,6 +188,7 @@ Action tracing is configured through the `actionTracing` section of `config/trac
 - **Description**: How to rotate old trace files
 
 **Values**:
+
 - `"age"` - Remove files older than `maxFileAge`
 - `"count"` - Keep only the most recent `maxTraceFiles` files
 
@@ -396,18 +403,21 @@ All configuration is validated against the JSON schema defined in:
 ### Common Validation Errors
 
 **Invalid line width**:
+
 ```
 ❌ textFormatOptions.lineWidth must be between 80 and 200, got: 300
 ✅ Set lineWidth to value between 80-200
 ```
 
 **Invalid output format**:
+
 ```
 ❌ Invalid output formats: [html, unsupported]
 ✅ Use only: json, text (html/markdown planned)
 ```
 
 **Invalid section separator**:
+
 ```
 ❌ textFormatOptions.sectionSeparator must be a single character
 ✅ Use single character like "=", "-", or "*"
@@ -417,11 +427,11 @@ All configuration is validated against the JSON schema defined in:
 
 ### Format Performance Impact
 
-| Format | Generation Time | File Size | Use Case |
-|--------|----------------|-----------|----------|
-| JSON | ~1-2ms | 100% | Programmatic analysis |
-| Text | ~2-3ms | 150% | Human review |
-| Both | ~3-4ms | 250% | Development |
+| Format | Generation Time | File Size | Use Case              |
+| ------ | --------------- | --------- | --------------------- |
+| JSON   | ~1-2ms          | 100%      | Programmatic analysis |
+| Text   | ~2-3ms          | 150%      | Human review          |
+| Both   | ~3-4ms          | 250%      | Development           |
 
 ### Optimization Tips
 
@@ -457,7 +467,7 @@ All configuration is validated against the JSON schema defined in:
 ### Backward Compatibility
 
 - Existing JSON-only configurations continue to work unchanged
-- `outputFormats` defaults to `["json"]` if not specified  
+- `outputFormats` defaults to `["json"]` if not specified
 - Text format options are ignored if text format not enabled
 - All existing trace analysis tools remain compatible
 
@@ -489,6 +499,7 @@ diff traces/before/trace_action_*.txt traces/after/trace_action_*.txt
 ## Troubleshooting
 
 For detailed troubleshooting information, see:
+
 - [Troubleshooting Guide](./troubleshooting.md)
 - [API Reference](./api-reference.md)
 - [Examples](./examples/)

@@ -130,17 +130,14 @@ export class TraitsGenerator {
     const startTime = Date.now();
 
     // Dispatch generation started event
-    this.#eventBus.dispatch({
-      type: 'TRAITS_GENERATION_STARTED',
-      payload: {
-        conceptId: concept.id,
-        directionId: direction.id,
-        timestamp: new Date().toISOString(),
-        metadata: {
-          conceptLength: concept.concept?.length || 0,
-          clichesCount: cliches?.length || 0,
-          promptVersion: PROMPT_VERSION_INFO.version,
-        },
+    this.#eventBus.dispatch('TRAITS_GENERATION_STARTED', {
+      conceptId: concept.id,
+      directionId: direction.id,
+      timestamp: new Date().toISOString(),
+      metadata: {
+        conceptLength: concept.concept?.length || 0,
+        clichesCount: cliches?.length || 0,
+        promptVersion: PROMPT_VERSION_INFO.version,
       },
     });
 
@@ -202,15 +199,12 @@ export class TraitsGenerator {
       });
 
       // Dispatch completion event
-      this.#eventBus.dispatch({
-        type: 'TRAITS_GENERATION_COMPLETED',
-        payload: {
-          conceptId: concept.id,
-          directionId: direction.id,
-          generationTime: processingTime,
-          timestamp: new Date().toISOString(),
-          metadata,
-        },
+      this.#eventBus.dispatch('TRAITS_GENERATION_COMPLETED', {
+        conceptId: concept.id,
+        directionId: direction.id,
+        generationTime: processingTime,
+        timestamp: new Date().toISOString(),
+        metadata,
       });
 
       // Return traits data with metadata (NOT stored per storage policy)
@@ -231,16 +225,13 @@ export class TraitsGenerator {
       });
 
       // Dispatch failure event
-      this.#eventBus.dispatch({
-        type: 'TRAITS_GENERATION_FAILED',
-        payload: {
-          conceptId: concept.id,
-          directionId: direction.id,
-          error: error.message,
-          processingTime,
-          failureStage,
-          timestamp: new Date().toISOString(),
-        },
+      this.#eventBus.dispatch('TRAITS_GENERATION_FAILED', {
+        conceptId: concept.id,
+        directionId: direction.id,
+        error: error.message,
+        processingTime,
+        failureStage,
+        timestamp: new Date().toISOString(),
       });
 
       if (error instanceof TraitsGenerationError) {

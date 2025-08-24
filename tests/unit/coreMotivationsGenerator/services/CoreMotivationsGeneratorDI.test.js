@@ -3,7 +3,14 @@
  * @description Tests that verify the dependency injection setup is working correctly
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { Registrar } from '../../../../src/utils/registrarHelpers.js';
@@ -16,7 +23,7 @@ describe('CoreMotivationsGenerator DI Registration', () => {
   beforeEach(() => {
     container = new AppContainer();
     const registrar = new Registrar(container);
-    
+
     // Register minimal dependencies for the services
     // Mock logger
     const mockLogger = {
@@ -26,36 +33,36 @@ describe('CoreMotivationsGenerator DI Registration', () => {
       error: jest.fn(),
     };
     registrar.instance(tokens.ILogger, mockLogger);
-    
+
     // Mock LLM services needed by CoreMotivationsGenerator
     const mockLlmJsonService = {
       clean: jest.fn(),
       parseAndRepair: jest.fn(),
     };
     registrar.instance(tokens.LlmJsonService, mockLlmJsonService);
-    
+
     const mockLlmAdapter = {
       getAIDecision: jest.fn(),
     };
     registrar.instance(tokens.LLMAdapter, mockLlmAdapter);
-    
+
     const mockLlmConfigManager = {
       loadConfiguration: jest.fn(),
       getActiveConfiguration: jest.fn(),
       setActiveConfiguration: jest.fn(),
     };
     registrar.instance(tokens.ILLMConfigurationManager, mockLlmConfigManager);
-    
+
     const mockEventBus = {
       dispatch: jest.fn(),
     };
     registrar.instance(tokens.ISafeEventDispatcher, mockEventBus);
-    
+
     const mockTokenEstimator = {
       estimateTokens: jest.fn(),
     };
     registrar.instance(tokens.ITokenEstimator, mockTokenEstimator);
-    
+
     // Now register the services we're testing
     registrar.singletonFactory(tokens.CoreMotivationsGenerator, (c) => {
       return new CoreMotivationsGenerator({
@@ -67,7 +74,7 @@ describe('CoreMotivationsGenerator DI Registration', () => {
         tokenEstimator: c.resolve(tokens.ITokenEstimator),
       });
     });
-    
+
     registrar.singletonFactory(tokens.CoreMotivationsDisplayEnhancer, (c) => {
       return new CoreMotivationsDisplayEnhancer({
         logger: c.resolve(tokens.ILogger),
@@ -138,8 +145,12 @@ describe('CoreMotivationsGenerator DI Registration', () => {
 
     it('should be a singleton', () => {
       // Act
-      const instance1 = container.resolve(tokens.CoreMotivationsDisplayEnhancer);
-      const instance2 = container.resolve(tokens.CoreMotivationsDisplayEnhancer);
+      const instance1 = container.resolve(
+        tokens.CoreMotivationsDisplayEnhancer
+      );
+      const instance2 = container.resolve(
+        tokens.CoreMotivationsDisplayEnhancer
+      );
 
       // Assert
       expect(instance1).toBe(instance2);
@@ -193,8 +204,12 @@ describe('CoreMotivationsGenerator DI Registration', () => {
 
     it('should have both services available for controller creation', () => {
       // Act
-      const coreMotivationsGenerator = container.resolve(tokens.CoreMotivationsGenerator);
-      const displayEnhancer = container.resolve(tokens.CoreMotivationsDisplayEnhancer);
+      const coreMotivationsGenerator = container.resolve(
+        tokens.CoreMotivationsGenerator
+      );
+      const displayEnhancer = container.resolve(
+        tokens.CoreMotivationsDisplayEnhancer
+      );
       const eventBus = container.resolve(tokens.ISafeEventDispatcher);
       const logger = container.resolve(tokens.ILogger);
 

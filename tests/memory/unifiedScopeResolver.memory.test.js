@@ -49,7 +49,7 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
   afterEach(async () => {
     // Clean up resolver cache - UnifiedScopeResolver doesn't expose clearCache
     // but the cache strategy will handle TTL expiration and LRU eviction
-    
+
     // Force multiple GC cycles for better memory stabilization
     await global.memoryTestUtils.forceGCAndWait();
     await global.memoryTestUtils.forceGCAndWait();
@@ -114,13 +114,13 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
       // Note: UnifiedScopeResolver has significant overhead per context due to mock setup
       const memoryPerContext = memoryGrowth / contextCount;
       const maxMemoryPerContext = global.memoryTestUtils.isCI()
-        ? 140000  // Increased from 100KB to 140KB for CI environment variability
+        ? 140000 // Increased from 100KB to 140KB for CI environment variability
         : 120000; // Increased from 90KB to 120KB for local environment variability
-      
+
       // Add variance tolerance for V8's non-deterministic memory allocation
       const varianceTolerance = 15000; // ±15KB tolerance for measurement fluctuation
       const adjustedThreshold = maxMemoryPerContext + varianceTolerance;
-      
+
       expect(memoryPerContext).toBeLessThan(adjustedThreshold);
 
       console.log(

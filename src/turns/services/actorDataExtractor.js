@@ -8,6 +8,8 @@ import {
   PROFILE_COMPONENT_ID,
   LIKES_COMPONENT_ID,
   DISLIKES_COMPONENT_ID,
+  STRENGTHS_COMPONENT_ID,
+  WEAKNESSES_COMPONENT_ID,
   SECRETS_COMPONENT_ID,
   FEARS_COMPONENT_ID, // <<< Added import
   SPEECH_PATTERNS_COMPONENT_ID,
@@ -141,6 +143,8 @@ class ActorDataExtractor extends IActorDataExtractor {
       { key: 'profile', componentId: PROFILE_COMPONENT_ID },
       { key: 'likes', componentId: LIKES_COMPONENT_ID },
       { key: 'dislikes', componentId: DISLIKES_COMPONENT_ID },
+      { key: 'strengths', componentId: STRENGTHS_COMPONENT_ID },
+      { key: 'weaknesses', componentId: WEAKNESSES_COMPONENT_ID },
       { key: 'secrets', componentId: SECRETS_COMPONENT_ID },
       { key: 'fears', componentId: FEARS_COMPONENT_ID },
     ];

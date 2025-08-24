@@ -153,33 +153,46 @@ describe('UnifiedScopeResolver Performance', () => {
       // Enhanced logging for debugging timing issues
       const avgNoCacheTime = noCacheTime / iterations;
       const avgCacheTime = cacheTime / iterations;
-      
+
       console.log(`Performance Results (${iterations} iterations):`);
-      console.log(`  Without cache: ${noCacheTime.toFixed(2)}ms (avg: ${avgNoCacheTime.toFixed(4)}ms per call)`);
-      console.log(`  With cache: ${cacheTime.toFixed(2)}ms (avg: ${avgCacheTime.toFixed(4)}ms per call)`);
+      console.log(
+        `  Without cache: ${noCacheTime.toFixed(2)}ms (avg: ${avgNoCacheTime.toFixed(4)}ms per call)`
+      );
+      console.log(
+        `  With cache: ${cacheTime.toFixed(2)}ms (avg: ${avgCacheTime.toFixed(4)}ms per call)`
+      );
       console.log(
         `  Improvement: ${improvementRatio.toFixed(2)}x faster (${improvementPercentage.toFixed(1)}% faster)`
       );
 
       // Measurement validation - only assert performance improvements when measurements are meaningful
       const minMeasurementThreshold = 1.0; // Minimum 1ms total time for reliable measurement
-      const isMeasurementReliable = noCacheTime >= minMeasurementThreshold && cacheTime >= 0.1;
-      
+      const isMeasurementReliable =
+        noCacheTime >= minMeasurementThreshold && cacheTime >= 0.1;
+
       // More lenient thresholds for sub-millisecond operations to account for measurement noise
       // Reduced from 1.5x to 1.25x to handle JavaScript timing variability in test environments
       const expectedRatioThreshold = isMeasurementReliable ? 1.25 : 1.0;
       const expectedPercentageThreshold = isMeasurementReliable ? 20 : 0;
-      
+
       if (isMeasurementReliable) {
-        console.log(`  ✓ Performance assertions applied (measurements reliable)`);
+        console.log(
+          `  ✓ Performance assertions applied (measurements reliable)`
+        );
       } else {
-        console.warn(`  ⚠️  Operations too fast for reliable performance measurement (${noCacheTime.toFixed(2)}ms total)`);
-        console.warn(`     Applying minimal performance thresholds due to measurement precision limits`);
+        console.warn(
+          `  ⚠️  Operations too fast for reliable performance measurement (${noCacheTime.toFixed(2)}ms total)`
+        );
+        console.warn(
+          `     Applying minimal performance thresholds due to measurement precision limits`
+        );
       }
-      
+
       expect(improvementRatio).toBeGreaterThan(expectedRatioThreshold);
-      expect(improvementPercentage).toBeGreaterThan(expectedPercentageThreshold);
-      
+      expect(improvementPercentage).toBeGreaterThan(
+        expectedPercentageThreshold
+      );
+
       // Always verify that cache time is reasonable (not significantly worse than no-cache time)
       expect(cacheTime).toBeLessThanOrEqual(noCacheTime * 2); // Sanity check - cache shouldn't be 2x slower
 

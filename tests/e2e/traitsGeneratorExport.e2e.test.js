@@ -49,7 +49,7 @@ describe('Traits Generator Export Functionality E2E', () => {
         const originalCreateElement = window.document.createElement;
         window.document.createElement = jest.fn((tagName) => {
           const element = originalCreateElement.call(window.document, tagName);
-          
+
           if (tagName.toLowerCase() === 'a') {
             // Mock download link behavior
             const originalClick = element.click;
@@ -58,13 +58,13 @@ describe('Traits Generator Export Functionality E2E', () => {
                 downloadedFiles.push({
                   filename: element.download,
                   url: element.href,
-                  timestamp: new Date().toISOString()
+                  timestamp: new Date().toISOString(),
                 });
               }
               return originalClick.call(element);
             });
           }
-          
+
           return element;
         });
 
@@ -76,7 +76,7 @@ describe('Traits Generator Export Functionality E2E', () => {
           }
           return 123;
         });
-      }
+      },
     });
 
     window = dom.window;
@@ -94,12 +94,14 @@ describe('Traits Generator Export Functionality E2E', () => {
   describe('Export Button Functionality', () => {
     it('should have properly configured export button', () => {
       const exportBtn = document.getElementById('export-btn');
-      
+
       expect(exportBtn).toBeTruthy();
       expect(exportBtn.tagName).toBe('BUTTON');
       expect(exportBtn.classList.contains('cb-button-secondary')).toBe(true);
-      expect(exportBtn.getAttribute('aria-label')).toBe('Export traits to text file');
-      
+      expect(exportBtn.getAttribute('aria-label')).toBe(
+        'Export traits to text file'
+      );
+
       // Initially should be hidden
       expect(exportBtn.style.display).toBe('none');
     });
@@ -108,7 +110,7 @@ describe('Traits Generator Export Functionality E2E', () => {
       const exportBtn = document.getElementById('export-btn');
       const buttonIcon = exportBtn.querySelector('.button-icon');
       const buttonText = exportBtn.querySelector('.button-text');
-      
+
       expect(buttonIcon).toBeTruthy();
       expect(buttonText).toBeTruthy();
       expect(buttonText.textContent).toBe('Export');
@@ -116,7 +118,7 @@ describe('Traits Generator Export Functionality E2E', () => {
 
     it('should handle export button click events', () => {
       const exportBtn = document.getElementById('export-btn');
-      
+
       expect(() => {
         exportBtn.dispatchEvent(new window.Event('click', { bubbles: true }));
       }).not.toThrow();
@@ -126,10 +128,10 @@ describe('Traits Generator Export Functionality E2E', () => {
       // Test that export button visibility is controlled properly
       const exportBtn = document.getElementById('export-btn');
       const resultsState = document.getElementById('results-state');
-      
+
       expect(exportBtn).toBeTruthy();
       expect(resultsState).toBeTruthy();
-      
+
       // Export button should be in the results panel
       const panelActions = document.querySelector('.panel-actions');
       expect(panelActions).toBeTruthy();
@@ -142,34 +144,34 @@ describe('Traits Generator Export Functionality E2E', () => {
       // Test that blob creation is supported
       const mockContent = ['Test trait data for export'];
       const mockOptions = { type: 'text/plain;charset=utf-8' };
-      
+
       expect(() => {
         new window.Blob(mockContent, mockOptions);
       }).not.toThrow();
-      
+
       expect(window.Blob).toHaveBeenCalledWith(mockContent, mockOptions);
     });
 
     it('should create object URL for download', () => {
       const mockBlob = { content: ['test'], type: 'text/plain' };
-      
+
       expect(() => {
         window.URL.createObjectURL(mockBlob);
       }).not.toThrow();
-      
+
       expect(window.URL.createObjectURL).toHaveBeenCalledWith(mockBlob);
     });
 
     it('should create download link with proper attributes', () => {
       const link = document.createElement('a');
-      
+
       expect(link).toBeTruthy();
       expect(link.tagName).toBe('A');
-      
+
       // Test setting download attributes
       link.href = 'mock-blob-url';
       link.download = 'test-traits.txt';
-      
+
       expect(link.href).toContain('mock-blob-url');
       expect(link.download).toBe('test-traits.txt');
     });
@@ -179,11 +181,11 @@ describe('Traits Generator Export Functionality E2E', () => {
       const link = document.createElement('a');
       link.href = 'mock-blob-url';
       link.download = 'character-traits-test.txt';
-      
+
       // Simulate adding to DOM and clicking
       document.body.appendChild(link);
       link.click();
-      
+
       expect(downloadedFiles).toHaveLength(1);
       expect(downloadedFiles[0].filename).toBe('character-traits-test.txt');
       expect(downloadedFiles[0].url).toContain('mock-blob-url');
@@ -191,12 +193,12 @@ describe('Traits Generator Export Functionality E2E', () => {
 
     it('should clean up download resources', () => {
       const mockUrl = 'mock-blob-url';
-      
+
       // Test that URL cleanup is called
       expect(() => {
         window.URL.revokeObjectURL(mockUrl);
       }).not.toThrow();
-      
+
       // Should also test setTimeout for delayed cleanup
       expect(window.setTimeout).toBeDefined();
     });
@@ -209,12 +211,12 @@ describe('Traits Generator Export Functionality E2E', () => {
         id: 'test-trait-123',
         names: [
           { name: 'Alexander', justification: 'Strong leadership qualities' },
-          { name: 'Marcus', justification: 'Roman heritage inspiration' }
+          { name: 'Marcus', justification: 'Roman heritage inspiration' },
         ],
         physicalDescription: 'A tall figure with weathered features',
         personality: [
           { trait: 'Determined', explanation: 'Never gives up on goals' },
-          { trait: 'Cautious', explanation: 'Thinks before acting' }
+          { trait: 'Cautious', explanation: 'Thinks before acting' },
         ],
         strengths: ['Strategic thinking', 'Loyalty'],
         weaknesses: ['Stubbornness', 'Trust issues'],
@@ -223,19 +225,21 @@ describe('Traits Generator Export Functionality E2E', () => {
         fears: ['Failure', 'Betrayal'],
         goals: {
           shortTerm: ['Complete current mission'],
-          longTerm: 'Establish lasting peace'
+          longTerm: 'Establish lasting peace',
         },
         notes: ['Has military background', 'Skilled negotiator'],
         profile: 'A complex character balancing strength with vulnerability',
         secrets: ['Once failed a crucial mission'],
-        generatedAt: new Date().toISOString()
+        generatedAt: new Date().toISOString(),
       };
 
       // Test that blob creation handles structured data
       const formattedContent = JSON.stringify(mockTraitData, null, 2);
-      
+
       expect(() => {
-        new window.Blob([formattedContent], { type: 'text/plain;charset=utf-8' });
+        new window.Blob([formattedContent], {
+          type: 'text/plain;charset=utf-8',
+        });
       }).not.toThrow();
     });
 
@@ -244,13 +248,13 @@ describe('Traits Generator Export Functionality E2E', () => {
       const mockUserInputs = {
         coreMotivation: 'To protect innocents from harm',
         internalContradiction: 'Fears the cost of leadership',
-        centralQuestion: 'Can one lead without losing themselves?'
+        centralQuestion: 'Can one lead without losing themselves?',
       };
 
       const mockExportData = {
         userInputs: mockUserInputs,
         directionTitle: 'The Reluctant Hero',
-        generatedAt: new Date().toISOString()
+        generatedAt: new Date().toISOString(),
       };
 
       expect(() => {
@@ -264,7 +268,7 @@ describe('Traits Generator Export Functionality E2E', () => {
       const mockDirection = 'The Reluctant Hero';
       const timestamp = new Date().toISOString().split('T')[0];
       const expectedFilename = `character-traits-${mockDirection.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.txt`;
-      
+
       // Should handle filename sanitization
       expect(expectedFilename).toMatch(/^character-traits-.*\.txt$/);
       expect(expectedFilename).not.toContain(' '); // No spaces
@@ -273,8 +277,9 @@ describe('Traits Generator Export Functionality E2E', () => {
 
     it('should handle special characters in export data', () => {
       const mockDataWithSpecialChars = {
-        description: 'Character with special chars: ñáéíóú, quotes "test", and symbols @#$%',
-        notes: ['Line 1\nLine 2', 'Tabs\tand\tspaces']
+        description:
+          'Character with special chars: ñáéíóú, quotes "test", and symbols @#$%',
+        notes: ['Line 1\nLine 2', 'Tabs\tand\tspaces'],
       };
 
       expect(() => {
@@ -321,21 +326,23 @@ describe('Traits Generator Export Functionality E2E', () => {
     });
 
     it('should announce export errors to screen readers', () => {
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
-      
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
+
       expect(screenReaderAnnouncement).toBeTruthy();
       expect(screenReaderAnnouncement.getAttribute('aria-live')).toBe('polite');
       expect(screenReaderAnnouncement.classList.contains('sr-only')).toBe(true);
-      
+
       // Should support announcing export failures
       expect(screenReaderAnnouncement).toBeTruthy();
     });
 
     it('should handle missing trait data gracefully', () => {
       const exportBtn = document.getElementById('export-btn');
-      
+
       expect(exportBtn).toBeTruthy();
-      
+
       // Export button should handle being clicked without data
       expect(() => {
         exportBtn.dispatchEvent(new window.Event('click', { bubbles: true }));
@@ -344,9 +351,11 @@ describe('Traits Generator Export Functionality E2E', () => {
 
     it('should provide user feedback for export failures', () => {
       // Should be able to display error messages for export failures
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
       expect(screenReaderAnnouncement).toBeTruthy();
-      
+
       // Could also use error state for export failures
       const errorState = document.getElementById('error-state');
       expect(errorState).toBeTruthy();
@@ -356,17 +365,23 @@ describe('Traits Generator Export Functionality E2E', () => {
   describe('Export Accessibility', () => {
     it('should have accessible export button', () => {
       const exportBtn = document.getElementById('export-btn');
-      
-      expect(exportBtn.getAttribute('aria-label')).toBe('Export traits to text file');
+
+      expect(exportBtn.getAttribute('aria-label')).toBe(
+        'Export traits to text file'
+      );
       expect(exportBtn.tagName).toBe('BUTTON');
-      
+
       // Should be keyboard accessible
-      expect(exportBtn.tabIndex >= 0 || exportBtn.getAttribute('tabindex') === null).toBe(true);
+      expect(
+        exportBtn.tabIndex >= 0 || exportBtn.getAttribute('tabindex') === null
+      ).toBe(true);
     });
 
     it('should announce export success to screen readers', () => {
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
-      
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
+
       expect(screenReaderAnnouncement).toBeTruthy();
       expect(screenReaderAnnouncement.getAttribute('aria-live')).toBe('polite');
       expect(screenReaderAnnouncement.getAttribute('aria-atomic')).toBe('true');
@@ -384,10 +399,10 @@ describe('Traits Generator Export Functionality E2E', () => {
     it('should handle export with high contrast mode', () => {
       const exportBtn = document.getElementById('export-btn');
       const buttonText = exportBtn.querySelector('.button-text');
-      
+
       expect(buttonText).toBeTruthy();
       expect(buttonText.textContent).toBe('Export');
-      
+
       // Should not rely solely on icons for functionality
       expect(buttonText.textContent.trim()).not.toBe('');
     });
@@ -399,10 +414,10 @@ describe('Traits Generator Export Functionality E2E', () => {
       const baseFilename = 'character-traits';
       const timestamp1 = new Date('2024-01-01').toISOString().split('T')[0];
       const timestamp2 = new Date('2024-01-02').toISOString().split('T')[0];
-      
+
       const filename1 = `${baseFilename}-${timestamp1}.txt`;
       const filename2 = `${baseFilename}-${timestamp2}.txt`;
-      
+
       expect(filename1).not.toBe(filename2);
     });
 
@@ -412,7 +427,7 @@ describe('Traits Generator Export Functionality E2E', () => {
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-');
-      
+
       expect(sanitized).toBe('the-hero-with-and-symbols');
       expect(sanitized).not.toContain('/');
       expect(sanitized).not.toContain('\\');
@@ -420,10 +435,10 @@ describe('Traits Generator Export Functionality E2E', () => {
     });
 
     it('should support text file format', () => {
-      const mockBlob = new window.Blob(['test content'], { 
-        type: 'text/plain;charset=utf-8' 
+      const mockBlob = new window.Blob(['test content'], {
+        type: 'text/plain;charset=utf-8',
       });
-      
+
       expect(mockBlob.type).toBe('text/plain;charset=utf-8');
     });
 
@@ -433,10 +448,10 @@ describe('Traits Generator Export Functionality E2E', () => {
         description: 'A'.repeat(10000),
         notes: Array(1000).fill('Large note entry'),
         details: {
-          expanded: 'B'.repeat(5000)
-        }
+          expanded: 'B'.repeat(5000),
+        },
       };
-      
+
       expect(() => {
         const exportText = JSON.stringify(largeData);
         new window.Blob([exportText], { type: 'text/plain;charset=utf-8' });
@@ -448,13 +463,13 @@ describe('Traits Generator Export Functionality E2E', () => {
     it('should only show export after successful generation', () => {
       const exportBtn = document.getElementById('export-btn');
       const resultsState = document.getElementById('results-state');
-      
+
       expect(exportBtn).toBeTruthy();
       expect(resultsState).toBeTruthy();
-      
+
       // Initially export should be hidden
       expect(exportBtn.style.display).toBe('none');
-      
+
       // Should be shown in results state
       expect(resultsState.style.display).toBe('none'); // Initially hidden
     });
@@ -464,23 +479,23 @@ describe('Traits Generator Export Functionality E2E', () => {
       const mockContext = {
         direction: {
           title: 'The Reluctant Hero',
-          description: 'Character forced into heroism'
+          description: 'Character forced into heroism',
         },
         userInputs: {
           coreMotivation: 'Protect innocents',
           internalContradiction: 'Fears responsibility',
-          centralQuestion: 'Can one lead reluctantly?'
+          centralQuestion: 'Can one lead reluctantly?',
         },
         traits: {
           names: [{ name: 'Alex', justification: 'Strong leader' }],
-          personality: [{ trait: 'Cautious', explanation: 'Thinks first' }]
+          personality: [{ trait: 'Cautious', explanation: 'Thinks first' }],
         },
         metadata: {
           generatedAt: new Date().toISOString(),
-          version: '1.0.0'
-        }
+          version: '1.0.0',
+        },
       };
-      
+
       expect(() => {
         const exportData = JSON.stringify(mockContext, null, 2);
         new window.Blob([exportData], { type: 'text/plain;charset=utf-8' });
@@ -490,10 +505,10 @@ describe('Traits Generator Export Functionality E2E', () => {
     it('should clear export state when form is cleared', () => {
       const exportBtn = document.getElementById('export-btn');
       const clearBtn = document.getElementById('clear-btn');
-      
+
       expect(exportBtn).toBeTruthy();
       expect(clearBtn).toBeTruthy();
-      
+
       // Export should be hidden when form is cleared
       expect(exportBtn.style.display).toBe('none');
     });
@@ -514,18 +529,18 @@ function setupExportMocks(downloadedFiles) {
       }
       return `mock-blob-url-${Date.now()}`;
     }),
-    revokeObjectURL: jest.fn()
+    revokeObjectURL: jest.fn(),
   };
 
   const mockBlob = jest.fn().mockImplementation((content, options) => {
     if (!content || !Array.isArray(content)) {
       throw new Error('Invalid blob content');
     }
-    
+
     return {
       content,
       type: options?.type || 'text/plain',
-      size: content[0]?.length || 0
+      size: content[0]?.length || 0,
     };
   });
 
@@ -535,22 +550,25 @@ function setupExportMocks(downloadedFiles) {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({
-          id: 'export-test-trait',
-          names: [{ name: 'TestChar', justification: 'For export testing' }],
-          physicalDescription: 'Test description for export',
-          personality: [{ trait: 'Testable', explanation: 'Good for testing' }],
-          strengths: ['Testing'],
-          weaknesses: ['Fictional'],
-          likes: ['Unit tests'],
-          dislikes: ['Bugs'],
-          fears: ['Failed tests'],
-          goals: { shortTerm: ['Pass tests'], longTerm: 'Be well tested' },
-          notes: ['Export test character'],
-          profile: 'A character designed for export testing',
-          secrets: ['Actually just test data'],
-          generatedAt: new Date().toISOString()
-        })
+        json: () =>
+          Promise.resolve({
+            id: 'export-test-trait',
+            names: [{ name: 'TestChar', justification: 'For export testing' }],
+            physicalDescription: 'Test description for export',
+            personality: [
+              { trait: 'Testable', explanation: 'Good for testing' },
+            ],
+            strengths: ['Testing'],
+            weaknesses: ['Fictional'],
+            likes: ['Unit tests'],
+            dislikes: ['Bugs'],
+            fears: ['Failed tests'],
+            goals: { shortTerm: ['Pass tests'], longTerm: 'Be well tested' },
+            notes: ['Export test character'],
+            profile: 'A character designed for export testing',
+            secrets: ['Actually just test data'],
+            generatedAt: new Date().toISOString(),
+          }),
       });
     }
 
@@ -560,6 +578,6 @@ function setupExportMocks(downloadedFiles) {
   return {
     URL: mockURL,
     Blob: mockBlob,
-    fetch: mockFetch
+    fetch: mockFetch,
   };
 }

@@ -39,7 +39,7 @@ describe('Traits Generator Service Integration E2E', () => {
         // Setup global mocks for service integration
         window.fetch = mockServices.fetch;
         window.console = { ...window.console, ...mockServices.console };
-        
+
         // Mock URL for export functionality
         window.URL = {
           createObjectURL: jest.fn(() => 'mock-blob-url'),
@@ -50,7 +50,7 @@ describe('Traits Generator Service Integration E2E', () => {
         window.Blob = jest.fn().mockImplementation((content, options) => ({
           content,
           type: options?.type || 'text/plain',
-          size: content[0]?.length || 0
+          size: content[0]?.length || 0,
         }));
 
         // Mock IndexedDB for storage
@@ -58,7 +58,7 @@ describe('Traits Generator Service Integration E2E', () => {
           const FDBFactory = require('fake-indexeddb/lib/FDBFactory');
           window.indexedDB = new FDBFactory();
         }
-      }
+      },
     });
 
     window = dom.window;
@@ -86,23 +86,27 @@ describe('Traits Generator Service Integration E2E', () => {
     it('should prepare for enhanced trait formatting', () => {
       // Test that the page structure supports the enhanced display format
       // that TraitsDisplayEnhancer would produce
-      
+
       const resultsState = document.getElementById('results-state');
       expect(resultsState).toBeTruthy();
       expect(resultsState.getAttribute('role')).toBe('region');
-      
+
       // Should be accessible for screen readers
-      expect(resultsState.getAttribute('aria-label')).toBe('Generated character traits');
+      expect(resultsState.getAttribute('aria-label')).toBe(
+        'Generated character traits'
+      );
     });
 
     it('should support trait export functionality', () => {
       const exportBtn = document.getElementById('export-btn');
       expect(exportBtn).toBeTruthy();
-      expect(exportBtn.getAttribute('aria-label')).toBe('Export traits to text file');
-      
+      expect(exportBtn.getAttribute('aria-label')).toBe(
+        'Export traits to text file'
+      );
+
       // Export button should initially be hidden
       expect(exportBtn.style.display).toBe('none');
-      
+
       // Should have proper styling for TraitsDisplayEnhancer integration
       expect(exportBtn.classList.contains('cb-button-secondary')).toBe(true);
     });
@@ -110,9 +114,9 @@ describe('Traits Generator Service Integration E2E', () => {
     it('should handle enhanced trait data display structure', () => {
       // Test that the UI can handle the enhanced data structure
       // that TraitsDisplayEnhancer.enhanceForDisplay() would return
-      
+
       const traitsResults = document.getElementById('traits-results');
-      
+
       // Should be ready to display enhanced categories
       expect(traitsResults).toBeTruthy();
       expect(traitsResults.className).toBe('traits-results');
@@ -123,35 +127,45 @@ describe('Traits Generator Service Integration E2E', () => {
     it('should support thematic direction loading workflow', () => {
       const directionSelector = document.getElementById('direction-selector');
       expect(directionSelector).toBeTruthy();
-      
+
       // Should have loading state support
       expect(directionSelector.classList.contains('loading')).toBe(false); // Not loading initially
       expect(directionSelector.disabled).toBe(false); // Should be enabled for user interaction
-      
+
       // Should have proper ARIA label for accessibility
-      expect(directionSelector.getAttribute('aria-label')).toBe('Select thematic direction');
+      expect(directionSelector.getAttribute('aria-label')).toBe(
+        'Select thematic direction'
+      );
     });
 
     it('should handle direction selection and display workflow', () => {
-      const selectedDirectionDisplay = document.getElementById('selected-direction-display');
+      const selectedDirectionDisplay = document.getElementById(
+        'selected-direction-display'
+      );
       const directionTitle = document.getElementById('direction-title');
-      const directionDescription = document.getElementById('direction-description');
-      
+      const directionDescription = document.getElementById(
+        'direction-description'
+      );
+
       expect(selectedDirectionDisplay).toBeTruthy();
       expect(directionTitle).toBeTruthy();
       expect(directionDescription).toBeTruthy();
-      
+
       // Should initially be hidden
       expect(selectedDirectionDisplay.style.display).toBe('none');
     });
 
     it('should support core motivations loading and display', () => {
-      const coreMotivationsPanel = document.getElementById('core-motivations-panel');
-      const coreMotivationsList = document.getElementById('core-motivations-list');
-      
+      const coreMotivationsPanel = document.getElementById(
+        'core-motivations-panel'
+      );
+      const coreMotivationsList = document.getElementById(
+        'core-motivations-list'
+      );
+
       expect(coreMotivationsPanel).toBeTruthy();
       expect(coreMotivationsList).toBeTruthy();
-      
+
       // Should initially be hidden until direction is selected
       expect(coreMotivationsPanel.style.display).toBe('none');
     });
@@ -168,15 +182,17 @@ describe('Traits Generator Service Integration E2E', () => {
       const generateBtn = document.getElementById('generate-btn');
       const loadingState = document.getElementById('loading-state');
       const loadingMessage = document.getElementById('loading-message');
-      
+
       expect(generateBtn).toBeTruthy();
       expect(loadingState).toBeTruthy();
       expect(loadingMessage).toBeTruthy();
-      
+
       // Should be properly configured for generation workflow
       expect(generateBtn.classList.contains('cb-button-primary')).toBe(true);
       expect(loadingState.getAttribute('role')).toBe('status');
-      expect(loadingMessage.textContent).toContain('Generating character traits');
+      expect(loadingMessage.textContent).toContain(
+        'Generating character traits'
+      );
     });
   });
 
@@ -184,24 +200,28 @@ describe('Traits Generator Service Integration E2E', () => {
     it('should support service error display workflow', () => {
       const errorState = document.getElementById('error-state');
       const errorMessageText = document.getElementById('error-message-text');
-      
+
       expect(errorState).toBeTruthy();
       expect(errorMessageText).toBeTruthy();
-      
+
       // Should have proper accessibility for service errors
       expect(errorState.getAttribute('role')).toBe('alert');
       expect(errorState.style.display).toBe('none'); // Initially hidden
     });
 
     it('should handle direction selector error display', () => {
-      const directionSelectorError = document.getElementById('direction-selector-error');
+      const directionSelectorError = document.getElementById(
+        'direction-selector-error'
+      );
       expect(directionSelectorError).toBeTruthy();
       expect(directionSelectorError.getAttribute('role')).toBe('alert');
       expect(directionSelectorError.textContent).toBe(''); // Initially empty
     });
 
     it('should handle input validation error display', () => {
-      const inputValidationError = document.getElementById('input-validation-error');
+      const inputValidationError = document.getElementById(
+        'input-validation-error'
+      );
       expect(inputValidationError).toBeTruthy();
       expect(inputValidationError.getAttribute('role')).toBe('alert');
       expect(inputValidationError.textContent).toBe(''); // Initially empty
@@ -211,10 +231,12 @@ describe('Traits Generator Service Integration E2E', () => {
   describe('Event Bus Integration', () => {
     it('should support event dispatching for service communication', () => {
       // Test that the page structure supports event-driven architecture
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
       expect(screenReaderAnnouncement).toBeTruthy();
       expect(screenReaderAnnouncement.getAttribute('aria-live')).toBe('polite');
-      
+
       // Should support event-driven screen reader announcements
       expect(screenReaderAnnouncement.classList.contains('sr-only')).toBe(true);
     });
@@ -224,7 +246,7 @@ describe('Traits Generator Service Integration E2E', () => {
       const resultsState = document.getElementById('results-state');
       const errorState = document.getElementById('error-state');
       const loadingState = document.getElementById('loading-state');
-      
+
       // All state containers should exist for event-driven state management
       expect(emptyState).toBeTruthy();
       expect(resultsState).toBeTruthy();
@@ -238,12 +260,12 @@ describe('Traits Generator Service Integration E2E', () => {
       // Test that all UI states are properly configured
       const stateElements = [
         'empty-state',
-        'loading-state', 
+        'loading-state',
         'results-state',
-        'error-state'
+        'error-state',
       ];
 
-      stateElements.forEach(stateId => {
+      stateElements.forEach((stateId) => {
         const element = document.getElementById(stateId);
         expect(element).toBeTruthy();
       });
@@ -257,11 +279,11 @@ describe('Traits Generator Service Integration E2E', () => {
       const generateBtn = document.getElementById('generate-btn');
       const clearBtn = document.getElementById('clear-btn');
       const exportBtn = document.getElementById('export-btn');
-      
+
       expect(generateBtn).toBeTruthy();
       expect(clearBtn).toBeTruthy();
       expect(exportBtn).toBeTruthy();
-      
+
       // Initial button states
       expect(generateBtn.disabled).toBe(true); // Disabled until valid input
       expect(clearBtn.disabled).toBe(false);
@@ -272,10 +294,10 @@ describe('Traits Generator Service Integration E2E', () => {
       const inputFields = [
         'core-motivation-input',
         'internal-contradiction-input',
-        'central-question-input'
+        'central-question-input',
       ];
 
-      inputFields.forEach(fieldId => {
+      inputFields.forEach((fieldId) => {
         const field = document.getElementById(fieldId);
         expect(field).toBeTruthy();
         expect(field.disabled).toBe(false); // Should be enabled initially
@@ -303,10 +325,10 @@ describe('Traits Generator Service Integration E2E', () => {
   describe('Export Service Integration', () => {
     it('should support file download workflow', () => {
       const exportBtn = document.getElementById('export-btn');
-      
+
       expect(exportBtn).toBeTruthy();
       expect(exportBtn.classList.contains('cb-button-secondary')).toBe(true);
-      
+
       // Should have proper icon and text for export
       const buttonIcon = exportBtn.querySelector('.button-icon');
       const buttonText = exportBtn.querySelector('.button-text');
@@ -317,11 +339,13 @@ describe('Traits Generator Service Integration E2E', () => {
     it('should handle export error scenarios', () => {
       // Export functionality should integrate with error handling
       const errorState = document.getElementById('error-state');
-      const screenReaderAnnouncement = document.getElementById('screen-reader-announcement');
-      
+      const screenReaderAnnouncement = document.getElementById(
+        'screen-reader-announcement'
+      );
+
       expect(errorState).toBeTruthy();
       expect(screenReaderAnnouncement).toBeTruthy();
-      
+
       // Should support announcing export errors
       expect(screenReaderAnnouncement.getAttribute('aria-live')).toBe('polite');
     });
@@ -331,10 +355,10 @@ describe('Traits Generator Service Integration E2E', () => {
     it('should support service dependency resolution', () => {
       // Test that the page loads the correct entry point for DI
       const scriptTags = Array.from(document.querySelectorAll('script[src]'));
-      const mainScript = scriptTags.find(script => 
+      const mainScript = scriptTags.find((script) =>
         script.src.includes('traits-generator.js')
       );
-      
+
       expect(mainScript).toBeTruthy();
       expect(mainScript.type).toBe('module'); // Required for ES6 DI patterns
     });
@@ -344,7 +368,7 @@ describe('Traits Generator Service Integration E2E', () => {
       const errorState = document.getElementById('error-state');
       const errorContent = errorState.querySelector('.error-content');
       const errorTitle = errorState.querySelector('.error-title');
-      
+
       expect(errorState).toBeTruthy();
       expect(errorContent).toBeTruthy();
       expect(errorTitle).toBeTruthy();
@@ -356,11 +380,11 @@ describe('Traits Generator Service Integration E2E', () => {
     it('should support efficient service operation feedback', () => {
       const loadingState = document.getElementById('loading-state');
       const spinner = loadingState.querySelector('.spinner');
-      
+
       expect(loadingState).toBeTruthy();
       expect(spinner).toBeTruthy();
       expect(spinner.getAttribute('aria-hidden')).toBe('true');
-      
+
       // Should provide user feedback during potentially long service operations
       expect(loadingState.getAttribute('aria-live')).toBe('polite');
     });
@@ -369,7 +393,7 @@ describe('Traits Generator Service Integration E2E', () => {
       // Should support timeout error display
       const errorState = document.getElementById('error-state');
       expect(errorState.getAttribute('role')).toBe('alert');
-      
+
       // Should be able to display network/timeout errors
       const errorMessageText = document.getElementById('error-message-text');
       expect(errorMessageText).toBeTruthy();
@@ -388,7 +412,7 @@ function setupServiceMocks() {
     log: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    debug: jest.fn()
+    debug: jest.fn(),
   };
 
   // Setup mock responses for different service endpoints
@@ -396,26 +420,30 @@ function setupServiceMocks() {
     const urlString = url.toString();
 
     // Mock thematic directions service
-    if (urlString.includes('thematic-directions') || urlString.includes('directions')) {
+    if (
+      urlString.includes('thematic-directions') ||
+      urlString.includes('directions')
+    ) {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve([
-          {
-            id: 'test-direction-1',
-            title: 'The Reluctant Hero',
-            description: 'A character forced into heroism against their will',
-            concept: 'Heroism',
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: 'test-direction-2', 
-            title: 'The Reformed Villain',
-            description: 'A former antagonist seeking redemption',
-            concept: 'Redemption',
-            createdAt: new Date().toISOString()
-          }
-        ])
+        json: () =>
+          Promise.resolve([
+            {
+              id: 'test-direction-1',
+              title: 'The Reluctant Hero',
+              description: 'A character forced into heroism against their will',
+              concept: 'Heroism',
+              createdAt: new Date().toISOString(),
+            },
+            {
+              id: 'test-direction-2',
+              title: 'The Reformed Villain',
+              description: 'A former antagonist seeking redemption',
+              concept: 'Redemption',
+              createdAt: new Date().toISOString(),
+            },
+          ]),
       });
     }
 
@@ -424,85 +452,160 @@ function setupServiceMocks() {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve([
-          { id: '1', text: 'The chosen one who doesn\'t want to be chosen', direction: 'test-direction-1' },
-          { id: '2', text: 'Reluctant to accept their destiny', direction: 'test-direction-1' }
-        ])
+        json: () =>
+          Promise.resolve([
+            {
+              id: '1',
+              text: "The chosen one who doesn't want to be chosen",
+              direction: 'test-direction-1',
+            },
+            {
+              id: '2',
+              text: 'Reluctant to accept their destiny',
+              direction: 'test-direction-1',
+            },
+          ]),
       });
     }
 
-    // Mock core motivations service  
+    // Mock core motivations service
     if (urlString.includes('core-motivations')) {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve([
-          {
-            id: '1',
-            coreMotivation: 'To protect innocents from harm while maintaining personal freedom',
-            internalContradiction: 'Wants to help but fears the responsibility of leadership',
-            centralQuestion: 'Can one be a hero without sacrificing personal desires?',
-            direction: 'test-direction-1'
-          }
-        ])
+        json: () =>
+          Promise.resolve([
+            {
+              id: '1',
+              coreMotivation:
+                'To protect innocents from harm while maintaining personal freedom',
+              internalContradiction:
+                'Wants to help but fears the responsibility of leadership',
+              centralQuestion:
+                'Can one be a hero without sacrificing personal desires?',
+              direction: 'test-direction-1',
+            },
+          ]),
       });
     }
 
     // Mock traits generation service
-    if (urlString.includes('generate-traits') || (options?.method === 'POST' && urlString.includes('traits'))) {
+    if (
+      urlString.includes('generate-traits') ||
+      (options?.method === 'POST' && urlString.includes('traits'))
+    ) {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({
-          id: 'generated-trait-123',
-          names: [
-            { name: 'Alexander', justification: 'Strong leadership qualities despite reluctance' },
-            { name: 'Marcus', justification: 'Roman warrior heritage with modern sensibilities' },
-            { name: 'David', justification: 'Biblical hero parallel - small against great odds' }
-          ],
-          physicalDescription: 'A tall, weathered figure with calculating eyes and battle scars that tell stories of reluctant heroism.',
-          personality: [
-            { trait: 'Cautious', explanation: 'Carefully considers all options before acting, often to a fault' },
-            { trait: 'Protective', explanation: 'Instinctively shields others from danger, even at personal cost' },
-            { trait: 'Conflicted', explanation: 'Torn between personal desires and perceived duty to others' }
-          ],
-          strengths: ['Strategic thinking', 'Combat experience', 'Empathy for the innocent'],
-          weaknesses: ['Reluctance to lead', 'Self-doubt', 'Burden of unwanted responsibility'],
-          likes: ['Quiet moments of solitude', 'Simple pleasures', 'Honest people'],
-          dislikes: ['Political games', 'Unnecessary violence', 'Being thrust into leadership'],
-          fears: ['Failing those who depend on him', 'Becoming the monster he fights'],
-          goals: {
-            shortTerm: ['Find safe haven for current refugees', 'Master new combat technique'],
-            longTerm: 'Establish lasting peace while maintaining personal freedom'
-          },
-          notes: ['Has a hidden past as a scholar', 'Skilled with both sword and strategy'],
-          profile: 'A complex character torn between desire for peace and necessity of war, representing the modern reluctant hero archetype.',
-          secrets: ['Was once a pacifist monk before the war changed everything'],
-          generatedAt: new Date().toISOString(),
-          metadata: {
-            model: 'gpt-4',
-            temperature: 0.8,
-            tokens: 1250,
-            responseTime: 3500,
-            promptVersion: '1.0.0',
-            generationPrompt: 'Generate character traits based on reluctant hero archetype...'
-          }
-        })
+        json: () =>
+          Promise.resolve({
+            id: 'generated-trait-123',
+            names: [
+              {
+                name: 'Alexander',
+                justification: 'Strong leadership qualities despite reluctance',
+              },
+              {
+                name: 'Marcus',
+                justification:
+                  'Roman warrior heritage with modern sensibilities',
+              },
+              {
+                name: 'David',
+                justification:
+                  'Biblical hero parallel - small against great odds',
+              },
+            ],
+            physicalDescription:
+              'A tall, weathered figure with calculating eyes and battle scars that tell stories of reluctant heroism.',
+            personality: [
+              {
+                trait: 'Cautious',
+                explanation:
+                  'Carefully considers all options before acting, often to a fault',
+              },
+              {
+                trait: 'Protective',
+                explanation:
+                  'Instinctively shields others from danger, even at personal cost',
+              },
+              {
+                trait: 'Conflicted',
+                explanation:
+                  'Torn between personal desires and perceived duty to others',
+              },
+            ],
+            strengths: [
+              'Strategic thinking',
+              'Combat experience',
+              'Empathy for the innocent',
+            ],
+            weaknesses: [
+              'Reluctance to lead',
+              'Self-doubt',
+              'Burden of unwanted responsibility',
+            ],
+            likes: [
+              'Quiet moments of solitude',
+              'Simple pleasures',
+              'Honest people',
+            ],
+            dislikes: [
+              'Political games',
+              'Unnecessary violence',
+              'Being thrust into leadership',
+            ],
+            fears: [
+              'Failing those who depend on him',
+              'Becoming the monster he fights',
+            ],
+            goals: {
+              shortTerm: [
+                'Find safe haven for current refugees',
+                'Master new combat technique',
+              ],
+              longTerm:
+                'Establish lasting peace while maintaining personal freedom',
+            },
+            notes: [
+              'Has a hidden past as a scholar',
+              'Skilled with both sword and strategy',
+            ],
+            profile:
+              'A complex character torn between desire for peace and necessity of war, representing the modern reluctant hero archetype.',
+            secrets: [
+              'Was once a pacifist monk before the war changed everything',
+            ],
+            generatedAt: new Date().toISOString(),
+            metadata: {
+              model: 'gpt-4',
+              temperature: 0.8,
+              tokens: 1250,
+              responseTime: 3500,
+              promptVersion: '1.0.0',
+              generationPrompt:
+                'Generate character traits based on reluctant hero archetype...',
+            },
+          }),
       });
     }
 
     // Mock schema loading
-    if (urlString.includes('schema') || urlString.includes('trait.schema.json')) {
+    if (
+      urlString.includes('schema') ||
+      urlString.includes('trait.schema.json')
+    ) {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({
-          $schema: 'http://json-schema.org/draft-07/schema#',
-          $id: 'schema://living-narrative-engine/trait.schema.json',
-          title: 'Character Trait',
-          type: 'object',
-          required: ['id', 'names', 'physicalDescription']
-        })
+        json: () =>
+          Promise.resolve({
+            $schema: 'http://json-schema.org/draft-07/schema#',
+            $id: 'schema://living-narrative-engine/trait.schema.json',
+            title: 'Character Trait',
+            type: 'object',
+            required: ['id', 'names', 'physicalDescription'],
+          }),
       });
     }
 
@@ -516,12 +619,12 @@ function setupServiceMocks() {
       ok: false,
       status: 404,
       statusText: 'Not Found',
-      json: () => Promise.resolve({ error: 'Endpoint not found' })
+      json: () => Promise.resolve({ error: 'Endpoint not found' }),
     });
   });
 
   return {
     fetch: mockFetch,
-    console: mockConsole
+    console: mockConsole,
   };
 }

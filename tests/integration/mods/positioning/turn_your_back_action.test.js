@@ -5,7 +5,14 @@
  * the action is valid and dispatches it directly.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import turnYourBackRule from '../../../../data/mods/positioning/rules/turn_your_back.rule.json';
 import eventIsActionTurnYourBack from '../../../../data/mods/positioning/conditions/event-is-action-turn-your-back.condition.json';
 import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
@@ -134,9 +141,9 @@ describe('positioning:turn_your_back action integration', () => {
     // Check that facing_away component was added
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
     expect(actor.components['positioning:facing_away']).toBeDefined();
-    expect(actor.components['positioning:facing_away'].facing_away_from).toEqual([
-      'test:target1',
-    ]);
+    expect(
+      actor.components['positioning:facing_away'].facing_away_from
+    ).toEqual(['test:target1']);
 
     // Check success message
     const successEvent = testEnv.events.find(
@@ -260,9 +267,9 @@ describe('positioning:turn_your_back action integration', () => {
 
     // Component should be added correctly
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:facing_away'].facing_away_from).toEqual([
-      'test:target1',
-    ]);
+    expect(
+      actor.components['positioning:facing_away'].facing_away_from
+    ).toEqual(['test:target1']);
 
     // Perceptible event should be visible to all in location
     const perceptibleEvent = testEnv.events.find(
@@ -337,7 +344,7 @@ describe('positioning:turn_your_back action integration', () => {
 
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
     const facingAwayComponent = actor.components['positioning:facing_away'];
-    
+
     // Verify component structure matches schema
     expect(facingAwayComponent).toBeDefined();
     expect(Array.isArray(facingAwayComponent.facing_away_from)).toBe(true);
@@ -373,18 +380,22 @@ describe('positioning:turn_your_back action integration', () => {
     });
 
     // Component should store the namespaced target ID
-    const actor = testEnv.entityManager.getEntityInstance('game:player_character');
+    const actor = testEnv.entityManager.getEntityInstance(
+      'game:player_character'
+    );
     expect(actor.components['positioning:facing_away']).toBeDefined();
-    expect(actor.components['positioning:facing_away'].facing_away_from).toEqual([
-      'npcs:bartender_instance',
-    ]);
+    expect(
+      actor.components['positioning:facing_away'].facing_away_from
+    ).toEqual(['npcs:bartender_instance']);
 
     // Verify success message includes proper names
     const successEvent = testEnv.events.find(
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe('Player turns their back to Bartender.');
+    expect(successEvent.payload.message).toBe(
+      'Player turns their back to Bartender.'
+    );
   });
 
   it('demonstrates component lifecycle (would be prevented by forbidden_components in action discovery)', async () => {
@@ -396,7 +407,9 @@ describe('positioning:turn_your_back action integration', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:facing_away': { facing_away_from: ['test:existing_target'] },
+          'positioning:facing_away': {
+            facing_away_from: ['test:existing_target'],
+          },
         },
       },
       {
@@ -421,9 +434,9 @@ describe('positioning:turn_your_back action integration', () => {
 
     // The ADD_COMPONENT operation would replace existing component
     const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:facing_away'].facing_away_from).toEqual([
-      'test:target1',
-    ]);
+    expect(
+      actor.components['positioning:facing_away'].facing_away_from
+    ).toEqual(['test:target1']);
   });
 
   it('validates component data matches facing_away schema expectations', async () => {
@@ -463,6 +476,8 @@ describe('positioning:turn_your_back action integration', () => {
     expect(component.facing_away_from).toContain('test:target1');
 
     // Verify array uniqueness (though this test only has one item)
-    expect(new Set(component.facing_away_from).size).toBe(component.facing_away_from.length);
+    expect(new Set(component.facing_away_from).size).toBe(
+      component.facing_away_from.length
+    );
   });
 });

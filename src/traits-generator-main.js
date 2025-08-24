@@ -23,9 +23,7 @@ const initializeApp = async () => {
       pageName: 'traits-generator',
       controllerClass: TraitsGeneratorController,
       includeModLoading: true,
-      customSchemas: [
-        '/data/schemas/trait.schema.json',
-      ],
+      customSchemas: ['/data/schemas/trait.schema.json'],
       services: {
         traitsDisplayEnhancer: TraitsDisplayEnhancer,
       },

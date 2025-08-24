@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:strengths",
+  "description": "Stores a character's strengths, written from their first-person perspective.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["text"],
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "A string describing the character's strengths, written from their first-person perspective. For example: 'I am particularly good at solving complex problems and inspiring others with my passion for innovation.' or using a delimited list format: 'My key strengths: Leadership + Problem-solving + Creative thinking'."
+      }
+    }
+  }
+}

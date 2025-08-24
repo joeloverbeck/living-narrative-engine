@@ -39,41 +39,58 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
     names: [
       {
         name: 'Alaric Ironward',
-        justification: 'A strong name that suggests both nobility and military prowess, fitting for a battle-scarred veteran'
+        justification:
+          'A strong name that suggests both nobility and military prowess, fitting for a battle-scarred veteran',
       },
       {
-        name: 'Marcus Thornfield', 
-        justification: 'Combines a classic warrior name with a field-based surname suggesting grounding and stability'
+        name: 'Marcus Thornfield',
+        justification:
+          'Combines a classic warrior name with a field-based surname suggesting grounding and stability',
       },
       {
         name: 'Gareth Soulstone',
-        justification: 'Evokes both strength and the weight of past experiences, suitable for someone seeking redemption'
-      }
+        justification:
+          'Evokes both strength and the weight of past experiences, suitable for someone seeking redemption',
+      },
     ],
-    physicalDescription: 'A weathered man in his early forties with silver-streaked dark hair and deep lines around steel-gray eyes that have seen too much. His broad shoulders carry themselves with military bearing despite the weight of old wounds, and a jagged scar runs from his left temple to his jaw. Calloused hands and a slight limp speak to years of combat, while his simple, well-maintained clothes suggest discipline despite his fall from grace.',
+    physicalDescription:
+      'A weathered man in his early forties with silver-streaked dark hair and deep lines around steel-gray eyes that have seen too much. His broad shoulders carry themselves with military bearing despite the weight of old wounds, and a jagged scar runs from his left temple to his jaw. Calloused hands and a slight limp speak to years of combat, while his simple, well-maintained clothes suggest discipline despite his fall from grace.',
     personality: [
       {
         trait: 'Protective Instinct',
-        explanation: 'Driven by an overwhelming need to shield others from the pain he has caused and experienced',
-        behavioral_examples: ['Always positions himself between danger and innocents', 'Cannot walk past someone in distress without helping']
+        explanation:
+          'Driven by an overwhelming need to shield others from the pain he has caused and experienced',
+        behavioral_examples: [
+          'Always positions himself between danger and innocents',
+          'Cannot walk past someone in distress without helping',
+        ],
       },
       {
         trait: 'Self-Punishing',
-        explanation: 'Believes he deserves suffering for his past mistakes and actively seeks hardship as penance',
-        behavioral_examples: ['Refuses comfortable accommodations', 'Takes on the most dangerous assignments']
+        explanation:
+          'Believes he deserves suffering for his past mistakes and actively seeks hardship as penance',
+        behavioral_examples: [
+          'Refuses comfortable accommodations',
+          'Takes on the most dangerous assignments',
+        ],
       },
       {
         trait: 'Reluctant Mentor',
-        explanation: 'Knows his experience could help others but fears corrupting them with his darkness',
-        behavioral_examples: ['Offers cryptic warnings rather than direct advice', 'Watches over younger fighters from a distance']
-      }
-    ]
+        explanation:
+          'Knows his experience could help others but fears corrupting them with his darkness',
+        behavioral_examples: [
+          'Offers cryptic warnings rather than direct advice',
+          'Watches over younger fighters from a distance',
+        ],
+      },
+    ],
   };
 
   // Sample concept
   const sampleConcept = {
     id: 'concept-123',
-    concept: 'A battle-scarred veteran seeking redemption after a tragic mistake',
+    concept:
+      'A battle-scarred veteran seeking redemption after a tragic mistake',
   };
 
   // Sample thematic direction
@@ -82,21 +99,24 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
     title: 'The Path to Redemption',
     description: 'Exploring themes of guilt, forgiveness, and second chances',
     coreTension: 'The struggle between self-punishment and self-forgiveness',
-    uniqueTwist: 'Redemption comes through helping others find their own redemption',
+    uniqueTwist:
+      'Redemption comes through helping others find their own redemption',
   };
 
   // Sample user inputs
   const sampleUserInputs = {
     coreMotivation: 'To atone for past mistakes by protecting the innocent',
-    internalContradiction: 'Believes they deserve punishment yet knows others need their protection',
-    centralQuestion: 'Can someone who has caused great harm ever truly be redeemed?'
+    internalContradiction:
+      'Believes they deserve punishment yet knows others need their protection',
+    centralQuestion:
+      'Can someone who has caused great harm ever truly be redeemed?',
   };
 
   // Sample clichés
   const sampleClichés = [
     { id: 'cliche-1', text: 'Brooding antihero with a dark past' },
     { id: 'cliche-2', text: 'Reluctant mentor figure' },
-    { id: 'cliche-3', text: 'Sacrificial hero complex' }
+    { id: 'cliche-3', text: 'Sacrificial hero complex' },
   ];
 
   beforeEach(() => {
@@ -163,7 +183,10 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
         maxRetries: 2,
       };
 
-      const result = await characterBuilderService.generateTraits(params, options);
+      const result = await characterBuilderService.generateTraits(
+        params,
+        options
+      );
 
       // Verify result structure matches the expected response format
       expect(result).toHaveProperty('names');
@@ -175,8 +198,11 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
 
       // Verify TraitsGenerator was called with correct parameters
       expect(traitsGenerator.generateTraits).toHaveBeenCalledTimes(1);
-      expect(traitsGenerator.generateTraits).toHaveBeenCalledWith(params, options);
-      
+      expect(traitsGenerator.generateTraits).toHaveBeenCalledWith(
+        params,
+        options
+      );
+
       // Verify CharacterBuilderService logging
       expect(mockLogger.info).toHaveBeenCalledWith(
         'CharacterBuilderService: Delegating traits generation',
@@ -199,16 +225,16 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
     it('should handle minimal parameters correctly', async () => {
       const params = {
         concept: { id: 'simple-concept', concept: 'A simple character' },
-        direction: { 
-          id: 'simple-direction', 
+        direction: {
+          id: 'simple-direction',
           title: 'Basic Direction',
           description: 'A simple thematic direction for testing',
-          coreTension: 'Basic tension for minimal test'
+          coreTension: 'Basic tension for minimal test',
         },
         userInputs: {
           coreMotivation: 'Simple motivation for testing',
           internalContradiction: 'Basic contradiction for testing',
-          centralQuestion: 'Simple question for testing?'
+          centralQuestion: 'Simple question for testing?',
         },
         cliches: [],
       };
@@ -241,13 +267,13 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
       const traitsError = new Error('LLM service temporarily unavailable');
       traitsGenerator.generateTraits.mockRejectedValue(traitsError);
 
-      await expect(characterBuilderService.generateTraits(params))
-        .rejects
-        .toThrow(CharacterBuilderError);
+      await expect(
+        characterBuilderService.generateTraits(params)
+      ).rejects.toThrow(CharacterBuilderError);
 
-      await expect(characterBuilderService.generateTraits(params))
-        .rejects
-        .toThrow('Failed to generate traits');
+      await expect(
+        characterBuilderService.generateTraits(params)
+      ).rejects.toThrow('Failed to generate traits');
 
       // Verify error was logged by CharacterBuilderService
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -281,9 +307,9 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
       const validationError = new Error('Invalid response structure from LLM');
       traitsGenerator.generateTraits.mockRejectedValue(validationError);
 
-      await expect(characterBuilderService.generateTraits(params))
-        .rejects
-        .toThrow(CharacterBuilderError);
+      await expect(
+        characterBuilderService.generateTraits(params)
+      ).rejects.toThrow(CharacterBuilderError);
 
       // Verify error logging
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -311,7 +337,10 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
 
       // Verify TraitsGenerator was called with the custom options
       expect(traitsGenerator.generateTraits).toHaveBeenCalledTimes(1);
-      expect(traitsGenerator.generateTraits).toHaveBeenCalledWith(params, customOptions);
+      expect(traitsGenerator.generateTraits).toHaveBeenCalledWith(
+        params,
+        customOptions
+      );
     });
   });
 
@@ -351,13 +380,13 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
         cliches: sampleClichés,
       };
 
-      await expect(serviceWithoutTraits.generateTraits(params))
-        .rejects
-        .toThrow(CharacterBuilderError);
+      await expect(serviceWithoutTraits.generateTraits(params)).rejects.toThrow(
+        CharacterBuilderError
+      );
 
-      await expect(serviceWithoutTraits.generateTraits(params))
-        .rejects
-        .toThrow('TraitsGenerator service not available');
+      await expect(serviceWithoutTraits.generateTraits(params)).rejects.toThrow(
+        'TraitsGenerator service not available'
+      );
     });
   });
 });
