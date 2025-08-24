@@ -3,34 +3,25 @@
  * This file initializes the Speech Patterns Generator controller and UI
  */
 
-import { ensureValidLogger } from './utils/loggerUtils.js';
-
-// Stub implementation for initial build setup
-// Full implementation will be added in SPEPATGEN-005 (Controller Implementation)
+import { CharacterBuilderBootstrap } from './characterBuilder/CharacterBuilderBootstrap.js';
+import { SpeechPatternsGeneratorController } from './characterBuilder/controllers/SpeechPatternsGeneratorController.js';
 
 /**
  * Initialize the Speech Patterns Generator application
  */
 async function initializeSpeechPatternsGenerator() {
-  const logger = ensureValidLogger(console);
-
   try {
-    logger.info('Initializing Speech Patterns Generator...');
+    const bootstrap = new CharacterBuilderBootstrap();
 
-    // Placeholder for controller initialization
-    // Will be implemented in SPEPATGEN-005
+    const { controller } = await bootstrap.bootstrap({
+      pageName: 'Speech Patterns Generator',
+      controllerClass: SpeechPatternsGeneratorController,
+      includeModLoading: false,
+    });
 
-    // Add basic navigation for now
-    const backBtn = document.getElementById('back-btn');
-    if (backBtn) {
-      backBtn.addEventListener('click', () => {
-        window.location.href = 'index.html';
-      });
-    }
-
-    logger.info('Speech Patterns Generator initialized successfully');
+    console.info('Speech Patterns Generator initialized successfully');
   } catch (error) {
-    logger.error('Failed to initialize Speech Patterns Generator:', error);
+    console.error('Failed to initialize Speech Patterns Generator:', error);
 
     // Display error to user
     const container = document.getElementById('speech-patterns-container');
@@ -38,6 +29,7 @@ async function initializeSpeechPatternsGenerator() {
       container.innerHTML = `
         <div class="cb-error-message">
           <p>Failed to initialize the application. Please refresh the page.</p>
+          <p class="error-details">${error.message}</p>
         </div>
       `;
     }

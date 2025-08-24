@@ -1,29 +1,3 @@
-# SPEPATGEN-005: Implement SpeechPatternsGeneratorController
-
-## Ticket Overview
-
-- **Epic**: Speech Patterns Generator Implementation
-- **Phase**: 2 - Core Implementation
-- **Type**: Backend Development/Controller
-- **Priority**: High
-- **Estimated Effort**: 2 days
-- **Dependencies**: SPEPATGEN-001 (HTML Structure), SPEPATGEN-004 (Build Entry Point)
-
-## Description
-
-Implement the `SpeechPatternsGeneratorController` class that manages the Speech Patterns Generator interface. This controller extends `BaseCharacterBuilderController` and handles character input validation, generation workflow orchestration, results display, and user interactions.
-
-## Requirements
-
-### Controller File Creation
-
-- **File**: `src/characterBuilder/controllers/SpeechPatternsGeneratorController.js`
-- **Parent Class**: Extends `BaseCharacterBuilderController`
-- **Dependencies**: Integrates with existing character builder infrastructure
-
-### Complete Controller Implementation
-
-```javascript
 /**
  * @file Speech patterns generator controller for character building
  * @description Manages UI for speech pattern generation based on character definitions
@@ -32,11 +6,11 @@ Implement the `SpeechPatternsGeneratorController` class that manages the Speech 
 
 import { BaseCharacterBuilderController } from './BaseCharacterBuilderController.js';
 import { DomUtils } from '../../utils/domUtils.js';
-import { validateDependency } from '../../utils/validationUtils.js';
 import {
+  validateDependency,
   assertPresent,
   assertNonBlankString,
-} from '../../utils/validationUtils.js';
+} from '../../utils/dependencyUtils.js';
 
 /**
  * Controller for speech patterns generator interface
@@ -44,11 +18,11 @@ import {
  */
 export class SpeechPatternsGeneratorController extends BaseCharacterBuilderController {
   // Dependencies
-  /** @private @type {SpeechPatternsDisplayEnhancer} */
-  #displayEnhancer;
+  /** @private @type {SpeechPatternsDisplayEnhancer|null} */
+  #displayEnhancer = null;
 
-  /** @private @type {ILLMService} */
-  #llmService;
+  /** @private @type {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} */
+  #llmAdapter;
 
   // UI State
   /** @private @type {object|null} */
@@ -65,34 +39,58 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
   /**
    * Create a new SpeechPatternsGeneratorController instance
+   *
    * @param {object} dependencies - Service dependencies
    */
   constructor(dependencies) {
     super(dependencies);
 
-    validateDependency(
-      dependencies.speechPatternsDisplayEnhancer,
-      'SpeechPatternsDisplayEnhancer',
-      null,
-      {
-        requiredMethods: [
-          'enhanceForDisplay',
-          'formatForExport',
-          'generateExportFilename',
-        ],
+    // SpeechPatternsDisplayEnhancer is optional (will be created in SPEPATGEN-006)
+    if (dependencies.speechPatternsDisplayEnhancer) {
+      validateDependency(
+        dependencies.speechPatternsDisplayEnhancer,
+        'SpeechPatternsDisplayEnhancer',
+        dependencies.logger,
+        {
+          requiredMethods: [
+            'enhanceForDisplay',
+            'formatForExport',
+            'generateExportFilename',
+          ],
+        }
+      );
+      this.#displayEnhancer = dependencies.speechPatternsDisplayEnhancer;
+    }
+
+    // Get LLM adapter from container (initialized by CharacterBuilderBootstrap)
+    if (dependencies.llmAdapter) {
+      validateDependency(
+        dependencies.llmAdapter,
+        'LLMAdapter',
+        dependencies.logger,
+        {
+          requiredMethods: ['generateText', 'isAvailable'],
+        }
+      );
+      this.#llmAdapter = dependencies.llmAdapter;
+    } else {
+      // Try to get from container if not explicitly passed
+      if (dependencies.container) {
+        try {
+          this.#llmAdapter = dependencies.container.resolve('LLMAdapter');
+        } catch (error) {
+          dependencies.logger?.warn(
+            'LLM adapter not available:',
+            error.message
+          );
+        }
       }
-    );
-
-    validateDependency(dependencies.llmService, 'ILLMService', null, {
-      requiredMethods: ['generateText', 'isAvailable'],
-    });
-
-    this.#displayEnhancer = dependencies.speechPatternsDisplayEnhancer;
-    this.#llmService = dependencies.llmService;
+    }
   }
 
   /**
    * Cache DOM elements specific to speech patterns generation
+   *
    * @protected
    */
   _cacheElements() {
@@ -124,6 +122,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
   /**
    * Set up event listeners for speech patterns generation UI
+   *
    * @protected
    */
   _setupEventListeners() {
@@ -172,6 +171,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
   /**
    * Load initial data (minimal for this generator)
+   *
    * @protected
    */
   async _loadInitialData() {
@@ -183,6 +183,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
   /**
    * Initialize UI state
+   *
    * @protected
    */
   async _initializeUIState() {
@@ -197,6 +198,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
   /**
    * Handle character input changes
+   *
    * @private
    */
   #handleCharacterInput() {
@@ -224,6 +226,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
   /**
    * Validate character input JSON format and content
+   *
    * @private
    * @returns {boolean} True if validation passes
    */
@@ -267,6 +270,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
   /**
    * Validate character definition structure
+   *
    * @private
    * @param {object} characterData - Parsed character data
    * @returns {object} Validation result with isValid flag and errors array
@@ -347,6 +351,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
   /**
    * Main generation orchestration method
+   *
    * @private
    */
   async #generateSpeechPatterns() {
@@ -398,6 +403,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
   /**
    * Prepare LLM prompt with character data and guidelines
+   *
    * @private
    * @param {object} characterData - Character definition
    * @returns {string} Formatted prompt for LLM
@@ -441,14 +447,17 @@ Generate the speech patterns now:`;
 
   /**
    * Call LLM service with speech patterns prompt
+   *
    * @private
    * @param {string} prompt - Formatted prompt
    * @returns {Promise<string>} LLM response
    */
   async #callSpeechPatternsService(prompt) {
-    assertPresent(this.#llmService, 'LLM service not available');
+    if (!this.#llmAdapter) {
+      throw new Error('LLM adapter not available - please check configuration');
+    }
 
-    if (!this.#llmService.isAvailable()) {
+    if (!this.#llmAdapter.isAvailable()) {
       throw new Error('LLM service is currently unavailable');
     }
 
@@ -459,17 +468,23 @@ Generate the speech patterns now:`;
       signal: this.#currentGenerationController?.signal,
     };
 
-    return await this.#llmService.generateText(requestOptions);
+    return await this.#llmAdapter.generateText(requestOptions);
   }
 
   /**
    * Process and validate LLM response
+   *
    * @private
    * @param {string} response - Raw LLM response
    * @returns {Promise<object>} Processed speech patterns
    */
   async #processLLMResponse(response) {
-    assertNonBlankString(response, 'LLM response');
+    assertNonBlankString(
+      response,
+      'LLM response',
+      'Speech pattern generation',
+      this.logger
+    );
 
     // Parse response (assuming it returns JSON or structured text)
     let parsedResponse;
@@ -490,6 +505,7 @@ Generate the speech patterns now:`;
 
   /**
    * Parse structured text response into speech patterns object
+   *
    * @private
    * @param {string} textResponse - Structured text response
    * @returns {object} Parsed speech patterns
@@ -540,15 +556,25 @@ Generate the speech patterns now:`;
       patterns.push(currentPattern);
     }
 
+    // Convert to simple string array format expected by core:speech_patterns schema
+    const simplePatterns = patterns.map((pattern) => {
+      if (pattern.circumstances) {
+        return `(${pattern.circumstances}) ${pattern.example}`;
+      }
+      return pattern.example || pattern.pattern;
+    });
+
     return {
-      speechPatterns: patterns,
+      speechPatterns: simplePatterns, // Simple array of strings for schema compliance
       characterName: this.#extractCharacterName(),
       generatedAt: new Date().toISOString(),
+      totalCount: simplePatterns.length,
     };
   }
 
   /**
    * Extract circumstances from speech example
+   *
    * @private
    * @param {string} example - Speech example
    * @returns {string} Extracted circumstances
@@ -560,6 +586,7 @@ Generate the speech patterns now:`;
 
   /**
    * Extract character name from character definition
+   *
    * @private
    * @returns {string} Character name
    */
@@ -577,6 +604,7 @@ Generate the speech patterns now:`;
 
   /**
    * Validate LLM response against schema
+   *
    * @private
    * @param {object} response - Parsed response
    * @returns {Promise<void>}
@@ -592,10 +620,12 @@ Generate the speech patterns now:`;
       throw new Error('Insufficient speech patterns generated');
     }
 
-    // Validate each pattern
+    // Validate each pattern is a string
     for (const pattern of response.speechPatterns) {
-      if (!pattern.pattern || !pattern.example) {
-        throw new Error('Invalid pattern format: missing required fields');
+      if (typeof pattern !== 'string' || !pattern.trim()) {
+        throw new Error(
+          'Invalid pattern format: patterns must be non-empty strings'
+        );
       }
     }
   }
@@ -604,6 +634,7 @@ Generate the speech patterns now:`;
 
   /**
    * Display generated speech patterns
+   *
    * @private
    * @param {object} patterns - Generated patterns
    */
@@ -614,11 +645,17 @@ Generate the speech patterns now:`;
     // Clear previous results
     container.innerHTML = '';
 
-    // Enhance patterns for display
-    const enhancedPatterns = this.#displayEnhancer.enhanceForDisplay(patterns);
+    // Enhance patterns for display or use fallback
+    let displayData;
+    if (this.#displayEnhancer) {
+      displayData = this.#displayEnhancer.enhanceForDisplay(patterns);
+    } else {
+      // Fallback display logic when enhancer is not available
+      displayData = this.#createFallbackDisplayData(patterns);
+    }
 
     // Create results header
-    const header = this.#createResultsHeader(enhancedPatterns);
+    const header = this.#createResultsHeader(displayData);
     container.appendChild(header);
 
     // Create results container
@@ -626,7 +663,7 @@ Generate the speech patterns now:`;
     resultsContainer.className = 'speech-patterns-results';
 
     // Render each pattern
-    enhancedPatterns.patterns.forEach((pattern, index) => {
+    displayData.patterns.forEach((pattern, index) => {
       const patternElement = this.#renderSpeechPattern(pattern, index);
       resultsContainer.appendChild(patternElement);
     });
@@ -634,23 +671,57 @@ Generate the speech patterns now:`;
     container.appendChild(resultsContainer);
 
     // Update pattern count
-    this.#updatePatternCount(enhancedPatterns.totalCount);
+    this.#updatePatternCount(displayData.totalCount);
+  }
+
+  /**
+   * Create fallback display data when display enhancer is not available
+   *
+   * @private
+   * @param {object} patterns - Raw pattern data
+   * @returns {object} Display-ready data structure
+   */
+  #createFallbackDisplayData(patterns) {
+    return {
+      patterns: patterns.speechPatterns.map((pattern, index) => ({
+        index: index + 1,
+        htmlSafePattern: this.#escapeHtml(pattern),
+        htmlSafeExample: this.#escapeHtml(pattern),
+        circumstances: '',
+      })),
+      characterName: patterns.characterName || 'Character',
+      totalCount: patterns.speechPatterns.length,
+    };
+  }
+
+  /**
+   * Escape HTML for safe display
+   *
+   * @private
+   * @param {string} text - Text to escape
+   * @returns {string} HTML-safe text
+   */
+  #escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   /**
    * Create results header
+   *
    * @private
-   * @param {object} enhancedPatterns - Enhanced pattern data
+   * @param {object} displayData - Display data
    * @returns {HTMLElement} Header element
    */
-  #createResultsHeader(enhancedPatterns) {
+  #createResultsHeader(displayData) {
     const header = document.createElement('div');
     header.className = 'results-header';
 
     header.innerHTML = `
-            <h3>Speech Patterns for ${enhancedPatterns.characterName}</h3>
+            <h3>Speech Patterns for ${displayData.characterName}</h3>
             <p class="results-subtitle">
-                Generated ${enhancedPatterns.totalCount} unique speech patterns
+                Generated ${displayData.totalCount} unique speech patterns
             </p>
         `;
 
@@ -659,6 +730,7 @@ Generate the speech patterns now:`;
 
   /**
    * Render individual speech pattern
+   *
    * @private
    * @param {object} pattern - Pattern data
    * @param {number} index - Pattern index
@@ -684,6 +756,7 @@ Generate the speech patterns now:`;
 
   /**
    * Export patterns to text file
+   *
    * @private
    */
   #exportToText() {
@@ -693,17 +766,29 @@ Generate the speech patterns now:`;
     }
 
     try {
-      const exportText = this.#displayEnhancer.formatForExport(
-        this.#lastGeneratedPatterns,
-        {
-          includeCharacterData: true,
-          characterDefinition: this.#characterDefinition,
-        }
-      );
+      let exportText, filename;
 
-      const filename = this.#displayEnhancer.generateExportFilename(
-        this.#lastGeneratedPatterns.characterName
-      );
+      if (this.#displayEnhancer) {
+        // Use display enhancer for formatted export
+        exportText = this.#displayEnhancer.formatForExport(
+          this.#lastGeneratedPatterns,
+          {
+            includeCharacterData: true,
+            characterDefinition: this.#characterDefinition,
+          }
+        );
+        filename = this.#displayEnhancer.generateExportFilename(
+          this.#lastGeneratedPatterns.characterName
+        );
+      } else {
+        // Fallback export format
+        exportText = this.#createFallbackExportText(
+          this.#lastGeneratedPatterns
+        );
+        filename = this.#createFallbackExportFilename(
+          this.#lastGeneratedPatterns.characterName
+        );
+      }
 
       this.#downloadTextFile(exportText, filename);
 
@@ -715,7 +800,56 @@ Generate the speech patterns now:`;
   }
 
   /**
+   * Create fallback export text when display enhancer is not available
+   *
+   * @private
+   * @param {object} patterns - Pattern data
+   * @returns {string} Export text
+   */
+  #createFallbackExportText(patterns) {
+    const lines = [
+      `Speech Patterns for ${patterns.characterName}`,
+      `Generated: ${new Date(patterns.generatedAt).toLocaleString()}`,
+      `Total Patterns: ${patterns.totalCount}`,
+      '',
+      '='.repeat(50),
+      '',
+    ];
+
+    patterns.speechPatterns.forEach((pattern, index) => {
+      lines.push(`${index + 1}. ${pattern}`);
+      lines.push('');
+    });
+
+    if (this.#characterDefinition) {
+      lines.push('='.repeat(50));
+      lines.push('Character Definition:');
+      lines.push('');
+      lines.push(JSON.stringify(this.#characterDefinition, null, 2));
+    }
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Create fallback export filename
+   *
+   * @private
+   * @param {string} characterName - Character name
+   * @returns {string} Filename
+   */
+  #createFallbackExportFilename(characterName) {
+    const safeName = characterName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const timestamp = new Date()
+      .toISOString()
+      .slice(0, 19)
+      .replace(/[:-]/g, '');
+    return `speech_patterns_${safeName}_${timestamp}.txt`;
+  }
+
+  /**
    * Download text content as file
+   *
    * @private
    * @param {string} content - File content
    * @param {string} filename - File name
@@ -738,6 +872,7 @@ Generate the speech patterns now:`;
 
   /**
    * Clear all input and results
+   *
    * @private
    */
   #clearAll() {
@@ -770,6 +905,7 @@ Generate the speech patterns now:`;
 
   /**
    * Update UI state based on current data
+   *
    * @private
    */
   #updateUIState() {
@@ -794,6 +930,7 @@ Generate the speech patterns now:`;
 
   /**
    * Update pattern count display
+   *
    * @private
    * @param {number} count - Pattern count
    */
@@ -808,6 +945,7 @@ Generate the speech patterns now:`;
 
   /**
    * Handle generation errors
+   *
    * @private
    * @param {Error} error - Generation error
    */
@@ -833,6 +971,7 @@ Generate the speech patterns now:`;
 
   /**
    * Show validation error for character input
+   *
    * @private
    * @param {Array<string>} errors - Validation errors
    */
@@ -853,6 +992,7 @@ Generate the speech patterns now:`;
 
   /**
    * Clear validation error display
+   *
    * @private
    */
   #clearValidationError() {
@@ -873,6 +1013,7 @@ Generate the speech patterns now:`;
 
   /**
    * Set up keyboard shortcuts
+   *
    * @private
    */
   #setupKeyboardShortcuts() {
@@ -913,6 +1054,7 @@ Generate the speech patterns now:`;
 
   /**
    * Announce message to screen readers
+   *
    * @private
    * @param {string} message - Message to announce
    */
@@ -930,99 +1072,3 @@ Generate the speech patterns now:`;
 }
 
 export default SpeechPatternsGeneratorController;
-```
-
-## Technical Specifications
-
-### Controller Architecture
-
-1. **State Management**
-   - Character definition validation and storage
-   - Generation process state tracking
-   - UI state synchronization
-
-2. **Input Processing**
-   - JSON parsing and validation
-   - Character structure validation
-   - Real-time feedback for user input
-
-3. **Generation Workflow**
-   - LLM prompt preparation
-   - Service integration with error handling
-   - Response processing and validation
-
-4. **Results Management**
-   - Dynamic content rendering
-   - Export functionality
-   - Screen reader accessibility
-
-### Integration Points
-
-1. **Base Controller**: Extends `BaseCharacterBuilderController`
-2. **Display Service**: Integrates with `SpeechPatternsDisplayEnhancer`
-3. **LLM Service**: Uses existing LLM service infrastructure
-4. **Validation System**: Prepares for schema validation integration
-
-### Error Handling Strategy
-
-1. **Input Validation**: Real-time JSON and structure validation
-2. **Service Errors**: Graceful handling of LLM service failures
-3. **Network Issues**: Timeout and connectivity error management
-4. **User Feedback**: Clear error messages and recovery suggestions
-
-## Acceptance Criteria
-
-### Core Functionality Requirements
-
-- [ ] Character JSON input validation works correctly
-- [ ] Speech pattern generation integrates with LLM service
-- [ ] Results display renders ~20 speech patterns properly
-- [ ] Export functionality creates downloadable text files
-
-### UI State Management Requirements
-
-- [ ] Loading states display during generation
-- [ ] Button states update correctly based on application state
-- [ ] Error states provide clear user feedback
-- [ ] Empty states guide user interaction
-
-### Input Validation Requirements
-
-- [ ] JSON parsing errors are handled gracefully
-- [ ] Character structure validation provides helpful feedback
-- [ ] Real-time validation updates UI responsively
-- [ ] Error messages are clear and actionable
-
-### Integration Requirements
-
-- [ ] Extends BaseCharacterBuilderController correctly
-- [ ] Integrates with SpeechPatternsDisplayEnhancer service
-- [ ] Uses existing LLM service infrastructure
-- [ ] Follows project dependency injection patterns
-
-### Accessibility Requirements
-
-- [ ] Screen reader announcements work for dynamic content
-- [ ] Keyboard shortcuts function correctly
-- [ ] Focus management maintains accessibility standards
-- [ ] Error states are announced to assistive technology
-
-## Files Modified
-
-- **NEW**: `src/characterBuilder/controllers/SpeechPatternsGeneratorController.js`
-
-## Dependencies For Next Tickets
-
-This controller implementation is required for:
-
-- SPEPATGEN-006 (Display Service) - controller depends on display enhancer
-- SPEPATGEN-007 (LLM Integration) - controller orchestrates LLM calls
-- SPEPATGEN-011 (Testing) - controller needs comprehensive test coverage
-
-## Notes
-
-- Controller assumes SpeechPatternsDisplayEnhancer exists (created in next ticket)
-- LLM service integration uses existing infrastructure
-- Follows established patterns from other character builder controllers
-- Implements comprehensive error handling for production use
-- Supports progressive enhancement with graceful degradation

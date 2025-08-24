@@ -103,7 +103,9 @@
       "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/traitsGeneratorConceptHandling.integration.test.js --no-coverage --verbose)",
       "mcp__playwright__browser_select_option",
       "mcp__playwright__browser_resize",
-      "mcp__playwright__browser_close"
+      "mcp__playwright__browser_close",
+      "mcp__morphllm-fast-apply__write_file",
+      "mcp__playwright__browser_hover"
     ],
     "deny": []
   }

@@ -46,6 +46,12 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
 
     // Track dispatched events for verification
     this.dispatchedEvents = [];
+
+    // Track responses for test assertions
+    this.lastThematicDirectionsResponse = null;
+    this.lastCoreMotivationsResponse = null;
+    this.lastClichesResponse = null;
+    this.lastTraitsResponse = null;
   }
 
   /**
@@ -56,6 +62,15 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     this.setupTestData();
     this.setupServices();
     this.setupUIElements();
+  }
+
+  /**
+   * Initialize test bed (compatibility method for older tests)
+   *
+   * @param {Window} window - Window object (unused but kept for compatibility)
+   */
+  initialize(window) {
+    this.setup();
   }
 
   /**
@@ -79,6 +94,10 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       getAllThematicDirections: jest.fn().mockResolvedValue([]),
       getClichesByDirectionId: jest.fn().mockResolvedValue([]),
       getCoreMotivationsByDirectionId: jest.fn().mockResolvedValue([]),
+      // Methods for tracking responses
+      getLastThematicDirectionsResponse: () => this.lastThematicDirectionsResponse,
+      getLastCoreMotivationsResponse: () => this.lastCoreMotivationsResponse,
+      getLastClichesResponse: () => this.lastClichesResponse,
     };
 
     // Mock character builder service
@@ -100,11 +119,23 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       hasCoreMotivationsForDirection: jest.fn().mockResolvedValue(true),
       getCoreMotivationsByDirectionId: jest.fn().mockResolvedValue([]),
       getClichesByDirectionId: jest.fn().mockResolvedValue([]),
+      // Methods for tracking responses
+      getLastThematicDirectionsResponse: () => this.lastThematicDirectionsResponse,
+      getLastCoreMotivationsResponse: () => this.lastCoreMotivationsResponse,
+      getLastClichesResponse: () => this.lastClichesResponse,
+      getLastTraitsResponse: () => this.lastTraitsResponse,
     };
 
     // Mock traits generator service
     this.mockTraitsGeneratorService = {
       generateTraits: jest.fn(),
+    };
+
+    // Mock schema validator (required by BaseCharacterBuilderController)
+    this.mockSchemaValidator = {
+      validate: jest.fn(),
+      validateAsync: jest.fn(),
+      validateAgainstSchema: jest.fn(),
     };
   }
 
@@ -128,6 +159,7 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     this.services.traitsGeneratorService = this.mockTraitsGeneratorService;
     this.services.eventBus = this.mockEventBus;
     this.services.logger = this.mockLogger;
+    this.services.schemaValidator = this.mockSchemaValidator;
   }
 
   /**
@@ -417,6 +449,68 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
   }
 
   /**
+   * Create valid traits data for schema validation (schema-compliant)
+   *
+   * @returns {object} Valid traits data
+   */
+  createValidTraitsData() {
+    return {
+      id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+      generatedAt: '2024-01-01T00:00:00.000Z',
+      names: [
+        {
+          name: 'Alaric Ironward',
+          justification: 'A strong name suggesting nobility and military prowess that resonates with the character theme',
+        },
+        {
+          name: 'Marcus Thornfield',
+          justification: 'Classic warrior name with grounded surname that implies connection to nature and growth',
+        },
+        {
+          name: 'Gareth Soulstone',
+          justification: 'Evokes strength and weight of past experiences while suggesting inner fortitude and resilience',
+        },
+      ],
+      physicalDescription: 'A weathered man in his early forties with silver-streaked dark hair that speaks of countless battles and hard-won wisdom. His steel-gray eyes hold depths of experience, while callused hands tell stories of survival.',
+      personality: [
+        {
+          trait: 'Protective Instinct',
+          explanation: 'Driven to shield others from harm at any cost to himself'
+        },
+        {
+          trait: 'Introspective',
+          explanation: 'Spends considerable time examining his own motivations and decisions'
+        },
+        {
+          trait: 'Determined',
+          explanation: 'Once committed to a course of action, sees it through regardless of obstacles'
+        }
+      ],
+      strengths: [
+        'Combat Experience',
+        'Strategic Thinking'
+      ],
+      weaknesses: [
+        'Self-Punishment',
+        'Overthinking'
+      ],
+      likes: ['Quiet moments', 'Helping others', 'Simple pleasures'],
+      dislikes: ['Unnecessary violence', 'Arrogance', 'Waste'],
+      fears: ['Repeating past mistakes'],
+      goals: {
+        shortTerm: ['Find redemption'],
+        longTerm: 'Achieve lasting peace and purpose in life after years of conflict'
+      },
+      notes: [
+        'Additional character notes and background details',
+        'Complex motivations drive all actions'
+      ],
+      profile: 'Character profile summary combining all traits into a cohesive narrative that explores themes of redemption, personal growth, and the struggle between past mistakes and future hope. This character represents the universal human desire for second chances.',
+      secrets: ['Hidden past identity'],
+    };
+  }
+
+  /**
    * Create valid direction with concept for controller testing
    *
    * @returns {object} Direction with concept data
@@ -467,6 +561,8 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     this.mockLLMService.mockResolvedValue(response);
     this.mockTraitsGeneratorService.generateTraits.mockResolvedValue(response);
     this.mockCharacterBuilderService.generateTraits.mockResolvedValue(response);
+    // Track the response
+    this.lastTraitsResponse = response;
   }
 
   /**
@@ -638,6 +734,15 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     return this.mockEventBus;
   }
 
+  /**
+   * Get schema validator mock
+   *
+   * @returns {object} Schema validator mock
+   */
+  getSchemaValidator() {
+    return this.services.schemaValidator;
+  }
+
   // ============= Test Setup Methods =============
 
   /**
@@ -678,35 +783,79 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     const directions = [
       {
         direction: { id: 'dir-1', title: 'Direction with both' },
+        concept: {
+          id: 'concept-1',
+          concept: 'Test concept 1',
+          directionId: 'dir-1',
+        },
         hasClichés: true,
         hasMotivations: true,
       },
       {
         direction: { id: 'dir-2', title: 'Direction with clichés only' },
+        concept: {
+          id: 'concept-2',
+          concept: 'Test concept 2',
+          directionId: 'dir-2',
+        },
         hasClichés: true,
         hasMotivations: false,
       },
       {
         direction: { id: 'dir-3', title: 'Direction with motivations only' },
+        concept: {
+          id: 'concept-3',
+          concept: 'Test concept 3',
+          directionId: 'dir-3',
+        },
         hasClichés: false,
         hasMotivations: true,
       },
     ];
 
-    // Setup mock responses
-    directions.forEach((dir) => {
-      this.mockCharacterBuilderService.hasClichesForDirection.mockImplementation(
-        (id) => id === 'dir-1' || id === 'dir-2'
-      );
-      this.mockCharacterBuilderService.hasCoreMotivationsForDirection.mockImplementation(
-        (id) => id === 'dir-1' || id === 'dir-3'
-      );
-    });
-
-    // Only dir-1 should be eligible (has both)
-    this.mockCharacterBuilderService.getDirectionsWithClichesAndMotivations.mockResolvedValue(
-      [directions[0]]
+    // Setup getAllThematicDirectionsWithConcepts to return all directions with concepts
+    const directionsWithConcepts = directions.map((d) => ({ direction: d.direction, concept: d.concept }));
+    this.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+      directionsWithConcepts
     );
+    // Track the response
+    this.lastThematicDirectionsResponse = directionsWithConcepts;
+
+    // Setup mock responses for filtering
+    this.mockCharacterBuilderService.hasClichesForDirection.mockImplementation(
+      (id) => Promise.resolve(id === 'dir-1' || id === 'dir-2')
+    );
+    this.mockCharacterBuilderService.getClichesByDirectionId.mockImplementation(
+      (id) => {
+        if (id === 'dir-1' || id === 'dir-2') {
+          const cliches = [{ id: 'cliche-1', text: 'Test cliche' }];
+          this.lastClichesResponse = cliches;
+          return Promise.resolve(cliches);
+        }
+        return Promise.resolve([]);
+      }
+    );
+    this.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockImplementation(
+      (id) => {
+        if (id === 'dir-1' || id === 'dir-3') {
+          const motivations = [
+            { id: 'motivation-1', text: 'Test motivation' },
+          ];
+          this.lastCoreMotivationsResponse = motivations;
+          return Promise.resolve(motivations);
+        }
+        return Promise.resolve([]);
+      }
+    );
+
+    // Also mock the deprecated method to avoid errors if still called anywhere
+    if (
+      this.mockCharacterBuilderService.getDirectionsWithClichesAndMotivations
+    ) {
+      this.mockCharacterBuilderService.getDirectionsWithClichesAndMotivations.mockResolvedValue(
+        [directions[0]]
+      );
+    }
   }
 
   // ============= Verification Methods =============

@@ -31,4 +31,6 @@ module.exports = {
   collectCoverage: false,
   // Run performance tests sequentially to avoid interference
   maxWorkers: 1,
+  // Allow console output for debugging
+  silent: false,
 };

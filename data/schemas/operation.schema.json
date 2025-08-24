@@ -133,6 +133,9 @@
         },
         {
           "$ref": "./operations/lockMovement.schema.json"
+        },
+        {
+          "$ref": "./operations/unlockMovement.schema.json"
         }
       ]
     }

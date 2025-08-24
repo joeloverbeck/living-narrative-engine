@@ -41,6 +41,7 @@ const OPERATION_SCHEMA_FILES = [
   'setVariable.schema.json',
   'systemMoveEntity.schema.json',
   'unequipClothing.schema.json',
+  'unlockMovement.schema.json',
 ];
 
 class StaticConfiguration {

@@ -92,6 +92,9 @@
                 rows="3"
                 placeholder="Enter the character's core motivation..."
                 aria-describedby="core-motivation-help"
+                required
+                aria-required="true"
+                autocomplete="off"
               ></textarea>
               <p id="core-motivation-help" class="cb-help-text">
                 What drives this character at their core?
@@ -108,6 +111,9 @@
                 rows="3"
                 placeholder="Enter the character's internal contradiction..."
                 aria-describedby="contradiction-help"
+                required
+                aria-required="true"
+                autocomplete="off"
               ></textarea>
               <p id="contradiction-help" class="cb-help-text">
                 What internal conflict makes this character complex?
@@ -124,6 +130,9 @@
                 rows="3"
                 placeholder="Enter the character's central question..."
                 aria-describedby="question-help"
+                required
+                aria-required="true"
+                autocomplete="off"
               ></textarea>
               <p id="question-help" class="cb-help-text">
                 What fundamental question does this character grapple with?
@@ -144,8 +153,9 @@
               class="cb-button-primary"
               disabled
               aria-label="Generate character traits"
+              aria-disabled="true"
             >
-              <span class="button-icon">✨</span>
+              <span class="button-icon" aria-hidden="true">✨</span>
               <span class="button-text">Generate Traits</span>
             </button>
 
@@ -154,7 +164,7 @@
               class="cb-button-secondary"
               aria-label="Clear all inputs"
             >
-              <span class="button-icon">🗑️</span>
+              <span class="button-icon" aria-hidden="true">🗑️</span>
               <span class="button-text">Clear All</span>
             </button>
 
@@ -179,7 +189,7 @@
                 style="display: none"
                 aria-label="Export traits to text file"
               >
-                <span class="button-icon">📄</span>
+                <span class="button-icon" aria-hidden="true">📄</span>
                 <span class="button-text">Export</span>
               </button>
             </div>

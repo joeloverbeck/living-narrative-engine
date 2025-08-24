@@ -111,6 +111,10 @@
   grid-template-columns: repeat(2, minmax(180px, 200px));
 }
 
+.button-grid--3col {
+  grid-template-columns: repeat(3, minmax(180px, 200px));
+}
+
 .button-grid--4col {
   grid-template-columns: repeat(4, minmax(180px, 200px));
 }
@@ -335,6 +339,7 @@
   /* All grids become single column on mobile */
   .button-grid--1col,
   .button-grid--2col,
+  .button-grid--3col,
   .button-grid--4col {
     grid-template-columns: 1fr;
     max-width: 300px;

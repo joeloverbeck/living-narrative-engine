@@ -118,6 +118,61 @@ describe('StaticConfiguration Validation Test', () => {
     expect(schemaFiles).toContain('world.schema.json');
   });
 
+  describe('Operation Schema Files', () => {
+    let configService;
+
+    beforeEach(() => {
+      configService = new StaticConfiguration();
+    });
+
+    it('should include all operation schemas that are referenced in operation.schema.json', () => {
+      // These are all the operations referenced in operation.schema.json
+      const expectedOperationSchemas = [
+        'operations/queryComponent.schema.json',
+        'operations/queryComponents.schema.json',
+        'operations/modifyComponent.schema.json',
+        'operations/addComponent.schema.json',
+        'operations/removeComponent.schema.json',
+        'operations/dispatchEvent.schema.json',
+        'operations/dispatchPerceptibleEvent.schema.json',
+        'operations/dispatchSpeech.schema.json',
+        'operations/endTurn.schema.json',
+        'operations/if.schema.json',
+        'operations/forEach.schema.json',
+        'operations/log.schema.json',
+        'operations/setVariable.schema.json',
+        'operations/getTimestamp.schema.json',
+        'operations/getName.schema.json',
+        'operations/resolveDirection.schema.json',
+        'operations/systemMoveEntity.schema.json',
+        'operations/rebuildLeaderListCache.schema.json',
+        'operations/checkFollowCycle.schema.json',
+        'operations/establishFollowRelation.schema.json',
+        'operations/breakFollowRelation.schema.json',
+        'operations/addPerceptionLogEntry.schema.json',
+        'operations/hasComponent.schema.json',
+        'operations/queryEntities.schema.json',
+        'operations/modifyArrayField.schema.json',
+        'operations/ifCoLocated.schema.json',
+        'operations/math.schema.json',
+        'operations/modifyContextArray.schema.json',
+        'operations/autoMoveFollowers.schema.json',
+        'operations/removeFromClosenessCircle.schema.json',
+        'operations/mergeClosenessCircle.schema.json',
+        'operations/unequipClothing.schema.json',
+        'operations/lockMovement.schema.json',
+        'operations/unlockMovement.schema.json', // This was missing!
+      ];
+
+      const schemaFiles = configService.getSchemaFiles();
+
+      // Check each expected operation schema is included
+      expectedOperationSchemas.forEach((operationSchema) => {
+        expect(schemaFiles).toContain(operationSchema);
+      });
+    });
+  });
+
   describe('Path and Filename Methods', () => {
     let configService;
 

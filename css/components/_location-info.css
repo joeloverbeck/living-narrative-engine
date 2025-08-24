@@ -96,7 +96,27 @@
 
 /* tooltip lives *inside* #location-portrait-visuals */
 .location-tooltip {
-  @extend .character-tooltip;
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(100% + var(--spacing-xs));
+  min-width: 350px;
+  max-width: 420px;
+  max-height: 55vh;
+  overflow-y: auto;
+  background: var(--panel-bg-color);
+  color: var(--primary-text-color);
+  border: 1px solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-small);
+  line-height: 1.45;
+  text-align: left;
+  box-shadow: var(--shadow-sm);
+  transition: opacity 0.15s ease-in-out;
+  z-index: 30;
 }
 
 /* Enable hover/focus/click interactions for location portrait tooltips */
