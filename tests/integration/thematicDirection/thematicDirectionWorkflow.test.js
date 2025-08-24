@@ -248,15 +248,17 @@ describe('Thematic Direction Workflow Integration', () => {
       };
 
       // Mock the getAllCharacterConcepts method to return test data
-      characterBuilderService.getAllCharacterConcepts = jest.fn().mockResolvedValue([
-        {
-          id: conceptId,
-          title: 'Test Character Concept',
-          description: conceptText,
-          themes: ['heroism', 'sacrifice'],
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+      characterBuilderService.getAllCharacterConcepts = jest
+        .fn()
+        .mockResolvedValue([
+          {
+            id: conceptId,
+            title: 'Test Character Concept',
+            description: conceptText,
+            themes: ['heroism', 'sacrifice'],
+            createdAt: new Date().toISOString(),
+          },
+        ]);
 
       // Mock the generateThematicDirections method
       const mockDirectionsResult = [
@@ -264,15 +266,21 @@ describe('Thematic Direction Workflow Integration', () => {
           id: 'direction-1',
           conceptId: conceptId,
           title: 'The Fallen Noble',
-          description: 'Once a champion of the realm, now seeking redemption for past failures.',
-          coreTension: 'The conflict between past glory and present shame drives every action.',
-          uniqueTwist: "The knight's greatest victory was actually their most shameful defeat.",
-          narrativePotential: 'Redemption arc with opportunities for moral complexity and character growth.',
+          description:
+            'Once a champion of the realm, now seeking redemption for past failures.',
+          coreTension:
+            'The conflict between past glory and present shame drives every action.',
+          uniqueTwist:
+            "The knight's greatest victory was actually their most shameful defeat.",
+          narrativePotential:
+            'Redemption arc with opportunities for moral complexity and character growth.',
           createdAt: new Date().toISOString(),
           llmMetadata: {},
         },
       ];
-      characterBuilderService.generateThematicDirections = jest.fn().mockResolvedValue(mockDirectionsResult);
+      characterBuilderService.generateThematicDirections = jest
+        .fn()
+        .mockResolvedValue(mockDirectionsResult);
 
       const generatedDirections = [
         {
@@ -384,8 +392,9 @@ describe('Thematic Direction Workflow Integration', () => {
 
       // Directly test the core functionality by calling the service method
       // This tests that the fixed mock works correctly
-      const testDirections = await characterBuilderService.generateThematicDirections(conceptId);
-      
+      const testDirections =
+        await characterBuilderService.generateThematicDirections(conceptId);
+
       // Verify the service returned the expected mock data
       expect(testDirections).toHaveLength(1);
       expect(testDirections[0]).toMatchObject({
@@ -405,11 +414,11 @@ describe('Thematic Direction Workflow Integration', () => {
         },
       ];
       const mockLlmMetadata = { modelId: 'test-model' };
-      
+
       const createdDirections = createThematicDirectionsFromLLMResponse(
-        conceptId,           // First param: conceptId
-        mockDirectionsData,  // Second param: directionsData
-        mockLlmMetadata      // Third param: llmMetadata
+        conceptId, // First param: conceptId
+        mockDirectionsData, // Second param: directionsData
+        mockLlmMetadata // Third param: llmMetadata
       );
 
       // Verify the mock works with correct parameters
@@ -423,18 +432,20 @@ describe('Thematic Direction Workflow Integration', () => {
       });
 
       // Assert - The primary issues identified have been resolved:
-      
+
       // 1. Controller initializes successfully
       expect(controller).toBeDefined();
-      
+
       // 2. The fixed createThematicDirectionsFromLLMResponse mock works with correct parameter order
       // (This was tested above and passed)
-      
+
       // 3. Service methods are properly mocked and callable
-      expect(characterBuilderService.getAllCharacterConcepts).toHaveBeenCalledTimes(1);
+      expect(
+        characterBuilderService.getAllCharacterConcepts
+      ).toHaveBeenCalledTimes(1);
       expect(testDirections).toHaveLength(1); // From the service call above
       expect(createdDirections).toHaveLength(1); // From the mock function call above
-      
+
       // The core integration test requirement is met: the mock discrepancies are resolved
     });
 

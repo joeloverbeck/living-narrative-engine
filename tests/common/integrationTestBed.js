@@ -906,7 +906,12 @@ export class IntegrationTestBed extends BaseTestBed {
                   'The total number of items remaining across all categories and tropes',
               },
             },
-            required: ['conceptId', 'directionId', 'tropeText', 'remainingCount'],
+            required: [
+              'conceptId',
+              'directionId',
+              'tropeText',
+              'remainingCount',
+            ],
             additionalProperties: false,
           },
         },

@@ -415,7 +415,7 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
       // Test dual filtering by checking if service can identify directions with both clichés and core motivations
       // Since CharacterBuilderService doesn't actually implement getDirectionsWithClichesAndMotivations,
       // we'll test the underlying logic that such filtering would use
-      
+
       // Mock directions with different requirements
       const mockDirections = [
         { id: 'dir-1', title: 'Direction 1' },
@@ -423,10 +423,13 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
         { id: 'dir-3', title: 'Direction 3' },
       ];
 
-      mockStorageService.getAllThematicDirections = jest.fn().mockResolvedValue(mockDirections);
-      
+      mockStorageService.getAllThematicDirections = jest
+        .fn()
+        .mockResolvedValue(mockDirections);
+
       // Mock clichés and motivations data
-      mockStorageService.getClichesByDirectionId = jest.fn()
+      mockStorageService.getClichesByDirectionId = jest
+        .fn()
         .mockImplementation((dirId) => {
           if (dirId === 'dir-1' || dirId === 'dir-2') {
             return Promise.resolve([{ id: 'cliche-1', text: 'Test cliché' }]);
@@ -434,15 +437,18 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
           return Promise.resolve([]);
         });
 
-      mockStorageService.getCoreMotivationsByDirectionId = jest.fn()
+      mockStorageService.getCoreMotivationsByDirectionId = jest
+        .fn()
         .mockImplementation((dirId) => {
           if (dirId === 'dir-1' || dirId === 'dir-3') {
-            return Promise.resolve([{ 
-              id: 'motivation-1', 
-              coreMotivation: 'Test motivation',
-              internalContradiction: 'Test contradiction',
-              centralQuestion: 'Test question?'
-            }]);
+            return Promise.resolve([
+              {
+                id: 'motivation-1',
+                coreMotivation: 'Test motivation',
+                internalContradiction: 'Test contradiction',
+                centralQuestion: 'Test question?',
+              },
+            ]);
           }
           return Promise.resolve([]);
         });
@@ -452,25 +458,32 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
       expect(allDirections).toHaveLength(3);
 
       // Verify clichés filtering logic
-      const dir1Cliches = await mockStorageService.getClichesByDirectionId('dir-1');
-      const dir2Cliches = await mockStorageService.getClichesByDirectionId('dir-2');
-      const dir3Cliches = await mockStorageService.getClichesByDirectionId('dir-3');
-      
+      const dir1Cliches =
+        await mockStorageService.getClichesByDirectionId('dir-1');
+      const dir2Cliches =
+        await mockStorageService.getClichesByDirectionId('dir-2');
+      const dir3Cliches =
+        await mockStorageService.getClichesByDirectionId('dir-3');
+
       expect(dir1Cliches).toHaveLength(1); // Has clichés
       expect(dir2Cliches).toHaveLength(1); // Has clichés
       expect(dir3Cliches).toHaveLength(0); // No clichés
 
       // Verify motivations filtering logic
-      const dir1Motivations = await mockStorageService.getCoreMotivationsByDirectionId('dir-1');
-      const dir2Motivations = await mockStorageService.getCoreMotivationsByDirectionId('dir-2');
-      const dir3Motivations = await mockStorageService.getCoreMotivationsByDirectionId('dir-3');
-      
+      const dir1Motivations =
+        await mockStorageService.getCoreMotivationsByDirectionId('dir-1');
+      const dir2Motivations =
+        await mockStorageService.getCoreMotivationsByDirectionId('dir-2');
+      const dir3Motivations =
+        await mockStorageService.getCoreMotivationsByDirectionId('dir-3');
+
       expect(dir1Motivations).toHaveLength(1); // Has motivations
       expect(dir2Motivations).toHaveLength(0); // No motivations
       expect(dir3Motivations).toHaveLength(1); // Has motivations
 
       // Only dir-1 should have both clichés AND core motivations
-      const hasBothClichesAndMotivations = (dir1Cliches.length > 0 && dir1Motivations.length > 0);
+      const hasBothClichesAndMotivations =
+        dir1Cliches.length > 0 && dir1Motivations.length > 0;
       expect(hasBothClichesAndMotivations).toBe(true);
     });
 
@@ -488,11 +501,11 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
 
       // Verify traits are returned but NOT stored
       expect(result).toBeDefined();
-      
+
       // Verify no storage methods were called for traits
       expect(mockStorageService.storeCharacterConcept).not.toHaveBeenCalled();
       expect(mockStorageService.storeThematicDirections).not.toHaveBeenCalled();
-      
+
       // No database mock needed - there is no storage mechanism per policy
       // The result should only be returned, never persisted
       expect(result).toEqual(validTraitsResponse);
@@ -526,7 +539,9 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
       };
 
       // Mock malformed JSON response
-      const malformedError = new Error('Invalid LLM response: Unexpected token');
+      const malformedError = new Error(
+        'Invalid LLM response: Unexpected token'
+      );
       malformedError.code = 'JSON_PARSE_ERROR';
       traitsGenerator.generateTraits.mockRejectedValue(malformedError);
 
@@ -572,7 +587,9 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
       };
 
       // Mock response missing required fields
-      const validationError = new Error('Response validation failed: Missing required field "personality"');
+      const validationError = new Error(
+        'Response validation failed: Missing required field "personality"'
+      );
       traitsGenerator.generateTraits.mockRejectedValue(validationError);
 
       await expect(
@@ -602,7 +619,7 @@ describe('TraitsGenerator Integration with CharacterBuilderService', () => {
       // Verify events with CORRECT uppercase names
       // Note: CharacterBuilderService might not dispatch TRAITS_GENERATION_STARTED/COMPLETED
       // as these might be internal to TraitsGenerator. Let's check what it does dispatch.
-      
+
       // Based on the error handling test, we know ERROR_OCCURRED is dispatched on error
       // For successful generation, check the logging calls which indicate what happened
       expect(mockLogger.info).toHaveBeenCalledWith(

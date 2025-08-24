@@ -582,21 +582,35 @@ export function createMockCharacterBuilderService(options = {}) {
       .fn()
       .mockImplementation(async () => {
         if (shouldFail) {
-          throw new Error('Failed to get all thematic directions with concepts');
+          throw new Error(
+            'Failed to get all thematic directions with concepts'
+          );
         }
         return [
           {
             direction: { id: 'dir-1', title: 'Direction 1', theme: 'Theme 1' },
-            concept: { id: 'concept-1', text: 'Test Concept 1', title: 'Test Concept 1' }
+            concept: {
+              id: 'concept-1',
+              text: 'Test Concept 1',
+              title: 'Test Concept 1',
+            },
           },
           {
             direction: { id: 'dir-2', title: 'Direction 2', theme: 'Theme 2' },
-            concept: { id: 'concept-1', text: 'Test Concept 1', title: 'Test Concept 1' }
+            concept: {
+              id: 'concept-1',
+              text: 'Test Concept 1',
+              title: 'Test Concept 1',
+            },
           },
           {
             direction: { id: 'dir-3', title: 'Direction 3', theme: 'Theme 3' },
-            concept: { id: 'concept-2', text: 'Test Concept 2', title: 'Test Concept 2' }
-          }
+            concept: {
+              id: 'concept-2',
+              text: 'Test Concept 2',
+              title: 'Test Concept 2',
+            },
+          },
         ];
       }),
     getThematicDirectionById: jest.fn().mockImplementation(async (id) => {

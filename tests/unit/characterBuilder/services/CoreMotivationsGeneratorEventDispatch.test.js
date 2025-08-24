@@ -20,7 +20,7 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
   beforeEach(() => {
     dispatchCalls = [];
     jest.clearAllMocks();
-    
+
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -37,7 +37,7 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
     const mockStrategy = {
       requestJsonFromLLM: jest.fn(),
     };
-    
+
     mockLlmStrategyFactory = {
       createStrategy: jest.fn().mockReturnValue(mockStrategy),
       getAIDecision: jest.fn(),
@@ -49,7 +49,9 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
         model: 'test-model',
       }),
       loadConfiguration: jest.fn(),
-      getAutoSaveActivatedInCoreMotivationsGenerator: jest.fn().mockReturnValue(false),
+      getAutoSaveActivatedInCoreMotivationsGenerator: jest
+        .fn()
+        .mockReturnValue(false),
       getProviderAllowedForExpensiveAPICalls: jest.fn().mockReturnValue('test'),
       getActiveConfiguration: jest.fn().mockReturnValue({
         provider: 'test',
@@ -61,10 +63,10 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
     mockEventBus = {
       dispatch: jest.fn().mockImplementation((...args) => {
         dispatchCalls.push(args);
-        
+
         // Simulate the real eventBus behavior to reproduce the error
         const [firstArg, secondArg] = args;
-        
+
         if (typeof firstArg === 'object' && firstArg !== null) {
           // This reproduces the error that happens in production
           mockLogger.warn(
@@ -76,7 +78,7 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
           mockLogger.error('EventBus: Invalid event name provided.', firstArg);
           return Promise.resolve(false);
         }
-        
+
         return Promise.resolve(true);
       }),
     };
@@ -100,14 +102,14 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
       // This test verifies that the bug is fixed
       // Previously, the dispatch was called with an object { type, payload }
       // Now it should be called with (string, object)
-      
+
       // Arrange
       const concept = {
         id: 'test-concept-id',
         name: 'Test Character',
         concept: 'A test character concept',
       };
-      
+
       const direction = {
         id: 'test-direction-id',
         title: 'Test Direction',
@@ -136,18 +138,18 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
 
       // Assert - After fix, events should be dispatched correctly
       expect(dispatchCalls.length).toBeGreaterThanOrEqual(2); // Started + Failed
-      
+
       // Check the first dispatch (GENERATION_STARTED)
       const [firstCall] = dispatchCalls;
       const [eventName, payload] = firstCall;
-      
+
       // After fix: first arg should be string, second should be object
       expect(typeof eventName).toBe('string');
       expect(eventName).toBe('core:core_motivations_generation_started');
       expect(typeof payload).toBe('object');
       expect(payload).toHaveProperty('conceptId', 'test-concept-id');
       expect(payload).toHaveProperty('directionId', 'test-direction-id');
-      
+
       // No errors should be logged with correct format
       expect(mockLogger.error).not.toHaveBeenCalledWith(
         'EventBus: Invalid event name provided.',
@@ -157,14 +159,14 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
 
     it('should work correctly with proper dispatch format (requires full mock setup)', async () => {
       // This test will pass after we fix the CoreMotivationsGenerator
-      
+
       // Arrange
       const concept = {
         id: 'test-concept-id',
         name: 'Test Character',
         concept: 'A test character concept',
       };
-      
+
       const direction = {
         id: 'test-direction-id',
         title: 'Test Direction',
@@ -176,25 +178,31 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
       // Mock successful LLM response
       const mockMotivations = [
         {
-          motivation: 'Seeks validation through proving their intellectual superiority to others',
-          internalContradiction: 'Desperately craves connection while sabotaging relationships through arrogance',
+          motivation:
+            'Seeks validation through proving their intellectual superiority to others',
+          internalContradiction:
+            'Desperately craves connection while sabotaging relationships through arrogance',
           centralQuestion: 'What does the character truly want?',
         },
         {
-          motivation: 'Driven to protect loved ones from any form of suffering or harm',
-          internalContradiction: 'Their protective instincts often become controlling and suffocating to those they love',
+          motivation:
+            'Driven to protect loved ones from any form of suffering or harm',
+          internalContradiction:
+            'Their protective instincts often become controlling and suffocating to those they love',
           centralQuestion: 'How will they achieve their goals?',
         },
         {
-          motivation: 'Compelled to achieve perfection in everything they attempt to do',
-          internalContradiction: 'Their perfectionism paralyzes them and prevents them from completing important tasks',
+          motivation:
+            'Compelled to achieve perfection in everything they attempt to do',
+          internalContradiction:
+            'Their perfectionism paralyzes them and prevents them from completing important tasks',
           centralQuestion: 'What price are they willing to pay?',
         },
       ];
 
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue(
         JSON.stringify({
-          motivations: mockMotivations.map(m => ({
+          motivations: mockMotivations.map((m) => ({
             coreDesire: m.motivation,
             internalContradiction: m.internalContradiction,
             centralQuestion: m.centralQuestion,
@@ -213,19 +221,19 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
       // Assert - Should return generated motivations
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
-      
+
       // Assert - After fix, dispatch should be called correctly
       expect(dispatchCalls.length).toBeGreaterThanOrEqual(2); // Started + Completed
-      
+
       // Check that dispatches use correct format (string eventName, object payload)
       for (const call of dispatchCalls) {
         const [eventName, payload] = call;
-        
+
         // After fix: first arg should be string, second should be object
         if (typeof eventName === 'string') {
           expect(typeof eventName).toBe('string');
           expect(eventName).toMatch(/^core:/); // Should be namespaced
-          
+
           if (payload) {
             expect(typeof payload).toBe('object');
             expect(payload).toHaveProperty('conceptId');
@@ -247,7 +255,7 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
         name: 'Test Character',
         concept: 'A test character concept',
       };
-      
+
       const direction = {
         id: 'test-direction-id',
         title: 'Test Direction',
@@ -270,16 +278,17 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
 
       // Assert - Should dispatch both started and failed events
       expect(dispatchCalls.length).toBeGreaterThanOrEqual(2);
-      
+
       const failedEventCall = dispatchCalls.find((call) => {
         const [arg] = call;
         // Check both old format (object with type) and new format (string)
         return (
-          (typeof arg === 'object' && arg?.type === 'CORE_MOTIVATIONS_GENERATION_FAILED') ||
+          (typeof arg === 'object' &&
+            arg?.type === 'CORE_MOTIVATIONS_GENERATION_FAILED') ||
           (typeof arg === 'string' && arg.includes('failed'))
         );
       });
-      
+
       expect(failedEventCall).toBeDefined();
     });
   });
@@ -292,7 +301,7 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
         name: 'Test Character',
         concept: 'A test character concept',
       };
-      
+
       const direction = {
         id: 'direction-456',
         title: 'Test Direction',
