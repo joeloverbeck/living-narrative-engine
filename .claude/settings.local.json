@@ -108,7 +108,21 @@
       "mcp__playwright__browser_hover",
       "Bash(NODE_ENV=test npx jest tests/performance/actions/tracing/loadTesting.test.js --testNamePattern=\"should handle memory pressure during extended operation\" --verbose --no-coverage)",
       "Bash(NODE_ENV=test npx jest tests/performance/actions/tracing/pipelineTracing.performance.test.js --testNamePattern=\"should not degrade under high concurrency\" --no-coverage)",
-      "Bash(export NODE_ENV=test)"
+      "Bash(export NODE_ENV=test)",
+      "Bash(chmod:*)",
+      "Bash(NODE_ENV=test npx jest tests/e2e/positioning/movementLockDebug.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/e2e/positioning/movementLockDebug.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/performance/domUI/visualizer/errorRecovery.performance.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/performance/domUI/visualizer/errorRecovery.performance.test.js --no-coverage --testNamePattern=\"should handle default configuration\")",
+      "Bash(NODE_ENV=test npx jest tests/performance/domUI/visualizer/errorRecovery.performance.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/speechPatternsSchemaValidation.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/e2e/positioning/movementLockFlow.test.js --testNamePattern=\"should complete full kneel-stand-move cycle for legacy entity\" --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/speechPatternsSchemaValidation.integration.test.js --no-coverage --verbose -t \"should validate circumstances format correctly\")",
+      "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/speechPatternsSchemaValidation.integration.test.js --no-coverage -t \"should validate circumstances format correctly\")",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/validators/SpeechPatternsSchemaValidator.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/validators/SpeechPatternsSchemaValidator.test.js --no-coverage -t \"should handle processing errors gracefully\")",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/validators/SpeechPatternsSchemaValidator.test.js --no-coverage -t \"should filter errors to pattern-specific ones\")",
+      "Bash(NODE_ENV=test npx jest tests/performance/logging/hybridLogger.performance.test.js --testNamePattern=\"should maintain performance with real category detection\" --verbose --no-coverage)"
     ],
     "deny": []
   }

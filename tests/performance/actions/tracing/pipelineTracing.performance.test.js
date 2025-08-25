@@ -149,18 +149,18 @@ describe('Pipeline Tracing Performance', () => {
       // Verify both services completed successfully
       expect(baselineTimes.length).toBe(baselineRuns);
       expect(tracingTimes.length).toBe(tracingRuns);
-      
+
       // Adjust threshold based on baseline measurement scale
       // For microsecond measurements, use very high threshold due to mock overhead variability
       const overheadThreshold = baselineMedian < 0.1 ? 100000 : 2000;
-      
+
       if (baselineMedian < 0.1) {
         console.log(
           `Note: baseline ${baselineMedian.toFixed(3)}ms is at microsecond level ` +
-          `where mock overhead variability makes percentage calculations unreliable.`
+            `where mock overhead variability makes percentage calculations unreliable.`
         );
       }
-      
+
       expect(overheadMedian).toBeLessThan(overheadThreshold);
     });
 
@@ -308,18 +308,18 @@ describe('Pipeline Tracing Performance', () => {
       // Verify both services completed successfully
       expect(baselineTimes.length).toBe(baselineRuns);
       expect(minimalTimes.length).toBe(minimalRuns);
-      
+
       // Adjust threshold based on baseline measurement scale
       // For microsecond measurements, use very high threshold due to mock overhead variability
       const overheadThreshold = baselineMedian < 0.1 ? 100000 : 2000;
-      
+
       if (baselineMedian < 0.1) {
         console.log(
           `Note: baseline ${baselineMedian.toFixed(3)}ms is at microsecond level ` +
-          `where mock overhead variability makes percentage calculations unreliable.`
+            `where mock overhead variability makes percentage calculations unreliable.`
         );
       }
-      
+
       expect(overheadMedian).toBeLessThan(overheadThreshold);
     });
   });
@@ -503,7 +503,7 @@ describe('Pipeline Tracing Performance', () => {
         // Collect multiple samples for more stable measurements
         const samples = [];
         const sampleCount = level === 1 ? 5 : 1; // More samples for baseline
-        
+
         for (let sample = 0; sample < sampleCount; sample++) {
           const start = performance.now();
           const promises = actors.map((actor) =>
@@ -518,7 +518,7 @@ describe('Pipeline Tracing Performance', () => {
         samples.sort((a, b) => a - b);
         const medianIndex = Math.floor(samples.length / 2);
         const avgTimePerOperation = samples[medianIndex];
-        
+
         durations.push(avgTimePerOperation);
         console.log(
           `Concurrency ${level}: ${avgTimePerOperation.toFixed(2)}ms per op`
@@ -527,23 +527,25 @@ describe('Pipeline Tracing Performance', () => {
 
       // Verify operations completed successfully
       expect(durations.length).toBe(concurrencyLevels.length);
-      
+
       // Calculate degradation but adjust threshold based on baseline scale
       const baseline = durations[0];
       const degradation = durations[durations.length - 1] / durations[0];
-      
+
       // For microsecond measurements, use very high threshold due to mock overhead variability
       const degradationThreshold = baseline < 0.1 ? 100 : 5.0;
-      
+
       if (baseline < 0.1) {
         console.log(
           `Note: baseline ${baseline.toFixed(3)}ms is at microsecond level ` +
-          `where mock overhead variability makes percentage calculations unreliable.`
+            `where mock overhead variability makes percentage calculations unreliable.`
         );
       } else {
-        console.log(`Performance degradation factor: ${degradation.toFixed(2)}x`);
+        console.log(
+          `Performance degradation factor: ${degradation.toFixed(2)}x`
+        );
       }
-      
+
       expect(degradation).toBeLessThan(degradationThreshold);
     });
   });
@@ -636,9 +638,10 @@ describe('Pipeline Tracing Performance', () => {
       // Should maintain good performance
       const timePerOp = duration / operations;
       expect(timePerOp).toBeLessThan(10); // Less than 10ms per operation
-      
+
       // Memory check - use very high threshold if GC not available
-      const memoryThreshold = memoryPerOp > 0 ? 100 * 1024 : Number.MAX_SAFE_INTEGER;
+      const memoryThreshold =
+        memoryPerOp > 0 ? 100 * 1024 : Number.MAX_SAFE_INTEGER;
       expect(memoryPerOp).toBeLessThan(memoryThreshold); // Less than 100KB per op when measurable
     });
   });

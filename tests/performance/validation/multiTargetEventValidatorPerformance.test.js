@@ -265,7 +265,7 @@ describe('MultiTargetEventValidator - Performance Tests', () => {
       // Standard deviation should be reasonable (allowing for timing variability)
       // Increased from 5x to 10x to account for environmental factors when running full test suite:
       // - CPU throttling under load from 87 performance tests
-      // - JavaScript GC pauses and JIT compilation variability  
+      // - JavaScript GC pauses and JIT compilation variability
       // - Sub-millisecond timing measurements are inherently unstable in shared resource environments
       expect(stdDev).toBeLessThan(averageTime * 10);
     });

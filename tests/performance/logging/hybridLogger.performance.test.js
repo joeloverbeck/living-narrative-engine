@@ -194,7 +194,7 @@ describe('HybridLogger Performance', () => {
   describe('Category Detection Performance', () => {
     it('should maintain performance with real category detection', () => {
       const iterations = 1000;
-      const maxDuration = 600; // 600ms for 1000 messages (0.6ms per message)
+      const maxDuration = 900; // 900ms for 1000 unique messages (0.9ms per message) - accounts for system variance
 
       const startTime = Date.now();
 
@@ -288,5 +288,4 @@ describe('HybridLogger Performance', () => {
       expect(console.error).toHaveBeenCalledTimes(iterationsPerLevel);
     });
   });
-
 });

@@ -279,7 +279,7 @@ class LogCategoryDetector {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32bit integer
     }
     return `${prefix}:${str.length}:${hash}`;
@@ -299,7 +299,8 @@ class LogCategoryDetector {
     this.#detectionCount++;
 
     // Generate cache key using hash for memory efficiency
-    const cacheKey = this.#cacheEnabled && this.#cache ? this.#hashString(message) : null;
+    const cacheKey =
+      this.#cacheEnabled && this.#cache ? this.#hashString(message) : null;
 
     // Check cache first
     if (cacheKey && this.#cache.has(cacheKey)) {

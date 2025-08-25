@@ -108,7 +108,7 @@ describe('Traits Generator Performance E2E Tests', () => {
     document = window.document;
     global.window = window;
     global.document = document;
-    
+
     // Setup default mock responses that return valid data structure
     testBed
       .getCharacterBuilderService()
@@ -216,30 +216,44 @@ describe('Traits Generator Performance E2E Tests', () => {
 
       // Mock the actual methods used by the controller
       const mockService = testBed.getCharacterBuilderService();
-      
-      mockService.getAllThematicDirectionsWithConcepts.mockImplementation(async () => {
-        return directions;
-      });
+
+      mockService.getAllThematicDirectionsWithConcepts.mockImplementation(
+        async () => {
+          return directions;
+        }
+      );
 
       // Mock that all directions have clichés and core motivations for proper filtering
-      mockService.hasClichesForDirection.mockImplementation(async (directionId) => {
-        // Only return true for the directions we created to ensure proper filtering
-        return directions.some(d => d.direction.id === directionId);
-      });
-      mockService.getCoreMotivationsByDirectionId.mockImplementation(async (directionId) => {
-        // Only return motivations for the directions we created
-        if (directions.some(d => d.direction.id === directionId)) {
-          return [{ id: 'motivation-1', coreDesire: 'Test motivation', internalContradiction: 'Test contradiction', centralQuestion: 'Test question?' }];
+      mockService.hasClichesForDirection.mockImplementation(
+        async (directionId) => {
+          // Only return true for the directions we created to ensure proper filtering
+          return directions.some((d) => d.direction.id === directionId);
         }
-        return [];
-      });
+      );
+      mockService.getCoreMotivationsByDirectionId.mockImplementation(
+        async (directionId) => {
+          // Only return motivations for the directions we created
+          if (directions.some((d) => d.direction.id === directionId)) {
+            return [
+              {
+                id: 'motivation-1',
+                coreDesire: 'Test motivation',
+                internalContradiction: 'Test contradiction',
+                centralQuestion: 'Test question?',
+              },
+            ];
+          }
+          return [];
+        }
+      );
 
       performanceTracker.mark('directions-load-start');
 
       await controller.initialize();
-      
+
       // Verify that DOM element exists before checking its contents
-      const directionSelectorElement = document.getElementById('direction-selector');
+      const directionSelectorElement =
+        document.getElementById('direction-selector');
       if (!directionSelectorElement) {
         throw new Error('Direction selector element not found in DOM');
       }
@@ -258,17 +272,19 @@ describe('Traits Generator Performance E2E Tests', () => {
       // Verify directions were processed and populated in DOM
       const directionSelector = document.getElementById('direction-selector');
       expect(directionSelector).toBeTruthy();
-      
+
       if (directionSelector) {
         const options = Array.from(directionSelector.options).filter(
           (opt) => opt.value !== ''
         );
-        
+
         // Debug: Check if service methods were actually called
-        expect(mockService.getAllThematicDirectionsWithConcepts).toHaveBeenCalled();
+        expect(
+          mockService.getAllThematicDirectionsWithConcepts
+        ).toHaveBeenCalled();
         expect(mockService.hasClichesForDirection).toHaveBeenCalled();
         expect(mockService.getCoreMotivationsByDirectionId).toHaveBeenCalled();
-        
+
         // The controller's filtering process may not work correctly in the test environment
         // For performance testing, we verify that the service methods were called correctly
         // rather than focusing on DOM manipulation which is complex in the test environment
@@ -367,15 +383,15 @@ describe('Traits Generator Performance E2E Tests', () => {
         .hasClichesForDirection.mockImplementation(() => Promise.resolve(true));
       testBed
         .getCharacterBuilderService()
-        .getCoreMotivationsByDirectionId.mockImplementation(() => Promise.resolve([
-          { id: 'motivation-1', text: 'Test motivation' },
-        ]));
+        .getCoreMotivationsByDirectionId.mockImplementation(() =>
+          Promise.resolve([{ id: 'motivation-1', text: 'Test motivation' }])
+        );
 
       await controller.initialize();
 
       // Wait for DOM to be ready and direction selector populated
       await new Promise((resolve) => setTimeout(resolve, 50));
-      
+
       // Select a direction first to enable inputs
       const directionSelector = document.getElementById('direction-selector');
       if (directionSelector && directionSelector.options.length > 1) {
@@ -419,7 +435,7 @@ describe('Traits Generator Performance E2E Tests', () => {
 
       // No cycle should take significantly longer than average
       // Adjust expectations for realistic DOM event handling
-      if (avgTime > 0 && validationTimes.every(t => t > 0)) {
+      if (avgTime > 0 && validationTimes.every((t) => t > 0)) {
         expect(maxTime).toBeLessThan(avgTime * 2); // Allow 2x variance for stability
         expect(avgTime).toBeLessThan(50); // Realistic average for DOM operations
       }
@@ -443,14 +459,14 @@ describe('Traits Generator Performance E2E Tests', () => {
         .hasClichesForDirection.mockImplementation(() => Promise.resolve(true));
       testBed
         .getCharacterBuilderService()
-        .getCoreMotivationsByDirectionId.mockImplementation(() => Promise.resolve([
-          { id: 'motivation-1', text: 'Test motivation' },
-        ]));
-      
+        .getCoreMotivationsByDirectionId.mockImplementation(() =>
+          Promise.resolve([{ id: 'motivation-1', text: 'Test motivation' }])
+        );
+
       // Mock the generateTraits method to simulate LLM call
-      testBed
-        .getCharacterBuilderService()
-        .generateTraits = jest.fn().mockResolvedValue(testBed.createValidTraitsResponse());
+      testBed.getCharacterBuilderService().generateTraits = jest
+        .fn()
+        .mockResolvedValue(testBed.createValidTraitsResponse());
 
       await controller.initialize();
 
@@ -475,7 +491,8 @@ describe('Traits Generator Performance E2E Tests', () => {
       ].forEach((id, index) => {
         const input = document.getElementById(id);
         if (input) {
-          input.value = inputValues[index] || `Test input ${index} with sufficient content`;
+          input.value =
+            inputValues[index] || `Test input ${index} with sufficient content`;
           input.dispatchEvent(new window.Event('input'));
         }
       });
@@ -494,7 +511,7 @@ describe('Traits Generator Performance E2E Tests', () => {
           concept: validConcept,
           direction: validDirection,
           userInputs: validInputs,
-          cliches: []
+          cliches: [],
         };
         await testBed.getCharacterBuilderService().generateTraits(params);
       }
@@ -511,9 +528,10 @@ describe('Traits Generator Performance E2E Tests', () => {
       expect(generationTime).toBeLessThan(300);
 
       // Verify generation was triggered (either fetch or service method)
-      const generationTriggered = 
-        fetchMock.mock.calls.length > 0 || 
-        testBed.getCharacterBuilderService().generateTraits.mock.calls.length > 0;
+      const generationTriggered =
+        fetchMock.mock.calls.length > 0 ||
+        testBed.getCharacterBuilderService().generateTraits.mock.calls.length >
+          0;
       expect(generationTriggered).toBeTruthy();
     });
 
@@ -689,14 +707,14 @@ describe('Traits Generator Performance E2E Tests', () => {
         .hasClichesForDirection.mockImplementation(() => Promise.resolve(true));
       testBed
         .getCharacterBuilderService()
-        .getCoreMotivationsByDirectionId.mockImplementation(() => Promise.resolve([
-          { id: 'motivation-1', text: 'Test motivation' },
-        ]));
-      
+        .getCoreMotivationsByDirectionId.mockImplementation(() =>
+          Promise.resolve([{ id: 'motivation-1', text: 'Test motivation' }])
+        );
+
       // Mock network delay in the service method
-      testBed
-        .getCharacterBuilderService()
-        .generateTraits = jest.fn().mockImplementation(
+      testBed.getCharacterBuilderService().generateTraits = jest
+        .fn()
+        .mockImplementation(
           () =>
             new Promise((resolve) => {
               setTimeout(
@@ -704,7 +722,7 @@ describe('Traits Generator Performance E2E Tests', () => {
                 150
               ); // 150ms delay
             })
-      );
+        );
 
       await controller.initialize();
 
@@ -748,11 +766,14 @@ describe('Traits Generator Performance E2E Tests', () => {
           concept: validConcept,
           direction: validDirection,
           userInputs: {
-            coreMotivation: 'Test input for network delay test with sufficient content',
-            internalContradiction: 'Test input for network delay test with sufficient content',
-            centralQuestion: 'Test input for network delay test with sufficient content'
+            coreMotivation:
+              'Test input for network delay test with sufficient content',
+            internalContradiction:
+              'Test input for network delay test with sufficient content',
+            centralQuestion:
+              'Test input for network delay test with sufficient content',
           },
-          cliches: []
+          cliches: [],
         };
         await testBed.getCharacterBuilderService().generateTraits(params);
       }
@@ -767,11 +788,12 @@ describe('Traits Generator Performance E2E Tests', () => {
 
       // Should handle network delays without blocking UI
       expect(networkTime).toBeLessThan(450); // Should complete within reasonable time including delay
-      
+
       // Verify generation was triggered
-      const generationTriggered = 
-        fetchMock.mock.calls.length > 0 || 
-        testBed.getCharacterBuilderService().generateTraits.mock.calls.length > 0;
+      const generationTriggered =
+        fetchMock.mock.calls.length > 0 ||
+        testBed.getCharacterBuilderService().generateTraits.mock.calls.length >
+          0;
       expect(generationTriggered).toBeTruthy();
     });
 
@@ -866,17 +888,32 @@ describe('Traits Generator Performance E2E Tests', () => {
         .getCharacterBuilderService()
         .hasClichesForDirection.mockImplementation(async (directionId) => {
           // Only return true for the directions in our large dataset
-          return largeDatasetWithConcepts.some(d => d.direction.id === directionId);
+          return largeDatasetWithConcepts.some(
+            (d) => d.direction.id === directionId
+          );
         });
       testBed
         .getCharacterBuilderService()
-        .getCoreMotivationsByDirectionId.mockImplementation(async (directionId) => {
-          // Only return motivations for the directions in our large dataset
-          if (largeDatasetWithConcepts.some(d => d.direction.id === directionId)) {
-            return [{ id: 'motivation-1', coreDesire: 'Test motivation', internalContradiction: 'Test contradiction', centralQuestion: 'Test question?' }];
+        .getCoreMotivationsByDirectionId.mockImplementation(
+          async (directionId) => {
+            // Only return motivations for the directions in our large dataset
+            if (
+              largeDatasetWithConcepts.some(
+                (d) => d.direction.id === directionId
+              )
+            ) {
+              return [
+                {
+                  id: 'motivation-1',
+                  coreDesire: 'Test motivation',
+                  internalContradiction: 'Test contradiction',
+                  centralQuestion: 'Test question?',
+                },
+              ];
+            }
+            return [];
           }
-          return [];
-        });
+        );
 
       performanceTracker.mark('large-dataset-start');
 
@@ -896,14 +933,14 @@ describe('Traits Generator Performance E2E Tests', () => {
       // UI should remain responsive and populated with items
       const directionSelector = document.getElementById('direction-selector');
       expect(directionSelector).toBeTruthy();
-      
+
       if (directionSelector) {
         const options = Array.from(directionSelector.options).filter(
           (opt) => opt.value !== ''
         );
         // The controller's filtering process may not work correctly in the test environment
         // For performance testing, we verify that the load operation completed without errors
-        // rather than focusing on DOM manipulation which is complex in the test environment  
+        // rather than focusing on DOM manipulation which is complex in the test environment
         expect(options.length).toBeGreaterThanOrEqual(0); // Just verify no exceptions occurred
       }
     });

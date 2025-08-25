@@ -5,7 +5,14 @@
  * movement components are attached to individual leg body parts.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import kneelBeforeRule from '../../../data/mods/positioning/rules/kneel_before.rule.json';
 import standUpRule from '../../../data/mods/positioning/rules/stand_up.rule.json';
 import eventIsActionKneelBefore from '../../../data/mods/positioning/conditions/event-is-action-kneel-before.condition.json';
@@ -96,7 +103,7 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
 
   beforeEach(() => {
     const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    
+
     // Expand macros for both rules
     const expandedKneelActions = expandMacros(kneelBeforeRule.actions, {
       get: (type, id) => (type === 'macros' ? macros[id] : undefined),
@@ -358,7 +365,7 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
     it('should unlock all leg movement components when anatomy entity stands', async () => {
       // Setup: Create kneeling anatomy entity
       const actorId = await createKneelingAnatomyActor();
-      
+
       // Get anatomy structure
       const bodyComponent = testEnv.entityManager.getComponentData(
         actorId,
@@ -409,7 +416,7 @@ describe('Movement Lock - Anatomy-Based Entities', () => {
     it('should allow movement after standing up', async () => {
       // Setup: Create kneeling anatomy entity then stand
       const actorId = await createKneelingAnatomyActor();
-      
+
       await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
         eventName: 'core:attempt_action',
         actorId: actorId,

@@ -230,19 +230,32 @@ export function validateSpeechPatternsGenerationResponse(response, logger) {
     // Validate each pattern
     response.speechPatterns.forEach((pattern, index) => {
       if (!pattern.pattern || typeof pattern.pattern !== 'string') {
-        errors.push(`Pattern ${index + 1}: 'pattern' field is required and must be a string`);
+        errors.push(
+          `Pattern ${index + 1}: 'pattern' field is required and must be a string`
+        );
       } else if (pattern.pattern.length < 5) {
-        errors.push(`Pattern ${index + 1}: 'pattern' must be at least 5 characters long`);
+        errors.push(
+          `Pattern ${index + 1}: 'pattern' must be at least 5 characters long`
+        );
       }
 
       if (!pattern.example || typeof pattern.example !== 'string') {
-        errors.push(`Pattern ${index + 1}: 'example' field is required and must be a string`);
+        errors.push(
+          `Pattern ${index + 1}: 'example' field is required and must be a string`
+        );
       } else if (pattern.example.length < 3) {
-        errors.push(`Pattern ${index + 1}: 'example' must be at least 3 characters long`);
+        errors.push(
+          `Pattern ${index + 1}: 'example' must be at least 3 characters long`
+        );
       }
 
-      if (pattern.circumstances !== undefined && typeof pattern.circumstances !== 'string') {
-        errors.push(`Pattern ${index + 1}: 'circumstances' must be a string if provided`);
+      if (
+        pattern.circumstances !== undefined &&
+        typeof pattern.circumstances !== 'string'
+      ) {
+        errors.push(
+          `Pattern ${index + 1}: 'circumstances' must be a string if provided`
+        );
       }
     });
 
@@ -252,7 +265,7 @@ export function validateSpeechPatternsGenerationResponse(response, logger) {
     }
 
     const isValid = errors.length === 0;
-    
+
     if (logger) {
       if (isValid) {
         logger.debug('Speech patterns response validation passed', {
@@ -278,7 +291,10 @@ export function validateSpeechPatternsGenerationResponse(response, logger) {
  * @param {object} options - Generation options
  * @returns {string} Generated prompt
  */
-export function buildSpeechPatternsGenerationPrompt(characterData, options = {}) {
+export function buildSpeechPatternsGenerationPrompt(
+  characterData,
+  options = {}
+) {
   if (!characterData || typeof characterData !== 'object') {
     throw new Error('Character data is required and must be an object');
   }

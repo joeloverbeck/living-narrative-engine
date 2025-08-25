@@ -19,11 +19,11 @@ describe('Stand Up Rule Loading Integration', () => {
     // Initialize IntegrationTestBed for proper schema loading
     testBed = new IntegrationTestBed();
     await testBed.initialize();
-    
+
     // Get services from the container
     schemaValidator = testBed.schemaValidator;
     logger = testBed.mockLogger || new ConsoleLogger();
-    
+
     // Load operation schemas needed for validation
     await loadOperationSchemas(schemaValidator);
 
@@ -36,7 +36,7 @@ describe('Stand Up Rule Loading Integration', () => {
     if (testBed) {
       await testBed.cleanup();
     }
-    
+
     // Clean up temp files
     try {
       await fs.rm('./tests/temp', { recursive: true, force: true });
@@ -236,11 +236,13 @@ describe('Stand Up Rule Loading Integration', () => {
 
       // The validation might fail due to missing required parameters for other operations
       // but it should not fail due to the action type being unrecognized
-      const hasTypeError = result.errors ? result.errors.some(
-        (error) =>
-          error.keyword === 'anyOf' &&
-          error.message === 'must match a schema in anyOf'
-      ) : false;
+      const hasTypeError = result.errors
+        ? result.errors.some(
+            (error) =>
+              error.keyword === 'anyOf' &&
+              error.message === 'must match a schema in anyOf'
+          )
+        : false;
 
       expect(hasTypeError).toBe(false);
     }
@@ -265,48 +267,48 @@ async function loadOperationSchemas(schemaValidator) {
           parameters: {
             type: 'object',
             properties: {
-              actor_id: { type: 'string' }
+              actor_id: { type: 'string' },
             },
-            required: ['actor_id']
-          }
+            required: ['actor_id'],
+          },
         },
-        required: ['type', 'parameters']
+        required: ['type', 'parameters'],
       },
       {
         type: 'object',
         properties: {
           type: { const: 'GET_NAME' },
-          parameters: { type: 'object' }
+          parameters: { type: 'object' },
         },
-        required: ['type']
+        required: ['type'],
       },
       {
         type: 'object',
         properties: {
           type: { const: 'QUERY_COMPONENT' },
-          parameters: { type: 'object' }
+          parameters: { type: 'object' },
         },
-        required: ['type']
+        required: ['type'],
       },
       {
         type: 'object',
         properties: {
           type: { const: 'REMOVE_COMPONENT' },
-          parameters: { type: 'object' }
+          parameters: { type: 'object' },
         },
-        required: ['type']
+        required: ['type'],
       },
       {
         type: 'object',
         properties: {
           type: { const: 'SET_VARIABLE' },
-          parameters: { type: 'object' }
+          parameters: { type: 'object' },
         },
-        required: ['type']
-      }
-    ]
+        required: ['type'],
+      },
+    ],
   };
-  
+
   // Load the specific UNLOCK_MOVEMENT schema
   const unlockMovementSchema = {
     $id: 'schema://living-narrative-engine/operations/unlockMovement.schema.json',
@@ -316,18 +318,21 @@ async function loadOperationSchemas(schemaValidator) {
       parameters: {
         type: 'object',
         properties: {
-          actor_id: { type: 'string' }
+          actor_id: { type: 'string' },
         },
-        required: ['actor_id']
-      }
+        required: ['actor_id'],
+      },
     },
-    required: ['type', 'parameters']
+    required: ['type', 'parameters'],
   };
 
   // Register the schemas
   await schemaValidator.addSchema(operationSchema, operationSchema.$id);
-  await schemaValidator.addSchema(unlockMovementSchema, unlockMovementSchema.$id);
-  
+  await schemaValidator.addSchema(
+    unlockMovementSchema,
+    unlockMovementSchema.$id
+  );
+
   // Also register the rule schema if needed
   const ruleSchema = {
     $id: 'schema://living-narrative-engine/rule.schema.json',
@@ -343,18 +348,22 @@ async function loadOperationSchemas(schemaValidator) {
         items: {
           oneOf: [
             { $ref: '#/definitions/operation' },
-            { type: 'object', properties: { macro: { type: 'string' } }, required: ['macro'] }
-          ]
-        }
-      }
+            {
+              type: 'object',
+              properties: { macro: { type: 'string' } },
+              required: ['macro'],
+            },
+          ],
+        },
+      },
     },
     required: ['rule_id', 'event_type', 'actions'],
     definitions: {
       operation: {
-        $ref: 'schema://living-narrative-engine/operation.schema.json'
-      }
-    }
+        $ref: 'schema://living-narrative-engine/operation.schema.json',
+      },
+    },
   };
-  
+
   await schemaValidator.addSchema(ruleSchema, ruleSchema.$id);
 }

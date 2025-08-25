@@ -130,27 +130,39 @@ describe('Backwards Compatibility Integration Tests', () => {
 
       // Verify all notes are processed correctly
       expect(promptData.notesArray).toHaveLength(3);
-      
+
       // Verify tags are filtered out during processing
       promptData.notesArray.forEach((note) => {
         expect(note).not.toHaveProperty('tags');
       });
 
       // Verify content is preserved
-      expect(promptData.notesArray[0].text).toBe('Legacy note with tags from old save');
+      expect(promptData.notesArray[0].text).toBe(
+        'Legacy note with tags from old save'
+      );
       expect(promptData.notesArray[0].subject).toBe('Old Character');
-      expect(promptData.notesArray[1].text).toBe('Another legacy note with different tags');
+      expect(promptData.notesArray[1].text).toBe(
+        'Another legacy note with different tags'
+      );
       expect(promptData.notesArray[2].text).toBe('Legacy note without tags');
 
       // Format the data and verify it works properly
       const formattedData = promptDataFormatter.formatPromptData(promptData);
-      expect(formattedData.notesContent).toContain('Legacy note with tags from old save');
-      expect(formattedData.notesContent).toContain('Another legacy note with different tags');
+      expect(formattedData.notesContent).toContain(
+        'Legacy note with tags from old save'
+      );
+      expect(formattedData.notesContent).toContain(
+        'Another legacy note with different tags'
+      );
       expect(formattedData.notesContent).toContain('Legacy note without tags');
 
       // Verify no tag content appears in formatted output
-      expect(formattedData.notesContent).not.toContain('[legacy, important, character]');
-      expect(formattedData.notesContent).not.toContain('[exploration, discovery]');
+      expect(formattedData.notesContent).not.toContain(
+        '[legacy, important, character]'
+      );
+      expect(formattedData.notesContent).not.toContain(
+        '[exploration, discovery]'
+      );
     });
 
     test('should handle corrupted legacy data with malformed tag structures', async () => {
@@ -219,7 +231,9 @@ describe('Backwards Compatibility Integration Tests', () => {
       expect(promptData.notesArray[0].text).toBe('Normal legacy note');
       expect(promptData.notesArray[1].text).toBe('Note with malformed tags');
       expect(promptData.notesArray[2].text).toBe('Note with invalid tags');
-      expect(promptData.notesArray[3].text).toBe('Note with nested tag objects');
+      expect(promptData.notesArray[3].text).toBe(
+        'Note with nested tag objects'
+      );
 
       // Verify formatting works correctly
       const formattedData = promptDataFormatter.formatPromptData(promptData);
@@ -374,18 +388,29 @@ describe('Backwards Compatibility Integration Tests', () => {
       });
 
       // Verify all expected content is present
-      expect(promptData.notesArray.some(note => note.text.includes('Old format note')))
-        .toBe(true);
-      expect(promptData.notesArray.some(note => note.text.includes('New format note')))
-        .toBe(true);
-      expect(promptData.notesArray.some(note => note.text.includes('Hybrid note')))
-        .toBe(true);
+      expect(
+        promptData.notesArray.some((note) =>
+          note.text.includes('Old format note')
+        )
+      ).toBe(true);
+      expect(
+        promptData.notesArray.some((note) =>
+          note.text.includes('New format note')
+        )
+      ).toBe(true);
+      expect(
+        promptData.notesArray.some((note) => note.text.includes('Hybrid note'))
+      ).toBe(true);
 
       // Verify formatting works consistently
       const formattedData = promptDataFormatter.formatPromptData(promptData);
       expect(formattedData.notesContent).toContain('Old format note with tags');
-      expect(formattedData.notesContent).toContain('New format note without tags');
-      expect(formattedData.notesContent).toContain('Hybrid note with mixed fields');
+      expect(formattedData.notesContent).toContain(
+        'New format note without tags'
+      );
+      expect(formattedData.notesContent).toContain(
+        'Hybrid note with mixed fields'
+      );
     });
 
     test('should maintain note ordering and timestamps during compatibility processing', async () => {
@@ -544,7 +569,8 @@ describe('Backwards Compatibility Integration Tests', () => {
       const largeLegacyData = Array.from({ length: 200 }, (_, i) => ({
         text: `Legacy note ${i + 1} with detailed content`,
         subject: `Legacy Subject ${i + 1}`,
-        subjectType: Object.values(SUBJECT_TYPES)[i % Object.values(SUBJECT_TYPES).length],
+        subjectType:
+          Object.values(SUBJECT_TYPES)[i % Object.values(SUBJECT_TYPES).length],
         context: `legacy context ${i + 1}`,
         tags: [`tag${i + 1}`, `category${(i % 5) + 1}`, `type${(i % 3) + 1}`],
         timestamp: new Date(2023, 0, 1, i % 24).toISOString(),

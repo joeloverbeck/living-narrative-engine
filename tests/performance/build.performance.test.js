@@ -79,14 +79,16 @@ describe('Build System Performance', () => {
   describe('Parallel vs Sequential Performance', () => {
     it(
       'should demonstrate parallel build performance advantage',
-      () => {
+      async () => {
         // Test parallel build (default)
         const parallelStart = Date.now();
         execSync('npm run build:dev', { stdio: 'ignore' });
         const parallelTime = Date.now() - parallelStart;
 
-        // Clean for sequential test
-        execSync('npm run build:clean', { stdio: 'ignore' });
+        // Clean for sequential test using fs-extra for proper async handling
+        await fs.remove(distDir);
+        // Add small delay to ensure filesystem has completed the operation
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Test sequential build (no-parallel)
         const sequentialStart = Date.now();

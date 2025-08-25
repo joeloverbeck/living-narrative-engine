@@ -3,7 +3,14 @@
  * @description Reproduces runtime errors caused by operation schemas that don't inherit from base-operation.schema.json
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import RuleLoader from '../../../src/loaders/ruleLoader.js';
 import {
   createMockPathResolver,
@@ -69,7 +76,10 @@ const createMockSchemaValidator = (overrides = {}) => {
     validate: jest.fn((schemaId, data) => {
       const validatorFunc = schemaValidators.get(schemaId);
       if (!validatorFunc) {
-        return { isValid: false, errors: [{ message: `No validator for schema ${schemaId}` }] };
+        return {
+          isValid: false,
+          errors: [{ message: `No validator for schema ${schemaId}` }],
+        };
       }
       return validatorFunc(data);
     }),
@@ -103,7 +113,7 @@ const createMockSchemaValidator = (overrides = {}) => {
  */
 const createMockDataRegistry = (overrides = {}) => {
   const registryStore = {};
-  
+
   return {
     store: jest.fn((type, id, data) => {
       if (!registryStore[type]) {
@@ -140,7 +150,7 @@ const createMockDataRegistry = (overrides = {}) => {
       return false;
     }),
     clear: jest.fn(() => {
-      Object.keys(registryStore).forEach(key => delete registryStore[key]);
+      Object.keys(registryStore).forEach((key) => delete registryStore[key]);
     }),
     getKeys: jest.fn((type) => {
       return registryStore[type] ? Object.keys(registryStore[type]) : [];
@@ -171,7 +181,8 @@ describe('RuleLoader - Schema Inconsistency Issues', () => {
   let mockSchemaValidator;
   let mockDataRegistry;
   let mockLogger;
-  const defaultRuleSchemaId = 'schema://living-narrative-engine/rule.schema.json';
+  const defaultRuleSchemaId =
+    'schema://living-narrative-engine/rule.schema.json';
 
   beforeEach(() => {
     // Create mock services using the proper factory functions
@@ -183,10 +194,10 @@ describe('RuleLoader - Schema Inconsistency Issues', () => {
     mockLogger = createMockLogger();
 
     // Configure the rule schema to be loaded by default
-    mockSchemaValidator.mockValidatorFunction(
-      defaultRuleSchemaId,
-      () => ({ isValid: true, errors: null })
-    );
+    mockSchemaValidator.mockValidatorFunction(defaultRuleSchemaId, () => ({
+      isValid: true,
+      errors: null,
+    }));
 
     ruleLoader = new RuleLoader(
       mockConfig,
@@ -212,44 +223,52 @@ describe('RuleLoader - Schema Inconsistency Issues', () => {
         actions: [
           {
             type: 'UNLOCK_MOVEMENT',
-            comment: 'Unlock movement after standing (handles both legacy and anatomy entities)',
+            comment:
+              'Unlock movement after standing (handles both legacy and anatomy entities)',
             parameters: {
-              actor_id: '{event.payload.actorId}'
-            }
-          }
-        ]
+              actor_id: '{event.payload.actorId}',
+            },
+          },
+        ],
       };
 
       // Setup mock to simulate schema validation failure
-      mockSchemaValidator.mockValidatorFunction(
-        defaultRuleSchemaId,
-        () => ({
-          isValid: false,
-          errors: [
-            {
-              instancePath: '/actions/0',
-              schemaPath: '#/additionalProperties',
-              keyword: 'additionalProperties',
-              params: { additionalProperty: 'comment' },
-              message: 'must NOT have additional properties'
-            }
-          ]
-        })
-      );
+      mockSchemaValidator.mockValidatorFunction(defaultRuleSchemaId, () => ({
+        isValid: false,
+        errors: [
+          {
+            instancePath: '/actions/0',
+            schemaPath: '#/additionalProperties',
+            keyword: 'additionalProperties',
+            params: { additionalProperty: 'comment' },
+            message: 'must NOT have additional properties',
+          },
+        ],
+      }));
 
       mockDataFetcher.fetch.mockResolvedValue(ruleWithCommentedUnlockMovement);
-      mockPathResolver.resolveModContentPath.mockReturnValue('./data/mods/test_mod/rules/test_rule.rule.json');
+      mockPathResolver.resolveModContentPath.mockReturnValue(
+        './data/mods/test_mod/rules/test_rule.rule.json'
+      );
 
       // Act: This should fail validation due to schema inconsistency
-      const result = await ruleLoader.loadItemsForMod('test_mod', {
-        content: { rules: ['test_rule.rule.json'] }
-      }, 'rules', 'rules', 'rules');
+      const result = await ruleLoader.loadItemsForMod(
+        'test_mod',
+        {
+          content: { rules: ['test_rule.rule.json'] },
+        },
+        'rules',
+        'rules',
+        'rules'
+      );
 
       // Assert: Should have 0 successful loads and 1 error
       expect(result.count).toBe(0);
       expect(result.errors).toBe(1);
       expect(result.failures).toHaveLength(1);
-      expect(result.failures[0].error.message).toMatch(/Primary schema validation failed/);
+      expect(result.failures[0].error.message).toMatch(
+        /Primary schema validation failed/
+      );
     });
 
     it('should fail validation for LOCK_MOVEMENT with comment field', async () => {
@@ -263,42 +282,49 @@ describe('RuleLoader - Schema Inconsistency Issues', () => {
             type: 'LOCK_MOVEMENT',
             comment: 'Lock movement during special action',
             parameters: {
-              actor_id: '{event.payload.actorId}'
-            }
-          }
-        ]
+              actor_id: '{event.payload.actorId}',
+            },
+          },
+        ],
       };
 
       // Setup mock to simulate schema validation failure
-      mockSchemaValidator.mockValidatorFunction(
-        defaultRuleSchemaId,
-        () => ({
-          isValid: false,
-          errors: [
-            {
-              instancePath: '/actions/0',
-              schemaPath: '#/additionalProperties',
-              keyword: 'additionalProperties',
-              params: { additionalProperty: 'comment' },
-              message: 'must NOT have additional properties'
-            }
-          ]
-        })
-      );
+      mockSchemaValidator.mockValidatorFunction(defaultRuleSchemaId, () => ({
+        isValid: false,
+        errors: [
+          {
+            instancePath: '/actions/0',
+            schemaPath: '#/additionalProperties',
+            keyword: 'additionalProperties',
+            params: { additionalProperty: 'comment' },
+            message: 'must NOT have additional properties',
+          },
+        ],
+      }));
 
       mockDataFetcher.fetch.mockResolvedValue(ruleWithCommentedLockMovement);
-      mockPathResolver.resolveModContentPath.mockReturnValue('./data/mods/test_mod/rules/test_rule.rule.json');
+      mockPathResolver.resolveModContentPath.mockReturnValue(
+        './data/mods/test_mod/rules/test_rule.rule.json'
+      );
 
       // Act: This should fail validation due to schema inconsistency
-      const result = await ruleLoader.loadItemsForMod('test_mod', {
-        content: { rules: ['test_rule.rule.json'] }
-      }, 'rules', 'rules', 'rules');
+      const result = await ruleLoader.loadItemsForMod(
+        'test_mod',
+        {
+          content: { rules: ['test_rule.rule.json'] },
+        },
+        'rules',
+        'rules',
+        'rules'
+      );
 
       // Assert: Should have 0 successful loads and 1 error
       expect(result.count).toBe(0);
       expect(result.errors).toBe(1);
       expect(result.failures).toHaveLength(1);
-      expect(result.failures[0].error.message).toMatch(/Primary schema validation failed/);
+      expect(result.failures[0].error.message).toMatch(
+        /Primary schema validation failed/
+      );
     });
 
     it('should reproduce the exact stand_up.rule.json validation failure pattern', async () => {
@@ -310,47 +336,55 @@ describe('RuleLoader - Schema Inconsistency Issues', () => {
         actions: [
           {
             type: 'GET_NAME',
-            parameters: { entity_ref: 'actor', result_variable: 'actorName' }
+            parameters: { entity_ref: 'actor', result_variable: 'actorName' },
           },
           {
             type: 'UNLOCK_MOVEMENT',
-            comment: 'Unlock movement after standing (handles both legacy and anatomy entities)',
+            comment:
+              'Unlock movement after standing (handles both legacy and anatomy entities)',
             parameters: {
-              actor_id: '{event.payload.actorId}'
-            }
-          }
-        ]
+              actor_id: '{event.payload.actorId}',
+            },
+          },
+        ],
       };
 
       // Setup mock to simulate the exact validation failure pattern seen in logs
-      mockSchemaValidator.mockValidatorFunction(
-        defaultRuleSchemaId,
-        () => ({
-          isValid: false,
-          errors: Array.from({ length: 148 }, (_, i) => ({
-            instancePath: `/actions/1`,
-            schemaPath: '#/additionalProperties',
-            keyword: 'additionalProperties',
-            params: { additionalProperty: 'comment' },
-            message: 'must NOT have additional properties',
-            errorId: i
-          }))
-        })
-      );
+      mockSchemaValidator.mockValidatorFunction(defaultRuleSchemaId, () => ({
+        isValid: false,
+        errors: Array.from({ length: 148 }, (_, i) => ({
+          instancePath: `/actions/1`,
+          schemaPath: '#/additionalProperties',
+          keyword: 'additionalProperties',
+          params: { additionalProperty: 'comment' },
+          message: 'must NOT have additional properties',
+          errorId: i,
+        })),
+      }));
 
       mockDataFetcher.fetch.mockResolvedValue(standUpRuleSimplified);
-      mockPathResolver.resolveModContentPath.mockReturnValue('./data/mods/positioning/rules/stand_up.rule.json');
+      mockPathResolver.resolveModContentPath.mockReturnValue(
+        './data/mods/positioning/rules/stand_up.rule.json'
+      );
 
       // Act: This should fail with the same error pattern seen in the logs
-      const result = await ruleLoader.loadItemsForMod('positioning', {
-        content: { rules: ['stand_up.rule.json'] }
-      }, 'rules', 'rules', 'rules');
+      const result = await ruleLoader.loadItemsForMod(
+        'positioning',
+        {
+          content: { rules: ['stand_up.rule.json'] },
+        },
+        'rules',
+        'rules',
+        'rules'
+      );
 
       // Assert: Should have 0 successful loads and 1 error
       expect(result.count).toBe(0);
       expect(result.errors).toBe(1);
       expect(result.failures).toHaveLength(1);
-      expect(result.failures[0].error.message).toMatch(/Primary schema validation failed for 'stand_up.rule.json'/);
+      expect(result.failures[0].error.message).toMatch(
+        /Primary schema validation failed for 'stand_up.rule.json'/
+      );
     });
   });
 
@@ -367,28 +401,33 @@ describe('RuleLoader - Schema Inconsistency Issues', () => {
             comment: 'This comment should work fine with REMOVE_COMPONENT',
             parameters: {
               entity_ref: 'actor',
-              component_type: 'core:test_component'
-            }
-          }
-        ]
+              component_type: 'core:test_component',
+            },
+          },
+        ],
       };
 
       // Setup mock to simulate successful validation (REMOVE_COMPONENT inherits from base schema)
-      mockSchemaValidator.mockValidatorFunction(
-        defaultRuleSchemaId,
-        () => ({
-          isValid: true,
-          errors: []
-        })
-      );
+      mockSchemaValidator.mockValidatorFunction(defaultRuleSchemaId, () => ({
+        isValid: true,
+        errors: [],
+      }));
 
       mockDataFetcher.fetch.mockResolvedValue(ruleWithWorkingOperation);
-      mockPathResolver.resolveModContentPath.mockReturnValue('./data/mods/test_mod/rules/working_rule.rule.json');
+      mockPathResolver.resolveModContentPath.mockReturnValue(
+        './data/mods/test_mod/rules/working_rule.rule.json'
+      );
 
       // Act: This should succeed because REMOVE_COMPONENT inherits from base schema
-      const result = await ruleLoader.loadItemsForMod('test_mod', {
-        content: { rules: ['working_rule.rule.json'] }
-      }, 'rules', 'rules', 'rules');
+      const result = await ruleLoader.loadItemsForMod(
+        'test_mod',
+        {
+          content: { rules: ['working_rule.rule.json'] },
+        },
+        'rules',
+        'rules',
+        'rules'
+      );
 
       // Assert
       expect(result).toBeDefined();
@@ -399,7 +438,7 @@ describe('RuleLoader - Schema Inconsistency Issues', () => {
     it('should demonstrate the schema inheritance difference between working and broken operations', async () => {
       // This test demonstrates the core issue: identical rule structures succeed or fail
       // based solely on whether the operation schema inherits from base-operation.schema.json
-      
+
       const ruleTemplate = (operationType) => ({
         $schema: 'schema://living-narrative-engine/rule.schema.json',
         rule_id: `test_${operationType.toLowerCase()}`,
@@ -408,11 +447,16 @@ describe('RuleLoader - Schema Inconsistency Issues', () => {
           {
             type: operationType,
             comment: 'Testing comment field support',
-            parameters: operationType === 'UNLOCK_MOVEMENT' || operationType === 'LOCK_MOVEMENT'
-              ? { actor_id: 'test_actor' }
-              : { entity_ref: 'actor', component_type: 'core:test_component' }
-          }
-        ]
+            parameters:
+              operationType === 'UNLOCK_MOVEMENT' ||
+              operationType === 'LOCK_MOVEMENT'
+                ? { actor_id: 'test_actor' }
+                : {
+                    entity_ref: 'actor',
+                    component_type: 'core:test_component',
+                  },
+          },
+        ],
       });
 
       // Test working operation (inherits from base schema)
@@ -423,52 +467,78 @@ describe('RuleLoader - Schema Inconsistency Issues', () => {
 
       mockPathResolver.resolveModContentPath
         .mockReturnValueOnce('./data/mods/test_mod/rules/working.rule.json')
-        .mockReturnValueOnce('./data/mods/test_mod/rules/broken_unlock.rule.json')
-        .mockReturnValueOnce('./data/mods/test_mod/rules/broken_lock.rule.json');
-        
+        .mockReturnValueOnce(
+          './data/mods/test_mod/rules/broken_unlock.rule.json'
+        )
+        .mockReturnValueOnce(
+          './data/mods/test_mod/rules/broken_lock.rule.json'
+        );
+
       // Setup sequential validation responses - working first, then failures
       let callCount = 0;
-      mockSchemaValidator.mockValidatorFunction(
-        defaultRuleSchemaId,
-        () => {
-          callCount++;
-          if (callCount === 1) {
-            return { isValid: true, errors: [] }; // REMOVE_COMPONENT succeeds
-          } else {
-            return { isValid: false, errors: [{ message: 'must NOT have additional properties' }] }; // Others fail
-          }
+      mockSchemaValidator.mockValidatorFunction(defaultRuleSchemaId, () => {
+        callCount++;
+        if (callCount === 1) {
+          return { isValid: true, errors: [] }; // REMOVE_COMPONENT succeeds
+        } else {
+          return {
+            isValid: false,
+            errors: [{ message: 'must NOT have additional properties' }],
+          }; // Others fail
         }
-      );
+      });
 
       // Working operation should succeed
-      const workingResult = await ruleLoader.loadItemsForMod('test_mod', {
-        content: { rules: ['working.rule.json'] }
-      }, 'rules', 'rules', 'rules');
+      const workingResult = await ruleLoader.loadItemsForMod(
+        'test_mod',
+        {
+          content: { rules: ['working.rule.json'] },
+        },
+        'rules',
+        'rules',
+        'rules'
+      );
       expect(workingResult.count).toBe(1);
 
       // Reset call count and setup failure responses for subsequent calls
       callCount = 0;
-      mockSchemaValidator.mockValidatorFunction(
-        defaultRuleSchemaId,
-        () => ({ isValid: false, errors: [{ message: 'must NOT have additional properties' }] })
-      );
+      mockSchemaValidator.mockValidatorFunction(defaultRuleSchemaId, () => ({
+        isValid: false,
+        errors: [{ message: 'must NOT have additional properties' }],
+      }));
 
       // Broken operations should fail
-      const unlockResult = await ruleLoader.loadItemsForMod('test_mod', {
-        content: { rules: ['broken_unlock.rule.json'] }
-      }, 'rules', 'rules', 'rules');
-      
+      const unlockResult = await ruleLoader.loadItemsForMod(
+        'test_mod',
+        {
+          content: { rules: ['broken_unlock.rule.json'] },
+        },
+        'rules',
+        'rules',
+        'rules'
+      );
+
       expect(unlockResult.count).toBe(0);
       expect(unlockResult.errors).toBe(1);
-      expect(unlockResult.failures[0].error.message).toMatch(/Primary schema validation failed/);
+      expect(unlockResult.failures[0].error.message).toMatch(
+        /Primary schema validation failed/
+      );
 
-      const lockResult = await ruleLoader.loadItemsForMod('test_mod', {
-        content: { rules: ['broken_lock.rule.json'] }
-      }, 'rules', 'rules', 'rules');
-      
+      const lockResult = await ruleLoader.loadItemsForMod(
+        'test_mod',
+        {
+          content: { rules: ['broken_lock.rule.json'] },
+        },
+        'rules',
+        'rules',
+        'rules'
+      );
+
       expect(lockResult.count).toBe(0);
       expect(lockResult.errors).toBe(1);
-      expect(lockResult.failures[0].error.message).toMatch(/Primary schema validation failed/);
+      expect(lockResult.failures[0].error.message).toMatch(
+        /Primary schema validation failed/
+      );
     });
   });
 });

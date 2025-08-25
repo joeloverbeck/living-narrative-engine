@@ -15,7 +15,7 @@ import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../../interfaces/ISchemaValidator.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 
 /**
  * Cache manager for Core Motivations data

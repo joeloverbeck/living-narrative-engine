@@ -171,12 +171,13 @@ describe('UnifiedScopeResolver Performance', () => {
         noCacheTime >= minMeasurementThreshold && cacheTime >= 0.1;
 
       // Use already calculated averages for timing stability assessment
-      const timingStability = Math.min(avgNoCacheTime, avgCacheTime) > 0.001 ? 'stable' : 'variable';
+      const timingStability =
+        Math.min(avgNoCacheTime, avgCacheTime) > 0.001 ? 'stable' : 'variable';
 
       // Adaptive thresholds based on measurement reliability and timing stability
       // Further reduced thresholds to handle JavaScript timing precision limitations
       let expectedRatioThreshold, expectedPercentageThreshold;
-      
+
       if (isMeasurementReliable && timingStability === 'stable') {
         // High confidence scenario - can use stricter thresholds
         expectedRatioThreshold = 1.15;
@@ -196,33 +197,60 @@ describe('UnifiedScopeResolver Performance', () => {
       console.log(`    Timing stability: ${timingStability}`);
       console.log(`    Avg no-cache: ${avgNoCacheTime.toFixed(4)}ms per call`);
       console.log(`    Avg cached: ${avgCacheTime.toFixed(4)}ms per call`);
-      console.log(`    Threshold mode: ${isMeasurementReliable ? (timingStability === 'stable' ? 'strict' : 'moderate') : 'lenient'}`);
-      console.log(`    Expected improvement: >${expectedRatioThreshold.toFixed(2)}x (${expectedPercentageThreshold}%+)`);
+      console.log(
+        `    Threshold mode: ${isMeasurementReliable ? (timingStability === 'stable' ? 'strict' : 'moderate') : 'lenient'}`
+      );
+      console.log(
+        `    Expected improvement: >${expectedRatioThreshold.toFixed(2)}x (${expectedPercentageThreshold}%+)`
+      );
 
       // Detect measurement anomalies before applying assertions
       const performanceRatio = noCacheTime / Math.max(cacheTime, 0.001);
-      const isPerformanceAnomaly = performanceRatio > 50 || performanceRatio < 0.5;
+      const isPerformanceAnomaly =
+        performanceRatio > 50 || performanceRatio < 0.5;
       const isReversePerformance = improvementRatio < 1.0; // Cache slower than no-cache
 
       if (isPerformanceAnomaly) {
-        console.warn(`  ⚠️  Performance anomaly detected (${performanceRatio.toFixed(1)}x difference)`);
-        console.warn(`     Measurement may be unreliable due to system interference`);
+        console.warn(
+          `  ⚠️  Performance anomaly detected (${performanceRatio.toFixed(1)}x difference)`
+        );
+        console.warn(
+          `     Measurement may be unreliable due to system interference`
+        );
       } else if (isReversePerformance) {
-        console.warn(`  ⚠️  Cache appears slower than no-cache (${improvementRatio.toFixed(2)}x)`);
-        console.warn(`     This indicates timing measurement noise in sub-millisecond operations`);
+        console.warn(
+          `  ⚠️  Cache appears slower than no-cache (${improvementRatio.toFixed(2)}x)`
+        );
+        console.warn(
+          `     This indicates timing measurement noise in sub-millisecond operations`
+        );
       } else if (isMeasurementReliable && timingStability === 'stable') {
-        console.log(`  ✓ High confidence measurements - applying strict thresholds`);
+        console.log(
+          `  ✓ High confidence measurements - applying strict thresholds`
+        );
       } else if (isMeasurementReliable) {
-        console.log(`  ✓ Reliable measurements with variable timing - applying moderate thresholds`);
+        console.log(
+          `  ✓ Reliable measurements with variable timing - applying moderate thresholds`
+        );
       } else {
-        console.warn(`  ⚠️  Sub-millisecond operations detected (${noCacheTime.toFixed(2)}ms total)`);
-        console.warn(`     Applying minimal thresholds due to JavaScript timing precision limits`);
+        console.warn(
+          `  ⚠️  Sub-millisecond operations detected (${noCacheTime.toFixed(2)}ms total)`
+        );
+        console.warn(
+          `     Applying minimal thresholds due to JavaScript timing precision limits`
+        );
       }
 
       // Apply adaptive assertions based on measurement quality
       // Use ternary to avoid conditional expects
-      const minExpectedRatio = isPerformanceAnomaly || isReversePerformance ? 0.5 : expectedRatioThreshold;
-      const minExpectedPercentage = isPerformanceAnomaly || isReversePerformance ? -50 : expectedPercentageThreshold;
+      const minExpectedRatio =
+        isPerformanceAnomaly || isReversePerformance
+          ? 0.5
+          : expectedRatioThreshold;
+      const minExpectedPercentage =
+        isPerformanceAnomaly || isReversePerformance
+          ? -50
+          : expectedPercentageThreshold;
       const maxCacheSlowdown = isPerformanceAnomaly ? 5 : 2;
 
       expect(improvementRatio).toBeGreaterThan(minExpectedRatio);

@@ -458,9 +458,7 @@ describe('CharacterBuilderBootstrap Integration', () => {
       expect(result).toBeDefined();
 
       // Verify that mods were loaded
-      expect(mockModsLoader.loadMods).toHaveBeenCalledWith('default', [
-        'core',
-      ]);
+      expect(mockModsLoader.loadMods).toHaveBeenCalledWith('default', ['core']);
 
       // Verify that events were registered
       expect(mockDataRegistry.setEventDefinition).toHaveBeenCalledWith(

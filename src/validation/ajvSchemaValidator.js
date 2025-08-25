@@ -60,58 +60,72 @@ class AjvSchemaValidator {
    * Creates a schema loader function for AJV to resolve relative schema references.
    * This converts relative paths like "./operations/unlockMovement.schema.json" or "../base-operation.schema.json"
    * to absolute schema IDs like "schema://living-narrative-engine/operations/unlockMovement.schema.json"
-   * 
+   *
    * @returns {Function} AJV-compatible loadSchema function
    */
   #createSchemaLoader() {
     return async (uri) => {
-      this.#logger.debug(`AjvSchemaValidator: Attempting to load schema from URI: ${uri}`);
-      
+      this.#logger.debug(
+        `AjvSchemaValidator: Attempting to load schema from URI: ${uri}`
+      );
+
       // Handle relative schema references by converting to absolute IDs
       if (uri.startsWith('./') || uri.startsWith('../')) {
         let relativePath;
-        
+
         if (uri.startsWith('./')) {
           relativePath = uri.substring(2); // Remove './'
         } else if (uri.startsWith('../')) {
           relativePath = uri.substring(3); // Remove '../'
         }
-        
+
         const absoluteId = `schema://living-narrative-engine/${relativePath}`;
-        
-        this.#logger.debug(`AjvSchemaValidator: Converting relative URI '${uri}' to absolute ID '${absoluteId}'`);
-        
+
+        this.#logger.debug(
+          `AjvSchemaValidator: Converting relative URI '${uri}' to absolute ID '${absoluteId}'`
+        );
+
         // Check if the schema is already loaded with the absolute ID
         const existingSchema = this.#ajv.getSchema(absoluteId);
         if (existingSchema) {
-          this.#logger.debug(`AjvSchemaValidator: Found existing schema for '${absoluteId}'`);
+          this.#logger.debug(
+            `AjvSchemaValidator: Found existing schema for '${absoluteId}'`
+          );
           return existingSchema.schema;
         }
-        
+
         // If not found, try to find it by searching through all loaded schemas
         const loadedIds = this.getLoadedSchemaIds();
-        const matchingId = loadedIds.find(id => id.endsWith(relativePath));
-        
+        const matchingId = loadedIds.find((id) => id.endsWith(relativePath));
+
         if (matchingId) {
           const matchingSchema = this.#ajv.getSchema(matchingId);
           if (matchingSchema) {
-            this.#logger.debug(`AjvSchemaValidator: Found schema '${matchingId}' matching relative path '${relativePath}'`);
+            this.#logger.debug(
+              `AjvSchemaValidator: Found schema '${matchingId}' matching relative path '${relativePath}'`
+            );
             return matchingSchema.schema;
           }
         }
-        
-        this.#logger.warn(`AjvSchemaValidator: Could not resolve schema reference '${uri}' (absolute: '${absoluteId}')`);
+
+        this.#logger.warn(
+          `AjvSchemaValidator: Could not resolve schema reference '${uri}' (absolute: '${absoluteId}')`
+        );
         throw new Error(`Cannot resolve schema reference: ${uri}`);
       }
-      
+
       // For absolute URIs, try to load directly
       const existingSchema = this.#ajv.getSchema(uri);
       if (existingSchema) {
-        this.#logger.debug(`AjvSchemaValidator: Found existing schema for '${uri}'`);
+        this.#logger.debug(
+          `AjvSchemaValidator: Found existing schema for '${uri}'`
+        );
         return existingSchema.schema;
       }
-      
-      this.#logger.warn(`AjvSchemaValidator: Could not resolve schema reference '${uri}'`);
+
+      this.#logger.warn(
+        `AjvSchemaValidator: Could not resolve schema reference '${uri}'`
+      );
       throw new Error(`Cannot resolve schema reference: ${uri}`);
     };
   }

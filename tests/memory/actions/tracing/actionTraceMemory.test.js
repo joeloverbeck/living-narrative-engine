@@ -107,7 +107,8 @@ describe('Action Tracing - Memory Tests', () => {
         // Take memory snapshot every few batches
         if (batch % 4 === 0) {
           await global.memoryTestUtils.forceGCAndWait();
-          const currentMemory = await global.memoryTestUtils.getStableMemoryUsage();
+          const currentMemory =
+            await global.memoryTestUtils.getStableMemoryUsage();
           memorySnapshots.push({
             batch,
             heapUsed: currentMemory,
@@ -161,7 +162,7 @@ describe('Action Tracing - Memory Tests', () => {
         // Negative values indicate memory was freed (good!)
         // Only positive values above threshold indicate potential leaks
         const maxGrowthRate = global.memoryTestUtils.isCI() ? 100000 : 50000; // 100KB/50KB growth per trace
-        
+
         if (memoryGrowthRate > 0) {
           expect(memoryGrowthRate).toBeLessThan(maxGrowthRate);
         }
@@ -172,13 +173,14 @@ describe('Action Tracing - Memory Tests', () => {
     it('should not accumulate memory when processing traces in batches', async () => {
       const batchCount = global.memoryTestUtils.isCI() ? 5 : 10;
       const tracesPerBatch = 50;
-      
+
       // Establish baseline
       await global.memoryTestUtils.forceGCAndWait();
-      const baselineMemory = await global.memoryTestUtils.getStableMemoryUsage();
-      
+      const baselineMemory =
+        await global.memoryTestUtils.getStableMemoryUsage();
+
       const batchMemories = [];
-      
+
       for (let i = 0; i < batchCount; i++) {
         // Create and process batch
         const traces = await Promise.all(
@@ -189,29 +191,37 @@ describe('Action Tracing - Memory Tests', () => {
             })
           )
         );
-        
-        await Promise.all(traces.map(trace => outputService.writeTrace(trace)));
-        
+
+        await Promise.all(
+          traces.map((trace) => outputService.writeTrace(trace))
+        );
+
         // Measure memory after each batch
         await global.memoryTestUtils.forceGCAndWait();
         const batchMemory = await global.memoryTestUtils.getStableMemoryUsage();
         batchMemories.push(batchMemory);
-        
+
         // Small delay between batches
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      
+
       // Check that memory doesn't continuously grow
       const firstBatchMemory = batchMemories[0];
       const lastBatchMemory = batchMemories[batchMemories.length - 1];
       const memoryGrowth = lastBatchMemory - firstBatchMemory;
-      
+
       console.log('Batch processing memory analysis:');
-      console.log(`  Baseline: ${(baselineMemory / 1024 / 1024).toFixed(2)} MB`);
-      console.log(`  First batch: ${(firstBatchMemory / 1024 / 1024).toFixed(2)} MB`);
-      console.log(`  Last batch: ${(lastBatchMemory / 1024 / 1024).toFixed(2)} MB`);
+      console.log(
+        `  Baseline: ${(baselineMemory / 1024 / 1024).toFixed(2)} MB`
+      );
+      console.log(
+        `  First batch: ${(firstBatchMemory / 1024 / 1024).toFixed(2)} MB`
+      );
+      console.log(
+        `  Last batch: ${(lastBatchMemory / 1024 / 1024).toFixed(2)} MB`
+      );
       console.log(`  Growth: ${(memoryGrowth / 1024 / 1024).toFixed(2)} MB`);
-      
+
       // Memory should not grow significantly between batches
       const maxBatchGrowth = global.memoryTestUtils.getMemoryThreshold(25); // 25MB base threshold
       expect(Math.abs(memoryGrowth)).toBeLessThan(maxBatchGrowth);
@@ -219,11 +229,12 @@ describe('Action Tracing - Memory Tests', () => {
 
     it('should release memory after trace processing completes', async () => {
       const traceCount = global.memoryTestUtils.isCI() ? 200 : 400;
-      
+
       // Baseline
       await global.memoryTestUtils.forceGCAndWait();
-      const baselineMemory = await global.memoryTestUtils.getStableMemoryUsage();
-      
+      const baselineMemory =
+        await global.memoryTestUtils.getStableMemoryUsage();
+
       // Create and hold references to traces
       const traces = await Promise.all(
         Array.from({ length: traceCount }, async (_, i) =>
@@ -233,37 +244,43 @@ describe('Action Tracing - Memory Tests', () => {
           })
         )
       );
-      
+
       // Process all traces
-      await Promise.all(traces.map(trace => outputService.writeTrace(trace)));
-      
+      await Promise.all(traces.map((trace) => outputService.writeTrace(trace)));
+
       // Measure peak memory
       const peakMemory = await global.memoryTestUtils.getStableMemoryUsage();
-      
+
       // Clear references and wait for cleanup
       traces.length = 0;
       await outputService.waitForPendingWrites();
       await global.memoryTestUtils.forceGCAndWait();
-      
+
       // Measure final memory
       const finalMemory = await global.memoryTestUtils.getStableMemoryUsage();
-      
+
       const peakGrowth = peakMemory - baselineMemory;
       const residualMemory = finalMemory - baselineMemory;
       const memoryReleased = peakGrowth - residualMemory;
-      
+
       console.log('Memory release analysis:');
-      console.log(`  Baseline: ${(baselineMemory / 1024 / 1024).toFixed(2)} MB`);
+      console.log(
+        `  Baseline: ${(baselineMemory / 1024 / 1024).toFixed(2)} MB`
+      );
       console.log(`  Peak: ${(peakMemory / 1024 / 1024).toFixed(2)} MB`);
       console.log(`  Final: ${(finalMemory / 1024 / 1024).toFixed(2)} MB`);
       console.log(`  Peak growth: ${(peakGrowth / 1024 / 1024).toFixed(2)} MB`);
-      console.log(`  Residual: ${(residualMemory / 1024 / 1024).toFixed(2)} MB`);
-      console.log(`  Released: ${(memoryReleased / 1024 / 1024).toFixed(2)} MB`);
-      
+      console.log(
+        `  Residual: ${(residualMemory / 1024 / 1024).toFixed(2)} MB`
+      );
+      console.log(
+        `  Released: ${(memoryReleased / 1024 / 1024).toFixed(2)} MB`
+      );
+
       // Most memory should be released after cleanup
       const maxResidual = global.memoryTestUtils.getMemoryThreshold(20); // 20MB base threshold
       expect(Math.abs(residualMemory)).toBeLessThan(maxResidual);
-      
+
       // At least 40% of peak memory should be released
       // Note: JavaScript's garbage collection may retain memory for performance
       if (peakGrowth > 0) {

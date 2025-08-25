@@ -166,6 +166,47 @@ class LogMetadataEnricher {
   }
 
   /**
+   * Sanitize arguments to create lightweight copies
+   * Prevents holding references to large objects
+   *
+   * @private
+   * @param {any[]} args - Original arguments
+   * @returns {any[]} Sanitized arguments
+   */
+  #sanitizeArgs(args) {
+    return args.map((arg) => {
+      // For objects, only keep essential properties
+      if (arg && typeof arg === 'object') {
+        // For errors, keep message and stack
+        if (arg instanceof Error) {
+          return {
+            type: 'Error',
+            message: arg.message,
+            stack: arg.stack,
+          };
+        }
+        // For large objects, just keep type info
+        const keys = Object.keys(arg);
+        if (keys.length > 10) {
+          return {
+            type: 'Object',
+            keyCount: keys.length,
+            sample: keys.slice(0, 3),
+          };
+        }
+        // For small objects, create shallow copy
+        try {
+          return JSON.parse(JSON.stringify(arg));
+        } catch {
+          return { type: 'Object', toString: String(arg) };
+        }
+      }
+      // Primitives are fine
+      return arg;
+    });
+  }
+
+  /**
    * Collect metadata based on configuration level (async)
    *
    * @private
@@ -175,9 +216,10 @@ class LogMetadataEnricher {
   async #collectMetadata(originalArgs) {
     const metadata = {};
 
-    // Always include original args if present
+    // Always include original args if present, but sanitize them to reduce memory
+    // retention by avoiding holding references to large objects
     if (originalArgs.length > 0) {
-      metadata.originalArgs = originalArgs;
+      metadata.originalArgs = this.#sanitizeArgs(originalArgs);
     }
 
     // Minimal level: only essential data
@@ -274,9 +316,10 @@ class LogMetadataEnricher {
   #collectMetadataSync(originalArgs) {
     const metadata = {};
 
-    // Always include original args if present
+    // Always include original args if present, but sanitize them to reduce memory
+    // retention by avoiding holding references to large objects
     if (originalArgs.length > 0) {
-      metadata.originalArgs = originalArgs;
+      metadata.originalArgs = this.#sanitizeArgs(originalArgs);
     }
 
     // Minimal level: only essential data
@@ -415,7 +458,7 @@ class LogMetadataEnricher {
           }
         }
       }
-    } catch (error) {
+    } catch {
       // Ignore source detection errors
     }
     return undefined;
@@ -449,7 +492,7 @@ class LogMetadataEnricher {
    */
   #parseStackLine(line) {
     // Try each browser pattern
-    for (const [browser, pattern] of this.#browserPatterns) {
+    for (const [, pattern] of this.#browserPatterns) {
       const match = line.match(pattern);
       if (match) {
         const file = match[1];

@@ -137,7 +137,7 @@ describe('Traits Generator - Schema Validation E2E', () => {
     const schemaFiles = {
       'thematic-direction': 'thematic-direction.schema.json',
       'core-motivation': 'core-motivation.schema.json',
-      'trait': 'trait.schema.json',
+      trait: 'trait.schema.json',
       'character-concept': 'character-concept.schema.json',
     };
 
@@ -203,14 +203,15 @@ describe('Traits Generator - Schema Validation E2E', () => {
                     'A character forced into heroism against their will, exploring themes of duty versus personal freedom',
                   coreTension: 'Duty versus personal desires',
                   uniqueTwist: 'Hero questions the nature of heroism itself',
-                  narrativePotential: 'Reluctant heroism and personal growth with deep moral questioning',
+                  narrativePotential:
+                    'Reluctant heroism and personal growth with deep moral questioning',
                   createdAt: '2024-01-01T00:00:00.000Z',
                   llmMetadata: {
                     modelId: 'test-model',
                     promptTokens: 100,
                     responseTokens: 200,
-                    processingTime: 1500
-                  }
+                    processingTime: 1500,
+                  },
                 },
               ]),
           });
@@ -228,23 +229,25 @@ describe('Traits Generator - Schema Validation E2E', () => {
             'A character forced into heroism against their will, exploring themes of duty versus personal freedom',
           coreTension: 'Duty versus personal desires',
           uniqueTwist: 'Hero questions the nature of heroism itself',
-          narrativePotential: 'Reluctant heroism and personal growth with deep moral questioning',
+          narrativePotential:
+            'Reluctant heroism and personal growth with deep moral questioning',
           createdAt: '2024-01-01T00:00:00.000Z',
           llmMetadata: {
             modelId: 'test-model',
             promptTokens: 100,
             responseTokens: 200,
-            processingTime: 1500
-          }
+            processingTime: 1500,
+          },
         },
       ];
       testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
-        mockDirections.map(d => ({ direction: d, concept: null }))
+        mockDirections.map((d) => ({ direction: d, concept: null }))
       );
-      
+
       // Simulate getting directions (controller would do this internally)
-      const directionsResult = await testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts();
-      const directions = directionsResult.map(d => d.direction);
+      const directionsResult =
+        await testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts();
+      const directions = directionsResult.map((d) => d.direction);
 
       // Validate against schema
       const validation = validateData(directions[0], 'thematic-direction');
@@ -283,12 +286,13 @@ describe('Traits Generator - Schema Validation E2E', () => {
         },
       ];
       testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
-        mockInvalidDirections.map(d => ({ direction: d, concept: null }))
+        mockInvalidDirections.map((d) => ({ direction: d, concept: null }))
       );
-      
+
       // Simulate getting directions
-      const directionsResult = await testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts();
-      const directions = directionsResult.map(d => d.direction);
+      const directionsResult =
+        await testBed.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts();
+      const directions = directionsResult.map((d) => d.direction);
       const validation = validateData(directions[0], 'thematic-direction');
 
       expect(validation.valid).toBe(false);
@@ -321,10 +325,13 @@ describe('Traits Generator - Schema Validation E2E', () => {
                     'Can someone who has caused great harm ever truly be redeemed?',
                   createdAt: '2024-01-01T00:00:00.000Z',
                   metadata: {
-                    clicheIds: ['abcd1234-5678-90ab-cdef-123456789abc', 'bcde2345-6789-01bc-def1-23456789abcd'],
+                    clicheIds: [
+                      'abcd1234-5678-90ab-cdef-123456789abc',
+                      'bcde2345-6789-01bc-def1-23456789abcd',
+                    ],
                     generationModel: 'test-model',
-                    temperature: 0.7
-                  }
+                    temperature: 0.7,
+                  },
                 },
               ]),
           });
@@ -338,26 +345,31 @@ describe('Traits Generator - Schema Validation E2E', () => {
           id: 'abcdef12-3456-7890-abcd-ef1234567890',
           directionId: '12345678-1234-1234-1234-123456789abc',
           conceptId: '87654321-4321-4321-4321-cba987654321',
-          coreDesire:
-            'To atone for past mistakes by protecting the innocent',
+          coreDesire: 'To atone for past mistakes by protecting the innocent',
           internalContradiction:
             'Believes they deserve punishment yet knows others need protection',
           centralQuestion:
             'Can someone who has caused great harm ever truly be redeemed?',
           createdAt: '2024-01-01T00:00:00.000Z',
           metadata: {
-            clicheIds: ['abcd1234-5678-90ab-cdef-123456789abc', 'bcde2345-6789-01bc-def1-23456789abcd'],
+            clicheIds: [
+              'abcd1234-5678-90ab-cdef-123456789abc',
+              'bcde2345-6789-01bc-def1-23456789abcd',
+            ],
             generationModel: 'test-model',
-            temperature: 0.7
-          }
+            temperature: 0.7,
+          },
         },
       ];
       testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
         mockMotivations
       );
-      
+
       // Simulate getting motivations
-      const motivations = await testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId('test-direction-1');
+      const motivations =
+        await testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId(
+          'test-direction-1'
+        );
       const validation = validateData(motivations[0], 'core-motivation');
 
       expect(validation.valid).toBe(true);
@@ -398,9 +410,12 @@ describe('Traits Generator - Schema Validation E2E', () => {
       testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
         mockMalformedMotivations
       );
-      
+
       // Simulate getting motivations
-      const motivations = await testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId('test-direction-1');
+      const motivations =
+        await testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId(
+          'test-direction-1'
+        );
       const validation = validateData(motivations[0], 'core-motivation');
 
       expect(validation.valid).toBe(false);
@@ -536,80 +551,78 @@ describe('Traits Generator - Schema Validation E2E', () => {
         names: [
           {
             name: 'Aria Blackthorn',
-            justification: 'Strong fantasy name reflecting inner conflict and duality'
+            justification:
+              'Strong fantasy name reflecting inner conflict and duality',
           },
           {
-            name: 'Marcus Stormwind', 
-            justification: 'Represents the turbulent nature of the character journey'
+            name: 'Marcus Stormwind',
+            justification:
+              'Represents the turbulent nature of the character journey',
           },
           {
             name: 'Elena Shadowbane',
-            justification: 'Evokes the fight against dark forces within and without'
-          }
+            justification:
+              'Evokes the fight against dark forces within and without',
+          },
         ],
-        physicalDescription: 'A weathered warrior in their early forties with determined steel-gray eyes and silver-streaked dark hair that speaks of many battles fought. Scars criss-cross their weathered hands, each telling a story of survival and sacrifice.',
+        physicalDescription:
+          'A weathered warrior in their early forties with determined steel-gray eyes and silver-streaked dark hair that speaks of many battles fought. Scars criss-cross their weathered hands, each telling a story of survival and sacrifice.',
         personality: [
           {
             trait: 'Resilient',
-            explanation: 'Bounces back from adversity with remarkable inner strength and determination'
+            explanation:
+              'Bounces back from adversity with remarkable inner strength and determination',
           },
           {
             trait: 'Protective',
-            explanation: 'Instinctively shields others from harm, sometimes at personal cost'
+            explanation:
+              'Instinctively shields others from harm, sometimes at personal cost',
           },
           {
             trait: 'Introspective',
-            explanation: 'Frequently examines their own motivations and past decisions'
-          }
+            explanation:
+              'Frequently examines their own motivations and past decisions',
+          },
         ],
-        strengths: [
-          'Strategic thinking',
-          'Combat experience'
-        ],
-        weaknesses: [
-          'Self-doubt',
-          'Overthinking'
-        ],
+        strengths: ['Strategic thinking', 'Combat experience'],
+        weaknesses: ['Self-doubt', 'Overthinking'],
         likes: [
           'Quiet reflection',
-          'Meaningful conversations', 
-          'Simple pleasures'
+          'Meaningful conversations',
+          'Simple pleasures',
         ],
         dislikes: [
           'Superficial interactions',
           'Betrayal',
-          'Unnecessary violence'
+          'Unnecessary violence',
         ],
-        fears: [
-          'Repeating past mistakes'
-        ],
+        fears: ['Repeating past mistakes'],
         goals: {
-          shortTerm: [
-            'Find inner peace'
-          ],
-          longTerm: 'Achieve true redemption and forgiveness for past actions'
+          shortTerm: ['Find inner peace'],
+          longTerm: 'Achieve true redemption and forgiveness for past actions',
         },
-        secrets: [
-          'Former identity as royal guard'
-        ],
+        secrets: ['Former identity as royal guard'],
         notes: [
           'Complex character balancing strength with vulnerability',
-          'Deep moral complexity drives all actions'
+          'Deep moral complexity drives all actions',
         ],
-        profile: 'A journey of personal growth and moral complexity, this character represents the struggle between past mistakes and future redemption. Their protective nature stems from guilt over previous failures, creating a compelling internal conflict that drives narrative tension.',
+        profile:
+          'A journey of personal growth and moral complexity, this character represents the struggle between past mistakes and future redemption. Their protective nature stems from guilt over previous failures, creating a compelling internal conflict that drives narrative tension.',
         metadata: {
           model: 'gpt-4',
           temperature: 0.7,
           tokens: 1250,
           responseTime: 1500,
           promptVersion: '1.0',
-          generationPrompt: 'Generate character traits for redemption theme'
-        }
+          generationPrompt: 'Generate character traits for redemption theme',
+        },
       };
-      
-      testBed.mockCharacterBuilderService.generateTraits.mockResolvedValue(mockTraits);
+
+      testBed.mockCharacterBuilderService.generateTraits.mockResolvedValue(
+        mockTraits
+      );
       testBed.mockLLMResponse(mockTraits);
-      
+
       // Simulate traits generation
       const traits = await testBed.mockCharacterBuilderService.generateTraits();
       const validation = validateData(traits, 'trait');
@@ -678,12 +691,14 @@ describe('Traits Generator - Schema Validation E2E', () => {
         goals: [{ invalid: 'structure' }], // Should be object with shortTerm/longTerm
         notes: 'Should be array not string', // Should be array
         profile: 'Too short for profile', // Should be minLength 200
-        secrets: [] // Empty array, needs minItems: 1
+        secrets: [], // Empty array, needs minItems: 1
       };
-      
-      testBed.mockCharacterBuilderService.generateTraits.mockResolvedValue(mockInvalidTraits);
+
+      testBed.mockCharacterBuilderService.generateTraits.mockResolvedValue(
+        mockInvalidTraits
+      );
       testBed.mockLLMResponse(mockInvalidTraits);
-      
+
       // Simulate traits generation
       const traits = await testBed.mockCharacterBuilderService.generateTraits();
       const validation = validateData(traits, 'trait');
@@ -706,15 +721,34 @@ describe('Traits Generator - Schema Validation E2E', () => {
         id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         generatedAt: '2024-01-01T00:00:00.000Z',
         names: [
-          { name: 'Test Character One', justification: 'Test name one with detailed reasoning' },
-          { name: 'Test Character Two', justification: 'Test name two with cultural background' },
-          { name: 'Test Character Three', justification: 'Test name three with thematic significance' }
+          {
+            name: 'Test Character One',
+            justification: 'Test name one with detailed reasoning',
+          },
+          {
+            name: 'Test Character Two',
+            justification: 'Test name two with cultural background',
+          },
+          {
+            name: 'Test Character Three',
+            justification: 'Test name three with thematic significance',
+          },
         ],
-        physicalDescription: 'A detailed physical description that meets the minimum length requirement of one hundred characters to satisfy the schema validation rules and provide adequate detail for character visualization.',
+        physicalDescription:
+          'A detailed physical description that meets the minimum length requirement of one hundred characters to satisfy the schema validation rules and provide adequate detail for character visualization.',
         personality: [
-          { trait: 'Brave', explanation: 'Demonstrates courage in face of danger' },
-          { trait: 'Thoughtful', explanation: 'Carefully considers all options before acting' },
-          { trait: 'Loyal', explanation: 'Remains faithful to friends and principles' }
+          {
+            trait: 'Brave',
+            explanation: 'Demonstrates courage in face of danger',
+          },
+          {
+            trait: 'Thoughtful',
+            explanation: 'Carefully considers all options before acting',
+          },
+          {
+            trait: 'Loyal',
+            explanation: 'Remains faithful to friends and principles',
+          },
         ],
         strengths: ['Strategic thinking', 'Physical prowess'],
         weaknesses: ['Overthinking', 'Self-doubt'],
@@ -723,15 +757,21 @@ describe('Traits Generator - Schema Validation E2E', () => {
         fears: ['Failure'],
         goals: {
           shortTerm: ['Complete current mission'],
-          longTerm: 'Find lasting peace and purpose in life'
+          longTerm: 'Find lasting peace and purpose in life',
         },
-        notes: ['Character has complex motivations', 'Driven by past experiences'],
-        profile: 'This character represents a complex individual struggling with internal conflicts while maintaining strong moral convictions. Their journey involves overcoming personal fears and doubts to become a true leader. The character arc focuses on growth through adversity and the importance of staying true to core values even when faced with difficult choices.',
-        secrets: ['Hidden noble heritage']
+        notes: [
+          'Character has complex motivations',
+          'Driven by past experiences',
+        ],
+        profile:
+          'This character represents a complex individual struggling with internal conflicts while maintaining strong moral convictions. Their journey involves overcoming personal fears and doubts to become a true leader. The character arc focuses on growth through adversity and the importance of staying true to core values even when faced with difficult choices.',
+        secrets: ['Hidden noble heritage'],
       };
 
       // Mock successful traits generation
-      testBed.mockCharacterBuilderService.generateTraits.mockResolvedValue(testTraits);
+      testBed.mockCharacterBuilderService.generateTraits.mockResolvedValue(
+        testTraits
+      );
       testBed.setGeneratedTraits(testTraits);
 
       // Trigger export
@@ -851,7 +891,10 @@ describe('Traits Generator - Schema Validation E2E', () => {
 
       // Simulate validation message display
       const validationMessageDiv = document.createElement('div');
-      validationMessageDiv.setAttribute('data-validation-message', 'form-validation');
+      validationMessageDiv.setAttribute(
+        'data-validation-message',
+        'form-validation'
+      );
       validationMessageDiv.textContent = 'Please fill in required fields';
       document.body.appendChild(validationMessageDiv);
 
@@ -872,19 +915,42 @@ describe('Traits Generator - Schema Validation E2E', () => {
         names: [
           { name: 'Valid Name One', justification: 'Valid justification one' },
           { name: 'Valid Name Two', justification: 'Valid justification two' },
-          { name: 'Valid Name Three', justification: 'Valid justification three' }
+          {
+            name: 'Valid Name Three',
+            justification: 'Valid justification three',
+          },
         ],
         physicalDescription: 'Valid description',
         personality: [{ trait: 'Valid', explanation: 'Valid trait' }],
-        strengths: [{ strength: 'Valid Strong', explanation: 'Valid strength' }],
+        strengths: [
+          { strength: 'Valid Strong', explanation: 'Valid strength' },
+        ],
         weaknesses: [{ weakness: 'Valid Weak', explanation: 'Valid weakness' }],
         likes: ['Valid like'],
         dislikes: ['Valid dislike'],
-        fears: [{ fear: 'Valid fear', root_cause: 'Valid cause', behavioral_impact: 'Valid impact' }],
-        goals: [{ goal: 'Valid goal', motivation: 'Valid motivation', obstacles: ['Valid obstacle'] }],
+        fears: [
+          {
+            fear: 'Valid fear',
+            root_cause: 'Valid cause',
+            behavioral_impact: 'Valid impact',
+          },
+        ],
+        goals: [
+          {
+            goal: 'Valid goal',
+            motivation: 'Valid motivation',
+            obstacles: ['Valid obstacle'],
+          },
+        ],
         notes: 'Valid notes',
         profile: 'Valid profile',
-        secrets: [{ secret: 'Valid secret', reason_for_hiding: 'Valid reason', consequences_if_revealed: 'Valid consequences' }]
+        secrets: [
+          {
+            secret: 'Valid secret',
+            reason_for_hiding: 'Valid reason',
+            consequences_if_revealed: 'Valid consequences',
+          },
+        ],
       };
 
       testBed.mockCharacterBuilderService.generateTraits.mockResolvedValue(
@@ -914,9 +980,18 @@ describe('Traits Generator - Schema Validation E2E', () => {
     it('should recover gracefully from schema loading failures', async () => {
       // Create mock schema validator that simulates failure
       const mockFailingSchemaValidator = {
-        validate: jest.fn().mockReturnValue({ valid: false, errors: ['Schema validation failed'] }),
-        validateAsync: jest.fn().mockResolvedValue({ valid: false, errors: ['Schema validation failed'] }),
-        validateAgainstSchema: jest.fn().mockReturnValue({ valid: false, errors: ['Schema validation failed'] }),
+        validate: jest.fn().mockReturnValue({
+          valid: false,
+          errors: ['Schema validation failed'],
+        }),
+        validateAsync: jest.fn().mockResolvedValue({
+          valid: false,
+          errors: ['Schema validation failed'],
+        }),
+        validateAgainstSchema: jest.fn().mockReturnValue({
+          valid: false,
+          errors: ['Schema validation failed'],
+        }),
       };
 
       // Create mock UIStateManager
@@ -956,7 +1031,10 @@ describe('Traits Generator - Schema Validation E2E', () => {
       expect(controllerWithFailingSchemas).toBeTruthy();
 
       // Should handle schema validation gracefully
-      const result = mockFailingSchemaValidator.validate('test data', 'test-schema');
+      const result = mockFailingSchemaValidator.validate(
+        'test data',
+        'test-schema'
+      );
       expect(result.valid).toBe(false);
     });
   });
@@ -969,27 +1047,33 @@ describe('Traits Generator - Schema Validation E2E', () => {
       const largeTraitsData = {
         id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
         generatedAt: '2024-01-01T00:00:00.000Z',
-        names: Array.from({ length: 5 }, (_, i) => ({  // maxItems: 5
+        names: Array.from({ length: 5 }, (_, i) => ({
+          // maxItems: 5
           name: `Character Name ${i}`,
           justification: `Detailed justification for character ${i} that explains the reasoning behind this name choice`,
         })),
-        personality: Array.from({ length: 5 }, (_, i) => ({  // maxItems: 5
+        personality: Array.from({ length: 5 }, (_, i) => ({
+          // maxItems: 5
           trait: `Trait ${i}`,
           explanation: `Detailed explanation for trait ${i} describing how this trait manifests in behavior`,
         })),
-        physicalDescription: 'A very detailed physical description '.repeat(10) + ' that meets minimum length requirements for schema validation.',
-        strengths: ['Strength 1', 'Strength 2'],  // minItems: 2
-        weaknesses: ['Weakness 1', 'Weakness 2'],  // minItems: 2
-        likes: ['Like 1', 'Like 2', 'Like 3'],  // minItems: 3
-        dislikes: ['Dislike 1', 'Dislike 2', 'Dislike 3'],  // minItems: 3
-        fears: ['Fear 1'],  // minItems: 1
+        physicalDescription:
+          'A very detailed physical description '.repeat(10) +
+          ' that meets minimum length requirements for schema validation.',
+        strengths: ['Strength 1', 'Strength 2'], // minItems: 2
+        weaknesses: ['Weakness 1', 'Weakness 2'], // minItems: 2
+        likes: ['Like 1', 'Like 2', 'Like 3'], // minItems: 3
+        dislikes: ['Dislike 1', 'Dislike 2', 'Dislike 3'], // minItems: 3
+        fears: ['Fear 1'], // minItems: 1
         goals: {
           shortTerm: ['Short term goal'],
-          longTerm: 'Long term goal description'
+          longTerm: 'Long term goal description',
         },
-        notes: ['Note 1', 'Note 2'],  // minItems: 2
-        profile: 'A comprehensive character profile '.repeat(20) + ' that meets the minimum length requirements for validation.',
-        secrets: ['Secret 1']  // minItems: 1
+        notes: ['Note 1', 'Note 2'], // minItems: 2
+        profile:
+          'A comprehensive character profile '.repeat(20) +
+          ' that meets the minimum length requirements for validation.',
+        secrets: ['Secret 1'], // minItems: 1
       };
 
       // Validate large dataset

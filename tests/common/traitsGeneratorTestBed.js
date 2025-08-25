@@ -95,7 +95,8 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       getClichesByDirectionId: jest.fn().mockResolvedValue([]),
       getCoreMotivationsByDirectionId: jest.fn().mockResolvedValue([]),
       // Methods for tracking responses
-      getLastThematicDirectionsResponse: () => this.lastThematicDirectionsResponse,
+      getLastThematicDirectionsResponse: () =>
+        this.lastThematicDirectionsResponse,
       getLastCoreMotivationsResponse: () => this.lastCoreMotivationsResponse,
       getLastClichesResponse: () => this.lastClichesResponse,
     };
@@ -120,7 +121,8 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       getCoreMotivationsByDirectionId: jest.fn().mockResolvedValue([]),
       getClichesByDirectionId: jest.fn().mockResolvedValue([]),
       // Methods for tracking responses
-      getLastThematicDirectionsResponse: () => this.lastThematicDirectionsResponse,
+      getLastThematicDirectionsResponse: () =>
+        this.lastThematicDirectionsResponse,
       getLastCoreMotivationsResponse: () => this.lastCoreMotivationsResponse,
       getLastClichesResponse: () => this.lastClichesResponse,
       getLastTraitsResponse: () => this.lastTraitsResponse,
@@ -460,52 +462,55 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
       names: [
         {
           name: 'Alaric Ironward',
-          justification: 'A strong name suggesting nobility and military prowess that resonates with the character theme',
+          justification:
+            'A strong name suggesting nobility and military prowess that resonates with the character theme',
         },
         {
           name: 'Marcus Thornfield',
-          justification: 'Classic warrior name with grounded surname that implies connection to nature and growth',
+          justification:
+            'Classic warrior name with grounded surname that implies connection to nature and growth',
         },
         {
           name: 'Gareth Soulstone',
-          justification: 'Evokes strength and weight of past experiences while suggesting inner fortitude and resilience',
+          justification:
+            'Evokes strength and weight of past experiences while suggesting inner fortitude and resilience',
         },
       ],
-      physicalDescription: 'A weathered man in his early forties with silver-streaked dark hair that speaks of countless battles and hard-won wisdom. His steel-gray eyes hold depths of experience, while callused hands tell stories of survival.',
+      physicalDescription:
+        'A weathered man in his early forties with silver-streaked dark hair that speaks of countless battles and hard-won wisdom. His steel-gray eyes hold depths of experience, while callused hands tell stories of survival.',
       personality: [
         {
           trait: 'Protective Instinct',
-          explanation: 'Driven to shield others from harm at any cost to himself'
+          explanation:
+            'Driven to shield others from harm at any cost to himself',
         },
         {
           trait: 'Introspective',
-          explanation: 'Spends considerable time examining his own motivations and decisions'
+          explanation:
+            'Spends considerable time examining his own motivations and decisions',
         },
         {
           trait: 'Determined',
-          explanation: 'Once committed to a course of action, sees it through regardless of obstacles'
-        }
+          explanation:
+            'Once committed to a course of action, sees it through regardless of obstacles',
+        },
       ],
-      strengths: [
-        'Combat Experience',
-        'Strategic Thinking'
-      ],
-      weaknesses: [
-        'Self-Punishment',
-        'Overthinking'
-      ],
+      strengths: ['Combat Experience', 'Strategic Thinking'],
+      weaknesses: ['Self-Punishment', 'Overthinking'],
       likes: ['Quiet moments', 'Helping others', 'Simple pleasures'],
       dislikes: ['Unnecessary violence', 'Arrogance', 'Waste'],
       fears: ['Repeating past mistakes'],
       goals: {
         shortTerm: ['Find redemption'],
-        longTerm: 'Achieve lasting peace and purpose in life after years of conflict'
+        longTerm:
+          'Achieve lasting peace and purpose in life after years of conflict',
       },
       notes: [
         'Additional character notes and background details',
-        'Complex motivations drive all actions'
+        'Complex motivations drive all actions',
       ],
-      profile: 'Character profile summary combining all traits into a cohesive narrative that explores themes of redemption, personal growth, and the struggle between past mistakes and future hope. This character represents the universal human desire for second chances.',
+      profile:
+        'Character profile summary combining all traits into a cohesive narrative that explores themes of redemption, personal growth, and the struggle between past mistakes and future hope. This character represents the universal human desire for second chances.',
       secrets: ['Hidden past identity'],
     };
   }
@@ -814,7 +819,10 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     ];
 
     // Setup getAllThematicDirectionsWithConcepts to return all directions with concepts
-    const directionsWithConcepts = directions.map((d) => ({ direction: d.direction, concept: d.concept }));
+    const directionsWithConcepts = directions.map((d) => ({
+      direction: d.direction,
+      concept: d.concept,
+    }));
     this.mockCharacterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
       directionsWithConcepts
     );
@@ -838,9 +846,7 @@ export class TraitsGeneratorTestBed extends BaseTestBed {
     this.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockImplementation(
       (id) => {
         if (id === 'dir-1' || id === 'dir-3') {
-          const motivations = [
-            { id: 'motivation-1', text: 'Test motivation' },
-          ];
+          const motivations = [{ id: 'motivation-1', text: 'Test motivation' }];
           this.lastCoreMotivationsResponse = motivations;
           return Promise.resolve(motivations);
         }

@@ -235,7 +235,6 @@ describe('High-Frequency Action Tracing Load Tests', () => {
       expect(timeVariance).toBeLessThan(400); // <400% variance in batch times (more lenient for system variations)
       expect(avgBatchTime).toBeLessThan(5000); // Average batch should complete reasonably quickly
     });
-
   });
 
   describe('Throughput Analysis', () => {

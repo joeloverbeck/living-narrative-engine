@@ -372,7 +372,6 @@ describe('Error Capture Integration', () => {
       expect(errorDetails.stackAnalysis).toBeNull();
       expect(errorDetails.location).toBeNull();
     });
-
   });
 
   describe('Error Analysis Edge Cases', () => {
@@ -390,7 +389,6 @@ describe('Error Capture Integration', () => {
         trace.captureError(error2);
       }).toThrow(); // Should throw because trace is already ended
     });
-
 
     it('should handle malformed stack traces without breaking', () => {
       const malformedStackTrace = `Error: Malformed stack
