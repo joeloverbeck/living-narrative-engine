@@ -1,18 +1,75 @@
- FAIL   performance  tests/performance/build.performance.test.js (27.366 s)
-  ● Build System Performance › Parallel vs Sequential Performance › should demonstrate parallel build performance advantage
-
-    Command failed: npm run build:dev
-
-      83 |         // Test parallel build (default)
-      84 |         const parallelStart = Date.now();
-    > 85 |         execSync('npm run build:dev', { stdio: 'ignore' });
-         |                 ^
-      86 |         const parallelTime = Date.now() - parallelStart;
-      87 |
-      88 |         // Clean for sequential test
-
-      at Object.<anonymous> (tests/performance/build.performance.test.js:85:17)
-
-  ● Build System Performance › Parallel vs Sequential Performance › should demonstrate parallel build performance advantage
-
-    ENOTEMPTY: directory not empty, rmdir 'dist'
+HighPrecisionTimer: Using performance.now() with 1μs resolution
+consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
+consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
+consoleLogger.js:151 [LoggerStrategy] Initialized with mode: development
+consoleLogger.js:151 Loaders Registration: All core services, loaders, and phases registered.
+consoleLogger.js:151 [CharacterBuilderBootstrap] Loading 3 schemas
+consoleLogger.js:151 CharacterDatabase: Successfully opened database
+consoleLogger.js:151 CharacterStorageService: Successfully initialized
+consoleLogger.js:151 SpeechPatternsGeneratorController: Successfully created with dependencies {coreServices: Array(4), additionalServices: Array(1)}
+consoleLogger.js:151 SpeechPatternsGeneratorController: Starting initialization
+consoleLogger.js:151 SpeechPatternsGeneratorController: Cached 17/17 elements (0 optional, 0 failed) in 0.30ms
+consoleLogger.js:151 CharacterBuilderService: Successfully initialized
+consoleLogger.js:163 VED: EventDefinition not found for 'core:ui_state_changed'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+warn @ loggerStrategy.js:442
+validatePayload_fn @ validatedEventDispatcher.js:93
+dispatch @ validatedEventDispatcher.js:225
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+_showState @ BaseCharacterBuilderController.js:1081
+_initializeUIState @ BaseCharacterBuilderController.js:2025
+await in _initializeUIState
+_initializeUIState @ SpeechPatternsGeneratorController.js:214
+_executeLifecycleMethod @ BaseCharacterBuilderController.js:1898
+initialize @ BaseCharacterBuilderController.js:1826
+await in initialize
+initializeController_fn @ CharacterBuilderBootstrap.js:986
+bootstrap @ CharacterBuilderBootstrap.js:119
+await in bootstrap
+initializeSpeechPatternsGenerator @ speech-patterns-generator-main.js:16
+(anonymous) @ speech-patterns-generator-main.js:46
+(anonymous) @ speech-patterns-generator-main.js:47Understand this warning
+consoleLogger.js:163 VED: EventDefinition not found for 'core:ui_state_changed'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+warn @ loggerStrategy.js:442
+validatePayload_fn @ validatedEventDispatcher.js:93
+dispatch @ validatedEventDispatcher.js:225
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+_showState @ BaseCharacterBuilderController.js:1081
+_initializeUIState @ SpeechPatternsGeneratorController.js:217
+await in _initializeUIState
+_executeLifecycleMethod @ BaseCharacterBuilderController.js:1898
+initialize @ BaseCharacterBuilderController.js:1826
+await in initialize
+initializeController_fn @ CharacterBuilderBootstrap.js:986
+bootstrap @ CharacterBuilderBootstrap.js:119
+await in bootstrap
+initializeSpeechPatternsGenerator @ speech-patterns-generator-main.js:16
+(anonymous) @ speech-patterns-generator-main.js:46
+(anonymous) @ speech-patterns-generator-main.js:47Understand this warning
+consoleLogger.js:151 SpeechPatternsGeneratorController: Initialization completed in 1.70ms
+consoleLogger.js:151 [CharacterBuilderBootstrap] Page 'Speech Patterns Generator' bootstrapped in 256.10ms {metrics: {…}}
+speech-patterns-generator-main.js:22 Speech Patterns Generator initialized successfully
+consoleLogger.js:163 VED: EventDefinition not found for 'core:ui_state_changed'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+warn @ loggerStrategy.js:442
+validatePayload_fn @ validatedEventDispatcher.js:93
+dispatch @ validatedEventDispatcher.js:225
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+_showState @ BaseCharacterBuilderController.js:1081
+generateSpeechPatterns_fn @ SpeechPatternsGeneratorController.js:396
+(anonymous) @ SpeechPatternsGeneratorController.js:160Understand this warning
+consoleLogger.js:175 Speech pattern generation failed: TypeError: Cannot read properties of undefined (reading 'generateSpeechPatterns')
+    at SpeechPatternsGeneratorController.generateSpeechPatterns_fn (SpeechPatternsGeneratorController.js:402:20)
+    at SpeechPatternsGeneratorController.<anonymous> (SpeechPatternsGeneratorController.js:160:9)
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:452
+generateSpeechPatterns_fn @ SpeechPatternsGeneratorController.js:418
+(anonymous) @ SpeechPatternsGeneratorController.js:160Understand this error
+consoleLogger.js:163 VED: EventDefinition not found for 'core:ui_state_changed'. Cannot validate payload. Proceeding with dispatch.

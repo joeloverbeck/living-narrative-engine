@@ -3,6 +3,7 @@
 #app-layout-container {
   display: flex;
   flex-grow: 1;
+  height: 100vh;
   overflow: hidden;
   background-color: var(--primary-bg-color);
 }

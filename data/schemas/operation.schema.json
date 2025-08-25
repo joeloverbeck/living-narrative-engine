@@ -136,6 +136,9 @@
         },
         {
           "$ref": "./operations/unlockMovement.schema.json"
+        },
+        {
+          "$ref": "./operations/regenerateDescription.schema.json"
         }
       ]
     }

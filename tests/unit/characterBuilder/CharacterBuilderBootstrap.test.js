@@ -873,7 +873,7 @@ describe('CharacterBuilderBootstrap', () => {
 
       // Should log schema loading info and debug messages
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Loading 3 schemas')
+        expect.stringContaining('Loading 4 schemas')
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Schema loading completed in')

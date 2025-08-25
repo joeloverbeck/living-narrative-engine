@@ -122,7 +122,24 @@
       "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/validators/SpeechPatternsSchemaValidator.test.js --no-coverage)",
       "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/validators/SpeechPatternsSchemaValidator.test.js --no-coverage -t \"should handle processing errors gracefully\")",
       "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/validators/SpeechPatternsSchemaValidator.test.js --no-coverage -t \"should filter errors to pattern-specific ones\")",
-      "Bash(NODE_ENV=test npx jest tests/performance/logging/hybridLogger.performance.test.js --testNamePattern=\"should maintain performance with real category detection\" --verbose --no-coverage)"
+      "Bash(NODE_ENV=test npx jest tests/performance/logging/hybridLogger.performance.test.js --testNamePattern=\"should maintain performance with real category detection\" --verbose --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/speechPatternsGeneratorSchemaValidation.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/speechPatternsGeneratorEventDefinition.test.js --no-coverage --verbose)",
+      "mcp__morphllm-fast-apply__list_directory",
+      "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/speechPatternsGeneratorUIStateIssues.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/speechPatternsGeneratorSchemaValidation.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/speechPatternsGeneratorSchemaValidation.test.js --no-coverage --testNamePattern=\"should accept valid character definition with nested\")",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/services/SpeechPatternsGenerator.test.js --no-cache --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/services/SpeechPatternsGenerator.test.js --no-cache --testNamePattern=\"should verify mock helper has 3 patterns\")",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/services/SpeechPatternsGenerator.test.js --no-cache --testNamePattern=\"should generate patterns for valid character\")",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/services/SpeechPatternsGenerator.test.js --no-cache --testNamePattern=\"should handle LLM strategy factory errors\" --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/services/SpeechPatternsGenerator.test.js --no-cache --testNamePattern=\"should handle.*errors\" --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/services/SpeechPatternsGenerator.test.js --no-cache --passWithNoTests=false)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/speechPatternsGeneratorSchemaValidation.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/services/SpeechPatternsGenerator.test.js --no-cache --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/speechPatternsGeneratorSchemaValidation.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/controllers/SpeechPatternsGeneratorController.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/services/SpeechPatternsDisplayEnhancer.test.js --no-coverage --verbose)"
     ],
     "deny": []
   }

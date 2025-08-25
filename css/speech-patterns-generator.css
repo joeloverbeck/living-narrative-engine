@@ -1041,3 +1041,72 @@
     opacity: 1;
   }
 }
+
+/* ============================================
+   SPEPATGEN-010: Enhanced Accessibility Features
+   ============================================ */
+
+/* Enhanced focus styles for navigable pattern items */
+.speech-pattern-item[tabindex='0']:focus-visible {
+  background: var(--secondary-bg-hover, #f8f9fa);
+  border-left: 4px solid var(--primary-color, var(--narrative-purple, #6c5ce7));
+  outline: 2px solid var(--primary-color, var(--narrative-purple, #6c5ce7));
+  outline-offset: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+/* Enhance pattern number visibility when focused */
+.speech-pattern-item[tabindex='0']:focus-visible .pattern-number {
+  background: var(--primary-color, var(--narrative-purple, #6c5ce7));
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* High contrast mode support for focused patterns */
+@media (prefers-contrast: high) {
+  .speech-pattern-item[tabindex='0']:focus-visible {
+    border-left-width: 6px;
+    outline-width: 3px;
+    background: var(--high-contrast-bg, #ffffff);
+  }
+}
+
+/* Reduced motion support for focus transitions */
+@media (prefers-reduced-motion: reduce) {
+  .speech-pattern-item[tabindex='0']:focus-visible,
+  .speech-pattern-item[tabindex='0']:focus-visible .pattern-number {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Visual indicator for keyboard navigation availability */
+.speech-patterns-container:not(:empty)::after {
+  content: '';
+  display: block;
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: var(--info-bg-subtle, #e3f2fd);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--secondary-text-color, #666);
+}
+
+.speech-patterns-container:not(:empty)::after {
+  content: '💡 Tip: Click any pattern to focus, then use arrow keys or J/K to navigate between patterns';
+}
+
+/* Enhanced screen reader support */
+.screen-reader-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}

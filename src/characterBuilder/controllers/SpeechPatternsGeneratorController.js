@@ -11,6 +11,7 @@ import {
   assertPresent,
   assertNonBlankString,
 } from '../../utils/dependencyUtils.js';
+import { tokens } from '../../dependencyInjection/tokens.js';
 
 /**
  * Controller for speech patterns generator interface
@@ -36,6 +37,9 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
   /** @private @type {AbortController|null} */
   #currentGenerationController = null;
+
+  /** @private @type {number|null} */
+  #inputDebounceTimer = null;
 
   /**
    * Create a new SpeechPatternsGeneratorController instance
@@ -78,7 +82,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       if (dependencies.container) {
         try {
           this.#speechPatternsGenerator = dependencies.container.resolve(
-            'SpeechPatternsGenerator'
+            tokens.SpeechPatternsGenerator
           );
         } catch (error) {
           dependencies.logger?.warn(
@@ -107,12 +111,27 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       clearBtn: '#clear-all-btn',
       backBtn: '#back-btn',
 
+      // UI State Management Elements (required by BaseCharacterBuilderController)
+      loadingState: '#loading-state',
+      resultsState: '#results-state',
+      errorState: '#error-state',
+
       // Display elements
       speechPatternsContainer: '#speech-patterns-container',
       loadingIndicator: '#loading-indicator',
       loadingMessage: '#loading-message',
       emptyState: '#empty-state',
       patternCount: '#pattern-count',
+
+      // Error handling elements in error state
+      errorMessage: {
+        selector: '#error-message',
+        required: false,
+      },
+      retryBtn: {
+        selector: '#retry-btn',
+        required: false,
+      },
 
       // Screen reader support
       screenReaderAnnouncement: {
@@ -167,6 +186,13 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       });
     }
 
+    // Retry button (in error state)
+    if (this._getElement('retryBtn')) {
+      this._addEventListener('retryBtn', 'click', () => {
+        this.#retryGeneration();
+      });
+    }
+
     // Keyboard shortcuts
     this.#setupKeyboardShortcuts();
   }
@@ -217,8 +243,8 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     this.#updateUIState();
 
     // Debounced validation for better UX
-    clearTimeout(this._inputDebounceTimer);
-    this._inputDebounceTimer = setTimeout(() => {
+    clearTimeout(this.#inputDebounceTimer);
+    this.#inputDebounceTimer = setTimeout(() => {
       if (input.length > 10) {
         // Only validate if substantial input
         this.#validateCharacterInput();
@@ -302,7 +328,12 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     let hasRequiredComponents = false;
     let componentCount = 0;
 
-    for (const componentId in characterData) {
+    // Support both formats:
+    // 1. New format: { "components": { "core:name": {...} } }
+    // 2. Legacy format: { "core:name": {...} }
+    const componentsToCheck = characterData.components || characterData;
+
+    for (const componentId in componentsToCheck) {
       if (componentId.includes(':')) {
         componentCount++;
         if (requiredComponents.includes(componentId)) {
@@ -323,8 +354,8 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
     // Check for reasonable content depth
     let hasDetailedContent = false;
-    for (const componentId in characterData) {
-      const component = characterData[componentId];
+    for (const componentId in componentsToCheck) {
+      const component = componentsToCheck[componentId];
       if (component && typeof component === 'object') {
         const contentLength = JSON.stringify(component).length;
         if (contentLength > 100) {
@@ -386,9 +417,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       // Update UI state
       this._showState('results');
       this.#updateUIState();
-      this.#announceToScreenReader(
-        `Successfully generated ${processedPatterns.speechPatterns.length} speech patterns`
-      );
+      this.#announceResults(processedPatterns);
     } catch (error) {
       this.logger.error('Speech pattern generation failed:', error);
 
@@ -442,6 +471,12 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     });
 
     container.appendChild(resultsContainer);
+
+    // Set first pattern as focusable for keyboard navigation
+    const firstPattern = resultsContainer.querySelector('.speech-pattern-item');
+    if (firstPattern) {
+      firstPattern.setAttribute('tabindex', '0');
+    }
 
     // Update pattern count
     this.#updatePatternCount(displayData.totalCount);
@@ -502,7 +537,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
   }
 
   /**
-   * Render individual speech pattern
+   * Render individual speech pattern with enhanced accessibility
    *
    * @private
    * @param {object} pattern - Pattern data
@@ -510,16 +545,50 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    * @returns {HTMLElement} Pattern element
    */
   #renderSpeechPattern(pattern, index) {
-    const patternElement = document.createElement('div');
+    const patternElement = document.createElement('article');
     patternElement.className = 'speech-pattern-item fade-in';
+
+    // Enhanced ARIA attributes for accessibility
+    patternElement.setAttribute('tabindex', '-1');
     patternElement.setAttribute('role', 'article');
-    patternElement.setAttribute('aria-label', `Speech pattern ${index + 1}`);
+    patternElement.setAttribute('aria-labelledby', `pattern-${index}-title`);
+    patternElement.setAttribute('aria-describedby', `pattern-${index}-content`);
 
     patternElement.innerHTML = `
             <div class="pattern-number" aria-hidden="true">${pattern.index}</div>
-            <div class="pattern-description">${pattern.htmlSafePattern}</div>
-            <div class="pattern-example">${pattern.htmlSafeExample}</div>
-            ${pattern.circumstances ? `<div class="pattern-circumstances">${pattern.circumstances}</div>` : ''}
+            
+            <!-- Screen reader title -->
+            <h3 id="pattern-${index}-title" class="screen-reader-only">
+                Speech Pattern ${pattern.index}
+            </h3>
+            
+            <div id="pattern-${index}-content" class="pattern-content">
+                <div class="pattern-description" role="definition">
+                    <!-- Screen reader context labels -->
+                    <span class="screen-reader-only">Pattern description: </span>
+                    ${pattern.htmlSafePattern}
+                </div>
+                <div class="pattern-example" role="example">
+                    <span class="screen-reader-only">Example dialogue: </span>
+                    ${pattern.htmlSafeExample}
+                </div>
+                ${
+                  pattern.circumstances
+                    ? `
+                    <div class="pattern-circumstances" role="note">
+                        <span class="screen-reader-only">Context: </span>
+                        ${pattern.circumstances}
+                    </div>
+                `
+                    : ''
+                }
+            </div>
+            
+            <!-- Navigation instructions for screen readers -->
+            <div class="screen-reader-only">
+                Pattern ${pattern.index} of ${this.#lastGeneratedPatterns?.speechPatterns?.length || 'unknown total'}.
+                Use arrow keys or J/K to navigate between patterns.
+            </div>
         `;
 
     return patternElement;
@@ -723,7 +792,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    * @param {Error} error - Generation error
    */
   #handleGenerationError(error) {
-    this._showState('empty');
+    this._showState('error');
     this.#updateUIState();
 
     let errorMessage = 'Failed to generate speech patterns';
@@ -745,8 +814,33 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
         'Generated content did not meet quality standards. Please try again.';
     }
 
-    this.showError(errorMessage);
+    // Display error in the error state container
+    this.#displayErrorInState(errorMessage);
     this.#announceToScreenReader(errorMessage);
+  }
+
+  /**
+   * Display error message in the error state container
+   *
+   * @private
+   * @param {string} message - Error message to display
+   */
+  #displayErrorInState(message) {
+    const errorMessageElement = this._getElement('errorMessage');
+    if (errorMessageElement) {
+      errorMessageElement.textContent = message;
+    }
+  }
+
+  /**
+   * Retry the last generation attempt
+   *
+   * @private
+   */
+  #retryGeneration() {
+    if (this.#characterDefinition && !this.#isGenerating) {
+      this.#generateSpeechPatterns();
+    }
   }
 
   /**
@@ -828,6 +922,78 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
         }
       }
     });
+
+    // Arrow key navigation for pattern results
+    document.addEventListener('keydown', (event) => {
+      const focusedPattern = event.target.closest('.speech-pattern-item');
+      if (focusedPattern) {
+        this.#handlePatternNavigation(event, focusedPattern);
+      }
+    });
+  }
+
+  /**
+   * Handle arrow key navigation through pattern results
+   *
+   * @private
+   * @param {KeyboardEvent} event - Keyboard event
+   * @param {HTMLElement} currentPattern - Currently focused pattern
+   */
+  #handlePatternNavigation(event, currentPattern) {
+    let nextPattern = null;
+
+    switch (event.key) {
+      case 'ArrowDown':
+      case 'j': // Vim-style navigation
+        event.preventDefault();
+        nextPattern = currentPattern.nextElementSibling;
+        break;
+      case 'ArrowUp':
+      case 'k': // Vim-style navigation
+        event.preventDefault();
+        nextPattern = currentPattern.previousElementSibling;
+        break;
+      case 'Home':
+        event.preventDefault();
+        nextPattern = currentPattern.parentElement.firstElementChild;
+        break;
+      case 'End':
+        event.preventDefault();
+        nextPattern = currentPattern.parentElement.lastElementChild;
+        break;
+    }
+
+    if (nextPattern && nextPattern.classList.contains('speech-pattern-item')) {
+      currentPattern.setAttribute('tabindex', '-1');
+      nextPattern.setAttribute('tabindex', '0');
+      nextPattern.focus();
+
+      // Announce to screen readers
+      const patternNumber =
+        nextPattern.querySelector('.pattern-number')?.textContent;
+      if (patternNumber) {
+        this.#announceToScreenReader(`Pattern ${patternNumber} focused`);
+      }
+    }
+  }
+
+  /**
+   * Enhanced result announcement with navigation instructions
+   *
+   * @private
+   * @param {object} result - Generated patterns result
+   */
+  #announceResults(result) {
+    const count = result.speechPatterns.length;
+    const characterName = result.characterName || 'your character';
+
+    // More detailed screen reader announcement
+    const message =
+      `Generated ${count} speech patterns for ${characterName}. ` +
+      `Patterns are now displayed. Use Tab to navigate to first pattern, ` +
+      `then use arrow keys or J/K to move between patterns.`;
+
+    this.#announceToScreenReader(message);
   }
 
   // Screen Reader Support

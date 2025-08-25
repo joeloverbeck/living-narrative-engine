@@ -35,6 +35,7 @@ const OPERATION_SCHEMA_FILES = [
   'queryComponents.schema.json',
   'queryEntities.schema.json',
   'rebuildLeaderListCache.schema.json',
+  'regenerateDescription.schema.json',
   'removeComponent.schema.json',
   'removeFromClosenessCircle.schema.json',
   'resolveDirection.schema.json',
