@@ -79,7 +79,6 @@ describe('ActionTraceOutputService - Additional Coverage Tests', () => {
     jest.useRealTimers();
   });
 
-
   describe('Text Format Data Extraction (lines 603-606)', () => {
     it('should extract actionId and actorId from structured trace actions for text format', async () => {
       const mockJsonFormatter = createMockJsonTraceFormatter();
@@ -312,7 +311,6 @@ describe('ActionTraceOutputService - Additional Coverage Tests', () => {
     });
   });
 
-
   describe('Shutdown Timeout Handling (lines 1321-1322)', () => {
     it('should handle shutdown timeout for pending writes', async () => {
       jest.useFakeTimers();
@@ -346,10 +344,10 @@ describe('ActionTraceOutputService - Additional Coverage Tests', () => {
 
       // Fast-forward timers to trigger timeout (2 seconds)
       jest.advanceTimersByTime(2000);
-      
+
       // Allow promises to settle
       await Promise.resolve();
-      
+
       try {
         await shutdownPromise;
       } catch (error) {
@@ -358,12 +356,13 @@ describe('ActionTraceOutputService - Additional Coverage Tests', () => {
 
       // Check if any warning was logged about shutdown or timeout
       const warnCalls = mockLogger.warn.mock.calls;
-      const hasShutdownWarning = warnCalls.some(call => 
-        call[0]?.includes?.('Shutdown') || 
-        call[0]?.includes?.('timeout') ||
-        call[1]?.error?.includes?.('timeout')
+      const hasShutdownWarning = warnCalls.some(
+        (call) =>
+          call[0]?.includes?.('Shutdown') ||
+          call[0]?.includes?.('timeout') ||
+          call[1]?.error?.includes?.('timeout')
       );
-      
+
       // If no shutdown warning, the service might handle it differently
       // Just verify the service handled the timeout scenario without crashing
       expect(serviceWithHandler).toBeDefined();
@@ -371,7 +370,6 @@ describe('ActionTraceOutputService - Additional Coverage Tests', () => {
       jest.useRealTimers();
     });
   });
-
 
   describe('Export Methods Edge Cases', () => {
     it('should handle missing storage adapter in export methods', async () => {

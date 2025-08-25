@@ -39,11 +39,9 @@ describe('updateMovementLock', () => {
       const result = await updateMovementLock(manager, 'e2', false);
 
       expect(result).toEqual({ locked: false });
-      expect(manager.addComponent).toHaveBeenCalledWith(
-        'e2',
-        'core:movement',
-        { locked: false }
-      );
+      expect(manager.addComponent).toHaveBeenCalledWith('e2', 'core:movement', {
+        locked: false,
+      });
     });
   });
 
