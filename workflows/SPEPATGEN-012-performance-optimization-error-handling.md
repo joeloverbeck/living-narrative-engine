@@ -52,9 +52,9 @@ Implement comprehensive performance optimizations and robust error handling for 
 - **Async Processing**
   - Non-blocking generation workflow
   - Progressive rendering of results
-  - Implement cancellation for long operations
-  - Use Web Workers for heavy computations
+  - Implement cancellation for long operations using AbortController
   - Optimize promise chain performance
+  - Use existing async patterns from BaseCharacterBuilderController
 
 - **Response Processing**
   - Stream processing for large LLM responses
@@ -67,42 +67,26 @@ Implement comprehensive performance optimizations and robust error handling for 
 
 #### Error Categories
 
-- **Input Validation Errors**
-
-  ```javascript
-  class InvalidCharacterStructureError extends Error {
-    constructor(field, expected, received) {
-      super(`Invalid ${field}: expected ${expected}, received ${received}`);
-      this.name = 'InvalidCharacterStructureError';
-      this.field = field;
-      this.expected = expected;
-      this.received = received;
-    }
-  }
-  ```
+Use existing error classes from `/src/characterBuilder/errors/`:
 
 - **Generation Errors**
 
   ```javascript
-  class GenerationFailureError extends Error {
-    constructor(reason, retryable = false) {
-      super(`Generation failed: ${reason}`);
-      this.name = 'GenerationFailureError';
-      this.retryable = retryable;
-    }
-  }
+  // Use existing SpeechPatternsGenerationError
+  // Located in: /src/characterBuilder/errors/SpeechPatternsGenerationError.js
   ```
 
-- **Service Errors**
+- **Response Processing Errors**
+
   ```javascript
-  class LLMServiceError extends Error {
-    constructor(statusCode, message, retryable = true) {
-      super(message);
-      this.name = 'LLMServiceError';
-      this.statusCode = statusCode;
-      this.retryable = retryable;
-    }
-  }
+  // Use existing SpeechPatternsResponseProcessingError  
+  // Located in: /src/characterBuilder/errors/SpeechPatternsResponseProcessingError.js
+  ```
+
+- **Validation Errors**
+  ```javascript
+  // Use existing SpeechPatternsValidationError
+  // Located in: /src/characterBuilder/errors/SpeechPatternsValidationError.js
   ```
 
 #### Error Recovery Strategies
@@ -149,11 +133,11 @@ Implement comprehensive performance optimizations and robust error handling for 
 #### CPU Optimization
 
 - **Workload Distribution**
-  - Use Web Workers for heavy processing
-  - Implement task scheduling
   - Progressive processing for large datasets
-  - Time-sliced operations
+  - Time-sliced operations using async/await patterns
   - Priority-based task queuing
+  - Leverage existing AbortController for cancellation
+  - Optimize with existing dependency injection patterns
 
 - **Algorithm Optimization**
   - Use efficient sorting/searching algorithms
@@ -174,33 +158,21 @@ Implement comprehensive performance optimizations and robust error handling for 
   - Network request timing
 
 - **Monitoring Implementation**
+  - Use existing performance infrastructure in `/src/actions/tracing/performanceMonitor.js`
+  - Leverage performance timing patterns from `BaseCharacterBuilderController`
+  - Integrate with existing logging infrastructure
 
   ```javascript
-  class PerformanceMonitor {
-    constructor() {
-      this.metrics = new Map();
-      this.observers = [];
-    }
-
-    startTimer(operation) {
-      return performance.mark(`${operation}-start`);
-    }
-
-    endTimer(operation) {
-      performance.mark(`${operation}-end`);
-      performance.measure(operation, `${operation}-start`, `${operation}-end`);
-    }
-
-    recordMemoryUsage() {
-      if (performance.memory) {
-        return {
-          used: performance.memory.usedJSHeapSize,
-          total: performance.memory.totalJSHeapSize,
-          limit: performance.memory.jsHeapSizeLimit,
-        };
-      }
-    }
-  }
+  // Reference existing performance patterns from BaseCharacterBuilderController
+  // Example usage:
+  performance.mark('speech-patterns-generation-start');
+  // ... generation logic ...
+  performance.mark('speech-patterns-generation-end');
+  performance.measure(
+    'speech-patterns-generation',
+    'speech-patterns-generation-start', 
+    'speech-patterns-generation-end'
+  );
   ```
 
 #### Error Tracking
@@ -223,28 +195,28 @@ Implement comprehensive performance optimizations and robust error handling for 
 
 #### Request Optimization
 
-- **Connection Management**
-  - HTTP/2 multiplexing utilization
-  - Connection pooling
-  - Request timeout optimization
-  - Retry strategy implementation
-  - Bandwidth-aware adaptations
+- **Client-Side Optimization**
+  - Request timeout configuration for LLM proxy server
+  - Retry strategy implementation with exponential backoff
+  - Request deduplication for identical prompts
+  - AbortController integration for cancellation
+  - Proper error handling for proxy server responses
 
-- **Payload Optimization**
-  - Request compression
-  - Response streaming
-  - Chunked transfer encoding
-  - Progressive loading
-  - Caching strategies
+- **LLM Proxy Server Integration**
+  - Leverage existing proxy server at `/llm-proxy-server/`
+  - Use existing API key management and provider abstraction
+  - Optimize request formatting for better LLM responses
+  - Implement proper timeout handling for LLM service calls
+  - Cache responses when appropriate
 
-#### Offline Capabilities
+#### Network Resilience
 
-- **Service Worker Integration**
-  - Cache generation results
-  - Offline mode detection
-  - Queue failed requests
-  - Background synchronization
-  - Progressive web app features
+- **Error Recovery**
+  - Request timeout handling
+  - Connection failure recovery
+  - Graceful degradation when LLM service unavailable
+  - User notification of network issues
+  - Retry mechanisms with exponential backoff
 
 ### Implementation Strategy
 
@@ -266,26 +238,27 @@ Implement comprehensive performance optimizations and robust error handling for 
 
 #### Error Handling Workflow
 
+Reference existing error handling patterns in:
+- `/src/characterBuilder/controllers/SpeechPatternsGeneratorController.js`
+- `/src/characterBuilder/controllers/BaseCharacterBuilderController.js`
+
 ```javascript
-class ErrorHandler {
-  static async handleError(error, context) {
-    // 1. Classify error
-    const classification = this.classifyError(error);
+// Follow existing error handling patterns:
+// 1. Use try-catch blocks with specific error types
+// 2. Leverage AbortController for cancellation
+// 3. Dispatch events through existing event system
+// 4. Use dependency injection for error handling services
+// 5. Implement user notification through existing UI patterns
 
-    // 2. Determine recovery strategy
-    const strategy = this.getRecoveryStrategy(classification);
-
-    // 3. Execute recovery
-    const result = await this.executeRecovery(strategy, context);
-
-    // 4. Log and monitor
-    this.logError(error, context, result);
-
-    // 5. User notification
-    this.notifyUser(classification, result);
-
-    return result;
+// Example from existing controller:
+try {
+  // operation logic
+} catch (error) {
+  if (error instanceof SpeechPatternsGenerationError) {
+    // Handle generation-specific error
+    this.handleGenerationError(error);
   }
+  // Use existing error communication patterns
 }
 ```
 
@@ -318,10 +291,20 @@ class ErrorHandler {
 ## Dependencies
 
 - SPEPATGEN-005 (Controller implementation)
-- SPEPATGEN-007 (LLM integration)
+- SPEPATGEN-007 (LLM integration)  
 - SPEPATGEN-009 (UI styling)
 - SPEPATGEN-010 (Accessibility features)
 - SPEPATGEN-011 (Test coverage)
+
+## Key Files to Modify
+
+- `/src/characterBuilder/controllers/SpeechPatternsGeneratorController.js`
+- `/src/characterBuilder/services/SpeechPatternsGenerator.js`
+- `/src/characterBuilder/services/SpeechPatternsResponseProcessor.js`
+- `/src/characterBuilder/controllers/BaseCharacterBuilderController.js`
+- `/src/characterBuilder/errors/SpeechPatternsGenerationError.js`
+- `/src/characterBuilder/errors/SpeechPatternsResponseProcessingError.js`
+- `/src/characterBuilder/errors/SpeechPatternsValidationError.js`
 
 ## Deliverables
 
@@ -335,18 +318,35 @@ class ErrorHandler {
 
 ## Tools and Libraries
 
-- Performance API for monitoring
-- Web Workers for heavy processing
-- Service Workers for offline capability
-- Error tracking frameworks
+- Performance API for monitoring (existing in BaseCharacterBuilderController)
+- AbortController for operation cancellation
+- Existing error handling infrastructure
 - Performance profiling tools
 - Memory monitoring utilities
+- Dependency injection container for service management
 
 ## Success Metrics
 
-- Performance budget targets met
-- Error rate < 1% for user workflows
-- Mean time to recovery < 5 seconds
-- User satisfaction with error handling
-- No critical performance regressions
-- Monitoring system fully operational
+- **Error Handling**
+  - All error types properly caught and handled using existing error classes
+  - User receives clear feedback for all error scenarios
+  - Retry mechanisms work correctly with exponential backoff
+  - AbortController properly cancels operations when needed
+
+- **Performance**
+  - Generation operations remain responsive (using existing performance patterns)
+  - Memory usage stays stable during extended usage
+  - No memory leaks in event listeners or DOM elements
+  - Performance monitoring integrated with existing infrastructure
+
+- **Integration**
+  - Error handling follows existing patterns from BaseCharacterBuilderController
+  - Proper integration with dependency injection container
+  - Network optimization works with existing LLM proxy server architecture
+  - No breaking changes to existing Speech Patterns Generator functionality
+
+## Implementation Priority
+
+1. **High Priority**: Enhance existing error handling patterns
+2. **Medium Priority**: Add performance monitoring using existing infrastructure  
+3. **Low Priority**: Advanced optimizations and comprehensive monitoring

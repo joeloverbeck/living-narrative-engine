@@ -44,7 +44,8 @@ import { CHARACTER_BUILDER_EVENTS } from './characterBuilderService.js';
  */
 export class SpeechPatternsGenerator {
   #logger;
-  #llmJsonService;
+  // eslint-disable-next-line no-unused-private-class-members
+  #_llmJsonService;
   #llmStrategyFactory;
   #llmConfigManager;
   #eventBus;
@@ -106,7 +107,7 @@ export class SpeechPatternsGenerator {
     }
 
     this.#logger = logger;
-    this.#llmJsonService = llmJsonService;
+    this.#_llmJsonService = llmJsonService;
     this.#llmStrategyFactory = llmStrategyFactory;
     this.#llmConfigManager = llmConfigManager;
     this.#eventBus = eventBus;
@@ -146,13 +147,14 @@ export class SpeechPatternsGenerator {
       });
 
       // Dispatch start event
+      this.#logger.debug('Dispatching speech patterns generation started event');
       this.#eventBus.dispatch({
         type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED,
         payload: {
           characterData: characterData,
           options: options,
           timestamp: new Date().toISOString(),
-        },
+        }
       });
 
       // Validate input
@@ -179,13 +181,14 @@ export class SpeechPatternsGenerator {
       const result = this.#validateAndEnhance(parsedResponse, options);
 
       // Dispatch success event
+      this.#logger.debug('Dispatching speech patterns generation completed event');
       this.#eventBus.dispatch({
         type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED,
         payload: {
           result: result,
           processingTime: Date.now() - startTime,
           timestamp: new Date().toISOString(),
-        },
+        }
       });
 
       this.#logger.info(
@@ -207,13 +210,14 @@ export class SpeechPatternsGenerator {
       });
 
       // Dispatch error event
+      this.#logger.debug('Dispatching speech patterns generation failed event');
       this.#eventBus.dispatch({
         type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_FAILED,
         payload: {
           error: error.message,
           processingTime,
           timestamp: new Date().toISOString(),
-        },
+        }
       });
 
       if (error instanceof SpeechPatternsGenerationError) {
@@ -241,13 +245,25 @@ export class SpeechPatternsGenerator {
     }
 
     // Check for basic character components
-    const hasCharacterComponents = Object.keys(characterData).some((key) =>
+    // Handle both direct character data format and nested components structure
+    let hasCharacterComponents = false;
+    
+    // Check if character data has colon-separated keys at top level (direct format)
+    hasCharacterComponents = Object.keys(characterData).some((key) =>
       key.includes(':')
     );
+    
+    // If not found at top level, check for nested components structure (character definition format)
+    if (!hasCharacterComponents && characterData.components && typeof characterData.components === 'object') {
+      hasCharacterComponents = Object.keys(characterData.components).some((key) =>
+        key.includes(':')
+      );
+    }
 
     if (!hasCharacterComponents) {
       throw new SpeechPatternsValidationError(
-        'Character data must contain at least one character component (format: "component:field")'
+        'Character data must contain at least one character component (format: "component:field"). ' +
+        'Expected either direct component data or nested under "components" key.'
       );
     }
 
@@ -462,21 +478,60 @@ export class SpeechPatternsGenerator {
    * @returns {string} Character name
    */
   #extractCharacterName(characterData) {
-    // Try to find name in various component formats
-    const nameComponent = characterData['core:name'];
-    if (nameComponent && nameComponent.name) {
-      return nameComponent.name;
+    // Handle nested components structure (character definition format)
+    if (characterData.components && typeof characterData.components === 'object') {
+      const nameComponent = characterData.components['core:name'];
+      if (nameComponent) {
+        // Check for both .text and .name fields
+        if (nameComponent.text) {
+          return nameComponent.text;
+        }
+        if (nameComponent.name) {
+          return nameComponent.name;
+        }
+      }
+
+      // Try other possible name fields in components
+      for (const [key, value] of Object.entries(characterData.components)) {
+        if (
+          key.includes('name') &&
+          value &&
+          typeof value === 'object'
+        ) {
+          if (value.text) {
+            return value.text;
+          }
+          if (value.name) {
+            return value.name;
+          }
+        }
+      }
     }
 
-    // Try other possible name fields
+    // Try to find name in direct format (legacy support)
+    const nameComponent = characterData['core:name'];
+    if (nameComponent) {
+      if (nameComponent.text) {
+        return nameComponent.text;
+      }
+      if (nameComponent.name) {
+        return nameComponent.name;
+      }
+    }
+
+    // Try other possible name fields in direct format
     for (const [key, value] of Object.entries(characterData)) {
       if (
         key.includes('name') &&
         value &&
-        typeof value === 'object' &&
-        value.name
+        typeof value === 'object'
       ) {
-        return value.name;
+        if (value.text) {
+          return value.text;
+        }
+        if (value.name) {
+          return value.name;
+        }
       }
     }
 

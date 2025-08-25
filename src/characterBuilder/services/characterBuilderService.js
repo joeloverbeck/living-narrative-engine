@@ -74,6 +74,12 @@ export const CHARACTER_BUILDER_EVENTS = {
     'core:core_motivations_generation_completed',
   CORE_MOTIVATIONS_GENERATION_FAILED: 'core:core_motivations_generation_failed',
   CORE_MOTIVATIONS_RETRIEVED: 'core:core_motivations_retrieved',
+  // Speech patterns events
+  SPEECH_PATTERNS_GENERATION_STARTED:
+    'core:speech_patterns_generation_started',
+  SPEECH_PATTERNS_GENERATION_COMPLETED:
+    'core:speech_patterns_generation_completed',
+  SPEECH_PATTERNS_GENERATION_FAILED: 'core:speech_patterns_generation_failed',
   // Cache events
   CACHE_INITIALIZED: 'core:cache_initialized',
   CACHE_HIT: 'core:cache_hit',

@@ -139,7 +139,19 @@
       "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/services/SpeechPatternsGenerator.test.js --no-cache --silent)",
       "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/speechPatternsGeneratorSchemaValidation.test.js --no-coverage)",
       "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/controllers/SpeechPatternsGeneratorController.test.js --no-coverage --verbose)",
-      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/services/SpeechPatternsDisplayEnhancer.test.js --no-coverage --verbose)"
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/services/SpeechPatternsDisplayEnhancer.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npm run test:unit tests/unit/characterBuilder/services/SpeechPatternsGenerator.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/services/SpeechPatternsGenerator.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npm run test:unit tests/unit/characterBuilder/ --passWithNoTests)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/speechPatternsGeneratorEventDispatchFix.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/speechPatternsSchemaValidationFix.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/performance/actions/tracing/actionTraceFilter.performance.test.js --testNamePattern=\"should update inclusion config quickly\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/services/SpeechPatternsGenerator.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/speechPatternsGeneratorRuntimeErrors.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/performance/actions/tracing/actionTraceFilter.performance.test.js --testNamePattern=\"Configuration Updates Performance\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/speechPatternsGeneratorEventDispatchFix.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:unit tests/unit/characterBuilder/ --silent)"
     ],
     "deny": []
   }
