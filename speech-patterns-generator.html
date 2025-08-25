@@ -21,7 +21,7 @@
     <link rel="manifest" href="/site.webmanifest" />
 
     <!-- JavaScript bundle (built from src/speech-patterns-generator-main.js) -->
-    <script type="module" src="dist/speech-patterns-generator.js"></script>
+    <script type="module" src="speech-patterns-generator.js"></script>
   </head>
   <body>
     <!-- Skip link for accessibility -->
@@ -103,6 +103,7 @@
               class="cb-button cb-button-primary"
               disabled
               aria-label="Generate speech patterns"
+              aria-keyshortcuts="Control+Enter"
             >
               <span class="button-icon">🎭</span>
               <span class="button-text">Generate Speech Patterns</span>
@@ -130,6 +131,7 @@
                 class="cb-button cb-button-danger"
                 disabled
                 aria-label="Clear character input and results"
+                aria-keyshortcuts="Control+Shift+Delete"
               >
                 <span class="button-icon">🗑️</span>
                 <span class="button-text">Clear All</span>
@@ -139,6 +141,7 @@
                 class="cb-button cb-button-secondary"
                 disabled
                 aria-label="Export speech patterns to text file"
+                aria-keyshortcuts="Control+E"
               >
                 <span class="button-icon">📄</span>
                 <span class="button-text">Export</span>
@@ -146,30 +149,64 @@
             </div>
           </div>
 
-          <!-- Loading Indicator -->
+          <!-- UI State Management Containers -->
+          <!-- Loading State - Used by UIStateManager -->
           <div
-            id="loading-indicator"
-            class="loading-indicator"
+            id="loading-state"
+            class="ui-state-container loading-state"
             style="display: none"
             role="status"
             aria-live="polite"
           >
-            <div class="spinner" aria-hidden="true"></div>
-            <p id="loading-message">Generating speech patterns...</p>
+            <div class="loading-indicator">
+              <div class="spinner" aria-hidden="true"></div>
+              <p id="loading-message">Generating speech patterns...</p>
+            </div>
           </div>
 
-          <!-- Speech Patterns Results Container -->
+          <!-- Results State - Used by UIStateManager -->
           <div
-            id="speech-patterns-container"
-            class="speech-patterns-container"
+            id="results-state"
+            class="ui-state-container results-state"
+            style="display: none"
             role="region"
             aria-label="Generated speech patterns"
           >
-            <!-- Speech pattern results will be dynamically added here -->
+            <!-- Speech Patterns Results Container -->
+            <div
+              id="speech-patterns-container"
+              class="speech-patterns-container"
+            >
+              <!-- Speech pattern results will be dynamically added here -->
+            </div>
           </div>
 
-          <!-- Empty State -->
-          <div id="empty-state" class="empty-state">
+          <!-- Error State - Used by UIStateManager -->
+          <div
+            id="error-state"
+            class="ui-state-container error-state"
+            style="display: none"
+            role="alert"
+          >
+            <div class="error-container">
+              <div class="error-icon" aria-hidden="true">❌</div>
+              <div class="error-content">
+                <h3 class="error-title">Generation Failed</h3>
+                <p class="error-message" id="error-message">
+                  <!-- Error message will be inserted here -->
+                </p>
+                <button
+                  class="cb-button cb-button-secondary retry-btn"
+                  id="retry-btn"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State - Default state when no content -->
+          <div id="empty-state" class="ui-state-container empty-state">
             <div class="empty-state-icon">🎭</div>
             <p class="empty-state-text">
               Paste a character definition and click "Generate Speech Patterns"
@@ -179,6 +216,18 @@
               The generator will create ~20 unique speech patterns with
               character voice examples
             </p>
+          </div>
+
+          <!-- Legacy Loading Indicator - Kept for backward compatibility -->
+          <div
+            id="loading-indicator"
+            class="loading-indicator"
+            style="display: none"
+            role="status"
+            aria-live="polite"
+          >
+            <div class="spinner" aria-hidden="true"></div>
+            <p>Generating speech patterns...</p>
           </div>
         </section>
       </main>

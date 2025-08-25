@@ -40,7 +40,9 @@
       "profile.component.json",
       "secrets.component.json",
       "short_term_memory.component.json",
-      "speech_patterns.component.json"
+      "speech_patterns.component.json",
+      "strengths.component.json",
+      "weaknesses.component.json"
     ],
     "conditions": [
       "actor-can-move.condition.json",
@@ -130,6 +132,9 @@
       "system_error_occurred.event.json",
       "system_warning_occurred.event.json",
       "thematic_directions_generated.event.json",
+      "traits_generated.event.json",
+      "traits_generation_completed.event.json",
+      "traits_generation_started.event.json",
       "turn_ended.event.json",
       "turn_processing_ended.event.json",
       "turn_processing_started.event.json",

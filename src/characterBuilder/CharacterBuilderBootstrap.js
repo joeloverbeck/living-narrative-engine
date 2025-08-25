@@ -382,6 +382,7 @@ export class CharacterBuilderBootstrap {
     const baseSchemas = [
       '/data/schemas/character-concept.schema.json',
       '/data/schemas/thematic-direction.schema.json',
+      '/data/schemas/llm-configs.schema.json',
     ];
 
     // Combine with custom schemas
@@ -568,6 +569,42 @@ export class CharacterBuilderBootstrap {
                 },
                 value: {
                   description: 'The new value of the field',
+                },
+              },
+              additionalProperties: false,
+            },
+          },
+          {
+            id: 'core:controller_initialized',
+            description:
+              'Dispatched when a character builder controller completes initialization successfully.',
+            payloadSchema: {
+              type: 'object',
+              required: ['controllerName', 'initializationTime'],
+              properties: {
+                controllerName: {
+                  type: 'string',
+                  description:
+                    'The name of the controller that completed initialization',
+                  minLength: 1,
+                },
+                initializationTime: {
+                  type: 'number',
+                  description:
+                    'Time taken to initialize the controller in milliseconds',
+                  minimum: 0,
+                },
+                timestamp: {
+                  type: 'string',
+                  format: 'date-time',
+                  description:
+                    'Optional. ISO 8601 timestamp of when initialization completed',
+                },
+                elementCount: {
+                  type: 'integer',
+                  description:
+                    'Optional. Number of DOM elements cached during initialization',
+                  minimum: 0,
                 },
               },
               additionalProperties: false,
@@ -842,7 +879,17 @@ export class CharacterBuilderBootstrap {
       eventBus: container.resolve(tokens.ISafeEventDispatcher),
       schemaValidator: container.resolve(tokens.ISchemaValidator),
       clicheGenerator: container.resolve(tokens.ClicheGenerator),
+      container: container, // Pass container for service resolution
     };
+
+    // Try to resolve optional services that some controllers might need
+    try {
+      dependencies.speechPatternsGenerator = container.resolve(
+        tokens.SpeechPatternsGenerator
+      );
+    } catch (error) {
+      // Service not available, that's okay for pages that don't need it
+    }
 
     // Resolve additional page-specific services from container or instantiate them
     if (config.services) {

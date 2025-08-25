@@ -16,7 +16,7 @@ async function initializeSpeechPatternsGenerator() {
     const { controller } = await bootstrap.bootstrap({
       pageName: 'Speech Patterns Generator',
       controllerClass: SpeechPatternsGeneratorController,
-      includeModLoading: false,
+      includeModLoading: true, // Enable mod loading to include event definitions
     });
 
     console.info('Speech Patterns Generator initialized successfully');
