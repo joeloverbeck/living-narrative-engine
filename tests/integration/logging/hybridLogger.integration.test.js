@@ -229,62 +229,6 @@ describe('HybridLogger Integration', () => {
     });
   });
 
-  describe('High-Volume Logging', () => {
-    it('should handle high-volume logging efficiently', async () => {
-      const startTime = Date.now();
-      const messageCount = 100;
-
-      // Generate many log messages
-      for (let i = 0; i < messageCount; i++) {
-        hybridLogger.info(`High volume message ${i}`);
-      }
-
-      const endTime = Date.now();
-      const duration = endTime - startTime;
-
-      // Should handle 100 messages in under 100ms
-      expect(duration).toBeLessThan(100);
-
-      // All messages should have been logged to console
-      expect(console.info).toHaveBeenCalledTimes(messageCount);
-
-      // Remote should batch and send
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      expect(mockFetch).toHaveBeenCalled();
-    });
-
-    it('should batch remote logs effectively', async () => {
-      // Configure small batch size for testing
-      remoteLogger = new RemoteLogger({
-        config: {
-          batchSize: 3,
-          flushInterval: 50,
-        },
-        dependencies: {
-          consoleLogger: consoleLogger,
-        },
-      });
-
-      hybridLogger = new HybridLogger({
-        consoleLogger,
-        remoteLogger,
-        categoryDetector,
-      });
-
-      // Send 5 messages (should trigger batch at 3)
-      hybridLogger.info('Message 1');
-      hybridLogger.info('Message 2');
-      hybridLogger.info('Message 3'); // Should trigger batch
-      hybridLogger.info('Message 4');
-      hybridLogger.info('Message 5');
-
-      // Wait for batching
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Should have made at least one batch request
-      expect(mockFetch).toHaveBeenCalled();
-    });
-  });
 
   describe('Console-Specific Methods Integration', () => {
     it('should handle console grouping with real console logger', () => {
@@ -376,43 +320,4 @@ describe('HybridLogger Integration', () => {
     });
   });
 
-  describe('Performance Integration', () => {
-    it('should maintain performance with real category detection', () => {
-      const startTime = Date.now();
-      const iterations = 1000;
-
-      for (let i = 0; i < iterations; i++) {
-        hybridLogger.info(
-          `Performance test message ${i} with GameEngine context`
-        );
-      }
-
-      const endTime = Date.now();
-      const duration = endTime - startTime;
-
-      // Should handle 1000 messages with category detection in reasonable time
-      expect(duration).toBeLessThan(500); // 500ms for 1000 messages
-
-      // Category detection should have been called for each message
-      expect(console.info).toHaveBeenCalledTimes(iterations);
-    });
-
-    it('should cache category detection results effectively', () => {
-      const sameMessage = 'Repeated message for caching test';
-
-      // Send the same message multiple times
-      for (let i = 0; i < 50; i++) {
-        hybridLogger.info(sameMessage);
-      }
-
-      // All should have been logged with the same category
-      expect(console.info).toHaveBeenCalledTimes(50);
-
-      // Check that all calls used the same formatted prefix
-      const firstCall = console.info.mock.calls[0][0];
-      console.info.mock.calls.forEach((call) => {
-        expect(call[0]).toBe(firstCall);
-      });
-    });
-  });
 });

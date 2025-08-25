@@ -63,13 +63,24 @@ export function renderPortraitElements(
       tooltip.innerHTML = DomUtils.textToHtml(locationDto.description);
       visualsElement.appendChild(tooltip);
 
-      // Make the visuals element focusable for keyboard accessibility
+      // Make the visuals element interactive for accessibility
       visualsElement.setAttribute('tabindex', '0');
-      visualsElement.setAttribute('role', 'img');
+      visualsElement.setAttribute('role', 'button');
       visualsElement.setAttribute(
         'aria-label',
         `${locationDto.name || 'Location'} portrait. Hover or focus to see description.`
       );
+
+      // Add click handler for tooltip interaction
+      const handler = () => {
+        visualsElement.classList.toggle('tooltip-open');
+      };
+
+      if (addListener) {
+        addListener(visualsElement, 'click', handler);
+      } else {
+        visualsElement.addEventListener('click', handler);
+      }
     }
   } else {
     logger.debug(

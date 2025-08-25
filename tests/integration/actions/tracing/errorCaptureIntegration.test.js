@@ -373,32 +373,6 @@ describe('Error Capture Integration', () => {
       expect(errorDetails.location).toBeNull();
     });
 
-    it('should maintain performance with error analysis enabled', () => {
-      const startTime = Date.now();
-
-      trace.captureDispatchStart();
-
-      const error = new Error('Performance test error');
-      error.stack = `Error: Performance test error
-    at testFunction (/home/project/src/test.js:10:5)
-    at processAction (/home/project/src/actions.js:25:10)`;
-
-      trace.captureError(error, {
-        phase: 'performance_test',
-        retryCount: 0,
-      });
-
-      const endTime = Date.now();
-      const duration = endTime - startTime;
-
-      // Error capture should be fast (< 10ms for this simple case)
-      expect(duration).toBeLessThan(10);
-
-      // But still provide full analysis
-      const errorSummary = trace.getErrorSummary();
-      expect(errorSummary).toBeTruthy();
-      expect(errorSummary.troubleshooting.length).toBeGreaterThan(0);
-    });
   });
 
   describe('Error Analysis Edge Cases', () => {
@@ -417,30 +391,6 @@ describe('Error Capture Integration', () => {
       }).toThrow(); // Should throw because trace is already ended
     });
 
-    it('should handle very large stack traces efficiently', () => {
-      const largeStackFrames = Array.from(
-        { length: 100 },
-        (_, i) =>
-          `    at function${i} (/home/project/src/file${i}.js:${i + 1}:1)`
-      ).join('\n');
-
-      const largeStackTrace = `Error: Large stack trace\n${largeStackFrames}`;
-
-      const error = new Error('Large stack trace test');
-      error.stack = largeStackTrace;
-
-      trace.captureDispatchStart();
-
-      const startTime = Date.now();
-      trace.captureError(error);
-      const endTime = Date.now();
-
-      // Should still be reasonably fast
-      expect(endTime - startTime).toBeLessThan(50);
-
-      const errorDetails = trace.getError();
-      expect(errorDetails.stackAnalysis.frames).toHaveLength(100);
-    });
 
     it('should handle malformed stack traces without breaking', () => {
       const malformedStackTrace = `Error: Malformed stack

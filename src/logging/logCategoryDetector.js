@@ -136,7 +136,7 @@ class LogCategoryDetector {
    */
   constructor(config = {}) {
     const {
-      cacheSize = 1000,
+      cacheSize = 200, // Reduced from 1000 to 200 for better memory efficiency
       enableCache = true,
       customPatterns = {},
     } = config;
@@ -265,6 +265,27 @@ class LogCategoryDetector {
   }
 
   /**
+   * Simple hash function for cache keys to reduce memory usage
+   *
+   * @private
+   * @param {string} str - String to hash
+   * @returns {string} Hash string
+   */
+  #hashString(str) {
+    // Use first 50 chars + length + simple checksum for cache key
+    // This reduces memory while maintaining good cache hit rates
+    const maxLen = 50;
+    const prefix = str.substring(0, maxLen);
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return `${prefix}:${str.length}:${hash}`;
+  }
+
+  /**
    * Detect category from log message
    *
    * @param {string} message - Log message
@@ -277,10 +298,13 @@ class LogCategoryDetector {
 
     this.#detectionCount++;
 
+    // Generate cache key using hash for memory efficiency
+    const cacheKey = this.#cacheEnabled && this.#cache ? this.#hashString(message) : null;
+
     // Check cache first
-    if (this.#cacheEnabled && this.#cache && this.#cache.has(message)) {
+    if (cacheKey && this.#cache.has(cacheKey)) {
       this.#cacheHits++;
-      return this.#cache.get(message);
+      return this.#cache.get(cacheKey);
     }
 
     // Find matching categories with their priorities
@@ -298,9 +322,9 @@ class LogCategoryDetector {
       detectedCategory = matches[0].category;
     }
 
-    // Cache the result
-    if (this.#cacheEnabled && this.#cache) {
-      this.#cache.set(message, detectedCategory);
+    // Cache the result using hashed key
+    if (cacheKey && this.#cache) {
+      this.#cache.set(cacheKey, detectedCategory);
     }
 
     return detectedCategory;

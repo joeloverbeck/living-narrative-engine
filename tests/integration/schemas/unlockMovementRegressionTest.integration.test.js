@@ -34,8 +34,11 @@ describe('UNLOCK_MOVEMENT Schema Regression Test', () => {
     const unlockSchema = JSON.parse(
       fs.readFileSync(unlockMovementSchemaPath, 'utf8')
     );
-    expect(unlockSchema.properties.type.const).toBe('UNLOCK_MOVEMENT');
-    expect(unlockSchema.properties.parameters.properties.actor_id.type).toBe(
+    // Schema uses allOf composition pattern
+    expect(unlockSchema.allOf).toBeDefined();
+    expect(unlockSchema.allOf[1].properties.type.const).toBe('UNLOCK_MOVEMENT');
+    // Parameters are defined in $defs
+    expect(unlockSchema.$defs.Parameters.properties.actor_id.type).toBe(
       'string'
     );
 
