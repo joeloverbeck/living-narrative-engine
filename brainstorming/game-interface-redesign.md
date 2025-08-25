@@ -57,11 +57,12 @@ Based on visual analysis of the running application and code examination, this d
 - Narrative area lacks personality and gaming atmosphere
 - No visual cues that this is where story unfolds
 
-#### 4. **Generic Action Interface**
+#### 4. **Inflexible Action Interface**
 
-- Action buttons look like standard web form elements
-- Categories (CORE, CLOTHING) have minimal visual distinction
-- No clear selection states or interactive feedback
+- Action interface assumes fixed categories instead of dynamic mod-driven content
+- Cannot accommodate contextual action bursts (e.g., 30+ intimacy actions from character proximity)
+- No scalable design for unknown numbers of action categories from mods
+- Action buttons lack visual distinction and interactive feedback
 
 #### 5. **Information Density Issues**
 
@@ -69,11 +70,12 @@ Based on visual analysis of the running application and code examination, this d
 - Left panel has excessive whitespace in perception log
 - Poor use of available screen real estate
 
-#### 6. **Lack of Gaming Identity**
+#### 6. **Scalability and Performance Gaps**
 
-- Interface feels more like a management dashboard than game
-- No atmospheric elements or immersive design cues
-- Missing visual elements that create emotional engagement
+- No consideration for round management with 5-10 to hundreds of characters
+- Character portrait integration not emphasized as primary feature
+- Missing performance strategies for large-scale location occupancy
+- Interface feels more like a management dashboard than immersive game
 
 ---
 
@@ -100,20 +102,23 @@ _Chat-centric design with cinematic presentation_
 │ • [Log Items]   │ └───────────────────────────────────┘ │ 👥 Characters │
 │                 │                                       │  Amala        │
 └─────────────────┴───────────────────────────────────────┴───────────────┤
-│                    ACTION REPERTOIRE                                    │
+│                    DYNAMIC ACTION REPERTOIRE                           │
 │ ┌──────────────────────────────────────────────────────────────────────┐│
-│ │ [Move Actions] [Social Actions] [Item Actions] [Special Actions]    ││
+│ │ ↕️ Expandable Categories: [Sex] [Intimacy] [Violence] [Clothing]     ││
+│ │ Context: 30+ actions | Scroll/Page: [1/3] | Filter: [All/Recent]   ││
+│ │ ⚡ Performance: Virtual rendering for 100+ actions                  ││
 │ └──────────────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Key Features:**
 
-- Center stage completely dedicated to narrative experience
-- Theatrical metaphor throughout design language
-- Rich, atmospheric backgrounds in narrative area
-- Actions presented as "repertoire" rather than form buttons
-- Character portraits integrated into "cast" concept
+- Center stage completely dedicated to narrative experience with prominent character portraits
+- Dynamic action system supporting unlimited mod-driven categories
+- Scalable interface accommodating 30+ contextual actions per situation
+- Virtual rendering system for performance with large action sets
+- Expandable/collapsible action categories with smart filtering
+- Character portraits as primary visual elements in narrative space
 
 ### Concept 2: "Command Bridge"
 
@@ -131,13 +136,14 @@ _Actions-primary interface with game-like panels_
 │ │  • Subtle background texture                                        │ │
 │ └─────────────────────────────────────────────────────────────────────┘ │
 ├─────────────────────────────────────────────────────────────────────────┤
-│                        COMMAND PANEL                                   │
-│ ┌─────────────────┬─────────────────┬─────────────────┬───────────────┐ │
-│ │   MOVEMENT      │    INTERACT     │    INVENTORY    │    SPECIAL    │ │
-│ │ [Follow Amala]  │ [Talk to...]    │ [Use Item]      │ [Wait]        │ │
-│ │ [Go to Shop]    │ [Look at...]    │ [Drop Item]     │ [Help]        │ │
-│ │ [Move Away]     │ [Touch...]      │ [Examine]       │ [Save Game]   │ │
-│ └─────────────────┴─────────────────┴─────────────────┴───────────────┘ │
+│                     ADAPTIVE COMMAND PANEL                             │
+│ ┌─ ACTIVE CATEGORIES ────────────────────────────────────────────────┐ │
+│ │ [Sex: 8] [Intimacy: 12] [Violence: 4] [Clothing: 6] [Movement: 3] │ │
+│ │ ──────── Currently Showing: Intimacy (12 actions) ────────────── │ │
+│ │ [Kiss Cheek] [Hold Hand] [Embrace] [Nuzzle] [Caress] [Whisper]   │ │
+│ │ [Touch Face] [Lock Eyes] [Lean Close] [Stroke Hair] [...]        │ │
+│ │ ◀ Page 1/2 ▶ | 🔍 Filter: All | ⚡ Performance: Virtual scroll    │ │
+│ └────────────────────────────────────────────────────────────────────┘ │
 ├─────────────────┬───────────────────────────────────────┬───────────────┤
 │ STATUS & INFO   │              INPUT                    │  QUICK INFO   │
 │ Turn: Iker      │ [Enter command/speech...]             │ Location:     │
@@ -148,11 +154,12 @@ _Actions-primary interface with game-like panels_
 
 **Key Features:**
 
-- Actions elevated to primary interface element
-- Game-like command panel with clear categorization
-- Status information integrated into bottom bar
-- Narrative area optimized for readability
-- Command-line gaming aesthetic
+- Dynamic action categories with real-time count display
+- Paginated interface supporting 30+ actions per category
+- Virtual scrolling for performance with large action sets
+- Context-aware action filtering and organization
+- Adaptive command panel that expands based on available actions
+- Prominent character portraits in narrative display area
 
 ### Concept 3: "Visual Novel Experience"
 
@@ -160,25 +167,32 @@ _Character and dialogue focused design_
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                     📖 VISUAL NOVEL INTERFACE                          │
+│                  📖 PORTRAIT-INTEGRATED DIALOGUE                       │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ ┌─────────────┐                                         ┌─────────────┐ │
-│ │   Iker      │              DIALOGUE SPACE             │   Amala     │ │
-│ │ [Portrait]  │                                         │ [Portrait]  │ │
-│ │             │  "The coffee shop buzzes with          │             │ │
-│ │ Speaking    │   afternoon conversations..."           │ Listening   │ │
-│ │             │                                         │             │ │
-│ │ Happy       │  💬 "What would you like to do?"       │ Attentive   │ │
-│ └─────────────┘                                         └─────────────┘ │
+│                        IMMERSIVE CHAT SPACE                            │
+│ ╭────────────────────────────────────────────────────────────────────╮  │
+│ │  [🖼️ IKER PORTRAIT]  💬 "The coffee shop buzzes with afternoon    │  │
+│ │   120x120px prominent     conversations. What should we do?"       │  │
+│ │   High-resolution         ─────────────────────────────            │  │
+│ │   Expression: Curious                                              │  │
+│ ╰────────────────────────────────────────────────────────────────────╯  │
+│                                                                         │
+│ ╭────────────────────────────────────────────────────────────────────╮  │
+│ │                      💬 [🖼️ AMALA PORTRAIT] "I'd love to hear     │  │
+│ │                          120x120px prominent      about your       │  │
+│ │                          High-resolution          morning!"        │  │
+│ │                          Expression: Warm                          │  │
+│ ╰────────────────────────────────────────────────────────────────────╯  │
 ├─────────────────────────────────────────────────────────────────────────┤
-│                         CHOICE PANEL                                   │
+│                    DYNAMIC ACTION SELECTION                            │
 │ ┌─────────────────────────────────────────────────────────────────────┐ │
-│ │                                                                     │ │
-│ │  ○ Follow Amala Castillo                                           │ │
-│ │  ○ Go to The Gilded Bean                                           │ │
-│ │  ○ Wait and observe the scene                                      │ │
-│ │  ○ Start a conversation                                            │ │
-│ │                                                                     │ │
+│ │ Categories: [Intimacy: 8] [Social: 5] [Movement: 3] [Clothing: 2]  │ │
+│ │ ─── Currently: Intimacy (Context: Close proximity to Amala) ─────   │ │
+│ │  ○ Kiss her cheek gently        ○ Hold her hand                    │ │
+│ │  ○ Nuzzle face into her neck    ○ Lean in for deep kiss            │ │
+│ │  ○ Caress her arm lovingly      ○ Whisper sweet words              │ │
+│ │  ○ Lock eyes romantically       ○ Embrace tenderly                 │ │
+│ │ [Show 24 more intimacy actions...] | Switch to: [Social] [Movement] │ │
 │ └─────────────────────────────────────────────────────────────────────┘ │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ Scene: The Gilded Bean - Outside Tables     [Settings] [Save] [Menu]   │
@@ -187,11 +201,12 @@ _Character and dialogue focused design_
 
 **Key Features:**
 
-- Character portraits as primary visual elements
-- Dialogue-centric presentation
-- Choice-based interaction (radio button style)
-- Clean, distraction-free reading experience
-- Visual novel gaming conventions
+- Large, prominent character portraits integrated directly into speech bubbles
+- Portrait-centric design emphasizing visual character recognition
+- Dynamic action categories with contextual relevance (intimacy from proximity)
+- Expandable action lists accommodating 30+ options per category
+- Multiple portrait support for group conversations
+- Clean, immersive dialogue experience with visual character focus
 
 ### Concept 4: "RPG Dashboard"
 
@@ -201,36 +216,37 @@ _Information-dense gaming interface with depth_
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      ⚔️ RPG DASHBOARD                                   │
 ├──────────────────┬────────────────────────────────────┬─────────────────┤
-│ PARTY STATUS     │            EVENT LOG               │  WORLD STATE    │
-│ ╭──────────────╮ │ ╭────────────────────────────────╮ │ ╭─────────────╮ │
-│ │ Iker Aguirre │ │ │ > Amala smiles warmly at you   │ │ │ Location:   │ │
-│ │ [Portrait]   │ │ │ > The coffee shop hums with    │ │ │ Coffee Shop │ │
-│ │ Status: Good │ │ │   conversation                 │ │ │ Exterior    │ │
-│ │ Mood: Calm   │ │ │ > You notice the golden hour   │ │ │             │ │
-│ ╰──────────────╯ │ │   lighting                     │ │ │ NPCs: 1     │ │
-│                  │ ╰────────────────────────────────╯ │ │ Items: 0    │ │
-│ RECENT ACTIONS   │                                    │ │ Exits: 1    │ │
-│ • Looked around  │                                    │ ╰─────────────╯ │
-│ • Observed scene │                                    │                 │
+│ ACTIVE CHARACTER │         INTEGRATED CHAT LOG        │  ROUND STATE    │
+│ ╭──────────────╮ │ ╭─[🖼️ AMALA] "Coffee shop hums   ╮ │ ╭─────────────╮ │
+│ │ Iker Aguirre │ │ │  Large portrait  with afternoon │ │ │ Round: 15   │ │
+│ │ [Portrait]   │ │ │  in bubble      conversations"  │ │ │ Turn: 3/8   │ │
+│ │ Status: Good │ │ ╰────────────────────────────────╯ │ │             │ │
+│ │ Turn: Active │ │ ╭─[🖼️ IKER] "I love the golden  ╮ │ │ Characters: │ │
+│ ╰──────────────╯ │ │  Large portrait   hour lighting"│ │ │ Active: 8   │ │
+│                  │ │  in bubble                      │ │ │ Queue: 127  │ │
+│ RECENT ACTIONS   │ ╰────────────────────────────────╯ │ │ Location:   │ │
+│ • Looked around  │                                    │ │ Coffee Shop │ │
+│ • Observed scene │                                    │ ╰─────────────╯ │
 ├──────────────────┴────────────────────────────────────┴─────────────────┤
-│                           ACTION BAR                                   │
-│ ╔══════════════╦══════════════╦══════════════╦══════════════╦═════════╗ │
-│ ║   MOVEMENT   ║   SOCIAL     ║   ITEMS      ║   EXAMINE    ║ SPECIAL ║ │
-│ ╠══════════════╬══════════════╬══════════════╬══════════════╬═════════╣ │
-│ ║ Follow Amala ║ Talk to      ║ Check Pockets║ Look Around  ║ Wait    ║ │
-│ ║ Enter Shop   ║ Approach     ║ Use Item     ║ Study Person ║ Help    ║ │
-│ ║ Move Away    ║ Wave         ║ Drop Item    ║ Read Signs   ║ Settings║ │
-│ ╚══════════════╩══════════════╩══════════════╩══════════════╩═════════╝ │
+│                     EXPANDABLE ACTION MATRIX                           │
+│ ╔═ INTIMACY: 15 ═╦═ VIOLENCE: 7 ═╦═ CLOTHING: 4 ═╦═ MOVEMENT: 3 ═╦═══╗ │
+│ ║ Kiss Cheek     ║ Threaten      ║ Remove Shirt  ║ Follow Amala ║...║ │
+│ ║ Nuzzle Neck    ║ Push Away     ║ Adjust Dress  ║ Enter Shop   ║   ║ │
+│ ║ [+13 more...]  ║ [+5 more...]  ║ [+2 more...]  ║ Move Away    ║   ║ │
+│ ╠════════════════╬═══════════════╬═══════════════╬══════════════╬═══╣ │
+│ ║ 🔽 Expand All Categories | Page 1/3 | Virtual Scroll: ON      ║   ║ │
+│ ╚════════════════════════════════════════════════════════════════════╝ │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Key Features:**
 
-- Rich information panels with gaming aesthetics
-- Event log combines narrative and perception
-- Detailed status information
-- Action bar with clear visual categories
-- RPG-style borders and visual depth
+- Round management system supporting 8 active characters with 127 queued
+- Large character portraits integrated directly into chat log bubbles
+- Expandable action matrix with category counts (Intimacy: 15, Violence: 7, etc.)
+- Virtual scrolling and pagination for performance with many actions
+- Scalable character tracking for locations with hundreds of entities
+- Rich information panels with gaming aesthetics and performance optimization
 
 ### Concept 5: "Immersive Overlay"
 
@@ -238,35 +254,209 @@ _Contextual floating panels over atmospheric background_
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                   🌅 IMMERSIVE ATMOSPHERE                               │
-│ ╭─ TURN STATUS ──╮      [Background: Coffee shop scene]    ╭─ QUICK ──╮ │
-│ │ Iker Aguirre   │                                         │ Location │ │
-│ │ [Small Avatar] │        💬 Speech Bubble Area            │ Outside  │ │
-│ │ Your Turn      │           [Floating over scene]        │ Tables   │ │
-│ ╰────────────────╯                                         │          │ │
-│                                                            │ People:1 │ │
-│                           ┌─────────────────────┐          ╰──────────╯ │
-│                           │ "What should I do?" │                       │
-│                           └─────────────────────┘                       │
+│                   🌅 SCALABLE IMMERSIVE INTERFACE                       │
+│ ╭─ ROUND STATUS ─╮      [Background: Coffee shop scene]    ╭─ PEOPLE ──╮ │
+│ │ Round: 15      │    ╭─[🖼️ IKER] "What should I do?"    │ Active: 8  │ │
+│ │ Turn: 3/8      │    │  Large prominent portrait         │ Queue: 127 │ │
+│ │ Character:     │    │  in floating speech bubble       │ Location:  │ │
+│ │ Iker (Active)  │    ╰───────────────────────────────    │ Coffee     │ │
+│ ╰────────────────╯                                         │ Shop       │ │
+│                      ╭─[🖼️ AMALA] "I love this time"     ╰────────────╯ │
+│                      │  Large prominent portrait                        │
+│                      │  Expression: Content                             │
+│                      ╰─────────────────────────────                     │
 │                                                                         │
-│                     ╭─ FLOATING ACTION MENU ──╮                        │
-│                     │ ● Follow Amala Castillo  │                        │
-│                     │ ● Go to The Gilded Bean  │                        │
-│                     │ ● Wait and observe       │                        │
-│                     │ ● Start conversation     │                        │
-│                     ╰─────────────────────────╯                        │
+│                  ╭─ CONTEXTUAL ACTION OVERLAY ──╮                       │
+│                  │ [Intimacy: 32] [Social: 12] [Movement: 5]           │
+│                  │ ● Kiss cheek tenderly    ● Nuzzle neck lovingly     │
+│                  │ ● Hold hand gently       ● Whisper sweet words      │
+│                  │ ● Caress face softly     ● Embrace warmly           │
+│                  │ [Show 26 more intimacy actions...] [Switch category] │
+│                  ╰─────────────────────────────────────────────────     │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ 🎭 [Perception Updates Float Here]          [Enter Speech...] [Confirm] │
+│ 🎭 [Round Progress: 127 characters pending] [Enter Speech...] [Confirm] │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Key Features:**
 
-- Atmospheric scene backgrounds
-- Minimal, floating interface elements
-- Context-sensitive panels that appear as needed
-- Immersive, distraction-free experience
-- Mobile-friendly overlay design
+- Round management overlay displaying turn order (3/8 active, 127 queued)
+- Large character portraits prominently featured in floating speech bubbles
+- Dynamic action categories with real-time counts (Intimacy: 32, Social: 12)
+- Contextual action overlay supporting 30+ actions per category
+- Scalable character tracking for crowded locations
+- Performance-optimized rendering for hundreds of characters
+- Immersive background integration with functional overlay panels
+
+---
+
+## Round Management & Scalability Architecture
+
+### Challenge Overview
+
+The Living Narrative Engine must handle game rounds with an arbitrary number of characters:
+
+- **Small gatherings**: 5-10 characters in the same location
+- **Large events**: Hundreds of characters in big world locations
+- **Dynamic participation**: Characters can enter/leave locations mid-round
+- **Performance constraints**: Real-time updates without UI lag
+
+### Round Management System Design
+
+#### Turn Order & Queue Visualization
+
+```css
+.round-manager {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  padding: 12px;
+  background: rgba(45, 52, 73, 0.95);
+  border-radius: 8px;
+}
+
+.active-turn-display {
+  /* Current character's turn prominently displayed */
+  min-width: 120px;
+  text-align: center;
+}
+
+.round-progress-bar {
+  /* Visual progress through current round */
+  position: relative;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.character-queue-counter {
+  /* Shows waiting character count */
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+```
+
+#### Scalable Character Tracking
+
+**For Small Groups (5-10 characters):**
+
+```html
+<!-- Show all characters with portraits -->
+<div class="character-turn-list">
+  <div class="character-turn active">
+    <img src="iker-portrait.jpg" alt="Iker" />
+    <span>Iker (Active)</span>
+  </div>
+  <div class="character-turn pending">
+    <img src="amala-portrait.jpg" alt="Amala" />
+    <span>Amala (Next)</span>
+  </div>
+  <!-- ... up to 10 characters -->
+</div>
+```
+
+**For Large Groups (100+ characters):**
+
+```html
+<!-- Summarized display with expandable details -->
+<div class="character-summary">
+  <div class="active-character">
+    <img src="current-portrait.jpg" alt="Current Character" />
+    <span>Character 1 of 127</span>
+  </div>
+  <div class="queue-summary">
+    <span>Next: 3 players, 124 NPCs</span>
+    <button class="expand-queue">View All →</button>
+  </div>
+</div>
+```
+
+#### Performance Optimization Strategies
+
+**Virtual Scrolling for Character Lists:**
+
+- Only render visible characters in UI
+- Lazy load character portraits and data
+- Implement infinite scroll for large lists
+- Use character ID caching for quick lookups
+
+**Efficient Round Processing:**
+
+- Process character actions in batches
+- Update UI incrementally rather than full refreshes
+- Use Web Workers for complex round calculations
+- Implement character priority queues for fair turn order
+
+**Memory Management:**
+
+- Unload inactive character data after rounds
+- Compress character state for storage
+- Use object pooling for character UI components
+- Implement garbage collection triggers
+
+### Technical Implementation
+
+#### Round State Management
+
+```javascript
+class RoundManager {
+  constructor(maxActiveCharacters = 10) {
+    this.currentRound = 1;
+    this.activeCharacters = new Map(); // Currently participating
+    this.queuedCharacters = new Queue(); // Waiting to act
+    this.maxActiveDisplay = maxActiveCharacters;
+  }
+
+  addCharacterToRound(character) {
+    if (this.activeCharacters.size < this.maxActiveDisplay) {
+      this.activeCharacters.set(character.id, character);
+    } else {
+      this.queuedCharacters.enqueue(character);
+    }
+    this.updateUI();
+  }
+
+  processCharacterAction(characterId, action) {
+    // Process action and move to next character
+    const nextCharacter = this.getNextCharacter();
+    this.setActiveCharacter(nextCharacter);
+    this.updateRoundProgress();
+  }
+}
+```
+
+#### UI Component Architecture
+
+```javascript
+class ScalableCharacterList {
+  constructor(container, virtualScrolling = true) {
+    this.container = container;
+    this.virtualScrolling = virtualScrolling;
+    this.visibleRange = { start: 0, end: 10 };
+    this.characterCache = new Map();
+  }
+
+  renderCharacters(characters) {
+    if (characters.length <= 10) {
+      return this.renderAllCharacters(characters);
+    } else {
+      return this.renderVirtualizedList(characters);
+    }
+  }
+
+  renderVirtualizedList(characters) {
+    // Only render visible characters for performance
+    const visibleCharacters = characters.slice(
+      this.visibleRange.start,
+      this.visibleRange.end
+    );
+
+    return visibleCharacters.map((char) => this.createCharacterElement(char));
+  }
+}
+```
 
 ---
 
@@ -342,92 +532,390 @@ background:
 }
 ```
 
-### Speech Bubble Transformation
+### Portrait-Integrated Speech Bubble Design
 
-#### Enhanced Visual Design:
+#### Primary Feature: Prominent Character Portraits
+
+The character portraits are the **main feature** of the interface, enabling users to easily picture and identify other characters. They must be prominently displayed **within** speech bubbles, not alongside them.
 
 ```css
-.speech-bubble {
+.speech-bubble-with-portrait {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
   background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
   border: 2px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 8px 25px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   position: relative;
+  margin-bottom: 16px;
 
   /* Animated entry */
   animation: bubbleSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-/* Character-specific styling */
-.speech-bubble.player {
-  background: linear-gradient(135deg, #8b5a3c 0%, #a0673d 100%);
-  border-color: rgba(255, 215, 160, 0.2);
+.character-portrait {
+  /* PROMINENT PORTRAIT - Main visual feature */
+  width: 120px;
+  height: 120px;
+  min-width: 120px; /* Prevent shrinking */
+  border-radius: 12px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.1);
+
+  /* High-quality rendering */
+  object-fit: cover;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+
+  /* Interactive state */
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-.speech-bubble.npc {
-  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-  border-color: rgba(160, 174, 192, 0.2);
+.character-portrait:hover {
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.5),
+    0 0 0 4px rgba(255, 255, 255, 0.1);
+}
+
+.speech-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.character-name-prominent {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  margin-bottom: 4px;
+}
+
+.speech-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #e8eaf6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Character-specific portrait frames */
+.speech-bubble-with-portrait.player .character-portrait {
+  border-color: rgba(255, 215, 160, 0.4);
+  box-shadow:
+    0 8px 25px rgba(139, 90, 60, 0.4),
+    inset 0 2px 0 rgba(255, 215, 160, 0.2);
+}
+
+.speech-bubble-with-portrait.npc .character-portrait {
+  border-color: rgba(160, 174, 192, 0.4);
+  box-shadow:
+    0 8px 25px rgba(74, 85, 104, 0.4),
+    inset 0 2px 0 rgba(160, 174, 192, 0.2);
+}
+
+/* Group conversation support */
+.speech-bubble-with-portrait.group-speaker {
+  /* Multiple portrait spacing */
+  .character-portrait {
+    width: 100px;
+    height: 100px;
+    min-width: 100px;
+  }
 }
 ```
 
-### Action Interface Revolution
-
-#### Current Problems:
-
-- Basic web form buttons lack gaming personality
-- Poor visual categorization
-- No clear interaction feedback
-
-#### Game-Appropriate Action Cards:
+#### Mobile Portrait Optimization
 
 ```css
-.action-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
+@media (max-width: 768px) {
+  .character-portrait {
+    /* Maintain prominence on mobile */
+    width: 100px;
+    height: 100px;
+    min-width: 100px;
+  }
+
+  .speech-bubble-with-portrait {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .character-name-prominent {
+    font-size: 1.2rem;
+  }
+
+  .speech-text {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .speech-bubble-with-portrait {
+    /* Stack vertically on very small screens */
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .character-portrait {
+    /* Even more prominent when stacked */
+    width: 140px;
+    height: 140px;
+    min-width: 140px;
+  }
+}
+```
+
+### Dynamic Action System Architecture
+
+#### Challenge: Mod-Driven Content Scalability
+
+The action system must support:
+
+- **Unknown categories**: Sex, intimacy, violence, clothing mods, plus new ones added weekly
+- **Variable quantities**: Context could generate 30+ actions per category
+- **Performance**: Smooth UI with hundreds of available actions
+- **Discoverability**: Users can find relevant actions among many options
+
+#### Scalable Action Container Design:
+
+```css
+.dynamic-action-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 16px;
+  background: rgba(45, 52, 73, 0.95);
   border-radius: 12px;
-  padding: 16px 20px;
-  color: white;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  position: relative;
+
+  /* Performance optimization */
+  contain: layout style paint;
+  will-change: scroll-position;
+}
+
+.action-category {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Interactive glow effect */
-  box-shadow:
-    0 4px 15px rgba(102, 126, 234, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
 }
 
-.action-card:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 8px 25px rgba(102, 126, 234, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  user-select: none;
 }
 
-.action-card:active {
-  transform: translateY(0);
-  box-shadow:
-    0 2px 10px rgba(102, 126, 234, 0.4),
-    inset 0 2px 4px rgba(0, 0, 0, 0.2);
+.category-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-transform: capitalize;
 }
 
-/* Category-based color coding */
-.action-card.movement {
-  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+.category-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
 }
-.action-card.social {
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+
+.category-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+  padding: 16px;
+  max-height: 200px;
+  overflow-y: auto;
 }
-.action-card.inventory {
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+
+/* Virtual scrolling support for large action lists */
+.action-list-virtualized {
+  height: 200px;
+  overflow-y: auto;
 }
-.action-card.special {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+.action-card-dynamic {
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+
+  /* Text overflow handling */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.action-card-dynamic:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+
+  /* Show full text on hover */
+  white-space: normal;
+  z-index: 10;
+}
+
+/* Dynamic category colors */
+.action-category[data-category='intimacy'] .category-header {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+}
+
+.action-category[data-category='violence'] .category-header {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.action-category[data-category='clothing'] .category-header {
+  background: linear-gradient(135deg, #f39c12 0%, #d35400 100%);
+}
+
+.action-category[data-category='social'] .category-header {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.action-category[data-category='movement'] .category-header {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+}
+
+/* Generic fallback for new mod categories */
+.action-category[data-category]:not([data-category='intimacy']):not(
+    [data-category='violence']
+  ):not([data-category='clothing']):not([data-category='social']):not(
+    [data-category='movement']
+  )
+  .category-header {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+}
+```
+
+#### Performance Optimization for Large Action Lists:
+
+```css
+/* Virtual scrolling container */
+.virtual-action-list {
+  height: 300px;
+  overflow: auto;
+  contain: strict;
+}
+
+/* Intersection observer targets */
+.action-card-dynamic[data-index] {
+  /* Only render visible actions */
+  min-height: 40px;
+}
+
+/* Pagination controls */
+.action-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.page-indicator {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.page-controls button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 6px 12px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.page-controls button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.page-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+```
+
+#### Search and Filter Integration:
+
+```css
+.action-search-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(45, 52, 73, 0.98);
+  backdrop-filter: blur(10px);
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-search-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.95rem;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.action-filter-chips {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-chip.active {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 ```
 
@@ -633,86 +1121,90 @@ background:
 
 ## Implementation Roadmap
 
-### Phase 1: Foundation (High Impact, Low Risk)
-
-**Estimated Effort: 1-2 days**
-
-#### Priority Tasks:
-
-1. **Color System Implementation**
-   - Update CSS custom properties with new gaming palette
-   - Replace current inconsistent colors throughout interface
-   - Test accessibility compliance (WCAG AA)
-
-2. **Typography Enhancement**
-   - Implement font hierarchy system
-   - Distinguish narrative text from UI text clearly
-   - Add proper text shadows and contrast
-
-3. **Background Transformation**
-   - Replace empty gray void with atmospheric gradient
-   - Add subtle texture patterns for visual interest
-   - Ensure readability of overlaid content
-
-**Technical Approach:**
-
-- Modify `css/themes/_default-theme.css` with new color variables
-- Update component CSS files to use new typography system
-- Test across existing content to ensure no regressions
-
-### Phase 2: Component Enhancement (High Impact, Medium Risk)
+### Phase 1: Core Architecture (High Impact, Medium Risk)
 
 **Estimated Effort: 3-4 days**
 
 #### Priority Tasks:
 
-1. **Speech Bubble Redesign**
-   - Implement enhanced visual styling with gradients and shadows
-   - Add character-specific color coding
-   - Improve entry animations and micro-interactions
+1. **Dynamic Action System Foundation**
+   - Implement modular action category loading
+   - Create expandable/collapsible action containers
+   - Add virtual scrolling for large action lists (30+ per category)
+   - Build search and filter functionality
 
-2. **Action Button Transformation**
-   - Convert from basic buttons to game-appropriate action cards
-   - Implement category-based color coding
-   - Add hover states, selection feedback, and transitions
+2. **Portrait-Integrated Speech Bubbles**
+   - Redesign speech bubble components to feature prominent portraits (120x120px)
+   - Implement character-specific portrait frames and styling
+   - Add support for group conversations with multiple portraits
+   - Optimize portrait loading and caching
 
-3. **Panel Visual Unification**
-   - Apply consistent styling across all interface panels
-   - Implement backdrop blur effects where appropriate
-   - Add subtle animations for panel appearance
+3. **Round Management System**
+   - Create scalable character tracking (5-10 to hundreds)
+   - Implement turn order visualization and queue management
+   - Add performance optimization for large character lists
+   - Build character state management and UI updates
 
 **Technical Approach:**
 
-- Modify `css/components/_speech-bubbles.css` with enhanced styles
-- Update `css/components/_actions-widget.css` for card-based design
-- Enhance `css/components/_widgets-base.css` for unified panel system
+- Create `DynamicActionSystem` class for mod-driven action handling
+- Modify speech bubble components to integrate large portraits
+- Implement `ScalableRoundManager` with virtual rendering
+- Add performance monitoring and optimization hooks
 
-### Phase 3: Layout Optimization (Medium Impact, Medium Risk)
+### Phase 2: Visual Polish & Performance (Medium Impact, Low Risk)
 
 **Estimated Effort: 2-3 days**
 
 #### Priority Tasks:
 
-1. **Information Hierarchy Improvement**
-   - Adjust panel sizes for better content prioritization
-   - Implement responsive behavior for different screen sizes
-   - Optimize whitespace usage across interface
+1. **Color System & Typography**
+   - Update CSS custom properties with new gaming palette
+   - Implement font hierarchy emphasizing character names and portraits
+   - Test accessibility compliance (WCAG AA) with prominent portraits
 
-2. **Interactive Feedback Enhancement**
-   - Add loading states and transition animations
-   - Implement visual feedback for user actions
-   - Improve focus states for accessibility
+2. **Background & Atmospheric Design**
+   - Replace empty gray void with atmospheric gradient
+   - Add subtle texture patterns complementing character portraits
+   - Ensure portrait prominence isn't diminished by background
 
-3. **Mobile Experience Optimization**
-   - Adapt layout for tablet and mobile devices
-   - Implement touch-friendly interaction areas
-   - Test responsive behavior across breakpoints
+3. **Performance Optimization**
+   - Implement efficient DOM rendering for hundreds of characters
+   - Add lazy loading for character portraits and action content
+   - Optimize CSS for smooth scrolling and animations
 
 **Technical Approach:**
 
-- Modify `css/layout/_grid.css` for improved responsive behavior
-- Update component CSS with enhanced interactive states
-- Add new breakpoints and mobile-specific optimizations
+- Modify `css/themes/_default-theme.css` with portrait-focused color system
+- Update component CSS to emphasize character portraits as main feature
+- Implement performance profiling and optimization for large-scale operations
+
+### Phase 3: Mobile & Scalability Testing (Low Impact, Medium Risk)
+
+**Estimated Effort: 2-3 days**
+
+#### Priority Tasks:
+
+1. **Mobile Portrait Experience**
+   - Ensure character portraits remain prominent on mobile (100-140px)
+   - Implement touch-friendly action category navigation
+   - Test portrait loading performance on mobile networks
+
+2. **Scalability Stress Testing**
+   - Test interface with 100+ character scenarios
+   - Validate action system with 30+ actions per category
+   - Profile memory usage and rendering performance
+
+3. **Cross-Browser Compatibility**
+   - Ensure portrait rendering works across browsers
+   - Test virtual scrolling performance on various devices
+   - Validate accessibility with screen readers
+
+**Technical Approach:**
+
+- Add mobile-specific CSS for prominent portrait display
+- Create performance testing scenarios with large character counts
+- Implement cross-browser testing for portrait and action systems
 
 ### Phase 4: Advanced Features (Medium Impact, High Risk)
 
@@ -918,24 +1410,31 @@ background:
 
 ## Conclusion
 
-This brainstorm provides five distinct design concepts and comprehensive implementation guidance to transform the Living Narrative Engine interface from a basic web application into a professional, immersive gaming experience.
+This corrected brainstorm addresses the specific requirements of the Living Narrative Engine, providing five distinct design concepts that accommodate dynamic mod-driven content, prominent character portraits, and massive scalability needs.
 
-**Key Transformation Areas:**
+**Key Corrections Addressed:**
 
-1. **Visual Hierarchy**: Clear focus on narrative content with supporting panels
-2. **Gaming Aesthetics**: Rich colors, depth, and interactive feedback
-3. **Component Quality**: Professional-grade buttons, panels, and typography
-4. **Responsive Design**: Works beautifully across all device sizes
-5. **Accessibility**: Maintains high standards while improving visual appeal
+1. **Dynamic Action System**: Supports unlimited mod categories (sex, intimacy, violence, clothing) with 30+ actions per category
+2. **Prominent Character Portraits**: 120x120px portraits integrated directly within speech bubbles as the main visual feature
+3. **Round Management**: Scalable system handling 5-10 to hundreds of characters with efficient turn order management
+4. **Performance Architecture**: Virtual scrolling, lazy loading, and optimization for large-scale content
+5. **Mod Extensibility**: Flexible design patterns that accommodate unknown categories added weekly
 
-**Recommended Approach:**
+**Recommended Implementation Approach:**
 
-- Start with **Phase 1 (Foundation)** for immediate visual impact
-- Iterate through **Phase 2 (Components)** for functional improvements
-- Consider **Phase 3 (Layout)** based on user feedback
-- Evaluate **Phase 4 (Advanced)** for long-term enhancement
+- **Phase 1 (Core Architecture)**: Build dynamic action system, portrait integration, and round management
+- **Phase 2 (Visual Polish)**: Implement gaming aesthetics that complement prominent character portraits
+- **Phase 3 (Scalability Testing)**: Validate performance with 100+ characters and 30+ actions per category
+- **Phase 4 (Advanced Features)**: Add optional enhancements based on user feedback
 
-The designs maintain all existing functionality while dramatically improving the visual experience, making the interface worthy of the sophisticated narrative engine it represents.
+**Critical Success Factors:**
+
+- Character portraits must remain the **primary visual feature** at all screen sizes
+- Action system must handle unlimited categories without performance degradation
+- Round management must scale from intimate conversations to massive gatherings
+- All designs must support real-time content updates from mod system
+
+The revised designs now accurately reflect the Living Narrative Engine's unique requirements while maintaining professional gaming aesthetics and accessibility standards.
 
 ---
 

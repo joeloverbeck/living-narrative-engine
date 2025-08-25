@@ -279,7 +279,7 @@ describe('Tag Removal Performance Tests', () => {
         // Actual measurement runs
         const runTimes = [];
         let validationData = null;
-        
+
         for (let run = 0; run < measurementRuns; run++) {
           const notes = createTestNotesWithoutTags(noteCount);
           const gameState = createGameStateWithNotes(notes);
@@ -301,10 +301,12 @@ describe('Tag Removal Performance Tests', () => {
             validationData = { promptData, formattedData };
           }
         }
-        
+
         // Validate processing success after measurements
         expect(validationData.promptData.notesArray).toHaveLength(noteCount);
-        expect(validationData.formattedData.notesContent.length).toBeGreaterThan(0);
+        expect(
+          validationData.formattedData.notesContent.length
+        ).toBeGreaterThan(0);
 
         // Use median time to exclude outliers
         runTimes.sort((a, b) => a - b);

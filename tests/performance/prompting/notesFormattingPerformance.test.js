@@ -188,7 +188,7 @@ describe('Notes Formatting Performance', () => {
       // The ratio of time/size should not increase dramatically
       const ratios = timings.map((t) => t.time / t.size);
       const firstRatio = ratios[0];
-      
+
       ratios.forEach((ratio, index) => {
         if (index > 0) {
           // Allow up to 2x degradation in performance ratio
@@ -309,7 +309,7 @@ describe('Notes Formatting Performance', () => {
       // Should handle many unique subjects efficiently
       expect(processingTime).toBeLessThan(200);
       expect(promptData.notesArray).toHaveLength(100);
-      
+
       // Verify all unique subjects are present
       for (let i = 1; i <= 100; i++) {
         expect(groupedContent).toContain(`### Unique Subject ${i}`);
