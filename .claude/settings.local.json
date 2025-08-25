@@ -105,7 +105,10 @@
       "mcp__playwright__browser_resize",
       "mcp__playwright__browser_close",
       "mcp__morphllm-fast-apply__write_file",
-      "mcp__playwright__browser_hover"
+      "mcp__playwright__browser_hover",
+      "Bash(NODE_ENV=test npx jest tests/performance/actions/tracing/loadTesting.test.js --testNamePattern=\"should handle memory pressure during extended operation\" --verbose --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/performance/actions/tracing/pipelineTracing.performance.test.js --testNamePattern=\"should not degrade under high concurrency\" --no-coverage)",
+      "Bash(export NODE_ENV=test)"
     ],
     "deny": []
   }

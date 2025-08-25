@@ -104,6 +104,9 @@ describe('renderPortraitElements', () => {
     );
     expect(container.getAttribute('tabindex')).toBe('0');
     expect(container.getAttribute('role')).toBe('button');
+    expect(container.getAttribute('aria-label')).toBe(
+      'Town Square portrait. Hover or focus to see description.'
+    );
   });
 
   it('does not add tooltip when no description', () => {

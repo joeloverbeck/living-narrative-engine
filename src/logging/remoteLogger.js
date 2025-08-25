@@ -182,7 +182,7 @@ class RemoteLogger {
       requestTimeout: 5000,
       metadataLevel: 'standard',
       enableCategoryCache: true,
-      categoryCacheSize: 1000,
+      categoryCacheSize: 200, // Reduced from 1000 to 200 for better memory efficiency
     };
 
     const mergedConfig = { ...defaultConfig, ...config };
@@ -529,12 +529,41 @@ class RemoteLogger {
    * @returns {Promise<void>}
    */
   async #sendBatch(logs) {
-    return await this.#circuitBreaker.execute(async () => {
-      return await this.#retryWithBackoff(
-        () => this.#sendHttpRequest(logs),
-        this.#retryAttempts
-      );
-    });
+    try {
+      const result = await this.#circuitBreaker.execute(async () => {
+        return await this.#retryWithBackoff(
+          () => this.#sendHttpRequest(logs),
+          this.#retryAttempts
+        );
+      });
+      
+      // Clean up metadata after successful transmission to free memory
+      this.#cleanupLogMetadata(logs);
+      
+      return result;
+    } catch (error) {
+      // Re-throw error after cleanup attempt
+      throw error;
+    }
+  }
+
+  /**
+   * Clean up log metadata to free memory after transmission.
+   *
+   * @private
+   * @param {DebugLogEntry[]} logs - Logs to clean up
+   */
+  #cleanupLogMetadata(logs) {
+    // Clear originalArgs references to allow garbage collection
+    for (const log of logs) {
+      if (log.metadata && log.metadata.originalArgs) {
+        log.metadata.originalArgs = null;
+      }
+      // Clear the entire metadata object to be thorough
+      if (log.metadata) {
+        log.metadata = null;
+      }
+    }
   }
 
   /**

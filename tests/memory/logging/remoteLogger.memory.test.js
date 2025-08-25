@@ -114,6 +114,8 @@ describe('RemoteLogger - Memory Usage Tests', () => {
           batchSize: 100,
           flushInterval: 500, // Shorter interval for faster test
           requestTimeout: 1000, // Shorter timeout for test env
+          categoryCacheSize: 50, // Small cache for memory test
+          metadataLevel: 'minimal', // Reduce metadata collection for memory test
         },
         dependencies: { consoleLogger: mockConsoleLogger },
       });
@@ -169,13 +171,16 @@ describe('RemoteLogger - Memory Usage Tests', () => {
       console.log(`Bytes per operation: ${bytesPerOperation.toFixed(2)}`);
 
       // Adjust thresholds based on environment
+      // With optimizations, memory usage should be significantly lower
       const memoryThreshold = global.memoryTestUtils
-        ? global.memoryTestUtils.getMemoryThreshold(50) // 50MB base, adjusted for CI
-        : 50 * 1024 * 1024;
+        ? global.memoryTestUtils.getMemoryThreshold(30) // Reduced from 50MB to 30MB
+        : 30 * 1024 * 1024;
 
+      // Bytes per operation threshold accounts for cache and metadata
+      // With hash-based cache and metadata cleanup, this should be much lower
       const bytesPerOpThreshold = global.memoryTestUtils?.isCI()
-        ? 15000
-        : 12000; // Increased to realistic threshold
+        ? 8000 // Reduced from 15000
+        : 5000; // Reduced from 12000
 
       // Should not consume excessive memory per operation
       expect(bytesPerOperation).toBeLessThan(bytesPerOpThreshold);
@@ -193,6 +198,8 @@ describe('RemoteLogger - Memory Usage Tests', () => {
           batchSize,
           flushInterval: 5000, // Long interval to test manual flushing
           requestTimeout: 1000, // Shorter timeout for test env
+          categoryCacheSize: 50, // Small cache for memory test
+          metadataLevel: 'minimal', // Reduce metadata collection for memory test
         },
         dependencies: { consoleLogger: mockConsoleLogger },
       });

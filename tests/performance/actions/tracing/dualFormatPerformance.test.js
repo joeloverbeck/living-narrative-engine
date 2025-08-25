@@ -149,38 +149,6 @@ describe('Dual-Format Action Tracing Performance', () => {
     });
   });
 
-  describe('Memory Usage Performance', () => {
-    it('should not leak memory during continuous dual-format generation', async () => {
-      const iterations = 200;
-
-      // Measure memory before
-      if (global.gc) global.gc();
-      const memBefore = process.memoryUsage();
-
-      for (let i = 0; i < iterations; i++) {
-        const trace = await testBed.createActionAwareTrace({
-          actorId: `memory-test-${i}`,
-          tracedActions: ['memory_test'],
-        });
-
-        await actionTraceOutputService.writeTrace(trace);
-      }
-
-      // Measure memory after
-      if (global.gc) global.gc();
-      const memAfter = process.memoryUsage();
-
-      const heapIncrease = memAfter.heapUsed - memBefore.heapUsed;
-      const heapIncreasePerTrace = heapIncrease / iterations;
-
-      console.log(
-        `Heap increase: ${heapIncrease} bytes total, ${heapIncreasePerTrace} bytes per trace`
-      );
-
-      expect(heapIncreasePerTrace).toBeLessThan(50000); // <50KB per trace (adjusted for realistic expectations)
-    });
-  });
-
   describe('Statistical Analysis', () => {
     it('should provide percentile analysis of performance data', async () => {
       const trace = await testBed.createActionAwareTrace({

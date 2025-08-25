@@ -20,13 +20,21 @@ describe('UNLOCK_MOVEMENT Schema Simple Test', () => {
     const schemaContent = fs.readFileSync(schemaPath, 'utf8');
     const schema = JSON.parse(schemaContent);
 
-    // Verify the schema has the expected structure
-    expect(schema.type).toBe('object');
-    expect(schema.properties.type.const).toBe('UNLOCK_MOVEMENT');
-    expect(schema.properties.parameters.properties.actor_id.type).toBe(
-      'string'
-    );
-    expect(schema.required).toEqual(['type', 'parameters']);
+    // Verify the schema has the expected structure (uses allOf pattern)
+    expect(schema.$id).toBe('schema://living-narrative-engine/operations/unlockMovement.schema.json');
+    expect(schema.title).toBe('UNLOCK_MOVEMENT Operation');
+    expect(schema.allOf).toBeDefined();
+    expect(schema.allOf.length).toBe(2);
+    
+    // Check that it references base-operation.schema.json
+    expect(schema.allOf[0].$ref).toBe('../base-operation.schema.json');
+    
+    // Check the operation-specific properties
+    expect(schema.allOf[1].properties.type.const).toBe('UNLOCK_MOVEMENT');
+    
+    // Check the $defs structure
+    expect(schema.$defs.Parameters.properties.actor_id.type).toBe('string');
+    expect(schema.$defs.Parameters.required).toEqual(['actor_id']);
   });
 
   it('should be referenced in operation.schema.json', () => {
@@ -47,16 +55,18 @@ describe('UNLOCK_MOVEMENT Schema Simple Test', () => {
   });
 
   it('should validate a valid UNLOCK_MOVEMENT operation', () => {
-    const ajv = new Ajv();
+    // Load all dependency schemas to resolve references
+    const commonSchema = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data/schemas/common.schema.json'), 'utf8'));
+    const jsonLogicSchema = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data/schemas/json-logic.schema.json'), 'utf8'));
+    const conditionSchema = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data/schemas/condition-container.schema.json'), 'utf8'));
+    const baseSchema = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data/schemas/base-operation.schema.json'), 'utf8'));
+    const unlockSchema = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data/schemas/operations/unlockMovement.schema.json'), 'utf8'));
 
-    // Load the unlockMovement schema
-    const schemaPath = path.join(
-      process.cwd(),
-      'data/schemas/operations/unlockMovement.schema.json'
-    );
-    const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
+    const ajv = new Ajv({
+      schemas: [commonSchema, jsonLogicSchema, conditionSchema, baseSchema, unlockSchema]
+    });
 
-    const validate = ajv.compile(schema);
+    const validate = ajv.compile(unlockSchema);
 
     const validOperation = {
       type: 'UNLOCK_MOVEMENT',
@@ -72,15 +82,18 @@ describe('UNLOCK_MOVEMENT Schema Simple Test', () => {
   });
 
   it('should reject an invalid UNLOCK_MOVEMENT operation', () => {
-    const ajv = new Ajv();
+    // Load all dependency schemas to resolve references
+    const commonSchema = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data/schemas/common.schema.json'), 'utf8'));
+    const jsonLogicSchema = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data/schemas/json-logic.schema.json'), 'utf8'));
+    const conditionSchema = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data/schemas/condition-container.schema.json'), 'utf8'));
+    const baseSchema = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data/schemas/base-operation.schema.json'), 'utf8'));
+    const unlockSchema = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data/schemas/operations/unlockMovement.schema.json'), 'utf8'));
 
-    const schemaPath = path.join(
-      process.cwd(),
-      'data/schemas/operations/unlockMovement.schema.json'
-    );
-    const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
+    const ajv = new Ajv({
+      schemas: [commonSchema, jsonLogicSchema, conditionSchema, baseSchema, unlockSchema]
+    });
 
-    const validate = ajv.compile(schema);
+    const validate = ajv.compile(unlockSchema);
 
     const invalidOperation = {
       type: 'UNLOCK_MOVEMENT',
