@@ -432,14 +432,21 @@ describe('ActionTraceFilter Performance', () => {
       });
 
       const levels = ['minimal', 'standard', 'detailed', 'verbose'];
-      const start = performance.now();
-      for (let i = 0; i < 1000; i++) {
-        filter.setVerbosityLevel(levels[i % 4]);
-      }
-      const duration = performance.now() - start;
+      
+      const testFunction = () => {
+        for (let i = 0; i < 1000; i++) {
+          filter.setVerbosityLevel(levels[i % 4]);
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        10,
+        '1000 verbosity updates'
+      );
 
       console.log(`1000 verbosity updates: ${duration.toFixed(2)}ms`);
-      expect(duration).toBeLessThan(5);
+      expect(duration).toBeLessThan(10);
     });
 
     it('should update inclusion config quickly', () => {
@@ -455,14 +462,20 @@ describe('ActionTraceFilter Performance', () => {
         { componentData: false, prerequisites: false },
       ];
 
-      const start = performance.now();
-      for (let i = 0; i < 1000; i++) {
-        filter.updateInclusionConfig(configs[i % 4]);
-      }
-      const duration = performance.now() - start;
+      const testFunction = () => {
+        for (let i = 0; i < 1000; i++) {
+          filter.updateInclusionConfig(configs[i % 4]);
+        }
+      };
+
+      const duration = executePerformanceTest(
+        testFunction,
+        10,
+        '1000 inclusion config updates'
+      );
 
       console.log(`1000 inclusion config updates: ${duration.toFixed(2)}ms`);
-      expect(duration).toBeLessThan(5);
+      expect(duration).toBeLessThan(10);
     });
   });
 

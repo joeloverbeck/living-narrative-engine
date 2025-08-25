@@ -16,6 +16,7 @@ import {
   createMockCharacterDefinition,
   createMockSpeechPatterns,
   createMockLLMResponse,
+  createMockSpeechPatternsArray,
 } from '../../../common/characterBuilder/speechPatternsTestHelpers.js';
 
 // Create character data compatible with production validation
@@ -220,24 +221,28 @@ describe('SpeechPatternsGenerator', () => {
         expect(result).toBeDefined();
         expect(result.speechPatterns).toHaveLength(3);
         expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalled();
-        // Verify event dispatches (events have dynamic types, just check structure)
+        // Verify event dispatches (using correct API format: dispatch(eventName, payload))
         expect(mockEventBus.dispatch).toHaveBeenCalledTimes(2);
         expect(mockEventBus.dispatch).toHaveBeenNthCalledWith(
           1,
           expect.objectContaining({
+            type: expect.any(String),
             payload: expect.objectContaining({
               characterData: expect.any(Object),
               options: expect.any(Object),
-            }),
+              timestamp: expect.any(String),
+            })
           })
         );
         expect(mockEventBus.dispatch).toHaveBeenNthCalledWith(
           2,
           expect.objectContaining({
+            type: expect.any(String),
             payload: expect.objectContaining({
               result: expect.any(Object),
               processingTime: expect.any(Number),
-            }),
+              timestamp: expect.any(String),
+            })
           })
         );
       } catch (error) {
@@ -302,9 +307,10 @@ describe('SpeechPatternsGenerator', () => {
       expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalled();
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
+          type: expect.any(String),
           payload: expect.objectContaining({
             result: expect.any(Object),
-          }),
+          })
         })
       );
     });
@@ -360,9 +366,10 @@ describe('SpeechPatternsGenerator', () => {
       expect(mockLogger.error).toHaveBeenCalled();
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
+          type: expect.any(String),
           payload: expect.objectContaining({
             error: expect.any(String),
-          }),
+          })
         })
       );
     });
@@ -376,9 +383,10 @@ describe('SpeechPatternsGenerator', () => {
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
+          type: expect.any(String),
           payload: expect.objectContaining({
             error: expect.any(String),
-          }),
+          })
         })
       );
     });
@@ -397,9 +405,10 @@ describe('SpeechPatternsGenerator', () => {
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({
+          type: expect.any(String),
           payload: expect.objectContaining({
             error: expect.any(String),
-          }),
+          })
         })
       );
     });
@@ -595,6 +604,197 @@ describe('SpeechPatternsGenerator', () => {
           processingTime: expect.any(Number),
         })
       );
+    });
+  });
+
+  /**
+   * Tests for issues fixed by speech patterns generator troubleshooting
+   * These tests specifically reproduce and verify fixes for:
+   * 1. Nested components structure validation
+   * 2. Event constants availability 
+   * 3. Character name extraction from nested data
+   */
+  describe('Troubleshooting Fixes', () => {
+    describe('Nested Components Structure Support', () => {
+      /**
+       * Create character data in the nested components format found in .character.json files
+       */
+      function createNestedComponentsCharacterData() {
+        return {
+          $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
+          id: 'test:character',
+          components: {
+            'core:name': { text: 'Joel Overberus' },
+            'core:actor': {},
+            'core:personality': {
+              traits: ['brave', 'determined', 'empathetic'],
+              background: 'A hero from another world with a strong sense of justice.',
+              motivations: ['protecting the innocent', 'finding a way home'],
+            },
+            'anatomy:body': { recipeId: 'anatomy:human_male' },
+            'core:portrait': {
+              imagePath: 'portraits/hero.png',
+              altText: 'A valiant hero with a bright sword.',
+            },
+          },
+        };
+      }
+
+      it('should validate character data with nested components structure', async () => {
+        const nestedCharacterData = createNestedComponentsCharacterData();
+
+        // This should NOT throw a validation error
+        await expect(
+          generator.generateSpeechPatterns(nestedCharacterData)
+        ).resolves.toBeDefined();
+
+        // Verify that validation passed by checking event dispatching
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'core:speech_patterns_generation_started',
+            payload: expect.objectContaining({
+              characterData: nestedCharacterData,
+            })
+          })
+        );
+      });
+
+      it('should extract character name from nested components structure', async () => {
+        const nestedCharacterData = createNestedComponentsCharacterData();
+
+        // Create a generator without schema validator to bypass strict response validation
+        const testGenerator = new SpeechPatternsGenerator({
+          logger: mockLogger,
+          llmJsonService: mockLlmJsonService,
+          llmStrategyFactory: mockLlmStrategyFactory,
+          llmConfigManager: mockLlmConfigManager,
+          eventBus: mockEventBus,
+          tokenEstimator: mockTokenEstimator,
+          // No schema validator - this allows response without required characterName
+        });
+
+        // Mock LLM response with character name (required by validation)
+        const mockResponseWithName = JSON.stringify({
+          speechPatterns: createMockSpeechPatternsArray(),
+          characterName: 'Test Character', // Required by prompt validation
+          generatedAt: new Date().toISOString(),
+          metadata: {
+            generation_time: Date.now(),
+            model: 'test-model',
+          },
+        });
+        mockLlmStrategyFactory.getAIDecision.mockResolvedValueOnce(mockResponseWithName);
+
+        // This should succeed without throwing validation errors
+        const result = await testGenerator.generateSpeechPatterns(nestedCharacterData);
+        expect(result).toBeDefined();
+        expect(result.speechPatterns).toHaveLength(3);
+      });
+
+      it('should still validate direct component format (backward compatibility)', async () => {
+        const directCharacterData = createValidCharacterData();
+
+        // This should continue to work
+        await expect(
+          generator.generateSpeechPatterns(directCharacterData)
+        ).resolves.toBeDefined();
+      });
+
+      it('should reject invalid character data without any components', async () => {
+        const invalidCharacterData = {
+          invalidField: 'no components here',
+          anotherField: 'still no components',
+        };
+
+        await expect(
+          generator.generateSpeechPatterns(invalidCharacterData)
+        ).rejects.toThrow('Character data must contain at least one character component');
+      });
+
+      it('should reject nested structure without colon-separated component keys', async () => {
+        const invalidNestedData = {
+          components: {
+            invalidComponent: { data: 'no colon in key' },
+            anotherInvalid: { data: 'also no colon' },
+          },
+        };
+
+        await expect(
+          generator.generateSpeechPatterns(invalidNestedData)
+        ).rejects.toThrow('Character data must contain at least one character component');
+      });
+    });
+
+    describe('Event Constants Handling', () => {
+      it('should dispatch events with valid event types (not undefined)', async () => {
+        const characterData = createValidCharacterData();
+
+        await generator.generateSpeechPatterns(characterData);
+
+        // Verify start event was dispatched with correct type
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'core:speech_patterns_generation_started',
+            payload: expect.objectContaining({
+              characterData,
+              timestamp: expect.any(String),
+            })
+          })
+        );
+
+        // Verify success event was dispatched with correct type  
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'core:speech_patterns_generation_completed',
+            payload: expect.objectContaining({
+              result: expect.any(Object),
+              processingTime: expect.any(Number),
+              timestamp: expect.any(String),
+            })
+          })
+        );
+      });
+
+      it('should dispatch failure event with valid event type on error', async () => {
+        const characterData = createValidCharacterData();
+        
+        // Force an error by making LLM call fail
+        mockLlmStrategyFactory.getAIDecision.mockRejectedValue(
+          new Error('LLM connection failed')
+        );
+
+        await expect(
+          generator.generateSpeechPatterns(characterData)
+        ).rejects.toThrow();
+
+        // Verify failure event was dispatched with correct type
+        expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: 'core:speech_patterns_generation_failed',
+            payload: expect.objectContaining({
+              error: expect.any(String),
+              processingTime: expect.any(Number),
+              timestamp: expect.any(String),
+            })
+          })
+        );
+      });
+
+      it('should not dispatch events with undefined types', async () => {
+        const characterData = createValidCharacterData();
+
+        await generator.generateSpeechPatterns(characterData);
+
+        // Check that no events were dispatched with undefined types
+        const dispatchCalls = mockEventBus.dispatch.mock.calls;
+        dispatchCalls.forEach(([eventObject]) => {
+          expect(eventObject).toBeDefined();
+          expect(eventObject.type).toBeDefined();
+          expect(eventObject.type).not.toBe('[object Object]');
+          expect(typeof eventObject.type).toBe('string');
+          expect(eventObject.type.length).toBeGreaterThan(0);
+        });
+      });
     });
   });
 });

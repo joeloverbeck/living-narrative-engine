@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-08-25T18:30:22.192Z",
+  "traceType": "action_aware_structured",
+  "actorId": "batch-actor-1",
+  "context": {
+    "test": true
+  },
+  "summary": {
+    "tracedActionCount": 0,
+    "totalStagesTracked": 0,
+    "sessionDuration": 0,
+    "averageStagesPerAction": 0
+  },
+  "spans": [],
+  "actions": {}
+}

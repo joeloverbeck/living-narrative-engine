@@ -6,7 +6,6 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import {
-  assertPresent,
   assertNonBlankString,
 } from '../../utils/dependencyUtils.js';
 import { validateSpeechPatternsGenerationResponse } from '../prompts/speechPatternsPrompts.js';
@@ -90,6 +89,18 @@ export class SpeechPatternsResponseProcessor {
     assertNonBlankString(rawResponse, 'LLM response');
 
     try {
+      // Log raw LLM response at info level for debugging
+      const truncatedResponse = rawResponse.length > 500 
+        ? rawResponse.substring(0, 500) + '...[truncated]'
+        : rawResponse;
+      
+      this.#logger.info('Raw LLM response received for speech patterns', {
+        responseLength: rawResponse.length,
+        characterName: context.characterName,
+        rawResponsePreview: truncatedResponse,
+        fullResponse: rawResponse, // Full response for detailed debugging
+      });
+
       this.#logger.debug('Processing LLM response for speech patterns', {
         responseLength: rawResponse.length,
         characterName: context.characterName,
@@ -411,7 +422,7 @@ export class SpeechPatternsResponseProcessor {
             failureThrowMessage: 'Invalid speech patterns response structure',
           }
         );
-      } catch (importError) {
+      } catch {
         this.#logger.debug(
           'Schema validation utility not available, using prompt validation only'
         );
