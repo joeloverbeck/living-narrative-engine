@@ -12,10 +12,10 @@ import {
   SPEECH_PATTERNS_LLM_PARAMS,
   PROMPT_VERSION_INFO,
 } from '../prompts/speechPatternsPrompts.js';
-import { 
+import {
   SpeechPatternsGenerationError,
   SpeechPatternsResponseProcessingError,
-  SpeechPatternsValidationError 
+  SpeechPatternsValidationError,
 } from '../errors/SpeechPatternsGenerationError.js';
 import { SpeechPatternsResponseProcessor } from './SpeechPatternsResponseProcessor.js';
 import { CHARACTER_BUILDER_EVENTS } from './characterBuilderService.js';
@@ -139,14 +139,11 @@ export class SpeechPatternsGenerator {
     const startTime = Date.now();
 
     try {
-      this.#logger.info(
-        'SpeechPatternsGenerator: Starting generation',
-        {
-          characterDataSize: JSON.stringify(characterData).length,
-          focusType: options.focusType,
-          patternCount: options.patternCount,
-        }
-      );
+      this.#logger.info('SpeechPatternsGenerator: Starting generation', {
+        characterDataSize: JSON.stringify(characterData).length,
+        focusType: options.focusType,
+        patternCount: options.patternCount,
+      });
 
       // Dispatch start event
       this.#eventBus.dispatch({
@@ -191,16 +188,19 @@ export class SpeechPatternsGenerator {
         },
       });
 
-      this.#logger.info('SpeechPatternsGenerator: Successfully generated speech patterns', {
-        patternCount: result.speechPatterns.length,
-        processingTime: Date.now() - startTime,
-        characterName: result.characterName,
-      });
+      this.#logger.info(
+        'SpeechPatternsGenerator: Successfully generated speech patterns',
+        {
+          patternCount: result.speechPatterns.length,
+          processingTime: Date.now() - startTime,
+          characterName: result.characterName,
+        }
+      );
 
       return result;
     } catch (error) {
       const processingTime = Date.now() - startTime;
-      
+
       this.#logger.error('SpeechPatternsGenerator: Generation failed', {
         error: error.message,
         processingTime,
@@ -241,8 +241,8 @@ export class SpeechPatternsGenerator {
     }
 
     // Check for basic character components
-    const hasCharacterComponents = Object.keys(characterData).some(
-      key => key.includes(':')
+    const hasCharacterComponents = Object.keys(characterData).some((key) =>
+      key.includes(':')
     );
 
     if (!hasCharacterComponents) {
@@ -291,7 +291,9 @@ export class SpeechPatternsGenerator {
     try {
       // Set active configuration if specified
       if (options.llmConfigId) {
-        await this.#llmConfigManager.setActiveConfiguration(options.llmConfigId);
+        await this.#llmConfigManager.setActiveConfiguration(
+          options.llmConfigId
+        );
       }
 
       const requestOptions = {
@@ -329,7 +331,10 @@ export class SpeechPatternsGenerator {
    */
   async #parseResponse(rawResponse, context) {
     try {
-      return await this.#responseProcessor.processResponse(rawResponse, context);
+      return await this.#responseProcessor.processResponse(
+        rawResponse,
+        context
+      );
     } catch (error) {
       throw new SpeechPatternsResponseProcessingError(
         `Failed to parse LLM response: ${error.message}`,
@@ -381,20 +386,26 @@ export class SpeechPatternsGenerator {
     const patterns = response.speechPatterns;
 
     // Check minimum pattern count
-    const minPatterns = options.patternCount ? Math.max(3, Math.floor(options.patternCount * 0.7)) : 3;
+    const minPatterns = options.patternCount
+      ? Math.max(3, Math.floor(options.patternCount * 0.7))
+      : 3;
     if (patterns.length < minPatterns) {
-      throw new Error(`Insufficient patterns generated: ${patterns.length} < ${minPatterns}`);
+      throw new Error(
+        `Insufficient patterns generated: ${patterns.length} < ${minPatterns}`
+      );
     }
 
     // Check for duplicate patterns
-    const uniquePatterns = new Set(patterns.map(p => p.pattern.toLowerCase()));
+    const uniquePatterns = new Set(
+      patterns.map((p) => p.pattern.toLowerCase())
+    );
     if (uniquePatterns.size < patterns.length * 0.8) {
       throw new Error('Too many similar patterns detected');
     }
 
     // Check pattern quality
-    const lowQualityPatterns = patterns.filter(p => 
-      p.pattern.length < 5 || p.example.length < 3
+    const lowQualityPatterns = patterns.filter(
+      (p) => p.pattern.length < 5 || p.example.length < 3
     );
     if (lowQualityPatterns.length > patterns.length * 0.2) {
       throw new Error('Too many low-quality patterns detected');
@@ -417,19 +428,27 @@ export class SpeechPatternsGenerator {
     score += countScore;
 
     // Pattern quality score (50%)
-    const avgPatternLength = patterns.reduce((sum, p) => sum + p.pattern.length, 0) / patterns.length;
-    const avgExampleLength = patterns.reduce((sum, p) => sum + p.example.length, 0) / patterns.length;
-    const qualityScore = ((avgPatternLength / 50) + (avgExampleLength / 30)) / 2 * 0.5;
+    const avgPatternLength =
+      patterns.reduce((sum, p) => sum + p.pattern.length, 0) / patterns.length;
+    const avgExampleLength =
+      patterns.reduce((sum, p) => sum + p.example.length, 0) / patterns.length;
+    const qualityScore =
+      ((avgPatternLength / 50 + avgExampleLength / 30) / 2) * 0.5;
     score += Math.min(qualityScore, 0.5);
 
     // Diversity score (15%)
-    const uniqueFirstWords = new Set(patterns.map(p => p.pattern.split(' ')[0].toLowerCase()));
+    const uniqueFirstWords = new Set(
+      patterns.map((p) => p.pattern.split(' ')[0].toLowerCase())
+    );
     const diversityScore = (uniqueFirstWords.size / patterns.length) * 0.15;
     score += diversityScore;
 
     // Circumstances coverage score (10%)
-    const patternsWithCircumstances = patterns.filter(p => p.circumstances && p.circumstances.trim());
-    const circumstancesScore = (patternsWithCircumstances.length / patterns.length) * 0.1;
+    const patternsWithCircumstances = patterns.filter(
+      (p) => p.circumstances && p.circumstances.trim()
+    );
+    const circumstancesScore =
+      (patternsWithCircumstances.length / patterns.length) * 0.1;
     score += circumstancesScore;
 
     return Math.min(Math.max(score, 0), 1);
@@ -451,7 +470,12 @@ export class SpeechPatternsGenerator {
 
     // Try other possible name fields
     for (const [key, value] of Object.entries(characterData)) {
-      if (key.includes('name') && value && typeof value === 'object' && value.name) {
+      if (
+        key.includes('name') &&
+        value &&
+        typeof value === 'object' &&
+        value.name
+      ) {
         return value.name;
       }
     }
@@ -477,7 +501,7 @@ export class SpeechPatternsGenerator {
       ],
       supportedFocusTypes: [
         'EMOTIONAL_FOCUS',
-        'SOCIAL_FOCUS', 
+        'SOCIAL_FOCUS',
         'PSYCHOLOGICAL_FOCUS',
         'RELATIONSHIP_FOCUS',
       ],

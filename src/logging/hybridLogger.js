@@ -384,6 +384,19 @@ class HybridLogger {
   updateFilters(filters) {
     this.#filters = { ...this.#filters, ...filters };
   }
+
+  /**
+   * Waits for all pending remote flush operations to complete
+   * Useful for tests and cleanup scenarios
+   *
+   * @returns {Promise<void>}
+   */
+  async waitForPendingFlushes() {
+    // Delegate to remote logger if it has the method
+    if (typeof this.#remoteLogger.waitForPendingFlushes === 'function') {
+      await this.#remoteLogger.waitForPendingFlushes();
+    }
+  }
 }
 
 export default HybridLogger;

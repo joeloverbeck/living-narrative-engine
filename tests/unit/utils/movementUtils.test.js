@@ -29,7 +29,7 @@ describe('updateMovementLock', () => {
       );
     });
 
-    it('returns null when no movement component exists', async () => {
+    it('creates new movement component when none exists', async () => {
       /** @type {jest.Mocked<IEntityManager>} */
       const manager = {
         getComponentData: jest.fn().mockReturnValue(undefined),
@@ -38,8 +38,12 @@ describe('updateMovementLock', () => {
 
       const result = await updateMovementLock(manager, 'e2', false);
 
-      expect(result).toBeNull();
-      expect(manager.addComponent).not.toHaveBeenCalled();
+      expect(result).toEqual({ locked: false });
+      expect(manager.addComponent).toHaveBeenCalledWith(
+        'e2',
+        'core:movement',
+        { locked: false }
+      );
     });
   });
 

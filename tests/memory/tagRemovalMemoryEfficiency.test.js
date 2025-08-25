@@ -52,7 +52,8 @@ describe('Tag Removal Memory Efficiency Tests', () => {
     return Array.from({ length: count }, (_, i) => ({
       text: `Test note ${i + 1} with detailed content for memory measurement`,
       subject: `Subject ${i + 1}`,
-      subjectType: Object.values(SUBJECT_TYPES)[i % Object.values(SUBJECT_TYPES).length],
+      subjectType:
+        Object.values(SUBJECT_TYPES)[i % Object.values(SUBJECT_TYPES).length],
       context: `Context ${i + 1} with additional descriptive information`,
       timestamp: new Date(2024, 0, 1, i).toISOString(),
     }));
@@ -97,9 +98,12 @@ describe('Tag Removal Memory Efficiency Tests', () => {
       const gameState = createGameStateWithNotes(largeNotesSet);
 
       // Process notes
-      const promptData = await promptContentProvider.getPromptData(gameState, mockLogger);
+      const promptData = await promptContentProvider.getPromptData(
+        gameState,
+        mockLogger
+      );
       const formattedData = promptDataFormatter.formatPromptData(promptData);
-      
+
       const finalMemory = process.memoryUsage();
       const heapUsedDelta = finalMemory.heapUsed - initialMemory.heapUsed;
 
@@ -107,17 +111,20 @@ describe('Tag Removal Memory Efficiency Tests', () => {
       expect(heapUsedDelta).toBeLessThan(10 * 1024 * 1024); // Less than 10MB for 200 notes
       expect(promptData.notesArray).toHaveLength(200);
 
-      console.log(`Memory Usage (200 notes): ${(heapUsedDelta / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `Memory Usage (200 notes): ${(heapUsedDelta / 1024 / 1024).toFixed(2)}MB`
+      );
     });
 
     test('should maintain low memory footprint with structured notes processing', async () => {
       const initialMemory = process.memoryUsage();
-      
+
       // Create structured notes with various subject types
       const structuredNotes = Array.from({ length: 150 }, (_, i) => ({
         text: `Structured note ${i + 1} with comprehensive content for memory testing`,
         subject: `Structured Subject ${i + 1}`,
-        subjectType: Object.values(SUBJECT_TYPES)[i % Object.values(SUBJECT_TYPES).length],
+        subjectType:
+          Object.values(SUBJECT_TYPES)[i % Object.values(SUBJECT_TYPES).length],
         context: `Detailed context ${i + 1} with extensive information for memory validation`,
         timestamp: new Date(2024, 0, 1, i % 24, i % 60).toISOString(),
       }));
@@ -125,12 +132,15 @@ describe('Tag Removal Memory Efficiency Tests', () => {
       const gameState = createGameStateWithNotes(structuredNotes);
 
       // Process with grouping (more complex processing)
-      const promptData = await promptContentProvider.getPromptData(gameState, mockLogger);
+      const promptData = await promptContentProvider.getPromptData(
+        gameState,
+        mockLogger
+      );
       const groupedContent = promptDataFormatter.formatNotes(
         promptData.notesArray,
         { groupBySubject: true }
       );
-      
+
       const finalMemory = process.memoryUsage();
       const heapUsedDelta = finalMemory.heapUsed - initialMemory.heapUsed;
 
@@ -139,7 +149,9 @@ describe('Tag Removal Memory Efficiency Tests', () => {
       expect(promptData.notesArray).toHaveLength(150);
       expect(groupedContent.length).toBeGreaterThan(0);
 
-      console.log(`Structured Notes Memory Usage (150 notes): ${(heapUsedDelta / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `Structured Notes Memory Usage (150 notes): ${(heapUsedDelta / 1024 / 1024).toFixed(2)}MB`
+      );
     });
 
     test('should handle memory pressure during extended processing', async () => {
@@ -149,20 +161,24 @@ describe('Tag Removal Memory Efficiency Tests', () => {
 
       for (let run = 0; run < runs; run++) {
         const initialMemory = process.memoryUsage();
-        
+
         const notes = createTestNotesWithoutTags(notesPerRun);
         const gameState = createGameStateWithNotes(notes);
 
         // Process multiple times to simulate extended operation
         for (let i = 0; i < 3; i++) {
-          const promptData = await promptContentProvider.getPromptData(gameState, mockLogger);
-          const formattedData = promptDataFormatter.formatPromptData(promptData);
-          
+          const promptData = await promptContentProvider.getPromptData(
+            gameState,
+            mockLogger
+          );
+          const formattedData =
+            promptDataFormatter.formatPromptData(promptData);
+
           // Verify processing success
           expect(promptData.notesArray).toHaveLength(notesPerRun);
           expect(formattedData.notesContent.length).toBeGreaterThan(0);
         }
-        
+
         const finalMemory = process.memoryUsage();
         const heapUsedDelta = finalMemory.heapUsed - initialMemory.heapUsed;
         maxMemoryDelta = Math.max(maxMemoryDelta, heapUsedDelta);
@@ -176,35 +192,42 @@ describe('Tag Removal Memory Efficiency Tests', () => {
       // Validate memory doesn't grow excessively across multiple runs
       expect(maxMemoryDelta).toBeLessThan(15 * 1024 * 1024); // Less than 15MB max delta
 
-      console.log(`Extended Processing Memory Peak: ${(maxMemoryDelta / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `Extended Processing Memory Peak: ${(maxMemoryDelta / 1024 / 1024).toFixed(2)}MB`
+      );
     });
 
     test('should efficiently handle large note datasets without memory leaks', async () => {
       const initialMemory = process.memoryUsage();
-      
+
       // Process several batches of notes
       const batches = 4;
       const notesPerBatch = 75;
-      
+
       for (let batch = 0; batch < batches; batch++) {
         const notes = createTestNotesWithoutTags(notesPerBatch);
         const gameState = createGameStateWithNotes(notes);
 
-        const promptData = await promptContentProvider.getPromptData(gameState, mockLogger);
+        const promptData = await promptContentProvider.getPromptData(
+          gameState,
+          mockLogger
+        );
         const formattedData = promptDataFormatter.formatPromptData(promptData);
-        
+
         // Verify each batch processes correctly
         expect(promptData.notesArray).toHaveLength(notesPerBatch);
         expect(formattedData.notesContent.length).toBeGreaterThan(0);
       }
-      
+
       const finalMemory = process.memoryUsage();
       const heapUsedDelta = finalMemory.heapUsed - initialMemory.heapUsed;
 
       // Validate no significant memory accumulation across batches
       expect(heapUsedDelta).toBeLessThan(12 * 1024 * 1024); // Less than 12MB for all batches
 
-      console.log(`Batch Processing Memory Usage (${batches * notesPerBatch} total notes): ${(heapUsedDelta / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `Batch Processing Memory Usage (${batches * notesPerBatch} total notes): ${(heapUsedDelta / 1024 / 1024).toFixed(2)}MB`
+      );
     });
   });
 
@@ -223,11 +246,14 @@ describe('Tag Removal Memory Efficiency Tests', () => {
       };
 
       const initialMemory = process.memoryUsage();
-      
+
       // Process notes and measure memory
-      const promptData = await promptContentProvider.getPromptData(gameState, mockLogger);
+      const promptData = await promptContentProvider.getPromptData(
+        gameState,
+        mockLogger
+      );
       const formattedData = promptDataFormatter.formatPromptData(promptData);
-      
+
       const peakMemory = process.memoryUsage();
       measurements.peakHeapUsed = peakMemory.heapUsed;
       measurements.heapUsedDelta = peakMemory.heapUsed - initialMemory.heapUsed;
@@ -242,7 +268,9 @@ describe('Tag Removal Memory Efficiency Tests', () => {
       };
 
       // Validate against baselines
-      expect(measurements.heapUsedDelta).toBeLessThan(memoryBaselines.maxHeapUsedDelta);
+      expect(measurements.heapUsedDelta).toBeLessThan(
+        memoryBaselines.maxHeapUsedDelta
+      );
       expect(measurements.rss).toBeLessThan(memoryBaselines.maxRss);
       expect(measurements.external).toBeLessThan(memoryBaselines.maxExternal);
 
@@ -252,10 +280,16 @@ describe('Tag Removal Memory Efficiency Tests', () => {
 
       // Log memory baseline metrics for future reference
       console.log(`Memory Baselines (${baselineNoteCount} notes):`);
-      console.log(`  - Heap Delta: ${(measurements.heapUsedDelta / 1024 / 1024).toFixed(2)}MB`);
-      console.log(`  - Peak Heap: ${(measurements.peakHeapUsed / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `  - Heap Delta: ${(measurements.heapUsedDelta / 1024 / 1024).toFixed(2)}MB`
+      );
+      console.log(
+        `  - Peak Heap: ${(measurements.peakHeapUsed / 1024 / 1024).toFixed(2)}MB`
+      );
       console.log(`  - RSS: ${(measurements.rss / 1024 / 1024).toFixed(2)}MB`);
-      console.log(`  - External: ${(measurements.external / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `  - External: ${(measurements.external / 1024 / 1024).toFixed(2)}MB`
+      );
     });
   });
 });

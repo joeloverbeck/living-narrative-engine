@@ -15,14 +15,14 @@ describe('UNLOCK_MOVEMENT Schema Validation Integration', () => {
     // Initialize IntegrationTestBed for proper schema loading
     testBed = new IntegrationTestBed();
     await testBed.initialize();
-    
+
     // Get schema validator from the container
     schemaValidator = testBed.schemaValidator;
-    
+
     // Load operation schemas needed for validation
     await loadOperationSchemas(schemaValidator);
   });
-  
+
   afterEach(async () => {
     // Clean up test bed
     if (testBed) {
@@ -212,79 +212,79 @@ async function loadOperationSchemas(schemaValidator) {
           parameters: {
             type: 'object',
             properties: {
-              actor_id: { type: 'string' }
+              actor_id: { type: 'string' },
             },
-            required: ['actor_id']
+            required: ['actor_id'],
           },
-          comment: { type: 'string' }
+          comment: { type: 'string' },
         },
         required: ['type', 'parameters'],
-        additionalProperties: false
+        additionalProperties: false,
       },
       {
         type: 'object',
         properties: {
           type: { const: 'GET_NAME' },
-          parameters: { 
+          parameters: {
             type: 'object',
             properties: {
               entity_ref: { type: 'string' },
-              result_variable: { type: 'string' }
+              result_variable: { type: 'string' },
             },
-            required: ['entity_ref', 'result_variable']
-          }
+            required: ['entity_ref', 'result_variable'],
+          },
         },
-        required: ['type', 'parameters']
+        required: ['type', 'parameters'],
       },
       {
         type: 'object',
         properties: {
           type: { const: 'QUERY_COMPONENT' },
-          parameters: { 
+          parameters: {
             type: 'object',
             properties: {
               entity_ref: { type: 'string' },
               component_type: { type: 'string' },
-              result_variable: { type: 'string' }
+              result_variable: { type: 'string' },
             },
-            required: ['entity_ref', 'component_type', 'result_variable']
-          }
+            required: ['entity_ref', 'component_type', 'result_variable'],
+          },
         },
-        required: ['type', 'parameters']
+        required: ['type', 'parameters'],
       },
       {
         type: 'object',
         properties: {
           type: { const: 'REMOVE_COMPONENT' },
-          parameters: { 
+          parameters: {
             type: 'object',
             properties: {
               entity_ref: { type: 'string' },
-              component_type: { type: 'string' }
+              component_type: { type: 'string' },
             },
-            required: ['entity_ref', 'component_type']
-          }
+            required: ['entity_ref', 'component_type'],
+          },
         },
-        required: ['type', 'parameters']
+        required: ['type', 'parameters'],
       },
       {
         type: 'object',
         properties: {
           type: { const: 'SET_VARIABLE' },
-          parameters: { 
+          parameters: {
             type: 'object',
             properties: {
               variable_name: { type: 'string' },
-              value: {}
+              value: {},
             },
-            required: ['variable_name', 'value']
-          }
+            required: ['variable_name', 'value'],
+          },
         },
-        required: ['type', 'parameters']
-      }
-    ]
+        required: ['type', 'parameters'],
+      },
+    ],
   };
-  
+
   // Load the specific UNLOCK_MOVEMENT schema
   const unlockMovementSchema = {
     $id: 'schema://living-narrative-engine/operations/unlockMovement.schema.json',
@@ -294,18 +294,21 @@ async function loadOperationSchemas(schemaValidator) {
       parameters: {
         type: 'object',
         properties: {
-          actor_id: { type: 'string' }
+          actor_id: { type: 'string' },
         },
-        required: ['actor_id']
-      }
+        required: ['actor_id'],
+      },
     },
-    required: ['type', 'parameters']
+    required: ['type', 'parameters'],
   };
 
   // Register the schemas
   await schemaValidator.addSchema(operationSchema, operationSchema.$id);
-  await schemaValidator.addSchema(unlockMovementSchema, unlockMovementSchema.$id);
-  
+  await schemaValidator.addSchema(
+    unlockMovementSchema,
+    unlockMovementSchema.$id
+  );
+
   // Also register the rule schema for complete validation
   const ruleSchema = {
     $id: 'schema://living-narrative-engine/rule.schema.json',
@@ -321,21 +324,21 @@ async function loadOperationSchemas(schemaValidator) {
         items: {
           oneOf: [
             { $ref: 'schema://living-narrative-engine/operation.schema.json' },
-            { 
-              type: 'object', 
-              properties: { 
-                macro: { type: 'string' } 
-              }, 
+            {
+              type: 'object',
+              properties: {
+                macro: { type: 'string' },
+              },
               required: ['macro'],
-              additionalProperties: false
-            }
-          ]
-        }
-      }
+              additionalProperties: false,
+            },
+          ],
+        },
+      },
     },
     required: ['rule_id', 'event_type', 'actions'],
-    additionalProperties: false
+    additionalProperties: false,
   };
-  
+
   await schemaValidator.addSchema(ruleSchema, ruleSchema.$id);
 }

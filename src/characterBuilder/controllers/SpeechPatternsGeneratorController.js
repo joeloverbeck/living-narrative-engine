@@ -77,7 +77,9 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       // Try to get from container if not explicitly passed
       if (dependencies.container) {
         try {
-          this.#speechPatternsGenerator = dependencies.container.resolve('SpeechPatternsGenerator');
+          this.#speechPatternsGenerator = dependencies.container.resolve(
+            'SpeechPatternsGenerator'
+          );
         } catch (error) {
           dependencies.logger?.warn(
             'SpeechPatternsGenerator not available:',
@@ -369,12 +371,13 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       this.#announceToScreenReader('Generating speech patterns...');
 
       // Generate speech patterns using service
-      const processedPatterns = await this.#speechPatternsGenerator.generateSpeechPatterns(
-        this.#characterDefinition,
-        {
-          abortSignal: this.#currentGenerationController?.signal,
-        }
-      );
+      const processedPatterns =
+        await this.#speechPatternsGenerator.generateSpeechPatterns(
+          this.#characterDefinition,
+          {
+            abortSignal: this.#currentGenerationController?.signal,
+          }
+        );
 
       // Store results and display
       this.#lastGeneratedPatterns = processedPatterns;
@@ -399,7 +402,6 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       this.#currentGenerationController = null;
     }
   }
-
 
   // Results Display Methods
 

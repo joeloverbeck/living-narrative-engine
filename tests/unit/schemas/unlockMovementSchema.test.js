@@ -24,35 +24,57 @@ describe('unlockMovement Schema Unit Tests', () => {
     // Load all schemas and let AJV resolve references automatically
     try {
       // Load all dependency schemas
-      const commonSchemaPath = process.cwd() + '/data/schemas/common.schema.json';
-      const commonSchema = JSON.parse(fs.readFileSync(commonSchemaPath, 'utf8'));
+      const commonSchemaPath =
+        process.cwd() + '/data/schemas/common.schema.json';
+      const commonSchema = JSON.parse(
+        fs.readFileSync(commonSchemaPath, 'utf8')
+      );
 
-      const jsonLogicSchemaPath = process.cwd() + '/data/schemas/json-logic.schema.json';
-      const jsonLogicSchema = JSON.parse(fs.readFileSync(jsonLogicSchemaPath, 'utf8'));
+      const jsonLogicSchemaPath =
+        process.cwd() + '/data/schemas/json-logic.schema.json';
+      const jsonLogicSchema = JSON.parse(
+        fs.readFileSync(jsonLogicSchemaPath, 'utf8')
+      );
 
-      const conditionSchemaPath = process.cwd() + '/data/schemas/condition-container.schema.json';
-      const conditionSchema = JSON.parse(fs.readFileSync(conditionSchemaPath, 'utf8'));
+      const conditionSchemaPath =
+        process.cwd() + '/data/schemas/condition-container.schema.json';
+      const conditionSchema = JSON.parse(
+        fs.readFileSync(conditionSchemaPath, 'utf8')
+      );
 
-      const baseSchemaPath = process.cwd() + '/data/schemas/base-operation.schema.json';
+      const baseSchemaPath =
+        process.cwd() + '/data/schemas/base-operation.schema.json';
       const baseSchema = JSON.parse(fs.readFileSync(baseSchemaPath, 'utf8'));
 
-      const unlockSchemaPath = process.cwd() + '/data/schemas/operations/unlockMovement.schema.json';
-      const unlockSchema = JSON.parse(fs.readFileSync(unlockSchemaPath, 'utf8'));
+      const unlockSchemaPath =
+        process.cwd() + '/data/schemas/operations/unlockMovement.schema.json';
+      const unlockSchema = JSON.parse(
+        fs.readFileSync(unlockSchemaPath, 'utf8')
+      );
 
-      const lockSchemaPath = process.cwd() + '/data/schemas/operations/lockMovement.schema.json';
+      const lockSchemaPath =
+        process.cwd() + '/data/schemas/operations/lockMovement.schema.json';
       const lockSchema = JSON.parse(fs.readFileSync(lockSchemaPath, 'utf8'));
 
       // Create AJV instance with all schemas loaded to resolve circular references
       const ajv = new Ajv({
-        schemas: [commonSchema, jsonLogicSchema, conditionSchema, baseSchema, unlockSchema, lockSchema],
+        schemas: [
+          commonSchema,
+          jsonLogicSchema,
+          conditionSchema,
+          baseSchema,
+          unlockSchema,
+          lockSchema,
+        ],
       });
       addFormats(ajv);
 
       // Create AjvSchemaValidator with pre-configured AJV instance
       schemaValidator = new AjvSchemaValidator({ logger, ajvInstance: ajv });
 
-      logger.debug('Successfully loaded all schemas with AJV reference resolution');
-
+      logger.debug(
+        'Successfully loaded all schemas with AJV reference resolution'
+      );
     } catch (err) {
       logger.error('Failed to load schema dependencies:', err);
       throw new Error(`Schema loading failed: ${err.message}`);

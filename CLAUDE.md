@@ -228,7 +228,7 @@ describe('ComponentName - Feature', () => {
     const mockLogger = testBed.createMockLogger();
     const input = testBed.createMock('testInput', ['method1', 'method2']);
 
-    // Act  
+    // Act
     const result = testBed.performAction(input);
 
     // Assert

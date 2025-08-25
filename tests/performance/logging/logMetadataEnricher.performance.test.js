@@ -15,13 +15,18 @@ import { createPerformanceTestBed } from '../../common/performanceTestBed.js';
 
 /**
  * Helper to determine environment-appropriate timing multipliers
- * 
+ *
  * @returns {object} Timing multipliers for test environment
  */
 function getTimingMultipliers() {
-  const isCI = !!(process.env.CI || process.env.CONTINUOUS_INTEGRATION || 
-    process.env.GITHUB_ACTIONS || process.env.GITLAB_CI || process.env.JENKINS_URL);
-  
+  const isCI = !!(
+    process.env.CI ||
+    process.env.CONTINUOUS_INTEGRATION ||
+    process.env.GITHUB_ACTIONS ||
+    process.env.GITLAB_CI ||
+    process.env.JENKINS_URL
+  );
+
   return {
     // CI environments are generally slower and less predictable
     timeoutMultiplier: isCI ? 3.0 : 1.5,
@@ -96,14 +101,14 @@ describe('LogMetadataEnricher - Performance Benchmarks', () => {
   const BASELINE_THRESHOLDS = {
     // Conservative thresholds for 1000 operations accounting for environment variance
     metadataEnrichment: 2000, // 2000ms for 1000 operations allows for system load
-    largeMetadata: 200,       // 200ms for single large object processing  
-    opsPerSecond: 250,        // Minimum 250 ops/second (conservative baseline)
+    largeMetadata: 200, // 200ms for single large object processing
+    opsPerSecond: 250, // Minimum 250 ops/second (conservative baseline)
   };
 
   beforeEach(() => {
     // Get environment-specific timing multipliers
     timingMultipliers = getTimingMultipliers();
-    
+
     // Setup global mocks
     global.window = mockWindow;
     global.navigator = mockNavigator;
@@ -154,12 +159,16 @@ describe('LogMetadataEnricher - Performance Benchmarks', () => {
       const metrics = benchmark.end();
 
       // Should process 1000 entries within reasonable time
-      const timeThreshold = BASELINE_THRESHOLDS.metadataEnrichment * timingMultipliers.timeoutMultiplier;
+      const timeThreshold =
+        BASELINE_THRESHOLDS.metadataEnrichment *
+        timingMultipliers.timeoutMultiplier;
       expect(metrics.totalTime).toBeLessThan(timeThreshold);
 
       // Calculate operations per second with environment-aware expectations
       const opsPerSecond = iterations / (metrics.totalTime / 1000);
-      const minOpsPerSecond = BASELINE_THRESHOLDS.opsPerSecond * timingMultipliers.opsVarianceMultiplier;
+      const minOpsPerSecond =
+        BASELINE_THRESHOLDS.opsPerSecond *
+        timingMultipliers.opsVarianceMultiplier;
       expect(opsPerSecond).toBeGreaterThan(minOpsPerSecond);
     });
 
@@ -186,7 +195,8 @@ describe('LogMetadataEnricher - Performance Benchmarks', () => {
       const metrics = benchmark.end();
 
       expect(enriched.metadata.originalArgs).toEqual(largeArgs);
-      const largeMetadataThreshold = BASELINE_THRESHOLDS.largeMetadata * timingMultipliers.timeoutMultiplier;
+      const largeMetadataThreshold =
+        BASELINE_THRESHOLDS.largeMetadata * timingMultipliers.timeoutMultiplier;
       expect(metrics.totalTime).toBeLessThan(largeMetadataThreshold);
     });
   });
@@ -226,16 +236,16 @@ describe('LogMetadataEnricher - Performance Benchmarks', () => {
 
       // Should have valid performance measurements for multiple test sizes
       expect(opsPerMsValues.length).toBeGreaterThan(1);
-      
+
       const avgOpsPerMs =
         opsPerMsValues.reduce((a, b) => a + b, 0) / opsPerMsValues.length;
 
       // Average operations per millisecond should be meaningful
       expect(avgOpsPerMs).toBeGreaterThan(0);
-      
+
       // Allow more variance in CI environments for stability
       const maxDeviation = timingMultipliers.timeoutMultiplier > 2 ? 3.0 : 2.0;
-      
+
       // All values should be within reasonable range of average (test scaling consistency)
       opsPerMsValues.forEach((ops) => {
         const deviation = Math.abs(ops - avgOpsPerMs) / avgOpsPerMs;
@@ -278,7 +288,9 @@ describe('LogMetadataEnricher - Performance Benchmarks', () => {
 
       // All levels should still be reasonably fast
       results.forEach((result) => {
-        const configThreshold = BASELINE_THRESHOLDS.metadataEnrichment * timingMultipliers.timeoutMultiplier;
+        const configThreshold =
+          BASELINE_THRESHOLDS.metadataEnrichment *
+          timingMultipliers.timeoutMultiplier;
         expect(result.totalTime).toBeLessThan(configThreshold);
       });
     });

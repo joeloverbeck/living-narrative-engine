@@ -1,0 +1,216 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/speech-patterns-response.schema.json",
+  "title": "Speech Patterns Response Schema",
+  "description": "Validates the response from LLM for speech patterns generation, ensuring quality and structure compliance",
+  "type": "object",
+
+  "properties": {
+    "characterName": {
+      "type": "string",
+      "description": "Name of the character these patterns are for",
+      "minLength": 1,
+      "maxLength": 100,
+      "pattern": "^[^<>\"'&]*$"
+    },
+
+    "speechPatterns": {
+      "type": "array",
+      "description": "Array of generated speech patterns for the character",
+      "minItems": 3,
+      "maxItems": 30,
+      "items": {
+        "$ref": "#/definitions/SpeechPattern"
+      }
+    },
+
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when patterns were generated"
+    },
+
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata about the generation process",
+      "properties": {
+        "processingMethod": {
+          "type": "string",
+          "enum": ["json", "text_parsing", "hybrid"],
+          "description": "Method used to process the LLM response"
+        },
+        "patternCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of patterns generated"
+        },
+        "averagePatternLength": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Average length of pattern descriptions"
+        },
+        "averageExampleLength": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Average length of pattern examples"
+        },
+        "patternsWithCircumstances": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of patterns that include circumstances"
+        },
+        "qualityScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Quality score for the generated patterns (0-1)"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+
+  "required": ["characterName", "speechPatterns"],
+  "additionalProperties": false,
+
+  "definitions": {
+    "SpeechPattern": {
+      "type": "object",
+      "description": "Individual speech pattern with example and optional context",
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "description": "Description of the speech pattern or characteristic",
+          "minLength": 5,
+          "maxLength": 500,
+          "pattern": "^[^<>]*$"
+        },
+
+        "example": {
+          "type": "string",
+          "description": "Example of character's voice demonstrating this pattern",
+          "minLength": 3,
+          "maxLength": 1000,
+          "pattern": "^[^<>]*$"
+        },
+
+        "circumstances": {
+          "type": ["string", "null"],
+          "description": "When or where this pattern typically appears",
+          "maxLength": 200,
+          "pattern": "^[^<>]*$"
+        }
+      },
+
+      "required": ["pattern", "example"],
+      "additionalProperties": false,
+
+      "allOf": [
+        {
+          "description": "Content quality validation for pattern descriptions",
+          "properties": {
+            "pattern": {
+              "not": {
+                "pattern": "^(says|talks|speaks|has a way of speaking)\\b"
+              }
+            }
+          }
+        },
+        {
+          "description": "Content quality validation for examples",
+          "properties": {
+            "example": {
+              "anyOf": [
+                { "pattern": "['\"].*['\"]" },
+                { "pattern": "\\(.*\\).*['\"].*['\"]" }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "circumstances": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "circumstances": {
+                "minLength": 5,
+                "pattern": "^(When|During|In|While|After|Before|If)\\b",
+                "description": "Circumstances should be descriptive and start with appropriate temporal/conditional words"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+
+  "allOf": [
+    {
+      "description": "Ensure at least one substantial pattern exists",
+      "properties": {
+        "speechPatterns": {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "minLength": 10
+              },
+              "example": {
+                "minLength": 10
+              }
+            },
+            "required": ["pattern", "example"]
+          }
+        }
+      }
+    },
+    {
+      "description": "Security validation to prevent XSS and injection attacks",
+      "properties": {
+        "characterName": {
+          "not": {
+            "pattern": "<[Ss][Cc][Rr][Ii][Pp][Tt]|[Jj][Aa][Vv][Aa][Ss][Cc][Rr][Ii][Pp][Tt]:|[Oo][Nn]\\w+\\s*="
+          }
+        }
+      }
+    }
+  ],
+
+  "examples": [
+    {
+      "characterName": "Sarah Mitchell",
+      "speechPatterns": [
+        {
+          "pattern": "Uses elaborate metaphors when explaining complex emotions",
+          "example": "\"It's like... imagine your favorite song being played backwards on a broken record player.\"",
+          "circumstances": "When trying to articulate deep emotional pain"
+        },
+        {
+          "pattern": "Switches to clipped, military-style speech under pressure",
+          "example": "\"Copy that. Moving to position. ETA two minutes.\"",
+          "circumstances": "During high-stress situations requiring quick decisions"
+        },
+        {
+          "pattern": "Tends to use technical jargon as emotional armor",
+          "example": "\"I need to recalibrate my approach to this situation.\"",
+          "circumstances": null
+        }
+      ],
+      "generatedAt": "2025-08-25T10:30:00Z",
+      "metadata": {
+        "processingMethod": "json",
+        "patternCount": 3,
+        "averagePatternLength": 65,
+        "averageExampleLength": 85,
+        "patternsWithCircumstances": 2,
+        "qualityScore": 0.87
+      }
+    }
+  ]
+}

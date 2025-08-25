@@ -10,11 +10,13 @@ import {
   assertNonBlankString,
 } from '../../utils/dependencyUtils.js';
 import { validateSpeechPatternsGenerationResponse } from '../prompts/speechPatternsPrompts.js';
+import SpeechPatternsSchemaValidator from '../validators/SpeechPatternsSchemaValidator.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../llms/llmJsonService.js').LlmJsonService} LlmJsonService
  * @typedef {import('../../interfaces/ISchemaValidator.js').ISchemaValidator} ISchemaValidator
+ * @typedef {import('../validators/SpeechPatternsSchemaValidator.js').default} SpeechPatternsSchemaValidator
  */
 
 /**
@@ -30,6 +32,9 @@ export class SpeechPatternsResponseProcessor {
   /** @private @type {ISchemaValidator} */
   #schemaValidator;
 
+  /** @private @type {SpeechPatternsSchemaValidator} */
+  #speechPatternsValidator;
+
   constructor(dependencies) {
     validateDependency(dependencies.logger, 'ILogger', null, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
@@ -37,17 +42,41 @@ export class SpeechPatternsResponseProcessor {
     validateDependency(dependencies.llmJsonService, 'LlmJsonService', null, {
       requiredMethods: ['clean', 'parseAndRepair'],
     });
-    
+
     // Schema validator is optional
     if (dependencies.schemaValidator) {
-      validateDependency(dependencies.schemaValidator, 'ISchemaValidator', null, {
-        requiredMethods: ['validateAgainstSchema'],
-      });
+      validateDependency(
+        dependencies.schemaValidator,
+        'ISchemaValidator',
+        null,
+        {
+          requiredMethods: ['validateAgainstSchema'],
+        }
+      );
     }
 
     this.#logger = dependencies.logger;
     this.#llmJsonService = dependencies.llmJsonService;
     this.#schemaValidator = dependencies.schemaValidator;
+
+    // Initialize speech patterns validator if schema validator is available
+    if (this.#schemaValidator) {
+      try {
+        this.#speechPatternsValidator = new SpeechPatternsSchemaValidator({
+          schemaValidator: this.#schemaValidator,
+          logger: this.#logger,
+        });
+        this.#logger.debug(
+          'SpeechPatternsSchemaValidator initialized successfully'
+        );
+      } catch (error) {
+        this.#logger.warn(
+          'Failed to initialize SpeechPatternsSchemaValidator',
+          error
+        );
+        this.#speechPatternsValidator = null;
+      }
+    }
   }
 
   /**
@@ -74,11 +103,17 @@ export class SpeechPatternsResponseProcessor {
         parsedResponse = await this.#parseTextResponse(rawResponse, context);
       }
 
-      // Validate response structure
-      await this.#validateResponse(parsedResponse);
+      // Validate response structure and get sanitized version if available
+      const validatedResponse = await this.#validateResponse(parsedResponse);
+
+      // Use sanitized response if validation returned one, otherwise use original
+      const responseToEnhance = validatedResponse || parsedResponse;
 
       // Enhance and normalize response
-      const enhancedResponse = this.#enhanceResponse(parsedResponse, context);
+      const enhancedResponse = this.#enhanceResponse(
+        responseToEnhance,
+        context
+      );
 
       this.#logger.debug('LLM response processed successfully', {
         patternCount: enhancedResponse.speechPatterns.length,
@@ -318,7 +353,7 @@ export class SpeechPatternsResponseProcessor {
    * @returns {Promise<void>}
    */
   async #validateResponse(response) {
-    // Use prompt validation function
+    // Use prompt validation function as primary validation
     const validationResult = validateSpeechPatternsGenerationResponse(
       response,
       this.#logger
@@ -330,25 +365,61 @@ export class SpeechPatternsResponseProcessor {
       );
     }
 
-    // Use schema validation utility if available
+    // Use enhanced schema validation if available
+    if (this.#speechPatternsValidator) {
+      try {
+        this.#logger.debug(
+          'Using SpeechPatternsSchemaValidator for enhanced validation'
+        );
+        const schemaValidationResult =
+          await this.#speechPatternsValidator.validateAndSanitizeResponse(
+            response
+          );
+
+        if (!schemaValidationResult.isValid) {
+          this.#logger.warn('Enhanced schema validation failed', {
+            errors: schemaValidationResult.errors,
+          });
+          throw new Error(
+            `Enhanced validation failed: ${schemaValidationResult.errors.join(', ')}`
+          );
+        }
+
+        this.#logger.debug('Enhanced schema validation passed');
+        return schemaValidationResult.sanitizedResponse;
+      } catch (validationError) {
+        this.#logger.error('Enhanced schema validation error', validationError);
+        throw validationError;
+      }
+    }
+
+    // Fallback to legacy schema validation if enhanced validator not available
     if (this.#schemaValidator) {
       try {
-        const { validateAgainstSchema } = await import('../../utils/schemaValidationUtils.js');
+        const { validateAgainstSchema } = await import(
+          '../../utils/schemaValidationUtils.js'
+        );
         validateAgainstSchema(
           this.#schemaValidator,
           'speech-patterns-response.schema.json',
           response,
           this.#logger,
           {
-            validationDebugMessage: 'Validating speech patterns response structure',
+            validationDebugMessage:
+              'Validating speech patterns response structure',
             failureMessage: 'Speech patterns response validation failed',
             failureThrowMessage: 'Invalid speech patterns response structure',
           }
         );
       } catch (importError) {
-        this.#logger.debug('Schema validation utility not available, using prompt validation only');
+        this.#logger.debug(
+          'Schema validation utility not available, using prompt validation only'
+        );
       }
     }
+
+    // Return the original response if no enhanced validation was performed
+    return response;
   }
 
   /**

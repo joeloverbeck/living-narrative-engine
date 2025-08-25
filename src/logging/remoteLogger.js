@@ -465,11 +465,30 @@ class RemoteLogger {
       } catch (error) {
         this.#handleSendFailure(error, logsToSend);
       } finally {
+        // Clean up memory regardless of success/failure
+        this.#cleanupLogMetadata(logsToSend);
         this.#currentFlushPromise = null;
       }
     })();
 
     return this.#currentFlushPromise;
+  }
+
+  /**
+   * Waits for all pending flush operations to complete
+   * Useful for tests and cleanup scenarios
+   *
+   * @returns {Promise<void>}
+   */
+  async waitForPendingFlushes() {
+    // First, trigger a flush if there's data in buffer
+    if (this.#buffer.length > 0) {
+      await this.#flush();
+    }
+    // Then wait for any current flush to complete
+    if (this.#currentFlushPromise) {
+      await this.#currentFlushPromise;
+    }
   }
 
   /**
@@ -529,22 +548,14 @@ class RemoteLogger {
    * @returns {Promise<void>}
    */
   async #sendBatch(logs) {
-    try {
-      const result = await this.#circuitBreaker.execute(async () => {
-        return await this.#retryWithBackoff(
-          () => this.#sendHttpRequest(logs),
-          this.#retryAttempts
-        );
-      });
-      
-      // Clean up metadata after successful transmission to free memory
-      this.#cleanupLogMetadata(logs);
-      
-      return result;
-    } catch (error) {
-      // Re-throw error after cleanup attempt
-      throw error;
-    }
+    const result = await this.#circuitBreaker.execute(async () => {
+      return await this.#retryWithBackoff(
+        () => this.#sendHttpRequest(logs),
+        this.#retryAttempts
+      );
+    });
+
+    return result;
   }
 
   /**

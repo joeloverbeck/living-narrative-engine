@@ -1,6 +1,6 @@
 # Living Narrative Engine - Game Interface Redesign Brainstorm
 
-*Creative exploration for transforming the main game interface from functional web application to immersive narrative gaming experience*
+_Creative exploration for transforming the main game interface from functional web application to immersive narrative gaming experience_
 
 ---
 
@@ -9,8 +9,9 @@
 Based on visual analysis of the running application and code examination, this document explores professional redesign concepts that transform the current basic three-panel layout into an engaging, immersive gaming interface that prioritizes narrative experience while maintaining all functional requirements.
 
 **Key Goals:**
+
 - Transform empty gray void into compelling narrative centerpiece
-- Elevate action buttons from web forms to game-appropriate interface elements  
+- Elevate action buttons from web forms to game-appropriate interface elements
 - Create cohesive visual hierarchy that guides user attention effectively
 - Implement modern gaming aesthetics while maintaining accessibility
 - Provide responsive design that works across all device sizes
@@ -22,6 +23,7 @@ Based on visual analysis of the running application and code examination, this d
 ### Visual Assessment from Live Screenshot
 
 **Current Layout Structure:**
+
 ```
 ┌─────────────────┬──────────────────────────┬─────────────────┐
 │ Left Panel      │ Center Panel             │ Right Panel     │
@@ -38,31 +40,37 @@ Based on visual analysis of the running application and code examination, this d
 ### Critical Visual Issues Identified
 
 #### 1. **Poor Hierarchy & Focus**
+
 - All three panels compete for attention equally
 - No clear visual indication of what users should focus on
 - The most important area (narrative/chat) appears broken/empty
 
-#### 2. **Inconsistent Visual Language**  
+#### 2. **Inconsistent Visual Language**
+
 - Mix of background colors: beige (perception), gray (center), white (right)
 - Buttons vary from basic web forms to styled teal game menu buttons
 - No unified color palette or design system
 
 #### 3. **Empty Center Syndrome**
+
 - Large gray void makes interface feel incomplete
 - Narrative area lacks personality and gaming atmosphere
 - No visual cues that this is where story unfolds
 
 #### 4. **Generic Action Interface**
+
 - Action buttons look like standard web form elements
 - Categories (CORE, CLOTHING) have minimal visual distinction
 - No clear selection states or interactive feedback
 
 #### 5. **Information Density Issues**
+
 - Right panel cramped with multiple collapsed sections
 - Left panel has excessive whitespace in perception log
 - Poor use of available screen real estate
 
 #### 6. **Lack of Gaming Identity**
+
 - Interface feels more like a management dashboard than game
 - No atmospheric elements or immersive design cues
 - Missing visual elements that create emotional engagement
@@ -72,7 +80,8 @@ Based on visual analysis of the running application and code examination, this d
 ## Design Concept Explorations
 
 ### Concept 1: "Narrative Theater"
-*Chat-centric design with cinematic presentation*
+
+_Chat-centric design with cinematic presentation_
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -99,14 +108,16 @@ Based on visual analysis of the running application and code examination, this d
 ```
 
 **Key Features:**
+
 - Center stage completely dedicated to narrative experience
 - Theatrical metaphor throughout design language
 - Rich, atmospheric backgrounds in narrative area
 - Actions presented as "repertoire" rather than form buttons
 - Character portraits integrated into "cast" concept
 
-### Concept 2: "Command Bridge" 
-*Actions-primary interface with game-like panels*
+### Concept 2: "Command Bridge"
+
+_Actions-primary interface with game-like panels_
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -136,6 +147,7 @@ Based on visual analysis of the running application and code examination, this d
 ```
 
 **Key Features:**
+
 - Actions elevated to primary interface element
 - Game-like command panel with clear categorization
 - Status information integrated into bottom bar
@@ -143,7 +155,8 @@ Based on visual analysis of the running application and code examination, this d
 - Command-line gaming aesthetic
 
 ### Concept 3: "Visual Novel Experience"
-*Character and dialogue focused design*
+
+_Character and dialogue focused design_
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -162,7 +175,7 @@ Based on visual analysis of the running application and code examination, this d
 │ ┌─────────────────────────────────────────────────────────────────────┐ │
 │ │                                                                     │ │
 │ │  ○ Follow Amala Castillo                                           │ │
-│ │  ○ Go to The Gilded Bean                                           │ │  
+│ │  ○ Go to The Gilded Bean                                           │ │
 │ │  ○ Wait and observe the scene                                      │ │
 │ │  ○ Start a conversation                                            │ │
 │ │                                                                     │ │
@@ -173,6 +186,7 @@ Based on visual analysis of the running application and code examination, this d
 ```
 
 **Key Features:**
+
 - Character portraits as primary visual elements
 - Dialogue-centric presentation
 - Choice-based interaction (radio button style)
@@ -180,7 +194,8 @@ Based on visual analysis of the running application and code examination, this d
 - Visual novel gaming conventions
 
 ### Concept 4: "RPG Dashboard"
-*Information-dense gaming interface with depth*
+
+_Information-dense gaming interface with depth_
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -210,6 +225,7 @@ Based on visual analysis of the running application and code examination, this d
 ```
 
 **Key Features:**
+
 - Rich information panels with gaming aesthetics
 - Event log combines narrative and perception
 - Detailed status information
@@ -217,13 +233,14 @@ Based on visual analysis of the running application and code examination, this d
 - RPG-style borders and visual depth
 
 ### Concept 5: "Immersive Overlay"
-*Contextual floating panels over atmospheric background*
+
+_Contextual floating panels over atmospheric background_
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                   🌅 IMMERSIVE ATMOSPHERE                               │
 │ ╭─ TURN STATUS ──╮      [Background: Coffee shop scene]    ╭─ QUICK ──╮ │
-│ │ Iker Aguirre   │                                         │ Location │ │ 
+│ │ Iker Aguirre   │                                         │ Location │ │
 │ │ [Small Avatar] │        💬 Speech Bubble Area            │ Outside  │ │
 │ │ Your Turn      │           [Floating over scene]        │ Tables   │ │
 │ ╰────────────────╯                                         │          │ │
@@ -244,6 +261,7 @@ Based on visual analysis of the running application and code examination, this d
 ```
 
 **Key Features:**
+
 - Atmospheric scene backgrounds
 - Minimal, floating interface elements
 - Context-sensitive panels that appear as needed
@@ -257,6 +275,7 @@ Based on visual analysis of the running application and code examination, this d
 ### Narrative/Chat Area Enhancement
 
 #### Current Issues:
+
 - Empty gray void creates feeling of broken interface
 - No visual hierarchy for different types of content
 - Lacks gaming atmosphere and personality
@@ -264,23 +283,38 @@ Based on visual analysis of the running application and code examination, this d
 #### Redesign Recommendations:
 
 **Background Treatment:**
+
 ```css
 /* Replace flat gray with atmospheric layers */
-background: linear-gradient(135deg, 
-  rgba(45, 52, 73, 0.95) 0%,
-  rgba(28, 37, 59, 0.98) 100%),
+background:
+  linear-gradient(
+    135deg,
+    rgba(45, 52, 73, 0.95) 0%,
+    rgba(28, 37, 59, 0.98) 100%
+  ),
   url('data:image/svg+xml,<pattern>...</pattern>');
 
 /* Subtle texture overlay for depth */
 &::after {
-  background-image: 
-    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.02) 1px, transparent 1px),
-    radial-gradient(circle at 75% 75%, rgba(255,255,255,0.015) 1px, transparent 1px);
-  background-size: 40px 40px, 60px 60px;
+  background-image:
+    radial-gradient(
+      circle at 25% 25%,
+      rgba(255, 255, 255, 0.02) 1px,
+      transparent 1px
+    ),
+    radial-gradient(
+      circle at 75% 75%,
+      rgba(255, 255, 255, 0.015) 1px,
+      transparent 1px
+    );
+  background-size:
+    40px 40px,
+    60px 60px;
 }
 ```
 
 **Typography Hierarchy:**
+
 ```css
 /* Narrative text - elegant, readable */
 .narrative-text {
@@ -288,7 +322,7 @@ background: linear-gradient(135deg,
   font-size: 1.1rem;
   line-height: 1.7;
   color: #f0f2f5;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Character dialogue - distinct styling */
@@ -303,7 +337,7 @@ background: linear-gradient(135deg,
 .system-message {
   font-family: 'Roboto Mono', monospace;
   font-size: 0.9rem;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
   font-style: italic;
 }
 ```
@@ -311,16 +345,17 @@ background: linear-gradient(135deg,
 ### Speech Bubble Transformation
 
 #### Enhanced Visual Design:
+
 ```css
 .speech-bubble {
   background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-  border: 2px solid rgba(255,255,255,0.1);
-  box-shadow: 
-    0 8px 25px rgba(0,0,0,0.3),
-    inset 0 1px 0 rgba(255,255,255,0.1);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   position: relative;
-  
+
   /* Animated entry */
   animation: bubbleSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
@@ -328,23 +363,25 @@ background: linear-gradient(135deg,
 /* Character-specific styling */
 .speech-bubble.player {
   background: linear-gradient(135deg, #8b5a3c 0%, #a0673d 100%);
-  border-color: rgba(255,215,160,0.2);
+  border-color: rgba(255, 215, 160, 0.2);
 }
 
 .speech-bubble.npc {
   background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-  border-color: rgba(160,174,192,0.2);
+  border-color: rgba(160, 174, 192, 0.2);
 }
 ```
 
 ### Action Interface Revolution
 
 #### Current Problems:
+
 - Basic web form buttons lack gaming personality
 - Poor visual categorization
 - No clear interaction feedback
 
 #### Game-Appropriate Action Cards:
+
 ```css
 .action-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -358,49 +395,58 @@ background: linear-gradient(135deg,
   position: relative;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
+
   /* Interactive glow effect */
-  box-shadow: 
+  box-shadow:
     0 4px 15px rgba(102, 126, 234, 0.4),
-    inset 0 1px 0 rgba(255,255,255,0.2);
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .action-card:hover {
   transform: translateY(-2px);
-  box-shadow: 
+  box-shadow:
     0 8px 25px rgba(102, 126, 234, 0.6),
-    inset 0 1px 0 rgba(255,255,255,0.3);
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .action-card:active {
   transform: translateY(0);
-  box-shadow: 
+  box-shadow:
     0 2px 10px rgba(102, 126, 234, 0.4),
-    inset 0 2px 4px rgba(0,0,0,0.2);
+    inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Category-based color coding */
-.action-card.movement { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
-.action-card.social { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
-.action-card.inventory { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
-.action-card.special { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.action-card.movement {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+.action-card.social {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+.action-card.inventory {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
+.action-card.special {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
 ```
 
 ### Panel Layout Enhancement
 
 #### Unified Visual Language:
+
 ```css
 .game-panel {
-  background: rgba(255,255,255,0.95);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 16px;
-  box-shadow: 
-    0 8px 32px rgba(0,0,0,0.1),
-    inset 0 1px 0 rgba(255,255,255,0.4);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
   padding: 24px;
   position: relative;
-  
+
   /* Subtle animation on appearance */
   animation: panelFadeIn 0.6s ease-out;
 }
@@ -412,10 +458,12 @@ background: linear-gradient(135deg,
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(255,255,255,0.4) 50%, 
-    transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
 }
 ```
 
@@ -426,36 +474,40 @@ background: linear-gradient(135deg,
 ### Primary Gaming Palette
 
 #### Background & Foundation
+
 ```css
 :root {
   /* Primary backgrounds - atmospheric depth */
-  --bg-primary: #1a202c;          /* Deep navy base */
-  --bg-secondary: #2d3748;        /* Medium slate */
-  --bg-elevated: rgba(255,255,255,0.95); /* Elevated panels */
-  --bg-overlay: rgba(45, 55, 72, 0.9);   /* Modal overlays */
-  
+  --bg-primary: #1a202c; /* Deep navy base */
+  --bg-secondary: #2d3748; /* Medium slate */
+  --bg-elevated: rgba(255, 255, 255, 0.95); /* Elevated panels */
+  --bg-overlay: rgba(45, 55, 72, 0.9); /* Modal overlays */
+
   /* Narrative area - rich, atmospheric */
-  --narrative-bg: linear-gradient(135deg, 
+  --narrative-bg: linear-gradient(
+    135deg,
     rgba(45, 52, 73, 0.95) 0%,
-    rgba(28, 37, 59, 0.98) 100%);
-    
+    rgba(28, 37, 59, 0.98) 100%
+  );
+
   /* Panel colors - cohesive system */
-  --panel-bg: rgba(255,255,255,0.95);
-  --panel-border: rgba(255,255,255,0.15);
-  --panel-shadow: rgba(0,0,0,0.1);
+  --panel-bg: rgba(255, 255, 255, 0.95);
+  --panel-border: rgba(255, 255, 255, 0.15);
+  --panel-shadow: rgba(0, 0, 0, 0.1);
 }
 ```
 
 #### Interactive Elements
+
 ```css
 :root {
   /* Action categories - distinct but harmonious */
   --action-movement: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-  --action-social: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);  
+  --action-social: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
   --action-inventory: linear-gradient(135deg, #fed330 0%, #f0932b 100%);
   --action-special: linear-gradient(135deg, #a55eea 0%, #778beb 100%);
   --action-core: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  
+
   /* Character speech bubbles */
   --speech-player: linear-gradient(135deg, #8b5a3c 0%, #a0673d 100%);
   --speech-npc: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
@@ -464,19 +516,21 @@ background: linear-gradient(135deg,
 ```
 
 #### Typography Colors
+
 ```css
 :root {
   /* Text hierarchy */
-  --text-narrative: #f0f2f5;      /* Main story text */
-  --text-dialogue: #e8eaf6;       /* Character speech */
-  --text-system: rgba(255,255,255,0.7);  /* System messages */
-  --text-ui-primary: #2d3748;     /* Primary UI text */
-  --text-ui-secondary: #718096;   /* Secondary UI text */
-  --text-accent: #667eea;         /* Accent/link text */
+  --text-narrative: #f0f2f5; /* Main story text */
+  --text-dialogue: #e8eaf6; /* Character speech */
+  --text-system: rgba(255, 255, 255, 0.7); /* System messages */
+  --text-ui-primary: #2d3748; /* Primary UI text */
+  --text-ui-secondary: #718096; /* Secondary UI text */
+  --text-accent: #667eea; /* Accent/link text */
 }
 ```
 
 ### Dark Mode Alternative
+
 ```css
 .theme-dark {
   --bg-primary: #0f1419;
@@ -494,6 +548,7 @@ background: linear-gradient(135deg,
 ### Font Hierarchy & Usage
 
 #### Font Stack Definition
+
 ```css
 :root {
   /* Primary fonts optimized for gaming */
@@ -505,6 +560,7 @@ background: linear-gradient(135deg,
 ```
 
 #### Narrative Text Styling
+
 ```css
 /* Story content - elegant and readable */
 .narrative-content {
@@ -513,7 +569,7 @@ background: linear-gradient(135deg,
   line-height: 1.7;
   letter-spacing: 0.01em;
   color: var(--text-narrative);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* Character names - distinctive */
@@ -536,6 +592,7 @@ background: linear-gradient(135deg,
 ```
 
 #### UI Text Hierarchy
+
 ```css
 /* Primary headings */
 .ui-heading-primary {
@@ -577,15 +634,17 @@ background: linear-gradient(135deg,
 ## Implementation Roadmap
 
 ### Phase 1: Foundation (High Impact, Low Risk)
+
 **Estimated Effort: 1-2 days**
 
 #### Priority Tasks:
+
 1. **Color System Implementation**
    - Update CSS custom properties with new gaming palette
    - Replace current inconsistent colors throughout interface
    - Test accessibility compliance (WCAG AA)
 
-2. **Typography Enhancement**  
+2. **Typography Enhancement**
    - Implement font hierarchy system
    - Distinguish narrative text from UI text clearly
    - Add proper text shadows and contrast
@@ -596,14 +655,17 @@ background: linear-gradient(135deg,
    - Ensure readability of overlaid content
 
 **Technical Approach:**
+
 - Modify `css/themes/_default-theme.css` with new color variables
 - Update component CSS files to use new typography system
 - Test across existing content to ensure no regressions
 
 ### Phase 2: Component Enhancement (High Impact, Medium Risk)
+
 **Estimated Effort: 3-4 days**
 
 #### Priority Tasks:
+
 1. **Speech Bubble Redesign**
    - Implement enhanced visual styling with gradients and shadows
    - Add character-specific color coding
@@ -620,14 +682,17 @@ background: linear-gradient(135deg,
    - Add subtle animations for panel appearance
 
 **Technical Approach:**
+
 - Modify `css/components/_speech-bubbles.css` with enhanced styles
 - Update `css/components/_actions-widget.css` for card-based design
 - Enhance `css/components/_widgets-base.css` for unified panel system
 
 ### Phase 3: Layout Optimization (Medium Impact, Medium Risk)
+
 **Estimated Effort: 2-3 days**
 
 #### Priority Tasks:
+
 1. **Information Hierarchy Improvement**
    - Adjust panel sizes for better content prioritization
    - Implement responsive behavior for different screen sizes
@@ -644,14 +709,17 @@ background: linear-gradient(135deg,
    - Test responsive behavior across breakpoints
 
 **Technical Approach:**
+
 - Modify `css/layout/_grid.css` for improved responsive behavior
 - Update component CSS with enhanced interactive states
 - Add new breakpoints and mobile-specific optimizations
 
 ### Phase 4: Advanced Features (Medium Impact, High Risk)
+
 **Estimated Effort: 4-5 days**
 
 #### Optional Enhancements:
+
 1. **Dynamic Theming System**
    - Implement user-selectable color themes
    - Add dark/light mode toggle functionality
@@ -668,6 +736,7 @@ background: linear-gradient(135deg,
    - Add layout variants (compact, comfortable, spacious)
 
 **Technical Approach:**
+
 - Extend CSS custom property system for theme switching
 - Add JavaScript for theme management and persistence
 - Implement CSS animations with proper performance considerations
@@ -675,24 +744,28 @@ background: linear-gradient(135deg,
 ### Implementation Considerations
 
 #### Accessibility Compliance
+
 - Maintain WCAG 2.1 AA contrast ratios throughout color changes
 - Ensure animations respect `prefers-reduced-motion` settings
 - Test keyboard navigation and screen reader compatibility
 - Preserve semantic HTML structure during visual changes
 
 #### Performance Impact
+
 - Use CSS transforms for animations (GPU acceleration)
 - Minimize repaints and reflows during transitions
 - Implement efficient CSS delivery (critical CSS inlining)
 - Test performance on lower-end devices
 
 #### Browser Compatibility
+
 - Use progressive enhancement for advanced visual effects
 - Provide fallbacks for newer CSS features (backdrop-filter, etc.)
 - Test across Chrome, Firefox, Safari, and Edge
 - Ensure mobile browser compatibility
 
 #### Testing Strategy
+
 - Visual regression testing with existing screenshots
 - Cross-browser testing on major platforms
 - Accessibility testing with screen readers
@@ -706,34 +779,36 @@ background: linear-gradient(135deg,
 ### Responsive Design Strategy
 
 #### Breakpoint System
+
 ```css
 :root {
   /* Gaming-optimized breakpoints */
-  --breakpoint-mobile: 480px;    /* Phones */
-  --breakpoint-tablet: 768px;    /* Tablets */  
-  --breakpoint-desktop: 1024px;  /* Small desktops */
-  --breakpoint-large: 1440px;    /* Large screens */
+  --breakpoint-mobile: 480px; /* Phones */
+  --breakpoint-tablet: 768px; /* Tablets */
+  --breakpoint-desktop: 1024px; /* Small desktops */
+  --breakpoint-large: 1440px; /* Large screens */
 }
 ```
 
 #### Mobile Layout Adaptations
+
 ```css
 @media (max-width: 768px) {
   .game-interface {
     /* Stack panels vertically */
     flex-direction: column;
-    
+
     /* Optimize for touch interaction */
     --touch-target-size: 44px;
     --panel-padding: 16px;
     --text-size-mobile: 1.1rem;
   }
-  
+
   .action-card {
     /* Larger touch targets */
     min-height: var(--touch-target-size);
     margin: 8px 0;
-    
+
     /* Simplified hover states for touch */
     &:active {
       transform: scale(0.98);
@@ -744,6 +819,7 @@ background: linear-gradient(135deg,
 ```
 
 #### Touch-First Interactions
+
 - Minimum 44px touch targets for all interactive elements
 - Swipe gestures for panel navigation on mobile
 - Long-press context menus for advanced actions
@@ -752,12 +828,13 @@ background: linear-gradient(135deg,
 ### Accessibility Enhancement
 
 #### Enhanced Focus Management
+
 ```css
 /* High-contrast focus indicators */
 .focusable:focus-visible {
   outline: 3px solid var(--focus-color);
   outline-offset: 2px;
-  box-shadow: 
+  box-shadow:
     0 0 0 5px rgba(102, 126, 234, 0.2),
     var(--elevation-shadow);
 }
@@ -781,12 +858,14 @@ background: linear-gradient(135deg,
 ```
 
 #### Screen Reader Optimization
+
 - Enhanced ARIA labels for game state information
 - Live regions for dynamic content updates (speech bubbles, actions)
 - Proper heading hierarchy for content navigation
 - Alternative text for all decorative and informational images
 
 #### Visual Accessibility
+
 - Maintain 4.5:1 contrast ratio for all text
 - Support for high contrast mode preferences
 - Reduced motion alternatives for animations
@@ -799,32 +878,37 @@ background: linear-gradient(135deg,
 ### Gaming Interface Examples
 
 #### Modern Narrative Games
+
 - **Disco Elysium**: Excellent typography hierarchy and atmospheric color palette
 - **Divinity Original Sin 2**: Clear action categorization and visual feedback
 - **Baldur's Gate 3**: Character portrait integration and dialogue presentation
 - **Crusader Kings 3**: Information density management and panel organization
 
-#### Visual Novel Interfaces  
+#### Visual Novel Interfaces
+
 - **VA-11 Hall-A**: Clean dialogue presentation and character focus
 - **Phoenix Wright Series**: Clear choice presentation and narrative flow
 - **Doki Doki Literature Club**: Effective use of color psychology
 - **The Stanley Parable**: Minimalist yet engaging interface design
 
 #### Web-Based Gaming Interfaces
+
 - **Roll20**: Panel management and responsive design
-- **Foundry VTT**: Modern UI patterns in gaming context  
+- **Foundry VTT**: Modern UI patterns in gaming context
 - **D&D Beyond**: Information hierarchy and mobile optimization
 - **Fantasy Grounds**: Traditional RPG interface adaptation to digital
 
 ### Modern Web Interface Patterns
 
 #### Design Systems
+
 - **Discord**: Gaming-focused color schemes and panel layouts
 - **Figma**: Floating panels and contextual interfaces
 - **Linear**: Clean typography and subtle animations
 - **Notion**: Information hierarchy and responsive design
 
 #### Color & Typography Inspiration
+
 - **Dribbble Gaming Tags**: Modern color palettes and gradients
 - **Game UI Database**: Comprehensive interface pattern collection
 - **Interface In Game**: Curated gaming interface examples
@@ -837,6 +921,7 @@ background: linear-gradient(135deg,
 This brainstorm provides five distinct design concepts and comprehensive implementation guidance to transform the Living Narrative Engine interface from a basic web application into a professional, immersive gaming experience.
 
 **Key Transformation Areas:**
+
 1. **Visual Hierarchy**: Clear focus on narrative content with supporting panels
 2. **Gaming Aesthetics**: Rich colors, depth, and interactive feedback
 3. **Component Quality**: Professional-grade buttons, panels, and typography
@@ -844,8 +929,9 @@ This brainstorm provides five distinct design concepts and comprehensive impleme
 5. **Accessibility**: Maintains high standards while improving visual appeal
 
 **Recommended Approach:**
+
 - Start with **Phase 1 (Foundation)** for immediate visual impact
-- Iterate through **Phase 2 (Components)** for functional improvements  
+- Iterate through **Phase 2 (Components)** for functional improvements
 - Consider **Phase 3 (Layout)** based on user feedback
 - Evaluate **Phase 4 (Advanced)** for long-term enhancement
 
@@ -853,4 +939,4 @@ The designs maintain all existing functionality while dramatically improving the
 
 ---
 
-*This brainstorming document represents creative exploration only. Implementation should proceed with careful testing and user feedback integration.*
+_This brainstorming document represents creative exploration only. Implementation should proceed with careful testing and user feedback integration._

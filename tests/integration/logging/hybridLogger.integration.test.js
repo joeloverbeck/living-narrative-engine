@@ -229,7 +229,6 @@ describe('HybridLogger Integration', () => {
     });
   });
 
-
   describe('Console-Specific Methods Integration', () => {
     it('should handle console grouping with real console logger', () => {
       hybridLogger.groupCollapsed('Test Group');
@@ -319,5 +318,4 @@ describe('HybridLogger Integration', () => {
       });
     });
   });
-
 });

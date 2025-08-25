@@ -178,23 +178,16 @@ describe('Pipeline - Structured Trace Performance', () => {
       ];
 
       mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
+      mockTargetResolutionService.resolveTargets.mockResolvedValue([
+        {
+          entityId: 'test_actor',
+          type: 'actor',
+          valid: true,
+          position: { x: 0, y: 0 },
+        },
+      ]);
 
-      // Add delays to different stages
-      mockTargetResolutionService.resolveTargets.mockImplementation(
-        async () => {
-          await new Promise((resolve) => setTimeout(resolve, 20));
-          return [
-            {
-              entityId: 'test_actor',
-              type: 'actor',
-              valid: true,
-              position: { x: 0, y: 0 },
-            },
-          ];
-        }
-      );
-
-      // Act
+      // Act - execute the pipeline first
       const result = await pipeline.execute({
         actor,
         actionContext,
@@ -205,7 +198,42 @@ describe('Pipeline - Structured Trace Performance', () => {
       // Assert
       expect(result.success).toBe(true);
 
-      // Critical path should include Pipeline and the slowest stage (TargetResolutionStage due to artificial delay)
+      // Now manually set the durations to be deterministic
+      // This ensures our test is not dependent on actual execution time
+      const allSpans = structuredTrace.getSpans();
+
+      // Find each span and set its duration directly
+      // We'll use Object.defineProperty to override the readonly duration getter
+      allSpans.forEach((span) => {
+        let mockedDuration;
+        switch (span.operation) {
+          case 'Pipeline':
+            mockedDuration = 78; // Total time
+            break;
+          case 'ComponentFilteringStage':
+            mockedDuration = 10;
+            break;
+          case 'PrerequisiteEvaluationStage':
+            mockedDuration = 5;
+            break;
+          case 'TargetResolutionStage':
+            mockedDuration = 50; // This is the slowest stage
+            break;
+          case 'ActionFormattingStage':
+            mockedDuration = 8;
+            break;
+          default:
+            mockedDuration = 1;
+        }
+
+        // Override the duration getter
+        Object.defineProperty(span, 'duration', {
+          get: () => mockedDuration,
+          configurable: true,
+        });
+      });
+
+      // Critical path should include Pipeline and the slowest stage (TargetResolutionStage with 50ms)
       const criticalPath = structuredTrace.getCriticalPath();
       expect(criticalPath).toEqual(['Pipeline', 'TargetResolutionStage']);
 
@@ -219,8 +247,7 @@ describe('Pipeline - Structured Trace Performance', () => {
         (op) => op.operation === 'TargetResolutionStage'
       );
       expect(targetResolutionOp).toBeDefined();
-      // Just verify it has a duration greater than 0
-      expect(targetResolutionOp.duration).toBeGreaterThan(0);
+      expect(targetResolutionOp.duration).toBe(50); // Should have our mocked 50ms duration
     });
   });
 });

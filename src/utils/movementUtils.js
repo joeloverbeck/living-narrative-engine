@@ -66,6 +66,8 @@ export async function updateMovementLock(entityManager, entityId, locked) {
     return move;
   }
 
-  // No movement component found
-  return null;
+  // No movement component found - create it with the locked state
+  const newMovement = { locked };
+  await entityManager.addComponent(entityId, 'core:movement', newMovement);
+  return newMovement;
 }
