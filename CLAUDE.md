@@ -110,7 +110,9 @@ class MyClass {
   #privateField;
 
   constructor({ dependency1, dependency2 }) {
-    validateDependency(dependency1, 'IDependency1');
+    validateDependency(dependency1, 'IDependency1', console, {
+      requiredMethods: ['method1', 'method2'],
+    });
     this.#privateField = dependency1;
   }
 }
@@ -128,17 +130,22 @@ export default MyClass;
 ### Dependency Injection Pattern
 
 ```javascript
-// Token definition
+// Token definition (actual implementation uses string tokens)
 export const tokens = {
-  IEntityManager: Symbol('IEntityManager'),
-  IEventBus: Symbol('IEventBus'),
+  IEntityManager: 'IEntityManager',
+  IEventBus: 'IEventBus',
+  ILogger: 'ILogger',
 };
 
 // Service implementation
 class EntityManager {
   constructor({ logger, eventBus, repository }) {
-    validateDependency(logger, 'ILogger');
-    validateDependency(eventBus, 'IEventBus');
+    validateDependency(logger, 'ILogger', logger, {
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
+    });
+    validateDependency(eventBus, 'IEventBus', logger, {
+      requiredMethods: ['dispatch'],
+    });
     this.#logger = logger;
     this.#eventBus = eventBus;
   }
@@ -157,17 +164,22 @@ import {
   validateDependency,
   assertPresent,
   assertNonBlankString,
-} from './utils/validationUtils.js';
+} from './utils/dependencyUtils.js';
+import { string, logger } from './utils/validationCore.js';
 import { ensureValidLogger } from './utils/loggerUtils.js';
 
 // Use in constructors
-validateDependency(service, 'IService', defaultImpl, {
+validateDependency(service, 'IService', logger, {
   requiredMethods: ['method1', 'method2'],
 });
 
 // Use for parameters
 assertPresent(value, 'Value is required');
-assertNonBlankString(id, 'Entity ID');
+assertNonBlankString(id, 'Entity ID', 'constructor validation', logger);
+
+// Alternative validation core usage
+string.assertNonBlank(id, 'Entity ID', 'constructor validation', logger);
+logger.assertValid(loggerInstance, 'logger');
 ```
 
 #### Error Handling Pattern
@@ -175,13 +187,14 @@ assertNonBlankString(id, 'Entity ID');
 ```javascript
 // Custom domain errors
 import { EntityNotFoundError } from './errors/entityNotFoundError.js';
+import { InvalidArgumentError } from './errors/invalidArgumentError.js';
 
 // Consistent error handling
 try {
   // operation
 } catch (err) {
   this.#logger.error(`Context: descriptive message`, err);
-  throw new DomainError('User-friendly message');
+  throw new InvalidArgumentError('User-friendly message');
 }
 
 // NEVER log errors directly - dispatch events
@@ -197,13 +210,13 @@ this.#eventBus.dispatch({
 
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { TestBedClass } from '../../common/testbed.js';
+import { createTestBed } from '../../common/testBed.js';
 
 describe('ComponentName - Feature', () => {
   let testBed;
 
   beforeEach(() => {
-    testBed = new TestBedClass();
+    testBed = createTestBed();
   });
 
   afterEach(() => {
@@ -212,13 +225,15 @@ describe('ComponentName - Feature', () => {
 
   it('should perform expected behavior', () => {
     // Arrange
-    const input = testBed.createInput();
+    const mockLogger = testBed.createMockLogger();
+    const input = testBed.createMock('testInput', ['method1', 'method2']);
 
-    // Act
+    // Act  
     const result = testBed.performAction(input);
 
     // Assert
     expect(result).toBe(expected);
+    expect(mockLogger.info).toHaveBeenCalled();
   });
 });
 ```

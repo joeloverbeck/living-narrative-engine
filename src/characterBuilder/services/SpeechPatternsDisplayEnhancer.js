@@ -1,39 +1,13 @@
-# SPEPATGEN-006: Create SpeechPatternsDisplayEnhancer Service
-
-## Ticket Overview
-
-- **Epic**: Speech Patterns Generator Implementation
-- **Phase**: 2 - Core Implementation
-- **Type**: Backend Development/Service
-- **Priority**: High
-- **Estimated Effort**: 1.5 days
-- **Dependencies**: SPEPATGEN-005 (Controller Implementation) - controller depends on this service
-
-## Description
-
-Create the `SpeechPatternsDisplayEnhancer` service responsible for formatting speech patterns for display and export. This service processes raw LLM responses into user-friendly formats, handles HTML escaping for security, and generates export files with proper formatting.
-
-## Requirements
-
-### Service File Creation
-
-- **File**: `src/characterBuilder/services/SpeechPatternsDisplayEnhancer.js`
-- **Type**: Service class following project patterns
-- **Dependencies**: Integrates with existing utility functions and logging
-
-### Complete Service Implementation
-
-```javascript
 /**
  * @file Speech patterns display enhancement service
  * @description Formats speech patterns for display and export
  */
 
-import { validateDependency } from '../../utils/validationUtils.js';
 import {
+  validateDependency,
   assertPresent,
   assertNonBlankString,
-} from '../../utils/validationUtils.js';
+} from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 
 /**
@@ -46,10 +20,13 @@ export class SpeechPatternsDisplayEnhancer {
 
   /**
    * Create a new SpeechPatternsDisplayEnhancer instance
+   *
    * @param {object} dependencies - Service dependencies
    */
   constructor(dependencies) {
-    validateDependency(dependencies.logger, 'ILogger');
+    validateDependency(dependencies.logger, 'ILogger', null, {
+      requiredMethods: ['debug', 'info', 'warn', 'error'],
+    });
 
     this.#logger = ensureValidLogger(dependencies.logger);
     this.#logger.debug('SpeechPatternsDisplayEnhancer initialized');
@@ -57,6 +34,7 @@ export class SpeechPatternsDisplayEnhancer {
 
   /**
    * Enhance speech patterns for display
+   *
    * @param {object} patterns - Raw patterns from LLM
    * @param {object} options - Display options
    * @returns {object} Enhanced patterns for display
@@ -103,6 +81,7 @@ export class SpeechPatternsDisplayEnhancer {
 
   /**
    * Format patterns for text export
+   *
    * @param {object} patterns - Generated patterns
    * @param {object} options - Export options
    * @returns {string} Formatted text for export
@@ -148,6 +127,7 @@ export class SpeechPatternsDisplayEnhancer {
 
   /**
    * Generate filename for export
+   *
    * @param {string} characterName - Character name
    * @param {object} options - Filename options
    * @returns {string} Export filename
@@ -176,6 +156,7 @@ export class SpeechPatternsDisplayEnhancer {
 
   /**
    * Validate patterns structure
+   *
    * @private
    * @param {object} patterns - Patterns data to validate
    */
@@ -208,6 +189,7 @@ export class SpeechPatternsDisplayEnhancer {
 
   /**
    * Enhance a single pattern for display
+   *
    * @private
    * @param {object} pattern - Raw pattern data
    * @param {number} index - Pattern index
@@ -249,6 +231,7 @@ export class SpeechPatternsDisplayEnhancer {
 
   /**
    * Analyze pattern complexity
+   *
    * @private
    * @param {object} pattern - Pattern data
    * @returns {object} Complexity analysis
@@ -280,6 +263,7 @@ export class SpeechPatternsDisplayEnhancer {
 
   /**
    * Categorize pattern type
+   *
    * @private
    * @param {object} pattern - Pattern data
    * @returns {Array<string>} Pattern categories
@@ -372,6 +356,7 @@ export class SpeechPatternsDisplayEnhancer {
 
   /**
    * Generate export header
+   *
    * @private
    * @param {string} characterName - Character name
    * @param {string} timestamp - Generation timestamp
@@ -402,6 +387,7 @@ SPEECH PATTERNS:
 
   /**
    * Generate patterns section for export
+   *
    * @private
    * @param {object} patterns - Pattern data
    * @returns {string} Formatted patterns section
@@ -432,6 +418,7 @@ SPEECH PATTERNS:
 
   /**
    * Generate character data section for export
+   *
    * @private
    * @param {object} characterDefinition - Character data
    * @returns {string} Character data section
@@ -453,6 +440,7 @@ ${JSON.stringify(characterDefinition, null, 2)}
 
   /**
    * Generate export footer
+   *
    * @private
    * @returns {string} Export footer
    */
@@ -478,6 +466,7 @@ ${'='.repeat(60)}
 
   /**
    * Escape HTML for safe display
+   *
    * @private
    * @param {string} text - Text to escape
    * @returns {string} HTML-escaped text
@@ -485,13 +474,17 @@ ${'='.repeat(60)}
   #escapeHtml(text) {
     if (typeof text !== 'string') return '';
 
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   /**
    * Sanitize string for filename
+   *
    * @private
    * @param {string} name - Name to sanitize
    * @returns {string} Filename-safe string
@@ -516,6 +509,7 @@ ${'='.repeat(60)}
 
   /**
    * Get supported export formats
+   *
    * @returns {Array<object>} Available export formats
    */
   getSupportedExportFormats() {
@@ -539,6 +533,7 @@ ${'='.repeat(60)}
 
   /**
    * Format patterns as JSON for export
+   *
    * @param {object} patterns - Pattern data
    * @param {object} options - Export options
    * @returns {string} JSON formatted data
@@ -580,6 +575,7 @@ ${'='.repeat(60)}
 
   /**
    * Validate export options
+   *
    * @param {object} options - Export options to validate
    * @returns {object} Validated and normalized options
    */
@@ -610,6 +606,7 @@ ${'='.repeat(60)}
 
   /**
    * Generate pattern statistics
+   *
    * @param {object} patterns - Pattern data
    * @returns {object} Pattern statistics
    */
@@ -674,94 +671,3 @@ ${'='.repeat(60)}
 }
 
 export default SpeechPatternsDisplayEnhancer;
-```
-
-## Technical Specifications
-
-### Service Architecture
-
-1. **Display Enhancement**
-   - HTML escaping for security
-   - Pattern metadata generation
-   - Content analysis and categorization
-
-2. **Export Functionality**
-   - Multiple export formats (TXT, JSON)
-   - Comprehensive text formatting
-   - Filename generation and sanitization
-
-3. **Data Processing**
-   - Pattern complexity analysis
-   - Category classification
-   - Statistical analysis
-
-### Integration Points
-
-1. **Controller Integration**: Used by `SpeechPatternsGeneratorController`
-2. **Validation System**: Validates pattern structure and content
-3. **Logging System**: Comprehensive error and debug logging
-4. **Utility Functions**: Uses existing validation and logging utilities
-
-### Security Considerations
-
-1. **HTML Escaping**: All user content properly escaped for display
-2. **Filename Sanitization**: Safe filename generation
-3. **Input Validation**: Comprehensive input validation
-4. **Error Handling**: Secure error messages without information leakage
-
-## Acceptance Criteria
-
-### Display Enhancement Requirements
-
-- [ ] Raw patterns enhanced with HTML-safe versions
-- [ ] Pattern metadata generated (complexity, categories)
-- [ ] Display formatting preserves content integrity
-- [ ] Enhancement process handles edge cases gracefully
-
-### Export Functionality Requirements
-
-- [ ] Text export generates human-readable format
-- [ ] JSON export provides machine-readable structure
-- [ ] Export files include comprehensive metadata
-- [ ] Filename generation creates safe, descriptive names
-
-### Content Analysis Requirements
-
-- [ ] Pattern complexity analysis works accurately
-- [ ] Category classification identifies speech characteristics
-- [ ] Statistical analysis provides meaningful insights
-- [ ] Content processing handles various pattern types
-
-### Security Requirements
-
-- [ ] HTML escaping prevents XSS vulnerabilities
-- [ ] Filename sanitization prevents directory traversal
-- [ ] Input validation rejects malicious content
-- [ ] Error handling doesn't leak sensitive information
-
-### Performance Requirements
-
-- [ ] Enhancement process completes within reasonable time
-- [ ] Export generation handles large pattern sets efficiently
-- [ ] Content analysis algorithms perform optimally
-- [ ] Memory usage remains controlled during processing
-
-## Files Modified
-
-- **NEW**: `src/characterBuilder/services/SpeechPatternsDisplayEnhancer.js`
-
-## Dependencies For Next Tickets
-
-This display service is required for:
-
-- SPEPATGEN-005 (Controller) - controller depends on this service
-- SPEPATGEN-013 (Export Functionality) - enhanced export features
-- SPEPATGEN-011 (Testing) - service needs comprehensive test coverage
-
-## Notes
-
-- Service provides comprehensive content analysis beyond basic display
-- Export functionality supports multiple formats for different use cases
-- Security measures implemented throughout for safe content handling
-- Statistical analysis provides insights for future feature development
-- Error handling ensures graceful degradation in all scenarios

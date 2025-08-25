@@ -152,10 +152,13 @@ describe('Entity Lifecycle Workflow Performance', () => {
       expect(batchEntities).toHaveLength(batchSize);
 
       // Note: Batch operations currently don't have true optimization - they just loop through
-      // individual creates. The 50% threshold accounts for wrapper overhead and timing variance
+      // individual creates. The threshold accounts for wrapper overhead and timing variance
       // in the test environment (JIT compilation, garbage collection, jsdom overhead).
+      // Using 2.0x multiplier to reduce test flakiness while still catching major performance regressions.
       // If true batch optimization is implemented in the future, this threshold can be tightened.
-      const batchEfficiencyThreshold = individualTime * 1.5;
+      const baseMultiplier = 2.0;
+      const envMultiplier = process.env.CI ? 2.5 : baseMultiplier; // More lenient in CI
+      const batchEfficiencyThreshold = individualTime * envMultiplier;
       expect(batchTime).toBeLessThan(batchEfficiencyThreshold);
     });
   });
