@@ -1,4 +1,4 @@
-import { freeze } from '../../utils';
+import { freeze } from '../../utils/cloneUtils.js';
 
 /**
  * @file Core DI tokens excluding UI and AI groups.
@@ -219,6 +219,9 @@ export const coreTokens = freeze({
   CoreMotivationsDisplayEnhancer: 'CoreMotivationsDisplayEnhancer',
   TraitsGenerator: 'TraitsGenerator',
   TraitsDisplayEnhancer: 'TraitsDisplayEnhancer',
+  SpeechPatternsGenerator: 'SpeechPatternsGenerator',
+  SpeechPatternsDisplayEnhancer: 'SpeechPatternsDisplayEnhancer',
+  SpeechPatternsResponseProcessor: 'SpeechPatternsResponseProcessor',
   CharacterDatabase: 'CharacterDatabase',
   ICoreMotivationsCacheManager: 'ICoreMotivationsCacheManager',
   CoreMotivationsCacheManager: 'CoreMotivationsCacheManager',

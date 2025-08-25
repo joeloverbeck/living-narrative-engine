@@ -20,6 +20,9 @@ import { CoreMotivationsGenerator } from '../../characterBuilder/services/CoreMo
 import { CoreMotivationsDisplayEnhancer } from '../../coreMotivationsGenerator/services/CoreMotivationsDisplayEnhancer.js';
 import { TraitsGenerator } from '../../characterBuilder/services/TraitsGenerator.js';
 import { TraitsDisplayEnhancer } from '../../characterBuilder/services/TraitsDisplayEnhancer.js';
+import { SpeechPatternsGenerator } from '../../characterBuilder/services/SpeechPatternsGenerator.js';
+import { SpeechPatternsDisplayEnhancer } from '../../characterBuilder/services/SpeechPatternsDisplayEnhancer.js';
+import { SpeechPatternsResponseProcessor } from '../../characterBuilder/services/SpeechPatternsResponseProcessor.js';
 import { CharacterBuilderService } from '../../characterBuilder/services/characterBuilderService.js';
 
 /**
@@ -129,6 +132,42 @@ function registerCharacterBuilderServices(registrar, logger) {
     `Character Builder Registration: Registered ${tokens.TraitsDisplayEnhancer}.`
   );
 
+  // Speech Patterns Services
+  registrar.singletonFactory(tokens.SpeechPatternsResponseProcessor, (c) => {
+    return new SpeechPatternsResponseProcessor({
+      logger: c.resolve(tokens.ILogger),
+      llmJsonService: c.resolve(tokens.LlmJsonService),
+      schemaValidator: c.resolve(tokens.ISchemaValidator),
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.SpeechPatternsResponseProcessor}.`
+  );
+
+  registrar.singletonFactory(tokens.SpeechPatternsGenerator, (c) => {
+    return new SpeechPatternsGenerator({
+      logger: c.resolve(tokens.ILogger),
+      llmJsonService: c.resolve(tokens.LlmJsonService),
+      llmStrategyFactory: c.resolve(tokens.LLMAdapter), // Use the ConfigurableLLMAdapter
+      llmConfigManager: c.resolve(tokens.ILLMConfigurationManager),
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),
+      tokenEstimator: c.resolve(tokens.ITokenEstimator),
+      schemaValidator: c.resolve(tokens.ISchemaValidator),
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.SpeechPatternsGenerator}.`
+  );
+
+  registrar.singletonFactory(tokens.SpeechPatternsDisplayEnhancer, (c) => {
+    return new SpeechPatternsDisplayEnhancer({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.SpeechPatternsDisplayEnhancer}.`
+  );
+
   registrar.singletonFactory(tokens.CharacterBuilderService, (c) => {
     return new CharacterBuilderService({
       logger: c.resolve(tokens.ILogger),
@@ -139,6 +178,7 @@ function registerCharacterBuilderServices(registrar, logger) {
       schemaValidator: c.resolve(tokens.ISchemaValidator),
       clicheGenerator: c.resolve(tokens.ClicheGenerator), // Replace null with actual service
       traitsGenerator: c.resolve(tokens.TraitsGenerator), // Traits generator service
+      speechPatternsGenerator: c.resolve(tokens.SpeechPatternsGenerator), // Speech patterns generator service
     });
   });
 
