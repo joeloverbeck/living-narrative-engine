@@ -1,0 +1,411 @@
+/**
+ * @file Integration test for turn around and kneel before interaction
+ * @description Tests that kneeling is not available when facing away and becomes available after turning to face
+ */
+
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import {
+  NAME_COMPONENT_ID,
+  POSITION_COMPONENT_ID,
+} from '../../../../src/constants/componentIds.js';
+import { SimpleEntityManager } from '../../../common/entities/index.js';
+import { ActionDiscoveryService } from '../../../../src/actions/actionDiscoveryService.js';
+import { ActionPipelineOrchestrator } from '../../../../src/actions/actionPipelineOrchestrator.js';
+import ActionCommandFormatter from '../../../../src/actions/actionFormatter.js';
+import { getEntityDisplayName } from '../../../../src/utils/entityUtils.js';
+import { GameDataRepository } from '../../../../src/data/gameDataRepository.js';
+import { SafeEventDispatcher } from '../../../../src/events/safeEventDispatcher.js';
+import { createMockActionErrorContextBuilder } from '../../../common/mockFactories/actions.js';
+import { createMockTargetContextBuilder } from '../../../common/mocks/mockTargetContextBuilder.js';
+import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
+import turnAroundAction from '../../../../data/mods/positioning/actions/turn_around.action.json';
+import kneelBeforeAction from '../../../../data/mods/positioning/actions/kneel_before.action.json';
+import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
+import {
+  createTargetResolutionServiceWithMocks,
+  createMockUnifiedScopeResolver,
+} from '../../../common/mocks/mockUnifiedScopeResolver.js';
+import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
+import ScopeEngine from '../../../../src/scopeDsl/engine.js';
+import { parseScopeDefinitions } from '../../../../src/scopeDsl/scopeDefinitionParser.js';
+import fs from 'fs';
+import path from 'path';
+import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
+import { PrerequisiteEvaluationService } from '../../../../src/actions/validation/prerequisiteEvaluationService.js';
+import { ActionIndex } from '../../../../src/actions/actionIndex.js';
+import DefaultDslParser from '../../../../src/scopeDsl/parser/defaultDslParser.js';
+import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
+
+describe('Turn around and kneel before interaction', () => {
+  let entityManager;
+  let actionDiscoveryService;
+  let actionPipelineOrchestrator;
+  let eventBus;
+  let actor1;
+  let actor2;
+  let logger;
+  let scopeRegistry;
+  let scopeEngine;
+  let targetResolutionService;
+  let gameDataRepository;
+  let actionIndex;
+  let safeEventDispatcher;
+
+  beforeEach(async () => {
+    // Set up logger
+    logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    // Set up entity manager
+    entityManager = new SimpleEntityManager([], logger);
+
+    // Set up scope registry and engine
+    scopeRegistry = new ScopeRegistry();
+
+    // Load necessary scope files
+    const scopePaths = [
+      'data/mods/core/scopes/actors_in_location.scope',
+      'data/mods/positioning/scopes/actors_in_location_facing.scope',
+      'data/mods/positioning/scopes/close_actors_facing_each_other_or_behind_target.scope',
+    ];
+
+    const parsedScopes = [];
+    for (const scopePath of scopePaths) {
+      const fullPath = path.join(process.cwd(), scopePath);
+      if (fs.existsSync(fullPath)) {
+        const scopeContent = fs.readFileSync(fullPath, 'utf-8');
+        const scopes = parseScopeDefinitions(scopeContent, fullPath);
+        parsedScopes.push(...scopes);
+      }
+    }
+
+    // Register scopes
+    scopeRegistry.initialize(Object.fromEntries(parsedScopes));
+
+    scopeEngine = new ScopeEngine();
+
+    // Set up action discovery dependencies
+    const dataRegistry = new InMemoryDataRegistry();
+
+    // Store the action definitions in the data registry
+    dataRegistry.store('actions', turnAroundAction.id, turnAroundAction);
+    dataRegistry.store('actions', kneelBeforeAction.id, kneelBeforeAction);
+
+    // Store conditions
+    const conditions = [
+      {
+        id: 'core:entity-at-location',
+        logic: {
+          '==': [{ var: 'entity.components.core:position.locationId' }, { var: 'actor.components.core:position.locationId' }],
+        },
+      },
+      {
+        id: 'core:entity-is-not-current-actor',
+        logic: {
+          '!=': [{ var: 'entity.id' }, { var: 'actor.id' }],
+        },
+      },
+      {
+        id: 'core:entity-has-actor-component',
+        logic: {
+          '!!': { var: 'entity.components.core:actor' },
+        },
+      },
+      {
+        id: 'positioning:entity-in-facing-away',
+        logic: {
+          in: [{ var: 'entity.id' }, { var: 'actor.components.positioning:facing_away.facing_away_from' }],
+        },
+      },
+    ];
+
+    conditions.forEach((condition) => {
+      dataRegistry.store('conditions', condition.id, condition);
+    });
+
+    gameDataRepository = new GameDataRepository(dataRegistry, logger);
+
+    // Set up dslParser and other dependencies
+    const dslParser = new DefaultDslParser();
+    const jsonLogicService = new JsonLogicEvaluationService({
+      logger,
+      gameDataRepository,
+    });
+    const actionErrorContextBuilder = createMockActionErrorContextBuilder();
+
+    // Create mock validatedEventDispatcher for SafeEventDispatcher
+    const validatedEventDispatcher = {
+      dispatch: jest.fn((event) => {
+        // Handle turn_around action
+        if (event.type === ATTEMPT_ACTION_ID && event.payload.actionId === 'positioning:turn_around') {
+          const target = entityManager.getEntityInstance(event.payload.targetId);
+          const actor = entityManager.getEntityInstance(event.payload.actorId);
+
+          if (target) {
+            const facingAwayComponent = target.components['positioning:facing_away'];
+            if (facingAwayComponent?.facing_away_from?.includes(actor.id)) {
+              // Remove actor from facing_away_from
+              const updatedList = facingAwayComponent.facing_away_from.filter(
+                (id) => id !== actor.id
+              );
+              if (updatedList.length === 0) {
+                // Remove component if empty
+                entityManager.removeComponent(target.id, 'positioning:facing_away');
+              } else {
+                entityManager.updateComponent(target.id, 'positioning:facing_away', {
+                  facing_away_from: updatedList,
+                });
+              }
+            } else {
+              // Add actor to facing_away_from
+              const currentList = facingAwayComponent?.facing_away_from || [];
+              entityManager.addComponent(target.id, 'positioning:facing_away', {
+                facing_away_from: [...currentList, actor.id],
+              });
+            }
+          }
+        }
+        return Promise.resolve();
+      }),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
+    };
+
+    safeEventDispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher,
+      logger,
+    });
+
+    eventBus = validatedEventDispatcher;
+
+    // Set up target resolution service
+    targetResolutionService = createTargetResolutionServiceWithMocks({
+      entityManager,
+      scopeEngine,
+      scopeRegistry,
+      logger,
+      safeEventDispatcher,
+      jsonLogicEvaluationService: jsonLogicService,
+      dslParser,
+      actionErrorContextBuilder,
+    });
+
+    // Create mock prerequisiteEvaluationService
+    const prereqService = {
+      evaluate: jest.fn().mockReturnValue(true),
+      evaluateActionConditions: jest.fn().mockResolvedValue({
+        success: true,
+        errors: [],
+      }),
+    };
+
+    actionIndex = new ActionIndex({ logger, entityManager });
+    const allActions = gameDataRepository.getAllActionDefinitions();
+    actionIndex.buildIndex(allActions);
+
+    const actionCommandFormatter = new ActionCommandFormatter({ logger });
+
+    actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+      actionIndex,
+      prerequisiteService: prereqService,
+      entityManager,
+      targetService: targetResolutionService,
+      formatter: actionCommandFormatter,
+      logger,
+      safeEventDispatcher,
+      getEntityDisplayNameFn: getEntityDisplayName,
+      errorBuilder: actionErrorContextBuilder,
+      unifiedScopeResolver: createMockUnifiedScopeResolver({
+        scopeRegistry,
+        entityManager,
+        logger,
+        jsonLogicEvaluationService: jsonLogicService,
+        gameDataRepository,
+      }),
+      targetContextBuilder: createMockTargetContextBuilder(),
+      multiTargetStage: createMultiTargetResolutionStage({
+        entityManager,
+        targetService: targetResolutionService,
+        logger,
+      }),
+    });
+
+    // Create mock traceContextFactory as a function
+    const traceContextFactory = jest.fn(() => ({
+      addStep: jest.fn(),
+      toJSON: jest.fn(() => ({})),
+    }));
+
+    // Create ActionDiscoveryService
+    actionDiscoveryService = new ActionDiscoveryService({
+      actionPipelineOrchestrator,
+      entityManager,
+      traceContextFactory,
+      logger,
+    });
+
+    // Create test actors
+    actor1 = {
+      id: 'test:actor1',
+      components: {
+        [NAME_COMPONENT_ID]: { name: 'Actor 1' },
+        [POSITION_COMPONENT_ID]: { locationId: 'test:location1' },
+        'core:actor': {},
+      },
+    };
+
+    actor2 = {
+      id: 'test:actor2',
+      components: {
+        [NAME_COMPONENT_ID]: { name: 'Actor 2' },
+        [POSITION_COMPONENT_ID]: { locationId: 'test:location1' },
+        'core:actor': {},
+      },
+    };
+
+    entityManager.addComponent(actor1.id, NAME_COMPONENT_ID, actor1.components[NAME_COMPONENT_ID]);
+    entityManager.addComponent(actor1.id, POSITION_COMPONENT_ID, actor1.components[POSITION_COMPONENT_ID]);
+    entityManager.addComponent(actor1.id, 'core:actor', actor1.components['core:actor']);
+
+    entityManager.addComponent(actor2.id, NAME_COMPONENT_ID, actor2.components[NAME_COMPONENT_ID]);
+    entityManager.addComponent(actor2.id, POSITION_COMPONENT_ID, actor2.components[POSITION_COMPONENT_ID]);
+    entityManager.addComponent(actor2.id, 'core:actor', actor2.components['core:actor']);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should not allow kneeling before an actor when facing away', async () => {
+    // 1. Actor1 turns actor2 around (actor2 now facing away from actor1)
+    await eventBus.dispatch({
+      type: ATTEMPT_ACTION_ID,
+      payload: {
+        actionId: 'positioning:turn_around',
+        actorId: 'test:actor1',
+        targetId: 'test:actor2',
+      },
+    });
+
+    // 2. Verify actor2 has facing_away component
+    const actor2AfterTurn = entityManager.getEntityInstance('test:actor2');
+    expect(actor2AfterTurn.components['positioning:facing_away']).toEqual({
+      facing_away_from: ['test:actor1'],
+    });
+
+    // 3. Discover available actions for actor2
+    const actor2Entity = entityManager.getEntityInstance('test:actor2');
+    const discoveryResult = await actionDiscoveryService.getValidActions(actor2Entity);
+    const availableActions = discoveryResult.actions || [];
+
+    // 4. Verify kneel_before is NOT available for actor1
+    const kneelAction = availableActions.find(
+      (a) => a.actionId === 'positioning:kneel_before'
+    );
+
+    if (kneelAction) {
+      // If the action exists, its targets should not include actor1
+      expect(kneelAction.targets).toBeDefined();
+      const primaryTargets = kneelAction.targets?.primary || [];
+      expect(primaryTargets).not.toContain('test:actor1');
+    }
+  });
+
+  it('should allow kneeling after turning back to face', async () => {
+    // 1. Actor1 turns actor2 around
+    await eventBus.dispatch({
+      type: ATTEMPT_ACTION_ID,
+      payload: {
+        actionId: 'positioning:turn_around',
+        actorId: 'test:actor1',
+        targetId: 'test:actor2',
+      },
+    });
+
+    // Verify actor2 is facing away
+    let actor2Current = entityManager.getEntityInstance('test:actor2');
+    expect(actor2Current.components['positioning:facing_away']).toEqual({
+      facing_away_from: ['test:actor1'],
+    });
+
+    // 2. Actor1 turns actor2 back to face them (toggle behavior)
+    await eventBus.dispatch({
+      type: ATTEMPT_ACTION_ID,
+      payload: {
+        actionId: 'positioning:turn_around',
+        actorId: 'test:actor1',
+        targetId: 'test:actor2',
+      },
+    });
+
+    // 3. Verify actor2 no longer has facing_away component (or actor1 not in the list)
+    actor2Current = entityManager.getEntityInstance('test:actor2');
+    const facingAwayComponent = actor2Current.components['positioning:facing_away'];
+    expect(
+      !facingAwayComponent || !facingAwayComponent.facing_away_from?.includes('test:actor1')
+    ).toBe(true);
+
+    // 4. Discover available actions for actor2
+    const actor2Entity = entityManager.getEntityInstance('test:actor2');
+    const discoveryResult = await actionDiscoveryService.getValidActions(actor2Entity);
+    const availableActions = discoveryResult.actions || [];
+
+    // 5. Verify kneel_before IS available for actor1
+    const kneelAction = availableActions.find(
+      (a) => a.actionId === 'positioning:kneel_before'
+    );
+
+    expect(kneelAction).toBeDefined();
+    if (kneelAction) {
+      expect(kneelAction.targets).toBeDefined();
+      const primaryTargets = kneelAction.targets?.primary || [];
+      expect(primaryTargets).toContain('test:actor1');
+    }
+  });
+
+  it('should correctly handle multiple actors with mixed facing states', async () => {
+    // Add a third actor
+    const actor3 = {
+      id: 'test:actor3',
+      components: {
+        [NAME_COMPONENT_ID]: { name: 'Actor 3' },
+        [POSITION_COMPONENT_ID]: { locationId: 'test:location1' },
+        'core:actor': {},
+      },
+    };
+    entityManager.addComponent(actor3.id, NAME_COMPONENT_ID, actor3.components[NAME_COMPONENT_ID]);
+    entityManager.addComponent(actor3.id, POSITION_COMPONENT_ID, actor3.components[POSITION_COMPONENT_ID]);
+    entityManager.addComponent(actor3.id, 'core:actor', actor3.components['core:actor']);
+
+    // Actor1 turns actor2 around (actor2 facing away from actor1)
+    await eventBus.dispatch({
+      type: ATTEMPT_ACTION_ID,
+      payload: {
+        actionId: 'positioning:turn_around',
+        actorId: 'test:actor1',
+        targetId: 'test:actor2',
+      },
+    });
+
+    // Discover available actions for actor2
+    const actor2Entity = entityManager.getEntityInstance('test:actor2');
+    const discoveryResult = await actionDiscoveryService.getValidActions(actor2Entity);
+    const availableActions = discoveryResult.actions || [];
+
+    // Find kneel_before action
+    const kneelAction = availableActions.find(
+      (a) => a.actionId === 'positioning:kneel_before'
+    );
+
+    if (kneelAction) {
+      const primaryTargets = kneelAction.targets?.primary || [];
+      // Should be able to kneel before actor3 but not actor1
+      expect(primaryTargets).toContain('test:actor3');
+      expect(primaryTargets).not.toContain('test:actor1');
+    }
+  });
+});

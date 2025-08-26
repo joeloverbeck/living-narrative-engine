@@ -142,11 +142,13 @@ describe('Union Operator Workflows E2E', () => {
   function createGameContext(actor) {
     const jsonLogicEval = container.resolve(tokens.JsonLogicEvaluationService);
     const spatialIndexManager = container.resolve(tokens.ISpatialIndexManager);
-    
+
     // Get all entities by their IDs
     const allEntityIds = entityManager.getEntityIds();
-    const allEntities = allEntityIds.map(id => entityManager.getEntityInstance(id)).filter(e => e);
-    
+    const allEntities = allEntityIds
+      .map((id) => entityManager.getEntityInstance(id))
+      .filter((e) => e);
+
     return {
       actorEntity: actor,
       currentLocation: testWorld.currentLocation,
@@ -221,12 +223,12 @@ describe('Union Operator Workflows E2E', () => {
 
       // Assert - should not have duplicates
       expect(result).toBeInstanceOf(Set);
-      
+
       // Get the count of actor entities
       const actorEntities = gameContext.allEntities.filter(
         (e) => e.hasComponent && e.hasComponent('core:actor')
       );
-      
+
       // The result should have the same count as unique actor entities
       expect(result.size).toBe(actorEntities.length);
     });
@@ -252,7 +254,7 @@ describe('Union Operator Workflows E2E', () => {
       expect(result).toBeInstanceOf(Set);
       // Should include the actor and all actor entities (including the actor itself)
       expect(result.has(actor.id)).toBe(true);
-      
+
       // Should include all actor entities
       const actorEntities = gameContext.allEntities.filter(
         (e) => e.hasComponent && e.hasComponent('core:actor')
@@ -277,11 +279,15 @@ describe('Union Operator Workflows E2E', () => {
 
       // Assert
       expect(result).toBeInstanceOf(Set);
-      
+
       // Should include entities with level > 5 OR level < 4
       for (const entityId of result) {
         const entity = entityManager.getEntityInstance(entityId);
-        if (entity && entity.hasComponent && entity.hasComponent('core:stats')) {
+        if (
+          entity &&
+          entity.hasComponent &&
+          entity.hasComponent('core:stats')
+        ) {
           const stats = entity.getComponent('core:stats');
           if (stats && stats.level !== undefined) {
             expect(stats.level > 5 || stats.level < 4).toBe(true);
@@ -305,18 +311,22 @@ describe('Union Operator Workflows E2E', () => {
 
       // Assert
       expect(result).toBeInstanceOf(Set);
-      
+
       // Should include both actor and item entities
-      const hasActors = [...result].some(entityId => {
+      const hasActors = [...result].some((entityId) => {
         const entity = entityManager.getEntityInstance(entityId);
-        return entity && entity.hasComponent && entity.hasComponent('core:actor');
+        return (
+          entity && entity.hasComponent && entity.hasComponent('core:actor')
+        );
       });
-      
-      const hasItems = [...result].some(entityId => {
+
+      const hasItems = [...result].some((entityId) => {
         const entity = entityManager.getEntityInstance(entityId);
-        return entity && entity.hasComponent && entity.hasComponent('core:item');
+        return (
+          entity && entity.hasComponent && entity.hasComponent('core:item')
+        );
       });
-      
+
       // At least actors should be present (items might not be in test setup)
       expect(hasActors).toBe(true);
     });

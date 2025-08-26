@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "positioning:sitting_on",
+  "description": "Tracks which furniture entity this actor is currently sitting on",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["furniture_id", "spot_index"],
+    "properties": {
+      "furniture_id": {
+        "description": "The furniture entity being sat upon",
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId"
+      },
+      "spot_index": {
+        "type": "integer",
+        "description": "Which spot in the furniture's spots array this actor occupies",
+        "minimum": 0
+      }
+    }
+  }
+}

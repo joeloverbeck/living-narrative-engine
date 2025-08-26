@@ -496,14 +496,34 @@ export class ScopeTestUtilities {
               or: [
                 {
                   and: [
-                    { '>': [{ var: 'entity.components.core:health.current' }, 30] },
-                    { '<': [{ var: 'entity.components.core:health.current' }, 80] },
+                    {
+                      '>': [
+                        { var: 'entity.components.core:health.current' },
+                        30,
+                      ],
+                    },
+                    {
+                      '<': [
+                        { var: 'entity.components.core:health.current' },
+                        80,
+                      ],
+                    },
                   ],
                 },
                 {
                   and: [
-                    { '>': [{ var: 'entity.components.core:stats.strength' }, 25] },
-                    { '==': [{ var: 'entity.components.core:actor.isPlayer' }, false] },
+                    {
+                      '>': [
+                        { var: 'entity.components.core:stats.strength' },
+                        25,
+                      ],
+                    },
+                    {
+                      '==': [
+                        { var: 'entity.components.core:actor.isPlayer' },
+                        false,
+                      ],
+                    },
                   ],
                 },
               ],
@@ -553,11 +573,7 @@ export class ScopeTestUtilities {
     dependencies,
     options = {}
   ) {
-    const {
-      iterations = 5,
-      measureMemory = true,
-      warmup = true,
-    } = options;
+    const { iterations = 5, measureMemory = true, warmup = true } = options;
 
     const results = [];
     let totalTime = 0;
@@ -595,7 +611,9 @@ export class ScopeTestUtilities {
         const endTime = performance.now();
         const endMemory = measureMemory ? process.memoryUsage() : null;
         const duration = endTime - startTime;
-        const memoryUsed = measureMemory ? endMemory.heapUsed - startMemory.heapUsed : 0;
+        const memoryUsed = measureMemory
+          ? endMemory.heapUsed - startMemory.heapUsed
+          : 0;
 
         results.push({
           iteration: i + 1,
@@ -627,9 +645,11 @@ export class ScopeTestUtilities {
     }
 
     // Calculate comprehensive metrics
-    const successfulResults = results.filter(r => r.success);
-    const times = successfulResults.map(r => r.duration);
-    const memoryUsages = measureMemory ? successfulResults.map(r => r.memoryUsed) : [];
+    const successfulResults = results.filter((r) => r.success);
+    const times = successfulResults.map((r) => r.duration);
+    const memoryUsages = measureMemory
+      ? successfulResults.map((r) => r.memoryUsed)
+      : [];
 
     return {
       scopeId,
@@ -637,27 +657,40 @@ export class ScopeTestUtilities {
       successCount,
       failureCount: iterations - successCount,
       successRate: (successCount / iterations) * 100,
-      
+
       // Time metrics
       totalTime,
       averageTime: totalTime / iterations,
       fastestTime: times.length > 0 ? Math.min(...times) : 0,
       slowestTime: times.length > 0 ? Math.max(...times) : 0,
-      timeStandardDeviation: times.length > 0 ? this._calculateStandardDeviation(times) : 0,
-      
+      timeStandardDeviation:
+        times.length > 0 ? this._calculateStandardDeviation(times) : 0,
+
       // Memory metrics (if measured)
-      averageMemoryUsage: measureMemory && memoryUsages.length > 0 ? 
-        memoryUsages.reduce((sum, mem) => sum + mem, 0) / memoryUsages.length : 0,
-      maxMemoryUsage: measureMemory && memoryUsages.length > 0 ? Math.max(...memoryUsages) : 0,
-      minMemoryUsage: measureMemory && memoryUsages.length > 0 ? Math.min(...memoryUsages) : 0,
-      
+      averageMemoryUsage:
+        measureMemory && memoryUsages.length > 0
+          ? memoryUsages.reduce((sum, mem) => sum + mem, 0) /
+            memoryUsages.length
+          : 0,
+      maxMemoryUsage:
+        measureMemory && memoryUsages.length > 0
+          ? Math.max(...memoryUsages)
+          : 0,
+      minMemoryUsage:
+        measureMemory && memoryUsages.length > 0
+          ? Math.min(...memoryUsages)
+          : 0,
+
       // Result size metrics
-      averageResultSize: successfulResults.length > 0 ?
-        successfulResults.reduce((sum, r) => sum + r.resultSize, 0) / successfulResults.length : 0,
-      
+      averageResultSize:
+        successfulResults.length > 0
+          ? successfulResults.reduce((sum, r) => sum + r.resultSize, 0) /
+            successfulResults.length
+          : 0,
+
       // Raw results for detailed analysis
       results,
-      
+
       // Performance classification
       performanceClass: this._classifyPerformance(totalTime / iterations),
     };
@@ -671,11 +704,12 @@ export class ScopeTestUtilities {
    */
   static _calculateStandardDeviation(values) {
     if (values.length === 0) return 0;
-    
+
     const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-    const squaredDifferences = values.map(val => Math.pow(val - mean, 2));
-    const meanSquaredDiff = squaredDifferences.reduce((sum, val) => sum + val, 0) / values.length;
-    
+    const squaredDifferences = values.map((val) => Math.pow(val - mean, 2));
+    const meanSquaredDiff =
+      squaredDifferences.reduce((sum, val) => sum + val, 0) / values.length;
+
     return Math.sqrt(meanSquaredDiff);
   }
 

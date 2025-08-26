@@ -71,13 +71,13 @@ export class SpeechPatternsGenerator {
   #eventBus;
   #tokenEstimator;
   #responseProcessor;
-  
+
   // Circuit breaker state
   #circuitBreakerState = 'closed'; // 'closed', 'open', 'half-open'
   #consecutiveFailures = 0;
   #lastFailureTime = null;
   #circuitResetTimer = null;
-  
+
   // Request deduplication and caching
   #requestCache = new Map(); // LRU cache for responses
   #pendingRequests = new Map(); // Track in-flight requests
@@ -170,10 +170,10 @@ export class SpeechPatternsGenerator {
    */
   async generateSpeechPatterns(characterData, options = {}) {
     const startTime = Date.now();
-    
+
     // Generate cache key for deduplication
     const cacheKey = this.#generateCacheKey(characterData, options);
-    
+
     // Check cache first
     const cachedResponse = this.#getCachedResponse(cacheKey);
     if (cachedResponse) {
@@ -181,41 +181,46 @@ export class SpeechPatternsGenerator {
         cacheKey,
         age: Date.now() - cachedResponse.timestamp,
       });
-      
+
       // Dispatch cached event
       this.#eventBus.dispatch({
         type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_CACHE_HIT,
         payload: {
           cacheKey,
           timestamp: new Date().toISOString(),
-        }
+        },
       });
-      
+
       return cachedResponse.data;
     }
-    
+
     // Check if there's already a pending request for the same data
     if (this.#pendingRequests.has(cacheKey)) {
       this.#logger.info('SpeechPatternsGenerator: Deduplicating request', {
         cacheKey,
       });
-      
+
       // Return the existing promise
       return this.#pendingRequests.get(cacheKey);
     }
 
     // Create a new promise for this request
-    const requestPromise = this.#executeGeneration(characterData, options, cacheKey, startTime);
-    
+    const requestPromise = this.#executeGeneration(
+      characterData,
+      options,
+      cacheKey,
+      startTime
+    );
+
     // Store as pending request
     this.#pendingRequests.set(cacheKey, requestPromise);
-    
+
     try {
       const result = await requestPromise;
-      
+
       // Cache the successful result
       this.#setCachedResponse(cacheKey, result);
-      
+
       return result;
     } finally {
       // Clean up pending request
@@ -242,14 +247,16 @@ export class SpeechPatternsGenerator {
       });
 
       // Dispatch start event
-      this.#logger.debug('Dispatching speech patterns generation started event');
+      this.#logger.debug(
+        'Dispatching speech patterns generation started event'
+      );
       this.#eventBus.dispatch({
         type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED,
         payload: {
           characterData: characterData,
           options: options,
           timestamp: new Date().toISOString(),
-        }
+        },
       });
 
       // Validate input
@@ -276,14 +283,16 @@ export class SpeechPatternsGenerator {
       const result = this.#validateAndEnhance(parsedResponse, options);
 
       // Dispatch success event
-      this.#logger.debug('Dispatching speech patterns generation completed event');
+      this.#logger.debug(
+        'Dispatching speech patterns generation completed event'
+      );
       this.#eventBus.dispatch({
         type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED,
         payload: {
           result: result,
           processingTime: Date.now() - startTime,
           timestamp: new Date().toISOString(),
-        }
+        },
       });
 
       this.#logger.info(
@@ -312,7 +321,7 @@ export class SpeechPatternsGenerator {
           error: error.message,
           processingTime,
           timestamp: new Date().toISOString(),
-        }
+        },
       });
 
       if (error instanceof SpeechPatternsGenerationError) {
@@ -342,23 +351,27 @@ export class SpeechPatternsGenerator {
     // Check for basic character components
     // Handle both direct character data format and nested components structure
     let hasCharacterComponents = false;
-    
+
     // Check if character data has colon-separated keys at top level (direct format)
     hasCharacterComponents = Object.keys(characterData).some((key) =>
       key.includes(':')
     );
-    
+
     // If not found at top level, check for nested components structure (character definition format)
-    if (!hasCharacterComponents && characterData.components && typeof characterData.components === 'object') {
-      hasCharacterComponents = Object.keys(characterData.components).some((key) =>
-        key.includes(':')
+    if (
+      !hasCharacterComponents &&
+      characterData.components &&
+      typeof characterData.components === 'object'
+    ) {
+      hasCharacterComponents = Object.keys(characterData.components).some(
+        (key) => key.includes(':')
       );
     }
 
     if (!hasCharacterComponents) {
       throw new SpeechPatternsValidationError(
         'Character data must contain at least one character component (format: "component:field"). ' +
-        'Expected either direct component data or nested under "components" key.'
+          'Expected either direct component data or nested under "components" key.'
       );
     }
 
@@ -403,7 +416,9 @@ export class SpeechPatternsGenerator {
     if (this.#circuitBreakerState === 'open') {
       if (this.#shouldAttemptReset()) {
         this.#circuitBreakerState = 'half-open';
-        this.#logger.info('Circuit breaker entering half-open state, attempting reset');
+        this.#logger.info(
+          'Circuit breaker entering half-open state, attempting reset'
+        );
       } else {
         throw new SpeechPatternsGenerationError(
           'Service temporarily unavailable due to repeated failures. Please try again later.',
@@ -413,7 +428,10 @@ export class SpeechPatternsGenerator {
     }
 
     // Retry configuration
-    const retryConfig = { ...DEFAULT_RETRY_CONFIG, ...(options.retryConfig || {}) };
+    const retryConfig = {
+      ...DEFAULT_RETRY_CONFIG,
+      ...(options.retryConfig || {}),
+    };
     let lastError = null;
 
     for (let attempt = 1; attempt <= retryConfig.maxRetries; attempt++) {
@@ -452,22 +470,25 @@ export class SpeechPatternsGenerator {
 
         // Success - reset circuit breaker
         this.#onSuccess();
-        
+
         return response;
       } catch (error) {
         lastError = error;
-        
+
         // Record failure for circuit breaker
         this.#onFailure();
 
         // Check if error is retryable
-        if (!this.#isRetryableError(error) || attempt >= retryConfig.maxRetries) {
+        if (
+          !this.#isRetryableError(error) ||
+          attempt >= retryConfig.maxRetries
+        ) {
           this.#logger.error(`LLM request failed after ${attempt} attempts`, {
             error: error.message,
             attempt,
             isRetryable: this.#isRetryableError(error),
           });
-          
+
           throw new SpeechPatternsGenerationError(
             `LLM request failed after ${attempt} attempts: ${error.message}`,
             error
@@ -476,7 +497,7 @@ export class SpeechPatternsGenerator {
 
         // Calculate delay with exponential backoff and jitter
         const delay = this.#calculateRetryDelay(attempt, retryConfig);
-        
+
         this.#logger.warn(`LLM request failed, retrying in ${delay}ms`, {
           error: error.message,
           attempt,
@@ -539,13 +560,13 @@ export class SpeechPatternsGenerator {
   async #delay(ms, abortSignal) {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(resolve, ms);
-      
+
       if (abortSignal) {
         const abortHandler = () => {
           clearTimeout(timer);
           reject(new Error('Delay aborted'));
         };
-        
+
         if (abortSignal.aborted) {
           abortHandler();
         } else {
@@ -592,7 +613,7 @@ export class SpeechPatternsGenerator {
       '504', // Gateway Timeout
     ];
 
-    return retryableMessages.some(msg => 
+    return retryableMessages.some((msg) =>
       error.message.toLowerCase().includes(msg.toLowerCase())
     );
   }
@@ -606,11 +627,11 @@ export class SpeechPatternsGenerator {
     if (this.#circuitBreakerState === 'half-open') {
       this.#logger.info('Circuit breaker reset to closed state');
     }
-    
+
     this.#circuitBreakerState = 'closed';
     this.#consecutiveFailures = 0;
     this.#lastFailureTime = null;
-    
+
     if (this.#circuitResetTimer) {
       clearTimeout(this.#circuitResetTimer);
       this.#circuitResetTimer = null;
@@ -699,16 +720,16 @@ export class SpeechPatternsGenerator {
       patternCount: options.patternCount,
       llmConfigId: options.llmConfigId,
     };
-    
+
     // Simple hash function for key generation
     const str = JSON.stringify(keyData);
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32bit integer
     }
-    
+
     return `speech_patterns_${hash}`;
   }
 
@@ -721,21 +742,21 @@ export class SpeechPatternsGenerator {
    */
   #getCachedResponse(cacheKey) {
     const cached = this.#requestCache.get(cacheKey);
-    
+
     if (!cached) {
       return null;
     }
-    
+
     // Check if cache is expired
     if (Date.now() - cached.timestamp > this.#cacheTTL) {
       this.#requestCache.delete(cacheKey);
       return null;
     }
-    
+
     // Move to end (LRU)
     this.#requestCache.delete(cacheKey);
     this.#requestCache.set(cacheKey, cached);
-    
+
     return cached;
   }
 
@@ -752,18 +773,18 @@ export class SpeechPatternsGenerator {
       // Delete oldest entry (first in Map)
       const firstKey = this.#requestCache.keys().next().value;
       this.#requestCache.delete(firstKey);
-      
+
       this.#logger.debug('Cache eviction', {
         evictedKey: firstKey,
         reason: 'cache size limit',
       });
     }
-    
+
     this.#requestCache.set(cacheKey, {
       data,
       timestamp: Date.now(),
     });
-    
+
     this.#logger.debug('Response cached', {
       cacheKey,
       cacheSize: this.#requestCache.size,
@@ -790,7 +811,7 @@ export class SpeechPatternsGenerator {
   getCacheStats() {
     const entries = Array.from(this.#requestCache.entries());
     const now = Date.now();
-    
+
     return {
       size: this.#requestCache.size,
       maxSize: this.#cacheMaxSize,
@@ -945,7 +966,10 @@ export class SpeechPatternsGenerator {
    */
   #extractCharacterName(characterData) {
     // Handle nested components structure (character definition format)
-    if (characterData.components && typeof characterData.components === 'object') {
+    if (
+      characterData.components &&
+      typeof characterData.components === 'object'
+    ) {
       const nameComponent = characterData.components['core:name'];
       if (nameComponent) {
         // Check for both .text and .name fields
@@ -959,11 +983,7 @@ export class SpeechPatternsGenerator {
 
       // Try other possible name fields in components
       for (const [key, value] of Object.entries(characterData.components)) {
-        if (
-          key.includes('name') &&
-          value &&
-          typeof value === 'object'
-        ) {
+        if (key.includes('name') && value && typeof value === 'object') {
           if (value.text) {
             return value.text;
           }
@@ -987,11 +1007,7 @@ export class SpeechPatternsGenerator {
 
     // Try other possible name fields in direct format
     for (const [key, value] of Object.entries(characterData)) {
-      if (
-        key.includes('name') &&
-        value &&
-        typeof value === 'object'
-      ) {
+      if (key.includes('name') && value && typeof value === 'object') {
         if (value.text) {
           return value.text;
         }

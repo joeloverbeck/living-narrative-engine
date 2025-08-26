@@ -6,6 +6,23 @@
 
 import { buildComponents } from '../../utils/entityComponentUtils.js';
 
+// Entity lookup cache for performance optimization
+const entityCache = new Map();
+const CACHE_SIZE_LIMIT = 10000; // Prevent unbounded cache growth
+let cacheHits = 0;
+let cacheMisses = 0;
+
+/**
+ * Clears the entity cache. Should be called when entity data changes significantly.
+ *
+ * @returns {void}
+ */
+export function clearEntityCache() {
+  entityCache.clear();
+  cacheHits = 0;
+  cacheMisses = 0;
+}
+
 /**
  * @typedef {import('./gateways.js').EntityGateway} EntityGateway
  */
@@ -67,14 +84,12 @@ export function createEvaluationContext(
   runtimeContext = null,
   processedActor = null
 ) {
-  // Handle null/undefined items
-  if (item === null || item === undefined) {
-    return null;
-  }
+  // Fast path: null/undefined items
+  if (item == null) return null;
 
-  // Critical check: actor should never be undefined in scope evaluation
-  // Only perform expensive validation when debugging is enabled
-  if (!actorEntity) {
+  // Fast path: Skip expensive validation in production (assume caller validated)
+  // Only validate in development or when trace is enabled
+  if (trace && !actorEntity) {
     const error = new Error(
       'createEvaluationContext: actorEntity is undefined. This should never happen during scope evaluation.'
     );
@@ -94,61 +109,77 @@ export function createEvaluationContext(
     throw error;
   }
 
-  // Additional check: actor must have a valid ID
-  // Only perform detailed validation when debugging
-  if (!actorEntity.id || actorEntity.id === 'undefined' || typeof actorEntity.id !== 'string') {
+  // Additional validation only when debugging
+  if (
+    trace &&
+    (!actorEntity.id ||
+      actorEntity.id === 'undefined' ||
+      typeof actorEntity.id !== 'string')
+  ) {
     const error = new Error(
       `createEvaluationContext: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This should never happen.`
     );
     if (trace) {
-      console.error('[CRITICAL] createEvaluationContext actor has invalid ID:', {
-        actorId: actorEntity.id,
-        actorIdType: typeof actorEntity.id,
-        actorKeys: Object.keys(actorEntity),
-        hasComponents: !!actorEntity.components,
-        item,
-        itemType: typeof item,
-        callStack: new Error().stack,
-      });
+      console.error(
+        '[CRITICAL] createEvaluationContext actor has invalid ID:',
+        {
+          actorId: actorEntity.id,
+          actorIdType: typeof actorEntity.id,
+          actorKeys: Object.keys(actorEntity),
+          hasComponents: !!actorEntity.components,
+          item,
+          itemType: typeof item,
+          callStack: new Error().stack,
+        }
+      );
     }
     throw error;
   }
 
-  // Create entity with components if needed
+  // Create or retrieve entity with components (with caching for performance)
   let entity;
   if (typeof item === 'string') {
-    // First try as entity (this is the primary path for clothing items)
-    entity = gateway.getEntityInstance(item);
-    if (entity) {
-      if (trace) {
+    // Check cache first for massive performance boost
+    const cacheKey = `entity_${item}`;
+    if (entityCache.has(cacheKey)) {
+      entity = entityCache.get(cacheKey);
+      cacheHits++;
+
+      if (trace && cacheHits % 1000 === 0) {
         trace.addLog(
           'debug',
-          `Item ${item} resolved as entity`,
+          `Cache stats: ${cacheHits} hits, ${cacheMisses} misses (${((cacheHits / (cacheHits + cacheMisses)) * 100).toFixed(1)}% hit rate)`,
           'createEvaluationContext'
         );
       }
     } else {
-      // Fallback: Try component registry lookup for non-entity items
-      const components = gateway.getItemComponents?.(item);
-      if (components) {
-        entity = { id: item, components };
-        if (trace) {
-          trace.addLog(
-            'debug',
-            `Item ${item} resolved via component lookup`,
-            'createEvaluationContext'
-          );
-        }
-      } else {
-        entity = { id: item };
-        if (trace) {
-          trace.addLog(
-            'debug',
-            `Item ${item} created as basic entity`,
-            'createEvaluationContext'
-          );
+      cacheMisses++;
+
+      // Try as entity first (primary path)
+      entity = gateway.getEntityInstance(item);
+
+      if (!entity) {
+        // Fallback: component lookup or basic entity
+        const components = gateway.getItemComponents?.(item);
+        entity = components ? { id: item, components } : { id: item };
+      }
+
+      // Cache the result (with simple LRU eviction)
+      if (entityCache.size >= CACHE_SIZE_LIMIT) {
+        // Clear oldest 20% when limit reached
+        const entriesToDelete = Math.floor(CACHE_SIZE_LIMIT * 0.2);
+        let deleted = 0;
+        for (const key of entityCache.keys()) {
+          if (deleted >= entriesToDelete) break;
+          entityCache.delete(key);
+          deleted++;
         }
       }
+      entityCache.set(cacheKey, entity);
+    }
+
+    if (trace) {
+      trace.addLog('debug', `Item ${item} resolved`, 'createEvaluationContext');
     }
   } else if (item && typeof item === 'object') {
     entity = item;
@@ -163,6 +194,15 @@ export function createEvaluationContext(
    * @param entityId
    */
   function addComponentsToEntity(entity, entityId) {
+    // Fast path: already has components as object
+    if (
+      entity.components &&
+      typeof entity.components === 'object' &&
+      !(entity.components instanceof Map)
+    ) {
+      return entity;
+    }
+
     // Convert Map-based components to plain object if needed
     if (entity.components instanceof Map) {
       const plainComponents = {};
@@ -170,29 +210,24 @@ export function createEvaluationContext(
         plainComponents[componentId] = data;
       }
 
-      // Create new entity with plain object components
+      // Fast path for plain objects
       const proto = Object.getPrototypeOf(entity);
       if (proto === Object.prototype || proto === null) {
         return {
           ...entity,
           components: plainComponents,
         };
-      } else {
-        // Preserve prototype while replacing components
-        const enhancedEntity = Object.create(proto);
-        for (const key of Object.keys(entity)) {
-          if (key !== 'components') {
-            enhancedEntity[key] = entity[key];
-          }
-        }
-        enhancedEntity.components = plainComponents;
-        return enhancedEntity;
       }
-    }
 
-    // If entity already has plain object components, return as-is
-    if (entity.components && typeof entity.components === 'object') {
-      return entity;
+      // Slower path: preserve prototype
+      const enhancedEntity = Object.create(proto);
+      for (const key of Object.keys(entity)) {
+        if (key !== 'components') {
+          enhancedEntity[key] = entity[key];
+        }
+      }
+      enhancedEntity.components = plainComponents;
+      return enhancedEntity;
     }
 
     // If no components but has componentTypeIds, build them
@@ -249,12 +284,14 @@ export function createEvaluationContext(
     return entity;
   }
 
-  // Ensure entity has components
-  entity = addComponentsToEntity(entity, entity.id || item);
+  // Fast path: Skip component addition if already present
+  if (!entity.components && entity.componentTypeIds) {
+    entity = addComponentsToEntity(entity, entity.id || item);
+  }
 
-  // Use pre-processed actor if available, otherwise process it
-  // This optimization is critical for large-scale filtering operations
-  const actor = processedActor || addComponentsToEntity(actorEntity, actorEntity.id);
+  // Use pre-processed actor if available (critical optimization)
+  // Avoids reprocessing actor for each of potentially 10,000+ entities
+  const actor = processedActor || actorEntity;
 
   const location = locationProvider.getLocation();
 

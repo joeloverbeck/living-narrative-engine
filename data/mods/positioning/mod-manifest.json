@@ -14,13 +14,17 @@
   ],
   "content": {
     "components": [
+      "allows_sitting.component.json",
       "closeness.component.json",
       "facing_away.component.json",
-      "kneeling_before.component.json"
+      "kneeling_before.component.json",
+      "sitting_on.component.json"
     ],
     "actions": [
       "get_close.action.json",
+      "get_up_from_furniture.action.json",
       "kneel_before.action.json",
+      "sit_down.action.json",
       "stand_up.action.json",
       "step_back.action.json",
       "turn_around.action.json",
@@ -35,7 +39,9 @@
       "entity-in-facing-away.condition.json",
       "entity-not-in-facing-away.condition.json",
       "event-is-action-get-close.condition.json",
+      "event-is-action-get-up-from-furniture.condition.json",
       "event-is-action-kneel-before.condition.json",
+      "event-is-action-sit-down.condition.json",
       "event-is-action-stand-up.condition.json",
       "event-is-action-step-back.condition.json",
       "event-is-action-turn-around-to-face.condition.json",
@@ -44,6 +50,8 @@
     ],
     "rules": [
       "get_close.rule.json",
+      "handle_get_up_from_furniture.rule.json",
+      "handle_sit_down.rule.json",
       "kneel_before.rule.json",
       "stand_up.rule.json",
       "step_back.rule.json",
@@ -63,8 +71,11 @@
     "macros": [],
     "scopes": [
       "actors_im_facing_away_from.scope",
+      "actors_in_location_facing.scope",
+      "available_furniture.scope",
       "close_actors.scope",
-      "close_actors_facing_each_other_or_behind_target.scope"
+      "close_actors_facing_each_other_or_behind_target.scope",
+      "furniture_im_sitting_on.scope"
     ]
   }
 }

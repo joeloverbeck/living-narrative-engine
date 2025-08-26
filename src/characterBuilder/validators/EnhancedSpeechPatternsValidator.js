@@ -94,7 +94,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
    */
   async validateInput(input, options = {}) {
     const cacheKey = this.#generateCacheKey(input, options);
-    
+
     // Check cache first
     const cached = this.#getCachedValidation(cacheKey);
     if (cached) {
@@ -112,19 +112,18 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       context: {
         validationTime: 0,
         cacheKey,
-        layers: {}
-      }
+        layers: {},
+      },
     };
 
     try {
-      // Layer 1: Schema validation (existing functionality)  
+      // Layer 1: Schema validation (existing functionality)
       const schemaResult = await super.validateAndSanitizeResponse(input);
       const schemaValidationTime = Date.now() - startTime;
-      
-      
+
       result.context.layers.schema = {
         duration: schemaValidationTime,
-        isValid: schemaResult ? schemaResult.isValid : false
+        isValid: schemaResult ? schemaResult.isValid : false,
       };
 
       if (!schemaResult || !schemaResult.isValid) {
@@ -138,19 +137,19 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
 
       // Continue with additional layers even if schema validation fails
       // to provide comprehensive feedback
-      
+
       // Layer 2: Semantic validation (if we have character data)
       if (input && typeof input === 'object') {
         const semanticStart = Date.now();
         const semanticResult = this.#performSemanticValidation(input, options);
         result.context.layers.semantic = {
           duration: Date.now() - semanticStart,
-          rulesApplied: semanticResult.rulesApplied
+          rulesApplied: semanticResult.rulesApplied,
         };
 
         result.warnings.push(...semanticResult.warnings);
         result.suggestions.push(...semanticResult.suggestions);
-        
+
         // Semantic errors are treated as warnings to avoid blocking
         if (semanticResult.errors.length > 0) {
           result.warnings.push(...semanticResult.errors);
@@ -163,7 +162,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
         const qualityResult = this.#performQualityAssessment(input, options);
         result.context.layers.quality = {
           duration: Date.now() - qualityStart,
-          metricsApplied: qualityResult.metricsApplied
+          metricsApplied: qualityResult.metricsApplied,
         };
 
         result.quality = qualityResult.metrics;
@@ -171,12 +170,18 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
 
         // Add quality-based warnings
         if (qualityResult.overallScore < 0.4) {
-          result.warnings.push('Character definition may need more detail for optimal speech pattern generation');
+          result.warnings.push(
+            'Character definition may need more detail for optimal speech pattern generation'
+          );
         }
       }
 
       // Generate contextual suggestions based on validation results
-      const suggestionsResult = this.#generateContextualSuggestions(input, result, options);
+      const suggestionsResult = this.#generateContextualSuggestions(
+        input,
+        result,
+        options
+      );
       result.suggestions.push(...suggestionsResult);
 
       // Limit total suggestions to avoid overwhelming users
@@ -184,7 +189,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
 
       // Final processing
       result.context.validationTime = Date.now() - startTime;
-      
+
       // Cache successful validation
       this.#setCachedValidation(cacheKey, result);
 
@@ -193,11 +198,10 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
         errors: result.errors.length,
         warnings: result.warnings.length,
         suggestions: result.suggestions.length,
-        qualityScore: result.quality.overallScore
+        qualityScore: result.quality.overallScore,
       });
 
       return result;
-
     } catch (error) {
       this.#logger.error('Enhanced validation failed', error);
       return {
@@ -206,7 +210,10 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
         warnings: [],
         suggestions: [],
         quality: {},
-        context: { validationTime: Date.now() - startTime, error: error.message }
+        context: {
+          validationTime: Date.now() - startTime,
+          error: error.message,
+        },
       };
     }
   }
@@ -223,7 +230,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       name: 'Character Name Consistency',
       category: 'consistency',
       priority: 9,
-      validator: (data) => this.#validateCharacterNameConsistency(data)
+      validator: (data) => this.#validateCharacterNameConsistency(data),
     });
 
     this.#addSemanticRule({
@@ -231,7 +238,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       name: 'Personality Trait Alignment',
       category: 'consistency',
       priority: 8,
-      validator: (data) => this.#validatePersonalityAlignment(data)
+      validator: (data) => this.#validatePersonalityAlignment(data),
     });
 
     this.#addSemanticRule({
@@ -239,7 +246,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       name: 'Component Completeness',
       category: 'completeness',
       priority: 7,
-      validator: (data) => this.#validateComponentCompleteness(data)
+      validator: (data) => this.#validateComponentCompleteness(data),
     });
 
     this.#addSemanticRule({
@@ -247,7 +254,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       name: 'Logical Relationships',
       category: 'logic',
       priority: 6,
-      validator: (data) => this.#validateLogicalRelationships(data)
+      validator: (data) => this.#validateLogicalRelationships(data),
     });
 
     this.#addSemanticRule({
@@ -255,7 +262,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       name: 'Content Depth Assessment',
       category: 'quality',
       priority: 5,
-      validator: (data) => this.#validateContentDepth(data)
+      validator: (data) => this.#validateContentDepth(data),
     });
   }
 
@@ -271,7 +278,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       name: 'Character Completeness',
       weight: 0.3,
       thresholds: { low: 0.3, medium: 0.6, high: 0.8 },
-      assessor: (data) => this.#assessCharacterCompleteness(data)
+      assessor: (data) => this.#assessCharacterCompleteness(data),
     });
 
     this.#addQualityMetric({
@@ -279,7 +286,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       name: 'Personality Depth',
       weight: 0.25,
       thresholds: { low: 0.4, medium: 0.7, high: 0.9 },
-      assessor: (data) => this.#assessPersonalityDepth(data)
+      assessor: (data) => this.#assessPersonalityDepth(data),
     });
 
     this.#addQualityMetric({
@@ -287,7 +294,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       name: 'Background Richness',
       weight: 0.2,
       thresholds: { low: 0.3, medium: 0.6, high: 0.8 },
-      assessor: (data) => this.#assessBackgroundRichness(data)
+      assessor: (data) => this.#assessBackgroundRichness(data),
     });
 
     this.#addQualityMetric({
@@ -295,7 +302,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       name: 'Relationship Complexity',
       weight: 0.15,
       thresholds: { low: 0.2, medium: 0.5, high: 0.8 },
-      assessor: (data) => this.#assessRelationshipComplexity(data)
+      assessor: (data) => this.#assessRelationshipComplexity(data),
     });
 
     this.#addQualityMetric({
@@ -303,7 +310,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       name: 'Narrative Potential',
       weight: 0.1,
       thresholds: { low: 0.3, medium: 0.6, high: 0.9 },
-      assessor: (data) => this.#assessNarrativePotential(data)
+      assessor: (data) => this.#assessNarrativePotential(data),
     });
   }
 
@@ -315,24 +322,34 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
   #initializeSuggestionTemplates() {
     this.#suggestionTemplates = {
       missingComponents: {
-        'core:personality': 'Add personality traits to define how the character thinks and behaves',
-        'core:profile': 'Include background information like age, occupation, and history',
+        'core:personality':
+          'Add personality traits to define how the character thinks and behaves',
+        'core:profile':
+          'Include background information like age, occupation, and history',
         'core:likes': 'Define what the character enjoys or values',
         'core:dislikes': 'Specify what the character avoids or opposes',
         'core:fears': 'Add fears or anxieties that drive character behavior',
-        'core:goals': 'Include short-term and long-term goals that motivate the character'
+        'core:goals':
+          'Include short-term and long-term goals that motivate the character',
       },
       improvementSuggestions: {
-        lowDetail: 'Consider expanding component details with specific examples and descriptions',
-        genericContent: 'Replace generic descriptions with specific, unique character traits',
-        inconsistencies: 'Review components for consistency in tone, background, and personality',
-        missingContext: 'Add contextual information about relationships, environment, and history'
+        lowDetail:
+          'Consider expanding component details with specific examples and descriptions',
+        genericContent:
+          'Replace generic descriptions with specific, unique character traits',
+        inconsistencies:
+          'Review components for consistency in tone, background, and personality',
+        missingContext:
+          'Add contextual information about relationships, environment, and history',
       },
       structuralSuggestions: {
-        formatIssues: 'Ensure all components follow the proper format with descriptive content',
-        organizationTips: 'Group related information within appropriate components',
-        namingConventions: 'Use consistent component naming (namespace:component format)'
-      }
+        formatIssues:
+          'Ensure all components follow the proper format with descriptive content',
+        organizationTips:
+          'Group related information within appropriate components',
+        namingConventions:
+          'Use consistent component naming (namespace:component format)',
+      },
     };
   }
 
@@ -369,12 +386,13 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       errors: [],
       warnings: [],
       suggestions: [],
-      rulesApplied: []
+      rulesApplied: [],
     };
 
     // Sort rules by priority (higher first)
-    const sortedRules = Array.from(this.#semanticRules.values())
-      .sort((a, b) => b.priority - a.priority);
+    const sortedRules = Array.from(this.#semanticRules.values()).sort(
+      (a, b) => b.priority - a.priority
+    );
 
     for (const rule of sortedRules) {
       try {
@@ -390,10 +408,11 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
         if (ruleResult.suggestions) {
           result.suggestions.push(...ruleResult.suggestions);
         }
-
       } catch (error) {
         this.#logger.warn(`Semantic rule '${rule.id}' failed`, error);
-        result.warnings.push(`Internal validation warning: ${rule.name} check encountered an issue`);
+        result.warnings.push(
+          `Internal validation warning: ${rule.name} check encountered an issue`
+        );
       }
     }
 
@@ -412,10 +431,10 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
     const result = {
       metrics: {
         overallScore: 0,
-        breakdown: {}
+        breakdown: {},
       },
       suggestions: [],
-      metricsApplied: []
+      metricsApplied: [],
     };
 
     let totalWeight = 0;
@@ -430,7 +449,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
         result.metrics.breakdown[metricId] = {
           score: assessment.score,
           level: this.#getQualityLevel(assessment.score, metric.thresholds),
-          details: assessment.details || {}
+          details: assessment.details || {},
         };
 
         // Accumulate weighted score
@@ -441,20 +460,22 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
         if (assessment.suggestions) {
           result.suggestions.push(...assessment.suggestions);
         }
-
       } catch (error) {
         this.#logger.warn(`Quality metric '${metricId}' failed`, error);
         result.metrics.breakdown[metricId] = {
           score: 0,
           level: 'error',
-          details: { error: error.message }
+          details: { error: error.message },
         };
       }
     }
 
     // Calculate overall score
-    result.metrics.overallScore = totalWeight > 0 ? weightedScore / totalWeight : 0;
-    result.metrics.overallLevel = this.#getOverallQualityLevel(result.metrics.overallScore);
+    result.metrics.overallScore =
+      totalWeight > 0 ? weightedScore / totalWeight : 0;
+    result.metrics.overallLevel = this.#getOverallQualityLevel(
+      result.metrics.overallScore
+    );
 
     return result;
   }
@@ -474,12 +495,20 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
     // Input-based suggestions
     if (input && typeof input === 'object') {
       const components = input.components || input;
-      const componentKeys = Object.keys(components).filter(key => key.includes(':'));
+      const componentKeys = Object.keys(components).filter((key) =>
+        key.includes(':')
+      );
 
       // Missing component suggestions
-      const expectedComponents = ['core:name', 'core:personality', 'core:profile'];
-      const missingComponents = expectedComponents.filter(comp => !componentKeys.includes(comp));
-      
+      const expectedComponents = [
+        'core:name',
+        'core:personality',
+        'core:profile',
+      ];
+      const missingComponents = expectedComponents.filter(
+        (comp) => !componentKeys.includes(comp)
+      );
+
       for (const missing of missingComponents) {
         const suggestion = this.#suggestionTemplates.missingComponents[missing];
         if (suggestion) {
@@ -488,34 +517,51 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       }
 
       // Content depth suggestions
-      const shallowComponents = componentKeys.filter(key => {
+      const shallowComponents = componentKeys.filter((key) => {
         const component = components[key];
         const contentLength = JSON.stringify(component).length;
         return contentLength < 50;
       });
 
       if (shallowComponents.length > 0) {
-        suggestions.push(`Components with minimal detail: ${shallowComponents.join(', ')}. Consider adding more specific information.`);
+        suggestions.push(
+          `Components with minimal detail: ${shallowComponents.join(', ')}. Consider adding more specific information.`
+        );
       }
     }
 
     // Error-based suggestions
     if (validationResult.errors.length > 0) {
-      const hasJsonErrors = validationResult.errors.some(err => 
-        err.toLowerCase().includes('json') || err.toLowerCase().includes('syntax')
+      const hasJsonErrors = validationResult.errors.some(
+        (err) =>
+          err.toLowerCase().includes('json') ||
+          err.toLowerCase().includes('syntax')
       );
-      
+
       if (hasJsonErrors) {
-        suggestions.push('Use a JSON validator or formatter to fix syntax issues');
-        suggestions.push('Check for missing quotes, commas, or brackets in your JSON');
+        suggestions.push(
+          'Use a JSON validator or formatter to fix syntax issues'
+        );
+        suggestions.push(
+          'Check for missing quotes, commas, or brackets in your JSON'
+        );
       }
     }
 
     // Quality-based suggestions
-    if (validationResult.quality && validationResult.quality.overallScore < 0.5) {
-      suggestions.push('Consider adding more detailed descriptions to improve generation quality');
-      suggestions.push('Include specific examples and context in component descriptions');
-      suggestions.push('Improve character depth with more comprehensive details');
+    if (
+      validationResult.quality &&
+      validationResult.quality.overallScore < 0.5
+    ) {
+      suggestions.push(
+        'Consider adding more detailed descriptions to improve generation quality'
+      );
+      suggestions.push(
+        'Include specific examples and context in component descriptions'
+      );
+      suggestions.push(
+        'Improve character depth with more comprehensive details'
+      );
     }
 
     // Remove duplicates but don't limit here - limiting is done at the end of validateInput
@@ -532,50 +578,87 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
    */
   #validateCharacterNameConsistency(data) {
     const result = { errors: [], warnings: [], suggestions: [] };
-    
+
     const components = data.components || data;
     const nameComponent = components['core:name'];
-    
+
     if (!nameComponent) {
       return result; // Handled by completeness validation
     }
 
-    const characterName = nameComponent.text || nameComponent.name || nameComponent.value;
+    const characterName =
+      nameComponent.text || nameComponent.name || nameComponent.value;
     if (!characterName) {
-      result.warnings.push('Character name component exists but lacks a clear name value');
-      result.suggestions.push('Ensure the name component includes a "text" or "name" field with the character\'s name');
+      result.warnings.push(
+        'Character name component exists but lacks a clear name value'
+      );
+      result.suggestions.push(
+        'Ensure the name component includes a "text" or "name" field with the character\'s name'
+      );
       return result;
     }
 
     // Check for name references in other components
-    const otherComponents = Object.entries(components).filter(([key]) => key !== 'core:name');
+    const otherComponents = Object.entries(components).filter(
+      ([key]) => key !== 'core:name'
+    );
     const inconsistencies = [];
 
     for (const [key, component] of otherComponents) {
       if (typeof component === 'object' && component !== null) {
         const componentText = JSON.stringify(component);
-        
+
         // Extract potential names from the component text (capitalized words that could be names)
-        const potentialNames = componentText.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\b/g);
+        const potentialNames = componentText.match(
+          /\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\b/g
+        );
         if (potentialNames && potentialNames.length > 0) {
-          const suspiciousNames = potentialNames.filter(name => 
-            name.toLowerCase() !== characterName.toLowerCase() &&
-            name.length > 2 &&
-            // Exclude common words that aren't names
-            !['The', 'And', 'But', 'For', 'Not', 'Yet', 'So', 'This', 'That', 'They', 'When', 'Where', 'Why', 'How', 'Who', 'What', 'Which', 'Then', 'Now', 'Here', 'There'].includes(name) &&
-            // Check if it looks like a proper name (not a common word)
-            /^[A-Z][a-z]+$/.test(name)
+          const suspiciousNames = potentialNames.filter(
+            (name) =>
+              name.toLowerCase() !== characterName.toLowerCase() &&
+              name.length > 2 &&
+              // Exclude common words that aren't names
+              ![
+                'The',
+                'And',
+                'But',
+                'For',
+                'Not',
+                'Yet',
+                'So',
+                'This',
+                'That',
+                'They',
+                'When',
+                'Where',
+                'Why',
+                'How',
+                'Who',
+                'What',
+                'Which',
+                'Then',
+                'Now',
+                'Here',
+                'There',
+              ].includes(name) &&
+              // Check if it looks like a proper name (not a common word)
+              /^[A-Z][a-z]+$/.test(name)
           );
-          
+
           if (suspiciousNames.length > 0) {
             // Check if these names appear in contexts that suggest they're referring to people
-            const contextualNames = suspiciousNames.filter(suspiciousName => {
-              const nameContext = new RegExp(`\\b${suspiciousName}\\b.{0,20}\\b(is|was|said|says|thinks|feels|loves|likes|hates|works|lives|goes|came|went)\\b`, 'i');
+            const contextualNames = suspiciousNames.filter((suspiciousName) => {
+              const nameContext = new RegExp(
+                `\\b${suspiciousName}\\b.{0,20}\\b(is|was|said|says|thinks|feels|loves|likes|hates|works|lives|goes|came|went)\\b`,
+                'i'
+              );
               return nameContext.test(componentText);
             });
-            
+
             if (contextualNames.length > 0) {
-              inconsistencies.push(`${key}: potential name inconsistency with "${contextualNames.join(', ')}"`);
+              inconsistencies.push(
+                `${key}: potential name inconsistency with "${contextualNames.join(', ')}"`
+              );
             }
           }
         }
@@ -583,8 +666,12 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
     }
 
     if (inconsistencies.length > 0) {
-      result.warnings.push(`Possible name inconsistencies detected: ${inconsistencies.join('; ')}`);
-      result.suggestions.push('Review character references across components to ensure name consistency');
+      result.warnings.push(
+        `Possible name inconsistencies detected: ${inconsistencies.join('; ')}`
+      );
+      result.suggestions.push(
+        'Review character references across components to ensure name consistency'
+      );
     }
 
     return result;
@@ -598,34 +685,38 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
    */
   #validatePersonalityAlignment(data) {
     const result = { errors: [], warnings: [], suggestions: [] };
-    
+
     const components = data.components || data;
     const personality = components['core:personality'];
-    
+
     if (!personality) {
       return result; // Handled by completeness validation
     }
 
     // Check for contradictory traits
     const personalityText = JSON.stringify(personality).toLowerCase();
-    
+
     const contradictions = [
       { traits: ['introverted', 'extroverted'], severity: 'warning' },
       { traits: ['optimistic', 'pessimistic'], severity: 'warning' },
       { traits: ['trusting', 'suspicious', 'paranoid'], severity: 'info' },
       { traits: ['calm', 'anxious', 'nervous'], severity: 'info' },
-      { traits: ['generous', 'selfish', 'greedy'], severity: 'warning' }
+      { traits: ['generous', 'selfish', 'greedy'], severity: 'warning' },
     ];
 
     for (const contradiction of contradictions) {
-      const foundTraits = contradiction.traits.filter(trait => 
+      const foundTraits = contradiction.traits.filter((trait) =>
         personalityText.includes(trait)
       );
-      
+
       if (foundTraits.length > 1) {
         if (contradiction.severity === 'warning') {
-          result.warnings.push(`Potentially contradictory personality traits: ${foundTraits.join(', ')}`);
-          result.suggestions.push('Consider if these contradictory traits are intentional or if they represent character complexity');
+          result.warnings.push(
+            `Potentially contradictory personality traits: ${foundTraits.join(', ')}`
+          );
+          result.suggestions.push(
+            'Consider if these contradictory traits are intentional or if they represent character complexity'
+          );
         }
       }
     }
@@ -638,7 +729,9 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
     if (likes && personality) {
       // This is a placeholder for more sophisticated alignment checking
       // In a full implementation, we'd use NLP to analyze semantic alignment
-      result.suggestions.push('Ensure personality traits align with character likes and motivations');
+      result.suggestions.push(
+        'Ensure personality traits align with character likes and motivations'
+      );
     }
 
     return result;
@@ -652,18 +745,29 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
    */
   #validateComponentCompleteness(data) {
     const result = { errors: [], warnings: [], suggestions: [] };
-    
+
     const components = data.components || data;
-    const componentKeys = Object.keys(components).filter(key => key.includes(':'));
-    
+    const componentKeys = Object.keys(components).filter((key) =>
+      key.includes(':')
+    );
+
     const coreComponents = ['core:name', 'core:personality', 'core:profile'];
-    const recommendedComponents = ['core:likes', 'core:dislikes', 'core:fears', 'core:goals'];
-    
+    const recommendedComponents = [
+      'core:likes',
+      'core:dislikes',
+      'core:fears',
+      'core:goals',
+    ];
+
     // Check core components
-    const missingCore = coreComponents.filter(comp => !componentKeys.includes(comp));
+    const missingCore = coreComponents.filter(
+      (comp) => !componentKeys.includes(comp)
+    );
     if (missingCore.length > 0) {
-      result.warnings.push(`Missing essential components: ${missingCore.join(', ')}`);
-      missingCore.forEach(comp => {
+      result.warnings.push(
+        `Missing essential components: ${missingCore.join(', ')}`
+      );
+      missingCore.forEach((comp) => {
         const suggestion = this.#suggestionTemplates.missingComponents[comp];
         if (suggestion) {
           result.suggestions.push(`Add ${comp}: ${suggestion}`);
@@ -672,9 +776,13 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
     }
 
     // Check recommended components
-    const missingRecommended = recommendedComponents.filter(comp => !componentKeys.includes(comp));
+    const missingRecommended = recommendedComponents.filter(
+      (comp) => !componentKeys.includes(comp)
+    );
     if (missingRecommended.length > 0) {
-      result.suggestions.push(`Consider adding: ${missingRecommended.join(', ')} for richer character definition`);
+      result.suggestions.push(
+        `Consider adding: ${missingRecommended.join(', ')} for richer character definition`
+      );
     }
 
     return result;
@@ -688,24 +796,28 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
    */
   #validateLogicalRelationships(data) {
     const result = { errors: [], warnings: [], suggestions: [] };
-    
+
     const components = data.components || data;
-    
+
     // Check for logical consistency between goals and fears
     const goals = components['core:goals'];
     const fears = components['core:fears'];
-    
+
     if (goals && fears) {
       // This is a placeholder for more sophisticated relationship analysis
-      result.suggestions.push('Review that character goals and fears create interesting conflicts and motivations');
+      result.suggestions.push(
+        'Review that character goals and fears create interesting conflicts and motivations'
+      );
     }
 
     // Check profile consistency with other components
     const profile = components['core:profile'];
     const personality = components['core:personality'];
-    
+
     if (profile && personality) {
-      result.suggestions.push('Ensure character background (profile) supports their personality traits');
+      result.suggestions.push(
+        'Ensure character background (profile) supports their personality traits'
+      );
     }
 
     return result;
@@ -719,13 +831,17 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
    */
   #validateContentDepth(data) {
     const result = { errors: [], warnings: [], suggestions: [] };
-    
+
     const components = data.components || data;
     const totalContent = JSON.stringify(components);
-    
+
     if (totalContent.length < 200) {
-      result.warnings.push('Character definition appears brief - more detail will improve speech pattern generation');
-      result.suggestions.push('Add specific examples, background details, and character quirks for better results');
+      result.warnings.push(
+        'Character definition appears brief - more detail will improve speech pattern generation'
+      );
+      result.suggestions.push(
+        'Add specific examples, background details, and character quirks for better results'
+      );
     }
 
     // Check individual component depth
@@ -738,7 +854,9 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       .map(([key]) => key);
 
     if (shallowComponents.length > 0) {
-      result.suggestions.push(`Components needing more detail: ${shallowComponents.join(', ')}`);
+      result.suggestions.push(
+        `Components needing more detail: ${shallowComponents.join(', ')}`
+      );
     }
 
     return result;
@@ -754,26 +872,35 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
    */
   #assessCharacterCompleteness(data) {
     const components = data.components || data;
-    const componentKeys = Object.keys(components).filter(key => key.includes(':'));
-    
+    const componentKeys = Object.keys(components).filter((key) =>
+      key.includes(':')
+    );
+
     const expectedComponents = [
-      'core:name', 'core:personality', 'core:profile', 'core:likes', 
-      'core:dislikes', 'core:fears', 'core:goals'
+      'core:name',
+      'core:personality',
+      'core:profile',
+      'core:likes',
+      'core:dislikes',
+      'core:fears',
+      'core:goals',
     ];
-    
-    const presentComponents = expectedComponents.filter(comp => componentKeys.includes(comp));
+
+    const presentComponents = expectedComponents.filter((comp) =>
+      componentKeys.includes(comp)
+    );
     const presenceScore = presentComponents.length / expectedComponents.length;
-    
+
     // Assess content quality of present components
     let qualityScore = 0;
     let assessedComponents = 0;
-    
+
     for (const comp of presentComponents) {
       if (components[comp]) {
         assessedComponents++;
         const componentContent = JSON.stringify(components[comp]);
         const wordCount = componentContent.split(/\s+/).length;
-        
+
         // Score based on content richness - adjusted for more realistic scoring
         if (comp === 'core:personality') {
           // Personality needs more detail
@@ -787,19 +914,24 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
         }
       }
     }
-    
-    const avgQualityScore = assessedComponents > 0 ? qualityScore / assessedComponents : 0;
-    
+
+    const avgQualityScore =
+      assessedComponents > 0 ? qualityScore / assessedComponents : 0;
+
     // Combined score: 60% presence, 40% quality
-    const score = (presenceScore * 0.6) + (avgQualityScore * 0.4);
-    
+    const score = presenceScore * 0.6 + avgQualityScore * 0.4;
+
     const suggestions = [];
     if (score < 0.7) {
       if (presenceScore < 0.8) {
-        suggestions.push('Add more character components for comprehensive personality definition');
+        suggestions.push(
+          'Add more character components for comprehensive personality definition'
+        );
       }
       if (avgQualityScore < 0.6) {
-        suggestions.push('Expand existing component descriptions with more specific details');
+        suggestions.push(
+          'Expand existing component descriptions with more specific details'
+        );
       }
     }
 
@@ -808,12 +940,14 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       details: {
         present: presentComponents.length,
         expected: expectedComponents.length,
-        missing: expectedComponents.filter(comp => !componentKeys.includes(comp)),
+        missing: expectedComponents.filter(
+          (comp) => !componentKeys.includes(comp)
+        ),
         presenceScore,
         qualityScore: avgQualityScore,
-        assessedComponents
+        assessedComponents,
       },
-      suggestions
+      suggestions,
     };
   }
 
@@ -826,9 +960,13 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
   #assessPersonalityDepth(data) {
     const components = data.components || data;
     const personality = components['core:personality'];
-    
+
     if (!personality) {
-      return { score: 0, details: { reason: 'No personality component found' }, suggestions: ['Add core:personality component'] };
+      return {
+        score: 0,
+        details: { reason: 'No personality component found' },
+        suggestions: ['Add core:personality component'],
+      };
     }
 
     const personalityText = JSON.stringify(personality);
@@ -837,13 +975,15 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
 
     const suggestions = [];
     if (score < 0.5) {
-      suggestions.push('Expand personality description with specific traits, quirks, and behavioral patterns');
+      suggestions.push(
+        'Expand personality description with specific traits, quirks, and behavioral patterns'
+      );
     }
 
     return {
       score,
       details: { wordCount, targetWords: 50 },
-      suggestions
+      suggestions,
     };
   }
 
@@ -856,49 +996,76 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
   #assessBackgroundRichness(data) {
     const components = data.components || data;
     const profile = components['core:profile'];
-    
+
     if (!profile) {
-      return { score: 0, details: { reason: 'No profile component found' }, suggestions: ['Add core:profile component with background information'] };
+      return {
+        score: 0,
+        details: { reason: 'No profile component found' },
+        suggestions: ['Add core:profile component with background information'],
+      };
     }
 
     const profileText = JSON.stringify(profile);
-    const hasAge = /\b(age|years?\s+old|born|\d{1,2}\s*years?\s*old|\d{1,2})\b/i.test(profileText);
-    const hasOccupation = /\b(work|job|profession|career|occupation|scientist|teacher|doctor|engineer|artist|writer|manager|student|researcher|biologist|analyst)\b/i.test(profileText);
-    
+    const hasAge =
+      /\b(age|years?\s+old|born|\d{1,2}\s*years?\s*old|\d{1,2})\b/i.test(
+        profileText
+      );
+    const hasOccupation =
+      /\b(work|job|profession|career|occupation|scientist|teacher|doctor|engineer|artist|writer|manager|student|researcher|biologist|analyst)\b/i.test(
+        profileText
+      );
+
     // Improved location detection - look for location keywords AND place names
-    const hasLocationKeywords = /\b(live|from|hometown|city|country|location|born in|grew up in|lives in|comes from|based in|located in|resides|residing)\b/i.test(profileText);
-    const hasPlaceNames = /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:,\s*[A-Z][a-z]+)*|[A-Z][a-z]+\s*,\s*[A-Z][a-z]+)\b/.test(profileText);
+    const hasLocationKeywords =
+      /\b(live|from|hometown|city|country|location|born in|grew up in|lives in|comes from|based in|located in|resides|residing)\b/i.test(
+        profileText
+      );
+    const hasPlaceNames =
+      /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:,\s*[A-Z][a-z]+)*|[A-Z][a-z]+\s*,\s*[A-Z][a-z]+)\b/.test(
+        profileText
+      );
     // Also check for specific geographic patterns like "City, State" or common place patterns
-    const hasGeographicPatterns = /\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s*,\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b|University|College|Institute|Bay|Valley|Hills|Beach|Park|Center|District/.test(profileText);
-    const hasLocation = hasLocationKeywords || hasPlaceNames || hasGeographicPatterns;
-    
-    const hasHistory = /\b(history|past|background|grew up|childhood|studied|graduated|worked|experience|previously|before|earlier|used to|started|began)\b/i.test(profileText);
-    
-    const richnessFactor = [hasAge, hasOccupation, hasLocation, hasHistory].filter(Boolean).length / 4;
+    const hasGeographicPatterns =
+      /\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s*,\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b|University|College|Institute|Bay|Valley|Hills|Beach|Park|Center|District/.test(
+        profileText
+      );
+    const hasLocation =
+      hasLocationKeywords || hasPlaceNames || hasGeographicPatterns;
+
+    const hasHistory =
+      /\b(history|past|background|grew up|childhood|studied|graduated|worked|experience|previously|before|earlier|used to|started|began)\b/i.test(
+        profileText
+      );
+
+    const richnessFactor =
+      [hasAge, hasOccupation, hasLocation, hasHistory].filter(Boolean).length /
+      4;
     const lengthFactor = Math.min(profileText.length / 200, 1);
-    const score = (richnessFactor * 0.6) + (lengthFactor * 0.4);
+    const score = richnessFactor * 0.6 + lengthFactor * 0.4;
 
     const suggestions = [];
     if (!hasAge) suggestions.push('Include character age information');
     if (!hasOccupation) suggestions.push('Add occupation or role information');
-    if (!hasLocation) suggestions.push('Specify where the character lives or comes from');
-    if (!hasHistory) suggestions.push('Include background history or significant past events');
+    if (!hasLocation)
+      suggestions.push('Specify where the character lives or comes from');
+    if (!hasHistory)
+      suggestions.push('Include background history or significant past events');
 
     return {
       score,
-      details: { 
-        hasAge, 
-        hasOccupation, 
-        hasLocation, 
-        hasHistory, 
+      details: {
+        hasAge,
+        hasOccupation,
+        hasLocation,
+        hasHistory,
         textLength: profileText.length,
         locationDetails: {
           hasLocationKeywords,
           hasPlaceNames,
-          hasGeographicPatterns
-        }
+          hasGeographicPatterns,
+        },
       },
-      suggestions
+      suggestions,
     };
   }
 
@@ -910,26 +1077,37 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
    */
   #assessRelationshipComplexity(data) {
     const components = data.components || data;
-    const relationshipComponents = Object.keys(components).filter(key => 
-      key.includes('relationship') || key.includes('friend') || key.includes('family') || key.includes('partner')
+    const relationshipComponents = Object.keys(components).filter(
+      (key) =>
+        key.includes('relationship') ||
+        key.includes('friend') ||
+        key.includes('family') ||
+        key.includes('partner')
     );
 
     const hasRelationships = relationshipComponents.length > 0;
     const relationshipText = relationshipComponents
-      .map(key => JSON.stringify(components[key]))
+      .map((key) => JSON.stringify(components[key]))
       .join(' ');
 
-    const score = hasRelationships ? Math.min(relationshipText.length / 100, 1) : 0;
+    const score = hasRelationships
+      ? Math.min(relationshipText.length / 100, 1)
+      : 0;
 
     const suggestions = [];
     if (score < 0.3) {
-      suggestions.push('Add relationship information to create more realistic character interactions');
+      suggestions.push(
+        'Add relationship information to create more realistic character interactions'
+      );
     }
 
     return {
       score,
-      details: { relationshipComponents: relationshipComponents.length, textLength: relationshipText.length },
-      suggestions
+      details: {
+        relationshipComponents: relationshipComponents.length,
+        textLength: relationshipText.length,
+      },
+      suggestions,
     };
   }
 
@@ -969,7 +1147,9 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       score += 0.3;
       details.hasConflicts = true;
     } else {
-      suggestions.push('Define character conflicts for compelling story development');
+      suggestions.push(
+        'Define character conflicts for compelling story development'
+      );
       details.hasConflicts = false;
     }
 
@@ -1030,7 +1210,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32bit integer
     }
     return Math.abs(hash).toString(16);
@@ -1071,7 +1251,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
 
     this.#validationCache.set(cacheKey, {
       result,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -1097,7 +1277,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       qualityMetrics: this.#qualityMetrics.size,
       cacheSize: this.#validationCache.size,
       cacheMaxSize: this.#cacheMaxSize,
-      cacheTTL: this.#cacheTTL
+      cacheTTL: this.#cacheTTL,
     };
   }
 }

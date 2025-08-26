@@ -367,7 +367,8 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
     it('should successfully process nested components character data without runtime errors', async () => {
       // Mock the character data that would typically come from a .character.json file
       const characterDefinitionData = JSON.stringify({
-        $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
+        $schema:
+          'schema://living-narrative-engine/entity-definition.schema.json',
         id: 'test:hero',
         components: {
           'core:name': { text: 'Integration Test Character' },
@@ -408,7 +409,9 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
           error.includes('Invalid event name provided')
         );
         const hasComponentValidationError = consoleErrors.some((error) =>
-          error.includes('Character data must contain at least one character component')
+          error.includes(
+            'Character data must contain at least one character component'
+          )
         );
 
         expect(hasObjectObjectError).toBe(false);
@@ -417,18 +420,21 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       } catch (error) {
         // Even if generation fails for other reasons (like missing LLM service),
         // we should not see the specific validation and event dispatching errors
-        const hasTargetedErrors = 
+        const hasTargetedErrors =
           error.message.includes('[object Object]') ||
           error.message.includes('Invalid event name provided') ||
-          error.message.includes('Character data must contain at least one character component');
-        
+          error.message.includes(
+            'Character data must contain at least one character component'
+          );
+
         expect(hasTargetedErrors).toBe(false);
       }
     });
 
     it('should extract character name correctly from nested components structure', async () => {
       const characterDefinitionData = JSON.stringify({
-        $schema: 'schema://living-narrative-engine/entity-definition.schema.json',
+        $schema:
+          'schema://living-narrative-engine/entity-definition.schema.json',
         id: 'test:named-character',
         components: {
           'core:name': { text: 'Expected Character Name' },
@@ -455,18 +461,19 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
 
         // If generation starts successfully, it means the name extraction worked
         // and didn't cause validation failures
-        const hasNameExtractionErrors = consoleErrors.some((error) =>
-          error.includes('Failed to extract character name') ||
-          error.includes('Character name is required')
+        const hasNameExtractionErrors = consoleErrors.some(
+          (error) =>
+            error.includes('Failed to extract character name') ||
+            error.includes('Character name is required')
         );
 
         expect(hasNameExtractionErrors).toBe(false);
       } catch (error) {
         // Even if other aspects fail, name extraction should not be the cause
-        const isNameExtractionError = 
+        const isNameExtractionError =
           error.message.includes('Failed to extract character name') ||
           error.message.includes('Character name is required');
-        
+
         expect(isNameExtractionError).toBe(false);
       }
     });
@@ -496,26 +503,29 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
         generateButton.click();
 
         // Check that we don't have event-related errors
-        const hasEventSystemErrors = consoleErrors.some((error) =>
-          error.includes('EventDefinition not found for \'[object Object]\'') ||
-          error.includes('Invalid event name provided') ||
-          error.includes('Cannot validate payload')
+        const hasEventSystemErrors = consoleErrors.some(
+          (error) =>
+            error.includes("EventDefinition not found for '[object Object]'") ||
+            error.includes('Invalid event name provided') ||
+            error.includes('Cannot validate payload')
         );
 
-        const hasEventWarnings = consoleWarnings.some((warning) =>
-          warning.includes('EventDefinition not found for \'[object Object]\'') ||
-          warning.includes('Cannot validate payload')
+        const hasEventWarnings = consoleWarnings.some(
+          (warning) =>
+            warning.includes(
+              "EventDefinition not found for '[object Object]'"
+            ) || warning.includes('Cannot validate payload')
         );
 
         expect(hasEventSystemErrors).toBe(false);
         expect(hasEventWarnings).toBe(false);
       } catch (error) {
         // Event system errors should not occur regardless of other failures
-        const isEventSystemError = 
+        const isEventSystemError =
           error.message.includes('[object Object]') ||
           error.message.includes('Invalid event name provided') ||
           error.message.includes('EventDefinition not found');
-        
+
         expect(isEventSystemError).toBe(false);
       }
     });
@@ -540,9 +550,13 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       });
 
       const mockSpeechPatternsGenerator = {
-        generateSpeechPatterns: jest.fn().mockRejectedValue(
-          new Error('Enhanced validation failed: Pattern 5: pattern description should be more specific than generic terms')
-        ),
+        generateSpeechPatterns: jest
+          .fn()
+          .mockRejectedValue(
+            new Error(
+              'Enhanced validation failed: Pattern 5: pattern description should be more specific than generic terms'
+            )
+          ),
         getServiceInfo: jest.fn().mockReturnValue({ version: '1.0.0' }),
       };
 
@@ -564,17 +578,17 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
 
       // Input test character data from error logs
       const characterData = {
-        "$schema": "http://example.com/schemas/entity-definition.schema.json",
-        "id": "test:character",
-        "components": {
-          "core:name": { "text": "Test Character" },
-          "core:profile": {
-            "text": "A test character with sufficient content for validation"
+        $schema: 'http://example.com/schemas/entity-definition.schema.json',
+        id: 'test:character',
+        components: {
+          'core:name': { text: 'Test Character' },
+          'core:profile': {
+            text: 'A test character with sufficient content for validation',
           },
-          "core:personality": {
-            "text": "Detailed personality traits and background information"
-          }
-        }
+          'core:personality': {
+            text: 'Detailed personality traits and background information',
+          },
+        },
       };
 
       const textarea = document.getElementById('character-definition');
@@ -590,12 +604,18 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify no "[object Object]" errors in console
-      const hasObjectObjectError = consoleErrors.some((error) =>
-        error.includes('[object Object]') || error.includes('getEventDefinition called with invalid ID: [object Object]')
+      const hasObjectObjectError = consoleErrors.some(
+        (error) =>
+          error.includes('[object Object]') ||
+          error.includes(
+            'getEventDefinition called with invalid ID: [object Object]'
+          )
       );
 
-      const hasObjectObjectWarning = consoleWarnings.some((warning) =>
-        warning.includes('[object Object]') || warning.includes('EventDefinition not found for \'[object Object]\'')
+      const hasObjectObjectWarning = consoleWarnings.some(
+        (warning) =>
+          warning.includes('[object Object]') ||
+          warning.includes("EventDefinition not found for '[object Object]'")
       );
 
       expect(hasObjectObjectError).toBe(false);
@@ -649,24 +669,24 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       const mockLLMJsonService = {
         clean: jest.fn().mockReturnValue(testLLMResponse),
         parseAndRepair: jest.fn().mockResolvedValue({
-          characterName: "Test Character",
+          characterName: 'Test Character',
           speechPatterns: [
             {
-              pattern: "Generic response pattern",
-              example: "This is an example", 
-              circumstances: "When testing"
+              pattern: 'Generic response pattern',
+              example: 'This is an example',
+              circumstances: 'When testing',
             },
             {
-              pattern: "Second test pattern",
-              example: "Another example",
-              circumstances: "When testing again"
+              pattern: 'Second test pattern',
+              example: 'Another example',
+              circumstances: 'When testing again',
             },
             {
-              pattern: "Third test pattern",
-              example: "Yet another example", 
-              circumstances: "When testing more"
-            }
-          ]
+              pattern: 'Third test pattern',
+              example: 'Yet another example',
+              circumstances: 'When testing more',
+            },
+          ],
         }),
       };
 
@@ -687,15 +707,17 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
 
       // Process a response
       await processor.processResponse(testLLMResponse, {
-        characterName: 'Test Character'
+        characterName: 'Test Character',
       });
 
       // Verify that info logging occurred with the raw response
       const hasRawResponseLog = infoLogCalls.some((logCall) => {
         const [message, data] = logCall;
-        return message.includes('Raw LLM response received') && 
-               data && 
-               data.fullResponse === testLLMResponse;
+        return (
+          message.includes('Raw LLM response received') &&
+          data &&
+          data.fullResponse === testLLMResponse
+        );
       });
 
       expect(hasRawResponseLog).toBe(true);
@@ -718,9 +740,9 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
             'Pattern 5: pattern description should be more specific than generic terms',
             'Pattern 6: example should contain quoted speech or dialogue',
             'Pattern 8: example should contain quoted speech or dialogue',
-            'Pattern 17: example should contain quoted speech or dialogue'
-          ]
-        })
+            'Pattern 17: example should contain quoted speech or dialogue',
+          ],
+        }),
       };
 
       const mockLogger = {
@@ -755,24 +777,24 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       const mockLLMJsonService = {
         clean: jest.fn().mockReturnValue(problemResponse),
         parseAndRepair: jest.fn().mockResolvedValue({
-          characterName: "Test Character",
+          characterName: 'Test Character',
           speechPatterns: [
             {
-              pattern: "Uses generic terms",
-              example: "Non-quoted example",
-              circumstances: "Testing"
+              pattern: 'Uses generic terms',
+              example: 'Non-quoted example',
+              circumstances: 'Testing',
             },
             {
-              pattern: "Generic pattern", 
-              example: "Also non-quoted",
-              circumstances: "More testing"
+              pattern: 'Generic pattern',
+              example: 'Also non-quoted',
+              circumstances: 'More testing',
             },
             {
-              pattern: "Another generic",
-              example: "Still no quotes",
-              circumstances: "Even more testing"
-            }
-          ]
+              pattern: 'Another generic',
+              example: 'Still no quotes',
+              circumstances: 'Even more testing',
+            },
+          ],
         }),
       };
 
@@ -782,16 +804,18 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       );
 
       // Mock the validator creation to return our failing validator
-      const originalSpeechPatternsValidator = (await import(
-        '../../../src/characterBuilder/validators/SpeechPatternsSchemaValidator.js'
-      )).default;
+      const originalSpeechPatternsValidator = (
+        await import(
+          '../../../src/characterBuilder/validators/SpeechPatternsSchemaValidator.js'
+        )
+      ).default;
 
       // Create processor (the validator will be created internally)
       const processor = new SpeechPatternsResponseProcessor({
         logger: mockLogger,
         llmJsonService: mockLLMJsonService,
         schemaValidator: {
-          validateAgainstSchema: jest.fn().mockReturnValue({ isValid: true })
+          validateAgainstSchema: jest.fn().mockReturnValue({ isValid: true }),
         },
       });
 
@@ -813,40 +837,43 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
     it('should reproduce and fix the exact character data validation error', async () => {
       // Use the exact character data structure from the error logs
       const exactCharacterData = {
-        "$schema": "http://example.com/schemas/entity-definition.schema.json",
-        "id": "p_erotica:ane_arrieta",
-        "components": {
-          "core:name": { "text": "Ane Arrieta" },
-          "core:portrait": {
-            "imagePath": "portraits/ane_arrieta.png",
-            "altText": "Ane Arrieta - A young woman with red hair in pigtails, brown eyes, and a youthful face"
+        $schema: 'http://example.com/schemas/entity-definition.schema.json',
+        id: 'p_erotica:ane_arrieta',
+        components: {
+          'core:name': { text: 'Ane Arrieta' },
+          'core:portrait': {
+            imagePath: 'portraits/ane_arrieta.png',
+            altText:
+              'Ane Arrieta - A young woman with red hair in pigtails, brown eyes, and a youthful face',
           },
-          "core:profile": {
-            "text": "Ane is short, and usually wears her red hair in pigtails..."
+          'core:profile': {
+            text: 'Ane is short, and usually wears her red hair in pigtails...',
           },
-          "core:personality": {
-            "text": "Ane has become so skilled at reading and reflecting what others want to see..."
-          }
-        }
+          'core:personality': {
+            text: 'Ane has become so skilled at reading and reflecting what others want to see...',
+          },
+        },
       };
 
       // Create mock services
       const mockSpeechPatternsGenerator = {
-        generateSpeechPatterns: jest.fn().mockImplementation((characterData) => {
-          // This should not throw character validation errors anymore
-          return Promise.resolve({
-            characterName: "Ane Arrieta",
-            speechPatterns: [
-              {
-                pattern: "Test pattern",
-                example: "\"Test dialogue\"",
-                circumstances: "When testing"
-              }
-            ],
-            generatedAt: new Date().toISOString(),
-            metadata: {}
-          });
-        }),
+        generateSpeechPatterns: jest
+          .fn()
+          .mockImplementation((characterData) => {
+            // This should not throw character validation errors anymore
+            return Promise.resolve({
+              characterName: 'Ane Arrieta',
+              speechPatterns: [
+                {
+                  pattern: 'Test pattern',
+                  example: '"Test dialogue"',
+                  circumstances: 'When testing',
+                },
+              ],
+              generatedAt: new Date().toISOString(),
+              metadata: {},
+            });
+          }),
         getServiceInfo: jest.fn().mockReturnValue({ version: '1.0.0' }),
       };
 
@@ -884,17 +911,23 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Verify no character validation errors
-      const hasValidationError = consoleErrors.some((error) =>
-        error.includes('Character data must contain at least one character component') ||
-        error.includes('format: "component:field"')
+      const hasValidationError = consoleErrors.some(
+        (error) =>
+          error.includes(
+            'Character data must contain at least one character component'
+          ) || error.includes('format: "component:field"')
       );
 
       expect(hasValidationError).toBe(false);
 
       // The main goal is to ensure no validation errors occurred
       // If the mock was called, that's even better, but not required for this test
-      if (mockSpeechPatternsGenerator.generateSpeechPatterns.mock.calls.length > 0) {
-        expect(mockSpeechPatternsGenerator.generateSpeechPatterns).toHaveBeenCalled();
+      if (
+        mockSpeechPatternsGenerator.generateSpeechPatterns.mock.calls.length > 0
+      ) {
+        expect(
+          mockSpeechPatternsGenerator.generateSpeechPatterns
+        ).toHaveBeenCalled();
       } else {
         // At minimum, ensure that no character validation errors occurred
         expect(hasValidationError).toBe(false);

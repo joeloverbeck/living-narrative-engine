@@ -5,9 +5,7 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import {
-  assertNonBlankString,
-} from '../../utils/dependencyUtils.js';
+import { assertNonBlankString } from '../../utils/dependencyUtils.js';
 import { validateSpeechPatternsGenerationResponse } from '../prompts/speechPatternsPrompts.js';
 import SpeechPatternsSchemaValidator from '../validators/SpeechPatternsSchemaValidator.js';
 
@@ -90,10 +88,11 @@ export class SpeechPatternsResponseProcessor {
 
     try {
       // Log raw LLM response at info level for debugging
-      const truncatedResponse = rawResponse.length > 500 
-        ? rawResponse.substring(0, 500) + '...[truncated]'
-        : rawResponse;
-      
+      const truncatedResponse =
+        rawResponse.length > 500
+          ? rawResponse.substring(0, 500) + '...[truncated]'
+          : rawResponse;
+
       this.#logger.info('Raw LLM response received for speech patterns', {
         responseLength: rawResponse.length,
         characterName: context.characterName,

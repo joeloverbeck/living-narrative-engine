@@ -70,7 +70,7 @@ class RegenerateDescriptionHandler extends ComponentOperationHandler {
 
   /**
    * Executes the REGENERATE_DESCRIPTION operation to update an entity's description.
-   * 
+   *
    * @param {RegenerateDescriptionOperationParams} params - Operation parameters.
    * @param {ExecutionContext} executionContext - Current execution context.
    * @returns {Promise<void>}
@@ -103,36 +103,41 @@ class RegenerateDescriptionHandler extends ComponentOperationHandler {
       if (!entity) {
         log.warn('Entity not found for description regeneration', {
           entityId,
-          operation: 'REGENERATE_DESCRIPTION'
+          operation: 'REGENERATE_DESCRIPTION',
         });
         return;
       }
 
       // 4. Description Generation
-      const newDescription = await this.#bodyDescriptionComposer.composeDescription(entity);
+      const newDescription =
+        await this.#bodyDescriptionComposer.composeDescription(entity);
 
       // 5. Component Update
       await this.#entityManager.addComponent(entityId, 'core:description', {
-        text: newDescription
+        text: newDescription,
       });
 
       log.info('Successfully regenerated entity description', {
         entityId,
-        descriptionLength: newDescription?.length || 0
+        descriptionLength: newDescription?.length || 0,
       });
-
     } catch (error) {
       log.error('Failed to regenerate entity description', {
         params,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
 
-      safeDispatchError(this.#dispatcher, 'REGENERATE_DESCRIPTION operation failed', {
-        params,
-        error: error.message,
-        stack: error.stack
-      }, log);
+      safeDispatchError(
+        this.#dispatcher,
+        'REGENERATE_DESCRIPTION operation failed',
+        {
+          params,
+          error: error.message,
+          stack: error.stack,
+        },
+        log
+      );
     }
   }
 }

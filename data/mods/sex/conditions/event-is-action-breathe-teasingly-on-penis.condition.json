@@ -1,13 +1,13 @@
 {
-    "$schema": "schema://living-narrative-engine/condition.schema.json",
-    "id": "sex:event-is-action-breathe-teasingly-on-penis",
-    "description": "Checks if the triggering event is for the 'sex:breathe_teasingly_on_penis' action.",
-    "logic": {
-        "==": [
-            {
-                "var": "event.payload.actionId"
-            },
-            "sex:breathe_teasingly_on_penis"
-        ]
-    }
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "sex:event-is-action-breathe-teasingly-on-penis",
+  "description": "Checks if the triggering event is for the 'sex:breathe_teasingly_on_penis' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "sex:breathe_teasingly_on_penis"
+    ]
+  }
 }

@@ -96,7 +96,8 @@ export class ActionTestUtilities {
     }
 
     // Add currentLocation property that tests expect
-    testWorld.currentLocation = entityManager.getEntityInstance('test-location-1');
+    testWorld.currentLocation =
+      entityManager.getEntityInstance('test-location-1');
 
     return testWorld;
   }

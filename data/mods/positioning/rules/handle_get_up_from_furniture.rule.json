@@ -1,0 +1,103 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_get_up_from_furniture",
+  "comment": "Handles positioning:get_up_from_furniture action",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "positioning:event-is-action-get-up-from-furniture"
+  },
+  "actions": [
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor's sitting position info",
+      "parameters": {
+        "entity_id": "{event.payload.actorId}",
+        "component_type": "positioning:sitting_on",
+        "result_variable": "sittingInfo"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Build the field path for the specific spot index",
+      "parameters": {
+        "variable_name": "spotFieldPath",
+        "value": {
+          "cat": ["spots.", { "var": "context.sittingInfo.spot_index" }]
+        }
+      }
+    },
+    {
+      "type": "MODIFY_COMPONENT",
+      "comment": "Clear the spot in furniture array using dot notation",
+      "parameters": {
+        "entity_ref": "target",
+        "component_type": "positioning:allows_sitting",
+        "field": "{context.spotFieldPath}",
+        "mode": "set",
+        "value": null
+      }
+    },
+    {
+      "type": "REMOVE_COMPONENT",
+      "comment": "Remove sitting_on from actor",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "positioning:sitting_on"
+      }
+    },
+    {
+      "type": "UNLOCK_MOVEMENT",
+      "comment": "Restore movement capability",
+      "parameters": {
+        "actor_id": "{event.payload.actorId}"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} gets up from {context.targetName}."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    {
+      "macro": "core:logSuccessAndEndTurn"
+    }
+  ]
+}

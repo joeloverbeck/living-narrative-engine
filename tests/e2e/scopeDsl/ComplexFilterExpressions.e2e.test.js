@@ -5,7 +5,7 @@
  * This test suite provides comprehensive end-to-end testing of complex filter
  * expressions in the ScopeDSL system, addressing critical coverage gaps in:
  * - Deeply nested AND/OR conditions with complex JSON Logic
- * - Condition reference chains and mixed inline/referenced conditions  
+ * - Condition reference chains and mixed inline/referenced conditions
  * - Performance validation with large datasets (1000+ entities)
  * - Filter failure resilience and graceful error handling
  * - Integration with other ScopeDSL features (unions, caching)
@@ -84,14 +84,34 @@ describe('Complex Filter Expressions E2E', () => {
               or: [
                 {
                   and: [
-                    { '>': [{ var: 'entity.components.core:health.current' }, 30] },
-                    { '<': [{ var: 'entity.components.core:health.current' }, 80] },
+                    {
+                      '>': [
+                        { var: 'entity.components.core:health.current' },
+                        30,
+                      ],
+                    },
+                    {
+                      '<': [
+                        { var: 'entity.components.core:health.current' },
+                        80,
+                      ],
+                    },
                   ],
                 },
                 {
                   and: [
-                    { '>': [{ var: 'entity.components.core:stats.strength' }, 25] },
-                    { '==': [{ var: 'entity.components.core:actor.isPlayer' }, false] },
+                    {
+                      '>': [
+                        { var: 'entity.components.core:stats.strength' },
+                        25,
+                      ],
+                    },
+                    {
+                      '==': [
+                        { var: 'entity.components.core:actor.isPlayer' },
+                        false,
+                      ],
+                    },
                   ],
                 },
               ],
@@ -261,7 +281,7 @@ describe('Complex Filter Expressions E2E', () => {
     // Create diverse actors for filtering
     for (let i = 0; i < size; i++) {
       const actorId = `complex-test-actor-${i}`;
-      
+
       const config = {
         level: Math.floor(Math.random() * 20) + 1, // 1-20
         strength: Math.floor(Math.random() * 30) + 10, // 10-39
@@ -299,27 +319,28 @@ describe('Complex Filter Expressions E2E', () => {
 
       expect(result).toBeDefined();
       expect(result instanceof Set).toBe(true);
-      
+
       // Should filter entities based on complex conditions
       // Expected: level >= 3 AND (strength >= 20 OR (agility >= 15 AND health < 80))
       const resultArray = Array.from(result);
-      
+
       // Verify each result matches the complex condition
       for (const entityId of resultArray) {
         const entity = await entityManager.getEntityInstance(entityId);
         expect(entity).toBeDefined();
-        
+
         const stats = entity.getComponentData('core:stats');
         const health = entity.getComponentData('core:health');
-        
+
         expect(stats).toBeDefined();
         expect(health).toBeDefined();
         expect(stats.level).toBeGreaterThanOrEqual(3);
-        
+
         const strengthCondition = stats.strength >= 20;
-        const agilityHealthCondition = stats.agility >= 15 && health.current < 80;
+        const agilityHealthCondition =
+          stats.agility >= 15 && health.current < 80;
         const orCondition = strengthCondition || agilityHealthCondition;
-        
+
         expect(orCondition).toBe(true);
       }
     });
@@ -338,16 +359,16 @@ describe('Complex Filter Expressions E2E', () => {
 
       expect(result).toBeDefined();
       expect(result instanceof Set).toBe(true);
-      
+
       // Should apply the referenced condition correctly
       const resultArray = Array.from(result);
       for (const entityId of resultArray) {
         const entity = await entityManager.getEntityInstance(entityId);
         expect(entity).toBeDefined();
-        
+
         const stats = entity.getComponentData('core:stats');
         expect(stats).toBeDefined();
-        
+
         // Verify complex-multilevel-condition is applied
         expect(stats.level).toBeGreaterThan(5);
         expect(stats.strength > 20 || stats.agility > 15).toBe(true);
@@ -368,16 +389,16 @@ describe('Complex Filter Expressions E2E', () => {
 
       expect(result).toBeDefined();
       expect(result instanceof Set).toBe(true);
-      
+
       // Should combine referenced condition AND inline level check
       const resultArray = Array.from(result);
       for (const entityId of resultArray) {
         const entity = await entityManager.getEntityInstance(entityId);
         expect(entity).toBeDefined();
-        
+
         const stats = entity.getComponentData('core:stats');
         expect(stats).toBeDefined();
-        
+
         // Must satisfy both referenced condition AND level > 10
         expect(stats.level).toBeGreaterThan(10);
       }
@@ -397,16 +418,16 @@ describe('Complex Filter Expressions E2E', () => {
 
       expect(result).toBeDefined();
       expect(result instanceof Set).toBe(true);
-      
+
       // Should apply arithmetic condition: strength + agility > 40
       const resultArray = Array.from(result);
       for (const entityId of resultArray) {
         const entity = await entityManager.getEntityInstance(entityId);
         expect(entity).toBeDefined();
-        
+
         const stats = entity.getComponentData('core:stats');
         expect(stats).toBeDefined();
-        
+
         expect(stats.strength + stats.agility).toBeGreaterThan(40);
       }
     });
@@ -475,12 +496,12 @@ describe('Complex Filter Expressions E2E', () => {
       for (const entityId of resultArray) {
         const entity = await entityManager.getEntityInstance(entityId);
         expect(entity).toBeDefined();
-        
+
         const stats = entity.getComponentData('core:stats');
         const health = entity.getComponentData('core:health');
         expect(stats).toBeDefined();
         expect(health).toBeDefined();
-        
+
         expect(stats.level).toBeGreaterThan(5);
         expect(health.current).toBeLessThan(90);
       }
@@ -530,7 +551,7 @@ describe('Complex Filter Expressions E2E', () => {
 
       expect(result).toBeDefined();
       expect(result instanceof Set).toBe(true);
-      
+
       // Should handle missing components and still evaluate what's available
       const resultArray = Array.from(result);
       expect(resultArray).toContain('partial-actor-1');
@@ -552,7 +573,7 @@ describe('Complex Filter Expressions E2E', () => {
 
       expect(result).toBeDefined();
       expect(result instanceof Set).toBe(true);
-      
+
       // Verify the resolution completed without context errors
       // This tests the complex context building and management in filterResolver
       expect(result.size).toBeGreaterThanOrEqual(0);
@@ -579,7 +600,7 @@ describe('Complex Filter Expressions E2E', () => {
         components: nullComponents,
       });
       registry.store('entityDefinitions', nullValueEntityId, definition);
-      
+
       await entityManager.createEntityInstance(nullValueEntityId, {
         instanceId: nullValueEntityId,
         definitionId: nullValueEntityId,
@@ -598,7 +619,7 @@ describe('Complex Filter Expressions E2E', () => {
 
       expect(result).toBeDefined();
       expect(result instanceof Set).toBe(true);
-      
+
       // Entity with null values should be excluded from results
       expect(result.has(nullValueEntityId)).toBe(false);
     });
@@ -637,7 +658,7 @@ describe('Complex Filter Expressions E2E', () => {
 
     test('should handle missing services gracefully', async () => {
       const testActor = await createComplexTestActor('error-test-actor');
-      
+
       // Create invalid game context (missing required services)
       const invalidGameContext = {
         currentLocation: null,

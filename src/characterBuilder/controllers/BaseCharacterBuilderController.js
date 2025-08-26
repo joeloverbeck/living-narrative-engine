@@ -1541,7 +1541,6 @@ export class BaseCharacterBuilderController {
     });
   }
 
-
   /**
    * Add click handler with loading state
    *
@@ -2898,7 +2897,7 @@ export class BaseCharacterBuilderController {
 
     // Clear weak references (they will be garbage collected)
     // Note: WeakMap and WeakSet don't need explicit clearing
-    
+
     // Clear custom cached data
     this._clearCachedData();
 
@@ -3011,10 +3010,13 @@ export class BaseCharacterBuilderController {
       const timestamp = performance.now();
       this.#performanceMarks.set(markName, timestamp);
       performance.mark(markName);
-      
+
       this.#logger.debug(`Performance mark: ${markName}`, { timestamp });
     } catch (error) {
-      this.#logger.warn(`Failed to create performance mark: ${markName}`, error);
+      this.#logger.warn(
+        `Failed to create performance mark: ${markName}`,
+        error
+      );
     }
   }
 
@@ -3039,17 +3041,20 @@ export class BaseCharacterBuilderController {
       const endTime = this.#performanceMarks.get(endMark);
 
       if (!startTime || !endTime) {
-        this.#logger.warn(`Performance marks not found for measurement: ${measureName}`, {
-          startMark,
-          endMark,
-          hasStartMark: !!startTime,
-          hasEndMark: !!endTime,
-        });
+        this.#logger.warn(
+          `Performance marks not found for measurement: ${measureName}`,
+          {
+            startMark,
+            endMark,
+            hasStartMark: !!startTime,
+            hasEndMark: !!endTime,
+          }
+        );
         return null;
       }
 
       const duration = endTime - startTime;
-      
+
       // Store measurement
       this.#performanceMeasurements.set(measureName, {
         duration,
@@ -3119,7 +3124,7 @@ export class BaseCharacterBuilderController {
           }
         }
       }
-      
+
       for (const [key] of this.#performanceMeasurements) {
         if (key.startsWith(prefix)) {
           this.#performanceMeasurements.delete(key);
@@ -3141,7 +3146,7 @@ export class BaseCharacterBuilderController {
         // Ignore errors
       }
     }
-    
+
     this.#logger.debug('Cleared performance data', { prefix });
   }
 
@@ -3217,7 +3222,7 @@ export class BaseCharacterBuilderController {
    */
   _debounce(fn, delay, options = {}) {
     const { leading = false, trailing = true, maxWait } = options;
-    
+
     let timerId = null;
     let maxTimerId = null;
     let lastCallTime = null;
@@ -3229,11 +3234,11 @@ export class BaseCharacterBuilderController {
     const executeFunction = () => {
       const args = lastArgs;
       const thisArg = lastThis;
-      
+
       lastArgs = null;
       lastThis = null;
       lastExecuteTime = Date.now();
-      
+
       result = fn.apply(thisArg, args);
       return result;
     };
@@ -3242,20 +3247,20 @@ export class BaseCharacterBuilderController {
       return this._setTimeout(() => {
         timerId = null;
         maxTimerId = null;
-        
+
         if (trailing && lastArgs) {
           executeFunction();
         }
       }, wait);
     };
 
-    const debounced = function(...args) {
+    const debounced = function (...args) {
       lastArgs = args;
       lastThis = this;
       lastCallTime = Date.now();
 
       const shouldExecuteNow = leading && !timerId;
-      
+
       // Clear existing timer
       if (timerId) {
         this._clearTimeout(timerId);
@@ -3264,7 +3269,7 @@ export class BaseCharacterBuilderController {
       // Handle maxWait
       if (maxWait && !maxTimerId) {
         const timeToMaxWait = maxWait - (lastCallTime - (lastExecuteTime || 0));
-        
+
         if (timeToMaxWait <= 0) {
           // Max wait exceeded, execute immediately
           if (timerId) {
@@ -3351,7 +3356,7 @@ export class BaseCharacterBuilderController {
    */
   _throttle(fn, wait, options = {}) {
     const { leading = true, trailing = true } = options;
-    
+
     let timerId = null;
     let lastExecuteTime = 0;
     let lastArgs = null;
@@ -3361,24 +3366,24 @@ export class BaseCharacterBuilderController {
     const executeFunction = () => {
       const args = lastArgs;
       const thisArg = lastThis;
-      
+
       lastArgs = null;
       lastThis = null;
       lastExecuteTime = Date.now();
-      
+
       result = fn.apply(thisArg, args);
       return result;
     };
 
-    const throttled = function(...args) {
+    const throttled = function (...args) {
       const now = Date.now();
       const timeSinceLastExecute = now - lastExecuteTime;
-      
+
       lastArgs = args;
       lastThis = this;
 
       const shouldExecuteNow = leading && timeSinceLastExecute >= wait;
-      
+
       if (shouldExecuteNow) {
         // Execute immediately
         if (timerId) {
@@ -3389,12 +3394,15 @@ export class BaseCharacterBuilderController {
       } else if (!timerId && trailing) {
         // Schedule execution
         const delay = wait - timeSinceLastExecute;
-        timerId = this._setTimeout(() => {
-          timerId = null;
-          if (lastArgs) {
-            executeFunction();
-          }
-        }, delay > 0 ? delay : wait);
+        timerId = this._setTimeout(
+          () => {
+            timerId = null;
+            if (lastArgs) {
+              executeFunction();
+            }
+          },
+          delay > 0 ? delay : wait
+        );
       }
 
       return result;

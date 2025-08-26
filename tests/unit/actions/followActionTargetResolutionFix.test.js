@@ -241,6 +241,11 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
   });
 
   it('should validate actor entity in createEvaluationContext', () => {
+    // Create a mock trace object to trigger validation logic
+    const mockTrace = {
+      addLog: jest.fn(),
+    };
+
     // Test with actor having 'undefined' as string ID
     const invalidActor = { id: 'undefined', componentTypeIds: [] };
 
@@ -249,7 +254,8 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
         'some-item',
         invalidActor,
         mockEntityManager,
-        mockLocationProvider
+        mockLocationProvider,
+        mockTrace // Pass trace to enable validation
       );
     }).toThrow(
       'createEvaluationContext: actorEntity has invalid ID: "undefined". This should never happen.'
@@ -261,7 +267,8 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
         'some-item',
         null,
         mockEntityManager,
-        mockLocationProvider
+        mockLocationProvider,
+        mockTrace // Pass trace to enable validation
       );
     }).toThrow(
       'createEvaluationContext: actorEntity is undefined. This should never happen during scope evaluation.'
@@ -274,7 +281,8 @@ describe('Follow Action Target Resolution - Invalid Entity ID Fix', () => {
         'some-item',
         actorWithoutId,
         mockEntityManager,
-        mockLocationProvider
+        mockLocationProvider,
+        mockTrace // Pass trace to enable validation
       );
     }).toThrow('createEvaluationContext: actorEntity has invalid ID');
   });

@@ -4,9 +4,9 @@
  * @typedef {import('../core/gateways.js').EntityGateway} EntityGateway
  */
 
-import { 
+import {
   createEvaluationContext,
-  preprocessActorForEvaluation 
+  preprocessActorForEvaluation,
 } from '../core/entityHelpers.js';
 
 /**
@@ -51,7 +51,7 @@ export default function createFilterResolver({
      */
     resolve(node, ctx) {
       const { actorEntity, dispatcher, trace } = ctx;
-      
+
       // Check if we have a cached processed actor from previous iterations
       // This avoids reprocessing the actor 10,000+ times in large datasets
       const cacheKey = '_processedActor';
@@ -97,7 +97,11 @@ export default function createFilterResolver({
 
       // Additional validation for actorEntity ID
       // Only perform detailed validation when debugging
-      if (!actorEntity.id || actorEntity.id === 'undefined' || typeof actorEntity.id !== 'string') {
+      if (
+        !actorEntity.id ||
+        actorEntity.id === 'undefined' ||
+        typeof actorEntity.id !== 'string'
+      ) {
         if (trace) {
           // Enhanced error detection for Entity class spread operator issue
           const isPossibleSpreadIssue =
@@ -113,30 +117,33 @@ export default function createFilterResolver({
 
           const error = new Error(errorMessage);
           // eslint-disable-next-line no-console
-          console.error('[CRITICAL] FilterResolver actorEntity has invalid ID:', {
-            actorId: actorEntity.id,
-            actorIdType: typeof actorEntity.id,
-            actorKeys: Object.keys(actorEntity),
-            nodeType: node?.type,
-            parentNodeType: node?.parent?.type,
-            hasDispatcher: !!dispatcher,
-            hasTrace: !!trace,
-            isPossibleSpreadIssue,
-            // Enhanced debugging info
-            contextSnapshot: {
-              hasActorEntity: true,
-              actorEntityKeys: Object.keys(actorEntity),
-              hasComponents: !!actorEntity.components,
-              componentCount: actorEntity.components
-                ? Object.keys(actorEntity.components).length
-                : 0,
-              depth: ctx.depth,
-              contextKeys: Object.keys(ctx).filter(
-                (k) => k !== 'dispatcher' && k !== 'cycleDetector'
-              ),
-            },
-            callStack: new Error().stack,
-          });
+          console.error(
+            '[CRITICAL] FilterResolver actorEntity has invalid ID:',
+            {
+              actorId: actorEntity.id,
+              actorIdType: typeof actorEntity.id,
+              actorKeys: Object.keys(actorEntity),
+              nodeType: node?.type,
+              parentNodeType: node?.parent?.type,
+              hasDispatcher: !!dispatcher,
+              hasTrace: !!trace,
+              isPossibleSpreadIssue,
+              // Enhanced debugging info
+              contextSnapshot: {
+                hasActorEntity: true,
+                actorEntityKeys: Object.keys(actorEntity),
+                hasComponents: !!actorEntity.components,
+                componentCount: actorEntity.components
+                  ? Object.keys(actorEntity.components).length
+                  : 0,
+                depth: ctx.depth,
+                contextKeys: Object.keys(ctx).filter(
+                  (k) => k !== 'dispatcher' && k !== 'cycleDetector'
+                ),
+              },
+              callStack: new Error().stack,
+            }
+          );
           throw error;
         }
         // In production, fail fast with minimal overhead
@@ -162,12 +169,15 @@ export default function createFilterResolver({
 
       const source = 'ScopeEngine.resolveFilter';
       const initialSize = parentResult.size;
-      
+
       // Preprocess actor once for all filtering operations (performance optimization)
       // This avoids reprocessing the actor for each of potentially 10,000+ entities
       if (!processedActor && initialSize > 0) {
         try {
-          processedActor = preprocessActorForEvaluation(actorEntity, entitiesGateway);
+          processedActor = preprocessActorForEvaluation(
+            actorEntity,
+            entitiesGateway
+          );
           // Store in context for potential nested filter operations
           ctx[cacheKey] = processedActor;
         } catch (err) {
@@ -222,7 +232,7 @@ export default function createFilterResolver({
               locationProvider,
               trace,
               ctx.runtimeCtx, // Pass runtime context for target/targets access
-              processedActor  // Use preprocessed actor for performance
+              processedActor // Use preprocessed actor for performance
             );
             if (evalCtx && logicEval.evaluate(node.logic, evalCtx)) {
               result.add(arrayElement);
@@ -238,7 +248,7 @@ export default function createFilterResolver({
               locationProvider,
               trace,
               ctx.runtimeCtx, // Pass runtime context for target/targets access
-              processedActor  // Use preprocessed actor for performance
+              processedActor // Use preprocessed actor for performance
             );
 
             if (!evalCtx) {
