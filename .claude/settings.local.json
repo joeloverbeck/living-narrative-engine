@@ -208,7 +208,26 @@
       "Bash(NODE_ENV=test npx jest tests/integration/positioning/furnitureSitting.integration.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/performance/characterBuilder/clicheErrorHandler.performance.test.js --testNamePattern=\"should demonstrate throttled cleanup behavior prevents O\\(n\\) performance degradation\" --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/integration/positioning/furnitureSitting.integration.test.js --no-coverage)",
-      "Bash(NODE_ENV=test npx jest --config jest.config.performance.js --env=jsdom --silent tests/performance/characterBuilder/clicheErrorHandler.performance.test.js)"
+      "Bash(NODE_ENV=test npx jest --config jest.config.performance.js --env=jsdom --silent tests/performance/characterBuilder/clicheErrorHandler.performance.test.js)",
+      "Bash(NODE_ENV=test npx jest tests/e2e/scopeDsl/MultiModScopeInteractions.e2e.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/e2e/scopeDsl/MultiModScopeInteractions.e2e.test.js --testNamePattern=\"should handle scopes referencing components from dependency mods\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/e2e/scopeDsl/MultiModScopeInteractions.e2e.test.js --no-coverage --verbose --testNamePattern=\"should handle scopes referencing components from dependency mods\")",
+      "Bash(NODE_ENV=test npx jest tests/performance/actions/tracing/loadTesting.test.js --testNamePattern=\"should maintain performance under sustained load\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/performance/actions/tracing/loadTesting.test.js --testNamePattern=\"should maintain performance under sustained load\" --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/positioning/furnitureSitting.integration.test.js --no-coverage --verbose -t \"should prevent sitting while kneeling\")",
+      "Bash(NODE_ENV=test npx jest tests/performance/actions/tracing/pipelineTracing.performance.test.js --testNamePattern=\"should scale linearly with number of traced actions\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/e2e/scopeDsl/MultiModScopeInteractions.e2e.test.js --no-coverage --testNamePattern=\"should handle scopes referencing components from dependency mods\")",
+      "Bash(NODE_ENV=test npx jest tests/e2e/scopeDsl/MultiModScopeInteractions.e2e.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/turnAroundKneelInteraction.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/positioning/furnitureSitting.integration.test.js --no-coverage --testNamePattern=\"should allocate second spot when first is occupied\")",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/environmentScope.integration.test.js --no-coverage --testNamePattern=\"should exclude entities in different locations\" --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/environmentScope.integration.test.js --no-coverage --verbose --maxWorkers=1)",
+      "Bash(NODE_ENV=test npx jest tests/integration/positioning/furnitureSitting.integration.test.js --no-coverage --testNamePattern=\"should allocate second spot when first is occupied\" --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/speechPatternsGeneratorDispatchFormat.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/rubVaginaOverClothesActionDiscovery.integration.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/validators/SpeechPatternsSchemaValidatorQuotedSpeechFix.test.js --no-coverage --verbose)",
+      "mcp__serena__think_about_whether_you_are_done",
+      "mcp__serena__insert_after_symbol"
     ],
     "deny": []
   }

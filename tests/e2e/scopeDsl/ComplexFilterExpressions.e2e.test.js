@@ -254,7 +254,8 @@ describe('Complex Filter Expressions E2E', () => {
   }
 
   /**
-   * Creates a diverse dataset for complex filtering tests
+   * Creates a deterministic dataset for complex filtering tests
+   * Ensures entities meet the filter conditions being tested
    *
    * @param size
    */
@@ -278,18 +279,39 @@ describe('Complex Filter Expressions E2E', () => {
       definitionId: 'test-location-1',
     });
 
-    // Create diverse actors for filtering
+    // Create deterministic actors that will meet various filter conditions
+    const testConfigs = [
+      // Entities that should pass most filters
+      { level: 12, strength: 25, agility: 20, health: 70 }, // High level, strong, agile
+      { level: 8, strength: 22, agility: 18, health: 65 },  // Medium-high stats
+      { level: 15, strength: 30, agility: 25, health: 75 }, // Very high stats
+      { level: 6, strength: 21, agility: 16, health: 45 },  // Just above thresholds
+      { level: 11, strength: 28, agility: 22, health: 85 }, // High level and strength
+      
+      // Entities that should pass some filters but not others
+      { level: 7, strength: 19, agility: 22, health: 60 },  // High agility, lower strength
+      { level: 4, strength: 25, agility: 20, health: 30 },  // Low level but good stats
+      { level: 9, strength: 15, agility: 28, health: 90 },  // High agility, low strength
+      { level: 13, strength: 12, agility: 30, health: 55 }, // High level and agility
+      { level: 3, strength: 35, agility: 10, health: 40 },  // Meets level >= 3, high strength
+      
+      // Entities for boundary testing
+      { level: 3, strength: 20, agility: 15, health: 79 },  // Boundary values
+      { level: 5, strength: 18, agility: 23, health: 35 },  // Just below some thresholds
+      { level: 10, strength: 16, agility: 25, health: 95 }, // Level = 10 boundary
+      { level: 20, strength: 35, agility: 30, health: 50 }, // Very high level
+      { level: 1, strength: 40, agility: 5, health: 25 },   // Low level, high strength
+    ];
+
+    // Use deterministic configs, repeating if needed
     for (let i = 0; i < size; i++) {
       const actorId = `complex-test-actor-${i}`;
-
+      const configIndex = i % testConfigs.length;
       const config = {
-        level: Math.floor(Math.random() * 20) + 1, // 1-20
-        strength: Math.floor(Math.random() * 30) + 10, // 10-39
-        agility: Math.floor(Math.random() * 25) + 5, // 5-29
-        health: Math.floor(Math.random() * 80) + 20, // 20-99
+        ...testConfigs[configIndex],
         maxHealth: 100,
         isPlayer: i === 0,
-        hasInventory: Math.random() > 0.3, // 70% have inventory
+        hasInventory: i % 3 !== 0, // 2/3 have inventory
       };
 
       const entity = await createComplexTestActor(actorId, config);

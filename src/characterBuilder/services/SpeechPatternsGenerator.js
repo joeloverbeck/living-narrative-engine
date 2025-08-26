@@ -183,13 +183,13 @@ export class SpeechPatternsGenerator {
       });
 
       // Dispatch cached event
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_CACHE_HIT,
-        payload: {
+      this.#eventBus.dispatch(
+        CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_CACHE_HIT,
+        {
           cacheKey,
           timestamp: new Date().toISOString(),
-        },
-      });
+        }
+      );
 
       return cachedResponse.data;
     }
@@ -250,14 +250,14 @@ export class SpeechPatternsGenerator {
       this.#logger.debug(
         'Dispatching speech patterns generation started event'
       );
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED,
-        payload: {
+      this.#eventBus.dispatch(
+        CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED,
+        {
           characterData: characterData,
           options: options,
           timestamp: new Date().toISOString(),
-        },
-      });
+        }
+      );
 
       // Validate input
       this.#validateCharacterData(characterData);
@@ -286,14 +286,14 @@ export class SpeechPatternsGenerator {
       this.#logger.debug(
         'Dispatching speech patterns generation completed event'
       );
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED,
-        payload: {
+      this.#eventBus.dispatch(
+        CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED,
+        {
           result: result,
           processingTime: Date.now() - startTime,
           timestamp: new Date().toISOString(),
-        },
-      });
+        }
+      );
 
       this.#logger.info(
         'SpeechPatternsGenerator: Successfully generated speech patterns',
@@ -315,14 +315,14 @@ export class SpeechPatternsGenerator {
 
       // Dispatch error event
       this.#logger.debug('Dispatching speech patterns generation failed event');
-      this.#eventBus.dispatch({
-        type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_FAILED,
-        payload: {
+      this.#eventBus.dispatch(
+        CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_FAILED,
+        {
           error: error.message,
           processingTime,
           timestamp: new Date().toISOString(),
-        },
-      });
+        }
+      );
 
       if (error instanceof SpeechPatternsGenerationError) {
         throw error;
@@ -506,16 +506,16 @@ export class SpeechPatternsGenerator {
         });
 
         // Dispatch retry event
-        this.#eventBus.dispatch({
-          type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_RETRY,
-          payload: {
+        this.#eventBus.dispatch(
+          CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_RETRY,
+          {
             attempt,
             maxRetries: retryConfig.maxRetries,
             delay,
             error: error.message,
             timestamp: new Date().toISOString(),
-          },
-        });
+          }
+        );
 
         // Wait before retry (unless aborted)
         await this.#delay(delay, options.abortSignal);
@@ -656,15 +656,15 @@ export class SpeechPatternsGenerator {
         });
 
         // Dispatch circuit breaker event
-        this.#eventBus.dispatch({
-          type: CHARACTER_BUILDER_EVENTS.CIRCUIT_BREAKER_OPENED,
-          payload: {
+        this.#eventBus.dispatch(
+          CHARACTER_BUILDER_EVENTS.CIRCUIT_BREAKER_OPENED,
+          {
             service: 'SpeechPatternsGenerator',
             consecutiveFailures: this.#consecutiveFailures,
             resetTimeout: CIRCUIT_BREAKER_CONFIG.resetTimeout,
             timestamp: new Date().toISOString(),
-          },
-        });
+          }
+        );
 
         // Schedule automatic reset attempt
         this.#scheduleCircuitReset();

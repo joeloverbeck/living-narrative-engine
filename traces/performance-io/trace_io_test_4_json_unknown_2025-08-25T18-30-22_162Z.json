@@ -1,9 +1,0 @@
-{
-  "timestamp": "2025-08-25T18:30:22.238Z",
-  "outputDirectory": "./traces/performance-io",
-  "trace": "{\n  \"timestamp\": \"2025-08-25T18:30:22.162Z\",\n  \"traceType\": \"action_aware_structured\",\n  \"actorId\": \"perf-io-test-actor\",\n  \"context\": {\n    \"test\": true\n  },\n  \"summary\": {\n    \"tracedActionCount\": 0,\n    \"totalStagesTracked\": 0,\n    \"sessionDuration\": 0,\n    \"averageStagesPerAction\": 0\n  },\n  \"spans\": [],\n  \"actions\": {}\n}",
-  "metadata": {
-    "actionId": "io_test_4_json",
-    "generatedBy": "Living Narrative Engine Action Tracing System"
-  }
-}

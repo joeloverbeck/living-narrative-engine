@@ -400,6 +400,19 @@ export class PromptDataFormatter {
   }
 
   /**
+   * Formats voice guidance for thoughts section
+   *
+   * @param {Array} thoughtsArray - Array of thought objects
+   * @returns {string} Voice guidance or empty string if no thoughts
+   */
+  formatThoughtsVoiceGuidance(thoughtsArray) {
+    if (!thoughtsArray || thoughtsArray.length === 0) {
+      return '';
+    }
+    return 'INNER VOICE REMINDER: Your thoughts below must reflect your character\'s authentic mental voice and personality patterns.';
+  }
+
+  /**
    * Format notes section with conditional XML wrapper
    *
    * @param {Array<{text: string, timestamp: string}>} notesArray - Array of notes
@@ -464,6 +477,9 @@ export class PromptDataFormatter {
     formattedData.goalsContent = this.formatGoals(promptData.goalsArray || []);
 
     // New conditional section formatting (complete sections with XML tags)
+    formattedData.thoughtsVoiceGuidance = this.formatThoughtsVoiceGuidance(
+      promptData.thoughtsArray || []
+    );
     formattedData.thoughtsSection = this.formatThoughtsSection(
       promptData.thoughtsArray || []
     );

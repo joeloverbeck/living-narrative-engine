@@ -11,7 +11,7 @@
       "type": "QUERY_COMPONENT",
       "comment": "Get current furniture spots array",
       "parameters": {
-        "entity_id": "{event.payload.targetId}",
+        "entity_ref": "{event.payload.targetId}",
         "component_type": "positioning:allows_sitting",
         "result_variable": "furnitureData"
       }
@@ -26,51 +26,77 @@
     },
     {
       "type": "SET_VARIABLE",
-      "comment": "Check if first spot is empty",
+      "comment": "Try spot 0 with atomic check",
       "parameters": {
-        "variable_name": "spot0Empty",
-        "value": { "==": [{ "var": "context.furnitureData.spots.0" }, null] }
+        "variable_name": "trySpot0",
+        "value": true
       }
     },
     {
       "type": "IF",
+      "comment": "Try to claim spot 0",
       "parameters": {
-        "condition": { "var": "context.spot0Empty" },
+        "condition": {
+          "and": [
+            { "var": "context.trySpot0" },
+            { "==": [{ "var": "context.spotIndex" }, -1] }
+          ]
+        },
         "then_actions": [
           {
-            "type": "SET_VARIABLE",
-            "parameters": {
-              "variable_name": "spotIndex",
-              "value": 0
-            }
-          },
-          {
-            "type": "MODIFY_COMPONENT",
-            "comment": "Set actor ID at spots.0",
+            "type": "ATOMIC_MODIFY_COMPONENT",
+            "comment": "Atomically claim spot 0 if empty",
             "parameters": {
               "entity_ref": "target",
               "component_type": "positioning:allows_sitting",
               "field": "spots.0",
-              "mode": "set",
-              "value": "{event.payload.actorId}"
-            }
-          }
-        ],
-        "else_actions": [
-          {
-            "type": "SET_VARIABLE",
-            "comment": "Check if second spot exists and is empty",
-            "parameters": {
-              "variable_name": "spot1Empty",
-              "value": {
-                "==": [{ "var": "context.furnitureData.spots.1" }, null]
-              }
+              "expected_value": null,
+              "new_value": "{event.payload.actorId}",
+              "result_variable": "spot0Claimed"
             }
           },
           {
             "type": "IF",
+            "comment": "Set spot index if claim succeeded",
             "parameters": {
-              "condition": { "var": "context.spot1Empty" },
+              "condition": { "var": "context.spot0Claimed" },
+              "then_actions": [
+                {
+                  "type": "SET_VARIABLE",
+                  "parameters": {
+                    "variable_name": "spotIndex",
+                    "value": 0
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Try to claim spot 1 if spot 0 failed",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.spotIndex" }, -1] },
+        "then_actions": [
+          {
+            "type": "ATOMIC_MODIFY_COMPONENT",
+            "comment": "Atomically claim spot 1 if empty",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "positioning:allows_sitting",
+              "field": "spots.1",
+              "expected_value": null,
+              "new_value": "{event.payload.actorId}",
+              "result_variable": "spot1Claimed"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Set spot index if claim succeeded",
+            "parameters": {
+              "condition": { "var": "context.spot1Claimed" },
               "then_actions": [
                 {
                   "type": "SET_VARIABLE",
@@ -78,64 +104,42 @@
                     "variable_name": "spotIndex",
                     "value": 1
                   }
-                },
-                {
-                  "type": "MODIFY_COMPONENT",
-                  "comment": "Set actor ID at spots.1",
-                  "parameters": {
-                    "entity_ref": "target",
-                    "component_type": "positioning:allows_sitting",
-                    "field": "spots.1",
-                    "mode": "set",
-                    "value": "{event.payload.actorId}"
-                  }
                 }
-              ],
-              "else_actions": [
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Try to claim spot 2 if spots 0 and 1 failed",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.spotIndex" }, -1] },
+        "then_actions": [
+          {
+            "type": "ATOMIC_MODIFY_COMPONENT",
+            "comment": "Atomically claim spot 2 if empty",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "positioning:allows_sitting",
+              "field": "spots.2",
+              "expected_value": null,
+              "new_value": "{event.payload.actorId}",
+              "result_variable": "spot2Claimed"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Set spot index if claim succeeded",
+            "parameters": {
+              "condition": { "var": "context.spot2Claimed" },
+              "then_actions": [
                 {
                   "type": "SET_VARIABLE",
-                  "comment": "Check if third spot exists and is empty",
                   "parameters": {
-                    "variable_name": "spot2Empty",
-                    "value": {
-                      "==": [{ "var": "context.furnitureData.spots.2" }, null]
-                    }
-                  }
-                },
-                {
-                  "type": "IF",
-                  "parameters": {
-                    "condition": { "var": "context.spot2Empty" },
-                    "then_actions": [
-                      {
-                        "type": "SET_VARIABLE",
-                        "parameters": {
-                          "variable_name": "spotIndex",
-                          "value": 2
-                        }
-                      },
-                      {
-                        "type": "MODIFY_COMPONENT",
-                        "comment": "Set actor ID at spots.2",
-                        "parameters": {
-                          "entity_ref": "target",
-                          "component_type": "positioning:allows_sitting",
-                          "field": "spots.2",
-                          "mode": "set",
-                          "value": "{event.payload.actorId}"
-                        }
-                      }
-                    ],
-                    "else_actions": [
-                      {
-                        "type": "SET_VARIABLE",
-                        "comment": "No empty spots found in first 3 positions",
-                        "parameters": {
-                          "variable_name": "spotIndex",
-                          "value": -1
-                        }
-                      }
-                    ]
+                    "variable_name": "spotIndex",
+                    "value": 2
                   }
                 }
               ]

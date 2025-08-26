@@ -33,6 +33,8 @@ import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetCon
 import { PipelineStage } from '../../../src/actions/pipeline/PipelineStage.js';
 import { PipelineResult } from '../../../src/actions/pipeline/PipelineResult.js';
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
+import jsonLogic from 'json-logic-js';
+import { createMockBodyGraphService } from '../../common/mockFactories/bodyGraphServiceFactory.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -178,13 +180,9 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
 
     entityManager = new SimpleEntityManager([]);
 
-    // Mock body graph service for custom operators
-    mockBodyGraphService = {
-      hasPartWithComponentValue: jest.fn(),
-      findPartsByType: jest.fn(),
-      getAllParts: jest.fn(),
-      buildAdjacencyCache: jest.fn(),
-    };
+    // Create a fresh mock body graph service using factory
+    // This ensures complete isolation between tests
+    mockBodyGraphService = createMockBodyGraphService();
 
     const dataRegistry = new InMemoryDataRegistry({ logger });
 
@@ -210,19 +208,18 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       },
     });
 
-    // Initialize JSON Logic with custom operators
+    // Create fresh JSON Logic evaluation service for each test
+    // This ensures operators don't persist between tests
     jsonLogicEval = new JsonLogicEvaluationService({
       logger,
       gameDataRepository: {
         getConditionDefinition: (id) => dataRegistry.get('conditions', id),
       },
     });
-    jsonLogicCustomOperators = new JsonLogicCustomOperators({
-      logger,
-      bodyGraphService: mockBodyGraphService,
-      entityManager,
-    });
-    jsonLogicCustomOperators.registerOperators(jsonLogicEval);
+    
+    // NOTE: Operators are NOT registered here - they will be registered
+    // after mock setup in each test or in setupEntities()
+    jsonLogicCustomOperators = null;
 
     // Parse and register the scope
     const parser = new DefaultDslParser({ logger });
@@ -313,12 +310,74 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
   });
 
   afterEach(() => {
+    // IMPORTANT: Remove all custom operators to prevent contamination
+    // This is critical for test isolation as json-logic-js uses a global instance
+    const customOperators = [
+      'hasPartWithComponentValue',
+      'hasPartOfType', 
+      'hasPartOfTypeWithComponentValue',
+      'hasClothingInSlot',
+      'hasClothingInSlotLayer',
+      'isSocketCovered',
+      'not' // Also remove the 'not' operator added by JsonLogicEvaluationService
+    ];
+    
+    // Remove each custom operator directly from json-logic-js
+    // This ensures complete cleanup even if jsonLogicEval is null
+    customOperators.forEach(op => {
+      try {
+        jsonLogic.rm_operation(op);
+      } catch (e) {
+        // Ignore errors - operator might not exist
+      }
+    });
+    
+    // Clear all mocks and restore original implementations
+    jest.clearAllMocks();
     jest.restoreAllMocks();
+    
+    // Clear references
+    jsonLogicEval = null;
+    jsonLogicCustomOperators = null;
+    mockBodyGraphService = null;
   });
+
+  // Helper function to register operators with current mock state
+  /**
+   *
+   */
+  function registerOperatorsWithCurrentMocks() {
+    // Remove old operators first if they exist
+    const customOperators = [
+      'hasPartWithComponentValue',
+      'hasPartOfType', 
+      'hasPartOfTypeWithComponentValue',
+      'hasClothingInSlot',
+      'hasClothingInSlotLayer',
+      'isSocketCovered'
+    ];
+    
+    customOperators.forEach(op => {
+      try {
+        jsonLogic.rm_operation(op);
+      } catch (e) {
+        // Ignore - operator might not exist
+      }
+    });
+    
+    // Create new operators with current mock state
+    jsonLogicCustomOperators = new JsonLogicCustomOperators({
+      logger,
+      bodyGraphService: mockBodyGraphService,
+      entityManager,
+    });
+    jsonLogicCustomOperators.registerOperators(jsonLogicEval);
+  }
 
   describe('socket coverage tests', () => {
     /**
      * Sets up test entities with optional clothing configuration
+     * Note: This function now ensures complete mock isolation per test
      *
      * @param {object} targetClothingConfig - Clothing configuration for target
      */
@@ -376,27 +435,24 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
 
       entityManager.setEntities(entities);
 
-      // Mock buildAdjacencyCache - called before findPartsByType
+      // Configure mock implementations for this test
+      // Using mockImplementation ensures a fresh function for each call
       mockBodyGraphService.buildAdjacencyCache.mockImplementation((rootId) => {
-        console.log('buildAdjacencyCache called with:', rootId);
         // No-op, just needs to be callable
       });
 
-      // Mock hasPartOfType to find vagina
+      mockBodyGraphService.findPartsByType.mockClear();
       mockBodyGraphService.findPartsByType.mockImplementation(
         (rootEntityId, partType) => {
-          console.log('findPartsByType called with:', {
-            rootEntityId,
-            partType,
-          });
           if (rootEntityId === 'groin1' && partType === 'vagina') {
-            console.log('Returning vagina1');
             return ['vagina1'];
           }
-          console.log('Returning empty array');
           return [];
         }
       );
+      
+      // CRITICAL: Register operators AFTER mock setup
+      registerOperatorsWithCurrentMocks();
     }
 
     it('should discover action when vagina is covered', async () => {
@@ -426,28 +482,6 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         currentLocation: { id: 'test-location' },
       });
 
-      // Debug: Log the result
-      if (result.actions.length === 0) {
-        console.log('No actions found! Debugging info:');
-        const target1 = entityManager.getEntityInstance('target1');
-        console.log('Entity target1:', target1);
-        if (target1) {
-          console.log('Target1 components:', target1.getAllComponents());
-        }
-      }
-      console.log('Discovery result:', JSON.stringify(result, null, 2));
-      console.log(
-        'All actions found:',
-        result.actions.map((a) => a.id)
-      );
-      console.log(
-        'Mock calls - buildAdjacencyCache:',
-        mockBodyGraphService.buildAdjacencyCache.mock.calls
-      );
-      console.log(
-        'Mock calls - findPartsByType:',
-        mockBodyGraphService.findPartsByType.mock.calls
-      );
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
@@ -608,7 +642,14 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
 
       entityManager.setEntities(entities);
 
-      // Mock hasPartOfType to find vagina
+      // Configure mock implementations with fresh functions
+      // This ensures no contamination from previous tests
+      mockBodyGraphService.buildAdjacencyCache.mockClear();
+      mockBodyGraphService.buildAdjacencyCache.mockImplementation((rootId) => {
+        // No-op, just needs to be callable
+      });
+
+      mockBodyGraphService.findPartsByType.mockClear();
       mockBodyGraphService.findPartsByType.mockImplementation(
         (rootEntityId, partType) => {
           if (rootEntityId === 'groin1' && partType === 'vagina') {
@@ -617,6 +658,9 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
           return [];
         }
       );
+      
+      // CRITICAL: Register operators AFTER mock setup
+      registerOperatorsWithCurrentMocks();
 
       // Act
       const actorEntity = entityManager.getEntityInstance('actor1');
@@ -691,12 +735,22 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
 
       entityManager.setEntities(entities);
 
-      // Mock hasPartOfType to find no vagina
+      // Configure mock implementations with fresh functions
+      // This ensures no contamination from previous tests
+      mockBodyGraphService.buildAdjacencyCache.mockClear();
+      mockBodyGraphService.buildAdjacencyCache.mockImplementation((rootId) => {
+        // No-op, just needs to be callable
+      });
+
+      mockBodyGraphService.findPartsByType.mockClear();
       mockBodyGraphService.findPartsByType.mockImplementation(
         (rootEntityId, partType) => {
           return [];
         }
       );
+      
+      // CRITICAL: Register operators AFTER mock setup
+      registerOperatorsWithCurrentMocks();
 
       // Act
       const actorEntity = entityManager.getEntityInstance('actor1');
@@ -773,7 +827,14 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
 
       entityManager.setEntities(entities);
 
-      // Mock hasPartOfType to find vagina
+      // Configure mock implementations with fresh functions
+      // This ensures no contamination from previous tests
+      mockBodyGraphService.buildAdjacencyCache.mockClear();
+      mockBodyGraphService.buildAdjacencyCache.mockImplementation((rootId) => {
+        // No-op, just needs to be callable
+      });
+
+      mockBodyGraphService.findPartsByType.mockClear();
       mockBodyGraphService.findPartsByType.mockImplementation(
         (rootEntityId, partType) => {
           if (rootEntityId === 'groin1' && partType === 'vagina') {
@@ -782,6 +843,9 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
           return [];
         }
       );
+      
+      // CRITICAL: Register operators AFTER mock setup
+      registerOperatorsWithCurrentMocks();
 
       // Act
       const actorEntity = entityManager.getEntityInstance('actor1');

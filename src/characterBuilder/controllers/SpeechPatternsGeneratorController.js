@@ -498,6 +498,19 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       );
     }
 
+    // Validate core:name component if present
+    const nameComponent = componentsToCheck['core:name'];
+    if (nameComponent) {
+      const characterName = this.#extractCharacterName(nameComponent);
+      if (!characterName) {
+        errors.push(
+          'Character name component exists but does not contain a valid name. Expected text, name, or value field.'
+        );
+      } else if (characterName.trim().length === 0) {
+        errors.push('Character name cannot be empty');
+      }
+    }
+
     // Check for reasonable content depth
     let hasDetailedContent = false;
     for (const componentId in componentsToCheck) {
@@ -523,7 +536,44 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       errors,
       componentCount,
       hasRequiredComponents,
+      characterName: nameComponent ? this.#extractCharacterName(nameComponent) : null,
     };
+  }
+
+  /**
+   * Extract character name from core:name component
+   *
+   * @private
+   * @param {object} nameComponent - The core:name component data
+   * @returns {string|null} Extracted character name or null if not found
+   */
+  #extractCharacterName(nameComponent) {
+    if (!nameComponent || typeof nameComponent !== 'object') {
+      return null;
+    }
+
+    // Try different common field names
+    if (nameComponent.text && typeof nameComponent.text === 'string') {
+      return nameComponent.text.trim();
+    }
+
+    if (nameComponent.name && typeof nameComponent.name === 'string') {
+      return nameComponent.name.trim();
+    }
+
+    if (nameComponent.value && typeof nameComponent.value === 'string') {
+      return nameComponent.value.trim();
+    }
+
+    // Check for nested structures
+    if (nameComponent.personal && nameComponent.personal.firstName) {
+      const firstName = nameComponent.personal.firstName;
+      const lastName = nameComponent.personal.lastName || '';
+      return `${firstName} ${lastName}`.trim();
+    }
+
+    // If none of the expected fields are found, return null
+    return null;
   }
 
   // Enhanced Progress Tracking Methods

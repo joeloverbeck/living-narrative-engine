@@ -78,7 +78,7 @@ describe('SpeechPatternsResponseProcessor - Schema Validation Fix', () => {
 
       // Should log warning about schema fallback
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('not loaded, falling back to basic validation')
+        expect.stringContaining('not loaded, validation will be limited')
       );
     });
 
@@ -119,7 +119,7 @@ describe('SpeechPatternsResponseProcessor - Schema Validation Fix', () => {
 
       // Should NOT log warning about schema fallback
       expect(mockLogger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining('not loaded, falling back to basic validation')
+        expect.stringContaining('not loaded, validation will be limited')
       );
     });
   });

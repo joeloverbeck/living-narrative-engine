@@ -3,23 +3,53 @@
  * @description Tests file writing performance using actual FileTraceOutputHandler
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, afterAll } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import FileTraceOutputHandler from '../../../../src/actions/tracing/fileTraceOutputHandler.js';
+import fs from 'fs';
+import path from 'path';
 
 describe('File I/O Performance Tests', () => {
   let testBed;
   let fileHandler;
+  const testOutputDir = './traces/performance-io';
 
   beforeEach(async () => {
     testBed = createTestBed();
 
     fileHandler = new FileTraceOutputHandler({
-      outputDirectory: './traces/performance-io',
+      outputDirectory: testOutputDir,
       logger: testBed.mockLogger,
     });
 
     await fileHandler.initialize();
+  });
+
+  afterEach(() => {
+    // Clean up test output directory after each test
+    try {
+      if (fs.existsSync(testOutputDir)) {
+        fs.rmSync(testOutputDir, { recursive: true, force: true });
+      }
+    } catch (error) {
+      // Ignore cleanup errors - directory might not exist or be in use
+      console.warn(`Warning: Could not clean up test directory: ${error.message}`);
+    }
+    
+    // Also clean up testBed
+    testBed.cleanup();
+  });
+
+  afterAll(() => {
+    // Final cleanup as safety measure
+    try {
+      if (fs.existsSync(testOutputDir)) {
+        fs.rmSync(testOutputDir, { recursive: true, force: true });
+      }
+    } catch (error) {
+      // Ignore cleanup errors
+      console.warn(`Warning: Final cleanup failed: ${error.message}`);
+    }
   });
 
   describe('Single File Write Performance', () => {

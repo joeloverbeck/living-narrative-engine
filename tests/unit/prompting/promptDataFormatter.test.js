@@ -71,6 +71,43 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
     });
   });
 
+  describe('formatThoughtsVoiceGuidance', () => {
+    test('returns empty string when thoughts array is empty', () => {
+      const result = formatter.formatThoughtsVoiceGuidance([]);
+      expect(result).toBe('');
+    });
+
+    test('returns empty string when thoughts array is null/undefined', () => {
+      expect(formatter.formatThoughtsVoiceGuidance(null)).toBe('');
+      expect(formatter.formatThoughtsVoiceGuidance(undefined)).toBe('');
+    });
+
+    test('returns voice guidance when thoughts exist', () => {
+      const thoughts = [
+        { text: 'First thought', timestamp: '2024-01-01' }
+      ];
+
+      const result = formatter.formatThoughtsVoiceGuidance(thoughts);
+
+      expect(result).toBe('INNER VOICE REMINDER: Your thoughts below must reflect your character\'s authentic mental voice and personality patterns.');
+    });
+
+    test('returns same guidance regardless of number of thoughts', () => {
+      const singleThought = [{ text: 'One thought', timestamp: '2024-01-01' }];
+      const multipleThoughts = [
+        { text: 'First thought', timestamp: '2024-01-01' },
+        { text: 'Second thought', timestamp: '2024-01-02' },
+        { text: 'Third thought', timestamp: '2024-01-03' }
+      ];
+
+      const result1 = formatter.formatThoughtsVoiceGuidance(singleThought);
+      const result2 = formatter.formatThoughtsVoiceGuidance(multipleThoughts);
+
+      expect(result1).toBe('INNER VOICE REMINDER: Your thoughts below must reflect your character\'s authentic mental voice and personality patterns.');
+      expect(result2).toBe('INNER VOICE REMINDER: Your thoughts below must reflect your character\'s authentic mental voice and personality patterns.');
+    });
+  });
+
   describe('formatNotesSection', () => {
     test('returns empty string when notes array is empty', () => {
       const result = formatter.formatNotesSection([]);
@@ -134,6 +171,32 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       expect(result.goalsSection).toBe('<goals>\n- Test goal\n</goals>');
     });
 
+    test('includes thoughtsVoiceGuidance field based on thoughts array', () => {
+      // Test with thoughts present
+      const promptDataWithThoughts = {
+        thoughtsArray: [{ text: 'Test thought', timestamp: '2024-01-01' }],
+      };
+
+      const resultWithThoughts = formatter.formatPromptData(promptDataWithThoughts);
+      expect(resultWithThoughts.thoughtsVoiceGuidance).toBe(
+        'INNER VOICE REMINDER: Your thoughts below must reflect your character\'s authentic mental voice and personality patterns.'
+      );
+
+      // Test with empty thoughts array
+      const promptDataEmpty = {
+        thoughtsArray: [],
+      };
+
+      const resultEmpty = formatter.formatPromptData(promptDataEmpty);
+      expect(resultEmpty.thoughtsVoiceGuidance).toBe('');
+
+      // Test with no thoughts array
+      const promptDataMissing = {};
+
+      const resultMissing = formatter.formatPromptData(promptDataMissing);
+      expect(resultMissing.thoughtsVoiceGuidance).toBe('');
+    });
+
     test('formatNotes maintains backward compatibility with default options', () => {
       const notesArray = [
         { text: 'First note', timestamp: '2024-01-01' },
@@ -193,6 +256,7 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       expect(result.thoughtsSection).toBe('');
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe('');
+      expect(result.thoughtsVoiceGuidance).toBe('');
     });
 
     test('handles mixed empty and non-empty sections', () => {

@@ -14,8 +14,14 @@
     }
   ],
   "content": {
-    "actions": ["slap.action.json", "sucker_punch.action.json"],
-    "rules": ["handle_slap.rule.json", "handle_sucker_punch.rule.json"],
+    "actions": [
+      "slap.action.json",
+      "sucker_punch.action.json"
+    ],
+    "rules": [
+      "handle_slap.rule.json",
+      "handle_sucker_punch.rule.json"
+    ],
     "conditions": [
       "event-is-action-slap.condition.json",
       "event-is-action-sucker-punch.condition.json"

@@ -9,6 +9,7 @@ import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
+import { ActionIndex } from '../../../src/actions/actionIndex.js';
 import { SimpleEntityManager } from '../entities/index.js';
 import {
   createMockLogger,
@@ -28,6 +29,9 @@ import { deepClone } from '../../../src/utils/cloneUtils.js';
  * @param {Array<{id:string,components:object}>} options.entities - Initial
  *   entities to load
  * @param {Array<object>} options.rules - System rules to load
+ * @param {Array<object>} [options.actions] - Action definitions to load
+ * @param {object} [options.conditions] - Condition definitions to load
+ * @param {object} [options.macros] - Macro definitions to load
  * @param {object} [options.logger] - Logger instance to use
  * @param {() => object} [options.createLogger] - Factory to create a logger if
  *   none is provided
@@ -55,6 +59,9 @@ export function createBaseRuleEnvironment({
   createHandlers,
   entities = [],
   rules = [],
+  actions = [],
+  conditions = {},
+  macros = {},
   logger = null,
   createLogger = null,
   dataRegistry = null,
@@ -71,7 +78,13 @@ export function createBaseRuleEnvironment({
       ? createDataRegistry()
       : {
           getAllSystemRules: jest.fn().mockReturnValue(rules),
-          getConditionDefinition: jest.fn().mockReturnValue(undefined),
+          getAllActionDefinitions: jest.fn().mockReturnValue(actions),
+          getConditionDefinition: jest.fn().mockImplementation((conditionId) => {
+            return conditions[conditionId] || undefined;
+          }),
+          getMacroDefinition: jest.fn().mockImplementation((macroId) => {
+            return macros[macroId] || undefined;
+          }),
         });
 
   const bus =
@@ -160,6 +173,13 @@ export function createBaseRuleEnvironment({
       ),
     };
 
+    // Create and initialize ActionIndex
+    const actionIndex = new ActionIndex({
+      logger: testLogger,
+      entityManager,
+    });
+    actionIndex.buildIndex(actions);
+
     interpreter = new SystemLogicInterpreter({
       logger: testLogger,
       eventBus: bus,
@@ -175,6 +195,7 @@ export function createBaseRuleEnvironment({
       operationRegistry,
       operationInterpreter,
       systemLogicInterpreter: interpreter,
+      actionIndex,
     };
   }
 
@@ -188,6 +209,7 @@ export function createBaseRuleEnvironment({
     jsonLogic,
     systemLogicInterpreter: init.systemLogicInterpreter,
     entityManager: init.entityManager,
+    actionIndex: init.actionIndex,
     logger: testLogger,
     dataRegistry: testDataRegistry,
     cleanup: () => {
@@ -215,6 +237,7 @@ export function resetRuleEnvironment(env, newEntities = []) {
   env.operationRegistry = newEnv.operationRegistry;
   env.operationInterpreter = newEnv.operationInterpreter;
   env.systemLogicInterpreter = newEnv.systemLogicInterpreter;
+  env.actionIndex = newEnv.actionIndex;
 }
 
 /**
@@ -270,6 +293,9 @@ export function createAttemptActionPayload({
  * @param {Function} options.createHandlers - Function to create handlers with (entityManager, eventBus, logger) parameters
  * @param {Array<{id:string,components:object}>} options.entities - Initial entities
  * @param {Array<object>} options.rules - System rules to load
+ * @param {Array<object>} [options.actions] - Action definitions to load
+ * @param {object} [options.conditions] - Condition definitions to load
+ * @param {object} [options.macros] - Macro definitions to load
  * @param {object} [options.logger] - Logger instance to use
  * @param {() => object} [options.createLogger] - Logger factory
  * @param {object} [options.dataRegistry] - Data registry instance to use
@@ -287,10 +313,39 @@ export function createRuleTestEnvironment(options) {
   // Add the helper function to the environment for easy access
   env.createAttemptActionPayload = createAttemptActionPayload;
 
-  // Add a convenience method for dispatching attempt_action events
+  // Add a convenience method for dispatching attempt_action events with validation
   env.dispatchAction = async (params) => {
     const payload = createAttemptActionPayload(params);
+    
+    // Validate action using ActionIndex before dispatch
+    if (payload.actionId) {
+      const actor = { id: payload.actorId };
+      const isValid = env.validateAction(payload.actorId, payload.actionId);
+      
+      if (!isValid) {
+        env.logger.debug(
+          `Action ${payload.actionId} filtered out by ActionIndex for actor ${payload.actorId}`
+        );
+        // Return early - don't dispatch the event
+        return true;
+      }
+    }
+    
     return env.eventBus.dispatch('core:attempt_action', payload);
+  };
+
+  // Add action validation helper
+  env.validateAction = (actorId, actionId) => {
+    // Check if entity exists
+    const actor = env.entityManager.getEntityInstance(actorId);
+    if (!actor) {
+      return false; // Entity doesn't exist, action invalid
+    }
+    
+    // Create proper actor entity object for ActionIndex
+    const actorEntity = { id: actorId };
+    const candidates = env.actionIndex.getCandidateActions(actorEntity);
+    return candidates.some(action => action.id === actionId);
   };
 
   return env;

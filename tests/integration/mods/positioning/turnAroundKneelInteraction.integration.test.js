@@ -227,9 +227,9 @@ describe('Turn around and kneel before interaction', () => {
         gameDataRepository,
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
-      multiTargetStage: createMultiTargetResolutionStage({
+      multiTargetResolutionStage: createMultiTargetResolutionStage({
         entityManager,
-        targetService: targetResolutionService,
+        targetResolver: targetResolutionService,
         logger,
       }),
     });

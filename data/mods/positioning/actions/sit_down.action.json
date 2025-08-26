@@ -13,9 +13,9 @@
   "template": "sit down on {target.components.core:description.short}",
   "prerequisites": [],
   "visual": {
-    "backgroundColor": "#4a90e2",
+    "backgroundColor": "#bf360c",
     "textColor": "#ffffff",
-    "hoverBackgroundColor": "#357abd",
+    "hoverBackgroundColor": "#8d2c08",
     "hoverTextColor": "#ffffff"
   }
 }
