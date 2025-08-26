@@ -198,9 +198,23 @@ export default function createStepResolver({ entitiesGateway }) {
             }
           }
         } else if (parentValue && typeof parentValue === 'object') {
-          const val = resolveObjectParentValue(parentValue, node.field);
-          if (val !== undefined) {
-            result.add(val);
+          // Check if parentValue is a Set (result from filtering)
+          if (parentValue instanceof Set) {
+            // Handle Set of objects - extract field from each object in the Set
+            for (const setItem of parentValue) {
+              if (setItem && typeof setItem === 'object') {
+                const val = resolveObjectParentValue(setItem, node.field);
+                if (val !== undefined) {
+                  result.add(val);
+                }
+              }
+            }
+          } else {
+            // Handle single object
+            const val = resolveObjectParentValue(parentValue, node.field);
+            if (val !== undefined) {
+              result.add(val);
+            }
           }
         }
       }

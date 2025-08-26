@@ -20,6 +20,8 @@ import {
   describe,
   beforeEach,
   afterEach,
+  beforeAll,
+  afterAll,
   test,
   expect,
   jest,
@@ -46,18 +48,24 @@ import { LLMProcessingError } from '../../../src/turns/services/LLMResponseProce
 describe('E2E: LLM Error Handling Scenarios', () => {
   let testBed;
 
-  beforeEach(async () => {
-    // Initialize test bed
-    testBed = new LLMAdapterTestBed();
+  beforeAll(async () => {
+    // Initialize test bed once with optimizations for faster testing
+    testBed = new LLMAdapterTestBed({
+      networkDelay: 0, // No artificial delays
+      lightweight: false, // We need proper initialization for LLM adapter
+      skipSchemaLoading: false, // Schemas are needed for validation
+    });
     await testBed.initialize();
-
-    // Clear any events from initialization
-    testBed.clearRecordedEvents();
   });
 
-  afterEach(async () => {
-    // Clean up test bed
+  afterAll(async () => {
+    // Clean up test bed once at the end
     await testBed.cleanup();
+  });
+
+  beforeEach(async () => {
+    // Reset state between tests (much faster than full cleanup/init)
+    await testBed.reset();
   });
 
   /**
@@ -446,17 +454,20 @@ describe('E2E: LLM Error Handling Scenarios', () => {
    */
   describe('Configuration Errors', () => {
     test('should handle missing API key', async () => {
-      // Arrange - Remove API keys
+      // Arrange - Remove API keys temporarily
       const originalKey = process.env.TEST_API_KEY;
+      const originalOpenRouterKey = process.env.OPENROUTER_API_KEY;
       delete process.env.TEST_API_KEY;
+      delete process.env.OPENROUTER_API_KEY;
 
       const testPrompt = testBed.createTestPrompt();
 
       // Act & Assert - The request will be made but fail
       await expect(testBed.getAIDecision(testPrompt)).rejects.toThrow();
 
-      // Restore key
+      // Restore keys immediately after test
       process.env.TEST_API_KEY = originalKey;
+      process.env.OPENROUTER_API_KEY = originalOpenRouterKey;
     });
 
     test('should handle switching to invalid configuration during operation', async () => {
@@ -591,24 +602,26 @@ describe('E2E: LLM Error Handling Scenarios', () => {
     test('should handle partial responses missing required fields', async () => {
       // Arrange
       const testPrompt = testBed.createTestPrompt();
-      const partialResponse = testBed.createToolCallingResponse({
+      // Create a response that explicitly omits the 'speech' field
+      const partialData = {
         chosenIndex: 1,
-        // Missing 'speech' which is required
         thoughts: 'Incomplete response',
-      });
+        // Explicitly NOT including 'speech'
+      };
+      const partialResponse = testBed.createToolCallingResponse(partialData);
 
       testBed.setMockResponse(
         'http://localhost:3001/api/llm-request',
         partialResponse
       );
 
-      // Act - The adapter returns the JSON, validation happens elsewhere
+      // Act - The adapter returns the JSON string from tool_calls arguments
       const response = await testBed.getAIDecision(testPrompt);
       const parsed = JSON.parse(response);
 
-      // Assert - Response is returned but missing required field
+      // Assert - Response is returned exactly as provided (without 'speech' field)
       expect(parsed.chosenIndex).toBe(1);
-      expect(parsed.speech).toBeUndefined();
+      expect(parsed).not.toHaveProperty('speech');
       expect(parsed.thoughts).toBe('Incomplete response');
     });
 
@@ -639,10 +652,11 @@ describe('E2E: LLM Error Handling Scenarios', () => {
       );
 
       // Act
+      // The adapter returns the raw string, even if it's not valid JSON
+      // The validation happens when the response is processed elsewhere
       const response = await testBed.getAIDecision(testPrompt);
 
-      // Assert - The adapter might return the raw string if it can't parse JSON
-      // The validation/processing error happens later in the pipeline
+      // Assert - The adapter returns the arguments string as-is
       expect(response).toBe('not-json-at-all');
     });
   });
@@ -672,14 +686,14 @@ describe('E2E: LLM Error Handling Scenarios', () => {
       );
 
       // Act & Assert
-      try {
-        await testBed.getAIDecision(testPrompt);
-        expect(true).toBe(false); // Should not reach here
-      } catch (error) {
-        // Error details should be preserved
-        expect(error).toBeDefined();
-        expect(error.message).toContain('Detailed error message');
-      }
+      await expect(testBed.getAIDecision(testPrompt)).rejects.toThrow();
+      
+      // Get the actual error for detailed inspection
+      const error = await testBed.getAIDecision(testPrompt).catch((e) => e);
+      
+      // Error details should be preserved (wrapped in LLMStrategyError)
+      expect(error).toBeDefined();
+      expect(error.message).toContain('Detailed error message');
     });
 
     test('should handle multiple concurrent errors appropriately', async () => {
@@ -757,6 +771,10 @@ describe('E2E: LLM Error Handling Scenarios', () => {
       // Assert
       expect(parsed.speech).toBe('Success after retries');
       expect(attemptCount).toBe(3);
+
+      // IMPORTANT: Reset the mock to prevent interference with subsequent tests
+      // The reset() method in the test bed will restore the default implementation
+      await testBed.reset();
     });
   });
 

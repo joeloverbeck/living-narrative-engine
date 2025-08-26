@@ -129,6 +129,18 @@ export class BaseCharacterBuilderController {
   /** @private @type {Set<number>} */
   #pendingAnimationFrames = new Set();
 
+  /** @private @type {Map<string, number>} */
+  #performanceMarks = new Map();
+
+  /** @private @type {Map<string, {duration: number, startMark: string, endMark: string}>} */
+  #performanceMeasurements = new Map();
+
+  /** @private @type {WeakMap<object, any>} */
+  #weakReferences = new WeakMap();
+
+  /** @private @type {WeakSet<object>} */
+  #weakTracking = new WeakSet();
+
   /**
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger - Logger instance
@@ -1529,42 +1541,6 @@ export class BaseCharacterBuilderController {
     });
   }
 
-  /**
-   * Debounce utility
-   *
-   * @param func
-   * @param wait
-   * @private
-   */
-  _debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func.apply(this, args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
-  }
-
-  /**
-   * Throttle utility
-   *
-   * @param func
-   * @param limit
-   * @private
-   */
-  _throttle(func, limit) {
-    let inThrottle;
-    return function executedFunction(...args) {
-      if (!inThrottle) {
-        func.apply(this, args);
-        inThrottle = true;
-        setTimeout(() => (inThrottle = false), limit);
-      }
-    };
-  }
 
   /**
    * Add click handler with loading state
@@ -2917,6 +2893,12 @@ export class BaseCharacterBuilderController {
     this.#debouncedHandlers.clear();
     this.#throttledHandlers.clear();
 
+    // Clear performance data
+    this._clearPerformanceData();
+
+    // Clear weak references (they will be garbage collected)
+    // Note: WeakMap and WeakSet don't need explicit clearing
+    
     // Clear custom cached data
     this._clearCachedData();
 
@@ -3011,6 +2993,473 @@ export class BaseCharacterBuilderController {
       cancelAnimationFrame(frameId);
       this.#pendingAnimationFrames.delete(frameId);
     }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Performance Monitoring
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Mark a performance timestamp
+   *
+   * @protected
+   * @param {string} markName - Name of the performance mark
+   * @returns {void}
+   */
+  _performanceMark(markName) {
+    try {
+      const timestamp = performance.now();
+      this.#performanceMarks.set(markName, timestamp);
+      performance.mark(markName);
+      
+      this.#logger.debug(`Performance mark: ${markName}`, { timestamp });
+    } catch (error) {
+      this.#logger.warn(`Failed to create performance mark: ${markName}`, error);
+    }
+  }
+
+  /**
+   * Measure time between two marks
+   *
+   * @protected
+   * @param {string} measureName - Name for the measurement
+   * @param {string} startMark - Start mark name
+   * @param {string} [endMark] - End mark name (defaults to current time)
+   * @returns {number|null} Duration in milliseconds or null if marks not found
+   */
+  _performanceMeasure(measureName, startMark, endMark = null) {
+    try {
+      if (!endMark) {
+        // Create end mark if not provided
+        endMark = `${measureName}-end`;
+        this._performanceMark(endMark);
+      }
+
+      const startTime = this.#performanceMarks.get(startMark);
+      const endTime = this.#performanceMarks.get(endMark);
+
+      if (!startTime || !endTime) {
+        this.#logger.warn(`Performance marks not found for measurement: ${measureName}`, {
+          startMark,
+          endMark,
+          hasStartMark: !!startTime,
+          hasEndMark: !!endTime,
+        });
+        return null;
+      }
+
+      const duration = endTime - startTime;
+      
+      // Store measurement
+      this.#performanceMeasurements.set(measureName, {
+        duration,
+        startMark,
+        endMark,
+      });
+
+      // Use native Performance API if available
+      try {
+        performance.measure(measureName, startMark, endMark);
+      } catch (e) {
+        // Native API might fail if marks don't exist, but we have our own tracking
+      }
+
+      this.#logger.debug(`Performance measurement: ${measureName}`, {
+        duration: `${duration.toFixed(2)}ms`,
+        startMark,
+        endMark,
+      });
+
+      // Dispatch performance event if duration exceeds threshold
+      if (duration > 100) {
+        this.eventBus.dispatch({
+          type: 'CHARACTER_BUILDER_PERFORMANCE_WARNING',
+          payload: {
+            controller: this.constructor.name,
+            measurement: measureName,
+            duration,
+            threshold: 100,
+          },
+        });
+      }
+
+      return duration;
+    } catch (error) {
+      this.#logger.warn(`Failed to measure performance: ${measureName}`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Get all performance measurements
+   *
+   * @protected
+   * @returns {Map<string, {duration: number, startMark: string, endMark: string}>}
+   */
+  _getPerformanceMeasurements() {
+    return new Map(this.#performanceMeasurements);
+  }
+
+  /**
+   * Clear performance marks and measurements
+   *
+   * @protected
+   * @param {string} [prefix] - Clear only marks/measurements with this prefix
+   */
+  _clearPerformanceData(prefix = null) {
+    if (prefix) {
+      // Clear specific marks and measurements with prefix
+      for (const [key] of this.#performanceMarks) {
+        if (key.startsWith(prefix)) {
+          this.#performanceMarks.delete(key);
+          try {
+            performance.clearMarks(key);
+          } catch (e) {
+            // Ignore if mark doesn't exist
+          }
+        }
+      }
+      
+      for (const [key] of this.#performanceMeasurements) {
+        if (key.startsWith(prefix)) {
+          this.#performanceMeasurements.delete(key);
+          try {
+            performance.clearMeasures(key);
+          } catch (e) {
+            // Ignore if measure doesn't exist
+          }
+        }
+      }
+    } else {
+      // Clear all
+      this.#performanceMarks.clear();
+      this.#performanceMeasurements.clear();
+      try {
+        performance.clearMarks();
+        performance.clearMeasures();
+      } catch (e) {
+        // Ignore errors
+      }
+    }
+    
+    this.#logger.debug('Cleared performance data', { prefix });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Memory Management
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Store a weak reference to an object
+   *
+   * @protected
+   * @param {object} key - Key object
+   * @param {any} value - Value to store
+   */
+  _setWeakReference(key, value) {
+    if (typeof key !== 'object' || key === null) {
+      throw new TypeError('WeakMap key must be an object');
+    }
+    this.#weakReferences.set(key, value);
+  }
+
+  /**
+   * Get a weak reference
+   *
+   * @protected
+   * @param {object} key - Key object
+   * @returns {any} Stored value or undefined
+   */
+  _getWeakReference(key) {
+    return this.#weakReferences.get(key);
+  }
+
+  /**
+   * Track an object in a WeakSet
+   *
+   * @protected
+   * @param {object} obj - Object to track
+   */
+  _trackWeakly(obj) {
+    if (typeof obj !== 'object' || obj === null) {
+      throw new TypeError('WeakSet value must be an object');
+    }
+    this.#weakTracking.add(obj);
+  }
+
+  /**
+   * Check if an object is being tracked
+   *
+   * @protected
+   * @param {object} obj - Object to check
+   * @returns {boolean}
+   */
+  _isWeaklyTracked(obj) {
+    return this.#weakTracking.has(obj);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Debounce and Throttle Utilities
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Create a debounced version of a function
+   * Function will only execute after the specified delay with no new calls
+   *
+   * @protected
+   * @param {Function} fn - Function to debounce
+   * @param {number} delay - Delay in milliseconds
+   * @param {object} [options] - Debounce options
+   * @param {boolean} [options.leading] - Execute on the leading edge
+   * @param {boolean} [options.trailing] - Execute on the trailing edge
+   * @param {number} [options.maxWait] - Maximum time to wait before forcing execution
+   * @returns {Function} Debounced function with cancel() method
+   */
+  _debounce(fn, delay, options = {}) {
+    const { leading = false, trailing = true, maxWait } = options;
+    
+    let timerId = null;
+    let maxTimerId = null;
+    let lastCallTime = null;
+    let lastExecuteTime = null;
+    let lastArgs = null;
+    let lastThis = null;
+    let result;
+
+    const executeFunction = () => {
+      const args = lastArgs;
+      const thisArg = lastThis;
+      
+      lastArgs = null;
+      lastThis = null;
+      lastExecuteTime = Date.now();
+      
+      result = fn.apply(thisArg, args);
+      return result;
+    };
+
+    const startTimer = (wait) => {
+      return this._setTimeout(() => {
+        timerId = null;
+        maxTimerId = null;
+        
+        if (trailing && lastArgs) {
+          executeFunction();
+        }
+      }, wait);
+    };
+
+    const debounced = function(...args) {
+      lastArgs = args;
+      lastThis = this;
+      lastCallTime = Date.now();
+
+      const shouldExecuteNow = leading && !timerId;
+      
+      // Clear existing timer
+      if (timerId) {
+        this._clearTimeout(timerId);
+      }
+
+      // Handle maxWait
+      if (maxWait && !maxTimerId) {
+        const timeToMaxWait = maxWait - (lastCallTime - (lastExecuteTime || 0));
+        
+        if (timeToMaxWait <= 0) {
+          // Max wait exceeded, execute immediately
+          if (timerId) {
+            this._clearTimeout(timerId);
+            timerId = null;
+          }
+          executeFunction();
+        } else {
+          // Set max wait timer
+          maxTimerId = this._setTimeout(() => {
+            if (timerId) {
+              this._clearTimeout(timerId);
+              timerId = null;
+            }
+            maxTimerId = null;
+            executeFunction();
+          }, timeToMaxWait);
+        }
+      }
+
+      timerId = startTimer(delay);
+
+      if (shouldExecuteNow) {
+        executeFunction();
+      }
+
+      return result;
+    }.bind(this);
+
+    // Add cancel method
+    debounced.cancel = () => {
+      if (timerId) {
+        this._clearTimeout(timerId);
+        timerId = null;
+      }
+      if (maxTimerId) {
+        this._clearTimeout(maxTimerId);
+        maxTimerId = null;
+      }
+      lastArgs = null;
+      lastThis = null;
+      lastCallTime = null;
+      lastExecuteTime = null;
+    };
+
+    // Add flush method
+    debounced.flush = () => {
+      if (timerId) {
+        this._clearTimeout(timerId);
+        timerId = null;
+      }
+      if (maxTimerId) {
+        this._clearTimeout(maxTimerId);
+        maxTimerId = null;
+      }
+      if (lastArgs) {
+        executeFunction();
+      }
+    };
+
+    // Add pending check
+    debounced.pending = () => {
+      return !!timerId;
+    };
+
+    // Store for cleanup
+    const key = `debounce_${fn.name || 'anonymous'}_${delay}`;
+    this.#debouncedHandlers.set(key, debounced);
+
+    return debounced;
+  }
+
+  /**
+   * Create a throttled version of a function
+   * Function will execute at most once per specified interval
+   *
+   * @protected
+   * @param {Function} fn - Function to throttle
+   * @param {number} wait - Minimum time between executions in milliseconds
+   * @param {object} [options] - Throttle options
+   * @param {boolean} [options.leading] - Execute on the leading edge
+   * @param {boolean} [options.trailing] - Execute on the trailing edge
+   * @returns {Function} Throttled function with cancel() method
+   */
+  _throttle(fn, wait, options = {}) {
+    const { leading = true, trailing = true } = options;
+    
+    let timerId = null;
+    let lastExecuteTime = 0;
+    let lastArgs = null;
+    let lastThis = null;
+    let result;
+
+    const executeFunction = () => {
+      const args = lastArgs;
+      const thisArg = lastThis;
+      
+      lastArgs = null;
+      lastThis = null;
+      lastExecuteTime = Date.now();
+      
+      result = fn.apply(thisArg, args);
+      return result;
+    };
+
+    const throttled = function(...args) {
+      const now = Date.now();
+      const timeSinceLastExecute = now - lastExecuteTime;
+      
+      lastArgs = args;
+      lastThis = this;
+
+      const shouldExecuteNow = leading && timeSinceLastExecute >= wait;
+      
+      if (shouldExecuteNow) {
+        // Execute immediately
+        if (timerId) {
+          this._clearTimeout(timerId);
+          timerId = null;
+        }
+        executeFunction();
+      } else if (!timerId && trailing) {
+        // Schedule execution
+        const delay = wait - timeSinceLastExecute;
+        timerId = this._setTimeout(() => {
+          timerId = null;
+          if (lastArgs) {
+            executeFunction();
+          }
+        }, delay > 0 ? delay : wait);
+      }
+
+      return result;
+    }.bind(this);
+
+    // Add cancel method
+    throttled.cancel = () => {
+      if (timerId) {
+        this._clearTimeout(timerId);
+        timerId = null;
+      }
+      lastArgs = null;
+      lastThis = null;
+    };
+
+    // Add flush method
+    throttled.flush = () => {
+      if (timerId) {
+        this._clearTimeout(timerId);
+        timerId = null;
+      }
+      if (lastArgs) {
+        executeFunction();
+      }
+    };
+
+    // Store for cleanup
+    const key = `throttle_${fn.name || 'anonymous'}_${wait}`;
+    this.#throttledHandlers.set(key, throttled);
+
+    return throttled;
+  }
+
+  /**
+   * Get or create a debounced handler
+   *
+   * @protected
+   * @param {string} key - Unique key for the handler
+   * @param {Function} fn - Function to debounce
+   * @param {number} delay - Delay in milliseconds
+   * @param {object} [options] - Debounce options
+   * @returns {Function} Debounced function
+   */
+  _getDebouncedHandler(key, fn, delay, options) {
+    if (!this.#debouncedHandlers.has(key)) {
+      this.#debouncedHandlers.set(key, this._debounce(fn, delay, options));
+    }
+    return this.#debouncedHandlers.get(key);
+  }
+
+  /**
+   * Get or create a throttled handler
+   *
+   * @protected
+   * @param {string} key - Unique key for the handler
+   * @param {Function} fn - Function to throttle
+   * @param {number} wait - Wait time in milliseconds
+   * @param {object} [options] - Throttle options
+   * @returns {Function} Throttled function
+   */
+  _getThrottledHandler(key, fn, wait, options) {
+    if (!this.#throttledHandlers.has(key)) {
+      this.#throttledHandlers.set(key, this._throttle(fn, wait, options));
+    }
+    return this.#throttledHandlers.get(key);
   }
 
   // ─────────────────────────────────────────────────────────────────────────

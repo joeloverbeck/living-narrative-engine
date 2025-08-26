@@ -25,7 +25,7 @@ import { TestConfigurationFactory } from '../../../common/testConfigurationFacto
  * - Response processing utilities
  */
 export class LLMAdapterTestBed {
-  constructor() {
+  constructor(options = {}) {
     this.container = null;
     this.llmAdapter = null;
     this.httpClient = null;
@@ -40,16 +40,31 @@ export class LLMAdapterTestBed {
 
     // Mock HTTP responses
     this.mockResponses = new Map();
+
+    // Configuration options
+    this.options = {
+      networkDelay: options.networkDelay ?? 0, // Default to 0ms for faster tests
+      lightweight: options.lightweight ?? false, // Skip heavy initialization if true
+      skipSchemaLoading: options.skipSchemaLoading ?? false, // Skip schema loading if true
+      ...options,
+    };
   }
 
   /**
    * Initialize the test bed with all required services
    */
   async initialize() {
-    // Create test configuration with isolated paths
-    const testConfig = await TestConfigurationFactory.createTestConfiguration();
-    this.testConfiguration = testConfig.pathConfiguration;
-    this.testConfigurationCleanup = testConfig.cleanup;
+    // Skip file system operations in lightweight mode
+    if (!this.options.lightweight) {
+      // Create test configuration with isolated paths
+      const testConfig = await TestConfigurationFactory.createTestConfiguration();
+      this.testConfiguration = testConfig.pathConfiguration;
+      this.testConfigurationCleanup = testConfig.cleanup;
+    } else {
+      // Use a minimal in-memory configuration
+      this.testConfiguration = this.createInMemoryTestConfiguration();
+      this.testConfigurationCleanup = null;
+    }
 
     // Create and configure container
     this.container = new AppContainer();
@@ -94,9 +109,11 @@ export class LLMAdapterTestBed {
     process.env.TEST_API_KEY = 'test-api-key-12345';
     process.env.OPENROUTER_API_KEY = 'test-openrouter-key';
 
-    // Load schemas FIRST - they are needed for validation
-    const schemaLoader = this.container.resolve(tokens.SchemaLoader);
-    await schemaLoader.loadAndCompileAllSchemas();
+    // Load schemas if not skipped
+    if (!this.options.skipSchemaLoading) {
+      const schemaLoader = this.container.resolve(tokens.SchemaLoader);
+      await schemaLoader.loadAndCompileAllSchemas();
+    }
 
     // Now resolve LLM adapter after schemas are loaded
     this.llmAdapter = this.container.resolve(aiTokens.LLMAdapter);
@@ -113,6 +130,56 @@ export class LLMAdapterTestBed {
 
     // Set up event monitoring
     this.setupEventMonitoring();
+  }
+
+  /**
+   * Reset the test bed state between tests without full teardown
+   * This is much faster than cleanup + initialize
+   */
+  async reset() {
+    // Clear mock responses and recorded events
+    this.mockResponses.clear();
+    this.events = [];
+    
+    // Reset mock function calls AND implementations
+    if (this.httpClient && this.httpClient.request) {
+      this.httpClient.request.mockReset();
+      // Re-apply the default mock implementation
+      this.httpClient.request.mockImplementation(async (url, options) => {
+        const key = `${options?.method || 'POST'}:${url}`;
+        const mockResponse = this.mockResponses.get(key);
+
+        if (mockResponse) {
+          // Simulate network delay only if configured
+          if (this.options.networkDelay > 0) {
+            await new Promise((resolve) => setTimeout(resolve, this.options.networkDelay));
+          }
+
+          // If the mock response is an error, throw it
+          if (mockResponse instanceof Error) {
+            throw mockResponse;
+          }
+
+          return mockResponse;
+        }
+
+        // Default response if no mock is set
+        throw new Error(
+          `No mock response configured for ${options?.method || 'POST'} ${url}`
+        );
+      });
+    }
+    
+    // Restore test API keys in case they were modified
+    process.env.TEST_API_KEY = 'test-api-key-12345';
+    process.env.OPENROUTER_API_KEY = 'test-openrouter-key';
+    
+    // Reset to default LLM configuration if it was changed
+    try {
+      await this.llmAdapter.setActiveLlm('test-llm-toolcalling');
+    } catch (error) {
+      // Ignore if the config doesn't exist
+    }
   }
 
   /**
@@ -161,8 +228,10 @@ export class LLMAdapterTestBed {
         const mockResponse = this.mockResponses.get(key);
 
         if (mockResponse) {
-          // Simulate network delay
-          await new Promise((resolve) => setTimeout(resolve, 10));
+          // Simulate network delay only if configured
+          if (this.options.networkDelay > 0) {
+            await new Promise((resolve) => setTimeout(resolve, this.options.networkDelay));
+          }
 
           // If the mock response is an error, throw it
           if (mockResponse instanceof Error) {
@@ -373,6 +442,24 @@ Choose one action by its index number and explain your choice.
       '</character_persona>',
       `</character_persona>\n\n<perception_log>\n${padding}\n</perception_log>`
     );
+  }
+
+  /**
+   * Create an in-memory test configuration to avoid file system operations
+   * 
+   * @private
+   * @returns {object} Minimal test path configuration
+   */
+  createInMemoryTestConfiguration() {
+    // Return a minimal path configuration that doesn't use the file system
+    return {
+      getDataPath: () => 'data',
+      getPromptsPath: () => 'data/prompts',
+      getLLMConfigPath: () => 'data/llm-configs.json',
+      getModsPath: () => 'data/mods',
+      getConfigPath: () => 'config',
+      getGameConfigPath: () => 'data/game.json',
+    };
   }
 
   /**

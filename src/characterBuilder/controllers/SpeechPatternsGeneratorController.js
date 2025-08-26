@@ -12,6 +12,7 @@ import {
   assertNonBlankString,
 } from '../../utils/dependencyUtils.js';
 import { tokens } from '../../dependencyInjection/tokens.js';
+import { EnhancedSpeechPatternsValidator } from '../validators/EnhancedSpeechPatternsValidator.js';
 
 /**
  * Controller for speech patterns generator interface
@@ -24,6 +25,9 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
   /** @private @type {import('../services/SpeechPatternsGenerator.js').SpeechPatternsGenerator} */
   #speechPatternsGenerator;
+
+  /** @private @type {EnhancedSpeechPatternsValidator|null} */
+  #enhancedValidator = null;
 
   // UI State
   /** @private @type {object|null} */
@@ -38,8 +42,8 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
   /** @private @type {AbortController|null} */
   #currentGenerationController = null;
 
-  /** @private @type {number|null} */
-  #inputDebounceTimer = null;
+  /** @private @type {Function|null} */
+  #debouncedValidation = null;
 
   /**
    * Create a new SpeechPatternsGeneratorController instance
@@ -90,6 +94,19 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
             error.message
           );
         }
+      }
+    }
+
+    // Initialize enhanced validator if available
+    if (dependencies.schemaValidator) {
+      try {
+        this.#enhancedValidator = new EnhancedSpeechPatternsValidator({
+          schemaValidator: dependencies.schemaValidator,
+          logger: dependencies.logger
+        });
+        dependencies.logger?.debug('EnhancedSpeechPatternsValidator initialized');
+      } catch (error) {
+        dependencies.logger?.warn('Failed to initialize enhanced validator:', error.message);
       }
     }
   }
@@ -147,6 +164,13 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    * @protected
    */
   _setupEventListeners() {
+    // Create debounced validation function with faster response time
+    this.#debouncedValidation = this._debounce(
+      () => this.#validateCharacterInputEnhanced(),
+      300,  // Reduced from 500ms to 300ms for better responsiveness
+      { trailing: true }
+    );
+
     // Character input validation
     if (this._getElement('characterDefinition')) {
       this._addEventListener('characterDefinition', 'input', () => {
@@ -154,7 +178,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       });
 
       this._addEventListener('characterDefinition', 'blur', () => {
-        this.#validateCharacterInput();
+        this.#validateCharacterInputEnhanced();
       });
     }
 
@@ -168,9 +192,19 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     // Export button
     if (this._getElement('exportBtn')) {
       this._addEventListener('exportBtn', 'click', () => {
-        this.#exportToText();
+        this.#exportToFile();
       });
     }
+
+    // Format selector change handler
+    if (this._getElement('exportFormat')) {
+      this._addEventListener('exportFormat', 'change', () => {
+        this.#updateTemplateVisibility();
+      });
+    }
+
+    // Initialize export controls
+    this.#initializeExportControls();
 
     // Clear button
     if (this._getElement('clearBtn')) {
@@ -242,14 +276,11 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     this.#characterDefinition = null;
     this.#updateUIState();
 
-    // Debounced validation for better UX
-    clearTimeout(this.#inputDebounceTimer);
-    this.#inputDebounceTimer = setTimeout(() => {
-      if (input.length > 10) {
-        // Only validate if substantial input
-        this.#validateCharacterInput();
-      }
-    }, 500);
+    // Use proper debounced validation
+    if (input.length > 10 && this.#debouncedValidation) {
+      // Only validate if substantial input
+      this.#debouncedValidation();
+    }
   }
 
   /**
@@ -292,6 +323,96 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       this.#showValidationError(['Invalid JSON format: ' + parseError.message]);
       this.#characterDefinition = null;
       this.#updateUIState();
+      return false;
+    }
+  }
+
+  /**
+   * Enhanced validation with multi-layer feedback and suggestions
+   *
+   * @private
+   * @returns {boolean} True if validation passes
+   */
+  async #validateCharacterInputEnhanced() {
+    const textarea = this._getElement('characterDefinition');
+    if (!textarea) return false;
+
+    const input = textarea.value.trim();
+
+    if (!input) {
+      this.#characterDefinition = null;
+      this.#updateUIState();
+      this.#clearEnhancedValidationDisplay();
+      return false;
+    }
+
+    // Show validation progress indicator
+    this.#showValidationProgress(true);
+
+    try {
+      let parsedData;
+      try {
+        parsedData = JSON.parse(input);
+      } catch (parseError) {
+        // Handle JSON syntax errors with enhanced feedback
+        const result = {
+          isValid: false,
+          errors: [`JSON Syntax Error: ${parseError.message}`],
+          warnings: [],
+          suggestions: [
+            'Use a JSON validator to check your syntax',
+            'Common issues: missing quotes around keys, trailing commas, unmatched brackets'
+          ]
+        };
+        this.#displayEnhancedValidationResults(result);
+        this.#showValidationProgress(false);
+        return false;
+      }
+
+      // Use enhanced validator if available, fallback to basic validation
+      let validationResult;
+      if (this.#enhancedValidator) {
+        validationResult = await this.#enhancedValidator.validateInput(parsedData, {
+          includeQualityAssessment: true,
+          includeSuggestions: true
+        });
+      } else {
+        // Fallback to basic validation
+        const basicResult = this.#validateCharacterStructure(parsedData);
+        validationResult = {
+          isValid: basicResult.isValid,
+          errors: basicResult.errors || [],
+          warnings: [],
+          suggestions: basicResult.isValid ? [] : ['Consider using the enhanced validator for more detailed feedback'],
+          quality: { overallScore: basicResult.isValid ? 0.7 : 0.3 }
+        };
+      }
+
+      // Update UI based on validation results
+      this.#displayEnhancedValidationResults(validationResult);
+
+      if (validationResult.isValid || validationResult.errors.length === 0) {
+        this.#characterDefinition = parsedData;
+        this.#updateUIState();
+        this.#showValidationProgress(false);
+        return true;
+      } else {
+        this.#characterDefinition = null;
+        this.#updateUIState();
+        this.#showValidationProgress(false);
+        return false;
+      }
+
+    } catch (error) {
+      this.logger.error('Enhanced validation failed:', error);
+      const fallbackResult = {
+        isValid: false,
+        errors: [`Validation system error: ${error.message}`],
+        warnings: [],
+        suggestions: ['Try refreshing the page if the problem persists']
+      };
+      this.#displayEnhancedValidationResults(fallbackResult);
+      this.#showValidationProgress(false);
       return false;
     }
   }
@@ -392,16 +513,22 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       return;
     }
 
+    // Performance monitoring
+    this._performanceMark('speech-patterns-generation-start');
+
     try {
       this.#isGenerating = true;
       this.#currentGenerationController = new AbortController();
 
       // Update UI to loading state
+      this._performanceMark('speech-patterns-ui-update-start');
       this._showState('loading');
       this.#updateUIState();
       this.#announceToScreenReader('Generating speech patterns...');
+      this._performanceMeasure('speech-patterns-ui-update', 'speech-patterns-ui-update-start');
 
       // Generate speech patterns using service
+      this._performanceMark('speech-patterns-llm-request-start');
       const processedPatterns =
         await this.#speechPatternsGenerator.generateSpeechPatterns(
           this.#characterDefinition,
@@ -409,15 +536,31 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
             abortSignal: this.#currentGenerationController?.signal,
           }
         );
+      this._performanceMeasure('speech-patterns-llm-request', 'speech-patterns-llm-request-start');
 
       // Store results and display
       this.#lastGeneratedPatterns = processedPatterns;
+      
+      this._performanceMark('speech-patterns-display-start');
       await this.#displayResults(processedPatterns);
+      this._performanceMeasure('speech-patterns-display', 'speech-patterns-display-start');
 
       // Update UI state
       this._showState('results');
       this.#updateUIState();
       this.#announceResults(processedPatterns);
+
+      // Measure total generation time
+      const totalDuration = this._performanceMeasure(
+        'speech-patterns-generation',
+        'speech-patterns-generation-start'
+      );
+
+      // Log performance summary
+      this.logger.info('Speech patterns generation completed', {
+        totalDuration: `${totalDuration?.toFixed(2)}ms`,
+        patternCount: processedPatterns.speechPatterns?.length,
+      });
     } catch (error) {
       this.logger.error('Speech pattern generation failed:', error);
 
@@ -444,42 +587,63 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     const container = this._getElement('speechPatternsContainer');
     if (!container) return;
 
-    // Clear previous results
-    container.innerHTML = '';
+    // Use requestAnimationFrame for smooth rendering
+    await new Promise(resolve => {
+      this._requestAnimationFrame(() => {
+        // Clear previous results
+        container.innerHTML = '';
 
-    // Enhance patterns for display or use fallback
-    let displayData;
-    if (this.#displayEnhancer) {
-      displayData = this.#displayEnhancer.enhanceForDisplay(patterns);
-    } else {
-      // Fallback display logic when enhancer is not available
-      displayData = this.#createFallbackDisplayData(patterns);
-    }
+        // Enhance patterns for display or use fallback
+        let displayData;
+        if (this.#displayEnhancer) {
+          displayData = this.#displayEnhancer.enhanceForDisplay(patterns);
+        } else {
+          // Fallback display logic when enhancer is not available
+          displayData = this.#createFallbackDisplayData(patterns);
+        }
 
-    // Create results header
-    const header = this.#createResultsHeader(displayData);
-    container.appendChild(header);
+        // Create DocumentFragment for batch DOM operations
+        const fragment = document.createDocumentFragment();
 
-    // Create results container
-    const resultsContainer = document.createElement('div');
-    resultsContainer.className = 'speech-patterns-results';
+        // Create results header
+        const header = this.#createResultsHeader(displayData);
+        fragment.appendChild(header);
 
-    // Render each pattern
-    displayData.patterns.forEach((pattern, index) => {
-      const patternElement = this.#renderSpeechPattern(pattern, index);
-      resultsContainer.appendChild(patternElement);
+        // Create results container
+        const resultsContainer = document.createElement('div');
+        resultsContainer.className = 'speech-patterns-results';
+        
+        // Add CSS containment for optimized rendering
+        resultsContainer.style.contain = 'layout style';
+
+        // Create another fragment for pattern elements
+        const patternsFragment = document.createDocumentFragment();
+
+        // Render each pattern to the fragment
+        displayData.patterns.forEach((pattern, index) => {
+          const patternElement = this.#renderSpeechPattern(pattern, index);
+          patternsFragment.appendChild(patternElement);
+        });
+
+        // Append all patterns at once
+        resultsContainer.appendChild(patternsFragment);
+        fragment.appendChild(resultsContainer);
+
+        // Single DOM update
+        container.appendChild(fragment);
+
+        // Set first pattern as focusable for keyboard navigation
+        const firstPattern = resultsContainer.querySelector('.speech-pattern-item');
+        if (firstPattern) {
+          firstPattern.setAttribute('tabindex', '0');
+        }
+
+        // Update pattern count
+        this.#updatePatternCount(displayData.totalCount);
+
+        resolve();
+      });
     });
-
-    container.appendChild(resultsContainer);
-
-    // Set first pattern as focusable for keyboard navigation
-    const firstPattern = resultsContainer.querySelector('.speech-pattern-item');
-    if (firstPattern) {
-      firstPattern.setAttribute('tabindex', '0');
-    }
-
-    // Update pattern count
-    this.#updatePatternCount(displayData.totalCount);
   }
 
   /**
@@ -502,18 +666,6 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     };
   }
 
-  /**
-   * Escape HTML for safe display
-   *
-   * @private
-   * @param {string} text - Text to escape
-   * @returns {string} HTML-safe text
-   */
-  #escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
 
   /**
    * Create results header
@@ -547,6 +699,15 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
   #renderSpeechPattern(pattern, index) {
     const patternElement = document.createElement('article');
     patternElement.className = 'speech-pattern-item fade-in';
+
+    // Performance optimizations: GPU acceleration and layer promotion
+    patternElement.style.willChange = 'transform, opacity';
+    patternElement.style.transform = 'translateZ(0)'; // Force GPU layer
+    
+    // Remove will-change after animation completes
+    patternElement.addEventListener('animationend', () => {
+      patternElement.style.willChange = 'auto';
+    }, { once: true });
 
     // Enhanced ARIA attributes for accessibility
     patternElement.setAttribute('tabindex', '-1');
@@ -601,7 +762,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    *
    * @private
    */
-  #exportToText() {
+  #exportToFile() {
     if (!this.#lastGeneratedPatterns) {
       this.showError('No speech patterns to export');
       return;
@@ -632,9 +793,73 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
         );
       }
 
-      this.#downloadTextFile(exportText, filename);
+      const formatSelector = this._getElement('exportFormat');
+      const templateSelector = this._getElement('exportTemplate');
+      const format = formatSelector?.value || 'txt';
+      const template = templateSelector?.value || 'default';
 
-      this.#announceToScreenReader('Speech patterns exported successfully');
+      let exportContent, mimeType;
+
+      if (!this.#displayEnhancer) {
+        // Fallback for text only
+        exportContent = exportText;
+        mimeType = 'text/plain';
+      } else {
+        const exportOptions = {
+          includeCharacterData: true,
+          characterDefinition: this.#characterDefinition,
+        };
+
+        // Get format info
+        const formats = this.#displayEnhancer.getSupportedExportFormats();
+        const formatInfo = formats.find(f => f.id === format) || formats[0];
+
+        // Generate content based on format
+        switch (format) {
+          case 'json':
+            exportContent = this.#displayEnhancer.formatAsJson(
+              this.#lastGeneratedPatterns,
+              exportOptions
+            );
+            break;
+          case 'markdown':
+            exportContent = this.#displayEnhancer.formatAsMarkdown(
+              this.#lastGeneratedPatterns,
+              exportOptions
+            );
+            break;
+          case 'csv':
+            exportContent = this.#displayEnhancer.formatAsCsv(
+              this.#lastGeneratedPatterns,
+              exportOptions
+            );
+            break;
+          case 'txt':
+          default:
+            // Apply template for text format
+            if (template !== 'default') {
+              exportContent = this.#displayEnhancer.applyTemplate(
+                this.#lastGeneratedPatterns,
+                template,
+                exportOptions
+              );
+            } else {
+              exportContent = exportText;
+            }
+            break;
+        }
+
+        filename = this.#displayEnhancer.generateExportFilename(
+          this.#lastGeneratedPatterns.characterName,
+          { extension: formatInfo.extension }
+        );
+        mimeType = formatInfo.mimeType;
+      }
+
+      this.#downloadFile(exportContent || exportText, filename, mimeType);
+      this.#announceToScreenReader(
+        `Speech patterns exported as ${format?.toUpperCase() || 'TXT'}`
+      );
     } catch (error) {
       this.logger.error('Export failed:', error);
       this.showError('Failed to export speech patterns');
@@ -690,14 +915,15 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
   }
 
   /**
-   * Download text content as file
+   * Download content as file
    *
    * @private
    * @param {string} content - File content
    * @param {string} filename - File name
+   * @param {string} mimeType - MIME type for file
    */
-  #downloadTextFile(content, filename) {
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  #downloadFile(content, filename, mimeType = 'text/plain') {
+    const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
     const url = URL.createObjectURL(blob);
 
     const link = document.createElement('a');
@@ -883,6 +1109,276 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     }
   }
 
+  /**
+   * Display enhanced validation results with categorized feedback
+   *
+   * @private
+   * @param {object} validationResult - Enhanced validation result
+   */
+  #displayEnhancedValidationResults(validationResult) {
+    const errorContainer = this._getElement('characterInputError');
+    const textarea = this._getElement('characterDefinition');
+    
+    if (!errorContainer) return;
+
+    // Clear previous state
+    this.#clearEnhancedValidationDisplay();
+
+    const { errors, warnings, suggestions, quality } = validationResult;
+    
+    if (errors.length === 0 && warnings.length === 0 && suggestions.length === 0) {
+      // All good - show success state
+      if (quality && quality.overallScore >= 0.8) {
+        this.#showValidationSuccess('Excellent character definition!');
+      } else if (quality && quality.overallScore >= 0.6) {
+        this.#showValidationSuccess('Good character definition');
+      } else {
+        errorContainer.style.display = 'none';
+      }
+      
+      if (textarea) {
+        textarea.classList.remove('error', 'warning');
+        textarea.classList.add('success');
+      }
+      return;
+    }
+
+    // Build enhanced feedback HTML
+    let html = '<div class="enhanced-validation-results">';
+
+    // Errors section (blocking issues)
+    if (errors.length > 0) {
+      html += '<div class="validation-section validation-errors">';
+      html += '<h4 class="validation-section-title">';
+      html += '<span class="validation-icon error-icon">❌</span>';
+      html += `Errors (${errors.length}) - Must be fixed`;
+      html += '</h4>';
+      html += '<ul class="validation-list">';
+      errors.forEach(error => {
+        html += `<li class="validation-item error-item">${this.#escapeHtml(error)}</li>`;
+      });
+      html += '</ul>';
+      html += '</div>';
+    }
+
+    // Warnings section (recommended fixes)
+    if (warnings.length > 0) {
+      html += '<div class="validation-section validation-warnings">';
+      html += '<h4 class="validation-section-title">';
+      html += '<span class="validation-icon warning-icon">⚠️</span>';
+      html += `Warnings (${warnings.length}) - Recommended fixes`;
+      html += '</h4>';
+      html += '<ul class="validation-list">';
+      warnings.forEach(warning => {
+        html += `<li class="validation-item warning-item">${this.#escapeHtml(warning)}</li>`;
+      });
+      html += '</ul>';
+      html += '</div>';
+    }
+
+    // Suggestions section (improvements)
+    if (suggestions.length > 0) {
+      html += '<div class="validation-section validation-suggestions">';
+      html += '<h4 class="validation-section-title">';
+      html += '<span class="validation-icon suggestion-icon">💡</span>';
+      html += `Suggestions (${suggestions.length}) - Improvements`;
+      html += '</h4>';
+      html += '<ul class="validation-list">';
+      suggestions.forEach(suggestion => {
+        html += `<li class="validation-item suggestion-item">${this.#escapeHtml(suggestion)}</li>`;
+      });
+      html += '</ul>';
+      html += '</div>';
+    }
+
+    // Quality score section
+    if (quality && typeof quality.overallScore === 'number') {
+      const score = Math.round(quality.overallScore * 100);
+      const level = this.#getQualityDisplayLevel(quality.overallScore);
+      
+      html += '<div class="validation-section validation-quality">';
+      html += '<h4 class="validation-section-title">';
+      html += '<span class="validation-icon quality-icon">📊</span>';
+      html += 'Character Quality Score';
+      html += '</h4>';
+      html += '<div class="quality-display">';
+      html += `<div class="quality-score ${level.class}">${score}%</div>`;
+      html += `<div class="quality-level">${level.text}</div>`;
+      html += '<div class="quality-bar">';
+      html += `<div class="quality-progress ${level.class}" style="width: ${score}%"></div>`;
+      html += '</div>';
+      html += '</div>';
+      html += '</div>';
+    }
+
+    html += '</div>';
+
+    // Display the enhanced feedback
+    errorContainer.innerHTML = html;
+    errorContainer.style.display = 'block';
+
+    // Update textarea styling
+    if (textarea) {
+      textarea.classList.remove('error', 'warning', 'success');
+      
+      if (errors.length > 0) {
+        textarea.classList.add('error');
+      } else if (warnings.length > 0) {
+        textarea.classList.add('warning');
+      }
+    }
+
+    // Add expandable behavior to sections
+    this.#setupValidationSectionToggling();
+  }
+
+  /**
+   * Clear enhanced validation display
+   *
+   * @private
+   */
+  #clearEnhancedValidationDisplay() {
+    const errorContainer = this._getElement('characterInputError');
+    if (errorContainer) {
+      errorContainer.style.display = 'none';
+      errorContainer.innerHTML = '';
+    }
+
+    const textarea = this._getElement('characterDefinition');
+    if (textarea) {
+      textarea.classList.remove('error', 'warning', 'success');
+    }
+  }
+
+  /**
+   * Show validation success message
+   *
+   * @private
+   * @param {string} message - Success message
+   */
+  #showValidationSuccess(message) {
+    const errorContainer = this._getElement('characterInputError');
+    if (!errorContainer) return;
+
+    const html = `
+      <div class="validation-success">
+        <span class="validation-icon success-icon">✅</span>
+        <span class="success-message">${this.#escapeHtml(message)}</span>
+      </div>
+    `;
+
+    errorContainer.innerHTML = html;
+    errorContainer.style.display = 'block';
+
+    // Auto-hide success message after 3 seconds
+    setTimeout(() => {
+      if (errorContainer.querySelector('.validation-success')) {
+        errorContainer.style.display = 'none';
+      }
+    }, 3000);
+  }
+
+  /**
+   * Show/hide validation progress indicator
+   *
+   * @private
+   * @param {boolean} show - Whether to show progress
+   */
+  #showValidationProgress(show) {
+    const errorContainer = this._getElement('characterInputError');
+    if (!errorContainer) return;
+
+    if (show) {
+      const html = `
+        <div class="validation-progress">
+          <div class="validation-spinner"></div>
+          <span class="progress-text">Validating character definition...</span>
+        </div>
+      `;
+      errorContainer.innerHTML = html;
+      errorContainer.style.display = 'block';
+    } else {
+      // Progress will be replaced by validation results or cleared
+    }
+  }
+
+  /**
+   * Setup expandable behavior for validation sections
+   *
+   * @private
+   */
+  #setupValidationSectionToggling() {
+    const sections = document.querySelectorAll('.validation-section');
+    
+    sections.forEach(section => {
+      const title = section.querySelector('.validation-section-title');
+      const content = section.querySelector('.validation-list');
+      
+      if (title && content) {
+        // Make sections collapsible for warnings and suggestions
+        if (section.classList.contains('validation-warnings') || 
+            section.classList.contains('validation-suggestions')) {
+          
+          title.style.cursor = 'pointer';
+          title.setAttribute('tabindex', '0');
+          title.setAttribute('role', 'button');
+          title.setAttribute('aria-expanded', 'true');
+          
+          const toggleSection = () => {
+            const isExpanded = content.style.display !== 'none';
+            content.style.display = isExpanded ? 'none' : 'block';
+            title.setAttribute('aria-expanded', !isExpanded);
+            title.classList.toggle('collapsed', isExpanded);
+          };
+
+          title.addEventListener('click', toggleSection);
+          title.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              toggleSection();
+            }
+          });
+        }
+      }
+    });
+  }
+
+  /**
+   * Get quality display level information
+   *
+   * @private
+   * @param {number} score - Quality score (0-1)
+   * @returns {object} Display level info
+   */
+  #getQualityDisplayLevel(score) {
+    if (score >= 0.8) {
+      return { class: 'excellent', text: 'Excellent' };
+    } else if (score >= 0.6) {
+      return { class: 'good', text: 'Good' };
+    } else if (score >= 0.4) {
+      return { class: 'fair', text: 'Fair' };
+    } else if (score >= 0.2) {
+      return { class: 'poor', text: 'Needs Work' };
+    } else {
+      return { class: 'inadequate', text: 'Inadequate' };
+    }
+  }
+
+  /**
+   * Escape HTML for safe display
+   *
+   * @private
+   * @param {string} text - Text to escape
+   * @returns {string} HTML-safe text
+   */
+  #escapeHtml(text) {
+    if (typeof text !== 'string') return '';
+    
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   // Keyboard Shortcuts
 
   /**
@@ -904,7 +1400,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
           case 'e':
             event.preventDefault();
             if (this.#lastGeneratedPatterns) {
-              this.#exportToText();
+              this.#exportToFile();
             }
             break;
 
@@ -1013,6 +1509,57 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       setTimeout(() => {
         announcer.textContent = '';
       }, 1000);
+    }
+  }
+
+  /**
+   * Initialize export controls
+   *
+   * @private
+   */
+  #initializeExportControls() {
+    const formatSelector = this._getElement('exportFormat');
+    const templateSelector = this._getElement('exportTemplate');
+
+    if (formatSelector && this.#displayEnhancer) {
+      // Populate format options
+      const formats = this.#displayEnhancer.getSupportedExportFormats();
+      formatSelector.innerHTML = formats
+        .map(
+          format =>
+            `<option value="${format.id}" title="${format.description}">${format.name}</option>`
+        )
+        .join('');
+    }
+
+    if (templateSelector && this.#displayEnhancer) {
+      // Populate template options
+      const templates = this.#displayEnhancer.getAvailableTemplates();
+      templateSelector.innerHTML = templates
+        .map(
+          template =>
+            `<option value="${template.id}" title="${template.description}">${template.name}</option>`
+        )
+        .join('');
+    }
+
+    // Set initial visibility
+    this.#updateTemplateVisibility();
+  }
+
+  /**
+   * Update template selector visibility based on format
+   *
+   * @private
+   */
+  #updateTemplateVisibility() {
+    const formatSelector = this._getElement('exportFormat');
+    const templateGroup = this._getElement('templateGroup');
+
+    if (formatSelector && templateGroup) {
+      // Only show template selector for text format
+      const showTemplates = formatSelector.value === 'txt';
+      templateGroup.style.display = showTemplates ? 'flex' : 'none';
     }
   }
 }

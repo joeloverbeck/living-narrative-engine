@@ -39,6 +39,26 @@ import { CHARACTER_BUILDER_EVENTS } from './characterBuilderService.js';
  */
 
 /**
+ * Retry configuration for LLM requests
+ */
+const DEFAULT_RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelay: 1000, // 1 second
+  maxDelay: 10000, // 10 seconds
+  backoffMultiplier: 2,
+  jitterFactor: 0.3, // 30% jitter to prevent thundering herd
+};
+
+/**
+ * Circuit breaker configuration for preventing cascading failures
+ */
+const CIRCUIT_BREAKER_CONFIG = {
+  failureThreshold: 5, // Number of failures before opening circuit
+  resetTimeout: 60000, // 1 minute before attempting to close circuit
+  monitoringWindow: 300000, // 5 minutes monitoring window
+};
+
+/**
  * Service for generating character speech patterns via LLM
  * Following the established three-service pattern used by other character builder services
  */
@@ -51,6 +71,18 @@ export class SpeechPatternsGenerator {
   #eventBus;
   #tokenEstimator;
   #responseProcessor;
+  
+  // Circuit breaker state
+  #circuitBreakerState = 'closed'; // 'closed', 'open', 'half-open'
+  #consecutiveFailures = 0;
+  #lastFailureTime = null;
+  #circuitResetTimer = null;
+  
+  // Request deduplication and caching
+  #requestCache = new Map(); // LRU cache for responses
+  #pendingRequests = new Map(); // Track in-flight requests
+  #cacheMaxSize = 10;
+  #cacheTTL = 300000; // 5 minutes
 
   /**
    * Create a new SpeechPatternsGenerator instance
@@ -138,7 +170,70 @@ export class SpeechPatternsGenerator {
    */
   async generateSpeechPatterns(characterData, options = {}) {
     const startTime = Date.now();
+    
+    // Generate cache key for deduplication
+    const cacheKey = this.#generateCacheKey(characterData, options);
+    
+    // Check cache first
+    const cachedResponse = this.#getCachedResponse(cacheKey);
+    if (cachedResponse) {
+      this.#logger.info('SpeechPatternsGenerator: Returning cached response', {
+        cacheKey,
+        age: Date.now() - cachedResponse.timestamp,
+      });
+      
+      // Dispatch cached event
+      this.#eventBus.dispatch({
+        type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_CACHE_HIT,
+        payload: {
+          cacheKey,
+          timestamp: new Date().toISOString(),
+        }
+      });
+      
+      return cachedResponse.data;
+    }
+    
+    // Check if there's already a pending request for the same data
+    if (this.#pendingRequests.has(cacheKey)) {
+      this.#logger.info('SpeechPatternsGenerator: Deduplicating request', {
+        cacheKey,
+      });
+      
+      // Return the existing promise
+      return this.#pendingRequests.get(cacheKey);
+    }
 
+    // Create a new promise for this request
+    const requestPromise = this.#executeGeneration(characterData, options, cacheKey, startTime);
+    
+    // Store as pending request
+    this.#pendingRequests.set(cacheKey, requestPromise);
+    
+    try {
+      const result = await requestPromise;
+      
+      // Cache the successful result
+      this.#setCachedResponse(cacheKey, result);
+      
+      return result;
+    } finally {
+      // Clean up pending request
+      this.#pendingRequests.delete(cacheKey);
+    }
+  }
+
+  /**
+   * Execute the actual generation logic
+   *
+   * @private
+   * @param {object} characterData - Character data
+   * @param {object} options - Options
+   * @param {string} cacheKey - Cache key
+   * @param {number} startTime - Start timestamp
+   * @returns {Promise<object>} Generation result
+   */
+  async #executeGeneration(characterData, options, cacheKey, startTime) {
     try {
       this.#logger.info('SpeechPatternsGenerator: Starting generation', {
         characterDataSize: JSON.stringify(characterData).length,
@@ -304,37 +399,408 @@ export class SpeechPatternsGenerator {
    * @returns {Promise<string>} LLM response
    */
   async #callLLM(prompt, options) {
-    try {
-      // Set active configuration if specified
-      if (options.llmConfigId) {
-        await this.#llmConfigManager.setActiveConfiguration(
-          options.llmConfigId
+    // Check circuit breaker state
+    if (this.#circuitBreakerState === 'open') {
+      if (this.#shouldAttemptReset()) {
+        this.#circuitBreakerState = 'half-open';
+        this.#logger.info('Circuit breaker entering half-open state, attempting reset');
+      } else {
+        throw new SpeechPatternsGenerationError(
+          'Service temporarily unavailable due to repeated failures. Please try again later.',
+          { circuitBreakerOpen: true }
         );
       }
-
-      const requestOptions = {
-        toolSchema: SPEECH_PATTERNS_RESPONSE_SCHEMA,
-        toolName: 'generate_speech_patterns',
-        toolDescription: 'Generate speech patterns for character development',
-        ...SPEECH_PATTERNS_LLM_PARAMS,
-      };
-
-      this.#logger.debug('Calling LLM for speech patterns generation', {
-        promptLength: prompt.length,
-        requestOptions,
-      });
-
-      return await this.#llmStrategyFactory.getAIDecision(
-        prompt,
-        options.abortSignal || null,
-        requestOptions
-      );
-    } catch (error) {
-      throw new SpeechPatternsGenerationError(
-        `LLM request failed: ${error.message}`,
-        error
-      );
     }
+
+    // Retry configuration
+    const retryConfig = { ...DEFAULT_RETRY_CONFIG, ...(options.retryConfig || {}) };
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= retryConfig.maxRetries; attempt++) {
+      try {
+        // Check if operation was aborted
+        if (options.abortSignal?.aborted) {
+          throw new Error('Operation aborted');
+        }
+
+        // Set active configuration if specified
+        if (options.llmConfigId) {
+          await this.#llmConfigManager.setActiveConfiguration(
+            options.llmConfigId
+          );
+        }
+
+        const requestOptions = {
+          toolSchema: SPEECH_PATTERNS_RESPONSE_SCHEMA,
+          toolName: 'generate_speech_patterns',
+          toolDescription: 'Generate speech patterns for character development',
+          ...SPEECH_PATTERNS_LLM_PARAMS,
+        };
+
+        this.#logger.debug('Calling LLM for speech patterns generation', {
+          promptLength: prompt.length,
+          requestOptions,
+          attempt,
+          maxRetries: retryConfig.maxRetries,
+        });
+
+        const response = await this.#llmStrategyFactory.getAIDecision(
+          prompt,
+          options.abortSignal || null,
+          requestOptions
+        );
+
+        // Success - reset circuit breaker
+        this.#onSuccess();
+        
+        return response;
+      } catch (error) {
+        lastError = error;
+        
+        // Record failure for circuit breaker
+        this.#onFailure();
+
+        // Check if error is retryable
+        if (!this.#isRetryableError(error) || attempt >= retryConfig.maxRetries) {
+          this.#logger.error(`LLM request failed after ${attempt} attempts`, {
+            error: error.message,
+            attempt,
+            isRetryable: this.#isRetryableError(error),
+          });
+          
+          throw new SpeechPatternsGenerationError(
+            `LLM request failed after ${attempt} attempts: ${error.message}`,
+            error
+          );
+        }
+
+        // Calculate delay with exponential backoff and jitter
+        const delay = this.#calculateRetryDelay(attempt, retryConfig);
+        
+        this.#logger.warn(`LLM request failed, retrying in ${delay}ms`, {
+          error: error.message,
+          attempt,
+          nextAttempt: attempt + 1,
+          delay,
+        });
+
+        // Dispatch retry event
+        this.#eventBus.dispatch({
+          type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_RETRY,
+          payload: {
+            attempt,
+            maxRetries: retryConfig.maxRetries,
+            delay,
+            error: error.message,
+            timestamp: new Date().toISOString(),
+          },
+        });
+
+        // Wait before retry (unless aborted)
+        await this.#delay(delay, options.abortSignal);
+      }
+    }
+
+    // Should not reach here, but handle edge case
+    throw new SpeechPatternsGenerationError(
+      `LLM request failed after ${retryConfig.maxRetries} attempts`,
+      lastError
+    );
+  }
+
+  /**
+   * Calculate retry delay with exponential backoff and jitter
+   *
+   * @private
+   * @param {number} attempt - Current attempt number
+   * @param {object} config - Retry configuration
+   * @returns {number} Delay in milliseconds
+   */
+  #calculateRetryDelay(attempt, config) {
+    const exponentialDelay = Math.min(
+      config.baseDelay * Math.pow(config.backoffMultiplier, attempt - 1),
+      config.maxDelay
+    );
+
+    // Add jitter to prevent thundering herd
+    const jitter = Math.random() * config.jitterFactor * exponentialDelay;
+
+    return Math.floor(exponentialDelay + jitter);
+  }
+
+  /**
+   * Delay for specified milliseconds with abort support
+   *
+   * @private
+   * @param {number} ms - Milliseconds to delay
+   * @param {AbortSignal} [abortSignal] - Optional abort signal
+   * @returns {Promise<void>}
+   */
+  async #delay(ms, abortSignal) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(resolve, ms);
+      
+      if (abortSignal) {
+        const abortHandler = () => {
+          clearTimeout(timer);
+          reject(new Error('Delay aborted'));
+        };
+        
+        if (abortSignal.aborted) {
+          abortHandler();
+        } else {
+          abortSignal.addEventListener('abort', abortHandler, { once: true });
+        }
+      }
+    });
+  }
+
+  /**
+   * Check if error is retryable
+   *
+   * @private
+   * @param {Error} error - Error to check
+   * @returns {boolean}
+   */
+  #isRetryableError(error) {
+    // Don't retry on abort
+    if (error.name === 'AbortError' || error.message === 'Operation aborted') {
+      return false;
+    }
+
+    // Don't retry validation errors
+    if (error instanceof SpeechPatternsValidationError) {
+      return false;
+    }
+
+    // Don't retry if circuit breaker is open
+    if (error.circuitBreakerOpen) {
+      return false;
+    }
+
+    // Retry on network errors, timeouts, and temporary failures
+    const retryableMessages = [
+      'timeout',
+      'network',
+      'ECONNRESET',
+      'ETIMEDOUT',
+      'unavailable',
+      'rate limit',
+      '429', // Too Many Requests
+      '502', // Bad Gateway
+      '503', // Service Unavailable
+      '504', // Gateway Timeout
+    ];
+
+    return retryableMessages.some(msg => 
+      error.message.toLowerCase().includes(msg.toLowerCase())
+    );
+  }
+
+  /**
+   * Handle successful request for circuit breaker
+   *
+   * @private
+   */
+  #onSuccess() {
+    if (this.#circuitBreakerState === 'half-open') {
+      this.#logger.info('Circuit breaker reset to closed state');
+    }
+    
+    this.#circuitBreakerState = 'closed';
+    this.#consecutiveFailures = 0;
+    this.#lastFailureTime = null;
+    
+    if (this.#circuitResetTimer) {
+      clearTimeout(this.#circuitResetTimer);
+      this.#circuitResetTimer = null;
+    }
+  }
+
+  /**
+   * Handle failed request for circuit breaker
+   *
+   * @private
+   */
+  #onFailure() {
+    this.#consecutiveFailures++;
+    this.#lastFailureTime = Date.now();
+
+    if (this.#consecutiveFailures >= CIRCUIT_BREAKER_CONFIG.failureThreshold) {
+      if (this.#circuitBreakerState !== 'open') {
+        this.#circuitBreakerState = 'open';
+        this.#logger.error('Circuit breaker opened due to repeated failures', {
+          consecutiveFailures: this.#consecutiveFailures,
+          threshold: CIRCUIT_BREAKER_CONFIG.failureThreshold,
+        });
+
+        // Dispatch circuit breaker event
+        this.#eventBus.dispatch({
+          type: CHARACTER_BUILDER_EVENTS.CIRCUIT_BREAKER_OPENED,
+          payload: {
+            service: 'SpeechPatternsGenerator',
+            consecutiveFailures: this.#consecutiveFailures,
+            resetTimeout: CIRCUIT_BREAKER_CONFIG.resetTimeout,
+            timestamp: new Date().toISOString(),
+          },
+        });
+
+        // Schedule automatic reset attempt
+        this.#scheduleCircuitReset();
+      }
+    }
+  }
+
+  /**
+   * Check if circuit should attempt reset
+   *
+   * @private
+   * @returns {boolean}
+   */
+  #shouldAttemptReset() {
+    if (!this.#lastFailureTime) {
+      return true;
+    }
+
+    const timeSinceLastFailure = Date.now() - this.#lastFailureTime;
+    return timeSinceLastFailure >= CIRCUIT_BREAKER_CONFIG.resetTimeout;
+  }
+
+  /**
+   * Schedule automatic circuit breaker reset
+   *
+   * @private
+   */
+  #scheduleCircuitReset() {
+    if (this.#circuitResetTimer) {
+      clearTimeout(this.#circuitResetTimer);
+    }
+
+    this.#circuitResetTimer = setTimeout(() => {
+      this.#logger.info('Attempting automatic circuit breaker reset');
+      this.#circuitBreakerState = 'half-open';
+      this.#circuitResetTimer = null;
+    }, CIRCUIT_BREAKER_CONFIG.resetTimeout);
+  }
+
+  /**
+   * Generate cache key for request deduplication
+   *
+   * @private
+   * @param {object} characterData - Character data
+   * @param {object} options - Options
+   * @returns {string} Cache key
+   */
+  #generateCacheKey(characterData, options) {
+    // Create a deterministic key from character data and options
+    const keyData = {
+      characterData: JSON.stringify(characterData),
+      focusType: options.focusType,
+      patternCount: options.patternCount,
+      llmConfigId: options.llmConfigId,
+    };
+    
+    // Simple hash function for key generation
+    const str = JSON.stringify(keyData);
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    return `speech_patterns_${hash}`;
+  }
+
+  /**
+   * Get cached response if available and not expired
+   *
+   * @private
+   * @param {string} cacheKey - Cache key
+   * @returns {object|null} Cached response or null
+   */
+  #getCachedResponse(cacheKey) {
+    const cached = this.#requestCache.get(cacheKey);
+    
+    if (!cached) {
+      return null;
+    }
+    
+    // Check if cache is expired
+    if (Date.now() - cached.timestamp > this.#cacheTTL) {
+      this.#requestCache.delete(cacheKey);
+      return null;
+    }
+    
+    // Move to end (LRU)
+    this.#requestCache.delete(cacheKey);
+    this.#requestCache.set(cacheKey, cached);
+    
+    return cached;
+  }
+
+  /**
+   * Set cached response with LRU eviction
+   *
+   * @private
+   * @param {string} cacheKey - Cache key
+   * @param {object} data - Data to cache
+   */
+  #setCachedResponse(cacheKey, data) {
+    // Implement LRU eviction
+    if (this.#requestCache.size >= this.#cacheMaxSize) {
+      // Delete oldest entry (first in Map)
+      const firstKey = this.#requestCache.keys().next().value;
+      this.#requestCache.delete(firstKey);
+      
+      this.#logger.debug('Cache eviction', {
+        evictedKey: firstKey,
+        reason: 'cache size limit',
+      });
+    }
+    
+    this.#requestCache.set(cacheKey, {
+      data,
+      timestamp: Date.now(),
+    });
+    
+    this.#logger.debug('Response cached', {
+      cacheKey,
+      cacheSize: this.#requestCache.size,
+    });
+  }
+
+  /**
+   * Clear cache (useful for memory management)
+   *
+   * @public
+   */
+  clearCache() {
+    const size = this.#requestCache.size;
+    this.#requestCache.clear();
+    this.#logger.info('Cache cleared', { entriesRemoved: size });
+  }
+
+  /**
+   * Get cache statistics
+   *
+   * @public
+   * @returns {object} Cache statistics
+   */
+  getCacheStats() {
+    const entries = Array.from(this.#requestCache.entries());
+    const now = Date.now();
+    
+    return {
+      size: this.#requestCache.size,
+      maxSize: this.#cacheMaxSize,
+      ttl: this.#cacheTTL,
+      entries: entries.map(([key, value]) => ({
+        key,
+        age: now - value.timestamp,
+        expired: now - value.timestamp > this.#cacheTTL,
+      })),
+    };
   }
 
   /**

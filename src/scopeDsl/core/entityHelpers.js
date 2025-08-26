@@ -55,6 +55,7 @@ export function getOrBuildComponents(entityId, entity, gateway, trace) {
  * @param {LocationProvider} locationProvider - Provides current location.
  * @param {object} [trace] - Optional trace logger with `addLog` method.
  * @param {object} [runtimeContext] - Optional runtime context with target/targets.
+ * @param {object} [processedActor] - Optional pre-processed actor entity to avoid reprocessing.
  * @returns {object|null} Context object with entity, actor and location fields.
  */
 export function createEvaluationContext(
@@ -63,51 +64,53 @@ export function createEvaluationContext(
   gateway,
   locationProvider,
   trace,
-  runtimeContext = null
+  runtimeContext = null,
+  processedActor = null
 ) {
   // Handle null/undefined items
-  if (item == null) {
+  if (item === null || item === undefined) {
     return null;
   }
 
   // Critical check: actor should never be undefined in scope evaluation
+  // Only perform expensive validation when debugging is enabled
   if (!actorEntity) {
     const error = new Error(
       'createEvaluationContext: actorEntity is undefined. This should never happen during scope evaluation.'
     );
-    console.error(
-      '[CRITICAL] createEvaluationContext called with undefined actor:',
-      {
-        item,
-        itemType: typeof item,
-        hasGateway: !!gateway,
-        hasLocationProvider: !!locationProvider,
-        // Enhanced debugging: show the call stack to trace where this came from
-        callStack: new Error().stack,
-      }
-    );
-    // Fail fast - don't continue with undefined actor
+    if (trace) {
+      console.error(
+        '[CRITICAL] createEvaluationContext called with undefined actor:',
+        {
+          item,
+          itemType: typeof item,
+          hasGateway: !!gateway,
+          hasLocationProvider: !!locationProvider,
+          // Enhanced debugging: show the call stack to trace where this came from
+          callStack: new Error().stack,
+        }
+      );
+    }
     throw error;
   }
 
   // Additional check: actor must have a valid ID
-  if (
-    !actorEntity.id ||
-    actorEntity.id === 'undefined' ||
-    typeof actorEntity.id !== 'string'
-  ) {
+  // Only perform detailed validation when debugging
+  if (!actorEntity.id || actorEntity.id === 'undefined' || typeof actorEntity.id !== 'string') {
     const error = new Error(
       `createEvaluationContext: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This should never happen.`
     );
-    console.error('[CRITICAL] createEvaluationContext actor has invalid ID:', {
-      actorId: actorEntity.id,
-      actorIdType: typeof actorEntity.id,
-      actorKeys: Object.keys(actorEntity),
-      hasComponents: !!actorEntity.components,
-      item,
-      itemType: typeof item,
-      callStack: new Error().stack,
-    });
+    if (trace) {
+      console.error('[CRITICAL] createEvaluationContext actor has invalid ID:', {
+        actorId: actorEntity.id,
+        actorIdType: typeof actorEntity.id,
+        actorKeys: Object.keys(actorEntity),
+        hasComponents: !!actorEntity.components,
+        item,
+        itemType: typeof item,
+        callStack: new Error().stack,
+      });
+    }
     throw error;
   }
 
@@ -249,8 +252,9 @@ export function createEvaluationContext(
   // Ensure entity has components
   entity = addComponentsToEntity(entity, entity.id || item);
 
-  // Ensure actor has components
-  const actor = addComponentsToEntity(actorEntity, actorEntity.id);
+  // Use pre-processed actor if available, otherwise process it
+  // This optimization is critical for large-scale filtering operations
+  const actor = processedActor || addComponentsToEntity(actorEntity, actorEntity.id);
 
   const location = locationProvider.getLocation();
 
@@ -287,6 +291,14 @@ export function createEvaluationContext(
     trace,
   };
 
+  // For plain objects (like inventory items), expose their properties directly
+  // This allows {"var": "quantity"} to access item.quantity
+  if (item && typeof item === 'object' && !entity?.components && item.id) {
+    // This is a plain object (not an entity with components)
+    // Expose all its properties at the root level for JSON Logic access
+    Object.assign(flattenedContext, item);
+  }
+
   // Add target context if available
   if (runtimeContext?.target) {
     flattenedContext.target = runtimeContext.target;
@@ -297,4 +309,112 @@ export function createEvaluationContext(
   }
 
   return flattenedContext;
+}
+
+/**
+ * Pre-processes an actor entity for use in multiple evaluation contexts.
+ * This is an optimization for bulk filtering operations.
+ *
+ * @param {object} actorEntity - The actor entity to preprocess
+ * @param {EntityGateway} gateway - Gateway used for component lookups
+ * @returns {object} Processed actor entity with components
+ */
+export function preprocessActorForEvaluation(actorEntity, gateway) {
+  if (!actorEntity || !actorEntity.id) {
+    throw new Error('preprocessActorForEvaluation: Invalid actor entity');
+  }
+
+  // Helper function copied from createEvaluationContext for consistency
+  /**
+   *
+   * @param entity
+   * @param entityId
+   */
+  function addComponentsToEntity(entity, entityId) {
+    // Convert Map-based components to plain object if needed
+    if (entity.components instanceof Map) {
+      const plainComponents = {};
+      for (const [componentId, data] of entity.components) {
+        plainComponents[componentId] = data;
+      }
+
+      // Create new entity with plain object components
+      const proto = Object.getPrototypeOf(entity);
+      if (proto === Object.prototype || proto === null) {
+        return {
+          ...entity,
+          components: plainComponents,
+        };
+      } else {
+        // Preserve prototype while replacing components
+        const enhancedEntity = Object.create(proto);
+        for (const key of Object.keys(entity)) {
+          if (key !== 'components') {
+            enhancedEntity[key] = entity[key];
+          }
+        }
+        enhancedEntity.components = plainComponents;
+        return enhancedEntity;
+      }
+    }
+
+    // If entity already has plain object components, return as-is
+    if (entity.components && typeof entity.components === 'object') {
+      return entity;
+    }
+
+    // If no components but has componentTypeIds, build them
+    if (!entity.components && entity.componentTypeIds) {
+      const components = buildComponents(
+        entityId || entity.id,
+        entity,
+        gateway
+      );
+
+      // Check if it's a plain object or has a custom prototype
+      const proto = Object.getPrototypeOf(entity);
+      if (proto === Object.prototype || proto === null) {
+        // Plain object - safe to use spread
+        return {
+          ...entity,
+          components,
+        };
+      }
+
+      // Entity instance - create a wrapper that preserves the original entity
+      const enhancedEntity = Object.create(proto);
+
+      // Define a getter for each property of the original entity
+      const descriptors = Object.getOwnPropertyDescriptors(proto);
+      for (const [key, descriptor] of Object.entries(descriptors)) {
+        if (descriptor.get) {
+          // This is a getter - create a forwarding getter
+          Object.defineProperty(enhancedEntity, key, {
+            get() {
+              return entity[key];
+            },
+            enumerable: descriptor.enumerable,
+            configurable: descriptor.configurable,
+          });
+        }
+      }
+
+      // Copy non-getter properties
+      for (const key of Object.keys(entity)) {
+        if (!Object.getOwnPropertyDescriptor(proto, key)?.get) {
+          enhancedEntity[key] = entity[key];
+        }
+      }
+
+      // Add components
+      enhancedEntity.components = components;
+
+      return enhancedEntity;
+    }
+
+    // No components and no componentTypeIds - return as-is
+    return entity;
+  }
+
+  return addComponentsToEntity(actorEntity, actorEntity.id);
 }
