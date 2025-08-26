@@ -85,14 +85,16 @@
               </p>
             </div>
 
-            <!-- Validation Error Display -->
+            <!-- Enhanced Validation Display -->
             <div
               id="character-input-error"
-              class="cb-error-message"
+              class="cb-error-message enhanced-validation-container"
               style="display: none"
               role="alert"
+              aria-live="polite"
+              aria-atomic="false"
             >
-              <!-- Error messages will be inserted here -->
+              <!-- Enhanced validation results will be inserted here -->
             </div>
           </div>
 
@@ -136,16 +138,36 @@
                 <span class="button-icon">🗑️</span>
                 <span class="button-text">Clear All</span>
               </button>
-              <button
-                id="export-btn"
-                class="cb-button cb-button-secondary"
-                disabled
-                aria-label="Export speech patterns to text file"
-                aria-keyshortcuts="Control+E"
-              >
-                <span class="button-icon">📄</span>
-                <span class="button-text">Export</span>
-              </button>
+              <div class="export-controls">
+                <select
+                  id="export-format"
+                  class="cb-select export-format-select"
+                  aria-label="Export format"
+                  title="Select export format"
+                >
+                  <!-- Options populated dynamically -->
+                </select>
+                <div id="template-group" class="template-group" style="display: none;">
+                  <select
+                    id="export-template"
+                    class="cb-select export-template-select"
+                    aria-label="Export template"
+                    title="Select export template"
+                  >
+                    <!-- Options populated dynamically -->
+                  </select>
+                </div>
+                <button
+                  id="export-btn"
+                  class="cb-button cb-button-secondary"
+                  disabled
+                  aria-label="Export speech patterns"
+                  aria-keyshortcuts="Control+E"
+                >
+                  <span class="button-icon">📄</span>
+                  <span class="button-text">Export</span>
+                </button>
+              </div>
             </div>
           </div>
 

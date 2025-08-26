@@ -4,7 +4,10 @@
  * @typedef {import('../core/gateways.js').EntityGateway} EntityGateway
  */
 
-import { createEvaluationContext } from '../core/entityHelpers.js';
+import { 
+  createEvaluationContext,
+  preprocessActorForEvaluation 
+} from '../core/entityHelpers.js';
 
 /**
  * @typedef {object} LocationProvider
@@ -48,85 +51,96 @@ export default function createFilterResolver({
      */
     resolve(node, ctx) {
       const { actorEntity, dispatcher, trace } = ctx;
+      
+      // Check if we have a cached processed actor from previous iterations
+      // This avoids reprocessing the actor 10,000+ times in large datasets
+      const cacheKey = '_processedActor';
+      let processedActor = ctx[cacheKey];
 
       // Critical validation: actorEntity must be present and have valid ID
       if (!actorEntity) {
-        const error = new Error(
-          'FilterResolver: actorEntity is undefined in context. This is a critical error.'
-        );
-        // eslint-disable-next-line no-console
-        console.error(
-          '[CRITICAL] FilterResolver context missing actorEntity:',
-          {
-            hasCtx: !!ctx,
-            ctxKeys: ctx ? Object.keys(ctx) : [],
-            nodeType: node?.type,
-            hasDispatcher: !!dispatcher,
-            hasTrace: !!trace,
-            parentNodeType: node?.parent?.type,
-            // Enhanced debugging: show full context structure
-            contextSnapshot: ctx
-              ? {
-                  hasActorEntity: !!ctx.actorEntity,
-                  hasRuntimeCtx: !!ctx.runtimeCtx,
-                  depth: ctx.depth,
-                  // Don't log full objects to avoid circular references
-                  keys: Object.keys(ctx).filter(
-                    (k) => k !== 'dispatcher' && k !== 'cycleDetector'
-                  ),
-                }
-              : null,
-            callStack: new Error().stack,
-          }
-        );
-        throw error;
+        // Only perform expensive debugging when trace is enabled
+        if (trace) {
+          const error = new Error(
+            'FilterResolver: actorEntity is undefined in context. This is a critical error.'
+          );
+          // eslint-disable-next-line no-console
+          console.error(
+            '[CRITICAL] FilterResolver context missing actorEntity:',
+            {
+              hasCtx: !!ctx,
+              ctxKeys: ctx ? Object.keys(ctx) : [],
+              nodeType: node?.type,
+              hasDispatcher: !!dispatcher,
+              hasTrace: !!trace,
+              parentNodeType: node?.parent?.type,
+              // Enhanced debugging: show full context structure
+              contextSnapshot: ctx
+                ? {
+                    hasActorEntity: !!ctx.actorEntity,
+                    hasRuntimeCtx: !!ctx.runtimeCtx,
+                    depth: ctx.depth,
+                    // Don't log full objects to avoid circular references
+                    keys: Object.keys(ctx).filter(
+                      (k) => k !== 'dispatcher' && k !== 'cycleDetector'
+                    ),
+                  }
+                : null,
+              callStack: new Error().stack,
+            }
+          );
+          throw error;
+        }
+        // In production, fail fast with minimal overhead
+        throw new Error('FilterResolver: actorEntity is undefined in context');
       }
 
       // Additional validation for actorEntity ID
-      if (
-        !actorEntity.id ||
-        actorEntity.id === 'undefined' ||
-        typeof actorEntity.id !== 'string'
-      ) {
-        // Enhanced error detection for Entity class spread operator issue
-        const isPossibleSpreadIssue =
-          !actorEntity.id &&
-          typeof actorEntity === 'object' &&
-          actorEntity !== null &&
-          // Check if this looks like a spread Entity object that lost its getters
-          ('componentTypeIds' in actorEntity || 'components' in actorEntity);
+      // Only perform detailed validation when debugging
+      if (!actorEntity.id || actorEntity.id === 'undefined' || typeof actorEntity.id !== 'string') {
+        if (trace) {
+          // Enhanced error detection for Entity class spread operator issue
+          const isPossibleSpreadIssue =
+            !actorEntity.id &&
+            typeof actorEntity === 'object' &&
+            actorEntity !== null &&
+            // Check if this looks like a spread Entity object that lost its getters
+            ('componentTypeIds' in actorEntity || 'components' in actorEntity);
 
-        const errorMessage = isPossibleSpreadIssue
-          ? `FilterResolver: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This appears to be an Entity instance that lost its 'id' getter method, likely due to improper use of spread operator (...entity). Entity instances must preserve their getter methods.`
-          : `FilterResolver: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This is a critical error.`;
+          const errorMessage = isPossibleSpreadIssue
+            ? `FilterResolver: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This appears to be an Entity instance that lost its 'id' getter method, likely due to improper use of spread operator (...entity). Entity instances must preserve their getter methods.`
+            : `FilterResolver: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This is a critical error.`;
 
-        const error = new Error(errorMessage);
-        // eslint-disable-next-line no-console
-        console.error('[CRITICAL] FilterResolver actorEntity has invalid ID:', {
-          actorId: actorEntity.id,
-          actorIdType: typeof actorEntity.id,
-          actorKeys: Object.keys(actorEntity),
-          nodeType: node?.type,
-          parentNodeType: node?.parent?.type,
-          hasDispatcher: !!dispatcher,
-          hasTrace: !!trace,
-          isPossibleSpreadIssue,
-          // Enhanced debugging info
-          contextSnapshot: {
-            hasActorEntity: true,
-            actorEntityKeys: Object.keys(actorEntity),
-            hasComponents: !!actorEntity.components,
-            componentCount: actorEntity.components
-              ? Object.keys(actorEntity.components).length
-              : 0,
-            depth: ctx.depth,
-            contextKeys: Object.keys(ctx).filter(
-              (k) => k !== 'dispatcher' && k !== 'cycleDetector'
-            ),
-          },
-          callStack: new Error().stack,
-        });
-        throw error;
+          const error = new Error(errorMessage);
+          // eslint-disable-next-line no-console
+          console.error('[CRITICAL] FilterResolver actorEntity has invalid ID:', {
+            actorId: actorEntity.id,
+            actorIdType: typeof actorEntity.id,
+            actorKeys: Object.keys(actorEntity),
+            nodeType: node?.type,
+            parentNodeType: node?.parent?.type,
+            hasDispatcher: !!dispatcher,
+            hasTrace: !!trace,
+            isPossibleSpreadIssue,
+            // Enhanced debugging info
+            contextSnapshot: {
+              hasActorEntity: true,
+              actorEntityKeys: Object.keys(actorEntity),
+              hasComponents: !!actorEntity.components,
+              componentCount: actorEntity.components
+                ? Object.keys(actorEntity.components).length
+                : 0,
+              depth: ctx.depth,
+              contextKeys: Object.keys(ctx).filter(
+                (k) => k !== 'dispatcher' && k !== 'cycleDetector'
+              ),
+            },
+            callStack: new Error().stack,
+          });
+          throw error;
+        }
+        // In production, fail fast with minimal overhead
+        throw new Error('FilterResolver: actorEntity has invalid ID');
       }
 
       // Validate node structure
@@ -148,6 +162,25 @@ export default function createFilterResolver({
 
       const source = 'ScopeEngine.resolveFilter';
       const initialSize = parentResult.size;
+      
+      // Preprocess actor once for all filtering operations (performance optimization)
+      // This avoids reprocessing the actor for each of potentially 10,000+ entities
+      if (!processedActor && initialSize > 0) {
+        try {
+          processedActor = preprocessActorForEvaluation(actorEntity, entitiesGateway);
+          // Store in context for potential nested filter operations
+          ctx[cacheKey] = processedActor;
+        } catch (err) {
+          // If preprocessing fails, we'll fall back to per-item processing
+          if (trace) {
+            trace.addLog(
+              'warning',
+              `Failed to preprocess actor, falling back to per-item processing: ${err.message}`,
+              source
+            );
+          }
+        }
+      }
 
       if (trace) {
         trace.addLog(
@@ -188,7 +221,8 @@ export default function createFilterResolver({
               entitiesGateway,
               locationProvider,
               trace,
-              ctx.runtimeCtx // Pass runtime context for target/targets access
+              ctx.runtimeCtx, // Pass runtime context for target/targets access
+              processedActor  // Use preprocessed actor for performance
             );
             if (evalCtx && logicEval.evaluate(node.logic, evalCtx)) {
               result.add(arrayElement);
@@ -203,7 +237,8 @@ export default function createFilterResolver({
               entitiesGateway,
               locationProvider,
               trace,
-              ctx.runtimeCtx // Pass runtime context for target/targets access
+              ctx.runtimeCtx, // Pass runtime context for target/targets access
+              processedActor  // Use preprocessed actor for performance
             );
 
             if (!evalCtx) {

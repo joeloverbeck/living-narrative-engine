@@ -67,6 +67,37 @@ export class ScopeTestUtilities {
         expr: 'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}].target',
         description: 'Test scope combining step and filter resolution',
       },
+      // Complex filter expressions for comprehensive testing
+      {
+        id: 'test:deeply_nested_filter',
+        expr: 'entities(core:actor)[{"and": [{">=": [{"var": "entity.components.core:stats.level"}, 3]}, {"or": [{">=": [{"var": "entity.components.core:stats.strength"}, 20]}, {"and": [{">=": [{"var": "entity.components.core:stats.agility"}, 15]}, {"<": [{"var": "entity.components.core:health.current"}, 80]}]}]}]}]',
+        description: 'Deeply nested AND/OR filter with multiple conditions',
+      },
+      {
+        id: 'test:condition_ref_chain',
+        expr: 'entities(core:actor)[{"condition_ref": "test:complex-multilevel-condition"}]',
+        description: 'Filter using complex condition reference',
+      },
+      {
+        id: 'test:mixed_inline_and_ref',
+        expr: 'entities(core:actor)[{"and": [{"condition_ref": "test:deep-nested-condition"}, {">": [{"var": "entity.components.core:stats.level"}, 10]}]}]',
+        description: 'Mixed condition reference and inline condition',
+      },
+      {
+        id: 'test:arithmetic_filter',
+        expr: 'entities(core:actor)[{"condition_ref": "test:arithmetic-condition"}]',
+        description: 'Filter using arithmetic operations in condition',
+      },
+      {
+        id: 'test:chained_filters',
+        expr: 'entities(core:actor)[{"and": [{">": [{"var": "entity.components.core:stats.level"}, 5]}, {"<": [{"var": "entity.components.core:health.current"}, 90]}]}]',
+        description: 'Combined filter operations using AND logic',
+      },
+      {
+        id: 'test:array_filter',
+        expr: 'actor.core:inventory.items[{">": [{"var": "quantity"}, 1]}].name',
+        description: 'Filter on array elements with property access',
+      },
     ];
 
     const allScopes = [...baseScopes, ...additionalScopes];
@@ -431,6 +462,248 @@ export class ScopeTestUtilities {
 
     return allConditions;
   }
+
+  /**
+   * Creates complex test conditions specifically for complex filter testing
+   *
+   * @param {object} registry - Data registry service
+   * @returns {Array} Complex test conditions for filter expressions
+   */
+  static setupComplexFilterTestConditions(registry) {
+    const complexConditions = [
+      {
+        id: 'test:complex-multilevel-condition',
+        description: 'Complex nested condition with multiple levels',
+        logic: {
+          and: [
+            { '>': [{ var: 'entity.components.core:stats.level' }, 5] },
+            {
+              or: [
+                { '>': [{ var: 'entity.components.core:stats.strength' }, 20] },
+                { '>': [{ var: 'entity.components.core:stats.agility' }, 15] },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        id: 'test:deep-nested-condition',
+        description: 'Very deep nested condition for stress testing',
+        logic: {
+          and: [
+            { '>': [{ var: 'entity.components.core:stats.level' }, 1] },
+            {
+              or: [
+                {
+                  and: [
+                    { '>': [{ var: 'entity.components.core:health.current' }, 30] },
+                    { '<': [{ var: 'entity.components.core:health.current' }, 80] },
+                  ],
+                },
+                {
+                  and: [
+                    { '>': [{ var: 'entity.components.core:stats.strength' }, 25] },
+                    { '==': [{ var: 'entity.components.core:actor.isPlayer' }, false] },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        id: 'test:arithmetic-condition',
+        description: 'Condition using arithmetic operations',
+        logic: {
+          '>': [
+            {
+              '+': [
+                { var: 'entity.components.core:stats.strength' },
+                { var: 'entity.components.core:stats.agility' },
+              ],
+            },
+            40,
+          ],
+        },
+      },
+    ];
+
+    for (const condition of complexConditions) {
+      registry.store('conditions', condition.id, condition);
+    }
+
+    return complexConditions;
+  }
+
+  /**
+   * Measures complex filter performance with detailed metrics
+   *
+   * @param {string} scopeId - Scope ID to test
+   * @param {object} testContext - Test context with actor and game state
+   * @param {object} dependencies - Required services
+   * @param {object} [options] - Performance measurement options
+   * @param {number} [options.iterations] - Number of iterations to run
+   * @param {boolean} [options.measureMemory] - Whether to measure memory usage
+   * @param {boolean} [options.warmup] - Whether to run warmup iterations
+   * @returns {Promise<object>} Detailed performance metrics
+   */
+  static async measureComplexFilterPerformance(
+    scopeId,
+    testContext,
+    dependencies,
+    options = {}
+  ) {
+    const {
+      iterations = 5,
+      measureMemory = true,
+      warmup = true,
+    } = options;
+
+    const results = [];
+    let totalTime = 0;
+    let successCount = 0;
+
+    // Warmup iterations to stabilize performance
+    if (warmup) {
+      for (let i = 0; i < 2; i++) {
+        try {
+          await this.resolveScopeE2E(
+            scopeId,
+            testContext.actor,
+            testContext.gameContext,
+            dependencies
+          );
+        } catch (error) {
+          // Ignore warmup errors
+        }
+      }
+    }
+
+    // Performance measurement iterations
+    for (let i = 0; i < iterations; i++) {
+      const startTime = performance.now();
+      const startMemory = measureMemory ? process.memoryUsage() : null;
+
+      try {
+        const result = await this.resolveScopeE2E(
+          scopeId,
+          testContext.actor,
+          testContext.gameContext,
+          dependencies
+        );
+
+        const endTime = performance.now();
+        const endMemory = measureMemory ? process.memoryUsage() : null;
+        const duration = endTime - startTime;
+        const memoryUsed = measureMemory ? endMemory.heapUsed - startMemory.heapUsed : 0;
+
+        results.push({
+          iteration: i + 1,
+          duration,
+          memoryUsed,
+          resultSize: result.size,
+          success: true,
+          scopeId,
+        });
+
+        totalTime += duration;
+        successCount++;
+      } catch (error) {
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+
+        results.push({
+          iteration: i + 1,
+          duration,
+          memoryUsed: 0,
+          resultSize: 0,
+          success: false,
+          error: error.message,
+          scopeId,
+        });
+
+        totalTime += duration;
+      }
+    }
+
+    // Calculate comprehensive metrics
+    const successfulResults = results.filter(r => r.success);
+    const times = successfulResults.map(r => r.duration);
+    const memoryUsages = measureMemory ? successfulResults.map(r => r.memoryUsed) : [];
+
+    return {
+      scopeId,
+      totalIterations: iterations,
+      successCount,
+      failureCount: iterations - successCount,
+      successRate: (successCount / iterations) * 100,
+      
+      // Time metrics
+      totalTime,
+      averageTime: totalTime / iterations,
+      fastestTime: times.length > 0 ? Math.min(...times) : 0,
+      slowestTime: times.length > 0 ? Math.max(...times) : 0,
+      timeStandardDeviation: times.length > 0 ? this._calculateStandardDeviation(times) : 0,
+      
+      // Memory metrics (if measured)
+      averageMemoryUsage: measureMemory && memoryUsages.length > 0 ? 
+        memoryUsages.reduce((sum, mem) => sum + mem, 0) / memoryUsages.length : 0,
+      maxMemoryUsage: measureMemory && memoryUsages.length > 0 ? Math.max(...memoryUsages) : 0,
+      minMemoryUsage: measureMemory && memoryUsages.length > 0 ? Math.min(...memoryUsages) : 0,
+      
+      // Result size metrics
+      averageResultSize: successfulResults.length > 0 ?
+        successfulResults.reduce((sum, r) => sum + r.resultSize, 0) / successfulResults.length : 0,
+      
+      // Raw results for detailed analysis
+      results,
+      
+      // Performance classification
+      performanceClass: this._classifyPerformance(totalTime / iterations),
+    };
+  }
+
+  /**
+   * Calculates standard deviation for performance analysis
+   *
+   * @param values
+   * @private
+   */
+  static _calculateStandardDeviation(values) {
+    if (values.length === 0) return 0;
+    
+    const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+    const squaredDifferences = values.map(val => Math.pow(val - mean, 2));
+    const meanSquaredDiff = squaredDifferences.reduce((sum, val) => sum + val, 0) / values.length;
+    
+    return Math.sqrt(meanSquaredDiff);
+  }
+
+  /**
+   * Classifies performance based on average time
+   *
+   * @param averageTime
+   * @private
+   */
+  static _classifyPerformance(averageTime) {
+    if (averageTime < 10) return 'Excellent';
+    if (averageTime < 50) return 'Good';
+    if (averageTime < 200) return 'Acceptable';
+    if (averageTime < 500) return 'Poor';
+    return 'Critical';
+  }
+}
+
+/**
+ * Helper function to measure memory usage
+ * Works in both Node.js and browser environments
+ */
+function measureMemory() {
+  if (typeof process !== 'undefined' && process.memoryUsage) {
+    return process.memoryUsage();
+  }
+  // Fallback for browser environments
+  return { heapUsed: 0, heapTotal: 0, external: 0, arrayBuffers: 0 };
 }
 
 export default ScopeTestUtilities;

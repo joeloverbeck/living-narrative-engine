@@ -352,7 +352,7 @@ describe('SpeechPatternsDisplayEnhancer', () => {
       expect(parsed.metadata).toHaveProperty('characterName', 'Test Character');
       expect(parsed.metadata).toHaveProperty('exportedAt');
       expect(parsed.metadata).toHaveProperty('totalPatterns', 3);
-      expect(parsed.metadata).toHaveProperty('version', '1.0.0');
+      expect(parsed.metadata).toHaveProperty('version', '2.0.0');
     });
 
     it('should preserve all pattern fields in JSON', () => {

@@ -281,10 +281,10 @@ class ScopeEngine extends IScopeEngine {
 
     // Generate key for cycle detection
     let nodeKey;
-    if (node.type === 'Union') {
-      // For union nodes, create a unique key based on the node object reference
-      // This prevents false cycle detection when multiple unions are nested
-      nodeKey = `Union:${Math.random().toString(36).substr(2, 9)}`;
+    if (node.type === 'Union' || node.type === 'Filter') {
+      // For union and filter nodes, create a unique key based on the node object reference
+      // This prevents false cycle detection when multiple nodes of the same type are nested
+      nodeKey = `${node.type}:${Math.random().toString(36).substr(2, 9)}`;
     } else {
       nodeKey = `${node.type}:${node.field || ''}:${node.param || ''}`;
     }

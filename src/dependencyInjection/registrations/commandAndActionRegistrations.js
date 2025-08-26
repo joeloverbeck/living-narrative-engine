@@ -84,10 +84,8 @@ export function registerCommandAndAction(container) {
   // --- Scope Registry ---
   // Must be registered before ActionDiscoveryService
   registrar.singletonFactory(tokens.IScopeRegistry, (c) => {
-    return new ScopeRegistry({
-      logger: c.resolve(tokens.ILogger),
-      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-    });
+    // ScopeRegistry constructor takes no parameters - it's a simple registry
+    return new ScopeRegistry();
   });
 
   // --- Action Index ---
