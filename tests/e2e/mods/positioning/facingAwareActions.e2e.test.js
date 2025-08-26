@@ -46,6 +46,9 @@ describe('Facing-aware action availability E2E', () => {
     actionServiceFacade.clearMockData();
   });
 
+  /**
+   *
+   */
   async function setupTestEntities() {
     // Create player entity
     await entityTestBed.createEntity('actor', {

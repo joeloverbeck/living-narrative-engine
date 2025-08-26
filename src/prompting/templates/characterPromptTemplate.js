@@ -27,6 +27,8 @@ export const CHARACTER_PROMPT_TEMPLATE = `<task_definition>
 {perceptionLogContent}
 </perception_log>
 
+{thoughtsVoiceGuidance}
+
 {thoughtsSection}
 
 {notesSection}

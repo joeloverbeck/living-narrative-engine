@@ -234,20 +234,21 @@ export function registerRenderers(registrar, logger) {
     logger
   );
 
-  registerWithLog(
-    registrar,
-    tokens.EntityLifecycleMonitor,
-    (c) =>
-      new EntityLifecycleMonitor({
-        logger: c.resolve(tokens.ILogger),
-        documentContext: c.resolve(tokens.IDocumentContext),
-        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        domElementFactory: c.resolve(tokens.DomElementFactory),
-        entityManager: c.resolve(tokens.IEntityManager),
-      }),
-    { lifecycle: 'singletonFactory' },
-    logger
-  );
+  // EntityLifecycleMonitor - DISABLED FOR PERFORMANCE
+  // registerWithLog(
+  //   registrar,
+  //   tokens.EntityLifecycleMonitor,
+  //   (c) =>
+  //     new EntityLifecycleMonitor({
+  //       logger: c.resolve(tokens.ILogger),
+  //       documentContext: c.resolve(tokens.IDocumentContext),
+  //       validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+  //       domElementFactory: c.resolve(tokens.DomElementFactory),
+  //       entityManager: c.resolve(tokens.IEntityManager),
+  //     }),
+  //   { lifecycle: 'singletonFactory' },
+  //   logger
+  // );
 
   registerWithLog(
     registrar,
@@ -464,7 +465,7 @@ export function registerFacadeAndManager(registrar, logger) {
         tokens.SaveGameUI,
         tokens.LoadGameUI,
         tokens.LlmSelectionModal,
-        tokens.EntityLifecycleMonitor,
+        // tokens.EntityLifecycleMonitor, // DISABLED FOR PERFORMANCE
       ],
     },
     logger

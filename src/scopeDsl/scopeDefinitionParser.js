@@ -49,7 +49,7 @@ function _assembleScopes(rawLines, filePath) {
   let currentScope = null;
 
   for (const line of rawLines) {
-    const scopeMatch = line.match(/^(\w+:\w+)\s*:=\s*(.*)$/);
+    const scopeMatch = line.match(/^([\w_-]+:[\w_-]+)\s*:=\s*(.*)$/);
     if (scopeMatch) {
       if (currentScope) {
         scopes.push(currentScope);

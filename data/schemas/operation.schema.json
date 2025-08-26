@@ -139,6 +139,9 @@
         },
         {
           "$ref": "./operations/regenerateDescription.schema.json"
+        },
+        {
+          "$ref": "./operations/atomicModifyComponent.schema.json"
         }
       ]
     }

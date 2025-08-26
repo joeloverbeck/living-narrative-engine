@@ -456,6 +456,27 @@ class JsonLogicEvaluationService extends BaseService {
       );
     }
   }
+
+  /**
+   * Removes a custom operation from the underlying json-logic-js instance.
+   * Used primarily for test cleanup to prevent operator contamination.
+   *
+   * @param {string} name - The name of the custom operator to remove.
+   */
+  removeOperation(name) {
+    try {
+      jsonLogic.rm_operation(name);
+      this.#logger.debug(
+        `Custom JSON Logic operation "${name}" removed successfully.`
+      );
+    } catch (error) {
+      this.#logger.error(
+        `Failed to remove custom JSON Logic operation "${name}":`,
+        error
+      );
+      // Don't throw - this is cleanup code
+    }
+  }
 }
 
 export default JsonLogicEvaluationService;

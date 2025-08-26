@@ -10,6 +10,7 @@ import {
   expect,
   jest,
 } from '@jest/globals';
+import { clearEntityCache } from '../../../src/scopeDsl/core/entityHelpers.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 import { ActionPipelineOrchestrator } from '../../../src/actions/actionPipelineOrchestrator.js';
@@ -53,6 +54,10 @@ describe('Scope Integration Tests', () => {
   let gameDataRepository;
 
   beforeEach(() => {
+    // Comprehensive state cleanup to prevent test pollution
+    clearEntityCache(); // Clear entity cache from entityHelpers.js
+    jest.clearAllMocks(); // Clear all Jest mocks
+    
     logger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -224,7 +229,7 @@ describe('Scope Integration Tests', () => {
     jest.restoreAllMocks();
   });
 
-  describe('environment scope', () => {
+  describe('potential_leaders scope (used by follow action)', () => {
     it('should resolve entities in same location for follow action', async () => {
       const actorId = 'actor1';
       const targetId = 'target1';
@@ -331,6 +336,24 @@ describe('Scope Integration Tests', () => {
       const followActions = result.actions.filter(
         (action) => action.id === 'core:follow'
       );
+      
+      // Debug logging for troubleshooting
+      if (followActions.length !== 0) {
+        console.log('DEBUG - Unexpected follow actions found:');
+        console.log('Available actions:', result.actions.map(a => ({
+          id: a.id, 
+          targetId: a.params?.targetId,
+          target: a.target
+        })));
+        console.log('Actor location:', actorEntity.components[POSITION_COMPONENT_ID]);
+        console.log('Target location:', entityManager.getEntityInstance(targetId)?.components[POSITION_COMPONENT_ID]);
+        console.log('Follow actions:', followActions.map(a => ({
+          id: a.id,
+          targetId: a.params?.targetId,
+          target: a.target
+        })));
+      }
+      
       expect(followActions.length).toBe(0);
     });
   });

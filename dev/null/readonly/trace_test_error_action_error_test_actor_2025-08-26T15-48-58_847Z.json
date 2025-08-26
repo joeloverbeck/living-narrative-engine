@@ -1,0 +1,38 @@
+{
+  "timestamp": "2025-08-26T15:48:58.847Z",
+  "outputDirectory": "/dev/null/readonly",
+  "trace": {
+    "metadata": {
+      "actionId": "test:error_action",
+      "actorId": "error_test_actor",
+      "traceType": "execution",
+      "createdAt": "2025-08-26T15:48:58.847Z",
+      "version": "1.0"
+    },
+    "turnAction": {
+      "actionDefinitionId": "test:error_action",
+      "commandString": "test command",
+      "parameters": {}
+    },
+    "components": {},
+    "prerequisites": [],
+    "targets": [],
+    "execution": {
+      "startTime": 1756223338747,
+      "endTime": 1756223338847,
+      "duration": 100,
+      "status": "success",
+      "result": {
+        "success": true,
+        "error": null
+      }
+    }
+  },
+  "metadata": {
+    "actionId": "test:error_action",
+    "actorId": "error_test_actor",
+    "isComplete": true,
+    "hasError": false,
+    "generatedBy": "Living Narrative Engine Action Tracing System"
+  }
+}

@@ -11,30 +11,69 @@
       "type": "QUERY_COMPONENT",
       "comment": "Get actor's sitting position info",
       "parameters": {
-        "entity_id": "{event.payload.actorId}",
+        "entity_ref": "{event.payload.actorId}",
         "component_type": "positioning:sitting_on",
         "result_variable": "sittingInfo"
       }
     },
     {
-      "type": "SET_VARIABLE",
-      "comment": "Build the field path for the specific spot index",
+      "type": "IF",
+      "comment": "Clear spot 0 if that's where actor was sitting",
       "parameters": {
-        "variable_name": "spotFieldPath",
-        "value": {
-          "cat": ["spots.", { "var": "context.sittingInfo.spot_index" }]
-        }
+        "condition": { "==": [{ "var": "context.sittingInfo.spot_index" }, 0] },
+        "then_actions": [
+          {
+            "type": "MODIFY_COMPONENT",
+            "comment": "Clear spot 0",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "positioning:allows_sitting",
+              "field": "spots.0",
+              "mode": "set",
+              "value": null
+            }
+          }
+        ]
       }
     },
     {
-      "type": "MODIFY_COMPONENT",
-      "comment": "Clear the spot in furniture array using dot notation",
+      "type": "IF",
+      "comment": "Clear spot 1 if that's where actor was sitting",
       "parameters": {
-        "entity_ref": "target",
-        "component_type": "positioning:allows_sitting",
-        "field": "{context.spotFieldPath}",
-        "mode": "set",
-        "value": null
+        "condition": { "==": [{ "var": "context.sittingInfo.spot_index" }, 1] },
+        "then_actions": [
+          {
+            "type": "MODIFY_COMPONENT",
+            "comment": "Clear spot 1",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "positioning:allows_sitting",
+              "field": "spots.1",
+              "mode": "set",
+              "value": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Clear spot 2 if that's where actor was sitting",
+      "parameters": {
+        "condition": { "==": [{ "var": "context.sittingInfo.spot_index" }, 2] },
+        "then_actions": [
+          {
+            "type": "MODIFY_COMPONENT",
+            "comment": "Clear spot 2",
+            "parameters": {
+              "entity_ref": "target",
+              "component_type": "positioning:allows_sitting",
+              "field": "spots.2",
+              "mode": "set",
+              "value": null
+            }
+          }
+        ]
       }
     },
     {

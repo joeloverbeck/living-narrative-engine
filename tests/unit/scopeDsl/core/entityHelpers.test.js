@@ -2,9 +2,14 @@ import { jest } from '@jest/globals';
 import {
   getOrBuildComponents,
   createEvaluationContext,
+  clearEntityCache,
 } from '../../../../src/scopeDsl/core/entityHelpers.js';
 
 describe('entityHelpers', () => {
+  beforeEach(() => {
+    // Clear entity cache before each test to ensure test isolation
+    clearEntityCache();
+  });
   describe('getOrBuildComponents', () => {
     it('returns null when entity is not found', () => {
       const gateway = { getEntityInstance: jest.fn(() => null) };

@@ -45,6 +45,11 @@ class OperationInterpreter extends BaseService {
       this.#logger,
       'OperationInterpreter.execute'
     );
+    
+    // DEBUG: Quick check
+    if (opType === 'ATOMIC_MODIFY_COMPONENT') {
+      console.log('🔬 ATOMIC_MODIFY_COMPONENT received');
+    }
     if (!opType) {
       this.#logger.error(
         'OperationInterpreter received invalid operation object (missing type).',

@@ -117,25 +117,20 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
     };
 
     try {
-      // Layer 1: Schema validation (existing functionality)
-      const schemaResult = await super.validateAndSanitizeResponse(input);
-      const schemaValidationTime = Date.now() - startTime;
-
-      result.context.layers.schema = {
-        duration: schemaValidationTime,
-        isValid: schemaResult ? schemaResult.isValid : false,
+      // Layer 1: Character definition structural validation (NOT speech patterns response validation)
+      const structuralStart = Date.now();
+      const structuralResult = this.#validateCharacterDefinitionStructure(input);
+      result.context.layers.structural = {
+        duration: Date.now() - structuralStart,
+        isValid: structuralResult.isValid,
       };
 
-      if (!schemaResult || !schemaResult.isValid) {
-        if (schemaResult && schemaResult.errors) {
-          result.errors.push(...schemaResult.errors);
-        } else {
-          result.errors.push('Schema validation failed');
-        }
+      if (!structuralResult.isValid) {
+        result.errors.push(...structuralResult.errors);
         result.isValid = false;
       }
 
-      // Continue with additional layers even if schema validation fails
+      // Continue with additional layers even if structural validation fails
       // to provide comprehensive feedback
 
       // Layer 2: Semantic validation (if we have character data)
@@ -216,6 +211,99 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
         },
       };
     }
+  }
+
+  /**
+   * Validate character definition structure (for INPUT validation, not response validation)
+   *
+   * @private
+   * @param {object} characterData - Character definition data
+   * @returns {object} Validation result
+   */
+  #validateCharacterDefinitionStructure(characterData) {
+    const errors = [];
+
+    // Check if it's an object
+    if (!characterData || typeof characterData !== 'object') {
+      errors.push('Character definition must be a JSON object');
+      return { isValid: false, errors };
+    }
+
+    // Support both formats:
+    // 1. New format: { "components": { "core:name": {...} } }
+    // 2. Legacy format: { "core:name": {...} }
+    const componentsToCheck = characterData.components || characterData;
+
+    // Check for character components (not speech pattern response structure)
+    const componentKeys = Object.keys(componentsToCheck).filter((key) =>
+      key.includes(':')
+    );
+
+    if (componentKeys.length === 0) {
+      errors.push(
+        'No character components found. Expected components like core:name, core:personality, etc.'
+      );
+      return { isValid: false, errors };
+    }
+
+    // Validate core:name component if present (this was the main issue)
+    const nameComponent = componentsToCheck['core:name'];
+    if (nameComponent) {
+      const characterName = this.#extractCharacterNameFromComponent(nameComponent);
+      if (!characterName) {
+        // This should NOT be treated as an error - provide suggestion instead
+        errors.push(
+          'Character name component exists but does not contain a valid name. Expected text, name, or value field.'
+        );
+      } else if (characterName.trim().length === 0) {
+        errors.push('Character name cannot be empty');
+      }
+    }
+
+    // NOTE: We do NOT validate for speechPatterns array here because this is CHARACTER INPUT validation
+    // The original bug was treating character definitions as if they were speech pattern responses
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      componentCount: componentKeys.length,
+      characterName: nameComponent ? this.#extractCharacterNameFromComponent(nameComponent) : null,
+    };
+  }
+
+  /**
+   * Extract character name from core:name component (same logic as controller)
+   *
+   * @private
+   * @param {object} nameComponent - The core:name component data
+   * @returns {string|null} Extracted character name or null if not found
+   */
+  #extractCharacterNameFromComponent(nameComponent) {
+    if (!nameComponent || typeof nameComponent !== 'object') {
+      return null;
+    }
+
+    // Try different common field names
+    if (nameComponent.text && typeof nameComponent.text === 'string') {
+      return nameComponent.text.trim();
+    }
+
+    if (nameComponent.name && typeof nameComponent.name === 'string') {
+      return nameComponent.name.trim();
+    }
+
+    if (nameComponent.value && typeof nameComponent.value === 'string') {
+      return nameComponent.value.trim();
+    }
+
+    // Check for nested structures
+    if (nameComponent.personal && nameComponent.personal.firstName) {
+      const firstName = nameComponent.personal.firstName;
+      const lastName = nameComponent.personal.lastName || '';
+      return `${firstName} ${lastName}`.trim();
+    }
+
+    return null;
   }
 
   /**
@@ -586,8 +674,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       return result; // Handled by completeness validation
     }
 
-    const characterName =
-      nameComponent.text || nameComponent.name || nameComponent.value;
+    const characterName = this.#extractCharacterNameFromComponent(nameComponent);
     if (!characterName) {
       result.warnings.push(
         'Character name component exists but lacks a clear name value'

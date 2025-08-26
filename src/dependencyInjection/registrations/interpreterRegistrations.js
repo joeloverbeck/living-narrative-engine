@@ -130,6 +130,7 @@ export function registerInterpreters(container) {
     registry.register('UNEQUIP_CLOTHING', bind(tokens.UnequipClothingHandler));
     registry.register('LOCK_MOVEMENT', bind(tokens.LockMovementHandler));
     registry.register('UNLOCK_MOVEMENT', bind(tokens.UnlockMovementHandler));
+    registry.register('ATOMIC_MODIFY_COMPONENT', bind(tokens.AtomicModifyComponentHandler));
 
     return registry;
   });

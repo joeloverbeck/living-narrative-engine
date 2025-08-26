@@ -48,7 +48,7 @@ export class DomUiFacade {
    * @param {SaveGameUI} deps.saveGameUI - The Save Game UI component.
    * @param {LoadGameUI} deps.loadGameUI - The Load Game UI component.
    * @param {LlmSelectionModal} deps.llmSelectionModal - The LLM Selection Modal component.
-   * @param {EntityLifecycleMonitor} deps.entityLifecycleMonitor - The Entity Lifecycle Monitor component.
+   * @param {EntityLifecycleMonitor} [deps.entityLifecycleMonitor] - The Entity Lifecycle Monitor component (optional, disabled for performance).
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
@@ -62,7 +62,7 @@ export class DomUiFacade {
     saveGameUI,
     loadGameUI,
     llmSelectionModal,
-    entityLifecycleMonitor,
+    entityLifecycleMonitor = null, // OPTIONAL - disabled for performance
   }) {
     // Basic validation to ensure all renderers are provided
     if (
@@ -113,12 +113,13 @@ export class DomUiFacade {
       throw new Error(
         'DomUiFacade: Missing or invalid llmSelectionModal dependency.'
       );
+    // EntityLifecycleMonitor is now optional (disabled for performance)
     if (
-      !entityLifecycleMonitor ||
+      entityLifecycleMonitor &&
       typeof entityLifecycleMonitor.clearEvents !== 'function'
     )
       throw new Error(
-        'DomUiFacade: Missing or invalid entityLifecycleMonitor dependency.'
+        'DomUiFacade: Invalid entityLifecycleMonitor dependency.'
       );
 
     this.#actionButtonsRenderer = actionButtonsRenderer;
@@ -227,7 +228,7 @@ export class DomUiFacade {
   /**
    * Provides the EntityLifecycleMonitor instance.
    *
-   * @returns {EntityLifecycleMonitor} Monitor for entity lifecycle events.
+   * @returns {EntityLifecycleMonitor|null} Monitor for entity lifecycle events, or null if disabled.
    */
   get entityLifecycleMonitor() {
     return this.#entityLifecycleMonitor;

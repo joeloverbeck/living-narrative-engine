@@ -225,24 +225,20 @@ describe('SpeechPatternsGenerator', () => {
         expect(mockEventBus.dispatch).toHaveBeenCalledTimes(2);
         expect(mockEventBus.dispatch).toHaveBeenNthCalledWith(
           1,
+          expect.any(String), // Event name as first argument
           expect.objectContaining({
-            type: expect.any(String),
-            payload: expect.objectContaining({
-              characterData: expect.any(Object),
-              options: expect.any(Object),
-              timestamp: expect.any(String),
-            }),
+            characterData: expect.any(Object),
+            options: expect.any(Object),
+            timestamp: expect.any(String),
           })
         );
         expect(mockEventBus.dispatch).toHaveBeenNthCalledWith(
           2,
+          expect.any(String), // Event name as first argument
           expect.objectContaining({
-            type: expect.any(String),
-            payload: expect.objectContaining({
               result: expect.any(Object),
               processingTime: expect.any(Number),
               timestamp: expect.any(String),
-            }),
           })
         );
       } catch (error) {
@@ -306,11 +302,9 @@ describe('SpeechPatternsGenerator', () => {
       // Verify LLM was called and processing completed
       expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalled();
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        expect.any(String),
         expect.objectContaining({
-          type: expect.any(String),
-          payload: expect.objectContaining({
-            result: expect.any(Object),
-          }),
+          result: expect.any(Object),
         })
       );
     });
@@ -365,11 +359,9 @@ describe('SpeechPatternsGenerator', () => {
 
       expect(mockLogger.error).toHaveBeenCalled();
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        expect.any(String),
         expect.objectContaining({
-          type: expect.any(String),
-          payload: expect.objectContaining({
-            error: expect.any(String),
-          }),
+          error: expect.any(String),
         })
       );
     });
@@ -382,11 +374,9 @@ describe('SpeechPatternsGenerator', () => {
       ).rejects.toThrow('Failed to generate speech patterns');
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        expect.any(String),
         expect.objectContaining({
-          type: expect.any(String),
-          payload: expect.objectContaining({
-            error: expect.any(String),
-          }),
+          error: expect.any(String),
         })
       );
     });
@@ -404,11 +394,9 @@ describe('SpeechPatternsGenerator', () => {
       );
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+        expect.any(String),
         expect.objectContaining({
-          type: expect.any(String),
-          payload: expect.objectContaining({
-            error: expect.any(String),
-          }),
+          error: expect.any(String),
         })
       );
     });
@@ -652,11 +640,9 @@ describe('SpeechPatternsGenerator', () => {
 
         // Verify that validation passed by checking event dispatching
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'core:speech_patterns_generation_started',
           expect.objectContaining({
-            type: 'core:speech_patterns_generation_started',
-            payload: expect.objectContaining({
-              characterData: nestedCharacterData,
-            }),
+            characterData: nestedCharacterData,
           })
         );
       });
@@ -742,24 +728,20 @@ describe('SpeechPatternsGenerator', () => {
 
         // Verify start event was dispatched with correct type
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'core:speech_patterns_generation_started',
           expect.objectContaining({
-            type: 'core:speech_patterns_generation_started',
-            payload: expect.objectContaining({
-              characterData,
-              timestamp: expect.any(String),
-            }),
+            characterData,
+            timestamp: expect.any(String),
           })
         );
 
         // Verify success event was dispatched with correct type
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'core:speech_patterns_generation_completed',
           expect.objectContaining({
-            type: 'core:speech_patterns_generation_completed',
-            payload: expect.objectContaining({
-              result: expect.any(Object),
-              processingTime: expect.any(Number),
-              timestamp: expect.any(String),
-            }),
+            result: expect.any(Object),
+            processingTime: expect.any(Number),
+            timestamp: expect.any(String),
           })
         );
       });
@@ -778,13 +760,11 @@ describe('SpeechPatternsGenerator', () => {
 
         // Verify failure event was dispatched with correct type
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
+          'core:speech_patterns_generation_failed',
           expect.objectContaining({
-            type: 'core:speech_patterns_generation_failed',
-            payload: expect.objectContaining({
-              error: expect.any(String),
-              processingTime: expect.any(Number),
-              timestamp: expect.any(String),
-            }),
+            error: expect.any(String),
+            processingTime: expect.any(Number),
+            timestamp: expect.any(String),
           })
         );
       });
@@ -796,12 +776,15 @@ describe('SpeechPatternsGenerator', () => {
 
         // Check that no events were dispatched with undefined types
         const dispatchCalls = mockEventBus.dispatch.mock.calls;
-        dispatchCalls.forEach(([eventObject]) => {
-          expect(eventObject).toBeDefined();
-          expect(eventObject.type).toBeDefined();
-          expect(eventObject.type).not.toBe('[object Object]');
-          expect(typeof eventObject.type).toBe('string');
-          expect(eventObject.type.length).toBeGreaterThan(0);
+        dispatchCalls.forEach(([eventName, payload]) => {
+          // First argument should be the event name string
+          expect(eventName).toBeDefined();
+          expect(typeof eventName).toBe('string');
+          expect(eventName).not.toBe('[object Object]');
+          expect(eventName.length).toBeGreaterThan(0);
+          // Second argument should be the payload object
+          expect(payload).toBeDefined();
+          expect(typeof payload).toBe('object');
         });
       });
     });

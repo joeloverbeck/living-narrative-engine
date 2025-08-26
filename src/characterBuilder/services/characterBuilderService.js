@@ -79,6 +79,10 @@ export const CHARACTER_BUILDER_EVENTS = {
   SPEECH_PATTERNS_GENERATION_COMPLETED:
     'core:speech_patterns_generation_completed',
   SPEECH_PATTERNS_GENERATION_FAILED: 'core:speech_patterns_generation_failed',
+  SPEECH_PATTERNS_CACHE_HIT: 'core:speech_patterns_cache_hit',
+  SPEECH_PATTERNS_GENERATION_RETRY: 'core:speech_patterns_generation_retry',
+  // Circuit breaker events
+  CIRCUIT_BREAKER_OPENED: 'core:circuit_breaker_opened',
   // Cache events
   CACHE_INITIALIZED: 'core:cache_initialized',
   CACHE_HIT: 'core:cache_hit',

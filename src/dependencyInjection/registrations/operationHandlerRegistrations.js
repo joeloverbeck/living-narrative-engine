@@ -38,6 +38,7 @@ import UnequipClothingHandler from '../../logic/operationHandlers/unequipClothin
 import LockMovementHandler from '../../logic/operationHandlers/lockMovementHandler.js';
 import UnlockMovementHandler from '../../logic/operationHandlers/unlockMovementHandler.js';
 import RegenerateDescriptionHandler from '../../logic/operationHandlers/regenerateDescriptionHandler.js';
+import AtomicModifyComponentHandler from '../../logic/operationHandlers/atomicModifyComponentHandler.js';
 import jsonLogic from 'json-logic-js';
 
 /**
@@ -383,6 +384,16 @@ export function registerOperationHandlers(registrar) {
           logger: c.resolve(tokens.ILogger),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
           bodyDescriptionComposer: c.resolve(tokens.BodyDescriptionComposer),
+        }),
+    ],
+    [
+      tokens.AtomicModifyComponentHandler,
+      AtomicModifyComponentHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
   ];

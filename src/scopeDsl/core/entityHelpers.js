@@ -87,9 +87,8 @@ export function createEvaluationContext(
   // Fast path: null/undefined items
   if (item == null) return null;
 
-  // Fast path: Skip expensive validation in production (assume caller validated)
-  // Only validate in development or when trace is enabled
-  if (trace && !actorEntity) {
+  // Critical validation - always check for undefined actor (programming error)
+  if (!actorEntity) {
     const error = new Error(
       'createEvaluationContext: actorEntity is undefined. This should never happen during scope evaluation.'
     );
@@ -109,12 +108,11 @@ export function createEvaluationContext(
     throw error;
   }
 
-  // Additional validation only when debugging
+  // Critical validation - always check for invalid actor ID (programming error)
   if (
-    trace &&
-    (!actorEntity.id ||
-      actorEntity.id === 'undefined' ||
-      typeof actorEntity.id !== 'string')
+    !actorEntity.id ||
+    actorEntity.id === 'undefined' ||
+    typeof actorEntity.id !== 'string'
   ) {
     const error = new Error(
       `createEvaluationContext: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This should never happen.`
@@ -157,11 +155,20 @@ export function createEvaluationContext(
 
       // Try as entity first (primary path)
       entity = gateway.getEntityInstance(item);
+      let resolvedHow = null;
 
-      if (!entity) {
+      if (entity) {
+        resolvedHow = 'resolved as entity';
+      } else {
         // Fallback: component lookup or basic entity
         const components = gateway.getItemComponents?.(item);
-        entity = components ? { id: item, components } : { id: item };
+        if (components) {
+          entity = { id: item, components };
+          resolvedHow = 'resolved via component lookup';
+        } else {
+          entity = { id: item };
+          resolvedHow = 'created as basic entity';
+        }
       }
 
       // Cache the result (with simple LRU eviction)
@@ -176,10 +183,11 @@ export function createEvaluationContext(
         }
       }
       entityCache.set(cacheKey, entity);
-    }
 
-    if (trace) {
-      trace.addLog('debug', `Item ${item} resolved`, 'createEvaluationContext');
+      // Log how the entity was resolved
+      if (trace) {
+        trace.addLog('debug', `Item ${item} ${resolvedHow}`, 'createEvaluationContext');
+      }
     }
   } else if (item && typeof item === 'object') {
     entity = item;
@@ -284,14 +292,19 @@ export function createEvaluationContext(
     return entity;
   }
 
-  // Fast path: Skip component addition if already present
-  if (!entity.components && entity.componentTypeIds) {
+  // Process entity if it needs components or has Map-based components that need conversion
+  if ((!entity.components && entity.componentTypeIds) || (entity.components instanceof Map)) {
     entity = addComponentsToEntity(entity, entity.id || item);
   }
 
   // Use pre-processed actor if available (critical optimization)
   // Avoids reprocessing actor for each of potentially 10,000+ entities
-  const actor = processedActor || actorEntity;
+  let actor = processedActor || actorEntity;
+  
+  // If not pre-processed, ensure actor has components built or Map components converted
+  if (!processedActor && ((!actor.components && actor.componentTypeIds) || (actor.components instanceof Map))) {
+    actor = addComponentsToEntity(actor, actor.id);
+  }
 
   const location = locationProvider.getLocation();
 

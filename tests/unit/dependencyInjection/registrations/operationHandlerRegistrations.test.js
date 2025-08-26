@@ -67,6 +67,7 @@ describe('registerOperationHandlers', () => {
       tokens.LockMovementHandler,
       tokens.UnlockMovementHandler,
       tokens.RegenerateDescriptionHandler,
+      tokens.AtomicModifyComponentHandler,
     ];
 
     handlerTokens.forEach((token) => {
@@ -829,6 +830,25 @@ describe('registerOperationHandlers', () => {
       expect(handler.constructor.name).toBe('UnlockMovementHandler');
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.ISafeEventDispatcher
+      );
+    });
+
+    it('creates AtomicModifyComponentHandler with correct dependencies', () => {
+      registerOperationHandlers(registrar);
+
+      const factoryCall = registerSpy.mock.calls.find(
+        (c) => c[0] === tokens.AtomicModifyComponentHandler
+      );
+      const factory = factoryCall[1];
+
+      const handler = factory(mockContainer);
+
+      expect(handler).toBeDefined();
+      expect(handler.constructor.name).toBe('AtomicModifyComponentHandler');
+      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
       expect(mockContainer.resolve).toHaveBeenCalledWith(
         tokens.ISafeEventDispatcher
       );

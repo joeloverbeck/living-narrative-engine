@@ -242,6 +242,7 @@ describe('filterResolver', () => {
       });
 
       it('should handle entities without componentTypeIds', () => {
+        // Mock getEntityInstance to return entity without componentTypeIds
         entitiesGateway.getEntityInstance.mockReturnValue({ id: 'entity1' });
         const parentResult = new Set(['entity1']);
         dispatcher.resolve.mockReturnValue(parentResult);
@@ -261,10 +262,13 @@ describe('filterResolver', () => {
         const result = resolver.resolve(node, ctx);
 
         expect(result.has('entity1')).toBe(true);
+        // The production code will add an empty components object for entities without componentTypeIds
         expect(logicEval.evaluate).toHaveBeenCalledWith(
           node.logic,
           expect.objectContaining({
-            entity: { id: 'entity1' },
+            entity: expect.objectContaining({
+              id: 'entity1',
+            }),
           })
         );
       });
@@ -406,10 +410,23 @@ describe('filterResolver', () => {
 
     describe('edge cases', () => {
       it('should use entitiesGateway.getComponentData when entity.getComponentData is not available', () => {
-        entitiesGateway.getEntityInstance.mockReturnValue({
-          id: 'entity1',
-          componentTypeIds: ['core:name'],
-          // No getComponentData method
+        // Import and clear entity cache to prevent interference from previous tests
+        const { clearEntityCache } = require('../../../../src/scopeDsl/core/entityHelpers.js');
+        clearEntityCache();
+        
+        // Clear previous calls and reset the mock
+        entitiesGateway.getComponentData.mockClear();
+        
+        // Override the default mock to return entity without getComponentData method
+        entitiesGateway.getEntityInstance.mockImplementation((id) => {
+          if (id === 'entity1') {
+            return {
+              id: 'entity1',
+              componentTypeIds: ['core:name'],
+              // No getComponentData method - this will trigger fallback to gateway
+            };
+          }
+          return null;
         });
         entitiesGateway.getComponentData.mockReturnValue({
           value: 'From Gateway',
