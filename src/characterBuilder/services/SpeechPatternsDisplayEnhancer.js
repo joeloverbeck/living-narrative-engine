@@ -393,7 +393,6 @@ SPEECH PATTERNS:
 `;
   }
 
-
   /**
    * Generate categorized patterns section
    *
@@ -407,11 +406,11 @@ SPEECH PATTERNS:
     patterns.speechPatterns.forEach((pattern, index) => {
       const categories = this.#categorizePattern(pattern);
       const primaryCategory = categories[0] || 'general';
-      
+
       if (!categorizedPatterns[primaryCategory]) {
         categorizedPatterns[primaryCategory] = [];
       }
-      
+
       categorizedPatterns[primaryCategory].push({
         ...pattern,
         index: index + 1,
@@ -421,22 +420,25 @@ SPEECH PATTERNS:
     let sectionText = 'SPEECH PATTERNS BY CATEGORY:\n\n';
 
     // Generate sections for each category
-    Object.entries(categorizedPatterns).forEach(([category, categoryPatterns]) => {
-      const categoryTitle = category.charAt(0).toUpperCase() + category.slice(1);
-      sectionText += `\n${categoryTitle} Patterns (${categoryPatterns.length})\n`;
-      sectionText += `${'-'.repeat(categoryTitle.length + 20)}\n\n`;
+    Object.entries(categorizedPatterns).forEach(
+      ([category, categoryPatterns]) => {
+        const categoryTitle =
+          category.charAt(0).toUpperCase() + category.slice(1);
+        sectionText += `\n${categoryTitle} Patterns (${categoryPatterns.length})\n`;
+        sectionText += `${'-'.repeat(categoryTitle.length + 20)}\n\n`;
 
-      categoryPatterns.forEach(pattern => {
-        const number = pattern.index.toString().padStart(2, '0');
-        sectionText += `${number}. PATTERN: ${pattern.pattern}\n`;
+        categoryPatterns.forEach((pattern) => {
+          const number = pattern.index.toString().padStart(2, '0');
+          sectionText += `${number}. PATTERN: ${pattern.pattern}\n`;
 
-        if (pattern.circumstances && pattern.circumstances.trim()) {
-          sectionText += `    CONTEXT: ${pattern.circumstances.trim()}\n`;
-        }
+          if (pattern.circumstances && pattern.circumstances.trim()) {
+            sectionText += `    CONTEXT: ${pattern.circumstances.trim()}\n`;
+          }
 
-        sectionText += `    EXAMPLE: ${pattern.example}\n\n`;
-      });
-    });
+          sectionText += `    EXAMPLE: ${pattern.example}\n\n`;
+        });
+      }
+    );
 
     return sectionText;
   }
@@ -450,32 +452,33 @@ SPEECH PATTERNS:
    */
   #generateStatisticsSection(patterns) {
     const stats = this.generateStatistics(patterns);
-    
+
     let statsText = '\nPATTERN STATISTICS:\n';
     statsText += `${'='.repeat(60)}\n\n`;
-    
+
     statsText += `Total Patterns: ${stats.totalPatterns}\n`;
     statsText += `Average Pattern Length: ${stats.averagePatternLength} characters\n`;
     statsText += `Average Example Length: ${stats.averageExampleLength} characters\n`;
     statsText += `Patterns with Circumstances: ${stats.patternsWithCircumstances} (${Math.round(
       (stats.patternsWithCircumstances / stats.totalPatterns) * 100
     )}%)\n\n`;
-    
+
     statsText += 'Complexity Distribution:\n';
     Object.entries(stats.complexityDistribution).forEach(([level, count]) => {
       const percentage = Math.round((count / stats.totalPatterns) * 100);
       statsText += `  - ${level.charAt(0).toUpperCase() + level.slice(1)}: ${count} (${percentage}%)\n`;
     });
-    
+
     statsText += '\nCategory Distribution:\n';
-    const sortedCategories = Object.entries(stats.categoryDistribution)
-      .sort((a, b) => b[1] - a[1]);
+    const sortedCategories = Object.entries(stats.categoryDistribution).sort(
+      (a, b) => b[1] - a[1]
+    );
     sortedCategories.forEach(([category, count]) => {
       statsText += `  - ${category.charAt(0).toUpperCase() + category.slice(1)}: ${count}\n`;
     });
-    
+
     statsText += `\n${'='.repeat(60)}\n\n`;
-    
+
     return statsText;
   }
 
@@ -715,7 +718,8 @@ ${'='.repeat(60)}
       // Table of Contents
       markdown += '## Table of Contents\n\n';
       markdown += '1. [Pattern Statistics](#pattern-statistics)\n';
-      markdown += '2. [Speech Patterns by Category](#speech-patterns-by-category)\n';
+      markdown +=
+        '2. [Speech Patterns by Category](#speech-patterns-by-category)\n';
       markdown += '3. [Complete Pattern List](#complete-pattern-list)\n';
       if (options.includeCharacterData) {
         markdown += '4. [Character Definition](#character-definition)\n';
@@ -746,19 +750,21 @@ ${'='.repeat(60)}
       // Patterns by Category
       markdown += '## Speech Patterns by Category\n\n';
       const categorizedPatterns = this.#groupPatternsByCategory(patterns);
-      Object.entries(categorizedPatterns).forEach(([category, categoryPatterns]) => {
-        markdown += `### ${category.charAt(0).toUpperCase() + category.slice(1)} (${categoryPatterns.length})\n\n`;
-        
-        categoryPatterns.forEach(pattern => {
-          markdown += `#### Pattern ${pattern.index}\n\n`;
-          markdown += `**Pattern:** ${pattern.pattern}\n\n`;
-          if (pattern.circumstances) {
-            markdown += `**Context:** ${pattern.circumstances}\n\n`;
-          }
-          markdown += `**Example:** "${pattern.example}"\n\n`;
-          markdown += '---\n\n';
-        });
-      });
+      Object.entries(categorizedPatterns).forEach(
+        ([category, categoryPatterns]) => {
+          markdown += `### ${category.charAt(0).toUpperCase() + category.slice(1)} (${categoryPatterns.length})\n\n`;
+
+          categoryPatterns.forEach((pattern) => {
+            markdown += `#### Pattern ${pattern.index}\n\n`;
+            markdown += `**Pattern:** ${pattern.pattern}\n\n`;
+            if (pattern.circumstances) {
+              markdown += `**Context:** ${pattern.circumstances}\n\n`;
+            }
+            markdown += `**Example:** "${pattern.example}"\n\n`;
+            markdown += '---\n\n';
+          });
+        }
+      );
 
       // Complete Pattern List
       markdown += '## Complete Pattern List\n\n';
@@ -782,7 +788,8 @@ ${'='.repeat(60)}
       }
 
       markdown += '---\n\n';
-      markdown += '*Generated by Speech Patterns Generator - Living Narrative Engine*\n';
+      markdown +=
+        '*Generated by Speech Patterns Generator - Living Narrative Engine*\n';
 
       return markdown;
     } catch (error) {
@@ -807,7 +814,7 @@ ${'='.repeat(60)}
 
       const characterName = patterns.characterName || 'Character';
       const rows = [];
-      
+
       // Header row
       rows.push([
         'ID',
@@ -824,7 +831,7 @@ ${'='.repeat(60)}
       patterns.speechPatterns.forEach((pattern, index) => {
         const categories = this.#categorizePattern(pattern);
         const complexity = this.#analyzeComplexity(pattern);
-        
+
         rows.push([
           index + 1,
           this.#escapeCsvCell(pattern.pattern),
@@ -841,14 +848,17 @@ ${'='.repeat(60)}
       if (options.includeMetadata !== false) {
         rows.unshift([]);
         rows.unshift(['Character Name', characterName]);
-        rows.unshift(['Generated At', patterns.generatedAt || new Date().toISOString()]);
+        rows.unshift([
+          'Generated At',
+          patterns.generatedAt || new Date().toISOString(),
+        ]);
         rows.unshift(['Export Date', new Date().toISOString()]);
         rows.unshift([]);
       }
 
       // Convert rows to CSV string
       const csvContent = rows
-        .map(row => row.map(cell => String(cell)).join(','))
+        .map((row) => row.map((cell) => String(cell)).join(','))
         .join('\n');
 
       return csvContent;
@@ -868,7 +878,12 @@ ${'='.repeat(60)}
    */
   applyTemplate(patterns, templateName = 'default', options = {}) {
     assertPresent(patterns, 'Speech patterns data');
-    assertNonBlankString(templateName, 'Template name', 'applyTemplate', this.#logger);
+    assertNonBlankString(
+      templateName,
+      'Template name',
+      'applyTemplate',
+      this.#logger
+    );
 
     try {
       this.#logger.debug(`Applying template: ${templateName}`);
@@ -878,7 +893,8 @@ ${'='.repeat(60)}
         default: () => this.formatForExport(patterns, options || {}),
         detailed: () => this.#generateDetailedTemplate(patterns, options || {}),
         summary: () => this.#generateSummaryTemplate(patterns, options || {}),
-        charactersheet: () => this.#generateCharacterSheetTemplate(patterns, options || {}),
+        charactersheet: () =>
+          this.#generateCharacterSheetTemplate(patterns, options || {}),
       };
 
       const templateFunction = templates[templateName.toLowerCase()];
@@ -937,32 +953,32 @@ ${'='.repeat(60)}
   #generateDetailedTemplate(patterns, options) {
     const characterName = patterns.characterName || 'Character';
     const stats = this.generateStatistics(patterns);
-    
+
     let output = `COMPREHENSIVE SPEECH PATTERN ANALYSIS\n`;
     output += `${'='.repeat(70)}\n\n`;
     output += `Character: ${characterName}\n`;
     output += `Analysis Date: ${new Date().toLocaleString()}\n\n`;
-    
+
     // Executive Summary
     output += 'EXECUTIVE SUMMARY\n';
     output += `${'-'.repeat(40)}\n`;
     output += `This analysis covers ${stats.totalPatterns} unique speech patterns generated\n`;
     output += `for the character "${characterName}". The patterns demonstrate\n`;
     output += `varying complexity levels and contextual applications.\n\n`;
-    
+
     // Full statistics
     output += this.#generateStatisticsSection(patterns);
-    
+
     // Detailed pattern analysis by category
     output += this.#generateCategorizedPatternsSection(patterns);
-    
+
     // Character definition if available
     if (options.includeCharacterData && options.characterDefinition) {
       output += this.#generateCharacterDataSection(options.characterDefinition);
     }
-    
+
     output += this.#generateExportFooter();
-    
+
     return output;
   }
 
@@ -978,31 +994,32 @@ ${'='.repeat(60)}
   #generateSummaryTemplate(patterns, _options) {
     const characterName = patterns.characterName || 'Character';
     const maxPatterns = _options?.maxPatterns || 10;
-    
+
     let output = `SPEECH PATTERN SUMMARY: ${characterName.toUpperCase()}\n`;
     output += `${'='.repeat(50)}\n\n`;
-    
+
     // Quick stats
     const stats = this.generateStatistics(patterns);
     output += `Total Patterns: ${stats.totalPatterns}\n`;
     output += `Complexity: `;
-    const dominantComplexity = Object.entries(stats.complexityDistribution)
-      .sort((a, b) => b[1] - a[1])[0];
+    const dominantComplexity = Object.entries(
+      stats.complexityDistribution
+    ).sort((a, b) => b[1] - a[1])[0];
     output += `Primarily ${dominantComplexity[0]}\n\n`;
-    
+
     // Top patterns only
     output += `KEY PATTERNS (Top ${Math.min(maxPatterns, patterns.speechPatterns.length)}):\n`;
     output += `${'-'.repeat(40)}\n\n`;
-    
+
     patterns.speechPatterns.slice(0, maxPatterns).forEach((pattern, index) => {
       output += `${index + 1}. ${pattern.pattern}\n`;
       output += `   Example: "${pattern.example}"\n\n`;
     });
-    
+
     if (patterns.speechPatterns.length > maxPatterns) {
       output += `... and ${patterns.speechPatterns.length - maxPatterns} more patterns\n`;
     }
-    
+
     return output;
   }
 
@@ -1018,58 +1035,58 @@ ${'='.repeat(60)}
   #generateCharacterSheetTemplate(patterns, _options) {
     const characterName = patterns.characterName || 'Character';
     const stats = this.generateStatistics(patterns);
-    
+
     let output = `╔${'═'.repeat(68)}╗\n`;
     output += `║${' '.repeat(20)}CHARACTER SPEECH PROFILE${' '.repeat(24)}║\n`;
     output += `╠${'═'.repeat(68)}╣\n`;
-    
+
     // Character Name
     const nameLabel = `║ Character: ${characterName}`;
     output += nameLabel + ' '.repeat(70 - nameLabel.length) + '║\n';
-    
+
     // Generation Date
     const dateLabel = `║ Generated: ${new Date(patterns.generatedAt || Date.now()).toLocaleDateString()}`;
     output += dateLabel + ' '.repeat(70 - dateLabel.length) + '║\n';
-    
+
     output += `╠${'═'.repeat(68)}╣\n`;
     output += `║ SPEECH CHARACTERISTICS${' '.repeat(45)}║\n`;
     output += `╠${'═'.repeat(68)}╣\n`;
-    
+
     // Key characteristics
     const topCategories = Object.entries(stats.categoryDistribution)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3);
-    
+
     topCategories.forEach(([category]) => {
       const catLabel = `║ • ${category.charAt(0).toUpperCase() + category.slice(1)} speech patterns`;
       output += catLabel + ' '.repeat(70 - catLabel.length) + '║\n';
     });
-    
+
     output += `╠${'═'.repeat(68)}╣\n`;
     output += `║ SIGNATURE PATTERNS${' '.repeat(49)}║\n`;
     output += `╠${'═'.repeat(68)}╣\n`;
-    
+
     // Select diverse patterns
     const signaturePatterns = this.#selectSignaturePatterns(patterns, 5);
     signaturePatterns.forEach((pattern, index) => {
       const patternLines = this.#wrapText(pattern.pattern, 64);
-      patternLines.forEach(line => {
+      patternLines.forEach((line) => {
         output += `║ ${line}${' '.repeat(67 - line.length)}║\n`;
       });
-      
+
       const exampleLabel = `  → "${pattern.example}"`;
       const exampleLines = this.#wrapText(exampleLabel, 64);
-      exampleLines.forEach(line => {
+      exampleLines.forEach((line) => {
         output += `║ ${line}${' '.repeat(67 - line.length)}║\n`;
       });
-      
+
       if (index < signaturePatterns.length - 1) {
         output += `║${' '.repeat(68)}║\n`;
       }
     });
-    
+
     output += `╚${'═'.repeat(68)}╝\n`;
-    
+
     return output;
   }
 
@@ -1084,21 +1101,21 @@ ${'='.repeat(60)}
    */
   #groupPatternsByCategory(patterns) {
     const categorizedPatterns = {};
-    
+
     patterns.speechPatterns.forEach((pattern, index) => {
       const categories = this.#categorizePattern(pattern);
       const primaryCategory = categories[0] || 'general';
-      
+
       if (!categorizedPatterns[primaryCategory]) {
         categorizedPatterns[primaryCategory] = [];
       }
-      
+
       categorizedPatterns[primaryCategory].push({
         ...pattern,
         index: index + 1,
       });
     });
-    
+
     return categorizedPatterns;
   }
 
@@ -1114,29 +1131,29 @@ ${'='.repeat(60)}
     // Select patterns with different complexity levels and categories
     const selected = [];
     const usedCategories = new Set();
-    
-    patterns.speechPatterns.forEach(pattern => {
+
+    patterns.speechPatterns.forEach((pattern) => {
       if (selected.length >= count) return;
-      
+
       const categories = this.#categorizePattern(pattern);
       const primaryCategory = categories[0];
-      
+
       if (!usedCategories.has(primaryCategory)) {
         selected.push(pattern);
         usedCategories.add(primaryCategory);
       }
     });
-    
+
     // Fill remaining slots with any patterns
     if (selected.length < count) {
-      patterns.speechPatterns.forEach(pattern => {
+      patterns.speechPatterns.forEach((pattern) => {
         if (selected.length >= count) return;
         if (!selected.includes(pattern)) {
           selected.push(pattern);
         }
       });
     }
-    
+
     return selected.slice(0, count);
   }
 
@@ -1152,8 +1169,8 @@ ${'='.repeat(60)}
     const words = text.split(' ');
     const lines = [];
     let currentLine = '';
-    
-    words.forEach(word => {
+
+    words.forEach((word) => {
       if (currentLine.length + word.length + 1 <= width) {
         currentLine += (currentLine ? ' ' : '') + word;
       } else {
@@ -1161,7 +1178,7 @@ ${'='.repeat(60)}
         currentLine = word;
       }
     });
-    
+
     if (currentLine) lines.push(currentLine);
     return lines;
   }
@@ -1175,10 +1192,7 @@ ${'='.repeat(60)}
    */
   #escapeMarkdownTableCell(text) {
     if (!text) return '';
-    return text
-      .replace(/\|/g, '\\|')
-      .replace(/\n/g, ' ')
-      .replace(/\r/g, '');
+    return text.replace(/\|/g, '\\|').replace(/\n/g, ' ').replace(/\r/g, '');
   }
 
   /**

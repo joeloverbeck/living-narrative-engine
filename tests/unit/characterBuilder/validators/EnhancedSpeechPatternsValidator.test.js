@@ -16,7 +16,7 @@ describe('EnhancedSpeechPatternsValidator', () => {
     mockSchemaValidator = {
       validate: jest.fn(),
       isSchemaLoaded: jest.fn().mockReturnValue(true),
-      validateAndSanitizeResponse: jest.fn()
+      validateAndSanitizeResponse: jest.fn(),
     };
 
     // Mock logger with all required methods for parent class
@@ -24,24 +24,24 @@ describe('EnhancedSpeechPatternsValidator', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     // Set up default successful mock returns that match parent class expectations
     mockSchemaValidator.validateAndSanitizeResponse.mockResolvedValue({
       isValid: true,
       errors: [],
-      sanitizedResponse: {}
+      sanitizedResponse: {},
     });
 
     mockSchemaValidator.validate.mockReturnValue({
       isValid: true,
-      errors: []
+      errors: [],
     });
 
     validator = new EnhancedSpeechPatternsValidator({
       schemaValidator: mockSchemaValidator,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -72,7 +72,7 @@ describe('EnhancedSpeechPatternsValidator', () => {
       expect(() => {
         new EnhancedSpeechPatternsValidator({
           schemaValidator: null, // Missing required dependency
-          logger: mockLogger
+          logger: mockLogger,
         });
       }).toThrow('Missing required dependency: AjvSchemaValidator');
     });
@@ -83,28 +83,30 @@ describe('EnhancedSpeechPatternsValidator', () => {
       const testCharacter = {
         components: {
           'core:name': { text: 'Alice' },
-          'core:personality': { 
-            traits: ['curious', 'analytical'], 
-            description: 'A thoughtful researcher who approaches problems methodically' 
+          'core:personality': {
+            traits: ['curious', 'analytical'],
+            description:
+              'A thoughtful researcher who approaches problems methodically',
           },
-          'core:profile': { 
-            age: 28, 
+          'core:profile': {
+            age: 28,
             occupation: 'Scientist',
-            background: 'Grew up in a small town, studied at university, now works in research lab'
-          }
-        }
+            background:
+              'Grew up in a small town, studied at university, now works in research lab',
+          },
+        },
       };
 
       // Mock successful schema validation with complete structure
       mockSchemaValidator.validateAndSanitizeResponse.mockResolvedValue({
         isValid: true,
         errors: [],
-        sanitizedResponse: testCharacter
+        sanitizedResponse: testCharacter,
       });
 
       const result = await validator.validateInput(testCharacter, {
         includeQualityAssessment: true,
-        includeSuggestions: true
+        includeSuggestions: true,
       });
 
       expect(result).toMatchObject({
@@ -118,9 +120,9 @@ describe('EnhancedSpeechPatternsValidator', () => {
           layers: expect.objectContaining({
             schema: expect.any(Object),
             semantic: expect.any(Object),
-            quality: expect.any(Object)
-          })
-        })
+            quality: expect.any(Object),
+          }),
+        }),
       });
 
       expect(result.context.layers.schema).toHaveProperty('duration');
@@ -132,16 +134,16 @@ describe('EnhancedSpeechPatternsValidator', () => {
       // Clear any existing cache and mocks
       validator.clearCache();
       mockSchemaValidator.validate.mockReset();
-      
+
       // Ensure schema is "loaded" so validation proceeds normally
       mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
-      
+
       // Mock the actual validation method to return an error for null input
       mockSchemaValidator.validate.mockReturnValue({
         isValid: false,
-        errors: ['Invalid input provided']
+        errors: ['Invalid input provided'],
       });
-      
+
       // Test with null input (which could come from failed JSON parsing)
       const result = await validator.validateInput(null, {});
 
@@ -154,17 +156,17 @@ describe('EnhancedSpeechPatternsValidator', () => {
     it('should continue validation even if schema validation fails', async () => {
       const testCharacter = {
         components: {
-          'core:name': { text: 'Bob' }
-        }
+          'core:name': { text: 'Bob' },
+        },
       };
 
       // Ensure schema is loaded so validation proceeds normally
       mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
-      
+
       // Mock failed schema validation through the validate method
       mockSchemaValidator.validate.mockReturnValue({
         isValid: false,
-        errors: ['Schema validation failed']
+        errors: ['Schema validation failed'],
       });
 
       const result = await validator.validateInput(testCharacter);
@@ -183,21 +185,25 @@ describe('EnhancedSpeechPatternsValidator', () => {
         const character = {
           components: {
             'core:name': { text: 'Sarah' },
-            'core:profile': { description: 'Sarah is a talented musician' }
-          }
+            'core:profile': { description: 'Sarah is a talented musician' },
+          },
         };
 
-        mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-          isValid: true,
-          errors: [],
-          sanitizedResponse: character
-        });
+        mockSchemaValidator.validateAndSanitizeResponse = jest
+          .fn()
+          .mockResolvedValue({
+            isValid: true,
+            errors: [],
+            sanitizedResponse: character,
+          });
 
         const result = await validator.validateInput(character);
-        
+
         // Should not have warnings about name inconsistency
-        const nameWarnings = result.warnings.filter(w => 
-          w.toLowerCase().includes('name') && w.toLowerCase().includes('inconsistency')
+        const nameWarnings = result.warnings.filter(
+          (w) =>
+            w.toLowerCase().includes('name') &&
+            w.toLowerCase().includes('inconsistency')
         );
         expect(nameWarnings).toHaveLength(0);
       });
@@ -206,20 +212,22 @@ describe('EnhancedSpeechPatternsValidator', () => {
         const character = {
           components: {
             'core:name': { text: 'Alice' },
-            'core:profile': { description: 'Bob is a great friend' }  // Different name
-          }
+            'core:profile': { description: 'Bob is a great friend' }, // Different name
+          },
         };
 
         mockSchemaValidator.validateAndSanitizeResponse.mockResolvedValue({
           isValid: true,
           errors: [],
-          sanitizedResponse: character
+          sanitizedResponse: character,
         });
 
         const result = await validator.validateInput(character);
-        
-        const nameWarnings = result.warnings.filter(w => 
-          w.toLowerCase().includes('name') && w.toLowerCase().includes('inconsistency')
+
+        const nameWarnings = result.warnings.filter(
+          (w) =>
+            w.toLowerCase().includes('name') &&
+            w.toLowerCase().includes('inconsistency')
         );
         expect(nameWarnings.length).toBeGreaterThan(0);
       });
@@ -229,25 +237,27 @@ describe('EnhancedSpeechPatternsValidator', () => {
       it('should suggest missing essential components', async () => {
         const incompleteCharacter = {
           components: {
-            'core:name': { text: 'Charlie' }
+            'core:name': { text: 'Charlie' },
             // Missing core:personality and core:profile
-          }
+          },
         };
 
-        mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-          isValid: true,
-          errors: [],
-          sanitizedResponse: incompleteCharacter
-        });
+        mockSchemaValidator.validateAndSanitizeResponse = jest
+          .fn()
+          .mockResolvedValue({
+            isValid: true,
+            errors: [],
+            sanitizedResponse: incompleteCharacter,
+          });
 
         const result = await validator.validateInput(incompleteCharacter);
-        
-        const missingSuggestions = result.warnings.filter(w => 
+
+        const missingSuggestions = result.warnings.filter((w) =>
           w.includes('Missing essential components')
         );
         expect(missingSuggestions.length).toBeGreaterThan(0);
-        
-        const personalitySuggestions = result.suggestions.filter(s =>
+
+        const personalitySuggestions = result.suggestions.filter((s) =>
           s.includes('core:personality')
         );
         expect(personalitySuggestions.length).toBeGreaterThan(0);
@@ -258,20 +268,22 @@ describe('EnhancedSpeechPatternsValidator', () => {
           components: {
             'core:name': { text: 'Diana' },
             'core:personality': { traits: ['kind'] },
-            'core:profile': { age: 25 }
+            'core:profile': { age: 25 },
             // Missing recommended components like likes, dislikes, fears, goals
-          }
+          },
         };
 
-        mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-          isValid: true,
-          errors: [],
-          sanitizedResponse: basicCharacter
-        });
+        mockSchemaValidator.validateAndSanitizeResponse = jest
+          .fn()
+          .mockResolvedValue({
+            isValid: true,
+            errors: [],
+            sanitizedResponse: basicCharacter,
+          });
 
         const result = await validator.validateInput(basicCharacter);
-        
-        const enhancementSuggestions = result.suggestions.filter(s =>
+
+        const enhancementSuggestions = result.suggestions.filter((s) =>
           s.includes('Consider adding')
         );
         expect(enhancementSuggestions.length).toBeGreaterThan(0);
@@ -283,21 +295,23 @@ describe('EnhancedSpeechPatternsValidator', () => {
         const briefCharacter = {
           components: {
             'core:name': { text: 'Eve' },
-            'core:personality': { traits: ['nice'] },  // Very brief
-            'core:profile': { age: 30 }  // Minimal detail
-          }
+            'core:personality': { traits: ['nice'] }, // Very brief
+            'core:profile': { age: 30 }, // Minimal detail
+          },
         };
 
-        mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-          isValid: true,
-          errors: [],
-          sanitizedResponse: briefCharacter
-        });
+        mockSchemaValidator.validateAndSanitizeResponse = jest
+          .fn()
+          .mockResolvedValue({
+            isValid: true,
+            errors: [],
+            sanitizedResponse: briefCharacter,
+          });
 
         const result = await validator.validateInput(briefCharacter);
-        
-        const depthWarnings = result.warnings.filter(w => 
-          w.includes('brief') || w.includes('more detail')
+
+        const depthWarnings = result.warnings.filter(
+          (w) => w.includes('brief') || w.includes('more detail')
         );
         expect(depthWarnings.length).toBeGreaterThan(0);
       });
@@ -315,40 +329,50 @@ describe('EnhancedSpeechPatternsValidator', () => {
             'core:likes': ['painting', 'nature'],
             'core:dislikes': ['criticism', 'rushed work'],
             'core:fears': ['failure', 'obscurity'],
-            'core:goals': ['create meaningful art', 'inspire others']
-          }
+            'core:goals': ['create meaningful art', 'inspire others'],
+          },
         };
 
-        mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-          isValid: true,
-          errors: [],
-          sanitizedResponse: completeCharacter
-        });
+        mockSchemaValidator.validateAndSanitizeResponse = jest
+          .fn()
+          .mockResolvedValue({
+            isValid: true,
+            errors: [],
+            sanitizedResponse: completeCharacter,
+          });
 
         const result = await validator.validateInput(completeCharacter);
-        
+
         expect(result.quality.overallScore).toBeGreaterThan(0.3);
-        expect(result.quality.breakdown).toHaveProperty('character_completeness');
-        expect(result.quality.breakdown.character_completeness.score).toBeGreaterThan(0.6);
+        expect(result.quality.breakdown).toHaveProperty(
+          'character_completeness'
+        );
+        expect(
+          result.quality.breakdown.character_completeness.score
+        ).toBeGreaterThan(0.6);
       });
 
       it('should score low for minimal character definitions', async () => {
         const minimalCharacter = {
           components: {
-            'core:name': { text: 'Grace' }
-          }
+            'core:name': { text: 'Grace' },
+          },
         };
 
-        mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-          isValid: true,
-          errors: [],
-          sanitizedResponse: minimalCharacter
-        });
+        mockSchemaValidator.validateAndSanitizeResponse = jest
+          .fn()
+          .mockResolvedValue({
+            isValid: true,
+            errors: [],
+            sanitizedResponse: minimalCharacter,
+          });
 
         const result = await validator.validateInput(minimalCharacter);
-        
+
         expect(result.quality.overallScore).toBeLessThan(0.5);
-        expect(result.quality.breakdown.character_completeness.score).toBeLessThan(0.3);
+        expect(
+          result.quality.breakdown.character_completeness.score
+        ).toBeLessThan(0.3);
       });
     });
 
@@ -359,39 +383,48 @@ describe('EnhancedSpeechPatternsValidator', () => {
             'core:name': { text: 'Henry' },
             'core:personality': {
               traits: ['analytical', 'introverted', 'perfectionistic'],
-              description: 'Henry is a methodical thinker who prefers to work alone. He has high standards for himself and others, often spending hours perfecting his work. Despite his quiet nature, he has a dry sense of humor that emerges around close friends. He struggles with spontaneity but excels at long-term planning and detailed analysis.'
-            }
-          }
+              description:
+                'Henry is a methodical thinker who prefers to work alone. He has high standards for himself and others, often spending hours perfecting his work. Despite his quiet nature, he has a dry sense of humor that emerges around close friends. He struggles with spontaneity but excels at long-term planning and detailed analysis.',
+            },
+          },
         };
 
-        mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-          isValid: true,
-          errors: [],
-          sanitizedResponse: richPersonality
-        });
+        mockSchemaValidator.validateAndSanitizeResponse = jest
+          .fn()
+          .mockResolvedValue({
+            isValid: true,
+            errors: [],
+            sanitizedResponse: richPersonality,
+          });
 
         const result = await validator.validateInput(richPersonality);
-        
-        expect(result.quality.breakdown.personality_depth.score).toBeGreaterThan(0.7);
+
+        expect(
+          result.quality.breakdown.personality_depth.score
+        ).toBeGreaterThan(0.7);
       });
 
       it('should score low for shallow personality descriptions', async () => {
         const shallowPersonality = {
           components: {
             'core:name': { text: 'Iris' },
-            'core:personality': { traits: ['nice'] }
-          }
+            'core:personality': { traits: ['nice'] },
+          },
         };
 
-        mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-          isValid: true,
-          errors: [],
-          sanitizedResponse: shallowPersonality
-        });
+        mockSchemaValidator.validateAndSanitizeResponse = jest
+          .fn()
+          .mockResolvedValue({
+            isValid: true,
+            errors: [],
+            sanitizedResponse: shallowPersonality,
+          });
 
         const result = await validator.validateInput(shallowPersonality);
-        
-        expect(result.quality.breakdown.personality_depth.score).toBeLessThan(0.3);
+
+        expect(result.quality.breakdown.personality_depth.score).toBeLessThan(
+          0.3
+        );
       });
     });
 
@@ -404,25 +437,39 @@ describe('EnhancedSpeechPatternsValidator', () => {
               age: 42,
               occupation: 'Marine biologist',
               location: 'Monterey, California',
-              history: 'Jack grew up in a coastal town where his fascination with marine life began. He studied at UC Santa Barbara, specializing in coral reef ecosystems. After completing his PhD, he worked for several research institutions before settling at the Monterey Bay Aquarium Research Institute.',
-              background: 'His childhood was spent exploring tide pools and snorkeling in kelp forests, experiences that shaped his career path and environmental consciousness.'
-            }
-          }
+              history:
+                'Jack grew up in a coastal town where his fascination with marine life began. He studied at UC Santa Barbara, specializing in coral reef ecosystems. After completing his PhD, he worked for several research institutions before settling at the Monterey Bay Aquarium Research Institute.',
+              background:
+                'His childhood was spent exploring tide pools and snorkeling in kelp forests, experiences that shaped his career path and environmental consciousness.',
+            },
+          },
         };
 
-        mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-          isValid: true,
-          errors: [],
-          sanitizedResponse: richBackground
-        });
+        mockSchemaValidator.validateAndSanitizeResponse = jest
+          .fn()
+          .mockResolvedValue({
+            isValid: true,
+            errors: [],
+            sanitizedResponse: richBackground,
+          });
 
         const result = await validator.validateInput(richBackground);
-        
-        expect(result.quality.breakdown.background_richness.score).toBeGreaterThan(0.7);
-        expect(result.quality.breakdown.background_richness.details.hasAge).toBe(true);
-        expect(result.quality.breakdown.background_richness.details.hasOccupation).toBe(true);
-        expect(result.quality.breakdown.background_richness.details.hasLocation).toBe(true);
-        expect(result.quality.breakdown.background_richness.details.hasHistory).toBe(true);
+
+        expect(
+          result.quality.breakdown.background_richness.score
+        ).toBeGreaterThan(0.7);
+        expect(
+          result.quality.breakdown.background_richness.details.hasAge
+        ).toBe(true);
+        expect(
+          result.quality.breakdown.background_richness.details.hasOccupation
+        ).toBe(true);
+        expect(
+          result.quality.breakdown.background_richness.details.hasLocation
+        ).toBe(true);
+        expect(
+          result.quality.breakdown.background_richness.details.hasHistory
+        ).toBe(true);
       });
     });
   });
@@ -432,24 +479,26 @@ describe('EnhancedSpeechPatternsValidator', () => {
       const character = {
         components: {
           'core:name': { text: 'Kate' },
-          'core:personality': { traits: ['ambitious'] }
+          'core:personality': { traits: ['ambitious'] },
           // Missing profile, goals, etc.
-        }
+        },
       };
 
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: character
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: character,
+        });
 
       const result = await validator.validateInput(character);
-      
+
       expect(result.suggestions.length).toBeGreaterThan(0);
-      
+
       // Should suggest adding missing components
-      const componentSuggestions = result.suggestions.filter(s => 
-        s.includes('Missing') || s.includes('Add')
+      const componentSuggestions = result.suggestions.filter(
+        (s) => s.includes('Missing') || s.includes('Add')
       );
       expect(componentSuggestions.length).toBeGreaterThan(0);
     });
@@ -457,18 +506,20 @@ describe('EnhancedSpeechPatternsValidator', () => {
     it('should limit suggestions to avoid overwhelming users', async () => {
       const minimalCharacter = {
         components: {
-          'core:name': { text: 'Leo' }
-        }
+          'core:name': { text: 'Leo' },
+        },
       };
 
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: minimalCharacter
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: minimalCharacter,
+        });
 
       const result = await validator.validateInput(minimalCharacter);
-      
+
       // Should limit suggestions to reasonable number (8 max)
       expect(result.suggestions.length).toBeLessThanOrEqual(8);
     });
@@ -477,23 +528,29 @@ describe('EnhancedSpeechPatternsValidator', () => {
       const lowQualityCharacter = {
         components: {
           'core:name': { text: 'Maya' },
-          'core:personality': { traits: ['ok'] }
-        }
+          'core:personality': { traits: ['ok'] },
+        },
       };
 
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: lowQualityCharacter
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: lowQualityCharacter,
+        });
 
       const result = await validator.validateInput(lowQualityCharacter);
-      
+
       // The quality score should definitely be low for this minimal character
       expect(result.quality.overallScore).toBeLessThan(0.5);
-      
-      const qualitySuggestions = result.suggestions.filter(s => 
-        s.includes('detailed') || s.includes('improve') || s.includes('depth') || s.includes('more')
+
+      const qualitySuggestions = result.suggestions.filter(
+        (s) =>
+          s.includes('detailed') ||
+          s.includes('improve') ||
+          s.includes('depth') ||
+          s.includes('more')
       );
       expect(qualitySuggestions.length).toBeGreaterThan(0);
     });
@@ -503,22 +560,24 @@ describe('EnhancedSpeechPatternsValidator', () => {
     it('should cache validation results', async () => {
       const character = {
         components: {
-          'core:name': { text: 'Nina' }
-        }
+          'core:name': { text: 'Nina' },
+        },
       };
 
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: character
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: character,
+        });
 
       // First validation
       await validator.validateInput(character);
-      
+
       // Second validation should use cache
       await validator.validateInput(character);
-      
+
       // Schema validator should only be called once due to caching
       expect(mockSchemaValidator.validate).toHaveBeenCalledTimes(1);
     });
@@ -526,13 +585,13 @@ describe('EnhancedSpeechPatternsValidator', () => {
     it('should respect cache size limits', async () => {
       const stats = validator.getValidationStats();
       const maxSize = stats.cacheMaxSize;
-      
+
       // Fill cache beyond max size
       for (let i = 0; i <= maxSize + 5; i++) {
         const character = {
           components: {
-            'core:name': { text: `Character${i}` }
-          }
+            'core:name': { text: `Character${i}` },
+          },
         };
 
         // The mock is already set up in beforeEach, just call the method
@@ -546,23 +605,25 @@ describe('EnhancedSpeechPatternsValidator', () => {
     it('should clear cache when requested', async () => {
       const character = {
         components: {
-          'core:name': { text: 'Oscar' }
-        }
+          'core:name': { text: 'Oscar' },
+        },
       };
 
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: character
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: character,
+        });
 
       await validator.validateInput(character);
-      
+
       let stats = validator.getValidationStats();
       expect(stats.cacheSize).toBeGreaterThan(0);
 
       validator.clearCache();
-      
+
       stats = validator.getValidationStats();
       expect(stats.cacheSize).toBe(0);
     });
@@ -573,43 +634,47 @@ describe('EnhancedSpeechPatternsValidator', () => {
       // Clear cache and reset mock
       validator.clearCache();
       mockSchemaValidator.validate.mockReset();
-      
+
       // Ensure schema is "loaded" so validation proceeds normally
       mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
-      
+
       mockSchemaValidator.validate.mockImplementation(() => {
         throw new Error('Schema validator error');
       });
 
       const character = {
         components: {
-          'core:name': { text: 'Paul' }
-        }
+          'core:name': { text: 'Paul' },
+        },
       };
 
       const result = await validator.validateInput(character);
-      
+
       expect(result.isValid).toBe(false);
-      expect(result.errors.some(e => e.includes('Validation error'))).toBe(true);
+      expect(result.errors.some((e) => e.includes('Validation error'))).toBe(
+        true
+      );
       expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('should continue processing even if individual rules fail', async () => {
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: {
-          components: {
-            'core:name': { text: 'Quinn' }
-          }
-        }
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: {
+            components: {
+              'core:name': { text: 'Quinn' },
+            },
+          },
+        });
 
       // The validator should handle internal rule failures gracefully
       const result = await validator.validateInput({
         components: {
-          'core:name': { text: 'Quinn' }
-        }
+          'core:name': { text: 'Quinn' },
+        },
       });
 
       expect(result).toBeDefined();
@@ -625,19 +690,21 @@ describe('EnhancedSpeechPatternsValidator', () => {
           'core:name': { text: 'Rachel' },
           'core:personality': {
             traits: Array(50).fill('trait'),
-            description: 'Very long description '.repeat(100)
+            description: 'Very long description '.repeat(100),
           },
           'core:profile': {
-            background: 'Extensive background '.repeat(100)
-          }
-        }
+            background: 'Extensive background '.repeat(100),
+          },
+        },
       };
 
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: largeCharacter
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: largeCharacter,
+        });
 
       const startTime = Date.now();
       const result = await validator.validateInput(largeCharacter);
@@ -657,7 +724,7 @@ describe('EnhancedSpeechPatternsValidator', () => {
         qualityMetrics: expect.any(Number),
         cacheSize: expect.any(Number),
         cacheMaxSize: expect.any(Number),
-        cacheTTL: expect.any(Number)
+        cacheTTL: expect.any(Number),
       });
 
       expect(stats.semanticRules).toBeGreaterThan(0);

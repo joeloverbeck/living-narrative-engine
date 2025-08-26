@@ -1,27 +1,24 @@
 {
-    "$schema": "schema://living-narrative-engine/action.schema.json",
-    "id": "sex:breathe_teasingly_on_penis",
-    "name": "Breathe Teasingly on Penis",
-    "description": "Breathe teasingly on the target's penis while kneeling before them from up close.",
-    "targets": {
-        "primary": {
-            "scope": "sex:actor_kneeling_before_target_with_penis",
-            "placeholder": "target",
-            "description": "Person with penis to breathe teasingly on"
-        }
-    },
-    "required_components": {
-        "actor": [
-            "positioning:closeness",
-            "positioning:kneeling_before"
-        ]
-    },
-    "template": "breathe teasingly on {target}'s penis",
-    "prerequisites": [],
-    "visual": {
-        "backgroundColor": "#4a148c",
-        "textColor": "#e1bee7",
-        "hoverBackgroundColor": "#6a1b9a",
-        "hoverTextColor": "#f3e5f5"
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "sex:breathe_teasingly_on_penis",
+  "name": "Breathe Teasingly on Penis",
+  "description": "Breathe teasingly on the target's penis while kneeling before them from up close.",
+  "targets": {
+    "primary": {
+      "scope": "sex:actor_kneeling_before_target_with_penis",
+      "placeholder": "target",
+      "description": "Person with penis to breathe teasingly on"
     }
+  },
+  "required_components": {
+    "actor": ["positioning:closeness", "positioning:kneeling_before"]
+  },
+  "template": "breathe teasingly on {target}'s penis",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#4a148c",
+    "textColor": "#e1bee7",
+    "hoverBackgroundColor": "#6a1b9a",
+    "hoverTextColor": "#f3e5f5"
+  }
 }

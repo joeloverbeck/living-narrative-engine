@@ -27,7 +27,9 @@ describe('SpeechPatternsGenerator - Event Dispatch API Fix', () => {
 
     mockLlmJsonService = {
       clean: jest.fn().mockImplementation((input) => input),
-      parseAndRepair: jest.fn().mockImplementation((input) => JSON.parse(input)),
+      parseAndRepair: jest
+        .fn()
+        .mockImplementation((input) => JSON.parse(input)),
     };
 
     mockLlmStrategyFactory = {
@@ -97,26 +99,30 @@ describe('SpeechPatternsGenerator - Event Dispatch API Fix', () => {
 
       // Verify that dispatch was called with the correct API format
       const dispatchCalls = mockEventBus.dispatch.mock.calls;
-      
+
       // Should have at least one call for the start event
       expect(dispatchCalls.length).toBeGreaterThan(0);
 
       // Find the start event dispatch call
-      const startEventCall = dispatchCalls.find(call => 
-        call[0].type === CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED
+      const startEventCall = dispatchCalls.find(
+        (call) =>
+          call[0].type ===
+          CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED
       );
 
       expect(startEventCall).toBeDefined();
-      
+
       // Verify the CORRECT API format: dispatch({type: eventName, payload: payload}) - NOT dispatch(eventName, payload)
-      expect(startEventCall[0]).toEqual(expect.objectContaining({
-        type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED,
-        payload: expect.objectContaining({
-          characterData: expect.any(Object),
-          options: expect.any(Object),
-          timestamp: expect.any(String),
+      expect(startEventCall[0]).toEqual(
+        expect.objectContaining({
+          type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED,
+          payload: expect.objectContaining({
+            characterData: expect.any(Object),
+            options: expect.any(Object),
+            timestamp: expect.any(String),
+          }),
         })
-      }));
+      );
     });
 
     it('should use correct dispatch API format for completion event', async () => {
@@ -125,10 +131,23 @@ describe('SpeechPatternsGenerator - Event Dispatch API Fix', () => {
         JSON.stringify({
           characterName: 'Test Character',
           speechPatterns: [
-            { pattern: 'Uses confident assertive language', example: '"I know exactly what I\'m doing here."' },
-            { pattern: 'Shifts between vulnerability and strength', example: '"Maybe I\'m scared, but that doesn\'t mean I\'ll back down."' },
-            { pattern: 'Questions with underlying assumptions', example: '"You really think that\'s the best approach?"' },
-            { pattern: 'Self-deprecating humor as defense', example: '"Well, I guess I\'m the expert at making mistakes."' },
+            {
+              pattern: 'Uses confident assertive language',
+              example: '"I know exactly what I\'m doing here."',
+            },
+            {
+              pattern: 'Shifts between vulnerability and strength',
+              example:
+                "\"Maybe I'm scared, but that doesn't mean I'll back down.\"",
+            },
+            {
+              pattern: 'Questions with underlying assumptions',
+              example: '"You really think that\'s the best approach?"',
+            },
+            {
+              pattern: 'Self-deprecating humor as defense',
+              example: '"Well, I guess I\'m the expert at making mistakes."',
+            },
           ],
         })
       );
@@ -147,21 +166,25 @@ describe('SpeechPatternsGenerator - Event Dispatch API Fix', () => {
       const dispatchCalls = mockEventBus.dispatch.mock.calls;
 
       // Find the completion event dispatch call
-      const completionEventCall = dispatchCalls.find(call => 
-        call[0].type === CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED
+      const completionEventCall = dispatchCalls.find(
+        (call) =>
+          call[0].type ===
+          CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED
       );
 
       expect(completionEventCall).toBeDefined();
-      
+
       // Verify correct API format
-      expect(completionEventCall[0]).toEqual(expect.objectContaining({
-        type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED,
-        payload: expect.objectContaining({
-          result: expect.any(Object),
-          processingTime: expect.any(Number),
-          timestamp: expect.any(String),
+      expect(completionEventCall[0]).toEqual(
+        expect.objectContaining({
+          type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED,
+          payload: expect.objectContaining({
+            result: expect.any(Object),
+            processingTime: expect.any(Number),
+            timestamp: expect.any(String),
+          }),
         })
-      }));
+      );
     });
 
     it('should use correct dispatch API format for failure event', async () => {
@@ -188,21 +211,25 @@ describe('SpeechPatternsGenerator - Event Dispatch API Fix', () => {
       const dispatchCalls = mockEventBus.dispatch.mock.calls;
 
       // Find the failure event dispatch call
-      const failureEventCall = dispatchCalls.find(call => 
-        call[0].type === CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_FAILED
+      const failureEventCall = dispatchCalls.find(
+        (call) =>
+          call[0].type ===
+          CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_FAILED
       );
 
       expect(failureEventCall).toBeDefined();
-      
+
       // Verify correct API format
-      expect(failureEventCall[0]).toEqual(expect.objectContaining({
-        type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_FAILED,
-        payload: expect.objectContaining({
-          error: expect.any(String),
-          processingTime: expect.any(Number),
-          timestamp: expect.any(String),
+      expect(failureEventCall[0]).toEqual(
+        expect.objectContaining({
+          type: CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_FAILED,
+          payload: expect.objectContaining({
+            error: expect.any(String),
+            processingTime: expect.any(Number),
+            timestamp: expect.any(String),
+          }),
         })
-      }));
+      );
     });
 
     it('should NOT use the old incorrect format that caused [object Object] errors', async () => {
@@ -210,10 +237,23 @@ describe('SpeechPatternsGenerator - Event Dispatch API Fix', () => {
         JSON.stringify({
           characterName: 'Test Character',
           speechPatterns: [
-            { pattern: 'Uses confident assertive language', example: '"I know exactly what I\'m doing here."' },
-            { pattern: 'Shifts between vulnerability and strength', example: '"Maybe I\'m scared, but that doesn\'t mean I\'ll back down."' },
-            { pattern: 'Questions with underlying assumptions', example: '"You really think that\'s the best approach?"' },
-            { pattern: 'Self-deprecating humor as defense', example: '"Well, I guess I\'m the expert at making mistakes."' },
+            {
+              pattern: 'Uses confident assertive language',
+              example: '"I know exactly what I\'m doing here."',
+            },
+            {
+              pattern: 'Shifts between vulnerability and strength',
+              example:
+                "\"Maybe I'm scared, but that doesn't mean I'll back down.\"",
+            },
+            {
+              pattern: 'Questions with underlying assumptions',
+              example: '"You really think that\'s the best approach?"',
+            },
+            {
+              pattern: 'Self-deprecating humor as defense',
+              example: '"Well, I guess I\'m the expert at making mistakes."',
+            },
           ],
         })
       );
@@ -232,18 +272,20 @@ describe('SpeechPatternsGenerator - Event Dispatch API Fix', () => {
       const dispatchCalls = mockEventBus.dispatch.mock.calls;
 
       // Verify ALL calls use the CORRECT format: dispatch({type: eventName, payload: payload})
-      dispatchCalls.forEach(call => {
+      dispatchCalls.forEach((call) => {
         // First argument should be an event object with type and payload
         expect(typeof call[0]).toBe('object');
-        expect(call[0]).toEqual(expect.objectContaining({
-          type: expect.any(String),
-          payload: expect.any(Object),
-        }));
-        
+        expect(call[0]).toEqual(
+          expect.objectContaining({
+            type: expect.any(String),
+            payload: expect.any(Object),
+          })
+        );
+
         // The type should be a valid string
         expect(typeof call[0].type).toBe('string');
         expect(call[0].type.length).toBeGreaterThan(0);
-        
+
         // Should not have the old incorrect format that would cause [object Object] errors
         expect(call[0].type).not.toBe('[object Object]');
       });
@@ -252,22 +294,36 @@ describe('SpeechPatternsGenerator - Event Dispatch API Fix', () => {
 
   describe('Event Constant Validation', () => {
     it('should have all speech pattern events as valid string constants', () => {
-      expect(typeof CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED).toBe('string');
-      expect(CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED).toBe('core:speech_patterns_generation_started');
-      
-      expect(typeof CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED).toBe('string');
-      expect(CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED).toBe('core:speech_patterns_generation_completed');
-      
-      expect(typeof CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_FAILED).toBe('string');
-      expect(CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_FAILED).toBe('core:speech_patterns_generation_failed');
+      expect(
+        typeof CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED
+      ).toBe('string');
+      expect(CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED).toBe(
+        'core:speech_patterns_generation_started'
+      );
+
+      expect(
+        typeof CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED
+      ).toBe('string');
+      expect(
+        CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED
+      ).toBe('core:speech_patterns_generation_completed');
+
+      expect(
+        typeof CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_FAILED
+      ).toBe('string');
+      expect(CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_FAILED).toBe(
+        'core:speech_patterns_generation_failed'
+      );
     });
 
     it('should not have undefined event constants that would cause [object Object] errors', () => {
       // All event constants should be properly defined strings
       const eventKeys = Object.keys(CHARACTER_BUILDER_EVENTS);
-      const speechPatternEventKeys = eventKeys.filter(key => key.includes('SPEECH_PATTERNS'));
-      
-      speechPatternEventKeys.forEach(key => {
+      const speechPatternEventKeys = eventKeys.filter((key) =>
+        key.includes('SPEECH_PATTERNS')
+      );
+
+      speechPatternEventKeys.forEach((key) => {
         const eventValue = CHARACTER_BUILDER_EVENTS[key];
         expect(eventValue).toBeDefined();
         expect(typeof eventValue).toBe('string');

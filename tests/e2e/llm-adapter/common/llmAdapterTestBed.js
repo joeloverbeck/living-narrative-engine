@@ -57,7 +57,8 @@ export class LLMAdapterTestBed {
     // Skip file system operations in lightweight mode
     if (!this.options.lightweight) {
       // Create test configuration with isolated paths
-      const testConfig = await TestConfigurationFactory.createTestConfiguration();
+      const testConfig =
+        await TestConfigurationFactory.createTestConfiguration();
       this.testConfiguration = testConfig.pathConfiguration;
       this.testConfigurationCleanup = testConfig.cleanup;
     } else {
@@ -140,7 +141,7 @@ export class LLMAdapterTestBed {
     // Clear mock responses and recorded events
     this.mockResponses.clear();
     this.events = [];
-    
+
     // Reset mock function calls AND implementations
     if (this.httpClient && this.httpClient.request) {
       this.httpClient.request.mockReset();
@@ -152,7 +153,9 @@ export class LLMAdapterTestBed {
         if (mockResponse) {
           // Simulate network delay only if configured
           if (this.options.networkDelay > 0) {
-            await new Promise((resolve) => setTimeout(resolve, this.options.networkDelay));
+            await new Promise((resolve) =>
+              setTimeout(resolve, this.options.networkDelay)
+            );
           }
 
           // If the mock response is an error, throw it
@@ -169,11 +172,11 @@ export class LLMAdapterTestBed {
         );
       });
     }
-    
+
     // Restore test API keys in case they were modified
     process.env.TEST_API_KEY = 'test-api-key-12345';
     process.env.OPENROUTER_API_KEY = 'test-openrouter-key';
-    
+
     // Reset to default LLM configuration if it was changed
     try {
       await this.llmAdapter.setActiveLlm('test-llm-toolcalling');
@@ -230,7 +233,9 @@ export class LLMAdapterTestBed {
         if (mockResponse) {
           // Simulate network delay only if configured
           if (this.options.networkDelay > 0) {
-            await new Promise((resolve) => setTimeout(resolve, this.options.networkDelay));
+            await new Promise((resolve) =>
+              setTimeout(resolve, this.options.networkDelay)
+            );
           }
 
           // If the mock response is an error, throw it
@@ -446,7 +451,7 @@ Choose one action by its index number and explain your choice.
 
   /**
    * Create an in-memory test configuration to avoid file system operations
-   * 
+   *
    * @private
    * @returns {object} Minimal test path configuration
    */

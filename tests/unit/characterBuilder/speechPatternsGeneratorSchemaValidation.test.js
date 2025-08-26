@@ -175,11 +175,13 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
 
       // Enhanced validator may show success message or no display
       const errorDiv = document.getElementById('character-input-error');
-      
+
       // Enhanced validator shows success messages, so check for success content or hidden
       const isHidden = errorDiv.style.display === 'none';
-      const hasSuccessMessage = errorDiv.textContent.includes('Excellent') || errorDiv.textContent.includes('Good');
-      
+      const hasSuccessMessage =
+        errorDiv.textContent.includes('Excellent') ||
+        errorDiv.textContent.includes('Good');
+
       expect(isHidden || hasSuccessMessage).toBe(true);
     });
 
@@ -335,11 +337,13 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
 
       // Enhanced validator may show success message or no display
       const errorDiv = document.getElementById('character-input-error');
-      
+
       // Enhanced validator shows success messages, so check for success content or hidden
       const isHidden = errorDiv.style.display === 'none';
-      const hasSuccessMessage = errorDiv.textContent.includes('Excellent') || errorDiv.textContent.includes('Good');
-      
+      const hasSuccessMessage =
+        errorDiv.textContent.includes('Excellent') ||
+        errorDiv.textContent.includes('Good');
+
       expect(isHidden || hasSuccessMessage).toBe(true);
     });
 
@@ -394,7 +398,7 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
 
       const errorDiv = document.getElementById('character-input-error');
       expect(errorDiv.style.display).not.toBe('none');
-      
+
       // Enhanced validator shows structured feedback - check for JSON syntax error
       expect(errorDiv.textContent).toContain('JSON Syntax Error');
     });
@@ -436,9 +440,12 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
 
       // Enhanced validator may show success message or clear display
       const isHidden = errorDiv.style.display === 'none';
-      const hasSuccessMessage = errorDiv.textContent.includes('Excellent') || errorDiv.textContent.includes('Good');
-      const noErrorMessage = !errorDiv.textContent.includes('JSON Syntax Error');
-      
+      const hasSuccessMessage =
+        errorDiv.textContent.includes('Excellent') ||
+        errorDiv.textContent.includes('Good');
+      const noErrorMessage =
+        !errorDiv.textContent.includes('JSON Syntax Error');
+
       expect(isHidden || (hasSuccessMessage && noErrorMessage)).toBe(true);
     });
   });

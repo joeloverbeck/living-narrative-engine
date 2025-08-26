@@ -20,11 +20,11 @@ describe('Enhanced Validation Pipeline Integration', () => {
 
     // Create comprehensive mocks
     mockLogger = testBed.createMockLogger();
-    
+
     mockSchemaValidator = {
       validate: jest.fn(),
       isSchemaLoaded: jest.fn().mockReturnValue(true),
-      validateAndSanitizeResponse: jest.fn()
+      validateAndSanitizeResponse: jest.fn(),
     };
 
     // Create mock CharacterBuilderService with all required methods
@@ -36,18 +36,18 @@ describe('Enhanced Validation Pipeline Integration', () => {
       deleteCharacterConcept: jest.fn().mockResolvedValue(),
       getCharacterConcept: jest.fn().mockResolvedValue(null),
       generateThematicDirections: jest.fn().mockResolvedValue([]),
-      getThematicDirections: jest.fn().mockResolvedValue([])
+      getThematicDirections: jest.fn().mockResolvedValue([]),
     };
 
     // Create mock EventBus with required methods
     const mockEventBus = {
       dispatch: jest.fn(),
       subscribe: jest.fn(),
-      unsubscribe: jest.fn()
+      unsubscribe: jest.fn(),
     };
 
     mockContainer = {
-      resolve: jest.fn()
+      resolve: jest.fn(),
     };
 
     // Create DOM elements for controller (matching actual HTML structure)
@@ -77,7 +77,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       characterBuilderService: mockCharacterBuilderService,
       eventBus: mockEventBus,
       schemaValidator: mockSchemaValidator,
-      container: mockContainer
+      container: mockContainer,
     });
 
     // Initialize the controller to cache elements and set up event listeners
@@ -108,14 +108,15 @@ describe('Enhanced Validation Pipeline Integration', () => {
           'core:name': { text: 'Alice' },
           'core:personality': {
             traits: ['curious', 'analytical'],
-            description: 'A thoughtful researcher with a methodical approach'
+            description: 'A thoughtful researcher with a methodical approach',
           },
           'core:profile': {
             age: 28,
             occupation: 'Research Scientist',
-            background: 'Alice grew up in a university town and was always fascinated by scientific discovery'
-          }
-        }
+            background:
+              'Alice grew up in a university town and was always fascinated by scientific discovery',
+          },
+        },
       };
 
       textarea.value = JSON.stringify(validCharacter, null, 2);
@@ -128,14 +129,16 @@ describe('Enhanced Validation Pipeline Integration', () => {
       textarea.dispatchEvent(event);
 
       // Wait for debounced validation
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       // For this complete character, validation should provide feedback
       // Even valid characters may show suggestions for improvement
       expect(errorContainer.style.display).toBe('block');
-      
+
       // Should not show critical errors for a complete character
-      expect(errorContainer.innerHTML).not.toContain('Missing essential components');
+      expect(errorContainer.innerHTML).not.toContain(
+        'Missing essential components'
+      );
     });
 
     it('should display categorized validation feedback', async () => {
@@ -145,9 +148,9 @@ describe('Enhanced Validation Pipeline Integration', () => {
       // Simulate character with validation issues (missing essential components)
       const problemCharacter = {
         components: {
-          'core:name': { text: 'Bob Smith' }
+          'core:name': { text: 'Bob Smith' },
           // Missing core:personality, core:profile - should trigger validation errors
-        }
+        },
       };
 
       textarea.value = JSON.stringify(problemCharacter, null, 2);
@@ -157,25 +160,33 @@ describe('Enhanced Validation Pipeline Integration', () => {
       textarea.dispatchEvent(event);
 
       // Wait for debounced validation
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       // Should display enhanced validation results
       expect(errorContainer.style.display).toBe('block');
-      
+
       // Check for enhanced validation structure
-      const validationResults = errorContainer.querySelector('.enhanced-validation-results');
+      const validationResults = errorContainer.querySelector(
+        '.enhanced-validation-results'
+      );
       expect(validationResults).toBeTruthy();
 
       // Should have warnings about missing components
-      const warningSections = errorContainer.querySelectorAll('.validation-warnings');
+      const warningSections = errorContainer.querySelectorAll(
+        '.validation-warnings'
+      );
       expect(warningSections.length).toBeGreaterThanOrEqual(0);
 
       // Should have suggestions
-      const suggestionSections = errorContainer.querySelectorAll('.validation-suggestions');
+      const suggestionSections = errorContainer.querySelectorAll(
+        '.validation-suggestions'
+      );
       expect(suggestionSections.length).toBeGreaterThanOrEqual(0);
 
       // Should have quality assessment
-      const qualitySections = errorContainer.querySelectorAll('.validation-quality');
+      const qualitySections = errorContainer.querySelectorAll(
+        '.validation-quality'
+      );
       expect(qualitySections.length).toBeGreaterThanOrEqual(0);
     });
 
@@ -191,13 +202,13 @@ describe('Enhanced Validation Pipeline Integration', () => {
       textarea.dispatchEvent(event);
 
       // Wait for debounced validation
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       // Should display error with suggestions
       expect(errorContainer.style.display).toBe('block');
       expect(errorContainer.innerHTML).toContain('JSON Syntax Error');
       expect(errorContainer.innerHTML).toContain('suggestion');
-      
+
       // Should show error styling on textarea
       expect(textarea.classList.contains('error')).toBe(true);
     });
@@ -208,8 +219,8 @@ describe('Enhanced Validation Pipeline Integration', () => {
 
       const character = {
         components: {
-          'core:name': { text: 'Charlie' }
-        }
+          'core:name': { text: 'Charlie' },
+        },
       };
 
       textarea.value = JSON.stringify(character, null, 2);
@@ -224,12 +235,12 @@ describe('Enhanced Validation Pipeline Integration', () => {
       textarea.dispatchEvent(event);
 
       // Wait for debounced validation to complete
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       // The validation completes quickly and shows results directly
       // Instead of checking for progress indicator, verify that validation occurred
       expect(errorContainer.style.display).toBe('block');
-      
+
       // Should show validation results (not progress indicator since validation completes quickly)
       expect(errorContainer.innerHTML).toContain('enhanced-validation-results');
     });
@@ -240,16 +251,18 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const incompleteCharacter = {
         components: {
           'core:name': { text: 'Diana' },
-          'core:personality': { traits: ['nice'] }
+          'core:personality': { traits: ['nice'] },
           // Missing profile, likes, dislikes, fears, goals
-        }
+        },
       };
 
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: incompleteCharacter
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: incompleteCharacter,
+        });
 
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
@@ -259,12 +272,14 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       expect(errorContainer.style.display).toBe('block');
 
       // Should identify missing components
-      expect(errorContainer.innerHTML).toMatch(/Missing.*core:profile|Add.*core:profile/i);
+      expect(errorContainer.innerHTML).toMatch(
+        /Missing.*core:profile|Add.*core:profile/i
+      );
 
       // Should suggest improvements
       const suggestions = errorContainer.querySelectorAll('.suggestion-item');
@@ -281,39 +296,56 @@ describe('Enhanced Validation Pipeline Integration', () => {
           'core:name': { text: 'Elena' },
           'core:personality': {
             traits: ['empathetic', 'determined', 'analytical'],
-            description: 'Elena is a compassionate problem-solver who approaches challenges with both emotional intelligence and logical reasoning. She has a natural ability to understand others\' perspectives while maintaining her own strong moral compass.'
+            description:
+              "Elena is a compassionate problem-solver who approaches challenges with both emotional intelligence and logical reasoning. She has a natural ability to understand others' perspectives while maintaining her own strong moral compass.",
           },
           'core:profile': {
             age: 32,
             occupation: 'Social worker and part-time therapist',
             location: 'Portland, Oregon',
-            background: 'Elena grew up in a multicultural household where she learned to navigate different perspectives from an early age. She studied psychology at university and has been working in social services for eight years.',
-            education: 'Masters in Social Work from Portland State University'
+            background:
+              'Elena grew up in a multicultural household where she learned to navigate different perspectives from an early age. She studied psychology at university and has been working in social services for eight years.',
+            education: 'Masters in Social Work from Portland State University',
           },
           'core:likes': {
-            activities: ['hiking', 'reading psychology books', 'community gardening'],
-            values: ['social justice', 'meaningful conversations', 'helping others grow']
+            activities: [
+              'hiking',
+              'reading psychology books',
+              'community gardening',
+            ],
+            values: [
+              'social justice',
+              'meaningful conversations',
+              'helping others grow',
+            ],
           },
           'core:dislikes': {
             behaviors: ['dishonesty', 'willful ignorance', 'cruelty'],
-            situations: ['bureaucratic red tape', 'rushed decisions']
+            situations: ['bureaucratic red tape', 'rushed decisions'],
           },
           'core:fears': {
             personal: ['not being able to help someone who really needs it'],
-            professional: ['making the wrong recommendation in a critical case']
+            professional: [
+              'making the wrong recommendation in a critical case',
+            ],
           },
           'core:goals': {
             shortTerm: ['complete additional trauma therapy certification'],
-            longTerm: ['open a community mental health center', 'write a book on resilience']
-          }
-        }
+            longTerm: [
+              'open a community mental health center',
+              'write a book on resilience',
+            ],
+          },
+        },
       };
 
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: richCharacter
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: richCharacter,
+        });
 
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
@@ -323,13 +355,15 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       // This rich character should either hide the error container or show positive feedback
-      expect(errorContainer.style.display === 'none' || 
-             errorContainer.innerHTML.includes('success') ||
-             errorContainer.innerHTML.includes('Good') ||
-             errorContainer.innerHTML.includes('Excellent')).toBe(true);
+      expect(
+        errorContainer.style.display === 'none' ||
+          errorContainer.innerHTML.includes('success') ||
+          errorContainer.innerHTML.includes('Good') ||
+          errorContainer.innerHTML.includes('Excellent')
+      ).toBe(true);
 
       // If showing feedback, verify it's positive
       if (errorContainer.style.display === 'block') {
@@ -347,22 +381,25 @@ describe('Enhanced Validation Pipeline Integration', () => {
           'core:name': { text: 'Frank' },
           'core:personality': {
             traits: ['ambitious', 'impatient'],
-            description: 'Frank is driven to succeed but sometimes rushes into decisions. He has good intentions but can be insensitive to others\' feelings when focused on his goals.'
+            description:
+              "Frank is driven to succeed but sometimes rushes into decisions. He has good intentions but can be insensitive to others' feelings when focused on his goals.",
           },
           'core:profile': {
             age: 28,
-            occupation: 'Marketing executive'
+            occupation: 'Marketing executive',
             // Missing some background details
-          }
+          },
           // Missing some recommended components
-        }
+        },
       };
 
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: mixedCharacter
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: mixedCharacter,
+        });
 
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
@@ -372,12 +409,14 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       expect(errorContainer.style.display).toBe('block');
 
       // Should have both positive aspects and areas for improvement
-      const validationSections = errorContainer.querySelectorAll('.validation-section');
+      const validationSections = errorContainer.querySelectorAll(
+        '.validation-section'
+      );
       expect(validationSections.length).toBeGreaterThan(0);
 
       // Should show moderate quality score
@@ -398,15 +437,17 @@ describe('Enhanced Validation Pipeline Integration', () => {
     it('should support collapsible validation sections', async () => {
       const character = {
         components: {
-          'core:name': { text: 'Grace' }
-        }
+          'core:name': { text: 'Grace' },
+        },
       };
 
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: character
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: character,
+        });
 
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
@@ -416,7 +457,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       // Look for collapsible sections (warnings and suggestions)
       const collapsibleTitles = errorContainer.querySelectorAll(
@@ -441,15 +482,17 @@ describe('Enhanced Validation Pipeline Integration', () => {
     it('should support keyboard navigation of validation sections', async () => {
       const character = {
         components: {
-          'core:name': { text: 'Henry' }
-        }
+          'core:name': { text: 'Henry' },
+        },
       };
 
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: character
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: character,
+        });
 
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
@@ -459,7 +502,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       const collapsibleTitles = errorContainer.querySelectorAll(
         '.validation-section-title[role="button"]'
@@ -467,9 +510,9 @@ describe('Enhanced Validation Pipeline Integration', () => {
 
       if (collapsibleTitles.length > 0) {
         const title = collapsibleTitles[0];
-        
+
         expect(title.getAttribute('tabindex')).toBe('0');
-        
+
         // Test keyboard activation
         const enterEvent = new KeyboardEvent('keydown', { key: 'Enter' });
         title.dispatchEvent(enterEvent);
@@ -495,13 +538,13 @@ describe('Enhanced Validation Pipeline Integration', () => {
         textarea.value += char;
         const event = new Event('input', { bubbles: true });
         textarea.dispatchEvent(event);
-        
+
         // Small delay between keystrokes
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
 
       // Wait for debounce to settle
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       // Should handle rapid input gracefully
       // The debounced validation should prevent excessive validation calls
@@ -515,7 +558,8 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const errorContainer = document.getElementById('character-input-error');
 
       // First, trigger an error
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn()
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
         .mockRejectedValue(new Error('Validation system error'));
 
       textarea.value = '{"test": "data"}';
@@ -523,28 +567,32 @@ describe('Enhanced Validation Pipeline Integration', () => {
       let event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       // The error message format is "Validation error: [details]"
       expect(errorContainer.innerHTML).toContain('Validation error:');
 
       // Now provide valid input
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: { components: { 'core:name': { text: 'Test' } } }
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: { components: { 'core:name': { text: 'Test' } } },
+        });
 
       textarea.value = '{"components": {"core:name": {"text": "Test"}}}';
 
       event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       // Should recover and show proper validation
-      expect(errorContainer.style.display === 'none' || 
-             !errorContainer.innerHTML.includes('Validation system error')).toBe(true);
+      expect(
+        errorContainer.style.display === 'none' ||
+          !errorContainer.innerHTML.includes('Validation system error')
+      ).toBe(true);
     });
   });
 
@@ -560,15 +608,17 @@ describe('Enhanced Validation Pipeline Integration', () => {
     it('should provide screen reader friendly content', async () => {
       const character = {
         components: {
-          'core:name': { text: 'Iris' }
-        }
+          'core:name': { text: 'Iris' },
+        },
       };
 
-      mockSchemaValidator.validateAndSanitizeResponse = jest.fn().mockResolvedValue({
-        isValid: true,
-        errors: [],
-        sanitizedResponse: character
-      });
+      mockSchemaValidator.validateAndSanitizeResponse = jest
+        .fn()
+        .mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: character,
+        });
 
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
@@ -578,11 +628,11 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise(resolve => setTimeout(resolve, 350));
+      await new Promise((resolve) => setTimeout(resolve, 350));
 
       // Should have accessible content structure
       const sections = errorContainer.querySelectorAll('.validation-section');
-      sections.forEach(section => {
+      sections.forEach((section) => {
         const title = section.querySelector('.validation-section-title');
         if (title && title.getAttribute('role') === 'button') {
           expect(title.getAttribute('aria-expanded')).toBeTruthy();

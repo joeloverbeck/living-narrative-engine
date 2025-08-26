@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "positioning:sit_down",
+  "name": "Sit down",
+  "description": "Sit down on available furniture",
+  "targets": "positioning:available_furniture",
+  "required_components": {
+    "actor": ["core:actor"]
+  },
+  "forbidden_components": {
+    "actor": ["positioning:sitting_on", "positioning:kneeling_before"]
+  },
+  "template": "sit down on {target.components.core:description.short}",
+  "prerequisites": [],
+  "visual": {
+    "backgroundColor": "#4a90e2",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#357abd",
+    "hoverTextColor": "#ffffff"
+  }
+}

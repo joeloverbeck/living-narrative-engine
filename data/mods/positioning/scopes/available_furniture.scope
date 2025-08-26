@@ -1,0 +1,16 @@
+positioning:available_furniture := entities(positioning:allows_sitting)[][{
+  "and": [
+    {
+      "==": [
+        {"var": "entity.components.core:position.locationId"},
+        {"var": "actor.components.core:position.locationId"}
+      ]
+    },
+    {
+      "some": [
+        {"var": "entity.components.positioning:allows_sitting.spots"},
+        {"==": [{"var": ""}, null]}
+      ]
+    }
+  ]
+}]

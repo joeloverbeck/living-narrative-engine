@@ -62,7 +62,7 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
       // caused by the cache rather than absolute heap memory, which can vary
       // significantly due to factors outside our control (V8 internals, GC timing,
       // test framework overhead, mock object allocation).
-      
+
       // Create many different contexts to test memory usage
       const contextCount = global.memoryTestUtils.isCI() ? 150 : 250;
       const contexts = Array.from({ length: contextCount }, (_, i) => ({
@@ -112,7 +112,7 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
       // which can vary due to V8 internals, test framework overhead, and GC timing
       const maxCacheGrowthMB = global.memoryTestUtils.isCI() ? 50 : 35; // Cache overhead
       const maxCacheLeakageMB = global.memoryTestUtils.isCI() ? 30 : 20; // Retained cache
-      
+
       // Absolute memory threshold is more lenient as it includes all heap allocations,
       // not just our cache. V8's memory management, mock objects, and test framework
       // can cause significant variation in absolute memory usage between runs.

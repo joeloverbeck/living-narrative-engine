@@ -612,55 +612,58 @@ export class CharacterBuilderBootstrap {
           },
           {
             id: 'core:speech_patterns_generation_started',
-            description: 'Dispatched when speech patterns generation begins for a character.',
+            description:
+              'Dispatched when speech patterns generation begins for a character.',
             payloadSchema: {
               type: 'object',
               properties: {
                 characterData: {
                   description: 'The character data being used for generation',
                   type: 'object',
-                  additionalProperties: true
+                  additionalProperties: true,
                 },
                 options: {
                   description: 'Options for speech pattern generation',
                   type: 'object',
-                  additionalProperties: true
+                  additionalProperties: true,
                 },
                 timestamp: {
                   description: 'ISO 8601 timestamp of when generation started',
                   type: 'string',
-                  format: 'date-time'
-                }
+                  format: 'date-time',
+                },
               },
               required: ['characterData', 'options', 'timestamp'],
-              additionalProperties: true
-            }
+              additionalProperties: true,
+            },
           },
           {
             id: 'core:speech_patterns_generation_completed',
-            description: 'Dispatched when speech patterns generation successfully completes.',
+            description:
+              'Dispatched when speech patterns generation successfully completes.',
             payloadSchema: {
               type: 'object',
               properties: {
                 result: {
                   description: 'The generated speech patterns result',
                   type: 'object',
-                  additionalProperties: true
+                  additionalProperties: true,
                 },
                 processingTime: {
                   description: 'Time taken to process in milliseconds',
                   type: 'number',
-                  minimum: 0
+                  minimum: 0,
                 },
                 timestamp: {
-                  description: 'ISO 8601 timestamp of when generation completed',
+                  description:
+                    'ISO 8601 timestamp of when generation completed',
                   type: 'string',
-                  format: 'date-time'
-                }
+                  format: 'date-time',
+                },
               },
               required: ['result', 'processingTime', 'timestamp'],
-              additionalProperties: true
-            }
+              additionalProperties: true,
+            },
           },
           {
             id: 'core:speech_patterns_generation_failed',
@@ -670,22 +673,22 @@ export class CharacterBuilderBootstrap {
               properties: {
                 error: {
                   description: 'The error message describing what went wrong',
-                  type: 'string'
+                  type: 'string',
                 },
                 processingTime: {
                   description: 'Time taken before failure in milliseconds',
                   type: 'number',
-                  minimum: 0
+                  minimum: 0,
                 },
                 timestamp: {
                   description: 'ISO 8601 timestamp of when generation failed',
                   type: 'string',
-                  format: 'date-time'
-                }
+                  format: 'date-time',
+                },
               },
               required: ['error', 'processingTime', 'timestamp'],
-              additionalProperties: true
-            }
+              additionalProperties: true,
+            },
           },
         ];
 

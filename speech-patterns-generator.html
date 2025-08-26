@@ -147,7 +147,11 @@
                 >
                   <!-- Options populated dynamically -->
                 </select>
-                <div id="template-group" class="template-group" style="display: none;">
+                <div
+                  id="template-group"
+                  class="template-group"
+                  style="display: none"
+                >
                   <select
                     id="export-template"
                     class="cb-select export-template-select"
@@ -183,6 +187,22 @@
             <div class="loading-indicator">
               <div class="spinner" aria-hidden="true"></div>
               <p id="loading-message">Generating speech patterns...</p>
+
+              <!-- Enhanced Progress Container -->
+              <div id="progress-container" class="progress-container">
+                <div class="progress-bar-container" aria-hidden="true">
+                  <div
+                    id="progress-bar"
+                    class="progress-bar"
+                    style="width: 0%"
+                  ></div>
+                </div>
+                <span
+                  id="time-estimate"
+                  class="time-estimate"
+                  style="display: none"
+                ></span>
+              </div>
             </div>
           </div>
 

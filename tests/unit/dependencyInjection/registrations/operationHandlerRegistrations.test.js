@@ -66,6 +66,7 @@ describe('registerOperationHandlers', () => {
       tokens.UnequipClothingHandler,
       tokens.LockMovementHandler,
       tokens.UnlockMovementHandler,
+      tokens.RegenerateDescriptionHandler,
     ];
 
     handlerTokens.forEach((token) => {

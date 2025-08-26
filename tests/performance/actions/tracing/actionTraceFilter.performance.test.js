@@ -432,7 +432,7 @@ describe('ActionTraceFilter Performance', () => {
       });
 
       const levels = ['minimal', 'standard', 'detailed', 'verbose'];
-      
+
       const testFunction = () => {
         for (let i = 0; i < 1000; i++) {
           filter.setVerbosityLevel(levels[i % 4]);

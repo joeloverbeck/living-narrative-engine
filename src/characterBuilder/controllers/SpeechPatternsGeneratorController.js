@@ -102,11 +102,16 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       try {
         this.#enhancedValidator = new EnhancedSpeechPatternsValidator({
           schemaValidator: dependencies.schemaValidator,
-          logger: dependencies.logger
+          logger: dependencies.logger,
         });
-        dependencies.logger?.debug('EnhancedSpeechPatternsValidator initialized');
+        dependencies.logger?.debug(
+          'EnhancedSpeechPatternsValidator initialized'
+        );
       } catch (error) {
-        dependencies.logger?.warn('Failed to initialize enhanced validator:', error.message);
+        dependencies.logger?.warn(
+          'Failed to initialize enhanced validator:',
+          error.message
+        );
       }
     }
   }
@@ -140,6 +145,20 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       emptyState: '#empty-state',
       patternCount: '#pattern-count',
 
+      // Progress elements (optional - will be created dynamically)
+      progressContainer: {
+        selector: '#progress-container',
+        required: false,
+      },
+      progressBar: {
+        selector: '#progress-bar',
+        required: false,
+      },
+      timeEstimate: {
+        selector: '#time-estimate',
+        required: false,
+      },
+
       // Error handling elements in error state
       errorMessage: {
         selector: '#error-message',
@@ -167,7 +186,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     // Create debounced validation function with faster response time
     this.#debouncedValidation = this._debounce(
       () => this.#validateCharacterInputEnhanced(),
-      300,  // Reduced from 500ms to 300ms for better responsiveness
+      300, // Reduced from 500ms to 300ms for better responsiveness
       { trailing: true }
     );
 
@@ -361,8 +380,8 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
           warnings: [],
           suggestions: [
             'Use a JSON validator to check your syntax',
-            'Common issues: missing quotes around keys, trailing commas, unmatched brackets'
-          ]
+            'Common issues: missing quotes around keys, trailing commas, unmatched brackets',
+          ],
         };
         this.#displayEnhancedValidationResults(result);
         this.#showValidationProgress(false);
@@ -372,10 +391,13 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       // Use enhanced validator if available, fallback to basic validation
       let validationResult;
       if (this.#enhancedValidator) {
-        validationResult = await this.#enhancedValidator.validateInput(parsedData, {
-          includeQualityAssessment: true,
-          includeSuggestions: true
-        });
+        validationResult = await this.#enhancedValidator.validateInput(
+          parsedData,
+          {
+            includeQualityAssessment: true,
+            includeSuggestions: true,
+          }
+        );
       } else {
         // Fallback to basic validation
         const basicResult = this.#validateCharacterStructure(parsedData);
@@ -383,8 +405,12 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
           isValid: basicResult.isValid,
           errors: basicResult.errors || [],
           warnings: [],
-          suggestions: basicResult.isValid ? [] : ['Consider using the enhanced validator for more detailed feedback'],
-          quality: { overallScore: basicResult.isValid ? 0.7 : 0.3 }
+          suggestions: basicResult.isValid
+            ? []
+            : [
+                'Consider using the enhanced validator for more detailed feedback',
+              ],
+          quality: { overallScore: basicResult.isValid ? 0.7 : 0.3 },
         };
       }
 
@@ -402,14 +428,13 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
         this.#showValidationProgress(false);
         return false;
       }
-
     } catch (error) {
       this.logger.error('Enhanced validation failed:', error);
       const fallbackResult = {
         isValid: false,
         errors: [`Validation system error: ${error.message}`],
         warnings: [],
-        suggestions: ['Try refreshing the page if the problem persists']
+        suggestions: ['Try refreshing the page if the problem persists'],
       };
       this.#displayEnhancedValidationResults(fallbackResult);
       this.#showValidationProgress(false);
@@ -501,6 +526,228 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     };
   }
 
+  // Enhanced Progress Tracking Methods
+
+  /**
+   * Update loading progress with stage information and time estimates
+   *
+   * @private
+   * @param {string} stage - Current stage name
+   * @param {number} progress - Progress percentage (0-100)
+   * @param {object} [timeEstimate] - Time estimate data
+   */
+  #updateLoadingProgress(stage, progress, timeEstimate = null) {
+    const loadingMessage = this._getElement('loadingMessage');
+    const progressContainer = this._getElement('progressContainer');
+    const progressBar = this._getElement('progressBar');
+    const timeEstimateElement = this._getElement('timeEstimate');
+
+    // Update loading message with stage and progress
+    if (loadingMessage) {
+      const message = this.#getStageMessage(stage, progress);
+      loadingMessage.textContent = message;
+    }
+
+    // Update progress bar
+    if (progressBar) {
+      this.#updateProgressBar(progress, timeEstimate);
+    }
+
+    // Update time estimate display
+    if (timeEstimateElement && timeEstimate) {
+      const formattedTime = this.#formatTimeEstimate(timeEstimate);
+      timeEstimateElement.textContent = formattedTime;
+      timeEstimateElement.style.display = formattedTime ? 'block' : 'none';
+    }
+
+    // Enhanced screen reader announcement
+    this.#announceProgressToScreenReader(stage, progress, timeEstimate);
+
+    // Show progress container if hidden
+    if (progressContainer) {
+      progressContainer.style.display = 'block';
+    }
+  }
+
+  /**
+   * Calculate time estimate based on current stage and performance data
+   *
+   * @private
+   * @param {string} currentStage - Current stage name
+   * @param {number} startTime - Generation start time
+   * @param {number} progress - Current progress (0-100)
+   * @returns {object} Time estimate data
+   */
+  #calculateTimeEstimate(currentStage, startTime, progress = 0) {
+    const currentTime = performance.now();
+    const elapsedTime = currentTime - startTime;
+
+    // Stage-based time estimation (based on existing performance data)
+    const stageWeights = {
+      validation: { weight: 0.15, baseTime: 1000 }, // 15% - Fast validation
+      processing: { weight: 0.55, baseTime: 15000 }, // 55% - Main AI processing
+      response: { weight: 0.2, baseTime: 3000 }, // 20% - Response processing
+      rendering: { weight: 0.1, baseTime: 1000 }, // 10% - Display rendering
+    };
+
+    const stageInfo = stageWeights[currentStage] || stageWeights['processing'];
+
+    // Calculate estimated total time based on progress
+    let estimatedTotal;
+    if (progress > 5) {
+      // Use actual progress for better estimate
+      estimatedTotal = elapsedTime / (progress / 100);
+    } else {
+      // Use stage-based estimate for early stages
+      estimatedTotal = stageInfo.baseTime / stageInfo.weight;
+    }
+
+    const remaining = Math.max(0, estimatedTotal - elapsedTime);
+
+    // Confidence decreases with estimation uncertainty
+    let confidence = 0.7; // Base confidence
+    if (progress > 20) confidence = 0.85;
+    if (progress > 50) confidence = 0.95;
+
+    return {
+      elapsed: Math.round(elapsedTime),
+      remaining: Math.round(remaining),
+      total: Math.round(estimatedTotal),
+      confidence: confidence,
+    };
+  }
+
+  /**
+   * Get stage-specific loading message
+   *
+   * @private
+   * @param {string} stage - Stage name
+   * @param {number} progress - Progress percentage
+   * @returns {string} Stage message
+   */
+  #getStageMessage(stage, progress) {
+    const roundedProgress = Math.round(progress);
+
+    const stageMessages = {
+      validation: `Stage 1 of 4: Validating character definition (${roundedProgress}% complete)`,
+      processing: `Stage 2 of 4: AI analyzing character traits and generating patterns (${roundedProgress}% complete)`,
+      response: `Stage 3 of 4: Processing and validating generated content (${roundedProgress}% complete)`,
+      rendering: `Stage 4 of 4: Preparing results for display (${roundedProgress}% complete)`,
+    };
+
+    return (
+      stageMessages[stage] ||
+      `Generating speech patterns (${roundedProgress}% complete)`
+    );
+  }
+
+  /**
+   * Update progress bar visual display
+   *
+   * @private
+   * @param {number} progress - Progress percentage (0-100)
+   * @param {object} [timeEstimate] - Time estimate data
+   */
+  #updateProgressBar(progress, timeEstimate = null) {
+    const progressBar = this._getElement('progressBar');
+    if (!progressBar) return;
+
+    const clampedProgress = Math.max(0, Math.min(100, progress));
+
+    // Use requestAnimationFrame for smooth animation
+    this._requestAnimationFrame(() => {
+      progressBar.style.width = `${clampedProgress}%`;
+
+      // Add confidence-based styling
+      if (timeEstimate && timeEstimate.confidence) {
+        const confidence = timeEstimate.confidence;
+        if (confidence > 0.9) {
+          progressBar.classList.add('high-confidence');
+        } else if (confidence > 0.7) {
+          progressBar.classList.add('medium-confidence');
+        } else {
+          progressBar.classList.add('low-confidence');
+        }
+      }
+    });
+  }
+
+  /**
+   * Format time estimate for display
+   *
+   * @private
+   * @param {object} timeEstimate - Time estimate data
+   * @returns {string} Formatted time string
+   */
+  #formatTimeEstimate(timeEstimate) {
+    if (!timeEstimate || timeEstimate.remaining < 1000) {
+      return ''; // Don't show very short estimates
+    }
+
+    const seconds = Math.ceil(timeEstimate.remaining / 1000);
+    const confidence = timeEstimate.confidence || 0.5;
+
+    if (seconds < 60) {
+      const range = Math.round(seconds * 0.2); // 20% variance
+      const low = Math.max(1, seconds - range);
+      const high = seconds + range;
+
+      if (confidence > 0.8) {
+        return `About ${seconds} seconds remaining`;
+      } else {
+        return `${low}-${high} seconds remaining`;
+      }
+    } else {
+      const minutes = Math.ceil(seconds / 60);
+      if (confidence > 0.8) {
+        return `About ${minutes} minute${minutes > 1 ? 's' : ''} remaining`;
+      } else {
+        return `${minutes}-${minutes + 1} minutes remaining`;
+      }
+    }
+  }
+
+  /**
+   * Enhanced screen reader progress announcement
+   *
+   * @private
+   * @param {string} stage - Current stage
+   * @param {number} progress - Progress percentage
+   * @param {object} [timeEstimate] - Time estimate data
+   */
+  #announceProgressToScreenReader(stage, progress, timeEstimate = null) {
+    const stageNames = {
+      validation: 'input validation',
+      processing: 'AI processing',
+      response: 'response processing',
+      rendering: 'display rendering',
+    };
+
+    const stageName = stageNames[stage] || 'processing';
+    const roundedProgress = Math.round(progress);
+
+    let announcement = `${stageName} ${roundedProgress}% complete`;
+
+    if (timeEstimate && timeEstimate.remaining > 5000) {
+      const timeText = this.#formatTimeEstimate(timeEstimate);
+      if (timeText) {
+        announcement += `. ${timeText}`;
+      }
+    }
+
+    // Only announce significant progress changes to avoid spam
+    if (
+      this.#lastAnnouncedProgress === undefined ||
+      Math.abs(this.#lastAnnouncedProgress - roundedProgress) >= 10
+    ) {
+      this.#announceToScreenReader(announcement);
+      this.#lastAnnouncedProgress = roundedProgress;
+    }
+  }
+
+  /** @private @type {number|undefined} */
+  #lastAnnouncedProgress = undefined;
+
   // Generation Workflow Methods
 
   /**
@@ -515,35 +762,124 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
     // Performance monitoring
     this._performanceMark('speech-patterns-generation-start');
+    const generationStartTime = performance.now();
 
     try {
       this.#isGenerating = true;
       this.#currentGenerationController = new AbortController();
 
-      // Update UI to loading state
+      // Stage 1: Initial UI Update and Validation (0-15%)
       this._performanceMark('speech-patterns-ui-update-start');
       this._showState('loading');
       this.#updateUIState();
-      this.#announceToScreenReader('Generating speech patterns...');
-      this._performanceMeasure('speech-patterns-ui-update', 'speech-patterns-ui-update-start');
 
-      // Generate speech patterns using service
+      // Show initial progress
+      let timeEstimate = this.#calculateTimeEstimate(
+        'validation',
+        generationStartTime,
+        5
+      );
+      this.#updateLoadingProgress('validation', 5, timeEstimate);
+
+      this._performanceMeasure(
+        'speech-patterns-ui-update',
+        'speech-patterns-ui-update-start'
+      );
+
+      // Brief pause for UI update (simulates validation time)
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Update validation progress
+      timeEstimate = this.#calculateTimeEstimate(
+        'validation',
+        generationStartTime,
+        15
+      );
+      this.#updateLoadingProgress('validation', 15, timeEstimate);
+
+      // Stage 2: AI Processing (15-70%)
       this._performanceMark('speech-patterns-llm-request-start');
+
+      // Update to processing stage
+      timeEstimate = this.#calculateTimeEstimate(
+        'processing',
+        generationStartTime,
+        20
+      );
+      this.#updateLoadingProgress('processing', 20, timeEstimate);
+
+      // Create progress callback for LLM processing
+      const progressCallback = (progress) => {
+        const adjustedProgress = 20 + progress * 0.5; // 20% to 70%
+        const currentTimeEstimate = this.#calculateTimeEstimate(
+          'processing',
+          generationStartTime,
+          adjustedProgress
+        );
+        this.#updateLoadingProgress(
+          'processing',
+          adjustedProgress,
+          currentTimeEstimate
+        );
+      };
+
       const processedPatterns =
         await this.#speechPatternsGenerator.generateSpeechPatterns(
           this.#characterDefinition,
           {
             abortSignal: this.#currentGenerationController?.signal,
+            progressCallback, // Add progress callback if service supports it
           }
         );
-      this._performanceMeasure('speech-patterns-llm-request', 'speech-patterns-llm-request-start');
+
+      this._performanceMeasure(
+        'speech-patterns-llm-request',
+        'speech-patterns-llm-request-start'
+      );
+
+      // Stage 3: Response Processing (70-90%)
+      timeEstimate = this.#calculateTimeEstimate(
+        'response',
+        generationStartTime,
+        75
+      );
+      this.#updateLoadingProgress('response', 75, timeEstimate);
+
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Brief pause for processing
+
+      timeEstimate = this.#calculateTimeEstimate(
+        'response',
+        generationStartTime,
+        90
+      );
+      this.#updateLoadingProgress('response', 90, timeEstimate);
 
       // Store results and display
       this.#lastGeneratedPatterns = processedPatterns;
-      
+
+      // Stage 4: Display Rendering (90-100%)
       this._performanceMark('speech-patterns-display-start');
+      timeEstimate = this.#calculateTimeEstimate(
+        'rendering',
+        generationStartTime,
+        95
+      );
+      this.#updateLoadingProgress('rendering', 95, timeEstimate);
+
       await this.#displayResults(processedPatterns);
-      this._performanceMeasure('speech-patterns-display', 'speech-patterns-display-start');
+
+      // Final progress update
+      timeEstimate = this.#calculateTimeEstimate(
+        'rendering',
+        generationStartTime,
+        100
+      );
+      this.#updateLoadingProgress('rendering', 100, timeEstimate);
+
+      this._performanceMeasure(
+        'speech-patterns-display',
+        'speech-patterns-display-start'
+      );
 
       // Update UI state
       this._showState('results');
@@ -588,7 +924,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     if (!container) return;
 
     // Use requestAnimationFrame for smooth rendering
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       this._requestAnimationFrame(() => {
         // Clear previous results
         container.innerHTML = '';
@@ -612,7 +948,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
         // Create results container
         const resultsContainer = document.createElement('div');
         resultsContainer.className = 'speech-patterns-results';
-        
+
         // Add CSS containment for optimized rendering
         resultsContainer.style.contain = 'layout style';
 
@@ -633,7 +969,9 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
         container.appendChild(fragment);
 
         // Set first pattern as focusable for keyboard navigation
-        const firstPattern = resultsContainer.querySelector('.speech-pattern-item');
+        const firstPattern = resultsContainer.querySelector(
+          '.speech-pattern-item'
+        );
         if (firstPattern) {
           firstPattern.setAttribute('tabindex', '0');
         }
@@ -665,7 +1003,6 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       totalCount: patterns.speechPatterns.length,
     };
   }
-
 
   /**
    * Create results header
@@ -703,11 +1040,15 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     // Performance optimizations: GPU acceleration and layer promotion
     patternElement.style.willChange = 'transform, opacity';
     patternElement.style.transform = 'translateZ(0)'; // Force GPU layer
-    
+
     // Remove will-change after animation completes
-    patternElement.addEventListener('animationend', () => {
-      patternElement.style.willChange = 'auto';
-    }, { once: true });
+    patternElement.addEventListener(
+      'animationend',
+      () => {
+        patternElement.style.willChange = 'auto';
+      },
+      { once: true }
+    );
 
     // Enhanced ARIA attributes for accessibility
     patternElement.setAttribute('tabindex', '-1');
@@ -812,7 +1153,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
 
         // Get format info
         const formats = this.#displayEnhancer.getSupportedExportFormats();
-        const formatInfo = formats.find(f => f.id === format) || formats[0];
+        const formatInfo = formats.find((f) => f.id === format) || formats[0];
 
         // Generate content based on format
         switch (format) {
@@ -1118,15 +1459,19 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
   #displayEnhancedValidationResults(validationResult) {
     const errorContainer = this._getElement('characterInputError');
     const textarea = this._getElement('characterDefinition');
-    
+
     if (!errorContainer) return;
 
     // Clear previous state
     this.#clearEnhancedValidationDisplay();
 
     const { errors, warnings, suggestions, quality } = validationResult;
-    
-    if (errors.length === 0 && warnings.length === 0 && suggestions.length === 0) {
+
+    if (
+      errors.length === 0 &&
+      warnings.length === 0 &&
+      suggestions.length === 0
+    ) {
       // All good - show success state
       if (quality && quality.overallScore >= 0.8) {
         this.#showValidationSuccess('Excellent character definition!');
@@ -1135,7 +1480,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       } else {
         errorContainer.style.display = 'none';
       }
-      
+
       if (textarea) {
         textarea.classList.remove('error', 'warning');
         textarea.classList.add('success');
@@ -1154,7 +1499,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       html += `Errors (${errors.length}) - Must be fixed`;
       html += '</h4>';
       html += '<ul class="validation-list">';
-      errors.forEach(error => {
+      errors.forEach((error) => {
         html += `<li class="validation-item error-item">${this.#escapeHtml(error)}</li>`;
       });
       html += '</ul>';
@@ -1169,7 +1514,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       html += `Warnings (${warnings.length}) - Recommended fixes`;
       html += '</h4>';
       html += '<ul class="validation-list">';
-      warnings.forEach(warning => {
+      warnings.forEach((warning) => {
         html += `<li class="validation-item warning-item">${this.#escapeHtml(warning)}</li>`;
       });
       html += '</ul>';
@@ -1184,7 +1529,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       html += `Suggestions (${suggestions.length}) - Improvements`;
       html += '</h4>';
       html += '<ul class="validation-list">';
-      suggestions.forEach(suggestion => {
+      suggestions.forEach((suggestion) => {
         html += `<li class="validation-item suggestion-item">${this.#escapeHtml(suggestion)}</li>`;
       });
       html += '</ul>';
@@ -1195,7 +1540,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     if (quality && typeof quality.overallScore === 'number') {
       const score = Math.round(quality.overallScore * 100);
       const level = this.#getQualityDisplayLevel(quality.overallScore);
-      
+
       html += '<div class="validation-section validation-quality">';
       html += '<h4 class="validation-section-title">';
       html += '<span class="validation-icon quality-icon">📊</span>';
@@ -1220,7 +1565,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
     // Update textarea styling
     if (textarea) {
       textarea.classList.remove('error', 'warning', 'success');
-      
+
       if (errors.length > 0) {
         textarea.classList.add('error');
       } else if (warnings.length > 0) {
@@ -1309,21 +1654,22 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    */
   #setupValidationSectionToggling() {
     const sections = document.querySelectorAll('.validation-section');
-    
-    sections.forEach(section => {
+
+    sections.forEach((section) => {
       const title = section.querySelector('.validation-section-title');
       const content = section.querySelector('.validation-list');
-      
+
       if (title && content) {
         // Make sections collapsible for warnings and suggestions
-        if (section.classList.contains('validation-warnings') || 
-            section.classList.contains('validation-suggestions')) {
-          
+        if (
+          section.classList.contains('validation-warnings') ||
+          section.classList.contains('validation-suggestions')
+        ) {
           title.style.cursor = 'pointer';
           title.setAttribute('tabindex', '0');
           title.setAttribute('role', 'button');
           title.setAttribute('aria-expanded', 'true');
-          
+
           const toggleSection = () => {
             const isExpanded = content.style.display !== 'none';
             content.style.display = isExpanded ? 'none' : 'block';
@@ -1373,7 +1719,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    */
   #escapeHtml(text) {
     if (typeof text !== 'string') return '';
-    
+
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
@@ -1526,7 +1872,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       const formats = this.#displayEnhancer.getSupportedExportFormats();
       formatSelector.innerHTML = formats
         .map(
-          format =>
+          (format) =>
             `<option value="${format.id}" title="${format.description}">${format.name}</option>`
         )
         .join('');
@@ -1537,7 +1883,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       const templates = this.#displayEnhancer.getAvailableTemplates();
       templateSelector.innerHTML = templates
         .map(
-          template =>
+          (template) =>
             `<option value="${template.id}" title="${template.description}">${template.name}</option>`
         )
         .join('');

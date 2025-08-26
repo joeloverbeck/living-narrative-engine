@@ -195,7 +195,20 @@
       "Bash(NODE_ENV=test npm run test:performance tests/performance/scopeDsl/ComplexFilterExpressions.performance.test.js)",
       "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/validators/EnhancedSpeechPatternsValidator.test.js --no-coverage --verbose --testNamePattern=\"should score high for complete character definitions\")",
       "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/validators/EnhancedSpeechPatternsValidator.test.js --no-coverage --verbose --testNamePattern=\"should provide quality-based suggestions for low scores\")",
-      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/validators/EnhancedSpeechPatternsValidator.test.js --no-coverage --silent --testNamePattern=\"should provide quality-based suggestions for low scores\")"
+      "Bash(NODE_ENV=test npx jest tests/unit/characterBuilder/validators/EnhancedSpeechPatternsValidator.test.js --no-coverage --silent --testNamePattern=\"should provide quality-based suggestions for low scores\")",
+      "Bash(NODE_ENV=test npx jest tests/performance/scopeDsl/ComplexFilterExpressions.performance.test.js --testNamePattern=\"should maintain performance consistency under concurrent load\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/performance/scopeDsl/ComplexFilterExpressions.performance.test.js --testNamePattern=\"should maintain performance consistency under concurrent load\" --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration tests/integration/clothing/unequipClothingAction.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/performance/actions/tracing/actionAwareStructuredTrace.performance.test.js --testNamePattern=\"should handle concurrent access without performance degradation\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/performance/actions/tracing/actionAwareStructuredTrace.performance.test.js --testNamePattern=\"should handle concurrent access without performance degradation\" --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/clothing/unequipClothingAction.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/actionCategorization/completeWorkflow.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/performance/actions/tracing/actionAwareStructuredTrace.performance.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/performance/scopeDsl/ComplexFilterExpressions.performance.test.js --testNamePattern=\"should handle complex filters on 10000\" --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/positioning/furnitureSitting.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/performance/characterBuilder/clicheErrorHandler.performance.test.js --testNamePattern=\"should demonstrate throttled cleanup behavior prevents O\\(n\\) performance degradation\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/positioning/furnitureSitting.integration.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest --config jest.config.performance.js --env=jsdom --silent tests/performance/characterBuilder/clicheErrorHandler.performance.test.js)"
     ],
     "deny": []
   }

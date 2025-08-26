@@ -520,6 +520,55 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
   }
 
   /**
+   * Create mock body part description builder
+   *
+   * @returns {object} Mock builder
+   */
+  createMockBodyPartDescriptionBuilder() {
+    return {
+      buildPartDescription: jest
+        .fn()
+        .mockReturnValue('test body part description'),
+      buildDescriptionFromParts: jest
+        .fn()
+        .mockReturnValue('full body description'),
+    };
+  }
+
+  /**
+   * Create mock part description generator
+   *
+   * @returns {object} Mock generator
+   */
+  createMockPartDescriptionGenerator() {
+    return {
+      generatePartDescriptions: jest
+        .fn()
+        .mockResolvedValue([
+          'head description',
+          'torso description',
+          'legs description',
+        ]),
+      generateSinglePartDescription: jest
+        .fn()
+        .mockResolvedValue('single part description'),
+    };
+  }
+
+  /**
+   * Wait for event processing to complete
+   * Simulates async event processing in tests
+   *
+   * @returns {Promise<void>}
+   */
+  async waitForEventProcessing() {
+    // Allow event loop to process
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // Flush any pending promises
+    await Promise.resolve();
+  }
+
+  /**
    * Get the action service
    *
    * @returns {object} Action service
@@ -601,8 +650,26 @@ export class ClothingIntegrationTestBed extends BaseTestBed {
   getSystemLogicInterpreter() {
     if (!this.systemLogicInterpreter) {
       // Create a mock system logic interpreter for testing
+      const executedOperations = [];
+      const listeners = [];
+
       this.systemLogicInterpreter = {
         processGameEvent: jest.fn().mockResolvedValue(true),
+        executedOperations, // Track executed operations
+        on: jest.fn((event, callback) => {
+          if (event === 'operationExecuted') {
+            listeners.push(callback);
+          }
+        }),
+        // Helper to simulate operation execution
+        simulateOperation: (op) => {
+          executedOperations.push(op);
+          listeners.forEach((cb) => cb(op));
+        },
+        // Helper to reset tracking
+        resetOperations: () => {
+          executedOperations.length = 0;
+        },
       };
     }
     return this.systemLogicInterpreter;

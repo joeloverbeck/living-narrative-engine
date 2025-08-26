@@ -35,9 +35,14 @@ describe('SpeechPatternsDisplayEnhancer - Advanced Exports', () => {
   describe('Enhanced Export Formats', () => {
     it('should list all supported export formats', () => {
       const formats = enhancer.getSupportedExportFormats();
-      
+
       expect(formats).toHaveLength(4);
-      expect(formats.map(f => f.id)).toEqual(['txt', 'json', 'markdown', 'csv']);
+      expect(formats.map((f) => f.id)).toEqual([
+        'txt',
+        'json',
+        'markdown',
+        'csv',
+      ]);
       expect(formats[0]).toHaveProperty('name', 'Plain Text');
       expect(formats[1]).toHaveProperty('name', 'JSON Data');
       expect(formats[2]).toHaveProperty('name', 'Markdown');
@@ -46,8 +51,8 @@ describe('SpeechPatternsDisplayEnhancer - Advanced Exports', () => {
 
     it('should validate each format has required properties', () => {
       const formats = enhancer.getSupportedExportFormats();
-      
-      formats.forEach(format => {
+
+      formats.forEach((format) => {
         expect(format).toHaveProperty('id');
         expect(format).toHaveProperty('name');
         expect(format).toHaveProperty('extension');
@@ -264,7 +269,7 @@ describe('SpeechPatternsDisplayEnhancer - Advanced Exports', () => {
 
       const result = enhancer.formatAsCsv(patterns);
       const lines = result.split('\n');
-      const dataLine = lines.find(line => line.startsWith('1,'));
+      const dataLine = lines.find((line) => line.startsWith('1,'));
       expect(dataLine).toBeDefined();
       expect(dataLine).toMatch(/,,/); // Empty circumstances field
     });
@@ -273,9 +278,9 @@ describe('SpeechPatternsDisplayEnhancer - Advanced Exports', () => {
   describe('Template System', () => {
     it('should list available templates', () => {
       const templates = enhancer.getAvailableTemplates();
-      
+
       expect(templates).toHaveLength(4);
-      expect(templates.map(t => t.id)).toEqual([
+      expect(templates.map((t) => t.id)).toEqual([
         'default',
         'detailed',
         'summary',
@@ -325,11 +330,13 @@ describe('SpeechPatternsDisplayEnhancer - Advanced Exports', () => {
 
     it('should limit patterns in summary template', () => {
       const patterns = {
-        speechPatterns: Array(20).fill(null).map((_, i) => ({
-          pattern: `Pattern ${i + 1}`,
-          example: `Example ${i + 1}`,
-          circumstances: `Context ${i + 1}`,
-        })),
+        speechPatterns: Array(20)
+          .fill(null)
+          .map((_, i) => ({
+            pattern: `Pattern ${i + 1}`,
+            example: `Example ${i + 1}`,
+            circumstances: `Context ${i + 1}`,
+          })),
         characterName: 'Test',
         generatedAt: new Date().toISOString(),
       };
@@ -385,8 +392,8 @@ describe('SpeechPatternsDisplayEnhancer - Advanced Exports', () => {
       expect(stats.complexityDistribution).toHaveProperty('low');
       expect(stats.complexityDistribution).toHaveProperty('medium');
       expect(stats.complexityDistribution).toHaveProperty('high');
-      
-      const totalComplexity = 
+
+      const totalComplexity =
         stats.complexityDistribution.low +
         stats.complexityDistribution.medium +
         stats.complexityDistribution.high;
@@ -405,7 +412,7 @@ describe('SpeechPatternsDisplayEnhancer - Advanced Exports', () => {
   describe('Export Filename Generation', () => {
     it('should generate filename with different extensions', () => {
       const characterName = 'Test Character';
-      
+
       const txtFilename = enhancer.generateExportFilename(characterName, {
         extension: 'txt',
       });

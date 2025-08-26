@@ -37,6 +37,7 @@ import HasBodyPartWithComponentValueHandler from '../../logic/operationHandlers/
 import UnequipClothingHandler from '../../logic/operationHandlers/unequipClothingHandler.js';
 import LockMovementHandler from '../../logic/operationHandlers/lockMovementHandler.js';
 import UnlockMovementHandler from '../../logic/operationHandlers/unlockMovementHandler.js';
+import RegenerateDescriptionHandler from '../../logic/operationHandlers/regenerateDescriptionHandler.js';
 import jsonLogic from 'json-logic-js';
 
 /**
@@ -371,6 +372,17 @@ export function registerOperationHandlers(registrar) {
           logger: c.resolve(tokens.ILogger),
           entityManager: c.resolve(tokens.IEntityManager),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.RegenerateDescriptionHandler,
+      RegenerateDescriptionHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          bodyDescriptionComposer: c.resolve(tokens.BodyDescriptionComposer),
         }),
     ],
   ];

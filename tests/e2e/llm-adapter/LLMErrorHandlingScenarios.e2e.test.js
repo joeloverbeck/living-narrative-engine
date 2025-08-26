@@ -687,10 +687,10 @@ describe('E2E: LLM Error Handling Scenarios', () => {
 
       // Act & Assert
       await expect(testBed.getAIDecision(testPrompt)).rejects.toThrow();
-      
+
       // Get the actual error for detailed inspection
       const error = await testBed.getAIDecision(testPrompt).catch((e) => e);
-      
+
       // Error details should be preserved (wrapped in LLMStrategyError)
       expect(error).toBeDefined();
       expect(error.message).toContain('Detailed error message');
