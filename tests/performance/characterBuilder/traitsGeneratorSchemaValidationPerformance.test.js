@@ -96,7 +96,8 @@ describe('Traits Generator - Schema Validation Performance', () => {
 
   /**
    * Load schemas for validation testing
-   * @returns {Promise<Object>} Loaded schemas
+   *
+   * @returns {Promise<object>} Loaded schemas
    */
   async function loadSchemas() {
     const schemasPath = path.resolve(process.cwd(), 'data/schemas');
@@ -128,9 +129,10 @@ describe('Traits Generator - Schema Validation Performance', () => {
 
   /**
    * Validate data against a schema
+   *
    * @param {*} data - Data to validate
    * @param {string} schemaName - Schema name to validate against
-   * @returns {Object} Validation result
+   * @returns {object} Validation result
    */
   function validateData(data, schemaName) {
     const validate = ajv.getSchema(schemaName);
