@@ -53,6 +53,14 @@ class JsonLogicEvaluationService extends BaseService {
 
     // --- ADDED: Register the 'not' operator alias upon instantiation ---
     this.addOperation('not', (a) => !a);
+    
+    // --- ADDED: Register the 'has' operator for checking object properties ---
+    this.addOperation('has', (object, property) => {
+      if (object && typeof object === 'object') {
+        return property in object;
+      }
+      return false;
+    });
 
     this.#logger.debug('JsonLogicEvaluationService initialized.');
   }
@@ -91,6 +99,8 @@ class JsonLogicEvaluationService extends BaseService {
       'var',
       'missing',
       'missing_some',
+      // Object operations
+      'has',
       // Array operations
       'in',
       'cat',

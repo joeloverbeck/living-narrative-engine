@@ -19,6 +19,7 @@ import createUnionResolver from './nodes/unionResolver.js';
 import createArrayIterationResolver from './nodes/arrayIterationResolver.js';
 import createClothingStepResolver from './nodes/clothingStepResolver.js';
 import createSlotAccessResolver from './nodes/slotAccessResolver.js';
+import createScopeReferenceResolver from './nodes/scopeReferenceResolver.js';
 
 /** @typedef {import('../types/runtimeContext.js').RuntimeContext} RuntimeContext */
 
@@ -48,12 +49,13 @@ import createSlotAccessResolver from './nodes/slotAccessResolver.js';
  * @implements {IScopeEngine}
  */
 class ScopeEngine extends IScopeEngine {
-  constructor() {
+  constructor({ scopeRegistry = null } = {}) {
     super();
-    this.maxDepth = 6;
+    this.maxDepth = 12;
     this.depthGuard = createDepthGuard(this.maxDepth);
     this.cycleDetector = createCycleDetector();
     this.contextMerger = new ContextMerger();
+    this.scopeRegistry = scopeRegistry;
   }
 
   setMaxDepth(n) {
@@ -190,7 +192,7 @@ class ScopeEngine extends IScopeEngine {
     });
     const slotAccessResolver = createSlotAccessResolver({ entitiesGateway });
 
-    return [
+    const resolvers = [
       // Clothing resolvers get priority for their specific fields
       clothingStepResolver,
       slotAccessResolver,
@@ -202,6 +204,18 @@ class ScopeEngine extends IScopeEngine {
       createUnionResolver(),
       createArrayIterationResolver(),
     ];
+
+    // Add scope reference resolver if scope registry is available
+    if (this.scopeRegistry) {
+      resolvers.push(
+        createScopeReferenceResolver({
+          scopeRegistry: this.scopeRegistry,
+          cycleDetector: this.cycleDetector,
+        })
+      );
+    }
+
+    return resolvers;
   }
 
   /**
@@ -237,6 +251,11 @@ class ScopeEngine extends IScopeEngine {
   resolve(ast, actorEntity, runtimeCtx, trace = null) {
     const source = 'ScopeEngine';
     trace?.addLog('step', 'Starting scope resolution.', source, { ast });
+
+    // Reset cycle detector and depth guard for each top-level resolution
+    // This ensures no state persists between separate resolve() calls
+    this.cycleDetector = createCycleDetector();
+    this.depthGuard = createDepthGuard(this.maxDepth);
 
     // Ensure engine is initialized with resolvers
     const dispatcher = this._ensureInitialized(runtimeCtx);
@@ -285,6 +304,10 @@ class ScopeEngine extends IScopeEngine {
       // For union and filter nodes, create a unique key based on the node object reference
       // This prevents false cycle detection when multiple nodes of the same type are nested
       nodeKey = `${node.type}:${Math.random().toString(36).substr(2, 9)}`;
+    } else if (node.type === 'ScopeReference') {
+      // For scope references, use the actual scope ID as the key
+      // This allows proper cycle detection when scopes reference each other
+      nodeKey = `ScopeReference:${node.scopeId}`;
     } else {
       nodeKey = `${node.type}:${node.field || ''}:${node.param || ''}`;
     }

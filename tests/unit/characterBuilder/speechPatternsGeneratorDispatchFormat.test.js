@@ -21,7 +21,7 @@ describe('SpeechPatternsGenerator - Event Dispatch Format', () => {
 
   beforeEach(() => {
     dispatchCalls = [];
-    
+
     mockLogger = {
       info: jest.fn(),
       debug: jest.fn(),
@@ -117,11 +117,11 @@ describe('SpeechPatternsGenerator - Event Dispatch Format', () => {
       // Verify all dispatch calls use correct format
       for (const call of dispatchCalls) {
         const [eventName, payload] = call;
-        
+
         // First argument must be a string (the event name)
         expect(typeof eventName).toBe('string');
         expect(eventName).toMatch(/^core:/);
-        
+
         // Second argument should be the payload object (if present)
         if (payload !== undefined) {
           expect(typeof payload).toBe('object');
@@ -153,12 +153,12 @@ describe('SpeechPatternsGenerator - Event Dispatch Format', () => {
       // Verify no dispatch calls use incorrect object format
       for (const call of dispatchCalls) {
         const [firstArg] = call;
-        
+
         // First argument should NOT be an object with a 'type' property
         if (typeof firstArg === 'object') {
           expect(firstArg).not.toHaveProperty('type');
         }
-        
+
         // It should be a string
         expect(typeof firstArg).toBe('string');
       }
@@ -168,7 +168,7 @@ describe('SpeechPatternsGenerator - Event Dispatch Format', () => {
   describe('Event Types', () => {
     it('should dispatch SPEECH_PATTERNS_GENERATION_STARTED event correctly', async () => {
       dispatchCalls = [];
-      
+
       const characterData = {
         'core:name': { text: 'Test Character' },
         'core:concept': { text: 'A test character' },
@@ -189,17 +189,21 @@ describe('SpeechPatternsGenerator - Event Dispatch Format', () => {
       const startedEventCall = dispatchCalls.find((call) => {
         const [firstArg] = call;
         return (
-          firstArg === CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED ||
-          (firstArg?.type === CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED)
+          firstArg ===
+            CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED ||
+          firstArg?.type ===
+            CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED
         );
       });
 
       expect(startedEventCall).toBeDefined();
-      
+
       // After fix, this should be in correct format
       const [eventName, payload] = startedEventCall;
       if (typeof eventName === 'string') {
-        expect(eventName).toBe(CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED);
+        expect(eventName).toBe(
+          CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED
+        );
         expect(payload).toHaveProperty('characterData');
         expect(payload).toHaveProperty('options');
         expect(payload).toHaveProperty('timestamp');
@@ -210,42 +214,48 @@ describe('SpeechPatternsGenerator - Event Dispatch Format', () => {
       // Test with cached result
       mockEventBus.dispatch.mockClear();
       dispatchCalls = [];
-      
+
       const characterData = {
         'core:name': { text: 'Test Character' },
         'core:concept': { text: 'A test character' },
       };
-      
+
       try {
         // First call to populate cache
-        await generator.generateSpeechPatterns(characterData, { patternCount: 3 });
+        await generator.generateSpeechPatterns(characterData, {
+          patternCount: 3,
+        });
       } catch (error) {
         // May fail due to LLM mock
       }
-      
+
       // Clear dispatch calls
       dispatchCalls = [];
-      
+
       try {
         // Second call should hit cache
-        await generator.generateSpeechPatterns(characterData, { patternCount: 3 });
+        await generator.generateSpeechPatterns(characterData, {
+          patternCount: 3,
+        });
       } catch (error) {
         // May fail due to LLM mock
       }
-      
+
       // Look for cache hit event
       const cacheHitCall = dispatchCalls.find((call) => {
         const [firstArg] = call;
         return (
           firstArg === CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_CACHE_HIT ||
-          (firstArg?.type === CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_CACHE_HIT)
+          firstArg?.type === CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_CACHE_HIT
         );
       });
-      
+
       if (cacheHitCall) {
         const [eventName, payload] = cacheHitCall;
         if (typeof eventName === 'string') {
-          expect(eventName).toBe(CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_CACHE_HIT);
+          expect(eventName).toBe(
+            CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_CACHE_HIT
+          );
           expect(payload).toHaveProperty('cacheKey');
           expect(payload).toHaveProperty('timestamp');
         }

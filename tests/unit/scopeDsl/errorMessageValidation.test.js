@@ -105,6 +105,7 @@ describe('Error Message Validation', () => {
 
     beforeEach(() => {
       engine = new ScopeEngine();
+      engine.setMaxDepth(6);
     });
 
     it('should throw ScopeDepthError with specific depth limit message', () => {

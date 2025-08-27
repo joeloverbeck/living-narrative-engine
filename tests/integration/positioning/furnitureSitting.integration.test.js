@@ -31,6 +31,7 @@ import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeC
 import LockMovementHandler from '../../../src/logic/operationHandlers/lockMovementHandler.js';
 import UnlockMovementHandler from '../../../src/logic/operationHandlers/unlockMovementHandler.js';
 import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
+import AtomicModifyComponentHandler from '../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -41,32 +42,32 @@ import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 
 // Action definitions
 const sitDownAction = {
-  id: "positioning:sit_down",
-  name: "Sit down",
-  description: "Sit down on available furniture",
-  targets: "positioning:available_furniture",
+  id: 'positioning:sit_down',
+  name: 'Sit down',
+  description: 'Sit down on available furniture',
+  targets: 'positioning:available_furniture',
   required_components: {
-    actor: ["core:actor"]
+    actor: ['core:actor'],
   },
   forbidden_components: {
-    actor: ["positioning:sitting_on", "positioning:kneeling_before"]
+    actor: ['positioning:sitting_on', 'positioning:kneeling_before'],
   },
-  template: "sit down on {target.components.core:description.short}",
+  template: 'sit down on {target.components.core:description.short}',
   prerequisites: [],
 };
 
 const getUpAction = {
-  id: "positioning:get_up_from_furniture", 
-  name: "Get up",
+  id: 'positioning:get_up_from_furniture',
+  name: 'Get up',
   description: "Stand up from the furniture you're sitting on",
-  targets: "positioning:furniture_im_sitting_on",
+  targets: 'positioning:furniture_im_sitting_on',
   required_components: {
-    actor: ["positioning:sitting_on"]
+    actor: ['positioning:sitting_on'],
   },
   forbidden_components: {
-    actor: []
+    actor: [],
   },
-  template: "get up from {target.components.core:description.short}",
+  template: 'get up from {target.components.core:description.short}',
   prerequisites: [],
 };
 
@@ -141,6 +142,11 @@ function createHandlers(entityManager, eventBus, logger) {
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
+    ATOMIC_MODIFY_COMPONENT: new AtomicModifyComponentHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    }),
   };
 }
 
@@ -167,28 +173,44 @@ describe('furniture sitting system', () => {
     // Create test actor
     actor = 'test:actor';
     testEnv.entityManager.addComponent(actor, ACTOR_COMPONENT_ID, {});
-    testEnv.entityManager.addComponent(actor, NAME_COMPONENT_ID, { name: 'Alice' });
-    testEnv.entityManager.addComponent(actor, POSITION_COMPONENT_ID, { locationId: 'location:room' });
+    testEnv.entityManager.addComponent(actor, NAME_COMPONENT_ID, {
+      name: 'Alice',
+    });
+    testEnv.entityManager.addComponent(actor, POSITION_COMPONENT_ID, {
+      locationId: 'location:room',
+    });
 
     // Create single-seat chair
     chair = 'furniture:chair';
-    testEnv.entityManager.addComponent(chair, 'positioning:allows_sitting', { spots: [null] });
-    testEnv.entityManager.addComponent(chair, DESCRIPTION_COMPONENT_ID, { 
-      short: 'wooden chair',
-      long: 'A simple wooden chair'
+    testEnv.entityManager.addComponent(chair, 'positioning:allows_sitting', {
+      spots: [null],
     });
-    testEnv.entityManager.addComponent(chair, NAME_COMPONENT_ID, { name: 'wooden chair' });
-    testEnv.entityManager.addComponent(chair, POSITION_COMPONENT_ID, { locationId: 'location:room' });
+    testEnv.entityManager.addComponent(chair, DESCRIPTION_COMPONENT_ID, {
+      short: 'wooden chair',
+      long: 'A simple wooden chair',
+    });
+    testEnv.entityManager.addComponent(chair, NAME_COMPONENT_ID, {
+      name: 'wooden chair',
+    });
+    testEnv.entityManager.addComponent(chair, POSITION_COMPONENT_ID, {
+      locationId: 'location:room',
+    });
 
     // Create three-seat couch
     couch = 'furniture:couch';
-    testEnv.entityManager.addComponent(couch, 'positioning:allows_sitting', { spots: [null, null, null] });
+    testEnv.entityManager.addComponent(couch, 'positioning:allows_sitting', {
+      spots: [null, null, null],
+    });
     testEnv.entityManager.addComponent(couch, DESCRIPTION_COMPONENT_ID, {
       short: 'leather couch',
-      long: 'A comfortable leather couch'
+      long: 'A comfortable leather couch',
     });
-    testEnv.entityManager.addComponent(couch, NAME_COMPONENT_ID, { name: 'leather couch' });
-    testEnv.entityManager.addComponent(couch, POSITION_COMPONENT_ID, { locationId: 'location:room' });
+    testEnv.entityManager.addComponent(couch, NAME_COMPONENT_ID, {
+      name: 'leather couch',
+    });
+    testEnv.entityManager.addComponent(couch, POSITION_COMPONENT_ID, {
+      locationId: 'location:room',
+    });
   });
 
   afterEach(() => {
@@ -231,9 +253,9 @@ describe('furniture sitting system', () => {
     it('should prevent sitting on occupied chair', async () => {
       // First actor sits
       await testEnv.dispatchAction({
-          actionId: 'positioning:sit_down',
-          actorId: actor,
-          targetId: chair,
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: chair,
       });
 
       // Verify first actor is sitting (should succeed since chair is empty)
@@ -249,14 +271,18 @@ describe('furniture sitting system', () => {
       // Create second actor
       const actor2 = 'test:actor2';
       testEnv.entityManager.addComponent(actor2, ACTOR_COMPONENT_ID, {});
-      testEnv.entityManager.addComponent(actor2, NAME_COMPONENT_ID, { name: 'Bob' });
-      testEnv.entityManager.addComponent(actor2, POSITION_COMPONENT_ID, { locationId: 'location:room' });
+      testEnv.entityManager.addComponent(actor2, NAME_COMPONENT_ID, {
+        name: 'Bob',
+      });
+      testEnv.entityManager.addComponent(actor2, POSITION_COMPONENT_ID, {
+        locationId: 'location:room',
+      });
 
       // Try to sit second actor - this should fail due to no available spots
       await testEnv.dispatchAction({
-          actionId: 'positioning:sit_down',
-          actorId: actor2,
-          targetId: chair,
+        actionId: 'positioning:sit_down',
+        actorId: actor2,
+        targetId: chair,
       });
 
       // Second actor should not be sitting (rule should fail to find empty spot)
@@ -279,16 +305,16 @@ describe('furniture sitting system', () => {
     it('should allow actor to get up from chair', async () => {
       // First sit down
       await testEnv.dispatchAction({
-          actionId: 'positioning:sit_down',
-          actorId: actor,
-          targetId: chair,
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: chair,
       });
 
       // Then get up
       await testEnv.dispatchAction({
-          actionId: 'positioning:get_up_from_furniture',
-          actorId: actor,
-          targetId: chair,
+        actionId: 'positioning:get_up_from_furniture',
+        actorId: actor,
+        targetId: chair,
       });
 
       // Check that sitting_on component is removed
@@ -325,9 +351,9 @@ describe('furniture sitting system', () => {
 
       // Get up
       await testEnv.dispatchAction({
-          actionId: 'positioning:get_up_from_furniture',
-          actorId: actor,
-          targetId: couch,
+        actionId: 'positioning:get_up_from_furniture',
+        actorId: actor,
+        targetId: couch,
       });
 
       // Check that only middle spot is cleared
@@ -342,9 +368,9 @@ describe('furniture sitting system', () => {
   describe('multi-seat furniture', () => {
     it('should allocate first available spot on couch', async () => {
       await testEnv.dispatchAction({
-          actionId: 'positioning:sit_down',
-          actorId: actor,
-          targetId: couch,
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: couch,
       });
 
       const sittingOn = testEnv.entityManager.getComponentData(
@@ -365,22 +391,26 @@ describe('furniture sitting system', () => {
     it('should allocate second spot when first is occupied', async () => {
       // First actor sits
       await testEnv.dispatchAction({
-          actionId: 'positioning:sit_down',
-          actorId: actor,
-          targetId: couch,
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: couch,
       });
 
       // Create second actor
       const actor2 = 'test:actor2';
       testEnv.entityManager.addComponent(actor2, ACTOR_COMPONENT_ID, {});
-      testEnv.entityManager.addComponent(actor2, NAME_COMPONENT_ID, { name: 'Bob' });
-      testEnv.entityManager.addComponent(actor2, POSITION_COMPONENT_ID, { locationId: 'location:room' });
+      testEnv.entityManager.addComponent(actor2, NAME_COMPONENT_ID, {
+        name: 'Bob',
+      });
+      testEnv.entityManager.addComponent(actor2, POSITION_COMPONENT_ID, {
+        locationId: 'location:room',
+      });
 
       // Second actor sits
       await testEnv.dispatchAction({
-          actionId: 'positioning:sit_down',
-          actorId: actor2,
-          targetId: couch,
+        actionId: 'positioning:sit_down',
+        actorId: actor2,
+        targetId: couch,
       });
 
       const sittingOn = testEnv.entityManager.getComponentData(
@@ -403,9 +433,9 @@ describe('furniture sitting system', () => {
     it('should prevent sitting while already sitting', async () => {
       // Sit on chair
       await testEnv.dispatchAction({
-          actionId: 'positioning:sit_down',
-          actorId: actor,
-          targetId: chair,
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: chair,
       });
 
       // Verify actor is sitting on chair
@@ -421,9 +451,9 @@ describe('furniture sitting system', () => {
 
       // Try to sit on couch without standing - this should be filtered out by ActionIndex
       await testEnv.dispatchAction({
-          actionId: 'positioning:sit_down',
-          actorId: actor,
-          targetId: couch,
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: couch,
       });
 
       // Should still be on chair (no rule execution due to ActionIndex filtering)
@@ -453,9 +483,9 @@ describe('furniture sitting system', () => {
 
       // Try to sit - this should be filtered out by ActionIndex
       await testEnv.dispatchAction({
-          actionId: 'positioning:sit_down',
-          actorId: actor,
-          targetId: chair,
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: chair,
       });
 
       // Should not be sitting (ActionIndex prevents rule execution)
@@ -483,9 +513,9 @@ describe('furniture sitting system', () => {
 
       // Try to sit
       await testEnv.dispatchAction({
-          actionId: 'positioning:sit_down',
-          actorId: actor,
-          targetId: chair,
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: chair,
       });
 
       // Should not be sitting (scope wouldn't include this furniture)
@@ -493,7 +523,7 @@ describe('furniture sitting system', () => {
         actor,
         'positioning:sitting_on'
       );
-      
+
       // Note: In a full implementation with scope resolution,
       // the action wouldn't be available. Here we're testing
       // the rule behavior would still work correctly.
@@ -506,15 +536,27 @@ describe('furniture sitting system', () => {
   describe('edge cases', () => {
     it('should handle furniture with no spots gracefully', async () => {
       const brokenChair = 'furniture:broken';
-      testEnv.entityManager.addComponent(brokenChair, 'positioning:allows_sitting', { spots: [] });
-      testEnv.entityManager.addComponent(brokenChair, DESCRIPTION_COMPONENT_ID, { short: 'broken chair' });
-      testEnv.entityManager.addComponent(brokenChair, NAME_COMPONENT_ID, { name: 'broken chair' });
-      testEnv.entityManager.addComponent(brokenChair, POSITION_COMPONENT_ID, { locationId: 'location:room' });
+      testEnv.entityManager.addComponent(
+        brokenChair,
+        'positioning:allows_sitting',
+        { spots: [] }
+      );
+      testEnv.entityManager.addComponent(
+        brokenChair,
+        DESCRIPTION_COMPONENT_ID,
+        { short: 'broken chair' }
+      );
+      testEnv.entityManager.addComponent(brokenChair, NAME_COMPONENT_ID, {
+        name: 'broken chair',
+      });
+      testEnv.entityManager.addComponent(brokenChair, POSITION_COMPONENT_ID, {
+        locationId: 'location:room',
+      });
 
       await testEnv.dispatchAction({
-          actionId: 'positioning:sit_down',
-          actorId: actor,
-          targetId: brokenChair,
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: brokenChair,
       });
 
       const sittingOn = testEnv.entityManager.getComponentData(
@@ -527,13 +569,13 @@ describe('furniture sitting system', () => {
     it('should handle furniture destruction while sitting', async () => {
       // Sit on chair
       await testEnv.dispatchAction({
-          actionId: 'positioning:sit_down',
-          actorId: actor,
-          targetId: chair,
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: chair,
       });
 
       // Remove chair entity (simulate destruction)
-      // Note: SimpleEntityManager doesn't have removeEntity, 
+      // Note: SimpleEntityManager doesn't have removeEntity,
       // we'd need to remove all components to simulate this
 
       // Actor should still have sitting_on component

@@ -366,15 +366,15 @@ describe('ClicheErrorHandler - Performance Tests', () => {
       // This test verifies that the throttled cleanup mechanism prevents O(n) performance degradation.
       // Without throttling, cleanup would run on every error, causing performance to degrade linearly
       // as errors accumulate. With throttling (every 100 operations or 5 minutes), performance remains stable.
-      
+
       // Note: We use a 3.0x threshold instead of 2.0x to account for CI environment variability
       // and the microsecond-level timing of these operations. True O(n) degradation would show
       // 10x+ performance ratios, so 3.0x still catches genuine issues while reducing flakiness.
-      
+
       let testPassed = false;
       let lastError = null;
       const maxAttempts = 3;
-      
+
       // Retry logic for test stability in CI environments
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
@@ -441,7 +441,7 @@ describe('ClicheErrorHandler - Performance Tests', () => {
               avgMs: p.avgTimePerError.toFixed(2),
             })),
           });
-          
+
           testPassed = true;
           break; // Test passed, exit retry loop
         } catch (error) {
@@ -452,7 +452,7 @@ describe('ClicheErrorHandler - Performance Tests', () => {
           }
         }
       }
-      
+
       // If all attempts failed, throw the last error
       if (!testPassed) {
         throw lastError;

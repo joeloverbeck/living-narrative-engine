@@ -299,21 +299,44 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    
+    // Clear operator caches to prevent state contamination between tests
+    if (jsonLogicCustomOperators) {
+      jsonLogicCustomOperators.clearCaches();
+    }
   });
 
   describe('socket coverage tests', () => {
+    /**
+     * Generates unique entity IDs for each test to prevent cache contamination
+     * 
+     * @returns {object} Object containing unique entity IDs
+     */
+    function generateUniqueEntityIds() {
+      const testName = expect.getState().currentTestName;
+      const uniqueId = testName ? testName.replace(/\s+/g, '_').toLowerCase() : Date.now();
+      
+      return {
+        actor: `actor_${uniqueId}`,
+        target: `target_${uniqueId}`,
+        groin: `groin_${uniqueId}`,
+        penis: `penis_${uniqueId}`
+      };
+    }
+
     /**
      * Sets up test entities with optional clothing configuration
      *
      * @param {object} targetClothingConfig - Clothing configuration for target
      */
     function setupEntities(targetClothingConfig = {}) {
+      const entityIds = generateUniqueEntityIds();
       const entities = [
         {
-          id: 'actor1',
+          id: entityIds.actor,
           components: {
             'positioning:closeness': {
-              partners: ['target1'],
+              partners: [entityIds.target],
             },
             'positioning:facing_away': {
               facing_away_from: [],
@@ -321,37 +344,37 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           },
         },
         {
-          id: 'target1',
+          id: entityIds.target,
           components: {
             'positioning:closeness': {
-              partners: ['actor1'],
+              partners: [entityIds.actor],
             },
             'positioning:facing_away': {
               facing_away_from: [],
             },
             'anatomy:body': {
               body: {
-                root: 'groin1',
+                root: entityIds.groin,
               },
             },
             ...targetClothingConfig,
           },
         },
         {
-          id: 'groin1',
+          id: entityIds.groin,
           components: {
             'anatomy:part': {
               parent: null,
-              children: ['penis1'],
+              children: [entityIds.penis],
               subType: 'groin',
             },
           },
         },
         {
-          id: 'penis1',
+          id: entityIds.penis,
           components: {
             'anatomy:part': {
-              parent: 'groin1',
+              parent: entityIds.groin,
               children: [],
               subType: 'penis',
             },
@@ -364,8 +387,8 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
       // Mock findPartsByType with correct signature (rootEntityId, partType)
       mockBodyGraphService.findPartsByType.mockImplementation(
         (rootEntityId, partType) => {
-          if (rootEntityId === 'groin1' && partType === 'penis') {
-            return ['penis1'];
+          if (rootEntityId === entityIds.groin && partType === 'penis') {
+            return [entityIds.penis];
           }
           return [];
         }
@@ -375,11 +398,13 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
       mockBodyGraphService.buildAdjacencyCache.mockImplementation(() => {
         // No-op for tests - cache is handled by the mock above
       });
+
+      return entityIds;
     }
 
     it('should discover action when penis is covered', async () => {
       // Arrange - penis covered by clothing
-      setupEntities({
+      const entityIds = setupEntities({
         'clothing:equipment': {
           equipped: {
             torso_lower: {
@@ -398,7 +423,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
       });
 
       // Act
-      const actorEntity = entityManager.getEntityInstance('actor1');
+      const actorEntity = entityManager.getEntityInstance(entityIds.actor);
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
       });
@@ -408,15 +433,15 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         (action) => action.id === 'sex:rub_penis_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(1);
-      expect(rubOverClothesActions[0].params.targetId).toBe('target1');
+      expect(rubOverClothesActions[0].params.targetId).toBe(entityIds.target);
     });
 
     it('should not discover action when penis is uncovered', async () => {
       // Arrange - no clothing equipment, penis uncovered
-      setupEntities({});
+      const entityIds = setupEntities({});
 
       // Act
-      const actorEntity = entityManager.getEntityInstance('actor1');
+      const actorEntity = entityManager.getEntityInstance(entityIds.actor);
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
       });
@@ -430,7 +455,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
     it('should not discover action when clothing equipment exists but no slot metadata', async () => {
       // Arrange - equipment but no metadata (edge case where isSocketCovered returns false)
-      setupEntities({
+      const entityIds = setupEntities({
         'clothing:equipment': {
           equipped: {
             torso_lower: {
@@ -442,7 +467,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
       });
 
       // Act
-      const actorEntity = entityManager.getEntityInstance('actor1');
+      const actorEntity = entityManager.getEntityInstance(entityIds.actor);
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
       });
@@ -456,7 +481,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
     it('should discover action when penis is covered by multiple clothing layers', async () => {
       // Arrange - multiple layers covering penis
-      setupEntities({
+      const entityIds = setupEntities({
         'clothing:equipment': {
           equipped: {
             torso_lower: {
@@ -477,7 +502,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
       });
 
       // Act
-      const actorEntity = entityManager.getEntityInstance('actor1');
+      const actorEntity = entityManager.getEntityInstance(entityIds.actor);
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
       });
@@ -487,17 +512,18 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
         (action) => action.id === 'sex:rub_penis_over_clothes'
       );
       expect(rubOverClothesActions).toHaveLength(1);
-      expect(rubOverClothesActions[0].params.targetId).toBe('target1');
+      expect(rubOverClothesActions[0].params.targetId).toBe(entityIds.target);
     });
 
     it('should not discover action when target is facing away', async () => {
       // Arrange - target facing away from actor, but penis covered
+      const entityIds = generateUniqueEntityIds();
       const entities = [
         {
-          id: 'actor1',
+          id: entityIds.actor,
           components: {
             'positioning:closeness': {
-              partners: ['target1'],
+              partners: [entityIds.target],
             },
             'positioning:facing_away': {
               facing_away_from: [],
@@ -505,17 +531,17 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           },
         },
         {
-          id: 'target1',
+          id: entityIds.target,
           components: {
             'positioning:closeness': {
-              partners: ['actor1'],
+              partners: [entityIds.actor],
             },
             'positioning:facing_away': {
-              facing_away_from: ['actor1'], // Target is facing away from actor
+              facing_away_from: [entityIds.actor], // Target is facing away from actor
             },
             'anatomy:body': {
               body: {
-                root: 'groin1',
+                root: entityIds.groin,
               },
             },
             'clothing:equipment': {
@@ -536,20 +562,20 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           },
         },
         {
-          id: 'groin1',
+          id: entityIds.groin,
           components: {
             'anatomy:part': {
               parent: null,
-              children: ['penis1'],
+              children: [entityIds.penis],
               subType: 'groin',
             },
           },
         },
         {
-          id: 'penis1',
+          id: entityIds.penis,
           components: {
             'anatomy:part': {
-              parent: 'groin1',
+              parent: entityIds.groin,
               children: [],
               subType: 'penis',
             },
@@ -562,15 +588,15 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
       // Mock findPartsByType with correct signature (rootEntityId, partType)
       mockBodyGraphService.findPartsByType.mockImplementation(
         (rootEntityId, partType) => {
-          if (rootEntityId === 'groin1' && partType === 'penis') {
-            return ['penis1'];
+          if (rootEntityId === entityIds.groin && partType === 'penis') {
+            return [entityIds.penis];
           }
           return [];
         }
       );
 
       // Act
-      const actorEntity = entityManager.getEntityInstance('actor1');
+      const actorEntity = entityManager.getEntityInstance(entityIds.actor);
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
       });
@@ -584,12 +610,13 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
     it('should not discover action when target has no penis', async () => {
       // Arrange - target without penis but with clothing
+      const entityIds = generateUniqueEntityIds();
       const entities = [
         {
-          id: 'actor1',
+          id: entityIds.actor,
           components: {
             'positioning:closeness': {
-              partners: ['target1'],
+              partners: [entityIds.target],
             },
             'positioning:facing_away': {
               facing_away_from: [],
@@ -597,17 +624,17 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           },
         },
         {
-          id: 'target1',
+          id: entityIds.target,
           components: {
             'positioning:closeness': {
-              partners: ['actor1'],
+              partners: [entityIds.actor],
             },
             'positioning:facing_away': {
               facing_away_from: [],
             },
             'anatomy:body': {
               body: {
-                root: 'groin1',
+                root: entityIds.groin,
               },
             },
             'clothing:equipment': {
@@ -628,7 +655,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           },
         },
         {
-          id: 'groin1',
+          id: entityIds.groin,
           components: {
             'anatomy:part': {
               parent: null,
@@ -649,7 +676,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
       );
 
       // Act
-      const actorEntity = entityManager.getEntityInstance('actor1');
+      const actorEntity = entityManager.getEntityInstance(entityIds.actor);
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
       });
@@ -663,9 +690,10 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
     it('should not discover action when no closeness relationship exists', async () => {
       // Arrange - no closeness component relationship
+      const entityIds = generateUniqueEntityIds();
       const entities = [
         {
-          id: 'actor1',
+          id: entityIds.actor,
           components: {
             'positioning:facing_away': {
               facing_away_from: [],
@@ -674,11 +702,11 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           },
         },
         {
-          id: 'target1',
+          id: entityIds.target,
           components: {
             'anatomy:body': {
               body: {
-                root: 'groin1',
+                root: entityIds.groin,
               },
             },
             'clothing:equipment': {
@@ -699,20 +727,20 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
           },
         },
         {
-          id: 'groin1',
+          id: entityIds.groin,
           components: {
             'anatomy:part': {
               parent: null,
-              children: ['penis1'],
+              children: [entityIds.penis],
               subType: 'groin',
             },
           },
         },
         {
-          id: 'penis1',
+          id: entityIds.penis,
           components: {
             'anatomy:part': {
-              parent: 'groin1',
+              parent: entityIds.groin,
               children: [],
               subType: 'penis',
             },
@@ -725,15 +753,15 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
       // Mock findPartsByType with correct signature (rootEntityId, partType)
       mockBodyGraphService.findPartsByType.mockImplementation(
         (rootEntityId, partType) => {
-          if (rootEntityId === 'groin1' && partType === 'penis') {
-            return ['penis1'];
+          if (rootEntityId === entityIds.groin && partType === 'penis') {
+            return [entityIds.penis];
           }
           return [];
         }
       );
 
       // Act
-      const actorEntity = entityManager.getEntityInstance('actor1');
+      const actorEntity = entityManager.getEntityInstance(entityIds.actor);
       const result = await actionDiscoveryService.getValidActions(actorEntity, {
         jsonLogicEval,
       });

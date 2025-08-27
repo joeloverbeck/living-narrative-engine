@@ -83,13 +83,13 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
     });
 
     test('returns voice guidance when thoughts exist', () => {
-      const thoughts = [
-        { text: 'First thought', timestamp: '2024-01-01' }
-      ];
+      const thoughts = [{ text: 'First thought', timestamp: '2024-01-01' }];
 
       const result = formatter.formatThoughtsVoiceGuidance(thoughts);
 
-      expect(result).toBe('INNER VOICE REMINDER: Your thoughts below must reflect your character\'s authentic mental voice and personality patterns.');
+      expect(result).toBe(
+        "INNER VOICE REMINDER: Your thoughts below must reflect your character's authentic mental voice and personality patterns."
+      );
     });
 
     test('returns same guidance regardless of number of thoughts', () => {
@@ -97,14 +97,18 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       const multipleThoughts = [
         { text: 'First thought', timestamp: '2024-01-01' },
         { text: 'Second thought', timestamp: '2024-01-02' },
-        { text: 'Third thought', timestamp: '2024-01-03' }
+        { text: 'Third thought', timestamp: '2024-01-03' },
       ];
 
       const result1 = formatter.formatThoughtsVoiceGuidance(singleThought);
       const result2 = formatter.formatThoughtsVoiceGuidance(multipleThoughts);
 
-      expect(result1).toBe('INNER VOICE REMINDER: Your thoughts below must reflect your character\'s authentic mental voice and personality patterns.');
-      expect(result2).toBe('INNER VOICE REMINDER: Your thoughts below must reflect your character\'s authentic mental voice and personality patterns.');
+      expect(result1).toBe(
+        "INNER VOICE REMINDER: Your thoughts below must reflect your character's authentic mental voice and personality patterns."
+      );
+      expect(result2).toBe(
+        "INNER VOICE REMINDER: Your thoughts below must reflect your character's authentic mental voice and personality patterns."
+      );
     });
   });
 
@@ -177,9 +181,11 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
         thoughtsArray: [{ text: 'Test thought', timestamp: '2024-01-01' }],
       };
 
-      const resultWithThoughts = formatter.formatPromptData(promptDataWithThoughts);
+      const resultWithThoughts = formatter.formatPromptData(
+        promptDataWithThoughts
+      );
       expect(resultWithThoughts.thoughtsVoiceGuidance).toBe(
-        'INNER VOICE REMINDER: Your thoughts below must reflect your character\'s authentic mental voice and personality patterns.'
+        "INNER VOICE REMINDER: Your thoughts below must reflect your character's authentic mental voice and personality patterns."
       );
 
       // Test with empty thoughts array

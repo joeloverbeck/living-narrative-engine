@@ -99,7 +99,7 @@ export class JsonLogicCustomOperators extends BaseService {
       logger: this.#logger,
     });
 
-    const isSocketCoveredOp = new IsSocketCoveredOperator({
+    this.isSocketCoveredOp = new IsSocketCoveredOperator({
       entityManager: this.#entityManager,
       logger: this.#logger,
     });
@@ -165,15 +165,28 @@ export class JsonLogicCustomOperators extends BaseService {
     );
 
     // Register isSocketCovered operator
+    const self = this;
     jsonLogicEvaluationService.addOperation(
       'isSocketCovered',
       function (entityPath, socketId) {
         // 'this' is the evaluation context
-        return isSocketCoveredOp.evaluate([entityPath, socketId], this);
+        return self.isSocketCoveredOp.evaluate([entityPath, socketId], this);
       }
     );
 
     this.#logger.info('Custom JSON Logic operators registered successfully');
+  }
+
+  /**
+   * Clears all operator caches - useful for testing
+   */
+  clearCaches() {
+    this.#logger.debug('Clearing custom operator caches');
+    
+    // Clear IsSocketCoveredOperator cache if it exists
+    if (this.isSocketCoveredOp) {
+      this.isSocketCoveredOp.clearCache();
+    }
   }
 }
 

@@ -163,6 +163,20 @@ class Parser {
       'IDENTIFIER',
       'Expected source node (actor, location, entities, target, or targets)'
     );
+
+    // Check if this is a scope reference (identifier with colon in next token)
+    if (this.match('COLON')) {
+      // This is a scope reference like "base:enhanced_actors"
+      const modId = idTok.value;
+      this.advance(); // consume ':'
+      const scopeNameTok = this.expect(
+        'IDENTIFIER',
+        'Expected scope name after colon'
+      );
+      const scopeId = `${modId}:${scopeNameTok.value}`;
+      return { type: 'ScopeReference', scopeId };
+    }
+
     switch (idTok.value) {
       case 'actor':
         return { type: 'Source', kind: 'actor' };

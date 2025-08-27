@@ -411,12 +411,14 @@ describe('filterResolver', () => {
     describe('edge cases', () => {
       it('should use entitiesGateway.getComponentData when entity.getComponentData is not available', () => {
         // Import and clear entity cache to prevent interference from previous tests
-        const { clearEntityCache } = require('../../../../src/scopeDsl/core/entityHelpers.js');
+        const {
+          clearEntityCache,
+        } = require('../../../../src/scopeDsl/core/entityHelpers.js');
         clearEntityCache();
-        
+
         // Clear previous calls and reset the mock
         entitiesGateway.getComponentData.mockClear();
-        
+
         // Override the default mock to return entity without getComponentData method
         entitiesGateway.getEntityInstance.mockImplementation((id) => {
           if (id === 'entity1') {

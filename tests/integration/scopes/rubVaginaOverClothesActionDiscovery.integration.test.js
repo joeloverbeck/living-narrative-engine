@@ -35,6 +35,7 @@ import { PipelineResult } from '../../../src/actions/pipeline/PipelineResult.js'
 import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
 import jsonLogic from 'json-logic-js';
 import { createMockBodyGraphService } from '../../common/mockFactories/bodyGraphServiceFactory.js';
+import { clearEntityCache } from '../../../src/scopeDsl/core/entityHelpers.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -216,7 +217,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         getConditionDefinition: (id) => dataRegistry.get('conditions', id),
       },
     });
-    
+
     // NOTE: Operators are NOT registered here - they will be registered
     // after mock setup in each test or in setupEntities()
     jsonLogicCustomOperators = null;
@@ -310,32 +311,36 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
   });
 
   afterEach(() => {
+    // CRITICAL: Clear entity cache to prevent test contamination
+    // This is essential for test isolation as the cache persists between tests
+    clearEntityCache();
+
     // IMPORTANT: Remove all custom operators to prevent contamination
     // This is critical for test isolation as json-logic-js uses a global instance
     const customOperators = [
       'hasPartWithComponentValue',
-      'hasPartOfType', 
+      'hasPartOfType',
       'hasPartOfTypeWithComponentValue',
       'hasClothingInSlot',
       'hasClothingInSlotLayer',
       'isSocketCovered',
-      'not' // Also remove the 'not' operator added by JsonLogicEvaluationService
+      'not', // Also remove the 'not' operator added by JsonLogicEvaluationService
     ];
-    
+
     // Remove each custom operator directly from json-logic-js
     // This ensures complete cleanup even if jsonLogicEval is null
-    customOperators.forEach(op => {
+    customOperators.forEach((op) => {
       try {
         jsonLogic.rm_operation(op);
       } catch (e) {
         // Ignore errors - operator might not exist
       }
     });
-    
+
     // Clear all mocks and restore original implementations
     jest.clearAllMocks();
     jest.restoreAllMocks();
-    
+
     // Clear references
     jsonLogicEval = null;
     jsonLogicCustomOperators = null;
@@ -350,21 +355,21 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
     // Remove old operators first if they exist
     const customOperators = [
       'hasPartWithComponentValue',
-      'hasPartOfType', 
+      'hasPartOfType',
       'hasPartOfTypeWithComponentValue',
       'hasClothingInSlot',
       'hasClothingInSlotLayer',
-      'isSocketCovered'
+      'isSocketCovered',
     ];
-    
-    customOperators.forEach(op => {
+
+    customOperators.forEach((op) => {
       try {
         jsonLogic.rm_operation(op);
       } catch (e) {
         // Ignore - operator might not exist
       }
     });
-    
+
     // Create new operators with current mock state
     jsonLogicCustomOperators = new JsonLogicCustomOperators({
       logger,
@@ -450,7 +455,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
           return [];
         }
       );
-      
+
       // CRITICAL: Register operators AFTER mock setup
       registerOperatorsWithCurrentMocks();
     }
@@ -481,7 +486,6 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         jsonLogicEval,
         currentLocation: { id: 'test-location' },
       });
-
 
       // Assert
       const rubOverClothesActions = result.actions.filter(
@@ -658,7 +662,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
           return [];
         }
       );
-      
+
       // CRITICAL: Register operators AFTER mock setup
       registerOperatorsWithCurrentMocks();
 
@@ -748,7 +752,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
           return [];
         }
       );
-      
+
       // CRITICAL: Register operators AFTER mock setup
       registerOperatorsWithCurrentMocks();
 
@@ -843,7 +847,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
           return [];
         }
       );
-      
+
       // CRITICAL: Register operators AFTER mock setup
       registerOperatorsWithCurrentMocks();
 

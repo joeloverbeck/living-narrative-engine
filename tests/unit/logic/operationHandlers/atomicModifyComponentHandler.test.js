@@ -87,9 +87,9 @@ describe('AtomicModifyComponentHandler', () => {
   //  Constructor validation
   // ---------------------------------------------------------------------------
   test('throws without valid dependencies', () => {
-    expect(() => new AtomicModifyComponentHandler({ logger: mockLogger })).toThrow(
-      /entityManager/
-    );
+    expect(
+      () => new AtomicModifyComponentHandler({ logger: mockLogger })
+    ).toThrow(/entityManager/);
     expect(
       () =>
         new AtomicModifyComponentHandler({
@@ -100,7 +100,8 @@ describe('AtomicModifyComponentHandler', () => {
         })
     ).toThrow(/getComponentData/);
     expect(
-      () => new AtomicModifyComponentHandler({ entityManager: mockEntityManager })
+      () =>
+        new AtomicModifyComponentHandler({ entityManager: mockEntityManager })
     ).toThrow(/logger/);
     expect(
       () =>
@@ -219,11 +220,11 @@ describe('AtomicModifyComponentHandler', () => {
   });
 
   test('handles complex object expected values with deep equality', async () => {
-    const currentComponent = { 
-      config: { 
+    const currentComponent = {
+      config: {
         settings: { enabled: true, count: 5 },
-        metadata: { name: 'test' }
-      }
+        metadata: { name: 'test' },
+      },
     };
     mockEntityManager.getComponentData.mockReturnValue(currentComponent);
 
@@ -243,8 +244,8 @@ describe('AtomicModifyComponentHandler', () => {
     const expectedModified = {
       config: {
         settings: { enabled: false, count: 10 },
-        metadata: { name: 'test' }
-      }
+        metadata: { name: 'test' },
+      },
     };
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
       actorId,
@@ -290,8 +291,8 @@ describe('AtomicModifyComponentHandler', () => {
   });
 
   test('fails when expected complex object does not match exactly', async () => {
-    const currentComponent = { 
-      settings: { enabled: true, count: 5, extra: 'field' }
+    const currentComponent = {
+      settings: { enabled: true, count: 5, extra: 'field' },
     };
     mockEntityManager.getComponentData.mockReturnValue(currentComponent);
 
@@ -366,40 +367,58 @@ describe('AtomicModifyComponentHandler', () => {
     mockEntityManager.getComponentData.mockReturnValue(testComponent);
 
     // Test actor reference
-    await handler.execute({
-      entity_ref: 'actor',
-      component_type: 'test:comp',
-      field: 'value',
-      expected_value: 'test',
-      new_value: 'updated',
-      result_variable: 'result1',
-    }, buildCtx());
+    await handler.execute(
+      {
+        entity_ref: 'actor',
+        component_type: 'test:comp',
+        field: 'value',
+        expected_value: 'test',
+        new_value: 'updated',
+        result_variable: 'result1',
+      },
+      buildCtx()
+    );
 
-    expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(actorId, 'test:comp');
+    expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+      actorId,
+      'test:comp'
+    );
 
     // Test target reference
-    await handler.execute({
-      entity_ref: 'target',
-      component_type: 'test:comp',
-      field: 'value',
-      expected_value: 'test',
-      new_value: 'updated',
-      result_variable: 'result2',
-    }, buildCtx());
+    await handler.execute(
+      {
+        entity_ref: 'target',
+        component_type: 'test:comp',
+        field: 'value',
+        expected_value: 'test',
+        new_value: 'updated',
+        result_variable: 'result2',
+      },
+      buildCtx()
+    );
 
-    expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(targetId, 'test:comp');
+    expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+      targetId,
+      'test:comp'
+    );
 
     // Test direct entity ID object
-    await handler.execute({
-      entity_ref: { entityId: 'direct-id' },
-      component_type: 'test:comp',
-      field: 'value',
-      expected_value: 'test',
-      new_value: 'updated',
-      result_variable: 'result3',
-    }, buildCtx());
+    await handler.execute(
+      {
+        entity_ref: { entityId: 'direct-id' },
+        component_type: 'test:comp',
+        field: 'value',
+        expected_value: 'test',
+        new_value: 'updated',
+        result_variable: 'result3',
+      },
+      buildCtx()
+    );
 
-    expect(mockEntityManager.getComponentData).toHaveBeenCalledWith('direct-id', 'test:comp');
+    expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+      'direct-id',
+      'test:comp'
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -423,7 +442,9 @@ describe('AtomicModifyComponentHandler', () => {
     await handler.execute(params, ctx);
 
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('EntityManager.addComponent reported an unexpected failure')
+      expect.stringContaining(
+        'EntityManager.addComponent reported an unexpected failure'
+      )
     );
     expect(ctx.evaluationContext.context.result).toBe(false);
   });
@@ -465,53 +486,62 @@ describe('AtomicModifyComponentHandler', () => {
   test('deep equality handles null and undefined correctly', async () => {
     const component1 = { value: null };
     const component2 = { value: undefined };
-    
+
     mockEntityManager.getComponentData
       .mockReturnValueOnce(component1)
       .mockReturnValueOnce(component2);
 
     // Test null expected value
     const ctx1 = buildCtx();
-    await handler.execute({
-      entity_ref: 'actor',
-      component_type: 'test:comp',
-      field: 'value',
-      expected_value: null,
-      new_value: 'new',
-      result_variable: 'result1',
-    }, ctx1);
-    
+    await handler.execute(
+      {
+        entity_ref: 'actor',
+        component_type: 'test:comp',
+        field: 'value',
+        expected_value: null,
+        new_value: 'new',
+        result_variable: 'result1',
+      },
+      ctx1
+    );
+
     expect(ctx1.evaluationContext.context.result1).toBe(true);
 
-    // Test undefined expected value  
+    // Test undefined expected value
     const ctx2 = buildCtx();
-    await handler.execute({
-      entity_ref: 'actor',
-      component_type: 'test:comp',
-      field: 'value',
-      expected_value: undefined,
-      new_value: 'new',
-      result_variable: 'result2',
-    }, ctx2);
-    
+    await handler.execute(
+      {
+        entity_ref: 'actor',
+        component_type: 'test:comp',
+        field: 'value',
+        expected_value: undefined,
+        new_value: 'new',
+        result_variable: 'result2',
+      },
+      ctx2
+    );
+
     expect(ctx2.evaluationContext.context.result2).toBe(true);
   });
 
   test('deep equality handles arrays correctly', async () => {
-    const currentComponent = { 
-      items: ['a', 'b', { nested: true }] 
+    const currentComponent = {
+      items: ['a', 'b', { nested: true }],
     };
     mockEntityManager.getComponentData.mockReturnValue(currentComponent);
 
     const ctx = buildCtx();
-    await handler.execute({
-      entity_ref: 'actor',
-      component_type: 'test:comp',
-      field: 'items',
-      expected_value: ['a', 'b', { nested: true }],
-      new_value: ['updated'],
-      result_variable: 'result',
-    }, ctx);
+    await handler.execute(
+      {
+        entity_ref: 'actor',
+        component_type: 'test:comp',
+        field: 'items',
+        expected_value: ['a', 'b', { nested: true }],
+        new_value: ['updated'],
+        result_variable: 'result',
+      },
+      ctx
+    );
 
     expect(ctx.evaluationContext.context.result).toBe(true);
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
@@ -526,14 +556,17 @@ describe('AtomicModifyComponentHandler', () => {
     mockEntityManager.getComponentData.mockReturnValue(currentComponent);
 
     const ctx = buildCtx();
-    await handler.execute({
-      entity_ref: 'actor',
-      component_type: 'test:comp',
-      field: 'items',
-      expected_value: ['a', 'b', 'c'], // Different length
-      new_value: ['updated'],
-      result_variable: 'result',
-    }, ctx);
+    await handler.execute(
+      {
+        entity_ref: 'actor',
+        component_type: 'test:comp',
+        field: 'items',
+        expected_value: ['a', 'b', 'c'], // Different length
+        new_value: ['updated'],
+        result_variable: 'result',
+      },
+      ctx
+    );
 
     expect(ctx.evaluationContext.context.result).toBe(false);
     expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
@@ -549,18 +582,21 @@ describe('AtomicModifyComponentHandler', () => {
       error: jest.fn(),
       debug: jest.fn(),
     };
-    
+
     const ctx = buildCtx({ logger: ctxLogger });
-    
+
     // Use invalid field to trigger warning
-    await handler.execute({
-      entity_ref: 'actor',
-      component_type: 'test:comp',
-      field: '',
-      expected_value: 'test',
-      new_value: 'new',
-      result_variable: 'result',
-    }, ctx);
+    await handler.execute(
+      {
+        entity_ref: 'actor',
+        component_type: 'test:comp',
+        field: '',
+        expected_value: 'test',
+        new_value: 'new',
+        result_variable: 'result',
+      },
+      ctx
+    );
 
     expect(ctxLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining('field" must be a non-empty string')
@@ -576,14 +612,17 @@ describe('AtomicModifyComponentHandler', () => {
     mockEntityManager.getComponentData.mockReturnValue(currentComponent);
 
     const ctx = buildCtx();
-    await handler.execute({
-      entity_ref: 'actor',
-      component_type: 'test:comp',
-      field: 'deeply.nested.path',
-      expected_value: undefined, // Path doesn't exist
-      new_value: 'created',
-      result_variable: 'result',
-    }, ctx);
+    await handler.execute(
+      {
+        entity_ref: 'actor',
+        component_type: 'test:comp',
+        field: 'deeply.nested.path',
+        expected_value: undefined, // Path doesn't exist
+        new_value: 'created',
+        result_variable: 'result',
+      },
+      ctx
+    );
 
     expect(ctx.evaluationContext.context.result).toBe(true);
     expect(mockEntityManager.addComponent).toHaveBeenCalledWith(

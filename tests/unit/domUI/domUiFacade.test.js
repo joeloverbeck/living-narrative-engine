@@ -141,12 +141,10 @@ describe('DomUiFacade', () => {
     );
   });
 
-  it('should throw an error if entityLifecycleMonitor is missing', () => {
+  it('should NOT throw an error if entityLifecycleMonitor is missing (optional)', () => {
     const deps = { ...validDeps };
     delete deps.entityLifecycleMonitor;
-    expect(() => new DomUiFacade(deps)).toThrow(
-      'DomUiFacade: Missing or invalid entityLifecycleMonitor dependency.'
-    );
+    expect(() => new DomUiFacade(deps)).not.toThrow();
   });
 
   /* ---------- getters ---------- */

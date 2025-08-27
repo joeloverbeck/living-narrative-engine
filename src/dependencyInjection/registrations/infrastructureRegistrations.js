@@ -194,8 +194,14 @@ export function registerInfrastructure(container) {
   });
   safeDebug(`Registered ${String(tokens.EventDispatchService)}.`);
 
-  // Scope DSL Engine
-  registrar.single(tokens.ScopeEngine, ScopeEngine);
+  // Scope DSL Engine - with scopeRegistry dependency
+  container.register(
+    tokens.ScopeEngine,
+    (c) => new ScopeEngine({ scopeRegistry: c.resolve(tokens.IScopeRegistry) }),
+    {
+      lifecycle: 'singleton',
+    }
+  );
   safeDebug(`Registered ${String(tokens.ScopeEngine)}.`);
 
   // DSL Parser

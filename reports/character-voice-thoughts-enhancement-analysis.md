@@ -42,12 +42,14 @@ game.html → bundle.js → AIPromptPipeline → Character Prompt Template → F
 ### Current State Assessment
 
 **Strengths:**
+
 - Comprehensive character voice guidance for dialogue and actions
 - Strong first-person perspective enforcement
 - Excellent action tag rules preventing internal thoughts in action descriptions
 - Robust character identity establishment
 
 **Weaknesses:**
+
 - No specific guidance that inner thoughts should reflect character's unique mental voice
 - Generic thoughts sections without character-specific voice instructions
 - Missing emphasis that thoughts should match character's speech patterns and personality
@@ -66,11 +68,13 @@ The current prompt system treats inner thoughts as a separate, generic response 
 **Modification:** Enhance `characterPortrayalGuidelinesTemplate` to include specific thoughts voice guidance.
 
 **Proposed Addition** (after Speech Style section):
+
 ```json
 "Inner Voice: Your thoughts must authentically reflect {{name}}'s unique mental voice, personality patterns, and internal speech style. Think as {{name}} would think - use their vocabulary, their concerns, their way of processing the world. Your internal monologue should sound distinctly like {{name}}, not like a generic AI assistant describing thoughts."
 ```
 
 **Benefits:**
+
 - Direct integration with existing character voice system
 - Reinforces first-person perspective for thoughts
 - Emphasizes character authenticity in internal processes
@@ -83,16 +87,22 @@ The current prompt system treats inner thoughts as a separate, generic response 
 **Modification:** Add conditional thoughts-specific instructions in template.
 
 **Proposed Addition:**
-```javascript
-{thoughtsVoiceGuidance}
 
-{thoughtsSection}
+```javascript
+{
+  thoughtsVoiceGuidance;
+}
+
+{
+  thoughtsSection;
+}
 ```
 
 Where `thoughtsVoiceGuidance` would be populated when thoughts exist with:
 "INNER VOICE REMINDER: Your thoughts below must reflect {{name}}'s authentic mental voice and personality patterns."
 
 **Benefits:**
+
 - Provides context-specific reminders
 - Appears only when thoughts section is present
 - Reinforces character voice directly before thoughts content
@@ -104,6 +114,7 @@ Where `thoughtsVoiceGuidance` would be populated when thoughts exist with:
 **Modification:** Enhance `formatThoughtsSection()` to include voice guidance.
 
 **Proposed Change:**
+
 ```javascript
 formatThoughtsSection(thoughtsArray) {
   const content = this.formatThoughts(thoughtsArray);
@@ -119,6 +130,7 @@ ${content}
 ```
 
 **Benefits:**
+
 - Direct integration with thoughts formatting
 - Character-agnostic but voice-focused guidance
 - Reinforces authenticity at the exact moment thoughts are presented
@@ -126,6 +138,7 @@ ${content}
 ### Phase 4: Testing & Validation Strategy
 
 **Test Scenarios:**
+
 1. **Character Archetype Testing:**
    - Scholarly character → thoughts should reflect analytical patterns
    - Street-smart character → thoughts should use colloquial mental voice
@@ -155,9 +168,10 @@ ${content}
 **File:** `src/prompting/templates/characterPromptTemplate.js`
 **Location:** Add new placeholder before `{thoughtsSection}`
 **Dependencies:** Requires corresponding updates in:
+
 - `AIPromptContentProvider.js` to populate the new placeholder
 - `promptDataFormatter.js` to provide the guidance content
-**Risk Level:** Low (additive change to template system)
+  **Risk Level:** Low (additive change to template system)
 
 ### Phase 3 Implementation
 
@@ -169,12 +183,14 @@ ${content}
 ## Success Metrics
 
 ### Qualitative Measures
+
 - Inner thoughts sound distinctly like the character speaking internally
 - Character personality traits and speech patterns appear in thoughts
 - Internal monologue matches character's established voice and concerns
 - Reduction in generic, AI-assistant-like thought responses
 
 ### Quantitative Measures
+
 - Character voice consistency score across dialogue vs thoughts
 - User satisfaction ratings for character authenticity
 - Reduction in "voice breaks" where thoughts don't match character identity
@@ -182,15 +198,18 @@ ${content}
 ## Risk Assessment
 
 ### Low Risk Elements
+
 - Phase 1 (Core prompt text enhancement): Simple text addition to existing system
 - Character identity system remains unchanged
 - Existing prompt generation pipeline preserved
 
 ### Medium Risk Elements
+
 - Phase 3 (Formatter enhancement): Modifies existing formatting logic
 - Template system changes require coordination across multiple files
 
 ### Mitigation Strategies
+
 - Implement phases incrementally with testing between each
 - Maintain backward compatibility in all formatting functions
 - Test with diverse character archetypes before deployment

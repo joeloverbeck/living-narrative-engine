@@ -45,7 +45,14 @@
           "description": "Context variable name to store the boolean result (true if modification succeeded, false if atomic check failed)"
         }
       },
-      "required": ["entity_ref", "component_type", "field", "expected_value", "new_value", "result_variable"],
+      "required": [
+        "entity_ref",
+        "component_type",
+        "field",
+        "expected_value",
+        "new_value",
+        "result_variable"
+      ],
       "additionalProperties": false
     }
   }

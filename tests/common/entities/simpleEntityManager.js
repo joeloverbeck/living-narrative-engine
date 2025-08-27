@@ -51,18 +51,36 @@ export default class SimpleEntityManager {
       return undefined;
     }
 
+    const entityManager = this; // Capture reference to fix closure issue
+
     // Return an object that has a getComponentData method to satisfy isValidEntity
     return {
       id: entity.id,
-      components: entity.components,
-      get componentTypeIds() {
-        return Object.keys(entity.components);
+      get components() {
+        // Always get fresh data from the entity manager
+        const currentEnt = entityManager.entities.get(id);
+        return currentEnt ? currentEnt.components : {};
       },
-      getComponentData: (componentType) =>
-        entity.components[componentType] ?? null,
-      hasComponent: (componentType) =>
-        Object.prototype.hasOwnProperty.call(entity.components, componentType),
-      getAllComponents: () => entity.components,
+      get componentTypeIds() {
+        // Always get fresh data from the entity manager
+        const currentEnt = entityManager.entities.get(id);
+        return currentEnt ? Object.keys(currentEnt.components) : [];
+      },
+      getComponentData: (componentType) => {
+        // Always get fresh data from the entity manager
+        const currentEnt = entityManager.entities.get(id);
+        return currentEnt ? currentEnt.components[componentType] ?? null : null;
+      },
+      hasComponent: (componentType) => {
+        // Always get fresh data from the entity manager
+        const currentEnt = entityManager.entities.get(id);
+        return currentEnt ? Object.prototype.hasOwnProperty.call(currentEnt.components, componentType) : false;
+      },
+      getAllComponents: () => {
+        // Always get fresh data from the entity manager
+        const currentEnt = entityManager.entities.get(id);
+        return currentEnt ? currentEnt.components : {};
+      },
     };
   }
 
@@ -93,11 +111,12 @@ export default class SimpleEntityManager {
 
   /**
    * Adds or replaces a component on an entity.
+   * Returns true on success for compatibility with atomic operations.
    *
    * @param {string} id - Entity id.
    * @param {string} type - Component type.
    * @param {object} data - Component data to set.
-   * @returns {void}
+   * @returns {boolean|Promise<boolean>} Success status
    */
   addComponent(id, type, data) {
     let ent = this.entities.get(id);
@@ -106,6 +125,7 @@ export default class SimpleEntityManager {
       this.entities.set(id, ent);
     }
     ent.components[type] = deepClone(data);
+    return Promise.resolve(true);
   }
 
   /**
@@ -123,6 +143,48 @@ export default class SimpleEntityManager {
   }
 
   /**
+   * Returns all entities in the manager.
+   *
+   * @returns {Array<object>} Array of all entity objects.
+   */
+  getEntities() {
+    const result = [];
+    const entityManager = this; // Capture reference to fix closure issue
+    
+    for (const entity of this.entities.values()) {
+      result.push({
+        id: entity.id,
+        get components() {
+          // Always get fresh data from the entity manager
+          const currentEnt = entityManager.entities.get(entity.id);
+          return currentEnt ? currentEnt.components : {};
+        },
+        get componentTypeIds() {
+          // Always get fresh data from the entity manager
+          const currentEnt = entityManager.entities.get(entity.id);
+          return currentEnt ? Object.keys(currentEnt.components) : [];
+        },
+        getComponentData: (type) => {
+          // Always get fresh data from the entity manager
+          const currentEnt = entityManager.entities.get(entity.id);
+          return currentEnt ? currentEnt.components[type] ?? null : null;
+        },
+        hasComponent: (type) => {
+          // Always get fresh data from the entity manager
+          const currentEnt = entityManager.entities.get(entity.id);
+          return currentEnt ? Object.prototype.hasOwnProperty.call(currentEnt.components, type) : false;
+        },
+        getAllComponents: () => {
+          // Always get fresh data from the entity manager
+          const currentEnt = entityManager.entities.get(entity.id);
+          return currentEnt ? currentEnt.components : {};
+        },
+      });
+    }
+    return result;
+  }
+
+  /**
    * Returns all entities that have the specified component.
    *
    * @param {string} componentType - Component type to filter by.
@@ -130,16 +192,27 @@ export default class SimpleEntityManager {
    */
   getEntitiesWithComponent(componentType) {
     const result = [];
+    const entityManager = this; // Capture reference to fix closure issue
+    
     for (const ent of this.entities.values()) {
       if (Object.prototype.hasOwnProperty.call(ent.components, componentType)) {
         result.push({
           id: ent.id,
           get componentTypeIds() {
-            return Object.keys(ent.components);
+            // Always get fresh data from the entity manager
+            const currentEnt = entityManager.entities.get(ent.id);
+            return currentEnt ? Object.keys(currentEnt.components) : [];
           },
-          getComponentData: (type) => ent.components[type] ?? null,
-          hasComponent: (type) =>
-            Object.prototype.hasOwnProperty.call(ent.components, type),
+          getComponentData: (type) => {
+            // Always get fresh data from the entity manager  
+            const currentEnt = entityManager.entities.get(ent.id);
+            return currentEnt ? currentEnt.components[type] ?? null : null;
+          },
+          hasComponent: (type) => {
+            // Always get fresh data from the entity manager
+            const currentEnt = entityManager.entities.get(ent.id);
+            return currentEnt ? Object.prototype.hasOwnProperty.call(currentEnt.components, type) : false;
+          },
         });
       }
     }
