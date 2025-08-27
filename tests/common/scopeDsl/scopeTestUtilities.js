@@ -179,8 +179,17 @@ export class ScopeTestUtilities {
       );
     }
 
-    // Create trace context if needed
-    const traceContext = trace ? new TraceContext() : null;
+    // Handle trace context - can be boolean or TraceContext instance
+    let traceContext = null;
+    if (trace) {
+      // If trace is already a TraceContext instance, use it directly
+      if (trace instanceof TraceContext) {
+        traceContext = trace;
+      } else {
+        // Otherwise create a new one
+        traceContext = new TraceContext();
+      }
+    }
 
     // Resolve the scope - engine expects (ast, actorEntity, runtimeCtx, trace)
     const result = await scopeEngine.resolve(

@@ -165,6 +165,94 @@ if (typeof window !== 'undefined') {
   window.showSaveFilePicker = undefined;
 }
 
+// 8. Performance User Timing API polyfill for jsdom
+// jsdom doesn't implement performance.mark/measure/getEntriesByName
+if (typeof performance !== 'undefined') {
+  // Store for performance marks and measures
+  const performanceEntries = [];
+  const performanceMarks = new Map();
+  
+  if (!performance.mark) {
+    performance.mark = function(markName) {
+      const entry = {
+        name: markName,
+        entryType: 'mark',
+        startTime: performance.now(),
+        duration: 0
+      };
+      performanceMarks.set(markName, entry);
+      performanceEntries.push(entry);
+      return entry;
+    };
+  }
+  
+  if (!performance.measure) {
+    performance.measure = function(measureName, startMarkName, endMarkName) {
+      const startMark = performanceMarks.get(startMarkName);
+      const endMark = performanceMarks.get(endMarkName);
+      
+      if (!startMark) {
+        throw new Error(`Failed to execute 'measure': The mark '${startMarkName}' does not exist.`);
+      }
+      if (!endMark) {
+        throw new Error(`Failed to execute 'measure': The mark '${endMarkName}' does not exist.`);
+      }
+      
+      const entry = {
+        name: measureName,
+        entryType: 'measure',
+        startTime: startMark.startTime,
+        duration: endMark.startTime - startMark.startTime
+      };
+      performanceEntries.push(entry);
+      return entry;
+    };
+  }
+  
+  if (!performance.getEntriesByName) {
+    performance.getEntriesByName = function(name) {
+      return performanceEntries.filter(entry => entry.name === name);
+    };
+  }
+  
+  if (!performance.clearMarks) {
+    performance.clearMarks = function(markName) {
+      if (markName) {
+        performanceMarks.delete(markName);
+        const index = performanceEntries.findIndex(e => e.name === markName && e.entryType === 'mark');
+        if (index !== -1) performanceEntries.splice(index, 1);
+      } else {
+        // Clear all marks
+        for (const [name] of performanceMarks) {
+          performanceMarks.delete(name);
+        }
+        // Remove all marks from entries
+        for (let i = performanceEntries.length - 1; i >= 0; i--) {
+          if (performanceEntries[i].entryType === 'mark') {
+            performanceEntries.splice(i, 1);
+          }
+        }
+      }
+    };
+  }
+  
+  if (!performance.clearMeasures) {
+    performance.clearMeasures = function(measureName) {
+      if (measureName) {
+        const index = performanceEntries.findIndex(e => e.name === measureName && e.entryType === 'measure');
+        if (index !== -1) performanceEntries.splice(index, 1);
+      } else {
+        // Remove all measures from entries
+        for (let i = performanceEntries.length - 1; i >= 0; i--) {
+          if (performanceEntries[i].entryType === 'measure') {
+            performanceEntries.splice(i, 1);
+          }
+        }
+      }
+    };
+  }
+}
+
 console.log('jest.setup.js: DOM API mocks initialized');
 
 // Note: Removed default jest.useRealTimers() to avoid conflicts with tests that use fake timers
