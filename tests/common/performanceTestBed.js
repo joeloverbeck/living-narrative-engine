@@ -42,7 +42,7 @@ function isRunningInCI() {
  *
  * @returns {number} Baseline memory usage in bytes
  */
-async function forceGCAndGetBaseline() {
+export async function forceGCAndGetBaseline() {
   // Force garbage collection if available (Node.js with --expose-gc flag)
   if (global.gc) {
     global.gc();
@@ -60,7 +60,7 @@ async function forceGCAndGetBaseline() {
  * @param {number} samples - Number of samples to take (default: 3)
  * @returns {Promise<number>} Average memory usage in bytes
  */
-async function getStableMemoryUsage(samples = 3) {
+export async function getStableMemoryUsage(samples = 3) {
   const measurements = [];
 
   for (let i = 0; i < samples; i++) {
