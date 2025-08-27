@@ -263,7 +263,10 @@
       "Bash(NODE_ENV=test npx jest tests/e2e/scopeDsl/DeveloperExperience.e2e.test.js --no-coverage)",
       "Bash(NODE_ENV=test npx jest tests/e2e/scopeDsl/DeveloperExperience.e2e.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test node --expose-gc ./node_modules/.bin/jest tests/memory/scopeDsl/HighConcurrency.memory.test.js --config jest.config.memory.js --env=jsdom --silent --testNamePattern=\"should manage memory efficiently under resource-intensive concurrent load\")",
-      "Bash(NODE_ENV=test node --expose-gc ./node_modules/.bin/jest tests/memory/scopeDsl/HighConcurrency.memory.test.js --config jest.config.memory.js --env=jsdom --silent --testNamePattern=\"should recover memory gracefully from resource pressure spikes\")"
+      "Bash(NODE_ENV=test node --expose-gc ./node_modules/.bin/jest tests/memory/scopeDsl/HighConcurrency.memory.test.js --config jest.config.memory.js --env=jsdom --silent --testNamePattern=\"should recover memory gracefully from resource pressure spikes\")",
+      "Bash(NODE_ENV=test npx jest tests/performance/logging/hybridLogger.performance.test.js --config jest.config.performance.js --testTimeout=5000 --bail)",
+      "Bash(NODE_ENV=test npx jest tests/performance/logging/hybridLogger.performance.test.js --config jest.config.performance.js --testTimeout=10000)",
+      "Bash(NODE_ENV=test node --expose-gc ./node_modules/.bin/jest tests/memory/scopeDsl/HighConcurrency.memory.test.js --testNamePattern=\"should cleanup memory efficiently after intensive concurrent operations\" --config jest.config.memory.js --no-coverage --verbose)"
     ],
     "deny": []
   }
