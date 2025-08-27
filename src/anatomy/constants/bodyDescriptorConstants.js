@@ -14,6 +14,7 @@ export const BODY_BUILD_TYPES = {
   SHAPELY: 'shapely',
   THICK: 'thick',
   MUSCULAR: 'muscular',
+  HULKING: 'hulking',
   STOCKY: 'stocky',
 };
 

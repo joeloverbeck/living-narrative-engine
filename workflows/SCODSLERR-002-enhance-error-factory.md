@@ -1,9 +1,11 @@
 # SCODSLERR-002: Enhance ErrorFactory with Templates
 
 ## Overview
+
 Enhance the existing error factory to support templated error messages, standardized error codes, and metadata attachment for consistent error creation across all resolvers.
 
 ## Objectives
+
 - Enhance `ScopeDslErrorFactory` with template system
 - Implement message interpolation for dynamic values
 - Add support for error codes and metadata
@@ -12,9 +14,11 @@ Enhance the existing error factory to support templated error messages, standard
 ## Implementation Details
 
 ### Location
+
 `src/scopeDsl/core/errorFactory.js`
 
 ### Key Features
+
 1. **Template System**
    - Pre-defined message templates for common errors
    - Template keys for easy reference
@@ -36,6 +40,7 @@ Enhance the existing error factory to support templated error messages, standard
    - Support nested object property access
 
 ### Template Examples
+
 ```javascript
 {
   missingActor: {
@@ -54,6 +59,7 @@ Enhance the existing error factory to support templated error messages, standard
 ```
 
 ### Interface
+
 ```javascript
 class ScopeDslErrorFactory {
   create(code, message, metadata = {})
@@ -62,6 +68,7 @@ class ScopeDslErrorFactory {
 ```
 
 ## Acceptance Criteria
+
 - [ ] Factory creates errors with codes and metadata
 - [ ] Template system with all predefined templates
 - [ ] Message interpolation works correctly
@@ -72,6 +79,7 @@ class ScopeDslErrorFactory {
 - [ ] Returns ScopeDslError instances
 
 ## Testing Requirements
+
 - Test error creation with codes and metadata
 - Test all predefined templates
 - Test interpolation with various parameters
@@ -81,18 +89,22 @@ class ScopeDslErrorFactory {
 - Verify error instance types
 
 ## Dependencies
+
 - SCODSLERR-001: Requires error handler to consume factory
 
 ## Estimated Effort
+
 - Implementation: 3 hours
 - Testing: 2 hours
 - Total: 5 hours
 
 ## Risk Assessment
+
 - **Medium Risk**: Must maintain backward compatibility
 - **Mitigation**: Keep existing create method, add new methods alongside
 
 ## Related Spec Sections
+
 - Section 3.2: Enhanced Error Factory
 - Section 2.3: Error Codes
 - Template definitions in spec

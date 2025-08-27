@@ -13,10 +13,10 @@ import {
   beforeEach,
   jest,
 } from '@jest/globals';
-import { 
+import {
   createPerformanceTestBed,
   forceGCAndGetBaseline,
-  getStableMemoryUsage 
+  getStableMemoryUsage,
 } from '../../common/performanceTestBed.js';
 import { ClothingIntegrationTestBed } from '../../common/clothing/clothingIntegrationTestBed.js';
 import { createEntityInstance } from '../../common/entities/entityFactories.js';
@@ -36,13 +36,13 @@ describe('Description Regeneration Performance', () => {
     // Set up performance tracking
     testBed = createPerformanceTestBed();
     performanceTracker = testBed.createPerformanceTracker();
-    
+
     // Set up clothing integration test bed for entity management
     clothingTestBed = new ClothingIntegrationTestBed();
     await clothingTestBed.setup();
-    
+
     entityManager = clothingTestBed.getEntityManager();
-    
+
     // Add the addComponent method that's required by RegenerateDescriptionHandler
     entityManager.addComponent = jest.fn((entityId, componentId, data) => {
       const entity = entityManager.entities.get(entityId);
@@ -54,30 +54,37 @@ describe('Description Regeneration Performance', () => {
       }
       return Promise.resolve();
     });
-    
+
     container = clothingTestBed.container;
-    
+
     // Set up body description composer with mocked compose functionality
     bodyDescriptionComposer = new BodyDescriptionComposer({
-      bodyPartDescriptionBuilder: clothingTestBed.createMockBodyPartDescriptionBuilder(),
+      bodyPartDescriptionBuilder:
+        clothingTestBed.createMockBodyPartDescriptionBuilder(),
       bodyGraphService: clothingTestBed.createMockBodyGraphService(),
       entityFinder: entityManager,
-      anatomyFormattingService: clothingTestBed.createMockAnatomyFormattingService(),
-      partDescriptionGenerator: clothingTestBed.createMockPartDescriptionGenerator(),
-      equipmentDescriptionService: clothingTestBed.services.get('equipmentDescriptionService'),
+      anatomyFormattingService:
+        clothingTestBed.createMockAnatomyFormattingService(),
+      partDescriptionGenerator:
+        clothingTestBed.createMockPartDescriptionGenerator(),
+      equipmentDescriptionService: clothingTestBed.services.get(
+        'equipmentDescriptionService'
+      ),
       logger: clothingTestBed.logger,
     });
-    
+
     // Mock the composeDescription method to return a realistic description
     bodyDescriptionComposer.composeDescription = jest.fn(async (entity) => {
       const equipment = entityManager.getComponentData(
         entity.instanceId,
         'clothing:equipment'
       );
-      const itemCount = equipment ? Object.keys(equipment.equipped || {}).length : 0;
+      const itemCount = equipment
+        ? Object.keys(equipment.equipped || {}).length
+        : 0;
       return `A test entity with ${itemCount} equipped items. The entity has a humanoid form with various clothing and equipment pieces.`;
     });
-    
+
     // Set up operation handler
     operationHandler = new RegenerateDescriptionHandler({
       entityManager,
@@ -117,7 +124,7 @@ describe('Description Regeneration Performance', () => {
         },
         logger: clothingTestBed.logger,
       });
-      
+
       // Register entity with entity manager
       entityManager.entities.set(entityId, entity);
       return entity;
@@ -135,7 +142,9 @@ describe('Description Regeneration Performance', () => {
       };
 
       // Measure: Single description regeneration
-      const benchmark = performanceTracker.startBenchmark('simple_entity_regeneration');
+      const benchmark = performanceTracker.startBenchmark(
+        'simple_entity_regeneration'
+      );
 
       await operationHandler.execute(
         {
@@ -159,7 +168,7 @@ describe('Description Regeneration Performance', () => {
       // Setup: Complex entity with 20+ clothing items
       const clothingItems = Array.from({ length: 25 }, (_, i) => `item_${i}`);
       const complexEntity = createEntityWithClothing(clothingItems);
-      
+
       // Add additional complexity with anatomy details
       entityManager.setComponentData(complexEntity.instanceId, 'core:anatomy', {
         blueprint: 'detailed_human',
@@ -176,7 +185,9 @@ describe('Description Regeneration Performance', () => {
       const measurements = [];
 
       for (let i = 0; i < 10; i++) {
-        const benchmark = performanceTracker.startBenchmark(`complex_entity_run_${i}`);
+        const benchmark = performanceTracker.startBenchmark(
+          `complex_entity_run_${i}`
+        );
 
         await operationHandler.execute(
           {
@@ -231,7 +242,9 @@ describe('Description Regeneration Performance', () => {
       });
 
       // Measure: Concurrent regeneration operations
-      const benchmark = performanceTracker.startBenchmark('concurrent_operations');
+      const benchmark = performanceTracker.startBenchmark(
+        'concurrent_operations'
+      );
 
       const promises = entities.map((entity) =>
         operationHandler.execute(
@@ -289,7 +302,11 @@ describe('Description Regeneration Performance', () => {
       const promises = entities.map((entity) =>
         operationHandler.execute(
           { entity_ref: entity.instanceId },
-          { actorId: entity.instanceId, targetId: null, locationId: 'test_location' }
+          {
+            actorId: entity.instanceId,
+            targetId: null,
+            locationId: 'test_location',
+          }
         )
       );
 
@@ -299,7 +316,7 @@ describe('Description Regeneration Performance', () => {
       // Assert: No significant performance degradation
       const avgTimePerEntity = metrics.totalTime / entityCount;
       expect(avgTimePerEntity).toBeLessThan(150);
-      
+
       // Check memory usage remains reasonable
       if (metrics.memoryUsage) {
         const memoryGrowthMB = metrics.memoryUsage.growth / (1024 * 1024);
@@ -357,14 +374,14 @@ describe('Description Regeneration Performance', () => {
         // Force garbage collection every 100 operations
         if (i % 100 === 0 && global.gc) {
           global.gc();
-          await new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10));
         }
       }
 
       // Measure: Final memory usage
       if (global.gc) {
         global.gc();
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
       const finalMemory = await getStableMemoryUsage();
 
@@ -408,10 +425,14 @@ describe('Description Regeneration Performance', () => {
       for (let round = 0; round < operationsPerEntity; round++) {
         // Run operations for all entities
         await Promise.all(
-          entities.map(entity =>
+          entities.map((entity) =>
             operationHandler.execute(
               { entity_ref: entity.instanceId },
-              { actorId: entity.instanceId, targetId: null, locationId: 'test_location' }
+              {
+                actorId: entity.instanceId,
+                targetId: null,
+                locationId: 'test_location',
+              }
             )
           )
         );
@@ -426,19 +447,20 @@ describe('Description Regeneration Performance', () => {
       // Force cleanup and final measurement
       if (global.gc) {
         global.gc();
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
         global.gc();
       }
 
       const finalMemory = await getStableMemoryUsage();
-      
+
       // Assert: Memory is properly reclaimed (or at least stable)
       const maxMemory = Math.max(...memorySnapshots);
-      const memoryReclaimed = maxMemory > finalMemory ? (maxMemory - finalMemory) / maxMemory : 0;
-      
+      const memoryReclaimed =
+        maxMemory > finalMemory ? (maxMemory - finalMemory) / maxMemory : 0;
+
       // More lenient check - just ensure memory doesn't grow unbounded
       expect(finalMemory).toBeLessThan(maxMemory * 1.5); // Final memory shouldn't be more than 1.5x peak
-      
+
       console.log(
         `GC efficiency: ${(memoryReclaimed * 100).toFixed(1)}% memory reclaimed after operations`
       );
@@ -451,7 +473,10 @@ describe('Description Regeneration Performance', () => {
       const results = [];
 
       for (const itemCount of complexityLevels) {
-        const clothingItems = Array.from({ length: itemCount }, (_, i) => `item_${i}`);
+        const clothingItems = Array.from(
+          { length: itemCount },
+          (_, i) => `item_${i}`
+        );
         const entity = createEntityInstance({
           instanceId: `scaling_test_${itemCount}`,
           definitionId: 'core:actor',
@@ -479,7 +504,9 @@ describe('Description Regeneration Performance', () => {
         // Measure performance at this complexity level
         const times = [];
         for (let run = 0; run < 5; run++) {
-          const benchmark = performanceTracker.startBenchmark(`complexity_${itemCount}_run_${run}`);
+          const benchmark = performanceTracker.startBenchmark(
+            `complexity_${itemCount}_run_${run}`
+          );
 
           await operationHandler.execute(
             {
@@ -508,14 +535,16 @@ describe('Description Regeneration Performance', () => {
       const lastTime = results[results.length - 1].avgTime;
       const scalingFactor = lastTime / firstTime;
       const itemIncreaseFactor = 30; // 30 items vs 1 item
-      
+
       // Should scale better than O(n) - expect sub-linear scaling
       expect(scalingFactor).toBeLessThan(itemIncreaseFactor * 0.5);
 
       // Log: Scaling curve for analysis
       console.log('Scaling results:');
       results.forEach((result) => {
-        console.log(`  ${result.itemCount} items: ${result.avgTime.toFixed(2)}ms`);
+        console.log(
+          `  ${result.itemCount} items: ${result.avgTime.toFixed(2)}ms`
+        );
       });
     });
 
@@ -554,10 +583,14 @@ describe('Description Regeneration Performance', () => {
       // Process a subset to simulate real-world usage
       const entitiesToProcess = entities.slice(0, 20);
       await Promise.all(
-        entitiesToProcess.map(entity =>
+        entitiesToProcess.map((entity) =>
           operationHandler.execute(
             { entity_ref: entity.instanceId },
-            { actorId: entity.instanceId, targetId: null, locationId: 'test_location' }
+            {
+              actorId: entity.instanceId,
+              targetId: null,
+              locationId: 'test_location',
+            }
           )
         )
       );
@@ -579,7 +612,9 @@ describe('Description Regeneration Performance', () => {
       );
 
       // Clean up
-      entities.forEach(entity => entityManager.entities.delete(entity.instanceId));
+      entities.forEach((entity) =>
+        entityManager.entities.delete(entity.instanceId)
+      );
     });
   });
 
@@ -624,7 +659,11 @@ describe('Description Regeneration Performance', () => {
         // Execute description regeneration (the focus of this test)
         await operationHandler.execute(
           { entity_ref: testActor.instanceId },
-          { actorId: testActor.instanceId, targetId: null, locationId: 'test_location' }
+          {
+            actorId: testActor.instanceId,
+            targetId: null,
+            locationId: 'test_location',
+          }
         );
       };
 
@@ -632,7 +671,9 @@ describe('Description Regeneration Performance', () => {
       const measurements = [];
 
       for (let i = 0; i < 20; i++) {
-        const benchmark = performanceTracker.startBenchmark(`rule_execution_${i}`);
+        const benchmark = performanceTracker.startBenchmark(
+          `rule_execution_${i}`
+        );
 
         await simulateRuleExecution();
 
@@ -663,9 +704,9 @@ describe('Description Regeneration Performance', () => {
 
       console.log(
         `Full rule execution with description update:\n` +
-        `  Average: ${averageRuleTime.toFixed(2)}ms\n` +
-        `  Min: ${minTime.toFixed(2)}ms\n` +
-        `  Max: ${maxTime.toFixed(2)}ms`
+          `  Average: ${averageRuleTime.toFixed(2)}ms\n` +
+          `  Min: ${minTime.toFixed(2)}ms\n` +
+          `  Max: ${maxTime.toFixed(2)}ms`
       );
     });
   });

@@ -7,13 +7,16 @@ This document analyzes the potential transformation of the Living Narrative Engi
 ## Current State: JSON-Based Action Effects System
 
 ### Overview
+
 The current action effects system uses:
+
 - **Rules**: JSON files with Event-Condition-Action (ECA) pattern
 - **Operations**: 30+ discrete operation types with specific JSON schemas
 - **Macros**: Reusable action sequences
 - **Conditions**: JSON Logic expressions for conditional execution
 
 ### Example Current Syntax
+
 ```json
 {
   "rule_id": "handle_follow",
@@ -33,10 +36,8 @@ The current action effects system uses:
     {
       "type": "IF",
       "parameters": {
-        "condition": {"var": "context.cycleCheck.cycleDetected"},
-        "then_actions": [
-          {"macro": "core:logFailureAndEndTurn"}
-        ]
+        "condition": { "var": "context.cycleCheck.cycleDetected" },
+        "then_actions": [{ "macro": "core:logFailureAndEndTurn" }]
       }
     }
   ]
@@ -44,6 +45,7 @@ The current action effects system uses:
 ```
 
 ### Current Strengths
+
 - **Strong validation**: JSON Schema provides comprehensive validation
 - **IDE support**: Excellent autocomplete and error detection
 - **Type safety**: Clear structure enforced by schemas
@@ -53,6 +55,7 @@ The current action effects system uses:
 ## DSL Transformation Vision
 
 ### Proposed DSL Syntax
+
 Drawing inspiration from scopeDsl, an action effects DSL might look like:
 
 ```
@@ -61,7 +64,7 @@ core:handle_follow := on core:attempt_action
   when core:event-is-action-follow
   do {
     cycleCheck = check_follow_cycle(actor, target)
-    
+
     if cycleCheck.cycleDetected {
       targetName = get_name(target)
       log_failure("Cannot follow {targetName}; would create cycle")
@@ -70,13 +73,13 @@ core:handle_follow := on core:attempt_action
       establish_follow(actor, target)
       followerName = get_name(actor)
       leaderName = get_name(target)
-      
+
       dispatch_perceptible {
         location: actor.position.locationId
         text: "{followerName} is now following {leaderName}"
         type: action_target_general
       }
-      
+
       end_turn(true)
     }
   }
@@ -85,8 +88,9 @@ core:handle_follow := on core:attempt_action
 ### Alternative Syntax Approaches
 
 #### Approach 1: Pipeline-Style
+
 ```
-core:move_action := 
+core:move_action :=
   on core:attempt_action[action="go"]
   | validate_components(actor, ["core:position", "core:name"])
   | get_target_location(event.targetId) -> targetLoc
@@ -96,11 +100,12 @@ core:move_action :=
 ```
 
 #### Approach 2: Declarative with Effects
+
 ```
 rule core:handle_follow {
   trigger: core:attempt_action
   guard: event.action == "follow"
-  
+
   effects {
     check: no_follow_cycle(actor, target)
     modify: actor.components.core:following = target.id
@@ -116,29 +121,34 @@ rule core:handle_follow {
 ### Pros of DSL Transformation
 
 #### 1. **Improved Readability**
+
 - Natural language-like syntax reduces cognitive load
 - 60-70% reduction in verbosity
 - Clearer intent expression
 - Better narrative alignment for modders
 
 #### 2. **Faster Development**
+
 - Less boilerplate code
 - Quicker prototyping
 - Reduced typing for common patterns
 - Better expression of game logic
 
 #### 3. **Domain Alignment**
+
 - Syntax tailored to game development concepts
 - Natural expression of game rules
 - Closer to how designers think about mechanics
 
 #### 4. **Consistency with ScopeDsl**
+
 - Unified language family across systems
 - Shared learning curve
 - Common tooling and patterns
 - Consistent modder experience
 
 #### 5. **Potential for Advanced Features**
+
 - Pattern matching capabilities
 - Implicit context handling
 - Built-in flow control
@@ -147,30 +157,35 @@ rule core:handle_follow {
 ### Cons of DSL Transformation
 
 #### 1. **Implementation Complexity**
+
 - Requires parser/lexer development (3-6 months)
 - Complex AST transformation logic
 - Error handling and reporting system
 - Extensive testing requirements
 
 #### 2. **Loss of Tooling**
+
 - No native IDE support initially
 - Requires custom syntax highlighting
 - Need custom linters/formatters
 - Lost JSON schema validation
 
 #### 3. **Migration Burden**
+
 - All existing rules need conversion
 - Backward compatibility challenges
 - Modder retraining required
 - Documentation rewrite needed
 
 #### 4. **Debugging Challenges**
+
 - Custom debugging tools needed
 - Stack traces less meaningful
 - Harder to inspect runtime state
 - Source mapping complexity
 
 #### 5. **Maintenance Overhead**
+
 - Additional codebase to maintain
 - Parser bugs affect entire system
 - Version compatibility issues
@@ -179,6 +194,7 @@ rule core:handle_follow {
 ## Implementation Considerations
 
 ### Technical Requirements
+
 1. **Parser Infrastructure**
    - Tokenizer/Lexer (2-3 weeks)
    - Parser with error recovery (3-4 weeks)
@@ -197,6 +213,7 @@ rule core:handle_follow {
    - Backward compatibility layer (3 weeks)
 
 ### Performance Impact
+
 - **Parse time**: Additional 50-200ms startup overhead
 - **Runtime**: Potentially faster if pre-compiled
 - **Memory**: AST storage vs JSON objects (similar)
@@ -205,18 +222,21 @@ rule core:handle_follow {
 ### Risk Assessment
 
 #### High Risks
+
 - **Complexity spiral**: DSL becomes too complex over time
 - **Community rejection**: Modders prefer JSON
 - **Tool ecosystem**: Insufficient tooling support
 - **Performance regression**: Parser bottlenecks
 
 #### Medium Risks
+
 - **Learning curve**: Barrier to entry for new modders
 - **Documentation debt**: Extensive docs needed
 - **Debugging difficulty**: Hard to troubleshoot
 - **Feature creep**: DSL tries to do too much
 
 #### Low Risks
+
 - **Technical feasibility**: Proven by scopeDsl success
 - **Integration issues**: Clean separation possible
 - **Data loss**: Migration tools can ensure safety
@@ -224,12 +244,14 @@ rule core:handle_follow {
 ## Hybrid Approach Option
 
 ### Progressive Enhancement Strategy
+
 1. **Phase 1**: Support both JSON and DSL formats
 2. **Phase 2**: DSL for new features only
 3. **Phase 3**: Gradual migration of existing rules
 4. **Phase 4**: Deprecate JSON support (optional)
 
 ### Benefits of Hybrid
+
 - Lower risk migration
 - Community can adopt gradually
 - Maintain backward compatibility
@@ -238,24 +260,25 @@ rule core:handle_follow {
 
 ## Comparative Analysis
 
-| Aspect | Current JSON | Proposed DSL | Winner |
-|--------|-------------|--------------|---------|
-| Readability | Verbose but clear | Concise and natural | DSL |
-| Tooling | Excellent | Initially limited | JSON |
-| Validation | Strong via schemas | Custom implementation | JSON |
-| Performance | Good | Unknown, likely similar | Tie |
-| Learning Curve | Familiar | New syntax to learn | JSON |
-| Expressiveness | Limited by structure | Highly expressive | DSL |
-| Maintenance | Standard JSON | Custom parser needed | JSON |
-| Debugging | Standard tools | Custom tools needed | JSON |
-| Community | Wide understanding | Niche knowledge | JSON |
-| Future-proofing | Limited evolution | Fully controlled | DSL |
+| Aspect          | Current JSON         | Proposed DSL            | Winner |
+| --------------- | -------------------- | ----------------------- | ------ |
+| Readability     | Verbose but clear    | Concise and natural     | DSL    |
+| Tooling         | Excellent            | Initially limited       | JSON   |
+| Validation      | Strong via schemas   | Custom implementation   | JSON   |
+| Performance     | Good                 | Unknown, likely similar | Tie    |
+| Learning Curve  | Familiar             | New syntax to learn     | JSON   |
+| Expressiveness  | Limited by structure | Highly expressive       | DSL    |
+| Maintenance     | Standard JSON        | Custom parser needed    | JSON   |
+| Debugging       | Standard tools       | Custom tools needed     | JSON   |
+| Community       | Wide understanding   | Niche knowledge         | JSON   |
+| Future-proofing | Limited evolution    | Fully controlled        | DSL    |
 
 ## Recommendation
 
 ### Short-Term Recommendation: **Maintain JSON System**
 
 **Rationale:**
+
 1. Current system is functional and well-validated
 2. Excellent tooling already in place
 3. Low maintenance burden
@@ -265,6 +288,7 @@ rule core:handle_follow {
 ### Long-Term Consideration: **Revisit in 12-18 months**
 
 **Conditions for DSL adoption:**
+
 1. If action complexity significantly increases
 2. If modder feedback indicates JSON is limiting
 3. If scopeDsl proves highly successful
@@ -302,10 +326,11 @@ While a DSL transformation offers compelling benefits in readability and express
 The success of scopeDsl demonstrates the team's capability to implement effective DSLs, but action effects have different requirements that are well-served by JSON's structure and validation capabilities. Consider revisiting this decision when the action system's complexity grows or if modder feedback strongly indicates a need for more expressive syntax.
 
 ### Key Takeaway
+
 **Focus on enhancing the current JSON system with better macros, tooling, and templates rather than undertaking a full DSL transformation at this time.**
 
 ---
 
-*Document created: 2025-08-27*
-*Analysis based on: Living Narrative Engine v1.0.0*
-*Comparison systems: scopeDsl v1.0, JSON Rules System v1.0*
+_Document created: 2025-08-27_
+_Analysis based on: Living Narrative Engine v1.0.0_
+_Comparison systems: scopeDsl v1.0, JSON Rules System v1.0_

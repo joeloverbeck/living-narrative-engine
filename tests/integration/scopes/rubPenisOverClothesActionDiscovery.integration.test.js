@@ -299,7 +299,7 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
-    
+
     // Clear operator caches to prevent state contamination between tests
     if (jsonLogicCustomOperators) {
       jsonLogicCustomOperators.clearCaches();
@@ -309,18 +309,20 @@ describe('Rub Penis Over Clothes Action Discovery Integration Tests', () => {
   describe('socket coverage tests', () => {
     /**
      * Generates unique entity IDs for each test to prevent cache contamination
-     * 
+     *
      * @returns {object} Object containing unique entity IDs
      */
     function generateUniqueEntityIds() {
       const testName = expect.getState().currentTestName;
-      const uniqueId = testName ? testName.replace(/\s+/g, '_').toLowerCase() : Date.now();
-      
+      const uniqueId = testName
+        ? testName.replace(/\s+/g, '_').toLowerCase()
+        : Date.now();
+
       return {
         actor: `actor_${uniqueId}`,
         target: `target_${uniqueId}`,
         groin: `groin_${uniqueId}`,
-        penis: `penis_${uniqueId}`
+        penis: `penis_${uniqueId}`,
       };
     }
 

@@ -1,6 +1,7 @@
 # ScopeDSL Comprehensive Modder's Guide
 
 ## Table of Contents
+
 1. [Introduction](#introduction)
 2. [Core Concepts](#core-concepts)
 3. [Basic Syntax](#basic-syntax)
@@ -21,6 +22,7 @@ ScopeDSL is a domain-specific language for defining entity queries and selection
 ### What is a Scope?
 
 A scope is a query that resolves to a set of entity IDs. Scopes are used throughout the engine to:
+
 - Define action targets (who can be targeted by an action)
 - Filter entities based on conditions
 - Navigate entity relationships
@@ -29,6 +31,7 @@ A scope is a query that resolves to a set of entity IDs. Scopes are used through
 ### File Format
 
 Scope definitions are stored in `.scope` files within your mod's `scopes/` directory:
+
 ```
 mods/your-mod/scopes/your_scope.scope
 ```
@@ -38,11 +41,13 @@ mods/your-mod/scopes/your_scope.scope
 ### Scope Definition Syntax
 
 Each scope follows this basic pattern:
+
 ```
 mod_id:scope_name := scope_expression
 ```
 
 Example:
+
 ```
 core:actors_in_location := entities(core:actor)[{"condition_ref": "core:entity-at-location"}]
 ```
@@ -50,6 +55,7 @@ core:actors_in_location := entities(core:actor)[{"condition_ref": "core:entity-a
 ### Comments
 
 Use `//` for single-line comments:
+
 ```
 // This scope returns all actors in the current location
 core:actors_in_location := entities(core:actor)
@@ -58,6 +64,7 @@ core:actors_in_location := entities(core:actor)
 ### Namespace Requirements
 
 All scope IDs must be namespaced with your mod ID:
+
 - ✅ `my_mod:my_scope`
 - ❌ `my_scope` (missing namespace)
 
@@ -65,38 +72,46 @@ All scope IDs must be namespaced with your mod ID:
 
 ### Core Operators
 
-| Operator | Purpose | Example |
-|----------|---------|---------|
-| `.` | Property access | `actor.core:inventory` |
-| `[]` | Array iteration | `actor.items[]` |
-| `+` or `\|` | Union (combine sets) | `actor + location` |
-| `:` | Namespace separator | `core:actor` |
-| `[{...}]` | JSON Logic filter | `entities[{">": [...]}]` |
+| Operator    | Purpose              | Example                  |
+| ----------- | -------------------- | ------------------------ |
+| `.`         | Property access      | `actor.core:inventory`   |
+| `[]`        | Array iteration      | `actor.items[]`          |
+| `+` or `\|` | Union (combine sets) | `actor + location`       |
+| `:`         | Namespace separator  | `core:actor`             |
+| `[{...}]`   | JSON Logic filter    | `entities[{">": [...]}]` |
 
 ## Sources
 
 Sources are the starting points for scope resolution:
 
 ### 1. actor
+
 Returns the current actor (the entity performing the action):
+
 ```
 actor
 ```
 
 ### 2. location
+
 Returns the current location entity:
+
 ```
 location
 ```
 
 ### 3. target
+
 Returns the current target entity (if available in context):
+
 ```
 target
 ```
 
 ### 4. entities(component)
+
 Returns all entities with a specific component:
+
 ```
 entities(core:actor)        // All actors
 entities(core:item)         // All items
@@ -104,13 +119,17 @@ entities(clothing:garment)  // All clothing items
 ```
 
 ### 5. none
+
 Returns an empty set (useful for actions without targets):
+
 ```
 none
 ```
 
 ### 6. self
+
 Returns the current entity in context:
+
 ```
 self
 ```
@@ -120,6 +139,7 @@ self
 ### Component Access
 
 Access entity components using dot notation:
+
 ```
 actor.core:stats           // Access stats component
 actor.core:inventory.items // Access items within inventory
@@ -128,6 +148,7 @@ actor.core:inventory.items // Access items within inventory
 ### Nested Property Access
 
 Navigate through nested data structures:
+
 ```
 actor.core:stats.strength        // Get strength value
 actor.core:position.locationId   // Get location ID
@@ -137,6 +158,7 @@ location.core:exits[].target     // Get all exit targets
 ### Array Iteration
 
 Use `[]` to iterate over arrays:
+
 ```
 actor.items[]                    // All items in inventory
 actor.core:followers.list[]      // All followers
@@ -146,6 +168,7 @@ entities(core:actor)[]           // All actors as individual results
 ### Chaining
 
 Chain multiple operations:
+
 ```
 location.core:exits[].target.core:description
 // Gets descriptions of all locations connected to current location
@@ -171,6 +194,7 @@ entities(core:actor)[{"!=": [{"var": "id"}, {"var": "actor.id"}]}]
 ### Logical Operators
 
 #### AND Conditions
+
 ```
 entities(core:actor)[{
   "and": [
@@ -181,6 +205,7 @@ entities(core:actor)[{
 ```
 
 #### OR Conditions
+
 ```
 entities(core:actor)[{
   "or": [
@@ -191,6 +216,7 @@ entities(core:actor)[{
 ```
 
 #### Complex Nested Conditions
+
 ```
 entities(core:actor)[{
   "and": [
@@ -213,6 +239,7 @@ entities(core:actor)[{
 ### Arithmetic Operations
 
 Perform calculations within filters:
+
 ```
 // Combined stats > 40
 entities(core:actor)[{
@@ -231,6 +258,7 @@ entities(core:actor)[{
 ### Condition References
 
 Reference pre-defined conditions:
+
 ```
 entities(core:actor)[{"condition_ref": "core:entity-at-location"}]
 
@@ -247,6 +275,7 @@ entities(core:actor)[{
 ### Array Element Filtering
 
 Filter elements within arrays:
+
 ```
 // Items with quantity > 1
 actor.core:inventory.items[{">": [{"var": "quantity"}, 1]}]
@@ -260,6 +289,7 @@ actor.core:inventory.items[{"==": [{"var": "type"}, "weapon"]}].name
 Combine multiple entity sets using union operators (`+` or `|`):
 
 ### Basic Union
+
 ```
 // Combine actor and location
 actor + location
@@ -269,6 +299,7 @@ actor | location
 ```
 
 ### Complex Unions
+
 ```
 // All actors and all items
 entities(core:actor) + entities(core:item)
@@ -277,13 +308,14 @@ entities(core:actor) + entities(core:item)
 actor + location + target
 
 // Union with filtered sets
-entities(core:actor)[{">": [{"var": "entity.components.core:stats.level"}, 5]}] + 
+entities(core:actor)[{">": [{"var": "entity.components.core:stats.level"}, 5]}] +
 entities(core:actor)[{"<": [{"var": "entity.components.core:stats.level"}, 3]}]
 ```
 
 ### Deduplication
 
 Unions automatically deduplicate results:
+
 ```
 // Even if actor appears in both sets, it's only included once
 entities(core:actor) + entities(core:actor)
@@ -339,6 +371,7 @@ actor.components.intimacy:kissing.partner
 ### Multi-Mod Scope References
 
 Reference scopes from other mods:
+
 ```
 // Reference a scope from base mod
 base:enhanced_actors
@@ -350,6 +383,7 @@ base:actors + extension:special_actors
 ### Dynamic Entity Selection
 
 Select entities based on runtime conditions:
+
 ```
 // Actors in same location as player
 entities(core:actor)[{
@@ -363,6 +397,7 @@ entities(core:actor)[{
 ### Cascading Filters
 
 Apply multiple filters in sequence:
+
 ```
 // Get high-level actors, then filter by health
 entities(core:actor)[
@@ -375,6 +410,7 @@ entities(core:actor)[
 ### Null Safety
 
 Handle missing components gracefully:
+
 ```
 // Only entities with stats component will be evaluated
 entities(core:actor)[{
@@ -390,6 +426,7 @@ entities(core:actor)[{
 ### 1. Filter Early, Filter Often
 
 Apply filters as early as possible to reduce the working set:
+
 ```
 // Good: Filter at source
 entities(core:actor)[{">": [{"var": "entity.components.core:stats.level"}, 5]}]
@@ -401,6 +438,7 @@ entities(core:actor)[]
 ### 2. Use Component Filters
 
 When using `entities()`, specify the most restrictive component:
+
 ```
 // Good: Only queries actors
 entities(core:actor)
@@ -412,6 +450,7 @@ entities(core:position)[{"condition_ref": "core:entity-has-actor-component"}]
 ### 3. Avoid Deep Nesting
 
 Limit navigation depth for better performance:
+
 ```
 // Reasonable depth
 actor.core:inventory.items[].name
@@ -423,6 +462,7 @@ actor.a.b.c.d.e.f.g.h.i.j
 ### 4. Cache Complex Conditions
 
 For frequently used complex filters, create named conditions:
+
 ```
 // Define once in conditions/
 {
@@ -437,6 +477,7 @@ entities(core:actor)[{"condition_ref": "my_mod:complex_filter"}]
 ### Performance Targets
 
 Based on system testing:
+
 - Simple scopes: < 10ms
 - Moderate complexity: < 50ms
 - Complex filters (100+ entities): < 200ms
@@ -447,6 +488,7 @@ Based on system testing:
 ### 1. Naming Conventions
 
 Use descriptive, consistent names:
+
 ```
 // Good
 my_mod:actors_in_combat
@@ -462,6 +504,7 @@ my_mod:x
 ### 2. Documentation
 
 Always document complex scopes:
+
 ```
 // Returns actors with level > 10 who are injured (health < 50%)
 // Used for healing priority targeting
@@ -479,6 +522,7 @@ my_mod:injured_veterans := entities(core:actor)[{
 ### 3. Modular Design
 
 Break complex scopes into smaller, reusable pieces:
+
 ```
 // Base scopes
 my_mod:all_weapons := entities(core:item)[{"condition_ref": "core:item-is-weapon"}]
@@ -491,6 +535,7 @@ my_mod:equipped_weapons := my_mod:equipped_items[{"condition_ref": "core:item-is
 ### 4. Error Handling
 
 Design scopes to handle edge cases:
+
 ```
 // Handle missing components gracefully
 actor.core:inventory.items[] | none
@@ -502,6 +547,7 @@ target | actor  // Use actor if no target
 ### 5. Testing Patterns
 
 Test scopes with various scenarios:
+
 - Empty entity sets
 - Missing components
 - Null/undefined values
@@ -511,6 +557,7 @@ Test scopes with various scenarios:
 ## Common Patterns Library
 
 ### Get All Other Actors
+
 ```
 core:other_actors := entities(core:actor)[{
   "!=": [{"var": "id"}, {"var": "actor.id"}]
@@ -518,6 +565,7 @@ core:other_actors := entities(core:actor)[{
 ```
 
 ### Actors at Current Location
+
 ```
 core:actors_here := entities(core:actor)[{
   "==": [
@@ -528,19 +576,22 @@ core:actors_here := entities(core:actor)[{
 ```
 
 ### Items in Inventory
+
 ```
 core:inventory_items := actor.core:inventory.items[]
 ```
 
 ### Available Actions Targets
+
 ```
 // Combine multiple potential targets
-my_mod:action_targets := 
+my_mod:action_targets :=
   entities(core:actor)[{"condition_ref": "core:valid-target"}] +
   entities(core:item)[{"condition_ref": "core:interactable"}]
 ```
 
 ### Health-Based Selection
+
 ```
 // Low health allies
 my_mod:wounded_allies := entities(core:actor)[{
@@ -555,6 +606,7 @@ my_mod:wounded_allies := entities(core:actor)[{
 ```
 
 ### Distance-Based Selection
+
 ```
 // Nearby actors (using positioning component)
 positioning:nearby_actors := entities(core:actor)[{
@@ -566,6 +618,7 @@ positioning:nearby_actors := entities(core:actor)[{
 ```
 
 ### Equipment Checks
+
 ```
 // Actors with weapons equipped
 combat:armed_actors := entities(core:actor)[{
@@ -577,6 +630,7 @@ combat:armed_actors := entities(core:actor)[{
 ```
 
 ### Clothing State Checks
+
 ```
 // Actors with exposed torso
 intimacy:exposed_torso := entities(core:actor)[{

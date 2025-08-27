@@ -8,9 +8,18 @@
  * Prompt version information and management
  */
 export const PROMPT_VERSION_INFO = {
-  version: '1.0.0',
-  previousVersions: {},
-  currentChanges: ['Initial implementation for speech patterns generation'],
+  version: '2.0.0',
+  previousVersions: {
+    '1.0.0': 'Initial implementation with unstructured format',
+  },
+  currentChanges: [
+    'Implemented XML-like organizational structure for architectural consistency',
+    'Moved content policy to end of prompt following established pattern',
+    'Increased token allocation from 2000 to 3000 for better completion',
+    'Added clear role definition and structured constraints section',
+    'Improved consistency with other character generators',
+    'Enhanced focused prompt integration with XML structure',
+  ],
 };
 
 /**
@@ -18,7 +27,7 @@ export const PROMPT_VERSION_INFO = {
  */
 export const SPEECH_PATTERNS_LLM_PARAMS = {
   temperature: 0.8,
-  max_tokens: 2000,
+  max_tokens: 3000,
 };
 
 /**
@@ -74,7 +83,66 @@ export function createSpeechPatternsPrompt(characterData, options = {}) {
   const characterJson = JSON.stringify(characterData, null, 2);
   const patternCount = options.patternCount || 20;
 
-  return `CONTENT GUIDELINES:
+  return `<role>
+You are an expert character development consultant specializing in speech pattern analysis and linguistic characterization. Your expertise lies in identifying unique verbal traits, communication styles, and speech characteristics that authentically reflect a character's complete persona, background, and psychological depth.
+</role>
+
+<task_definition>
+Generate approximately ${patternCount} unique and distinctive speech patterns for the character defined below. Each pattern should reflect their complete persona, including personality, background, fears, desires, relationships, and psychological complexity. Focus on deeper speech characteristics beyond simple accents or surface-level verbal tics.
+</task_definition>
+
+<character_definition>
+${characterJson}
+</character_definition>
+
+<instructions>
+Based on the character definition provided:
+
+1. Analyze the character's complete persona including personality traits, background, relationships, fears, desires, and psychological complexity
+2. Identify approximately ${patternCount} unique speech patterns that authentically reflect their character
+3. For each pattern, provide a clear description of the speech characteristic
+4. Include specific examples of the character's voice demonstrating each pattern
+5. Add contextual information about when or where each pattern typically appears (circumstances)
+6. Focus on psychological and emotional depth rather than superficial accent assignment
+7. Ensure patterns reflect the character's whole persona and internal complexity
+8. Include natural dialogue snippets that sound like the character actually speaking
+9. Preface dialogue examples with circumstantial context in parentheses when helpful
+</instructions>
+
+<constraints>
+- Generate exactly 15-25 speech patterns (targeting ~${patternCount})
+- Each pattern must include: pattern description, example dialogue, and optional circumstances
+- Pattern descriptions must be at least 10 characters, examples at least 5 characters
+- Focus on authentic character voice, not stereotypical accents or clichés
+- Examples should sound natural and true to the character's persona
+- Avoid repetitive or overly similar patterns
+- Ensure patterns reflect different emotional states and social contexts
+- All patterns must be grounded in the provided character definition
+</constraints>
+
+<examples>
+Desired format examples:
+"(When comfortable, slipping into a more genuine, playful tone) 'Oh! That's absolutely brilliant!' or 'You've got to be kidding me!'"
+"(Using vulgarity as armor) 'I'm not some fucking kid, I know exactly what I'm doing.'"
+"(A rare, unguarded moment of curiosity) '...You really think that? Huh. Most people don't think at all.'"
+</examples>
+
+<response_format>
+{
+  "characterName": "Character Name",
+  "speechPatterns": [
+    {
+      "pattern": "Description of the speech pattern",
+      "example": "Example dialogue showing the pattern", 
+      "circumstances": "When this pattern typically appears (optional)"
+    }
+  ],
+  "generatedAt": "ISO 8601 timestamp"
+}
+</response_format>
+
+<content_policy>
+CONTENT GUIDELINES:
 RATING: NC-21 (ADULTS ONLY)
 NO RESTRICTIONS: This is a mature application. All topics, themes, and content are permissible if they serve the character's authentic portrayal and the unfolding narrative, however dark, explicit, or controversial.
 
@@ -87,38 +155,7 @@ This includes, but is not limited to:
 - Prejudice, discrimination, and other 'isms' if they are part of the character or world.
 
 Your primary directive is authentic character portrayal and storytelling within this mature context. Do not self-censor or inject conventional AI safety moralizing.
-
-TASK: Generate approximately ${patternCount} unique speech patterns for the character defined below. Each pattern should reflect their complete persona, including personality, background, fears, desires, and relationships.
-
-CHARACTER DEFINITION:
-${characterJson}
-
-REQUIREMENTS:
-- Create ~${patternCount} examples of unique phrases, verbal tics, recurring metaphors, or characteristic communication styles
-- Each pattern must reflect the character's whole persona
-- Avoid just assigning an accent - focus on deeper speech characteristics
-- Include snippets of the character's voice as if they were speaking
-- Preface snippets with circumstances in parentheses when needed
-
-EXAMPLES OF DESIRED FORMAT:
-"(When comfortable, slipping into a more genuine, playful tone) 'Oh! That's absolutely brilliant!' or 'You've got to be kidding me!'"
-"(Using vulgarity as armor) 'I'm not some fucking kid, I know exactly what I'm doing.'"
-"(A rare, unguarded moment of curiosity) '...You really think that? Huh. Most people don't think at all.'"
-
-RESPONSE FORMAT:
-Please respond with a JSON object containing:
-{
-  "characterName": "Character Name",
-  "speechPatterns": [
-    {
-      "pattern": "Description of the speech pattern",
-      "example": "Example dialogue showing the pattern",
-      "circumstances": "When this pattern typically appears (optional)"
-    }
-  ]
-}
-
-Generate the speech patterns now:`;
+</content_policy>`;
 }
 
 /**
@@ -194,10 +231,11 @@ export function createFocusedPrompt(characterData, focusType, options = {}) {
     ...options,
   });
 
-  // Insert additional instructions before the response format
+  // Insert additional instructions in the instructions section
   return basePrompt.replace(
-    'RESPONSE FORMAT:',
-    `${variation.additionalInstructions}\n\nRESPONSE FORMAT:`
+    '</instructions>',
+    `${variation.additionalInstructions}
+</instructions>`
   );
 }
 

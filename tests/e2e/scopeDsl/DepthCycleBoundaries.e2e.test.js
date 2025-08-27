@@ -228,7 +228,7 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
       // Since each scope reference and filter adds to depth, we need fewer levels
       // Let's create a chain of 6 levels to stay well under the limit
       const depthScopes = [];
-      
+
       // Level 1 - base level
       depthScopes.push({
         name: 'level_01',
@@ -237,7 +237,8 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
 
       // Levels 2-6 - each level references the previous with a filter
       for (let i = 2; i <= 6; i++) {
-        const prevLevel = i === 2 ? 'level_01' : `level_${String(i - 1).padStart(2, '0')}`;
+        const prevLevel =
+          i === 2 ? 'level_01' : `level_${String(i - 1).padStart(2, '0')}`;
         const currentLevel = `level_${String(i).padStart(2, '0')}`;
         depthScopes.push({
           name: currentLevel,
@@ -248,11 +249,16 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
       await createDepthTestMod(tempDir, 'depth_test', depthScopes);
 
       // Load all scope definitions
-      const scopeFiles = depthScopes.map(scope => `${scope.name}.scope`);
-      const scopeDefinitions = await loadScopesFromMod('depth_test', scopeFiles);
+      const scopeFiles = depthScopes.map((scope) => `${scope.name}.scope`);
+      const scopeDefinitions = await loadScopesFromMod(
+        'depth_test',
+        scopeFiles
+      );
       scopeRegistry.initialize(scopeDefinitions);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Test resolution at a reasonable depth (should succeed)
@@ -273,8 +279,8 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
       // Create a deeply nested chain to trigger depth violation
       // Each scope reference + filter operation adds significant depth
       const depthScopes = [];
-      
-      // Level 1 - base level  
+
+      // Level 1 - base level
       depthScopes.push({
         name: 'level_01',
         content: 'depth_exceed:level_01 := entities(core:actor)',
@@ -282,7 +288,8 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
 
       // Create more levels to trigger depth violation - 15 levels should do it
       for (let i = 2; i <= 15; i++) {
-        const prevLevel = i === 2 ? 'level_01' : `level_${String(i - 1).padStart(2, '0')}`;
+        const prevLevel =
+          i === 2 ? 'level_01' : `level_${String(i - 1).padStart(2, '0')}`;
         const currentLevel = `level_${String(i).padStart(2, '0')}`;
         depthScopes.push({
           name: currentLevel,
@@ -293,11 +300,16 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
       await createDepthTestMod(tempDir, 'depth_exceed_test', depthScopes);
 
       // Load all scope definitions
-      const scopeFiles = depthScopes.map(scope => `${scope.name}.scope`);
-      const scopeDefinitions = await loadScopesFromMod('depth_exceed_test', scopeFiles);
+      const scopeFiles = depthScopes.map((scope) => `${scope.name}.scope`);
+      const scopeDefinitions = await loadScopesFromMod(
+        'depth_exceed_test',
+        scopeFiles
+      );
       scopeRegistry.initialize(scopeDefinitions);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Test resolution that exceeds depth limit (should throw ScopeDepthError)
@@ -314,7 +326,7 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
     test('should maintain performance with deep but valid expressions', async () => {
       // Create a moderately deep expression that stays under the limit
       const deepButValidScopes = [];
-      
+
       deepButValidScopes.push({
         name: 'base',
         content: 'perf:base := entities(core:actor)',
@@ -322,7 +334,8 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
 
       // Create 4 more levels for reasonable depth testing
       for (let i = 1; i <= 4; i++) {
-        const prevLevel = i === 1 ? 'base' : `level_${String(i - 1).padStart(2, '0')}`;
+        const prevLevel =
+          i === 1 ? 'base' : `level_${String(i - 1).padStart(2, '0')}`;
         const currentLevel = `level_${String(i).padStart(2, '0')}`;
         deepButValidScopes.push({
           name: currentLevel,
@@ -332,11 +345,15 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
 
       await createDepthTestMod(tempDir, 'perf_test', deepButValidScopes);
 
-      const scopeFiles = deepButValidScopes.map(scope => `${scope.name}.scope`);
+      const scopeFiles = deepButValidScopes.map(
+        (scope) => `${scope.name}.scope`
+      );
       const scopeDefinitions = await loadScopesFromMod('perf_test', scopeFiles);
       scopeRegistry.initialize(scopeDefinitions);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Measure performance of moderately deep valid expression
@@ -368,21 +385,28 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
       const cyclicScopes = [
         {
           name: 'scope_a',
-          content: 'cycle:scope_a := cycle:scope_b[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
+          content:
+            'cycle:scope_a := cycle:scope_b[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
         },
         {
-          name: 'scope_b', 
-          content: 'cycle:scope_b := cycle:scope_a[{"var": "entity.components.core:position.locationId", "==": "test-location-1"}]',
+          name: 'scope_b',
+          content:
+            'cycle:scope_b := cycle:scope_a[{"var": "entity.components.core:position.locationId", "==": "test-location-1"}]',
         },
       ];
 
       await createDepthTestMod(tempDir, 'simple_cycle_test', cyclicScopes);
 
-      const scopeFiles = cyclicScopes.map(scope => `${scope.name}.scope`);
-      const scopeDefinitions = await loadScopesFromMod('simple_cycle_test', scopeFiles);
+      const scopeFiles = cyclicScopes.map((scope) => `${scope.name}.scope`);
+      const scopeDefinitions = await loadScopesFromMod(
+        'simple_cycle_test',
+        scopeFiles
+      );
       scopeRegistry.initialize(scopeDefinitions);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Should detect cycle and throw ScopeCycleError
@@ -405,21 +429,34 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
         },
         {
           name: 'scope_b',
-          content: 'complex_cycle:scope_b := complex_cycle:scope_c[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
+          content:
+            'complex_cycle:scope_b := complex_cycle:scope_c[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
         },
         {
           name: 'scope_c',
-          content: 'complex_cycle:scope_c := complex_cycle:scope_a[{"var": "entity.components.core:position.locationId", "==": "test-location-1"}]',
+          content:
+            'complex_cycle:scope_c := complex_cycle:scope_a[{"var": "entity.components.core:position.locationId", "==": "test-location-1"}]',
         },
       ];
 
-      await createDepthTestMod(tempDir, 'complex_cycle_test', complexCyclicScopes);
+      await createDepthTestMod(
+        tempDir,
+        'complex_cycle_test',
+        complexCyclicScopes
+      );
 
-      const scopeFiles = complexCyclicScopes.map(scope => `${scope.name}.scope`);
-      const scopeDefinitions = await loadScopesFromMod('complex_cycle_test', scopeFiles);
+      const scopeFiles = complexCyclicScopes.map(
+        (scope) => `${scope.name}.scope`
+      );
+      const scopeDefinitions = await loadScopesFromMod(
+        'complex_cycle_test',
+        scopeFiles
+      );
       scopeRegistry.initialize(scopeDefinitions);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Should detect complex cycle and throw ScopeCycleError
@@ -438,17 +475,23 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
       const selfRefScopes = [
         {
           name: 'self_ref',
-          content: 'self:recursive := self:recursive[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
+          content:
+            'self:recursive := self:recursive[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
         },
       ];
 
       await createDepthTestMod(tempDir, 'self_ref_test', selfRefScopes);
 
-      const scopeFiles = selfRefScopes.map(scope => `${scope.name}.scope`);
-      const scopeDefinitions = await loadScopesFromMod('self_ref_test', scopeFiles);
+      const scopeFiles = selfRefScopes.map((scope) => `${scope.name}.scope`);
+      const scopeDefinitions = await loadScopesFromMod(
+        'self_ref_test',
+        scopeFiles
+      );
       scopeRegistry.initialize(scopeDefinitions);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Should detect self-reference and throw ScopeCycleError
@@ -467,21 +510,30 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
       const namedCyclicScopes = [
         {
           name: 'players',
-          content: 'named:players := named:enemies[{"var": "entity.components.core:actor.isPlayer", "==": true}]',
+          content:
+            'named:players := named:enemies[{"var": "entity.components.core:actor.isPlayer", "==": true}]',
         },
         {
           name: 'enemies',
-          content: 'named:enemies := named:players[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
+          content:
+            'named:enemies := named:players[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
         },
       ];
 
       await createDepthTestMod(tempDir, 'named_cycle_test', namedCyclicScopes);
 
-      const scopeFiles = namedCyclicScopes.map(scope => `${scope.name}.scope`);
-      const scopeDefinitions = await loadScopesFromMod('named_cycle_test', scopeFiles);
+      const scopeFiles = namedCyclicScopes.map(
+        (scope) => `${scope.name}.scope`
+      );
+      const scopeDefinitions = await loadScopesFromMod(
+        'named_cycle_test',
+        scopeFiles
+      );
       scopeRegistry.initialize(scopeDefinitions);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       try {
@@ -531,11 +583,16 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
 
       await createDepthTestMod(tempDir, 'recovery_test', mixedDepthScopes);
 
-      const scopeFiles = mixedDepthScopes.map(scope => `${scope.name}.scope`);
-      const scopeDefinitions = await loadScopesFromMod('recovery_test', scopeFiles);
+      const scopeFiles = mixedDepthScopes.map((scope) => `${scope.name}.scope`);
+      const scopeDefinitions = await loadScopesFromMod(
+        'recovery_test',
+        scopeFiles
+      );
       scopeRegistry.initialize(scopeDefinitions);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Valid scope should work fine
@@ -592,11 +649,16 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
 
       await createDepthTestMod(tempDir, 'mixed_recovery_test', mixedScopes);
 
-      const scopeFiles = mixedScopes.map(scope => `${scope.name}.scope`);
-      const scopeDefinitions = await loadScopesFromMod('mixed_recovery_test', scopeFiles);
+      const scopeFiles = mixedScopes.map((scope) => `${scope.name}.scope`);
+      const scopeDefinitions = await loadScopesFromMod(
+        'mixed_recovery_test',
+        scopeFiles
+      );
       scopeRegistry.initialize(scopeDefinitions);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Valid scope should work
@@ -630,7 +692,7 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
   });
 
   /**
-   * Test Category 4: Performance Impact of Safety Checks  
+   * Test Category 4: Performance Impact of Safety Checks
    * Validates that safety mechanisms don't significantly impact performance
    */
   describe('Performance Impact of Safety Checks', () => {
@@ -643,21 +705,30 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
         },
         {
           name: 'moderate',
-          content: 'perf:moderate := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
+          content:
+            'perf:moderate := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
         },
         {
           name: 'complex',
-          content: 'perf:complex := entities(core:actor)[{"and": [{"var": "entity.components.core:actor.isPlayer", "==": false}, {"var": "entity.components.core:position.locationId", "==": "test-location-1"}]}]',
+          content:
+            'perf:complex := entities(core:actor)[{"and": [{"var": "entity.components.core:actor.isPlayer", "==": false}, {"var": "entity.components.core:position.locationId", "==": "test-location-1"}]}]',
         },
       ];
 
       await createDepthTestMod(tempDir, 'performance_test', performanceScopes);
 
-      const scopeFiles = performanceScopes.map(scope => `${scope.name}.scope`);
-      const scopeDefinitions = await loadScopesFromMod('performance_test', scopeFiles);
+      const scopeFiles = performanceScopes.map(
+        (scope) => `${scope.name}.scope`
+      );
+      const scopeDefinitions = await loadScopesFromMod(
+        'performance_test',
+        scopeFiles
+      );
       scopeRegistry.initialize(scopeDefinitions);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       const performanceResults = {};
@@ -693,7 +764,8 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
 
       // Performance should be consistent (low variance)
       for (const [scopeName, metrics] of Object.entries(performanceResults)) {
-        const variance = Math.max(...metrics.times) - Math.min(...metrics.times);
+        const variance =
+          Math.max(...metrics.times) - Math.min(...metrics.times);
         expect(variance).toBeLessThan(20); // Variance should be reasonable
       }
     });
@@ -701,7 +773,7 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
     test('should handle boundary conditions efficiently', async () => {
       // Test performance at reasonable depth boundaries
       const boundaryScopes = [];
-      
+
       // Create scope chain at moderate depth
       boundaryScopes.push({
         name: 'base',
@@ -710,7 +782,8 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
 
       // Create 5 levels for boundary testing
       for (let i = 1; i <= 5; i++) {
-        const prevLevel = i === 1 ? 'base' : `level_${String(i - 1).padStart(2, '0')}`;
+        const prevLevel =
+          i === 1 ? 'base' : `level_${String(i - 1).padStart(2, '0')}`;
         const currentLevel = `level_${String(i).padStart(2, '0')}`;
         boundaryScopes.push({
           name: currentLevel,
@@ -720,11 +793,16 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
 
       await createDepthTestMod(tempDir, 'boundary_perf_test', boundaryScopes);
 
-      const scopeFiles = boundaryScopes.map(scope => `${scope.name}.scope`);
-      const scopeDefinitions = await loadScopesFromMod('boundary_perf_test', scopeFiles);
+      const scopeFiles = boundaryScopes.map((scope) => `${scope.name}.scope`);
+      const scopeDefinitions = await loadScopesFromMod(
+        'boundary_perf_test',
+        scopeFiles
+      );
       scopeRegistry.initialize(scopeDefinitions);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Measure performance of moderately deep boundary expression
@@ -745,8 +823,9 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
         times.push(endTime - startTime);
       }
 
-      const averageTime = times.reduce((sum, time) => sum + time, 0) / times.length;
-      
+      const averageTime =
+        times.reduce((sum, time) => sum + time, 0) / times.length;
+
       // Deep boundary expressions should still perform reasonably (< 100ms)
       expect(averageTime).toBeLessThan(100);
 

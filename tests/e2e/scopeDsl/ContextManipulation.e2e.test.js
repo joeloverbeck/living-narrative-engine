@@ -98,7 +98,7 @@ describe('Context Manipulation E2E', () => {
         },
       });
       registry.store('entityDefinitions', 'test:actor1', actorDefinition);
-      
+
       await entityManager.createEntityInstance('test:actor1', {
         instanceId: 'actor1',
         definitionId: 'test:actor1',
@@ -209,7 +209,7 @@ describe('Context Manipulation E2E', () => {
         expr: 'actor',
         ast: dslParser.parse('actor'),
       };
-      
+
       // Use initialize to add the scope
       const currentScopes = {};
       for (const name of scopeRegistry.getAllScopeNames()) {
@@ -262,7 +262,7 @@ describe('Context Manipulation E2E', () => {
       // Note: ContextMerger will prefer overlay's non-null values for critical properties
       const overlayContext = {
         actorEntity: { id: 'different-actor' },
-        dispatcher: { resolve: () => new Set() }, 
+        dispatcher: { resolve: () => new Set() },
         cycleDetector: null,
         depthGuard: undefined,
         depth: 5,
@@ -274,15 +274,18 @@ describe('Context Manipulation E2E', () => {
       // Critical properties: overlay values are used if they are truthy, otherwise base is used
       // Since overlay.actorEntity is truthy, it will be used (this is how the merger works)
       expect(mergedContext.actorEntity.id).toBe('different-actor');
-      
+
       // For a test that preserves critical properties, we need an overlay without them
       const overlayWithoutCritical = {
         depth: 5,
         customProp: 'allowed',
       };
-      
-      const properMergedContext = contextMerger.merge(baseContext, overlayWithoutCritical);
-      
+
+      const properMergedContext = contextMerger.merge(
+        baseContext,
+        overlayWithoutCritical
+      );
+
       // Now critical properties should be preserved from base
       expect(properMergedContext.actorEntity).toBe(actor);
       expect(properMergedContext.dispatcher).toBe(criticalDispatcher);
@@ -348,7 +351,7 @@ describe('Context Manipulation E2E', () => {
 
       // Context merger should use valid base when overlay is invalid
       const customMerger = new ContextMerger();
-      
+
       // Merging with invalid overlay should preserve valid base
       let mergedContext;
       try {
@@ -392,11 +395,15 @@ describe('Context Manipulation E2E', () => {
       // Scope resolution should handle circular context gracefully
       let result;
       try {
-        result = await scopeEngine.resolve(scopeDef.ast, circularContext.actorEntity, {
-          entities: [circularContext.actorEntity],
-          location: { id: 'loc1' },
-          entityManager,
-        });
+        result = await scopeEngine.resolve(
+          scopeDef.ast,
+          circularContext.actorEntity,
+          {
+            entities: [circularContext.actorEntity],
+            location: { id: 'loc1' },
+            entityManager,
+          }
+        );
       } catch {
         // Should not throw due to circular references
         result = new Set();
@@ -517,7 +524,7 @@ describe('Context Manipulation E2E', () => {
         },
       });
       registry.store('entityDefinitions', 'test:actor5', actorDef);
-      
+
       await entityManager.createEntityInstance('test:actor5', {
         instanceId: 'actor5',
         definitionId: 'test:actor5',
@@ -615,7 +622,7 @@ describe('Context Manipulation E2E', () => {
       let depthError = null;
       try {
         // Create a resolution that would exceed max depth (unused but represents the scenario)
-        const deepContext = {  // eslint-disable-line no-unused-vars
+        const deepContext = {
           actorEntity: actor,
           runtimeCtx: { entityManager },
           dispatcher: scopeEngine.dispatcher,
@@ -653,7 +660,7 @@ describe('Context Manipulation E2E', () => {
         },
       });
       registry.store('entityDefinitions', 'test:actor7', actorDef7);
-      
+
       await entityManager.createEntityInstance('test:actor7', {
         instanceId: 'actor7',
         definitionId: 'test:actor7',
@@ -679,7 +686,7 @@ describe('Context Manipulation E2E', () => {
           'actor.core:inventory.items[{">": [{"var": "quantity"}, 3]}]'
         ),
       };
-      
+
       // Add to registry using initialize
       const currentScopes = {};
       for (const name of scopeRegistry.getAllScopeNames()) {
@@ -701,7 +708,7 @@ describe('Context Manipulation E2E', () => {
       // Note: The trace may not be directly called in all resolution paths
       // but it should be available for use
       expect(result).toBeInstanceOf(Set);
-      
+
       // Verify trace context was available throughout
       // Trace was available even if not called
       expect(traceContext.addLog).toBeDefined();

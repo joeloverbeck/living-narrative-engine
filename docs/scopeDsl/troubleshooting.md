@@ -5,6 +5,7 @@
 ### Syntax Errors
 
 #### Error: "Expected field name after '.'"
+
 ```
 // Wrong
 actor..inventory
@@ -15,6 +16,7 @@ actor.core:inventory
 ```
 
 #### Error: "Expected component identifier"
+
 ```
 // Wrong
 entities()
@@ -25,6 +27,7 @@ entities(core:actor)
 ```
 
 #### Error: "Expected opening brace for JSON Logic"
+
 ```
 // Wrong
 entities(core:actor)[
@@ -35,6 +38,7 @@ entities(core:actor)[{"condition": "value"}]
 ```
 
 #### Error: "Unexpected token"
+
 ```
 // Wrong
 actor + + location
@@ -52,6 +56,7 @@ actor | location
 **Cause**: Referenced scope doesn't exist or isn't loaded.
 
 **Solutions**:
+
 1. Check scope ID includes namespace: `mod:scope`
 2. Verify scope file exists in `mods/mod_name/scopes/`
 3. Check for typos in scope ID
@@ -70,6 +75,7 @@ my_mod:my_scope := actor
 **Cause**: Trying to access non-existent component.
 
 **Solutions**:
+
 1. Verify component ID includes namespace
 2. Check component is defined in mod
 3. Handle missing components gracefully
@@ -89,6 +95,7 @@ entities(core:actor)[{
 **Cause**: Scope A references B which references A (directly or indirectly).
 
 **Solutions**:
+
 1. Map out scope dependencies
 2. Break circular chain with base cases
 3. Use union operators instead of references where appropriate
@@ -109,6 +116,7 @@ mod:scope_b := mod:base_scope[filter_b]
 **Cause**: Too many levels of property access or scope references.
 
 **Solutions**:
+
 1. Simplify deep navigation chains
 2. Break complex scopes into smaller parts
 3. Cache intermediate results
@@ -126,11 +134,13 @@ actor.core:deep_data.value
 #### Problem: Filter returns empty set unexpectedly
 
 **Common Causes**:
+
 1. Variable path incorrect
 2. Type mismatch in comparison
 3. Component doesn't exist on entities
 
 **Debugging Steps**:
+
 ```
 // 1. Test without filter first
 entities(core:actor)[]
@@ -150,6 +160,7 @@ entities(core:actor)[{
 #### Problem: JSON Logic syntax errors
 
 **Variable Access Issues**:
+
 ```
 // Wrong - incorrect path
 {"var": "entity.core:stats.level"}
@@ -161,6 +172,7 @@ entities(core:actor)[{
 ```
 
 **String vs Number Comparisons**:
+
 ```
 // Wrong - comparing string to number
 {">": [{"var": "entity.components.core:stats.level"}, "5"]}
@@ -170,6 +182,7 @@ entities(core:actor)[{
 ```
 
 **Missing Quotes in String Values**:
+
 ```
 // Wrong
 {"==": [{"var": "entity.components.core:name.value"}, Guard]}
@@ -185,6 +198,7 @@ entities(core:actor)[{
 **Solutions**:
 
 1. **Filter at the source**:
+
 ```
 // Slow
 entities(core:position)[]  // Gets all entities with position
@@ -195,6 +209,7 @@ entities(core:actor)[]  // Only gets actors
 ```
 
 2. **Use condition references for complex logic**:
+
 ```
 // Define once in conditions/complex_filter.json
 {
@@ -207,6 +222,7 @@ entities(core:actor)[{"condition_ref": "my_mod:complex_filter"}]
 ```
 
 3. **Avoid redundant unions**:
+
 ```
 // Inefficient
 entities(core:actor) + entities(core:actor)  // Duplicates
@@ -216,6 +232,7 @@ entities(core:actor)
 ```
 
 4. **Put restrictive conditions first**:
+
 ```
 // Better performance
 [{
@@ -233,6 +250,7 @@ entities(core:actor)
 **Problem**: Entities with missing data cause errors.
 
 **Solution**: Add null checks:
+
 ```
 // Defensive filtering
 entities(core:actor)[{
@@ -249,6 +267,7 @@ entities(core:actor)[{
 **Problem**: Accessing empty arrays returns nothing.
 
 **Solution**: Provide fallbacks:
+
 ```
 // With fallback
 actor.core:inventory.items[] | none
@@ -267,6 +286,7 @@ entities(core:actor)[{
 **Problem**: Scope expects context that isn't available.
 
 **Solution**: Use defensive patterns:
+
 ```
 // Defensive target access
 target | actor  // Falls back to actor if no target
@@ -285,6 +305,7 @@ entities(core:actor)[{
 ### 1. Progressive Testing
 
 Start simple and add complexity:
+
 ```
 // Step 1: Basic source
 actor
@@ -299,6 +320,7 @@ actor.core:inventory.items[{">": [{"var": "quantity"}, 1]}]
 ### 2. Component Verification
 
 Verify components exist before using them:
+
 ```
 // Check what components an entity has
 entities(core:actor)[]  // List all actors
@@ -308,6 +330,7 @@ entities(core:actor)[]  // List all actors
 ### 3. Isolate Issues
 
 Test each part independently:
+
 ```
 // Original complex scope
 my_mod:complex := entities(core:actor)[filter1] + entities(core:item)[filter2]
@@ -321,6 +344,7 @@ my_mod:test3 := my_mod:test1 + my_mod:test2
 ### 4. Use Trace Mode
 
 Enable tracing for detailed resolution info:
+
 - Check which entities are being evaluated
 - See filter results at each step
 - Identify where empty sets originate
@@ -328,22 +352,23 @@ Enable tracing for detailed resolution info:
 ### 5. Validate JSON Logic
 
 Test JSON Logic expressions separately:
+
 1. Extract the filter expression
 2. Test with known data
 3. Verify expected results
 
 ## Error Message Reference
 
-| Error | Meaning | Common Fix |
-|-------|---------|------------|
-| `ScopeSyntaxError` | Invalid scope syntax | Check operators and structure |
-| `Scope not found` | Referenced scope doesn't exist | Verify scope ID and loading |
-| `Component not found` | Component doesn't exist | Check component registration |
-| `Maximum depth exceeded` | Too many nested operations | Simplify scope structure |
-| `Circular reference` | Scopes reference each other | Break circular dependency |
-| `Invalid AST structure` | Malformed parsed tree | Check scope syntax |
-| `Condition not found` | condition_ref target missing | Verify condition exists |
-| `Type mismatch` | Comparing incompatible types | Check data types in filters |
+| Error                    | Meaning                        | Common Fix                    |
+| ------------------------ | ------------------------------ | ----------------------------- |
+| `ScopeSyntaxError`       | Invalid scope syntax           | Check operators and structure |
+| `Scope not found`        | Referenced scope doesn't exist | Verify scope ID and loading   |
+| `Component not found`    | Component doesn't exist        | Check component registration  |
+| `Maximum depth exceeded` | Too many nested operations     | Simplify scope structure      |
+| `Circular reference`     | Scopes reference each other    | Break circular dependency     |
+| `Invalid AST structure`  | Malformed parsed tree          | Check scope syntax            |
+| `Condition not found`    | condition_ref target missing   | Verify condition exists       |
+| `Type mismatch`          | Comparing incompatible types   | Check data types in filters   |
 
 ## Prevention Checklist
 
@@ -363,6 +388,7 @@ Before deploying scopes:
 ## Getting Help
 
 When reporting issues, include:
+
 1. The exact scope definition
 2. Error message received
 3. Expected vs actual behavior

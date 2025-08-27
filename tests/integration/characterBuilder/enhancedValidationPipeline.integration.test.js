@@ -584,12 +584,12 @@ describe('Enhanced Validation Pipeline Integration', () => {
 
       // Should recover and show improved validation feedback or success state
       expect(errorContainer.style.display).toBe('block');
-      
+
       // Should no longer show the "no components found" error
       expect(errorContainer.innerHTML).not.toContain(
         'No character components found'
       );
-      
+
       // Should show enhanced validation structure with improved feedback
       expect(errorContainer.innerHTML).toContain('enhanced-validation-results');
     });

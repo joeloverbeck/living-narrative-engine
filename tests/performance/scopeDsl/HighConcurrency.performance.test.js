@@ -16,7 +16,7 @@
  * - Error rate < 5% under normal concurrent load
  * - Consistent response times (variance < 50%)
  * - No performance degradation over multiple test cycles
- * 
+ *
  * Optimizations Applied:
  * - Reduced entity counts while maintaining statistical validity
  * - Container reuse between test suites
@@ -65,7 +65,7 @@ describe('High Concurrency Performance - Optimized', () => {
   let jsonLogicService;
   let spatialIndexManager;
   let registry;
-  
+
   // Performance metrics tracking
   let performanceMetrics = {
     throughputResults: [],
@@ -77,22 +77,26 @@ describe('High Concurrency Performance - Optimized', () => {
   // One-time setup for all tests
   beforeAll(async () => {
     // Create and prewarm shared container once
-    const containerSetup = await createPerformanceContainer({ includeUI: false });
+    const containerSetup = await createPerformanceContainer({
+      includeUI: false,
+    });
     sharedContainer = containerSetup.container;
     sharedCleanup = containerSetup.cleanup;
-    
+
     await prewarmContainer(sharedContainer);
-    
+
     // Get services once
     entityManager = sharedContainer.resolve(tokens.IEntityManager);
     scopeRegistry = sharedContainer.resolve(tokens.IScopeRegistry);
     scopeEngine = sharedContainer.resolve(tokens.IScopeEngine);
     dslParser = sharedContainer.resolve(tokens.DslParser);
     logger = sharedContainer.resolve(tokens.ILogger);
-    jsonLogicService = sharedContainer.resolve(tokens.JsonLogicEvaluationService);
+    jsonLogicService = sharedContainer.resolve(
+      tokens.JsonLogicEvaluationService
+    );
     spatialIndexManager = sharedContainer.resolve(tokens.ISpatialIndexManager);
     registry = sharedContainer.resolve(tokens.IDataRegistry);
-    
+
     // Setup test conditions once
     ScopeTestUtilities.setupScopeTestConditions(registry, [
       {
@@ -110,8 +114,12 @@ describe('High Concurrency Performance - Optimized', () => {
             { '>': [{ var: 'entity.components.core:stats.level' }, 1] },
             {
               or: [
-                { '>=': [{ var: 'entity.components.core:stats.strength' }, 10] },
-                { '>=': [{ var: 'entity.components.core:health.current' }, 30] },
+                {
+                  '>=': [{ var: 'entity.components.core:stats.strength' }, 10],
+                },
+                {
+                  '>=': [{ var: 'entity.components.core:health.current' }, 30],
+                },
               ],
             },
           ],
@@ -127,14 +135,34 @@ describe('High Concurrency Performance - Optimized', () => {
               or: [
                 {
                   and: [
-                    { '>=': [{ var: 'entity.components.core:stats.strength' }, 15] },
-                    { '>': [{ var: 'entity.components.core:health.current' }, 40] },
+                    {
+                      '>=': [
+                        { var: 'entity.components.core:stats.strength' },
+                        15,
+                      ],
+                    },
+                    {
+                      '>': [
+                        { var: 'entity.components.core:health.current' },
+                        40,
+                      ],
+                    },
                   ],
                 },
                 {
                   and: [
-                    { '>=': [{ var: 'entity.components.core:stats.agility' }, 12] },
-                    { '<': [{ var: 'entity.components.core:health.current' }, 80] },
+                    {
+                      '>=': [
+                        { var: 'entity.components.core:stats.agility' },
+                        12,
+                      ],
+                    },
+                    {
+                      '<': [
+                        { var: 'entity.components.core:health.current' },
+                        80,
+                      ],
+                    },
                   ],
                 },
               ],
@@ -143,7 +171,7 @@ describe('High Concurrency Performance - Optimized', () => {
         },
       },
     ]);
-    
+
     // Create performance test scopes once
     const performanceScopes = ScopeTestUtilities.createTestScopes(
       { dslParser, logger },
@@ -165,7 +193,7 @@ describe('High Concurrency Performance - Optimized', () => {
         },
       ]
     );
-    
+
     // Initialize scope registry once
     scopeRegistry.initialize(performanceScopes);
   });
@@ -173,7 +201,106 @@ describe('High Concurrency Performance - Optimized', () => {
   beforeEach(async () => {
     // Quick state reset between tests
     await resetContainerState(sharedContainer);
-    
+
+    // Re-setup test conditions after reset (since resetContainerState clears them)
+    ScopeTestUtilities.setupScopeTestConditions(registry, [
+      {
+        id: 'perf-concurrency:lightweight-condition',
+        description: 'Lightweight condition for throughput testing',
+        logic: {
+          '>': [{ var: 'entity.components.core:stats.level' }, 0],
+        },
+      },
+      {
+        id: 'perf-concurrency:moderate-condition',
+        description: 'Moderate condition for scaling testing',
+        logic: {
+          and: [
+            { '>': [{ var: 'entity.components.core:stats.level' }, 1] },
+            {
+              or: [
+                {
+                  '>=': [{ var: 'entity.components.core:stats.strength' }, 10],
+                },
+                {
+                  '>=': [{ var: 'entity.components.core:health.current' }, 30],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        id: 'perf-concurrency:heavy-condition',
+        description: 'Heavy condition for stress testing',
+        logic: {
+          and: [
+            { '>': [{ var: 'entity.components.core:stats.level' }, 2] },
+            {
+              or: [
+                {
+                  and: [
+                    {
+                      '>=': [
+                        { var: 'entity.components.core:stats.strength' },
+                        15,
+                      ],
+                    },
+                    {
+                      '>': [
+                        { var: 'entity.components.core:health.current' },
+                        40,
+                      ],
+                    },
+                  ],
+                },
+                {
+                  and: [
+                    {
+                      '>=': [
+                        { var: 'entity.components.core:stats.agility' },
+                        12,
+                      ],
+                    },
+                    {
+                      '<': [
+                        { var: 'entity.components.core:health.current' },
+                        80,
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ]);
+
+    // Re-initialize scope registry with performance scopes
+    const performanceScopes = ScopeTestUtilities.createTestScopes(
+      { dslParser, logger },
+      [
+        {
+          id: 'perf-concurrency:lightweight_filter',
+          expr: 'entities(core:actor)[{"condition_ref": "perf-concurrency:lightweight-condition"}]',
+          description: 'Lightweight filter for throughput testing',
+        },
+        {
+          id: 'perf-concurrency:moderate_filter',
+          expr: 'entities(core:actor)[{"condition_ref": "perf-concurrency:moderate-condition"}]',
+          description: 'Moderate filter for scaling testing',
+        },
+        {
+          id: 'perf-concurrency:heavy_filter',
+          expr: 'entities(core:actor)[{"condition_ref": "perf-concurrency:heavy-condition"}]',
+          description: 'Heavy filter for stress testing',
+        },
+      ]
+    );
+
+    scopeRegistry.initialize(performanceScopes);
+
     // Reset performance metrics
     performanceMetrics = {
       throughputResults: [],
@@ -201,6 +328,9 @@ describe('High Concurrency Performance - Optimized', () => {
   /**
    * Creates a performance test actor with specified configuration
    * Optimized for batch creation
+   *
+   * @param actorId
+   * @param config
    */
   async function createPerformanceActor(actorId, config = {}) {
     const {
@@ -236,18 +366,27 @@ describe('High Concurrency Performance - Optimized', () => {
   /**
    * Creates dataset optimized for performance testing
    * Uses batch operations and reduced entity counts
+   *
+   * @param size
    */
   async function createPerformanceDataset(size) {
     const entities = [];
 
     // Create test location
-    const locationDefinition = new EntityDefinition('perf-concurrency-location', {
-      description: 'Performance test location',
-      components: {
-        'core:position': { x: 0, y: 0 },
-      },
-    });
-    registry.store('entityDefinitions', 'perf-concurrency-location', locationDefinition);
+    const locationDefinition = new EntityDefinition(
+      'perf-concurrency-location',
+      {
+        description: 'Performance test location',
+        components: {
+          'core:position': { x: 0, y: 0 },
+        },
+      }
+    );
+    registry.store(
+      'entityDefinitions',
+      'perf-concurrency-location',
+      locationDefinition
+    );
     await entityManager.createEntityInstance('perf-concurrency-location', {
       instanceId: 'perf-concurrency-location',
       definitionId: 'perf-concurrency-location',
@@ -257,11 +396,13 @@ describe('High Concurrency Performance - Optimized', () => {
     const createPromises = [];
     for (let i = 0; i < size; i++) {
       const actorId = `perf-concurrency-actor-${i}`;
-      createPromises.push(createPerformanceActor(actorId, {
-        isPlayer: i === 0,
-      }));
+      createPromises.push(
+        createPerformanceActor(actorId, {
+          isPlayer: i === 0,
+        })
+      );
     }
-    
+
     // Create all actors in parallel
     const createdEntities = await Promise.all(createPromises);
     entities.push(...createdEntities);
@@ -275,7 +416,9 @@ describe('High Concurrency Performance - Optimized', () => {
    */
   async function createPerformanceGameContext() {
     return {
-      currentLocation: await entityManager.getEntityInstance('perf-concurrency-location'),
+      currentLocation: await entityManager.getEntityInstance(
+        'perf-concurrency-location'
+      ),
       entityManager: entityManager,
       allEntities: Array.from(entityManager.entities || []),
       jsonLogicEval: jsonLogicService,
@@ -287,6 +430,12 @@ describe('High Concurrency Performance - Optimized', () => {
   /**
    * Measures performance metrics for concurrent operations
    * Optimized for minimal overhead
+   *
+   * @param scopeId
+   * @param testActor
+   * @param gameContext
+   * @param concurrentOperations
+   * @param description
    */
   async function measureConcurrentPerformance(
     scopeId,
@@ -305,11 +454,11 @@ describe('High Concurrency Performance - Optimized', () => {
           scopeRegistry,
           scopeEngine,
         })
-          .then(result => ({
+          .then((result) => ({
             success: true,
             result,
           }))
-          .catch(error => ({
+          .catch((error) => ({
             success: false,
             error,
           }))
@@ -321,8 +470,8 @@ describe('High Concurrency Performance - Optimized', () => {
     const totalTime = endTime - startTime;
 
     // Calculate metrics
-    const successfulOperations = results.filter(r => r.success).length;
-    const failedOperations = results.filter(r => !r.success).length;
+    const successfulOperations = results.filter((r) => r.success).length;
+    const failedOperations = results.filter((r) => !r.success).length;
     const errorRate = (failedOperations / results.length) * 100;
     const throughput = (successfulOperations / totalTime) * 1000; // ops per second
     const averageLatency = totalTime / successfulOperations;
@@ -373,14 +522,14 @@ describe('High Concurrency Performance - Optimized', () => {
       // Assert - Scaling should be reasonable
       expect(scalingResults).toHaveLength(concurrencyLevels.length);
 
-      scalingResults.forEach(metrics => {
+      scalingResults.forEach((metrics) => {
         expect(metrics.successfulOperations).toBe(metrics.concurrentOperations);
         expect(metrics.errorRate).toBe(0); // No errors expected in scaling test
         expect(metrics.throughput).toBeGreaterThan(5); // At least 5 ops/second
       });
 
       // Throughput should scale reasonably
-      const throughputs = scalingResults.map(r => r.throughput);
+      const throughputs = scalingResults.map((r) => r.throughput);
       const firstThroughput = throughputs[0];
       const lastThroughput = throughputs[throughputs.length - 1];
 
@@ -418,16 +567,20 @@ describe('High Concurrency Performance - Optimized', () => {
       // Assert - Performance should be consistent across cycles
       expect(cycleResults).toHaveLength(cycles);
 
-      const throughputs = cycleResults.map(r => r.throughput);
-      const averageLatencies = cycleResults.map(r => r.averageLatency);
+      const throughputs = cycleResults.map((r) => r.throughput);
+      const averageLatencies = cycleResults.map((r) => r.averageLatency);
 
       // Calculate consistency metrics
-      const avgThroughput = throughputs.reduce((a, b) => a + b) / throughputs.length;
-      const throughputVariance = Math.max(...throughputs) - Math.min(...throughputs);
-      const throughputConsistency = 1 - (throughputVariance / avgThroughput);
+      const avgThroughput =
+        throughputs.reduce((a, b) => a + b) / throughputs.length;
+      const throughputVariance =
+        Math.max(...throughputs) - Math.min(...throughputs);
+      const throughputConsistency = 1 - throughputVariance / avgThroughput;
 
-      const avgLatency = averageLatencies.reduce((a, b) => a + b) / averageLatencies.length;
-      const latencyVariance = Math.max(...averageLatencies) - Math.min(...averageLatencies);
+      const avgLatency =
+        averageLatencies.reduce((a, b) => a + b) / averageLatencies.length;
+      const latencyVariance =
+        Math.max(...averageLatencies) - Math.min(...averageLatencies);
 
       // Performance should be reasonably consistent
       expect(throughputConsistency).toBeGreaterThan(0.7);
@@ -474,7 +627,10 @@ describe('High Concurrency Performance - Optimized', () => {
 
       // Test different scope complexities
       const complexityTests = [
-        { scopeId: 'perf-concurrency:lightweight_filter', complexity: 'lightweight' },
+        {
+          scopeId: 'perf-concurrency:lightweight_filter',
+          complexity: 'lightweight',
+        },
         { scopeId: 'perf-concurrency:moderate_filter', complexity: 'moderate' },
         { scopeId: 'perf-concurrency:heavy_filter', complexity: 'heavy' },
       ];
@@ -503,17 +659,23 @@ describe('High Concurrency Performance - Optimized', () => {
       // Assert - Performance should correlate with complexity
       expect(complexityResults).toHaveLength(complexityTests.length);
 
-      complexityResults.forEach(result => {
+      complexityResults.forEach((result) => {
         expect(result.successfulOperations).toBeGreaterThan(0);
         expect(result.throughput).toBeGreaterThan(1);
       });
 
       // Lightweight should generally be fastest
-      const lightweightResult = complexityResults.find(r => r.complexity === 'lightweight');
-      const heavyResult = complexityResults.find(r => r.complexity === 'heavy');
+      const lightweightResult = complexityResults.find(
+        (r) => r.complexity === 'lightweight'
+      );
+      const heavyResult = complexityResults.find(
+        (r) => r.complexity === 'heavy'
+      );
 
       if (lightweightResult && heavyResult) {
-        expect(lightweightResult.throughput).toBeGreaterThanOrEqual(heavyResult.throughput * 0.5);
+        expect(lightweightResult.throughput).toBeGreaterThanOrEqual(
+          heavyResult.throughput * 0.5
+        );
       }
     });
   });
@@ -638,7 +800,7 @@ describe('High Concurrency Performance - Optimized', () => {
       // Analyze for performance regression
       const baselineResult = cycleResults[0];
       const regressionThreshold = 0.8;
-      
+
       let regressionDetected = false;
 
       cycleResults.forEach((result) => {
@@ -652,9 +814,11 @@ describe('High Concurrency Performance - Optimized', () => {
       expect(cycleResults).toHaveLength(cycles);
       expect(regressionDetected).toBe(false);
 
-      cycleResults.forEach(result => {
+      cycleResults.forEach((result) => {
         expect(result.successfulOperations).toBe(concurrentOps);
-        expect(result.throughput).toBeGreaterThan(baselineResult.throughput * regressionThreshold);
+        expect(result.throughput).toBeGreaterThan(
+          baselineResult.throughput * regressionThreshold
+        );
         expect(result.errorRate).toBeLessThan(10);
       });
     });

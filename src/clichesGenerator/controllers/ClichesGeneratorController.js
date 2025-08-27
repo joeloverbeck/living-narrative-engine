@@ -259,9 +259,9 @@ export class ClichesGeneratorController extends BaseCharacterBuilderController {
     });
 
     // Back to menu button
-    const backBtn = document.getElementById('back-to-menu-btn');
+    const backBtn = document.getElementById('back-btn');
     backBtn?.addEventListener('click', () => {
-      window.location.href = '/index.html';
+      window.location.href = 'index.html';
     });
 
     // Setup keyboard shortcuts for improved UX

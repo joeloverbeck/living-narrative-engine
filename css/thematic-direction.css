@@ -327,18 +327,20 @@
   flex-direction: column;
 }
 
-/* Ensure results state fills available space without forcing height */
+/*/* Ensure results state fills available space without forcing height */
 #results-state {
   flex: 1;
   overflow-y: auto;
   padding-right: 8px; /* Space for scrollbar */
+  padding-top: 0.5rem; /* Buffer zone to prevent content hiding */
+  scroll-padding-top: 1rem; /* Prevent content from being hidden when scrolling */
   display: flex;
   flex-direction: column;
 }
 
-/* Ensure proper spacing and visibility for all direction cards */
+/*/* Ensure proper spacing and visibility for all direction cards */
 .directions-results {
-  padding: 1rem 0 2rem 0; /* Add top padding to prevent first card from being cut off */
+  padding: 2rem 0 2rem 0; /* Increased top padding to prevent first card from being cut off */
   display: flex;
   flex-direction: column;
   gap: 1.5rem; /* Consistent spacing between cards */

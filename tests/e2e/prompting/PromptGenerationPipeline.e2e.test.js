@@ -37,24 +37,36 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
   let testWorld;
   let testActors;
   let testActions;
+  let setupStartTime;
+  let setupEndTime;
 
-  beforeEach(async () => {
-    // Initialize test bed - keep original pattern for complex container setup
+  beforeAll(async () => {
+    setupStartTime = Date.now();
+
+    // Initialize test bed once - reuse across all tests for performance
     testBed = new PromptGenerationTestBed();
     await testBed.initialize();
 
-    // Set up test world, actors, and actions
+    // Set up test world, actors, and actions once
     testWorld = await testBed.createTestWorld();
     testActors = await testBed.createTestActors();
     testActions = await testBed.registerTestActions();
 
-    // Clear any events from initialization
-    testBed.clearRecordedEvents();
+    setupEndTime = Date.now();
+    const setupTime = setupEndTime - setupStartTime;
+    console.log(`[Performance] Test setup completed in ${setupTime}ms`);
   });
 
-  afterEach(async () => {
-    // Clean up test bed
-    await testBed.cleanup();
+  beforeEach(() => {
+    // Reset test state between tests without full recreation
+    testBed.resetTestState();
+  });
+
+  afterAll(async () => {
+    // Clean up test bed only once at the end
+    if (testBed) {
+      await testBed.cleanup();
+    }
   });
 
   /**
@@ -63,6 +75,7 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
    */
   describe('Core Prompt Generation', () => {
     test('should generate complete prompt for AI actor decision', async () => {
+      const testStart = Date.now();
       // Arrange
       const aiActor = testActors.aiActor;
       const turnContext = testBed.createTestTurnContext();
@@ -92,7 +105,14 @@ describe('Complete Prompt Generation Pipeline E2E', () => {
 
       // Assert - Location name was resolved
       expect(prompt).toContain('The Rusty Tankard');
-    });
+
+      const testEnd = Date.now();
+      const testTime = testEnd - testStart;
+      console.log(
+        `[Performance] Core prompt generation test completed in ${testTime}ms`
+      );
+      expect(testTime).toBeLessThan(2000); // Should complete in under 2 seconds
+    }, 5000); // 5 second timeout
 
     test('should assemble prompt elements in configured order', async () => {
       // Arrange

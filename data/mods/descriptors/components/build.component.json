@@ -16,6 +16,7 @@
           "shapely",
           "thick",
           "muscular",
+          "hulking",
           "stocky"
         ],
         "default": "average"

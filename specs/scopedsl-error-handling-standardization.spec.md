@@ -88,7 +88,7 @@ const ErrorCategories = {
   DEPTH_EXCEEDED: 'depth_exceeded',
   PARSE_ERROR: 'parse_error',
   CONFIGURATION: 'configuration',
-  UNKNOWN: 'unknown'
+  UNKNOWN: 'unknown',
 };
 ```
 
@@ -103,21 +103,21 @@ const ErrorCodes = {
   INVALID_ACTOR_ID: 'SCOPE_1002',
   MISSING_DISPATCHER: 'SCOPE_1003',
   MISSING_REGISTRY: 'SCOPE_1004',
-  
+
   // Node errors (2xxx)
   INVALID_NODE_TYPE: 'SCOPE_2001',
   MISSING_NODE_PARENT: 'SCOPE_2002',
   INVALID_NODE_STRUCTURE: 'SCOPE_2003',
-  
+
   // Resolution errors (3xxx)
   RESOLUTION_FAILED: 'SCOPE_3001',
   SCOPE_NOT_FOUND: 'SCOPE_3002',
   FILTER_EVAL_FAILED: 'SCOPE_3003',
-  
+
   // System errors (4xxx)
   CYCLE_DETECTED: 'SCOPE_4001',
   MAX_DEPTH_EXCEEDED: 'SCOPE_4002',
-  MEMORY_LIMIT: 'SCOPE_4003'
+  MEMORY_LIMIT: 'SCOPE_4003',
 };
 ```
 
@@ -138,24 +138,24 @@ class ScopeDslErrorHandler {
   #errorBuffer;
   #maxBufferSize;
   #errorFactory;
-  
+
   constructor({ logger, errorFactory, config = {} }) {
     validateDependency(logger, 'ILogger', console, {
-      requiredMethods: ['error', 'warn', 'debug']
+      requiredMethods: ['error', 'warn', 'debug'],
     });
     validateDependency(errorFactory, 'IErrorFactory', console, {
-      requiredMethods: ['create']
+      requiredMethods: ['create'],
     });
-    
+
     this.#logger = logger;
-    this.raffeine,
-    this.#isDevelopment = config.isDevelopment ?? 
-      (process.env.NODE_ENV !== 'production');
+    (this.raffeine,
+      (this.#isDevelopment =
+        config.isDevelopment ?? process.env.NODE_ENV !== 'production'));
     this.#errorBuffer = [];
     this.#maxBufferSize = config.maxBufferSize ?? 100;
     this.#errorFactory = errorFactory;
   }
-  
+
   /**
    * Handle an error with environment-aware processing
    * @param {Error|string} error - The error or message
@@ -167,33 +167,29 @@ class ScopeDslErrorHandler {
   handleError(error, context, resolverName, errorCode = null) {
     // Create error info
     const errorInfo = this.#createErrorInfo(
-      error, 
-      context, 
-      resolverName, 
+      error,
+      context,
+      resolverName,
       errorCode
     );
-    
+
     // Buffer for analysis
     this.#bufferError(errorInfo);
-    
+
     // Log based on environment
     if (this.#isDevelopment) {
       this.#logDetailedError(errorInfo);
     } else {
       this.#logProductionError(errorInfo);
     }
-    
+
     // Always throw clean error
-    throw this.#errorFactory.create(
-      errorInfo.code,
-      errorInfo.message,
-      {
-        resolver: resolverName,
-        category: errorInfo.category
-      }
-    );
+    throw this.#errorFactory.create(errorInfo.code, errorInfo.message, {
+      resolver: resolverName,
+      category: errorInfo.category,
+    });
   }
-  
+
   /**
    * Create standardized error info
    * @private
@@ -201,7 +197,7 @@ class ScopeDslErrorHandler {
   #createErrorInfo(error, context, resolverName, errorCode) {
     const message = typeof error === 'string' ? error : error.message;
     const code = errorCode || this.#detectErrorCode(message, context);
-    
+
     return {
       timestamp: Date.now(),
       message: this.#formatMessage(message, resolverName),
@@ -209,17 +205,17 @@ class ScopeDslErrorHandler {
       category: this.#categorizeError(code, message),
       resolver: resolverName,
       context: this.#sanitizeContext(context),
-      stack: error instanceof Error ? error.stack : null
+      stack: error instanceof Error ? error.stack : null,
     };
   }
-  
+
   /**
    * Sanitize context to prevent circular references
    * @private
    */
   #sanitizeContext(context) {
     if (!context) return null;
-    
+
     return {
       hasActorEntity: !!context.actorEntity,
       actorId: context.actorEntity?.id,
@@ -229,11 +225,12 @@ class ScopeDslErrorHandler {
       hasDampatcher: !!context.dispatcher,
       hasRegistry: !!context.scopeRegistry,
       // Avoid logging full objects that may have circulars
-      keys: Object.keys(context)
-        .filter(k => !['dispatcher', 'cycleDetector', 'actorEntity'].includes(k))
+      keys: Object.keys(context).filter(
+        (k) => !['dispatcher', 'cycleDetector', 'actorEntity'].includes(k)
+      ),
     };
   }
-  
+
   /**
    * Categorize error based on code and message
    * @private
@@ -243,7 +240,7 @@ class ScopeDslErrorHandler {
     if (code.startsWith('SCOPE_2')) return ErrorCategories.INVALID_DATA;
     if (code.startsWith('SCOPE_3')) return ErrorCategories.RESOLUTION_FAILURE;
     if (code.startsWith('SCOPE_4')) return ErrorCategories.CONFIGURATION;
-    
+
     // Pattern matching for uncoded errors
     if (message.includes('missing') || message.includes('undefined')) {
       return ErrorCategories.MISSING_CONTEXT;
@@ -254,23 +251,23 @@ class ScopeDslErrorHandler {
     if (message.includes('cycle')) {
       return ErrorCategories.CYCLE_DETECTED;
     }
-    
+
     return ErrorCategories.UNKNOWN;
   }
-  
+
   /**
    * Buffer error for later analysis
    * @private
    */
   #bufferError(errorInfo) {
     this.#errorBuffer.push(errorInfo);
-    
+
     // Maintain buffer size limit
     if (this.#errorBuffer.length > this.#maxBufferSize) {
       this.#errorBuffer.shift();
     }
   }
-  
+
   /**
    * Get error buffer for analysis
    * @returns {Array} Recent errors
@@ -278,7 +275,7 @@ class ScopeDslErrorHandler {
   getErrorBuffer() {
     return [...this.#errorBuffer];
   }
-  
+
   /**
    * Clear error buffer
    */
@@ -300,11 +297,11 @@ import { ScopeDslError } from '../errors/scopeDslError.js';
  */
 class ScopeDslErrorFactory {
   #templates;
-  
+
   constructor() {
     this.#templates = this.#initializeTemplates();
   }
-  
+
   /**
    * Create a typed error with code
    * @param {string} code - Error code from ErrorCodes
@@ -318,7 +315,7 @@ class ScopeDslErrorFactory {
     error.metadata = metadata;
     return error;
   }
-  
+
   /**
    * Create error from template
    * @param {string} templateKey - Template identifier
@@ -328,13 +325,16 @@ class ScopeDslErrorFactory {
   fromTemplate(templateKey, params = {}) {
     const template = this.#templates[templateKey];
     if (!template) {
-      return this.create('SCOPE_9999', `Unknown error template: ${templateKey}`);
+      return this.create(
+        'SCOPE_9999',
+        `Unknown error template: ${templateKey}`
+      );
     }
-    
+
     const message = this.#interpolate(template.message, params);
     return this.create(template.code, message, params);
   }
-  
+
   /**
    * Initialize error message templates
    * @private
@@ -343,31 +343,31 @@ class ScopeDslErrorFactory {
     return {
       missingActor: {
         code: 'SCOPE_1001',
-        message: '{resolver}: actorEntity is missing from context'
+        message: '{resolver}: actorEntity is missing from context',
       },
       invalidActorId: {
         code: 'SCOPE_1002',
-        message: '{resolver}: actorEntity has invalid ID: {actorId}'
+        message: '{resolver}: actorEntity has invalid ID: {actorId}',
       },
       missingDispatcher: {
         code: 'SCOPE_1003',
-        message: '{resolver}: dispatcher function is missing from context'
+        message: '{resolver}: dispatcher function is missing from context',
       },
       scopeNotFound: {
         code: 'SCOPE_3002',
-        message: 'Referenced scope not found: {scopeId}'
+        message: 'Referenced scope not found: {scopeId}',
       },
       cycleDetected: {
         code: 'SCOPE_4001',
-        message: 'Circular reference detected: {path}'
+        message: 'Circular reference detected: {path}',
       },
       depthExceeded: {
         code: 'SCOPE_4002',
-        message: 'Maximum depth {maxDepth} exceeded at depth {currentDepth}'
-      }
+        message: 'Maximum depth {maxDepth} exceeded at depth {currentDepth}',
+      },
     };
   }
-  
+
   /**
    * Interpolate template with parameters
    * @private
@@ -421,13 +421,13 @@ export default function createFilterResolver({
   logicEval,
   entitiesGateway,
   locationProvider,
-  errorHandler  // New dependency
+  errorHandler, // New dependency
 }) {
   // Validate error handler
   validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
-    requiredMethods: ['handleError', 'getErrorBuffer']
+    requiredMethods: ['handleError', 'getErrorBuffer'],
   });
-  
+
   return {
     resolve(node, ctx) {
       // Use error handler for all error scenarios
@@ -440,7 +440,7 @@ export default function createFilterResolver({
         );
       }
       // ... rest of resolver logic
-    }
+    },
   };
 }
 ```
@@ -462,8 +462,8 @@ container.register('IScopeDslErrorHandler', (deps) => {
     errorFactory: deps.get('IScopeDslErrorFactory'),
     config: {
       isDevelopment: process.env.NODE_ENV !== 'production',
-      maxBufferSize: 100
-    }
+      maxBufferSize: 100,
+    },
   });
 });
 
@@ -473,7 +473,7 @@ container.register('filterResolver', (deps) => {
     logicEval: deps.get('ILogicEvaluator'),
     entitiesGateway: deps.get('IEntityGateway'),
     locationProvider: deps.get('ILocationProvider'),
-    errorHandler: deps.get('IScopeDslErrorHandler')
+    errorHandler: deps.get('IScopeDslErrorHandler'),
   });
 });
 ```
@@ -489,28 +489,28 @@ describe('ScopeDslErrorHandler', () => {
   let errorHandler;
   let mockLogger;
   let mockErrorFactory;
-  
+
   beforeEach(() => {
     mockLogger = createMockLogger();
     mockErrorFactory = {
-      create: jest.fn((code, message) => new ScopeDslError(message))
+      create: jest.fn((code, message) => new ScopeDslError(message)),
     };
-    
+
     errorHandler = new ScopeDslErrorHandler({
       logger: mockLogger,
       errorFactory: mockErrorFactory,
-      config: { isDevelopment: true }
+      config: { isDevelopment: true },
     });
   });
-  
+
   describe('Error Handling', () => {
     it('should create standardized error info', () => {
       const context = {
         actorEntity: { id: 'test-actor' },
         depth: 3,
-        node: { type: 'Filter' }
+        node: { type: 'Filter' },
       };
-      
+
       expect(() => {
         errorHandler.handleError(
           'Test error',
@@ -519,38 +519,38 @@ describe('ScopeDslErrorHandler', () => {
           'SCOPE_1001'
         );
       }).toThrow(ScopeDslError);
-      
+
       expect(mockErrorFactory.create).toHaveBeenCalledWith(
         'SCOPE_1001',
         expect.stringContaining('Test error'),
         expect.objectContaining({
           resolver: 'TestResolver',
-          category: 'missing_context'
+          category: 'missing_context',
         })
       );
     });
-    
+
     it('should sanitize context to prevent circular references', () => {
       const circularObj = {};
       circularObj.self = circularObj;
-      
+
       const context = {
         actorEntity: { id: 'test' },
-        circular: circularObj
+        circular: circularObj,
       };
-      
+
       expect(() => {
         errorHandler.handleError('Error', context, 'Test');
       }).not.toThrow(TypeError); // No circular reference error
     });
-    
+
     it('should buffer errors up to maxBufferSize', () => {
       const handler = new ScopeDslErrorHandler({
         logger: mockLogger,
         errorFactory: mockErrorFactory,
-        config: { maxBufferSize: 3 }
+        config: { maxBufferSize: 3 },
       });
-      
+
       // Add 5 errors
       for (let i = 0; i < 5; i++) {
         try {
@@ -559,39 +559,39 @@ describe('ScopeDslErrorHandler', () => {
           // Expected to throw
         }
       }
-      
+
       const buffer = handler.getErrorBuffer();
       expect(buffer).toHaveLength(3);
       expect(buffer[0].message).toContain('Error 2');
     });
   });
-  
+
   describe('Environment Behavior', () => {
     it('should log detailed errors in development', () => {
       const devHandler = new ScopeDslErrorHandler({
         logger: mockLogger,
         errorFactory: mockErrorFactory,
-        config: { isDevelopment: true }
+        config: { isDevelopment: true },
       });
-      
+
       try {
         devHandler.handleError('Test', {}, 'Test');
       } catch (e) {}
-      
+
       expect(mockLogger.debug).toHaveBeenCalled();
     });
-    
+
     it('should log minimal errors in production', () => {
       const prodHandler = new ScopeDslErrorHandler({
         logger: mockLogger,
         errorFactory: mockErrorFactory,
-        config: { isDevelopment: false }
+        config: { isDevelopment: false },
       });
-      
+
       try {
         prodHandler.handleError('Test', {}, 'Test');
       } catch (e) {}
-      
+
       expect(mockLogger.debug).not.toHaveBeenCalled();
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.not.stringContaining('Full context')
@@ -610,37 +610,39 @@ describe('ScopeDSL Error Handling Integration', () => {
   let container;
   let scopeEngine;
   let errorHandler;
-  
+
   beforeEach(async () => {
     container = await createTestContainer();
     scopeEngine = container.get('IScopeEngine');
     errorHandler = container.get('IScopeDslErrorHandler');
   });
-  
+
   it('should handle missing actor errors consistently', async () => {
     const scopeWithFilter = 'actor.items[{"==": [{"var": "type"}, "weapon"]}]';
-    
+
     // Remove actor from context
     const context = { depth: 0 };
-    
-    await expect(scopeEngine.resolve(scopeWithFilter, context))
-      .rejects.toThrow(ScopeDslError);
-    
+
+    await expect(scopeEngine.resolve(scopeWithFilter, context)).rejects.toThrow(
+      ScopeDslError
+    );
+
     const errors = errorHandler.getErrorBuffer();
     expect(errors).toHaveLength(1);
     expect(errors[0].code).toBe('SCOPE_1001');
     expect(errors[0].category).toBe('missing_context');
   });
-  
+
   it('should handle cycle detection errors', async () => {
     // Create circular scope reference
     const registry = container.get('IScopeRegistry');
     registry.register('scope1', 'scope2');
     registry.register('scope2', 'scope1');
-    
-    await expect(scopeEngine.resolve('scope1', defaultContext))
-      .rejects.toThrow(ScopeDslError);
-    
+
+    await expect(scopeEngine.resolve('scope1', defaultContext)).rejects.toThrow(
+      ScopeDslError
+    );
+
     const errors = errorHandler.getErrorBuffer();
     expect(errors[0].code).toBe('SCOPE_4001');
     expect(errors[0].category).toBe('cycle_detected');
@@ -658,12 +660,12 @@ describe('Error Handling Performance', () => {
     const prodHandler = new ScopeDslErrorHandler({
       logger: noOpLogger,
       errorFactory: new ScopeDslErrorFactory(),
-      config: { isDevelopment: false }
+      config: { isDevelopment: false },
     });
-    
+
     const iterations = 10000;
     const context = { actorEntity: { id: 'test' }, depth: 1 };
-    
+
     const start = performance.now();
     for (let i = 0; i < iterations; i++) {
       try {
@@ -673,10 +675,10 @@ describe('Error Handling Performance', () => {
       }
     }
     const duration = performance.now() - start;
-    
+
     // Should handle 10k errors in under 100ms
     expect(duration).toBeLessThan(100);
-    
+
     // Average time per error should be under 0.01ms
     expect(duration / iterations).toBeLessThan(0.01);
   });
@@ -686,6 +688,7 @@ describe('Error Handling Performance', () => {
 ## 6. Implementation Phases
 
 ### Phase 1: Core Infrastructure (Week 1)
+
 1. Create `ScopeDslErrorHandler` class
 2. Enhance `errorFactory.js` with templates
 3. Add error codes and categories
@@ -693,6 +696,7 @@ describe('Error Handling Performance', () => {
 5. Update container configuration
 
 ### Phase 2: Resolver Migration (Week 2)
+
 1. Update `filterResolver.js` as pilot
 2. Validate approach with integration tests
 3. Migrate remaining resolvers:
@@ -705,6 +709,7 @@ describe('Error Handling Performance', () => {
    - `clothingStepResolver.js`
 
 ### Phase 3: Cleanup (Week 3)
+
 1. Remove all `console.error` calls
 2. Remove debug-specific code blocks
 3. Update documentation
@@ -712,6 +717,7 @@ describe('Error Handling Performance', () => {
 5. Final integration testing
 
 ### Phase 4: Monitoring & Documentation (Week 4)
+
 1. Add error analytics endpoints
 2. Create error handling guide
 3. Update developer documentation
@@ -722,14 +728,14 @@ describe('Error Handling Performance', () => {
 
 ### 7.1 Success Metrics
 
-| Metric | Target | Validation Method |
-|--------|--------|------------------|
-| Code Reduction | >180 lines removed | Line count analysis |
-| Error Consistency | 100% standardized | Code review |
-| Performance Impact | <2ms overhead | Performance tests |
-| Test Coverage | >85% branches | Jest coverage report |
-| Memory Usage | No increase | Memory profiling |
-| Developer Experience | Improved | Team feedback |
+| Metric               | Target             | Validation Method    |
+| -------------------- | ------------------ | -------------------- |
+| Code Reduction       | >180 lines removed | Line count analysis  |
+| Error Consistency    | 100% standardized  | Code review          |
+| Performance Impact   | <2ms overhead      | Performance tests    |
+| Test Coverage        | >85% branches      | Jest coverage report |
+| Memory Usage         | No increase        | Memory profiling     |
+| Developer Experience | Improved           | Team feedback        |
 
 ### 7.2 Testing Requirements
 
@@ -741,6 +747,7 @@ describe('Error Handling Performance', () => {
 ### 7.3 Documentation Standards
 
 Required documentation:
+
 - API documentation for `ScopeDslErrorHandler`
 - Migration guide for resolver authors
 - Error code reference guide
@@ -769,6 +776,7 @@ Required documentation:
 ### 8.2 Rollback Plan
 
 If issues arise, rollback strategy:
+
 1. Revert container configuration changes
 2. Restore original resolver error handling
 3. Keep error handler as optional dependency
@@ -777,6 +785,7 @@ If issues arise, rollback strategy:
 ## 9. Future Enhancements
 
 Potential future improvements:
+
 - Error telemetry and remote reporting
 - Machine learning for error pattern detection
 - Automatic error recovery strategies

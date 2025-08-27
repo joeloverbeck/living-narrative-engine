@@ -134,6 +134,10 @@ export function registerInterpreters(container) {
       'ATOMIC_MODIFY_COMPONENT',
       bind(tokens.AtomicModifyComponentHandler)
     );
+    registry.register(
+      'REGENERATE_DESCRIPTION',
+      bind(tokens.RegenerateDescriptionHandler)
+    );
 
     return registry;
   });

@@ -177,7 +177,7 @@ export class ClichesGeneratorControllerTestBed extends BaseTestBed {
           </div>
         </div>
         
-        <button id="back-to-menu-btn">Back to Menu</button>
+        <button id="back-btn">Back to Menu</button>
       </div>
     `;
   }

@@ -996,7 +996,8 @@ export class IntegrationTestBed extends BaseTestBed {
         },
         {
           id: 'core:speech_patterns_cache_hit',
-          description: 'Dispatched when cached speech patterns are returned instead of generating new ones.',
+          description:
+            'Dispatched when cached speech patterns are returned instead of generating new ones.',
           payloadSchema: {
             type: 'object',
             properties: {
@@ -1005,7 +1006,8 @@ export class IntegrationTestBed extends BaseTestBed {
                 type: 'string',
               },
               timestamp: {
-                description: 'ISO 8601 timestamp of when the cache hit occurred',
+                description:
+                  'ISO 8601 timestamp of when the cache hit occurred',
                 type: 'string',
                 format: 'date-time',
               },
@@ -1016,7 +1018,8 @@ export class IntegrationTestBed extends BaseTestBed {
         },
         {
           id: 'core:speech_patterns_generation_retry',
-          description: 'Dispatched when speech patterns generation is retried after a failure.',
+          description:
+            'Dispatched when speech patterns generation is retried after a failure.',
           payloadSchema: {
             type: 'object',
             properties: {
@@ -1040,7 +1043,8 @@ export class IntegrationTestBed extends BaseTestBed {
                 type: 'string',
               },
               timestamp: {
-                description: 'ISO 8601 timestamp of when the retry was scheduled',
+                description:
+                  'ISO 8601 timestamp of when the retry was scheduled',
                 type: 'string',
                 format: 'date-time',
               },
@@ -1051,39 +1055,53 @@ export class IntegrationTestBed extends BaseTestBed {
         },
         {
           id: 'core:circuit_breaker_opened',
-          description: 'Dispatched when a circuit breaker opens due to consecutive failures, preventing further requests until reset.',
+          description:
+            'Dispatched when a circuit breaker opens due to consecutive failures, preventing further requests until reset.',
           payloadSchema: {
             type: 'object',
             properties: {
               service: {
-                description: 'Name of the service where the circuit breaker was opened',
+                description:
+                  'Name of the service where the circuit breaker was opened',
                 type: 'string',
               },
               consecutiveFailures: {
-                description: 'Number of consecutive failures that caused the circuit breaker to open',
+                description:
+                  'Number of consecutive failures that caused the circuit breaker to open',
                 type: 'number',
                 minimum: 1,
               },
               resetTimeout: {
-                description: 'Timeout in milliseconds after which the circuit breaker will attempt to reset',
+                description:
+                  'Timeout in milliseconds after which the circuit breaker will attempt to reset',
                 type: 'number',
                 minimum: 0,
               },
               timestamp: {
-                description: 'ISO 8601 timestamp of when the circuit breaker was opened',
+                description:
+                  'ISO 8601 timestamp of when the circuit breaker was opened',
                 type: 'string',
                 format: 'date-time',
               },
             },
-            required: ['service', 'consecutiveFailures', 'resetTimeout', 'timestamp'],
+            required: [
+              'service',
+              'consecutiveFailures',
+              'resetTimeout',
+              'timestamp',
+            ],
             additionalProperties: true,
           },
         },
       ];
 
       // Register event definitions with the data registry
+      // Only register events that aren't already loaded (prevents duplicate registration warnings)
       for (const eventDef of testEventDefinitions) {
-        dataRegistry.store('events', eventDef.id, eventDef);
+        const existingDef = dataRegistry.get('events', eventDef.id);
+        if (!existingDef) {
+          dataRegistry.store('events', eventDef.id, eventDef);
+        }
       }
 
       // Also register the schemas with the schema validator
@@ -1091,8 +1109,12 @@ export class IntegrationTestBed extends BaseTestBed {
       if (schemaValidator) {
         for (const eventDef of testEventDefinitions) {
           const schemaId = `${eventDef.id}#payload`;
-          // Register the schema directly - addSchema(schemaData, schemaId)
-          if (typeof schemaValidator.addSchema === 'function') {
+          // Only register schema if not already loaded (prevents duplicate registration warnings)
+          if (
+            typeof schemaValidator.addSchema === 'function' &&
+            typeof schemaValidator.isSchemaLoaded === 'function' &&
+            !schemaValidator.isSchemaLoaded(schemaId)
+          ) {
             schemaValidator.addSchema(eventDef.payloadSchema, schemaId);
           }
         }

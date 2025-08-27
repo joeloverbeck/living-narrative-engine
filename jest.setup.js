@@ -5,6 +5,11 @@
 // jest.setup.js
 require('jest-extended/all');
 
+// Ensure test mode is detected
+process.env.NODE_ENV = 'test';
+process.env.DEBUG_LOG_MODE = 'test';
+process.env.DEBUG_LOG_SILENT = 'true';
+
 // --- Polyfills for Jest Node environment ---
 
 // 1. TextEncoder/TextDecoder (needed by jsdom/whatwg-url)
@@ -171,55 +176,61 @@ if (typeof performance !== 'undefined') {
   // Store for performance marks and measures
   const performanceEntries = [];
   const performanceMarks = new Map();
-  
+
   if (!performance.mark) {
-    performance.mark = function(markName) {
+    performance.mark = function (markName) {
       const entry = {
         name: markName,
         entryType: 'mark',
         startTime: performance.now(),
-        duration: 0
+        duration: 0,
       };
       performanceMarks.set(markName, entry);
       performanceEntries.push(entry);
       return entry;
     };
   }
-  
+
   if (!performance.measure) {
-    performance.measure = function(measureName, startMarkName, endMarkName) {
+    performance.measure = function (measureName, startMarkName, endMarkName) {
       const startMark = performanceMarks.get(startMarkName);
       const endMark = performanceMarks.get(endMarkName);
-      
+
       if (!startMark) {
-        throw new Error(`Failed to execute 'measure': The mark '${startMarkName}' does not exist.`);
+        throw new Error(
+          `Failed to execute 'measure': The mark '${startMarkName}' does not exist.`
+        );
       }
       if (!endMark) {
-        throw new Error(`Failed to execute 'measure': The mark '${endMarkName}' does not exist.`);
+        throw new Error(
+          `Failed to execute 'measure': The mark '${endMarkName}' does not exist.`
+        );
       }
-      
+
       const entry = {
         name: measureName,
         entryType: 'measure',
         startTime: startMark.startTime,
-        duration: endMark.startTime - startMark.startTime
+        duration: endMark.startTime - startMark.startTime,
       };
       performanceEntries.push(entry);
       return entry;
     };
   }
-  
+
   if (!performance.getEntriesByName) {
-    performance.getEntriesByName = function(name) {
-      return performanceEntries.filter(entry => entry.name === name);
+    performance.getEntriesByName = function (name) {
+      return performanceEntries.filter((entry) => entry.name === name);
     };
   }
-  
+
   if (!performance.clearMarks) {
-    performance.clearMarks = function(markName) {
+    performance.clearMarks = function (markName) {
       if (markName) {
         performanceMarks.delete(markName);
-        const index = performanceEntries.findIndex(e => e.name === markName && e.entryType === 'mark');
+        const index = performanceEntries.findIndex(
+          (e) => e.name === markName && e.entryType === 'mark'
+        );
         if (index !== -1) performanceEntries.splice(index, 1);
       } else {
         // Clear all marks
@@ -235,11 +246,13 @@ if (typeof performance !== 'undefined') {
       }
     };
   }
-  
+
   if (!performance.clearMeasures) {
-    performance.clearMeasures = function(measureName) {
+    performance.clearMeasures = function (measureName) {
       if (measureName) {
-        const index = performanceEntries.findIndex(e => e.name === measureName && e.entryType === 'measure');
+        const index = performanceEntries.findIndex(
+          (e) => e.name === measureName && e.entryType === 'measure'
+        );
         if (index !== -1) performanceEntries.splice(index, 1);
       } else {
         // Remove all measures from entries

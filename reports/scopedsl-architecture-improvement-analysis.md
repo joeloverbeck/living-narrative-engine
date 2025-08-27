@@ -7,12 +7,14 @@ This report analyzes the architecture of the ScopeDSL system based on comprehens
 ### Current State Assessment
 
 **Strengths:**
+
 - Well-structured resolver pattern with clear separation of concerns
 - Comprehensive test coverage across E2E, performance, and memory scenarios
 - Good use of dependency injection and factory patterns
 - Effective caching strategies in place
 
 **Critical Concerns:**
+
 - Complex error handling with mixed production/debug patterns
 - Memory management issues under high concurrency (up to 150MB growth)
 - Performance bottlenecks in filter resolution (repeated actor preprocessing)
@@ -32,7 +34,9 @@ This report analyzes the architecture of the ScopeDSL system based on comprehens
 ### Current Architecture Strengths
 
 #### 1. Clear Separation of Concerns
+
 The system effectively separates parsing, resolution, and evaluation:
+
 ```
 Parser (DSL → AST) → Engine (AST Walker) → Resolvers (Node Processors) → Results
 ```
@@ -40,7 +44,9 @@ Parser (DSL → AST) → Engine (AST Walker) → Resolvers (Node Processors) →
 **Union Operator Support**: The parser supports both `+` (plus) and `|` (pipe) operators for unions, providing flexibility in DSL expression syntax. Both operators produce identical union behavior.
 
 #### 2. Dependency Injection Pattern
+
 Clean dependency injection throughout:
+
 ```javascript
 // Good pattern observed in engine.js
 class ScopeEngine extends IScopeEngine {
@@ -52,7 +58,9 @@ class ScopeEngine extends IScopeEngine {
 ```
 
 #### 3. Factory Pattern for Resolvers
+
 Each resolver is created via factory functions, enabling easy testing and configuration:
+
 ```javascript
 export default function createFilterResolver({ logicEval, entitiesGateway, locationProvider })
 ```
@@ -60,14 +68,18 @@ export default function createFilterResolver({ logicEval, entitiesGateway, locat
 **Important Note**: Resolvers are instantiated directly in `engine.js` (lines 201-208), not through the dependency injection container. They are created as part of the engine's initialization and do not currently receive error handlers or logger instances.
 
 #### 4. Parser Implementation Details
+
 The recursive-descent parser uses a tokenizer that supports both `PLUS` and `PIPE` tokens for union operations. The parser treats both operators identically in `parseExpr()`, allowing users to choose their preferred syntax (`actor.items + actor.weapons` or `actor.items | actor.weapons`).
 
 **Depth Limits** (Verified in code): The system uses different depth guards in different contexts:
+
 - Parser: Maximum depth of 6 for parsing expressions (hardcoded in parser.js line 68)
 - Engine: Maximum depth of 12 for resolution operations (configurable via `setMaxDepth()`, engine.js line 54)
 
 #### 5. File Structure Organization
+
 The ScopeDSL system is well-organized with clear module boundaries:
+
 ```
 src/scopeDsl/
 ├── engine.js                 # Main engine implementation
@@ -113,6 +125,7 @@ src/scopeDsl/
 **Problem:** Tests show up to 150MB memory growth during 50 concurrent operations, with only 30-40% recovery rate.
 
 **Evidence from tests:**
+
 ```javascript
 // HighConcurrency.memory.test.js - Line 424
 expect(memoryGrowthMB).toBeLessThan(100); // Test expects less than 100MB growth
@@ -124,6 +137,7 @@ expect(spikeMB).toBeLessThan(150); // Test expects less than 150MB per spike
 ```
 
 **Root Causes:**
+
 - No object pooling for frequently created objects
 - Closure retention in resolver chains
 - Unbounded caching strategies
@@ -133,6 +147,7 @@ expect(spikeMB).toBeLessThan(150); // Test expects less than 150MB per spike
 **Problem:** Filter resolver reprocesses actors for each entity evaluation.
 
 **Evidence from code:**
+
 ```javascript
 // filterResolver.js - Line 57-58
 const cacheKey = '_processedActor';
@@ -147,6 +162,7 @@ let processedActor = ctx[cacheKey];
 **Problem:** Mixed debug and production error handling creates maintenance burden.
 
 **Evidence:**
+
 ```javascript
 // filterResolver.js - Lines 62-96
 if (!actorEntity) {
@@ -170,6 +186,7 @@ if (!actorEntity) {
 **Problem:** Test setup requires extensive boilerplate and DOM manipulation.
 
 **Evidence:**
+
 ```javascript
 // Every test file repeats 30+ lines of setup
 const outputDiv = document.createElement('div');
@@ -181,6 +198,7 @@ const messageList = document.createElement('ul');
 ### Concurrency Challenges
 
 The system shows strain under concurrent load:
+
 - Linear performance degradation after 50 concurrent operations
 - Cache consistency issues without proper synchronization
 - No backpressure or rate limiting mechanisms
@@ -188,6 +206,7 @@ The system shows strain under concurrent load:
 ### Memory Leak Indicators
 
 Memory tests reveal potential leaks:
+
 ```javascript
 // Test shows concerning pattern
 for (let round = 0; round < rounds; round++) {
@@ -211,29 +230,29 @@ for (let round = 0; round < rounds; round++) {
 class ResourcePool {
   #availableContexts = [];
   #maxPoolSize = 100;
-  
+
   acquireContext() {
     if (this.#availableContexts.length > 0) {
       return this.#availableContexts.pop();
     }
     return this.#createContext();
   }
-  
+
   releaseContext(ctx) {
     this.#resetContext(ctx);
     if (this.#availableContexts.length < this.#maxPoolSize) {
       this.#availableContexts.push(ctx);
     }
   }
-  
+
   #createContext() {
-    return { 
-      actorEntity: null, 
-      depth: 0, 
-      _cache: new Map() 
+    return {
+      actorEntity: null,
+      depth: 0,
+      _cache: new Map(),
     };
   }
-  
+
   #resetContext(ctx) {
     ctx.actorEntity = null;
     ctx.depth = 0;
@@ -243,6 +262,7 @@ class ResourcePool {
 ```
 
 **Benefits:**
+
 - Reduce GC pressure by 40-60%
 - Improve concurrent operation performance
 - Predictable memory usage patterns
@@ -259,16 +279,16 @@ class ScopeDslErrorHandler {
   #isDevelopment = process.env.NODE_ENV !== 'production';
   #errorBuffer = [];
   #maxBufferSize = 100;
-  
+
   handleError(error, context, resolver) {
     const errorInfo = this.#createErrorInfo(error, context, resolver);
-    
+
     if (this.#isDevelopment) {
       this.#logDetailedError(errorInfo);
     }
-    
+
     this.#bufferError(errorInfo);
-    
+
     // Always throw a clean error
     throw new ScopeDslError(
       errorInfo.message,
@@ -276,29 +296,30 @@ class ScopeDslErrorHandler {
       errorInfo.resolver
     );
   }
-  
+
   #createErrorInfo(error, context, resolver) {
     return {
       message: error.message,
       code: this.#getErrorCode(error),
       resolver: resolver.constructor.name,
       timestamp: Date.now(),
-      context: this.#sanitizeContext(context)
+      context: this.#sanitizeContext(context),
     };
   }
-  
+
   #sanitizeContext(context) {
     // Remove circular references and sensitive data
     return {
       hasActorEntity: !!context.actorEntity,
       depth: context.depth,
-      nodeType: context.node?.type
+      nodeType: context.node?.type,
     };
   }
 }
 ```
 
 **Benefits:**
+
 - Consistent error messages across all resolvers
 - Reduced code duplication (save ~200 lines)
 - Better production performance
@@ -312,32 +333,37 @@ class ScopeDslErrorHandler {
 
 ```javascript
 // Proposed enhancement to filterResolver.js
-function createFilterResolver({ logicEval, entitiesGateway, locationProvider }) {
+function createFilterResolver({
+  logicEval,
+  entitiesGateway,
+  locationProvider,
+}) {
   // Resolution-wide cache
   const processedActorCache = new WeakMap();
-  
+
   return {
     resolve(node, ctx) {
       const { actorEntity, dispatcher, trace } = ctx;
-      
+
       // Use WeakMap for automatic cleanup
       let processedActor = processedActorCache.get(actorEntity);
-      
+
       if (!processedActor) {
         processedActor = preprocessActorForEvaluation(
-          actorEntity, 
+          actorEntity,
           entitiesGateway
         );
         processedActorCache.set(actorEntity, processedActor);
       }
-      
+
       // Rest of resolution logic...
-    }
+    },
   };
 }
 ```
 
 **Benefits:**
+
 - 80% reduction in preprocessing overhead
 - Better memory cleanup with WeakMap
 - Improved performance for large entity sets
@@ -358,23 +384,23 @@ class ScopeDslTestFixture {
     await fixture.initialize(options);
     return fixture;
   }
-  
+
   async initialize(options) {
     this.container = await this.#createContainer(options);
     this.services = this.#resolveServices();
     this.testData = await this.#createTestData(options);
   }
-  
+
   #createContainer(options) {
     const container = new AppContainer();
     const dom = this.#createDOMElements();
-    
+
     return configureContainer(container, {
       ...dom,
-      ...options.containerConfig
+      ...options.containerConfig,
     });
   }
-  
+
   #createDOMElements() {
     // Centralized DOM creation
     if (typeof document === 'undefined') {
@@ -382,7 +408,7 @@ class ScopeDslTestFixture {
     }
     return this.#createRealDOM();
   }
-  
+
   async cleanup() {
     if (this.container?.cleanup) {
       this.container.cleanup();
@@ -395,16 +421,16 @@ class ScopeDslTestFixture {
 // Usage in tests
 describe('ScopeDSL Test', () => {
   let fixture;
-  
+
   beforeEach(async () => {
     fixture = await ScopeDslTestFixture.create({
       entityCount: 500,
-      scopeComplexity: 'moderate'
+      scopeComplexity: 'moderate',
     });
   });
-  
+
   afterEach(() => fixture.cleanup());
-  
+
   test('should resolve scope', async () => {
     const result = await fixture.resolveScope('test:scope');
     expect(result).toBeDefined();
@@ -413,6 +439,7 @@ describe('ScopeDSL Test', () => {
 ```
 
 **Benefits:**
+
 - 70% reduction in test boilerplate
 - Consistent test environment setup
 - Easier test maintenance
@@ -430,14 +457,14 @@ class ConcurrencyController {
   #maxConcurrent = 50;
   #activeOperations = 0;
   #queue = [];
-  
+
   async execute(operation) {
     if (this.#activeOperations >= this.#maxConcurrent) {
       await this.#waitForSlot();
     }
-    
+
     this.#activeOperations++;
-    
+
     try {
       return await operation();
     } finally {
@@ -445,15 +472,18 @@ class ConcurrencyController {
       this.#processQueue();
     }
   }
-  
+
   #waitForSlot() {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       this.#queue.push(resolve);
     });
   }
-  
+
   #processQueue() {
-    if (this.#queue.length > 0 && this.#activeOperations < this.#maxConcurrent) {
+    if (
+      this.#queue.length > 0 &&
+      this.#activeOperations < this.#maxConcurrent
+    ) {
       const next = this.#queue.shift();
       next();
     }
@@ -462,6 +492,7 @@ class ConcurrencyController {
 ```
 
 **Benefits:**
+
 - Prevent system overload
 - Predictable performance under load
 - Better resource utilization
@@ -480,42 +511,43 @@ class ConcurrencyController {
 class ResolverPluginManager {
   #resolvers = new Map();
   #middlewares = [];
-  
+
   registerResolver(type, resolver) {
     if (!resolver.canResolve || !resolver.resolve) {
       throw new Error('Invalid resolver plugin');
     }
     this.#resolvers.set(type, resolver);
   }
-  
+
   registerMiddleware(middleware) {
     this.#middlewares.push(middleware);
   }
-  
+
   async resolveNode(node, context) {
     // Apply middlewares
     let ctx = context;
     for (const middleware of this.#middlewares) {
       ctx = await middleware.before(node, ctx);
     }
-    
+
     // Find and execute resolver
     const resolver = this.#findResolver(node);
     const result = await resolver.resolve(node, ctx);
-    
+
     // Apply post-processing
     for (const middleware of this.#middlewares.reverse()) {
       if (middleware.after) {
         await middleware.after(node, result, ctx);
       }
     }
-    
+
     return result;
   }
 }
 ```
 
 **Benefits:**
+
 - Extensible architecture
 - Third-party resolver support
 - Better separation of concerns
@@ -524,21 +556,25 @@ class ResolverPluginManager {
 ## Implementation Roadmap
 
 ### Phase 1: Foundation (Weeks 1-2)
+
 1. Implement resource pooling
 2. Standardize error handling
 3. Add performance benchmarks
 
 ### Phase 2: Optimization (Weeks 3-4)
+
 1. Optimize caching strategies
 2. Implement concurrency control
 3. Memory leak fixes
 
 ### Phase 3: Refactoring (Weeks 5-6)
+
 1. Simplify test infrastructure
 2. Consolidate resolver patterns
 3. Documentation updates
 
 ### Phase 4: Enhancement (Weeks 7-8)
+
 1. Plugin architecture design
 2. API improvements
 3. Performance validation
@@ -546,19 +582,21 @@ class ResolverPluginManager {
 ## Architectural Patterns to Adopt
 
 ### 1. Circuit Breaker Pattern
+
 Prevent cascading failures in resolution chain:
+
 ```javascript
 class CircuitBreaker {
   #failureThreshold = 5;
   #resetTimeout = 60000;
   #failureCount = 0;
   #state = 'CLOSED'; // CLOSED, OPEN, HALF_OPEN
-  
+
   async execute(operation) {
     if (this.#state === 'OPEN') {
       throw new Error('Circuit breaker is OPEN');
     }
-    
+
     try {
       const result = await operation();
       this.#onSuccess();
@@ -572,26 +610,28 @@ class CircuitBreaker {
 ```
 
 ### 2. Builder Pattern for Complex Contexts
+
 Simplify context creation:
+
 ```javascript
 class ResolutionContextBuilder {
   #context = {};
-  
+
   withActor(actor) {
     this.#context.actorEntity = actor;
     return this;
   }
-  
+
   withDepth(depth) {
     this.#context.depth = depth;
     return this;
   }
-  
+
   withCache(cache) {
     this.#context._cache = cache;
     return this;
   }
-  
+
   build() {
     this.#validate();
     return { ...this.#context };
@@ -600,16 +640,18 @@ class ResolutionContextBuilder {
 ```
 
 ### 3. Observer Pattern for State Changes
+
 Enable reactive updates:
+
 ```javascript
 class ScopeStateObserver {
   #observers = new Set();
-  
+
   subscribe(observer) {
     this.#observers.add(observer);
     return () => this.#observers.delete(observer);
   }
-  
+
   notify(event, data) {
     for (const observer of this.#observers) {
       observer.update(event, data);
@@ -621,6 +663,7 @@ class ScopeStateObserver {
 ## Testing Strategy Improvements
 
 ### 1. Test Organization
+
 ```
 tests/
 ├── unit/scopeDsl/
@@ -636,63 +679,65 @@ tests/
 ```
 
 ### 2. Performance Testing Framework
+
 ```javascript
 class PerformanceBenchmark {
   static async run(name, operation, options = {}) {
     const iterations = options.iterations || 1000;
     const warmup = options.warmup || 100;
-    
+
     // Warmup
     for (let i = 0; i < warmup; i++) {
       await operation();
     }
-    
+
     // Measure
     const start = performance.now();
     for (let i = 0; i < iterations; i++) {
       await operation();
     }
     const end = performance.now();
-    
+
     return {
       name,
       iterations,
       totalTime: end - start,
       avgTime: (end - start) / iterations,
-      opsPerSecond: iterations / ((end - start) / 1000)
+      opsPerSecond: iterations / ((end - start) / 1000),
     };
   }
 }
 ```
 
 ### 3. Memory Testing Best Practices
+
 ```javascript
 class MemoryProfiler {
   static async profile(operation, options = {}) {
     const snapshots = [];
-    
+
     // Force GC before profiling
     if (global.gc) global.gc();
-    
+
     snapshots.push({
       phase: 'before',
-      memory: process.memoryUsage()
+      memory: process.memoryUsage(),
     });
-    
+
     await operation();
-    
+
     snapshots.push({
       phase: 'after',
-      memory: process.memoryUsage()
+      memory: process.memoryUsage(),
     });
-    
+
     if (global.gc) global.gc();
-    
+
     snapshots.push({
       phase: 'afterGC',
-      memory: process.memoryUsage()
+      memory: process.memoryUsage(),
     });
-    
+
     return this.#analyzeSnapshots(snapshots);
   }
 }
@@ -702,13 +747,13 @@ class MemoryProfiler {
 
 ### Expected Improvements
 
-| Optimization | Current | Expected | Improvement |
-|--------------|---------|----------|-------------|
-| Filter Resolution (1000 entities) | 200ms | 40ms | 80% faster |
-| Memory per Operation | 2.5MB | 0.5MB | 80% reduction |
-| Concurrent Operations (50) | 150MB growth | 30MB growth | 80% reduction |
-| Error Handling Overhead | 15ms | 2ms | 87% faster |
-| Test Setup Time | 500ms | 150ms | 70% faster |
+| Optimization                      | Current      | Expected    | Improvement   |
+| --------------------------------- | ------------ | ----------- | ------------- |
+| Filter Resolution (1000 entities) | 200ms        | 40ms        | 80% faster    |
+| Memory per Operation              | 2.5MB        | 0.5MB       | 80% reduction |
+| Concurrent Operations (50)        | 150MB growth | 30MB growth | 80% reduction |
+| Error Handling Overhead           | 15ms         | 2ms         | 87% faster    |
+| Test Setup Time                   | 500ms        | 150ms       | 70% faster    |
 
 ### Validation Metrics
 
@@ -725,31 +770,36 @@ class MemoryProfiler {
 ## Migration Strategy
 
 ### 1. Backward Compatibility
+
 All changes maintain API compatibility:
+
 ```javascript
 // Old API continues to work
 const engine = new ScopeEngine({ scopeRegistry });
 const result = engine.resolve(ast, context);
 
 // New features are additive
-const engine = new ScopeEngine({ 
+const engine = new ScopeEngine({
   scopeRegistry,
   resourcePool: new ResourcePool(),
-  concurrencyController: new ConcurrencyController()
+  concurrencyController: new ConcurrencyController(),
 });
 ```
 
 ### 2. Feature Flags
+
 Enable gradual rollout:
+
 ```javascript
 const features = {
   useResourcePooling: process.env.SCOPE_USE_POOLING === 'true',
   useNewErrorHandler: process.env.SCOPE_NEW_ERRORS === 'true',
-  maxConcurrency: parseInt(process.env.SCOPE_MAX_CONCURRENT) || 50
+  maxConcurrency: parseInt(process.env.SCOPE_MAX_CONCURRENT) || 50,
 };
 ```
 
 ### 3. Testing During Migration
+
 - Run old and new implementations in parallel
 - Compare results for consistency
 - Monitor performance metrics
@@ -760,17 +810,20 @@ const features = {
 ### Current State vs Required Infrastructure
 
 **Existing Components (to be modified):**
+
 - `errorFactory.js` - Currently minimal (20 lines), only handles unknown node types
 - Resolver files - Have mixed debug/production error handling to be removed
 - `engine.js` - Creates resolvers directly, needs modification to pass error handler
 
 **New Components Required (to be created from scratch):**
+
 - `scopeDslErrorHandler.js` - Complete new centralized error handling class
 - Enhanced error factory with templates and error code support
 - Error codes and categories definitions
 - Error buffering and analysis system
 
 **Integration Changes Required:**
+
 - Modify engine.js to instantiate and pass error handler to resolvers
 - Update all resolver factory function signatures to accept error handler
 - Remove all console.error calls from resolvers (4 files confirmed)
@@ -805,6 +858,7 @@ The ScopeDSL system has a solid foundation but requires architectural improvemen
 3. **Long-term sustainability** with plugin architecture and improved testing
 
 Implementation should proceed in phases, with careful monitoring and validation at each step. The expected outcome is a system that is:
+
 - **50-80% faster** in common operations
 - **80% more memory efficient**
 - **Significantly more maintainable** with reduced code complexity

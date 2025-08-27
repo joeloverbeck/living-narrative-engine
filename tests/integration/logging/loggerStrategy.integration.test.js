@@ -19,10 +19,14 @@ import NoOpLogger from '../../../src/logging/noOpLogger.js';
 describe('LoggerStrategy Integration', () => {
   let originalEnv;
   let consoleSpies;
+  let originalJestWorkerId;
 
   beforeEach(() => {
     // Save original environment
     originalEnv = { ...process.env };
+    
+    // Save JEST_WORKER_ID specifically since Jest sets it
+    originalJestWorkerId = process.env.JEST_WORKER_ID;
 
     // Mock console methods
     consoleSpies = {
@@ -41,6 +45,11 @@ describe('LoggerStrategy Integration', () => {
   afterEach(() => {
     // Restore original environment
     process.env = originalEnv;
+    
+    // Restore JEST_WORKER_ID if it was originally set
+    if (originalJestWorkerId !== undefined) {
+      process.env.JEST_WORKER_ID = originalJestWorkerId;
+    }
 
     // Restore console spies
     Object.values(consoleSpies).forEach((spy) => spy.mockRestore());
@@ -48,6 +57,11 @@ describe('LoggerStrategy Integration', () => {
 
   describe('Configuration File Loading', () => {
     it('should load configuration from debug-logging-config.json', () => {
+      // Clear all environment variables to test configuration-based mode
+      delete process.env.JEST_WORKER_ID;
+      delete process.env.DEBUG_LOG_MODE;
+      delete process.env.NODE_ENV;
+      
       // Simulate the config content from debug-logging-config.json
       const configContent = {
         enabled: true,
@@ -277,6 +291,7 @@ describe('LoggerStrategy Integration', () => {
 
     it('should respect NODE_ENV when DEBUG_LOG_MODE is not set', () => {
       delete process.env.DEBUG_LOG_MODE;
+      delete process.env.JEST_WORKER_ID; // Clear Jest environment
 
       const testCases = [
         { env: 'production', expected: LoggerMode.PRODUCTION },
@@ -295,6 +310,9 @@ describe('LoggerStrategy Integration', () => {
 
   describe('Complex Scenarios', () => {
     it('should handle mixed configuration sources correctly', () => {
+      // Clear JEST_WORKER_ID to properly test priority order
+      delete process.env.JEST_WORKER_ID;
+      
       // Set different values at different priority levels
       process.env.NODE_ENV = 'production';
       process.env.DEBUG_LOG_MODE = 'test';
@@ -308,8 +326,9 @@ describe('LoggerStrategy Integration', () => {
       const strategy2 = new LoggerStrategy({ config });
       expect(strategy2.getMode()).toBe(LoggerMode.TEST);
 
-      // Clear DEBUG_LOG_MODE, config should win over NODE_ENV
+      // Clear DEBUG_LOG_MODE and JEST_WORKER_ID, config should win over NODE_ENV
       delete process.env.DEBUG_LOG_MODE;
+      delete process.env.JEST_WORKER_ID;
       const strategy3 = new LoggerStrategy({ config });
       expect(strategy3.getMode()).toBe(LoggerMode.DEVELOPMENT);
 

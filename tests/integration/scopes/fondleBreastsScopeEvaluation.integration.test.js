@@ -348,7 +348,7 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
       // Create evaluation context as done in production
       const mockLocationProvider = { getLocation: () => null };
       const mockGateway = { getEntityInstance: () => null };
-      
+
       const evalContext = {
         entity: targetEntity,
         actor: actorEntity,
@@ -362,7 +362,9 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
         '!': {
           in: [
             { var: 'actor.id' },
-            { var: 'entity.components.positioning:facing_away.facing_away_from' },
+            {
+              var: 'entity.components.positioning:facing_away.facing_away_from',
+            },
           ],
         },
       };
@@ -441,24 +443,29 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
       entityManager.setEntities(entities);
 
       // Clear any cached state that might interfere
-      if (jsonLogicCustomOperators && typeof jsonLogicCustomOperators.clearCaches === 'function') {
+      if (
+        jsonLogicCustomOperators &&
+        typeof jsonLogicCustomOperators.clearCaches === 'function'
+      ) {
         jsonLogicCustomOperators.clearCaches();
       }
-      
+
       // Clear entity cache from entityHelpers - this could be contaminating evaluations
-      const { clearEntityCache } = require('../../../src/scopeDsl/core/entityHelpers.js');
+      const {
+        clearEntityCache,
+      } = require('../../../src/scopeDsl/core/entityHelpers.js');
       clearEntityCache();
-      
+
       // Clear scope registry and re-register to ensure clean state
       scopeRegistry.clear();
-      
+
       // Re-parse and re-register the scope to ensure clean state
       const parser = new DefaultDslParser({ logger });
       const freshScopeDefinitions = parseScopeDefinitions(
         breastsScopeContent,
         'actors_with_breasts_facing_each_other.scope'
       );
-      
+
       scopeRegistry.initialize({
         'sex:actors_with_breasts_facing_each_other': freshScopeDefinitions.get(
           'sex:actors_with_breasts_facing_each_other'

@@ -228,6 +228,46 @@ describe('EnhancedSpeechPatternsValidator', () => {
         );
         expect(nameWarnings.length).toBeGreaterThan(0);
       });
+
+      it('should not warn about pronouns as name inconsistencies', async () => {
+        const character = {
+          components: {
+            'core:name': { text: 'Garazi Ibarrola' },
+            'core:profile': {
+              description: 'She is a skilled artist. Her work is amazing.',
+            },
+            'core:likes': {
+              list: [
+                'She enjoys painting',
+                'She loves music',
+                'She likes dancing',
+              ],
+            },
+            'core:secrets': {
+              text: 'She has a hidden talent for singing',
+            },
+            'core:notes': {
+              text: 'Garazi is talented. Her skills are diverse. Garazi works hard. Garazi never gives up.',
+            },
+          },
+        };
+
+        mockSchemaValidator.validateAndSanitizeResponse.mockResolvedValue({
+          isValid: true,
+          errors: [],
+          sanitizedResponse: character,
+        });
+
+        const result = await validator.validateInput(character);
+
+        // Should not have warnings about pronouns being name inconsistencies
+        const nameWarnings = result.warnings.filter(
+          (w) =>
+            w.toLowerCase().includes('name') &&
+            w.toLowerCase().includes('inconsistency')
+        );
+        expect(nameWarnings).toHaveLength(0);
+      });
     });
 
     describe('Component Completeness', () => {
