@@ -1,0 +1,22 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:human_breast_c_cup_firm",
+    "description": "A C-cup, firm breast",
+    "components": {
+        "anatomy:part": {
+            "subType": "breast"
+        },
+        "descriptors:size_specific": {
+            "size": "C-cup"
+        },
+        "descriptors:weight_feel": {
+            "weight": "meaty"
+        },
+        "descriptors:firmness": {
+            "firmness": "firm"
+        },
+        "core:name": {
+            "text": "breast"
+        }
+    }
+}

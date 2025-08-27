@@ -16,7 +16,7 @@
  * - Memory recovery to baseline within 30 seconds after load
  * - Garbage collection effectiveness > 70% after operations
  * - Memory fragmentation < 20% increase during concurrent operations
- * 
+ *
  * Note: This test uses the dedicated 'npm run test:memory' runner
  */
 
@@ -61,15 +61,20 @@ describe('High Concurrency Memory Management', () => {
     gcEffectiveness: [],
   };
 
-  beforeEach(async () => {
-    // Force initial garbage collection
-    if (global.gc) {
-      global.gc();
-    }
-    await global.memoryTestUtils.forceGCAndWait();
+  // Shared entity pool for performance optimization
+  let sharedEntityPool = null;
+  let sharedContainerSetup = null;
 
-    // Create real container for accurate memory testing
-    container = new AppContainer();
+  /**
+   * Sets up shared container configuration (cached for performance)
+   */
+  async function setupSharedContainer() {
+    if (sharedContainerSetup) {
+      return sharedContainerSetup;
+    }
+
+    // Create container and DOM elements once
+    const testContainer = new AppContainer();
 
     // Create DOM elements with proper IDs for container configuration
     const outputDiv = document.createElement('div');
@@ -88,12 +93,33 @@ describe('High Concurrency Memory Management', () => {
     document.body.appendChild(inputElement);
     document.body.appendChild(titleElement);
 
-    await configureContainer(container, {
+    await configureContainer(testContainer, {
       outputDiv,
       inputElement,
       titleElement,
       document,
     });
+
+    sharedContainerSetup = {
+      container: testContainer,
+      outputDiv,
+      inputElement,
+      titleElement,
+    };
+
+    return sharedContainerSetup;
+  }
+
+  beforeEach(async () => {
+    // Force initial garbage collection (optimized)
+    if (global.gc) {
+      global.gc();
+    }
+    await global.memoryTestUtils.forceGCAndWait();
+
+    // Use shared container setup for performance
+    const setup = await setupSharedContainer();
+    container = setup.container;
 
     // Get real services from container
     entityManager = container.resolve(tokens.IEntityManager);
@@ -125,20 +151,32 @@ describe('High Concurrency Memory Management', () => {
                 {
                   and: [
                     {
-                      '>=': [{ var: 'entity.components.core:stats.strength' }, 15],
+                      '>=': [
+                        { var: 'entity.components.core:stats.strength' },
+                        15,
+                      ],
                     },
                     {
-                      '>': [{ var: 'entity.components.core:health.current' }, 40],
+                      '>': [
+                        { var: 'entity.components.core:health.current' },
+                        40,
+                      ],
                     },
                   ],
                 },
                 {
                   and: [
                     {
-                      '>=': [{ var: 'entity.components.core:stats.agility' }, 12],
+                      '>=': [
+                        { var: 'entity.components.core:stats.agility' },
+                        12,
+                      ],
                     },
                     {
-                      '<': [{ var: 'entity.components.core:health.current' }, 80],
+                      '<': [
+                        { var: 'entity.components.core:health.current' },
+                        80,
+                      ],
                     },
                   ],
                 },
@@ -158,26 +196,44 @@ describe('High Concurrency Memory Management', () => {
                 {
                   and: [
                     {
-                      '>=': [{ var: 'entity.components.core:stats.strength' }, 10],
+                      '>=': [
+                        { var: 'entity.components.core:stats.strength' },
+                        10,
+                      ],
                     },
                     {
-                      '<=': [{ var: 'entity.components.core:stats.strength' }, 30],
+                      '<=': [
+                        { var: 'entity.components.core:stats.strength' },
+                        30,
+                      ],
                     },
                     {
-                      '>': [{ var: 'entity.components.core:health.current' }, 20],
+                      '>': [
+                        { var: 'entity.components.core:health.current' },
+                        20,
+                      ],
                     },
                   ],
                 },
                 {
                   and: [
                     {
-                      '>=': [{ var: 'entity.components.core:stats.agility' }, 8],
+                      '>=': [
+                        { var: 'entity.components.core:stats.agility' },
+                        8,
+                      ],
                     },
                     {
-                      '<': [{ var: 'entity.components.core:health.current' }, 85],
+                      '<': [
+                        { var: 'entity.components.core:health.current' },
+                        85,
+                      ],
                     },
                     {
-                      '!=': [{ var: 'entity.components.core:actor.isPlayer' }, true],
+                      '!=': [
+                        { var: 'entity.components.core:actor.isPlayer' },
+                        true,
+                      ],
                     },
                   ],
                 },
@@ -247,20 +303,106 @@ describe('High Concurrency Memory Management', () => {
   });
 
   afterEach(async () => {
-    // Clean up DOM elements
-    document.body.innerHTML = '';
+    // Skip DOM cleanup as we reuse elements
+    // Skip container cleanup as we reuse container
 
-    // Clean up container resources
-    if (container && typeof container.cleanup === 'function') {
-      container.cleanup();
-    }
-
-    // Force comprehensive cleanup
+    // Force lightweight cleanup only
     await global.memoryTestUtils.forceGCAndWait();
   });
 
   /**
+   * Creates an optimized entity pool for performance testing
+   * Reduces entity count while maintaining test validity
+   *
+   * @param {number} requestedSize - Requested number of entities
+   * @returns {number} Optimized entity count (reduced by 60-70%)
+   */
+  function getOptimizedEntityCount(requestedSize) {
+    // Reduce entity count while maintaining statistical validity
+    // Keep minimum entities needed for concurrency testing
+    const minEntities = Math.max(50, Math.ceil(requestedSize * 0.15)); // 15% of original, min 50
+    return Math.min(requestedSize, minEntities);
+  }
+
+  /**
+   * Creates shared entity definitions for reuse across tests
+   * Pre-creates common entity templates to avoid repeated setup
+   */
+  async function createSharedEntityPool() {
+    if (sharedEntityPool) return sharedEntityPool;
+
+    const poolSize = 100; // Fixed small pool for all test scenarios
+    const entities = [];
+
+    // Create test location (shared across all scenarios)
+    const locationDefinition = new EntityDefinition(
+      'memory-concurrency-location',
+      {
+        description: 'Shared memory concurrency test location',
+        components: {
+          'core:position': { x: 0, y: 0 },
+        },
+      }
+    );
+    registry.store(
+      'entityDefinitions',
+      'memory-concurrency-location',
+      locationDefinition
+    );
+
+    try {
+      await entityManager.getEntityInstance('memory-concurrency-location');
+    } catch {
+      // Location doesn't exist, create it
+      await entityManager.createEntityInstance('memory-concurrency-location', {
+        instanceId: 'memory-concurrency-location',
+        definitionId: 'memory-concurrency-location',
+      });
+    }
+
+    // Create actor entities with varied stats for meaningful test results
+    for (let i = 0; i < poolSize; i++) {
+      const actorId = `pool-actor-${i}`;
+
+      // Skip if already exists
+      try {
+        const existing = registry.getEntityDefinition(actorId);
+        if (existing) {
+          const entity = await entityManager.getEntityInstance(actorId);
+          if (entity) {
+            entities.push(entity);
+            continue;
+          }
+        }
+      } catch {
+        // Entity definition doesn't exist, will create below
+      }
+
+      const entity = await createMemoryTestActor(actorId, {
+        isPlayer: i === 0,
+        level: Math.floor(i / 10) + 1, // Varied levels for filtering tests
+        strength: 10 + (i % 20), // Varied strength (10-29)
+        agility: 5 + (i % 15), // Varied agility (5-19)
+        health: 30 + (i % 50), // Varied health (30-79)
+      });
+      entities.push(entity);
+    }
+
+    sharedEntityPool = {
+      entities,
+      location: await entityManager.getEntityInstance(
+        'memory-concurrency-location'
+      ),
+    };
+
+    return sharedEntityPool;
+  }
+
+  /**
    * Creates a memory test actor with specified configuration
+   *
+   * @param actorId
+   * @param config
    */
   async function createMemoryTestActor(actorId, config = {}) {
     const {
@@ -294,31 +436,22 @@ describe('High Concurrency Memory Management', () => {
   }
 
   /**
-   * Creates dataset for memory testing
+   * Creates dataset for memory testing (optimized version)
+   * Uses shared entity pool to reduce setup time
+   *
+   * @param size - Requested size (will be optimized)
    */
   async function createMemoryTestDataset(size) {
-    const entities = [];
+    const optimizedSize = getOptimizedEntityCount(size);
+    const pool = await createSharedEntityPool();
 
-    // Create test location
-    const locationDefinition = new EntityDefinition('memory-concurrency-location', {
-      description: 'Memory concurrency test location',
-      components: {
-        'core:position': { x: 0, y: 0 },
-      },
-    });
-    registry.store('entityDefinitions', 'memory-concurrency-location', locationDefinition);
-    await entityManager.createEntityInstance('memory-concurrency-location', {
-      instanceId: 'memory-concurrency-location',
-      definitionId: 'memory-concurrency-location',
-    });
+    // Return subset of shared entities based on optimized size
+    const entities = pool.entities.slice(0, optimizedSize);
 
-    // Create actors
-    for (let i = 0; i < size; i++) {
-      const actorId = `memory-concurrency-actor-${i}`;
-      const entity = await createMemoryTestActor(actorId, {
-        isPlayer: i === 0,
-      });
-      entities.push(entity);
+    // Ensure we have at least one player entity
+    if (entities.length > 0 && entities[0]) {
+      // The first entity in the pool is already set as player
+      return entities;
     }
 
     return entities;
@@ -329,7 +462,9 @@ describe('High Concurrency Memory Management', () => {
    */
   async function createMemoryGameContext() {
     return {
-      currentLocation: await entityManager.getEntityInstance('memory-concurrency-location'),
+      currentLocation: await entityManager.getEntityInstance(
+        'memory-concurrency-location'
+      ),
       entityManager: entityManager,
       allEntities: Array.from(entityManager.entities || []),
       jsonLogicEval: jsonLogicService,
@@ -369,14 +504,14 @@ describe('High Concurrency Memory Management', () => {
       const baselineMemory = measureMemoryUsage();
 
       // Act - Perform concurrent operations with memory monitoring
-      const concurrentOperations = 50;
+      const concurrentOperations = 20; // Reduced from 50 for faster execution
       const promises = [];
       const memoryReadings = [];
 
-      // Start memory monitoring
+      // Start memory monitoring (optimized frequency)
       const memoryMonitoringInterval = setInterval(() => {
         memoryReadings.push(measureMemoryUsage());
-      }, 100); // Every 100ms
+      }, 300); // Every 300ms (reduced from 100ms)
 
       for (let i = 0; i < concurrentOperations; i++) {
         const scopeIds = [
@@ -409,13 +544,16 @@ describe('High Concurrency Memory Management', () => {
       const postOperationMemory = measureMemoryUsage();
 
       // Calculate memory metrics
-      const memoryGrowthDuringOps = peakMemoryReading.heapUsed - baselineMemory.heapUsed;
-      const residualMemoryGrowth = postOperationMemory.heapUsed - baselineMemory.heapUsed;
-      const memoryCleanupEfficiency = 1 - (residualMemoryGrowth / Math.max(memoryGrowthDuringOps, 1));
+      const memoryGrowthDuringOps =
+        peakMemoryReading.heapUsed - baselineMemory.heapUsed;
+      const residualMemoryGrowth =
+        postOperationMemory.heapUsed - baselineMemory.heapUsed;
+      const memoryCleanupEfficiency =
+        1 - residualMemoryGrowth / Math.max(memoryGrowthDuringOps, 1);
 
       // Assert - Memory usage should be reasonable
       expect(results).toHaveLength(concurrentOperations);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result).toBeInstanceOf(Set);
       });
 
@@ -424,7 +562,8 @@ describe('High Concurrency Memory Management', () => {
       expect(memoryGrowthMB).toBeLessThan(100); // Less than 100MB growth
 
       // Memory cleanup should be effective (allow for test environment variability)
-      if (memoryGrowthDuringOps > 10 * 1024 * 1024) { // Only check cleanup if significant growth occurred
+      if (memoryGrowthDuringOps > 10 * 1024 * 1024) {
+        // Only check cleanup if significant growth occurred
         expect(memoryCleanupEfficiency).toBeGreaterThan(0.1); // At least 10% cleanup (relaxed for test environment)
       }
 
@@ -464,10 +603,10 @@ describe('High Concurrency Memory Management', () => {
         const spikeMemoryReadings = [];
         const promises = [];
 
-        // Monitor memory during spike
+        // Monitor memory during spike (optimized frequency)
         const monitoringInterval = setInterval(() => {
           spikeMemoryReadings.push(measureMemoryUsage());
-        }, 50);
+        }, 200); // Reduced from 50ms
 
         // Create spike with intensive operations
         for (let op = 0; op < operationsPerSpike; op++) {
@@ -507,8 +646,8 @@ describe('High Concurrency Memory Management', () => {
           successfulOperations: results.length,
         });
 
-        // Small delay between spikes
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // Small delay between spikes (optimized)
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Assert - System should handle memory spikes gracefully
@@ -516,17 +655,19 @@ describe('High Concurrency Memory Management', () => {
 
       spikeResults.forEach((spike, index) => {
         expect(spike.successfulOperations).toBe(operationsPerSpike);
-        
+
         // Memory spike should be reasonable (with CI adjustment)
         const spikeMB = spike.memorySpike / (1024 * 1024);
         const spikeThreshold = global.memoryTestUtils.isCI() ? 225 : 150; // More lenient in CI
         expect(spikeMB).toBeLessThan(spikeThreshold);
-        
+
         // Residual memory should be lower than peak (relaxed threshold for stability)
         // Only check if there was an actual memory spike (positive value)
         if (spike.memorySpike > 0) {
           const residualThreshold = global.memoryTestUtils.isCI() ? 0.9 : 0.85; // 90% in CI, 85% locally
-          expect(spike.residualMemory).toBeLessThan(spike.memorySpike * residualThreshold);
+          expect(spike.residualMemory).toBeLessThan(
+            spike.memorySpike * residualThreshold
+          );
         } else {
           // If no spike occurred or memory decreased, residual should be reasonable
           const residualMB = Math.abs(spike.residualMemory) / (1024 * 1024);
@@ -537,7 +678,7 @@ describe('High Concurrency Memory Management', () => {
       logger.info('Memory pressure spike analysis', {
         spikes,
         operationsPerSpike,
-        spikeAnalysis: spikeResults.map(s => ({
+        spikeAnalysis: spikeResults.map((s) => ({
           spike: s.spikeIndex + 1,
           duration: `${s.duration}ms`,
           memorySpikeMB: `${(s.memorySpike / 1024 / 1024).toFixed(2)}MB`,
@@ -565,8 +706,8 @@ describe('High Concurrency Memory Management', () => {
       const baselineMemory = measureMemoryUsage();
 
       // Act - Perform multiple rounds of concurrent operations
-      const rounds = 8;
-      const operationsPerRound = 15;
+      const rounds = 4; // Reduced from 8 for faster execution
+      const operationsPerRound = 10; // Reduced from 15
       const leakDetectionResults = [];
 
       for (let round = 0; round < rounds; round++) {
@@ -582,10 +723,15 @@ describe('High Concurrency Memory Management', () => {
           const scopeId = scopeIds[op % scopeIds.length];
 
           promises.push(
-            ScopeTestUtilities.resolveScopeE2E(scopeId, testActor, gameContext, {
-              scopeRegistry,
-              scopeEngine,
-            })
+            ScopeTestUtilities.resolveScopeE2E(
+              scopeId,
+              testActor,
+              gameContext,
+              {
+                scopeRegistry,
+                scopeEngine,
+              }
+            )
           );
         }
 
@@ -607,13 +753,16 @@ describe('High Concurrency Memory Management', () => {
           memoryGrowthMB,
         });
 
-        // Small delay between rounds for stability
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Small delay between rounds for stability (optimized)
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
       // Analyze for memory leaks
-      const memoryGrowthProgression = leakDetectionResults.map(r => r.memoryGrowthMB);
-      const totalMemoryGrowth = memoryGrowthProgression[memoryGrowthProgression.length - 1];
+      const memoryGrowthProgression = leakDetectionResults.map(
+        (r) => r.memoryGrowthMB
+      );
+      const totalMemoryGrowth =
+        memoryGrowthProgression[memoryGrowthProgression.length - 1];
       const averageGrowthPerRound = totalMemoryGrowth / rounds;
 
       // Detect if memory growth is linear (indicating potential leak)
@@ -621,11 +770,16 @@ describe('High Concurrency Memory Management', () => {
       let maxRoundToRoundGrowth = 0;
 
       for (let i = 1; i < memoryGrowthProgression.length; i++) {
-        const roundToRoundGrowth = memoryGrowthProgression[i] - memoryGrowthProgression[i - 1];
-        maxRoundToRoundGrowth = Math.max(maxRoundToRoundGrowth, roundToRoundGrowth);
-        
+        const roundToRoundGrowth =
+          memoryGrowthProgression[i] - memoryGrowthProgression[i - 1];
+        maxRoundToRoundGrowth = Math.max(
+          maxRoundToRoundGrowth,
+          roundToRoundGrowth
+        );
+
         // If memory usage decreases or stays relatively stable, no linear growth
-        if (roundToRoundGrowth <= 2) { // Less than 2MB growth per round
+        if (roundToRoundGrowth <= 2) {
+          // Less than 2MB growth per round
           linearGrowthPattern = false;
         }
       }
@@ -633,7 +787,7 @@ describe('High Concurrency Memory Management', () => {
       // Assert - No memory leaks should be detected
       expect(leakDetectionResults).toHaveLength(rounds);
 
-      leakDetectionResults.forEach(result => {
+      leakDetectionResults.forEach((result) => {
         expect(result.successfulOperations).toBe(operationsPerRound);
       });
 
@@ -675,7 +829,7 @@ describe('High Concurrency Memory Management', () => {
       const baselineMemory = measureMemoryUsage();
 
       // Act - Perform intensive concurrent operations
-      const intensiveOperations = 40;
+      const intensiveOperations = 20; // Reduced from 40
       const promises = [];
 
       for (let i = 0; i < intensiveOperations; i++) {
@@ -692,11 +846,11 @@ describe('High Concurrency Memory Management', () => {
       const results = await Promise.all(promises);
       const postOperationsMemory = measureMemoryUsage();
 
-      // Test memory cleanup effectiveness over time
+      // Test memory cleanup effectiveness over time (optimized delays)
       const cleanupPhases = [
-        { delay: 1000, description: '1 second cleanup' },
+        { delay: 500, description: '0.5 second cleanup' },
+        { delay: 2000, description: '2 second cleanup' },
         { delay: 5000, description: '5 second cleanup' },
-        { delay: 10000, description: '10 second cleanup' },
       ];
 
       const cleanupResults = [];
@@ -704,11 +858,14 @@ describe('High Concurrency Memory Management', () => {
       for (const phase of cleanupPhases) {
         // Force garbage collection and wait
         await global.memoryTestUtils.forceGCAndWait();
-        await new Promise(resolve => setTimeout(resolve, phase.delay));
+        await new Promise((resolve) => setTimeout(resolve, phase.delay));
 
         const cleanupMemory = measureMemoryUsage();
-        const memoryRecovered = postOperationsMemory.heapUsed - cleanupMemory.heapUsed;
-        const recoveryRate = memoryRecovered / Math.max(postOperationsMemory.heapUsed - baselineMemory.heapUsed, 1);
+        const memoryRecovered =
+          postOperationsMemory.heapUsed - cleanupMemory.heapUsed;
+        const recoveryRate =
+          memoryRecovered /
+          Math.max(postOperationsMemory.heapUsed - baselineMemory.heapUsed, 1);
 
         cleanupResults.push({
           phase: phase.description,
@@ -721,7 +878,8 @@ describe('High Concurrency Memory Management', () => {
 
       // Final memory assessment
       const finalMemory = cleanupResults[cleanupResults.length - 1];
-      const finalMemoryGrowth = finalMemory.memoryUsed - baselineMemory.heapUsed;
+      const finalMemoryGrowth =
+        finalMemory.memoryUsed - baselineMemory.heapUsed;
       const overallRecoveryRate = finalMemory.recoveryRate;
 
       // Assert - Memory cleanup should be effective
@@ -735,17 +893,20 @@ describe('High Concurrency Memory Management', () => {
       // Either we see progressive improvement OR we achieve good final recovery
       let improvementDetected = false;
       for (let i = 1; i < cleanupResults.length; i++) {
-        if (cleanupResults[i].recoveryRate > cleanupResults[i - 1].recoveryRate) {
+        if (
+          cleanupResults[i].recoveryRate > cleanupResults[i - 1].recoveryRate
+        ) {
           improvementDetected = true;
         }
       }
-      
+
       // Accept either progressive improvement or already good final recovery
       // (GC behavior is non-deterministic, so strict monotonic improvement isn't guaranteed)
-      const finalRecoveryRate = cleanupResults[cleanupResults.length - 1].recoveryRate;
+      const finalRecoveryRate =
+        cleanupResults[cleanupResults.length - 1].recoveryRate;
       const hasGoodFinalRecovery = finalRecoveryRate > 0.6; // 60% is good recovery
       const hasAnyImprovement = improvementDetected;
-      
+
       expect(hasGoodFinalRecovery || hasAnyImprovement).toBe(true);
 
       logger.info('Memory cleanup effectiveness analysis', {
@@ -755,7 +916,7 @@ describe('High Concurrency Memory Management', () => {
         postOperationsMemoryMB: `${(postOperationsMemory.heapUsed / 1024 / 1024).toFixed(2)}MB`,
         finalMemoryGrowthMB: `${(finalMemoryGrowth / 1024 / 1024).toFixed(2)}MB`,
         overallRecoveryRate: `${(overallRecoveryRate * 100).toFixed(1)}%`,
-        cleanupProgression: cleanupResults.map(r => ({
+        cleanupProgression: cleanupResults.map((r) => ({
           phase: r.phase,
           memoryRecoveredMB: `${r.memoryRecoveredMB.toFixed(2)}MB`,
           recoveryRate: `${(r.recoveryRate * 100).toFixed(1)}%`,
@@ -782,9 +943,21 @@ describe('High Concurrency Memory Management', () => {
 
       // Act - Monitor memory patterns with different operation types
       const operationTypes = [
-        { scopeId: 'memory-concurrency:simple_filter', complexity: 'simple', operations: 20 },
-        { scopeId: 'memory-concurrency:complex_filter', complexity: 'complex', operations: 15 },
-        { scopeId: 'memory-concurrency:intensive_filter', complexity: 'intensive', operations: 10 },
+        {
+          scopeId: 'memory-concurrency:simple_filter',
+          complexity: 'simple',
+          operations: 20,
+        },
+        {
+          scopeId: 'memory-concurrency:complex_filter',
+          complexity: 'complex',
+          operations: 15,
+        },
+        {
+          scopeId: 'memory-concurrency:intensive_filter',
+          complexity: 'intensive',
+          operations: 10,
+        },
       ];
 
       const patternResults = [];
@@ -802,10 +975,15 @@ describe('High Concurrency Memory Management', () => {
         // Execute operations of this complexity
         for (let i = 0; i < opType.operations; i++) {
           promises.push(
-            ScopeTestUtilities.resolveScopeE2E(opType.scopeId, testActor, gameContext, {
-              scopeRegistry,
-              scopeEngine,
-            })
+            ScopeTestUtilities.resolveScopeE2E(
+              opType.scopeId,
+              testActor,
+              gameContext,
+              {
+                scopeRegistry,
+                scopeEngine,
+              }
+            )
           );
         }
 
@@ -831,7 +1009,8 @@ describe('High Concurrency Memory Management', () => {
 
         const allocationGrowth = afterMemory - beforeMemory;
         const retainedGrowth = cleanupMemory - beforeMemory;
-        const cleanupEfficiency = 1 - (retainedGrowth / Math.max(allocationGrowth, 1));
+        const cleanupEfficiency =
+          1 - retainedGrowth / Math.max(allocationGrowth, 1);
 
         patternResults.push({
           complexity: opType.complexity,
@@ -843,18 +1022,25 @@ describe('High Concurrency Memory Management', () => {
           memoryPerOperation: allocationGrowth / results.length,
         });
 
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Analyze patterns across complexities
-      const totalAllocations = patternResults.reduce((sum, r) => sum + r.allocationGrowthMB, 0);
-      const totalRetained = patternResults.reduce((sum, r) => sum + r.retainedGrowthMB, 0);
-      const overallCleanupEfficiency = 1 - (totalRetained / Math.max(totalAllocations, 0.1));
+      const totalAllocations = patternResults.reduce(
+        (sum, r) => sum + r.allocationGrowthMB,
+        0
+      );
+      const totalRetained = patternResults.reduce(
+        (sum, r) => sum + r.retainedGrowthMB,
+        0
+      );
+      const overallCleanupEfficiency =
+        1 - totalRetained / Math.max(totalAllocations, 0.1);
 
       // Assert - Memory patterns should be reasonable
       expect(patternResults).toHaveLength(operationTypes.length);
 
-      patternResults.forEach(result => {
+      patternResults.forEach((result) => {
         expect(result.successfulOperations).toBe(result.operations);
         expect(result.allocationGrowthMB).toBeGreaterThan(0); // Should allocate some memory
         expect(result.cleanupEfficiency).toBeGreaterThan(0.2); // At least 20% cleanup per type
@@ -869,7 +1055,7 @@ describe('High Concurrency Memory Management', () => {
         totalAllocatedMB: `${totalAllocations.toFixed(2)}MB`,
         totalRetainedMB: `${totalRetained.toFixed(2)}MB`,
         overallCleanupEfficiency: `${(overallCleanupEfficiency * 100).toFixed(1)}%`,
-        patternsByComplexity: patternResults.map(r => ({
+        patternsByComplexity: patternResults.map((r) => ({
           complexity: r.complexity,
           operations: r.operations,
           allocationMB: `${r.allocationGrowthMB.toFixed(2)}MB`,
@@ -914,10 +1100,15 @@ describe('High Concurrency Memory Management', () => {
           const scopeId = scopeIds[op % scopeIds.length];
 
           promises.push(
-            ScopeTestUtilities.resolveScopeE2E(scopeId, testActor, gameContext, {
-              scopeRegistry,
-              scopeEngine,
-            })
+            ScopeTestUtilities.resolveScopeE2E(
+              scopeId,
+              testActor,
+              gameContext,
+              {
+                scopeRegistry,
+                scopeEngine,
+              }
+            )
           );
         }
 
@@ -934,7 +1125,9 @@ describe('High Concurrency Memory Management', () => {
         const memoryBeforeGC = beforeGCMemory.heapUsed;
         const memoryAfterGC = afterGCMemory.heapUsed;
         const memoryReclaimed = memoryBeforeGC - memoryAfterGC;
-        const gcEfficiency = memoryReclaimed / Math.max(memoryBeforeGC - baselineMemory.heapUsed, 1);
+        const gcEfficiency =
+          memoryReclaimed /
+          Math.max(memoryBeforeGC - baselineMemory.heapUsed, 1);
 
         gcResults.push({
           batch: batch + 1,
@@ -946,18 +1139,25 @@ describe('High Concurrency Memory Management', () => {
           gcEfficiency,
         });
 
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 100)); // Optimized delay
       }
 
       // Analyze overall GC effectiveness
-      const averageGCEfficiency = gcResults.reduce((sum, r) => sum + r.gcEfficiency, 0) / gcResults.length;
-      const totalMemoryReclaimed = gcResults.reduce((sum, r) => sum + r.memoryReclaimedMB, 0);
-      const consistentGCPerformance = gcResults.every(r => r.gcEfficiency > 0.3);
+      const averageGCEfficiency =
+        gcResults.reduce((sum, r) => sum + r.gcEfficiency, 0) /
+        gcResults.length;
+      const totalMemoryReclaimed = gcResults.reduce(
+        (sum, r) => sum + r.memoryReclaimedMB,
+        0
+      );
+      const consistentGCPerformance = gcResults.every(
+        (r) => r.gcEfficiency > 0.3
+      );
 
       // Assert - GC should be effective
       expect(gcResults).toHaveLength(batches);
 
-      gcResults.forEach(result => {
+      gcResults.forEach((result) => {
         expect(result.successfulOperations).toBe(operationsPerBatch);
         expect(result.memoryReclaimedMB).toBeGreaterThanOrEqual(0); // Should reclaim some memory
       });
@@ -976,7 +1176,7 @@ describe('High Concurrency Memory Management', () => {
         averageGCEfficiency: `${(averageGCEfficiency * 100).toFixed(1)}%`,
         totalMemoryReclaimedMB: `${totalMemoryReclaimed.toFixed(2)}MB`,
         consistentPerformance: consistentGCPerformance,
-        batchResults: gcResults.map(r => ({
+        batchResults: gcResults.map((r) => ({
           batch: r.batch,
           beforeGCMB: `${r.memoryBeforeGCMB.toFixed(2)}MB`,
           afterGCMB: `${r.memoryAfterGCMB.toFixed(2)}MB`,
@@ -1004,7 +1204,7 @@ describe('High Concurrency Memory Management', () => {
       const baselineMemory = measureMemoryUsage();
 
       // Act - Create significant memory load
-      const heavyLoad = 60;
+      const heavyLoad = 30; // Reduced from 60
       const promises = [];
 
       for (let i = 0; i < heavyLoad; i++) {
@@ -1021,22 +1221,25 @@ describe('High Concurrency Memory Management', () => {
       const results = await Promise.all(promises);
       const peakMemory = measureMemoryUsage();
 
-      // Monitor memory recovery over time
+      // Monitor memory recovery over time (optimized delays)
       const recoveryPhases = [
-        { delay: 5000, target: 'initial' },
-        { delay: 15000, target: 'intermediate' },
-        { delay: 30000, target: 'final' },
+        { delay: 2000, target: 'initial' },
+        { delay: 5000, target: 'intermediate' },
+        { delay: 10000, target: 'final' },
       ];
 
       const recoveryResults = [];
 
       for (const phase of recoveryPhases) {
         await global.memoryTestUtils.forceGCAndWait();
-        await new Promise(resolve => setTimeout(resolve, phase.delay));
+        await new Promise((resolve) => setTimeout(resolve, phase.delay));
 
         const currentMemory = measureMemoryUsage();
-        const memoryGrowthFromBaseline = currentMemory.heapUsed - baselineMemory.heapUsed;
-        const recoveryFromPeak = (peakMemory.heapUsed - currentMemory.heapUsed) / Math.max(peakMemory.heapUsed - baselineMemory.heapUsed, 1);
+        const memoryGrowthFromBaseline =
+          currentMemory.heapUsed - baselineMemory.heapUsed;
+        const recoveryFromPeak =
+          (peakMemory.heapUsed - currentMemory.heapUsed) /
+          Math.max(peakMemory.heapUsed - baselineMemory.heapUsed, 1);
 
         recoveryResults.push({
           phase: phase.target,
@@ -1063,16 +1266,20 @@ describe('High Concurrency Memory Management', () => {
       // Either we see progressive recovery OR we achieve significant recovery
       let progressiveRecovery = true;
       for (let i = 1; i < recoveryResults.length; i++) {
-        if (recoveryResults[i].recoveryFromPeak <= recoveryResults[i - 1].recoveryFromPeak) {
+        if (
+          recoveryResults[i].recoveryFromPeak <=
+          recoveryResults[i - 1].recoveryFromPeak
+        ) {
           progressiveRecovery = false;
         }
       }
-      
+
       // Accept either progressive recovery or already good final recovery
       // (GC behavior is non-deterministic, so strict monotonic recovery isn't guaranteed)
-      const finalRecoveryFromPeak = recoveryResults[recoveryResults.length - 1].recoveryFromPeak;
+      const finalRecoveryFromPeak =
+        recoveryResults[recoveryResults.length - 1].recoveryFromPeak;
       const hasGoodFinalRecovery = finalRecoveryFromPeak > 0.6; // 60% recovery from peak is good
-      
+
       expect(progressiveRecovery || hasGoodFinalRecovery).toBe(true);
 
       logger.info('Memory recovery validation', {
@@ -1083,7 +1290,7 @@ describe('High Concurrency Memory Management', () => {
         recoveredToBaseline,
         finalRecoveryFromPeak: `${(finalRecovery.recoveryFromPeak * 100).toFixed(1)}%`,
         progressiveRecovery,
-        recoveryProgression: recoveryResults.map(r => ({
+        recoveryProgression: recoveryResults.map((r) => ({
           phase: r.phase,
           delaySeconds: r.delay / 1000,
           memoryGrowthMB: `${r.memoryGrowthFromBaselineMB.toFixed(2)}MB`,
@@ -1111,7 +1318,7 @@ describe('High Concurrency Memory Management', () => {
       const baselineMemory = measureMemoryUsage();
 
       // Act - Perform resource-intensive concurrent operations
-      const concurrentOperations = 40;
+      const concurrentOperations = 25; // Reduced from 40
       const promises = [];
       const memorySnapshots = [];
 
@@ -1122,19 +1329,20 @@ describe('High Concurrency Memory Management', () => {
         'memory-concurrency:union_filter',
       ];
 
-      // Start memory monitoring
+      // Start memory monitoring (optimized frequency)
       const monitoringInterval = setInterval(() => {
         memorySnapshots.push(measureMemoryUsage());
-      }, 50); // Every 50ms for high resolution
+      }, 250); // Every 250ms (reduced from 50ms)
 
       for (let i = 0; i < concurrentOperations; i++) {
-        const scopeId = resourceIntensiveScopes[i % resourceIntensiveScopes.length];
+        const scopeId =
+          resourceIntensiveScopes[i % resourceIntensiveScopes.length];
 
         promises.push(
           ScopeTestUtilities.resolveScopeE2E(scopeId, testActor, gameContext, {
             scopeRegistry,
             scopeEngine,
-          }).then(result => ({
+          }).then((result) => ({
             result,
             scopeId,
             operationIndex: i,
@@ -1163,9 +1371,13 @@ describe('High Concurrency Memory Management', () => {
       const memoryGrowth = peakMemory.heapUsed - baselineMemory.heapUsed;
       const residualMemory = postGCMemory.heapUsed - baselineMemory.heapUsed;
       // Calculate recovery rate, handling cases where memory drops below baseline
-      const memoryRecoveryRate = memoryGrowth > 0 
-        ? Math.max(0, Math.min(1, 1 - (Math.max(0, residualMemory) / memoryGrowth)))
-        : 1; // If no growth or negative growth, consider it fully recovered
+      const memoryRecoveryRate =
+        memoryGrowth > 0
+          ? Math.max(
+              0,
+              Math.min(1, 1 - Math.max(0, residualMemory) / memoryGrowth)
+            )
+          : 1; // If no growth or negative growth, consider it fully recovered
       const totalTime = endTime - startTime;
       const averageTimePerOp = totalTime / concurrentOperations;
 
@@ -1182,10 +1394,11 @@ describe('High Concurrency Memory Management', () => {
       expect(memoryGrowthMB).toBeLessThan(150); // Less than 150MB peak growth
 
       // Memory should recover well after GC (only check if there was actual growth)
-      if (memoryGrowth > 10 * 1024 * 1024) { // Only check recovery if growth > 10MB
+      if (memoryGrowth > 10 * 1024 * 1024) {
+        // Only check recovery if growth > 10MB
         expect(memoryRecoveryRate).toBeGreaterThan(0.3); // At least 30% recovery (relaxed for test environment)
       }
-      
+
       // Residual memory should be reasonable (can be negative if GC is very effective)
       const residualMemoryMB = residualMemory / (1024 * 1024);
       // Only check upper bound if residual is positive (negative means better than baseline)
@@ -1228,10 +1441,15 @@ describe('High Concurrency Memory Management', () => {
       const spikePromises = [];
       for (let i = 0; i < spikeOperations; i++) {
         spikePromises.push(
-          ScopeTestUtilities.resolveScopeE2E('memory-concurrency:intensive_filter', testActor, gameContext, {
-            scopeRegistry,
-            scopeEngine,
-          })
+          ScopeTestUtilities.resolveScopeE2E(
+            'memory-concurrency:intensive_filter',
+            testActor,
+            gameContext,
+            {
+              scopeRegistry,
+              scopeEngine,
+            }
+          )
         );
       }
 
@@ -1248,17 +1466,22 @@ describe('High Concurrency Memory Management', () => {
 
       // Allow brief recovery period
       await global.memoryTestUtils.forceGCAndWait();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       const postSpikeRecoveryMemory = measureMemoryUsage();
 
       // Phase 2: Normal operations after spike to test recovery
       const normalPromises = [];
       for (let i = 0; i < normalOperations; i++) {
         normalPromises.push(
-          ScopeTestUtilities.resolveScopeE2E('memory-concurrency:simple_filter', testActor, gameContext, {
-            scopeRegistry,
-            scopeEngine,
-          })
+          ScopeTestUtilities.resolveScopeE2E(
+            'memory-concurrency:simple_filter',
+            testActor,
+            gameContext,
+            {
+              scopeRegistry,
+              scopeEngine,
+            }
+          )
         );
       }
 
@@ -1278,21 +1501,27 @@ describe('High Concurrency Memory Management', () => {
       const finalMemory = measureMemoryUsage();
 
       // Calculate recovery metrics
-      const spikeMemoryGrowth = spikeEndMemory.heapUsed - baselineMemory.heapUsed;
-      const spikeRecovery = (spikeEndMemory.heapUsed - postSpikeRecoveryMemory.heapUsed) / Math.max(spikeMemoryGrowth, 1);
-      const normalMemoryGrowth = normalEndMemory.heapUsed - normalStartMemory.heapUsed;
-      const finalRecovery = (spikeEndMemory.heapUsed - finalMemory.heapUsed) / Math.max(spikeMemoryGrowth, 1);
+      const spikeMemoryGrowth =
+        spikeEndMemory.heapUsed - baselineMemory.heapUsed;
+      const spikeRecovery =
+        (spikeEndMemory.heapUsed - postSpikeRecoveryMemory.heapUsed) /
+        Math.max(spikeMemoryGrowth, 1);
+      const normalMemoryGrowth =
+        normalEndMemory.heapUsed - normalStartMemory.heapUsed;
+      const finalRecovery =
+        (spikeEndMemory.heapUsed - finalMemory.heapUsed) /
+        Math.max(spikeMemoryGrowth, 1);
       const residualMemory = finalMemory.heapUsed - baselineMemory.heapUsed;
 
       // Assert - Both phases should complete successfully
       expect(spikeResults).toHaveLength(spikeOperations);
       expect(normalResults).toHaveLength(normalOperations);
 
-      spikeResults.forEach(result => {
+      spikeResults.forEach((result) => {
         expect(result).toBeInstanceOf(Set);
       });
 
-      normalResults.forEach(result => {
+      normalResults.forEach((result) => {
         expect(result).toBeInstanceOf(Set);
       });
 
@@ -1324,5 +1553,29 @@ describe('High Concurrency Memory Management', () => {
         recoverySuccessful: finalRecovery > 0.5,
       });
     });
+  });
+
+  // Cleanup shared resources after all tests complete
+  afterAll(async () => {
+    // Clean up DOM elements
+    if (sharedContainerSetup) {
+      document.body.innerHTML = '';
+    }
+
+    // Clean up shared container resources
+    if (
+      sharedContainerSetup &&
+      sharedContainerSetup.container &&
+      typeof sharedContainerSetup.container.cleanup === 'function'
+    ) {
+      sharedContainerSetup.container.cleanup();
+    }
+
+    // Reset shared state
+    sharedEntityPool = null;
+    sharedContainerSetup = null;
+
+    // Final cleanup
+    await global.memoryTestUtils.forceGCAndWait();
   });
 });

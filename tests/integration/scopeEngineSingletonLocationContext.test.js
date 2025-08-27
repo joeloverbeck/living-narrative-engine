@@ -61,7 +61,7 @@ describe('Singleton Scope Engine Location Context', () => {
   beforeEach(() => {
     // Clear the module-level entity cache to prevent stale data between tests
     clearEntityCache();
-    
+
     logger = {
       debug: jest.fn(),
       info: jest.fn(),

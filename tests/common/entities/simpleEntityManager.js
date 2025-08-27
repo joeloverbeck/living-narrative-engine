@@ -69,12 +69,19 @@ export default class SimpleEntityManager {
       getComponentData: (componentType) => {
         // Always get fresh data from the entity manager
         const currentEnt = entityManager.entities.get(id);
-        return currentEnt ? currentEnt.components[componentType] ?? null : null;
+        return currentEnt
+          ? (currentEnt.components[componentType] ?? null)
+          : null;
       },
       hasComponent: (componentType) => {
         // Always get fresh data from the entity manager
         const currentEnt = entityManager.entities.get(id);
-        return currentEnt ? Object.prototype.hasOwnProperty.call(currentEnt.components, componentType) : false;
+        return currentEnt
+          ? Object.prototype.hasOwnProperty.call(
+              currentEnt.components,
+              componentType
+            )
+          : false;
       },
       getAllComponents: () => {
         // Always get fresh data from the entity manager
@@ -150,7 +157,7 @@ export default class SimpleEntityManager {
   getEntities() {
     const result = [];
     const entityManager = this; // Capture reference to fix closure issue
-    
+
     for (const entity of this.entities.values()) {
       result.push({
         id: entity.id,
@@ -167,12 +174,14 @@ export default class SimpleEntityManager {
         getComponentData: (type) => {
           // Always get fresh data from the entity manager
           const currentEnt = entityManager.entities.get(entity.id);
-          return currentEnt ? currentEnt.components[type] ?? null : null;
+          return currentEnt ? (currentEnt.components[type] ?? null) : null;
         },
         hasComponent: (type) => {
           // Always get fresh data from the entity manager
           const currentEnt = entityManager.entities.get(entity.id);
-          return currentEnt ? Object.prototype.hasOwnProperty.call(currentEnt.components, type) : false;
+          return currentEnt
+            ? Object.prototype.hasOwnProperty.call(currentEnt.components, type)
+            : false;
         },
         getAllComponents: () => {
           // Always get fresh data from the entity manager
@@ -193,7 +202,7 @@ export default class SimpleEntityManager {
   getEntitiesWithComponent(componentType) {
     const result = [];
     const entityManager = this; // Capture reference to fix closure issue
-    
+
     for (const ent of this.entities.values()) {
       if (Object.prototype.hasOwnProperty.call(ent.components, componentType)) {
         result.push({
@@ -204,14 +213,19 @@ export default class SimpleEntityManager {
             return currentEnt ? Object.keys(currentEnt.components) : [];
           },
           getComponentData: (type) => {
-            // Always get fresh data from the entity manager  
+            // Always get fresh data from the entity manager
             const currentEnt = entityManager.entities.get(ent.id);
-            return currentEnt ? currentEnt.components[type] ?? null : null;
+            return currentEnt ? (currentEnt.components[type] ?? null) : null;
           },
           hasComponent: (type) => {
             // Always get fresh data from the entity manager
             const currentEnt = entityManager.entities.get(ent.id);
-            return currentEnt ? Object.prototype.hasOwnProperty.call(currentEnt.components, type) : false;
+            return currentEnt
+              ? Object.prototype.hasOwnProperty.call(
+                  currentEnt.components,
+                  type
+                )
+              : false;
           },
         });
       }

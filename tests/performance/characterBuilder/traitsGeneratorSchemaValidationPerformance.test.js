@@ -234,10 +234,13 @@ describe('Traits Generator - Schema Validation Performance', () => {
       const startTime = Date.now();
 
       // Create multiple validation promises using valid test data
-      const validationPromises = Array.from({ length: concurrentValidations }, async () => {
-        const testData = testBed.createValidTraitsData();
-        return validateData(testData, 'trait');
-      });
+      const validationPromises = Array.from(
+        { length: concurrentValidations },
+        async () => {
+          const testData = testBed.createValidTraitsData();
+          return validateData(testData, 'trait');
+        }
+      );
 
       // Execute all validations concurrently
       const results = await Promise.all(validationPromises);
@@ -260,9 +263,9 @@ describe('Traits Generator - Schema Validation Performance', () => {
       for (let i = 0; i < datasets; i++) {
         const testData = testBed.createValidTraitsData();
         const startTime = performance.now();
-        
+
         const result = validateData(testData, 'trait');
-        
+
         const validationTime = performance.now() - startTime;
         validationTimes.push(validationTime);
 
@@ -278,9 +281,11 @@ describe('Traits Generator - Schema Validation Performance', () => {
       // Performance shouldn't degrade significantly over multiple validations
       const firstHalf = validationTimes.slice(0, Math.ceil(datasets / 2));
       const secondHalf = validationTimes.slice(Math.ceil(datasets / 2));
-      
-      const firstHalfAvg = firstHalf.reduce((sum, time) => sum + time, 0) / firstHalf.length;
-      const secondHalfAvg = secondHalf.reduce((sum, time) => sum + time, 0) / secondHalf.length;
+
+      const firstHalfAvg =
+        firstHalf.reduce((sum, time) => sum + time, 0) / firstHalf.length;
+      const secondHalfAvg =
+        secondHalf.reduce((sum, time) => sum + time, 0) / secondHalf.length;
 
       // Second half shouldn't be significantly slower (no major performance degradation)
       if (firstHalfAvg > 0) {

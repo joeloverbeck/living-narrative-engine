@@ -1,9 +1,11 @@
 # SCODSLERR-009: Migrate StepResolver
 
 ## Overview
+
 Migrate the stepResolver to use the centralized error handling system, focusing on its complex traversal and node stepping logic.
 
 ## Objectives
+
 - Update stepResolver to use IScopeDslErrorHandler
 - Handle complex nested traversal errors
 - Remove verbose debug logging
@@ -12,40 +14,45 @@ Migrate the stepResolver to use the centralized error handling system, focusing 
 ## Implementation Details
 
 ### Location
+
 `src/scopeDsl/resolvers/stepResolver.js`
 
 ### Key Error Scenarios
 
 #### 1. Node Traversal Errors
+
 - Invalid parent node
 - Missing child nodes
 - Broken traversal chain
 - Null node references
 
 #### 2. Step Operation Errors
+
 - Invalid step direction
 - Boundary violations
 - Recursive step limits
 - Invalid step count
 
 #### 3. Context Propagation Errors
+
 - Lost context during traversal
 - Invalid context mutation
 - Depth limit exceeded
 
 ### Error Code Mapping
 
-| Error Type | Description | Error Code | Category |
-|-----------|-------------|------------|----------|
-| No parent | Node has no parent for step | SCOPE_2002 | INVALID_DATA |
-| Invalid step | Step operation invalid | SCOPE_2001 | INVALID_DATA |
-| Max depth | Exceeded depth limit | SCOPE_4002 | DEPTH_EXCEEDED |
-| Null node | Encountered null node | SCOPE_2003 | INVALID_DATA |
-| Context lost | Context corrupted | SCOPE_1001 | MISSING_CONTEXT |
+| Error Type   | Description                 | Error Code | Category        |
+| ------------ | --------------------------- | ---------- | --------------- |
+| No parent    | Node has no parent for step | SCOPE_2002 | INVALID_DATA    |
+| Invalid step | Step operation invalid      | SCOPE_2001 | INVALID_DATA    |
+| Max depth    | Exceeded depth limit        | SCOPE_4002 | DEPTH_EXCEEDED  |
+| Null node    | Encountered null node       | SCOPE_2003 | INVALID_DATA    |
+| Context lost | Context corrupted           | SCOPE_1001 | MISSING_CONTEXT |
 
 ### Complex Error Handling
 
 #### Before:
+
 ```javascript
 if (!node.parent) {
   if (debug) {
@@ -61,6 +68,7 @@ if (!node.parent) {
 ```
 
 #### After:
+
 ```javascript
 if (!node.parent) {
   errorHandler.handleError(
@@ -80,20 +88,22 @@ if (!node.parent) {
 4. **Performance**: Remove expensive debug serialization
 
 ### Dependency Updates
+
 ```javascript
 export default function createStepResolver({
   nodeTraverser,
   depthTracker,
-  errorHandler // New dependency
+  errorHandler, // New dependency
 }) {
   validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
-    requiredMethods: ['handleError']
+    requiredMethods: ['handleError'],
   });
   // ...
 }
 ```
 
 ## Acceptance Criteria
+
 - [ ] All traversal errors use error handler
 - [ ] Debug logging removed
 - [ ] Path information preserved in errors
@@ -103,6 +113,7 @@ export default function createStepResolver({
 - [ ] Error buffer captures traversal history
 
 ## Testing Requirements
+
 - Test boundary conditions (root, leaf nodes)
 - Test depth limit enforcement
 - Test recursive step detection
@@ -111,27 +122,32 @@ export default function createStepResolver({
 - Memory tests for error buffering
 
 ## Dependencies
+
 - SCODSLERR-006: Pilot pattern established
 - SCODSLERR-005: Container configuration
 - SCODSLERR-003: Error codes defined
 
 ## Estimated Effort
+
 - Code migration: 3 hours
 - Test updates: 2 hours
 - Validation: 1 hour
 - Total: 6 hours
 
 ## Risk Assessment
+
 - **Medium Risk**: Complex traversal logic
 - **Mitigation**: Careful testing of edge cases
 - **Concern**: Path tracking performance
 
 ## Related Spec Sections
+
 - Section 4: Migration Strategy
 - Section 2.3: Error Codes
 - Section 3.3: Resolver Integration
 
 ## Performance Notes
+
 - Remove JSON.stringify from hot paths
 - Cache node paths if needed repeatedly
 - Consider lazy evaluation of debug info

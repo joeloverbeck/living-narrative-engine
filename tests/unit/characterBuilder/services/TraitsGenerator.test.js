@@ -331,7 +331,7 @@ describe('TraitsGenerator', () => {
       // Verify events were dispatched
       expect(mockEventBus.dispatch).toHaveBeenCalledTimes(2);
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'TRAITS_GENERATION_STARTED',
+        'core:TRAITS_GENERATION_STARTED',
         expect.objectContaining({
           conceptId: 'concept-123',
           directionId: 'direction-456',
@@ -344,7 +344,7 @@ describe('TraitsGenerator', () => {
         })
       );
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'TRAITS_GENERATION_COMPLETED',
+        'core:TRAITS_GENERATION_COMPLETED',
         expect.objectContaining({
           conceptId: 'concept-123',
           directionId: 'direction-456',
@@ -567,7 +567,7 @@ describe('TraitsGenerator', () => {
       ).rejects.toThrow(TraitsGenerationError);
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'TRAITS_GENERATION_FAILED',
+        'core:TRAITS_GENERATION_FAILED',
         expect.objectContaining({
           conceptId: 'concept-123',
           directionId: 'direction-456',

@@ -66,7 +66,7 @@
           },
           {
             "type": "IF",
-            "comment": "Check if spot 1 was claimed successfully", 
+            "comment": "Check if spot 1 was claimed successfully",
             "parameters": {
               "condition": { "var": "context.spot1Claimed" },
               "then_actions": [

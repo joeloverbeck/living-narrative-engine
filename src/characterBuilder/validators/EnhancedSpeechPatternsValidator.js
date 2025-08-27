@@ -708,9 +708,11 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
           const suspiciousNames = potentialNames.filter(
             (name) =>
               name.toLowerCase() !== characterName.toLowerCase() &&
+              !characterName.toLowerCase().includes(name.toLowerCase()) && // Check if name is part of full character name
               name.length > 2 &&
               // Exclude common words that aren't names
               ![
+                // Articles and conjunctions
                 'The',
                 'And',
                 'But',
@@ -718,9 +720,35 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
                 'Not',
                 'Yet',
                 'So',
+                // Demonstratives
                 'This',
                 'That',
+                'These',
+                'Those',
+                // Pronouns
                 'They',
+                'She',
+                'He',
+                'Her',
+                'His',
+                'Him',
+                'Hers',
+                'Its',
+                'Their',
+                'Theirs',
+                'Them',
+                'We',
+                'Us',
+                'Our',
+                'Ours',
+                'You',
+                'Your',
+                'Yours',
+                'My',
+                'Mine',
+                'Me',
+                'I',
+                // Question words
                 'When',
                 'Where',
                 'Why',
@@ -728,10 +756,29 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
                 'Who',
                 'What',
                 'Which',
+                // Time/place words
                 'Then',
                 'Now',
                 'Here',
                 'There',
+                // Common sentence starters
+                'After',
+                'Before',
+                'During',
+                'While',
+                'Since',
+                'Although',
+                'Because',
+                'Unless',
+                'Until',
+                'If',
+                'As',
+                'With',
+                'Without',
+                'Through',
+                'Between',
+                'Among',
+                'Within',
               ].includes(name) &&
               // Check if it looks like a proper name (not a common word)
               /^[A-Z][a-z]+$/.test(name)

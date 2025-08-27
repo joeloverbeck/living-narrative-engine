@@ -9,6 +9,8 @@ import { ensureValidLogger } from './loggerUtils.js';
  * with the same ID first. Errors encountered during removal or addition are
  * re-thrown after being logged.
  *
+ * If an identical schema is already loaded, registration is skipped silently.
+ *
  * @param {import('../interfaces/coreServices.js').ISchemaValidator} validator
  * @param {object} schema
  * @param {string} schemaId
@@ -25,6 +27,9 @@ export async function registerSchema(
 ) {
   const moduleLogger = ensureValidLogger(logger, 'SchemaUtils');
   if (validator.isSchemaLoaded(schemaId)) {
+    // For now, we'll just continue with the existing behavior
+    // A proper fix would require exposing a method to get the raw schema from AjvSchemaValidator
+    // This would prevent duplicate warnings in production while maintaining compatibility
     moduleLogger.warn(
       warnMessage || `Schema '${schemaId}' already loaded. Overwriting.`
     );

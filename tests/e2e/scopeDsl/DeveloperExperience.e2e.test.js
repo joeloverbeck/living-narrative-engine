@@ -136,7 +136,7 @@ describe('Developer Experience E2E', () => {
       // Verify result was returned
       expect(result).toBeDefined();
       expect(result).toBeInstanceOf(Set);
-      
+
       // Check that we got the actor entity
       expect(result.size).toBeGreaterThan(0);
       expect(result.has(testActors.player.id)).toBe(true);
@@ -312,7 +312,9 @@ describe('Developer Experience E2E', () => {
       } catch (error) {
         // Verify error message includes helpful context
         expect(error.message).toContain('test:nonexistent_scope');
-        expect(error.message.toLowerCase()).toMatch(/not found|missing|undefined/);
+        expect(error.message.toLowerCase()).toMatch(
+          /not found|missing|undefined/
+        );
       }
     });
 
@@ -407,7 +409,7 @@ describe('Developer Experience E2E', () => {
         );
         const endTime = performance.now();
         const duration = endTime - startTime;
-        
+
         results.push({ duration, success: result !== undefined });
         totalTime += duration;
       }
@@ -435,21 +437,25 @@ describe('Developer Experience E2E', () => {
       });
 
       // Manually track memory if available
-      const startMemory = process.memoryUsage ? process.memoryUsage().heapUsed : 0;
-      
+      const startMemory = process.memoryUsage
+        ? process.memoryUsage().heapUsed
+        : 0;
+
       const result = await ScopeTestUtilities.resolveScopeE2E(
         'test:deeply_nested_filter',
         testActors.player,
         gameContext,
         { scopeRegistry, scopeEngine }
       );
-      
-      const endMemory = process.memoryUsage ? process.memoryUsage().heapUsed : 0;
+
+      const endMemory = process.memoryUsage
+        ? process.memoryUsage().heapUsed
+        : 0;
       const memoryUsed = endMemory - startMemory;
 
       // Verify resolution worked
       expect(result).toBeDefined();
-      
+
       // Memory tracking only works in Node environment
       if (process.memoryUsage) {
         // Memory change could be positive or negative due to GC
@@ -464,8 +470,8 @@ describe('Developer Experience E2E', () => {
       const performanceClasses = [
         { time: 5, expectedClass: 'Excellent' },
         { time: 15, expectedClass: 'Good' },
-        { time: 45, expectedClass: 'Good' },  // Changed from 'Acceptable' - threshold is <50ms for Good
-        { time: 150, expectedClass: 'Acceptable' },  // Changed from 'Slow' - threshold is <200ms for Acceptable
+        { time: 45, expectedClass: 'Good' }, // Changed from 'Acceptable' - threshold is <50ms for Good
+        { time: 150, expectedClass: 'Acceptable' }, // Changed from 'Slow' - threshold is <200ms for Acceptable
       ];
 
       for (const { time, expectedClass } of performanceClasses) {
@@ -518,19 +524,34 @@ describe('Developer Experience E2E', () => {
         { expr: 'actor', description: 'Actor source' },
         { expr: 'location', description: 'Location source' },
         { expr: 'entities(core:item)', description: 'Entities with component' },
-        { expr: 'entities(!core:hostile)', description: 'Entities without component' },
+        {
+          expr: 'entities(!core:hostile)',
+          description: 'Entities without component',
+        },
 
         // Component navigation
         { expr: 'actor.core:inventory', description: 'Component access' },
-        { expr: 'actor.core:inventory.items', description: 'Nested field access' },
+        {
+          expr: 'actor.core:inventory.items',
+          description: 'Nested field access',
+        },
 
         // Array iteration
-        { expr: 'actor.core:inventory.items[]', description: 'Array iteration' },
+        {
+          expr: 'actor.core:inventory.items[]',
+          description: 'Array iteration',
+        },
         { expr: 'location.core:exits[]', description: 'Exit iteration' },
 
         // Union operations - both syntaxes
-        { expr: 'actor.core:inventory.items[] + location.core:items[]', description: 'Union with +' },
-        { expr: 'actor.followers[] | actor.partners[]', description: 'Union with |' },
+        {
+          expr: 'actor.core:inventory.items[] + location.core:items[]',
+          description: 'Union with +',
+        },
+        {
+          expr: 'actor.followers[] | actor.partners[]',
+          description: 'Union with |',
+        },
       ];
 
       for (const { expr, description } of documentationExamples) {
@@ -554,9 +575,18 @@ describe('Developer Experience E2E', () => {
     test('should validate clothing resolution examples', async () => {
       const clothingExamples = [
         // From docs/scope-dsl.md - Clothing examples
-        { expr: 'actor.topmost_clothing', description: 'Topmost clothing access' },
-        { expr: 'actor.topmost_clothing.torso', description: 'Specific slot access' },
-        { expr: 'actor.outer_clothing.legs', description: 'Outer layer access' },
+        {
+          expr: 'actor.topmost_clothing',
+          description: 'Topmost clothing access',
+        },
+        {
+          expr: 'actor.topmost_clothing.torso',
+          description: 'Specific slot access',
+        },
+        {
+          expr: 'actor.outer_clothing.legs',
+          description: 'Outer layer access',
+        },
         { expr: 'actor.base_clothing.torso', description: 'Base layer access' },
         { expr: 'actor.underwear.hips', description: 'Underwear access' },
       ];
@@ -623,10 +653,19 @@ describe('Developer Experience E2E', () => {
       const tutorialExamples = [
         // From docs/mods/creating-scopes.md
         { expr: 'actor', description: 'Tutorial: Actor source' },
-        { expr: 'actor.core:pets.petList[]', description: 'Tutorial: Pet list access' },
-        { expr: 'location.core:items[]', description: 'Tutorial: Items in location' },
+        {
+          expr: 'actor.core:pets.petList[]',
+          description: 'Tutorial: Pet list access',
+        },
+        {
+          expr: 'location.core:items[]',
+          description: 'Tutorial: Items in location',
+        },
         { expr: 'entities(core:npc)', description: 'Tutorial: All NPCs' },
-        { expr: 'entities(!core:hostile)', description: 'Tutorial: Non-hostile entities' },
+        {
+          expr: 'entities(!core:hostile)',
+          description: 'Tutorial: Non-hostile entities',
+        },
 
         // Combined scopes from tutorial
         {

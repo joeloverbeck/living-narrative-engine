@@ -172,16 +172,24 @@ class LoggerStrategy {
       return this.#config.mode;
     }
 
-    // Priority 4: NODE_ENV mapping
-    if (typeof process !== 'undefined' && process.env?.NODE_ENV) {
-      const nodeEnv = process.env.NODE_ENV.toLowerCase();
-      switch (nodeEnv) {
-        case 'test':
-          return LoggerMode.TEST;
-        case 'production':
-          return LoggerMode.PRODUCTION;
-        case 'development':
-          return LoggerMode.DEVELOPMENT;
+    // Priority 4: NODE_ENV mapping or JEST_WORKER_ID detection
+    if (typeof process !== 'undefined') {
+      // Check for Jest test environment first (JEST_WORKER_ID is always set in Jest)
+      if (process.env?.JEST_WORKER_ID !== undefined) {
+        return LoggerMode.TEST;
+      }
+      
+      // Then check NODE_ENV
+      if (process.env?.NODE_ENV) {
+        const nodeEnv = process.env.NODE_ENV.toLowerCase();
+        switch (nodeEnv) {
+          case 'test':
+            return LoggerMode.TEST;
+          case 'production':
+            return LoggerMode.PRODUCTION;
+          case 'development':
+            return LoggerMode.DEVELOPMENT;
+        }
       }
     }
 

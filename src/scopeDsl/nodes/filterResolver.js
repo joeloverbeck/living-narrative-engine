@@ -290,7 +290,10 @@ export default function createFilterResolver({
             }
           } catch (error) {
             // Re-throw errors for missing condition references
-            if (error.message && error.message.includes('Could not resolve condition_ref')) {
+            if (
+              error.message &&
+              error.message.includes('Could not resolve condition_ref')
+            ) {
               throw error;
             }
             // Handle other errors gracefully

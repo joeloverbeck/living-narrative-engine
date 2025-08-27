@@ -182,7 +182,7 @@ export class JsonLogicCustomOperators extends BaseService {
    */
   clearCaches() {
     this.#logger.debug('Clearing custom operator caches');
-    
+
     // Clear IsSocketCoveredOperator cache if it exists
     if (this.isSocketCoveredOp) {
       this.isSocketCoveredOp.clearCache();

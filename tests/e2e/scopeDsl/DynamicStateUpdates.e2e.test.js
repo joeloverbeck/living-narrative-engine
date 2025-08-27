@@ -77,7 +77,7 @@ describe('Dynamic State Updates E2E', () => {
   afterEach(async () => {
     // Clean up caches and state
     clearEntityCache();
-    
+
     if (container) {
       // Additional cleanup if needed
     }
@@ -85,6 +85,8 @@ describe('Dynamic State Updates E2E', () => {
 
   /**
    * Register essential schemas for dynamic testing
+   *
+   * @param schemaValidator
    */
   async function registerTestSchemas(schemaValidator) {
     // Core schemas
@@ -278,6 +280,8 @@ describe('Dynamic State Updates E2E', () => {
 
   /**
    * Gets action ID from action object (handles both formats)
+   *
+   * @param action
    */
   function getActionId(action) {
     return action.actionId || action.id;
@@ -285,6 +289,9 @@ describe('Dynamic State Updates E2E', () => {
 
   /**
    * Creates test entity with specific components
+   *
+   * @param entityId
+   * @param components
    */
   async function createTestEntity(entityId, components) {
     const entityDefinition = createEntityDefinition(entityId, components);
@@ -309,7 +316,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:dynamic_entities',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -331,7 +339,8 @@ describe('Dynamic State Updates E2E', () => {
           {
             id: 'test:dynamic_entities',
             expr: 'entities(core:actor)[{"and": [{"!=": [{"var": "id"}, {"var": "actor.id"}]}, {">": [{"var": "entity.components.core:stats.level"}, 10]}]}]',
-            description: 'Dynamic entities scope - now restricted to high level actors',
+            description:
+              'Dynamic entities scope - now restricted to high level actors',
           },
         ]
       );
@@ -347,7 +356,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:dynamic_entities',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -390,7 +400,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:brand_new_scope',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -418,7 +429,8 @@ describe('Dynamic State Updates E2E', () => {
           'test:brand_new_scope',
           playerEntity,
           {
-            currentLocation: await entityManager.getEntityInstance('test-location-1'),
+            currentLocation:
+              await entityManager.getEntityInstance('test-location-1'),
             entityManager,
             allEntities: Array.from(entityManager.entities),
             jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -450,7 +462,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:high_level_entities',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -477,7 +490,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:high_level_entities',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -515,7 +529,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:health_based',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -548,7 +563,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:health_based',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -574,7 +590,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:location_based',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -593,11 +610,17 @@ describe('Dynamic State Updates E2E', () => {
       });
 
       // Ensure the player has the correct position component for comparison
-      const playerInstance = await entityManager.getEntityInstance(testActors.player.id);
+      const playerInstance = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       if (!playerInstance.core?.position?.locationId) {
-        await entityManager.addComponent(testActors.player.id, 'core:position', {
-          locationId: 'test-location-1',
-        });
+        await entityManager.addComponent(
+          testActors.player.id,
+          'core:position',
+          {
+            locationId: 'test-location-1',
+          }
+        );
       }
 
       // Clear cache
@@ -608,7 +631,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:location_based',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -633,7 +657,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:location_based',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -643,7 +668,9 @@ describe('Dynamic State Updates E2E', () => {
       );
 
       const afterRemovalIds = Array.from(afterRemovalTargets);
-      expect(afterRemovalTargets.size).toBeLessThanOrEqual(afterCreationTargets.size);
+      expect(afterRemovalTargets.size).toBeLessThanOrEqual(
+        afterCreationTargets.size
+      );
       expect(afterRemovalIds).not.toContain(newActorId);
     });
 
@@ -703,7 +730,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:high_level_entities',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -738,7 +766,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:high_level_entities',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -762,7 +791,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:high_level_entities',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -778,7 +808,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:high_level_entities',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -788,7 +819,7 @@ describe('Dynamic State Updates E2E', () => {
       );
 
       const freshIds = Array.from(freshTargets);
-      
+
       // Fresh resolution should include the updated entity
       expect(freshIds).toContain(testEntityId);
     });
@@ -814,7 +845,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:high_level_entities',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -830,7 +862,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:high_level_entities',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -851,7 +884,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:high_level_entities',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -881,7 +915,8 @@ describe('Dynamic State Updates E2E', () => {
       );
 
       const baseContext = {
-        currentLocation: await entityManager.getEntityInstance('test-location-1'),
+        currentLocation:
+          await entityManager.getEntityInstance('test-location-1'),
         allEntities: Array.from(entityManager.entities),
       };
 
@@ -891,7 +926,9 @@ describe('Dynamic State Updates E2E', () => {
         baseContext
       );
 
-      const initialActionIds = initialActions.actions.map((a) => getActionId(a));
+      const initialActionIds = initialActions.actions.map((a) =>
+        getActionId(a)
+      );
 
       // Modify entity state to affect scope resolution
       const testEntityId = await createTestEntity('action-scope-entity', {
@@ -916,7 +953,9 @@ describe('Dynamic State Updates E2E', () => {
         updatedContext
       );
 
-      const updatedActionIds = updatedActions.actions.map((a) => getActionId(a));
+      const updatedActionIds = updatedActions.actions.map((a) =>
+        getActionId(a)
+      );
 
       // Should still have core actions
       expect(updatedActionIds).toContain('core:wait');
@@ -946,7 +985,7 @@ describe('Dynamic State Updates E2E', () => {
         expect(() => {
           scopeRegistry.initialize(invalidScopes);
         }).toThrow();
-        
+
         // Reinitialize with valid scopes after the error test
         await setupInitialScopeDefinitions();
       } catch (error) {
@@ -960,7 +999,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:dynamic_entities',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -996,7 +1036,8 @@ describe('Dynamic State Updates E2E', () => {
         'test:high_level_entities',
         playerEntity,
         {
-          currentLocation: await entityManager.getEntityInstance('test-location-1'),
+          currentLocation:
+            await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
           jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
@@ -1007,7 +1048,7 @@ describe('Dynamic State Updates E2E', () => {
 
       // Should return a valid result even with missing instance
       expect(result).toBeInstanceOf(Set);
-      
+
       // The corrupted entity should not be in results since instance was removed
       const resultIds = Array.from(result);
       expect(resultIds).not.toContain(corruptEntityId);

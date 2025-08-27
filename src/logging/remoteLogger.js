@@ -868,9 +868,6 @@ class RemoteLogger {
    * @returns {Promise<void>}
    */
   async destroy() {
-    // Set unloading flag to prevent new operations
-    this.#isUnloading = true;
-
     // Clear any pending flush timer
     if (this.#flushTimer !== null) {
       clearTimeout(this.#flushTimer);
@@ -883,8 +880,11 @@ class RemoteLogger {
       this.#abortController = null;
     }
 
-    // Final flush of any remaining logs
+    // Final flush of any remaining logs BEFORE setting unloading flag
     await this.#flush();
+
+    // Set unloading flag to prevent new operations
+    this.#isUnloading = true;
 
     // Clear buffer and cleanup metadata references
     for (const log of this.#buffer) {

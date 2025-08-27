@@ -133,7 +133,7 @@ describe('Speech Patterns Schema Validation Integration', () => {
           },
           {
             pattern: 'Valid pattern that meets minimum requirements',
-            example: 'Hi', // Too short - violates minLength: 3  
+            example: 'Hi', // Too short - violates minLength: 3
             circumstances: null,
           },
         ],

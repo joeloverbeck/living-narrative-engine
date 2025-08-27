@@ -25,7 +25,7 @@ describe('Character Definition Validation', () => {
       'isSchemaLoaded',
       'validateAndSanitizeResponse',
     ]);
-    
+
     // Configure schema validator mocks
     mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
     mockSchemaValidator.validate.mockReturnValue({ isValid: true, errors: [] });
@@ -81,18 +81,18 @@ describe('Character Definition Validation', () => {
 
       // Should extract name correctly and pass structural validation
       expect(result.context.layers.structural.isValid).toBe(true);
-      
+
       // Should have quality assessment
       expect(result.quality).toBeDefined();
       expect(typeof result.quality.overallScore).toBe('number');
-      
+
       // Should not have blocking errors
       expect(result.errors.length).toBe(0);
     });
 
     it('should handle core:speech_patterns component correctly (distinguishes input vs response validation)', async () => {
       // This reproduces the second user-reported issue:
-      // Empty speech patterns in CHARACTER INPUT should be valid 
+      // Empty speech patterns in CHARACTER INPUT should be valid
       // (different from RESPONSE validation which requires populated patterns)
       const characterDefinition = {
         components: {
@@ -123,7 +123,7 @@ describe('Character Definition Validation', () => {
 
       // Character definition structure should be valid
       expect(result.context.layers.structural.isValid).toBe(true);
-      
+
       // Should have basic quality assessment
       expect(result.quality.overallScore).toBeGreaterThan(0);
     });
@@ -218,10 +218,10 @@ describe('Character Definition Validation', () => {
       expect(result.context.layers.structural.isValid).toBe(true);
       expect(result.context.layers.semantic).toBeDefined();
       expect(result.context.layers.quality).toBeDefined();
-      
+
       // Should provide quality assessment breakdown
       expect(result.quality.breakdown).toBeDefined();
-      
+
       // May have suggestions for further improvement, but no errors
       expect(Array.isArray(result.suggestions)).toBe(true);
     });
@@ -317,15 +317,23 @@ describe('Character Definition Validation', () => {
         'No character components found. Expected components like core:name, core:personality, etc.'
       );
     });
-    
+
     it('should reject null or undefined input', async () => {
       const nullResult = await enhancedValidator.validateInput(null);
       expect(nullResult.isValid).toBe(false);
-      expect(nullResult.errors.some(e => e.includes('Character definition must be a JSON object'))).toBe(true);
-      
+      expect(
+        nullResult.errors.some((e) =>
+          e.includes('Character definition must be a JSON object')
+        )
+      ).toBe(true);
+
       const undefinedResult = await enhancedValidator.validateInput(undefined);
       expect(undefinedResult.isValid).toBe(false);
-      expect(undefinedResult.errors.some(e => e.includes('Character definition must be a JSON object'))).toBe(true);
+      expect(
+        undefinedResult.errors.some((e) =>
+          e.includes('Character definition must be a JSON object')
+        )
+      ).toBe(true);
     });
 
     it('should handle malformed core:name component appropriately', async () => {
@@ -337,7 +345,8 @@ describe('Character Definition Validation', () => {
             nickname: 'Testy', // Not a recognized name field
           },
           'core:personality': {
-            description: 'Test personality with some content to avoid depth warnings',
+            description:
+              'Test personality with some content to avoid depth warnings',
             traits: ['curious', 'analytical'],
           },
           'core:profile': {
@@ -354,7 +363,7 @@ describe('Character Definition Validation', () => {
         'Character name component exists but does not contain a valid name. Expected text, name, or value field.'
       );
       expect(result.isValid).toBe(false);
-      
+
       // Should still provide structural validation context
       expect(result.context.layers.structural).toBeDefined();
       expect(result.context.layers.structural.isValid).toBe(false);
@@ -370,7 +379,7 @@ describe('Character Definition Validation', () => {
         'Character definition must be a JSON object'
       );
     });
-    
+
     it('should handle array input gracefully', async () => {
       const arrayData = [{ 'core:name': { text: 'Test' } }];
 
@@ -382,7 +391,7 @@ describe('Character Definition Validation', () => {
       expect(result.errors.length).toBeGreaterThan(0);
     });
   });
-  
+
   describe('Enhanced Validation Features', () => {
     it('should provide quality assessment metrics', async () => {
       const richCharacter = {
@@ -390,20 +399,41 @@ describe('Character Definition Validation', () => {
           'core:name': { text: 'Dr. Elizabeth Harper' },
           'core:personality': {
             traits: ['meticulous', 'empathetic', 'driven', 'perfectionist'],
-            description: 'A dedicated medical researcher who brings both scientific rigor and deep compassion to her work. She has a tendency toward perfectionism that sometimes creates internal conflict.',
+            description:
+              'A dedicated medical researcher who brings both scientific rigor and deep compassion to her work. She has a tendency toward perfectionism that sometimes creates internal conflict.',
             temperament: 'melancholic-sanguine',
           },
           'core:profile': {
             age: 42,
             occupation: 'Chief Medical Research Officer',
-            background: 'Graduated magna cum laude from Harvard Medical School, completed residency at Johns Hopkins. Has published 23 peer-reviewed papers on infectious disease research.',
+            background:
+              'Graduated magna cum laude from Harvard Medical School, completed residency at Johns Hopkins. Has published 23 peer-reviewed papers on infectious disease research.',
           },
-          'core:likes': ['classical music', 'hiking', 'mystery novels', 'fine wine'],
-          'core:dislikes': ['bureaucratic red tape', 'sloppy methodology', 'social media'],
-          'core:fears': ['making critical errors', 'failing patients', 'losing her objectivity'],
+          'core:likes': [
+            'classical music',
+            'hiking',
+            'mystery novels',
+            'fine wine',
+          ],
+          'core:dislikes': [
+            'bureaucratic red tape',
+            'sloppy methodology',
+            'social media',
+          ],
+          'core:fears': [
+            'making critical errors',
+            'failing patients',
+            'losing her objectivity',
+          ],
           'core:goals': {
-            shortTerm: ['complete current vaccine trial', 'mentor junior researchers'],
-            longTerm: ['develop breakthrough treatment', 'establish research foundation'],
+            shortTerm: [
+              'complete current vaccine trial',
+              'mentor junior researchers',
+            ],
+            longTerm: [
+              'develop breakthrough treatment',
+              'establish research foundation',
+            ],
           },
         },
       };
@@ -417,15 +447,17 @@ describe('Character Definition Validation', () => {
       expect(result.quality).toBeDefined();
       expect(result.quality.overallScore).toBeGreaterThan(0.6); // Should have good quality (more realistic threshold)
       expect(result.quality.breakdown).toBeDefined();
-      
+
       // Should have suggestions even for good characters
       expect(Array.isArray(result.suggestions)).toBe(true);
-      
+
       // Should have timing information
       expect(result.context.validationTime).toBeGreaterThanOrEqual(0);
-      expect(result.context.layers.structural.duration).toBeGreaterThanOrEqual(0);
+      expect(result.context.layers.structural.duration).toBeGreaterThanOrEqual(
+        0
+      );
     });
-    
+
     it('should cache validation results for repeated inputs', async () => {
       const character = {
         components: {
@@ -438,12 +470,12 @@ describe('Character Definition Validation', () => {
       // First validation
       const result1 = await enhancedValidator.validateInput(character);
       expect(result1.isValid).toBe(true);
-      
+
       // Second validation should be faster (cached)
       const startTime = Date.now();
       const result2 = await enhancedValidator.validateInput(character);
       const endTime = Date.now();
-      
+
       expect(result2.isValid).toBe(true);
       // Cache hit should be very fast (under 10ms)
       expect(endTime - startTime).toBeLessThan(10);
@@ -477,7 +509,7 @@ describe('Validator Health and Statistics', () => {
 
   it('should provide validation statistics', () => {
     const stats = enhancedValidator.getValidationStats();
-    
+
     expect(stats).toBeDefined();
     expect(typeof stats.semanticRules).toBe('number');
     expect(typeof stats.qualityMetrics).toBe('number');
@@ -485,11 +517,11 @@ describe('Validator Health and Statistics', () => {
     expect(stats.semanticRules).toBeGreaterThan(0);
     expect(stats.qualityMetrics).toBeGreaterThan(0);
   });
-  
+
   it('should allow cache clearing', () => {
     // Clear cache should not throw
     expect(() => enhancedValidator.clearCache()).not.toThrow();
-    
+
     const afterClearStats = enhancedValidator.getValidationStats();
     expect(afterClearStats.cacheSize).toBe(0);
   });
@@ -504,7 +536,7 @@ describe('Specific Bug Fixes Verification', () => {
     testBed = createTestBed();
     const mockSchemaValidator = testBed.createMock('schemaValidator', [
       'validate',
-      'isSchemaLoaded', 
+      'isSchemaLoaded',
       'validateAndSanitizeResponse',
     ]);
     mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
@@ -527,34 +559,40 @@ describe('Specific Bug Fixes Verification', () => {
       components: {
         'core:name': { text: 'Bug Fix Test' },
         'core:personality': { description: 'Testing validation distinction' },
-        'core:speech_patterns': { 
+        'core:speech_patterns': {
           patterns: [], // Empty is OK for input
-          metadata: { generated: false } 
+          metadata: { generated: false },
         },
       },
     };
 
     const result = await enhancedValidator.validateInput(characterInput);
-    
+
     // Should pass because this is input validation, not response validation
     expect(result.isValid).toBe(true);
-    
+
     // Should not have speech pattern array validation errors
-    const hasPatternErrors = result.errors.some(error => 
-      error.toLowerCase().includes('speech patterns must be') ||
-      error.toLowerCase().includes('patterns must be an array')
+    const hasPatternErrors = result.errors.some(
+      (error) =>
+        error.toLowerCase().includes('speech patterns must be') ||
+        error.toLowerCase().includes('patterns must be an array')
     );
     expect(hasPatternErrors).toBe(false);
   });
-  
+
   it('should correctly extract names from various core:name formats', async () => {
     const validTestCases = [
       { nameData: { text: 'John Doe' } },
       { nameData: { name: 'Jane Smith' } },
       { nameData: { value: 'Bob Wilson' } },
-      { nameData: { personal: { firstName: 'Alice', lastName: 'Johnson' }, text: 'Alice Johnson' } },
+      {
+        nameData: {
+          personal: { firstName: 'Alice', lastName: 'Johnson' },
+          text: 'Alice Johnson',
+        },
+      },
     ];
-    
+
     for (const testCase of validTestCases) {
       const character = {
         components: {
@@ -563,14 +601,14 @@ describe('Specific Bug Fixes Verification', () => {
           'core:profile': { age: 25, occupation: 'Tester' },
         },
       };
-      
+
       const result = await enhancedValidator.validateInput(character);
-      
+
       expect(result.isValid).toBe(true);
       expect(result.context.layers.structural.isValid).toBe(true);
     }
   });
-  
+
   it('should reject core:name with invalid format', async () => {
     const character = {
       components: {
@@ -579,10 +617,12 @@ describe('Specific Bug Fixes Verification', () => {
         'core:profile': { age: 25, occupation: 'Tester' },
       },
     };
-    
+
     const result = await enhancedValidator.validateInput(character);
-    
+
     expect(result.isValid).toBe(false);
-    expect(result.errors.some(e => e.includes('does not contain a valid name'))).toBe(true);
+    expect(
+      result.errors.some((e) => e.includes('does not contain a valid name'))
+    ).toBe(true);
   });
 });

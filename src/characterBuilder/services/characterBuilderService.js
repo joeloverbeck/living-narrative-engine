@@ -88,6 +88,8 @@ export const CHARACTER_BUILDER_EVENTS = {
   CACHE_HIT: 'core:cache_hit',
   CACHE_MISS: 'core:cache_miss',
   CACHE_EVICTED: 'core:cache_evicted',
+  // Performance events
+  CHARACTER_BUILDER_PERFORMANCE_WARNING: 'core:character_builder_performance_warning',
 };
 
 /**

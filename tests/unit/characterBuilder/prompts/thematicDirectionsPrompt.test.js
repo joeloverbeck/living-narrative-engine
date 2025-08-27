@@ -30,7 +30,7 @@ describe('ThematicDirectionsPrompt', () => {
       it('should export correct LLM parameters', () => {
         expect(CHARACTER_BUILDER_LLM_PARAMS).toEqual({
           temperature: 0.7,
-          max_tokens: 2000,
+          max_tokens: 3000,
         });
       });
 
@@ -580,7 +580,7 @@ describe('ThematicDirectionsPrompt', () => {
         },
         defaultParameters: {
           temperature: 0.7, // Should be overridden by CHARACTER_BUILDER_LLM_PARAMS
-          max_tokens: 2000, // Should be overridden by CHARACTER_BUILDER_LLM_PARAMS
+          max_tokens: 3000, // Should be overridden by CHARACTER_BUILDER_LLM_PARAMS
         },
       });
     });

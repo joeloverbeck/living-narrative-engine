@@ -8,28 +8,29 @@ mod_id:scope_name := expression
 
 ## Sources
 
-| Source | Description | Example |
-|--------|-------------|---------|
-| `actor` | Current actor | `actor` |
-| `location` | Current location | `location` |
-| `target` | Current target | `target` |
+| Source                | Description                 | Example                |
+| --------------------- | --------------------------- | ---------------------- |
+| `actor`               | Current actor               | `actor`                |
+| `location`            | Current location            | `location`             |
+| `target`              | Current target              | `target`               |
 | `entities(component)` | All entities with component | `entities(core:actor)` |
-| `none` | Empty set | `none` |
-| `self` | Current entity | `self` |
+| `none`                | Empty set                   | `none`                 |
+| `self`                | Current entity              | `self`                 |
 
 ## Operators
 
-| Operator | Purpose | Example |
-|----------|---------|---------|
-| `.` | Property access | `actor.core:stats` |
-| `[]` | Array iteration | `actor.items[]` |
-| `+` or `\|` | Union | `actor + location` |
-| `:` | Namespace | `core:actor` |
-| `[{...}]` | Filter | `entities[{">": [...]}]` |
+| Operator    | Purpose         | Example                  |
+| ----------- | --------------- | ------------------------ |
+| `.`         | Property access | `actor.core:stats`       |
+| `[]`        | Array iteration | `actor.items[]`          |
+| `+` or `\|` | Union           | `actor + location`       |
+| `:`         | Namespace       | `core:actor`             |
+| `[{...}]`   | Filter          | `entities[{">": [...]}]` |
 
 ## JSON Logic Operators
 
 ### Comparison
+
 - `==` Equal
 - `!=` Not equal
 - `>` Greater than
@@ -38,11 +39,13 @@ mod_id:scope_name := expression
 - `<=` Less or equal
 
 ### Logical
+
 - `and` All conditions must be true
 - `or` At least one condition must be true
 - `not` Negation
 
 ### Arithmetic
+
 - `+` Addition
 - `-` Subtraction
 - `*` Multiplication
@@ -50,17 +53,20 @@ mod_id:scope_name := expression
 - `%` Modulo
 
 ### Variables
+
 - `{"var": "path"}` Access variable
 - `{"var": "entity.components.core:stats.level"}` Component access
 
 ## Common Filter Patterns
 
 ### Basic Comparison
+
 ```
 [{">": [{"var": "entity.components.core:stats.level"}, 5]}]
 ```
 
 ### AND Condition
+
 ```
 [{
   "and": [
@@ -71,6 +77,7 @@ mod_id:scope_name := expression
 ```
 
 ### OR Condition
+
 ```
 [{
   "or": [
@@ -81,16 +88,19 @@ mod_id:scope_name := expression
 ```
 
 ### Condition Reference
+
 ```
 [{"condition_ref": "core:condition-name"}]
 ```
 
 ### Not Equal to Current Actor
+
 ```
 [{"!=": [{"var": "id"}, {"var": "actor.id"}]}]
 ```
 
 ### Same Location
+
 ```
 [{
   "==": [
@@ -103,6 +113,7 @@ mod_id:scope_name := expression
 ## Special Resolvers
 
 ### Clothing
+
 - `actor.topmost_clothing[]` - Topmost items by layer
 - `actor.all_clothing[]` - All clothing
 - `actor.outer_clothing[]` - Outer layer only
@@ -110,6 +121,7 @@ mod_id:scope_name := expression
 - `actor.topmost_clothing.slot_name` - Specific slot
 
 ### Common Component Paths
+
 - `actor.core:stats.level` - Actor level
 - `actor.core:health.current` - Current health
 - `actor.core:inventory.items[]` - Inventory items
@@ -119,6 +131,7 @@ mod_id:scope_name := expression
 ## Complete Examples
 
 ### All Other Actors at Location
+
 ```
 my_mod:other_actors_here := entities(core:actor)[{
   "and": [
@@ -134,6 +147,7 @@ my_mod:other_actors_here := entities(core:actor)[{
 ```
 
 ### High-Level Actors
+
 ```
 my_mod:veterans := entities(core:actor)[{
   ">": [{"var": "entity.components.core:stats.level"}, 10]
@@ -141,6 +155,7 @@ my_mod:veterans := entities(core:actor)[{
 ```
 
 ### Items with Quantity > 1
+
 ```
 my_mod:stackable_items := actor.core:inventory.items[{
   ">": [{"var": "quantity"}, 1]
@@ -148,14 +163,16 @@ my_mod:stackable_items := actor.core:inventory.items[{
 ```
 
 ### Union of Multiple Sources
+
 ```
-my_mod:all_targets := 
-  entities(core:actor) + 
-  entities(core:item) + 
+my_mod:all_targets :=
+  entities(core:actor) +
+  entities(core:item) +
   entities(furniture:seat)
 ```
 
 ### Wounded Allies (< 30% health)
+
 ```
 my_mod:wounded := entities(core:actor)[{
   "and": [
@@ -171,6 +188,7 @@ my_mod:wounded := entities(core:actor)[{
 ```
 
 ### Complex Nested Filter
+
 ```
 my_mod:special_targets := entities(core:actor)[{
   "and": [

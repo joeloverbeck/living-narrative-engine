@@ -13,6 +13,7 @@ import {
   UIStateManager,
   UI_STATES,
 } from '../../shared/characterBuilder/uiStateManager.js';
+import { CHARACTER_BUILDER_EVENTS } from '../services/characterBuilderService.js';
 
 /** @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger */
 /** @typedef {import('../services/characterBuilderService.js').CharacterBuilderService} CharacterBuilderService */
@@ -3077,15 +3078,15 @@ export class BaseCharacterBuilderController {
 
       // Dispatch performance event if duration exceeds threshold
       if (duration > 100) {
-        this.eventBus.dispatch({
-          type: 'CHARACTER_BUILDER_PERFORMANCE_WARNING',
-          payload: {
+        this.eventBus.dispatch(
+          CHARACTER_BUILDER_EVENTS.CHARACTER_BUILDER_PERFORMANCE_WARNING,
+          {
             controller: this.constructor.name,
             measurement: measureName,
             duration,
             threshold: 100,
-          },
-        });
+          }
+        );
       }
 
       return duration;

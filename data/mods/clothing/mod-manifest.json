@@ -31,12 +31,15 @@
         "dark_indigo_denim_jeans.entity.json",
         "dark_olive_cotton_twill_chore_jacket.entity.json",
         "fitted_navy_cotton_boxer_briefs.entity.json",
+        "flat_trainers.entity.json",
         "forest_green_cotton_linen_button_down.entity.json",
         "graphite_wool_wide_leg_trousers.entity.json",
         "gray_ribknit_cotton_socks.entity.json",
+        "high_compression_leggings.entity.json",
         "indigo_denim_trucker_jacket.entity.json",
         "leather_stiletto_pumps.entity.json",
         "nude_thong.entity.json",
+        "nylon_sports_bra.entity.json",
         "pink_off_shoulder_crop_top.entity.json",
         "pink_short_flared_skirt.entity.json",
         "sand_beige_cotton_chinos.entity.json",
@@ -51,15 +54,21 @@
       ],
       "instances": []
     },
-    "actions": ["remove_clothing.action.json"],
+    "actions": [
+      "remove_clothing.action.json"
+    ],
     "events": [
       "clothing_equipped.event.json",
       "clothing_instantiation_completed.event.json",
       "clothing_layer_conflict.event.json",
       "clothing_unequipped.event.json"
     ],
-    "rules": ["handle_remove_clothing.rule.json"],
-    "conditions": ["event-is-action-remove-clothing.condition.json"],
+    "rules": [
+      "handle_remove_clothing.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-remove-clothing.condition.json"
+    ],
     "scopes": [
       "target_topmost_torso_lower_clothing.scope",
       "target_topmost_torso_lower_clothing_no_accessories.scope",

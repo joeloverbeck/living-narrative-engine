@@ -33,42 +33,41 @@ describe('positioning:actors_in_location_facing scope integration', () => {
         const conditions = {
           'core:entity-at-location': {
             logic: {
-              "==": [
-                { "var": "entity.components.core:position.locationId" },
-                { "var": "location.id" }
-              ]
-            }
+              '==': [
+                { var: 'entity.components.core:position.locationId' },
+                { var: 'location.id' },
+              ],
+            },
           },
           'core:entity-is-not-current-actor': {
             logic: {
-              "!=": [
-                { "var": "entity.id" },
-                { "var": "actor.id" }
-              ]
-            }
+              '!=': [{ var: 'entity.id' }, { var: 'actor.id' }],
+            },
           },
           'core:entity-has-actor-component': {
             logic: {
-              "!!": { "var": "entity.components.core:actor" }
-            }
+              '!!': { var: 'entity.components.core:actor' },
+            },
           },
           'positioning:entity-in-facing-away': {
             logic: {
-              "in": [
-                { "var": "entity.id" },
-                { "var": "actor.components.positioning:facing_away.facing_away_from" }
-              ]
-            }
-          }
+              in: [
+                { var: 'entity.id' },
+                {
+                  var: 'actor.components.positioning:facing_away.facing_away_from',
+                },
+              ],
+            },
+          },
         };
         return conditions[conditionId] || null;
-      }
+      },
     };
 
     // Initialize JSON Logic Evaluation Service
     jsonLogicEval = new JsonLogicEvaluationService({
       logger,
-      gameDataRepository: mockGameDataRepository
+      gameDataRepository: mockGameDataRepository,
     });
 
     // Create scope registry and register the necessary scopes

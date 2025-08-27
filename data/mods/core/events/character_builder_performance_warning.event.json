@@ -1,0 +1,37 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:character_builder_performance_warning",
+  "description": "Fired when a character builder operation exceeds performance thresholds.",
+  "payloadSchema": {
+    "title": "Core: Character Builder Performance Warning Event Payload",
+    "description": "Defines the payload structure for the 'core:character_builder_performance_warning' event, used for monitoring performance issues in character builder operations.",
+    "type": "object",
+    "properties": {
+      "controller": {
+        "type": "string",
+        "description": "Required. The name of the controller class where the performance issue occurred."
+      },
+      "measurement": {
+        "type": "string",
+        "description": "Required. The name of the performance measurement that exceeded the threshold."
+      },
+      "duration": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Required. The actual duration of the operation in milliseconds."
+      },
+      "threshold": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Required. The performance threshold that was exceeded in milliseconds."
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Optional. ISO 8601 timestamp of when the performance warning occurred."
+      }
+    },
+    "required": ["controller", "measurement", "duration", "threshold"],
+    "additionalProperties": false
+  }
+}

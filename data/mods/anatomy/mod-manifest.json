@@ -26,6 +26,7 @@
         "human_ass_cheek.entity.json",
         "human_ass_cheek_bubbly.entity.json",
         "human_ass_cheek_firm.entity.json",
+        "human_ass_cheek_firm_muscular_shelf.entity.json",
         "human_ass_cheek_firm_thick.entity.json",
         "human_ass_cheek_round.entity.json",
         "human_ass_cheek_small_bubbly.entity.json",
@@ -33,6 +34,7 @@
         "human_asshole.entity.json",
         "human_breast.entity.json",
         "human_breast_a_cup.entity.json",
+        "human_breast_c_cup_firm.entity.json",
         "human_breast_d_cup.entity.json",
         "human_breast_g_cup.entity.json",
         "human_breast_shelf.entity.json",
@@ -43,14 +45,17 @@
         "human_eye_cobalt.entity.json",
         "human_eye_green.entity.json",
         "human_female_torso.entity.json",
+        "human_female_torso_hulking.entity.json",
         "human_foot.entity.json",
         "human_hair.entity.json",
         "human_hair_blonde.entity.json",
+        "human_hair_medium_brown_ponytail.entity.json",
         "human_hair_raven.entity.json",
         "human_hair_red_ponytails.entity.json",
         "human_hair_short_brown_wavy.entity.json",
         "human_hand.entity.json",
         "human_leg.entity.json",
+        "human_leg_hulking.entity.json",
         "human_leg_muscular.entity.json",
         "human_leg_muscular_hairy.entity.json",
         "human_leg_shapely.entity.json",
@@ -65,9 +70,11 @@
         "human_testicle_thick.entity.json",
         "human_vagina.entity.json",
         "humanoid_arm.entity.json",
+        "humanoid_arm_hulking.entity.json",
         "humanoid_arm_muscular.entity.json",
         "humanoid_arm_muscular_hairy.entity.json",
         "humanoid_arm_slim.entity.json",
+        "humanoid_arm_soft.entity.json",
         "humanoid_ear.entity.json",
         "humanoid_head.entity.json",
         "humanoid_head_bearded.entity.json",
@@ -78,15 +85,24 @@
       ],
       "instances": []
     },
-    "blueprints": ["human_female.blueprint.json", "human_male.blueprint.json"],
+    "blueprints": [
+      "human_female.blueprint.json",
+      "human_male.blueprint.json"
+    ],
     "recipes": [
       "gorgeous_milf.recipe.json",
       "human_female.recipe.json",
       "human_male.recipe.json"
     ],
-    "anatomyFormatting": ["default.json"],
-    "libraries": ["humanoid.slot-library.json"],
-    "parts": ["humanoid_core.part.json"],
+    "anatomyFormatting": [
+      "default.json"
+    ],
+    "libraries": [
+      "humanoid.slot-library.json"
+    ],
+    "parts": [
+      "humanoid_core.part.json"
+    ],
     "events": [
       "interaction_click.event.json",
       "interaction_pan.event.json",

@@ -53,7 +53,8 @@ describe('Thematic Direction Update Events - Integration Test', () => {
     schemaValidator.validateAgainstSchema = jest.fn().mockReturnValue(true);
     schemaValidator.addSchema = jest.fn().mockResolvedValue(undefined);
 
-    // Register the core:direction_updated event definition
+    // Only register the core:direction_updated event definition if it's not already loaded
+    // This prevents duplicate registration warnings when mod loading has already registered it
     const eventDefinition = {
       id: 'core:direction_updated',
       description: 'Fired when a thematic direction is updated.',
@@ -72,11 +73,17 @@ describe('Thematic Direction Update Events - Integration Test', () => {
       },
     };
 
-    await schemaValidator.addSchema(
-      eventDefinition.payloadSchema,
-      `${eventDefinition.id}#payload`
+    // Check if event definition is already registered before adding it
+    const existingEventDef = dataRegistry.getEventDefinition(
+      eventDefinition.id
     );
-    dataRegistry.setEventDefinition(eventDefinition.id, eventDefinition);
+    if (!existingEventDef) {
+      await schemaValidator.addSchema(
+        eventDefinition.payloadSchema,
+        `${eventDefinition.id}#payload`
+      );
+      dataRegistry.setEventDefinition(eventDefinition.id, eventDefinition);
+    }
 
     // Create test character concept
     testConcept = {

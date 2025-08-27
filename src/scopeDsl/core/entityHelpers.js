@@ -243,19 +243,18 @@ export function createEvaluationContext(
     }
 
     // If no components but has componentTypeIds or getAllComponents method, build them
-    if (!entity.components && (entity.componentTypeIds || entity.getAllComponents)) {
+    if (
+      !entity.components &&
+      (entity.componentTypeIds || entity.getAllComponents)
+    ) {
       let components;
-      
+
       // If entity has getAllComponents method (Entity class), use it
       if (typeof entity.getAllComponents === 'function') {
         components = entity.getAllComponents();
       } else {
         // Otherwise build from componentTypeIds
-        components = buildComponents(
-          entityId || entity.id,
-          entity,
-          gateway
-        );
+        components = buildComponents(entityId || entity.id, entity, gateway);
       }
 
       // Check if it's a plain object or has a custom prototype
@@ -433,19 +432,18 @@ export function preprocessActorForEvaluation(actorEntity, gateway) {
     }
 
     // If no components but has componentTypeIds or getAllComponents method, build them
-    if (!entity.components && (entity.componentTypeIds || entity.getAllComponents)) {
+    if (
+      !entity.components &&
+      (entity.componentTypeIds || entity.getAllComponents)
+    ) {
       let components;
-      
+
       // If entity has getAllComponents method (Entity class), use it
       if (typeof entity.getAllComponents === 'function') {
         components = entity.getAllComponents();
       } else {
         // Otherwise build from componentTypeIds
-        components = buildComponents(
-          entityId || entity.id,
-          entity,
-          gateway
-        );
+        components = buildComponents(entityId || entity.id, entity, gateway);
       }
 
       // Check if it's a plain object or has a custom prototype

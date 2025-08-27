@@ -1,0 +1,82 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "TRAITS_GENERATION_FAILED",
+  "description": "Dispatched when character traits generation fails",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "conceptId": {
+        "type": "string",
+        "description": "ID of the character concept that was being used"
+      },
+      "directionId": {
+        "type": "string",
+        "description": "ID of the thematic direction that was being applied"
+      },
+      "error": {
+        "type": "string",
+        "description": "Error message describing the failure"
+      },
+      "failureStage": {
+        "type": "string",
+        "description": "Stage where the generation failed",
+        "enum": [
+          "llm_request",
+          "json_parsing",
+          "validation",
+          "retry_exhausted",
+          "unknown"
+        ]
+      },
+      "processingTime": {
+        "type": "number",
+        "description": "Time elapsed before failure in milliseconds"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO 8601 timestamp when traits generation failed"
+      },
+      "metadata": {
+        "type": "object",
+        "description": "Additional failure metadata",
+        "properties": {
+          "attemptNumber": {
+            "type": "number",
+            "description": "Which attempt number failed (1-based)"
+          },
+          "maxRetries": {
+            "type": "number",
+            "description": "Maximum number of retries configured"
+          },
+          "llmConfigId": {
+            "type": "string",
+            "description": "LLM configuration ID that was being used"
+          },
+          "promptVersion": {
+            "type": "string",
+            "description": "Version of the traits generation prompt"
+          },
+          "errorCode": {
+            "type": "string",
+            "description": "Structured error code if available"
+          },
+          "stackTrace": {
+            "type": "string",
+            "description": "Stack trace for debugging (only in development)"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "required": [
+      "conceptId",
+      "directionId",
+      "error",
+      "failureStage",
+      "processingTime",
+      "timestamp"
+    ],
+    "additionalProperties": true
+  }
+}

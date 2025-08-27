@@ -65,8 +65,7 @@
         "maxFileAge": {
           "type": "integer",
           "minimum": 3600,
-          "description": "Maximum age of trace files in seconds (when using age policy)",
-          "default": 86400
+          "description": "Maximum age of trace files in seconds (when using age policy)"
         },
         "outputFormats": {
           "type": "array",

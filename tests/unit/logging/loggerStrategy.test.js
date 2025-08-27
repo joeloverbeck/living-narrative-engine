@@ -21,10 +21,14 @@ import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 describe('LoggerStrategy', () => {
   let originalEnv;
   let consoleSpies;
+  let originalJestWorkerId;
 
   beforeEach(() => {
     // Save original environment
     originalEnv = { ...process.env };
+    
+    // Save JEST_WORKER_ID specifically since Jest sets it
+    originalJestWorkerId = process.env.JEST_WORKER_ID;
 
     // Mock console methods to prevent output during tests
     consoleSpies = {
@@ -38,6 +42,11 @@ describe('LoggerStrategy', () => {
   afterEach(() => {
     // Restore original environment
     process.env = originalEnv;
+    
+    // Restore JEST_WORKER_ID if it was originally set
+    if (originalJestWorkerId !== undefined) {
+      process.env.JEST_WORKER_ID = originalJestWorkerId;
+    }
 
     // Restore console spies
     Object.values(consoleSpies).forEach((spy) => spy.mockRestore());
@@ -48,6 +57,7 @@ describe('LoggerStrategy', () => {
       // Clear environment to test true defaults
       delete process.env.DEBUG_LOG_MODE;
       delete process.env.NODE_ENV;
+      delete process.env.JEST_WORKER_ID; // Clear Jest environment
 
       const strategy = new LoggerStrategy();
       expect(strategy.getMode()).toBe(LoggerMode.CONSOLE);
@@ -71,8 +81,9 @@ describe('LoggerStrategy', () => {
     });
 
     it('should map NODE_ENV to appropriate mode', () => {
-      // Clear any existing DEBUG_LOG_MODE to test NODE_ENV fallback
+      // Clear any existing DEBUG_LOG_MODE and JEST_WORKER_ID to test NODE_ENV fallback
       delete process.env.DEBUG_LOG_MODE;
+      delete process.env.JEST_WORKER_ID;
 
       // Test each NODE_ENV value in isolation with fresh config
       process.env.NODE_ENV = 'production';
@@ -89,6 +100,11 @@ describe('LoggerStrategy', () => {
     });
 
     it('should use config mode when no explicit mode or env vars', () => {
+      // Clear all environment variables that could affect mode detection
+      delete process.env.DEBUG_LOG_MODE;
+      delete process.env.NODE_ENV;
+      delete process.env.JEST_WORKER_ID;
+      
       const config = { mode: LoggerMode.NONE };
       const strategy = new LoggerStrategy({ config });
       expect(strategy.getMode()).toBe(LoggerMode.NONE);
@@ -98,9 +114,41 @@ describe('LoggerStrategy', () => {
       // Clear environment to test fallback behavior
       delete process.env.DEBUG_LOG_MODE;
       delete process.env.NODE_ENV;
+      delete process.env.JEST_WORKER_ID;
 
       const strategy = new LoggerStrategy({ mode: 'invalid' });
       expect(strategy.getMode()).toBe(LoggerMode.CONSOLE);
+    });
+
+    it('should detect test mode when JEST_WORKER_ID is set', () => {
+      // Clear other environment variables to isolate JEST_WORKER_ID detection
+      delete process.env.DEBUG_LOG_MODE;
+      delete process.env.NODE_ENV;
+      process.env.JEST_WORKER_ID = '1';
+      
+      const strategy = new LoggerStrategy();
+      expect(strategy.getMode()).toBe(LoggerMode.TEST);
+      
+      // Clean up
+      delete process.env.JEST_WORKER_ID;
+    });
+
+    it('should detect test mode with either NODE_ENV or JEST_WORKER_ID', () => {
+      delete process.env.DEBUG_LOG_MODE;
+      
+      // Test with only JEST_WORKER_ID
+      delete process.env.NODE_ENV;
+      process.env.JEST_WORKER_ID = '2';
+      let strategy = new LoggerStrategy();
+      expect(strategy.getMode()).toBe(LoggerMode.TEST);
+      
+      // Test with both
+      process.env.NODE_ENV = 'test';
+      strategy = new LoggerStrategy();
+      expect(strategy.getMode()).toBe(LoggerMode.TEST);
+      
+      // Clean up
+      delete process.env.JEST_WORKER_ID;
     });
   });
 
@@ -342,6 +390,7 @@ describe('LoggerStrategy', () => {
       // Clear environment to test config defaults
       delete process.env.DEBUG_LOG_MODE;
       delete process.env.NODE_ENV;
+      delete process.env.JEST_WORKER_ID;
 
       const config = { logLevel: 'DEBUG' };
       const strategy = new LoggerStrategy({ config });
@@ -352,6 +401,7 @@ describe('LoggerStrategy', () => {
       // Clear environment to test config fallback
       delete process.env.DEBUG_LOG_MODE;
       delete process.env.NODE_ENV;
+      delete process.env.JEST_WORKER_ID;
 
       const config = { mode: 'invalid-mode' };
       const strategy = new LoggerStrategy({ config });

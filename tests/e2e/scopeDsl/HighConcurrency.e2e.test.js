@@ -115,10 +115,16 @@ describe('High Concurrency E2E', () => {
                 {
                   and: [
                     {
-                      '>=': [{ var: 'entity.components.core:stats.agility' }, 12],
+                      '>=': [
+                        { var: 'entity.components.core:stats.agility' },
+                        12,
+                      ],
                     },
                     {
-                      '>': [{ var: 'entity.components.core:health.current' }, 50],
+                      '>': [
+                        { var: 'entity.components.core:health.current' },
+                        50,
+                      ],
                     },
                   ],
                 },
@@ -198,6 +204,9 @@ describe('High Concurrency E2E', () => {
 
   /**
    * Creates a concurrency test actor with specified configuration
+   *
+   * @param actorId
+   * @param config
    */
   async function createConcurrencyTestActor(actorId, config = {}) {
     const {
@@ -232,18 +241,27 @@ describe('High Concurrency E2E', () => {
 
   /**
    * Creates dataset for concurrency testing
+   *
+   * @param size
    */
   async function createConcurrencyDataset(size) {
     const entities = [];
 
     // Create test location
-    const locationDefinition = new EntityDefinition('concurrency-test-location', {
-      description: 'Concurrency test location',
-      components: {
-        'core:position': { x: 0, y: 0 },
-      },
-    });
-    registry.store('entityDefinitions', 'concurrency-test-location', locationDefinition);
+    const locationDefinition = new EntityDefinition(
+      'concurrency-test-location',
+      {
+        description: 'Concurrency test location',
+        components: {
+          'core:position': { x: 0, y: 0 },
+        },
+      }
+    );
+    registry.store(
+      'entityDefinitions',
+      'concurrency-test-location',
+      locationDefinition
+    );
     await entityManager.createEntityInstance('concurrency-test-location', {
       instanceId: 'concurrency-test-location',
       definitionId: 'concurrency-test-location',
@@ -266,7 +284,9 @@ describe('High Concurrency E2E', () => {
    */
   async function createConcurrencyGameContext() {
     return {
-      currentLocation: await entityManager.getEntityInstance('concurrency-test-location'),
+      currentLocation: await entityManager.getEntityInstance(
+        'concurrency-test-location'
+      ),
       entityManager: entityManager,
       allEntities: Array.from(entityManager.entities || []),
       jsonLogicEval: jsonLogicService,
@@ -304,7 +324,7 @@ describe('High Concurrency E2E', () => {
           ScopeTestUtilities.resolveScopeE2E(scopeId, testActor, gameContext, {
             scopeRegistry,
             scopeEngine,
-          }).catch(error => ({ error, scopeId, operationIndex: i }))
+          }).catch((error) => ({ error, scopeId, operationIndex: i }))
         );
       }
 
@@ -314,8 +334,8 @@ describe('High Concurrency E2E', () => {
       const totalTime = endTime - startTime;
 
       // Assert - All operations should complete successfully
-      const successfulResults = results.filter(result => !result.error);
-      const failedResults = results.filter(result => result.error);
+      const successfulResults = results.filter((result) => !result.error);
+      const failedResults = results.filter((result) => result.error);
 
       expect(successfulResults).toHaveLength(concurrentOperations);
       expect(failedResults).toHaveLength(0);
@@ -406,10 +426,15 @@ describe('High Concurrency E2E', () => {
 
         for (let op = 0; op < operationsPerRound; op++) {
           promises.push(
-            ScopeTestUtilities.resolveScopeE2E(scopeId, testActor, gameContext, {
-              scopeRegistry,
-              scopeEngine,
-            })
+            ScopeTestUtilities.resolveScopeE2E(
+              scopeId,
+              testActor,
+              gameContext,
+              {
+                scopeRegistry,
+                scopeEngine,
+              }
+            )
           );
         }
 
@@ -417,7 +442,7 @@ describe('High Concurrency E2E', () => {
         allResults.push(...roundResults);
 
         // Small delay between rounds to allow cache stabilization
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
 
       // Assert - All results should be consistent despite caching
@@ -474,7 +499,7 @@ describe('High Concurrency E2E', () => {
           ScopeTestUtilities.resolveScopeE2E(scopeId, testActor, gameContext, {
             scopeRegistry,
             scopeEngine,
-          }).then(result => ({ result, scopeId, index: i }))
+          }).then((result) => ({ result, scopeId, index: i }))
         );
       }
 
@@ -538,7 +563,7 @@ describe('High Concurrency E2E', () => {
           ScopeTestUtilities.resolveScopeE2E(scopeId, testActor, gameContext, {
             scopeRegistry,
             scopeEngine,
-          }).then(result => {
+          }).then((result) => {
             const endTime = Date.now();
             return {
               result,
@@ -612,7 +637,7 @@ describe('High Concurrency E2E', () => {
           ScopeTestUtilities.resolveScopeE2E(scopeId, testActor, gameContext, {
             scopeRegistry,
             scopeEngine,
-          }).then(result => ({
+          }).then((result) => ({
             result,
             scopeId,
             operationIndex: i,
@@ -625,7 +650,7 @@ describe('High Concurrency E2E', () => {
 
         // Small delay between launches to create rapid succession
         if (i < totalOperations - 1) {
-          await new Promise(resolve => setTimeout(resolve, operationDelay));
+          await new Promise((resolve) => setTimeout(resolve, operationDelay));
         }
       }
 
@@ -683,10 +708,26 @@ describe('High Concurrency E2E', () => {
       const operationMix = [];
 
       const complexityLevels = [
-        { scopeId: 'concurrency:simple_filter', complexity: 'simple', weight: 0.4 },
-        { scopeId: 'concurrency:complex_filter', complexity: 'complex', weight: 0.3 },
-        { scopeId: 'concurrency:arithmetic_filter', complexity: 'moderate', weight: 0.2 },
-        { scopeId: 'concurrency:union_scope', complexity: 'complex', weight: 0.1 },
+        {
+          scopeId: 'concurrency:simple_filter',
+          complexity: 'simple',
+          weight: 0.4,
+        },
+        {
+          scopeId: 'concurrency:complex_filter',
+          complexity: 'complex',
+          weight: 0.3,
+        },
+        {
+          scopeId: 'concurrency:arithmetic_filter',
+          complexity: 'moderate',
+          weight: 0.2,
+        },
+        {
+          scopeId: 'concurrency:union_scope',
+          complexity: 'complex',
+          weight: 0.1,
+        },
       ];
 
       for (let i = 0; i < totalOperations; i++) {
@@ -714,10 +755,15 @@ describe('High Concurrency E2E', () => {
         });
 
         promises.push(
-          ScopeTestUtilities.resolveScopeE2E(selectedLevel.scopeId, testActor, gameContext, {
-            scopeRegistry,
-            scopeEngine,
-          }).then(result => ({
+          ScopeTestUtilities.resolveScopeE2E(
+            selectedLevel.scopeId,
+            testActor,
+            gameContext,
+            {
+              scopeRegistry,
+              scopeEngine,
+            }
+          ).then((result) => ({
             result,
             operationIndex: i,
             scopeId: selectedLevel.scopeId,
@@ -777,17 +823,16 @@ describe('High Concurrency E2E', () => {
       });
 
       // All complexity levels should maintain consistency
-      Object.values(consistencyResults).forEach(consistent => {
+      Object.values(consistencyResults).forEach((consistent) => {
         expect(consistent).toBe(true);
       });
 
       logger.info('Mixed complexity concurrent operations validation', {
         totalOperations,
         complexityDistribution: Object.fromEntries(
-          Array.from(resultsByComplexity.entries()).map(([complexity, results]) => [
-            complexity,
-            results.length,
-          ])
+          Array.from(resultsByComplexity.entries()).map(
+            ([complexity, results]) => [complexity, results.length]
+          )
         ),
         totalTime: `${totalTime}ms`,
         averageTimePerOp: `${(totalTime / totalOperations).toFixed(2)}ms`,
@@ -802,6 +847,11 @@ describe('High Concurrency E2E', () => {
 });
 
 // Helper function for array equality comparison
+/**
+ *
+ * @param a
+ * @param b
+ */
 function arraysEqual(a, b) {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {

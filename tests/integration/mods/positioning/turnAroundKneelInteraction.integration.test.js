@@ -86,7 +86,6 @@ describe('Turn around and kneel before interaction', () => {
 
     // Register scopes
     scopeRegistry.initialize(Object.fromEntries(parsedScopes));
-    
 
     scopeEngine = new ScopeEngine({ scopeRegistry });
 
@@ -423,20 +422,18 @@ describe('Turn around and kneel before interaction', () => {
     actor2Current = entityManager.getEntityInstance('test:actor2');
     const facingAwayComponent =
       actor2Current.components['positioning:facing_away'];
-    
-    
+
     expect(
       !facingAwayComponent ||
         !facingAwayComponent.facing_away_from?.includes('test:actor1')
     ).toBe(true);
 
-
     // 4. Discover available actions for actor2 (who is now facing actor1)
     const actor2Entity = entityManager.getEntityInstance('test:actor2');
-    
+
     const discoveryResult =
       await actionDiscoveryService.getValidActions(actor2Entity);
-    
+
     const availableActions = discoveryResult.actions || [];
 
     // 5. Verify kneel_before IS available for actor1
@@ -507,7 +504,7 @@ describe('Turn around and kneel before interaction', () => {
     if (kneelAction) {
       // Should be able to kneel before actor3 but not actor1 (facing away from actor1)
       expect(kneelAction.params).toBeDefined();
-      
+
       // Check if the discovered action targets actor3 or actor1
       if (kneelAction.params.targetId === 'test:actor3') {
         expect(kneelAction.params.targetId).toBe('test:actor3');
