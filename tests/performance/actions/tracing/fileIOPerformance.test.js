@@ -3,7 +3,14 @@
  * @description Tests file writing performance using actual FileTraceOutputHandler
  */
 
-import { describe, it, expect, beforeEach, afterEach, afterAll } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  afterAll,
+} from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import FileTraceOutputHandler from '../../../../src/actions/tracing/fileTraceOutputHandler.js';
 import fs from 'fs';
@@ -33,9 +40,11 @@ describe('File I/O Performance Tests', () => {
       }
     } catch (error) {
       // Ignore cleanup errors - directory might not exist or be in use
-      console.warn(`Warning: Could not clean up test directory: ${error.message}`);
+      console.warn(
+        `Warning: Could not clean up test directory: ${error.message}`
+      );
     }
-    
+
     // Also clean up testBed
     testBed.cleanup();
   });

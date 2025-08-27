@@ -289,7 +289,11 @@ export default function createFilterResolver({
               trace.addLog('debug', `Item ${item} failed filter`, source);
             }
           } catch (error) {
-            // Handle errors gracefully
+            // Re-throw errors for missing condition references
+            if (error.message && error.message.includes('Could not resolve condition_ref')) {
+              throw error;
+            }
+            // Handle other errors gracefully
             if (trace) {
               trace.addLog(
                 'error',

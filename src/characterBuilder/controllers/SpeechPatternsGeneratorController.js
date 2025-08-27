@@ -536,7 +536,9 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       errors,
       componentCount,
       hasRequiredComponents,
-      characterName: nameComponent ? this.#extractCharacterName(nameComponent) : null,
+      characterName: nameComponent
+        ? this.#extractCharacterName(nameComponent)
+        : null,
     };
   }
 

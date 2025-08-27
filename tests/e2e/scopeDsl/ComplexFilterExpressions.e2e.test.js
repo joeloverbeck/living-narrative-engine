@@ -283,24 +283,24 @@ describe('Complex Filter Expressions E2E', () => {
     const testConfigs = [
       // Entities that should pass most filters
       { level: 12, strength: 25, agility: 20, health: 70 }, // High level, strong, agile
-      { level: 8, strength: 22, agility: 18, health: 65 },  // Medium-high stats
+      { level: 8, strength: 22, agility: 18, health: 65 }, // Medium-high stats
       { level: 15, strength: 30, agility: 25, health: 75 }, // Very high stats
-      { level: 6, strength: 21, agility: 16, health: 45 },  // Just above thresholds
+      { level: 6, strength: 21, agility: 16, health: 45 }, // Just above thresholds
       { level: 11, strength: 28, agility: 22, health: 85 }, // High level and strength
-      
+
       // Entities that should pass some filters but not others
-      { level: 7, strength: 19, agility: 22, health: 60 },  // High agility, lower strength
-      { level: 4, strength: 25, agility: 20, health: 30 },  // Low level but good stats
-      { level: 9, strength: 15, agility: 28, health: 90 },  // High agility, low strength
+      { level: 7, strength: 19, agility: 22, health: 60 }, // High agility, lower strength
+      { level: 4, strength: 25, agility: 20, health: 30 }, // Low level but good stats
+      { level: 9, strength: 15, agility: 28, health: 90 }, // High agility, low strength
       { level: 13, strength: 12, agility: 30, health: 55 }, // High level and agility
-      { level: 3, strength: 35, agility: 10, health: 40 },  // Meets level >= 3, high strength
-      
+      { level: 3, strength: 35, agility: 10, health: 40 }, // Meets level >= 3, high strength
+
       // Entities for boundary testing
-      { level: 3, strength: 20, agility: 15, health: 79 },  // Boundary values
-      { level: 5, strength: 18, agility: 23, health: 35 },  // Just below some thresholds
+      { level: 3, strength: 20, agility: 15, health: 79 }, // Boundary values
+      { level: 5, strength: 18, agility: 23, health: 35 }, // Just below some thresholds
       { level: 10, strength: 16, agility: 25, health: 95 }, // Level = 10 boundary
       { level: 20, strength: 35, agility: 30, health: 50 }, // Very high level
-      { level: 1, strength: 40, agility: 5, health: 25 },   // Low level, high strength
+      { level: 1, strength: 40, agility: 5, health: 25 }, // Low level, high strength
     ];
 
     // Use deterministic configs, repeating if needed

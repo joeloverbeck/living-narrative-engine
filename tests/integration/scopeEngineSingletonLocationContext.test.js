@@ -13,6 +13,7 @@ import { getEntityDisplayName } from '../../src/utils/entityUtils.js';
 import { SafeEventDispatcher } from '../../src/events/safeEventDispatcher.js';
 import ScopeRegistry from '../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../src/scopeDsl/engine.js';
+import { clearEntityCache } from '../../src/scopeDsl/core/entityHelpers.js';
 import { parseScopeDefinitions } from '../../src/scopeDsl/scopeDefinitionParser.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
 import InMemoryDataRegistry from '../../src/data/inMemoryDataRegistry.js';
@@ -58,6 +59,9 @@ describe('Singleton Scope Engine Location Context', () => {
   let registry;
 
   beforeEach(() => {
+    // Clear the module-level entity cache to prevent stale data between tests
+    clearEntityCache();
+    
     logger = {
       debug: jest.fn(),
       info: jest.fn(),

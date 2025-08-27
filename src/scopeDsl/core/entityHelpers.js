@@ -186,7 +186,11 @@ export function createEvaluationContext(
 
       // Log how the entity was resolved
       if (trace) {
-        trace.addLog('debug', `Item ${item} ${resolvedHow}`, 'createEvaluationContext');
+        trace.addLog(
+          'debug',
+          `Item ${item} ${resolvedHow}`,
+          'createEvaluationContext'
+        );
       }
     }
   } else if (item && typeof item === 'object') {
@@ -238,13 +242,21 @@ export function createEvaluationContext(
       return enhancedEntity;
     }
 
-    // If no components but has componentTypeIds, build them
-    if (!entity.components && entity.componentTypeIds) {
-      const components = buildComponents(
-        entityId || entity.id,
-        entity,
-        gateway
-      );
+    // If no components but has componentTypeIds or getAllComponents method, build them
+    if (!entity.components && (entity.componentTypeIds || entity.getAllComponents)) {
+      let components;
+      
+      // If entity has getAllComponents method (Entity class), use it
+      if (typeof entity.getAllComponents === 'function') {
+        components = entity.getAllComponents();
+      } else {
+        // Otherwise build from componentTypeIds
+        components = buildComponents(
+          entityId || entity.id,
+          entity,
+          gateway
+        );
+      }
 
       // Check if it's a plain object or has a custom prototype
       const proto = Object.getPrototypeOf(entity);
@@ -293,16 +305,23 @@ export function createEvaluationContext(
   }
 
   // Process entity if it needs components or has Map-based components that need conversion
-  if ((!entity.components && entity.componentTypeIds) || (entity.components instanceof Map)) {
+  if (
+    (!entity.components && entity.componentTypeIds) ||
+    entity.components instanceof Map
+  ) {
     entity = addComponentsToEntity(entity, entity.id || item);
   }
 
   // Use pre-processed actor if available (critical optimization)
   // Avoids reprocessing actor for each of potentially 10,000+ entities
   let actor = processedActor || actorEntity;
-  
+
   // If not pre-processed, ensure actor has components built or Map components converted
-  if (!processedActor && ((!actor.components && actor.componentTypeIds) || (actor.components instanceof Map))) {
+  if (
+    !processedActor &&
+    ((!actor.components && actor.componentTypeIds) ||
+      actor.components instanceof Map)
+  ) {
     actor = addComponentsToEntity(actor, actor.id);
   }
 
@@ -413,13 +432,21 @@ export function preprocessActorForEvaluation(actorEntity, gateway) {
       return entity;
     }
 
-    // If no components but has componentTypeIds, build them
-    if (!entity.components && entity.componentTypeIds) {
-      const components = buildComponents(
-        entityId || entity.id,
-        entity,
-        gateway
-      );
+    // If no components but has componentTypeIds or getAllComponents method, build them
+    if (!entity.components && (entity.componentTypeIds || entity.getAllComponents)) {
+      let components;
+      
+      // If entity has getAllComponents method (Entity class), use it
+      if (typeof entity.getAllComponents === 'function') {
+        components = entity.getAllComponents();
+      } else {
+        // Otherwise build from componentTypeIds
+        components = buildComponents(
+          entityId || entity.id,
+          entity,
+          gateway
+        );
+      }
 
       // Check if it's a plain object or has a custom prototype
       const proto = Object.getPrototypeOf(entity);

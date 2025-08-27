@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_sit_down",
-  "comment": "Handles positioning:sit_down action",
+  "comment": "Handles positioning:sit_down action with proper sequential spot allocation",
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "positioning:event-is-action-sit-down"
@@ -25,64 +25,36 @@
       }
     },
     {
-      "type": "SET_VARIABLE",
-      "comment": "Try spot 0 with atomic check",
+      "type": "ATOMIC_MODIFY_COMPONENT",
+      "comment": "Try to claim spot 0 first",
       "parameters": {
-        "variable_name": "trySpot0",
-        "value": true
+        "entity_ref": "target",
+        "component_type": "positioning:allows_sitting",
+        "field": "spots.0",
+        "expected_value": null,
+        "new_value": "{event.payload.actorId}",
+        "result_variable": "spot0Claimed"
       }
     },
     {
       "type": "IF",
-      "comment": "Try to claim spot 0",
+      "comment": "Check if spot 0 was claimed successfully",
       "parameters": {
-        "condition": {
-          "and": [
-            { "var": "context.trySpot0" },
-            { "==": [{ "var": "context.spotIndex" }, -1] }
-          ]
-        },
+        "condition": { "var": "context.spot0Claimed" },
         "then_actions": [
           {
-            "type": "ATOMIC_MODIFY_COMPONENT",
-            "comment": "Atomically claim spot 0 if empty",
+            "type": "SET_VARIABLE",
+            "comment": "Spot 0 claimed successfully",
             "parameters": {
-              "entity_ref": "target",
-              "component_type": "positioning:allows_sitting",
-              "field": "spots.0",
-              "expected_value": null,
-              "new_value": "{event.payload.actorId}",
-              "result_variable": "spot0Claimed"
-            }
-          },
-          {
-            "type": "IF",
-            "comment": "Set spot index if claim succeeded",
-            "parameters": {
-              "condition": { "var": "context.spot0Claimed" },
-              "then_actions": [
-                {
-                  "type": "SET_VARIABLE",
-                  "parameters": {
-                    "variable_name": "spotIndex",
-                    "value": 0
-                  }
-                }
-              ]
+              "variable_name": "spotIndex",
+              "value": 0
             }
           }
-        ]
-      }
-    },
-    {
-      "type": "IF",
-      "comment": "Try to claim spot 1 if spot 0 failed",
-      "parameters": {
-        "condition": { "==": [{ "var": "context.spotIndex" }, -1] },
-        "then_actions": [
+        ],
+        "else_actions": [
           {
             "type": "ATOMIC_MODIFY_COMPONENT",
-            "comment": "Atomically claim spot 1 if empty",
+            "comment": "Spot 0 failed, try to claim spot 1",
             "parameters": {
               "entity_ref": "target",
               "component_type": "positioning:allows_sitting",
@@ -94,52 +66,47 @@
           },
           {
             "type": "IF",
-            "comment": "Set spot index if claim succeeded",
+            "comment": "Check if spot 1 was claimed successfully", 
             "parameters": {
               "condition": { "var": "context.spot1Claimed" },
               "then_actions": [
                 {
                   "type": "SET_VARIABLE",
+                  "comment": "Spot 1 claimed successfully",
                   "parameters": {
                     "variable_name": "spotIndex",
                     "value": 1
                   }
                 }
-              ]
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "IF",
-      "comment": "Try to claim spot 2 if spots 0 and 1 failed",
-      "parameters": {
-        "condition": { "==": [{ "var": "context.spotIndex" }, -1] },
-        "then_actions": [
-          {
-            "type": "ATOMIC_MODIFY_COMPONENT",
-            "comment": "Atomically claim spot 2 if empty",
-            "parameters": {
-              "entity_ref": "target",
-              "component_type": "positioning:allows_sitting",
-              "field": "spots.2",
-              "expected_value": null,
-              "new_value": "{event.payload.actorId}",
-              "result_variable": "spot2Claimed"
-            }
-          },
-          {
-            "type": "IF",
-            "comment": "Set spot index if claim succeeded",
-            "parameters": {
-              "condition": { "var": "context.spot2Claimed" },
-              "then_actions": [
+              ],
+              "else_actions": [
                 {
-                  "type": "SET_VARIABLE",
+                  "type": "ATOMIC_MODIFY_COMPONENT",
+                  "comment": "Spot 1 failed, try to claim spot 2",
                   "parameters": {
-                    "variable_name": "spotIndex",
-                    "value": 2
+                    "entity_ref": "target",
+                    "component_type": "positioning:allows_sitting",
+                    "field": "spots.2",
+                    "expected_value": null,
+                    "new_value": "{event.payload.actorId}",
+                    "result_variable": "spot2Claimed"
+                  }
+                },
+                {
+                  "type": "IF",
+                  "comment": "Check if spot 2 was claimed successfully",
+                  "parameters": {
+                    "condition": { "var": "context.spot2Claimed" },
+                    "then_actions": [
+                      {
+                        "type": "SET_VARIABLE",
+                        "comment": "Spot 2 claimed successfully",
+                        "parameters": {
+                          "variable_name": "spotIndex",
+                          "value": 2
+                        }
+                      }
+                    ]
                   }
                 }
               ]
@@ -175,11 +142,17 @@
           },
           {
             "type": "GET_NAME",
-            "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+            "parameters": {
+              "entity_ref": "actor",
+              "result_variable": "actorName"
+            }
           },
           {
             "type": "GET_NAME",
-            "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+            "parameters": {
+              "entity_ref": "target",
+              "result_variable": "targetName"
+            }
           },
           {
             "type": "QUERY_COMPONENT",

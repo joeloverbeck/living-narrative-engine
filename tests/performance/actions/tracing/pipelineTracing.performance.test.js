@@ -421,7 +421,7 @@ describe('Pipeline Tracing Performance', () => {
 
       // Calculate scaling factor
       const scalingFactor = durationAll / duration1;
-      
+
       // Enhanced debugging output for high scaling factors
       if (scalingFactor > 10) {
         console.log(`=== Scaling Test Debug Info ===`);
@@ -429,7 +429,7 @@ describe('Pipeline Tracing Performance', () => {
           `Single action time: ${duration1.toFixed(3)}ms, All actions time: ${durationAll.toFixed(3)}ms`
         );
         console.log(`Scaling factor: ${scalingFactor.toFixed(2)}x`);
-        
+
         // Note about microsecond-level measurements
         if (duration1 < 0.1) {
           console.log(
@@ -452,11 +452,11 @@ describe('Pipeline Tracing Performance', () => {
       // The adaptive threshold prevents false positives while still catching
       // catastrophic performance regressions. In production with real I/O,
       // scaling would be much lower (typically <2x).
-      
+
       // Adjust threshold based on baseline measurement scale
       // For microsecond measurements, use very high threshold due to mock overhead variability
       const scalingThreshold = duration1 < 0.1 ? 50.0 : 2.0;
-      
+
       if (duration1 < 0.1) {
         console.log(
           `Note: baseline ${duration1.toFixed(3)}ms is at microsecond level ` +

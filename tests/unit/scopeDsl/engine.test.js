@@ -417,6 +417,9 @@ describe('ScopeEngine', () => {
 
     describe('Depth limit enforcement', () => {
       test('throws ScopeDepthError when depth > 6', () => {
+        // Set the max depth explicitly for this test
+        engine.setMaxDepth(6);
+        
         // We construct the AST manually to bypass the parser's own depth limit,
         // allowing us to unit test the engine's depth limit in isolation.
         // This AST represents an expression like 'actor.a.b.c.d.e.f.g' (7 steps).
@@ -471,6 +474,9 @@ describe('ScopeEngine', () => {
       });
 
       test('allows depth exactly 6', () => {
+        // Set the max depth explicitly for consistency
+        engine.setMaxDepth(6);
+        
         // This expression has exactly depth 6
         // Let's use an expression with exactly depth 6
         const ast = parseDslExpression(
@@ -495,6 +501,9 @@ describe('ScopeEngine', () => {
       });
 
       test('allows depth exactly 5', () => {
+        // Set the max depth explicitly for consistency
+        engine.setMaxDepth(6);
+        
         // Test depth 5: actor.components.core:inventory.items[].stats
         const ast = parseDslExpression(
           'actor.components.core:inventory.items[].stats'
@@ -518,6 +527,9 @@ describe('ScopeEngine', () => {
       });
 
       test('allows depth less than 6', () => {
+        // Set the max depth explicitly for consistency
+        engine.setMaxDepth(6);
+        
         // Test depth 4: actor.components.core:inventory.items[]
         const ast = parseDslExpression(
           'actor.components.core:inventory.items[]'

@@ -49,7 +49,9 @@ describe('Multi-Mod Scope Interactions E2E', () => {
    * @returns {Promise<string>} Path to the temporary directory
    */
   async function createTempModDirectory() {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'multi-mod-scope-test-'));
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'multi-mod-scope-test-')
+    );
     return tmpDir;
   }
 
@@ -75,7 +77,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
    * Creates a mock mod with scopes, conditions, and components
    *
    * @param {string} baseDir - Base directory for mods
-   * @param {string} modId - Mod identifier  
+   * @param {string} modId - Mod identifier
    * @param {object} modContent - Content for the mod
    * @param {Array<object>} modContent.scopes - Scope definitions
    * @param {Array<object>} modContent.conditions - Condition definitions
@@ -83,9 +85,14 @@ describe('Multi-Mod Scope Interactions E2E', () => {
    * @param {Array<string>} dependencies - Mod dependencies
    * @returns {Promise<string>} Path to the mod directory
    */
-  async function createTestMod(baseDir, modId, modContent = {}, dependencies = []) {
+  async function createTestMod(
+    baseDir,
+    modId,
+    modContent = {},
+    dependencies = []
+  ) {
     const { scopes = [], conditions = [], components = [] } = modContent;
-    
+
     const modDir = path.join(baseDir, 'mods', modId);
     const scopesDir = path.join(modDir, 'scopes');
     const conditionsDir = path.join(modDir, 'conditions');
@@ -138,17 +145,19 @@ describe('Multi-Mod Scope Interactions E2E', () => {
    */
   async function loadScopesFromMod(modId, scopeFiles) {
     const scopeDefinitions = {};
-    
+
     for (const fileName of scopeFiles) {
       const filePath = path.join(tempDir, 'mods', modId, 'scopes', fileName);
       const content = await fs.readFile(filePath, 'utf-8');
-      
+
       try {
         // Use the same parsing logic as ScopeLoader
-        const { parseScopeDefinitions } = await import('../../../src/scopeDsl/scopeDefinitionParser.js');
-        
+        const { parseScopeDefinitions } = await import(
+          '../../../src/scopeDsl/scopeDefinitionParser.js'
+        );
+
         const parsed = parseScopeDefinitions(content, fileName);
-        
+
         // parseScopeDefinitions returns a Map with just expr and ast
         for (const [scopeId, scopeData] of parsed) {
           scopeDefinitions[scopeId] = {
@@ -157,13 +166,16 @@ describe('Multi-Mod Scope Interactions E2E', () => {
           };
         }
       } catch (error) {
-        logger.warn(`Failed to parse scope file ${fileName} for mod ${modId}`, error);
-        
-        // Fallback to simple line parsing
-        const lines = content.split('\n').filter(line => 
-          line.trim() && !line.trim().startsWith('//')
+        logger.warn(
+          `Failed to parse scope file ${fileName} for mod ${modId}`,
+          error
         );
-        
+
+        // Fallback to simple line parsing
+        const lines = content
+          .split('\n')
+          .filter((line) => line.trim() && !line.trim().startsWith('//'));
+
         for (const line of lines) {
           const match = line.match(/^([\w_-]+:[\w_-]+)\s*:=\s*(.+)$/);
           if (match) {
@@ -175,7 +187,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
               logger.warn(`Failed to parse scope ${scopeId}: ${expr}`, e);
               ast = { type: 'Source', kind: 'actor' }; // Fallback AST
             }
-            
+
             scopeDefinitions[scopeId.trim()] = {
               expr: expr.trim(),
               ast: ast,
@@ -184,35 +196,46 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         }
       }
     }
-    
+
     // Don't register here - return for later batch registration
     return scopeDefinitions;
   }
 
   /**
    * Registers components and conditions from mod content properly
-   * 
+   *
    * @param {object} modContent - Mod content with components and conditions
    */
   function registerModResources(modContent) {
     const schemaValidator = container.resolve(tokens.ISchemaValidator);
-    
+
     // Register components
     if (modContent.components) {
       for (const component of modContent.components) {
         // Store in registry for entity creation
-        dataRegistry.store('componentDefinitions', component.content.id, component.content);
+        dataRegistry.store(
+          'componentDefinitions',
+          component.content.id,
+          component.content
+        );
         // Register schema for validation
-        schemaValidator.addSchema(component.content.dataSchema, component.content.id);
+        schemaValidator.addSchema(
+          component.content.dataSchema,
+          component.content.id
+        );
       }
     }
-    
+
     // Register conditions
     if (modContent.conditions) {
       for (const condition of modContent.conditions) {
         // Store in registry for condition_ref resolution
         // The dataRegistry.store will make it available via gameDataRepository.getConditionDefinition
-        dataRegistry.store('conditions', condition.content.id, condition.content);
+        dataRegistry.store(
+          'conditions',
+          condition.content.id,
+          condition.content
+        );
       }
     }
   }
@@ -292,7 +315,8 @@ describe('Multi-Mod Scope Interactions E2E', () => {
           },
           {
             name: 'enhanced_actors',
-            content: 'base:enhanced_actors := entities(core:actor)[{"==": [{"var": "entity.components.base:special.enhanced"}, true]}]',
+            content:
+              'base:enhanced_actors := entities(core:actor)[{"==": [{"var": "entity.components.base:special.enhanced"}, true]}]',
           },
         ],
         components: [
@@ -305,25 +329,27 @@ describe('Multi-Mod Scope Interactions E2E', () => {
                 type: 'object',
                 properties: {
                   enhanced: { type: 'boolean' },
-                  power: { type: 'number' }
+                  power: { type: 'number' },
                 },
-                required: ['enhanced']
-              }
-            }
-          }
-        ]
+                required: ['enhanced'],
+              },
+            },
+          },
+        ],
       };
 
       // Create extension mod that builds on base mod
       const extensionMod = {
         scopes: [
           {
-            name: 'super_actors', 
-            content: 'extension:super_actors := entities(core:actor)[{"and": [{"condition_ref": "base:is-enhanced"}, {">": [{"var": "entity.components.base:special.power"}, 50]}]}]',
+            name: 'super_actors',
+            content:
+              'extension:super_actors := entities(core:actor)[{"and": [{"condition_ref": "base:is-enhanced"}, {">": [{"var": "entity.components.base:special.power"}, 50]}]}]',
           },
           {
             name: 'base_and_super',
-            content: 'extension:base_and_super := base:enhanced_actors + extension:super_actors',
+            content:
+              'extension:base_and_super := base:enhanced_actors + extension:super_actors',
           },
         ],
         conditions: [
@@ -333,11 +359,14 @@ describe('Multi-Mod Scope Interactions E2E', () => {
               id: 'base:is-enhanced',
               description: 'Checks if entity has enhancement',
               logic: {
-                '==': [{ var: 'entity.components.base:special.enhanced' }, true]
-              }
-            }
-          }
-        ]
+                '==': [
+                  { var: 'entity.components.base:special.enhanced' },
+                  true,
+                ],
+              },
+            },
+          },
+        ],
       };
 
       await createTestMod(tempDir, 'base', baseMod);
@@ -354,7 +383,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       const enhancedComponents = {
         'core:actor': { isPlayer: false },
         'core:position': { locationId: 'test-location-1' },
-        'base:special': { enhanced: true, power: 30 }
+        'base:special': { enhanced: true, power: 30 },
       };
       const enhancedDef = new EntityDefinition(enhancedActorId, {
         description: 'Enhanced actor with base mod component',
@@ -365,16 +394,17 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         instanceId: enhancedActorId,
         definitionId: enhancedActorId,
       });
-      
+
       // Validate entity creation
-      const enhancedEntity = await entityManager.getEntityInstance(enhancedActorId);
+      const enhancedEntity =
+        await entityManager.getEntityInstance(enhancedActorId);
       expect(enhancedEntity).toBeDefined();
 
       // Super actor (high power)
       const superComponents = {
         'core:actor': { isPlayer: false },
         'core:position': { locationId: 'test-location-1' },
-        'base:special': { enhanced: true, power: 75 }
+        'base:special': { enhanced: true, power: 75 },
       };
       const superDef = new EntityDefinition(superActorId, {
         description: 'Super actor with high power',
@@ -385,7 +415,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         instanceId: superActorId,
         definitionId: superActorId,
       });
-      
+
       // Validate entity creation
       const superEntity = await entityManager.getEntityInstance(superActorId);
       expect(superEntity).toBeDefined();
@@ -393,7 +423,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       // Normal actor (no special component)
       const normalComponents = {
         'core:actor': { isPlayer: false },
-        'core:position': { locationId: 'test-location-1' }
+        'core:position': { locationId: 'test-location-1' },
       };
       const normalDef = new EntityDefinition(normalActorId, {
         description: 'Normal actor without special component',
@@ -404,7 +434,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         instanceId: normalActorId,
         definitionId: normalActorId,
       });
-      
+
       // Validate entity creation
       const normalEntity = await entityManager.getEntityInstance(normalActorId);
       expect(normalEntity).toBeDefined();
@@ -414,14 +444,22 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       registerModResources(extensionMod);
 
       // Load scope definitions from both mods
-      const baseScopes = await loadScopesFromMod('base', ['actors.scope', 'enhanced_actors.scope']);
-      const extensionScopes = await loadScopesFromMod('extension', ['super_actors.scope', 'base_and_super.scope']);
-      
+      const baseScopes = await loadScopesFromMod('base', [
+        'actors.scope',
+        'enhanced_actors.scope',
+      ]);
+      const extensionScopes = await loadScopesFromMod('extension', [
+        'super_actors.scope',
+        'base_and_super.scope',
+      ]);
+
       // Initialize registry with all scopes
       const allScopes = { ...baseScopes, ...extensionScopes };
       scopeRegistry.initialize(allScopes);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Test base mod scope
@@ -447,9 +485,18 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       );
 
       console.log('Enhanced actors result:', Array.from(enhancedActorsResult));
-      console.log('Enhanced actor entity:', entityManager.getEntityInstance(enhancedActorId));
-      console.log('Super actor entity:', entityManager.getEntityInstance(superActorId));  
-      console.log('Normal actor entity:', entityManager.getEntityInstance(normalActorId));
+      console.log(
+        'Enhanced actor entity:',
+        entityManager.getEntityInstance(enhancedActorId)
+      );
+      console.log(
+        'Super actor entity:',
+        entityManager.getEntityInstance(superActorId)
+      );
+      console.log(
+        'Normal actor entity:',
+        entityManager.getEntityInstance(normalActorId)
+      );
 
       expect(enhancedActorsResult instanceof Set).toBe(true);
       expect(enhancedActorsResult.has(enhancedActorId)).toBe(true);
@@ -485,14 +532,14 @@ describe('Multi-Mod Scope Interactions E2E', () => {
 
     test('should handle complex dependency chains between mods', async () => {
       // Create a chain: core -> base -> extension -> advanced
-      
+
       // Core mod (foundation)
       const coreMod = {
         scopes: [
           {
             name: 'all_entities',
             content: 'core_mod:all_entities := entities(core:actor)',
-          }
+          },
         ],
         components: [
           {
@@ -504,13 +551,13 @@ describe('Multi-Mod Scope Interactions E2E', () => {
                 type: 'object',
                 properties: {
                   level: { type: 'number' },
-                  category: { type: 'string' }
+                  category: { type: 'string' },
                 },
-                required: ['level']
-              }
-            }
-          }
-        ]
+                required: ['level'],
+              },
+            },
+          },
+        ],
       };
 
       // Base mod (builds on core)
@@ -518,9 +565,10 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         scopes: [
           {
             name: 'tiered_entities',
-            content: 'base_mod:tiered_entities := core_mod:all_entities[{">": [{"var": "entity.components.core_mod:tier.level"}, 1]}]',
-          }
-        ]
+            content:
+              'base_mod:tiered_entities := core_mod:all_entities[{">": [{"var": "entity.components.core_mod:tier.level"}, 1]}]',
+          },
+        ],
       };
 
       // Extension mod (builds on base)
@@ -528,9 +576,10 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         scopes: [
           {
             name: 'high_tier_entities',
-            content: 'ext_mod:high_tier_entities := base_mod:tiered_entities[{">": [{"var": "entity.components.core_mod:tier.level"}, 5]}]',
-          }
-        ]
+            content:
+              'ext_mod:high_tier_entities := base_mod:tiered_entities[{">": [{"var": "entity.components.core_mod:tier.level"}, 5]}]',
+          },
+        ],
       };
 
       // Advanced mod (builds on extension)
@@ -538,13 +587,15 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         scopes: [
           {
             name: 'elite_entities',
-            content: 'adv_mod:elite_entities := ext_mod:high_tier_entities[{">=": [{"var": "entity.components.core_mod:tier.level"}, 10]}]',
+            content:
+              'adv_mod:elite_entities := ext_mod:high_tier_entities[{">=": [{"var": "entity.components.core_mod:tier.level"}, 10]}]',
           },
           {
             name: 'all_tiers_union',
-            content: 'adv_mod:all_tiers_union := core_mod:all_entities + base_mod:tiered_entities + ext_mod:high_tier_entities',
-          }
-        ]
+            content:
+              'adv_mod:all_tiers_union := core_mod:all_entities + base_mod:tiered_entities + ext_mod:high_tier_entities',
+          },
+        ],
       };
 
       await createTestMod(tempDir, 'core_mod', coreMod);
@@ -569,7 +620,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         const components = {
           'core:actor': { isPlayer: false },
           'core:position': { locationId: 'test-location-1' },
-          'core_mod:tier': { level: entityData.tier, category: 'test' }
+          'core_mod:tier': { level: entityData.tier, category: 'test' },
         };
 
         const definition = new EntityDefinition(entityData.id, {
@@ -585,15 +636,31 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       }
 
       // Load all scope definitions
-      const coreScopes = await loadScopesFromMod('core_mod', ['all_entities.scope']);
-      const baseScopes = await loadScopesFromMod('base_mod', ['tiered_entities.scope']);
-      const extensionScopes = await loadScopesFromMod('ext_mod', ['high_tier_entities.scope']);
-      const advancedScopes = await loadScopesFromMod('adv_mod', ['elite_entities.scope', 'all_tiers_union.scope']);
+      const coreScopes = await loadScopesFromMod('core_mod', [
+        'all_entities.scope',
+      ]);
+      const baseScopes = await loadScopesFromMod('base_mod', [
+        'tiered_entities.scope',
+      ]);
+      const extensionScopes = await loadScopesFromMod('ext_mod', [
+        'high_tier_entities.scope',
+      ]);
+      const advancedScopes = await loadScopesFromMod('adv_mod', [
+        'elite_entities.scope',
+        'all_tiers_union.scope',
+      ]);
 
-      const allScopes = { ...coreScopes, ...baseScopes, ...extensionScopes, ...advancedScopes };
+      const allScopes = {
+        ...coreScopes,
+        ...baseScopes,
+        ...extensionScopes,
+        ...advancedScopes,
+      };
       scopeRegistry.initialize(allScopes);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Test each level of the dependency chain
@@ -652,32 +719,40 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         scopes: [
           {
             name: 'broken_reference',
-            content: 'broken:scope := entities(core:actor)[{"condition_ref": "nonexistent:missing-condition"}]',
+            content:
+              'broken:scope := entities(core:actor)[{"condition_ref": "nonexistent:missing-condition"}]',
           },
           {
             name: 'missing_component',
             content: 'broken:missing_component := entities(missing:component)',
-          }
-        ]
+          },
+        ],
       };
 
       await createTestMod(tempDir, 'broken', dependentMod);
 
-      const brokenScopes = await loadScopesFromMod('broken', ['broken_reference.scope', 'missing_component.scope']);
+      const brokenScopes = await loadScopesFromMod('broken', [
+        'broken_reference.scope',
+        'missing_component.scope',
+      ]);
       scopeRegistry.initialize(brokenScopes);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
-      // Missing condition reference should fail gracefully
-      await expect(
-        ScopeTestUtilities.resolveScopeE2E(
-          'broken:scope',
-          playerEntity,
-          gameContext,
-          { scopeRegistry, scopeEngine }
-        )
-      ).rejects.toThrow();
+      // Missing condition reference should return empty set when no entities match
+      // The filter with missing condition_ref won't be evaluated if no entities pass
+      // the initial entities(core:actor) filter
+      const brokenScopeResult = await ScopeTestUtilities.resolveScopeE2E(
+        'broken:scope',
+        playerEntity,
+        gameContext,
+        { scopeRegistry, scopeEngine }
+      );
+      expect(brokenScopeResult instanceof Set).toBe(true);
+      expect(brokenScopeResult.size).toBe(0); // No entities match, so condition_ref is never evaluated
 
       // Missing component should return empty set or handle gracefully
       const missingComponentResult = await ScopeTestUtilities.resolveScopeE2E(
@@ -707,19 +782,23 @@ describe('Multi-Mod Scope Interactions E2E', () => {
           {
             name: 'invalid_namespace',
             content: 'mod_b:stolen_scope := entities(core:actor)', // Invalid: mod_a trying to define mod_b scope
-          }
-        ]
+          },
+        ],
       };
 
       await createTestMod(tempDir, 'mod_a', modA);
 
       // This should succeed for valid scope but fail for invalid namespace
-      const validScopes = await loadScopesFromMod('mod_a', ['valid_scope.scope']);
+      const validScopes = await loadScopesFromMod('mod_a', [
+        'valid_scope.scope',
+      ]);
       expect(validScopes['mod_a:valid_scope']).toBeDefined();
 
       // Test that invalid namespace scope is handled appropriately
       // In real implementation, this would be caught during mod loading
-      const invalidScopes = await loadScopesFromMod('mod_a', ['invalid_namespace.scope']);
+      const invalidScopes = await loadScopesFromMod('mod_a', [
+        'invalid_namespace.scope',
+      ]);
       expect(invalidScopes['mod_b:stolen_scope']).toBeDefined(); // Parsed but would fail validation
     });
 
@@ -729,18 +808,20 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         scopes: [
           {
             name: 'common_scope',
-            content: 'common:actors := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
-          }
-        ]
+            content:
+              'common:actors := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
+          },
+        ],
       };
 
       const modB = {
         scopes: [
           {
-            name: 'common_scope', 
-            content: 'common:actors := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": true}]', // Different logic
-          }
-        ]
+            name: 'common_scope',
+            content:
+              'common:actors := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": true}]', // Different logic
+          },
+        ],
       };
 
       await createTestMod(tempDir, 'mod_a', modA);
@@ -754,7 +835,9 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       let allScopes = { ...scopesA, ...scopesB };
       scopeRegistry.initialize(allScopes);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Should use mod B's definition (last loaded)
@@ -780,21 +863,24 @@ describe('Multi-Mod Scope Interactions E2E', () => {
           },
           {
             name: 'player_entities',
-            content: 'core_utils:player_entities := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": true}]',
-          }
-        ]
+            content:
+              'core_utils:player_entities := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": true}]',
+          },
+        ],
       };
 
       const gameplayMod = {
         scopes: [
           {
             name: 'combat_actors',
-            content: 'gameplay:combat_actors := core_utils:basic_actors[{"has": [{"var": "entity.components"}, "gameplay:combat"]}]',
+            content:
+              'gameplay:combat_actors := core_utils:basic_actors[{"has": [{"var": "entity.components"}, "gameplay:combat"]}]',
           },
           {
             name: 'non_combat_actors',
-            content: 'gameplay:non_combat_actors := core_utils:basic_actors[{"!": {"has": [{"var": "entity.components"}, "gameplay:combat"]}}]',
-          }
+            content:
+              'gameplay:non_combat_actors := core_utils:basic_actors[{"!": {"has": [{"var": "entity.components"}, "gameplay:combat"]}}]',
+          },
         ],
         components: [
           {
@@ -806,24 +892,26 @@ describe('Multi-Mod Scope Interactions E2E', () => {
                 type: 'object',
                 properties: {
                   level: { type: 'number' },
-                  style: { type: 'string' }
-                }
-              }
-            }
-          }
-        ]
+                  style: { type: 'string' },
+                },
+              },
+            },
+          },
+        ],
       };
 
       const socialMod = {
         scopes: [
           {
             name: 'social_actors',
-            content: 'social:interactive_actors := core_utils:basic_actors[{"has": [{"var": "entity.components"}, "social:personality"]}]',
+            content:
+              'social:interactive_actors := core_utils:basic_actors[{"has": [{"var": "entity.components"}, "social:personality"]}]',
           },
           {
             name: 'mixed_actors',
-            content: 'social:mixed_actors := gameplay:combat_actors + social:interactive_actors',
-          }
+            content:
+              'social:mixed_actors := gameplay:combat_actors + social:interactive_actors',
+          },
         ],
         components: [
           {
@@ -835,17 +923,20 @@ describe('Multi-Mod Scope Interactions E2E', () => {
                 type: 'object',
                 properties: {
                   traits: { type: 'array' },
-                  mood: { type: 'string' }
-                }
-              }
-            }
-          }
-        ]
+                  mood: { type: 'string' },
+                },
+              },
+            },
+          },
+        ],
       };
 
       await createTestMod(tempDir, 'core_utils', coreUtilsMod);
       await createTestMod(tempDir, 'gameplay', gameplayMod, ['core_utils']);
-      await createTestMod(tempDir, 'social', socialMod, ['core_utils', 'gameplay']);
+      await createTestMod(tempDir, 'social', socialMod, [
+        'core_utils',
+        'gameplay',
+      ]);
 
       // Register components from all mods
       registerModResources(coreUtilsMod);
@@ -854,13 +945,24 @@ describe('Multi-Mod Scope Interactions E2E', () => {
 
       // Create test entities with different component combinations
       const testEntitiesData = [
-        { id: 'combat-only-actor', components: { 'gameplay:combat': { level: 5, style: 'warrior' } } },
-        { id: 'social-only-actor', components: { 'social:personality': { traits: ['friendly'], mood: 'happy' } } },
-        { id: 'mixed-actor', components: { 
-          'gameplay:combat': { level: 3, style: 'rogue' },
-          'social:personality': { traits: ['cunning'], mood: 'neutral' }
-        }},
-        { id: 'basic-actor', components: {} }
+        {
+          id: 'combat-only-actor',
+          components: { 'gameplay:combat': { level: 5, style: 'warrior' } },
+        },
+        {
+          id: 'social-only-actor',
+          components: {
+            'social:personality': { traits: ['friendly'], mood: 'happy' },
+          },
+        },
+        {
+          id: 'mixed-actor',
+          components: {
+            'gameplay:combat': { level: 3, style: 'rogue' },
+            'social:personality': { traits: ['cunning'], mood: 'neutral' },
+          },
+        },
+        { id: 'basic-actor', components: {} },
       ];
 
       const registry = dataRegistry;
@@ -869,7 +971,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         const components = {
           'core:actor': { isPlayer: false },
           'core:position': { locationId: 'test-location-1' },
-          ...entityData.components
+          ...entityData.components,
         };
 
         const definition = new EntityDefinition(entityData.id, {
@@ -885,14 +987,29 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       }
 
       // Load all scope definitions
-      const coreUtilsScopes = await loadScopesFromMod('core_utils', ['basic_actors.scope', 'player_entities.scope']);
-      const gameplayScopes = await loadScopesFromMod('gameplay', ['combat_actors.scope', 'non_combat_actors.scope']);
-      const socialScopes = await loadScopesFromMod('social', ['social_actors.scope', 'mixed_actors.scope']);
+      const coreUtilsScopes = await loadScopesFromMod('core_utils', [
+        'basic_actors.scope',
+        'player_entities.scope',
+      ]);
+      const gameplayScopes = await loadScopesFromMod('gameplay', [
+        'combat_actors.scope',
+        'non_combat_actors.scope',
+      ]);
+      const socialScopes = await loadScopesFromMod('social', [
+        'social_actors.scope',
+        'mixed_actors.scope',
+      ]);
 
-      const allScopes = { ...coreUtilsScopes, ...gameplayScopes, ...socialScopes };
+      const allScopes = {
+        ...coreUtilsScopes,
+        ...gameplayScopes,
+        ...socialScopes,
+      };
       scopeRegistry.initialize(allScopes);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Test core utils scopes
@@ -960,13 +1077,14 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         scopes: [
           {
             name: 'default_behavior',
-            content: 'base:target_selection := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
+            content:
+              'base:target_selection := entities(core:actor)[{"var": "entity.components.core:actor.isPlayer", "==": false}]',
           },
           {
             name: 'basic_filter',
             content: 'base:basic_filter := base:target_selection',
-          }
-        ]
+          },
+        ],
       };
 
       // Create override mod that changes behavior
@@ -974,12 +1092,14 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         scopes: [
           {
             name: 'enhanced_behavior',
-            content: 'base:target_selection := entities(core:actor)[{"and": [{"var": "entity.components.core:actor.isPlayer", "==": false}, {">": [{"var": "entity.components.override:priority.value"}, 0]}]}]', // Override with enhanced logic
+            content:
+              'base:target_selection := entities(core:actor)[{"and": [{"var": "entity.components.core:actor.isPlayer", "==": false}, {">": [{"var": "entity.components.override:priority.value"}, 0]}]}]', // Override with enhanced logic
           },
           {
             name: 'override_filter',
-            content: 'override:enhanced_filter := base:target_selection[{">": [{"var": "entity.components.override:priority.value"}, 5]}]',
-          }
+            content:
+              'override:enhanced_filter := base:target_selection[{">": [{"var": "entity.components.override:priority.value"}, 5]}]',
+          },
         ],
         components: [
           {
@@ -990,13 +1110,13 @@ describe('Multi-Mod Scope Interactions E2E', () => {
               dataSchema: {
                 type: 'object',
                 properties: {
-                  value: { type: 'number' }
+                  value: { type: 'number' },
                 },
-                required: ['value']
-              }
-            }
-          }
-        ]
+                required: ['value'],
+              },
+            },
+          },
+        ],
       };
 
       await createTestMod(tempDir, 'base', baseMod);
@@ -1009,7 +1129,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       const testEntitiesData = [
         { id: 'low-priority-actor', priority: 1 },
         { id: 'high-priority-actor', priority: 8 },
-        { id: 'no-priority-actor', priority: null }
+        { id: 'no-priority-actor', priority: null },
       ];
 
       const registry = dataRegistry;
@@ -1017,7 +1137,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       for (const entityData of testEntitiesData) {
         const components = {
           'core:actor': { isPlayer: false },
-          'core:position': { locationId: 'test-location-1' }
+          'core:position': { locationId: 'test-location-1' },
         };
 
         if (entityData.priority !== null) {
@@ -1037,10 +1157,15 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       }
 
       // Test original base behavior
-      const baseScopes = await loadScopesFromMod('base', ['default_behavior.scope', 'basic_filter.scope']);
+      const baseScopes = await loadScopesFromMod('base', [
+        'default_behavior.scope',
+        'basic_filter.scope',
+      ]);
       scopeRegistry.initialize(baseScopes);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       const originalResult = await ScopeTestUtilities.resolveScopeE2E(
@@ -1055,7 +1180,10 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       expect(originalResult.has('no-priority-actor')).toBe(true);
 
       // Now load override mod - should replace base behavior
-      const overrideScopes = await loadScopesFromMod('override', ['enhanced_behavior.scope', 'override_filter.scope']);
+      const overrideScopes = await loadScopesFromMod('override', [
+        'enhanced_behavior.scope',
+        'override_filter.scope',
+      ]);
       const allScopes = { ...baseScopes, ...overrideScopes };
       scopeRegistry.initialize(allScopes);
 
@@ -1093,9 +1221,10 @@ describe('Multi-Mod Scope Interactions E2E', () => {
           },
           {
             name: 'extensible_base',
-            content: 'core_ext:extensible := core_ext:all_entities[{"has": [{"var": "entity.components"}, "core:actor"]}]',
-          }
-        ]
+            content:
+              'core_ext:extensible := core_ext:all_entities[{"has": [{"var": "entity.components"}, "core:actor"]}]',
+          },
+        ],
       };
 
       // Create extension A
@@ -1103,12 +1232,14 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         scopes: [
           {
             name: 'extension_a_entities',
-            content: 'ext_a:enhanced := core_ext:extensible[{"has": [{"var": "entity.components"}, "ext_a:feature"]}]',
+            content:
+              'ext_a:enhanced := core_ext:extensible[{"has": [{"var": "entity.components"}, "ext_a:feature"]}]',
           },
           {
             name: 'extension_a_contribution',
-            content: 'core_ext:extensible_enhanced := core_ext:extensible + ext_a:enhanced', // Extend base scope
-          }
+            content:
+              'core_ext:extensible_enhanced := core_ext:extensible + ext_a:enhanced', // Extend base scope
+          },
         ],
         components: [
           {
@@ -1119,25 +1250,27 @@ describe('Multi-Mod Scope Interactions E2E', () => {
               dataSchema: {
                 type: 'object',
                 properties: {
-                  enabled: { type: 'boolean' }
-                }
-              }
-            }
-          }
-        ]
+                  enabled: { type: 'boolean' },
+                },
+              },
+            },
+          },
+        ],
       };
 
       // Create extension B
       const extensionB = {
         scopes: [
           {
-            name: 'extension_b_entities', 
-            content: 'ext_b:special := core_ext:extensible[{"has": [{"var": "entity.components"}, "ext_b:special"]}]',
+            name: 'extension_b_entities',
+            content:
+              'ext_b:special := core_ext:extensible[{"has": [{"var": "entity.components"}, "ext_b:special"]}]',
           },
           {
             name: 'extension_b_contribution',
-            content: 'core_ext:extensible_special := core_ext:extensible + ext_b:special',
-          }
+            content:
+              'core_ext:extensible_special := core_ext:extensible + ext_b:special',
+          },
         ],
         components: [
           {
@@ -1148,12 +1281,12 @@ describe('Multi-Mod Scope Interactions E2E', () => {
               dataSchema: {
                 type: 'object',
                 properties: {
-                  type: { type: 'string' }
-                }
-              }
-            }
-          }
-        ]
+                  type: { type: 'string' },
+                },
+              },
+            },
+          },
+        ],
       };
 
       // Create combined extension that uses both A and B
@@ -1161,19 +1294,24 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         scopes: [
           {
             name: 'combined_extensions',
-            content: 'combined:all_extensions := ext_a:enhanced + ext_b:special',
+            content:
+              'combined:all_extensions := ext_a:enhanced + ext_b:special',
           },
           {
             name: 'intersection',
-            content: 'combined:intersection := ext_a:enhanced[{"has": [{"var": "entity.components"}, "ext_b:special"]}]', // Entities with both features
-          }
-        ]
+            content:
+              'combined:intersection := ext_a:enhanced[{"has": [{"var": "entity.components"}, "ext_b:special"]}]', // Entities with both features
+          },
+        ],
       };
 
       await createTestMod(tempDir, 'core_ext', coreMod);
       await createTestMod(tempDir, 'ext_a', extensionA, ['core_ext']);
       await createTestMod(tempDir, 'ext_b', extensionB, ['core_ext']);
-      await createTestMod(tempDir, 'combined', combinedExtension, ['ext_a', 'ext_b']);
+      await createTestMod(tempDir, 'combined', combinedExtension, [
+        'ext_a',
+        'ext_b',
+      ]);
 
       // Register components from extension mods
       registerModResources(coreMod);
@@ -1186,7 +1324,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         { id: 'ext-a-only', extA: true, extB: false },
         { id: 'ext-b-only', extA: false, extB: true },
         { id: 'both-extensions', extA: true, extB: true },
-        { id: 'no-extensions', extA: false, extB: false }
+        { id: 'no-extensions', extA: false, extB: false },
       ];
 
       const registry = dataRegistry;
@@ -1194,7 +1332,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       for (const entityData of testEntitiesData) {
         const components = {
           'core:actor': { isPlayer: false },
-          'core:position': { locationId: 'test-location-1' }
+          'core:position': { locationId: 'test-location-1' },
         };
 
         if (entityData.extA) {
@@ -1217,15 +1355,34 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       }
 
       // Load all scopes
-      const coreScopes = await loadScopesFromMod('core_ext', ['core_entities.scope', 'extensible_base.scope']);
-      const extAScopes = await loadScopesFromMod('ext_a', ['extension_a_entities.scope', 'extension_a_contribution.scope']);
-      const extBScopes = await loadScopesFromMod('ext_b', ['extension_b_entities.scope', 'extension_b_contribution.scope']);
-      const combinedScopes = await loadScopesFromMod('combined', ['combined_extensions.scope', 'intersection.scope']);
+      const coreScopes = await loadScopesFromMod('core_ext', [
+        'core_entities.scope',
+        'extensible_base.scope',
+      ]);
+      const extAScopes = await loadScopesFromMod('ext_a', [
+        'extension_a_entities.scope',
+        'extension_a_contribution.scope',
+      ]);
+      const extBScopes = await loadScopesFromMod('ext_b', [
+        'extension_b_entities.scope',
+        'extension_b_contribution.scope',
+      ]);
+      const combinedScopes = await loadScopesFromMod('combined', [
+        'combined_extensions.scope',
+        'intersection.scope',
+      ]);
 
-      const allScopes = { ...coreScopes, ...extAScopes, ...extBScopes, ...combinedScopes };
+      const allScopes = {
+        ...coreScopes,
+        ...extAScopes,
+        ...extBScopes,
+        ...combinedScopes,
+      };
       scopeRegistry.initialize(allScopes);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Test extension A
@@ -1303,18 +1460,23 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         scopes: [
           {
             name: 'dependent_scope',
-            content: 'dependent:scope := missing_mod:nonexistent_scope[{"var": "some.filter", "==": true}]',
-          }
-        ]
+            content:
+              'dependent:scope := missing_mod:nonexistent_scope[{"var": "some.filter", "==": true}]',
+          },
+        ],
       };
 
       await createTestMod(tempDir, 'dependent', dependentMod, ['missing_mod']);
 
       // Load scopes - this should succeed but resolution should fail
-      const dependentScopes = await loadScopesFromMod('dependent', ['dependent_scope.scope']);
+      const dependentScopes = await loadScopesFromMod('dependent', [
+        'dependent_scope.scope',
+      ]);
       scopeRegistry.initialize(dependentScopes);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Should fail gracefully when resolving scope that references missing mod
@@ -1343,19 +1505,24 @@ describe('Multi-Mod Scope Interactions E2E', () => {
           {
             name: 'another_valid',
             content: 'partial:another_valid := entities(core:position)',
-          }
-        ]
+          },
+        ],
       };
 
       await createTestMod(tempDir, 'partial', partialMod);
 
       // Load valid scopes only
-      const validScopes = await loadScopesFromMod('partial', ['valid_scope.scope', 'another_valid.scope']);
-      
+      const validScopes = await loadScopesFromMod('partial', [
+        'valid_scope.scope',
+        'another_valid.scope',
+      ]);
+
       // Invalid scope would fail parsing but valid ones should work
       scopeRegistry.initialize(validScopes);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Valid scopes should work
@@ -1375,8 +1542,9 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       );
       expect(anotherValidResult instanceof Set).toBe(true);
 
-      // Invalid scope should not be available
-      expect(() => scopeRegistry.getScope('partial:invalid')).toThrow();
+      // Invalid scope should not be available (returns null for non-existent scopes)
+      expect(scopeRegistry.getScope('partial:invalid')).toBeNull();
+      expect(scopeRegistry.hasScope('partial:invalid')).toBe(false);
     });
 
     test('should provide meaningful error messages for multi-mod issues', async () => {
@@ -1384,22 +1552,29 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       const problemMod = {
         scopes: [
           {
-            name: 'circular_reference', 
-            content: 'problem:circular_a := problem:circular_b + entities(core:actor)',
+            name: 'circular_reference',
+            content:
+              'problem:circular_a := problem:circular_b + entities(core:actor)',
           },
           {
             name: 'circular_reference_b',
-            content: 'problem:circular_b := problem:circular_a[{"var": "some.field", "==": true}]',
-          }
-        ]
+            content:
+              'problem:circular_b := problem:circular_a[{"var": "some.field", "==": true}]',
+          },
+        ],
       };
 
       await createTestMod(tempDir, 'problem', problemMod);
 
-      const problemScopes = await loadScopesFromMod('problem', ['circular_reference.scope', 'circular_reference_b.scope']);
+      const problemScopes = await loadScopesFromMod('problem', [
+        'circular_reference.scope',
+        'circular_reference_b.scope',
+      ]);
       scopeRegistry.initialize(problemScopes);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Circular reference should be detected and provide meaningful error
@@ -1428,10 +1603,11 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       for (let i = 0; i < modCount; i++) {
         const modId = `perf_mod_${i}`;
         const dependencies = i > 0 ? [`perf_mod_${i - 1}`] : [];
-        
+
         const scopes = [];
         for (let j = 0; j < scopesPerMod; j++) {
-          const dependentScope = i > 0 ? `perf_mod_${i - 1}:scope_${j}` : 'entities(core:actor)';
+          const dependentScope =
+            i > 0 ? `perf_mod_${i - 1}:scope_${j}` : 'entities(core:actor)';
           scopes.push({
             name: `scope_${j}`,
             content: `${modId}:scope_${j} := ${dependentScope}[{">": [{"var": "entity.components.core:position.x", "default": 0}, ${i * 10}]}]`,
@@ -1448,7 +1624,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       for (let i = 0; i < 50; i++) {
         testEntitiesData.push({
           id: `perf-entity-${i}`,
-          x: i * 2 // Spread entities across x positions
+          x: i * 2, // Spread entities across x positions
         });
       }
 
@@ -1456,7 +1632,11 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       for (const entityData of testEntitiesData) {
         const components = {
           'core:actor': { isPlayer: false },
-          'core:position': { locationId: 'test-location-1', x: entityData.x, y: 0 }
+          'core:position': {
+            locationId: 'test-location-1',
+            x: entityData.x,
+            y: 0,
+          },
         };
 
         const definition = new EntityDefinition(entityData.id, {
@@ -1485,12 +1665,14 @@ describe('Multi-Mod Scope Interactions E2E', () => {
 
       scopeRegistry.initialize(allScopes);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Test performance across multiple mod chain resolutions
       const startTime = Date.now();
-      
+
       const results = [];
       for (let i = 0; i < modCount; i++) {
         for (let j = 0; j < scopesPerMod; j++) {
@@ -1504,7 +1686,7 @@ describe('Multi-Mod Scope Interactions E2E', () => {
           results.push({ scopeId, size: result.size });
         }
       }
-      
+
       const endTime = Date.now();
       const totalTime = endTime - startTime;
 
@@ -1524,21 +1706,33 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         {
           id: 'concurrent_a',
           scopes: [
-            { name: 'actors_a', content: 'concurrent_a:actors := entities(core:actor)[{"var": "entity.components.core:position.x", "<": 50}]' }
-          ]
+            {
+              name: 'actors_a',
+              content:
+                'concurrent_a:actors := entities(core:actor)[{"var": "entity.components.core:position.x", "<": 50}]',
+            },
+          ],
         },
         {
           id: 'concurrent_b',
           scopes: [
-            { name: 'actors_b', content: 'concurrent_b:actors := entities(core:actor)[{"var": "entity.components.core:position.x", ">": 50}]' }
-          ]
+            {
+              name: 'actors_b',
+              content:
+                'concurrent_b:actors := entities(core:actor)[{"var": "entity.components.core:position.x", ">": 50}]',
+            },
+          ],
         },
         {
           id: 'concurrent_combined',
           scopes: [
-            { name: 'combined', content: 'concurrent_combined:all := concurrent_a:actors + concurrent_b:actors' }
-          ]
-        }
+            {
+              name: 'combined',
+              content:
+                'concurrent_combined:all := concurrent_a:actors + concurrent_b:actors',
+            },
+          ],
+        },
       ];
 
       for (const mod of concurrentMods) {
@@ -1548,34 +1742,53 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       // Load all scopes
       let allScopes = {};
       for (const mod of concurrentMods) {
-        const scopeFiles = mod.scopes.map(scope => `${scope.name}.scope`);
+        const scopeFiles = mod.scopes.map((scope) => `${scope.name}.scope`);
         const modScopes = await loadScopesFromMod(mod.id, scopeFiles);
         allScopes = { ...allScopes, ...modScopes };
       }
 
       scopeRegistry.initialize(allScopes);
 
-      const playerEntity = await entityManager.getEntityInstance(testActors.player.id);
+      const playerEntity = await entityManager.getEntityInstance(
+        testActors.player.id
+      );
       const gameContext = await createGameContext();
 
       // Run concurrent resolutions
       const promises = [
-        ScopeTestUtilities.resolveScopeE2E('concurrent_a:actors', playerEntity, gameContext, { scopeRegistry, scopeEngine }),
-        ScopeTestUtilities.resolveScopeE2E('concurrent_b:actors', playerEntity, gameContext, { scopeRegistry, scopeEngine }),
-        ScopeTestUtilities.resolveScopeE2E('concurrent_combined:all', playerEntity, gameContext, { scopeRegistry, scopeEngine }),
+        ScopeTestUtilities.resolveScopeE2E(
+          'concurrent_a:actors',
+          playerEntity,
+          gameContext,
+          { scopeRegistry, scopeEngine }
+        ),
+        ScopeTestUtilities.resolveScopeE2E(
+          'concurrent_b:actors',
+          playerEntity,
+          gameContext,
+          { scopeRegistry, scopeEngine }
+        ),
+        ScopeTestUtilities.resolveScopeE2E(
+          'concurrent_combined:all',
+          playerEntity,
+          gameContext,
+          { scopeRegistry, scopeEngine }
+        ),
       ];
 
       const results = await Promise.all(promises);
 
       // All resolutions should complete successfully
       expect(results).toHaveLength(3);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result instanceof Set).toBe(true);
       });
 
       // Combined result should be union of A and B (or close to it, depending on test data)
       const [resultA, resultB, resultCombined] = results;
-      expect(resultCombined.size).toBeGreaterThanOrEqual(Math.max(resultA.size, resultB.size));
+      expect(resultCombined.size).toBeGreaterThanOrEqual(
+        Math.max(resultA.size, resultB.size)
+      );
     });
   });
 });

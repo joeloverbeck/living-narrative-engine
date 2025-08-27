@@ -157,7 +157,7 @@ describe('EnhancedSpeechPatternsValidator', () => {
       const testCharacter = {
         components: {
           // Missing core:name or invalid structure to trigger structural validation failure
-          'invalid_component': { text: 'Bob' }, // No proper namespaced component
+          invalid_component: { text: 'Bob' }, // No proper namespaced component
         },
       };
 
@@ -165,7 +165,11 @@ describe('EnhancedSpeechPatternsValidator', () => {
 
       // With no valid character components, structural validation should fail
       expect(result.isValid).toBe(false);
-      expect(result.errors.some(err => err.includes('No character components found'))).toBe(true);
+      expect(
+        result.errors.some((err) =>
+          err.includes('No character components found')
+        )
+      ).toBe(true);
       // Should still have semantic and quality layers
       expect(result.context.layers).toHaveProperty('semantic');
       expect(result.context.layers).toHaveProperty('quality');
@@ -636,9 +640,13 @@ describe('EnhancedSpeechPatternsValidator', () => {
 
       // Should handle the error gracefully but mark as invalid due to structural issues
       expect(result.isValid).toBe(false);
-      expect(result.errors.some((e) => 
-        e.includes('Character name component exists but does not contain a valid name')
-      )).toBe(true);
+      expect(
+        result.errors.some((e) =>
+          e.includes(
+            'Character name component exists but does not contain a valid name'
+          )
+        )
+      ).toBe(true);
       // Should still have completed validation with layers
       expect(result.context.layers).toHaveProperty('structural');
       expect(result.context.layers).toHaveProperty('semantic');

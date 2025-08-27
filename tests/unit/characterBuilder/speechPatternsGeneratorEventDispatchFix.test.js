@@ -106,13 +106,16 @@ describe('SpeechPatternsGenerator - Event Dispatch API Usage', () => {
       // Find the start event dispatch call
       const startEventCall = dispatchCalls.find(
         (call) =>
-          call[0] === CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED
+          call[0] ===
+          CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED
       );
 
       expect(startEventCall).toBeDefined();
 
       // Verify the CORRECT API format: dispatch(eventName, payload) - where eventName is first param, payload is second
-      expect(startEventCall[0]).toBe(CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED);
+      expect(startEventCall[0]).toBe(
+        CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_STARTED
+      );
       expect(startEventCall[1]).toEqual(
         expect.objectContaining({
           characterData: expect.any(Object),
@@ -165,13 +168,16 @@ describe('SpeechPatternsGenerator - Event Dispatch API Usage', () => {
       // Find the completion event dispatch call
       const completionEventCall = dispatchCalls.find(
         (call) =>
-          call[0] === CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED
+          call[0] ===
+          CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED
       );
 
       expect(completionEventCall).toBeDefined();
 
       // Verify correct API format
-      expect(completionEventCall[0]).toBe(CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED);
+      expect(completionEventCall[0]).toBe(
+        CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_COMPLETED
+      );
       expect(completionEventCall[1]).toEqual(
         expect.objectContaining({
           result: expect.any(Object),
@@ -213,7 +219,9 @@ describe('SpeechPatternsGenerator - Event Dispatch API Usage', () => {
       expect(failureEventCall).toBeDefined();
 
       // Verify correct API format
-      expect(failureEventCall[0]).toBe(CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_FAILED);
+      expect(failureEventCall[0]).toBe(
+        CHARACTER_BUILDER_EVENTS.SPEECH_PATTERNS_GENERATION_FAILED
+      );
       expect(failureEventCall[1]).toEqual(
         expect.objectContaining({
           error: expect.any(String),
@@ -267,14 +275,14 @@ describe('SpeechPatternsGenerator - Event Dispatch API Usage', () => {
         // First argument should be the event name as a string
         expect(typeof call[0]).toBe('string');
         expect(call[0].length).toBeGreaterThan(0);
-        
+
         // Second argument should be the payload object
         expect(typeof call[1]).toBe('object');
         expect(call[1]).not.toBeNull();
 
         // The event name should be a valid string and not [object Object]
         expect(call[0]).not.toBe('[object Object]');
-        
+
         // Event name should follow the expected pattern (contain 'core:')
         expect(call[0]).toMatch(/^core:/);
       });

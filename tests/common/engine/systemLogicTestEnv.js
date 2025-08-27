@@ -79,9 +79,11 @@ export function createBaseRuleEnvironment({
       : {
           getAllSystemRules: jest.fn().mockReturnValue(rules),
           getAllActionDefinitions: jest.fn().mockReturnValue(actions),
-          getConditionDefinition: jest.fn().mockImplementation((conditionId) => {
-            return conditions[conditionId] || undefined;
-          }),
+          getConditionDefinition: jest
+            .fn()
+            .mockImplementation((conditionId) => {
+              return conditions[conditionId] || undefined;
+            }),
           getMacroDefinition: jest.fn().mockImplementation((macroId) => {
             return macros[macroId] || undefined;
           }),
@@ -316,12 +318,12 @@ export function createRuleTestEnvironment(options) {
   // Add a convenience method for dispatching attempt_action events with validation
   env.dispatchAction = async (params) => {
     const payload = createAttemptActionPayload(params);
-    
+
     // Validate action using ActionIndex before dispatch
     if (payload.actionId) {
       const actor = { id: payload.actorId };
       const isValid = env.validateAction(payload.actorId, payload.actionId);
-      
+
       if (!isValid) {
         env.logger.debug(
           `Action ${payload.actionId} filtered out by ActionIndex for actor ${payload.actorId}`
@@ -330,7 +332,7 @@ export function createRuleTestEnvironment(options) {
         return true;
       }
     }
-    
+
     return env.eventBus.dispatch('core:attempt_action', payload);
   };
 
@@ -341,11 +343,11 @@ export function createRuleTestEnvironment(options) {
     if (!actor) {
       return false; // Entity doesn't exist, action invalid
     }
-    
+
     // Create proper actor entity object for ActionIndex
     const actorEntity = { id: actorId };
     const candidates = env.actionIndex.getCandidateActions(actorEntity);
-    return candidates.some(action => action.id === actionId);
+    return candidates.some((action) => action.id === actionId);
   };
 
   return env;

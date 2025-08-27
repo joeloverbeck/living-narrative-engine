@@ -101,6 +101,14 @@ describe('registerInfrastructure', () => {
     container.register(tokens.ModManifestLoader, () => mockModManifestLoader);
     container.register(tokens.IDataFetcher, () => ({ fetch: jest.fn() }));
     container.register(tokens.IPathResolver, () => mockPathResolver);
+    // IScopeRegistry is required by ScopeEngine but registered in commandAndActionRegistrations
+    // Mock it here for test isolation
+    container.register(tokens.IScopeRegistry, () => ({
+      registerScope: jest.fn(),
+      getScope: jest.fn(),
+      hasScope: jest.fn(),
+      getAllScopes: jest.fn(),
+    }));
   });
 
   afterEach(() => {

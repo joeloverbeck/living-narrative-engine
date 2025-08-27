@@ -363,6 +363,11 @@ class RemoteLogger {
    * @param {any[]} metadata - Additional log data
    */
   #addToBuffer(level, message, metadata) {
+    // Skip processing if logger is being destroyed
+    if (this.#isUnloading) {
+      return;
+    }
+
     try {
       // Create enriched log entry
       const logEntry = this.#enrichLogEntry(level, message, metadata);
@@ -446,6 +451,11 @@ class RemoteLogger {
       return;
     }
 
+    // Skip async flush if unloading (will use sync flush instead)
+    if (this.#isUnloading) {
+      return;
+    }
+
     // Clear the scheduled flush timer
     if (this.#flushTimer !== null) {
       clearTimeout(this.#flushTimer);
@@ -481,13 +491,34 @@ class RemoteLogger {
    * @returns {Promise<void>}
    */
   async waitForPendingFlushes() {
-    // First, trigger a flush if there's data in buffer
-    if (this.#buffer.length > 0) {
-      await this.#flush();
+    // Keep flushing until buffer is empty and no flush is in progress
+    // This handles the race condition where new logs can be added during flush
+    let iterations = 0;
+    const maxIterations = 10; // Safety limit to prevent infinite loops
+
+    while (
+      (this.#buffer.length > 0 || this.#currentFlushPromise) &&
+      iterations < maxIterations
+    ) {
+      iterations++;
+
+      // Trigger flush if there's data in buffer
+      if (this.#buffer.length > 0) {
+        await this.#flush();
+      }
+
+      // Wait for any current flush to complete
+      if (this.#currentFlushPromise) {
+        await this.#currentFlushPromise;
+      }
+
+      // Small delay to allow any async operations to settle
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
-    // Then wait for any current flush to complete
-    if (this.#currentFlushPromise) {
-      await this.#currentFlushPromise;
+
+    // Final check - if we hit max iterations, force one more flush
+    if (iterations >= maxIterations && this.#buffer.length > 0) {
+      await this.#flush();
     }
   }
 
@@ -837,6 +868,9 @@ class RemoteLogger {
    * @returns {Promise<void>}
    */
   async destroy() {
+    // Set unloading flag to prevent new operations
+    this.#isUnloading = true;
+
     // Clear any pending flush timer
     if (this.#flushTimer !== null) {
       clearTimeout(this.#flushTimer);
@@ -852,13 +886,28 @@ class RemoteLogger {
     // Final flush of any remaining logs
     await this.#flush();
 
-    // Clear buffer
+    // Clear buffer and cleanup metadata references
+    for (const log of this.#buffer) {
+      if (log.metadata) {
+        log.metadata = null;
+      }
+    }
     this.#buffer.length = 0;
 
     // Clear category cache
     if (this.#categoryDetector) {
       this.#categoryDetector.clearCache();
     }
+
+    // Remove event listeners to prevent memory leaks
+    if (typeof window !== 'undefined') {
+      // Note: We can't remove these specific listeners without storing references
+      // but setting isUnloading flag prevents their execution
+      // Future improvement: Store listener references to remove them explicitly
+    }
+
+    // Clear current flush promise reference
+    this.#currentFlushPromise = null;
   }
 }
 

@@ -196,7 +196,8 @@ describe('Facing-aware action availability E2E', () => {
     ]);
 
     // Re-check available actions after turning back
-    const updatedActions = await actionServiceFacade.discoverActions('test:npc');
+    const updatedActions =
+      await actionServiceFacade.discoverActions('test:npc');
 
     // Now kneeling should be available again
     const updatedKneelAction = updatedActions.find(
@@ -303,7 +304,8 @@ describe('Facing-aware action availability E2E', () => {
     ]);
 
     // Re-check available actions
-    const updatedActions = await actionServiceFacade.discoverActions('test:npc');
+    const updatedActions =
+      await actionServiceFacade.discoverActions('test:npc');
     const updatedKneelAction = updatedActions.find(
       (a) => a.actionId === 'positioning:kneel_before'
     );

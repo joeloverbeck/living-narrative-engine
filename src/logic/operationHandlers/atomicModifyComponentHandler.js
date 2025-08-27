@@ -72,14 +72,14 @@ class AtomicModifyComponentHandler extends ComponentOperationHandler {
     if (!assertParamsObject(params, logger, 'ATOMIC_MODIFY_COMPONENT')) {
       return;
     }
-    
-    const { 
-      entity_ref, 
-      component_type, 
-      field, 
-      expected_value, 
-      new_value, 
-      result_variable 
+
+    const {
+      entity_ref,
+      component_type,
+      field,
+      expected_value,
+      new_value,
+      result_variable,
     } = params;
 
     // ── validate entity and component type together ─────────────────
@@ -103,7 +103,9 @@ class AtomicModifyComponentHandler extends ComponentOperationHandler {
       typeof field !== 'string' ||
       !field.trim()
     ) {
-      logger.warn('ATOMIC_MODIFY_COMPONENT: "field" must be a non-empty string.');
+      logger.warn(
+        'ATOMIC_MODIFY_COMPONENT: "field" must be a non-empty string.'
+      );
       this.#storeResult(false, result_variable, executionContext, logger);
       return;
     }
@@ -115,12 +117,17 @@ class AtomicModifyComponentHandler extends ComponentOperationHandler {
       typeof result_variable !== 'string' ||
       !result_variable.trim()
     ) {
-      logger.warn('ATOMIC_MODIFY_COMPONENT: "result_variable" must be a non-empty string.');
+      logger.warn(
+        'ATOMIC_MODIFY_COMPONENT: "result_variable" must be a non-empty string.'
+      );
       return;
     }
 
     // ── fetch & clone component data ───────────────────────────────
-    const current = this.#entityManager.getComponentData(entityId, componentType);
+    const current = this.#entityManager.getComponentData(
+      entityId,
+      componentType
+    );
 
     if (current === undefined) {
       logger.warn(
@@ -152,7 +159,7 @@ class AtomicModifyComponentHandler extends ComponentOperationHandler {
     // ── perform atomic modification ─────────────────────────────────
     const updatedComponent = deepClone(current);
     const success = setByPath(updatedComponent, field.trim(), new_value);
-    
+
     if (!success) {
       logger.warn(
         `ATOMIC_MODIFY_COMPONENT: Failed to set path "${field}" on component "${componentType}".`
@@ -168,7 +175,7 @@ class AtomicModifyComponentHandler extends ComponentOperationHandler {
         componentType,
         updatedComponent
       );
-      
+
       if (addSuccess) {
         logger.debug(
           `ATOMIC_MODIFY_COMPONENT: Successfully modified "${componentType}.${field}" on "${entityId}" from ${JSON.stringify(expected_value)} to ${JSON.stringify(new_value)}`
@@ -235,22 +242,22 @@ class AtomicModifyComponentHandler extends ComponentOperationHandler {
    * Deep equality comparison for atomic check.
    *
    * @param {*} a - First value
-   * @param {*} b - Second value  
+   * @param {*} b - Second value
    * @returns {boolean} Whether values are deeply equal
    * @private
    */
   #deepEqual(a, b) {
     if (a === b) return true;
-    
+
     if (a === null || b === null) return a === b;
     if (a === undefined || b === undefined) return a === b;
-    
+
     if (typeof a !== typeof b) return false;
-    
+
     if (typeof a !== 'object') return a === b;
-    
+
     if (Array.isArray(a) !== Array.isArray(b)) return false;
-    
+
     if (Array.isArray(a)) {
       if (a.length !== b.length) return false;
       for (let i = 0; i < a.length; i++) {
@@ -258,17 +265,17 @@ class AtomicModifyComponentHandler extends ComponentOperationHandler {
       }
       return true;
     }
-    
+
     const keysA = Object.keys(a);
     const keysB = Object.keys(b);
-    
+
     if (keysA.length !== keysB.length) return false;
-    
+
     for (const key of keysA) {
       if (!keysB.includes(key)) return false;
       if (!this.#deepEqual(a[key], b[key])) return false;
     }
-    
+
     return true;
   }
 
@@ -284,7 +291,11 @@ class AtomicModifyComponentHandler extends ComponentOperationHandler {
     const parts = path.split('.').filter(Boolean);
     let current = obj;
     for (const part of parts) {
-      if (current === null || current === undefined || typeof current !== 'object') {
+      if (
+        current === null ||
+        current === undefined ||
+        typeof current !== 'object'
+      ) {
         return undefined;
       }
       current = current[part];

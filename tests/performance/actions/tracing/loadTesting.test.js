@@ -216,17 +216,24 @@ describe('High-Frequency Action Tracing Load Tests', () => {
         batchTimes.reduce((sum, time) => sum + time, 0) / batchTimes.length;
       const maxBatchTime = Math.max(...batchTimes);
       const minBatchTime = Math.min(...batchTimes);
-      
+
       // Calculate standard deviation for better statistical analysis
-      const variance = batchTimes.reduce((sum, time) => sum + Math.pow(time - avgBatchTime, 2), 0) / batchTimes.length;
+      const variance =
+        batchTimes.reduce(
+          (sum, time) => sum + Math.pow(time - avgBatchTime, 2),
+          0
+        ) / batchTimes.length;
       const stdDev = Math.sqrt(variance);
       const coefficientOfVariation = (stdDev / avgBatchTime) * 100;
-      
+
       // Calculate median for more stable central tendency
       const sortedTimes = [...batchTimes].sort((a, b) => a - b);
-      const median = sortedTimes.length % 2 === 0
-        ? (sortedTimes[sortedTimes.length / 2 - 1] + sortedTimes[sortedTimes.length / 2]) / 2
-        : sortedTimes[Math.floor(sortedTimes.length / 2)];
+      const median =
+        sortedTimes.length % 2 === 0
+          ? (sortedTimes[sortedTimes.length / 2 - 1] +
+              sortedTimes[sortedTimes.length / 2]) /
+            2
+          : sortedTimes[Math.floor(sortedTimes.length / 2)];
 
       // More robust degradation calculation using statistical measures
       const firstBatchTime = Math.max(batchTimes[0], 10); // Minimum 10ms floor to prevent near-zero division
@@ -240,8 +247,12 @@ describe('High-Frequency Action Tracing Load Tests', () => {
       console.log(`  Min batch time: ${minBatchTime.toFixed(2)}ms`);
       console.log(`  Max batch time: ${maxBatchTime.toFixed(2)}ms`);
       console.log(`  Standard deviation: ${stdDev.toFixed(2)}ms`);
-      console.log(`  Coefficient of variation: ${coefficientOfVariation.toFixed(1)}%`);
-      console.log(`  Performance change: ${percentageChange.toFixed(1)}% (${absoluteChange.toFixed(1)}ms)`);
+      console.log(
+        `  Coefficient of variation: ${coefficientOfVariation.toFixed(1)}%`
+      );
+      console.log(
+        `  Performance change: ${percentageChange.toFixed(1)}% (${absoluteChange.toFixed(1)}ms)`
+      );
 
       // More robust assertions using statistical measures and absolute thresholds
       expect(coefficientOfVariation).toBeLessThan(200); // Coefficient of variation should be reasonable

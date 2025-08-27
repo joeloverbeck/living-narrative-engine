@@ -49,7 +49,7 @@ export class SpeechPatternsSchemaValidator {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['debug', 'warn', 'error', 'info'],
     });
-    
+
     if (schemaValidator && typeof schemaValidator === 'object') {
       validateDependency(schemaValidator, 'AjvSchemaValidator', logger, {
         requiredMethods: ['validate', 'isSchemaLoaded'],
@@ -74,10 +74,10 @@ export class SpeechPatternsSchemaValidator {
           `Schema '${this.#schemaId}' not loaded, validation will be limited`
         );
         // Return valid if schema isn't loaded - trust the structure
-        return { 
-          isValid: true, 
-          errors: [], 
-          warnings: ['Schema validation unavailable'] 
+        return {
+          isValid: true,
+          errors: [],
+          warnings: ['Schema validation unavailable'],
         };
       }
 
@@ -94,10 +94,9 @@ export class SpeechPatternsSchemaValidator {
 
       // Format schema validation errors for readability
       const errors = this.#formatSchemaErrors(validationResult.errors);
-      
+
       this.#logger.debug('Schema validation failed', { errors });
       return { isValid: false, errors, warnings: [] };
-      
     } catch (error) {
       this.#logger.error('Validation error', error);
       return {
@@ -152,7 +151,7 @@ export class SpeechPatternsSchemaValidator {
     };
 
     const result = await this.validateResponse(wrappedResponse);
-    
+
     // Filter errors to only pattern-related ones
     const patternErrors = result.errors.filter(
       (err) => err.includes('speechPatterns') || err.includes('Pattern')
@@ -188,7 +187,9 @@ export class SpeechPatternsSchemaValidator {
       // Remove data: URLs for safety
       .replace(/data:[^"'\s]*/gi, '')
       // Remove vbscript: protocol
-      .replace(/vbscript:/gi, '');
+      .replace(/vbscript:/gi, '')
+      // Remove all HTML tags but preserve content
+      .replace(/<[^>]*>/gi, '');
 
     // Clean up any excessive whitespace left by removals
     sanitized = sanitized.replace(/\s+/g, ' ').trim();
@@ -261,34 +262,46 @@ export class SpeechPatternsSchemaValidator {
       if (typeof error === 'string') {
         return error;
       }
-      
+
       if (error.message || error.keyword) {
         const path = error.instancePath || error.dataPath || '';
         const keyword = error.keyword || error.message || '';
-        
+
         // Create user-friendly error messages
-        if ((keyword === 'minItems' || error.message === 'minItems') && path.includes('speechPatterns')) {
+        if (
+          (keyword === 'minItems' || error.message === 'minItems') &&
+          path.includes('speechPatterns')
+        ) {
           return `Not enough speech patterns generated (minimum 3 required)`;
         }
-        if ((keyword === 'maxItems' || error.message === 'maxItems') && path.includes('speechPatterns')) {
+        if (
+          (keyword === 'maxItems' || error.message === 'maxItems') &&
+          path.includes('speechPatterns')
+        ) {
           return `Too many speech patterns generated (maximum 30 allowed)`;
         }
         if (keyword === 'required' || error.message === 'required') {
           return `Missing required field: ${error.params?.missingProperty || 'unknown'}`;
         }
-        if (keyword === 'minLength' || keyword === 'maxLength' || 
-            error.message === 'minLength' || error.message === 'maxLength') {
+        if (
+          keyword === 'minLength' ||
+          keyword === 'maxLength' ||
+          error.message === 'minLength' ||
+          error.message === 'maxLength'
+        ) {
           const fieldName = path.split('/').pop() || 'field';
-          const msg = error.message === 'minLength' || error.message === 'maxLength' 
-            ? `${error.message}` : error.message;
+          const msg =
+            error.message === 'minLength' || error.message === 'maxLength'
+              ? `${error.message}`
+              : error.message;
           return `${fieldName} length invalid: ${msg}`;
         }
-        
+
         // Default formatting - handle both keyword and message as the error type
         const errorType = error.keyword || error.message || 'Unknown error';
         return path ? `${path}: ${errorType}` : errorType;
       }
-      
+
       return 'Unknown validation error';
     });
   }

@@ -409,7 +409,7 @@ export class PromptDataFormatter {
     if (!thoughtsArray || thoughtsArray.length === 0) {
       return '';
     }
-    return 'INNER VOICE REMINDER: Your thoughts below must reflect your character\'s authentic mental voice and personality patterns.';
+    return "INNER VOICE REMINDER: Your thoughts below must reflect your character's authentic mental voice and personality patterns.";
   }
 
   /**

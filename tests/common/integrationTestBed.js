@@ -994,6 +994,91 @@ export class IntegrationTestBed extends BaseTestBed {
             additionalProperties: true,
           },
         },
+        {
+          id: 'core:speech_patterns_cache_hit',
+          description: 'Dispatched when cached speech patterns are returned instead of generating new ones.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              cacheKey: {
+                description: 'The cache key that was hit',
+                type: 'string',
+              },
+              timestamp: {
+                description: 'ISO 8601 timestamp of when the cache hit occurred',
+                type: 'string',
+                format: 'date-time',
+              },
+            },
+            required: ['cacheKey', 'timestamp'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:speech_patterns_generation_retry',
+          description: 'Dispatched when speech patterns generation is retried after a failure.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              attempt: {
+                description: 'Current attempt number (starting from 1)',
+                type: 'number',
+                minimum: 1,
+              },
+              maxRetries: {
+                description: 'Maximum number of retry attempts allowed',
+                type: 'number',
+                minimum: 1,
+              },
+              delay: {
+                description: 'Delay in milliseconds before the retry attempt',
+                type: 'number',
+                minimum: 0,
+              },
+              error: {
+                description: 'Error message from the previous failed attempt',
+                type: 'string',
+              },
+              timestamp: {
+                description: 'ISO 8601 timestamp of when the retry was scheduled',
+                type: 'string',
+                format: 'date-time',
+              },
+            },
+            required: ['attempt', 'maxRetries', 'delay', 'error', 'timestamp'],
+            additionalProperties: true,
+          },
+        },
+        {
+          id: 'core:circuit_breaker_opened',
+          description: 'Dispatched when a circuit breaker opens due to consecutive failures, preventing further requests until reset.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              service: {
+                description: 'Name of the service where the circuit breaker was opened',
+                type: 'string',
+              },
+              consecutiveFailures: {
+                description: 'Number of consecutive failures that caused the circuit breaker to open',
+                type: 'number',
+                minimum: 1,
+              },
+              resetTimeout: {
+                description: 'Timeout in milliseconds after which the circuit breaker will attempt to reset',
+                type: 'number',
+                minimum: 0,
+              },
+              timestamp: {
+                description: 'ISO 8601 timestamp of when the circuit breaker was opened',
+                type: 'string',
+                format: 'date-time',
+              },
+            },
+            required: ['service', 'consecutiveFailures', 'resetTimeout', 'timestamp'],
+            additionalProperties: true,
+          },
+        },
       ];
 
       // Register event definitions with the data registry

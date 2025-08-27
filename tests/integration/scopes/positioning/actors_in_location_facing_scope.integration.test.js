@@ -9,6 +9,7 @@ import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
 import { parseDslExpression } from '../../../../src/scopeDsl/parser/parser.js';
 import ConsoleLogger from '../../../../src/logging/consoleLogger.js';
+import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 import { addMockAstsToScopes } from '../../../common/scopeDsl/mockAstGenerator.js';
 import {
   NAME_COMPONENT_ID,
@@ -20,23 +21,69 @@ describe('positioning:actors_in_location_facing scope integration', () => {
   let scopeEngine;
   let scopeRegistry;
   let logger;
+  let jsonLogicEval;
 
   beforeEach(() => {
     // Initialize test environment
     logger = new ConsoleLogger('ERROR');
 
+    // Create mock GameDataRepository with condition definitions
+    const mockGameDataRepository = {
+      getConditionDefinition: (conditionId) => {
+        const conditions = {
+          'core:entity-at-location': {
+            logic: {
+              "==": [
+                { "var": "entity.components.core:position.locationId" },
+                { "var": "location.id" }
+              ]
+            }
+          },
+          'core:entity-is-not-current-actor': {
+            logic: {
+              "!=": [
+                { "var": "entity.id" },
+                { "var": "actor.id" }
+              ]
+            }
+          },
+          'core:entity-has-actor-component': {
+            logic: {
+              "!!": { "var": "entity.components.core:actor" }
+            }
+          },
+          'positioning:entity-in-facing-away': {
+            logic: {
+              "in": [
+                { "var": "entity.id" },
+                { "var": "actor.components.positioning:facing_away.facing_away_from" }
+              ]
+            }
+          }
+        };
+        return conditions[conditionId] || null;
+      }
+    };
+
+    // Initialize JSON Logic Evaluation Service
+    jsonLogicEval = new JsonLogicEvaluationService({
+      logger,
+      gameDataRepository: mockGameDataRepository
+    });
+
     // Create scope registry and register the necessary scopes
     scopeRegistry = new ScopeRegistry();
-    
+
     // Register mock scopes for testing
     const mockScopes = {
       'positioning:actors_in_location_facing': {
         expr: 'entities(core:position)[][{"and": [{"condition_ref": "core:entity-at-location"}, {"condition_ref": "core:entity-is-not-current-actor"}, {"condition_ref": "core:entity-has-actor-component"}, {"!": {"condition_ref": "positioning:entity-in-facing-away"}}]}]',
-        definition: 'positioning:actors_in_location_facing := entities(core:position)[][{"and": [{"condition_ref": "core:entity-at-location"}, {"condition_ref": "core:entity-is-not-current-actor"}, {"condition_ref": "core:entity-has-actor-component"}, {"!": {"condition_ref": "positioning:entity-in-facing-away"}}]}]',
+        definition:
+          'positioning:actors_in_location_facing := entities(core:position)[][{"and": [{"condition_ref": "core:entity-at-location"}, {"condition_ref": "core:entity-is-not-current-actor"}, {"condition_ref": "core:entity-has-actor-component"}, {"!": {"condition_ref": "positioning:entity-in-facing-away"}}]}]',
         modId: 'positioning',
       },
     };
-    
+
     scopeRegistry.initialize(addMockAstsToScopes(mockScopes));
 
     // Create scope engine
@@ -81,10 +128,14 @@ describe('positioning:actors_in_location_facing scope integration', () => {
         entityManager,
         logger,
         actor: actor1,
+        jsonLogicEval,
+        location: { id: 'test:location1' },
       };
 
       // Parse and resolve the scope expression
-      const scopeDef = scopeRegistry.getScope('positioning:actors_in_location_facing');
+      const scopeDef = scopeRegistry.getScope(
+        'positioning:actors_in_location_facing'
+      );
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor1, runtimeCtx);
 
@@ -127,10 +178,14 @@ describe('positioning:actors_in_location_facing scope integration', () => {
         entityManager,
         logger,
         actor: actor1,
+        jsonLogicEval,
+        location: { id: 'test:location1' },
       };
 
       // Parse and resolve the scope expression
-      const scopeDef = scopeRegistry.getScope('positioning:actors_in_location_facing');
+      const scopeDef = scopeRegistry.getScope(
+        'positioning:actors_in_location_facing'
+      );
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor1, runtimeCtx);
 
@@ -164,10 +219,14 @@ describe('positioning:actors_in_location_facing scope integration', () => {
         entityManager,
         logger,
         actor: loneActor,
+        jsonLogicEval,
+        location: { id: 'test:location1' },
       };
 
       // Parse and resolve the scope expression
-      const scopeDef = scopeRegistry.getScope('positioning:actors_in_location_facing');
+      const scopeDef = scopeRegistry.getScope(
+        'positioning:actors_in_location_facing'
+      );
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, loneActor, runtimeCtx);
 
@@ -217,10 +276,14 @@ describe('positioning:actors_in_location_facing scope integration', () => {
         entityManager,
         logger,
         actor: actor1,
+        jsonLogicEval,
+        location: { id: 'test:location1' },
       };
 
       // Parse and resolve the scope expression
-      const scopeDef = scopeRegistry.getScope('positioning:actors_in_location_facing');
+      const scopeDef = scopeRegistry.getScope(
+        'positioning:actors_in_location_facing'
+      );
       const ast = parseDslExpression(scopeDef.definition.split(':=')[1].trim());
       const result = scopeEngine.resolve(ast, actor1, runtimeCtx);
 

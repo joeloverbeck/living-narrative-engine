@@ -236,9 +236,9 @@ describe('SpeechPatternsGenerator', () => {
           2,
           expect.any(String), // Event name as first argument
           expect.objectContaining({
-              result: expect.any(Object),
-              processingTime: expect.any(Number),
-              timestamp: expect.any(String),
+            result: expect.any(Object),
+            processingTime: expect.any(Number),
+            timestamp: expect.any(String),
           })
         );
       } catch (error) {

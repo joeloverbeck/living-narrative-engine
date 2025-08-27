@@ -95,14 +95,18 @@ describe('SpeechPatternsSchemaValidator', () => {
         characterName: 'Sarah Mitchell',
         speechPatterns: [
           {
-            pattern: 'Uses elaborate metaphors when explaining complex emotions',
-            example: "It's like... imagine your favorite song being played backwards on a broken record player.",
+            pattern:
+              'Uses elaborate metaphors when explaining complex emotions',
+            example:
+              "It's like... imagine your favorite song being played backwards on a broken record player.",
             circumstances: 'When trying to articulate deep emotional pain',
           },
           {
-            pattern: 'Switches to clipped, military-style speech under pressure',
+            pattern:
+              'Switches to clipped, military-style speech under pressure',
             example: 'Copy that. Moving to position. ETA two minutes.',
-            circumstances: 'During high-stress situations requiring quick decisions',
+            circumstances:
+              'During high-stress situations requiring quick decisions',
           },
           {
             pattern: 'Tends to use technical jargon as emotional armor',
@@ -175,7 +179,11 @@ describe('SpeechPatternsSchemaValidator', () => {
         { keyword: 'minItems', instancePath: '/speechPatterns' },
         { keyword: 'maxItems', instancePath: '/speechPatterns' },
         { keyword: 'required', params: { missingProperty: 'characterName' } },
-        { keyword: 'minLength', instancePath: '/characterName', message: 'too short' },
+        {
+          keyword: 'minLength',
+          instancePath: '/characterName',
+          message: 'too short',
+        },
         { message: 'Some other error', instancePath: '/example' },
         'String error message',
       ];
@@ -188,11 +196,19 @@ describe('SpeechPatternsSchemaValidator', () => {
       const result = await validator.validateResponse(validResponse);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Not enough speech patterns generated (minimum 3 required)');
-      expect(result.errors).toContain('Too many speech patterns generated (maximum 30 allowed)');
+      expect(result.errors).toContain(
+        'Not enough speech patterns generated (minimum 3 required)'
+      );
+      expect(result.errors).toContain(
+        'Too many speech patterns generated (maximum 30 allowed)'
+      );
       expect(result.errors).toContain('Missing required field: characterName');
-      expect(result.errors.some(e => e.includes('characterName') && e.includes('too short'))).toBe(true);
-      expect(result.errors.some(e => e.includes('/example'))).toBe(true);
+      expect(
+        result.errors.some(
+          (e) => e.includes('characterName') && e.includes('too short')
+        )
+      ).toBe(true);
+      expect(result.errors.some((e) => e.includes('/example'))).toBe(true);
       expect(result.errors).toContain('String error message');
     });
   });
@@ -201,7 +217,8 @@ describe('SpeechPatternsSchemaValidator', () => {
     it('should validate individual pattern successfully', async () => {
       const validPattern = {
         pattern: 'Uses elaborate metaphors when explaining complex emotions',
-        example: "It's like... imagine your favorite song being played backwards on a broken record player.",
+        example:
+          "It's like... imagine your favorite song being played backwards on a broken record player.",
         circumstances: 'When trying to articulate deep emotional pain',
       };
 
@@ -251,7 +268,9 @@ describe('SpeechPatternsSchemaValidator', () => {
 
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors.some((err) => err.includes('speechPatterns[0]'))).toBe(true);
+      expect(
+        result.errors.some((err) => err.includes('speechPatterns[0]'))
+      ).toBe(true);
       expect(result.errors).not.toContain('Character name is required');
       expect(result.errors).not.toContain('GeneratedAt field is missing');
     });
@@ -276,7 +295,8 @@ describe('SpeechPatternsSchemaValidator', () => {
     });
 
     it('should remove iframe tags and content', () => {
-      const maliciousInput = 'Content <iframe src="evil.com"></iframe> more content';
+      const maliciousInput =
+        'Content <iframe src="evil.com"></iframe> more content';
       const sanitized = validator.sanitizeInput(maliciousInput);
 
       expect(sanitized).toBe('Content more content');
@@ -299,7 +319,8 @@ describe('SpeechPatternsSchemaValidator', () => {
     });
 
     it('should remove data: URLs', () => {
-      const maliciousInput = 'Image <img src="data:text/html,<script>alert(1)</script>">';
+      const maliciousInput =
+        'Image <img src="data:text/html,<script>alert(1)</script>">';
       const sanitized = validator.sanitizeInput(maliciousInput);
 
       expect(sanitized).not.toContain('data:');
@@ -328,7 +349,8 @@ describe('SpeechPatternsSchemaValidator', () => {
     });
 
     it('should preserve legitimate content', () => {
-      const legitimateInput = 'This is a normal text with emphasis and numbers 123.';
+      const legitimateInput =
+        'This is a normal text with emphasis and numbers 123.';
       const sanitized = validator.sanitizeInput(legitimateInput);
 
       expect(sanitized).toContain('normal text');
@@ -345,14 +367,18 @@ describe('SpeechPatternsSchemaValidator', () => {
         characterName: 'Sarah Mitchell',
         speechPatterns: [
           {
-            pattern: 'Uses elaborate metaphors when explaining complex emotions',
-            example: "It's like... imagine your favorite song being played backwards on a broken record player.",
+            pattern:
+              'Uses elaborate metaphors when explaining complex emotions',
+            example:
+              "It's like... imagine your favorite song being played backwards on a broken record player.",
             circumstances: 'When trying to articulate deep emotional pain',
           },
           {
-            pattern: 'Switches to clipped, military-style speech under pressure',
+            pattern:
+              'Switches to clipped, military-style speech under pressure',
             example: 'Copy that. Moving to position. ETA two minutes.',
-            circumstances: 'During high-stress situations requiring quick decisions',
+            circumstances:
+              'During high-stress situations requiring quick decisions',
           },
           {
             pattern: 'Tends to use technical jargon as emotional armor',
@@ -391,17 +417,25 @@ describe('SpeechPatternsSchemaValidator', () => {
           {
             pattern: 'Another safe pattern',
             example: 'Safe example',
-            circumstances: 'Safe<script>alert("circumstances")</script>circumstances',
+            circumstances:
+              'Safe<script>alert("circumstances")</script>circumstances',
           },
         ],
       };
 
-      const result = await validator.validateAndSanitizeResponse(maliciousResponse);
+      const result =
+        await validator.validateAndSanitizeResponse(maliciousResponse);
 
       expect(result.sanitizedResponse.characterName).not.toContain('<script>');
-      expect(result.sanitizedResponse.speechPatterns[0].pattern).not.toContain('<script>');
-      expect(result.sanitizedResponse.speechPatterns[1].example).not.toContain('<iframe>');
-      expect(result.sanitizedResponse.speechPatterns[2].circumstances).not.toContain('<script>');
+      expect(result.sanitizedResponse.speechPatterns[0].pattern).not.toContain(
+        '<script>'
+      );
+      expect(result.sanitizedResponse.speechPatterns[1].example).not.toContain(
+        '<iframe>'
+      );
+      expect(
+        result.sanitizedResponse.speechPatterns[2].circumstances
+      ).not.toContain('<script>');
     });
 
     it('should handle validation failure with sanitization', async () => {
@@ -431,7 +465,9 @@ describe('SpeechPatternsSchemaValidator', () => {
       });
 
       expect(result.isValid).toBe(false);
-      expect(result.errors.some((err) => err.includes('Processing error:'))).toBe(true);
+      expect(
+        result.errors.some((err) => err.includes('Processing error:'))
+      ).toBe(true);
       expect(result.sanitizedResponse).toBeNull();
 
       // Restore original method
@@ -447,7 +483,9 @@ describe('SpeechPatternsSchemaValidator', () => {
         'schema://living-narrative-engine/speech-patterns-response.schema.json'
       );
       expect(info.version).toBe('1.0.0');
-      expect(info.description).toBe('Speech Patterns Response Validation Schema');
+      expect(info.description).toBe(
+        'Speech Patterns Response Validation Schema'
+      );
     });
   });
 });

@@ -119,7 +119,8 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
     try {
       // Layer 1: Character definition structural validation (NOT speech patterns response validation)
       const structuralStart = Date.now();
-      const structuralResult = this.#validateCharacterDefinitionStructure(input);
+      const structuralResult =
+        this.#validateCharacterDefinitionStructure(input);
       result.context.layers.structural = {
         duration: Date.now() - structuralStart,
         isValid: structuralResult.isValid,
@@ -249,7 +250,8 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
     // Validate core:name component if present (this was the main issue)
     const nameComponent = componentsToCheck['core:name'];
     if (nameComponent) {
-      const characterName = this.#extractCharacterNameFromComponent(nameComponent);
+      const characterName =
+        this.#extractCharacterNameFromComponent(nameComponent);
       if (!characterName) {
         // This should NOT be treated as an error - provide suggestion instead
         errors.push(
@@ -267,7 +269,9 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       isValid: errors.length === 0,
       errors,
       componentCount: componentKeys.length,
-      characterName: nameComponent ? this.#extractCharacterNameFromComponent(nameComponent) : null,
+      characterName: nameComponent
+        ? this.#extractCharacterNameFromComponent(nameComponent)
+        : null,
     };
   }
 
@@ -674,7 +678,8 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       return result; // Handled by completeness validation
     }
 
-    const characterName = this.#extractCharacterNameFromComponent(nameComponent);
+    const characterName =
+      this.#extractCharacterNameFromComponent(nameComponent);
     if (!characterName) {
       result.warnings.push(
         'Character name component exists but lacks a clear name value'
@@ -1293,7 +1298,7 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
    * @private
    */
   #hashObject(obj) {
-    const str = JSON.stringify(obj);
+    const str = JSON.stringify(obj) || 'null';
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);

@@ -14,13 +14,17 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
 
   beforeEach(() => {
     testBed = createTestBed();
-    
+
     // Set up DOM structure for the controller
     setupSpeechPatternsDOM();
-    
+
     const dependencies = {
       logger: testBed.createMockLogger(),
-      eventBus: testBed.createMock('eventBus', ['dispatch', 'subscribe', 'unsubscribe']),
+      eventBus: testBed.createMock('eventBus', [
+        'dispatch',
+        'subscribe',
+        'unsubscribe',
+      ]),
       container: testBed.createMock('container', ['resolve']),
       schemaValidator: testBed.createMock('schemaValidator', [
         'validate',
@@ -55,35 +59,36 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const characterDefinition = {
         components: {
           'core:name': {
-            text: 'Amaia Castillo'
+            text: 'Amaia Castillo',
           },
           'core:personality': {
             traits: ['passionate', 'creative', 'independent'],
-            description: 'A fiery artist with strong convictions'
+            description: 'A fiery artist with strong convictions',
           },
           'core:profile': {
             age: 27,
             occupation: 'Artist',
-            background: 'Grew up in Barcelona, moved to New York for art career'
+            background:
+              'Grew up in Barcelona, moved to New York for art career',
           },
           'core:speech_patterns': {
-            patterns: [] // Empty patterns array should be valid
-          }
-        }
+            patterns: [], // Empty patterns array should be valid
+          },
+        },
       };
 
       // Test through the public interface by setting up the textarea and triggering validation
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
       const generateBtn = document.getElementById('generate-btn');
-      
+
       // Set the character definition in the textarea
       textarea.value = JSON.stringify(characterDefinition);
-      
+
       // Trigger the input event to validate
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
-      
+
       // Wait a bit for debounced validation (controller uses 300ms debounce)
       setTimeout(() => {
         // Check if the validation is working by checking error state
@@ -100,28 +105,28 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       // Test direct component format (no "components" wrapper)
       const legacyCharacterDefinition = {
         'core:name': {
-          text: 'Maria Santos'
+          text: 'Maria Santos',
         },
         'core:personality': {
           traits: ['analytical', 'methodical'],
-          description: 'A careful researcher who values precision'
+          description: 'A careful researcher who values precision',
         },
         'core:profile': {
           age: 34,
-          occupation: 'Research Scientist'
-        }
+          occupation: 'Research Scientist',
+        },
       };
 
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
       const generateBtn = document.getElementById('generate-btn');
-      
+
       textarea.value = JSON.stringify(legacyCharacterDefinition);
-      
+
       // Trigger validation
       const inputEvent = new Event('input', { bubbles: true });
       textarea.dispatchEvent(inputEvent);
-      
+
       // Wait for debounced validation
       setTimeout(() => {
         // Legacy format should be supported and valid
@@ -138,29 +143,29 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
         {
           name: 'text field format',
           nameComponent: { text: 'Isabella Rodriguez' },
-          expected: 'Isabella Rodriguez'
+          expected: 'Isabella Rodriguez',
         },
         {
-          name: 'name field format', 
+          name: 'name field format',
           nameComponent: { name: 'Elena Vasquez' },
-          expected: 'Elena Vasquez'
+          expected: 'Elena Vasquez',
         },
         {
           name: 'value field format',
           nameComponent: { value: 'Carmen Delgado' },
-          expected: 'Carmen Delgado'
+          expected: 'Carmen Delgado',
         },
         {
           name: 'nested structure',
-          nameComponent: { 
+          nameComponent: {
             personal: {
               firstName: 'Sofia',
-              lastName: 'Martinez'
+              lastName: 'Martinez',
             },
-            text: 'Sofia Martinez'
+            text: 'Sofia Martinez',
           },
-          expected: 'Sofia Martinez'
-        }
+          expected: 'Sofia Martinez',
+        },
       ];
 
       const textarea = document.getElementById('character-definition');
@@ -179,9 +184,9 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
           components: {
             'core:name': testCase.nameComponent,
             'core:personality': {
-              description: 'Test character for name extraction'
-            }
-          }
+              description: 'Test character for name extraction',
+            },
+          },
         };
 
         // Set character definition and trigger validation
@@ -209,26 +214,26 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
       const characterDefinition = {
         components: {
           'core:name': {
-            text: 'Test Character'
+            text: 'Test Character',
           },
           'core:personality': {
             traits: ['curious'],
-            description: 'A test character'
+            description: 'A test character',
           },
           'core:speech_patterns': {
             patterns: [], // Empty array should be valid - patterns get generated later
             metadata: {
               generated: false,
-              lastUpdated: null
-            }
-          }
-        }
+              lastUpdated: null,
+            },
+          },
+        },
       };
 
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
       const generateBtn = document.getElementById('generate-btn');
-      
+
       textarea.value = JSON.stringify(characterDefinition);
 
       // Trigger validation
@@ -252,13 +257,13 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
           'core:name': { text: 'Test Character' },
           'core:personality': { description: 'Test personality' },
           // Notice: NO speechPatterns array - this is CHARACTER input, not RESPONSE
-        }
+        },
       };
 
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
       const generateBtn = document.getElementById('generate-btn');
-      
+
       textarea.value = JSON.stringify(characterDefinition);
 
       // Trigger validation
@@ -284,49 +289,59 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
         components: {
           'core:name': {
             text: 'Amaia Castillo',
-            pronunciation: 'ah-MAH-ee-ah kas-TEE-yoh'
+            pronunciation: 'ah-MAH-ee-ah kas-TEE-yoh',
           },
           'core:personality': {
             traits: ['passionate', 'artistic', 'impulsive', 'loyal'],
-            description: 'Amaia is a passionate artist who feels everything deeply. She\'s impulsive and follows her heart, sometimes to her detriment, but her loyalty to those she cares about is unwavering.',
+            description:
+              "Amaia is a passionate artist who feels everything deeply. She's impulsive and follows her heart, sometimes to her detriment, but her loyalty to those she cares about is unwavering.",
             temperament: 'sanguine-choleric',
-            motivations: ['creative expression', 'authentic connections', 'freedom']
+            motivations: [
+              'creative expression',
+              'authentic connections',
+              'freedom',
+            ],
           },
           'core:profile': {
             age: 28,
             occupation: 'Freelance illustrator and muralist',
-            background: 'Born in Barcelona to a Spanish father and Basque mother, Amaia grew up surrounded by art and culture. She moved to New York five years ago to pursue her artistic career.',
+            background:
+              'Born in Barcelona to a Spanish father and Basque mother, Amaia grew up surrounded by art and culture. She moved to New York five years ago to pursue her artistic career.',
             appearance: {
               height: '5\'6"',
               build: 'slender',
               hair: 'long, dark brown with copper highlights',
               eyes: 'hazel',
-              style: 'bohemian chic with paint-stained fingers'
-            }
+              style: 'bohemian chic with paint-stained fingers',
+            },
           },
           'core:likes': [
             'vibrant colors',
             'late-night painting sessions',
             'flamenco music',
             'small coffee shops',
-            'authentic conversations'
+            'authentic conversations',
           ],
           'core:dislikes': [
             'corporate art',
-            'superficial relationships', 
+            'superficial relationships',
             'cold weather',
             'being rushed',
-            'art critics who don\'t create'
+            "art critics who don't create",
           ],
           'core:fears': [
             'losing her creative spark',
             'selling out her artistic vision',
             'being misunderstood',
-            'abandonment by those she loves'
+            'abandonment by those she loves',
           ],
           'core:goals': {
             shortTerm: ['finish mural commission', 'save for studio space'],
-            longTerm: ['establish herself as recognized artist', 'find lasting love', 'connect with Basque heritage']
+            longTerm: [
+              'establish herself as recognized artist',
+              'find lasting love',
+              'connect with Basque heritage',
+            ],
           },
           'core:speech_patterns': {
             patterns: [], // Empty - will be generated
@@ -334,16 +349,16 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
               generated: false,
               language: 'English',
               accent: 'slight Spanish',
-              lastUpdated: null
-            }
-          }
-        }
+              lastUpdated: null,
+            },
+          },
+        },
       };
 
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
       const generateBtn = document.getElementById('generate-btn');
-      
+
       textarea.value = JSON.stringify(realisticCharacter);
 
       // Trigger validation
@@ -362,11 +377,11 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
   describe('Error Cases That Should Fail', () => {
     it('should reject character definition with no components', (done) => {
       const emptyCharacter = {};
-      
+
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
       const generateBtn = document.getElementById('generate-btn');
-      
+
       textarea.value = JSON.stringify(emptyCharacter);
 
       // Trigger validation
@@ -386,15 +401,15 @@ describe('SpeechPatternsGeneratorController - Character Definition Validation', 
         components: {
           'core:name': null, // Invalid - should be object with text/name/value
           'core:personality': {
-            description: 'Test personality'
-          }
-        }
+            description: 'Test personality',
+          },
+        },
       };
 
       const textarea = document.getElementById('character-definition');
       const errorContainer = document.getElementById('character-input-error');
       const generateBtn = document.getElementById('generate-btn');
-      
+
       textarea.value = JSON.stringify(malformedCharacter);
 
       // Trigger validation

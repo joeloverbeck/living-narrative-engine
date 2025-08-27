@@ -57,7 +57,7 @@ describe('Scope Integration Tests', () => {
     // Comprehensive state cleanup to prevent test pollution
     clearEntityCache(); // Clear entity cache from entityHelpers.js
     jest.clearAllMocks(); // Clear all Jest mocks
-    
+
     logger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -336,24 +336,38 @@ describe('Scope Integration Tests', () => {
       const followActions = result.actions.filter(
         (action) => action.id === 'core:follow'
       );
-      
+
       // Debug logging for troubleshooting
       if (followActions.length !== 0) {
         console.log('DEBUG - Unexpected follow actions found:');
-        console.log('Available actions:', result.actions.map(a => ({
-          id: a.id, 
-          targetId: a.params?.targetId,
-          target: a.target
-        })));
-        console.log('Actor location:', actorEntity.components[POSITION_COMPONENT_ID]);
-        console.log('Target location:', entityManager.getEntityInstance(targetId)?.components[POSITION_COMPONENT_ID]);
-        console.log('Follow actions:', followActions.map(a => ({
-          id: a.id,
-          targetId: a.params?.targetId,
-          target: a.target
-        })));
+        console.log(
+          'Available actions:',
+          result.actions.map((a) => ({
+            id: a.id,
+            targetId: a.params?.targetId,
+            target: a.target,
+          }))
+        );
+        console.log(
+          'Actor location:',
+          actorEntity.components[POSITION_COMPONENT_ID]
+        );
+        console.log(
+          'Target location:',
+          entityManager.getEntityInstance(targetId)?.components[
+            POSITION_COMPONENT_ID
+          ]
+        );
+        console.log(
+          'Follow actions:',
+          followActions.map((a) => ({
+            id: a.id,
+            targetId: a.params?.targetId,
+            target: a.target,
+          }))
+        );
       }
-      
+
       expect(followActions.length).toBe(0);
     });
   });
