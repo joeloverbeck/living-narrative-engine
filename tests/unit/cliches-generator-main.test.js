@@ -43,18 +43,18 @@ describe('Clichés Generator Entry Point', () => {
     // Set up global mocks before importing the production module
     mockGetElementById = jest.fn();
     mockAddEventListener = jest.fn();
-    
+
     global.document = {
       getElementById: mockGetElementById,
       readyState: 'loading',
       addEventListener: mockAddEventListener,
     };
-    
+
     global.window = {
       addEventListener: jest.fn(),
       __clichesController: undefined,
     };
-    
+
     global.process = {
       env: {
         NODE_ENV: 'test',

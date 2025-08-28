@@ -69,6 +69,9 @@ export default function createClothingStepResolver({ entitiesGateway }) {
         type: 'clothing_slot_access',
         // For ArrayIterationResolver compatibility
         __isClothingAccessObject: true,
+        // Coverage priority metadata for enhanced priority calculation
+        supportsPriorityCalculation: true,
+        entityId: entityId, // Store entity ID for future enhancements
       };
     }
 
@@ -112,6 +115,9 @@ export default function createClothingStepResolver({ entitiesGateway }) {
       type: 'clothing_slot_access',
       // For ArrayIterationResolver compatibility
       __isClothingAccessObject: true,
+      // Coverage priority metadata for enhanced priority calculation
+      supportsPriorityCalculation: true,
+      entityId: entityId, // Store entity ID for future enhancements
     };
   }
 

@@ -238,6 +238,7 @@ export const HTTP_AGENT_HIGH_LOAD_REQUESTS_PER_MIN = 60;
 
 /**
  * Rate limiting configuration constants
+ * Environment-aware settings: Development has much higher limits than production
  */
 
 /**
@@ -248,9 +249,11 @@ export const RATE_LIMIT_GENERAL_WINDOW_MS = 15 * 60 * 1000;
 
 /**
  * Maximum general API requests per window.
+ * Higher limits for development to support game initialization logging.
  * @type {number}
  */
-export const RATE_LIMIT_GENERAL_MAX_REQUESTS = 100;
+export const RATE_LIMIT_GENERAL_MAX_REQUESTS = 
+  process.env.NODE_ENV === 'production' ? 100 : 2000;
 
 /**
  * LLM API rate limiting window in milliseconds - 1 minute.
@@ -260,9 +263,11 @@ export const RATE_LIMIT_LLM_WINDOW_MS = 60 * 1000;
 
 /**
  * Maximum LLM API requests per window.
+ * Higher limits for development to support rapid prototyping and testing.
  * @type {number}
  */
-export const RATE_LIMIT_LLM_MAX_REQUESTS = 10;
+export const RATE_LIMIT_LLM_MAX_REQUESTS = 
+  process.env.NODE_ENV === 'production' ? 10 : 100;
 
 /**
  * Maximum authentication requests per window.

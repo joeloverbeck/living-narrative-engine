@@ -25,6 +25,10 @@
     },
     "descriptors:texture": {
       "texture": "rugged"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "outer"
     }
   }
 }

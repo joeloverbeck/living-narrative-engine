@@ -10,10 +10,12 @@
  * @property {(message: string, ...args: any[]) => void} debug - Logs a debug message.
  */
 
-const DEFAULT_PROXY_SERVER_URL = 'http://localhost:3001/api/llm-request';
-const VALID_EXECUTION_ENVIRONMENTS = ['client', 'server', 'unknown'];
 import { initLogger } from '../utils/index.js';
 import { isNonBlankString } from '../utils/textUtils.js';
+import { getEndpointConfig } from '../config/endpointConfig.js';
+
+const DEFAULT_PROXY_SERVER_URL = getEndpointConfig().getLlmRequestEndpoint();
+const VALID_EXECUTION_ENVIRONMENTS = ['client', 'server', 'unknown'];
 
 /**
  * @description Checks if the provided object conforms to the EnvironmentContext interface.

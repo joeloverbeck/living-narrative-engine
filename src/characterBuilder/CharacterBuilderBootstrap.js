@@ -971,6 +971,23 @@ export class CharacterBuilderBootstrap {
       // Service not available, that's okay for pages that don't need it
     }
 
+    // Try to resolve TraitsRewriter services if available
+    try {
+      dependencies.traitsRewriterGenerator = container.resolve(
+        tokens.TraitsRewriterGenerator
+      );
+    } catch (error) {
+      // Service not available, that's okay for pages that don't need it
+    }
+
+    try {
+      dependencies.traitsRewriterDisplayEnhancer = container.resolve(
+        tokens.TraitsRewriterDisplayEnhancer
+      );
+    } catch (error) {
+      // Service not available, that's okay for pages that don't need it
+    }
+
     // Resolve additional page-specific services from container or instantiate them
     if (config.services) {
       for (const [serviceName, serviceClassOrInstance] of Object.entries(

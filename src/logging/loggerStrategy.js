@@ -128,7 +128,10 @@ class LoggerStrategy {
 
     // Merge config with defaults (but don't use mode from DEFAULT_CONFIG)
     const { mode: defaultMode, ...defaultConfigWithoutMode } = DEFAULT_CONFIG;
-    this.#config = this.#validateConfig({ ...defaultConfigWithoutMode, ...config });
+    this.#config = this.#validateConfig({
+      ...defaultConfigWithoutMode,
+      ...config,
+    });
 
     // Determine initial mode
     this.#mode = this.#detectMode(mode);
@@ -339,12 +342,12 @@ class LoggerStrategy {
       // Create console and remote loggers
       const consoleLogger = this.#createConsoleLogger(config);
       const remoteLogger = this.#createRemoteLogger(config, dependencies);
-      
+
       // Create LogCategoryDetector if not provided
       const categoryDetector = dependencies.categoryDetector || {
         detectCategory: () => 'general',
       };
-      
+
       // Create HybridLogger
       return new HybridLogger(
         {
@@ -461,20 +464,20 @@ class LoggerStrategy {
     }
 
     const oldMode = this.#mode;
-    
+
     // Save current state before transition
     this.#saveCurrentState();
-    
+
     // Create new logger
     const newLogger = this.#createLogger(
       newMode,
       this.#config,
       this.#dependencies
     );
-    
+
     // Transition state
     this.#transitionState(oldMode, newMode, newLogger);
-    
+
     // Update references
     this.#logger = newLogger;
     this.#mode = newMode;
@@ -517,11 +520,11 @@ class LoggerStrategy {
   #isMode(input) {
     if (typeof input !== 'string') return false;
     const lowerInput = input.toLowerCase();
-    
+
     // Check if it's a direct mode name or a mapped mode name
     const isDirectMode = Object.values(LoggerMode).includes(lowerInput);
     const isMappedMode = Object.keys(MODE_SWITCH_MAP).includes(lowerInput);
-    
+
     return isDirectMode || isMappedMode;
   }
 
@@ -564,11 +567,14 @@ class LoggerStrategy {
     // Transfer buffered logs if applicable
     if (this.#hasBuffer()) {
       const buffer = this.#drainBuffer();
-      if (newLogger.processBatch && typeof newLogger.processBatch === 'function') {
+      if (
+        newLogger.processBatch &&
+        typeof newLogger.processBatch === 'function'
+      ) {
         newLogger.processBatch(buffer);
       } else {
         // Replay logs individually if batch processing not available
-        buffer.forEach(log => {
+        buffer.forEach((log) => {
           const level = log.level || 'info';
           if (typeof newLogger[level] === 'function') {
             newLogger[level](log.message, ...log.args);
@@ -797,7 +803,7 @@ class LoggerStrategy {
     // Merge configuration updates
     if (config.remote || config.console || config.performance) {
       this.#config = this.#mergeConfig(this.#config, config);
-      
+
       // Recreate logger with new config if needed
       if (config.remote && this.#mode === LoggerMode.PRODUCTION) {
         this.#logger = this.#createLogger(
@@ -902,7 +908,9 @@ class LoggerStrategy {
           if (typeof value !== 'object' || value === null) {
             errors.push(`Category ${key} must be an object`);
           } else if (value.level && !this.#isLogLevel(value.level)) {
-            errors.push(`Invalid log level for category ${key}: ${value.level}`);
+            errors.push(
+              `Invalid log level for category ${key}: ${value.level}`
+            );
           }
         }
       }
@@ -973,7 +981,7 @@ class LoggerStrategy {
    */
   #mergeConfig(target, source) {
     const result = { ...target };
-    
+
     for (const key in source) {
       if (Object.prototype.hasOwnProperty.call(source, key)) {
         if (
@@ -992,7 +1000,7 @@ class LoggerStrategy {
         }
       }
     }
-    
+
     return result;
   }
 

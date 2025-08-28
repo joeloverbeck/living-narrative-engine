@@ -15,6 +15,7 @@ import {
   handleValidationErrors,
 } from '../middleware/validation.js';
 import { createApiRateLimiter } from '../middleware/rateLimiting.js';
+import { createSizeLimitConfig } from '../middleware/timeout.js';
 
 const router = express.Router();
 const logger = new ConsoleLogger();
@@ -56,6 +57,9 @@ const debugLogController = new DebugLogController(logger, logStorageService);
  */
 router.post(
   '/',
+  // Apply increased size limit for debug logs (5MB instead of default 1MB)
+  express.json(createSizeLimitConfig({ jsonLimit: '5mb' }).json),
+
   // Apply rate limiting (100 requests per 15 minutes)
   createApiRateLimiter(),
 

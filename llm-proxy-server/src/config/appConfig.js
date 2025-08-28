@@ -233,9 +233,15 @@ class AppConfigService {
     // NODE_ENV
     const nodeEnvValue = process.env.NODE_ENV;
     this._nodeEnv = nodeEnvValue || 'development';
-    this._logger.debug(
-      `AppConfigService: NODE_ENV found in environment: '${nodeEnvValue || 'undefined'}'. Effective value: '${this._nodeEnv}'.`
-    );
+    if (nodeEnvValue !== undefined) {
+      this._logger.debug(
+        `AppConfigService: NODE_ENV found in environment: '${nodeEnvValue}'. Effective value: '${this._nodeEnv}'.`
+      );
+    } else {
+      this._logger.debug(
+        `AppConfigService: NODE_ENV not set in environment. Using default: '${this._nodeEnv}'.`
+      );
+    }
 
     // Cache Configuration
     this._logger.debug(`${servicePrefix}Loading cache configuration...`);
@@ -246,23 +252,33 @@ class AppConfigService {
       cacheEnabledEnv !== undefined
         ? cacheEnabledEnv.toLowerCase() === 'true'
         : true;
-    this._logger.debug(
-      `${servicePrefix}CACHE_ENABLED: '${cacheEnabledEnv || 'undefined'}'. Effective value: ${this._cacheEnabled}.`
-    );
+    if (cacheEnabledEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}CACHE_ENABLED found in environment: '${cacheEnabledEnv}'. Effective value: ${this._cacheEnabled}.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}CACHE_ENABLED not set in environment. Using default: ${this._cacheEnabled}.`
+      );
+    }
 
     // CACHE_DEFAULT_TTL
     const cacheDefaultTtlEnv = process.env.CACHE_DEFAULT_TTL;
     this._cacheDefaultTtl = cacheDefaultTtlEnv
       ? parseInt(cacheDefaultTtlEnv, 10)
       : CACHE_DEFAULT_TTL;
-    if (isNaN(this._cacheDefaultTtl)) {
+    if (cacheDefaultTtlEnv !== undefined && isNaN(this._cacheDefaultTtl)) {
       this._cacheDefaultTtl = CACHE_DEFAULT_TTL;
       this._logger.warn(
         `${servicePrefix}CACHE_DEFAULT_TTL invalid: '${cacheDefaultTtlEnv}'. Using default: ${this._cacheDefaultTtl}ms.`
       );
+    } else if (cacheDefaultTtlEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}CACHE_DEFAULT_TTL found in environment: '${cacheDefaultTtlEnv}'. Effective value: ${this._cacheDefaultTtl}ms.`
+      );
     } else {
       this._logger.debug(
-        `${servicePrefix}CACHE_DEFAULT_TTL: '${cacheDefaultTtlEnv || 'undefined'}'. Effective value: ${this._cacheDefaultTtl}ms.`
+        `${servicePrefix}CACHE_DEFAULT_TTL not set in environment. Using default: ${this._cacheDefaultTtl}ms.`
       );
     }
 
@@ -276,9 +292,13 @@ class AppConfigService {
       this._logger.warn(
         `${servicePrefix}CACHE_MAX_SIZE invalid: '${cacheMaxSizeEnv}'. Using default: ${this._cacheMaxSize}.`
       );
+    } else if (cacheMaxSizeEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}CACHE_MAX_SIZE found in environment: '${cacheMaxSizeEnv}'. Effective value: ${this._cacheMaxSize}.`
+      );
     } else {
       this._logger.debug(
-        `${servicePrefix}CACHE_MAX_SIZE: '${cacheMaxSizeEnv || 'undefined'}'. Effective value: ${this._cacheMaxSize}.`
+        `${servicePrefix}CACHE_MAX_SIZE not set in environment. Using default: ${this._cacheMaxSize}.`
       );
     }
 
@@ -292,9 +312,13 @@ class AppConfigService {
       this._logger.warn(
         `${servicePrefix}API_KEY_CACHE_TTL invalid: '${apiKeyCacheTtlEnv}'. Using default: ${this._apiKeyCacheTtl}ms.`
       );
+    } else if (apiKeyCacheTtlEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}API_KEY_CACHE_TTL found in environment: '${apiKeyCacheTtlEnv}'. Effective value: ${this._apiKeyCacheTtl}ms.`
+      );
     } else {
       this._logger.debug(
-        `${servicePrefix}API_KEY_CACHE_TTL: '${apiKeyCacheTtlEnv || 'undefined'}'. Effective value: ${this._apiKeyCacheTtl}ms.`
+        `${servicePrefix}API_KEY_CACHE_TTL not set in environment. Using default: ${this._apiKeyCacheTtl}ms.`
       );
     }
 
@@ -307,9 +331,15 @@ class AppConfigService {
       httpAgentEnabledEnv !== undefined
         ? httpAgentEnabledEnv.toLowerCase() === 'true'
         : true;
-    this._logger.debug(
-      `${servicePrefix}HTTP_AGENT_ENABLED: '${httpAgentEnabledEnv || 'undefined'}'. Effective value: ${this._httpAgentEnabled}.`
-    );
+    if (httpAgentEnabledEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_ENABLED found in environment: '${httpAgentEnabledEnv}'. Effective value: ${this._httpAgentEnabled}.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_ENABLED not set in environment. Using default: ${this._httpAgentEnabled}.`
+      );
+    }
 
     // HTTP_AGENT_KEEP_ALIVE
     const httpAgentKeepAliveEnv = process.env.HTTP_AGENT_KEEP_ALIVE;
@@ -317,9 +347,15 @@ class AppConfigService {
       httpAgentKeepAliveEnv !== undefined
         ? httpAgentKeepAliveEnv.toLowerCase() === 'true'
         : HTTP_AGENT_KEEP_ALIVE;
-    this._logger.debug(
-      `${servicePrefix}HTTP_AGENT_KEEP_ALIVE: '${httpAgentKeepAliveEnv || 'undefined'}'. Effective value: ${this._httpAgentKeepAlive}.`
-    );
+    if (httpAgentKeepAliveEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_KEEP_ALIVE found in environment: '${httpAgentKeepAliveEnv}'. Effective value: ${this._httpAgentKeepAlive}.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_KEEP_ALIVE not set in environment. Using default: ${this._httpAgentKeepAlive}.`
+      );
+    }
 
     // HTTP_AGENT_MAX_SOCKETS
     const httpAgentMaxSocketsEnv = process.env.HTTP_AGENT_MAX_SOCKETS;
@@ -331,9 +367,13 @@ class AppConfigService {
       this._logger.warn(
         `${servicePrefix}HTTP_AGENT_MAX_SOCKETS invalid: '${httpAgentMaxSocketsEnv}'. Using default: ${this._httpAgentMaxSockets}.`
       );
+    } else if (httpAgentMaxSocketsEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_MAX_SOCKETS found in environment: '${httpAgentMaxSocketsEnv}'. Effective value: ${this._httpAgentMaxSockets}.`
+      );
     } else {
       this._logger.debug(
-        `${servicePrefix}HTTP_AGENT_MAX_SOCKETS: '${httpAgentMaxSocketsEnv || 'undefined'}'. Effective value: ${this._httpAgentMaxSockets}.`
+        `${servicePrefix}HTTP_AGENT_MAX_SOCKETS not set in environment. Using default: ${this._httpAgentMaxSockets}.`
       );
     }
 
@@ -350,9 +390,13 @@ class AppConfigService {
       this._logger.warn(
         `${servicePrefix}HTTP_AGENT_MAX_FREE_SOCKETS invalid: '${httpAgentMaxFreeSocketsEnv}'. Using default: ${this._httpAgentMaxFreeSockets}.`
       );
+    } else if (httpAgentMaxFreeSocketsEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_MAX_FREE_SOCKETS found in environment: '${httpAgentMaxFreeSocketsEnv}'. Effective value: ${this._httpAgentMaxFreeSockets}.`
+      );
     } else {
       this._logger.debug(
-        `${servicePrefix}HTTP_AGENT_MAX_FREE_SOCKETS: '${httpAgentMaxFreeSocketsEnv || 'undefined'}'. Effective value: ${this._httpAgentMaxFreeSockets}.`
+        `${servicePrefix}HTTP_AGENT_MAX_FREE_SOCKETS not set in environment. Using default: ${this._httpAgentMaxFreeSockets}.`
       );
     }
 
@@ -366,9 +410,13 @@ class AppConfigService {
       this._logger.warn(
         `${servicePrefix}HTTP_AGENT_TIMEOUT invalid: '${httpAgentTimeoutEnv}'. Using default: ${this._httpAgentTimeout}ms.`
       );
+    } else if (httpAgentTimeoutEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_TIMEOUT found in environment: '${httpAgentTimeoutEnv}'. Effective value: ${this._httpAgentTimeout}ms.`
+      );
     } else {
       this._logger.debug(
-        `${servicePrefix}HTTP_AGENT_TIMEOUT: '${httpAgentTimeoutEnv || 'undefined'}'. Effective value: ${this._httpAgentTimeout}ms.`
+        `${servicePrefix}HTTP_AGENT_TIMEOUT not set in environment. Using default: ${this._httpAgentTimeout}ms.`
       );
     }
 
@@ -386,9 +434,13 @@ class AppConfigService {
       this._logger.warn(
         `${servicePrefix}HTTP_AGENT_FREE_SOCKET_TIMEOUT invalid: '${httpAgentFreeSocketTimeoutEnv}'. Using default: ${this._httpAgentFreeSocketTimeout}ms.`
       );
+    } else if (httpAgentFreeSocketTimeoutEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_FREE_SOCKET_TIMEOUT found in environment: '${httpAgentFreeSocketTimeoutEnv}'. Effective value: ${this._httpAgentFreeSocketTimeout}ms.`
+      );
     } else {
       this._logger.debug(
-        `${servicePrefix}HTTP_AGENT_FREE_SOCKET_TIMEOUT: '${httpAgentFreeSocketTimeoutEnv || 'undefined'}'. Effective value: ${this._httpAgentFreeSocketTimeout}ms.`
+        `${servicePrefix}HTTP_AGENT_FREE_SOCKET_TIMEOUT not set in environment. Using default: ${this._httpAgentFreeSocketTimeout}ms.`
       );
     }
 
@@ -406,9 +458,13 @@ class AppConfigService {
       this._logger.warn(
         `${servicePrefix}HTTP_AGENT_MAX_TOTAL_SOCKETS invalid: '${httpAgentMaxTotalSocketsEnv}'. Using default: ${this._httpAgentMaxTotalSockets}.`
       );
+    } else if (httpAgentMaxTotalSocketsEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_MAX_TOTAL_SOCKETS found in environment: '${httpAgentMaxTotalSocketsEnv}'. Effective value: ${this._httpAgentMaxTotalSockets}.`
+      );
     } else {
       this._logger.debug(
-        `${servicePrefix}HTTP_AGENT_MAX_TOTAL_SOCKETS: '${httpAgentMaxTotalSocketsEnv || 'undefined'}'. Effective value: ${this._httpAgentMaxTotalSockets}.`
+        `${servicePrefix}HTTP_AGENT_MAX_TOTAL_SOCKETS not set in environment. Using default: ${this._httpAgentMaxTotalSockets}.`
       );
     }
 
@@ -422,9 +478,13 @@ class AppConfigService {
       this._logger.warn(
         `${servicePrefix}HTTP_AGENT_MAX_IDLE_TIME invalid: '${httpAgentMaxIdleTimeEnv}'. Using default: ${this._httpAgentMaxIdleTime}ms.`
       );
+    } else if (httpAgentMaxIdleTimeEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}HTTP_AGENT_MAX_IDLE_TIME found in environment: '${httpAgentMaxIdleTimeEnv}'. Effective value: ${this._httpAgentMaxIdleTime}ms.`
+      );
     } else {
       this._logger.debug(
-        `${servicePrefix}HTTP_AGENT_MAX_IDLE_TIME: '${httpAgentMaxIdleTimeEnv || 'undefined'}'. Effective value: ${this._httpAgentMaxIdleTime}ms.`
+        `${servicePrefix}HTTP_AGENT_MAX_IDLE_TIME not set in environment. Using default: ${this._httpAgentMaxIdleTime}ms.`
       );
     }
 
@@ -439,16 +499,28 @@ class AppConfigService {
       debugLoggingEnabledEnv !== undefined
         ? debugLoggingEnabledEnv.toLowerCase() === 'true'
         : DEBUG_LOGGING_ENABLED;
-    this._logger.debug(
-      `${servicePrefix}DEBUG_LOGGING_ENABLED: '${debugLoggingEnabledEnv || 'undefined'}'. Effective value: ${this._debugLoggingEnabled}.`
-    );
+    if (debugLoggingEnabledEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_ENABLED found in environment: '${debugLoggingEnabledEnv}'. Effective value: ${this._debugLoggingEnabled}.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_ENABLED not set in environment. Using default: ${this._debugLoggingEnabled}.`
+      );
+    }
 
     // DEBUG_LOGGING_PATH
     const debugLoggingPathEnv = process.env.DEBUG_LOGGING_PATH;
     this._debugLoggingPath = debugLoggingPathEnv || DEBUG_LOGGING_DEFAULT_PATH;
-    this._logger.debug(
-      `${servicePrefix}DEBUG_LOGGING_PATH: '${debugLoggingPathEnv || 'undefined'}'. Effective value: '${this._debugLoggingPath}'.`
-    );
+    if (debugLoggingPathEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_PATH found in environment: '${debugLoggingPathEnv}'. Effective value: '${this._debugLoggingPath}'.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_PATH not set in environment. Using default: '${this._debugLoggingPath}'.`
+      );
+    }
 
     // DEBUG_LOGGING_RETENTION_DAYS
     const debugLoggingRetentionDaysEnv =
@@ -465,9 +537,13 @@ class AppConfigService {
       this._logger.warn(
         `${servicePrefix}DEBUG_LOGGING_RETENTION_DAYS invalid: '${debugLoggingRetentionDaysEnv}'. Using default: ${this._debugLoggingRetentionDays} days.`
       );
+    } else if (debugLoggingRetentionDaysEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_RETENTION_DAYS found in environment: '${debugLoggingRetentionDaysEnv}'. Effective value: ${this._debugLoggingRetentionDays} days.`
+      );
     } else {
       this._logger.debug(
-        `${servicePrefix}DEBUG_LOGGING_RETENTION_DAYS: '${debugLoggingRetentionDaysEnv || 'undefined'}'. Effective value: ${this._debugLoggingRetentionDays} days.`
+        `${servicePrefix}DEBUG_LOGGING_RETENTION_DAYS not set in environment. Using default: ${this._debugLoggingRetentionDays} days.`
       );
     }
 
@@ -475,9 +551,15 @@ class AppConfigService {
     const debugLoggingMaxFileSizeEnv = process.env.DEBUG_LOGGING_MAX_FILE_SIZE;
     this._debugLoggingMaxFileSize =
       debugLoggingMaxFileSizeEnv || DEBUG_LOGGING_DEFAULT_MAX_FILE_SIZE;
-    this._logger.debug(
-      `${servicePrefix}DEBUG_LOGGING_MAX_FILE_SIZE: '${debugLoggingMaxFileSizeEnv || 'undefined'}'. Effective value: '${this._debugLoggingMaxFileSize}'.`
-    );
+    if (debugLoggingMaxFileSizeEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_MAX_FILE_SIZE found in environment: '${debugLoggingMaxFileSizeEnv}'. Effective value: '${this._debugLoggingMaxFileSize}'.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_MAX_FILE_SIZE not set in environment. Using default: '${this._debugLoggingMaxFileSize}'.`
+      );
+    }
 
     // DEBUG_LOGGING_WRITE_BUFFER_SIZE
     const debugLoggingWriteBufferSizeEnv =
@@ -494,9 +576,13 @@ class AppConfigService {
       this._logger.warn(
         `${servicePrefix}DEBUG_LOGGING_WRITE_BUFFER_SIZE invalid: '${debugLoggingWriteBufferSizeEnv}'. Using default: ${this._debugLoggingWriteBufferSize}.`
       );
+    } else if (debugLoggingWriteBufferSizeEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_WRITE_BUFFER_SIZE found in environment: '${debugLoggingWriteBufferSizeEnv}'. Effective value: ${this._debugLoggingWriteBufferSize}.`
+      );
     } else {
       this._logger.debug(
-        `${servicePrefix}DEBUG_LOGGING_WRITE_BUFFER_SIZE: '${debugLoggingWriteBufferSizeEnv || 'undefined'}'. Effective value: ${this._debugLoggingWriteBufferSize}.`
+        `${servicePrefix}DEBUG_LOGGING_WRITE_BUFFER_SIZE not set in environment. Using default: ${this._debugLoggingWriteBufferSize}.`
       );
     }
 
@@ -514,9 +600,13 @@ class AppConfigService {
       this._logger.warn(
         `${servicePrefix}DEBUG_LOGGING_FLUSH_INTERVAL invalid: '${debugLoggingFlushIntervalEnv}'. Using default: ${this._debugLoggingFlushInterval}ms.`
       );
+    } else if (debugLoggingFlushIntervalEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_FLUSH_INTERVAL found in environment: '${debugLoggingFlushIntervalEnv}'. Effective value: ${this._debugLoggingFlushInterval}ms.`
+      );
     } else {
       this._logger.debug(
-        `${servicePrefix}DEBUG_LOGGING_FLUSH_INTERVAL: '${debugLoggingFlushIntervalEnv || 'undefined'}'. Effective value: ${this._debugLoggingFlushInterval}ms.`
+        `${servicePrefix}DEBUG_LOGGING_FLUSH_INTERVAL not set in environment. Using default: ${this._debugLoggingFlushInterval}ms.`
       );
     }
 
@@ -535,9 +625,13 @@ class AppConfigService {
       this._logger.warn(
         `${servicePrefix}DEBUG_LOGGING_MAX_CONCURRENT_WRITES invalid: '${debugLoggingMaxConcurrentWritesEnv}'. Using default: ${this._debugLoggingMaxConcurrentWrites}.`
       );
+    } else if (debugLoggingMaxConcurrentWritesEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_MAX_CONCURRENT_WRITES found in environment: '${debugLoggingMaxConcurrentWritesEnv}'. Effective value: ${this._debugLoggingMaxConcurrentWrites}.`
+      );
     } else {
       this._logger.debug(
-        `${servicePrefix}DEBUG_LOGGING_MAX_CONCURRENT_WRITES: '${debugLoggingMaxConcurrentWritesEnv || 'undefined'}'. Effective value: ${this._debugLoggingMaxConcurrentWrites}.`
+        `${servicePrefix}DEBUG_LOGGING_MAX_CONCURRENT_WRITES not set in environment. Using default: ${this._debugLoggingMaxConcurrentWrites}.`
       );
     }
 
@@ -546,9 +640,15 @@ class AppConfigService {
       process.env.DEBUG_LOGGING_CLEANUP_SCHEDULE;
     this._debugLoggingCleanupSchedule =
       debugLoggingCleanupScheduleEnv || DEBUG_LOGGING_DEFAULT_CLEANUP_SCHEDULE;
-    this._logger.debug(
-      `${servicePrefix}DEBUG_LOGGING_CLEANUP_SCHEDULE: '${debugLoggingCleanupScheduleEnv || 'undefined'}'. Effective value: '${this._debugLoggingCleanupSchedule}'.`
-    );
+    if (debugLoggingCleanupScheduleEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_CLEANUP_SCHEDULE found in environment: '${debugLoggingCleanupScheduleEnv}'. Effective value: '${this._debugLoggingCleanupSchedule}'.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_CLEANUP_SCHEDULE not set in environment. Using default: '${this._debugLoggingCleanupSchedule}'.`
+      );
+    }
 
     // DEBUG_LOGGING_CLEANUP_ENABLED
     const debugLoggingCleanupEnabledEnv =
@@ -557,9 +657,15 @@ class AppConfigService {
       debugLoggingCleanupEnabledEnv !== undefined
         ? debugLoggingCleanupEnabledEnv.toLowerCase() === 'true'
         : DEBUG_LOGGING_DEFAULT_CLEANUP_ENABLED;
-    this._logger.debug(
-      `${servicePrefix}DEBUG_LOGGING_CLEANUP_ENABLED: '${debugLoggingCleanupEnabledEnv || 'undefined'}'. Effective value: ${this._debugLoggingCleanupEnabled}.`
-    );
+    if (debugLoggingCleanupEnabledEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_CLEANUP_ENABLED found in environment: '${debugLoggingCleanupEnabledEnv}'. Effective value: ${this._debugLoggingCleanupEnabled}.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_CLEANUP_ENABLED not set in environment. Using default: ${this._debugLoggingCleanupEnabled}.`
+      );
+    }
 
     // DEBUG_LOGGING_COMPRESSION
     const debugLoggingCompressionEnv = process.env.DEBUG_LOGGING_COMPRESSION;
@@ -567,9 +673,15 @@ class AppConfigService {
       debugLoggingCompressionEnv !== undefined
         ? debugLoggingCompressionEnv.toLowerCase() === 'true'
         : DEBUG_LOGGING_DEFAULT_COMPRESSION;
-    this._logger.debug(
-      `${servicePrefix}DEBUG_LOGGING_COMPRESSION: '${debugLoggingCompressionEnv || 'undefined'}'. Effective value: ${this._debugLoggingCompression}.`
-    );
+    if (debugLoggingCompressionEnv !== undefined) {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_COMPRESSION found in environment: '${debugLoggingCompressionEnv}'. Effective value: ${this._debugLoggingCompression}.`
+      );
+    } else {
+      this._logger.debug(
+        `${servicePrefix}DEBUG_LOGGING_COMPRESSION not set in environment. Using default: ${this._debugLoggingCompression}.`
+      );
+    }
 
     this._logger.debug('AppConfigService: Configuration loading complete.');
   }
@@ -612,13 +724,15 @@ class AppConfigService {
 
   /**
    * Gets an array of allowed origins for CORS.
-   * Parses PROXY_ALLOWED_ORIGIN if set and non-empty, returns an empty array otherwise.
+   * Parses PROXY_ALLOWED_ORIGIN if set and non-empty.
+   * In development mode, provides default origins if none are configured.
    * @returns {string[]} An array of allowed origins.
    */
   getAllowedOriginsArray() {
     if (this._proxyAllowedOrigin && this._proxyAllowedOrigin.trim() !== '') {
       return this._proxyAllowedOrigin.split(',').map((origin) => origin.trim());
     }
+    
     return [];
   }
 

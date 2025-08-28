@@ -48,7 +48,7 @@ describe('Complex Filter Expressions Performance', () => {
   let jsonLogicService;
   let spatialIndexManager;
   let registry;
-  
+
   // Shared test data to reduce setup overhead
   let sharedTestScopes;
   let sharedTestConditions;
@@ -181,7 +181,7 @@ describe('Complex Filter Expressions Performance', () => {
         },
       },
     ];
-    
+
     // Setup conditions in registry
     ScopeTestUtilities.setupScopeTestConditions(registry, sharedTestConditions);
 
@@ -215,7 +215,7 @@ describe('Complex Filter Expressions Performance', () => {
     // Initialize scope registry with performance test scopes
     scopeRegistry.initialize(sharedTestScopes);
   });
-  
+
   beforeEach(() => {
     // Reset performance metrics for each test
     performanceMetrics = {
@@ -223,11 +223,13 @@ describe('Complex Filter Expressions Performance', () => {
       memoryUsage: [],
       concurrentOperations: 0,
     };
-    
+
     // Clear any test entities from previous tests
     if (entityManager) {
       try {
-        const entities = entityManager.getEntities ? entityManager.getEntities() : [];
+        const entities = entityManager.getEntities
+          ? entityManager.getEntities()
+          : [];
         for (const entity of entities) {
           const id = entity?.id || entity;
           // Clear all performance test actors
@@ -257,7 +259,7 @@ describe('Complex Filter Expressions Performance', () => {
     if (entityManager?.clear) {
       entityManager.clear();
     }
-    
+
     // Clear registry data
     if (registry?.clear) {
       registry.clear();
@@ -268,7 +270,7 @@ describe('Complex Filter Expressions Performance', () => {
       global.gc();
     }
   });
-  
+
   afterAll(() => {
     // Final cleanup of the shared container
     if (container?.cleanup) {
@@ -283,14 +285,18 @@ describe('Complex Filter Expressions Performance', () => {
    * @param baseId Base ID for actors
    * @param config Configuration overrides
    */
-  async function createPerformanceTestActorsBatch(count, baseId = null, config = {}) {
+  async function createPerformanceTestActorsBatch(
+    count,
+    baseId = null,
+    config = {}
+  ) {
     // Generate unique base ID if not provided
     if (!baseId) {
       baseId = `perf-actor-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
     const actors = [];
     const definitions = [];
-    
+
     // Pre-generate all definitions first (batch operation)
     for (let i = 0; i < count; i++) {
       const actorId = `${baseId}-${i}`;
@@ -314,30 +320,30 @@ describe('Complex Filter Expressions Performance', () => {
         description: 'Performance test actor',
         components,
       });
-      
+
       definitions.push({ id: actorId, definition });
     }
-    
+
     // Batch store all definitions
     for (const { id, definition } of definitions) {
       registry.store('entityDefinitions', id, definition);
     }
-    
+
     // Batch create all instances
-    const createPromises = definitions.map(({ id }) => 
+    const createPromises = definitions.map(({ id }) =>
       entityManager.createEntityInstance(id, {
         instanceId: id,
         definitionId: id,
       })
     );
-    
+
     await Promise.all(createPromises);
-    
+
     // Batch get all instances
     for (const { id } of definitions) {
       actors.push(await entityManager.getEntityInstance(id));
     }
-    
+
     return actors;
   }
 
@@ -348,15 +354,22 @@ describe('Complex Filter Expressions Performance', () => {
    */
   async function createPerformanceDataset(size) {
     // Create test location only if it doesn't exist
-    if (!entityManager.getEntityInstance || !entityManager.getEntityInstance('test-location-1')) {
+    if (
+      !entityManager.getEntityInstance ||
+      !entityManager.getEntityInstance('test-location-1')
+    ) {
       const locationDefinition = new EntityDefinition('test-location-1', {
         description: 'Performance test location',
         components: {
           'core:position': { x: 0, y: 0 },
         },
       });
-      registry.store('entityDefinitions', 'test-location-1', locationDefinition);
-      
+      registry.store(
+        'entityDefinitions',
+        'test-location-1',
+        locationDefinition
+      );
+
       try {
         await entityManager.createEntityInstance('test-location-1', {
           instanceId: 'test-location-1',

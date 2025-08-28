@@ -1,3 +1,5 @@
+import { calculatePriorityWithValidation, sortCandidatesWithTieBreaking } from '../prioritySystem/priorityCalculator.js';
+
 /**
  * Creates an ArrayIterationStep node resolver for flattening array values.
  * Resolves ArrayIterationStep nodes by flattening arrays from parent results.
@@ -14,16 +16,36 @@ export default function createArrayIterationResolver() {
   };
 
   /**
-   * Gets all clothing items from a clothing access object
+   * Maps clothing access mode and layer to coverage priority
+   *
+   * @param {string} mode - Clothing access mode
+   * @param {string} layer - Layer type
+   * @returns {string} Coverage priority for priority calculation
+   */
+  function getCoveragePriorityFromMode(mode, layer) {
+    const layerToCoverage = {
+      'outer': 'outer',
+      'base': 'base', 
+      'underwear': 'underwear',
+      'accessories': 'base' // Accessories treated as base coverage
+    };
+    
+    return layerToCoverage[layer] || 'direct';
+  }
+
+  /**
+   * Gets all clothing items from a clothing access object using priority-based selection
    *
    * @param {object} clothingAccess - The clothing access object
-   * @returns {Array} Array of clothing entity IDs
+   * @param {object} trace - Optional trace logger
+   * @returns {Array} Array of clothing entity IDs sorted by priority
    */
-  function getAllClothingItems(clothingAccess) {
+  function getAllClothingItems(clothingAccess, trace) {
     const { equipped, mode } = clothingAccess;
-    const result = [];
+    const candidates = [];
     const layers = LAYER_PRIORITY[mode] || LAYER_PRIORITY.topmost;
 
+    // Collect all available items with their priority data
     for (const [slotName, slotData] of Object.entries(equipped)) {
       if (!slotData || typeof slotData !== 'object') {
         continue;
@@ -31,12 +53,47 @@ export default function createArrayIterationResolver() {
 
       for (const layer of layers) {
         if (slotData[layer]) {
-          result.push(slotData[layer]);
+          candidates.push({
+            itemId: slotData[layer],
+            layer: layer,
+            slotName: slotName,
+            coveragePriority: getCoveragePriorityFromMode(mode, layer),
+            source: 'coverage',
+            priority: 0, // Will be calculated
+          });
+
           if (mode === 'topmost') {
             break; // Only take the topmost for topmost mode
           }
         }
       }
+    }
+
+    // Calculate priorities for all candidates
+    for (const candidate of candidates) {
+      candidate.priority = calculatePriorityWithValidation(
+        candidate.coveragePriority,
+        candidate.layer,
+        trace ? { warn: (msg) => trace.addLog('warn', msg, 'ArrayIterationResolver') } : null
+      );
+    }
+
+    // Sort candidates by priority and extract item IDs
+    const sortedCandidates = sortCandidatesWithTieBreaking(candidates);
+    const result = sortedCandidates.map(candidate => candidate.itemId);
+
+    if (trace && result.length > 0) {
+      trace.addLog(
+        'info',
+        `ArrayIterationResolver: Processed ${candidates.length} clothing items with priority-based sorting`,
+        'ArrayIterationResolver',
+        {
+          totalCandidates: candidates.length,
+          resultCount: result.length,
+          mode: mode,
+          topPriority: sortedCandidates[0]?.priority
+        }
+      );
     }
 
     return result;
@@ -108,7 +165,7 @@ export default function createArrayIterationResolver() {
           }
         } else if (parentValue && parentValue.__isClothingAccessObject) {
           // Handle clothing access objects from ClothingStepResolver
-          const items = getAllClothingItems(parentValue);
+          const items = getAllClothingItems(parentValue, trace);
           for (const item of items) {
             if (item !== null && item !== undefined) {
               result.add(item);

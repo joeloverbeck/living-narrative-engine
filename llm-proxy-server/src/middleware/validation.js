@@ -173,9 +173,15 @@ export const handleValidationErrors = (req, res, next) => {
       message: err.msg,
     }));
 
+    // Use specific error message if there's only one error, otherwise use generic message
+    const message =
+      errorDetails.length === 1
+        ? errorDetails[0].message
+        : 'Client request validation failed.';
+
     return res.status(400).json({
       error: true,
-      message: 'Client request validation failed.',
+      message: message,
       stage: 'request_validation',
       details: {
         validationErrors: errorDetails,
@@ -203,8 +209,8 @@ export const validateDebugLogRequest = () => {
         if (logs.length === 0) {
           throw new Error('logs array cannot be empty');
         }
-        if (logs.length > 1000) {
-          throw new Error('logs array cannot contain more than 1000 entries');
+        if (logs.length > 5000) {
+          throw new Error('logs array cannot contain more than 5000 entries');
         }
         return true;
       }),

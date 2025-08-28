@@ -5,6 +5,7 @@
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
+import { getEndpointConfig } from '../../config/endpointConfig.js';
 
 /**
  * Handles file-based output of trace data in browser environments
@@ -300,11 +301,11 @@ class FileTraceOutputHandler {
       };
 
       this.#logger.info('FileTraceOutputHandler: Sending POST to server', {
-        url: 'http://localhost:3001/api/traces/write',
+        url: getEndpointConfig().getTracesWriteEndpoint(),
         bodySize: JSON.stringify(requestBody).length,
       });
 
-      const response = await fetch('http://localhost:3001/api/traces/write', {
+      const response = await fetch(getEndpointConfig().getTracesWriteEndpoint(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -350,7 +351,7 @@ class FileTraceOutputHandler {
       // Log specific error types for better debugging
       if (error.message.includes('Failed to fetch')) {
         this.#logger.error(
-          'FileTraceOutputHandler: Server appears to be offline or unreachable at http://localhost:3001'
+          `FileTraceOutputHandler: Server appears to be offline or unreachable at ${getEndpointConfig().getBaseUrl()}`
         );
       } else if (error.message.includes('CORS')) {
         this.#logger.error(
@@ -395,12 +396,12 @@ class FileTraceOutputHandler {
         'FileTraceOutputHandler: Attempting batch write to server',
         {
           batchSize: traceBatch.length,
-          endpoint: 'http://localhost:3001/api/traces/write-batch',
+          endpoint: getEndpointConfig().getTracesWriteBatchEndpoint(),
         }
       );
 
       const response = await fetch(
-        'http://localhost:3001/api/traces/write-batch',
+        getEndpointConfig().getTracesWriteBatchEndpoint(),
         {
           method: 'POST',
           headers: {

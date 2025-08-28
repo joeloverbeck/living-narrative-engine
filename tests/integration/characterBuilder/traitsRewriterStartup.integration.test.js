@@ -14,7 +14,7 @@ describe('TraitsRewriter Application Startup', () => {
 
   beforeEach(() => {
     bootstrap = new CharacterBuilderBootstrap();
-    
+
     // Store original console methods
     originalConsole = {
       info: console.info,
@@ -22,17 +22,17 @@ describe('TraitsRewriter Application Startup', () => {
       warn: console.warn,
       debug: console.debug,
     };
-    
+
     // Mock console methods to suppress output during tests
     console.info = jest.fn();
     console.error = jest.fn();
     console.warn = jest.fn();
     console.debug = jest.fn();
-    
+
     // Mock fetch for schema loading
     mockFetch = jest.fn();
     global.fetch = mockFetch;
-    
+
     // Default successful response for schema requests
     mockFetch.mockResolvedValue({
       ok: true,
@@ -54,7 +54,7 @@ describe('TraitsRewriter Application Startup', () => {
     console.error = originalConsole.error;
     console.warn = originalConsole.warn;
     console.debug = originalConsole.debug;
-    
+
     // Clean up
     jest.clearAllMocks();
     document.body.innerHTML = '';
@@ -71,13 +71,19 @@ describe('TraitsRewriter Application Startup', () => {
 
   it('should have all required service dependencies available', async () => {
     // Import tokens to verify they exist
-    const { tokens } = await import('../../../src/dependencyInjection/tokens.js');
-    
+    const { tokens } = await import(
+      '../../../src/dependencyInjection/tokens.js'
+    );
+
     // Verify all TraitsRewriter tokens are defined
     expect(tokens.TraitsRewriterController).toBe('TraitsRewriterController');
     expect(tokens.TraitsRewriterGenerator).toBe('TraitsRewriterGenerator');
-    expect(tokens.TraitsRewriterResponseProcessor).toBe('TraitsRewriterResponseProcessor');
-    expect(tokens.TraitsRewriterDisplayEnhancer).toBe('TraitsRewriterDisplayEnhancer');
+    expect(tokens.TraitsRewriterResponseProcessor).toBe(
+      'TraitsRewriterResponseProcessor'
+    );
+    expect(tokens.TraitsRewriterDisplayEnhancer).toBe(
+      'TraitsRewriterDisplayEnhancer'
+    );
   });
 
   it('should bootstrap controller successfully', async () => {
@@ -86,11 +92,11 @@ describe('TraitsRewriter Application Startup', () => {
       controllerClass: TraitsRewriterController,
       includeModLoading: false, // Disable mod loading for faster tests
     });
-    
+
     expect(result).toBeDefined();
     expect(result.controller).toBeInstanceOf(TraitsRewriterController);
     expect(result.container).toBeDefined();
-    
+
     // Verify no errors were logged
     expect(console.error).not.toHaveBeenCalled();
   });
@@ -101,10 +107,10 @@ describe('TraitsRewriter Application Startup', () => {
       controllerClass: TraitsRewriterController,
       includeModLoading: false,
     });
-    
+
     // Verify controller was initialized
     expect(result.controller).toBeDefined();
-    
+
     // Verify controller has access to required properties from base class
     expect(result.controller.logger).toBeDefined();
     expect(result.controller.characterBuilderService).toBeDefined();
@@ -118,10 +124,10 @@ describe('TraitsRewriter Application Startup', () => {
       controllerClass: TraitsRewriterController,
       includeModLoading: false,
     });
-    
+
     // The controller should initialize successfully and be in stub mode
     expect(result.controller).toBeDefined();
-    
+
     // Since this is a stub implementation, we just verify it bootstrapped
     // The actual UI state testing will be done in Phase 2
     expect(result.controller).toBeInstanceOf(TraitsRewriterController);
@@ -130,20 +136,23 @@ describe('TraitsRewriter Application Startup', () => {
   it('should handle missing DOM elements gracefully', async () => {
     // Remove the expected container element
     document.body.innerHTML = '';
-    
+
     const result = await bootstrap.bootstrap({
       pageName: 'Traits Rewriter',
       controllerClass: TraitsRewriterController,
       includeModLoading: false,
     });
-    
+
     // Should still bootstrap successfully
     expect(result.controller).toBeInstanceOf(TraitsRewriterController);
-    
+
     // May log warnings but should not error
     const errorCalls = console.error.mock.calls;
-    const criticalErrors = errorCalls.filter(call => 
-      call.some(arg => String(arg).includes('critical') || String(arg).includes('fatal'))
+    const criticalErrors = errorCalls.filter((call) =>
+      call.some(
+        (arg) =>
+          String(arg).includes('critical') || String(arg).includes('fatal')
+      )
     );
     expect(criticalErrors).toHaveLength(0);
   });
@@ -159,11 +168,11 @@ describe('TraitsRewriter Application Startup', () => {
     const { TraitsRewriterDisplayEnhancer } = await import(
       '../../../src/characterBuilder/services/TraitsRewriterDisplayEnhancer.js'
     );
-    
+
     expect(TraitsRewriterGenerator).toBeDefined();
     expect(TraitsRewriterResponseProcessor).toBeDefined();
     expect(TraitsRewriterDisplayEnhancer).toBeDefined();
-    
+
     // Verify they are constructors
     expect(typeof TraitsRewriterGenerator).toBe('function');
     expect(typeof TraitsRewriterResponseProcessor).toBe('function');
@@ -172,7 +181,7 @@ describe('TraitsRewriter Application Startup', () => {
 
   it('should confirm controller extends BaseCharacterBuilderController', () => {
     expect(TraitsRewriterController.prototype).toBeInstanceOf(Object);
-    
+
     // Create a proper mock for characterBuilderService with all required methods
     const mockCharacterBuilderService = {
       initialize: jest.fn(),
@@ -192,22 +201,30 @@ describe('TraitsRewriter Application Startup', () => {
       deleteCharacter: jest.fn(),
       listCharacters: jest.fn(),
     };
-    
+
     // Check that it has the expected base class methods
     const controller = new TraitsRewriterController({
       logger: console,
       characterBuilderService: mockCharacterBuilderService,
-      eventBus: { 
+      eventBus: {
         dispatch: jest.fn(),
         subscribe: jest.fn(),
-        unsubscribe: jest.fn()
+        unsubscribe: jest.fn(),
       },
-      schemaValidator: { 
+      schemaValidator: {
         validate: jest.fn(),
-        validateAgainstSchema: jest.fn() 
+        validateAgainstSchema: jest.fn(),
+      },
+      traitsRewriterGenerator: {
+        generateRewrittenTraits: jest.fn(),
+      },
+      traitsRewriterDisplayEnhancer: {
+        enhanceForDisplay: jest.fn(),
+        formatForExport: jest.fn(),
+        generateExportFilename: jest.fn(),
       },
     });
-    
+
     // These methods should exist from the base class
     expect(typeof controller._cacheElements).toBe('function');
     expect(typeof controller._setupEventListeners).toBe('function');
@@ -216,13 +233,13 @@ describe('TraitsRewriter Application Startup', () => {
 
   it('should verify Phase 1 objectives are met', async () => {
     // This test summarizes that all Phase 1 objectives are completed:
-    
+
     // 1. Import error resolved - controller can be imported
     const { TraitsRewriterController: ImportedController } = await import(
       '../../../src/characterBuilder/controllers/TraitsRewriterController.js'
     );
     expect(ImportedController).toBeDefined();
-    
+
     // 2. Application starts without errors - bootstrap succeeds
     const result = await bootstrap.bootstrap({
       pageName: 'Traits Rewriter',
@@ -231,16 +248,18 @@ describe('TraitsRewriter Application Startup', () => {
     });
     expect(result.controller).toBeDefined();
     expect(console.error).not.toHaveBeenCalled();
-    
+
     // 3. TraitsRewriter page accessible - controller instantiates
     expect(result.controller).toBeInstanceOf(TraitsRewriterController);
-    
+
     // 4. Foundation ready for Phase 2 - all services registered
-    const { tokens } = await import('../../../src/dependencyInjection/tokens.js');
+    const { tokens } = await import(
+      '../../../src/dependencyInjection/tokens.js'
+    );
     expect(tokens.TraitsRewriterGenerator).toBeDefined();
     expect(tokens.TraitsRewriterResponseProcessor).toBeDefined();
     expect(tokens.TraitsRewriterDisplayEnhancer).toBeDefined();
-    
+
     // All Phase 1 criteria met!
     expect(true).toBe(true);
   });

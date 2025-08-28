@@ -72,6 +72,8 @@ describe('HybridLogger Integration', () => {
         endpoint: 'http://test-server/api/debug-log',
         batchSize: 5,
         flushInterval: 100,
+        initialConnectionDelay: 0, // Disable delay for testing
+        skipServerReadinessValidation: true, // Disable health checks for testing
       },
       dependencies: {
         consoleLogger: consoleLogger,
@@ -79,10 +81,18 @@ describe('HybridLogger Integration', () => {
     });
     categoryDetector = new LogCategoryDetector();
 
-    // Mock successful fetch response
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ success: true, processed: 1 }),
+    // Mock successful fetch response for both health check and logging
+    mockFetch.mockImplementation((url) => {
+      if (url.includes('/health')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ status: 'UP' }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ success: true, processed: 1 }),
+      });
     });
 
     // Create HybridLogger with real dependencies and permissive filters for testing
