@@ -82,7 +82,7 @@ describe('BaseCharacterBuilderController - Performance Event Dispatch', () => {
     let mockTime = 0;
     performance.now = jest.fn(() => {
       // Return increasing time for each call
-      return mockTime += 100;
+      return (mockTime += 100);
     });
 
     // Create marks with time difference > 100ms
@@ -105,20 +105,22 @@ describe('BaseCharacterBuilderController - Performance Event Dispatch', () => {
 
     // Get the dispatch call arguments
     const dispatchCall = mockEventBus.dispatch.mock.calls[0];
-    
+
     // After the fix, dispatch should be called with two separate arguments
     expect(dispatchCall.length).toBe(2);
-    
+
     // First argument should be the event type string
-    expect(dispatchCall[0]).toBe(CHARACTER_BUILDER_EVENTS.CHARACTER_BUILDER_PERFORMANCE_WARNING);
-    
+    expect(dispatchCall[0]).toBe(
+      CHARACTER_BUILDER_EVENTS.CHARACTER_BUILDER_PERFORMANCE_WARNING
+    );
+
     // Second argument should be the payload object
     expect(dispatchCall[1]).toEqual({
       controller: 'TestController',
       measurement: 'testMeasure',
       duration: 150,
       threshold: 100,
-    })
+    });
 
     // Restore original performance.now
     performance.now = originalNow;
@@ -130,7 +132,7 @@ describe('BaseCharacterBuilderController - Performance Event Dispatch', () => {
     let mockTime = 0;
     performance.now = jest.fn(() => {
       // Return increasing time for each call
-      return mockTime += 25;
+      return (mockTime += 25);
     });
 
     // Create marks with time difference < 100ms
@@ -157,7 +159,7 @@ describe('BaseCharacterBuilderController - Performance Event Dispatch', () => {
 
   it('should handle performance API errors gracefully', () => {
     // Don't create any marks to simulate missing marks error
-    
+
     // Execute performance measure without marks
     const duration = controller.testPerformanceMeasure(
       'testMeasure',

@@ -291,7 +291,16 @@
       "Bash(NODE_ENV=test node --expose-gc ./node_modules/.bin/jest tests/memory/actionIndex.memory.test.js --testNamePattern=\"should maintain memory efficiency with large entity sets\" --verbose)",
       "Bash(export NODE_OPTIONS=\"--max-old-space-size=512\")",
       "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/core/scopeDslErrorHandler.test.js --no-coverage --verbose)",
-      "Bash(NODE_ENV=test npm run test:unit tests/unit/characterBuilder/validators/EnhancedSpeechPatternsValidator.test.js)"
+      "Bash(NODE_ENV=test npm run test:unit tests/unit/characterBuilder/validators/EnhancedSpeechPatternsValidator.test.js)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/core/scopeDslErrorHandler.test.js --coverage --coverageReporters=text)",
+      "Bash(NODE_ENV=test node --expose-gc ./node_modules/.bin/jest tests/memory/scopeDsl/HighConcurrency.memory.test.js --config jest.config.memory.js --env=jsdom --verbose)",
+      "Bash(NODE_ENV=test node --expose-gc ./node_modules/.bin/jest tests/memory/scopeDsl/HighConcurrency.memory.test.js --config jest.config.memory.js --env=jsdom --silent)",
+      "Bash(time:*)",
+      "Bash(NODE_ENV=test npx jest tests/unit/config/registrations/infrastructureRegistrations.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/dependencyInjection/scopeDslErrorServicesRegistration.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npm run test:unit tests/unit/logging/config/configValidator.test.js)",
+      "Bash(NODE_ENV=test npm run test:performance tests/performance/scopeDsl/ComplexFilterExpressions.performance.test.js --testNamePattern=\"should demonstrate performance scaling with filter complexity\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/performance/scopeDsl/ComplexFilterExpressions.performance.test.js --config jest.config.performance.js --env=jsdom --silent)"
     ],
     "deny": []
   }

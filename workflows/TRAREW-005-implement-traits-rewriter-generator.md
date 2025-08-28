@@ -1,6 +1,6 @@
 # TRAREW-005: Implement TraitsRewriterGenerator Service
 
-## Priority: 🔥 HIGH  
+## Priority: 🔥 HIGH
 
 **Phase**: 2 - Core Business Logic  
 **Story Points**: 5  
@@ -13,7 +13,7 @@ The TraitsRewriterGenerator is the core business logic service responsible for o
 ## Requirements
 
 1. Extract relevant traits from character definitions (10 supported types)
-2. Create LLM prompts using existing template infrastructure  
+2. Create LLM prompts using existing template infrastructure
 3. Integrate with LLM services following established patterns
 4. Process and validate LLM responses
 5. Handle errors comprehensively with proper event dispatching
@@ -33,9 +33,11 @@ The TraitsRewriterGenerator is the core business logic service responsible for o
 ## Implementation Details
 
 ### File to Create
+
 **Path**: `/src/characterBuilder/services/TraitsRewriterGenerator.js`
 
 ### Core Interface
+
 ```javascript
 /**
  * @file TraitsRewriterGenerator - Core service for trait rewriting workflow
@@ -51,26 +53,26 @@ export class TraitsRewriterGenerator {
   // Private fields following codebase patterns
   /** @private @type {ILogger} */
   #logger;
-  
+
   /** @private @type {LlmJsonService} */
   #llmJsonService;
-  
+
   /** @private @type {ConfigurableLLMAdapter} */
   #llmStrategyFactory;
-  
+
   /** @private @type {ILLMConfigurationManager} */
   #llmConfigManager;
-  
+
   /** @private @type {ISafeEventDispatcher} */
   #eventBus;
-  
+
   /** @private @type {ITokenEstimator} */
   #tokenEstimator;
 
   constructor(dependencies) {
     // Comprehensive dependency validation
     this.#validateDependencies(dependencies);
-    
+
     // Store validated dependencies
     this.#logger = dependencies.logger;
     this.#llmJsonService = dependencies.llmJsonService;
@@ -105,8 +107,10 @@ export class TraitsRewriterGenerator {
 
 ### Key Methods Implementation
 
-#### 1. generateRewrittenTraits() 
+#### 1. generateRewrittenTraits()
+
 Main orchestration method:
+
 - Extract relevant traits from character definition
 - Create LLM prompt with character data
 - Execute LLM generation with proper error handling
@@ -115,20 +119,26 @@ Main orchestration method:
 - Return formatted results
 
 #### 2. #extractRelevantTraits()
+
 Trait extraction logic:
+
 - Check for each of the 10 supported trait types
 - Handle various character definition formats
 - Validate trait content and structure
 - Return structured trait data
 
 #### 3. #createLLMPrompt()
+
 Prompt generation:
+
 - Use `createTraitsRewriterPrompt()` from existing templates
 - Include character data, speech patterns, and context
 - Add generation options and parameters
 
 #### 4. LLM Integration
+
 Follow established patterns:
+
 ```javascript
 const response = await this.#llmJsonService.generateContent({
   prompt: this.#createLLMPrompt(characterData),
@@ -144,16 +154,19 @@ const response = await this.#llmJsonService.generateContent({
 ## Dependencies
 
 **Blocking**:
+
 - TRAREW-004 (Application Startup Verified)
 - TraitsRewriterError class (created in TRAREW-009)
 - TraitsRewriterResponseProcessor (created in TRAREW-006)
 
 **External Dependencies**:
+
 - Existing prompt templates in `traitsRewriterPrompts.js` ✅
 - CHARACTER_BUILDER_EVENTS constants ✅
 - LLM service infrastructure ✅
 
 **Required Services** (via DI):
+
 - `ILogger` - Logging service
 - `LlmJsonService` - JSON-safe LLM interaction
 - `LLMAdapter` - ConfigurableLLMAdapter for content generation
@@ -164,6 +177,7 @@ const response = await this.#llmJsonService.generateContent({
 ## Testing Requirements
 
 ### Unit Tests
+
 Create `/tests/unit/characterBuilder/services/TraitsRewriterGenerator.test.js`:
 
 ```javascript
@@ -199,11 +213,13 @@ describe('TraitsRewriterGenerator', () => {
 ```
 
 ### Integration Testing
+
 Integration tests handled in TRAREW-014.
 
 ## Validation Steps
 
 ### Step 1: Service Creation
+
 ```javascript
 // Test service instantiation
 const generator = container.resolve(tokens.TraitsRewriterGenerator);
@@ -211,11 +227,12 @@ expect(generator).toBeDefined();
 ```
 
 ### Step 2: Trait Extraction Test
+
 ```javascript
 const characterData = {
   'core:name': { text: 'Test Character' },
   'core:personality': { text: 'Analytical and methodical' },
-  'core:likes': { text: 'Books and puzzles' }
+  'core:likes': { text: 'Books and puzzles' },
 };
 
 const traits = generator.extractRelevantTraits(characterData);
@@ -224,6 +241,7 @@ expect(traits).toHaveProperty('core:likes');
 ```
 
 ### Step 3: LLM Integration Test
+
 ```javascript
 const result = await generator.generateRewrittenTraits(characterData);
 expect(result).toHaveProperty('rewrittenTraits');
@@ -233,11 +251,13 @@ expect(result).toHaveProperty('characterName');
 ## Files Modified
 
 ### New Files
+
 - `/src/characterBuilder/services/TraitsRewriterGenerator.js` - Main service implementation
 
 ### Dependencies Referenced
+
 - `/src/characterBuilder/prompts/traitsRewriterPrompts.js` ✅ (exists)
-- `/src/characterBuilder/services/characterBuilderService.js` ✅ (exists) 
+- `/src/characterBuilder/services/characterBuilderService.js` ✅ (exists)
 - `/src/characterBuilder/errors/TraitsRewriterError.js` (created in TRAREW-009)
 
 ## Supported Trait Types
@@ -246,7 +266,7 @@ The service must handle these 10 trait types when present:
 
 1. `core:likes` - Things the character enjoys or appreciates
 2. `core:dislikes` - Things the character avoids or dislikes
-3. `core:fears` - Character's fears and phobias  
+3. `core:fears` - Character's fears and phobias
 4. `core:goals` - Objectives and aspirations
 5. `core:notes` - Additional character notes
 6. `core:personality` - Personality description
@@ -258,13 +278,16 @@ The service must handle these 10 trait types when present:
 ## Error Handling
 
 ### Error Categories
+
 - **INVALID_CHARACTER_DEFINITION**: Malformed or missing character data
 - **GENERATION_FAILED**: LLM service errors or failures
 - **VALIDATION_FAILED**: Response validation errors
 - **MISSING_TRAITS**: No extractable traits found
 
 ### Error Context
+
 Each error should include:
+
 - Character name (if available)
 - Trait types being processed
 - LLM service details
@@ -273,16 +296,19 @@ Each error should include:
 ## Performance Considerations
 
 ### Token Management
+
 - Estimate token usage before generation
 - Monitor actual token consumption
 - Log token metrics for optimization
 
 ### Response Caching
+
 - Consider caching for identical character definitions
 - Implement cache invalidation strategy
 - Balance memory usage vs performance
 
 ### Async Processing
+
 - Use proper async/await patterns
 - Handle concurrent requests appropriately
 - Implement timeout handling
@@ -290,7 +316,7 @@ Each error should include:
 ## Success Metrics
 
 - **Trait Extraction**: Successfully identifies all present trait types
-- **LLM Integration**: Generates coherent first-person trait rewrites  
+- **LLM Integration**: Generates coherent first-person trait rewrites
 - **Error Handling**: Graceful handling of all error scenarios
 - **Event Integration**: Proper event dispatching throughout workflow
 - **Performance**: Token usage within expected bounds
@@ -299,7 +325,8 @@ Each error should include:
 ## Next Steps
 
 After completion:
-- **TRAREW-006**: Implement TraitsRewriterResponseProcessor  
+
+- **TRAREW-006**: Implement TraitsRewriterResponseProcessor
 - **TRAREW-007**: Implement TraitsRewriterDisplayEnhancer
 - **TRAREW-008**: Complete TraitsRewriterController integration
 - **TRAREW-011**: Comprehensive unit testing

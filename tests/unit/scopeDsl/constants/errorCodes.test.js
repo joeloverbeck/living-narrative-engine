@@ -14,7 +14,7 @@ describe('ErrorCodes', () => {
 
     it('should be frozen and immutable', () => {
       expect(Object.isFrozen(ErrorCodes)).toBe(true);
-      
+
       // Attempt to modify should throw in strict mode
       expect(() => {
         ErrorCodes.MISSING_CONTEXT_GENERIC = 'MODIFIED_CODE';
@@ -36,7 +36,7 @@ describe('ErrorCodes', () => {
 
   describe('Code Format', () => {
     it('should use SCOPE_ prefix for all codes', () => {
-      Object.values(ErrorCodes).forEach(code => {
+      Object.values(ErrorCodes).forEach((code) => {
         expect(code).toMatch(/^SCOPE_\d{4}$/);
       });
     });
@@ -48,7 +48,7 @@ describe('ErrorCodes', () => {
     });
 
     it('should use 4-digit numbering scheme', () => {
-      Object.values(ErrorCodes).forEach(code => {
+      Object.values(ErrorCodes).forEach((code) => {
         const number = code.replace('SCOPE_', '');
         expect(number).toMatch(/^\d{4}$/);
         expect(number.length).toBe(4);
@@ -69,7 +69,7 @@ describe('ErrorCodes', () => {
         'MISSING_TARGET',
       ];
 
-      contextCodes.forEach(codeName => {
+      contextCodes.forEach((codeName) => {
         it(`should have ${codeName} in 1xxx range`, () => {
           expect(ErrorCodes[codeName]).toMatch(/^SCOPE_1\d{3}$/);
         });
@@ -89,7 +89,7 @@ describe('ErrorCodes', () => {
         'DATA_TYPE_MISMATCH',
       ];
 
-      dataCodes.forEach(codeName => {
+      dataCodes.forEach((codeName) => {
         it(`should have ${codeName} in 2xxx range`, () => {
           expect(ErrorCodes[codeName]).toMatch(/^SCOPE_2\d{3}$/);
         });
@@ -110,7 +110,7 @@ describe('ErrorCodes', () => {
         'CLOTHING_STEP_FAILED',
       ];
 
-      resolutionCodes.forEach(codeName => {
+      resolutionCodes.forEach((codeName) => {
         it(`should have ${codeName} in 3xxx range`, () => {
           expect(ErrorCodes[codeName]).toMatch(/^SCOPE_3\d{3}$/);
         });
@@ -127,7 +127,7 @@ describe('ErrorCodes', () => {
         'STACK_OVERFLOW',
       ];
 
-      systemCodes.forEach(codeName => {
+      systemCodes.forEach((codeName) => {
         it(`should have ${codeName} in 4xxx range`, () => {
           expect(ErrorCodes[codeName]).toMatch(/^SCOPE_4\d{3}$/);
         });
@@ -145,7 +145,7 @@ describe('ErrorCodes', () => {
         'INVALID_SCOPE_REFERENCE',
       ];
 
-      parseCodes.forEach(codeName => {
+      parseCodes.forEach((codeName) => {
         it(`should have ${codeName} in 5xxx range`, () => {
           expect(ErrorCodes[codeName]).toMatch(/^SCOPE_5\d{3}$/);
         });
@@ -163,7 +163,7 @@ describe('ErrorCodes', () => {
         'ENGINE_CONFIG_INVALID',
       ];
 
-      configCodes.forEach(codeName => {
+      configCodes.forEach((codeName) => {
         it(`should have ${codeName} in 6xxx range`, () => {
           expect(ErrorCodes[codeName]).toMatch(/^SCOPE_6\d{3}$/);
         });
@@ -180,7 +180,7 @@ describe('ErrorCodes', () => {
         'UNKNOWN_ERROR',
       ];
 
-      unknownCodes.forEach(codeName => {
+      unknownCodes.forEach((codeName) => {
         it(`should have ${codeName} in 9xxx range`, () => {
           expect(ErrorCodes[codeName]).toMatch(/^SCOPE_9\d{3}$/);
         });
@@ -210,7 +210,7 @@ describe('ErrorCodes', () => {
     it('should not have gaps in base sequences', () => {
       // Check that we have the expected base codes for each category
       const baseCodes = ['1000', '2000', '3000', '5000', '6000', '9000'];
-      baseCodes.forEach(baseCode => {
+      baseCodes.forEach((baseCode) => {
         const fullCode = `SCOPE_${baseCode}`;
         expect(Object.values(ErrorCodes)).toContain(fullCode);
       });
@@ -229,7 +229,7 @@ describe('ErrorCodes', () => {
     });
 
     it('should not have null or undefined codes', () => {
-      Object.values(ErrorCodes).forEach(code => {
+      Object.values(ErrorCodes).forEach((code) => {
         expect(code).not.toBeNull();
         expect(code).not.toBeUndefined();
         expect(code).not.toBe('');

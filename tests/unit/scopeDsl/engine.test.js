@@ -85,9 +85,18 @@ describe('ScopeEngine', () => {
   let engine;
   let actorId;
   let actorEntity;
+  let mockErrorHandler;
 
   beforeEach(() => {
-    engine = new ScopeEngine();
+    // Create mock error handler for testing
+    mockErrorHandler = {
+      handleError: jest.fn((error, context, resolver, code) => {
+        throw new Error(`[${code}] ${error.message}`);
+      }),
+      getErrorBuffer: jest.fn(() => []),
+    };
+
+    engine = new ScopeEngine({ errorHandler: mockErrorHandler });
     actorId = 'actor123';
     actorEntity = { id: actorId, components: {} };
     jest.clearAllMocks();

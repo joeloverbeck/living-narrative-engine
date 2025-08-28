@@ -231,7 +231,7 @@ describe('EnhancedSpeechPatternsValidator', () => {
         );
         // Updated expectation: current implementation doesn't detect cross-component name inconsistencies
         expect(nameWarnings.length).toBe(0);
-        
+
         // Instead, verify the actual validation that occurs - checking for missing components
         const componentWarnings = result.warnings.filter((w) =>
           w.includes('Missing essential components')
@@ -371,21 +371,42 @@ describe('EnhancedSpeechPatternsValidator', () => {
         const completeCharacter = {
           components: {
             'core:name': { text: 'Frank Richardson' },
-            'core:personality': { 
+            'core:personality': {
               traits: ['determined', 'creative', 'passionate', 'perfectionist'],
-              description: 'Frank is a deeply creative individual who approaches his art with methodical precision and unwavering determination. He has an eye for detail and often loses himself in his work for hours, emerging only when he feels the piece meets his high standards. His passion for art drives everything he does, and he believes that true artistry comes from understanding both technique and emotion.'
+              description:
+                'Frank is a deeply creative individual who approaches his art with methodical precision and unwavering determination. He has an eye for detail and often loses himself in his work for hours, emerging only when he feels the piece meets his high standards. His passion for art drives everything he does, and he believes that true artistry comes from understanding both technique and emotion.',
             },
-            'core:profile': { 
-              age: 35, 
+            'core:profile': {
+              age: 35,
               occupation: 'Professional Artist and Gallery Owner',
-              background: 'Frank grew up in a family of craftspeople, learning woodworking from his father and painting from his grandmother. He studied fine arts at university, specializing in mixed media installations. After graduation, he traveled extensively through Europe, studying classical techniques and modern interpretations. He returned home to establish his own gallery, where he both displays his work and mentors young artists.',
+              background:
+                'Frank grew up in a family of craftspeople, learning woodworking from his father and painting from his grandmother. He studied fine arts at university, specializing in mixed media installations. After graduation, he traveled extensively through Europe, studying classical techniques and modern interpretations. He returned home to establish his own gallery, where he both displays his work and mentors young artists.',
               location: 'Downtown Arts District',
-              history: 'His artistic journey began in childhood with simple sketches, evolved through formal training, and matured during his European travels where he developed his unique style blending classical techniques with contemporary themes.'
+              history:
+                'His artistic journey began in childhood with simple sketches, evolved through formal training, and matured during his European travels where he developed his unique style blending classical techniques with contemporary themes.',
             },
-            'core:likes': ['painting landscapes at dawn', 'studying classical techniques', 'mentoring young artists', 'quiet mornings in his studio'],
-            'core:dislikes': ['rushing artistic processes', 'superficial criticism', 'commercialization of art', 'interrupted creative flow'],
-            'core:fears': ['artistic stagnation', 'being forgotten after death', 'losing his creative vision'],
-            'core:goals': ['create a masterpiece that will outlive him', 'establish a lasting art education program', 'inspire the next generation of artists'],
+            'core:likes': [
+              'painting landscapes at dawn',
+              'studying classical techniques',
+              'mentoring young artists',
+              'quiet mornings in his studio',
+            ],
+            'core:dislikes': [
+              'rushing artistic processes',
+              'superficial criticism',
+              'commercialization of art',
+              'interrupted creative flow',
+            ],
+            'core:fears': [
+              'artistic stagnation',
+              'being forgotten after death',
+              'losing his creative vision',
+            ],
+            'core:goals': [
+              'create a masterpiece that will outlive him',
+              'establish a lasting art education program',
+              'inspire the next generation of artists',
+            ],
           },
         };
 

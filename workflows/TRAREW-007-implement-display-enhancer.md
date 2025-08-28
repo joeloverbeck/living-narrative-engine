@@ -1,6 +1,6 @@
 # TRAREW-007: Implement TraitsRewriterDisplayEnhancer Service
 
-## Priority: 🔥 HIGH  
+## Priority: 🔥 HIGH
 
 **Phase**: 2 - Core Business Logic  
 **Story Points**: 2  
@@ -32,9 +32,11 @@ The TraitsRewriterDisplayEnhancer handles formatting rewritten traits for displa
 ## Implementation Details
 
 ### File to Create
+
 **Path**: `/src/characterBuilder/services/TraitsRewriterDisplayEnhancer.js`
 
 ### Core Interface
+
 ```javascript
 /**
  * @file TraitsRewriterDisplayEnhancer - Display formatting and export functionality
@@ -110,7 +112,9 @@ export class TraitsRewriterDisplayEnhancer {
 ### Key Methods Implementation
 
 #### 1. enhanceForDisplay()
+
 Main display enhancement:
+
 - Sanitize trait content for safe HTML display
 - Create organized section structure
 - Add proper labels and formatting
@@ -118,21 +122,27 @@ Main display enhancement:
 - Handle empty or missing traits gracefully
 
 #### 2. formatForExport()
+
 Export formatting:
+
 - **Text Format**: Human-readable with section headers
 - **JSON Format**: Structured data with metadata
 - Include character name and generation timestamp
 - Handle export options (include metadata, custom formatting)
 
 #### 3. generateExportFilename()
+
 Filename generation:
+
 - Format: `{character-name}-traits-rewriter-{timestamp}.{ext}`
 - Sanitize character names for filesystem safety
 - Use ISO timestamp format
 - Handle special characters and spaces
 
 #### 4. createDisplaySections()
+
 UI section creation:
+
 - Convert trait keys to human-readable labels
 - Create HTML structure expected by the UI
 - Add proper CSS classes for styling
@@ -141,18 +151,22 @@ UI section creation:
 ## Dependencies
 
 **Blocking**:
+
 - TRAREW-004 (Application Startup Verified)
 - TraitsRewriterError class (created in TRAREW-009)
 
 **External Dependencies**:
+
 - No external service dependencies (minimal service)
 
 **Required Services** (via DI):
+
 - `ILogger` - Logging service (minimal dependencies)
 
 ## Testing Requirements
 
 ### Unit Tests
+
 Create `/tests/unit/characterBuilder/services/TraitsRewriterDisplayEnhancer.test.js`:
 
 ```javascript
@@ -199,11 +213,12 @@ describe('TraitsRewriterDisplayEnhancer', () => {
 ```
 
 ### Test Data
+
 ```javascript
 const sampleTraits = {
   'core:personality': 'I am analytical and methodical in my approach.',
   'core:likes': 'I enjoy reading books and solving puzzles.',
-  'core:fears': 'I fear being abandoned or seen as incompetent.'
+  'core:fears': 'I fear being abandoned or seen as incompetent.',
 };
 
 const expectedDisplaySections = [
@@ -212,20 +227,22 @@ const expectedDisplaySections = [
     label: 'Personality',
     content: 'I am analytical and methodical in my approach.',
     cssClass: 'trait-section',
-    index: 0
-  }
+    index: 0,
+  },
 ];
 ```
 
 ## Validation Steps
 
 ### Step 1: Service Creation
+
 ```javascript
 const enhancer = container.resolve(tokens.TraitsRewriterDisplayEnhancer);
 expect(enhancer).toBeDefined();
 ```
 
 ### Step 2: Display Enhancement Test
+
 ```javascript
 const displayData = enhancer.enhanceForDisplay(sampleTraits, 'Test Character');
 expect(displayData).toHaveProperty('sections');
@@ -233,6 +250,7 @@ expect(displayData).toHaveProperty('characterName');
 ```
 
 ### Step 3: Export Formatting Test
+
 ```javascript
 const textExport = enhancer.formatForExport(sampleTraits, 'text');
 expect(textExport).toContain('Personality:');
@@ -246,14 +264,17 @@ expect(parsed).toHaveProperty('rewrittenTraits');
 ## Files Modified
 
 ### New Files
+
 - `/src/characterBuilder/services/TraitsRewriterDisplayEnhancer.js` - Main service
 
 ### Dependencies Referenced
+
 - `/src/characterBuilder/errors/TraitsRewriterError.js` (created in TRAREW-009)
 
 ## Display Structure Expected by UI
 
 The UI expects sections in this format:
+
 ```html
 <div class="trait-section">
   <h3 class="trait-section-title">Personality</h3>
@@ -262,12 +283,13 @@ The UI expects sections in this format:
 ```
 
 ### Section Data Structure
+
 ```javascript
 {
   sections: [
     {
       key: 'core:personality',
-      label: 'Personality', 
+      label: 'Personality',
       content: 'First-person trait content...',
       cssClass: 'trait-section',
       titleClass: 'trait-section-title',
@@ -284,6 +306,7 @@ The UI expects sections in this format:
 ## Export Format Specifications
 
 ### Text Export Format
+
 ```
 Character: {Character Name}
 Generated: {ISO Timestamp}
@@ -301,6 +324,7 @@ I fear being abandoned or seen as incompetent.
 ```
 
 ### JSON Export Format
+
 ```json
 {
   "characterName": "Character Name",
@@ -318,6 +342,7 @@ I fear being abandoned or seen as incompetent.
 ## Content Safety Implementation
 
 ### HTML Escaping
+
 ```javascript
 #escapeHtmlContent(text) {
   if (typeof text !== 'string') {
@@ -335,6 +360,7 @@ I fear being abandoned or seen as incompetent.
 ```
 
 ### Content Sanitization
+
 ```javascript
 #sanitizeForDisplay(content) {
   if (!content || typeof content !== 'string') {
@@ -343,10 +369,10 @@ I fear being abandoned or seen as incompetent.
 
   // HTML escape
   let sanitized = this.#escapeHtmlContent(content);
-  
+
   // Trim whitespace
   sanitized = sanitized.trim();
-  
+
   // Validate length
   if (sanitized.length > 5000) {
     sanitized = sanitized.substring(0, 5000) + '...';
@@ -360,6 +386,7 @@ I fear being abandoned or seen as incompetent.
 ## Trait Label Formatting
 
 ### Label Conversion Map
+
 ```javascript
 const TRAIT_LABELS = {
   'core:personality': 'Personality',
@@ -375,7 +402,7 @@ const TRAIT_LABELS = {
 };
 
 #formatTraitLabel(traitKey) {
-  return TRAIT_LABELS[traitKey] || 
+  return TRAIT_LABELS[traitKey] ||
          traitKey.replace('core:', '').replace(/([A-Z])/g, ' $1').trim();
 }
 ```
@@ -383,6 +410,7 @@ const TRAIT_LABELS = {
 ## Filename Sanitization
 
 ### Safe Filename Generation
+
 ```javascript
 generateExportFilename(characterName) {
   // Sanitize character name for filesystem
@@ -402,11 +430,13 @@ generateExportFilename(characterName) {
 ## Error Handling
 
 ### Error Categories
+
 - **EXPORT_FAILED**: Export formatting or generation errors
 - **INVALID_FORMAT**: Unsupported export format requested
 - **CONTENT_SANITIZATION_FAILED**: Content cleaning errors
 
 ### Error Context
+
 - Character name being processed
 - Export format requested
 - Content length and structure
@@ -415,11 +445,13 @@ generateExportFilename(characterName) {
 ## Performance Considerations
 
 ### Content Processing
+
 - Efficient string operations
 - Memory management for large trait sets
 - Batch processing where possible
 
 ### Export Generation
+
 - Stream-based export for large content
 - Template-based formatting
 - Caching for repeated exports
@@ -436,6 +468,7 @@ generateExportFilename(characterName) {
 ## Next Steps
 
 After completion:
+
 - **TRAREW-008**: Complete TraitsRewriterController integration
 - **TRAREW-005**: Integration with TraitsRewriterGenerator
 - **TRAREW-013**: Comprehensive unit testing

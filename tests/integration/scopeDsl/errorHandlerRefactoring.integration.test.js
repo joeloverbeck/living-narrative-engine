@@ -6,7 +6,9 @@
 
 import { jest } from '@jest/globals';
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import ScopeDslErrorHandler, { ErrorCategories } from '../../../src/scopeDsl/core/scopeDslErrorHandler.js';
+import ScopeDslErrorHandler, {
+  ErrorCategories,
+} from '../../../src/scopeDsl/core/scopeDslErrorHandler.js';
 import { ErrorCategories as ExternalErrorCategories } from '../../../src/scopeDsl/constants/errorCategories.js';
 import { ErrorCodes } from '../../../src/scopeDsl/constants/errorCodes.js';
 import { ScopeDslError } from '../../../src/scopeDsl/errors/scopeDslError.js';
@@ -117,7 +119,7 @@ describe('ScopeDslErrorHandler - Integration Tests After Refactoring', () => {
 
     it('should handle unknown errors with fallback code', () => {
       const unknownError = 'Some completely unrecognized error message';
-      
+
       expect(() => {
         errorHandler.handleError(unknownError, mockContext, 'TestResolver');
       }).toThrow(ScopeDslError);
@@ -131,14 +133,14 @@ describe('ScopeDslErrorHandler - Integration Tests After Refactoring', () => {
     it('should use fallback code when category is not mapped', () => {
       // Create a scenario where the category mapping might fail
       const customError = new Error('Custom error with no clear category');
-      
+
       expect(() => {
         errorHandler.handleError(customError, {}, 'TestResolver');
       }).toThrow(ScopeDslError);
 
       const errorBuffer = errorHandler.getErrorBuffer();
       const lastError = errorBuffer[errorBuffer.length - 1];
-      
+
       // Should fallback to UNKNOWN category and corresponding code
       expect(Object.values(ErrorCodes)).toContain(lastError.code);
     });
@@ -147,7 +149,7 @@ describe('ScopeDslErrorHandler - Integration Tests After Refactoring', () => {
   describe('Backward Compatibility Verification', () => {
     it('should preserve existing error codes for cycle detection', () => {
       const cycleError = 'Circular dependency detected';
-      
+
       expect(() => {
         errorHandler.handleError(cycleError, mockContext, 'CycleResolver');
       }).toThrow(ScopeDslError);
@@ -159,7 +161,7 @@ describe('ScopeDslErrorHandler - Integration Tests After Refactoring', () => {
 
     it('should preserve existing error codes for depth exceeded', () => {
       const depthError = 'Maximum depth limit exceeded';
-      
+
       expect(() => {
         errorHandler.handleError(depthError, mockContext, 'DepthResolver');
       }).toThrow(ScopeDslError);
@@ -172,14 +174,14 @@ describe('ScopeDslErrorHandler - Integration Tests After Refactoring', () => {
     it('should preserve fallback error code', () => {
       // Mock a scenario where category mapping returns undefined
       const strangeError = 'Completely unidentifiable error type';
-      
+
       expect(() => {
         errorHandler.handleError(strangeError, null, 'TestResolver');
       }).toThrow(ScopeDslError);
 
       const errorBuffer = errorHandler.getErrorBuffer();
       const lastError = errorBuffer[errorBuffer.length - 1];
-      
+
       // Should use one of the defined codes, not undefined
       expect(Object.values(ErrorCodes)).toContain(lastError.code);
     });
@@ -188,7 +190,7 @@ describe('ScopeDslErrorHandler - Integration Tests After Refactoring', () => {
   describe('Error Message Formatting', () => {
     it('should format error messages with new error codes', () => {
       const testError = 'Test error message';
-      
+
       let thrownError;
       try {
         errorHandler.handleError(testError, mockContext, 'TestResolver');
@@ -203,7 +205,7 @@ describe('ScopeDslErrorHandler - Integration Tests After Refactoring', () => {
 
     it('should include correct error codes in formatted messages', () => {
       const contextError = 'Missing required context data';
-      
+
       let thrownError;
       try {
         errorHandler.handleError(contextError, {}, 'ContextResolver');
@@ -220,15 +222,15 @@ describe('ScopeDslErrorHandler - Integration Tests After Refactoring', () => {
     beforeEach(() => {
       // Set development environment for detailed logging
       process.env.NODE_ENV = 'development';
-      errorHandler = new ScopeDslErrorHandler({ 
+      errorHandler = new ScopeDslErrorHandler({
         logger: mockLogger,
-        config: { isDevelopment: true }
+        config: { isDevelopment: true },
       });
     });
 
     it('should log errors with new error codes in development', () => {
       const testError = 'Development test error';
-      
+
       expect(() => {
         errorHandler.handleError(testError, mockContext, 'DevTestResolver');
       }).toThrow();
@@ -249,11 +251,11 @@ describe('ScopeDslErrorHandler - Integration Tests After Refactoring', () => {
     it('should store errors with new code format in buffer', () => {
       const errors = [
         'Context error test',
-        'Data validation error test', 
-        'Resolution failure test'
+        'Data validation error test',
+        'Resolution failure test',
       ];
 
-      errors.forEach(error => {
+      errors.forEach((error) => {
         try {
           errorHandler.handleError(error, mockContext, 'BufferTestResolver');
         } catch {
@@ -264,7 +266,7 @@ describe('ScopeDslErrorHandler - Integration Tests After Refactoring', () => {
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer).toHaveLength(3);
 
-      buffer.forEach(errorInfo => {
+      buffer.forEach((errorInfo) => {
         expect(errorInfo.code).toMatch(/^SCOPE_\d{4}$/);
         expect(errorInfo.category).toMatch(/^[a-z_]+$/);
         expect(errorInfo.resolverName).toBe('BufferTestResolver');
@@ -274,7 +276,7 @@ describe('ScopeDslErrorHandler - Integration Tests After Refactoring', () => {
 
     it('should maintain error buffer functionality after refactoring', () => {
       const testError = 'Buffer functionality test';
-      
+
       // Clear buffer first
       errorHandler.clearErrorBuffer();
       expect(errorHandler.getErrorBuffer()).toHaveLength(0);

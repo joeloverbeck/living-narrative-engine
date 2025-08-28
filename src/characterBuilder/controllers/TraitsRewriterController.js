@@ -36,8 +36,10 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
   constructor(dependencies) {
     // Call parent constructor with core dependencies
     super(dependencies);
-    
-    this.logger.info(`TraitsRewriterController: Minimal stub initialized (stubMode: ${this.#stubMode})`);
+
+    this.logger.info(
+      `TraitsRewriterController: Minimal stub initialized (stubMode: ${this.#stubMode})`
+    );
   }
 
   /**

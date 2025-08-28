@@ -2,23 +2,23 @@
  * @file Error codes for ScopeDSL system following existing numbering scheme
  * @description Defines standardized error codes for the ScopeDSL system using a hierarchical
  * numbering scheme that aligns with existing implementation patterns.
- * 
+ *
  * The numbering scheme uses category-based prefixes (1000, 2000, etc.) with specific
  * subcodes for granular error identification and handling.
  */
 
 /**
  * Error codes for ScopeDSL system following existing numbering scheme
- * 
+ *
  * Base codes from existing implementation:
  * - 1000: MISSING_CONTEXT errors
- * - 2000: INVALID_DATA errors  
+ * - 2000: INVALID_DATA errors
  * - 3000: RESOLUTION_FAILURE errors
  * - 4001-4002: CYCLE_DETECTED and DEPTH_EXCEEDED (existing codes)
  * - 5000: PARSE_ERROR errors
  * - 6000: CONFIGURATION errors
  * - 9000-9999: UNKNOWN/fallback errors
- * 
+ *
  * @readonly
  * @enum {string}
  */

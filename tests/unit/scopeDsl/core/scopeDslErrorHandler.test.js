@@ -4,7 +4,9 @@
 
 import { jest } from '@jest/globals';
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import ScopeDslErrorHandler, { ErrorCategories } from '../../../../src/scopeDsl/core/scopeDslErrorHandler.js';
+import ScopeDslErrorHandler, {
+  ErrorCategories,
+} from '../../../../src/scopeDsl/core/scopeDslErrorHandler.js';
 import { ScopeDslError } from '../../../../src/scopeDsl/errors/scopeDslError.js';
 
 describe('ScopeDslErrorHandler', () => {
@@ -34,7 +36,6 @@ describe('ScopeDslErrorHandler', () => {
       dispatcher: { resolve: jest.fn() },
       depth: 2,
     };
-
   });
 
   // Restore original NODE_ENV after each test
@@ -50,15 +51,18 @@ describe('ScopeDslErrorHandler', () => {
 
     it('should throw error for missing logger', () => {
       const invalidDeps = { ...validDependencies, logger: null };
-      expect(() => new ScopeDslErrorHandler(invalidDeps)).toThrow('Missing required dependency: ILogger');
+      expect(() => new ScopeDslErrorHandler(invalidDeps)).toThrow(
+        'Missing required dependency: ILogger'
+      );
     });
 
     it('should throw error for logger missing required methods', () => {
       const invalidLogger = { error: jest.fn() }; // Missing warn, debug, info
       const invalidDeps = { ...validDependencies, logger: invalidLogger };
-      expect(() => new ScopeDslErrorHandler(invalidDeps)).toThrow('Invalid or missing method');
+      expect(() => new ScopeDslErrorHandler(invalidDeps)).toThrow(
+        'Invalid or missing method'
+      );
     });
-
 
     it('should use default config values when not provided', () => {
       process.env.NODE_ENV = 'production';
@@ -72,7 +76,10 @@ describe('ScopeDslErrorHandler', () => {
         isDevelopment: true,
         maxBufferSize: 50,
       };
-      const handler = new ScopeDslErrorHandler({ ...validDependencies, config });
+      const handler = new ScopeDslErrorHandler({
+        ...validDependencies,
+        config,
+      });
       expect(handler).toBeInstanceOf(ScopeDslErrorHandler);
     });
   });
@@ -82,11 +89,15 @@ describe('ScopeDslErrorHandler', () => {
       process.env.NODE_ENV = 'production';
       errorHandler = new ScopeDslErrorHandler(validDependencies);
 
-      expect(() => errorHandler.handleError('test error', mockContext, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('test error', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       // Production logging should be minimal (no detailed context)
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringMatching(/^\[ScopeDSL:testResolver\] SCOPE_\d+: test error$/)
+        expect.stringMatching(
+          /^\[ScopeDSL:testResolver\] SCOPE_\d+: test error$/
+        )
       );
     });
 
@@ -94,8 +105,10 @@ describe('ScopeDslErrorHandler', () => {
       process.env.NODE_ENV = 'development';
       errorHandler = new ScopeDslErrorHandler(validDependencies);
 
-      expect(() => errorHandler.handleError('test error', mockContext, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('test error', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       // Development logging should include detailed context
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(/^\[ScopeDSL:testResolver\] test error$/),
@@ -113,8 +126,10 @@ describe('ScopeDslErrorHandler', () => {
       const config = { isDevelopment: true };
       errorHandler = new ScopeDslErrorHandler({ ...validDependencies, config });
 
-      expect(() => errorHandler.handleError('test error', mockContext, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('test error', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       // Should behave as development despite NODE_ENV=production
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringMatching(/^\[ScopeDSL:testResolver\] test error$/),
@@ -132,47 +147,68 @@ describe('ScopeDslErrorHandler', () => {
 
     it('should handle string error messages', () => {
       const errorMessage = 'Test error message';
-      
-      expect(() => errorHandler.handleError(errorMessage, mockContext, 'testResolver')).toThrow(ScopeDslError);
-      
+
+      expect(() =>
+        errorHandler.handleError(errorMessage, mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('should handle Error objects', () => {
       const error = new Error('Test error object');
-      
-      expect(() => errorHandler.handleError(error, mockContext, 'testResolver')).toThrow(ScopeDslError);
-      
+
+      expect(() =>
+        errorHandler.handleError(error, mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('should always throw ScopeDslError', () => {
-      expect(() => errorHandler.handleError('test', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('test', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
     });
 
     it('should include error code in thrown error message', () => {
-      expect(() => errorHandler.handleError('test error', mockContext, 'testResolver'))
-        .toThrow(expect.objectContaining({
-          message: expect.stringMatching(/^\[SCOPE_\d+\]/)
-        }));
+      expect(() =>
+        errorHandler.handleError('test error', mockContext, 'testResolver')
+      ).toThrow(
+        expect.objectContaining({
+          message: expect.stringMatching(/^\[SCOPE_\d+\]/),
+        })
+      );
     });
 
     it('should accept custom error code', () => {
       const customCode = 'CUSTOM_ERROR_001';
-      
-      expect(() => errorHandler.handleError('test error', mockContext, 'testResolver', customCode))
-        .toThrow(expect.objectContaining({
-          message: expect.stringMatching(/^\[CUSTOM_ERROR_001\]/)
-        }));
+
+      expect(() =>
+        errorHandler.handleError(
+          'test error',
+          mockContext,
+          'testResolver',
+          customCode
+        )
+      ).toThrow(
+        expect.objectContaining({
+          message: expect.stringMatching(/^\[CUSTOM_ERROR_001\]/),
+        })
+      );
     });
 
     it('should handle null context gracefully', () => {
-      expect(() => errorHandler.handleError('test', null, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('test', null, 'testResolver')
+      ).toThrow(ScopeDslError);
       expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('should handle undefined context gracefully', () => {
-      expect(() => errorHandler.handleError('test', undefined, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('test', undefined, 'testResolver')
+      ).toThrow(ScopeDslError);
       expect(mockLogger.error).toHaveBeenCalled();
     });
   });
@@ -183,50 +219,90 @@ describe('ScopeDslErrorHandler', () => {
     });
 
     it('should categorize missing context errors', () => {
-      expect(() => errorHandler.handleError('missing actorEntity', {}, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('missing actorEntity', {}, 'testResolver')
+      ).toThrow(ScopeDslError);
       // We can verify categorization worked by checking the buffer
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].category).toBe(ErrorCategories.MISSING_CONTEXT);
     });
 
     it('should categorize cycle detection errors', () => {
-      expect(() => errorHandler.handleError('circular reference detected', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError(
+          'circular reference detected',
+          mockContext,
+          'testResolver'
+        )
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].category).toBe(ErrorCategories.CYCLE_DETECTED);
     });
 
     it('should categorize depth exceeded errors', () => {
-      expect(() => errorHandler.handleError('maximum depth exceeded', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError(
+          'maximum depth exceeded',
+          mockContext,
+          'testResolver'
+        )
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].category).toBe(ErrorCategories.DEPTH_EXCEEDED);
     });
 
     it('should categorize parse errors', () => {
-      expect(() => errorHandler.handleError('syntax error in expression', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError(
+          'syntax error in expression',
+          mockContext,
+          'testResolver'
+        )
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].category).toBe(ErrorCategories.PARSE_ERROR);
     });
 
     it('should categorize invalid data errors', () => {
-      expect(() => errorHandler.handleError('invalid data format', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError(
+          'invalid data format',
+          mockContext,
+          'testResolver'
+        )
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].category).toBe(ErrorCategories.INVALID_DATA);
     });
 
     it('should categorize configuration errors', () => {
-      expect(() => errorHandler.handleError('configuration setting invalid', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError(
+          'configuration setting invalid',
+          mockContext,
+          'testResolver'
+        )
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].category).toBe(ErrorCategories.CONFIGURATION);
     });
 
     it('should categorize resolution failure errors', () => {
-      expect(() => errorHandler.handleError('scope not found', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('scope not found', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].category).toBe(ErrorCategories.RESOLUTION_FAILURE);
     });
 
     it('should categorize unknown errors as unknown', () => {
-      expect(() => errorHandler.handleError('some random error', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError(
+          'some random error',
+          mockContext,
+          'testResolver'
+        )
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].category).toBe(ErrorCategories.UNKNOWN);
     });
@@ -241,8 +317,10 @@ describe('ScopeDslErrorHandler', () => {
       const circularContext = { name: 'test' };
       circularContext.self = circularContext; // Create circular reference
 
-      expect(() => errorHandler.handleError('test', circularContext, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('test', circularContext, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].sanitizedContext).toEqual({
         name: 'test',
@@ -256,8 +334,10 @@ describe('ScopeDslErrorHandler', () => {
         fn: () => 'function',
       };
 
-      expect(() => errorHandler.handleError('test', contextWithFunction, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('test', contextWithFunction, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].sanitizedContext.fn).toBe('[Function]');
     });
@@ -268,19 +348,25 @@ describe('ScopeDslErrorHandler', () => {
         error: new Error('nested error'),
       };
 
-      expect(() => errorHandler.handleError('test', contextWithError, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('test', contextWithError, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].sanitizedContext.error).toBe('nested error');
     });
 
     it('should limit array size in sanitization', () => {
       const contextWithLargeArray = {
-        items: Array(10).fill(0).map((_, i) => ({ id: i })),
+        items: Array(10)
+          .fill(0)
+          .map((_, i) => ({ id: i })),
       };
 
-      expect(() => errorHandler.handleError('test', contextWithLargeArray, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('test', contextWithLargeArray, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].sanitizedContext.items).toHaveLength(5); // Limited to 5 items
     });
@@ -291,8 +377,10 @@ describe('ScopeDslErrorHandler', () => {
         contextWithManyKeys[`key${i}`] = `value${i}`;
       }
 
-      expect(() => errorHandler.handleError('test', contextWithManyKeys, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('test', contextWithManyKeys, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       const buffer = errorHandler.getErrorBuffer();
       expect(Object.keys(buffer[0].sanitizedContext)).toHaveLength(10); // Limited to 10 keys
     });
@@ -304,8 +392,10 @@ describe('ScopeDslErrorHandler', () => {
         validValue: 'test',
       };
 
-      expect(() => errorHandler.handleError('test', contextWithNulls, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('test', contextWithNulls, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].sanitizedContext.nullValue).toBe(null);
       expect(buffer[0].sanitizedContext.undefinedValue).toBe(undefined);
@@ -320,12 +410,16 @@ describe('ScopeDslErrorHandler', () => {
         current = current.nested;
       }
 
-      expect(() => errorHandler.handleError('test', deepContext, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('test', deepContext, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       const buffer = errorHandler.getErrorBuffer();
       // Should be truncated at depth 3 (depth > 3 condition in code)
       const sanitized = buffer[0].sanitizedContext;
-      expect(sanitized.nested.nested.nested.nested).toBe('[Circular Reference]');
+      expect(sanitized.nested.nested.nested.nested).toBe(
+        '[Circular Reference]'
+      );
     });
   });
 
@@ -335,8 +429,12 @@ describe('ScopeDslErrorHandler', () => {
     });
 
     it('should buffer errors', () => {
-      expect(() => errorHandler.handleError('first error', mockContext, 'resolver1')).toThrow(ScopeDslError);
-      expect(() => errorHandler.handleError('second error', mockContext, 'resolver2')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('first error', mockContext, 'resolver1')
+      ).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('second error', mockContext, 'resolver2')
+      ).toThrow(ScopeDslError);
 
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer).toHaveLength(2);
@@ -345,10 +443,14 @@ describe('ScopeDslErrorHandler', () => {
     });
 
     it('should include timestamps in buffered errors', () => {
-      expect(() => errorHandler.handleError('test error', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('test error', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
 
       const buffer = errorHandler.getErrorBuffer();
-      expect(buffer[0].timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/); // ISO format
+      expect(buffer[0].timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/
+      ); // ISO format
     });
 
     it('should enforce buffer size limit', () => {
@@ -371,21 +473,25 @@ describe('ScopeDslErrorHandler', () => {
     });
 
     it('should clear buffer when requested', () => {
-      expect(() => errorHandler.handleError('test error', mockContext, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('test error', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       expect(errorHandler.getErrorBuffer()).toHaveLength(1);
-      
+
       errorHandler.clearErrorBuffer();
-      
+
       expect(errorHandler.getErrorBuffer()).toHaveLength(0);
     });
 
     it('should return copy of buffer, not reference', () => {
-      expect(() => errorHandler.handleError('test error', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('test error', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
 
       const buffer1 = errorHandler.getErrorBuffer();
       const buffer2 = errorHandler.getErrorBuffer();
-      
+
       expect(buffer1).toEqual(buffer2);
       expect(buffer1).not.toBe(buffer2); // Different object references
     });
@@ -397,56 +503,95 @@ describe('ScopeDslErrorHandler', () => {
     });
 
     it('should generate appropriate code for missing context', () => {
-      expect(() => errorHandler.handleError('missing context', {}, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('missing context', {}, 'testResolver')
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].code).toBe('SCOPE_1000');
     });
 
     it('should generate appropriate code for invalid data', () => {
-      expect(() => errorHandler.handleError('invalid data format', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError(
+          'invalid data format',
+          mockContext,
+          'testResolver'
+        )
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].code).toBe('SCOPE_2000');
     });
 
     it('should generate appropriate code for resolution failure', () => {
-      expect(() => errorHandler.handleError('resolution failed', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError(
+          'resolution failed',
+          mockContext,
+          'testResolver'
+        )
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].code).toBe('SCOPE_3000');
     });
 
     it('should generate appropriate code for cycle detected', () => {
-      expect(() => errorHandler.handleError('cycle detected', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('cycle detected', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].code).toBe('SCOPE_4001');
     });
 
     it('should generate appropriate code for depth exceeded', () => {
-      expect(() => errorHandler.handleError('depth exceeded', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('depth exceeded', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].code).toBe('SCOPE_4002');
     });
 
     it('should generate appropriate code for parse error', () => {
-      expect(() => errorHandler.handleError('parse error', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('parse error', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].code).toBe('SCOPE_5000');
     });
 
     it('should generate appropriate code for configuration error', () => {
-      expect(() => errorHandler.handleError('configuration error', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError(
+          'configuration error',
+          mockContext,
+          'testResolver'
+        )
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].code).toBe('SCOPE_6000');
     });
 
     it('should generate unknown code for unrecognized errors', () => {
-      expect(() => errorHandler.handleError('weird random error', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError(
+          'weird random error',
+          mockContext,
+          'testResolver'
+        )
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].code).toBe('SCOPE_9000');
     });
 
     it('should use custom error code when provided', () => {
       const customCode = 'CUSTOM_123';
-      expect(() => errorHandler.handleError('test', mockContext, 'testResolver', customCode)).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError(
+          'test',
+          mockContext,
+          'testResolver',
+          customCode
+        )
+      ).toThrow(ScopeDslError);
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].code).toBe(customCode);
     });
@@ -457,7 +602,9 @@ describe('ScopeDslErrorHandler', () => {
       const config = { isDevelopment: true };
       errorHandler = new ScopeDslErrorHandler({ ...validDependencies, config });
 
-      expect(() => errorHandler.handleError('test error', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('test error', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         '[ScopeDSL:testResolver] test error',
@@ -475,10 +622,14 @@ describe('ScopeDslErrorHandler', () => {
       const config = { isDevelopment: false };
       errorHandler = new ScopeDslErrorHandler({ ...validDependencies, config });
 
-      expect(() => errorHandler.handleError('test error', mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError('test error', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringMatching(/^\[ScopeDSL:testResolver\] SCOPE_\d+: test error$/)
+        expect.stringMatching(
+          /^\[ScopeDSL:testResolver\] SCOPE_\d+: test error$/
+        )
       );
     });
 
@@ -487,7 +638,9 @@ describe('ScopeDslErrorHandler', () => {
       errorHandler = new ScopeDslErrorHandler({ ...validDependencies, config });
       const error = new Error('test error');
 
-      expect(() => errorHandler.handleError(error, mockContext, 'testResolver')).toThrow(ScopeDslError);
+      expect(() =>
+        errorHandler.handleError(error, mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         '[ScopeDSL:testResolver] test error',
@@ -505,23 +658,29 @@ describe('ScopeDslErrorHandler', () => {
 
     it('should handle non-string, non-Error error input', () => {
       const numberError = 12345;
-      expect(() => errorHandler.handleError(numberError, mockContext, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError(numberError, mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].message).toBe('12345');
     });
 
     it('should handle empty string error', () => {
-      expect(() => errorHandler.handleError('', mockContext, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('', mockContext, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       const buffer = errorHandler.getErrorBuffer();
       expect(buffer[0].message).toBe('');
     });
 
     it('should handle resolver name with special characters', () => {
       const resolverName = 'my-special_resolver.v2';
-      expect(() => errorHandler.handleError('test', mockContext, resolverName)).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('test', mockContext, resolverName)
+      ).toThrow(ScopeDslError);
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(resolverName),
         expect.any(Object)
@@ -532,13 +691,17 @@ describe('ScopeDslErrorHandler', () => {
       const problematicContext = {
         get badProperty() {
           throw new Error('Property access error');
-        }
+        },
       };
 
-      expect(() => errorHandler.handleError('test', problematicContext, 'testResolver')).toThrow(ScopeDslError);
-      
+      expect(() =>
+        errorHandler.handleError('test', problematicContext, 'testResolver')
+      ).toThrow(ScopeDslError);
+
       const buffer = errorHandler.getErrorBuffer();
-      expect(buffer[0].sanitizedContext.badProperty).toBe('[Sanitization Error]');
+      expect(buffer[0].sanitizedContext.badProperty).toBe(
+        '[Sanitization Error]'
+      );
     });
   });
 });

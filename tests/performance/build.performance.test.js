@@ -37,22 +37,27 @@ describe('Build System Performance', () => {
       child.on('close', (code) => {
         // Check if this is a validation failure due to missing development features
         const buildOutput = stdout + stderr;
-        const isDevValidationFailure = code !== 0 && 
+        const isDevValidationFailure =
+          code !== 0 &&
           buildOutput.includes('Build validation failed') &&
-          (buildOutput.includes('traits-rewriter.js') || 
-           buildOutput.includes('Required javascript file missing') ||
-           buildOutput.includes('TraitsRewriterController.js'));
-           
+          (buildOutput.includes('traits-rewriter.js') ||
+            buildOutput.includes('Required javascript file missing') ||
+            buildOutput.includes('TraitsRewriterController.js'));
+
         if (code === 0 || isDevValidationFailure) {
-          resolve({ 
-            stdout, 
-            stderr, 
-            code, 
+          resolve({
+            stdout,
+            stderr,
+            code,
             isDevValidationFailure,
-            actualSuccess: code === 0
+            actualSuccess: code === 0,
           });
         } else {
-          reject(new Error(`Command failed with code ${code}\nStdout: ${stdout}\nStderr: ${stderr}`));
+          reject(
+            new Error(
+              `Command failed with code ${code}\nStdout: ${stdout}\nStderr: ${stderr}`
+            )
+          );
         }
       });
 
@@ -69,34 +74,42 @@ describe('Build System Performance', () => {
   };
 
   // Helper function to execute build with retries
-  const executeBuildWithRetries = async (command, args = [], retries = maxRetries) => {
+  const executeBuildWithRetries = async (
+    command,
+    args = [],
+    retries = maxRetries
+  ) => {
     let lastError;
-    
+
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const result = await executeBuild(command, args);
-        
+
         // If it's a dev validation failure but build steps completed, treat as success
         if (result.isDevValidationFailure) {
-          console.warn(`Build completed with validation warnings (missing development features)`);
+          console.warn(
+            `Build completed with validation warnings (missing development features)`
+          );
         }
-        
+
         return result;
       } catch (error) {
         lastError = error;
         if (attempt < retries) {
-          console.warn(`Build attempt ${attempt + 1} failed, retrying... Error: ${error.message}`);
+          console.warn(
+            `Build attempt ${attempt + 1} failed, retrying... Error: ${error.message}`
+          );
           // Wait before retry
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise((resolve) => setTimeout(resolve, 2000));
           // Clean dist directory before retry
           if (await fs.pathExists(distDir)) {
             await fs.remove(distDir);
           }
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
     }
-    
+
     throw lastError;
   };
 
@@ -104,13 +117,13 @@ describe('Build System Performance', () => {
   const validateBuildPrerequisites = async () => {
     // Check if build script exists
     const buildScriptPath = path.join(process.cwd(), 'scripts', 'build.js');
-    if (!await fs.pathExists(buildScriptPath)) {
+    if (!(await fs.pathExists(buildScriptPath))) {
       throw new Error('Build script not found at scripts/build.js');
     }
 
     // Check if package.json has required scripts
     const packageJsonPath = path.join(process.cwd(), 'package.json');
-    if (!await fs.pathExists(packageJsonPath)) {
+    if (!(await fs.pathExists(packageJsonPath))) {
       throw new Error('package.json not found');
     }
 
@@ -126,14 +139,14 @@ describe('Build System Performance', () => {
   beforeEach(async () => {
     // Validate prerequisites
     await validateBuildPrerequisites();
-    
+
     // Clean dist directory before each test
     if (await fs.pathExists(distDir)) {
       await fs.remove(distDir);
     }
-    
+
     // Wait for filesystem operations to complete
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   });
 
   afterEach(async () => {
@@ -141,9 +154,9 @@ describe('Build System Performance', () => {
     if (await fs.pathExists(distDir)) {
       await fs.remove(distDir);
     }
-    
+
     // Wait for filesystem operations to complete
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   });
 
   describe('Build Speed Benchmarks', () => {
@@ -153,22 +166,26 @@ describe('Build System Performance', () => {
         const startTime = Date.now();
 
         const result = await executeBuildWithRetries('build:dev');
-        
+
         const buildTime = Date.now() - startTime;
 
         // Verify build succeeded (or succeeded with dev validation warnings)
-        expect(result.actualSuccess || result.isDevValidationFailure).toBe(true);
-        
+        expect(result.actualSuccess || result.isDevValidationFailure).toBe(
+          true
+        );
+
         if (result.isDevValidationFailure) {
-          console.log('Build completed with validation warnings for missing development features');
+          console.log(
+            'Build completed with validation warnings for missing development features'
+          );
         }
-        
+
         // Verify dist directory was created with content
         expect(await fs.pathExists(distDir)).toBe(true);
-        
+
         // Log build time for monitoring (but don't fail on it)
         console.log(`Development build completed in ${buildTime}ms`);
-        
+
         // Reasonable upper bound - builds should complete within 2 minutes
         expect(buildTime).toBeLessThan(120000);
       },
@@ -181,22 +198,26 @@ describe('Build System Performance', () => {
         const startTime = Date.now();
 
         const result = await executeBuildWithRetries('build:prod');
-        
+
         const buildTime = Date.now() - startTime;
 
         // Verify build succeeded (or succeeded with dev validation warnings)
-        expect(result.actualSuccess || result.isDevValidationFailure).toBe(true);
-        
+        expect(result.actualSuccess || result.isDevValidationFailure).toBe(
+          true
+        );
+
         if (result.isDevValidationFailure) {
-          console.log('Build completed with validation warnings for missing development features');
+          console.log(
+            'Build completed with validation warnings for missing development features'
+          );
         }
-        
+
         // Verify dist directory was created with content
         expect(await fs.pathExists(distDir)).toBe(true);
-        
+
         // Log build time for monitoring (but don't fail on it)
         console.log(`Production build completed in ${buildTime}ms`);
-        
+
         // Production builds get more time due to minification
         expect(buildTime).toBeLessThan(180000); // 3 minutes
       },
@@ -214,30 +235,38 @@ describe('Build System Performance', () => {
           if (await fs.pathExists(distDir)) {
             await fs.remove(distDir);
           }
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
 
           const startTime = Date.now();
           const result = await executeBuildWithRetries('build:dev');
           const buildTime = Date.now() - startTime;
-          
-          expect(result.actualSuccess || result.isDevValidationFailure).toBe(true);
-          
+
+          expect(result.actualSuccess || result.isDevValidationFailure).toBe(
+            true
+          );
+
           if (result.isDevValidationFailure) {
-            console.log('Build completed with validation warnings for missing development features');
+            console.log(
+              'Build completed with validation warnings for missing development features'
+            );
           }
           buildTimes.push(buildTime);
-          
+
           console.log(`Build run ${i + 1}: ${buildTime}ms`);
         }
 
         // Calculate coefficient of variation (std dev / mean)
         const mean = buildTimes.reduce((a, b) => a + b, 0) / buildTimes.length;
-        const variance = buildTimes.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / buildTimes.length;
+        const variance =
+          buildTimes.reduce((a, b) => a + Math.pow(b - mean, 2), 0) /
+          buildTimes.length;
         const stdDev = Math.sqrt(variance);
         const coefficientOfVariation = stdDev / mean;
-        
-        console.log(`Build time consistency: mean=${mean.toFixed(0)}ms, stdDev=${stdDev.toFixed(0)}ms, CV=${(coefficientOfVariation * 100).toFixed(1)}%`);
-        
+
+        console.log(
+          `Build time consistency: mean=${mean.toFixed(0)}ms, stdDev=${stdDev.toFixed(0)}ms, CV=${(coefficientOfVariation * 100).toFixed(1)}%`
+        );
+
         // Builds should be reasonably consistent (CV < 50%)
         expect(coefficientOfVariation).toBeLessThan(0.5);
       },
@@ -254,11 +283,15 @@ describe('Build System Performance', () => {
         const parallelStart = Date.now();
         const parallelResult = await executeBuildWithRetries('build:dev');
         const parallelTime = Date.now() - parallelStart;
-        
-        expect(parallelResult.actualSuccess || parallelResult.isDevValidationFailure).toBe(true);
-        
+
+        expect(
+          parallelResult.actualSuccess || parallelResult.isDevValidationFailure
+        ).toBe(true);
+
         if (parallelResult.isDevValidationFailure) {
-          console.log('Parallel build completed with validation warnings for missing development features');
+          console.log(
+            'Parallel build completed with validation warnings for missing development features'
+          );
         }
         expect(await fs.pathExists(distDir)).toBe(true);
         console.log(`Parallel build: ${parallelTime}ms`);
@@ -270,30 +303,46 @@ describe('Build System Performance', () => {
         // Test sequential build (no-parallel) using direct script call
         console.log('Testing sequential build...');
         const sequentialStart = Date.now();
-        
+
         try {
-          const sequentialResult = await executeBuild('run', ['node', 'scripts/build.js', '--no-parallel', '--mode', 'development']);
+          const sequentialResult = await executeBuild('run', [
+            'node',
+            'scripts/build.js',
+            '--no-parallel',
+            '--mode',
+            'development',
+          ]);
           const sequentialTime = Date.now() - sequentialStart;
-          
-          expect(sequentialResult.actualSuccess || sequentialResult.isDevValidationFailure).toBe(true);
-          
+
+          expect(
+            sequentialResult.actualSuccess ||
+              sequentialResult.isDevValidationFailure
+          ).toBe(true);
+
           if (sequentialResult.isDevValidationFailure) {
-            console.log('Sequential build completed with validation warnings for missing development features');
+            console.log(
+              'Sequential build completed with validation warnings for missing development features'
+            );
           }
           expect(await fs.pathExists(distDir)).toBe(true);
           console.log(`Sequential build: ${sequentialTime}ms`);
-          
+
           // Both builds should work, timing comparison is informational only
-          console.log(`Build mode comparison: parallel=${parallelTime}ms, sequential=${sequentialTime}ms`);
-          
+          console.log(
+            `Build mode comparison: parallel=${parallelTime}ms, sequential=${sequentialTime}ms`
+          );
+
           // The key requirement is that both builds succeed
           expect(true).toBe(true); // Both builds succeeded if we reach here
-          
         } catch (error) {
           // If sequential build fails, just log it and pass the test
           // since the main requirement is that parallel build works
-          console.warn(`Sequential build failed (expected in some environments): ${error.message}`);
-          console.log('Parallel build works correctly, sequential build support varies by environment');
+          console.warn(
+            `Sequential build failed (expected in some environments): ${error.message}`
+          );
+          console.log(
+            'Parallel build works correctly, sequential build support varies by environment'
+          );
           expect(true).toBe(true); // Test passes as long as parallel build worked
         }
       },
@@ -306,22 +355,26 @@ describe('Build System Performance', () => {
       'should produce valid build output with reasonable bundle sizes',
       async () => {
         const result = await executeBuildWithRetries('build:prod');
-        expect(result.actualSuccess || result.isDevValidationFailure).toBe(true);
-        
+        expect(result.actualSuccess || result.isDevValidationFailure).toBe(
+          true
+        );
+
         if (result.isDevValidationFailure) {
-          console.log('Build completed with validation warnings for missing development features');
+          console.log(
+            'Build completed with validation warnings for missing development features'
+          );
         }
 
         // Check that dist directory exists and has content
         expect(await fs.pathExists(distDir)).toBe(true);
-        
+
         const distContents = await fs.readdir(distDir);
         expect(distContents.length).toBeGreaterThan(0);
-        
+
         console.log(`Build output files: ${distContents.join(', ')}`);
 
         // Check for JavaScript bundle files (flexible list since config may change)
-        const jsBundles = distContents.filter(file => file.endsWith('.js'));
+        const jsBundles = distContents.filter((file) => file.endsWith('.js'));
         expect(jsBundles.length).toBeGreaterThan(0);
 
         let totalSize = 0;
@@ -331,7 +384,7 @@ describe('Build System Performance', () => {
           const bundlePath = path.join(distDir, bundle);
           const stats = await fs.stat(bundlePath);
           const sizeInMB = stats.size / (1024 * 1024);
-          
+
           totalSize += stats.size;
           bundleSizes[bundle] = sizeInMB;
 
@@ -343,7 +396,7 @@ describe('Build System Performance', () => {
         Object.entries(bundleSizes).forEach(([bundle, size]) => {
           console.log(`${bundle}: ${size.toFixed(2)}MB`);
         });
-        
+
         const totalSizeInMB = totalSize / (1024 * 1024);
         console.log(`Total bundle size: ${totalSizeInMB.toFixed(2)}MB`);
 
@@ -362,31 +415,39 @@ describe('Build System Performance', () => {
         const initialTime = process.hrtime.bigint();
 
         const result = await executeBuildWithRetries('build:dev');
-        
+
         const finalMemory = process.memoryUsage();
         const finalTime = process.hrtime.bigint();
-        
-        expect(result.actualSuccess || result.isDevValidationFailure).toBe(true);
-        
+
+        expect(result.actualSuccess || result.isDevValidationFailure).toBe(
+          true
+        );
+
         if (result.isDevValidationFailure) {
-          console.log('Build completed with validation warnings for missing development features');
+          console.log(
+            'Build completed with validation warnings for missing development features'
+          );
         }
-        
+
         // Calculate memory usage
         const memoryIncrease = finalMemory.heapUsed - initialMemory.heapUsed;
         const memoryIncreaseInMB = memoryIncrease / (1024 * 1024);
-        
+
         // Calculate CPU time
         const cpuTimeInMs = Number(finalTime - initialTime) / 1000000;
-        
-        console.log(`Memory usage: ${memoryIncreaseInMB.toFixed(2)}MB increase`);
+
+        console.log(
+          `Memory usage: ${memoryIncreaseInMB.toFixed(2)}MB increase`
+        );
         console.log(`CPU time: ${cpuTimeInMs.toFixed(0)}ms`);
-        console.log(`Final heap usage: ${(finalMemory.heapUsed / 1024 / 1024).toFixed(2)}MB`);
-        
+        console.log(
+          `Final heap usage: ${(finalMemory.heapUsed / 1024 / 1024).toFixed(2)}MB`
+        );
+
         // Memory increase should be reasonable (relaxed threshold)
         // Note: This measures test process memory, not build process memory
         expect(Math.abs(memoryIncrease)).toBeLessThan(1000 * 1024 * 1024); // 1GB absolute change
-        
+
         // Verify build actually produced output
         expect(await fs.pathExists(distDir)).toBe(true);
       },

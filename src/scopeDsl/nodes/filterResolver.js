@@ -8,6 +8,8 @@ import {
   createEvaluationContext,
   preprocessActorForEvaluation,
 } from '../core/entityHelpers.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
+import { ErrorCodes } from '../constants/errorCodes.js';
 
 /**
  * @typedef {object} LocationProvider
@@ -21,13 +23,21 @@ import {
  * @param {LogicEvaluator} deps.logicEval - JSON Logic evaluator
  * @param {EntityGateway} deps.entitiesGateway - Gateway for entity operations
  * @param {LocationProvider} deps.locationProvider - Provider for current location
+ * @param deps.errorHandler
  * @returns {NodeResolver} Filter node resolver
  */
 export default function createFilterResolver({
   logicEval,
   entitiesGateway,
   locationProvider,
+  errorHandler = null,
 }) {
+  // Only validate if provided (for backward compatibility)
+  if (errorHandler) {
+    validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
+      requiredMethods: ['handleError', 'getErrorBuffer'],
+    });
+  }
   return {
     /**
      * Determines if this resolver can handle the given node
@@ -59,109 +69,68 @@ export default function createFilterResolver({
 
       // Critical validation: actorEntity must be present and have valid ID
       if (!actorEntity) {
-        // Only perform expensive debugging when trace is enabled
-        if (trace) {
-          const error = new Error(
-            'FilterResolver: actorEntity is undefined in context. This is a critical error.'
+        const error = new Error(
+          'FilterResolver: actorEntity is undefined in context'
+        );
+        if (errorHandler) {
+          errorHandler.handleError(
+            error,
+            ctx,
+            'FilterResolver',
+            ErrorCodes.MISSING_ACTOR
           );
-          // eslint-disable-next-line no-console
-          console.error(
-            '[CRITICAL] FilterResolver context missing actorEntity:',
-            {
-              hasCtx: !!ctx,
-              ctxKeys: ctx ? Object.keys(ctx) : [],
-              nodeType: node?.type,
-              hasDispatcher: !!dispatcher,
-              hasTrace: !!trace,
-              parentNodeType: node?.parent?.type,
-              // Enhanced debugging: show full context structure
-              contextSnapshot: ctx
-                ? {
-                    hasActorEntity: !!ctx.actorEntity,
-                    hasRuntimeCtx: !!ctx.runtimeCtx,
-                    depth: ctx.depth,
-                    // Don't log full objects to avoid circular references
-                    keys: Object.keys(ctx).filter(
-                      (k) => k !== 'dispatcher' && k !== 'cycleDetector'
-                    ),
-                  }
-                : null,
-              callStack: new Error().stack,
-            }
-          );
+        } else {
+          // Fallback for backward compatibility
           throw error;
         }
-        // In production, fail fast with minimal overhead
-        throw new Error('FilterResolver: actorEntity is undefined in context');
       }
 
       // Additional validation for actorEntity ID
-      // Only perform detailed validation when debugging
       if (
         !actorEntity.id ||
         actorEntity.id === 'undefined' ||
         typeof actorEntity.id !== 'string'
       ) {
-        if (trace) {
-          // Enhanced error detection for Entity class spread operator issue
-          const isPossibleSpreadIssue =
-            !actorEntity.id &&
-            typeof actorEntity === 'object' &&
-            actorEntity !== null &&
-            // Check if this looks like a spread Entity object that lost its getters
-            ('componentTypeIds' in actorEntity || 'components' in actorEntity);
+        const isPossibleSpreadIssue =
+          !actorEntity.id &&
+          typeof actorEntity === 'object' &&
+          actorEntity !== null &&
+          ('componentTypeIds' in actorEntity || 'components' in actorEntity);
 
-          const errorMessage = isPossibleSpreadIssue
-            ? `FilterResolver: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This appears to be an Entity instance that lost its 'id' getter method, likely due to improper use of spread operator (...entity). Entity instances must preserve their getter methods.`
-            : `FilterResolver: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This is a critical error.`;
+        const errorMessage = isPossibleSpreadIssue
+          ? `FilterResolver: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This appears to be an Entity instance that lost its 'id' getter method`
+          : `FilterResolver: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}`;
 
-          const error = new Error(errorMessage);
-          // eslint-disable-next-line no-console
-          console.error(
-            '[CRITICAL] FilterResolver actorEntity has invalid ID:',
-            {
-              actorId: actorEntity.id,
-              actorIdType: typeof actorEntity.id,
-              actorKeys: Object.keys(actorEntity),
-              nodeType: node?.type,
-              parentNodeType: node?.parent?.type,
-              hasDispatcher: !!dispatcher,
-              hasTrace: !!trace,
-              isPossibleSpreadIssue,
-              // Enhanced debugging info
-              contextSnapshot: {
-                hasActorEntity: true,
-                actorEntityKeys: Object.keys(actorEntity),
-                hasComponents: !!actorEntity.components,
-                componentCount: actorEntity.components
-                  ? Object.keys(actorEntity.components).length
-                  : 0,
-                depth: ctx.depth,
-                contextKeys: Object.keys(ctx).filter(
-                  (k) => k !== 'dispatcher' && k !== 'cycleDetector'
-                ),
-              },
-              callStack: new Error().stack,
-            }
+        const error = new Error(errorMessage);
+        if (errorHandler) {
+          errorHandler.handleError(
+            error,
+            ctx,
+            'FilterResolver',
+            ErrorCodes.INVALID_ACTOR_ID
           );
+        } else {
+          // Fallback for backward compatibility
           throw error;
         }
-        // In production, fail fast with minimal overhead
-        throw new Error('FilterResolver: actorEntity has invalid ID');
       }
 
       // Validate node structure
       if (!node || !node.parent) {
         const error = new Error(
-          'FilterResolver: Invalid node structure - missing parent node.'
+          'FilterResolver: Invalid node structure - missing parent node'
         );
-        // eslint-disable-next-line no-console
-        console.error('[CRITICAL] FilterResolver invalid node structure:', {
-          hasNode: !!node,
-          nodeType: node?.type,
-          hasParent: !!node?.parent,
-        });
-        throw error;
+        if (errorHandler) {
+          errorHandler.handleError(
+            error,
+            ctx,
+            'FilterResolver',
+            ErrorCodes.MISSING_NODE_PARENT
+          );
+        } else {
+          // Fallback for backward compatibility
+          throw error;
+        }
       }
 
       // Recursively resolve parent node
@@ -294,7 +263,16 @@ export default function createFilterResolver({
               error.message &&
               error.message.includes('Could not resolve condition_ref')
             ) {
-              throw error;
+              if (errorHandler) {
+                errorHandler.handleError(
+                  error,
+                  ctx,
+                  'FilterResolver',
+                  ErrorCodes.RESOLUTION_FAILED_GENERIC
+                );
+              } else {
+                throw error;
+              }
             }
             // Handle other errors gracefully
             if (trace) {

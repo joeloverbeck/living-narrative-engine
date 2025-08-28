@@ -21,7 +21,7 @@ After implementing the minimal controller stub, dependency injection tokens, and
 ## Acceptance Criteria
 
 - [ ] **Build Success**: `npm run build` completes without errors
-- [ ] **Application Start**: `npm run start` launches without errors  
+- [ ] **Application Start**: `npm run start` launches without errors
 - [ ] **Page Access**: traits-rewriter.html loads in browser without errors
 - [ ] **Controller Bootstrap**: TraitsRewriterController instantiates successfully
 - [ ] **Console Clean**: No import, DI, or controller errors in browser console
@@ -32,27 +32,34 @@ After implementing the minimal controller stub, dependency injection tokens, and
 ### Testing Sequence
 
 #### 1. Build Verification
+
 ```bash
 npm run build
 ```
+
 **Expected**: Clean build with no import errors
 
 #### 2. Application Startup
+
 ```bash
 npm run start
 ```
+
 **Expected**: Application starts on configured port
 
 #### 3. Page Access Test
+
 - Navigate to: `http://localhost:[port]/traits-rewriter.html`
 - **Expected**: Page loads with character builder UI
 
 #### 4. Controller Bootstrap Verification
+
 - Open browser developer tools
 - Navigate to traits-rewriter page
 - **Expected**: Controller instantiation logs in console
 
 #### 5. UI State Verification
+
 - Verify page shows empty state (not error state)
 - Check for proper UI element display
 - **Expected**: Professional UI with empty state message
@@ -60,21 +67,45 @@ npm run start
 ## Dependencies
 
 **Blocking**:
+
 - TRAREW-001 (Minimal Controller Stub) - Must be completed
-- TRAREW-002 (DI Tokens) - Must be completed  
+- TRAREW-002 (DI Tokens) - Must be completed
 - TRAREW-003 (Service Registration) - Must be completed
 
 **Required By**:
+
 - TRAREW-005 (Begin Phase 2 Implementation)
 
 ## Testing Requirements
 
 ### Automated Testing
+
 Create a basic smoke test to verify the fix:
 
 ```javascript
-// tests/integration/traitsRewriter/applicationStartup.test.js
+// tests/integration/characterBuilder/traitsRewriterStartup.integration.test.js
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { CharacterBuilderBootstrap } from '../../../src/characterBuilder/CharacterBuilderBootstrap.js';
+import { TraitsRewriterController } from '../../../src/characterBuilder/controllers/TraitsRewriterController.js';
+
 describe('TraitsRewriter Application Startup', () => {
+  let bootstrap;
+  let mockFetch;
+
+  beforeEach(() => {
+    bootstrap = new CharacterBuilderBootstrap();
+    // Mock fetch for schema loading
+    mockFetch = jest.fn();
+    global.fetch = mockFetch;
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        $id: 'schema://living-narrative-engine/test.json',
+        type: 'object',
+      }),
+    });
+  });
+
   it('should start application without import errors', async () => {
     // Test that controller can be imported
     const { TraitsRewriterController } = await import(
@@ -83,10 +114,15 @@ describe('TraitsRewriter Application Startup', () => {
     expect(TraitsRewriterController).toBeDefined();
   });
 
-  it('should resolve controller through DI container', () => {
-    const container = createTestContainer();
-    const controller = container.resolve(tokens.TraitsRewriterController);
-    expect(controller).toBeInstanceOf(TraitsRewriterController);
+  it('should bootstrap controller successfully', async () => {
+    const result = await bootstrap.bootstrap({
+      pageName: 'Traits Rewriter',
+      controllerClass: TraitsRewriterController,
+      includeModLoading: false,
+    });
+    
+    expect(result.controller).toBeInstanceOf(TraitsRewriterController);
+    expect(result.container).toBeDefined();
   });
 });
 ```
@@ -94,22 +130,26 @@ describe('TraitsRewriter Application Startup', () => {
 ### Manual Testing Checklist
 
 #### Build Test
-- [ ] Run `npm run build` 
+
+- [ ] Run `npm run build`
 - [ ] Verify no import errors in output
-- [ ] Check that traits-rewriter.js is generated in dist/
+- [ ] Check that traits-rewriter.js is generated in project root (not dist/)
 
 #### Runtime Test
+
 - [ ] Start application with `npm run start`
 - [ ] Verify no startup errors in console
 - [ ] Check that all services initialize properly
 
-#### UI Test  
+#### UI Test
+
 - [ ] Open traits-rewriter.html in browser
 - [ ] Verify page loads completely
 - [ ] Check for proper CSS loading and styling
 - [ ] Confirm no JavaScript errors in browser console
 
 #### Controller Test
+
 - [ ] Verify controller bootstrap logs appear
 - [ ] Check that controller is instantiated with proper dependencies
 - [ ] Confirm UI state manager is initialized
@@ -117,33 +157,36 @@ describe('TraitsRewriter Application Startup', () => {
 ## Validation Steps
 
 ### Step 1: Clean Build Verification
+
 ```bash
 # Clean any existing builds
-npm run build:clean  # if available
-rm -rf dist/
+npm run build:clean
 
 # Fresh build
 npm run build
 
 # Verify output
-ls -la dist/ | grep traits-rewriter
+ls -la | grep traits-rewriter.js
 ```
 
 ### Step 2: Development Server Test
+
 ```bash
 npm run start
 # Should start without errors
 ```
 
-### Step 3: Production Build Test (if applicable)
+### Step 3: Production Build Test
+
 ```bash
-npm run build:production  # if available
+npm run build:prod
 # Verify production build works
 ```
 
 ### Step 4: Browser Testing
+
 1. Open Chrome/Firefox Developer Tools
-2. Navigate to traits-rewriter.html  
+2. Navigate to traits-rewriter.html
 3. Check Console tab for errors
 4. Check Network tab for failed resources
 5. Verify UI displays correctly
@@ -151,10 +194,12 @@ npm run build:production  # if available
 ## Files to Verify
 
 ### Build Output
-- `dist/traits-rewriter.js` - Should be generated without errors
-- `dist/traits-rewriter.js.map` - Source map should exist
 
-### Page Resources  
+- `traits-rewriter.js` - Should be generated without errors in project root
+- `traits-rewriter.js.map` - Source map should exist in project root
+
+### Page Resources
+
 - `traits-rewriter.html` - Should load completely
 - `css/traits-rewriter.css` - Styles should apply
 - All referenced assets should load successfully
@@ -162,16 +207,19 @@ npm run build:production  # if available
 ## Success Metrics
 
 ### Build Metrics
+
 - **Build Time**: Reasonable build completion time
-- **Bundle Size**: traits-rewriter.js bundle generated successfully  
+- **Bundle Size**: traits-rewriter.js bundle generated successfully
 - **Source Maps**: Debugging source maps available
 
 ### Runtime Metrics
+
 - **Startup Time**: Application starts in reasonable time
 - **Memory Usage**: No memory leaks during controller instantiation
 - **Network Requests**: All resources load successfully
 
 ### User Experience Metrics
+
 - **Page Load Time**: traits-rewriter.html loads within 2 seconds
 - **UI Responsiveness**: Interface is interactive immediately
 - **Error Free**: No user-visible errors or broken functionality
@@ -179,6 +227,7 @@ npm run build:production  # if available
 ## Next Steps
 
 After successful verification:
+
 - **TRAREW-005**: Begin Phase 2 - Implement TraitsRewriterGenerator
 - **Phase 2 Planning**: Detailed implementation of core business logic
 - **Architecture Review**: Confirm Phase 1 foundation supports Phase 2 requirements
@@ -195,18 +244,33 @@ After successful verification:
 ### Common Issues
 
 #### Import Errors
-- **Problem**: Module not found errors
-- **Solution**: Verify file paths and imports in TRAREW-001
 
-#### DI Registration Errors  
+- **Problem**: Module not found errors
+- **Solution**: Verify file paths exist, particularly:
+  - `src/characterBuilder/controllers/TraitsRewriterController.js`
+  - `src/characterBuilder/CharacterBuilderBootstrap.js`
+  - Service files in `src/characterBuilder/services/`
+
+#### DI Registration Errors
+
 - **Problem**: Service resolution failures
-- **Solution**: Check token definitions and registrations from TRAREW-002/003
+- **Solution**: Note that TraitsRewriterController doesn't need DI registration
+  - CharacterBuilderBootstrap instantiates controllers directly
+  - Only services (Generator, ResponseProcessor, DisplayEnhancer) need registration
+  - Check registrations in `src/dependencyInjection/registrations/characterBuilderRegistrations.js`
 
 #### Controller Instantiation Errors
-- **Problem**: Constructor validation failures  
-- **Solution**: Verify dependencies are properly registered
+
+- **Problem**: Constructor validation failures
+- **Solution**: Ensure controller receives required dependencies:
+  - logger (ILogger)
+  - characterBuilderService (CharacterBuilderService)
+  - eventBus (ISafeEventDispatcher)
+  - schemaValidator (ISchemaValidator)
+  - Note: CharacterBuilderBootstrap handles dependency resolution
 
 #### UI Display Issues
+
 - **Problem**: Page shows error state instead of empty state
 - **Solution**: Check controller initialization and state management
 
@@ -226,7 +290,8 @@ After successful verification:
 ## Phase 1 Completion Criteria
 
 Upon successful completion of this ticket, Phase 1 objectives are met:
-- ✅ Import error resolved  
+
+- ✅ Import error resolved
 - ✅ Application starts without errors
 - ✅ TraitsRewriter page accessible
 - ✅ Foundation ready for Phase 2 implementation

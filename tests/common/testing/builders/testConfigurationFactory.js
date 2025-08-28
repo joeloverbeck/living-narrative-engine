@@ -38,7 +38,9 @@ export class TestConfigurationFactory {
 
     const cleanup = async () => {
       if (this.#tempDirectories.size > 0) {
-        console.log(`[Test Cleanup] Cleaning up ${this.#tempDirectories.size} test directories...`);
+        console.log(
+          `[Test Cleanup] Cleaning up ${this.#tempDirectories.size} test directories...`
+        );
         for (const dir of this.#tempDirectories) {
           try {
             await fs.rm(dir, { recursive: true, force: true });

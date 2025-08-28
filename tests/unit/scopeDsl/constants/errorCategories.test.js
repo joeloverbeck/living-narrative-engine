@@ -14,7 +14,7 @@ describe('ErrorCategories', () => {
 
     it('should be frozen and immutable', () => {
       expect(Object.isFrozen(ErrorCategories)).toBe(true);
-      
+
       // Attempt to modify should throw in strict mode
       expect(() => {
         ErrorCategories.MISSING_CONTEXT = 'modified_value';
@@ -38,7 +38,7 @@ describe('ErrorCategories', () => {
         'UNKNOWN',
       ];
 
-      expectedCategories.forEach(category => {
+      expectedCategories.forEach((category) => {
         expect(ErrorCategories).toHaveProperty(category);
         expect(typeof ErrorCategories[category]).toBe('string');
         expect(ErrorCategories[category]).toBeTruthy();
@@ -70,7 +70,7 @@ describe('ErrorCategories', () => {
     });
 
     it('should use snake_case format for all values', () => {
-      Object.values(ErrorCategories).forEach(value => {
+      Object.values(ErrorCategories).forEach((value) => {
         expect(value).toMatch(/^[a-z]+(_[a-z]+)*$/);
       });
     });
@@ -116,7 +116,7 @@ describe('ErrorCategories', () => {
 
   describe('Edge Cases', () => {
     it('should not have null or undefined values', () => {
-      Object.values(ErrorCategories).forEach(value => {
+      Object.values(ErrorCategories).forEach((value) => {
         expect(value).not.toBeNull();
         expect(value).not.toBeUndefined();
         expect(value).not.toBe('');
@@ -124,7 +124,7 @@ describe('ErrorCategories', () => {
     });
 
     it('should not have numeric values', () => {
-      Object.values(ErrorCategories).forEach(value => {
+      Object.values(ErrorCategories).forEach((value) => {
         expect(typeof value).toBe('string');
         expect(isNaN(Number(value))).toBe(true);
       });

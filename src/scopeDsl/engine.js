@@ -49,13 +49,14 @@ import createScopeReferenceResolver from './nodes/scopeReferenceResolver.js';
  * @implements {IScopeEngine}
  */
 class ScopeEngine extends IScopeEngine {
-  constructor({ scopeRegistry = null } = {}) {
+  constructor({ scopeRegistry = null, errorHandler = null } = {}) {
     super();
     this.maxDepth = 12;
     this.depthGuard = createDepthGuard(this.maxDepth);
     this.cycleDetector = createCycleDetector();
     this.contextMerger = new ContextMerger();
     this.scopeRegistry = scopeRegistry;
+    this.errorHandler = errorHandler;
   }
 
   setMaxDepth(n) {
@@ -200,7 +201,12 @@ class ScopeEngine extends IScopeEngine {
       // Existing resolvers maintain their order
       createSourceResolver({ entitiesGateway, locationProvider }),
       createStepResolver({ entitiesGateway }),
-      createFilterResolver({ logicEval, entitiesGateway, locationProvider }),
+      createFilterResolver({
+        logicEval,
+        entitiesGateway,
+        locationProvider,
+        errorHandler: this.errorHandler,
+      }),
       createUnionResolver(),
       createArrayIterationResolver(),
     ];

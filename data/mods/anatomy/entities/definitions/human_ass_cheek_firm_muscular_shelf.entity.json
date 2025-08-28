@@ -1,22 +1,22 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "anatomy:human_ass_cheek_firm_muscular_shelf",
-    "description": "A human ass cheek that is firm, muscular, and shelf",
-    "components": {
-        "anatomy:part": {
-            "subType": "ass_cheek"
-        },
-        "descriptors:firmness": {
-            "firmness": "firm"
-        },
-        "descriptors:build": {
-            "build": "muscular"
-        },
-        "descriptors:projection": {
-            "projection": "shelf"
-        },
-        "core:name": {
-            "text": "ass cheek"
-        }
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:human_ass_cheek_firm_muscular_shelf",
+  "description": "A human ass cheek that is firm, muscular, and shelf",
+  "components": {
+    "anatomy:part": {
+      "subType": "ass_cheek"
+    },
+    "descriptors:firmness": {
+      "firmness": "firm"
+    },
+    "descriptors:build": {
+      "build": "muscular"
+    },
+    "descriptors:projection": {
+      "projection": "shelf"
+    },
+    "core:name": {
+      "text": "ass cheek"
     }
+  }
 }

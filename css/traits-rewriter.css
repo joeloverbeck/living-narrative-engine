@@ -69,7 +69,9 @@
   border-radius: var(--border-radius-md);
   padding: 1rem;
   border-left: 3px solid var(--primary);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .trait-section:hover {
@@ -123,7 +125,7 @@
   background: var(--surface-secondary);
   border-radius: var(--border-radius-sm);
   position: relative;
-  quotes: """ """ "'" "'";
+  quotes: '' ' ' '' "'" "'";
 }
 
 .trait-content::before {
@@ -241,16 +243,36 @@
 }
 
 /* Trait Icons Map */
-.trait-label[data-trait="likes"] .trait-label-icon::before { content: "❤️"; }
-.trait-label[data-trait="dislikes"] .trait-label-icon::before { content: "💔"; }
-.trait-label[data-trait="fears"] .trait-label-icon::before { content: "😰"; }
-.trait-label[data-trait="goals"] .trait-label-icon::before { content: "🎯"; }
-.trait-label[data-trait="notes"] .trait-label-icon::before { content: "📝"; }
-.trait-label[data-trait="personality"] .trait-label-icon::before { content: "🎭"; }
-.trait-label[data-trait="profile"] .trait-label-icon::before { content: "📋"; }
-.trait-label[data-trait="secrets"] .trait-label-icon::before { content: "🤫"; }
-.trait-label[data-trait="strengths"] .trait-label-icon::before { content: "💪"; }
-.trait-label[data-trait="weaknesses"] .trait-label-icon::before { content: "🔗"; }
+.trait-label[data-trait='likes'] .trait-label-icon::before {
+  content: '❤️';
+}
+.trait-label[data-trait='dislikes'] .trait-label-icon::before {
+  content: '💔';
+}
+.trait-label[data-trait='fears'] .trait-label-icon::before {
+  content: '😰';
+}
+.trait-label[data-trait='goals'] .trait-label-icon::before {
+  content: '🎯';
+}
+.trait-label[data-trait='notes'] .trait-label-icon::before {
+  content: '📝';
+}
+.trait-label[data-trait='personality'] .trait-label-icon::before {
+  content: '🎭';
+}
+.trait-label[data-trait='profile'] .trait-label-icon::before {
+  content: '📋';
+}
+.trait-label[data-trait='secrets'] .trait-label-icon::before {
+  content: '🤫';
+}
+.trait-label[data-trait='strengths'] .trait-label-icon::before {
+  content: '💪';
+}
+.trait-label[data-trait='weaknesses'] .trait-label-icon::before {
+  content: '🔗';
+}
 
 /* Animations */
 @keyframes fadeIn {
@@ -271,7 +293,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -366,7 +389,8 @@
     opacity: 0;
     transform: translateY(10px);
   }
-  20%, 80% {
+  20%,
+  80% {
     opacity: 1;
     transform: translateY(0);
   }

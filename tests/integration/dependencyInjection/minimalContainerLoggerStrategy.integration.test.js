@@ -118,14 +118,14 @@ describe('MinimalContainerConfig LoggerStrategy Integration', () => {
       // Clear DEBUG_LOG_MODE to allow minimalContainerConfig to force console mode
       const originalDebugLogMode = process.env.DEBUG_LOG_MODE;
       delete process.env.DEBUG_LOG_MODE;
-      
+
       process.env.NODE_ENV = 'test';
       await configureMinimalContainer(container);
       const logger = container.resolve(tokens.ILogger);
 
       // In test mode with no DEBUG_LOG_MODE, minimalContainerConfig forces console mode
       expect(logger.getMode()).toBe('console');
-      
+
       // Restore original value
       if (originalDebugLogMode !== undefined) {
         process.env.DEBUG_LOG_MODE = originalDebugLogMode;

@@ -3,10 +3,12 @@
  * Main entry point for all logging operations with support for runtime mode switching.
  */
 
-import ConsoleLogger from './consoleLogger.js';
+import ConsoleLogger, { LogLevel } from './consoleLogger.js';
 import NoOpLogger from './noOpLogger.js';
 import RemoteLogger from './remoteLogger.js';
+import HybridLogger from './hybridLogger.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
+import { DEFAULT_CONFIG, CONFIG_PRESETS } from './config/defaultConfig.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -36,32 +38,24 @@ const MODE_SWITCH_MAP = {
   console: LoggerMode.CONSOLE,
   hybrid: LoggerMode.DEVELOPMENT,
   none: LoggerMode.NONE,
+  test: LoggerMode.TEST,
 };
 
 /**
- * Default configuration for the logger strategy
+ * Special commands supported by setLogLevel
  *
  * @private
+ * @type {string[]}
  */
-const DEFAULT_CONFIG = {
-  enabled: true,
-  fallbackToConsole: true,
-  remote: {
-    endpoint: 'http://localhost:3001/api/debug-log',
-    batchSize: 100,
-    flushInterval: 1000,
-    retryAttempts: 3,
-    retryBaseDelay: 1000,
-    retryMaxDelay: 30000,
-    circuitBreakerThreshold: 5,
-    circuitBreakerTimeout: 60000,
-    requestTimeout: 5000,
-  },
-  categories: {
-    engine: { enabled: true, level: 'debug' },
-    ui: { enabled: true, level: 'info' },
-  },
-};
+const SPECIAL_COMMANDS = ['reload', 'reset', 'flush', 'status'];
+
+/**
+ * Valid log levels for backward compatibility
+ *
+ * @private
+ * @type {string[]}
+ */
+const VALID_LOG_LEVELS = ['DEBUG', 'INFO', 'WARN', 'ERROR', 'NONE'];
 
 /**
  * Implements the ILogger interface using the Strategy pattern.
@@ -102,6 +96,18 @@ class LoggerStrategy {
   #loggerInstances;
 
   /**
+   * @private
+   * @type {string | number}
+   */
+  #currentLevel;
+
+  /**
+   * @private
+   * @type {Array<object>}
+   */
+  #logBuffer;
+
+  /**
    * Creates an instance of LoggerStrategy.
    *
    * @param {object} options - Configuration options
@@ -117,9 +123,12 @@ class LoggerStrategy {
   constructor({ mode, config = {}, dependencies = {} } = {}) {
     this.#dependencies = dependencies;
     this.#loggerInstances = new Map();
+    this.#logBuffer = [];
+    this.#currentLevel = 'INFO'; // Default log level
 
-    // Merge config with defaults
-    this.#config = this.#validateConfig({ ...DEFAULT_CONFIG, ...config });
+    // Merge config with defaults (but don't use mode from DEFAULT_CONFIG)
+    const { mode: defaultMode, ...defaultConfigWithoutMode } = DEFAULT_CONFIG;
+    this.#config = this.#validateConfig({ ...defaultConfigWithoutMode, ...config });
 
     // Determine initial mode
     this.#mode = this.#detectMode(mode);
@@ -178,7 +187,7 @@ class LoggerStrategy {
       if (process.env?.JEST_WORKER_ID !== undefined) {
         return LoggerMode.TEST;
       }
-      
+
       // Then check NODE_ENV
       if (process.env?.NODE_ENV) {
         const nodeEnv = process.env.NODE_ENV.toLowerCase();
@@ -227,12 +236,12 @@ class LoggerStrategy {
           break;
 
         case LoggerMode.DEVELOPMENT:
-          // HybridLogger will be implemented in DEBUGLOGGING-008
+          // Use HybridLogger for development mode
           if (dependencies.hybridLogger) {
             logger = dependencies.hybridLogger;
           } else {
-            // Fallback to console for now
-            logger = this.#createConsoleLogger(config);
+            // Create HybridLogger instance
+            logger = this.#createHybridLogger(config, dependencies);
           }
           break;
 
@@ -315,6 +324,43 @@ class LoggerStrategy {
     // Create new instance
     const logLevel = config.logLevel || 'INFO';
     return new ConsoleLogger(logLevel);
+  }
+
+  /**
+   * Creates a HybridLogger instance.
+   *
+   * @private
+   * @param {object} config - Configuration object
+   * @param {object} dependencies - Logger dependencies
+   * @returns {HybridLogger} The hybrid logger instance
+   */
+  #createHybridLogger(config, dependencies) {
+    try {
+      // Create console and remote loggers
+      const consoleLogger = this.#createConsoleLogger(config);
+      const remoteLogger = this.#createRemoteLogger(config, dependencies);
+      
+      // Create LogCategoryDetector if not provided
+      const categoryDetector = dependencies.categoryDetector || {
+        detectCategory: () => 'general',
+      };
+      
+      // Create HybridLogger
+      return new HybridLogger(
+        {
+          consoleLogger,
+          remoteLogger,
+          categoryDetector,
+        },
+        config.hybrid || {}
+      );
+    } catch (error) {
+      console.error(
+        '[LoggerStrategy] Failed to create HybridLogger, falling back to console:',
+        error
+      );
+      return this.#createConsoleLogger(config);
+    }
   }
 
   /**
@@ -401,9 +447,11 @@ class LoggerStrategy {
    */
   #switchMode(newMode) {
     if (!Object.values(LoggerMode).includes(newMode)) {
-      this.#logger.warn(
-        `[LoggerStrategy] Invalid mode '${newMode}' for switching`
-      );
+      if (this.#logger && typeof this.#logger.warn === 'function') {
+        this.#logger.warn(
+          `[LoggerStrategy] Invalid mode '${newMode}' for switching`
+        );
+      }
       return;
     }
 
@@ -413,18 +461,171 @@ class LoggerStrategy {
     }
 
     const oldMode = this.#mode;
-    this.#mode = newMode;
-    this.#logger = this.#createLogger(
+    
+    // Save current state before transition
+    this.#saveCurrentState();
+    
+    // Create new logger
+    const newLogger = this.#createLogger(
       newMode,
       this.#config,
       this.#dependencies
     );
+    
+    // Transition state
+    this.#transitionState(oldMode, newMode, newLogger);
+    
+    // Update references
+    this.#logger = newLogger;
+    this.#mode = newMode;
+
+    // Notify mode change
+    this.#notifyModeChange(oldMode, newMode);
 
     // Log the mode switch (unless switching to none)
     if (newMode !== LoggerMode.NONE) {
       this.#logger.info(
         `[LoggerStrategy] Switched from ${oldMode} to ${newMode} mode`
       );
+    }
+  }
+
+  /**
+   * Checks if the input is a valid log level.
+   *
+   * @private
+   * @param {any} input - The input to check
+   * @returns {boolean} True if input is a valid log level
+   */
+  #isLogLevel(input) {
+    if (typeof input === 'string') {
+      return VALID_LOG_LEVELS.includes(input.toUpperCase());
+    }
+    if (typeof input === 'number') {
+      return Object.values(LogLevel).includes(input);
+    }
+    return false;
+  }
+
+  /**
+   * Checks if the input is a valid mode.
+   *
+   * @private
+   * @param {any} input - The input to check
+   * @returns {boolean} True if input is a valid mode
+   */
+  #isMode(input) {
+    if (typeof input !== 'string') return false;
+    const lowerInput = input.toLowerCase();
+    
+    // Check if it's a direct mode name or a mapped mode name
+    const isDirectMode = Object.values(LoggerMode).includes(lowerInput);
+    const isMappedMode = Object.keys(MODE_SWITCH_MAP).includes(lowerInput);
+    
+    return isDirectMode || isMappedMode;
+  }
+
+  /**
+   * Checks if the input is a special command.
+   *
+   * @private
+   * @param {any} input - The input to check
+   * @returns {boolean} True if input is a special command
+   */
+  #isSpecialCommand(input) {
+    if (typeof input !== 'string') return false;
+    return SPECIAL_COMMANDS.includes(input.toLowerCase());
+  }
+
+  /**
+   * Saves the current logger state.
+   *
+   * @private
+   */
+  #saveCurrentState() {
+    // Save any buffered logs if the logger supports it
+    if (typeof this.#logger.getBuffer === 'function') {
+      const buffer = this.#logger.getBuffer();
+      if (buffer && buffer.length > 0) {
+        this.#logBuffer.push(...buffer);
+      }
+    }
+  }
+
+  /**
+   * Transitions state between loggers.
+   *
+   * @private
+   * @param {string} oldMode - The old mode
+   * @param {string} newMode - The new mode
+   * @param {ILogger} newLogger - The new logger instance
+   */
+  #transitionState(oldMode, newMode, newLogger) {
+    // Transfer buffered logs if applicable
+    if (this.#hasBuffer()) {
+      const buffer = this.#drainBuffer();
+      if (newLogger.processBatch && typeof newLogger.processBatch === 'function') {
+        newLogger.processBatch(buffer);
+      } else {
+        // Replay logs individually if batch processing not available
+        buffer.forEach(log => {
+          const level = log.level || 'info';
+          if (typeof newLogger[level] === 'function') {
+            newLogger[level](log.message, ...log.args);
+          }
+        });
+      }
+    }
+
+    // Transfer log level if applicable
+    if (this.#currentLevel && typeof newLogger.setLogLevel === 'function') {
+      newLogger.setLogLevel(this.#currentLevel);
+    }
+  }
+
+  /**
+   * Checks if there are buffered logs.
+   *
+   * @private
+   * @returns {boolean} True if there are buffered logs
+   */
+  #hasBuffer() {
+    return this.#logBuffer.length > 0;
+  }
+
+  /**
+   * Drains and returns the log buffer.
+   *
+   * @private
+   * @returns {Array<object>} The buffered logs
+   */
+  #drainBuffer() {
+    const buffer = [...this.#logBuffer];
+    this.#logBuffer = [];
+    return buffer;
+  }
+
+  /**
+   * Notifies about mode change via event bus.
+   *
+   * @private
+   * @param {string} oldMode - The old mode
+   * @param {string} newMode - The new mode
+   */
+  #notifyModeChange(oldMode, newMode) {
+    if (
+      this.#dependencies.eventBus &&
+      typeof this.#dependencies.eventBus.dispatch === 'function'
+    ) {
+      this.#dependencies.eventBus.dispatch({
+        type: 'logger.mode.changed',
+        payload: {
+          from: oldMode,
+          to: newMode,
+          timestamp: Date.now(),
+          reason: 'runtime-switch',
+        },
+      });
     }
   }
 
@@ -506,32 +707,293 @@ class LoggerStrategy {
 
   /**
    * Sets the log level or switches logger mode.
-   * Supports both traditional log level changes and mode switching via special values.
+   * Supports traditional log levels, mode switching, configuration objects, and special commands.
    *
-   * @param {string | number} logLevelInput - The desired log level or special mode switch value.
+   * @param {string | number | object} input - The desired log level, mode, configuration, or command.
+   * @returns {object|undefined} Status object if 'status' command, undefined otherwise
    */
-  setLogLevel(logLevelInput) {
-    // Check if it's a mode switch command
-    if (typeof logLevelInput === 'string') {
-      const lowerInput = logLevelInput.toLowerCase();
-
-      // Check for special mode switch values
-      if (MODE_SWITCH_MAP[lowerInput]) {
-        this.#switchMode(MODE_SWITCH_MAP[lowerInput]);
+  setLogLevel(input) {
+    try {
+      // Check mode switching first (takes precedence for 'none')
+      if (this.#isMode(input)) {
+        const lowerInput = input.toLowerCase();
+        const targetMode = MODE_SWITCH_MAP[lowerInput] || lowerInput;
+        this.#switchMode(targetMode);
         return;
       }
 
-      // Check for direct mode names
-      if (Object.values(LoggerMode).includes(lowerInput)) {
-        this.#switchMode(lowerInput);
+      // Backward compatibility: traditional log levels (except 'none' which is handled above)
+      if (this.#isLogLevel(input)) {
+        this.#currentLevel = input;
+        if (typeof this.#logger.setLogLevel === 'function') {
+          this.#logger.setLogLevel(input);
+        }
         return;
+      }
+
+      // Special commands
+      if (this.#isSpecialCommand(input)) {
+        return this.#handleSpecialCommand(input.toLowerCase());
+      }
+
+      // Configuration object
+      if (typeof input === 'object' && input !== null) {
+        this.#applyConfiguration(input);
+        return;
+      }
+
+      // Unknown input
+      if (this.#logger && typeof this.#logger.warn === 'function') {
+        this.#logger.warn(
+          `[LoggerStrategy] Invalid setLogLevel input: ${JSON.stringify(input)}`
+        );
+      }
+    } catch (error) {
+      // Don't let errors in setLogLevel break the application
+      console.error('[LoggerStrategy] Error in setLogLevel:', error);
+      // Keep current configuration on error
+    }
+  }
+
+  /**
+   * Applies a configuration object.
+   *
+   * @private
+   * @param {object} config - Configuration object
+   */
+  #applyConfiguration(config) {
+    // Validate configuration
+    const validation = this.#validateConfiguration(config);
+    if (!validation.valid) {
+      if (this.#logger && typeof this.#logger.error === 'function') {
+        this.#logger.error(
+          `[LoggerStrategy] Invalid configuration: ${validation.errors.join(', ')}`
+        );
+      }
+      return;
+    }
+
+    // Apply mode change if specified
+    if (config.mode && config.mode !== this.#mode) {
+      const targetMode = MODE_SWITCH_MAP[config.mode] || config.mode;
+      if (Object.values(LoggerMode).includes(targetMode)) {
+        this.#switchMode(targetMode);
       }
     }
 
-    // Otherwise, delegate to the current logger's setLogLevel
-    if (typeof this.#logger.setLogLevel === 'function') {
-      this.#logger.setLogLevel(logLevelInput);
+    // Apply category updates
+    if (config.categories) {
+      this.#updateCategories(config.categories);
     }
+
+    // Apply logger-specific config
+    if (config.logLevel) {
+      this.#currentLevel = config.logLevel;
+      if (typeof this.#logger.setLogLevel === 'function') {
+        this.#logger.setLogLevel(config.logLevel);
+      }
+    }
+
+    // Merge configuration updates
+    if (config.remote || config.console || config.performance) {
+      this.#config = this.#mergeConfig(this.#config, config);
+      
+      // Recreate logger with new config if needed
+      if (config.remote && this.#mode === LoggerMode.PRODUCTION) {
+        this.#logger = this.#createLogger(
+          this.#mode,
+          this.#config,
+          this.#dependencies
+        );
+      }
+    }
+  }
+
+  /**
+   * Handles special commands.
+   *
+   * @private
+   * @param {string} command - The command to handle
+   */
+  #handleSpecialCommand(command) {
+    switch (command) {
+      case 'reload':
+        // Reload configuration from defaults
+        const reloadedConfig = this.#mergeConfig(
+          DEFAULT_CONFIG,
+          this.#dependencies.config || {}
+        );
+        this.#config = reloadedConfig;
+        // Don't call applyConfiguration as it may change the logger
+        // Just update the config and log
+        if (this.#logger && typeof this.#logger.info === 'function') {
+          this.#logger.info('[LoggerStrategy] Configuration reloaded');
+        }
+        break;
+
+      case 'reset':
+        // Reset to default configuration
+        this.#config = { ...DEFAULT_CONFIG };
+        this.#mode = this.#detectMode(null);
+        this.#currentLevel = 'INFO';
+        this.#logger = this.#createLogger(
+          this.#mode,
+          this.#config,
+          this.#dependencies
+        );
+        if (this.#logger && typeof this.#logger.info === 'function') {
+          this.#logger.info('[LoggerStrategy] Configuration reset to defaults');
+        }
+        break;
+
+      case 'flush':
+        // Force any pending logs to be processed
+        if (typeof this.#logger.flush === 'function') {
+          this.#logger.flush();
+        } else if (typeof this.#logger.processBatch === 'function') {
+          this.#logger.processBatch([]);
+        }
+        break;
+
+      case 'status':
+        // Return current status
+        const status = this.#getStatus();
+        if (this.#logger && typeof this.#logger.info === 'function') {
+          this.#logger.info('[LoggerStrategy] Status:', status);
+        }
+        return status;
+
+      default:
+        if (this.#logger && typeof this.#logger.warn === 'function') {
+          this.#logger.warn(`[LoggerStrategy] Unknown command: ${command}`);
+        }
+    }
+  }
+
+  /**
+   * Validates a configuration object.
+   *
+   * @private
+   * @param {object} config - Configuration to validate
+   * @returns {{valid: boolean, errors: string[]}} Validation result
+   */
+  #validateConfiguration(config) {
+    const errors = [];
+
+    if (typeof config !== 'object' || config === null) {
+      return { valid: false, errors: ['Configuration must be an object'] };
+    }
+
+    // Validate mode if present
+    if (config.mode !== undefined) {
+      const targetMode = MODE_SWITCH_MAP[config.mode] || config.mode;
+      if (!Object.values(LoggerMode).includes(targetMode)) {
+        errors.push(`Invalid mode: ${config.mode}`);
+      }
+    }
+
+    // Validate categories if present
+    if (config.categories !== undefined) {
+      if (typeof config.categories !== 'object' || config.categories === null) {
+        errors.push('Categories must be an object');
+      } else {
+        // Validate each category configuration
+        for (const [key, value] of Object.entries(config.categories)) {
+          if (typeof value !== 'object' || value === null) {
+            errors.push(`Category ${key} must be an object`);
+          } else if (value.level && !this.#isLogLevel(value.level)) {
+            errors.push(`Invalid log level for category ${key}: ${value.level}`);
+          }
+        }
+      }
+    }
+
+    // Validate logLevel if present
+    if (config.logLevel !== undefined && !this.#isLogLevel(config.logLevel)) {
+      errors.push(`Invalid log level: ${config.logLevel}`);
+    }
+
+    return { valid: errors.length === 0, errors };
+  }
+
+  /**
+   * Updates category configurations.
+   *
+   * @private
+   * @param {object} categories - Category configurations to update
+   */
+  #updateCategories(categories) {
+    if (!this.#config.categories) {
+      this.#config.categories = {};
+    }
+
+    // Merge category updates
+    this.#config.categories = {
+      ...this.#config.categories,
+      ...categories,
+    };
+
+    // Apply to current logger if it supports category configuration
+    if (typeof this.#logger.updateCategories === 'function') {
+      this.#logger.updateCategories(categories);
+    }
+  }
+
+  /**
+   * Gets the current status.
+   *
+   * @private
+   * @returns {object} Status information
+   */
+  #getStatus() {
+    return {
+      mode: this.#mode,
+      logLevel: this.#currentLevel,
+      bufferedLogs: this.#logBuffer.length,
+      config: {
+        enabled: this.#config.enabled,
+        fallbackToConsole: this.#config.fallbackToConsole,
+        categories: Object.keys(this.#config.categories || {}),
+      },
+      logger: {
+        type: this.#logger.constructor.name,
+        hasFlush: typeof this.#logger.flush === 'function',
+        hasProcessBatch: typeof this.#logger.processBatch === 'function',
+      },
+    };
+  }
+
+  /**
+   * Deep merges configuration objects.
+   *
+   * @private
+   * @param {object} target - Target configuration
+   * @param {object} source - Source configuration to merge
+   * @returns {object} Merged configuration
+   */
+  #mergeConfig(target, source) {
+    const result = { ...target };
+    
+    for (const key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        if (
+          typeof source[key] === 'object' &&
+          source[key] !== null &&
+          !Array.isArray(source[key]) &&
+          typeof result[key] === 'object' &&
+          result[key] !== null &&
+          !Array.isArray(result[key])
+        ) {
+          // Recursively merge objects
+          result[key] = this.#mergeConfig(result[key], source[key]);
+        } else {
+          // Direct assignment for primitives, arrays, and null
+          result[key] = source[key];
+        }
+      }
+    }
+    
+    return result;
   }
 
   /**

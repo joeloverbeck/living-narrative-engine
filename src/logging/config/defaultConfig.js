@@ -5,7 +5,7 @@
 
 /**
  * Default configuration for the debug logging system
- * 
+ *
  * @type {object}
  */
 export const DEFAULT_CONFIG = {
@@ -59,7 +59,7 @@ export const DEFAULT_CONFIG = {
 /**
  * Environment-specific configuration presets
  * These can be merged with DEFAULT_CONFIG for quick environment setup
- * 
+ *
  * @type {object}
  */
 export const CONFIG_PRESETS = {
@@ -97,7 +97,7 @@ export const CONFIG_PRESETS = {
       circuitBreakerThreshold: 3, // More sensitive circuit breaker
     },
   },
-  
+
   development: {
     mode: 'hybrid',
     fallbackToConsole: true,
@@ -129,7 +129,7 @@ export const CONFIG_PRESETS = {
       slowLogThreshold: 500, // Lower threshold for development
     },
   },
-  
+
   test: {
     mode: 'test',
     enabled: false, // Disable most logging during tests
@@ -161,7 +161,7 @@ export const CONFIG_PRESETS = {
       enableMetrics: false,
     },
   },
-  
+
   debugging: {
     mode: 'hybrid',
     fallbackToConsole: true,
@@ -195,7 +195,7 @@ export const CONFIG_PRESETS = {
       metricsInterval: 30000, // More frequent metrics
     },
   },
-  
+
   silent: {
     mode: 'none',
     enabled: false,
@@ -232,7 +232,7 @@ export const CONFIG_PRESETS = {
 /**
  * Migration support for old logger-config.json format
  * Converts legacy configuration to new schema format
- * 
+ *
  * @param {object} oldConfig - Legacy configuration object
  * @returns {object} Migrated configuration object
  */
@@ -264,7 +264,7 @@ export function migrateOldConfig(oldConfig) {
 /**
  * Environment variable mappings for configuration override
  * Maps environment variable names to configuration paths
- * 
+ *
  * @type {object}
  */
 export const ENV_VAR_MAPPINGS = {

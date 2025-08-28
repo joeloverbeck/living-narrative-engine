@@ -907,7 +907,7 @@ describe('High Concurrency Performance - Optimized', () => {
       // Act - Perform warmup cycles first to stabilize JIT and GC
       const warmupCycles = 2;
       const concurrentOps = 35;
-      
+
       // Warmup cycles (not measured)
       for (let i = 0; i < warmupCycles; i++) {
         await measureConcurrentPerformance(
@@ -940,7 +940,8 @@ describe('High Concurrency Performance - Optimized', () => {
       }
 
       // Analyze for performance regression using average as baseline
-      const avgThroughput = cycleResults.reduce((sum, r) => sum + r.throughput, 0) / cycles;
+      const avgThroughput =
+        cycleResults.reduce((sum, r) => sum + r.throughput, 0) / cycles;
       const regressionThreshold = 0.65; // More tolerant of GC-induced variation
 
       let regressionDetected = false;

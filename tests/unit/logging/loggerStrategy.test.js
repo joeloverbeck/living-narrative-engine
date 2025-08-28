@@ -16,6 +16,7 @@ import LoggerStrategy, {
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import NoOpLogger from '../../../src/logging/noOpLogger.js';
 import RemoteLogger from '../../../src/logging/remoteLogger.js';
+import HybridLogger from '../../../src/logging/hybridLogger.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 
 describe('LoggerStrategy', () => {
@@ -26,7 +27,7 @@ describe('LoggerStrategy', () => {
   beforeEach(() => {
     // Save original environment
     originalEnv = { ...process.env };
-    
+
     // Save JEST_WORKER_ID specifically since Jest sets it
     originalJestWorkerId = process.env.JEST_WORKER_ID;
 
@@ -42,7 +43,7 @@ describe('LoggerStrategy', () => {
   afterEach(() => {
     // Restore original environment
     process.env = originalEnv;
-    
+
     // Restore JEST_WORKER_ID if it was originally set
     if (originalJestWorkerId !== undefined) {
       process.env.JEST_WORKER_ID = originalJestWorkerId;
@@ -104,7 +105,7 @@ describe('LoggerStrategy', () => {
       delete process.env.DEBUG_LOG_MODE;
       delete process.env.NODE_ENV;
       delete process.env.JEST_WORKER_ID;
-      
+
       const config = { mode: LoggerMode.NONE };
       const strategy = new LoggerStrategy({ config });
       expect(strategy.getMode()).toBe(LoggerMode.NONE);
@@ -125,28 +126,28 @@ describe('LoggerStrategy', () => {
       delete process.env.DEBUG_LOG_MODE;
       delete process.env.NODE_ENV;
       process.env.JEST_WORKER_ID = '1';
-      
+
       const strategy = new LoggerStrategy();
       expect(strategy.getMode()).toBe(LoggerMode.TEST);
-      
+
       // Clean up
       delete process.env.JEST_WORKER_ID;
     });
 
     it('should detect test mode with either NODE_ENV or JEST_WORKER_ID', () => {
       delete process.env.DEBUG_LOG_MODE;
-      
+
       // Test with only JEST_WORKER_ID
       delete process.env.NODE_ENV;
       process.env.JEST_WORKER_ID = '2';
       let strategy = new LoggerStrategy();
       expect(strategy.getMode()).toBe(LoggerMode.TEST);
-      
+
       // Test with both
       process.env.NODE_ENV = 'test';
       strategy = new LoggerStrategy();
       expect(strategy.getMode()).toBe(LoggerMode.TEST);
-      
+
       // Clean up
       delete process.env.JEST_WORKER_ID;
     });
@@ -194,10 +195,11 @@ describe('LoggerStrategy', () => {
       expect(logger).toBeInstanceOf(RemoteLogger);
     });
 
-    it('should fallback to console logger when hybrid logger not available', () => {
+    it('should create hybrid logger when in development mode', () => {
       const strategy = new LoggerStrategy({ mode: LoggerMode.DEVELOPMENT });
       const logger = strategy.getCurrentLogger();
-      expect(logger).toBeInstanceOf(ConsoleLogger);
+      // We now create HybridLogger instances automatically
+      expect(logger).toBeInstanceOf(HybridLogger);
     });
 
     it('should demonstrate genuine fallback scenario documentation', () => {

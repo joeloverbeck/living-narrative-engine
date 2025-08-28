@@ -1,6 +1,6 @@
 /**
  * @file Integration test to verify traits generation events use correct namespaces
- * 
+ *
  * Note: This test manually registers events to simulate mod loading behavior
  * without the complexity of mocking all file fetching operations.
  * Events from mods are stored with qualified IDs (modId:eventId).
@@ -57,7 +57,7 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
     eventBus = container.resolve(tokens.IEventBus);
     gameDataRepository = container.resolve(tokens.IGameDataRepository);
     dataRegistry = container.resolve(tokens.IDataRegistry);
-    
+
     // Manually register the events as they would be loaded from mods
     // Events loaded from mods are stored with their qualified ID (modId:eventId)
     const traitsGenerationStartedEvent = {
@@ -84,10 +84,14 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
         required: ['conceptId', 'directionId', 'timestamp', 'metadata'],
       },
     };
-    
+
     // Store the event in the registry as the mod loader would
-    dataRegistry.store('events', 'core:TRAITS_GENERATION_STARTED', traitsGenerationStartedEvent);
-    
+    dataRegistry.store(
+      'events',
+      'core:TRAITS_GENERATION_STARTED',
+      traitsGenerationStartedEvent
+    );
+
     // Also register the completed and failed events for completeness
     dataRegistry.store('events', 'core:TRAITS_GENERATION_COMPLETED', {
       id: 'core:TRAITS_GENERATION_COMPLETED',
@@ -96,7 +100,7 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
       description: 'Dispatched when traits generation completes',
       payloadSchema: { type: 'object' },
     });
-    
+
     dataRegistry.store('events', 'core:TRAITS_GENERATION_FAILED', {
       id: 'core:TRAITS_GENERATION_FAILED',
       _modId: 'core',
@@ -202,7 +206,7 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
   it('should reproduce the warning when TraitsGenerator dispatches without namespace', async () => {
     // The TraitsGenerator from production code correctly uses namespaced events
     // This test verifies that the production code is correctly dispatching with namespace
-    
+
     // Check that TraitsGenerator correctly uses the namespaced event
     const logger = container.resolve(tokens.ILogger);
     const llmJsonService = {
@@ -257,11 +261,12 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
     const validatedDispatcher = container.resolve(
       tokens.IValidatedEventDispatcher
     );
-    
+
     // Spy on the dispatcher's logger
-    const dispatcherLogger = validatedDispatcher._logger || validatedDispatcher.logger || logger;
+    const dispatcherLogger =
+      validatedDispatcher._logger || validatedDispatcher.logger || logger;
     jest.spyOn(dispatcherLogger, 'warn');
-    
+
     // Try to dispatch without namespace (this should warn)
     // The dispatch method takes event type and payload separately
     await validatedDispatcher.dispatch('TRAITS_GENERATION_STARTED', {
@@ -277,7 +282,9 @@ describe('TraitsGenerator - Event Namespace Integration', () => {
 
     // Now check if warning was logged for the non-namespaced dispatch
     expect(dispatcherLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("EventDefinition not found for 'TRAITS_GENERATION_STARTED'")
+      expect.stringContaining(
+        "EventDefinition not found for 'TRAITS_GENERATION_STARTED'"
+      )
     );
   });
 });

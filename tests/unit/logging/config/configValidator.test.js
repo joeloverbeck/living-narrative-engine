@@ -15,8 +15,10 @@ describe('DebugLoggingConfigValidator', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    mockSchemaValidator = testBed.createMock('schemaValidator', ['validateAgainstSchema']);
-    
+    mockSchemaValidator = testBed.createMock('schemaValidator', [
+      'validateAgainstSchema',
+    ]);
+
     validator = new DebugLoggingConfigValidator({
       schemaValidator: mockSchemaValidator,
       logger: mockLogger,
@@ -53,8 +55,8 @@ describe('DebugLoggingConfigValidator', () => {
         enabled: true,
         mode: 'development',
         categories: {
-          engine: { enabled: true, level: 'debug' }
-        }
+          engine: { enabled: true, level: 'debug' },
+        },
       };
 
       mockSchemaValidator.validateAgainstSchema.mockReturnValue({
@@ -78,19 +80,23 @@ describe('DebugLoggingConfigValidator', () => {
       const result = validator.validateConfig(null);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toEqual(['Configuration must be a non-null object']);
+      expect(result.errors).toEqual([
+        'Configuration must be a non-null object',
+      ]);
     });
 
     it('should reject non-object configuration', () => {
       const result = validator.validateConfig('invalid');
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toEqual(['Configuration must be a non-null object']);
+      expect(result.errors).toEqual([
+        'Configuration must be a non-null object',
+      ]);
     });
 
     it('should handle schema validation failures', () => {
       const config = { enabled: 'invalid' };
-      
+
       mockSchemaValidator.validateAgainstSchema.mockReturnValue({
         isValid: false,
         errors: ['enabled must be boolean'],
@@ -109,7 +115,7 @@ describe('DebugLoggingConfigValidator', () => {
 
     it('should handle validation exceptions', () => {
       const config = { enabled: true };
-      
+
       mockSchemaValidator.validateAgainstSchema.mockImplementation(() => {
         throw new Error('Schema validation error');
       });
@@ -117,7 +123,9 @@ describe('DebugLoggingConfigValidator', () => {
       const result = validator.validateConfig(config);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toEqual(['Validation error: Schema validation error']);
+      expect(result.errors).toEqual([
+        'Validation error: Schema validation error',
+      ]);
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Error during debug logging configuration validation',
         expect.any(Error)
@@ -128,7 +136,7 @@ describe('DebugLoggingConfigValidator', () => {
   describe('validateConfigOrThrow', () => {
     it('should not throw for valid configuration', () => {
       const config = { enabled: true, mode: 'development' };
-      
+
       mockSchemaValidator.validateAgainstSchema.mockReturnValue({
         isValid: true,
         errors: [],
@@ -141,7 +149,7 @@ describe('DebugLoggingConfigValidator', () => {
 
     it('should throw for invalid configuration', () => {
       const config = { enabled: 'invalid' };
-      
+
       mockSchemaValidator.validateAgainstSchema.mockReturnValue({
         isValid: false,
         errors: ['enabled must be boolean'],
@@ -150,7 +158,9 @@ describe('DebugLoggingConfigValidator', () => {
 
       expect(() => {
         validator.validateConfigOrThrow(config);
-      }).toThrow('Invalid debug logging configuration: enabled must be boolean');
+      }).toThrow(
+        'Invalid debug logging configuration: enabled must be boolean'
+      );
     });
   });
 
@@ -163,24 +173,31 @@ describe('DebugLoggingConfigValidator', () => {
 
       const result = validator.validateCategory('engine', {
         enabled: true,
-        level: 'debug'
+        level: 'debug',
       });
 
       expect(result.isValid).toBe(true);
     });
 
     it('should reject invalid category name', () => {
-      const result = validator.validateCategory('', { enabled: true, level: 'debug' });
+      const result = validator.validateCategory('', {
+        enabled: true,
+        level: 'debug',
+      });
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toEqual(['Category name must be a non-empty string']);
+      expect(result.errors).toEqual([
+        'Category name must be a non-empty string',
+      ]);
     });
 
     it('should reject invalid category config', () => {
       const result = validator.validateCategory('engine', null);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toEqual(['Category configuration must be a non-null object']);
+      expect(result.errors).toEqual([
+        'Category configuration must be a non-null object',
+      ]);
     });
 
     it('should handle validation exceptions for categories', () => {
@@ -188,7 +205,10 @@ describe('DebugLoggingConfigValidator', () => {
         throw new Error('Validation error');
       });
 
-      const result = validator.validateCategory('engine', { enabled: true, level: 'debug' });
+      const result = validator.validateCategory('engine', {
+        enabled: true,
+        level: 'debug',
+      });
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toEqual(['Validation error: Validation error']);
@@ -218,7 +238,9 @@ describe('DebugLoggingConfigValidator', () => {
       const result = validator.validateRemoteConfig(null);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toEqual(['Remote configuration must be a non-null object']);
+      expect(result.errors).toEqual([
+        'Remote configuration must be a non-null object',
+      ]);
     });
 
     it('should handle remote validation exceptions', () => {
@@ -229,7 +251,9 @@ describe('DebugLoggingConfigValidator', () => {
       const result = validator.validateRemoteConfig({ endpoint: 'invalid' });
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toEqual(['Validation error: Remote validation error']);
+      expect(result.errors).toEqual([
+        'Validation error: Remote validation error',
+      ]);
     });
   });
 
@@ -276,16 +300,18 @@ describe('DebugLoggingConfigValidator', () => {
       // First call (overall) succeeds, second call (category) fails
       mockSchemaValidator.validateAgainstSchema
         .mockReturnValueOnce({ isValid: true, errors: [] })
-        .mockReturnValueOnce({ 
-          isValid: false, 
+        .mockReturnValueOnce({
+          isValid: false,
           errors: ['enabled must be boolean'],
-          formattedErrors: 'enabled must be boolean'
+          formattedErrors: 'enabled must be boolean',
         });
 
       const report = validator.performDetailedValidation(config);
 
       expect(report.isValid).toBe(false);
-      expect(report.errors).toContain('Category \'engine\': enabled must be boolean');
+      expect(report.errors).toContain(
+        "Category 'engine': enabled must be boolean"
+      );
       expect(report.categories.engine.isValid).toBe(false);
     });
 
@@ -305,8 +331,12 @@ describe('DebugLoggingConfigValidator', () => {
 
       const report = validator.performDetailedValidation(config);
 
-      expect(report.warnings).toContain('Remote mode enabled but no endpoint specified');
-      expect(report.warnings).toContain('Very low slow log threshold may impact performance');
+      expect(report.warnings).toContain(
+        'Remote mode enabled but no endpoint specified'
+      );
+      expect(report.warnings).toContain(
+        'Very low slow log threshold may impact performance'
+      );
     });
 
     it('should warn when logging is disabled but mode is not none', () => {
@@ -322,7 +352,9 @@ describe('DebugLoggingConfigValidator', () => {
 
       const report = validator.performDetailedValidation(config);
 
-      expect(report.warnings).toContain('Logging disabled but mode is not "none" - consider setting mode to "none"');
+      expect(report.warnings).toContain(
+        'Logging disabled but mode is not "none" - consider setting mode to "none"'
+      );
     });
 
     it('should handle exceptions during detailed validation', () => {
@@ -346,7 +378,10 @@ describe('DebugLoggingConfigValidator', () => {
         errors: [],
       });
 
-      const report = validator.performDetailedValidation({ enabled: true, mode: 'development' });
+      const report = validator.performDetailedValidation({
+        enabled: true,
+        mode: 'development',
+      });
 
       expect(report.validationDurationMs).toBeGreaterThanOrEqual(0);
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -354,8 +389,749 @@ describe('DebugLoggingConfigValidator', () => {
         expect.objectContaining({
           isValid: true,
           errorCount: 0,
-          warningCount: expect.any(Number)
+          warningCount: expect.any(Number),
         })
+      );
+    });
+  });
+
+  describe('validateSemanticRules', () => {
+    it('should validate configuration without semantic issues', () => {
+      const config = {
+        enabled: true,
+        mode: 'development',
+        categories: {
+          engine: { enabled: true, level: 'debug' },
+        },
+        remote: {
+          endpoint: 'http://localhost:3001',
+          batchSize: 100,
+          flushInterval: 1000,
+        },
+      };
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.warnings).toEqual([]);
+    });
+
+    it('should detect mode-category mismatch', () => {
+      const config = {
+        enabled: true,
+        mode: 'none',
+        categories: {
+          engine: { enabled: true, level: 'debug' },
+          ui: { enabled: true, level: 'info' },
+        },
+      };
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Categories enabled but mode is "none": engine, ui'
+      );
+    });
+
+    it('should detect remote mode without endpoint', () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+      };
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Remote or hybrid mode enabled but no endpoint specified'
+      );
+    });
+
+    it('should detect hybrid mode without endpoint', () => {
+      const config = {
+        enabled: true,
+        mode: 'hybrid',
+      };
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Remote or hybrid mode enabled but no endpoint specified'
+      );
+    });
+
+    it('should warn about batch-flush imbalance', () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'http://localhost:3001',
+          batchSize: 800,
+          flushInterval: 300,
+        },
+      };
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Large batch with short interval may cause performance issues'
+      );
+    });
+
+    it('should warn about excessive retry delays', () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'http://localhost:3001',
+          retryMaxDelay: 120000,
+        },
+      };
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Very high retry max delay may cause poor user experience'
+      );
+    });
+
+    it('should warn about circuit breaker imbalance', () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'http://localhost:3001',
+          circuitBreakerThreshold: 15,
+          circuitBreakerTimeout: 20000,
+        },
+      };
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'High failure threshold with short timeout may cause frequent circuit breaker activation'
+      );
+    });
+
+    it('should handle exceptions during semantic validation', () => {
+      const config = null;
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors[0]).toMatch(/Semantic validation error/);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during semantic validation',
+        expect.any(Error)
+      );
+    });
+
+    it('should allow mode "none" without categories', () => {
+      const config = {
+        enabled: true,
+        mode: 'none',
+      };
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should allow mode "none" with disabled categories', () => {
+      const config = {
+        enabled: true,
+        mode: 'none',
+        categories: {
+          engine: { enabled: false, level: 'debug' },
+        },
+      };
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+  });
+
+  describe('validateSecurityConstraints', () => {
+    beforeEach(() => {
+      // Reset NODE_ENV for each test
+      delete process.env.NODE_ENV;
+    });
+
+    it('should validate configuration without security issues', () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'https://api.example.com/logs',
+          batchSize: 100,
+          flushInterval: 1000,
+        },
+      };
+
+      const result = validator.validateSecurityConstraints(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.warnings).toEqual([]);
+    });
+
+    it('should flag localhost in production', () => {
+      process.env.NODE_ENV = 'production';
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'http://localhost:3001/logs',
+        },
+      };
+
+      const result = validator.validateSecurityConstraints(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Using localhost endpoint in production environment'
+      );
+    });
+
+    it('should warn about insecure HTTP in production', () => {
+      process.env.NODE_ENV = 'production';
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'http://api.example.com/logs',
+        },
+      };
+
+      const result = validator.validateSecurityConstraints(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Using insecure HTTP endpoint in production'
+      );
+    });
+
+    it('should warn about large batch sizes', () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'https://api.example.com/logs',
+          batchSize: 2000,
+        },
+      };
+
+      const result = validator.validateSecurityConstraints(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Very large batch size may cause memory issues'
+      );
+    });
+
+    it('should warn about excessive flush frequency', () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'https://api.example.com/logs',
+          flushInterval: 100,
+        },
+      };
+
+      const result = validator.validateSecurityConstraints(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Very short flush interval may cause performance degradation'
+      );
+    });
+
+    it('should warn about permissive circuit breaker', () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'https://api.example.com/logs',
+          circuitBreakerThreshold: 75,
+        },
+      };
+
+      const result = validator.validateSecurityConstraints(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Very high circuit breaker threshold may not provide adequate protection'
+      );
+    });
+
+    it('should handle exceptions during security validation', () => {
+      const config = null;
+
+      const result = validator.validateSecurityConstraints(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors[0]).toMatch(/Security validation error/);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during security validation',
+        expect.any(Error)
+      );
+    });
+
+    it('should allow localhost in development', () => {
+      process.env.NODE_ENV = 'development';
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'http://localhost:3001/logs',
+        },
+      };
+
+      const result = validator.validateSecurityConstraints(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should allow HTTP in development', () => {
+      process.env.NODE_ENV = 'development';
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'http://api.example.com/logs',
+        },
+      };
+
+      const result = validator.validateSecurityConstraints(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toEqual([]);
+    });
+  });
+
+  describe('validateEndpointReachability', () => {
+    beforeEach(() => {
+      // Mock global fetch for testing
+      global.fetch = jest.fn();
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should validate reachable endpoint', async () => {
+      global.fetch.mockResolvedValue({
+        ok: true,
+        status: 200,
+      });
+
+      const result = await validator.validateEndpointReachability(
+        'http://localhost:3001'
+      );
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(global.fetch).toHaveBeenCalledWith('http://localhost:3001', {
+        method: 'HEAD',
+        signal: expect.any(AbortSignal),
+      });
+    });
+
+    it('should handle unreachable endpoint with HTTP error', async () => {
+      global.fetch.mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
+
+      const result = await validator.validateEndpointReachability(
+        'http://invalid:3001'
+      );
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual(['Endpoint returned status: 404']);
+    });
+
+    it('should handle network errors', async () => {
+      global.fetch.mockRejectedValue(new Error('Network error'));
+
+      const result = await validator.validateEndpointReachability(
+        'http://invalid:3001'
+      );
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual(['Cannot reach endpoint: Network error']);
+    });
+
+    it('should handle timeout errors', async () => {
+      global.fetch.mockImplementation(() => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => reject({ name: 'AbortError' }), 100);
+        });
+      });
+
+      const result = await validator.validateEndpointReachability(
+        'http://slow:3001',
+        50
+      );
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual(['Endpoint timeout after 50ms']);
+    }, 10000);
+
+    it('should reject invalid endpoint parameter', async () => {
+      const result = await validator.validateEndpointReachability(null);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual(['Endpoint must be a non-empty string']);
+    });
+
+    it('should reject empty endpoint parameter', async () => {
+      const result = await validator.validateEndpointReachability('');
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual(['Endpoint must be a non-empty string']);
+    });
+
+    it('should handle exceptions during endpoint validation', async () => {
+      // Mock an unexpected error during validation setup
+      const originalSetTimeout = global.setTimeout;
+      global.setTimeout = null;
+
+      const result =
+        await validator.validateEndpointReachability('http://test:3001');
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors[0]).toMatch(/Endpoint validation error/);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during endpoint reachability validation',
+        expect.any(Error)
+      );
+
+      global.setTimeout = originalSetTimeout;
+    });
+  });
+
+  describe('performComprehensiveValidation', () => {
+    beforeEach(() => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+      });
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should perform all validation layers successfully', async () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'https://api.example.com/logs',
+          batchSize: 100,
+          flushInterval: 1000,
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = await validator.performComprehensiveValidation(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.layers.schema.isValid).toBe(true);
+      expect(result.layers.semantic.isValid).toBe(true);
+      expect(result.layers.security.isValid).toBe(true);
+      expect(result.layers.runtime.isValid).toBe(true);
+      expect(result.validationDurationMs).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should fail when schema validation fails', async () => {
+      const config = { enabled: 'invalid' };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: false,
+        errors: ['enabled must be boolean'],
+        formattedErrors: 'enabled must be boolean',
+      });
+
+      const result = await validator.performComprehensiveValidation(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('enabled must be boolean');
+      expect(result.layers.schema.isValid).toBe(false);
+    });
+
+    it('should fail when semantic validation fails', async () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        // Missing endpoint
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = await validator.performComprehensiveValidation(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Remote or hybrid mode enabled but no endpoint specified'
+      );
+      expect(result.layers.semantic.isValid).toBe(false);
+    });
+
+    it('should fail when security validation fails', async () => {
+      process.env.NODE_ENV = 'production';
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'http://localhost:3001',
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = await validator.performComprehensiveValidation(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Using localhost endpoint in production environment'
+      );
+      expect(result.layers.security.isValid).toBe(false);
+
+      delete process.env.NODE_ENV;
+    });
+
+    it('should add warnings for unreachable endpoints but continue', async () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'http://unreachable:3001',
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      global.fetch.mockRejectedValue(new Error('Network unreachable'));
+
+      const result = await validator.performComprehensiveValidation(config);
+
+      expect(result.isValid).toBe(true); // Still valid overall
+      expect(result.warnings).toContain(
+        'Cannot reach endpoint: Network unreachable'
+      );
+      expect(result.layers.runtime.isValid).toBe(false);
+    });
+
+    it('should support skipping schema validation', async () => {
+      const config = { enabled: 'invalid' };
+
+      const result = await validator.performComprehensiveValidation(config, {
+        skipSchema: true,
+      });
+
+      expect(result.layers.schema).toBe(null);
+      expect(mockSchemaValidator.validateAgainstSchema).not.toHaveBeenCalled();
+    });
+
+    it('should support skipping semantic validation', async () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        // Missing endpoint - would normally cause semantic failure
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = await validator.performComprehensiveValidation(config, {
+        skipSemantic: true,
+      });
+
+      expect(result.layers.semantic).toBe(null);
+      expect(result.isValid).toBe(true); // No semantic validation performed
+    });
+
+    it('should support skipping security validation', async () => {
+      process.env.NODE_ENV = 'production';
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'http://localhost:3001',
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = await validator.performComprehensiveValidation(config, {
+        skipSecurity: true,
+      });
+
+      expect(result.layers.security).toBe(null);
+      expect(result.isValid).toBe(true); // No security validation performed
+
+      delete process.env.NODE_ENV;
+    });
+
+    it('should support skipping runtime validation', async () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'http://unreachable:3001',
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = await validator.performComprehensiveValidation(config, {
+        skipRuntime: true,
+      });
+
+      expect(result.layers.runtime).toBe(null);
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    it('should skip runtime validation when no endpoint is configured', async () => {
+      const config = {
+        enabled: true,
+        mode: 'console',
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = await validator.performComprehensiveValidation(config);
+
+      expect(result.layers.runtime).toBe(null);
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    it('should handle exceptions during comprehensive validation', async () => {
+      const config = { enabled: true };
+
+      // Mock an error that happens after schema validation
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      // Create a spy that will throw during debug logging
+      const debugSpy = jest
+        .spyOn(validator, 'validateSemanticRules')
+        .mockImplementation(() => {
+          throw new Error('Semantic validation system error');
+        });
+
+      const result = await validator.performComprehensiveValidation(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toEqual([
+        'Comprehensive validation error: Semantic validation system error',
+      ]);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during comprehensive validation',
+        expect.any(Error)
+      );
+
+      debugSpy.mockRestore();
+    });
+
+    it('should log debug information about validation completion', async () => {
+      const config = {
+        enabled: true,
+        mode: 'console',
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      await validator.performComprehensiveValidation(config);
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringMatching(/Comprehensive validation completed in \d+ms/),
+        expect.objectContaining({
+          isValid: true,
+          errorCount: 0,
+          warningCount: expect.any(Number),
+          layersExecuted: expect.arrayContaining([
+            'schema',
+            'semantic',
+            'security',
+          ]),
+        })
+      );
+    });
+
+    it('should collect warnings from multiple layers', async () => {
+      const config = {
+        enabled: true,
+        mode: 'remote',
+        remote: {
+          endpoint: 'http://unreachable:3001',
+          batchSize: 2000,
+          flushInterval: 100,
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      global.fetch.mockRejectedValue(new Error('Network unreachable'));
+
+      const result = await validator.performComprehensiveValidation(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings.length).toBeGreaterThan(2);
+      expect(result.warnings).toContain(
+        'Very large batch size may cause memory issues'
+      );
+      expect(result.warnings).toContain(
+        'Very short flush interval may cause performance degradation'
+      );
+      expect(result.warnings).toContain(
+        'Cannot reach endpoint: Network unreachable'
       );
     });
   });
