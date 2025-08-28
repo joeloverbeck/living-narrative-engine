@@ -250,8 +250,12 @@ describe('BodyDescriptionComposer - Performance Tests', () => {
       const degradationRatio = lastBatchTime / firstBatchTime;
 
       // Enhanced logging for debugging flaky test behavior
-      console.log(`Batch times: [${times.map(t => t.toFixed(2)).join(', ')}]ms`);
-      console.log(`First batch: ${firstBatchTime.toFixed(2)}ms, Last batch: ${lastBatchTime.toFixed(2)}ms`);
+      console.log(
+        `Batch times: [${times.map((t) => t.toFixed(2)).join(', ')}]ms`
+      );
+      console.log(
+        `First batch: ${firstBatchTime.toFixed(2)}ms, Last batch: ${lastBatchTime.toFixed(2)}ms`
+      );
       console.log(`Average batch time: ${avgTime.toFixed(2)}ms`);
       console.log(`Degradation ratio: ${degradationRatio.toFixed(2)}x`);
 

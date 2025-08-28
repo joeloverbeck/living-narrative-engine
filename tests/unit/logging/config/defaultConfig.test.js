@@ -3,7 +3,12 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
-import { DEFAULT_CONFIG, CONFIG_PRESETS, migrateOldConfig, ENV_VAR_MAPPINGS } from '../../../../src/logging/config/defaultConfig.js';
+import {
+  DEFAULT_CONFIG,
+  CONFIG_PRESETS,
+  migrateOldConfig,
+  ENV_VAR_MAPPINGS,
+} from '../../../../src/logging/config/defaultConfig.js';
 
 describe('Default Configuration', () => {
   describe('DEFAULT_CONFIG', () => {
@@ -23,8 +28,15 @@ describe('Default Configuration', () => {
 
     it('should have valid mode', () => {
       expect(typeof DEFAULT_CONFIG.mode).toBe('string');
-      expect(['console', 'remote', 'hybrid', 'test', 'none', 'development', 'production'])
-        .toContain(DEFAULT_CONFIG.mode);
+      expect([
+        'console',
+        'remote',
+        'hybrid',
+        'test',
+        'none',
+        'development',
+        'production',
+      ]).toContain(DEFAULT_CONFIG.mode);
     });
 
     it('should have complete remote configuration', () => {
@@ -48,22 +60,33 @@ describe('Default Configuration', () => {
 
     it('should have comprehensive categories', () => {
       const categories = DEFAULT_CONFIG.categories;
-      
+
       // Check for expected categories
       const expectedCategories = [
-        'engine', 'ui', 'ecs', 'ai', 'persistence', 
-        'anatomy', 'actions', 'turns', 'events', 
-        'validation', 'general', 'entities', 'llm'
+        'engine',
+        'ui',
+        'ecs',
+        'ai',
+        'persistence',
+        'anatomy',
+        'actions',
+        'turns',
+        'events',
+        'validation',
+        'general',
+        'entities',
+        'llm',
       ];
 
-      expectedCategories.forEach(category => {
+      expectedCategories.forEach((category) => {
         expect(categories).toHaveProperty(category);
         expect(categories[category]).toHaveProperty('enabled');
         expect(categories[category]).toHaveProperty('level');
         expect(typeof categories[category].enabled).toBe('boolean');
         expect(typeof categories[category].level).toBe('string');
-        expect(['debug', 'info', 'warn', 'error', 'none'])
-          .toContain(categories[category].level);
+        expect(['debug', 'info', 'warn', 'error', 'none']).toContain(
+          categories[category].level
+        );
       });
     });
 
@@ -102,8 +125,14 @@ describe('Default Configuration', () => {
 
   describe('CONFIG_PRESETS', () => {
     it('should contain expected presets', () => {
-      const expectedPresets = ['production', 'development', 'test', 'debugging', 'silent'];
-      expectedPresets.forEach(preset => {
+      const expectedPresets = [
+        'production',
+        'development',
+        'test',
+        'debugging',
+        'silent',
+      ];
+      expectedPresets.forEach((preset) => {
         expect(CONFIG_PRESETS).toHaveProperty(preset);
         expect(typeof CONFIG_PRESETS[preset]).toBe('object');
       });
@@ -120,15 +149,21 @@ describe('Default Configuration', () => {
       });
 
       it('should have warn/error levels for categories', () => {
-        Object.values(production.categories).forEach(category => {
+        Object.values(production.categories).forEach((category) => {
           expect(['warn', 'error']).toContain(category.level);
         });
       });
 
       it('should have production-optimized remote settings', () => {
-        expect(production.remote.batchSize).toBeLessThanOrEqual(DEFAULT_CONFIG.remote.batchSize);
-        expect(production.remote.flushInterval).toBeGreaterThanOrEqual(DEFAULT_CONFIG.remote.flushInterval);
-        expect(production.remote.retryAttempts).toBeGreaterThanOrEqual(DEFAULT_CONFIG.remote.retryAttempts);
+        expect(production.remote.batchSize).toBeLessThanOrEqual(
+          DEFAULT_CONFIG.remote.batchSize
+        );
+        expect(production.remote.flushInterval).toBeGreaterThanOrEqual(
+          DEFAULT_CONFIG.remote.flushInterval
+        );
+        expect(production.remote.retryAttempts).toBeGreaterThanOrEqual(
+          DEFAULT_CONFIG.remote.retryAttempts
+        );
       });
     });
 
@@ -143,8 +178,9 @@ describe('Default Configuration', () => {
       });
 
       it('should have debug levels for most categories', () => {
-        const debugCategories = Object.values(development.categories)
-          .filter(cat => cat.level === 'debug');
+        const debugCategories = Object.values(development.categories).filter(
+          (cat) => cat.level === 'debug'
+        );
         expect(debugCategories.length).toBeGreaterThan(5);
       });
     });
@@ -159,8 +195,9 @@ describe('Default Configuration', () => {
       });
 
       it('should disable most categories', () => {
-        const enabledCategories = Object.values(test.categories)
-          .filter(cat => cat.enabled);
+        const enabledCategories = Object.values(test.categories).filter(
+          (cat) => cat.enabled
+        );
         expect(enabledCategories.length).toBeLessThanOrEqual(2);
       });
     });
@@ -175,14 +212,16 @@ describe('Default Configuration', () => {
       });
 
       it('should have debug level for all categories', () => {
-        Object.values(debugging.categories).forEach(category => {
+        Object.values(debugging.categories).forEach((category) => {
           expect(category.level).toBe('debug');
           expect(category.enabled).toBe(true);
         });
       });
 
       it('should have sensitive performance monitoring', () => {
-        expect(debugging.performance.slowLogThreshold).toBeLessThan(DEFAULT_CONFIG.performance.slowLogThreshold);
+        expect(debugging.performance.slowLogThreshold).toBeLessThan(
+          DEFAULT_CONFIG.performance.slowLogThreshold
+        );
       });
     });
 
@@ -197,7 +236,7 @@ describe('Default Configuration', () => {
       });
 
       it('should disable all categories', () => {
-        Object.values(silent.categories).forEach(category => {
+        Object.values(silent.categories).forEach((category) => {
           expect(category.enabled).toBe(false);
           expect(category.level).toBe('none');
         });
@@ -230,7 +269,7 @@ describe('Default Configuration', () => {
       expect(result.logLevel).toBe('DEBUG');
       expect(result.categories.general).toEqual({
         enabled: true,
-        level: 'debug'
+        level: 'debug',
       });
     });
 
@@ -268,20 +307,30 @@ describe('Default Configuration', () => {
 
     it('should map to valid configuration paths', () => {
       const validPaths = [
-        'enabled', 'mode', 'logLevel',
-        'remote.endpoint', 'remote.batchSize', 'remote.flushInterval',
-        'remote.retryAttempts', 'remote.circuitBreakerThreshold', 'remote.requestTimeout',
-        'console.enabled', 'console.useColors', 'console.showTimestamp', 'console.showCategory',
-        'performance.enableMetrics', 'performance.slowLogThreshold'
+        'enabled',
+        'mode',
+        'logLevel',
+        'remote.endpoint',
+        'remote.batchSize',
+        'remote.flushInterval',
+        'remote.retryAttempts',
+        'remote.circuitBreakerThreshold',
+        'remote.requestTimeout',
+        'console.enabled',
+        'console.useColors',
+        'console.showTimestamp',
+        'console.showCategory',
+        'performance.enableMetrics',
+        'performance.slowLogThreshold',
       ];
 
-      Object.values(ENV_VAR_MAPPINGS).forEach(path => {
+      Object.values(ENV_VAR_MAPPINGS).forEach((path) => {
         expect(validPaths).toContain(path);
       });
     });
 
     it('should have DEBUG_LOG prefix for all variables', () => {
-      Object.keys(ENV_VAR_MAPPINGS).forEach(envVar => {
+      Object.keys(ENV_VAR_MAPPINGS).forEach((envVar) => {
         expect(envVar.startsWith('DEBUG_LOG_')).toBe(true);
       });
     });
@@ -297,13 +346,13 @@ describe('Default Configuration', () => {
   describe('Configuration consistency', () => {
     it('should have consistent category structure across presets', () => {
       const defaultCategories = Object.keys(DEFAULT_CONFIG.categories);
-      
+
       Object.entries(CONFIG_PRESETS).forEach(([presetName, preset]) => {
         if (preset.categories) {
           const presetCategories = Object.keys(preset.categories);
-          
+
           // All categories in preset should exist in default
-          presetCategories.forEach(category => {
+          presetCategories.forEach((category) => {
             expect(defaultCategories).toContain(category);
           });
         }
@@ -326,8 +375,16 @@ describe('Default Configuration', () => {
     });
 
     it('should have valid modes in presets', () => {
-      const validModes = ['console', 'remote', 'hybrid', 'test', 'none', 'development', 'production'];
-      
+      const validModes = [
+        'console',
+        'remote',
+        'hybrid',
+        'test',
+        'none',
+        'development',
+        'production',
+      ];
+
       Object.entries(CONFIG_PRESETS).forEach(([presetName, preset]) => {
         if (preset.mode) {
           expect(validModes).toContain(preset.mode);

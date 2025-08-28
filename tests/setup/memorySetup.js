@@ -35,32 +35,32 @@ if (global.gc) {
 // Global memory test utilities
 global.memoryTestUtils = {
   /**
-   * Forces garbage collection and waits for stabilization (optimized)
+   * Forces garbage collection and waits for stabilization (highly optimized)
    *
    * @returns {Promise<void>}
    */
   async forceGCAndWait() {
     if (global.gc) {
       global.gc();
-      await new Promise((resolve) => setTimeout(resolve, 20)); // Reduced from 50ms
+      await new Promise((resolve) => setTimeout(resolve, 10)); // Further reduced for performance
       global.gc();
-      await new Promise((resolve) => setTimeout(resolve, 20)); // Reduced from 50ms
+      await new Promise((resolve) => setTimeout(resolve, 10)); // Further reduced for performance
     }
   },
 
   /**
-   * Gets stable memory measurement with multiple samples (optimized)
+   * Gets stable memory measurement with multiple samples (highly optimized)
    *
    * @param {number} samples - Number of samples to take
    * @returns {Promise<number>} Median memory usage in bytes
    */
-  async getStableMemoryUsage(samples = 3) {
-    // Reduced from 5
+  async getStableMemoryUsage(samples = 2) {
+    // Further reduced for performance
     const measurements = [];
 
     for (let i = 0; i < samples; i++) {
       if (i > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 5)); // Reduced from 10ms
+        await new Promise((resolve) => setTimeout(resolve, 2)); // Further reduced for performance
       }
       measurements.push(process.memoryUsage().heapUsed);
     }

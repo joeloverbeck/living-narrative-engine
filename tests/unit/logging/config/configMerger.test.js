@@ -5,7 +5,10 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import { DebugLoggingConfigMerger } from '../../../../src/logging/config/configMerger.js';
-import { DEFAULT_CONFIG, CONFIG_PRESETS } from '../../../../src/logging/config/defaultConfig.js';
+import {
+  DEFAULT_CONFIG,
+  CONFIG_PRESETS,
+} from '../../../../src/logging/config/defaultConfig.js';
 
 describe('DebugLoggingConfigMerger', () => {
   let testBed;
@@ -15,7 +18,7 @@ describe('DebugLoggingConfigMerger', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    
+
     merger = new DebugLoggingConfigMerger({
       logger: mockLogger,
     });
@@ -54,7 +57,9 @@ describe('DebugLoggingConfigMerger', () => {
     it('should warn about unknown presets', () => {
       const result = merger.mergeConfig({}, 'unknown-preset', {});
 
-      expect(mockLogger.warn).toHaveBeenCalledWith('Unknown preset requested: unknown-preset');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Unknown preset requested: unknown-preset'
+      );
       expect(result).toEqual(DEFAULT_CONFIG);
     });
 
@@ -63,8 +68,8 @@ describe('DebugLoggingConfigMerger', () => {
         enabled: false,
         mode: 'test',
         categories: {
-          engine: { enabled: false, level: 'error' }
-        }
+          engine: { enabled: false, level: 'error' },
+        },
       };
 
       const result = merger.mergeConfig(overrides, null, {});
@@ -119,10 +124,10 @@ describe('DebugLoggingConfigMerger', () => {
 
       // Environment variable should win
       expect(result.mode).toBe('remote');
-      
+
       // Development preset should be applied for other settings
       expect(result.console.showTimestamp).toBe(true);
-      
+
       // Default values should be preserved where not overridden
       expect(result.enabled).toBe(DEFAULT_CONFIG.enabled);
     });
@@ -163,7 +168,7 @@ describe('DebugLoggingConfigMerger', () => {
         a: 10, // Override primitive
         b: {
           c: 20, // Override nested primitive
-          f: 4,  // Add new nested property
+          f: 4, // Add new nested property
         },
         e: [4, 5], // Replace array
         g: 'new', // Add new property
@@ -299,7 +304,7 @@ describe('DebugLoggingConfigMerger', () => {
   describe('setNestedValue and getNestedValue', () => {
     it('should set and get nested values', () => {
       const obj = {};
-      
+
       merger.setNestedValue(obj, 'a.b.c', 'value');
       expect(obj).toEqual({ a: { b: { c: 'value' } } });
 
@@ -309,7 +314,7 @@ describe('DebugLoggingConfigMerger', () => {
 
     it('should handle existing nested structures', () => {
       const obj = { a: { x: 1 } };
-      
+
       merger.setNestedValue(obj, 'a.b.c', 'value');
       expect(obj.a.x).toBe(1); // Preserve existing
       expect(obj.a.b.c).toBe('value');
@@ -317,7 +322,7 @@ describe('DebugLoggingConfigMerger', () => {
 
     it('should return default value for missing paths', () => {
       const obj = { a: { b: 1 } };
-      
+
       expect(merger.getNestedValue(obj, 'a.b')).toBe(1);
       expect(merger.getNestedValue(obj, 'a.c')).toBe(undefined);
       expect(merger.getNestedValue(obj, 'a.c', 'default')).toBe('default');
@@ -326,14 +331,16 @@ describe('DebugLoggingConfigMerger', () => {
 
     it('should handle null/undefined objects', () => {
       expect(merger.getNestedValue(null, 'a.b', 'default')).toBe('default');
-      expect(merger.getNestedValue(undefined, 'a.b', 'default')).toBe('default');
+      expect(merger.getNestedValue(undefined, 'a.b', 'default')).toBe(
+        'default'
+      );
     });
   });
 
   describe('mergeWithLegacySupport', () => {
     it('should merge with legacy configuration', () => {
       const legacyConfig = {
-        logLevel: 'DEBUG'
+        logLevel: 'DEBUG',
       };
 
       const result = merger.mergeWithLegacySupport({}, legacyConfig, null, {});
@@ -345,7 +352,7 @@ describe('DebugLoggingConfigMerger', () => {
 
     it('should handle legacy NONE log level', () => {
       const legacyConfig = {
-        logLevel: 'NONE'
+        logLevel: 'NONE',
       };
 
       const result = merger.mergeWithLegacySupport({}, legacyConfig, null, {});
@@ -359,17 +366,29 @@ describe('DebugLoggingConfigMerger', () => {
       const currentConfig = { mode: 'hybrid' };
       const legacyConfig = { logLevel: 'INFO' };
 
-      const result = merger.mergeWithLegacySupport(currentConfig, legacyConfig, null, {});
+      const result = merger.mergeWithLegacySupport(
+        currentConfig,
+        legacyConfig,
+        null,
+        {}
+      );
 
       expect(result.mode).toBe('hybrid'); // Should preserve existing
       expect(result.logLevel).toBe('INFO');
     });
 
     it('should handle missing legacy config', () => {
-      const result = merger.mergeWithLegacySupport({ mode: 'test' }, null, null, {});
+      const result = merger.mergeWithLegacySupport(
+        { mode: 'test' },
+        null,
+        null,
+        {}
+      );
 
       expect(result.mode).toBe('test');
-      expect(mockLogger.info).not.toHaveBeenCalledWith('Migrating legacy configuration');
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        'Migrating legacy configuration'
+      );
     });
   });
 

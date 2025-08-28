@@ -6,12 +6,12 @@
 
 **CRITICAL RUNTIME ISSUE**: The application currently fails to start due to missing business logic components, despite having a complete professional UI foundation that exceeds requirements.
 
-| Component Category | Status | Notes |
-| --- | --- | --- |
-| **UI Foundation** | ✅ **COMPLETE** | Professional implementation with WCAG AA compliance, responsive design, animations, and dark mode support |
-| **Business Logic** | ❌ **MISSING** | All core services missing - causes import error preventing application startup |
-| **Dependencies** | ❌ **NOT REGISTERED** | Missing dependency injection tokens and registrations |
-| **Testing** | ❌ **REQUIRED** | Comprehensive test suite needed for new components |
+| Component Category | Status                | Notes                                                                                                     |
+| ------------------ | --------------------- | --------------------------------------------------------------------------------------------------------- |
+| **UI Foundation**  | ✅ **COMPLETE**       | Professional implementation with WCAG AA compliance, responsive design, animations, and dark mode support |
+| **Business Logic** | ❌ **MISSING**        | All core services missing - causes import error preventing application startup                            |
+| **Dependencies**   | ❌ **NOT REGISTERED** | Missing dependency injection tokens and registrations                                                     |
+| **Testing**        | ❌ **REQUIRED**       | Comprehensive test suite needed for new components                                                        |
 
 **Implementation Priority**: **URGENT** - Fix runtime error → **HIGH** - Core business logic → **STANDARD** - Testing
 
@@ -85,10 +85,10 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
   // Private fields following codebase patterns
   /** @private @type {TraitsRewriterGenerator} */
   #traitsRewriterGenerator;
-  
+
   /** @private @type {TraitsRewriterDisplayEnhancer} */
   #traitsRewriterDisplayEnhancer;
-  
+
   /** @private @type {object|null} */
   #lastGeneratedTraits = null;
 
@@ -128,7 +128,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
   _cacheElements()                   // Cache UI element references using _cacheElementsFromMap
   _setupEventListeners()             // Handle user interactions using _addEventListener
   _initializeUIStateManager()        // Initialize state management
-  
+
   // Feature Methods Required (private implementation methods)
   #handleCharacterInput()            // Process character definition changes
   #validateCharacterDefinition()     // JSON validation and schema checks
@@ -162,19 +162,19 @@ export class TraitsRewriterGenerator {
   // Private fields following codebase patterns
   /** @private @type {ILogger} */
   #logger;
-  
+
   /** @private @type {LlmJsonService} */
   #llmJsonService;
-  
+
   /** @private @type {ConfigurableLLMAdapter} */
   #llmStrategyFactory;
-  
+
   /** @private @type {ILLMConfigurationManager} */
   #llmConfigManager;
-  
+
   /** @private @type {ISafeEventDispatcher} */
   #eventBus;
-  
+
   /** @private @type {ITokenEstimator} */
   #tokenEstimator;
 
@@ -183,23 +183,23 @@ export class TraitsRewriterGenerator {
     validateDependency(dependencies.logger, 'ILogger', null, {
       requiredMethods: ['debug', 'info', 'warn', 'error']
     });
-    
+
     validateDependency(dependencies.llmJsonService, 'LlmJsonService', dependencies.logger, {
       requiredMethods: ['generateContent']
     });
-    
+
     validateDependency(dependencies.llmStrategyFactory, 'ConfigurableLLMAdapter', dependencies.logger, {
       requiredMethods: ['generateContent']
     });
-    
+
     validateDependency(dependencies.llmConfigManager, 'ILLMConfigurationManager', dependencies.logger, {
       requiredMethods: ['getCurrentLlmId']
     });
-    
+
     validateDependency(dependencies.eventBus, 'ISafeEventDispatcher', dependencies.logger, {
       requiredMethods: ['dispatch']
     });
-    
+
     validateDependency(dependencies.tokenEstimator, 'ITokenEstimator', dependencies.logger, {
       requiredMethods: ['estimateTokens']
     });
@@ -226,7 +226,7 @@ export class TraitsRewriterGenerator {
 
 - **Extract Traits**: Identify present traits from the 10 supported types
 - **Prompt Creation**: Use `createTraitsRewriterPrompt()` with character data
-- **LLM Integration**: Use `llmJsonService` with `ConfigurableLLMAdapter` infrastructure  
+- **LLM Integration**: Use `llmJsonService` with `ConfigurableLLMAdapter` infrastructure
 - **Response Processing**: Delegate to `TraitsRewriterResponseProcessor`
 - **Error Handling**: Comprehensive error scenarios and recovery
 - **Event Dispatching**: CHARACTER_BUILDER_EVENTS integration following existing patterns
@@ -245,10 +245,10 @@ export class TraitsRewriterResponseProcessor {
   // Private fields following codebase patterns
   /** @private @type {ILogger} */
   #logger;
-  
+
   /** @private @type {LlmJsonService} */
   #llmJsonService;
-  
+
   /** @private @type {ISchemaValidator} */
   #schemaValidator;
 
@@ -257,11 +257,11 @@ export class TraitsRewriterResponseProcessor {
     validateDependency(dependencies.logger, 'ILogger', null, {
       requiredMethods: ['debug', 'info', 'warn', 'error']
     });
-    
+
     validateDependency(dependencies.llmJsonService, 'LlmJsonService', dependencies.logger, {
       requiredMethods: ['parseAndValidateResponse']
     });
-    
+
     validateDependency(dependencies.schemaValidator, 'ISchemaValidator', dependencies.logger, {
       requiredMethods: ['validate']
     });
@@ -375,7 +375,7 @@ export const TRAITS_REWRITER_ERROR_CODES = {
   SpeechPatternsResponseProcessor: 'SpeechPatternsResponseProcessor',
   // Traits Rewriter Services
   TraitsRewriterController: 'TraitsRewriterController',
-  TraitsRewriterGenerator: 'TraitsRewriterGenerator', 
+  TraitsRewriterGenerator: 'TraitsRewriterGenerator',
   TraitsRewriterResponseProcessor: 'TraitsRewriterResponseProcessor',
   TraitsRewriterDisplayEnhancer: 'TraitsRewriterDisplayEnhancer',
   CharacterDatabase: 'CharacterDatabase',
@@ -432,11 +432,15 @@ function registerCharacterBuilderServices(registrar, logger) {
       eventBus: c.resolve(tokens.ISafeEventDispatcher),
       schemaValidator: c.resolve(tokens.ISchemaValidator),
       traitsRewriterGenerator: c.resolve(tokens.TraitsRewriterGenerator),
-      traitsRewriterDisplayEnhancer: c.resolve(tokens.TraitsRewriterDisplayEnhancer),
+      traitsRewriterDisplayEnhancer: c.resolve(
+        tokens.TraitsRewriterDisplayEnhancer
+      ),
     });
   });
 
-  logger.debug('Character Builder Registration: Registered Traits Rewriter services.');
+  logger.debug(
+    'Character Builder Registration: Registered Traits Rewriter services.'
+  );
 }
 ```
 
@@ -449,7 +453,7 @@ function registerCharacterBuilderServices(registrar, logger) {
 The system must handle these 10 trait types (when present in character definition):
 
 1. `core:likes` - Things the character enjoys or appreciates
-2. `core:dislikes` - Things the character avoids or dislikes  
+2. `core:dislikes` - Things the character avoids or dislikes
 3. `core:fears` - Character's fears and phobias
 4. `core:goals` - Objectives and aspirations
 5. `core:notes` - Additional character notes
@@ -490,12 +494,12 @@ import { CHARACTER_BUILDER_EVENTS } from '../services/characterBuilderService.js
 // Dispatch events using established patterns
 this.#eventBus.dispatch({
   type: CHARACTER_BUILDER_EVENTS.GENERATION_STARTED,
-  payload: { 
+  payload: {
     feature: 'traits-rewriter',
     component: 'TraitsRewriterGenerator',
     characterName: character.name,
-    timestamp: new Date().toISOString()
-  }
+    timestamp: new Date().toISOString(),
+  },
 });
 
 // Success event
@@ -503,11 +507,11 @@ this.#eventBus.dispatch({
   type: CHARACTER_BUILDER_EVENTS.GENERATION_COMPLETED,
   payload: {
     feature: 'traits-rewriter',
-    component: 'TraitsRewriterGenerator', 
+    component: 'TraitsRewriterGenerator',
     characterName: character.name,
     resultCount: Object.keys(rewrittenTraits).length,
-    timestamp: new Date().toISOString()
-  }
+    timestamp: new Date().toISOString(),
+  },
 });
 
 // Error event
@@ -518,8 +522,8 @@ this.#eventBus.dispatch({
     component: 'TraitsRewriterGenerator',
     error: error.message,
     characterName: character.name,
-    timestamp: new Date().toISOString()
-  }
+    timestamp: new Date().toISOString(),
+  },
 });
 ```
 
@@ -607,7 +611,7 @@ The UI expects sections to be created as:
 
 ### Phase 2: Core Business Logic (HIGH)
 
-**Goal**: Implement functional trait rewriting workflow  
+**Goal**: Implement functional trait rewriting workflow
 
 1. Implement `TraitsRewriterGenerator` with LLM integration
 2. Create `TraitsRewriterResponseProcessor` for response handling
@@ -732,7 +736,7 @@ The UI expects sections to be created as:
 - **Memory Management**: Proper cleanup of large objects and event listeners
 - **Progress Feedback**: Loading indicators and progress updates for users
 
-### Security Considerations  
+### Security Considerations
 
 - **Input Validation**: Comprehensive validation of character definitions
 - **Content Sanitization**: HTML escaping for all user content display
@@ -762,7 +766,7 @@ This specification has been corrected to accurately reflect the actual codebase 
 
 1. **Token System**: Updated from simple `TOKENS` object to modular token system in `tokens-core.js`
 2. **Dependency Injection**: Corrected to use `registrar.singletonFactory` with proper dependency resolution
-3. **Service Dependencies**: Fixed to use actual patterns: `llmJsonService`, `llmStrategyFactory`, `llmConfigManager`, `eventBus`, `tokenEstimator`  
+3. **Service Dependencies**: Fixed to use actual patterns: `llmJsonService`, `llmStrategyFactory`, `llmConfigManager`, `eventBus`, `tokenEstimator`
 4. **BaseCharacterBuilderController**: Updated to reflect sophisticated implementation with private fields, UIStateManager, and advanced validation
 5. **Constructor Patterns**: Corrected to show proper `validateDependency` usage and error handling
 6. **Event Integration**: Updated to use established `CHARACTER_BUILDER_EVENTS` patterns

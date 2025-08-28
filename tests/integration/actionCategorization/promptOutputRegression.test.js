@@ -355,7 +355,6 @@ describe('AI Prompt Output Regression', () => {
       expect(result).toContain('[Index: 1]');
       expect(result).toContain('[Index: 6]');
     });
-
   });
 
   describe('Format Consistency', () => {

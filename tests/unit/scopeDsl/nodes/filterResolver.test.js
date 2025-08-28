@@ -7,8 +7,18 @@ describe('filterResolver', () => {
   let entitiesGateway;
   let locationProvider;
   let dispatcher;
+  let errorHandler;
 
   beforeEach(() => {
+    // Create mock error handler
+    errorHandler = {
+      handleError: jest.fn((error, context, resolver, code) => {
+        // Simulate throwing an error like the real handler does
+        throw new Error(`[${code}] ${error.message}`);
+      }),
+      getErrorBuffer: jest.fn(() => []),
+    };
+
     // Create mock logic evaluator
     logicEval = {
       evaluate: jest.fn(),
@@ -466,6 +476,103 @@ describe('filterResolver', () => {
           })
         );
       });
+    });
+  });
+
+  describe('error handler integration', () => {
+    let resolverWithErrorHandler;
+
+    beforeEach(() => {
+      resolverWithErrorHandler = createFilterResolver({
+        logicEval,
+        entitiesGateway,
+        locationProvider,
+        errorHandler,
+      });
+    });
+
+    it('should use error handler for missing actorEntity', () => {
+      const node = {
+        type: 'Filter',
+        parent: { type: 'Source', kind: 'entities' },
+        logic: { '==': [{ var: 'entity.id' }, 'entity1'] },
+      };
+      const ctx = {
+        actorEntity: null, // Missing actor
+        dispatcher,
+      };
+
+      expect(() => resolverWithErrorHandler.resolve(node, ctx)).toThrow(
+        /\[SCOPE_1001\].*actorEntity is undefined/
+      );
+      expect(errorHandler.handleError).toHaveBeenCalledWith(
+        expect.any(Error),
+        ctx,
+        'FilterResolver',
+        'SCOPE_1001'
+      );
+    });
+
+    it('should use error handler for invalid actorEntity ID', () => {
+      const node = {
+        type: 'Filter',
+        parent: { type: 'Source', kind: 'entities' },
+        logic: { '==': [{ var: 'entity.id' }, 'entity1'] },
+      };
+      const ctx = {
+        actorEntity: { id: undefined }, // Invalid ID
+        dispatcher,
+      };
+      dispatcher.resolve.mockReturnValue(new Set());
+
+      expect(() => resolverWithErrorHandler.resolve(node, ctx)).toThrow(
+        /\[SCOPE_1002\].*invalid ID/
+      );
+      expect(errorHandler.handleError).toHaveBeenCalledWith(
+        expect.any(Error),
+        ctx,
+        'FilterResolver',
+        'SCOPE_1002'
+      );
+    });
+
+    it('should use error handler for missing parent node', () => {
+      const node = {
+        type: 'Filter',
+        // Missing parent
+        logic: { '==': [{ var: 'entity.id' }, 'entity1'] },
+      };
+      const ctx = {
+        actorEntity: { id: 'actor123' },
+        dispatcher,
+      };
+
+      expect(() => resolverWithErrorHandler.resolve(node, ctx)).toThrow(
+        /\[SCOPE_2002\].*missing parent node/
+      );
+      expect(errorHandler.handleError).toHaveBeenCalledWith(
+        expect.any(Error),
+        ctx,
+        'FilterResolver',
+        'SCOPE_2002'
+      );
+    });
+
+    it('should work without error handler for backward compatibility', () => {
+      const node = {
+        type: 'Filter',
+        parent: { type: 'Source', kind: 'entities' },
+        logic: { '==': [{ var: 'entity.id' }, 'entity1'] },
+      };
+      const ctx = {
+        actorEntity: null, // Missing actor
+        dispatcher,
+      };
+
+      // Original resolver without error handler should still throw
+      expect(() => resolver.resolve(node, ctx)).toThrow(
+        /FilterResolver: actorEntity is undefined/
+      );
     });
   });
 });

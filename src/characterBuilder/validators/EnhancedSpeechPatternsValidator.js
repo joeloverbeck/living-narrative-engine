@@ -90,10 +90,15 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       );
 
     // Add speech-patterns-specific context
-    if (validationResult.quality && validationResult.quality.overallScore < 0.4) {
-      if (!validationResult.warnings.includes(
-        'Character definition may need more detail for optimal speech pattern generation'
-      )) {
+    if (
+      validationResult.quality &&
+      validationResult.quality.overallScore < 0.4
+    ) {
+      if (
+        !validationResult.warnings.includes(
+          'Character definition may need more detail for optimal speech pattern generation'
+        )
+      ) {
         validationResult.warnings.push(
           'Character definition may need more detail for optimal speech pattern generation'
         );

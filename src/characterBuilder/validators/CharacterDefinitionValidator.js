@@ -1021,12 +1021,15 @@ export class CharacterDefinitionValidator {
       /\b(age|years?\s+old|born|\d{1,2}\s*years?\s*old|\d{1,2})\b/i.test(
         profileText
       );
-    const hasOccupation =
-      /\b(work|job|profession|career|occupation)\b/i.test(profileText);
-    const hasLocation =
-      /\b(live|from|hometown|city|country|location)\b/i.test(profileText);
-    const hasHistory =
-      /\b(history|past|background|grew up|childhood)\b/i.test(profileText);
+    const hasOccupation = /\b(work|job|profession|career|occupation)\b/i.test(
+      profileText
+    );
+    const hasLocation = /\b(live|from|hometown|city|country|location)\b/i.test(
+      profileText
+    );
+    const hasHistory = /\b(history|past|background|grew up|childhood)\b/i.test(
+      profileText
+    );
 
     const richnessFactor =
       [hasAge, hasOccupation, hasLocation, hasHistory].filter(Boolean).length /

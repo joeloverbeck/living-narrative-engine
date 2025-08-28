@@ -93,117 +93,146 @@ describe('errorFactory', () => {
     it('should create error from missingContext template with parameters', () => {
       const error = errorFactory.fromTemplate('missingContext', {
         field: 'actor',
-        resolver: 'EntityResolver'
+        resolver: 'EntityResolver',
       });
 
       expect(error).toBeInstanceOf(ScopeDslError);
-      expect(error.message).toBe('Required context field "actor" is missing for EntityResolver');
+      expect(error.message).toBe(
+        'Required context field "actor" is missing for EntityResolver'
+      );
     });
 
     it('should create error from invalidData template with parameters', () => {
       const error = errorFactory.fromTemplate('invalidData', {
         field: 'position',
         expected: 'object',
-        actual: 'string'
+        actual: 'string',
       });
 
       expect(error).toBeInstanceOf(ScopeDslError);
-      expect(error.message).toBe('Invalid data format in position: expected object, got string');
+      expect(error.message).toBe(
+        'Invalid data format in position: expected object, got string'
+      );
     });
 
     it('should create error from resolutionFailure template with parameters', () => {
       const error = errorFactory.fromTemplate('resolutionFailure', {
         path: 'actor.items',
         resolver: 'ItemResolver',
-        reason: 'entity not found'
+        reason: 'entity not found',
       });
 
       expect(error).toBeInstanceOf(ScopeDslError);
-      expect(error.message).toBe('Failed to resolve actor.items in ItemResolver: entity not found');
+      expect(error.message).toBe(
+        'Failed to resolve actor.items in ItemResolver: entity not found'
+      );
     });
 
     it('should create error from cycleDetected template with parameters', () => {
       const error = errorFactory.fromTemplate('cycleDetected', {
         path: 'actor.followers.leader',
-        depth: 5
+        depth: 5,
       });
 
       expect(error).toBeInstanceOf(ScopeDslError);
-      expect(error.message).toBe('Circular reference detected in actor.followers.leader at depth 5');
+      expect(error.message).toBe(
+        'Circular reference detected in actor.followers.leader at depth 5'
+      );
     });
 
     it('should create error from depthExceeded template with parameters', () => {
       const error = errorFactory.fromTemplate('depthExceeded', {
         maxDepth: 10,
-        path: 'deeply.nested.property'
+        path: 'deeply.nested.property',
       });
 
       expect(error).toBeInstanceOf(ScopeDslError);
-      expect(error.message).toBe('Maximum depth 10 exceeded at deeply.nested.property');
+      expect(error.message).toBe(
+        'Maximum depth 10 exceeded at deeply.nested.property'
+      );
     });
 
     it('should create error from parseError template with parameters', () => {
       const error = errorFactory.fromTemplate('parseError', {
         source: 'scope expression',
-        reason: 'unexpected token'
+        reason: 'unexpected token',
       });
 
       expect(error).toBeInstanceOf(ScopeDslError);
-      expect(error.message).toBe('Parse error in scope expression: unexpected token');
+      expect(error.message).toBe(
+        'Parse error in scope expression: unexpected token'
+      );
     });
 
     it('should create error from configuration template with parameters', () => {
       const error = errorFactory.fromTemplate('configuration', {
         setting: 'maxDepth',
-        reason: 'must be positive integer'
+        reason: 'must be positive integer',
       });
 
       expect(error).toBeInstanceOf(ScopeDslError);
-      expect(error.message).toBe('Configuration error in maxDepth: must be positive integer');
+      expect(error.message).toBe(
+        'Configuration error in maxDepth: must be positive integer'
+      );
     });
 
     it('should handle unknown template keys gracefully', () => {
       const error = errorFactory.fromTemplate('unknownTemplate', {
         param1: 'value1',
-        param2: 'value2'
+        param2: 'value2',
       });
 
       expect(error).toBeInstanceOf(ScopeDslError);
-      expect(error.message).toBe('Unknown error template: \'unknownTemplate\'. Parameters: {"param1":"value1","param2":"value2"}');
+      expect(error.message).toBe(
+        'Unknown error template: \'unknownTemplate\'. Parameters: {"param1":"value1","param2":"value2"}'
+      );
     });
 
     it('should handle missing parameters by leaving placeholders', () => {
       const error = errorFactory.fromTemplate('missingContext', {
-        field: 'actor'
+        field: 'actor',
         // resolver parameter missing
       });
 
       expect(error).toBeInstanceOf(ScopeDslError);
-      expect(error.message).toBe('Required context field "actor" is missing for {resolver}');
+      expect(error.message).toBe(
+        'Required context field "actor" is missing for {resolver}'
+      );
     });
 
     it('should handle empty parameters object', () => {
       const error = errorFactory.fromTemplate('missingContext', {});
 
       expect(error).toBeInstanceOf(ScopeDslError);
-      expect(error.message).toBe('Required context field "{field}" is missing for {resolver}');
+      expect(error.message).toBe(
+        'Required context field "{field}" is missing for {resolver}'
+      );
     });
 
     it('should handle null and undefined parameters', () => {
       const errorNull = errorFactory.fromTemplate('missingContext', null);
-      expect(errorNull.message).toBe('Required context field "{field}" is missing for {resolver}');
+      expect(errorNull.message).toBe(
+        'Required context field "{field}" is missing for {resolver}'
+      );
 
-      const errorUndefined = errorFactory.fromTemplate('missingContext', undefined);
-      expect(errorUndefined.message).toBe('Required context field "{field}" is missing for {resolver}');
+      const errorUndefined = errorFactory.fromTemplate(
+        'missingContext',
+        undefined
+      );
+      expect(errorUndefined.message).toBe(
+        'Required context field "{field}" is missing for {resolver}'
+      );
     });
   });
 
   describe('createForCategory', () => {
     it('should create error with custom message and interpolation', () => {
-      const error = errorFactory.createForCategory('invalid_data', 
-        'Custom error in {component}: {details}', {
+      const error = errorFactory.createForCategory(
+        'invalid_data',
+        'Custom error in {component}: {details}',
+        {
           component: 'Parser',
-          details: 'malformed JSON'
+          details: 'malformed JSON',
         }
       );
 
@@ -212,16 +241,21 @@ describe('errorFactory', () => {
     });
 
     it('should create error without parameters', () => {
-      const error = errorFactory.createForCategory('configuration', 'Simple error message');
+      const error = errorFactory.createForCategory(
+        'configuration',
+        'Simple error message'
+      );
 
       expect(error).toBeInstanceOf(ScopeDslError);
       expect(error.message).toBe('Simple error message');
     });
 
     it('should handle missing parameters in custom message', () => {
-      const error = errorFactory.createForCategory('invalid_data', 
-        'Error in {component}: {missing}', {
-          component: 'Parser'
+      const error = errorFactory.createForCategory(
+        'invalid_data',
+        'Error in {component}: {missing}',
+        {
+          component: 'Parser',
           // missing parameter not provided
         }
       );
@@ -240,12 +274,12 @@ describe('errorFactory', () => {
         error: jest.fn(),
         warn: jest.fn(),
         debug: jest.fn(),
-        info: jest.fn()
+        info: jest.fn(),
       };
 
       mockErrorHandler = new ScopeDslErrorHandler({
         logger: mockLogger,
-        config: { isDevelopment: true }
+        config: { isDevelopment: true },
       });
     });
 
@@ -254,10 +288,16 @@ describe('errorFactory', () => {
       const resolverName = 'TestResolver';
 
       expect(() => {
-        errorFactory.createWithHandler('missingContext', {
-          field: 'location',
-          resolver: resolverName
-        }, context, resolverName, mockErrorHandler);
+        errorFactory.createWithHandler(
+          'missingContext',
+          {
+            field: 'location',
+            resolver: resolverName,
+          },
+          context,
+          resolverName,
+          mockErrorHandler
+        );
       }).toThrow(ScopeDslError);
 
       expect(mockLogger.error).toHaveBeenCalled();
@@ -268,33 +308,54 @@ describe('errorFactory', () => {
       const resolverName = 'TestResolver';
 
       expect(() => {
-        errorFactory.createWithHandler('unknownTemplate', {
-          param: 'value'
-        }, context, resolverName, mockErrorHandler);
+        errorFactory.createWithHandler(
+          'unknownTemplate',
+          {
+            param: 'value',
+          },
+          context,
+          resolverName,
+          mockErrorHandler
+        );
       }).toThrow(ScopeDslError);
 
       expect(mockLogger.error).toHaveBeenCalled();
     });
 
     it('should fallback to fromTemplate when no error handler provided', () => {
-      const error = errorFactory.createWithHandler('missingContext', {
-        field: 'actor',
-        resolver: 'TestResolver'
-      }, {}, 'TestResolver', null);
+      const error = errorFactory.createWithHandler(
+        'missingContext',
+        {
+          field: 'actor',
+          resolver: 'TestResolver',
+        },
+        {},
+        'TestResolver',
+        null
+      );
 
       expect(error).toBeInstanceOf(ScopeDslError);
-      expect(error.message).toBe('Required context field "actor" is missing for TestResolver');
+      expect(error.message).toBe(
+        'Required context field "actor" is missing for TestResolver'
+      );
     });
 
     it('should fallback to fromTemplate when error handler is undefined', () => {
-      const error = errorFactory.createWithHandler('invalidData', {
-        field: 'position',
-        expected: 'object',
-        actual: 'string'
-      }, {}, 'TestResolver');
+      const error = errorFactory.createWithHandler(
+        'invalidData',
+        {
+          field: 'position',
+          expected: 'object',
+          actual: 'string',
+        },
+        {},
+        'TestResolver'
+      );
 
       expect(error).toBeInstanceOf(ScopeDslError);
-      expect(error.message).toBe('Invalid data format in position: expected object, got string');
+      expect(error.message).toBe(
+        'Invalid data format in position: expected object, got string'
+      );
     });
   });
 
@@ -302,19 +363,23 @@ describe('errorFactory', () => {
     it('should support nested property access', () => {
       const error = errorFactory.fromTemplate('missingContext', {
         field: 'actor.name',
-        resolver: 'TestResolver'
+        resolver: 'TestResolver',
       });
 
-      expect(error.message).toBe('Required context field "actor.name" is missing for TestResolver');
+      expect(error.message).toBe(
+        'Required context field "actor.name" is missing for TestResolver'
+      );
     });
 
     it('should handle nested object parameters', () => {
-      const error = errorFactory.createForCategory('test', 
-        'Error in {config.setting}: {config.reason}', {
+      const error = errorFactory.createForCategory(
+        'test',
+        'Error in {config.setting}: {config.reason}',
+        {
           config: {
             setting: 'maxDepth',
-            reason: 'invalid value'
-          }
+            reason: 'invalid value',
+          },
         }
       );
 
@@ -322,11 +387,13 @@ describe('errorFactory', () => {
     });
 
     it('should handle special values (null, undefined)', () => {
-      const error = errorFactory.createForCategory('test',
-        'Values: {nullValue}, {undefinedValue}, {stringValue}', {
+      const error = errorFactory.createForCategory(
+        'test',
+        'Values: {nullValue}, {undefinedValue}, {stringValue}',
+        {
           nullValue: null,
           undefinedValue: undefined,
-          stringValue: 'test'
+          stringValue: 'test',
         }
       );
 
@@ -334,24 +401,30 @@ describe('errorFactory', () => {
     });
 
     it('should handle non-string values by JSON stringifying', () => {
-      const error = errorFactory.createForCategory('test',
-        'Object: {obj}, Array: {arr}, Number: {num}', {
+      const error = errorFactory.createForCategory(
+        'test',
+        'Object: {obj}, Array: {arr}, Number: {num}',
+        {
           obj: { key: 'value' },
           arr: [1, 2, 3],
-          num: 42
+          num: 42,
         }
       );
 
-      expect(error.message).toBe('Object: {"key":"value"}, Array: [1,2,3], Number: 42');
+      expect(error.message).toBe(
+        'Object: {"key":"value"}, Array: [1,2,3], Number: 42'
+      );
     });
 
     it('should handle circular references in parameter values gracefully', () => {
       const circular = { name: 'test' };
       circular.self = circular;
 
-      const error = errorFactory.createForCategory('test',
-        'Circular: {circular}', {
-          circular: circular
+      const error = errorFactory.createForCategory(
+        'test',
+        'Circular: {circular}',
+        {
+          circular: circular,
         }
       );
 

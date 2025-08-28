@@ -1,6 +1,6 @@
 # TRAREW-015: Documentation and User Guides
 
-## Priority: 🟢 LOW  
+## Priority: 🟢 LOW
 
 **Phase**: 3 - Testing & Validation  
 **Story Points**: 2  
@@ -33,6 +33,7 @@ The TraitsRewriter feature needs comprehensive documentation to support users, d
 ## Implementation Details
 
 ### Documentation Structure
+
 Create comprehensive documentation files:
 
 ```
@@ -57,18 +58,22 @@ Create comprehensive documentation files:
 ### 1. User Guide (`user-guide.md`)
 
 #### User Guide Structure
-```markdown
+
+````markdown
 # TraitsRewriter User Guide
 
 ## Overview
+
 The TraitsRewriter tool helps writers, game masters, and creators transform character trait descriptions into first-person voice, making characters feel more authentic and helping with character development and roleplay.
 
 ## Getting Started
 
 ### What is TraitsRewriter?
+
 TraitsRewriter takes your character's traits written in third-person (like "analytical and methodical") and rewrites them in first-person voice (like "I am analytical and methodical in my approach").
 
 ### Basic Workflow
+
 1. **Input Character Definition**: Paste your character data in JSON format
 2. **Generate Traits**: Click generate to rewrite traits in first-person
 3. **Review Results**: Read the rewritten traits to understand your character's voice
@@ -77,6 +82,7 @@ TraitsRewriter takes your character's traits written in third-person (like "anal
 ## Character Definition Format
 
 ### Required Structure
+
 Your character definition must be in JSON format with specific field names:
 
 ```json
@@ -87,10 +93,12 @@ Your character definition must be in JSON format with specific field names:
   "core:fears": { "text": "Character's fears and concerns" }
 }
 ```
+````
 
 ### Supported Trait Types
+
 - `core:personality` - Overall personality description
-- `core:likes` - Things the character enjoys or appreciates  
+- `core:likes` - Things the character enjoys or appreciates
 - `core:dislikes` - Things the character avoids or dislikes
 - `core:fears` - Character's fears, phobias, or concerns
 - `core:goals` - Objectives, aspirations, and ambitions
@@ -103,16 +111,19 @@ Your character definition must be in JSON format with specific field names:
 ## Examples by User Type
 
 ### Fiction Writers
+
 Create authentic character voices for novels, short stories, and creative writing.
 
 [Example character definition and output]
 
 ### Game Masters
+
 Develop NPC personalities for tabletop RPGs with consistent roleplay guidance.
 
 [Example NPC definition and output]
 
 ### Character Creators
+
 Develop characters for games, stories, or other creative projects.
 
 [Example character development workflow]
@@ -120,11 +131,13 @@ Develop characters for games, stories, or other creative projects.
 ## Export Options
 
 ### Text Format
+
 - Human-readable format perfect for writing references
 - Organized by trait type with clear headers
 - Includes character name and generation timestamp
 
-### JSON Format  
+### JSON Format
+
 - Structured data format for digital tools
 - Preserves all metadata and trait relationships
 - Compatible with other character management tools
@@ -132,12 +145,14 @@ Develop characters for games, stories, or other creative projects.
 ## Tips and Best Practices
 
 ### Writing Effective Character Descriptions
+
 - Be specific rather than generic
 - Include concrete details and examples
 - Consider internal contradictions and complexity
 - Think about how traits manifest in behavior
 
 ### Getting Better Results
+
 - Provide context for personality traits
 - Include specific examples in trait descriptions
 - Use descriptive language rather than single words
@@ -146,17 +161,20 @@ Develop characters for games, stories, or other creative projects.
 ## Troubleshooting
 
 ### Common Issues
+
 - JSON format errors and how to fix them
 - Empty or incomplete results
 - Generation taking too long
 - Export not working
 
 ### Getting Help
+
 - Check the troubleshooting guide
 - Verify your character definition format
 - Try with a simpler character first
 - Contact support if issues persist
-```
+
+````
 
 ### 2. Technical Overview (`technical-overview.md`)
 
@@ -169,25 +187,27 @@ Develop characters for games, stories, or other creative projects.
 ### Service Architecture
 The TraitsRewriter feature follows a modular service architecture with clear separation of concerns:
 
-```
-┌─────────────────────┐    ┌──────────────────────┐
-│ TraitsRewriterController │    │ User Interface       │
-└─────────────────────┘    └──────────────────────┘
-           │
-           ├── TraitsRewriterGenerator
-           │   ├── Trait Extraction
-           │   ├── Prompt Creation  
-           │   └── LLM Integration
-           │
-           ├── TraitsRewriterResponseProcessor
-           │   ├── JSON Parsing
-           │   ├── Schema Validation
-           │   └── Content Sanitization
-           │
-           └── TraitsRewriterDisplayEnhancer
-               ├── Display Formatting
-               ├── Export Generation
-               └── File Management
+````
+
+┌─────────────────────┐ ┌──────────────────────┐
+│ TraitsRewriterController │ │ User Interface │
+└─────────────────────┘ └──────────────────────┘
+│
+├── TraitsRewriterGenerator
+│ ├── Trait Extraction
+│ ├── Prompt Creation  
+ │ └── LLM Integration
+│
+├── TraitsRewriterResponseProcessor
+│ ├── JSON Parsing
+│ ├── Schema Validation
+│ └── Content Sanitization
+│
+└── TraitsRewriterDisplayEnhancer
+├── Display Formatting
+├── Export Generation
+└── File Management
+
 ```
 
 ### Service Responsibilities
@@ -199,7 +219,7 @@ The TraitsRewriter feature follows a modular service architecture with clear sep
 - Manages generation workflow and error handling
 - Dispatches lifecycle events throughout the process
 
-#### TraitsRewriterResponseProcessor  
+#### TraitsRewriterResponseProcessor
 - Parses and validates LLM responses safely
 - Validates against response schemas
 - Sanitizes content for secure display
@@ -270,7 +290,8 @@ Custom TraitsRewriterError class with comprehensive error codes and user-friendl
 ### 3. API Reference (`api-reference.md`)
 
 #### API Documentation Structure
-```markdown
+
+````markdown
 # TraitsRewriter API Reference
 
 ## TraitsRewriterGenerator
@@ -280,6 +301,7 @@ Custom TraitsRewriterError class with comprehensive error codes and user-friendl
 Generates rewritten traits in first-person voice from character definition.
 
 **Parameters:**
+
 - `characterDefinition` (Object) - Character data with trait information
   - Required properties: `core:name`
   - Optional trait properties: `core:personality`, `core:likes`, etc.
@@ -290,6 +312,7 @@ Generates rewritten traits in first-person voice from character definition.
 
 **Returns:**
 Promise resolving to generation result object:
+
 ```javascript
 {
   characterName: "Character Name",
@@ -304,16 +327,20 @@ Promise resolving to generation result object:
   }
 }
 ```
+````
 
 **Throws:**
+
 - `TraitsRewriterError` with appropriate error code for various failure scenarios
 
 ### Internal Methods
 
 #### `extractRelevantTraits(characterDefinition)`
+
 Extracts supported trait types from character definition.
 
 #### `createLLMPrompt(characterData)`
+
 Creates properly formatted prompt for LLM generation.
 
 ## TraitsRewriterResponseProcessor
@@ -323,11 +350,13 @@ Creates properly formatted prompt for LLM generation.
 Processes and validates LLM response for trait rewriting.
 
 **Parameters:**
+
 - `llmResponse` (String|Object) - Raw LLM response
 - `originalCharacterData` (Object) - Original character definition for validation
 
 **Returns:**
 Promise resolving to processed response:
+
 ```javascript
 {
   characterName: "Character Name",
@@ -346,12 +375,14 @@ Promise resolving to processed response:
 Formats rewritten traits for display in the user interface.
 
 **Parameters:**
+
 - `rewrittenTraits` (Object) - Processed traits from ResponseProcessor
 - `characterName` (String) - Character name for display
 - `options` (Object) - Display options
 
 **Returns:**
 Display data object:
+
 ```javascript
 {
   sections: [
@@ -381,9 +412,11 @@ Generates safe filename for export with timestamp.
 ### Public Methods
 
 #### `generateRewrittenTraits(characterDefinition, options)`
+
 Main entry point for complete trait rewriting workflow.
 
 #### Event Handling
+
 Controller subscribes to and dispatches CHARACTER_BUILDER_EVENTS for workflow coordination.
 
 ## Error Codes Reference
@@ -400,7 +433,8 @@ Controller subscribes to and dispatches CHARACTER_BUILDER_EVENTS for workflow co
 - `TIMEOUT_ERROR` - Request timeout errors
 
 Each error includes user-friendly messages and context information for debugging.
-```
+
+````
 
 ### 4. Developer Guide (`developer-guide.md`)
 
@@ -422,30 +456,33 @@ npm run dev
 
 # Run tests
 npm run test:unit -- --testPathPattern="TraitsRewriter"
-npm run test:integration -- --testPathPattern="TraitsRewriter" 
+npm run test:integration -- --testPathPattern="TraitsRewriter"
 npm run test:e2e -- traitsRewriter
 
 # Code quality checks
 npm run lint
 npm run typecheck
 npm run format
-```
+````
 
 ### Architecture Guidelines
 
 #### Service Development
+
 - Follow existing dependency injection patterns
 - Use private fields with # syntax
 - Implement comprehensive error handling
 - Include proper JSDoc documentation
 
 #### Testing Requirements
+
 - Unit tests for all public methods
 - Integration tests for service coordination
 - End-to-end tests for user workflows
 - Performance tests for critical operations
 
 #### Code Quality
+
 - ESLint compliance required
 - TypeScript type checking
 - 90%+ test coverage
@@ -454,18 +491,21 @@ npm run format
 ## Extension Points
 
 ### Adding New Trait Types
+
 1. Update `DEFAULT_TRAIT_KEYS` in prompts
 2. Add label mapping in DisplayEnhancer
 3. Update schema validation
 4. Add tests for new trait type
 
 ### Custom Export Formats
+
 1. Extend `formatForExport` method
 2. Add format-specific templates
 3. Update UI export options
 4. Test new export functionality
 
 ### LLM Integration
+
 - Follow established llmJsonService patterns
 - Use proper error handling and timeouts
 - Include token estimation and monitoring
@@ -474,22 +514,26 @@ npm run format
 ## Maintenance
 
 ### Code Organization
+
 - Services in `/src/characterBuilder/services/`
 - Tests mirror source structure
 - Shared utilities and patterns
 - Clear separation of concerns
 
 ### Documentation
+
 - Update API docs for interface changes
-- Include examples for new features  
+- Include examples for new features
 - Document breaking changes
 - Maintain troubleshooting guides
 
 ### Performance Monitoring
+
 - Track generation response times
 - Monitor memory usage patterns
 - Measure user workflow completion
 - Identify optimization opportunities
+
 ```
 
 ## Dependencies
@@ -547,3 +591,4 @@ After completion:
 - [ ] Review documentation accuracy against implementation
 - [ ] Test documentation with representative users
 - [ ] Establish documentation maintenance procedures
+```

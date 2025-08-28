@@ -140,6 +140,7 @@ describe('ScopeEngine helper methods', () => {
         logicEval,
         entitiesGateway,
         locationProvider,
+        errorHandler: null,
       });
       expect(createUnionResolver).toHaveBeenCalled();
       expect(createArrayIterationResolver).toHaveBeenCalled();

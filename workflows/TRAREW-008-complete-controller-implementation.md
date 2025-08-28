@@ -1,6 +1,6 @@
 # TRAREW-008: Complete TraitsRewriterController Implementation
 
-## Priority: 🔥 HIGH  
+## Priority: 🔥 HIGH
 
 **Phase**: 2 - Core Business Logic  
 **Story Points**: 4  
@@ -35,9 +35,11 @@ The TraitsRewriterController currently exists as a minimal stub (from TRAREW-001
 ## Implementation Details
 
 ### File to Replace
+
 **Path**: `/src/characterBuilder/controllers/TraitsRewriterController.js`
 
 ### Complete Controller Interface
+
 ```javascript
 /**
  * @file TraitsRewriterController - Complete controller for trait rewriting
@@ -53,16 +55,16 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
   // Private fields following codebase patterns
   /** @private @type {TraitsRewriterGenerator} */
   #traitsRewriterGenerator;
-  
+
   /** @private @type {TraitsRewriterDisplayEnhancer} */
   #traitsRewriterDisplayEnhancer;
-  
+
   /** @private @type {object|null} */
   #lastGeneratedTraits = null;
-  
+
   /** @private @type {object|null} */
   #currentCharacterDefinition = null;
-  
+
   /** @private @type {boolean} */
   #isGenerating = false;
 
@@ -82,39 +84,39 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
   // Core lifecycle methods (override from BaseCharacterBuilderController)
   async _loadInitialData() {
     this._getLogger().debug('TraitsRewriterController: Loading initial data');
-    
+
     // Initialize UI with empty state
     this._showState('empty');
-    
+
     // Subscribe to generation events
     this.#subscribeToGenerationEvents();
   }
 
   _cacheElements() {
     this._getLogger().debug('TraitsRewriterController: Caching DOM elements');
-    
+
     this._cacheElementsFromMap({
       // Character input elements
       characterDefinitionInput: '#character-definition-input',
       inputValidationError: '#input-validation-error',
-      
+
       // Control buttons
       generateBtn: '#generate-btn',
-      exportBtn: '#export-btn', 
+      exportBtn: '#export-btn',
       clearBtn: '#clear-btn',
-      
+
       // State containers
       emptyState: '#empty-state',
-      loadingState: '#loading-state', 
+      loadingState: '#loading-state',
       resultsState: '#results-state',
       errorState: '#error-state',
       errorMessageText: '#error-message-text',
-      
+
       // Results display
       rewrittenTraitsContainer: '#rewritten-traits-container',
       characterNameDisplay: '#character-name-display',
       exportFormatSelect: '#export-format-select',
-      
+
       // Loading feedback
       loadingMessage: '#loading-message',
       progressIndicator: '#progress-indicator'
@@ -123,39 +125,39 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
 
   _setupEventListeners() {
     this._getLogger().debug('TraitsRewriterController: Setting up event listeners');
-    
+
     // Character input validation
     this.#setupCharacterInputHandling();
-    
+
     // Control button handlers
     this.#setupControlButtons();
-    
-    // Export functionality  
+
+    // Export functionality
     this.#setupExportHandling();
   }
 
   // Main workflow methods
   #handleCharacterInput()
-  #validateCharacterDefinition() 
+  #validateCharacterDefinition()
   #generateRewrittenTraits()
   #displayResults()
   #exportToFile()
   #clearAll()
-  
+
   // Event and error handling
   #subscribeToGenerationEvents()
   #handleGenerationProgress()
-  #handleGenerationComplete() 
+  #handleGenerationComplete()
   #handleGenerationError()
   #displayError()
-  
+
   // UI management
   #setupCharacterInputHandling()
   #setupControlButtons()
   #setupExportHandling()
   #updateUIState()
   #resetUI()
-  
+
   // Validation
   #validateTraitsRewriterDependencies()
 }
@@ -164,17 +166,18 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
 ### Key Implementation Areas
 
 #### 1. Character Input Handling
+
 ```javascript
 #setupCharacterInputHandling() {
   const inputElement = this._getElement('characterDefinitionInput');
   if (inputElement) {
     // Real-time validation on input
-    this._addEventListener('characterDefinitionInput', 'input', 
+    this._addEventListener('characterDefinitionInput', 'input',
       this.#debounceValidation(this.#handleCharacterInput.bind(this), 500)
     );
-    
+
     // Validation on blur
-    this._addEventListener('characterDefinitionInput', 'blur', 
+    this._addEventListener('characterDefinitionInput', 'blur',
       this.#handleCharacterInput.bind(this)
     );
   }
@@ -183,24 +186,24 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
 async #handleCharacterInput() {
   const inputElement = this._getElement('characterDefinitionInput');
   const errorElement = this._getElement('inputValidationError');
-  
+
   try {
     const inputText = inputElement.value.trim();
-    
+
     if (!inputText) {
       this.#currentCharacterDefinition = null;
       this.#updateGenerateButtonState(false);
       return;
     }
-    
+
     // Validate JSON and character definition
     const characterDefinition = await this.#validateCharacterDefinition(inputText);
     this.#currentCharacterDefinition = characterDefinition;
-    
+
     // Clear errors and enable generation
     this._hideElement('inputValidationError');
     this.#updateGenerateButtonState(true);
-    
+
   } catch (error) {
     this.#currentCharacterDefinition = null;
     this.#updateGenerateButtonState(false);
@@ -210,32 +213,33 @@ async #handleCharacterInput() {
 ```
 
 #### 2. Generation Workflow
+
 ```javascript
 async #generateRewrittenTraits() {
   if (this.#isGenerating || !this.#currentCharacterDefinition) {
     return;
   }
-  
+
   this.#isGenerating = true;
-  
+
   try {
     // Update UI to loading state
     this._showState('loading', { message: 'Rewriting character traits...' });
-    
+
     // Disable controls during generation
     this.#updateControlsState(false);
-    
+
     // Generate rewritten traits
     const result = await this.#traitsRewriterGenerator.generateRewrittenTraits(
       this.#currentCharacterDefinition,
       { includeMetadata: true }
     );
-    
+
     this.#lastGeneratedTraits = result;
-    
+
     // Display results
     await this.#displayResults(result);
-    
+
   } catch (error) {
     this._getLogger().error('TraitsRewriterController: Generation failed', error);
     this.#displayError(error);
@@ -247,6 +251,7 @@ async #generateRewrittenTraits() {
 ```
 
 #### 3. Results Display
+
 ```javascript
 async #displayResults(generatedTraits) {
   try {
@@ -255,22 +260,22 @@ async #displayResults(generatedTraits) {
       generatedTraits.rewrittenTraits,
       generatedTraits.characterName
     );
-    
+
     // Update character name display
     const nameElement = this._getElement('characterNameDisplay');
     if (nameElement) {
       nameElement.textContent = displayData.characterName;
     }
-    
+
     // Create trait sections
     this.#createTraitSections(displayData.sections);
-    
+
     // Show results state
     this._showState('results');
-    
+
     // Enable export functionality
     this._showElement('exportBtn');
-    
+
   } catch (error) {
     this._getLogger().error('TraitsRewriterController: Display failed', error);
     throw new TraitsRewriterError('Failed to display results', 'DISPLAY_FAILED', { error });
@@ -279,33 +284,34 @@ async #displayResults(generatedTraits) {
 ```
 
 #### 4. Export Functionality
+
 ```javascript
 async #exportToFile() {
   if (!this.#lastGeneratedTraits) {
     return;
   }
-  
+
   try {
     const formatSelect = this._getElement('exportFormatSelect');
     const exportFormat = formatSelect ? formatSelect.value : 'text';
-    
+
     // Format content for export
     const exportContent = this.#traitsRewriterDisplayEnhancer.formatForExport(
       this.#lastGeneratedTraits.rewrittenTraits,
       exportFormat
     );
-    
+
     // Generate filename
     const filename = this.#traitsRewriterDisplayEnhancer.generateExportFilename(
       this.#lastGeneratedTraits.characterName
     );
-    
+
     // Trigger download
     this.#downloadFile(exportContent, filename, exportFormat);
-    
+
     // Show success feedback
     this.#showExportSuccess(filename);
-    
+
   } catch (error) {
     this._getLogger().error('TraitsRewriterController: Export failed', error);
     this.#displayError(new TraitsRewriterError('Export failed', 'EXPORT_FAILED', { error }));
@@ -316,12 +322,14 @@ async #exportToFile() {
 ## Dependencies
 
 **Blocking**:
+
 - TRAREW-005 (TraitsRewriterGenerator) - Required for generation workflow
 - TRAREW-006 (TraitsRewriterResponseProcessor) - Used by Generator
 - TRAREW-007 (TraitsRewriterDisplayEnhancer) - Required for display and export
 - TRAREW-009 (TraitsRewriterError) - Required for error handling
 
 **External Dependencies**:
+
 - BaseCharacterBuilderController ✅ (exists)
 - CHARACTER_BUILDER_EVENTS ✅ (exists)
 - UI elements in traits-rewriter.html ✅ (exists)
@@ -329,6 +337,7 @@ async #exportToFile() {
 ## Testing Requirements
 
 ### Unit Tests
+
 Create `/tests/unit/characterBuilder/controllers/TraitsRewriterController.test.js`:
 
 ```javascript
@@ -342,7 +351,7 @@ describe('TraitsRewriterController', () => {
 
   describe('Character Input Handling', () => {
     it('should validate JSON character definitions');
-    it('should show validation errors for invalid input'); 
+    it('should show validation errors for invalid input');
     it('should enable generate button for valid input');
     it('should handle real-time input validation');
   });
@@ -385,6 +394,7 @@ describe('TraitsRewriterController', () => {
 ## Validation Steps
 
 ### Step 1: Controller Bootstrap
+
 ```javascript
 const controller = container.resolve(tokens.TraitsRewriterController);
 expect(controller).toBeInstanceOf(TraitsRewriterController);
@@ -392,12 +402,14 @@ expect(controller).toBeInstanceOf(BaseCharacterBuilderController);
 ```
 
 ### Step 2: UI Integration Test
+
 - Navigate to traits-rewriter.html
 - Verify all UI elements are properly cached
 - Test character input validation
 - Test generation button state management
 
-### Step 3: Complete Workflow Test  
+### Step 3: Complete Workflow Test
+
 - Input valid character definition
 - Trigger generation process
 - Verify results display
@@ -406,9 +418,11 @@ expect(controller).toBeInstanceOf(BaseCharacterBuilderController);
 ## Files Modified
 
 ### Modified Files
+
 - `/src/characterBuilder/controllers/TraitsRewriterController.js` - Complete replacement of stub
 
 ### Integration Points
+
 - TraitsRewriterGenerator service (TRAREW-005)
 - TraitsRewriterDisplayEnhancer service (TRAREW-007)
 - CHARACTER_BUILDER_EVENTS system
@@ -417,13 +431,15 @@ expect(controller).toBeInstanceOf(BaseCharacterBuilderController);
 ## UI Integration Details
 
 ### Expected HTML Structure
+
 The controller works with the existing traits-rewriter.html structure:
 
 ```html
 <!-- Character Input Panel -->
-<textarea id="character-definition-input" 
-          placeholder="Paste your character definition (JSON format)...">
-</textarea>
+<textarea
+  id="character-definition-input"
+  placeholder="Paste your character definition (JSON format)..."
+></textarea>
 <div id="input-validation-error" class="error-message"></div>
 
 <!-- Control Buttons -->
@@ -452,8 +468,9 @@ The controller works with the existing traits-rewriter.html structure:
 ```
 
 ### CSS Classes Used
+
 - `.trait-section` - Individual trait display sections
-- `.trait-section-title` - Section headers (Personality, Likes, etc.)  
+- `.trait-section-title` - Section headers (Personality, Likes, etc.)
 - `.trait-content` - Trait content display
 - `.error-message` - Error message styling
 - `.loading-indicator` - Loading state styling
@@ -461,21 +478,23 @@ The controller works with the existing traits-rewriter.html structure:
 ## Event Integration
 
 ### CHARACTER_BUILDER_EVENTS Subscription
+
 ```javascript
 #subscribeToGenerationEvents() {
   // Listen for generation progress
-  this._subscribeToEvent(CHARACTER_BUILDER_EVENTS.GENERATION_STARTED, 
+  this._subscribeToEvent(CHARACTER_BUILDER_EVENTS.GENERATION_STARTED,
     this.#handleGenerationProgress.bind(this));
-    
+
   this._subscribeToEvent(CHARACTER_BUILDER_EVENTS.GENERATION_COMPLETED,
     this.#handleGenerationComplete.bind(this));
-    
+
   this._subscribeToEvent(CHARACTER_BUILDER_EVENTS.GENERATION_FAILED,
     this.#handleGenerationError.bind(this));
 }
 ```
 
 ### Event Dispatching
+
 ```javascript
 // Dispatch controller-specific events
 this._getEventBus().dispatch({
@@ -484,8 +503,8 @@ this._getEventBus().dispatch({
     controller: 'TraitsRewriterController',
     fromState: previousState,
     toState: newState,
-    timestamp: new Date().toISOString()
-  }
+    timestamp: new Date().toISOString(),
+  },
 });
 ```
 
@@ -496,16 +515,16 @@ this._getEventBus().dispatch({
   const mimeType = format === 'json' ? 'application/json' : 'text/plain';
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
-  
+
   const downloadLink = document.createElement('a');
   downloadLink.href = url;
   downloadLink.download = `${filename}.${format === 'json' ? 'json' : 'txt'}`;
   downloadLink.style.display = 'none';
-  
+
   document.body.appendChild(downloadLink);
   downloadLink.click();
   document.body.removeChild(downloadLink);
-  
+
   URL.revokeObjectURL(url);
 }
 ```
@@ -513,12 +532,14 @@ this._getEventBus().dispatch({
 ## Error Handling Strategy
 
 ### Error Display
+
 - User-friendly error messages in error state
-- Validation errors inline with form inputs  
+- Validation errors inline with form inputs
 - Recovery suggestions and help text
 - Clear error state with retry options
 
 ### Error Recovery
+
 - Clear button to reset entire form
 - Input validation reset on content change
 - Automatic error state clearing on successful actions
@@ -536,6 +557,7 @@ this._getEventBus().dispatch({
 ## Next Steps
 
 After completion:
+
 - **TRAREW-009**: Create TraitsRewriterError class
 - **TRAREW-010**: Comprehensive controller unit testing
 - **TRAREW-014**: Integration testing for complete workflow

@@ -172,8 +172,9 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
         );
 
         // Wrap the initialize method to track calls
-        const originalInitialize = anatomyInitService.initialize.bind(anatomyInitService);
-        anatomyInitService.initialize = function() {
+        const originalInitialize =
+          anatomyInitService.initialize.bind(anatomyInitService);
+        anatomyInitService.initialize = function () {
           initializeCallCount++;
           return originalInitialize();
         };
@@ -189,11 +190,11 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
       // First manual call after automatic initialization
       anatomyInitService.initialize();
       expect(initializeCallCount).toBe(1);
-      
+
       // Second manual call - should still be safe
       anatomyInitService.initialize();
       expect(initializeCallCount).toBe(2);
-      
+
       // The service should handle multiple initialize calls without throwing
     }
 

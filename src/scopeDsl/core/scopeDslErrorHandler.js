@@ -8,10 +8,9 @@ import { ScopeDslError } from '../errors/scopeDslError.js';
 import { ErrorCategories } from '../constants/errorCategories.js';
 import { ErrorCodes } from '../constants/errorCodes.js';
 
-
 /**
  * Centralized error handler for ScopeDSL system
- * 
+ *
  * Provides environment-aware error handling, context sanitization,
  * and error buffering capabilities for consistent error processing
  * across all ScopeDSL resolvers.
@@ -24,7 +23,7 @@ class ScopeDslErrorHandler {
 
   /**
    * Creates a new ScopeDslErrorHandler instance
-   * 
+   *
    * @param {object} dependencies - Dependency object
    * @param {import('../../interfaces/ILogger.js').ILogger} dependencies.logger - Logger instance
    * @param {object} [dependencies.config] - Configuration options
@@ -37,14 +36,17 @@ class ScopeDslErrorHandler {
     });
 
     this.#logger = logger;
-    this.#isDevelopment = config.isDevelopment ?? (typeof globalThis.process !== 'undefined' && globalThis.process.env?.NODE_ENV !== 'production');
+    this.#isDevelopment =
+      config.isDevelopment ??
+      (typeof globalThis.process !== 'undefined' &&
+        globalThis.process.env?.NODE_ENV !== 'production');
     this.#errorBuffer = [];
     this.#maxBufferSize = config.maxBufferSize ?? 100;
   }
 
   /**
    * Handle an error with environment-aware processing
-   * 
+   *
    * @param {Error|string} error - The error or error message
    * @param {object} context - Resolution context for debugging
    * @param {string} resolverName - Name of the resolver that encountered the error
@@ -53,7 +55,12 @@ class ScopeDslErrorHandler {
    */
   handleError(error, context, resolverName, errorCode = null) {
     // Create standardized error information
-    const errorInfo = this.#createErrorInfo(error, context, resolverName, errorCode);
+    const errorInfo = this.#createErrorInfo(
+      error,
+      context,
+      resolverName,
+      errorCode
+    );
 
     // Buffer the error for analysis
     this.#bufferError(errorInfo);
@@ -71,7 +78,7 @@ class ScopeDslErrorHandler {
 
   /**
    * Get the current error buffer for analysis
-   * 
+   *
    * @returns {Array} Copy of the current error buffer
    */
   getErrorBuffer() {
@@ -87,7 +94,7 @@ class ScopeDslErrorHandler {
 
   /**
    * Create standardized error information object
-   * 
+   *
    * @param {Error|string} error - Original error or message
    * @param {object} context - Resolution context
    * @param {string} resolverName - Name of the resolver
@@ -114,7 +121,7 @@ class ScopeDslErrorHandler {
 
   /**
    * Add error to the circular buffer
-   * 
+   *
    * @param {object} errorInfo - Error information to buffer
    * @private
    */
@@ -129,33 +136,38 @@ class ScopeDslErrorHandler {
 
   /**
    * Log detailed error information for development environment
-   * 
+   *
    * @param {object} errorInfo - Error information to log
    * @private
    */
   #logDetailedError(errorInfo) {
-    this.#logger.error(`[ScopeDSL:${errorInfo.resolverName}] ${errorInfo.message}`, {
-      code: errorInfo.code,
-      category: errorInfo.category,
-      context: errorInfo.sanitizedContext,
-      timestamp: errorInfo.timestamp,
-      stack: errorInfo.originalError,
-    });
+    this.#logger.error(
+      `[ScopeDSL:${errorInfo.resolverName}] ${errorInfo.message}`,
+      {
+        code: errorInfo.code,
+        category: errorInfo.category,
+        context: errorInfo.sanitizedContext,
+        timestamp: errorInfo.timestamp,
+        stack: errorInfo.originalError,
+      }
+    );
   }
 
   /**
    * Log minimal error information for production environment
-   * 
+   *
    * @param {object} errorInfo - Error information to log
    * @private
    */
   #logProductionError(errorInfo) {
-    this.#logger.error(`[ScopeDSL:${errorInfo.resolverName}] ${errorInfo.code}: ${errorInfo.message}`);
+    this.#logger.error(
+      `[ScopeDSL:${errorInfo.resolverName}] ${errorInfo.code}: ${errorInfo.message}`
+    );
   }
 
   /**
    * Categorize error based on message patterns and context
-   * 
+   *
    * @param {string} message - Error message
    * @param {object} context - Resolution context
    * @returns {string} Error category
@@ -165,7 +177,11 @@ class ScopeDslErrorHandler {
     const lowerMessage = message.toLowerCase();
 
     // Context-related errors (check context first)
-    if (lowerMessage.includes('missing') || lowerMessage.includes('undefined') || lowerMessage.includes('null')) {
+    if (
+      lowerMessage.includes('missing') ||
+      lowerMessage.includes('undefined') ||
+      lowerMessage.includes('null')
+    ) {
       if (!context || Object.keys(context).length === 0) {
         return ErrorCategories.MISSING_CONTEXT;
       }
@@ -177,17 +193,29 @@ class ScopeDslErrorHandler {
     }
 
     // Depth limit errors
-    if (lowerMessage.includes('depth') || lowerMessage.includes('limit') || lowerMessage.includes('exceed')) {
+    if (
+      lowerMessage.includes('depth') ||
+      lowerMessage.includes('limit') ||
+      lowerMessage.includes('exceed')
+    ) {
       return ErrorCategories.DEPTH_EXCEEDED;
     }
 
     // Configuration errors (check before parse errors since both might contain "invalid")
-    if (lowerMessage.includes('config') || lowerMessage.includes('setting') || lowerMessage.includes('option')) {
+    if (
+      lowerMessage.includes('config') ||
+      lowerMessage.includes('setting') ||
+      lowerMessage.includes('option')
+    ) {
       return ErrorCategories.CONFIGURATION;
     }
 
     // Data validation errors (check specific data patterns before general "invalid")
-    if (lowerMessage.includes('data format') || lowerMessage.includes('malformed') || lowerMessage.includes('corrupt')) {
+    if (
+      lowerMessage.includes('data format') ||
+      lowerMessage.includes('malformed') ||
+      lowerMessage.includes('corrupt')
+    ) {
       return ErrorCategories.INVALID_DATA;
     }
 
@@ -197,7 +225,12 @@ class ScopeDslErrorHandler {
     }
 
     // Resolution failures
-    if (lowerMessage.includes('resolve') || lowerMessage.includes('find') || lowerMessage.includes('not found') || lowerMessage.includes('resolution failed')) {
+    if (
+      lowerMessage.includes('resolve') ||
+      lowerMessage.includes('find') ||
+      lowerMessage.includes('not found') ||
+      lowerMessage.includes('resolution failed')
+    ) {
       return ErrorCategories.RESOLUTION_FAILURE;
     }
 
@@ -211,7 +244,7 @@ class ScopeDslErrorHandler {
 
   /**
    * Generate error code based on category
-   * 
+   *
    * @param {string} category - Error category
    * @returns {string} Generated error code
    * @private
@@ -220,7 +253,8 @@ class ScopeDslErrorHandler {
     const codeMap = {
       [ErrorCategories.MISSING_CONTEXT]: ErrorCodes.MISSING_CONTEXT_GENERIC,
       [ErrorCategories.INVALID_DATA]: ErrorCodes.INVALID_DATA_GENERIC,
-      [ErrorCategories.RESOLUTION_FAILURE]: ErrorCodes.RESOLUTION_FAILED_GENERIC,
+      [ErrorCategories.RESOLUTION_FAILURE]:
+        ErrorCodes.RESOLUTION_FAILED_GENERIC,
       [ErrorCategories.CYCLE_DETECTED]: ErrorCodes.CYCLE_DETECTED,
       [ErrorCategories.DEPTH_EXCEEDED]: ErrorCodes.MAX_DEPTH_EXCEEDED,
       [ErrorCategories.PARSE_ERROR]: ErrorCodes.PARSE_ERROR_GENERIC,
@@ -233,7 +267,7 @@ class ScopeDslErrorHandler {
 
   /**
    * Sanitize context object to prevent circular references
-   * 
+   *
    * @param {object} context - Original context
    * @returns {object} Sanitized context safe for serialization
    * @private
@@ -244,17 +278,17 @@ class ScopeDslErrorHandler {
     }
 
     const seen = new WeakSet();
-    
+
     const sanitize = (obj, depth = 0) => {
       // Prevent infinite recursion
       if (depth > 3 || seen.has(obj)) {
         return '[Circular Reference]';
       }
-      
+
       if (obj === null || obj === undefined) {
         return obj;
       }
-      
+
       if (typeof obj !== 'object') {
         return obj;
       }
@@ -262,7 +296,7 @@ class ScopeDslErrorHandler {
       seen.add(obj);
 
       if (Array.isArray(obj)) {
-        return obj.slice(0, 5).map(item => sanitize(item, depth + 1));
+        return obj.slice(0, 5).map((item) => sanitize(item, depth + 1));
       }
 
       const result = {};
@@ -291,7 +325,7 @@ class ScopeDslErrorHandler {
 
   /**
    * Create a ScopeDslError from error information
-   * 
+   *
    * @param {object} errorInfo - Standardized error information
    * @returns {ScopeDslError} New ScopeDslError instance
    * @private

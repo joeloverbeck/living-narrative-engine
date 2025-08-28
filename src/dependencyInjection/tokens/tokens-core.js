@@ -113,6 +113,8 @@ export const coreTokens = freeze({
   IValidatedEventDispatcher: 'IValidatedEventDispatcher',
   IScopeRegistry: 'IScopeRegistry',
   IScopeEngine: 'IScopeEngine',
+  IScopeDslErrorFactory: 'IScopeDslErrorFactory',
+  IScopeDslErrorHandler: 'IScopeDslErrorHandler',
   IUnifiedScopeResolver: 'IUnifiedScopeResolver',
   IScopeCacheStrategy: 'IScopeCacheStrategy',
   IActionExecutor: 'IActionExecutor',
@@ -225,6 +227,11 @@ export const coreTokens = freeze({
   SpeechPatternsDisplayEnhancer: 'SpeechPatternsDisplayEnhancer',
   SpeechPatternsResponseProcessor: 'SpeechPatternsResponseProcessor',
   CharacterDatabase: 'CharacterDatabase',
+  // Traits Rewriter Services
+  TraitsRewriterController: 'TraitsRewriterController',
+  TraitsRewriterGenerator: 'TraitsRewriterGenerator',
+  TraitsRewriterResponseProcessor: 'TraitsRewriterResponseProcessor',
+  TraitsRewriterDisplayEnhancer: 'TraitsRewriterDisplayEnhancer',
   ICoreMotivationsCacheManager: 'ICoreMotivationsCacheManager',
   CoreMotivationsCacheManager: 'CoreMotivationsCacheManager',
   // Target Context Builder

@@ -1,6 +1,6 @@
 # TRAREW-009: Create TraitsRewriterError Class and Error Handling
 
-## Priority: 🔥 HIGH  
+## Priority: 🔥 HIGH
 
 **Phase**: 2 - Core Business Logic  
 **Story Points**: 1  
@@ -31,9 +31,11 @@ The TraitsRewriter services need a comprehensive error handling system with doma
 ## Implementation Details
 
 ### File to Create
+
 **Path**: `/src/characterBuilder/errors/TraitsRewriterError.js`
 
 ### Core Error Class
+
 ```javascript
 /**
  * @file TraitsRewriterError - Domain-specific error handling for trait rewriting
@@ -54,25 +56,25 @@ export class TraitsRewriterError extends Error {
    */
   constructor(message, code, context = {}, cause = null) {
     super(message);
-    
+
     // Set error name
     this.name = 'TraitsRewriterError';
-    
+
     // Set error code
     this.code = code;
-    
+
     // Set error context
     this.context = {
       timestamp: new Date().toISOString(),
-      ...context
+      ...context,
     };
-    
+
     // Set cause if provided
     if (cause) {
       this.cause = cause;
       this.stack += `\nCaused by: ${cause.stack}`;
     }
-    
+
     // Ensure proper stack trace
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, TraitsRewriterError);
@@ -108,7 +110,7 @@ export class TraitsRewriterError extends Error {
       severity: this.getSeverity(),
       userMessage: this.getUserMessage(),
       stack: this.stack,
-      timestamp: this.context.timestamp
+      timestamp: this.context.timestamp,
     };
   }
 
@@ -119,7 +121,11 @@ export class TraitsRewriterError extends Error {
    * @param {object} context - Additional context
    * @returns {TraitsRewriterError} TraitsRewriterError instance
    */
-  static from(error, defaultCode = TRAITS_REWRITER_ERROR_CODES.UNKNOWN_ERROR, context = {}) {
+  static from(
+    error,
+    defaultCode = TRAITS_REWRITER_ERROR_CODES.UNKNOWN_ERROR,
+    context = {}
+  ) {
     if (error instanceof TraitsRewriterError) {
       return error;
     }
@@ -131,6 +137,7 @@ export class TraitsRewriterError extends Error {
 ```
 
 ### Error Codes Definition
+
 ```javascript
 /**
  * Comprehensive error codes for trait rewriting operations
@@ -143,38 +150,39 @@ export const TRAITS_REWRITER_ERROR_CODES = {
   MISSING_CHARACTER_DATA: 'MISSING_CHARACTER_DATA',
   INVALID_JSON_FORMAT: 'INVALID_JSON_FORMAT',
   MISSING_REQUIRED_TRAITS: 'MISSING_REQUIRED_TRAITS',
-  
+
   // Generation process errors
   GENERATION_FAILED: 'GENERATION_FAILED',
   LLM_SERVICE_ERROR: 'LLM_SERVICE_ERROR',
   PROMPT_CREATION_FAILED: 'PROMPT_CREATION_FAILED',
   TOKEN_LIMIT_EXCEEDED: 'TOKEN_LIMIT_EXCEEDED',
-  
+
   // Response processing errors
   RESPONSE_PROCESSING_FAILED: 'RESPONSE_PROCESSING_FAILED',
   INVALID_RESPONSE_FORMAT: 'INVALID_RESPONSE_FORMAT',
   SCHEMA_VALIDATION_FAILED: 'SCHEMA_VALIDATION_FAILED',
   INCOMPLETE_RESPONSE: 'INCOMPLETE_RESPONSE',
-  
+
   // Display and export errors
   DISPLAY_FORMATTING_FAILED: 'DISPLAY_FORMATTING_FAILED',
   EXPORT_FAILED: 'EXPORT_FAILED',
   FILE_GENERATION_FAILED: 'FILE_GENERATION_FAILED',
   CONTENT_SANITIZATION_FAILED: 'CONTENT_SANITIZATION_FAILED',
-  
+
   // Service errors
   SERVICE_INITIALIZATION_FAILED: 'SERVICE_INITIALIZATION_FAILED',
   DEPENDENCY_RESOLUTION_FAILED: 'DEPENDENCY_RESOLUTION_FAILED',
-  
+
   // System errors
   UNKNOWN_ERROR: 'UNKNOWN_ERROR',
   NETWORK_ERROR: 'NETWORK_ERROR',
   TIMEOUT_ERROR: 'TIMEOUT_ERROR',
-  PERMISSION_DENIED: 'PERMISSION_DENIED'
+  PERMISSION_DENIED: 'PERMISSION_DENIED',
 };
 ```
 
 ### User-Friendly Error Messages
+
 ```javascript
 /**
  * User-friendly error messages mapped to error codes
@@ -182,45 +190,46 @@ export const TRAITS_REWRITER_ERROR_CODES = {
  * @readonly
  */
 const USER_ERROR_MESSAGES = {
-  [TRAITS_REWRITER_ERROR_CODES.INVALID_CHARACTER_DEFINITION]: 
+  [TRAITS_REWRITER_ERROR_CODES.INVALID_CHARACTER_DEFINITION]:
     'The character definition format is not valid. Please check your JSON format and try again.',
-    
-  [TRAITS_REWRITER_ERROR_CODES.MISSING_CHARACTER_DATA]: 
+
+  [TRAITS_REWRITER_ERROR_CODES.MISSING_CHARACTER_DATA]:
     'No character data provided. Please enter a character definition to rewrite traits.',
-    
-  [TRAITS_REWRITER_ERROR_CODES.INVALID_JSON_FORMAT]: 
+
+  [TRAITS_REWRITER_ERROR_CODES.INVALID_JSON_FORMAT]:
     'The character definition is not valid JSON. Please check for syntax errors and try again.',
-    
-  [TRAITS_REWRITER_ERROR_CODES.MISSING_REQUIRED_TRAITS]: 
+
+  [TRAITS_REWRITER_ERROR_CODES.MISSING_REQUIRED_TRAITS]:
     'No traits found to rewrite. Please ensure your character definition includes personality traits.',
-    
-  [TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED]: 
+
+  [TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED]:
     'Failed to generate rewritten traits. Please try again or contact support if the problem persists.',
-    
-  [TRAITS_REWRITER_ERROR_CODES.LLM_SERVICE_ERROR]: 
+
+  [TRAITS_REWRITER_ERROR_CODES.LLM_SERVICE_ERROR]:
     'The AI service encountered an error. Please try again in a moment.',
-    
-  [TRAITS_REWRITER_ERROR_CODES.TOKEN_LIMIT_EXCEEDED]: 
+
+  [TRAITS_REWRITER_ERROR_CODES.TOKEN_LIMIT_EXCEEDED]:
     'The character definition is too large to process. Please try with a shorter description.',
-    
-  [TRAITS_REWRITER_ERROR_CODES.SCHEMA_VALIDATION_FAILED]: 
+
+  [TRAITS_REWRITER_ERROR_CODES.SCHEMA_VALIDATION_FAILED]:
     'The generated response format is invalid. Please try generating again.',
-    
-  [TRAITS_REWRITER_ERROR_CODES.EXPORT_FAILED]: 
+
+  [TRAITS_REWRITER_ERROR_CODES.EXPORT_FAILED]:
     'Failed to export traits. Please try again or try a different export format.',
-    
-  [TRAITS_REWRITER_ERROR_CODES.NETWORK_ERROR]: 
+
+  [TRAITS_REWRITER_ERROR_CODES.NETWORK_ERROR]:
     'Network connection error. Please check your connection and try again.',
-    
-  [TRAITS_REWRITER_ERROR_CODES.TIMEOUT_ERROR]: 
+
+  [TRAITS_REWRITER_ERROR_CODES.TIMEOUT_ERROR]:
     'The request timed out. Please try again with a shorter character definition.',
-    
-  [TRAITS_REWRITER_ERROR_CODES.UNKNOWN_ERROR]: 
-    'An unexpected error occurred. Please try again or contact support if the problem persists.'
+
+  [TRAITS_REWRITER_ERROR_CODES.UNKNOWN_ERROR]:
+    'An unexpected error occurred. Please try again or contact support if the problem persists.',
 };
 ```
 
 ### Error Severity Mapping
+
 ```javascript
 /**
  * Error severity levels mapped to error codes
@@ -242,16 +251,18 @@ const ERROR_SEVERITY_MAP = {
   [TRAITS_REWRITER_ERROR_CODES.SERVICE_INITIALIZATION_FAILED]: 'critical',
   [TRAITS_REWRITER_ERROR_CODES.NETWORK_ERROR]: 'warning',
   [TRAITS_REWRITER_ERROR_CODES.TIMEOUT_ERROR]: 'warning',
-  [TRAITS_REWRITER_ERROR_CODES.UNKNOWN_ERROR]: 'error'
+  [TRAITS_REWRITER_ERROR_CODES.UNKNOWN_ERROR]: 'error',
 };
 ```
 
 ## Dependencies
 
 **Blocking**:
+
 - None (foundational component)
 
 **Required By**:
+
 - TRAREW-005 (TraitsRewriterGenerator) - Uses error class
 - TRAREW-006 (TraitsRewriterResponseProcessor) - Uses error class
 - TRAREW-007 (TraitsRewriterDisplayEnhancer) - Uses error class
@@ -260,6 +271,7 @@ const ERROR_SEVERITY_MAP = {
 ## Testing Requirements
 
 ### Unit Tests
+
 Create `/tests/unit/characterBuilder/errors/TraitsRewriterError.test.js`:
 
 ```javascript
@@ -307,6 +319,7 @@ describe('TraitsRewriterError', () => {
 ```
 
 ### Error Scenarios to Test
+
 ```javascript
 // Test cases for different error scenarios
 const testCases = [
@@ -314,26 +327,27 @@ const testCases = [
     name: 'Invalid JSON',
     code: TRAITS_REWRITER_ERROR_CODES.INVALID_JSON_FORMAT,
     context: { input: '{"invalid": json}' },
-    expectedSeverity: 'warning'
+    expectedSeverity: 'warning',
   },
   {
     name: 'Generation failure',
     code: TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED,
     context: { characterName: 'Test', traitCount: 3 },
-    expectedSeverity: 'error'
+    expectedSeverity: 'error',
   },
   {
     name: 'Service initialization',
     code: TRAITS_REWRITER_ERROR_CODES.SERVICE_INITIALIZATION_FAILED,
     context: { service: 'TraitsRewriterGenerator' },
-    expectedSeverity: 'critical'
-  }
+    expectedSeverity: 'critical',
+  },
 ];
 ```
 
 ## Validation Steps
 
 ### Step 1: Error Class Creation
+
 ```javascript
 const error = new TraitsRewriterError(
   'Test error message',
@@ -347,6 +361,7 @@ expect(error.code).toBe('GENERATION_FAILED');
 ```
 
 ### Step 2: User Message Test
+
 ```javascript
 const userMessage = error.getUserMessage();
 expect(userMessage).not.toContain('technical details');
@@ -354,6 +369,7 @@ expect(userMessage).toMatch(/user-friendly language/);
 ```
 
 ### Step 3: JSON Serialization Test
+
 ```javascript
 const errorJson = error.toJSON();
 expect(errorJson).toHaveProperty('name');
@@ -366,10 +382,13 @@ expect(errorJson).toHaveProperty('userMessage');
 ## Files Modified
 
 ### New Files
+
 - `/src/characterBuilder/errors/TraitsRewriterError.js` - Complete error class
 
 ### Integration Usage
+
 Services will use the error class like:
+
 ```javascript
 import { TraitsRewriterError, TRAITS_REWRITER_ERROR_CODES } from '../errors/TraitsRewriterError.js';
 
@@ -377,9 +396,9 @@ import { TraitsRewriterError, TRAITS_REWRITER_ERROR_CODES } from '../errors/Trai
 throw new TraitsRewriterError(
   'Character definition validation failed',
   TRAITS_REWRITER_ERROR_CODES.INVALID_CHARACTER_DEFINITION,
-  { 
+  {
     characterName: characterData.name,
-    validationErrors: validationResult.errors 
+    validationErrors: validationResult.errors
   }
 );
 
@@ -398,6 +417,7 @@ catch (unknownError) {
 ## Error Context Guidelines
 
 ### Context Data Standards
+
 ```javascript
 // Character-related context
 {
@@ -407,7 +427,7 @@ catch (unknownError) {
   traitCount?: number
 }
 
-// Service-related context  
+// Service-related context
 {
   service: string,
   method: string,
@@ -433,6 +453,7 @@ catch (unknownError) {
 ```
 
 ### Sensitive Data Handling
+
 - Never include API keys, passwords, or tokens
 - Sanitize user input before including in context
 - Avoid logging full character definitions (use summaries)
@@ -441,22 +462,24 @@ catch (unknownError) {
 ## Logging Integration
 
 ### Service Integration
+
 ```javascript
 // In service methods
 try {
   // Service operation
 } catch (error) {
   const traitsError = TraitsRewriterError.from(error, defaultCode, context);
-  
+
   // Log with appropriate level based on severity
   const severity = traitsError.getSeverity();
   this.#logger[severity]('Operation failed', traitsError.toJSON());
-  
+
   throw traitsError;
 }
 ```
 
-### Controller Integration  
+### Controller Integration
+
 ```javascript
 // In controller methods
 try {
@@ -465,7 +488,7 @@ try {
   if (error instanceof TraitsRewriterError) {
     // Display user-friendly message
     this.#displayError(error.getUserMessage());
-    
+
     // Log technical details
     this._getLogger().error('Controller operation failed', error.toJSON());
   } else {
@@ -487,6 +510,7 @@ try {
 ## Next Steps
 
 After completion:
+
 - **TRAREW-005-008**: Use error class in all service implementations
 - **TRAREW-010-017**: Include error scenarios in all test suites
 

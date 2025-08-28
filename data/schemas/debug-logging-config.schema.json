@@ -16,7 +16,15 @@
     },
     "mode": {
       "type": "string",
-      "enum": ["console", "remote", "hybrid", "test", "none", "development", "production"],
+      "enum": [
+        "console",
+        "remote",
+        "hybrid",
+        "test",
+        "none",
+        "development",
+        "production"
+      ],
       "description": "Logging mode determining output destination",
       "default": "development"
     },

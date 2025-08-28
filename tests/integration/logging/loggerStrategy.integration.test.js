@@ -24,7 +24,7 @@ describe('LoggerStrategy Integration', () => {
   beforeEach(() => {
     // Save original environment
     originalEnv = { ...process.env };
-    
+
     // Save JEST_WORKER_ID specifically since Jest sets it
     originalJestWorkerId = process.env.JEST_WORKER_ID;
 
@@ -45,7 +45,7 @@ describe('LoggerStrategy Integration', () => {
   afterEach(() => {
     // Restore original environment
     process.env = originalEnv;
-    
+
     // Restore JEST_WORKER_ID if it was originally set
     if (originalJestWorkerId !== undefined) {
       process.env.JEST_WORKER_ID = originalJestWorkerId;
@@ -61,7 +61,7 @@ describe('LoggerStrategy Integration', () => {
       delete process.env.JEST_WORKER_ID;
       delete process.env.DEBUG_LOG_MODE;
       delete process.env.NODE_ENV;
-      
+
       // Simulate the config content from debug-logging-config.json
       const configContent = {
         enabled: true,
@@ -312,7 +312,7 @@ describe('LoggerStrategy Integration', () => {
     it('should handle mixed configuration sources correctly', () => {
       // Clear JEST_WORKER_ID to properly test priority order
       delete process.env.JEST_WORKER_ID;
-      
+
       // Set different values at different priority levels
       process.env.NODE_ENV = 'production';
       process.env.DEBUG_LOG_MODE = 'test';

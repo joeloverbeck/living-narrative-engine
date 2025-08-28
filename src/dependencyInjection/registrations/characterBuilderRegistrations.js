@@ -23,6 +23,9 @@ import { TraitsDisplayEnhancer } from '../../characterBuilder/services/TraitsDis
 import { SpeechPatternsGenerator } from '../../characterBuilder/services/SpeechPatternsGenerator.js';
 import { SpeechPatternsDisplayEnhancer } from '../../characterBuilder/services/SpeechPatternsDisplayEnhancer.js';
 import { SpeechPatternsResponseProcessor } from '../../characterBuilder/services/SpeechPatternsResponseProcessor.js';
+import { TraitsRewriterGenerator } from '../../characterBuilder/services/TraitsRewriterGenerator.js';
+import { TraitsRewriterResponseProcessor } from '../../characterBuilder/services/TraitsRewriterResponseProcessor.js';
+import { TraitsRewriterDisplayEnhancer } from '../../characterBuilder/services/TraitsRewriterDisplayEnhancer.js';
 import { CharacterBuilderService } from '../../characterBuilder/services/characterBuilderService.js';
 
 /**
@@ -166,6 +169,41 @@ function registerCharacterBuilderServices(registrar, logger) {
   });
   logger.debug(
     `Character Builder Registration: Registered ${tokens.SpeechPatternsDisplayEnhancer}.`
+  );
+
+  // Traits Rewriter Services
+  registrar.singletonFactory(tokens.TraitsRewriterGenerator, (c) => {
+    return new TraitsRewriterGenerator({
+      logger: c.resolve(tokens.ILogger),
+      llmJsonService: c.resolve(tokens.LlmJsonService),
+      llmStrategyFactory: c.resolve(tokens.LLMAdapter),
+      llmConfigManager: c.resolve(tokens.ILLMConfigurationManager),
+      eventBus: c.resolve(tokens.ISafeEventDispatcher),
+      tokenEstimator: c.resolve(tokens.ITokenEstimator),
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.TraitsRewriterGenerator}.`
+  );
+
+  registrar.singletonFactory(tokens.TraitsRewriterResponseProcessor, (c) => {
+    return new TraitsRewriterResponseProcessor({
+      logger: c.resolve(tokens.ILogger),
+      llmJsonService: c.resolve(tokens.LlmJsonService),
+      schemaValidator: c.resolve(tokens.ISchemaValidator),
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.TraitsRewriterResponseProcessor}.`
+  );
+
+  registrar.singletonFactory(tokens.TraitsRewriterDisplayEnhancer, (c) => {
+    return new TraitsRewriterDisplayEnhancer({
+      logger: c.resolve(tokens.ILogger),
+    });
+  });
+  logger.debug(
+    `Character Builder Registration: Registered ${tokens.TraitsRewriterDisplayEnhancer}.`
   );
 
   registrar.singletonFactory(tokens.CharacterBuilderService, (c) => {

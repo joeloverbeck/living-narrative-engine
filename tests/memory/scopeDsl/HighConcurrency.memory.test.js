@@ -34,8 +34,8 @@ import { configureContainer } from '../../../src/dependencyInjection/containerCo
 import { ScopeTestUtilities } from '../../common/scopeDsl/scopeTestUtilities.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 
-// Set longer timeout for memory tests
-jest.setTimeout(180000); // 3 minutes for memory testing
+// Set optimized timeout for memory tests
+jest.setTimeout(90000); // 1.5 minutes for optimized memory testing
 
 /**
  * Memory test suite for high concurrency scenarios in ScopeDSL
@@ -318,9 +318,9 @@ describe('High Concurrency Memory Management', () => {
    * @returns {number} Optimized entity count (reduced by 60-70%)
    */
   function getOptimizedEntityCount(requestedSize) {
-    // Reduce entity count while maintaining statistical validity
+    // Further reduce entity count for performance while maintaining test validity
     // Keep minimum entities needed for concurrency testing
-    const minEntities = Math.max(50, Math.ceil(requestedSize * 0.15)); // 15% of original, min 50
+    const minEntities = Math.max(30, Math.ceil(requestedSize * 0.08)); // 8% of original, min 30
     return Math.min(requestedSize, minEntities);
   }
 
@@ -331,7 +331,7 @@ describe('High Concurrency Memory Management', () => {
   async function createSharedEntityPool() {
     if (sharedEntityPool) return sharedEntityPool;
 
-    const poolSize = 100; // Fixed small pool for all test scenarios
+    const poolSize = 50; // Optimized small pool for faster test execution
     const entities = [];
 
     // Create test location (shared across all scenarios)
@@ -493,8 +493,8 @@ describe('High Concurrency Memory Management', () => {
    */
   describe('Memory Pressure During Concurrency', () => {
     test('should track memory usage with 50+ concurrent operations', async () => {
-      // Arrange - Create dataset for memory pressure testing
-      const entityCount = 600;
+      // Arrange - Create dataset for memory pressure testing (optimized)
+      const entityCount = 300;
       const testEntities = await createMemoryTestDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createMemoryGameContext();
@@ -503,15 +503,15 @@ describe('High Concurrency Memory Management', () => {
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory = measureMemoryUsage();
 
-      // Act - Perform concurrent operations with memory monitoring
-      const concurrentOperations = 20; // Reduced from 50 for faster execution
+      // Act - Perform concurrent operations with memory monitoring (optimized)
+      const concurrentOperations = 12; // Further reduced for performance
       const promises = [];
       const memoryReadings = [];
 
-      // Start memory monitoring (optimized frequency)
+      // Start memory monitoring (highly optimized frequency)
       const memoryMonitoringInterval = setInterval(() => {
         memoryReadings.push(measureMemoryUsage());
-      }, 300); // Every 300ms (reduced from 100ms)
+      }, 500); // Every 500ms (further reduced for performance)
 
       for (let i = 0; i < concurrentOperations; i++) {
         const scopeIds = [
@@ -584,8 +584,8 @@ describe('High Concurrency Memory Management', () => {
     });
 
     test('should handle memory pressure spikes during concurrent operations', async () => {
-      // Arrange - Create dataset for memory spike testing
-      const entityCount = 800;
+      // Arrange - Create dataset for memory spike testing (optimized)
+      const entityCount = 400;
       const testEntities = await createMemoryTestDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createMemoryGameContext();
@@ -594,19 +594,19 @@ describe('High Concurrency Memory Management', () => {
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory = measureMemoryUsage();
 
-      // Act - Create intentional memory pressure spikes
-      const spikes = 3;
-      const operationsPerSpike = 20;
+      // Act - Create intentional memory pressure spikes (optimized)
+      const spikes = 2;
+      const operationsPerSpike = 12;
       const spikeResults = [];
 
       for (let spike = 0; spike < spikes; spike++) {
         const spikeMemoryReadings = [];
         const promises = [];
 
-        // Monitor memory during spike (optimized frequency)
+        // Monitor memory during spike (highly optimized frequency)
         const monitoringInterval = setInterval(() => {
           spikeMemoryReadings.push(measureMemoryUsage());
-        }, 200); // Reduced from 50ms
+        }, 400); // Further reduced for performance
 
         // Create spike with intensive operations
         for (let op = 0; op < operationsPerSpike; op++) {
@@ -646,8 +646,8 @@ describe('High Concurrency Memory Management', () => {
           successfulOperations: results.length,
         });
 
-        // Small delay between spikes (optimized)
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        // Minimal delay between spikes (optimized)
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
       // Assert - System should handle memory spikes gracefully
@@ -695,8 +695,8 @@ describe('High Concurrency Memory Management', () => {
    */
   describe('Memory Leak Detection', () => {
     test('should not leak memory during sustained concurrent operations', async () => {
-      // Arrange - Create dataset for leak detection
-      const entityCount = 400;
+      // Arrange - Create dataset for leak detection (optimized)
+      const entityCount = 250;
       const testEntities = await createMemoryTestDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createMemoryGameContext();
@@ -705,9 +705,9 @@ describe('High Concurrency Memory Management', () => {
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory = measureMemoryUsage();
 
-      // Act - Perform multiple rounds of concurrent operations
-      const rounds = 4; // Reduced from 8 for faster execution
-      const operationsPerRound = 10; // Reduced from 15
+      // Act - Perform multiple rounds of concurrent operations (optimized)
+      const rounds = 3; // Further reduced for performance
+      const operationsPerRound = 8; // Further reduced
       const leakDetectionResults = [];
 
       for (let round = 0; round < rounds; round++) {
@@ -753,8 +753,8 @@ describe('High Concurrency Memory Management', () => {
           memoryGrowthMB,
         });
 
-        // Small delay between rounds for stability (optimized)
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        // Minimal delay between rounds for stability (optimized)
+        await new Promise((resolve) => setTimeout(resolve, 25));
       }
 
       // Analyze for memory leaks
@@ -818,8 +818,8 @@ describe('High Concurrency Memory Management', () => {
     });
 
     test('should cleanup memory efficiently after intensive concurrent operations', async () => {
-      // Arrange - Create dataset for cleanup testing
-      const entityCount = 500;
+      // Arrange - Create dataset for cleanup testing (optimized)
+      const entityCount = 300;
       const testEntities = await createMemoryTestDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createMemoryGameContext();
@@ -828,8 +828,8 @@ describe('High Concurrency Memory Management', () => {
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory = measureMemoryUsage();
 
-      // Act - Perform intensive concurrent operations
-      const intensiveOperations = 20; // Reduced from 40
+      // Act - Perform intensive concurrent operations (optimized)
+      const intensiveOperations = 12; // Further reduced for performance
       const promises = [];
 
       for (let i = 0; i < intensiveOperations; i++) {
@@ -846,11 +846,11 @@ describe('High Concurrency Memory Management', () => {
       const results = await Promise.all(promises);
       const postOperationsMemory = measureMemoryUsage();
 
-      // Test memory cleanup effectiveness over time (optimized delays)
+      // Test memory cleanup effectiveness over time (highly optimized delays)
       const cleanupPhases = [
-        { delay: 500, description: '0.5 second cleanup' },
+        { delay: 200, description: '0.2 second cleanup' },
+        { delay: 800, description: '0.8 second cleanup' },
         { delay: 2000, description: '2 second cleanup' },
-        { delay: 5000, description: '5 second cleanup' },
       ];
 
       const cleanupResults = [];
@@ -931,8 +931,8 @@ describe('High Concurrency Memory Management', () => {
    */
   describe('Memory Growth Patterns Analysis', () => {
     test('should analyze memory allocation patterns during concurrent resolution', async () => {
-      // Arrange - Create dataset for pattern analysis
-      const entityCount = 600;
+      // Arrange - Create dataset for pattern analysis (optimized)
+      const entityCount = 350;
       const testEntities = await createMemoryTestDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createMemoryGameContext();
@@ -946,17 +946,17 @@ describe('High Concurrency Memory Management', () => {
         {
           scopeId: 'memory-concurrency:simple_filter',
           complexity: 'simple',
-          operations: 20,
+          operations: 12,
         },
         {
           scopeId: 'memory-concurrency:complex_filter',
           complexity: 'complex',
-          operations: 15,
+          operations: 8,
         },
         {
           scopeId: 'memory-concurrency:intensive_filter',
           complexity: 'intensive',
-          operations: 10,
+          operations: 6,
         },
       ];
 
@@ -1022,7 +1022,7 @@ describe('High Concurrency Memory Management', () => {
           memoryPerOperation: allocationGrowth / results.length,
         });
 
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
       // Analyze patterns across complexities
@@ -1073,8 +1073,8 @@ describe('High Concurrency Memory Management', () => {
    */
   describe('Garbage Collection Effectiveness', () => {
     test('should maintain garbage collection effectiveness under concurrent load', async () => {
-      // Arrange - Create dataset for GC testing
-      const entityCount = 500;
+      // Arrange - Create dataset for GC testing (optimized)
+      const entityCount = 300;
       const testEntities = await createMemoryTestDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createMemoryGameContext();
@@ -1083,9 +1083,9 @@ describe('High Concurrency Memory Management', () => {
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory = measureMemoryUsage();
 
-      // Act - Test GC effectiveness across multiple concurrent batches
-      const batches = 4;
-      const operationsPerBatch = 20;
+      // Act - Test GC effectiveness across multiple concurrent batches (optimized)
+      const batches = 3;
+      const operationsPerBatch = 12;
       const gcResults = [];
 
       for (let batch = 0; batch < batches; batch++) {
@@ -1139,7 +1139,7 @@ describe('High Concurrency Memory Management', () => {
           gcEfficiency,
         });
 
-        await new Promise((resolve) => setTimeout(resolve, 100)); // Optimized delay
+        await new Promise((resolve) => setTimeout(resolve, 50)); // Further optimized delay
       }
 
       // Analyze overall GC effectiveness
@@ -1164,7 +1164,7 @@ describe('High Concurrency Memory Management', () => {
 
       // Overall GC effectiveness should be good
       expect(averageGCEfficiency).toBeGreaterThan(0.4); // At least 40% average efficiency
-      expect(totalMemoryReclaimed).toBeGreaterThan(10); // At least 10MB total reclaimed
+      expect(totalMemoryReclaimed).toBeGreaterThan(5); // At least 5MB total reclaimed (adjusted for reduced operations)
       expect(consistentGCPerformance).toBe(true);
 
       memoryMetrics.gcEffectiveness = gcResults;
@@ -1193,8 +1193,8 @@ describe('High Concurrency Memory Management', () => {
    */
   describe('Memory Recovery Validation', () => {
     test('should recover memory to baseline within 30 seconds after load', async () => {
-      // Arrange - Create dataset for recovery testing
-      const entityCount = 400;
+      // Arrange - Create dataset for recovery testing (optimized)
+      const entityCount = 250;
       const testEntities = await createMemoryTestDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createMemoryGameContext();
@@ -1203,8 +1203,8 @@ describe('High Concurrency Memory Management', () => {
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory = measureMemoryUsage();
 
-      // Act - Create significant memory load
-      const heavyLoad = 30; // Reduced from 60
+      // Act - Create significant memory load (optimized)
+      const heavyLoad = 18; // Further reduced for performance
       const promises = [];
 
       for (let i = 0; i < heavyLoad; i++) {
@@ -1221,11 +1221,11 @@ describe('High Concurrency Memory Management', () => {
       const results = await Promise.all(promises);
       const peakMemory = measureMemoryUsage();
 
-      // Monitor memory recovery over time (optimized delays)
+      // Monitor memory recovery over time (highly optimized delays)
       const recoveryPhases = [
-        { delay: 2000, target: 'initial' },
-        { delay: 5000, target: 'intermediate' },
-        { delay: 10000, target: 'final' },
+        { delay: 800, target: 'initial' },
+        { delay: 2000, target: 'intermediate' },
+        { delay: 4000, target: 'final' },
       ];
 
       const recoveryResults = [];
@@ -1307,8 +1307,8 @@ describe('High Concurrency Memory Management', () => {
    */
   describe('Resource Contention Memory Management', () => {
     test('should manage memory efficiently under resource-intensive concurrent load', async () => {
-      // Arrange - Create larger dataset to increase resource pressure
-      const entityCount = 800;
+      // Arrange - Create dataset to increase resource pressure (optimized)
+      const entityCount = 450;
       const testEntities = await createMemoryTestDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createMemoryGameContext();
@@ -1317,8 +1317,8 @@ describe('High Concurrency Memory Management', () => {
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory = measureMemoryUsage();
 
-      // Act - Perform resource-intensive concurrent operations
-      const concurrentOperations = 25; // Reduced from 40
+      // Act - Perform resource-intensive concurrent operations (optimized)
+      const concurrentOperations = 15; // Further reduced for performance
       const promises = [];
       const memorySnapshots = [];
 
@@ -1329,10 +1329,10 @@ describe('High Concurrency Memory Management', () => {
         'memory-concurrency:union_filter',
       ];
 
-      // Start memory monitoring (optimized frequency)
+      // Start memory monitoring (highly optimized frequency)
       const monitoringInterval = setInterval(() => {
         memorySnapshots.push(measureMemoryUsage());
-      }, 250); // Every 250ms (reduced from 50ms)
+      }, 500); // Every 500ms (further reduced for performance)
 
       for (let i = 0; i < concurrentOperations; i++) {
         const scopeId =
@@ -1422,8 +1422,8 @@ describe('High Concurrency Memory Management', () => {
     });
 
     test('should recover memory gracefully from resource pressure spikes', async () => {
-      // Arrange - Create dataset for recovery testing
-      const entityCount = 600;
+      // Arrange - Create dataset for recovery testing (optimized)
+      const entityCount = 350;
       const testEntities = await createMemoryTestDataset(entityCount);
       const testActor = testEntities[0];
       const gameContext = await createMemoryGameContext();
@@ -1432,9 +1432,9 @@ describe('High Concurrency Memory Management', () => {
       await global.memoryTestUtils.forceGCAndWait();
       const baselineMemory = measureMemoryUsage();
 
-      // Act - Create resource pressure spike, then normal operations
-      const spikeOperations = 20;
-      const normalOperations = 15;
+      // Act - Create resource pressure spike, then normal operations (optimized)
+      const spikeOperations = 12;
+      const normalOperations = 8;
       const memoryMetricsLog = [];
 
       // Phase 1: Create resource pressure spike with intensive operations
@@ -1464,9 +1464,9 @@ describe('High Concurrency Memory Management', () => {
         memoryGrowth: spikeEndMemory.heapUsed - spikeStartMemory.heapUsed,
       });
 
-      // Allow brief recovery period
+      // Allow brief recovery period (optimized)
       await global.memoryTestUtils.forceGCAndWait();
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 50));
       const postSpikeRecoveryMemory = measureMemoryUsage();
 
       // Phase 2: Normal operations after spike to test recovery

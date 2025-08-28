@@ -17,6 +17,8 @@ import { ActionIndexingService } from '../../turns/services/actionIndexingServic
 import ScopeRegistry from '../../scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../scopeDsl/engine.js';
 import DefaultDslParser from '../../scopeDsl/parser/defaultDslParser.js';
+import errorFactory from '../../scopeDsl/core/errorFactory.js';
+import ScopeDslErrorHandler from '../../scopeDsl/core/scopeDslErrorHandler.js';
 import { ServiceSetup } from '../../utils/serviceInitializerUtils.js';
 import { EventDispatchService } from '../../utils/eventDispatchService.js';
 import { ProductionPathConfiguration } from '../../configuration/productionPathConfiguration.js';
@@ -194,10 +196,14 @@ export function registerInfrastructure(container) {
   });
   safeDebug(`Registered ${String(tokens.EventDispatchService)}.`);
 
-  // Scope DSL Engine - with scopeRegistry dependency
+  // Scope DSL Engine - with scopeRegistry and errorHandler dependencies
   container.register(
     tokens.ScopeEngine,
-    (c) => new ScopeEngine({ scopeRegistry: c.resolve(tokens.IScopeRegistry) }),
+    (c) =>
+      new ScopeEngine({
+        scopeRegistry: c.resolve(tokens.IScopeRegistry),
+        errorHandler: c.resolve(tokens.IScopeDslErrorHandler),
+      }),
     {
       lifecycle: 'singleton',
     }
@@ -217,6 +223,27 @@ export function registerInfrastructure(container) {
     }
   );
   safeDebug(`Registered ${String(tokens.IScopeEngine)} -> ScopeEngine.`);
+
+  // Scope DSL Error Factory (already an object, not a class)
+  registrar.singletonFactory(tokens.IScopeDslErrorFactory, () => errorFactory);
+  safeDebug(`Registered ${String(tokens.IScopeDslErrorFactory)}.`);
+
+  // Scope DSL Error Handler with proper dependencies
+  registrar.singletonFactory(
+    tokens.IScopeDslErrorHandler,
+    (c) =>
+      new ScopeDslErrorHandler({
+        logger: c.resolve(tokens.ILogger),
+        errorFactory: c.resolve(tokens.IScopeDslErrorFactory),
+        config: {
+          isDevelopment:
+            typeof globalThis.process !== 'undefined' &&
+            globalThis.process.env?.NODE_ENV !== 'production',
+          maxBufferSize: 100,
+        },
+      })
+  );
+  safeDebug(`Registered ${String(tokens.IScopeDslErrorHandler)}.`);
 
   safeDebug('Infrastructure Registration: complete.');
 }

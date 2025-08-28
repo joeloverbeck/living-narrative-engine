@@ -4,7 +4,11 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import { DEFAULT_CONFIG, CONFIG_PRESETS, ENV_VAR_MAPPINGS } from './defaultConfig.js';
+import {
+  DEFAULT_CONFIG,
+  CONFIG_PRESETS,
+  ENV_VAR_MAPPINGS,
+} from './defaultConfig.js';
 
 /* global process */
 
@@ -25,7 +29,7 @@ export class DebugLoggingConfigMerger {
 
   /**
    * Creates an instance of DebugLoggingConfigMerger
-   * 
+   *
    * @param {object} dependencies - Dependencies
    * @param {ILogger} dependencies.logger - Logger instance
    */
@@ -40,7 +44,7 @@ export class DebugLoggingConfigMerger {
   /**
    * Merges configuration with proper precedence
    * Priority: environment variables > overrides > preset > defaults
-   * 
+   *
    * @param {object} [overrides] - Configuration overrides
    * @param {string} [preset] - Preset name to apply
    * @param {object} [envVars] - Environment variables
@@ -48,10 +52,10 @@ export class DebugLoggingConfigMerger {
    */
   mergeConfig(overrides = {}, preset = null, envVars = process.env) {
     try {
-      this.#logger.debug('Starting configuration merge', { 
+      this.#logger.debug('Starting configuration merge', {
         hasOverrides: !!overrides && Object.keys(overrides).length > 0,
         preset,
-        envVarCount: Object.keys(envVars || {}).length 
+        envVarCount: Object.keys(envVars || {}).length,
       });
 
       // Start with default configuration
@@ -77,7 +81,7 @@ export class DebugLoggingConfigMerger {
       this.#logger.debug('Configuration merge completed', {
         mode: config.mode,
         enabled: config.enabled,
-        categoriesCount: Object.keys(config.categories || {}).length
+        categoriesCount: Object.keys(config.categories || {}).length,
       });
 
       return config;
@@ -90,7 +94,7 @@ export class DebugLoggingConfigMerger {
   /**
    * Performs deep merge of two configuration objects
    * Arrays are replaced, not merged
-   * 
+   *
    * @param {object} target - Target object (will be modified)
    * @param {object} source - Source object
    * @returns {object} Merged object
@@ -116,7 +120,10 @@ export class DebugLoggingConfigMerger {
         } else if (Array.isArray(sourceValue)) {
           // Replace arrays completely, don't merge them
           result[key] = [...sourceValue];
-        } else if (typeof sourceValue === 'object' && !Array.isArray(sourceValue)) {
+        } else if (
+          typeof sourceValue === 'object' &&
+          !Array.isArray(sourceValue)
+        ) {
           // Recursively merge objects
           result[key] = this.deepMerge(targetValue, sourceValue);
         } else {
@@ -131,7 +138,7 @@ export class DebugLoggingConfigMerger {
 
   /**
    * Creates a deep clone of an object
-   * 
+   *
    * @param {*} obj - Object to clone
    * @returns {*} Cloned object
    */
@@ -145,7 +152,7 @@ export class DebugLoggingConfigMerger {
     }
 
     if (Array.isArray(obj)) {
-      return obj.map(item => this.deepClone(item));
+      return obj.map((item) => this.deepClone(item));
     }
 
     const cloned = {};
@@ -160,7 +167,7 @@ export class DebugLoggingConfigMerger {
 
   /**
    * Applies environment variable overrides to configuration
-   * 
+   *
    * @param {object} config - Configuration object to modify
    * @param {object} envVars - Environment variables
    * @returns {object} Modified configuration
@@ -179,8 +186,10 @@ export class DebugLoggingConfigMerger {
         const value = this.parseEnvironmentValue(envVars[envVarName]);
         this.setNestedValue(result, configPath, value);
         envVarCount++;
-        
-        this.#logger.debug(`Applied env var: ${envVarName} -> ${configPath}`, { value });
+
+        this.#logger.debug(`Applied env var: ${envVarName} -> ${configPath}`, {
+          value,
+        });
       }
     }
 
@@ -188,7 +197,9 @@ export class DebugLoggingConfigMerger {
     // Format: DEBUG_LOG_CATEGORY_<CATEGORY_NAME>_ENABLED or _LEVEL
     for (const envVarName in envVars) {
       if (envVarName.startsWith('DEBUG_LOG_CATEGORY_')) {
-        const match = envVarName.match(/^DEBUG_LOG_CATEGORY_([A-Z_]+)_(ENABLED|LEVEL)$/);
+        const match = envVarName.match(
+          /^DEBUG_LOG_CATEGORY_([A-Z_]+)_(ENABLED|LEVEL)$/
+        );
         if (match) {
           const categoryName = match[1].toLowerCase();
           const property = match[2].toLowerCase();
@@ -204,17 +215,19 @@ export class DebugLoggingConfigMerger {
           result.categories[categoryName][property] = value;
           envVarCount++;
 
-          this.#logger.debug(`Applied category env var: ${envVarName}`, { 
-            category: categoryName, 
-            property, 
-            value 
+          this.#logger.debug(`Applied category env var: ${envVarName}`, {
+            category: categoryName,
+            property,
+            value,
           });
         }
       }
     }
 
     if (envVarCount > 0) {
-      this.#logger.info(`Applied ${envVarCount} environment variable overrides`);
+      this.#logger.info(
+        `Applied ${envVarCount} environment variable overrides`
+      );
     }
 
     return result;
@@ -222,7 +235,7 @@ export class DebugLoggingConfigMerger {
 
   /**
    * Parses environment variable value to appropriate type
-   * 
+   *
    * @param {string} value - String value from environment
    * @returns {*} Parsed value
    */
@@ -251,7 +264,7 @@ export class DebugLoggingConfigMerger {
 
   /**
    * Sets a nested value in an object using dot notation
-   * 
+   *
    * @param {object} obj - Object to modify
    * @param {string} path - Dot-separated path (e.g., 'remote.endpoint')
    * @param {*} value - Value to set
@@ -274,7 +287,7 @@ export class DebugLoggingConfigMerger {
 
   /**
    * Gets a nested value from an object using dot notation
-   * 
+   *
    * @param {object} obj - Object to read from
    * @param {string} path - Dot-separated path
    * @param {*} [defaultValue] - Default value if path doesn't exist
@@ -289,7 +302,11 @@ export class DebugLoggingConfigMerger {
     let current = obj;
 
     for (const key of keys) {
-      if (current === null || current === undefined || typeof current !== 'object') {
+      if (
+        current === null ||
+        current === undefined ||
+        typeof current !== 'object'
+      ) {
         return defaultValue;
       }
       current = current[key];
@@ -301,25 +318,30 @@ export class DebugLoggingConfigMerger {
   /**
    * Merges configuration with legacy support
    * Handles old logger-config.json format and migrates it
-   * 
+   *
    * @param {object} [currentConfig] - Current configuration
    * @param {object} [legacyConfig] - Legacy configuration to migrate
    * @param {string} [preset] - Preset to apply
    * @param {object} [envVars] - Environment variables
    * @returns {object} Merged configuration with migration
    */
-  mergeWithLegacySupport(currentConfig = {}, legacyConfig = null, preset = null, envVars = process.env) {
+  mergeWithLegacySupport(
+    currentConfig = {},
+    legacyConfig = null,
+    preset = null,
+    envVars = process.env
+  ) {
     try {
       // let baseConfig = DEFAULT_CONFIG; // Not currently used
 
       // Handle legacy configuration migration
       if (legacyConfig) {
         this.#logger.info('Migrating legacy configuration');
-        
+
         // Simple migration for basic logLevel
         if (legacyConfig.logLevel) {
           currentConfig.logLevel = legacyConfig.logLevel;
-          
+
           // Convert logLevel to mode if not already set
           if (!currentConfig.mode) {
             if (legacyConfig.logLevel === 'NONE') {
@@ -343,7 +365,7 @@ export class DebugLoggingConfigMerger {
   /**
    * Validates configuration precedence and reports what was applied
    * Useful for debugging configuration issues
-   * 
+   *
    * @param {object} [overrides] - Configuration overrides
    * @param {string} [preset] - Preset name
    * @param {object} [envVars] - Environment variables
