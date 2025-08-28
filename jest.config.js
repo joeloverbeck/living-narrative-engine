@@ -9,6 +9,7 @@
  */
 module.exports = {
   testEnvironment: 'jsdom',
+  setupFiles: ['./tests/setup/cleanupTestDirectories.js'],
   setupFilesAfterEnv: ['./jest.setup.js'],
 
   transformIgnorePatterns: [

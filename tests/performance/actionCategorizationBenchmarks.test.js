@@ -86,10 +86,7 @@ describe('Action Categorization Performance Benchmarks', () => {
       actionCategorizationService: service,
     });
 
-    const domElementFactory = new DomElementFactory({
-      logger: appLogger,
-      documentContext: documentContext,
-    });
+    const domElementFactory = new DomElementFactory(documentContext);
 
     uiRenderer = new ActionButtonsRenderer({
       logger: appLogger,

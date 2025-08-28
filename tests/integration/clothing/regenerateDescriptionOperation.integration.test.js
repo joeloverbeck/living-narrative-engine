@@ -4,20 +4,73 @@
  * fails due to missing handler registration.
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { createIntegrationTestBed } from '../../common/integrationTestBed.js';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import ClothingIntegrationTestBed from '../../common/clothing/clothingIntegrationTestBed.js';
+import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
+import OperationRegistry from '../../../src/logic/operationRegistry.js';
+import RegenerateDescriptionHandler from '../../../src/logic/operationHandlers/regenerateDescriptionHandler.js';
 
 describe('REGENERATE_DESCRIPTION Operation Integration', () => {
   let testBed;
   let operationInterpreter;
   let mockLogger;
+  let entityManager;
+  let mockBodyDescriptionComposer;
 
-  beforeEach(() => {
-    testBed = createIntegrationTestBed();
-    operationInterpreter = testBed.getService('OperationInterpreter');
-
-    // Capture logger to check for error messages
-    mockLogger = testBed.getService('ILogger');
+  beforeEach(async () => {
+    testBed = new ClothingIntegrationTestBed();
+    await testBed.setup();
+    
+    entityManager = testBed.getEntityManager();
+    mockLogger = testBed.logger;
+    
+    // Enhance entity manager with required methods for the handler
+    entityManager.addComponent = jest.fn(async (entityId, componentId, data) => {
+      const entity = entityManager.entities.get(entityId);
+      if (entity) {
+        if (!entity.components) entity.components = {};
+        entity.components[componentId] = data;
+      }
+    });
+    
+    entityManager.createEntity = jest.fn(async (entityId, type) => {
+      const entity = { 
+        id: entityId, 
+        type: type, 
+        components: {} 
+      };
+      entityManager.entities.set(entityId, entity);
+      return entity;
+    });
+    
+    // Create mock BodyDescriptionComposer
+    mockBodyDescriptionComposer = {
+      composeDescription: jest.fn().mockResolvedValue('Updated description')
+    };
+    
+    // Set up OperationRegistry with the REGENERATE_DESCRIPTION handler
+    const operationRegistry = new OperationRegistry({
+      logger: mockLogger
+    });
+    
+    // Register the REGENERATE_DESCRIPTION handler
+    const regenerateDescriptionHandler = new RegenerateDescriptionHandler({
+      entityManager: entityManager,
+      bodyDescriptionComposer: mockBodyDescriptionComposer,
+      logger: mockLogger,
+      safeEventDispatcher: testBed.eventDispatcher
+    });
+    
+    operationRegistry.register('REGENERATE_DESCRIPTION', 
+      (params, context) => regenerateDescriptionHandler.execute(params, context)
+    );
+    
+    // Create OperationInterpreter with the registry
+    operationInterpreter = new OperationInterpreter({
+      logger: mockLogger,
+      operationRegistry: operationRegistry
+    });
+    
     jest.clearAllMocks();
   });
 
@@ -27,7 +80,6 @@ describe('REGENERATE_DESCRIPTION Operation Integration', () => {
 
   it('should execute REGENERATE_DESCRIPTION operation without "HANDLER NOT FOUND" error', async () => {
     // Arrange - create test entity with required components
-    const entityManager = testBed.getService('IEntityManager');
     const testEntityId = 'test-actor-' + Date.now();
 
     // Create a test entity with basic components
@@ -39,15 +91,6 @@ describe('REGENERATE_DESCRIPTION Operation Integration', () => {
       text: 'Initial description',
     });
 
-    // Mock the BodyDescriptionComposer to avoid external dependencies
-    const mockBodyDescriptionComposer = testBed.createMock(
-      'BodyDescriptionComposer',
-      ['composeDescription']
-    );
-    mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
-      'Updated description'
-    );
-
     // Prepare the operation that should be executed by the rule
     const regenerateOperation = {
       type: 'REGENERATE_DESCRIPTION',
@@ -58,6 +101,9 @@ describe('REGENERATE_DESCRIPTION Operation Integration', () => {
 
     // Create minimal execution context
     const executionContext = {
+      evaluationContext: {
+        actor: { id: testEntityId },
+      },
       variables: new Map([['actor', testEntityId]]),
       event: {
         type: 'core:attempt_action',
@@ -65,7 +111,7 @@ describe('REGENERATE_DESCRIPTION Operation Integration', () => {
           targetId: 'some-clothing-item',
         },
       },
-      worldContext: testBed.getService('IWorldContext'),
+      worldContext: null,
     };
 
     // Act - execute the REGENERATE_DESCRIPTION operation
@@ -88,19 +134,18 @@ describe('REGENERATE_DESCRIPTION Operation Integration', () => {
     // This test simulates the exact flow from handle_remove_clothing.rule.json
 
     // Arrange - setup test entity and mocks
-    const entityManager = testBed.getService('IEntityManager');
     const testEntityId = 'test-actor-clothing-' + Date.now();
 
     await entityManager.createEntity(testEntityId, 'core:actor');
     await entityManager.addComponent(testEntityId, 'core:description', {
       text: 'Original description',
     });
+    
+    // Verify the entity was created
+    const createdEntity = entityManager.getEntityInstance(testEntityId);
+    expect(createdEntity).toBeDefined();
+    expect(createdEntity.id).toBe(testEntityId);
 
-    // Mock BodyDescriptionComposer
-    const mockBodyDescriptionComposer = testBed.createMock(
-      'BodyDescriptionComposer',
-      ['composeDescription']
-    );
     const newDescription = 'Actor after clothing removal';
     mockBodyDescriptionComposer.composeDescription.mockResolvedValue(
       newDescription
@@ -115,6 +160,18 @@ describe('REGENERATE_DESCRIPTION Operation Integration', () => {
     };
 
     const executionContext = {
+      evaluationContext: {
+        actor: { id: testEntityId },
+        target: { id: 'clothing-item-id' },
+        event: {
+          type: 'core:attempt_action',
+          payload: {
+            actorId: testEntityId,
+            targetId: 'clothing-item-id',
+            actionId: 'clothing:remove_clothing',
+          },
+        },
+      },
       variables: new Map([
         ['actor', testEntityId], // Context variable mapping
         ['actorName', 'Test Actor'],
@@ -128,7 +185,7 @@ describe('REGENERATE_DESCRIPTION Operation Integration', () => {
           actionId: 'clothing:remove_clothing',
         },
       },
-      worldContext: testBed.getService('IWorldContext'),
+      worldContext: null,
     };
 
     // Act - execute the operation as it would be called from the rule
@@ -138,12 +195,30 @@ describe('REGENERATE_DESCRIPTION Operation Integration', () => {
     expect(mockLogger.error).not.toHaveBeenCalledWith(
       expect.stringContaining('HANDLER NOT FOUND')
     );
+    
+    // Verify the mock was called
+    expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalled();
 
+    // Wait for the async addComponent to complete
+    await new Promise(resolve => setTimeout(resolve, 0));
+    
+    // Verify addComponent was called with the correct parameters
+    expect(entityManager.addComponent).toHaveBeenCalledWith(
+      testEntityId,
+      'core:description',
+      { text: newDescription }
+    );
+    
     // Verify the entity's description was updated (if the handler executes properly)
     const entity = entityManager.getEntityInstance(testEntityId);
     if (entity && entity.components && entity.components['core:description']) {
       // Handler should have updated the description
       expect(entity.components['core:description'].text).toBe(newDescription);
     }
+    
+    // Also verify the mock was called
+    expect(mockBodyDescriptionComposer.composeDescription).toHaveBeenCalledWith(
+      expect.objectContaining({ id: testEntityId })
+    );
   });
 });

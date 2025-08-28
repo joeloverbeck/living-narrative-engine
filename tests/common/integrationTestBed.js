@@ -1093,6 +1093,46 @@ export class IntegrationTestBed extends BaseTestBed {
             additionalProperties: true,
           },
         },
+        {
+          id: 'core:character_builder_performance_warning',
+          description:
+            'Fired when a character builder operation exceeds performance thresholds.',
+          payloadSchema: {
+            type: 'object',
+            properties: {
+              controller: {
+                type: 'string',
+                description:
+                  'Required. The name of the controller class where the performance issue occurred.',
+              },
+              measurement: {
+                type: 'string',
+                description:
+                  'Required. The name of the performance measurement that exceeded the threshold.',
+              },
+              duration: {
+                type: 'number',
+                minimum: 0,
+                description:
+                  'Required. The actual duration of the operation in milliseconds.',
+              },
+              threshold: {
+                type: 'number',
+                minimum: 0,
+                description:
+                  'Required. The performance threshold that was exceeded in milliseconds.',
+              },
+              timestamp: {
+                type: 'string',
+                format: 'date-time',
+                description:
+                  'Optional. ISO 8601 timestamp of when the performance warning occurred.',
+              },
+            },
+            required: ['controller', 'measurement', 'duration', 'threshold'],
+            additionalProperties: false,
+          },
+        },
       ];
 
       // Register event definitions with the data registry
