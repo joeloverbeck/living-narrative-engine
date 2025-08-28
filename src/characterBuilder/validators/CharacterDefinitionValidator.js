@@ -707,6 +707,7 @@ export class CharacterDefinitionValidator {
   /**
    * Validate character name consistency across components
    *
+   * @param data
    * @private
    */
   #validateCharacterNameConsistency(data) {
@@ -736,6 +737,7 @@ export class CharacterDefinitionValidator {
   /**
    * Validate personality trait alignment
    *
+   * @param data
    * @private
    */
   #validatePersonalityAlignment(data) {
@@ -782,6 +784,7 @@ export class CharacterDefinitionValidator {
   /**
    * Validate component completeness
    *
+   * @param data
    * @private
    */
   #validateComponentCompleteness(data) {
@@ -832,6 +835,7 @@ export class CharacterDefinitionValidator {
   /**
    * Validate content depth
    *
+   * @param data
    * @private
    */
   #validateContentDepth(data) {
@@ -872,6 +876,7 @@ export class CharacterDefinitionValidator {
   /**
    * Assess character completeness
    *
+   * @param data
    * @private
    */
   #assessCharacterCompleteness(data) {
@@ -960,6 +965,7 @@ export class CharacterDefinitionValidator {
   /**
    * Assess personality depth
    *
+   * @param data
    * @private
    */
   #assessPersonalityDepth(data) {
@@ -995,6 +1001,7 @@ export class CharacterDefinitionValidator {
   /**
    * Assess background richness
    *
+   * @param data
    * @private
    */
   #assessBackgroundRichness(data) {
@@ -1051,6 +1058,7 @@ export class CharacterDefinitionValidator {
   /**
    * Assess narrative potential
    *
+   * @param data
    * @private
    */
   #assessNarrativePotential(data) {
@@ -1106,6 +1114,8 @@ export class CharacterDefinitionValidator {
   /**
    * Get quality level from score
    *
+   * @param score
+   * @param thresholds
    * @private
    */
   #getQualityLevel(score, thresholds) {
@@ -1118,6 +1128,7 @@ export class CharacterDefinitionValidator {
   /**
    * Get overall quality level
    *
+   * @param score
    * @private
    */
   #getOverallQualityLevel(score) {
@@ -1131,6 +1142,8 @@ export class CharacterDefinitionValidator {
   /**
    * Generate cache key for validation results
    *
+   * @param input
+   * @param options
    * @private
    */
   #generateCacheKey(input, options) {
@@ -1142,6 +1155,7 @@ export class CharacterDefinitionValidator {
   /**
    * Simple hash function for objects
    *
+   * @param obj
    * @private
    */
   #hashObject(obj) {
@@ -1158,6 +1172,7 @@ export class CharacterDefinitionValidator {
   /**
    * Get cached validation result
    *
+   * @param cacheKey
    * @private
    */
   #getCachedValidation(cacheKey) {
@@ -1176,6 +1191,8 @@ export class CharacterDefinitionValidator {
   /**
    * Set cached validation result
    *
+   * @param cacheKey
+   * @param result
    * @private
    */
   #setCachedValidation(cacheKey, result) {

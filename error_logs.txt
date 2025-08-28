@@ -1,98 +1,84 @@
-Raw LLM response received for speech patterns {responseLength: 7452, characterName: 'Garazi Ibarrola', rawResponsePreview: '{"characterName": "Garazi Ibarrola", "speechPatter…ibe non-physical situations, reveal...[truncated]', fullResponse: '{"characterName": "Garazi Ibarrola", "speechPatter…oments"}], "generatedAt": "2024-12-19T10:30:00Z"}'}
-speech-patterns-generator.js:19267 Schema 'schema://living-narrative-engine/speech-patterns-response.schema.json' not loaded, validation will be limited
-warn @ speech-patterns-generator.js:19267
-warn @ speech-patterns-generator.js:21184
-validateResponse @ speech-patterns-generator.js:139445
-validateAndSanitizeResponse @ speech-patterns-generator.js:139484
-validateResponse_fn @ speech-patterns-generator.js:139886
-processResponse @ speech-patterns-generator.js:139693
-await in processResponse
-parseResponse_fn6 @ speech-patterns-generator.js:140618
-executeGeneration_fn @ speech-patterns-generator.js:140219
-await in executeGeneration_fn
-generateSpeechPatterns @ speech-patterns-generator.js:140112
-generateSpeechPatterns_fn @ speech-patterns-generator.js:148011
-await in generateSpeechPatterns_fn
-(anonymous) @ speech-patterns-generator.js:147512Understand this warning
-speech-patterns-generator.js:19256 SpeechPatternsGenerator: Successfully generated speech patterns {patternCount: 20, processingTime: 48633, characterName: 'Garazi Ibarrola'}
-speech-patterns-generator.js:19267 GameDataRepository: getEventDefinition called with invalid ID: [object Object]
-warn @ speech-patterns-generator.js:19267
-warn @ speech-patterns-generator.js:21184
-getDef_fn @ speech-patterns-generator.js:31446
-getEventDefinition @ speech-patterns-generator.js:31327
-validatePayload_fn @ speech-patterns-generator.js:31619
-dispatch @ speech-patterns-generator.js:31558
-__privateMethod.call.payload.payload @ speech-patterns-generator.js:31827
-executeSafely_fn @ speech-patterns-generator.js:31907
-dispatch @ speech-patterns-generator.js:31827
-_performanceMeasure @ speech-patterns-generator.js:145614
-generateSpeechPatterns_fn @ speech-patterns-generator.js:148019
-await in generateSpeechPatterns_fn
-(anonymous) @ speech-patterns-generator.js:147512Understand this warning
-speech-patterns-generator.js:19267 VED: EventDefinition not found for '[object Object]'. Cannot validate payload. Proceeding with dispatch.
-warn @ speech-patterns-generator.js:19267
-warn @ speech-patterns-generator.js:21184
-validatePayload_fn @ speech-patterns-generator.js:31626
-dispatch @ speech-patterns-generator.js:31558
-__privateMethod.call.payload.payload @ speech-patterns-generator.js:31827
-executeSafely_fn @ speech-patterns-generator.js:31907
-dispatch @ speech-patterns-generator.js:31827
-_performanceMeasure @ speech-patterns-generator.js:145614
-generateSpeechPatterns_fn @ speech-patterns-generator.js:148019
-await in generateSpeechPatterns_fn
-(anonymous) @ speech-patterns-generator.js:147512Understand this warning
-speech-patterns-generator.js:19278 EventBus: Invalid event name provided. {type: 'CHARACTER_BUILDER_PERFORMANCE_WARNING', payload: {…}}
-error @ speech-patterns-generator.js:19278
-error @ speech-patterns-generator.js:21193
-validateEventName_fn @ speech-patterns-generator.js:30416
-dispatch @ speech-patterns-generator.js:30361
-emitEvent_fn @ speech-patterns-generator.js:31716
-dispatch @ speech-patterns-generator.js:31560
-__privateMethod.call.payload.payload @ speech-patterns-generator.js:31827
-executeSafely_fn @ speech-patterns-generator.js:31907
-dispatch @ speech-patterns-generator.js:31827
-_performanceMeasure @ speech-patterns-generator.js:145614
-generateSpeechPatterns_fn @ speech-patterns-generator.js:148019
-await in generateSpeechPatterns_fn
-(anonymous) @ speech-patterns-generator.js:147512Understand this error
-speech-patterns-generator.js:19267 GameDataRepository: getEventDefinition called with invalid ID: [object Object]
-warn @ speech-patterns-generator.js:19267
-warn @ speech-patterns-generator.js:21184
-getDef_fn @ speech-patterns-generator.js:31446
-getEventDefinition @ speech-patterns-generator.js:31327
-validatePayload_fn @ speech-patterns-generator.js:31619
-dispatch @ speech-patterns-generator.js:31558
-__privateMethod.call.payload.payload @ speech-patterns-generator.js:31827
-executeSafely_fn @ speech-patterns-generator.js:31907
-dispatch @ speech-patterns-generator.js:31827
-_performanceMeasure @ speech-patterns-generator.js:145614
-generateSpeechPatterns_fn @ speech-patterns-generator.js:148042
-await in generateSpeechPatterns_fn
-(anonymous) @ speech-patterns-generator.js:147512Understand this warning
-speech-patterns-generator.js:19267 VED: EventDefinition not found for '[object Object]'. Cannot validate payload. Proceeding with dispatch.
-warn @ speech-patterns-generator.js:19267
-warn @ speech-patterns-generator.js:21184
-validatePayload_fn @ speech-patterns-generator.js:31626
-dispatch @ speech-patterns-generator.js:31558
-__privateMethod.call.payload.payload @ speech-patterns-generator.js:31827
-executeSafely_fn @ speech-patterns-generator.js:31907
-dispatch @ speech-patterns-generator.js:31827
-_performanceMeasure @ speech-patterns-generator.js:145614
-generateSpeechPatterns_fn @ speech-patterns-generator.js:148042
-await in generateSpeechPatterns_fn
-(anonymous) @ speech-patterns-generator.js:147512Understand this warning
-speech-patterns-generator.js:19278 EventBus: Invalid event name provided. {type: 'CHARACTER_BUILDER_PERFORMANCE_WARNING', payload: {…}}
-error @ speech-patterns-generator.js:19278
-error @ speech-patterns-generator.js:21193
-validateEventName_fn @ speech-patterns-generator.js:30416
-dispatch @ speech-patterns-generator.js:30361
-emitEvent_fn @ speech-patterns-generator.js:31716
-dispatch @ speech-patterns-generator.js:31560
-__privateMethod.call.payload.payload @ speech-patterns-generator.js:31827
-executeSafely_fn @ speech-patterns-generator.js:31907
-dispatch @ speech-patterns-generator.js:31827
-_performanceMeasure @ speech-patterns-generator.js:145614
-generateSpeechPatterns_fn @ speech-patterns-generator.js:148042
-await in generateSpeechPatterns_fn
-(anonymous) @ speech-patterns-generator.js:147512Understand this error
-speech-patterns-generator.js:19256 Speech patterns generation completed {totalDuration: '48967.90ms', patternCount: 20}
+ FAIL   performance  tests/performance/build.performance.test.js (22.67 s)
+  ● Build System Performance › Build Speed Benchmarks › should complete development build within reasonable time
+
+    Command failed: npm run build:dev
+
+      32 |         const startTime = Date.now();
+      33 |
+    > 34 |         execSync('npm run build:dev', { stdio: 'ignore' });
+         |                 ^
+      35 |
+      36 |         const buildTime = Date.now() - startTime;
+      37 |
+
+      at Object.<anonymous> (tests/performance/build.performance.test.js:34:17)
+
+  ● Build System Performance › Build Speed Benchmarks › should complete production build within reasonable time
+
+    Command failed: npm run build:prod
+
+      47 |         const startTime = Date.now();
+      48 |
+    > 49 |         execSync('npm run build:prod', { stdio: 'ignore' });
+         |                 ^
+      50 |
+      51 |         const buildTime = Date.now() - startTime;
+      52 |
+
+      at Object.<anonymous> (tests/performance/build.performance.test.js:49:17)
+
+  ● Build System Performance › Build Speed Benchmarks › should show performance improvement compared to legacy build
+
+    Command failed: npm run build:dev
+
+      62 |         // Measure new build time
+      63 |         const startTime = Date.now();
+    > 64 |         execSync('npm run build:dev', { stdio: 'ignore' });
+         |                 ^
+      65 |         const newBuildTime = Date.now() - startTime;
+      66 |
+      67 |         // According to the implementation, original build was ~10 seconds
+
+      at Object.<anonymous> (tests/performance/build.performance.test.js:64:17)
+
+  ● Build System Performance › Parallel vs Sequential Performance › should demonstrate parallel build performance advantage
+
+    Command failed: npm run build:dev
+
+      83 |         // Test parallel build (default)
+      84 |         const parallelStart = Date.now();
+    > 85 |         execSync('npm run build:dev', { stdio: 'ignore' });
+         |                 ^
+      86 |         const parallelTime = Date.now() - parallelStart;
+      87 |
+      88 |         // Clean for sequential test using fs-extra for proper async handling
+
+      at Object.<anonymous> (tests/performance/build.performance.test.js:85:17)
+
+  ● Build System Performance › Build Efficiency Metrics › should maintain efficient bundle sizes
+
+    Command failed: npm run build:prod
+
+      110 |       'should maintain efficient bundle sizes',
+      111 |       async () => {
+    > 112 |         execSync('npm run build:prod', { stdio: 'ignore' });
+          |                 ^
+      113 |
+      114 |         const expectedBundles = [
+      115 |           'bundle.js',
+
+      at Object.<anonymous> (tests/performance/build.performance.test.js:112:17)
+
+  ● Build System Performance › Resource Usage Efficiency › should complete build without excessive memory usage
+
+    Command failed: npm run build:dev
+
+      147 |         const initialMemory = process.memoryUsage();
+      148 |
+    > 149 |         execSync('npm run build:dev', { stdio: 'ignore' });
+          |                 ^
+      150 |
+      151 |         const finalMemory = process.memoryUsage();
+      152 |         const memoryIncrease = finalMemory.heapUsed - initialMemory.heapUsed;
+
+      at Object.<anonymous> (tests/performance/build.performance.test.js:149:17)

@@ -85,6 +85,7 @@ describe('Index.html - Main Menu', () => {
         'Core Motivations Generator',
         'Traits Generator',
         'Speech Patterns Generator',
+        'Traits Rewriter',
       ];
 
       const actualButtons = Array.from(buttons).map((btn) => {
@@ -115,6 +116,7 @@ describe('Index.html - Main Menu', () => {
           id: 'speech-patterns-generator-button',
           text: 'Speech Patterns Generator',
         },
+        { id: 'traits-rewriter-button', text: 'Traits Rewriter' },
       ];
 
       buttonConfigs.forEach(({ id, text }) => {
@@ -158,6 +160,7 @@ describe('Index.html - Main Menu', () => {
           id: 'speech-patterns-generator-button',
           href: 'speech-patterns-generator.html',
         },
+        { id: 'traits-rewriter-button', href: 'traits-rewriter.html' },
       ];
 
       buttonConfigs.forEach(({ id, href }) => {

@@ -1,4 +1,5 @@
 {
+  "$schema": "schema://living-narrative-engine/debug-logging-config.schema.json",
   "enabled": true,
   "mode": "development",
   "fallbackToConsole": true,
@@ -8,7 +9,13 @@
     "batchSize": 100,
     "flushInterval": 1000,
     "retryAttempts": 3,
-    "retryDelay": 1000
+    "retryBaseDelay": 1000,
+    "retryMaxDelay": 30000,
+    "retryDelay": 1000,
+    "circuitBreakerThreshold": 5,
+    "circuitBreakerTimeout": 60000,
+    "requestTimeout": 5000,
+    "compression": false
   },
   "categories": {
     "engine": {
@@ -30,10 +37,51 @@
     "llm": {
       "enabled": true,
       "level": "info"
+    },
+    "ecs": {
+      "enabled": true,
+      "level": "debug"
+    },
+    "ai": {
+      "enabled": true,
+      "level": "debug"
+    },
+    "persistence": {
+      "enabled": false,
+      "level": "warn"
+    },
+    "anatomy": {
+      "enabled": true,
+      "level": "info"
+    },
+    "turns": {
+      "enabled": true,
+      "level": "info"
+    },
+    "events": {
+      "enabled": false,
+      "level": "warn"
+    },
+    "validation": {
+      "enabled": false,
+      "level": "error"
+    },
+    "general": {
+      "enabled": true,
+      "level": "debug"
     }
   },
+  "console": {
+    "enabled": true,
+    "useColors": true,
+    "showTimestamp": false,
+    "showCategory": true,
+    "groupSimilar": true
+  },
   "performance": {
-    "slowLogThreshold": 1000,
-    "enableMetrics": true
+    "enableMetrics": true,
+    "metricsInterval": 60000,
+    "memoryWarningThreshold": 100,
+    "slowLogThreshold": 1000
   }
 }

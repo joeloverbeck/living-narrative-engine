@@ -29,6 +29,7 @@ export class TestConfigurationFactory {
 
   /**
    * Registers process exit handlers to clean up temp directories
+   *
    * @private
    */
   static #registerCleanupHandlers() {

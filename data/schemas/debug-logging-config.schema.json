@@ -1,0 +1,205 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/debug-logging-config.schema.json",
+  "title": "Debug Logging Configuration Schema",
+  "description": "Complete schema for debug logging system configuration including validation, defaults, and support for both client and server configurations",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference URI"
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Enable or disable the entire logging system",
+      "default": true
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["console", "remote", "hybrid", "test", "none", "development", "production"],
+      "description": "Logging mode determining output destination",
+      "default": "development"
+    },
+    "fallbackToConsole": {
+      "type": "boolean",
+      "description": "Whether to fallback to console logging when remote logging fails",
+      "default": true
+    },
+    "logLevel": {
+      "type": "string",
+      "enum": ["DEBUG", "INFO", "WARN", "ERROR", "NONE"],
+      "description": "Global log level (legacy support)",
+      "default": "INFO"
+    },
+    "remote": {
+      "type": "object",
+      "description": "Remote logging configuration",
+      "properties": {
+        "endpoint": {
+          "type": "string",
+          "format": "uri",
+          "description": "Remote logging endpoint URL",
+          "default": "http://localhost:3001/api/debug-log"
+        },
+        "batchSize": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Number of logs to batch before sending",
+          "default": 100
+        },
+        "flushInterval": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 10000,
+          "description": "Flush interval in milliseconds",
+          "default": 1000
+        },
+        "retryAttempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Number of retry attempts for failed requests",
+          "default": 3
+        },
+        "retryBaseDelay": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 60000,
+          "description": "Base delay for retry attempts in milliseconds",
+          "default": 1000
+        },
+        "retryMaxDelay": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 300000,
+          "description": "Maximum delay for retry attempts in milliseconds",
+          "default": 30000
+        },
+        "retryDelay": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 60000,
+          "description": "Retry delay in milliseconds (legacy support)",
+          "default": 1000
+        },
+        "circuitBreakerThreshold": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Number of failures before circuit breaker activates",
+          "default": 5
+        },
+        "circuitBreakerTimeout": {
+          "type": "integer",
+          "minimum": 10000,
+          "maximum": 600000,
+          "description": "Circuit breaker timeout in milliseconds",
+          "default": 60000
+        },
+        "requestTimeout": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 30000,
+          "description": "HTTP request timeout in milliseconds",
+          "default": 5000
+        },
+        "compression": {
+          "type": "boolean",
+          "description": "Enable compression for remote requests",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "categories": {
+      "type": "object",
+      "description": "Per-category logging configuration",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Enable logging for this category",
+            "default": true
+          },
+          "level": {
+            "type": "string",
+            "enum": ["debug", "info", "warn", "error", "none"],
+            "description": "Log level for this category",
+            "default": "info"
+          }
+        },
+        "required": ["enabled", "level"],
+        "additionalProperties": false
+      }
+    },
+    "console": {
+      "type": "object",
+      "description": "Console logging configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable console output",
+          "default": true
+        },
+        "useColors": {
+          "type": "boolean",
+          "description": "Use colored output in console",
+          "default": true
+        },
+        "showTimestamp": {
+          "type": "boolean",
+          "description": "Show timestamps in console output",
+          "default": false
+        },
+        "showCategory": {
+          "type": "boolean",
+          "description": "Show log categories in console output",
+          "default": true
+        },
+        "groupSimilar": {
+          "type": "boolean",
+          "description": "Group similar log messages",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "performance": {
+      "type": "object",
+      "description": "Performance monitoring configuration",
+      "properties": {
+        "enableMetrics": {
+          "type": "boolean",
+          "description": "Enable performance metrics collection",
+          "default": true
+        },
+        "metricsInterval": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 300000,
+          "description": "Metrics collection interval in milliseconds",
+          "default": 60000
+        },
+        "memoryWarningThreshold": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 1000,
+          "description": "Memory warning threshold in MB",
+          "default": 100
+        },
+        "slowLogThreshold": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 10000,
+          "description": "Slow operation threshold in milliseconds",
+          "default": 1000
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["enabled", "mode"],
+  "additionalProperties": false
+}
