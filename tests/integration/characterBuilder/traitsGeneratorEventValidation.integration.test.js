@@ -117,9 +117,9 @@ describe('TraitsGenerator - Event Validation Integration', () => {
         // Expected to fail due to mocked parsing error
       }
 
-      // Assert - Verify TRAITS_GENERATION_STARTED event was dispatched with correct structure
+      // Assert - Verify core:TRAITS_GENERATION_STARTED event was dispatched with correct structure
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'TRAITS_GENERATION_STARTED',
+        'core:TRAITS_GENERATION_STARTED',
         expect.objectContaining({
           conceptId: 'test-concept-id',
           directionId: 'test-direction-id',
@@ -136,7 +136,7 @@ describe('TraitsGenerator - Event Validation Integration', () => {
 
       // Should also dispatch failure event
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'TRAITS_GENERATION_FAILED',
+        'core:TRAITS_GENERATION_FAILED',
         expect.objectContaining({
           conceptId: 'test-concept-id',
           directionId: 'test-direction-id',
@@ -153,10 +153,11 @@ describe('TraitsGenerator - Event Validation Integration', () => {
     it('should have created event definitions that match the dispatched payload structures', () => {
       // This test documents that we've created the correct event definition files
       // The existence of these files should resolve the event validation warnings
+      // Note: Production code uses 'core:' namespace prefix when dispatching
 
       const expectedEventDefinitions = [
-        'TRAITS_GENERATION_STARTED',
-        'TRAITS_GENERATION_COMPLETED',
+        'core:TRAITS_GENERATION_STARTED',
+        'core:TRAITS_GENERATION_COMPLETED',
         'core:traits_generated',
       ];
 
@@ -169,7 +170,7 @@ describe('TraitsGenerator - Event Validation Integration', () => {
         expect(eventName.length).toBeGreaterThan(0);
       });
 
-      // Verify expected payload structure for TRAITS_GENERATION_STARTED
+      // Verify expected payload structure for core:TRAITS_GENERATION_STARTED
       const startedPayloadStructure = {
         conceptId: 'string',
         directionId: 'string',
@@ -182,7 +183,7 @@ describe('TraitsGenerator - Event Validation Integration', () => {
       };
       expect(startedPayloadStructure).toBeDefined();
 
-      // Verify expected payload structure for TRAITS_GENERATION_COMPLETED
+      // Verify expected payload structure for core:TRAITS_GENERATION_COMPLETED
       const completedPayloadStructure = {
         conceptId: 'string',
         directionId: 'string',

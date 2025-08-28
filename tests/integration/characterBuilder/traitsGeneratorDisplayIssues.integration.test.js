@@ -231,9 +231,9 @@ describe('TraitsGenerator Display Issues Integration Test', () => {
       // This should complete without event validation errors
       const result = await traitsGenerator.generateTraits(testParams);
 
-      // Verify events were dispatched with correct format
+      // Verify events were dispatched with correct format (with core: namespace)
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'TRAITS_GENERATION_STARTED',
+        'core:TRAITS_GENERATION_STARTED',
         expect.objectContaining({
           conceptId: testParams.concept.id,
           directionId: testParams.direction.id,
@@ -242,7 +242,7 @@ describe('TraitsGenerator Display Issues Integration Test', () => {
       );
 
       expect(mockEventBus.dispatch).toHaveBeenCalledWith(
-        'TRAITS_GENERATION_COMPLETED',
+        'core:TRAITS_GENERATION_COMPLETED',
         expect.objectContaining({
           conceptId: testParams.concept.id,
           directionId: testParams.direction.id,
@@ -304,7 +304,7 @@ describe('TraitsGenerator Display Issues Integration Test', () => {
 
       // Verify failure event was dispatched (checking that it exists rather than exact error message)
       const failureEventCall = mockEventBus.dispatch.mock.calls.find(
-        (call) => call[0] === 'TRAITS_GENERATION_FAILED'
+        (call) => call[0] === 'core:TRAITS_GENERATION_FAILED'
       );
 
       expect(failureEventCall).toBeTruthy();

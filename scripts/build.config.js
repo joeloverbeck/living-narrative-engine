@@ -56,6 +56,11 @@ module.exports = {
       entry: 'src/speech-patterns-generator-main.js',
       output: 'speech-patterns-generator.js',
     },
+    {
+      name: 'traits-rewriter',
+      entry: 'src/traits-rewriter-main.js',
+      output: 'traits-rewriter.js',
+    },
   ],
 
   // HTML files (explicit list to prevent missing files)
@@ -70,6 +75,7 @@ module.exports = {
     'core-motivations-generator.html',
     'traits-generator.html',
     'speech-patterns-generator.html',
+    'traits-rewriter.html',
   ],
 
   // Static asset directories

@@ -143,6 +143,13 @@
               <span class="button-icon" aria-hidden="true">💬</span>
               <span class="button-text">Speech Patterns Generator</span>
             </button>
+            <button
+              id="traits-rewriter-button"
+              class="menu-button nav-button nav-button--character nav-button--purple"
+            >
+              <span class="button-icon" aria-hidden="true">✍️</span>
+              <span class="button-text">Traits Rewriter</span>
+            </button>
           </div>
         </section>
       </main>
@@ -193,6 +200,11 @@
         .getElementById('speech-patterns-generator-button')
         .addEventListener('click', () => {
           window.location.href = 'speech-patterns-generator.html';
+        });
+      document
+        .getElementById('traits-rewriter-button')
+        .addEventListener('click', () => {
+          window.location.href = 'traits-rewriter.html';
         });
     </script>
   </body>

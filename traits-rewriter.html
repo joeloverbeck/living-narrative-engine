@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Rewrite character traits from third-person to first-person perspective"
+    />
+    <title>Traits Rewriter - Living Narrative Engine</title>
+
+    <!-- Reuse existing character builder styles -->
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/traits-rewriter.css" />
+
+    <!-- Standard favicon links (matching other pages) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- JavaScript bundle (built from src/traits-rewriter-main.js) -->
+    <script type="module" src="traits-rewriter.js"></script>
+  </head>
+  <body>
+    <!-- Skip link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <div id="app" class="cb-page-container">
+      <!-- Header Section -->
+      <header class="cb-page-header">
+        <div class="header-content">
+          <h1>Traits Rewriter</h1>
+          <p class="header-subtitle">
+            Transform character traits from third-person description to 
+            first-person narrative voice
+          </p>
+        </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main id="main-content" class="cb-page-main traits-rewriter-main">
+        <!-- Left Panel: Character Input -->
+        <aside class="cb-input-panel character-input-panel">
+          <h2 class="cb-panel-title">Character Definition</h2>
+
+          <!-- Content Guidelines Notice -->
+          <div class="content-guidelines-notice">
+            <div class="notice-header">
+              <span class="notice-icon">⚠️</span>
+              <strong>Content Guidelines: NC-21 (Adults Only)</strong>
+            </div>
+            <p class="notice-text">
+              This application is for mature users. All topics, themes, and
+              content are permissible if they serve authentic character
+              portrayal, however dark, explicit, or controversial.
+            </p>
+          </div>
+
+          <!-- Character Input Section -->
+          <div class="character-input-section">
+            <label for="character-definition" class="input-label">
+              Character Definition (JSON)
+            </label>
+            <p class="input-description">
+              Paste your complete character definition in JSON format. The
+              rewriter will transform traits to first-person perspective using
+              the character's unique voice from their speech patterns.
+            </p>
+
+            <textarea
+              id="character-definition"
+              class="character-definition-input"
+              placeholder="Paste your character JSON definition here..."
+              rows="20"
+              aria-label="Character definition in JSON format"
+              aria-describedby="character-input-help"
+            ></textarea>
+
+            <div id="character-input-help" class="input-help">
+              <p>
+                Expected format: Complete character entity with components like
+                core:name, core:personality, core:profile, and speech patterns.
+              </p>
+              <p class="input-help-traits">
+                Traits to be rewritten: core:likes, core:dislikes, core:fears,
+                core:goals, core:notes, core:personality, core:profile, 
+                core:secrets, core:strengths, core:weaknesses
+              </p>
+            </div>
+
+            <!-- Enhanced Validation Display -->
+            <div
+              id="character-input-error"
+              class="cb-error-message enhanced-validation-container"
+              style="display: none"
+              role="alert"
+              aria-live="polite"
+              aria-atomic="false"
+            >
+              <!-- Enhanced validation results will be inserted here -->
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button
+              id="rewrite-traits-button"
+              class="cb-button cb-button--primary"
+              aria-label="Rewrite character traits to first-person"
+            >
+              <span class="button-icon">✏️</span>
+              <span class="button-text">Rewrite Traits</span>
+            </button>
+
+            <button
+              id="clear-input-button"
+              class="cb-button cb-button--secondary"
+              aria-label="Clear character definition input"
+            >
+              <span class="button-icon">🗑️</span>
+              <span class="button-text">Clear Input</span>
+            </button>
+          </div>
+        </aside>
+
+        <!-- Right Panel: Rewritten Traits Display -->
+        <section
+          class="cb-output-panel rewritten-traits-panel"
+          aria-labelledby="rewritten-traits-title"
+        >
+          <h2 id="rewritten-traits-title" class="cb-panel-title">
+            First-Person Traits
+          </h2>
+
+          <!-- Progress Indicator -->
+          <div
+            id="generation-progress"
+            class="generation-progress"
+            style="display: none"
+            role="status"
+            aria-live="polite"
+          >
+            <div class="progress-spinner"></div>
+            <p class="progress-text">Rewriting traits in character voice...</p>
+          </div>
+
+          <!-- Rewritten Traits Container -->
+          <div
+            id="rewritten-traits-container"
+            class="rewritten-traits-container"
+            style="display: none"
+          >
+            <div class="traits-header">
+              <h3 id="character-name-display" class="character-name">
+                Character Traits
+              </h3>
+              <div class="traits-actions">
+                <button
+                  id="export-json-button"
+                  class="cb-button cb-button--small"
+                  aria-label="Export rewritten traits as JSON"
+                >
+                  <span class="button-icon">📄</span>
+                  <span class="button-text">Export JSON</span>
+                </button>
+                <button
+                  id="export-text-button"
+                  class="cb-button cb-button--small"
+                  aria-label="Export rewritten traits as text"
+                >
+                  <span class="button-icon">📝</span>
+                  <span class="button-text">Export Text</span>
+                </button>
+                <button
+                  id="copy-traits-button"
+                  class="cb-button cb-button--small"
+                  aria-label="Copy all rewritten traits to clipboard"
+                >
+                  <span class="button-icon">📋</span>
+                  <span class="button-text">Copy All</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Individual Trait Sections -->
+            <div id="traits-sections" class="traits-sections">
+              <!-- Trait sections will be dynamically inserted here -->
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div id="empty-state" class="empty-state">
+            <div class="empty-state-icon">📝</div>
+            <h3 class="empty-state-title">No Traits Yet</h3>
+            <p class="empty-state-text">
+              Paste your character definition and click "Rewrite Traits" to
+              transform traits into first-person narrative voice.
+            </p>
+          </div>
+
+          <!-- Error Display -->
+          <div
+            id="generation-error"
+            class="cb-error-message generation-error"
+            style="display: none"
+            role="alert"
+          >
+            <h3 class="error-title">Generation Error</h3>
+            <p class="error-message"></p>
+            <button
+              id="retry-button"
+              class="cb-button cb-button--small"
+              aria-label="Retry trait rewriting"
+            >
+              <span class="button-icon">🔄</span>
+              <span class="button-text">Retry</span>
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer class="cb-page-footer">
+        <nav class="footer-nav" aria-label="Footer navigation">
+          <a href="index.html" class="footer-link">Home</a>
+          <span class="footer-separator">|</span>
+          <a href="speech-patterns-generator.html" class="footer-link">
+            Speech Patterns Generator
+          </a>
+          <span class="footer-separator">|</span>
+          <a href="traits-generator.html" class="footer-link">
+            Traits Generator
+          </a>
+        </nav>
+      </footer>
+    </div>
+  </body>
+</html>

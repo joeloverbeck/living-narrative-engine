@@ -276,7 +276,20 @@
       "Bash(NODE_ENV=test npx jest tests/integration/clothing/regenerateDescriptionOperation.integration.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/unit/dependencyInjection/registrations/interpreterRegistrations.RegenerateDescription.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/integration/clothing/clothingDescriptionIntegration.test.js --no-coverage --verbose)",
-      "Bash(NODE_ENV=test npx jest tests/unit/bug-reproduction/regenerateDescriptionHandlerNotFound.test.js --no-coverage --verbose)"
+      "Bash(NODE_ENV=test npx jest tests/unit/bug-reproduction/regenerateDescriptionHandlerNotFound.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/traitsGeneratorEventNamespace.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/clothing/regenerateDescriptionOperation.integration.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/clothing/regenerateDescriptionOperation.integration.test.js --no-coverage -t \"should properly execute the regenerate description handler when called from rule\")",
+      "Bash(NODE_ENV=test npx jest tests/integration/clothing --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/traitsGeneratorEventValidation.integration.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/dependencyInjection/minimalContainerLoggerStrategy.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/traitsGenerator --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/eventDefinitionWarnings.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/performance/domUI/actionButtonsRenderer.performance.test.js --testNamePattern=\"should maintain performance for large action sets\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/performance/domUI/actionButtonsRenderer.performance.test.js --testNamePattern=\"should maintain performance for large action sets\" --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/performance/domUI/actionButtonsRenderer.performance.test.js --config jest.config.performance.js --env=jsdom --testNamePattern=\"should maintain performance for large action sets\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test node --expose-gc ./node_modules/.bin/jest tests/memory/actionIndex.memory.test.js --testNamePattern=\"should maintain memory efficiency with large entity sets\" --verbose)",
+      "Bash(export NODE_OPTIONS=\"--max-old-space-size=512\")"
     ],
     "deny": []
   }

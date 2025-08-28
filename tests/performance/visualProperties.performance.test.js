@@ -64,10 +64,7 @@ describe('Visual Properties - Performance Tests', () => {
       unsubscribe: jest.fn(),
     };
 
-    const domElementFactory = new DomElementFactory({
-      logger: logger,
-      documentContext: documentContext,
-    });
+    const domElementFactory = new DomElementFactory(documentContext);
 
     renderer = new ActionButtonsRenderer({
       logger: logger,

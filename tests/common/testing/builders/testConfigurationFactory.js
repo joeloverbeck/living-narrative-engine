@@ -23,6 +23,49 @@ import { TestConfigurationValidator } from './validation/testConfigurationValida
  * LLM configuration management and test environment factory methods.
  */
 export class TestConfigurationFactory {
+  // Static registry of created temp directories for cleanup
+  static #tempDirectories = new Set();
+  static #cleanupRegistered = false;
+
+  /**
+   * Registers process exit handlers to clean up temp directories
+   * @private
+   */
+  static #registerCleanupHandlers() {
+    if (this.#cleanupRegistered) return;
+    this.#cleanupRegistered = true;
+
+    const cleanup = async () => {
+      if (this.#tempDirectories.size > 0) {
+        console.log(`[Test Cleanup] Cleaning up ${this.#tempDirectories.size} test directories...`);
+        for (const dir of this.#tempDirectories) {
+          try {
+            await fs.rm(dir, { recursive: true, force: true });
+            this.#tempDirectories.delete(dir);
+          } catch (error) {
+            // Ignore cleanup errors
+          }
+        }
+      }
+    };
+
+    // Register cleanup for various exit scenarios
+    process.on('exit', () => cleanup());
+    process.on('SIGINT', async () => {
+      await cleanup();
+      process.exit(0);
+    });
+    process.on('SIGTERM', async () => {
+      await cleanup();
+      process.exit(0);
+    });
+    process.on('uncaughtException', async (error) => {
+      console.error('Uncaught Exception:', error);
+      await cleanup();
+      process.exit(1);
+    });
+  }
+
   // LLM Configuration Methods
 
   /**
@@ -218,21 +261,21 @@ export class TestConfigurationFactory {
 
   /**
    * Creates a test configuration with a temporary directory structure.
-   * For E2E tests, we use the actual data directory to avoid file path issues.
+   * Uses OS temp directory for better isolation and automatic cleanup.
    *
    * @returns {Promise<{pathConfiguration: TestPathConfiguration, tempDir: string, cleanup: () => Promise<void>}>}
    */
   static async createTestConfiguration() {
-    // For E2E tests, use the actual data directory instead of temp files
-    // This avoids issues with fetch() not being able to access temp directories
-    const projectRoot = process.cwd();
+    // Register cleanup handlers on first use
+    this.#registerCleanupHandlers();
 
-    // Create a unique directory name for each test to avoid race conditions
+    // Use OS temp directory for better isolation and cleanup
+    // The OS will eventually clean these up even if our cleanup fails
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
     const tempDir = path.join(
-      projectRoot,
-      'data',
+      os.tmpdir(),
+      'living-narrative-tests',
       `test-temp-${timestamp}-${randomSuffix}`
     );
 
@@ -247,6 +290,9 @@ export class TestConfigurationFactory {
       );
     }
 
+    // Register this directory for cleanup
+    this.#tempDirectories.add(tempDir);
+
     // Create test path configuration
     const pathConfiguration = new TestPathConfiguration(tempDir);
 
@@ -257,6 +303,8 @@ export class TestConfigurationFactory {
       cleanup: async () => {
         try {
           await fs.rm(tempDir, { recursive: true, force: true });
+          // Remove from registry after successful cleanup
+          this.#tempDirectories.delete(tempDir);
         } catch (error) {
           // Ignore cleanup errors in tests
           console.warn(
