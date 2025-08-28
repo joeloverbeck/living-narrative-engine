@@ -11,12 +11,37 @@ import {
   assertNonBlankString,
 } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
+import {
+  TraitsRewriterError,
+  TRAITS_REWRITER_ERROR_CODES,
+} from '../errors/TraitsRewriterError.js';
+
+/**
+ * Label conversion map for trait keys
+ *
+ * @constant {object}
+ */
+const TRAIT_LABELS = {
+  'core:personality': 'Personality',
+  'core:likes': 'Likes',
+  'core:dislikes': 'Dislikes',
+  'core:fears': 'Fears',
+  'core:goals': 'Goals',
+  'core:notes': 'Notes',
+  'core:profile': 'Profile',
+  'core:secrets': 'Secrets',
+  'core:strengths': 'Strengths',
+  'core:weaknesses': 'Weaknesses',
+  'core:background': 'Background',
+  'core:motivations': 'Motivations',
+  'core:beliefs': 'Beliefs',
+  'core:hobbies': 'Hobbies',
+  'core:relationships': 'Relationships',
+};
 
 /**
  * Service for enhancing rewritten traits display and export functionality
  * Handles formatting, HTML escaping, and file generation
- *
- * TODO: Complete implementation in TRAREW-007
  */
 export class TraitsRewriterDisplayEnhancer {
   /** @private @type {ILogger} */
@@ -28,12 +53,11 @@ export class TraitsRewriterDisplayEnhancer {
    * @param {object} dependencies - Service dependencies
    */
   constructor(dependencies) {
-    validateDependency(dependencies.logger, 'ILogger', null, {
-      requiredMethods: ['debug', 'info', 'warn', 'error'],
-    });
-
+    this.#validateDependencies(dependencies);
     this.#logger = ensureValidLogger(dependencies.logger);
-    this.#logger.debug('TraitsRewriterDisplayEnhancer initialized (stub mode)');
+    this.#logger.info(
+      'TraitsRewriterDisplayEnhancer: Initialized successfully'
+    );
   }
 
   /**
@@ -46,17 +70,96 @@ export class TraitsRewriterDisplayEnhancer {
   enhanceForDisplay(traits, options = {}) {
     assertPresent(traits, 'Rewritten traits data');
 
-    this.#logger.warn(
-      'TraitsRewriterDisplayEnhancer.enhanceForDisplay called (not implemented)'
-    );
+    try {
+      this.#logger.debug('Enhancing traits for display', {
+        traitCount: Object.keys(traits).length,
+        characterName: options.characterName,
+      });
 
-    // Return minimal stub response
-    return {
-      traits: traits,
-      displayOptions: options,
-      enhanced: false,
-      message: 'TraitsRewriterDisplayEnhancer not yet implemented',
-    };
+      const sections = this.createDisplaySections(traits);
+
+      const displayData = {
+        sections,
+        characterName: options.characterName || 'Character',
+        totalSections: sections.length,
+        generatedAt: options.timestamp || new Date().toISOString(),
+        displayOptions: options,
+        enhanced: true,
+      };
+
+      this.#logger.debug('Traits enhanced successfully', {
+        totalSections: displayData.totalSections,
+      });
+
+      return displayData;
+    } catch (error) {
+      this.#logger.error('Failed to enhance traits for display', error);
+      throw TraitsRewriterError.forExportFailure(
+        'Display enhancement failed',
+        {
+          characterName: options.characterName,
+          traitCount: Object.keys(traits || {}).length,
+        },
+        error
+      );
+    }
+  }
+
+  /**
+   * Create display sections from enhanced traits
+   *
+   * @param {object} traits - Enhanced trait data
+   * @returns {Array<object>} Display sections
+   */
+  createDisplaySections(traits) {
+    assertPresent(traits, 'Traits for display sections');
+
+    try {
+      const sections = [];
+      let index = 0;
+
+      // Process traits in a specific order if they exist
+      const orderedKeys = [
+        'core:personality',
+        'core:profile',
+        'core:background',
+        'core:motivations',
+        'core:goals',
+        'core:beliefs',
+        'core:strengths',
+        'core:weaknesses',
+        'core:likes',
+        'core:dislikes',
+        'core:fears',
+        'core:hobbies',
+        'core:relationships',
+        'core:secrets',
+        'core:notes',
+      ];
+
+      // Process ordered keys first
+      for (const key of orderedKeys) {
+        if (traits[key]) {
+          sections.push(this.#createTraitSection(key, traits[key], index++));
+        }
+      }
+
+      // Process any remaining keys not in the ordered list
+      for (const [key, value] of Object.entries(traits)) {
+        if (!orderedKeys.includes(key)) {
+          sections.push(this.#createTraitSection(key, value, index++));
+        }
+      }
+
+      return sections;
+    } catch (error) {
+      this.#logger.error('Failed to create display sections', error);
+      throw TraitsRewriterError.forSanitizationFailure(
+        'Section creation failed',
+        { traitCount: Object.keys(traits || {}).length },
+        error
+      );
+    }
   }
 
   /**
@@ -64,9 +167,10 @@ export class TraitsRewriterDisplayEnhancer {
    *
    * @param {object} traits - Traits data to format
    * @param {string} format - Export format ('json' or 'text')
+   * @param {object} options - Export options
    * @returns {string} Formatted content for export
    */
-  formatForExport(traits, format = 'json') {
+  formatForExport(traits, format = 'text', options = {}) {
     assertPresent(traits, 'Traits data for export');
     assertNonBlankString(
       format,
@@ -75,16 +179,36 @@ export class TraitsRewriterDisplayEnhancer {
       this.#logger
     );
 
-    this.#logger.warn(
-      'TraitsRewriterDisplayEnhancer.formatForExport called (not implemented)'
-    );
-
-    // Return basic JSON stringification for stub
-    if (format === 'json') {
-      return JSON.stringify(traits, null, 2);
+    const supportedFormats = ['text', 'json'];
+    if (!supportedFormats.includes(format.toLowerCase())) {
+      throw TraitsRewriterError.forInvalidFormat(format, supportedFormats, {
+        characterName: options.characterName,
+      });
     }
 
-    return 'TraitsRewriterDisplayEnhancer export not yet implemented';
+    try {
+      this.#logger.debug('Formatting traits for export', {
+        format,
+        characterName: options.characterName,
+        traitCount: Object.keys(traits).length,
+      });
+
+      if (format.toLowerCase() === 'json') {
+        return this.#formatAsJson(traits, options);
+      } else {
+        return this.#formatAsText(traits, options);
+      }
+    } catch (error) {
+      this.#logger.error(`Failed to format traits for ${format} export`, error);
+      throw TraitsRewriterError.forExportFailure(
+        `Failed to format for ${format}`,
+        {
+          format,
+          characterName: options.characterName,
+        },
+        error
+      );
+    }
   }
 
   /**
@@ -94,7 +218,7 @@ export class TraitsRewriterDisplayEnhancer {
    * @param {string} format - File format
    * @returns {string} Generated filename
    */
-  generateExportFilename(characterName = 'character', format = 'json') {
+  generateExportFilename(characterName = 'character', format = 'txt') {
     assertNonBlankString(
       characterName,
       'Character name',
@@ -102,13 +226,24 @@ export class TraitsRewriterDisplayEnhancer {
       this.#logger
     );
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const sanitizedName = characterName
+    // Sanitize character name for filesystem safety
+    const safeName = characterName
+      .replace(/[<>:"/\\|?*!]/g, '') // Remove invalid chars including exclamation marks
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+      .substring(0, 50) // Limit length
+      .replace(/^-+|-+$/g, ''); // Trim leading/trailing hyphens
 
-    return `rewritten-traits-${sanitizedName}-${timestamp}.${format}`;
+    // Create ISO timestamp without milliseconds
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, '-')
+      .split('T')
+      .join('_')
+      .slice(0, -5); // Remove milliseconds and 'Z'
+
+    const extension = format === 'json' ? 'json' : 'txt';
+    return `${safeName || 'character'}-traits-rewriter-${timestamp}.${extension}`;
   }
 
   /**
@@ -120,17 +255,29 @@ export class TraitsRewriterDisplayEnhancer {
   createHtmlDisplay(traits) {
     assertPresent(traits, 'Traits for HTML display');
 
-    this.#logger.warn(
-      'TraitsRewriterDisplayEnhancer.createHtmlDisplay called (not implemented)'
-    );
+    try {
+      const sections = this.createDisplaySections(traits);
 
-    // Return basic HTML stub
-    return `
-      <div class="traits-rewriter-display-stub">
-        <p>TraitsRewriterDisplayEnhancer not yet implemented</p>
-        <pre>${JSON.stringify(traits, null, 2)}</pre>
-      </div>
-    `;
+      let html = '<div class="traits-rewriter-display">\n';
+
+      for (const section of sections) {
+        html += `  <div class="${section.cssClass}">\n`;
+        html += `    <h3 class="${section.titleClass}">${section.label}</h3>\n`;
+        html += `    <div class="${section.contentClass}">${section.content}</div>\n`;
+        html += `  </div>\n`;
+      }
+
+      html += '</div>';
+
+      return html;
+    } catch (error) {
+      this.#logger.error('Failed to create HTML display', error);
+      throw TraitsRewriterError.forSanitizationFailure(
+        'HTML generation failed',
+        { traitCount: Object.keys(traits || {}).length },
+        error
+      );
+    }
   }
 
   /**
@@ -144,14 +291,53 @@ export class TraitsRewriterDisplayEnhancer {
     assertPresent(original, 'Original traits');
     assertPresent(rewritten, 'Rewritten traits');
 
-    this.#logger.warn(
-      'TraitsRewriterDisplayEnhancer.compareTraits called (not implemented)'
-    );
+    try {
+      const changes = [];
+      const allKeys = new Set([
+        ...Object.keys(original),
+        ...Object.keys(rewritten),
+      ]);
 
-    return {
-      hasChanges: false,
-      comparison: 'Not yet implemented',
-    };
+      for (const key of allKeys) {
+        if (!original[key] && rewritten[key]) {
+          changes.push({
+            key,
+            type: 'added',
+            newValue: rewritten[key],
+          });
+        } else if (original[key] && !rewritten[key]) {
+          changes.push({
+            key,
+            type: 'removed',
+            oldValue: original[key],
+          });
+        } else if (original[key] !== rewritten[key]) {
+          changes.push({
+            key,
+            type: 'modified',
+            oldValue: original[key],
+            newValue: rewritten[key],
+          });
+        }
+      }
+
+      return {
+        hasChanges: changes.length > 0,
+        changeCount: changes.length,
+        changes,
+        comparison:
+          changes.length > 0
+            ? `Found ${changes.length} changes`
+            : 'No changes detected',
+      };
+    } catch (error) {
+      this.#logger.error('Failed to compare traits', error);
+      throw TraitsRewriterError.forValidationFailure(
+        'comparison',
+        'Trait comparison failed',
+        { error: error.message }
+      );
+    }
   }
 
   /**
@@ -162,10 +348,179 @@ export class TraitsRewriterDisplayEnhancer {
   getServiceInfo() {
     return {
       name: 'TraitsRewriterDisplayEnhancer',
-      version: '0.1.0',
-      status: 'stub',
+      version: '1.0.0',
+      status: 'active',
       implementationTask: 'TRAREW-007',
     };
+  }
+
+  // ================== Private Helper Methods ==================
+
+  /**
+   * Escape HTML content to prevent XSS
+   *
+   * @private
+   * @param {string} text - Text to escape
+   * @returns {string} Escaped text
+   */
+  #escapeHtmlContent(text) {
+    if (typeof text !== 'string') {
+      return '';
+    }
+
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;')
+      .replace(/=/g, '&#x3D;'); // Also escape equals sign for attribute safety
+  }
+
+  /**
+   * Sanitize content for safe display
+   *
+   * @private
+   * @param {string} content - Content to sanitize
+   * @returns {string} Sanitized content
+   */
+  #sanitizeForDisplay(content) {
+    if (!content || typeof content !== 'string') {
+      return '';
+    }
+
+    // HTML escape
+    let sanitized = this.#escapeHtmlContent(content);
+
+    // Trim whitespace
+    sanitized = sanitized.trim();
+
+    // Validate length
+    if (sanitized.length > 5000) {
+      sanitized = sanitized.substring(0, 5000) + '...';
+      this.#logger.warn('Content truncated due to length limit', {
+        originalLength: content.length,
+      });
+    }
+
+    return sanitized;
+  }
+
+  /**
+   * Format trait key into human-readable label
+   *
+   * @private
+   * @param {string} traitKey - Trait key to format
+   * @returns {string} Formatted label
+   */
+  #formatTraitLabel(traitKey) {
+    // Check if we have a predefined label
+    if (TRAIT_LABELS[traitKey]) {
+      return TRAIT_LABELS[traitKey];
+    }
+
+    // Otherwise, format the key
+    return traitKey
+      .replace('core:', '') // Remove namespace
+      .replace(/([A-Z])/g, ' $1') // Add space before capitals
+      .replace(/_/g, ' ') // Replace underscores with spaces
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .trim()
+      .replace(/^./, (str) => str.toUpperCase()); // Capitalize first letter
+  }
+
+  /**
+   * Create a single trait section for display
+   *
+   * @private
+   * @param {string} traitKey - Trait key
+   * @param {string} traitValue - Trait value
+   * @param {number} index - Section index
+   * @returns {object} Trait section object
+   */
+  #createTraitSection(traitKey, traitValue, index) {
+    const sanitizedContent = this.#sanitizeForDisplay(traitValue);
+    const label = this.#formatTraitLabel(traitKey);
+
+    return {
+      key: traitKey,
+      label,
+      content: sanitizedContent,
+      cssClass: 'trait-section',
+      titleClass: 'trait-section-title',
+      contentClass: 'trait-content',
+      index,
+    };
+  }
+
+  /**
+   * Format traits as JSON
+   *
+   * @private
+   * @param {object} traits - Traits to format
+   * @param {object} options - Export options
+   * @returns {string} JSON formatted string
+   */
+  #formatAsJson(traits, options) {
+    const exportData = {
+      characterName: options.characterName || 'Character',
+      rewrittenTraits: traits,
+      exportedAt: new Date().toISOString(),
+      exportFormat: 'json',
+      traitCount: Object.keys(traits).length,
+    };
+
+    if (options.includeMetadata) {
+      exportData.metadata = options.metadata || {};
+    }
+
+    return JSON.stringify(exportData, null, 2);
+  }
+
+  /**
+   * Format traits as text
+   *
+   * @private
+   * @param {object} traits - Traits to format
+   * @param {object} options - Export options
+   * @returns {string} Text formatted string
+   */
+  #formatAsText(traits, options) {
+    const characterName = options.characterName || 'Character';
+    const timestamp = new Date().toISOString();
+
+    let text = `Character: ${characterName}\n`;
+    text += `Generated: ${timestamp}\n`;
+    text += `Rewritten Traits\n`;
+    text += `================\n\n`;
+
+    // Process traits in order
+    const sections = this.createDisplaySections(traits);
+
+    for (const section of sections) {
+      text += `${section.label}:\n`;
+      // Don't escape HTML for text export, use original value
+      text += `${traits[section.key]}\n\n`;
+    }
+
+    text += `\n--- End of Rewritten Traits ---\n`;
+    text += `Total Traits: ${sections.length}\n`;
+    text += `Exported: ${timestamp}\n`;
+
+    return text;
+  }
+
+  /**
+   * Validate dependencies
+   *
+   * @private
+   * @param {object} dependencies - Dependencies to validate
+   */
+  #validateDependencies(dependencies) {
+    validateDependency(dependencies.logger, 'ILogger', null, {
+      requiredMethods: ['debug', 'info', 'warn', 'error'],
+    });
   }
 }
 

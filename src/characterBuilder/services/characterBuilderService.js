@@ -81,6 +81,12 @@ export const CHARACTER_BUILDER_EVENTS = {
   SPEECH_PATTERNS_GENERATION_FAILED: 'core:speech_patterns_generation_failed',
   SPEECH_PATTERNS_CACHE_HIT: 'core:speech_patterns_cache_hit',
   SPEECH_PATTERNS_GENERATION_RETRY: 'core:speech_patterns_generation_retry',
+  // Traits rewriter events
+  TRAITS_REWRITER_GENERATION_STARTED: 'core:traits_rewriter_generation_started',
+  TRAITS_REWRITER_GENERATION_COMPLETED:
+    'core:traits_rewriter_generation_completed',
+  TRAITS_REWRITER_GENERATION_FAILED: 'core:traits_rewriter_generation_failed',
+  TRAITS_REWRITER_CACHE_HIT: 'core:traits_rewriter_cache_hit',
   // Circuit breaker events
   CIRCUIT_BREAKER_OPENED: 'core:circuit_breaker_opened',
   // Cache events

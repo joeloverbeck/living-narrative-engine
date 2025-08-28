@@ -3,6 +3,8 @@
  * @description Provides comprehensive default values and environment-specific presets
  */
 
+import { getEndpointConfig } from '../../config/endpointConfig.js';
+
 /**
  * Default configuration for the debug logging system
  *
@@ -14,7 +16,7 @@ export const DEFAULT_CONFIG = {
   fallbackToConsole: true,
   logLevel: 'INFO', // Legacy support
   remote: {
-    endpoint: 'http://localhost:3001/api/debug-log',
+    endpoint: getEndpointConfig().getDebugLogEndpoint(),
     batchSize: 100,
     flushInterval: 1000,
     retryAttempts: 3,

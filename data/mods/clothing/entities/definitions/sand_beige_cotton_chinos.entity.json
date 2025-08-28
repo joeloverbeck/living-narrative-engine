@@ -24,6 +24,10 @@
     },
     "descriptors:texture": {
       "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_lower"],
+      "coveragePriority": "base"
     }
   }
 }

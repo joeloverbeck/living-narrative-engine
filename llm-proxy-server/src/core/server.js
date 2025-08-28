@@ -58,6 +58,9 @@ import traceRoutes from '../routes/traceRoutes.js';
 // Import debug routes
 import debugRoutes from '../routes/debugRoutes.js';
 
+// Import health routes
+import healthRoutes from '../routes/healthRoutes.js';
+
 // Import log storage and maintenance scheduler services
 import LogStorageService from '../services/logStorageService.js';
 import LogMaintenanceScheduler from '../services/logMaintenanceScheduler.js';
@@ -108,20 +111,40 @@ app.use((req, res, next) => {
   return createTimeoutMiddleware(30000)(req, res, next);
 });
 
-// CORS Configuration - This initial log is now covered by the summary log.
-// const PROXY_ALLOWED_ORIGIN_CONFIG = appConfigService.getProxyAllowedOrigin();
+// CORS Configuration
 const allowedOriginsArray = appConfigService.getAllowedOriginsArray();
 
 if (allowedOriginsArray.length > 0) {
-  // proxyLogger.info(`LLM Proxy Server: CORS will be enabled for origin(s): ${PROXY_ALLOWED_ORIGIN_CONFIG}`); // Removed, will be in summary
+  // Log CORS configuration immediately for debugging
+  proxyLogger.info(
+    `LLM Proxy Server: Configuring CORS for ${allowedOriginsArray.length} origin(s)`
+  );
+  proxyLogger.debug('CORS allowed origins:', { origins: allowedOriginsArray });
+  
   const corsOptions = {
     origin: allowedOriginsArray,
     methods: [HTTP_METHOD_POST, HTTP_METHOD_OPTIONS],
     allowedHeaders: [HTTP_HEADER_CONTENT_TYPE, 'X-Title', 'HTTP-Referer'],
   };
   app.use(cors(corsOptions));
+  
+  // Log successful CORS middleware application
+  proxyLogger.debug('CORS middleware applied successfully');
 } else {
-  // proxyLogger.warn('LLM Proxy Server: PROXY_ALLOWED_ORIGIN environment variable not set or empty. CORS will not be specifically configured.'); // Removed, will be in summary
+  // Check if in development mode and provide helpful warning
+  const nodeEnv = appConfigService.getNodeEnv ? appConfigService.getNodeEnv() : 'production';
+  if (nodeEnv === 'development') {
+    proxyLogger.warn(
+      'LLM Proxy Server: CORS not configured in development mode. ' +
+      'To enable browser access, set PROXY_ALLOWED_ORIGIN environment variable. ' +
+      'Example: PROXY_ALLOWED_ORIGIN="http://localhost:8080,http://127.0.0.1:8080"'
+    );
+  } else {
+    proxyLogger.warn(
+      'LLM Proxy Server: PROXY_ALLOWED_ORIGIN environment variable not set or empty. ' +
+      'CORS will not be configured. This may cause issues with browser-based clients.'
+    );
+  }
 }
 
 // Middleware to parse JSON bodies with size limits
@@ -294,6 +317,9 @@ app.use('/api/traces', traceRoutes);
 // Register debug routes for debug log collection
 app.use('/api/debug-log', debugRoutes);
 
+// Register health check routes
+app.use('/health', healthRoutes);
+
 // Store server instance for graceful shutdown
 let server;
 
@@ -398,10 +424,11 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
     }
   }
 
-  server = app.listen(PORT, () => {
+  server = app.listen(PORT, '0.0.0.0', () => {
     proxyLogger.info('--- LLM Proxy Server Startup Summary ---');
     // AC 4.a: Message: LLM Proxy Server listening on port [PORT]
     proxyLogger.info(`LLM Proxy Server listening on port ${PORT}`);
+    proxyLogger.info(`LLM Proxy Server: Binding to 0.0.0.0:${PORT} (accessible via localhost:${PORT} and 127.0.0.1:${PORT})`);
 
     // AC 4.a: Default Port Usage Note
     // Using appConfigService.isProxyPortDefaulted() which was added in appConfig.js
@@ -425,8 +452,8 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
     if (llmConfigService.isOperational()) {
       const llmConfigs = llmConfigService.getLlmConfigs(); // llmConfigs will not be null if operational
       let numLlmConfigs = 0;
-      if (llmConfigs && llmConfigs.llms) {
-        numLlmConfigs = Object.keys(llmConfigs.llms).length;
+      if (llmConfigs && llmConfigs.configs) {
+        numLlmConfigs = Object.keys(llmConfigs.configs).length;
       }
       proxyLogger.info(
         `LLM Proxy Server: Successfully loaded ${numLlmConfigs} LLM configurations. Proxy is OPERATIONAL.`

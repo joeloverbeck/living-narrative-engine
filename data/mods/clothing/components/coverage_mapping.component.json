@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "clothing:coverage_mapping",
+  "description": "Defines additional body slots that clothing items cover when equipped",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "covers": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "torso_upper",
+            "torso_lower",
+            "legs",
+            "feet",
+            "head_gear",
+            "hands",
+            "left_arm_clothing",
+            "right_arm_clothing"
+          ]
+        },
+        "description": "Array of clothing slots this item covers when worn",
+        "uniqueItems": true,
+        "minItems": 1
+      },
+      "coveragePriority": {
+        "type": "string",
+        "enum": ["outer", "base", "underwear", "accessories"],
+        "description": "Priority level for coverage resolution"
+      }
+    },
+    "required": ["covers", "coveragePriority"],
+    "additionalProperties": false
+  }
+}

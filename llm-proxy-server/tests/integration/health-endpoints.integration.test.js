@@ -44,9 +44,9 @@ describe('Health Check Endpoints Integration', () => {
     mockCacheService = {
       set: jest.fn(),
       get: jest.fn(),
-      delete: jest.fn(),
-      size: jest.fn(),
-      getMemoryUsage: jest.fn(),
+      invalidate: jest.fn(),
+      getSize: jest.fn(),
+      getMemoryInfo: jest.fn(),
     };
 
     mockHttpAgentService = {
@@ -199,13 +199,16 @@ describe('Health Check Endpoints Integration', () => {
       mockCacheService.get.mockImplementation((key) => {
         return cacheStore.get(key);
       });
-      mockCacheService.delete.mockImplementation((key) => {
+      mockCacheService.invalidate.mockImplementation((key) => {
         return cacheStore.delete(key);
       });
-      mockCacheService.size.mockReturnValue(25);
-      mockCacheService.getMemoryUsage.mockReturnValue({
-        used: 2048,
-        total: 4096,
+      mockCacheService.getSize.mockReturnValue(25);
+      mockCacheService.getMemoryInfo.mockReturnValue({
+        currentBytes: 2048,
+        maxBytes: 4096,
+        usagePercent: "50.00",
+        averageEntrySize: 82,
+        entryCount: 25,
       });
 
       mockHttpAgentService.getStats.mockReturnValue({
@@ -244,7 +247,13 @@ describe('Health Check Endpoints Integration', () => {
               details: {
                 working: true,
                 size: 25,
-                memoryUsage: { used: 2048, total: 4096 },
+                memoryUsage: {
+                  currentBytes: 2048,
+                  maxBytes: 4096,
+                  usagePercent: "50.00",
+                  averageEntrySize: 82,
+                  entryCount: 25,
+                },
               },
             },
             {
@@ -417,7 +426,7 @@ describe('Health Check Endpoints Integration', () => {
       expect(mockCacheService.get).toHaveBeenCalledWith(
         '__health_check_test__'
       );
-      expect(mockCacheService.delete).toHaveBeenCalledWith(
+      expect(mockCacheService.invalidate).toHaveBeenCalledWith(
         '__health_check_test__'
       );
     });
@@ -588,7 +597,7 @@ describe('Health Check Endpoints Integration', () => {
       mockCacheService.get.mockImplementation((key) => {
         return cacheStore.get(key);
       });
-      mockCacheService.delete.mockImplementation((key) => {
+      mockCacheService.invalidate.mockImplementation((key) => {
         return cacheStore.delete(key);
       });
 

@@ -21,6 +21,10 @@
     },
     "descriptors:color_basic": {
       "color": "black"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper", "torso_lower"],
+      "coveragePriority": "base"
     }
   }
 }

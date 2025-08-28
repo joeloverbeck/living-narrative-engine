@@ -194,8 +194,8 @@ async function checkLlmConfigService(llmConfigService) {
       };
     }
 
-    const configCount = llmConfigs?.llms
-      ? Object.keys(llmConfigs.llms).length
+    const configCount = llmConfigs?.configs
+      ? Object.keys(llmConfigs.configs).length
       : 0;
 
     return {
@@ -233,7 +233,7 @@ async function checkCacheService(cacheService) {
 
     cacheService.set(testKey, testValue, 1000); // 1 second TTL
     const retrieved = cacheService.get(testKey);
-    cacheService.delete(testKey); // Clean up
+    cacheService.invalidate(testKey); // Clean up
 
     // Check if cache round-trip worked correctly
     // More robust than exact timestamp equality - checks structure and reasonable timestamp value
@@ -248,9 +248,9 @@ async function checkCacheService(cacheService) {
       status: isWorking ? 'UP' : 'DOWN',
       details: {
         working: isWorking,
-        size: cacheService.size(),
-        memoryUsage: cacheService.getMemoryUsage
-          ? cacheService.getMemoryUsage()
+        size: cacheService.getSize(),
+        memoryUsage: cacheService.getMemoryInfo
+          ? cacheService.getMemoryInfo()
           : null,
       },
     };

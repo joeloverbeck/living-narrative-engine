@@ -107,7 +107,7 @@ describe('LoggerStrategy - Runtime Switching', () => {
       // This is a breaking change from pure backward compatibility
       // but provides consistent behavior
       strategy.setLogLevel('NONE');
-      
+
       // Should switch to none mode rather than setting log level
       expect(strategy.getMode()).toBe(LoggerMode.NONE);
     });
@@ -180,9 +180,9 @@ describe('LoggerStrategy - Runtime Switching', () => {
 
       // Debug: Check initial state
       expect(strategy.getMode()).toBe(LoggerMode.CONSOLE);
-      
+
       strategy.setLogLevel('none');
-      
+
       // The mode should now be NONE
       expect(strategy.getMode()).toBe(LoggerMode.NONE);
     });
@@ -314,12 +314,12 @@ describe('LoggerStrategy - Runtime Switching', () => {
       // Clear any initialization calls
       mockDependencies.consoleLogger.info.mockClear();
       mockDependencies.hybridLogger.info.mockClear();
-      
+
       strategy.setLogLevel('reset');
       // Reset uses default mode detection
       // The default config has mode: 'development' which maps to DEVELOPMENT
       expect(strategy.getMode()).toBe(LoggerMode.DEVELOPMENT);
-      
+
       // Check that reset was logged (will be on hybrid logger due to development mode)
       expect(mockDependencies.hybridLogger.info).toHaveBeenCalledWith(
         '[LoggerStrategy] Configuration reset to defaults'
@@ -399,12 +399,10 @@ describe('LoggerStrategy - Runtime Switching', () => {
     it('should transfer buffered logs during transition', () => {
       // Create mock logger with buffer support
       const mockLoggerWithBuffer = createMockLogger();
-      mockLoggerWithBuffer.getBuffer = jest
-        .fn()
-        .mockReturnValue([
-          { level: 'info', message: 'Test log 1', args: [] },
-          { level: 'error', message: 'Test log 2', args: ['error'] },
-        ]);
+      mockLoggerWithBuffer.getBuffer = jest.fn().mockReturnValue([
+        { level: 'info', message: 'Test log 1', args: [] },
+        { level: 'error', message: 'Test log 2', args: ['error'] },
+      ]);
 
       const mockRemoteWithBatch = createMockLogger();
       mockRemoteWithBatch.processBatch = jest.fn();

@@ -54,5 +54,22 @@
   "analysis": {
     "enabled": true,
     "bottleneckThresholdMs": 100
+  },
+  "scopeDslTracing": {
+    "enabled": true,
+    "coverageResolution": {
+      "enabled": true,
+      "verbosity": "standard",
+      "includePerformanceMetrics": true,
+      "includeCandidateDetails": true,
+      "includePhaseBreakdown": true,
+      "outputFormats": ["text"],
+      "textFormatOptions": {
+        "enableColors": false,
+        "includeTimestamps": true,
+        "showSpanHierarchy": true,
+        "showEvents": true
+      }
+    }
   }
 }

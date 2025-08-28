@@ -300,7 +300,17 @@
       "Bash(NODE_ENV=test npx jest tests/integration/dependencyInjection/scopeDslErrorServicesRegistration.integration.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npm run test:unit tests/unit/logging/config/configValidator.test.js)",
       "Bash(NODE_ENV=test npm run test:performance tests/performance/scopeDsl/ComplexFilterExpressions.performance.test.js --testNamePattern=\"should demonstrate performance scaling with filter complexity\" --no-coverage --verbose)",
-      "Bash(NODE_ENV=test npx jest tests/performance/scopeDsl/ComplexFilterExpressions.performance.test.js --config jest.config.performance.js --env=jsdom --silent)"
+      "Bash(NODE_ENV=test npx jest tests/performance/scopeDsl/ComplexFilterExpressions.performance.test.js --config jest.config.performance.js --env=jsdom --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopeDsl/filterResolverErrorHandling.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/logging/remoteLoggerBufferOverflowReproduction.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/e2e/logging/gameLaunchLoggingVolume.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npm run test:unit tests/unit/logging/ --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/logging/remoteLogger.test.js --no-coverage --verbose --testNamePattern=\"should flush when batch size is reached\")",
+      "Bash(NODE_ENV=test npx jest tests/integration/characterBuilder/traitsRewriterIntegration.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/prioritySystem/priorityCalculator.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/logging/remoteLoggerNetworkErrorClassification.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/logging/remoteLoggerBatchingInefficiency.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/logging/remoteLoggerBatchingInefficiency.integration.test.js --no-coverage --verbose --testNamePattern=\"should show batching efficiency\")"
     ],
     "deny": []
   }
