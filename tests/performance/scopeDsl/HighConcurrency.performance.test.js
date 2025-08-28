@@ -765,7 +765,135 @@ describe('High Concurrency Performance - Optimized', () => {
   });
 
   /**
-   * Scenario 5: Performance Regression Detection
+   * Scenario 5: Concurrent Operation Launch Timing
+   * Tests launch timing spreads and concurrent operation timing constraints
+   */
+  describe('Concurrent Operation Launch Timing', () => {
+    test('should maintain tight launch timing spreads under concurrent load', async () => {
+      // Arrange - Create dataset for launch timing testing
+      const entityCount = 200;
+      const testEntities = await createPerformanceDataset(entityCount);
+      const testActor = testEntities[0];
+      const gameContext = await createPerformanceGameContext();
+
+      // Act - Perform concurrent operations with precise timing tracking
+      const concurrentOperations = 30;
+      const scopeId = 'perf-concurrency:moderate_filter';
+      const promises = [];
+      const operationTimestamps = [];
+
+      // Launch all operations simultaneously with timestamp tracking
+      for (let i = 0; i < concurrentOperations; i++) {
+        const startTime = performance.now();
+        promises.push(
+          ScopeTestUtilities.resolveScopeE2E(scopeId, testActor, gameContext, {
+            scopeRegistry,
+            scopeEngine,
+          }).then((result) => {
+            const endTime = performance.now();
+            return {
+              result,
+              operationIndex: i,
+              startTime,
+              endTime,
+              duration: endTime - startTime,
+            };
+          })
+        );
+        operationTimestamps.push(startTime);
+      }
+
+      const results = await Promise.all(promises);
+
+      // Assert - Performance timing constraints
+      expect(results).toHaveLength(concurrentOperations);
+
+      // Verify launch timing spread (performance constraint)
+      const minStartTime = Math.min(...operationTimestamps);
+      const maxStartTime = Math.max(...operationTimestamps);
+      const launchTimeSpread = maxStartTime - minStartTime;
+
+      // Launch spread should be minimal (operations started nearly simultaneously)
+      expect(launchTimeSpread).toBeLessThan(600); // Performance timing constraint
+
+      // Verify all operations completed successfully with reasonable timing
+      results.forEach(({ result, operationIndex, duration }) => {
+        expect(result).toBeInstanceOf(Set);
+        expect(duration).toBeGreaterThan(0);
+        expect(duration).toBeLessThan(5000); // Individual operation performance constraint
+      });
+
+      logger.info('Launch timing performance validation', {
+        concurrentOperations,
+        scopeId,
+        launchTimeSpread: `${launchTimeSpread}ms`,
+        averageDuration: `${(results.reduce((sum, r) => sum + r.duration, 0) / results.length).toFixed(2)}ms`,
+        timingConstraintMet: launchTimeSpread < 600,
+      });
+    });
+
+    test('should complete bulk concurrent operations within performance window', async () => {
+      // Arrange - Create dataset for bulk operation timing
+      const entityCount = 500;
+      const testEntities = await createPerformanceDataset(entityCount);
+      const testActor = testEntities[0];
+      const gameContext = await createPerformanceGameContext();
+
+      // Act - Perform 50 concurrent scope resolutions with timing constraint
+      const concurrentOperations = 50;
+      const promises = [];
+
+      const scopeIds = [
+        'perf-concurrency:lightweight_filter',
+        'perf-concurrency:moderate_filter',
+        'perf-concurrency:heavy_filter',
+      ];
+
+      for (let i = 0; i < concurrentOperations; i++) {
+        const scopeId = scopeIds[i % scopeIds.length];
+        promises.push(
+          ScopeTestUtilities.resolveScopeE2E(scopeId, testActor, gameContext, {
+            scopeRegistry,
+            scopeEngine,
+          }).catch((error) => ({ error, scopeId, operationIndex: i }))
+        );
+      }
+
+      const startTime = performance.now();
+      const results = await Promise.all(promises);
+      const endTime = performance.now();
+      const totalTime = endTime - startTime;
+
+      // Assert - Performance constraints for bulk operations
+      const successfulResults = results.filter((result) => !result.error);
+      const failedResults = results.filter((result) => result.error);
+
+      expect(successfulResults).toHaveLength(concurrentOperations);
+      expect(failedResults).toHaveLength(0);
+
+      // Performance timing constraint for bulk operations
+      expect(totalTime).toBeLessThan(5000); // 5 second performance window
+
+      // All successful results should be valid Sets
+      successfulResults.forEach((result, index) => {
+        expect(result).toBeInstanceOf(Set);
+        expect(result.size).toBeGreaterThanOrEqual(0);
+      });
+
+      logger.info('Bulk concurrent operations performance', {
+        concurrentOperations,
+        entityCount,
+        successfulOperations: successfulResults.length,
+        failedOperations: failedResults.length,
+        totalTime: `${totalTime}ms`,
+        averageTimePerOp: `${(totalTime / concurrentOperations).toFixed(2)}ms`,
+        performanceConstraintMet: totalTime < 5000,
+      });
+    });
+  });
+
+  /**
+   * Scenario 6: Performance Regression Detection
    * Detect performance changes over multiple test cycles
    */
   describe('Performance Regression Detection', () => {

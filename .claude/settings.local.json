@@ -289,7 +289,9 @@
       "Bash(NODE_ENV=test npx jest tests/performance/domUI/actionButtonsRenderer.performance.test.js --testNamePattern=\"should maintain performance for large action sets\" --no-coverage)",
       "Bash(NODE_ENV=test npx jest tests/performance/domUI/actionButtonsRenderer.performance.test.js --config jest.config.performance.js --env=jsdom --testNamePattern=\"should maintain performance for large action sets\" --no-coverage --verbose)",
       "Bash(NODE_ENV=test node --expose-gc ./node_modules/.bin/jest tests/memory/actionIndex.memory.test.js --testNamePattern=\"should maintain memory efficiency with large entity sets\" --verbose)",
-      "Bash(export NODE_OPTIONS=\"--max-old-space-size=512\")"
+      "Bash(export NODE_OPTIONS=\"--max-old-space-size=512\")",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/core/scopeDslErrorHandler.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npm run test:unit tests/unit/characterBuilder/validators/EnhancedSpeechPatternsValidator.test.js)"
     ],
     "deny": []
   }

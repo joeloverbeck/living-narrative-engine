@@ -69,7 +69,9 @@ export class EnhancedSpeechPatternsValidator extends SpeechPatternsSchemaValidat
       schemaValidator: dependencies.schemaValidator,
     });
 
-    this.#logger.debug('EnhancedSpeechPatternsValidator initialized');
+    this.#logger.debug('EnhancedSpeechPatternsValidator initialized', {
+      characterDefinitionValidator: !!this.#characterDefinitionValidator,
+    });
   }
 
   /**

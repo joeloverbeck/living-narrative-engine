@@ -222,4 +222,28 @@ describe('AIPromptContentProvider Performance', () => {
     expect(result).toBeTruthy();
     expect(result.length).toBeGreaterThan(0);
   });
+
+  /**
+   * Test: Performance with very large action sets (extracted from integration test)
+   * Verifies that processing 100 actions completes within 100ms threshold
+   */
+  it('should handle very large action sets efficiently', () => {
+    const largeActionSet = Array.from({ length: 100 }, (_, i) => ({
+      index: i + 1,
+      actionId: `namespace${i % 10}:action${i}`,
+      commandString: `command ${i}`,
+      description: `Description for action number ${i}.`,
+    }));
+
+    const gameState = { availableActions: largeActionSet };
+
+    const startTime = performance.now();
+    const result =
+      promptContentProvider.getAvailableActionsInfoContent(gameState);
+    const endTime = performance.now();
+
+    expect(endTime - startTime).toBeLessThan(100); // 100ms threshold
+    expect(result).toBeTruthy();
+    expect(result).toContain('## Available Actions');
+  });
 });
