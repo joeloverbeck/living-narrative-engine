@@ -45,7 +45,34 @@ export class BodyDescriptionComposer {
    * @returns {Promise<string>} The composed description
    */
   async composeDescription(bodyEntity) {
-    if (!bodyEntity || !bodyEntity.hasComponent(ANATOMY_BODY_COMPONENT_ID)) {
+    // Defensive validation: ensure bodyEntity has the required interface
+    if (!bodyEntity) {
+      this.#logger.debug('BodyDescriptionComposer.composeDescription: bodyEntity is null or undefined');
+      return '';
+    }
+
+    if (typeof bodyEntity.hasComponent !== 'function') {
+      this.#logger.error('BodyDescriptionComposer.composeDescription: bodyEntity does not have hasComponent method', {
+        bodyEntityType: typeof bodyEntity,
+        bodyEntityKeys: Object.keys(bodyEntity || {}),
+        bodyEntityId: bodyEntity.id || 'unknown',
+      });
+      return '';
+    }
+
+    if (typeof bodyEntity.getComponentData !== 'function') {
+      this.#logger.error('BodyDescriptionComposer.composeDescription: bodyEntity does not have getComponentData method', {
+        bodyEntityType: typeof bodyEntity,
+        bodyEntityKeys: Object.keys(bodyEntity || {}),
+        bodyEntityId: bodyEntity.id || 'unknown',
+      });
+      return '';
+    }
+
+    if (!bodyEntity.hasComponent(ANATOMY_BODY_COMPONENT_ID)) {
+      this.#logger.debug('BodyDescriptionComposer.composeDescription: bodyEntity does not have anatomy:body component', {
+        bodyEntityId: bodyEntity.id || 'unknown',
+      });
       return '';
     }
 
@@ -150,6 +177,11 @@ export class BodyDescriptionComposer {
 
       // Check if entity has the required methods
       if (!entity || typeof entity.hasComponent !== 'function') {
+        this.#logger.warn('BodyDescriptionComposer.groupPartsByType: Part entity missing hasComponent method', {
+          partId,
+          entityType: typeof entity,
+          entityKeys: entity ? Object.keys(entity) : [],
+        });
         continue;
       }
 
@@ -158,6 +190,11 @@ export class BodyDescriptionComposer {
       }
 
       if (typeof entity.getComponentData !== 'function') {
+        this.#logger.warn('BodyDescriptionComposer.groupPartsByType: Part entity missing getComponentData method', {
+          partId,
+          entityType: typeof entity,
+          entityKeys: entity ? Object.keys(entity) : [],
+        });
         continue;
       }
 

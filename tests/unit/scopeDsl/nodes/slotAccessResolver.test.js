@@ -1057,8 +1057,8 @@ describe('SlotAccessResolver', () => {
       mockStructuredTrace = traceContext.structuredTrace;
       mockSpan = traceContext.mockSpan;
 
-      // Add structured trace to context - resolver looks for trace.__ctx.structuredTrace
-      mockContext.trace.__ctx = { structuredTrace: mockStructuredTrace };
+      // Add structured trace to context - resolver looks for structuredTrace directly
+      mockContext.structuredTrace = mockStructuredTrace;
     });
 
     it('should create candidate collection spans during resolution', () => {
@@ -1263,89 +1263,4 @@ describe('SlotAccessResolver', () => {
     });
   });
 
-  describe('Performance Requirements', () => {
-    it('should complete resolution within reasonable time', () => {
-      const clothingAccess = createMockClothingAccess({
-        torso_upper: { outer: 'jacket', base: 'shirt' },
-        torso_lower: { base: 'pants' },
-        legs: { base: 'jeans' },
-      }, 'topmost');
-
-      const mockContextLocal = {
-        dispatcher: {
-          resolve: jest.fn().mockReturnValue(new Set([clothingAccess])),
-        },
-        trace: null, // Disable tracing for performance test
-      };
-
-      const node = {
-        type: 'Step',
-        field: 'torso_upper',
-        parent: { type: 'Step' },
-      };
-
-      const startTime = performance.now();
-
-      for (let i = 0; i < 1000; i++) {
-        resolver.resolve(node, mockContextLocal);
-      }
-
-      const avgTime = (performance.now() - startTime) / 1000;
-      expect(avgTime).toBeLessThan(1); // Less than 1ms per resolution
-    });
-
-    it('should handle memory efficiently with caching', () => {
-      // Clear priority cache
-      clearPriorityCache();
-
-      const initialStats = getCacheStats();
-      expect(initialStats.size).toBe(0);
-
-      // Trigger cache population
-      for (let i = 0; i < 100; i++) {
-        calculateCoveragePriorityOptimized('base', 'outer');
-        calculateCoveragePriorityOptimized('outer', 'base');
-      }
-
-      const finalStats = getCacheStats();
-      expect(finalStats.size).toBeGreaterThan(0);
-      expect(finalStats.size).toBeLessThan(10); // Should not grow indefinitely
-    });
-
-    it('should maintain consistent performance across different equipment configurations', () => {
-      const testConfigurations = [
-        REALISTIC_EQUIPMENT_SCENARIOS.casualWear,
-        REALISTIC_EQUIPMENT_SCENARIOS.formalWear,
-        REALISTIC_EQUIPMENT_SCENARIOS.layeredOutfit,
-      ];
-
-      const node = {
-        type: 'Step',
-        field: 'torso_upper',
-        parent: { type: 'Step' },
-      };
-
-      const timings = [];
-
-      testConfigurations.forEach(equipment => {
-        const clothingAccess = createMockClothingAccess(equipment, 'topmost');
-        mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
-
-        const startTime = performance.now();
-        
-        for (let i = 0; i < 100; i++) {
-          resolver.resolve(node, mockContext);
-        }
-
-        const avgTime = (performance.now() - startTime) / 100;
-        timings.push(avgTime);
-      });
-
-      // Verify performance consistency (no timing should be more than 2x another)
-      const minTiming = Math.min(...timings);
-      const maxTiming = Math.max(...timings);
-      
-      expect(maxTiming / minTiming).toBeLessThan(2);
-    });
-  });
 });

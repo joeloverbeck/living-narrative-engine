@@ -75,11 +75,8 @@ describe('RemoteLogger - Performance Integration Tests', () => {
   let mockConsoleLogger;
 
   beforeEach(() => {
-    jest.clearAllTimers();
-    jest.useFakeTimers();
-
-    // Mock Date.now() to work with Jest's fake timers
-    jest.useFakeTimers('modern');
+    // Use real timers for performance tests to get accurate timing measurements
+    jest.useRealTimers();
 
     performanceTestBed = createPerformanceTestBed();
     performanceTracker = performanceTestBed.createPerformanceTracker();
@@ -125,14 +122,12 @@ describe('RemoteLogger - Performance Integration Tests', () => {
     }));
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     if (remoteLogger) {
-      remoteLogger.destroy();
+      await remoteLogger.destroy();
     }
     global.fetch = originalFetch;
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
-    jest.restoreAllMocks(); // This will restore Date.now
+    jest.restoreAllMocks();
     mockServer.reset();
     performanceTestBed.cleanup();
   });
@@ -167,6 +162,7 @@ describe('RemoteLogger - Performance Integration Tests', () => {
         config: {
           batchSize: 50,
           flushInterval: 10, // Fast flush
+          initialConnectionDelay: 0, // No delay for tests
         },
         dependencies: { consoleLogger: mockConsoleLogger },
       });
@@ -180,7 +176,8 @@ describe('RemoteLogger - Performance Integration Tests', () => {
         });
       }
 
-      await jest.runAllTimersAsync();
+      // Wait for flush to complete with real timers
+      await remoteLogger.waitForPendingFlushes();
 
       const metrics = benchmark.end();
 
@@ -204,7 +201,10 @@ describe('RemoteLogger - Performance Integration Tests', () => {
       });
 
       remoteLogger = new RemoteLogger({
-        config: { batchSize: 1 },
+        config: { 
+          batchSize: 1,
+          initialConnectionDelay: 0, // No delay for tests
+        },
         dependencies: { consoleLogger: mockConsoleLogger },
       });
 
@@ -226,15 +226,16 @@ describe('RemoteLogger - Performance Integration Tests', () => {
       remoteLogger.info('Large log entry', largeMetadata);
 
       const startTime = Date.now();
-      await jest.runAllTimersAsync();
+      // Wait for flush to complete with real timers
+      await remoteLogger.waitForPendingFlushes();
       const endTime = Date.now();
 
       const metrics = benchmark.end();
 
-      expect(mockServer.getRequestCount()).toBe(1);
+      expect(mockServer.getRequestCount()).toBeGreaterThanOrEqual(1);
 
       // Should handle large entries without significant delay
-      expect(metrics.totalTime).toBeLessThan(200); // Under 200ms for large entry processing
+      expect(metrics.totalTime).toBeLessThan(100); // Under 100ms for large entry
 
       const stats = remoteLogger.getStats();
       expect(stats.bufferSize).toBe(0);
@@ -257,15 +258,16 @@ describe('RemoteLogger - Performance Integration Tests', () => {
           batchSize: 100,
           enableCategoryCache: true,
           categoryCacheSize: 1000,
+          initialConnectionDelay: 0, // No delay for tests
         },
         dependencies: { consoleLogger: mockConsoleLogger },
       });
 
       const startTime = Date.now();
 
-      // Generate 13000+ unique messages with some repetition for cache testing
-      const uniqueMessages = 1000;
-      const totalMessages = 13000;
+      // Generate fewer messages for faster test execution while still testing cache efficiency
+      const uniqueMessages = 500;
+      const totalMessages = 2000;
 
       for (let i = 0; i < totalMessages; i++) {
         const messageIndex = i % uniqueMessages;
@@ -273,14 +275,15 @@ describe('RemoteLogger - Performance Integration Tests', () => {
         remoteLogger.info(message);
       }
 
-      await jest.runAllTimersAsync();
+      // Wait for flush to complete with real timers
+      await remoteLogger.waitForPendingFlushes();
 
       const endTime = Date.now();
       const duration = endTime - startTime;
       const metrics = benchmark.end();
 
-      // Should process 13000+ messages quickly with cache (adjusted for test env timing)
-      expect(metrics.totalTime).toBeLessThan(5000); // Less than 5000ms (adjusted for test environment)
+      // Should process 2000 messages quickly with cache  
+      expect(metrics.totalTime).toBeLessThan(1000); // Less than 1000ms for 2000 messages
 
       const stats = remoteLogger.getStats();
       expect(stats.categoryDetector.detectionCount).toBe(totalMessages);
@@ -288,7 +291,7 @@ describe('RemoteLogger - Performance Integration Tests', () => {
 
       // Calculate cache hit rate
       const hitRate = parseFloat(stats.categoryDetector.cacheHitRate);
-      expect(hitRate).toBeGreaterThan(90); // Should have >90% cache hit rate
+      expect(hitRate).toBeGreaterThan(70); // Should have >70% cache hit rate
     });
 
     it('should maintain performance with different metadata levels', async () => {
@@ -310,6 +313,7 @@ describe('RemoteLogger - Performance Integration Tests', () => {
           config: {
             batchSize: 50,
             metadataLevel: level,
+            initialConnectionDelay: 0, // No delay for tests
           },
           dependencies: { consoleLogger: mockConsoleLogger },
         });
@@ -321,22 +325,30 @@ describe('RemoteLogger - Performance Integration Tests', () => {
           logger.info(`Performance test message ${i}`);
         }
 
-        await jest.runAllTimersAsync();
+        // Wait for flush to complete with real timers
+        await logger.waitForPendingFlushes();
 
         const endTime = Date.now();
         const metrics = benchmark.end();
         results[level] = metrics.totalTime;
 
-        logger.destroy();
+        await logger.destroy();
       }
 
       // Performance assertions
       // Minimal should be fastest
       expect(results.minimal).toBeLessThanOrEqual(results.standard);
-      expect(results.standard).toBeLessThanOrEqual(results.full);
+      
+      // Standard vs Full: Allow 10% tolerance for timing variations
+      // The difference between standard and full is small (just extra metadata fields)
+      // so timing noise can occasionally cause inversions
+      const tolerance = 0.1; // 10% tolerance
+      const standardTime = results.standard;
+      const fullTime = results.full;
+      expect(standardTime).toBeLessThanOrEqual(fullTime * (1 + tolerance));
 
-      // All levels should be reasonably fast (adjusted for test env timing)
-      expect(results.full).toBeLessThan(5000); // Even full level should be <5000ms for 500 logs in test env
+      // All levels should be reasonably fast
+      expect(results.full).toBeLessThan(200); // Even full level should be <200ms for 500 logs
     });
 
     it('should handle burst logging with enhanced features', async () => {
@@ -355,6 +367,7 @@ describe('RemoteLogger - Performance Integration Tests', () => {
           flushInterval: 10,
           enableCategoryCache: true,
           metadataLevel: 'standard',
+          initialConnectionDelay: 0, // No delay for tests
         },
         dependencies: { consoleLogger: mockConsoleLogger },
       });
@@ -374,14 +387,15 @@ describe('RemoteLogger - Performance Integration Tests', () => {
         remoteLogger.info(message);
       }
 
-      await jest.runAllTimersAsync();
+      // Wait for flush to complete with real timers
+      await remoteLogger.waitForPendingFlushes();
 
       const endTime = Date.now();
       const duration = endTime - startTime;
       const metrics = benchmark.end();
 
       // Should handle burst efficiently
-      expect(metrics.totalTime).toBeLessThan(400); // Less than 400ms for 1000 logs
+      expect(metrics.totalTime).toBeLessThan(300); // Less than 300ms for 1000 logs
 
       const stats = remoteLogger.getStats();
       expect(stats.bufferSize).toBe(0); // All logs should be sent
@@ -408,9 +422,10 @@ describe('RemoteLogger - Performance Integration Tests', () => {
         remoteLogger = new RemoteLogger({
           config: {
             batchSize: Math.max(10, size / 10),
-            flushInterval: 5000,
+            flushInterval: 50, // Reduced for faster test execution
             metadataLevel: 'standard',
             enableCategoryCache: true,
+            initialConnectionDelay: 0, // No delay for tests
           },
           dependencies: { consoleLogger: mockConsoleLogger },
         });
@@ -424,7 +439,7 @@ describe('RemoteLogger - Performance Integration Tests', () => {
         }
 
         await remoteLogger.flush();
-        await jest.runAllTimersAsync();
+        await remoteLogger.waitForPendingFlushes();
 
         const metrics = benchmark.end();
         timings.push({

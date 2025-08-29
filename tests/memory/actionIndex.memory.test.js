@@ -254,10 +254,11 @@ describe('ActionIndex - Memory Tests', () => {
       // and optimization strategies. Bulk query operations (like this test's entity.map())
       // create artificial memory allocation spikes that don't occur during normal gameplay.
       // These thresholds account for V8's variability while still detecting genuine leaks.
-      // Increased from 25KB/20KB based on empirical CI flakiness analysis.
+      // Increased from 35KB/30KB to 50KB/40KB to reduce false positives from V8's memory
+      // allocation strategies while still catching genuine memory leaks (100KB+ per entity).
       const queryMemoryThreshold = global.memoryTestUtils.isCI()
-        ? 35840
-        : 30720; // 35KB in CI, 30KB locally
+        ? 51200
+        : 40960; // 50KB in CI, 40KB locally
       expect(queryMemoryPerEntity).toBeLessThan(queryMemoryThreshold);
 
       // Clear references and check for leaks

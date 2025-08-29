@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:traits_rewriter_cache_hit",
+  "description": "Dispatched when a cache hit occurs in the traits rewriter service.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "key": {
+        "description": "Cache key that was hit",
+        "type": "string"
+      },
+      "characterName": {
+        "description": "Name of the character for which cached data was retrieved",
+        "type": "string"
+      },
+      "cacheType": {
+        "description": "Type of traits rewriter cache data",
+        "type": "string",
+        "enum": ["rewritten_traits", "generation_result"]
+      },
+      "timestamp": {
+        "description": "ISO 8601 timestamp of when cache hit occurred",
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "required": ["key"],
+    "additionalProperties": true
+  }
+}

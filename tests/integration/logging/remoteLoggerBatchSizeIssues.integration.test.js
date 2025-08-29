@@ -87,17 +87,20 @@ describe('RemoteLogger - Batch Size Issues Integration', () => {
 
   describe('Issue Reproduction - HTTP 400 Errors', () => {
     it('should reproduce HTTP 400 error when batch exceeds 1000 entries', async () => {
-      remoteLogger = new RemoteLogger(
-        {
+      remoteLogger = new RemoteLogger({
+        config: {
           endpoint: 'http://localhost:3001/api/debug-log',
           batchSize: 1500, // Intentionally large to trigger issue
           flushInterval: 100,
+          skipServerReadinessValidation: true, // Bypass health checks for testing
+          initialConnectionDelay: 0, // Enable immediate flushing
+          disableAdaptiveBatching: true, // Force single batch to trigger server errors
         },
-        {
+        dependencies: {
           eventBus: mockEventBus,
-          fallbackLogger: mockFallbackLogger,
+          consoleLogger: mockFallbackLogger,
         }
-      );
+      });
 
       // Generate logs that exceed server limit
       for (let i = 0; i < 1100; i++) {
@@ -123,28 +126,39 @@ describe('RemoteLogger - Batch Size Issues Integration', () => {
     });
 
     it('should reproduce buffer accumulation from failed requests', async () => {
-      remoteLogger = new RemoteLogger(
-        {
+      remoteLogger = new RemoteLogger({
+        config: {
           endpoint: 'http://localhost:3001/api/debug-log',
           batchSize: 100,
           flushInterval: 50,
           retryAttempts: 2,
+          skipServerReadinessValidation: true, // Bypass health checks for testing
+          initialConnectionDelay: 0, // Enable immediate flushing
+          disableAdaptiveBatching: true, // Force single batch behavior
         },
-        {
+        dependencies: {
           eventBus: mockEventBus,
-          fallbackLogger: mockFallbackLogger,
+          consoleLogger: mockFallbackLogger,
         }
-      );
+      });
 
       // Mock fetch to always return 400 to simulate server rejection
-      global.fetch = jest.fn(() =>
-        Promise.resolve({
+      global.fetch = jest.fn((url, options) => {
+        const request = {
+          url,
+          method: options.method,
+          body: JSON.parse(options.body),
+          headers: options.headers,
+        };
+        requests.push(request);
+
+        return Promise.resolve({
           ok: false,
           status: 400,
           statusText: 'Bad Request',
           json: () => Promise.resolve({ error: 'Server error' }),
-        })
-      );
+        });
+      });
 
       // Generate multiple batches of logs
       for (let batch = 0; batch < 15; batch++) {
@@ -171,21 +185,24 @@ describe('RemoteLogger - Batch Size Issues Integration', () => {
 
   describe('Issue Reproduction - HTTP 413 Errors', () => {
     it('should reproduce HTTP 413 error with large payload', async () => {
-      remoteLogger = new RemoteLogger(
-        {
+      remoteLogger = new RemoteLogger({
+        config: {
           endpoint: 'http://localhost:3001/api/debug-log',
           batchSize: 5000, // Very large batch
           flushInterval: 100,
+          skipServerReadinessValidation: true, // Bypass health checks for testing
+          initialConnectionDelay: 0, // Enable immediate flushing
+          disableAdaptiveBatching: true, // Force single batch to trigger server errors
         },
-        {
+        dependencies: {
           eventBus: mockEventBus,
-          fallbackLogger: mockFallbackLogger,
+          consoleLogger: mockFallbackLogger,
         }
-      );
+      });
 
-      // Generate logs with large messages to exceed 1MB payload
-      const largeMessage = 'x'.repeat(1000); // 1KB message
-      for (let i = 0; i < 2000; i++) {
+      // Generate logs with large messages to exceed 1MB payload but stay under 1000 count
+      const largeMessage = 'x'.repeat(2000); // 2KB message
+      for (let i = 0; i < 600; i++) { // 600 logs * ~2KB each = ~1.2MB
         remoteLogger.debug(`${largeMessage} - message ${i}`);
       }
 
@@ -210,27 +227,38 @@ describe('RemoteLogger - Batch Size Issues Integration', () => {
 
   describe('Buffer Management Issues', () => {
     it('should demonstrate buffer growth when flushes fail', async () => {
-      remoteLogger = new RemoteLogger(
-        {
+      remoteLogger = new RemoteLogger({
+        config: {
           endpoint: 'http://localhost:3001/api/debug-log',
           batchSize: 100,
           flushInterval: 50,
           retryAttempts: 1, // Minimal retries
+          skipServerReadinessValidation: true, // Bypass health checks for testing
+          initialConnectionDelay: 0, // Enable immediate flushing
+          disableAdaptiveBatching: true, // Force predictable batch behavior
         },
-        {
+        dependencies: {
           eventBus: mockEventBus,
-          fallbackLogger: mockFallbackLogger,
+          consoleLogger: mockFallbackLogger,
         }
-      );
+      });
 
       // Mock server to fail consistently
-      global.fetch = jest.fn(() =>
-        Promise.resolve({
+      global.fetch = jest.fn((url, options) => {
+        const request = {
+          url,
+          method: options.method,
+          body: JSON.parse(options.body),
+          headers: options.headers,
+        };
+        requests.push(request);
+
+        return Promise.resolve({
           ok: false,
           status: 500,
           statusText: 'Internal Server Error',
-        })
-      );
+        });
+      });
 
       // Continuously add logs
       const addLogs = () => {
@@ -248,7 +276,7 @@ describe('RemoteLogger - Batch Size Issues Integration', () => {
 
       // Buffer should have grown significantly due to failed flushes
       const stats = remoteLogger.getStats();
-      expect(stats.buffer.size).toBeGreaterThan(100);
+      expect(stats.bufferSize).toBeGreaterThan(100);
 
       // Should have made multiple failed requests
       expect(requests.length).toBeGreaterThan(1);

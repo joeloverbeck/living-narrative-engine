@@ -310,7 +310,10 @@
       "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/prioritySystem/priorityCalculator.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/unit/logging/remoteLoggerNetworkErrorClassification.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/integration/logging/remoteLoggerBatchingInefficiency.integration.test.js --no-coverage --verbose)",
-      "Bash(NODE_ENV=test npx jest tests/integration/logging/remoteLoggerBatchingInefficiency.integration.test.js --no-coverage --verbose --testNamePattern=\"should show batching efficiency\")"
+      "Bash(NODE_ENV=test npx jest tests/integration/logging/remoteLoggerBatchingInefficiency.integration.test.js --no-coverage --verbose --testNamePattern=\"should show batching efficiency\")",
+      "Bash(NODE_ENV=test npm run test:unit tests/unit/logging/remoteLoggerNetworkFailure.test.js)",
+      "Bash(NODE_ENV=test npm run test:unit tests/unit/logging/remoteLogger.test.js)",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopeDsl/clothingCoverageResolution.integration.test.js --no-coverage --verbose)"
     ],
     "deny": []
   }

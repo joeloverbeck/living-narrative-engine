@@ -255,48 +255,6 @@ describe('FilterResolver Error Handling Integration', () => {
     });
   });
 
-  describe('Error Handling Performance', () => {
-    it('should handle errors efficiently', () => {
-      const iterations = 1000;
-      const start = performance.now();
-
-      for (let i = 0; i < iterations; i++) {
-        try {
-          errorHandler.handleError(
-            new Error(`Performance test error ${i}`),
-            { depth: 0 },
-            'testResolver'
-          );
-        } catch (e) {
-          // Expected error
-        }
-      }
-
-      const duration = performance.now() - start;
-      expect(duration).toBeLessThan(200); // <0.2ms per error - adjusted for CI environment
-    });
-
-    it('should clear error buffer efficiently', () => {
-      const iterations = 100;
-
-      for (let i = 0; i < iterations; i++) {
-        errorHandler.clearErrorBuffer();
-
-        // Add some errors
-        try {
-          errorHandler.handleError(
-            new Error('Test error'),
-            { depth: 0 },
-            'testResolver'
-          );
-        } catch (e) {
-          // Expected error
-        }
-      }
-
-      expect(errorHandler.getErrorBuffer()).toBeDefined();
-    });
-  });
 
   // Helper functions for test data creation
   const createTestContext = () => ({

@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:traits_rewriter_generation_started",
+  "description": "Dispatched when traits rewriter generation begins for a character.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "characterName": {
+        "description": "The name of the character being processed",
+        "type": "string"
+      },
+      "timestamp": {
+        "description": "ISO 8601 timestamp of when generation started",
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "required": ["characterName", "timestamp"],
+    "additionalProperties": true
+  }
+}

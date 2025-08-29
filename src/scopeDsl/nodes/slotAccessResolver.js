@@ -220,15 +220,15 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
    *
    * @param {object} clothingAccess - The clothing access object from ClothingStepResolver
    * @param {string} slotName - The slot name to access
-   * @param {object} trace - Optional trace logger
+   * @param {object} ctx - Resolution context with trace and structuredTrace
    * @returns {string|null} The entity ID of the item in the slot or null
    */
-  function resolveSlotAccess(clothingAccess, slotName, trace) {
+  function resolveSlotAccess(clothingAccess, slotName, ctx) {
     const { equipped, mode } = clothingAccess;
     const slotData = equipped[slotName];
 
     // Enhanced structured tracing integration
-    const ctx = trace?.__ctx || trace; // Support both direct trace and context with trace
+    const trace = ctx?.trace;
     const structuredTrace = ctx?.structuredTrace;
     const performanceMonitor = ctx?.performanceMonitor;
 
@@ -494,7 +494,7 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
             subItem !== null &&
             subItem.__clothingSlotAccess
           ) {
-            const slotItem = resolveSlotAccess(subItem, field, ctx.trace);
+            const slotItem = resolveSlotAccess(subItem, field, ctx);
             if (slotItem) {
               // Enhancement: Apply additional coverage validation here
               const enhancedResult = applyEnhancedCoverage(slotItem, field, ctx);
@@ -508,7 +508,7 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
         item.__clothingSlotAccess
       ) {
         // This is a clothing slot access object from ClothingStepResolver
-        const slotItem = resolveSlotAccess(item, field, ctx.trace);
+        const slotItem = resolveSlotAccess(item, field, ctx);
         if (slotItem) {
           // Enhancement: Apply additional coverage validation here
           const enhancedResult = applyEnhancedCoverage(slotItem, field, ctx);

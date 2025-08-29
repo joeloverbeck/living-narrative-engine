@@ -222,7 +222,12 @@ describe('CoverageTracingEnhancer', () => {
     });
 
     it('should use existing structured trace when present', () => {
-      const existingTrace = { existing: true };
+      const existingTrace = {
+        startSpan: jest.fn().mockReturnValue(mockSpan),
+        endSpan: jest.fn(),
+        getActiveSpan: jest.fn().mockReturnValue(mockSpan),
+        getSpans: jest.fn().mockReturnValue([])
+      };
       const mockNode = {
         type: 'Step',
         field: 'torso_upper',

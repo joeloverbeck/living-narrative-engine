@@ -29,12 +29,17 @@ describe('RemoteLogger Connection Issues - Integration', () => {
       const mockLogger = testBed.createMockLogger();
       
       // Use the same endpoint configuration as production
-      remoteLogger = new RemoteLogger(mockLogger, {
-        endpoint: 'http://127.0.0.1:3001/api/debug-log',
-        batchSize: 100,
-        flushInterval: 1000,
-        retryAttempts: 1, // Reduce for faster test
-        requestTimeout: 5000
+      remoteLogger = new RemoteLogger({
+        config: {
+          endpoint: 'http://127.0.0.1:3001/api/debug-log',
+          batchSize: 100,
+          flushInterval: 1000,
+          retryAttempts: 1, // Reduce for faster test
+          requestTimeout: 5000
+        },
+        dependencies: {
+          consoleLogger: mockLogger
+        }
       });
 
       // Try to log something - this should trigger the connection attempt
@@ -45,7 +50,8 @@ describe('RemoteLogger Connection Issues - Integration', () => {
 
       // Verify that the logger falls back to console and logs the failure
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to send batch to server, falling back to console')
+        expect.stringContaining('Failed to send batch to server, falling back to console'),
+        expect.any(Object)
       );
     });
 
@@ -53,12 +59,17 @@ describe('RemoteLogger Connection Issues - Integration', () => {
       // Simulate the scenario where client starts logging immediately after bootstrap
       const mockLogger = testBed.createMockLogger();
       
-      remoteLogger = new RemoteLogger(mockLogger, {
-        endpoint: 'http://127.0.0.1:3001/api/debug-log',
-        batchSize: 10, // Small batch for immediate sending
-        flushInterval: 100, // Fast flush
-        retryAttempts: 2,
-        requestTimeout: 3000
+      remoteLogger = new RemoteLogger({
+        config: {
+          endpoint: 'http://127.0.0.1:3001/api/debug-log',
+          batchSize: 10, // Small batch for immediate sending
+          flushInterval: 100, // Fast flush
+          retryAttempts: 2,
+          requestTimeout: 3000
+        },
+        dependencies: {
+          consoleLogger: mockLogger
+        }
       });
 
       // Simulate rapid logging that happens during app bootstrap
@@ -71,7 +82,8 @@ describe('RemoteLogger Connection Issues - Integration', () => {
 
       // Should see multiple connection failures
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to send batch to server')
+        expect.stringContaining('Failed to send batch to server'),
+        expect.any(Object)
       );
     });
 
@@ -85,12 +97,17 @@ describe('RemoteLogger Connection Issues - Integration', () => {
       ];
 
       for (const endpoint of endpoints) {
-        const logger = new RemoteLogger(mockLogger, {
-          endpoint,
-          batchSize: 1,
-          flushInterval: 100,
-          retryAttempts: 1,
-          requestTimeout: 2000
+        const logger = new RemoteLogger({
+          config: {
+            endpoint,
+            batchSize: 1,
+            flushInterval: 100,
+            retryAttempts: 1,
+            requestTimeout: 2000
+          },
+          dependencies: {
+            consoleLogger: mockLogger
+          }
         });
 
         logger.info(`Testing endpoint: ${endpoint}`);
@@ -103,7 +120,8 @@ describe('RemoteLogger Connection Issues - Integration', () => {
 
       // Both should fail with connection refused
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to send batch to server')
+        expect.stringContaining('Failed to send batch to server'),
+        expect.any(Object)
       );
     });
   });
@@ -114,13 +132,18 @@ describe('RemoteLogger Connection Issues - Integration', () => {
       // For now, it documents the expected behavior
       const mockLogger = testBed.createMockLogger();
       
-      remoteLogger = new RemoteLogger(mockLogger, {
-        endpoint: 'http://127.0.0.1:3001/api/debug-log',
-        batchSize: 10,
-        flushInterval: 1000,
-        retryAttempts: 3,
-        retryBaseDelay: 500,
-        requestTimeout: 10000
+      remoteLogger = new RemoteLogger({
+        config: {
+          endpoint: 'http://127.0.0.1:3001/api/debug-log',
+          batchSize: 10,
+          flushInterval: 1000,
+          retryAttempts: 3,
+          retryBaseDelay: 500,
+          requestTimeout: 10000
+        },
+        dependencies: {
+          consoleLogger: mockLogger
+        }
       });
 
       // Log a test message
@@ -140,7 +163,8 @@ describe('RemoteLogger Connection Issues - Integration', () => {
       } else {
         // Until proxy server is fixed, we expect failures
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Failed to send batch to server')
+          expect.stringContaining('Failed to send batch to server'),
+          expect.any(Object)
         );
       }
     });
@@ -148,14 +172,20 @@ describe('RemoteLogger Connection Issues - Integration', () => {
     it('should implement proper retry logic with backoff', async () => {
       const mockLogger = testBed.createMockLogger();
       
-      remoteLogger = new RemoteLogger(mockLogger, {
-        endpoint: 'http://127.0.0.1:3001/api/debug-log',
-        batchSize: 5,
-        flushInterval: 500,
-        retryAttempts: 3,
-        retryBaseDelay: 100,
-        retryMaxDelay: 1000,
-        requestTimeout: 2000
+      remoteLogger = new RemoteLogger({
+        config: {
+          endpoint: 'http://127.0.0.1:3001/api/debug-log',
+          batchSize: 5,
+          flushInterval: 500,
+          retryAttempts: 3,
+          retryBaseDelay: 100,
+          retryMaxDelay: 1000,
+          requestTimeout: 2000,
+          skipServerReadinessValidation: true // Skip health check to test retry logic
+        },
+        dependencies: {
+          consoleLogger: mockLogger
+        }
       });
 
       // Log messages to trigger retry sequence
@@ -169,7 +199,8 @@ describe('RemoteLogger Connection Issues - Integration', () => {
       // Should see evidence of retry attempts in logs
       // This will be implemented as part of the fix
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Retrying batch send')
+        expect.stringContaining('Retrying batch send'),
+        expect.any(Object)
       );
     });
   });

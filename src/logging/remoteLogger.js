@@ -960,7 +960,7 @@ class RemoteLogger {
           // Don't requeue - these logs won't succeed on retry
           this.#fallbackLogger?.warn(
             '[RemoteLogger] Discarding batch due to client error',
-            { error: error.message, logCount: logsToSend.length }
+            { error: error?.message || String(error), logCount: logsToSend.length }
           );
         } else {
           // For server errors (5xx) or network issues, consider limited requeue
@@ -1440,7 +1440,7 @@ class RemoteLogger {
       this.#fallbackLogger.warn(
         '[RemoteLogger] Failed to send batch to server, falling back to console',
         {
-          error: error.message,
+          error: error?.message || String(error),
           logCount: logs.length,
           circuitBreakerState: this.#circuitBreaker.getState(),
         }
@@ -1472,7 +1472,7 @@ class RemoteLogger {
       this.#eventBus.dispatch({
         type: 'REMOTE_LOGGER_SEND_FAILED',
         payload: {
-          error: error.message,
+          error: error?.message || String(error),
           logCount: logs.length,
           circuitBreakerState: this.#circuitBreaker.getState(),
           endpoint: this.#endpoint,
@@ -1846,6 +1846,7 @@ class RemoteLogger {
    * @returns {boolean} True if this is a client error
    */
   #isClientError(error) {
+    if (!error) return false;
     const message = error.message || '';
     return (
       message.includes('HTTP 4') ||
@@ -1864,6 +1865,7 @@ class RemoteLogger {
    * @returns {boolean} True if this is a non-retriable error
    */
   #isNonRetriableError(error) {
+    if (!error) return false;
     const message = error.message || '';
     return (
       // Browser-specific network failures that won't be fixed by retrying
@@ -1895,6 +1897,7 @@ class RemoteLogger {
    * @returns {boolean} True if this is a retriable connection error
    */
   #isConnectionError(error) {
+    if (!error) return false;
     const message = error.message || '';
     return (
       message.includes('ECONNREFUSED') ||
@@ -1963,7 +1966,7 @@ class RemoteLogger {
           {
             requeuedCount: logsToRequeue,
             discardedCount: logs.length - logsToRequeue,
-            error: error.message,
+            error: error?.message || String(error),
           }
         );
       }
