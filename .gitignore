@@ -208,3 +208,6 @@ coverage-temp/
 .serena/cache/
 */.serena/cache/
 **/.serena/cache/
+
+# Action trace files
+traces/

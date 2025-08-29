@@ -577,7 +577,8 @@ class LoggerStrategy {
         buffer.forEach((log) => {
           const level = log.level || 'info';
           if (typeof newLogger[level] === 'function') {
-            newLogger[level](log.message, ...log.args);
+            const args = log.args || [];
+            newLogger[level](log.message, ...args);
           }
         });
       }

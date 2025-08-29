@@ -3,15 +3,20 @@
   "traceAnalysisEnabled": false,
   "actionTracing": {
     "enabled": false,
-    "tracedActions": ["positioning:turn_your_back"],
-    "outputDirectory": "./traces/turn-your-back",
+    "tracedActions": [
+      "intimacy:fondle_ass"
+    ],
+    "outputDirectory": "./traces/covering",
     "verbosity": "verbose",
     "includeComponentData": true,
     "includePrerequisites": true,
     "includeTargets": true,
     "maxTraceFiles": 100,
     "rotationPolicy": "count",
-    "outputFormats": ["json", "text"],
+    "outputFormats": [
+      "json",
+      "text"
+    ],
     "textFormatOptions": {
       "enableColors": false,
       "lineWidth": 120,
@@ -63,7 +68,9 @@
       "includePerformanceMetrics": true,
       "includeCandidateDetails": true,
       "includePhaseBreakdown": true,
-      "outputFormats": ["text"],
+      "outputFormats": [
+        "text"
+      ],
       "textFormatOptions": {
         "enableColors": false,
         "includeTimestamps": true,

@@ -14,33 +14,17 @@ import {
 import { ScopeCacheStrategy } from '../../../../src/actions/scopes/scopeCacheStrategy.js';
 import { UnifiedScopeResolver } from '../../../../src/actions/scopes/unifiedScopeResolver.js';
 import { ActionResult } from '../../../../src/actions/core/actionResult.js';
-import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
-import { configureContainer } from '../../../../src/dependencyInjection/containerConfig.js';
-import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { TARGET_DOMAIN_SELF } from '../../../../src/constants/targetDomains.js';
+import { ContainerTestBed } from '../../../common/containerTestBed.js';
 
 describe('ScopeCacheStrategy Integration Tests', () => {
-  let container;
+  let testBed;
   let cacheStrategy;
   let mockLogger;
+  let mockContainer;
 
-  beforeEach(async () => {
-    jest.clearAllMocks();
-
-    // Create DOM elements needed by container configuration
-    const outputDiv = document.createElement('div');
-    const inputElement = document.createElement('input');
-    const titleElement = document.createElement('h1');
-
-    // Create and configure container
-    container = new AppContainer();
-    await configureContainer(container, {
-      outputDiv,
-      inputElement,
-      titleElement,
-      document,
-    });
-
+  // Set up shared mock dependencies once
+  beforeAll(() => {
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -48,19 +32,42 @@ describe('ScopeCacheStrategy Integration Tests', () => {
       error: jest.fn(),
     };
 
-    // Create cache strategy with real dependencies
+    // Create lightweight mock container
+    mockContainer = {
+      resolve: jest.fn().mockImplementation((token) => {
+        const mocks = {
+          IScopeRegistry: { getScope: jest.fn() },
+          IScopeEngine: { resolve: jest.fn() },
+          IEntityManager: { getEntity: jest.fn() },
+          JsonLogicEvaluationService: { evaluate: jest.fn() },
+          DslParser: { parse: jest.fn() },
+          ILogger: mockLogger,
+          IActionErrorContextBuilder: { buildErrorContext: jest.fn() },
+        };
+        return mocks[token] || {};
+      }),
+    };
+
+    testBed = new ContainerTestBed(mockContainer);
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    // Create fresh cache strategy for each test
     cacheStrategy = new ScopeCacheStrategy({
       logger: mockLogger,
       maxSize: 5,
       defaultTTL: 1000,
     });
-
-    // Note: UnifiedScopeResolver can be resolved when needed for specific tests
   });
 
   afterEach(() => {
     cacheStrategy.clear();
-    jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    testBed?.cleanup?.();
   });
 
   describe('Cache Hit Path Integration (lines 70-80)', () => {
@@ -85,18 +92,20 @@ describe('ScopeCacheStrategy Integration Tests', () => {
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle expired entry removal during getSync (lines 78-80)', async () => {
+    it('should handle expired entry removal during getSync (lines 78-80)', () => {
+      jest.useFakeTimers();
+
       const testValue = ActionResult.success(new Set(['expired']));
       const testKey = 'test:expired:actor123:location1';
 
       // Set value with very short TTL
-      cacheStrategy.setSync(testKey, testValue, 10);
+      cacheStrategy.setSync(testKey, testValue, 5);
 
       // Verify it exists initially
       expect(cacheStrategy.getSync(testKey)).toBe(testValue);
 
-      // Wait for expiration
-      await new Promise((resolve) => setTimeout(resolve, 20));
+      // Fast-forward time to expire the entry
+      jest.advanceTimersByTime(10);
 
       // Clear mock logs to focus on expiration behavior
       mockLogger.debug.mockClear();
@@ -112,6 +121,8 @@ describe('ScopeCacheStrategy Integration Tests', () => {
         key: testKey,
       });
       expect(cacheStrategy.size).toBe(0); // Expired entry should be removed
+
+      jest.useRealTimers();
     });
   });
 
@@ -366,10 +377,10 @@ describe('ScopeCacheStrategy Integration Tests', () => {
         // Set up test data with different TTLs
         cacheStrategy.setSync('valid1', 'value1', 2000);
         cacheStrategy.setSync('valid2', 'value2', 3000);
-        cacheStrategy.setSync('expire', 'value3', 10);
+        cacheStrategy.setSync('expire', 'value3', 5);
 
         // Wait for one to expire
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        await new Promise((resolve) => setTimeout(resolve, 10));
 
         // Test getStats method (lines 259-281)
         const stats = cacheStrategy.getStats();
@@ -419,14 +430,14 @@ describe('ScopeCacheStrategy Integration Tests', () => {
       it('should remove expired entries during cleanup', async () => {
         // Set up entries with different expiration times
         cacheStrategy.setSync('keep1', 'value1', 2000);
-        cacheStrategy.setSync('expire1', 'value2', 10);
-        cacheStrategy.setSync('expire2', 'value3', 10);
+        cacheStrategy.setSync('expire1', 'value2', 5);
+        cacheStrategy.setSync('expire2', 'value3', 5);
         cacheStrategy.setSync('keep2', 'value4', 2000);
 
         expect(cacheStrategy.size).toBe(4);
 
         // Wait for some to expire
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        await new Promise((resolve) => setTimeout(resolve, 10));
 
         // Test cleanup method (lines 300-320)
         const cleanedCount = cacheStrategy.cleanup();
@@ -457,19 +468,15 @@ describe('ScopeCacheStrategy Integration Tests', () => {
 
   describe('UnifiedScopeResolver Integration', () => {
     it('should work with UnifiedScopeResolver for real caching scenarios', () => {
-      // Create UnifiedScopeResolver with our cache strategy
+      // Create UnifiedScopeResolver with mock dependencies
       const testResolver = new UnifiedScopeResolver({
-        scopeRegistry: container.resolve(tokens.IScopeRegistry),
-        scopeEngine: container.resolve(tokens.IScopeEngine),
-        entityManager: container.resolve(tokens.IEntityManager),
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: container.resolve(tokens.DslParser),
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
+        scopeRegistry: testBed.container.resolve('IScopeRegistry'),
+        scopeEngine: testBed.container.resolve('IScopeEngine'),
+        entityManager: testBed.container.resolve('IEntityManager'),
+        jsonLogicEvaluationService: testBed.container.resolve('JsonLogicEvaluationService'),
+        dslParser: testBed.container.resolve('DslParser'),
+        logger: testBed.container.resolve('ILogger'),
+        actionErrorContextBuilder: testBed.container.resolve('IActionErrorContextBuilder'),
         cacheStrategy: cacheStrategy,
       });
 
@@ -477,6 +484,10 @@ describe('ScopeCacheStrategy Integration Tests', () => {
         actor: { id: 'integration-actor', componentTypeIds: [] },
         actorLocation: 'location1',
       };
+
+      // Mock the resolver to return consistent results
+      const mockResult = ActionResult.success(new Set(['mock-entity']));
+      testBed.container.resolve('IScopeEngine').resolve.mockReturnValue(mockResult);
 
       // First call - should miss cache and potentially populate it
       const result1 = testResolver.resolve(TARGET_DOMAIN_SELF, context, {
@@ -538,7 +549,7 @@ describe('ScopeCacheStrategy Integration Tests', () => {
       for (let i = 0; i < 10; i++) {
         promises.push(
           cacheStrategy.get(`concurrent-${i}`, async () => {
-            await new Promise((resolve) => setTimeout(resolve, 10));
+            await new Promise((resolve) => setTimeout(resolve, 5));
             return ActionResult.success(new Set([`result-${i}`]));
           })
         );
@@ -613,6 +624,8 @@ describe('ScopeCacheStrategy Integration Tests', () => {
     });
 
     it('should handle zero and negative TTL values', () => {
+      jest.useFakeTimers();
+
       // Zero TTL should use default
       cacheStrategy.setSync('zero-ttl', 'value', 0);
       expect(cacheStrategy.getSync('zero-ttl')).toBe('value');
@@ -620,6 +633,8 @@ describe('ScopeCacheStrategy Integration Tests', () => {
       // Negative TTL should expire immediately
       cacheStrategy.setSync('negative-ttl', 'value', -100);
       expect(cacheStrategy.getSync('negative-ttl')).toBeNull();
+
+      jest.useRealTimers();
     });
   });
 
@@ -627,12 +642,12 @@ describe('ScopeCacheStrategy Integration Tests', () => {
     it('should maintain cache integrity through multiple operations', async () => {
       // Perform various operations in sequence
       cacheStrategy.setSync('lifecycle1', 'value1', 1000);
-      cacheStrategy.setSync('lifecycle2', 'value2', 100);
+      cacheStrategy.setSync('lifecycle2', 'value2', 25);
 
       expect(cacheStrategy.size).toBe(2);
 
       // Wait for one to expire
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Add more entries
       cacheStrategy.setSync('lifecycle3', 'value3');

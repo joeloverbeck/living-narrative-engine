@@ -3,8 +3,7 @@
  * Tests build speed and performance optimization with robust error handling
  * 
  * Usage:
- *   Normal (fast): npm run test:performance
- *   Extended: PERF_TESTS_EXTENDED=true npm run test:performance
+ *   npm run test:performance
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -17,7 +16,6 @@ describe('Build System Performance', () => {
   const testTimeout = 120000; // 120 seconds for performance tests with retries
   const maxRetries = 2;
   const buildTimeoutMs = 60000; // 60 seconds timeout per build attempt
-  const runExtendedTests = process.env.PERF_TESTS_EXTENDED === 'true';
 
   // Helper function to execute build commands with proper error handling
   const executeBuild = async (command, args = [], useFastMode = true) => {
@@ -227,8 +225,8 @@ describe('Build System Performance', () => {
 
   });
 
-  // Extended performance tests - run only when PERF_TESTS_EXTENDED=true
-  (runExtendedTests ? describe : describe.skip)('Extended Build Performance', () => {
+  // Extended performance tests
+  describe('Extended Build Performance', () => {
     it(
       'should demonstrate consistent build performance across runs',
       async () => {
@@ -279,7 +277,7 @@ describe('Build System Performance', () => {
     );
   });
 
-  (runExtendedTests ? describe : describe.skip)('Parallel vs Sequential Performance', () => {
+  describe('Parallel vs Sequential Performance', () => {
     it(
       'should validate parallel and sequential build modes work correctly',
       async () => {

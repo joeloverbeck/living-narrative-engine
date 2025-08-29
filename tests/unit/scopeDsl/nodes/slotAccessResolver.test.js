@@ -706,7 +706,7 @@ describe('SlotAccessResolver', () => {
 
       expect(mockContext.trace.addLog).toHaveBeenCalledWith(
         'info',
-        expect.stringContaining('No data found for slot'),
+        expect.stringContaining('No items found for slot'),
         'SlotAccessResolver',
         expect.objectContaining({
           slotName: 'left_arm_clothing',
@@ -1180,7 +1180,7 @@ describe('SlotAccessResolver', () => {
       expect(result).toEqual(new Set());
       expect(mockContextLocal.trace.addLog).toHaveBeenCalledWith(
         'info',
-        expect.stringContaining('No data found for slot'),
+        expect.stringContaining('No items found for slot'),
         'SlotAccessResolver',
         expect.any(Object)
       );

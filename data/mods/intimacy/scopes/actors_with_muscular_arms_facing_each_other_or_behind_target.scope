@@ -1,8 +1,13 @@
-// Scope for actors in closeness who have muscular arms and are either facing each other OR actor is behind the target
-// Used by actions that require arm anatomy with muscular build and can work from either face-to-face or behind positions
+// Scope for actors in closeness who have muscular or hulking arms and are either facing each other OR actor is behind the target
+// Used by actions that require arm anatomy with muscular/hulking build and can work from either face-to-face or behind positions
 intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target := actor.components.positioning:closeness.partners[][{
   "and": [
-    {"hasPartOfTypeWithComponentValue": [".", "arm", "descriptors:build", "build", "muscular"]},
+    {
+      "or": [
+        {"hasPartOfTypeWithComponentValue": [".", "arm", "descriptors:build", "build", "muscular"]},
+        {"hasPartOfTypeWithComponentValue": [".", "arm", "descriptors:build", "build", "hulking"]}
+      ]
+    },
     {
       "or": [
         {"condition_ref": "positioning:both-actors-facing-each-other"},

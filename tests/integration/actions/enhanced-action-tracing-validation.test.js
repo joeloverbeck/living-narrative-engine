@@ -111,24 +111,23 @@ describe('Enhanced Action Tracing Validation', () => {
     );
     expect(slotLogs.length).toBeGreaterThan(0);
 
-    const analysisLog = slotLogs.find((log) =>
-      log.message.includes('Analyzing slot')
+    // Check for the "Processing slot" log
+    const processingLog = slotLogs.find((log) =>
+      log.message.includes('Processing slot torso_lower')
     );
-    expect(analysisLog).toBeDefined();
-    expect(analysisLog.data.mode).toBe('topmost_no_accessories');
-    expect(analysisLog.data.excludesAccessories).toBe(true);
-    expect(analysisLog.data.availableLayers.accessories).toBe(
-      'clothing:dark_brown_leather_belt'
-    );
+    expect(processingLog).toBeDefined();
+    expect(processingLog.data.field).toBe('torso_lower');
 
-    const failureLog = slotLogs.find((log) =>
-      log.message.includes('No item selected')
+    // Check for the "No items found" log (since accessories are excluded)
+    const noItemsLog = slotLogs.find((log) =>
+      log.message.includes('No items found for slot torso_lower')
     );
-    expect(failureLog).toBeDefined();
-    expect(failureLog.data.failureReason).toBe(
-      'Only accessories available but mode excludes accessories'
-    );
-    expect(failureLog.data.hasAccessoriesOnly).toBe(true);
+    expect(noItemsLog).toBeDefined();
+    expect(noItemsLog.data.slotName).toBe('torso_lower');
+    expect(noItemsLog.data.mode).toBe('topmost_no_accessories');
+    
+    // The available slots should include torso_lower since it has accessories
+    expect(noItemsLog.data.availableSlots).toContain('torso_lower');
   });
 
   it('should trace successful clothing resolution for scenario with base layer', () => {

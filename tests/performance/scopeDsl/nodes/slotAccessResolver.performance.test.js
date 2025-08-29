@@ -70,32 +70,33 @@ describe('SlotAccessResolver Performance', () => {
   beforeEach(() => {
     testBed = createTestBed();
     
-    // Create mock entities gateway
-    const mockEntitiesGateway = testBed.createMock('entitiesGateway', ['getEntity']);
-    mockEntitiesGateway.getEntity.mockReturnValue({
-      id: 'test_entity',
-      components: {
-        'core:equipment': {
+    // Create mock entities gateway with correct methods
+    const mockEntitiesGateway = testBed.createMock('entitiesGateway', ['getComponentData']);
+    mockEntitiesGateway.getComponentData.mockImplementation((entityId, componentType) => {
+      if (componentType === 'clothing:equipment') {
+        return {
           equipped: {
             torso_upper: { outer: 'jacket_1', base: 'shirt_1' },
             torso_lower: { base: 'pants_1' },
           },
-        },
-      },
+        };
+      }
+      return null;
     });
 
-    // Create resolver
+    // Create resolver (only entitiesGateway parameter)
     resolver = createSlotAccessResolver({
       entitiesGateway: mockEntitiesGateway,
-      logger: testBed.createMockLogger(),
     });
 
-    // Setup mock context
+    // Setup mock context with all expected properties
     mockContext = {
       dispatcher: {
         resolve: jest.fn(),
       },
       trace: null, // Disable tracing for performance tests
+      structuredTrace: null, // Add missing structuredTrace property
+      performanceMonitor: null, // Add missing performanceMonitor property
     };
   });
 

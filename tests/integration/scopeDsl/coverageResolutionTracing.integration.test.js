@@ -234,7 +234,7 @@ describe('Coverage Resolution Tracing Integration', () => {
 
       const candidateCollectionSpan = spans.find(s => s.operation === 'candidate_collection');
       expect(candidateCollectionSpan).toBeDefined();
-      expect(candidateCollectionSpan.attributes.totalCandidatesFound).toBe(3);
+      expect(candidateCollectionSpan.attributes.candidateCount).toBe(3);
 
       const priorityCalculationSpan = spans.find(s => s.operation === 'priority_calculation');
       expect(priorityCalculationSpan).toBeDefined();
@@ -287,7 +287,7 @@ describe('Coverage Resolution Tracing Integration', () => {
       const candidateCollectionSpan = structuredTrace.getSpans().find(s => s.operation === 'candidate_collection');
       
       // Should only find one candidate for outer mode
-      expect(candidateCollectionSpan.attributes.totalCandidatesFound).toBe(1);
+      expect(candidateCollectionSpan.attributes.candidateCount).toBe(1);
     });
 
     it('should handle empty clothing slots with proper tracing', () => {

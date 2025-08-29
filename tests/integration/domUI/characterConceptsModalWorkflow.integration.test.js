@@ -11,17 +11,26 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import AppContainer from '../../../src/dependencyInjection/appContainer.js';
-import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
+import {
+  createTestContainer,
+  createMockCharacterBuilderService,
+  createFastIndexedDBMock,
+  createMinimalModalDOM,
+} from '../../common/testContainerConfig.js';
+import {
+  flushPromises,
+  waitForModalOpen,
+  waitForModalClose,
+  waitForValidation,
+  waitForCapturedEvents,
+  waitForIndexedDB,
+  waitForInputValue,
+} from '../../common/testWaitUtils.js';
 
-// Mock IndexedDB for testing
-const mockIndexedDB = {
-  open: jest.fn(),
-  deleteDatabase: jest.fn(),
-};
-global.indexedDB = mockIndexedDB;
+// Mock IndexedDB for testing with fast resolution
+global.indexedDB = createFastIndexedDBMock();
 
 describe('Character Concepts Manager - Modal Workflow Integration', () => {
   let container;
@@ -37,135 +46,31 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
     capturedEvents = [];
     eventUnsubscribers = [];
 
-    // Reset DOM
-    document.body.innerHTML = '';
+    // Reset DOM with optimized template
+    document.body.innerHTML = createMinimalModalDOM();
 
-    // Configure IndexedDB mock for database initialization
-    const mockDB = {
-      createObjectStore: jest.fn(() => ({
-        createIndex: jest.fn(),
-      })),
-      objectStoreNames: {
-        contains: jest.fn(() => false),
+    // Create lightweight test container
+    const existingConcepts = [
+      {
+        id: 'existing-concept-1',
+        concept: 'A brave knight with a mysterious past',
+        created: Date.now() - 86400000, // 1 day ago
+        updated: Date.now() - 3600000, // 1 hour ago
+        createdAt: Date.now() - 86400000,
+        updatedAt: Date.now() - 3600000,
       },
-      transaction: jest.fn(() => ({
-        objectStore: jest.fn(() => ({
-          put: jest.fn(() => ({
-            onsuccess: null,
-            onerror: null,
-          })),
-          get: jest.fn(() => ({
-            onsuccess: null,
-            onerror: null,
-            result: null,
-          })),
-          getAll: jest.fn(() => ({
-            onsuccess: null,
-            onerror: null,
-            result: [],
-          })),
-          delete: jest.fn(() => ({
-            onsuccess: null,
-            onerror: null,
-          })),
-          index: jest.fn(() => ({
-            getAll: jest.fn(() => ({
-              onsuccess: null,
-              onerror: null,
-              result: [],
-            })),
-          })),
-        })),
-        oncomplete: null,
-        onerror: null,
-      })),
-    };
-
-    const mockRequest = {
-      result: mockDB,
-      onsuccess: null,
-      onerror: null,
-      onupgradeneeded: null,
-    };
-
-    mockIndexedDB.open.mockReturnValue(mockRequest);
-
-    // Simulate successful database open
-    setTimeout(() => {
-      if (mockRequest.onupgradeneeded) {
-        mockRequest.onupgradeneeded({ target: { result: mockDB } });
-      }
-      if (mockRequest.onsuccess) {
-        mockRequest.onsuccess();
-      }
-    }, 0);
-
-    // Create container
-    container = new AppContainer();
-
-    // Create required DOM elements
-    document.body.innerHTML = `
-      <div id="character-concepts-manager-container">
-        <div id="concepts-container"></div>
-        <div id="concepts-results"></div>
-        <div id="empty-state"></div>
-        <div id="loading-state" style="display: none;"></div>
-        <div id="error-state" style="display: none;"></div>
-        <div id="results-state" style="display: none;"></div>
-        <div id="error-message-text"></div>
-        <button id="create-concept-btn">Create Concept</button>
-        <button id="create-first-btn">Create First</button>
-        <button id="retry-btn">Retry</button>
-        <button id="back-to-menu-btn">Back</button>
-        <input id="concept-search" type="text" />
-        <div class="stats-display"></div>
-        <span id="total-concepts">0</span>
-        <span id="concepts-with-directions">0</span>
-        <span id="total-directions">0</span>
-        
-        <!-- Create/Edit Modal -->
-        <div id="concept-modal" class="modal" style="display: none;">
-          <div class="modal-content">
-            <h2 id="concept-modal-title">Create Character Concept</h2>
-            <form id="concept-form">
-              <textarea id="concept-text" required minlength="10"></textarea>
-              <span id="char-count">0/1000</span>
-              <div id="concept-help" class="input-help">Describe your character concept (50-3000 characters)</div>
-              <div id="concept-error"></div>
-              <button id="save-concept-btn" type="submit">Save Concept</button>
-              <button id="cancel-concept-btn" type="button">Cancel</button>
-              <button id="close-concept-modal" type="button">×</button>
-            </form>
-          </div>
-        </div>
-        
-        <!-- Delete Modal -->
-        <div id="delete-confirmation-modal" class="modal" style="display: none;">
-          <div class="modal-content">
-            <h2 id="delete-modal-title">Confirm Deletion</h2>
-            <div id="delete-modal-message"></div>
-            <button id="confirm-delete-btn">Delete</button>
-            <button id="cancel-delete-btn">Cancel</button>
-            <button id="close-delete-modal">×</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Configure container
-    const mockUiElements = {
-      outputDiv: document.createElement('div'),
-      inputElement: document.createElement('input'),
-      titleElement: document.createElement('h1'),
-      document: document,
-    };
-
-    await configureContainer(container, mockUiElements);
+    ];
+    
+    characterBuilderService = createMockCharacterBuilderService({ existingConcepts });
+    container = await createTestContainer({
+      mockServices: {
+        [tokens.CharacterBuilderService]: characterBuilderService,
+      },
+    });
 
     // Get services
     logger = container.resolve(tokens.ILogger);
     eventBus = container.resolve(tokens.ISafeEventDispatcher);
-    characterBuilderService = container.resolve(tokens.CharacterBuilderService);
 
     // Setup event capturing
     const eventTypes = [
@@ -187,66 +92,24 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
       eventUnsubscribers.push(unsubscribe);
     });
 
-    // Mock character builder service
-    characterBuilderService.getAllCharacterConcepts = jest
-      .fn()
-      .mockImplementation(async () => {
-        // Need to return fresh data on each call to handle updates
-        return [
-          {
-            id: 'existing-concept-1',
-            concept: 'A brave knight with a mysterious past',
-            created: Date.now() - 86400000, // 1 day ago
-            updated: Date.now() - 3600000, // 1 hour ago
-            createdAt: Date.now() - 86400000, // Also need createdAt for display
-            updatedAt: Date.now() - 3600000, // And updatedAt for display
-          },
-        ];
+    // Configure mock service to dispatch events for controller
+    const originalCreate = characterBuilderService.createCharacterConcept;
+    characterBuilderService.createCharacterConcept = jest.fn().mockImplementation(async (conceptText) => {
+      const result = await originalCreate(conceptText);
+      
+      // Dispatch the events that the controller expects
+      eventBus.dispatch('core:character-concept-created', {
+        concept: result,
       });
-
-    characterBuilderService.createCharacterConcept = jest
-      .fn()
-      .mockImplementation(async (conceptText) => {
-        const newConcept = {
-          id: 'new-concept-' + Date.now(),
-          concept: conceptText,
-          created: Date.now(),
-          updated: Date.now(),
-        };
-
-        // Dispatch the event that the controller expects
-        eventBus.dispatch('core:character-concept-created', {
-          concept: newConcept,
-        });
-
-        // Also dispatch statistics update
-        eventBus.dispatch('core:statistics-updated', {
-          totalConcepts: 2,
-          conceptsWithDirections: 1,
-          totalDirections: 3,
-        });
-
-        return newConcept;
+      
+      eventBus.dispatch('core:statistics-updated', {
+        totalConcepts: 2,
+        conceptsWithDirections: 1,
+        totalDirections: 3,
       });
-
-    characterBuilderService.updateCharacterConcept = jest
-      .fn()
-      .mockResolvedValue(true);
-    characterBuilderService.deleteCharacterConcept = jest
-      .fn()
-      .mockResolvedValue(true);
-    characterBuilderService.getThematicDirections = jest
-      .fn()
-      .mockResolvedValue([]);
-
-    // Add missing required methods
-    characterBuilderService.initialize = jest.fn().mockResolvedValue(undefined);
-    characterBuilderService.getCharacterConcept = jest
-      .fn()
-      .mockResolvedValue(null);
-    characterBuilderService.generateThematicDirections = jest
-      .fn()
-      .mockResolvedValue([]);
+      
+      return result;
+    });
 
     // Create controller
     controller = new CharacterConceptsManagerController({
@@ -255,11 +118,9 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
       eventBus,
     });
 
-    // Initialize controller
+    // Initialize controller and wait for IndexedDB
     await controller.initialize();
-
-    // Wait for initial load and IndexedDB initialization
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await waitForIndexedDB();
   });
 
   afterEach(() => {
@@ -278,7 +139,7 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
   });
 
   describe('Modal Display Verification', () => {
-    it('should show create modal with proper display styles', () => {
+    it('should show create modal with proper display styles', async () => {
       const modal = document.getElementById('concept-modal');
       const createBtn = document.getElementById('create-concept-btn');
 
@@ -287,6 +148,9 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
 
       // Click create button
       createBtn.click();
+
+      // Wait for async event dispatch
+      await flushPromises();
 
       // Modal should be visible
       expect(modal.style.display).toBe('flex');
@@ -301,13 +165,14 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
       );
     });
 
-    it('should properly close modal and dispatch close event', () => {
+    it('should properly close modal and dispatch close event', async () => {
       const modal = document.getElementById('concept-modal');
       const createBtn = document.getElementById('create-concept-btn');
       const closeBtn = document.getElementById('close-concept-modal');
 
       // Open modal
       createBtn.click();
+      await flushPromises();
       expect(modal.style.display).toBe('flex');
 
       // Clear previous events
@@ -315,6 +180,7 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
 
       // Close modal
       closeBtn.click();
+      await flushPromises();
 
       // Modal should be hidden
       expect(modal.style.display).toBe('none');
@@ -348,8 +214,8 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
       const form = document.getElementById('concept-form');
       form.dispatchEvent(new Event('submit', { bubbles: true }));
 
-      // Wait for async operations
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Wait for async operations to complete
+      await flushPromises();
 
       // Verify service was called
       expect(
@@ -403,8 +269,13 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
       const form = document.getElementById('concept-form');
       form.dispatchEvent(new Event('submit', { bubbles: true }));
 
-      // Wait for async operations
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Wait for async operations and error events
+      await waitForCapturedEvents(
+        capturedEvents,
+        (e) => e.type === 'core:character-builder-error-occurred',
+        1,
+        1000
+      );
 
       // Should have error event
       const errorEvents = capturedEvents.filter(
@@ -415,9 +286,6 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
       // Modal should remain open for retry
       const modal = document.getElementById('concept-modal');
       expect(modal.style.display).toBe('flex');
-
-      // Wait a bit more for error display to complete
-      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify error handling completed successfully:
       // 1. Error event was dispatched ✓ (checked above)
@@ -440,17 +308,14 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
         if (controller._testExports.conceptsData.length === 0) {
           // Trigger a manual data load if needed
           await controller._testExports.loadData();
-          // Wait for async operations to complete
-          await new Promise((resolve) => setTimeout(resolve, 100));
+          await flushPromises();
         }
 
         // Ensure concepts data is populated
         expect(controller._testExports.conceptsData.length).toBeGreaterThan(0);
 
         await controller._testExports.showEditModal('existing-concept-1');
-
-        // Wait for async operations
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await flushPromises();
 
         const modal = document.getElementById('concept-modal');
         const modalTitle = document.getElementById('concept-modal-title');
@@ -493,16 +358,14 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
         // Ensure concepts data is populated
         if (controller._testExports.conceptsData.length === 0) {
           await controller._testExports.loadData();
-          await new Promise((resolve) => setTimeout(resolve, 100));
+          await flushPromises();
         }
 
         expect(controller._testExports.conceptsData.length).toBeGreaterThan(0);
 
         // Open edit modal for an existing concept
         await controller._testExports.showEditModal('existing-concept-1');
-
-        // Wait for modal setup and element replacement
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await flushPromises();
 
         const modal = document.getElementById('concept-modal');
 
@@ -521,8 +384,8 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
         conceptText.value = 'Too short';
         conceptText.dispatchEvent(new Event('input', { bubbles: true }));
 
-        // Wait for validation debounce (300ms + buffer)
-        await new Promise((resolve) => setTimeout(resolve, 400));
+        // Wait for validation to complete
+        await waitForValidation(saveBtn, true, 500);
 
         // Re-query button after validation
         saveBtn = document.getElementById('save-concept-btn');
@@ -536,7 +399,7 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
         conceptText.dispatchEvent(new Event('input', { bubbles: true }));
 
         // Wait for validation to complete
-        await new Promise((resolve) => setTimeout(resolve, 400)); // 300ms debounce + buffer
+        await waitForValidation(saveBtn, false, 500);
 
         // Re-query button after validation
         saveBtn = document.getElementById('save-concept-btn');
@@ -595,8 +458,8 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
       // Open modal
       document.getElementById('create-concept-btn').click();
 
-      // Wait for modal setup and element replacement
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait for modal setup
+      await flushPromises();
 
       // Re-query elements after modal setup (they get replaced)
       const conceptText = document.getElementById('concept-text');
@@ -606,8 +469,8 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
       conceptText.value = 'Too short for validation';
       conceptText.dispatchEvent(new Event('input', { bubbles: true }));
 
-      // Wait for validation debounce (300ms + buffer)
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      // Wait for validation to complete
+      await waitForValidation(saveBtn, true, 500);
 
       // Re-query save button after validation
       const updatedSaveBtn = document.getElementById('save-concept-btn');
@@ -658,8 +521,13 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
       searchInput.value = 'knight';
       searchInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-      // Wait for debounce (300ms + buffer)
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      // Wait for search debounce to complete
+      await waitForCapturedEvents(
+        capturedEvents,
+        (e) => e.type === 'core:ui_search_performed',
+        1,
+        500
+      );
 
       // Should have search event
       const searchEvents = capturedEvents.filter(
@@ -691,8 +559,13 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
         new Event('submit', { bubbles: true, cancelable: true })
       );
 
-      // Wait for async operations
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Wait for async operations and statistics events
+      await waitForCapturedEvents(
+        capturedEvents,
+        (e) => e.type === 'core:statistics-updated',
+        1,
+        1000
+      );
 
       // Should have statistics update event
       const statsEvents = capturedEvents.filter(

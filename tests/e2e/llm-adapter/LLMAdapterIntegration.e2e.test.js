@@ -49,18 +49,27 @@ import { LLMStrategyError } from '../../../src/llms/errors/LLMStrategyError.js';
 describe('LLM Adapter Integration E2E', () => {
   let testBed;
 
-  beforeEach(async () => {
-    // Initialize test bed
-    testBed = new LLMAdapterTestBed();
+  beforeAll(async () => {
+    // Initialize test bed once with performance optimizations
+    testBed = new LLMAdapterTestBed({
+      lightweight: true,      // Skip file system operations
+      skipSchemaLoading: false, // Keep schema loading as LLM adapter needs schemas
+      networkDelay: 0         // No artificial network delays
+    });
     await testBed.initialize();
-
-    // Clear any events from initialization
-    testBed.clearRecordedEvents();
   });
 
-  afterEach(async () => {
-    // Clean up test bed
+  afterAll(async () => {
+    // Clean up test bed once at the end
     await testBed.cleanup();
+  });
+
+  beforeEach(async () => {
+    // Reset test bed state between tests (much faster than full reinit)
+    await testBed.reset();
+    
+    // Clear any events from previous tests
+    testBed.clearRecordedEvents();
   });
 
   /**

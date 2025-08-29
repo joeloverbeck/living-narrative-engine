@@ -80,7 +80,7 @@ describe('SlotAccessResolver Coverage Performance', () => {
           parent: { type: 'Step' },
         };
 
-        const mockContext = testUtilities.createMockContext(equipment.equipped, 'topmost');
+        const mockContext = testUtilities.createMockContext(equipment.equipped, 'topmost', false, 'test_character');
 
         const startTime = performance.now();
 
@@ -126,7 +126,7 @@ describe('SlotAccessResolver Coverage Performance', () => {
           parent: { type: 'Step' },
         };
 
-        const mockContext = testUtilities.createMockContext(equipment.equipped, 'topmost');
+        const mockContext = testUtilities.createMockContext(equipment.equipped, 'topmost', false, 'test_character');
 
         const startTime = performance.now();
 
@@ -188,7 +188,7 @@ describe('SlotAccessResolver Coverage Performance', () => {
           parent: { type: 'Step' },
         };
 
-        const mockContext = testUtilities.createMockContext(equipment.equipped, 'topmost');
+        const mockContext = testUtilities.createMockContext(equipment.equipped, 'topmost', false, 'test_character');
 
         const startTime = performance.now();
 
@@ -234,7 +234,7 @@ describe('SlotAccessResolver Coverage Performance', () => {
 
       // Resolve clothing for all characters concurrently
       const promises = characters.map((char) => {
-        const mockContext = testUtilities.createMockContext(char.equipment.equipped, 'topmost');
+        const mockContext = testUtilities.createMockContext(char.equipment.equipped, 'topmost', false, char.id);
         return Promise.resolve(slotAccessResolver.resolve(node, mockContext));
       });
 
@@ -272,7 +272,7 @@ describe('SlotAccessResolver Coverage Performance', () => {
 
       // Perform resolutions with cache tracking
       for (const character of characters) {
-        const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', true);
+        const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', true, character.id);
 
         slotAccessResolver.resolve(node, mockContext);
 
@@ -301,7 +301,7 @@ describe('SlotAccessResolver Coverage Performance', () => {
       // Test with warm cache
       let cacheTime = 0;
       for (let i = 0; i < 100; i++) {
-        const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost');
+        const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', false, character.id);
         const startTime = performance.now();
 
         slotAccessResolver.resolve(node, mockContext);
@@ -329,7 +329,7 @@ describe('SlotAccessResolver Coverage Performance', () => {
         parent: { type: 'Step' },
       };
 
-      const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', true);
+      const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', true, character.id);
 
       slotAccessResolver.resolve(node, mockContext);
 
@@ -352,7 +352,7 @@ describe('SlotAccessResolver Coverage Performance', () => {
         parent: { type: 'Step' },
       };
 
-      const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', true);
+      const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', true, character.id);
 
       slotAccessResolver.resolve(node, mockContext);
 
@@ -378,7 +378,7 @@ describe('SlotAccessResolver Coverage Performance', () => {
       let tracingTime = 0;
       for (let i = 0; i < 100; i++) {
         const startTime = performance.now();
-        const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', true);
+        const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', true, character.id);
 
         slotAccessResolver.resolve(node, mockContext);
 
@@ -390,7 +390,7 @@ describe('SlotAccessResolver Coverage Performance', () => {
       let noTracingTime = 0;
       for (let i = 0; i < 100; i++) {
         const startTime = performance.now();
-        const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', false);
+        const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', false, character.id);
 
         slotAccessResolver.resolve(node, mockContext);
 

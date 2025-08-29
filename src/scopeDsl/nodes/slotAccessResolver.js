@@ -216,6 +216,64 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
   }
 
   /**
+   * Collects items from other slots that have coverage mapping for the target slot
+   *
+   * @param {string} entityId - The entity ID being resolved
+   * @param {string} targetSlot - The target slot to find coverage for
+   * @param {object} equipped - The equipped items data
+   * @param {object} trace - Optional trace logger
+   * @returns {Array} Array of coverage candidates with metadata
+   */
+  function collectCoverageItems(entityId, targetSlot, equipped, trace) {
+    const coverageCandidates = [];
+    
+    // Check all equipped slots for items with coverage mapping
+    for (const [slotName, slotData] of Object.entries(equipped || {})) {
+      if (!slotData || slotName === targetSlot) {
+        continue; // Skip empty slots and the target slot itself
+      }
+      
+      // Check each layer in the slot
+      for (const [layer, itemId] of Object.entries(slotData)) {
+        if (!itemId) continue;
+        
+        // Get the item's coverage mapping component
+        const coverageMapping = entitiesGateway.getComponentData(itemId, 'clothing:coverage_mapping');
+        
+        if (coverageMapping?.covers?.includes(targetSlot)) {
+          const candidate = {
+            itemId: itemId,
+            sourceSlot: slotName,
+            layer: layer,
+            coveragePriority: coverageMapping.coveragePriority || 'base',
+            source: 'coverage_mapping',
+          };
+          
+          coverageCandidates.push(candidate);
+          
+          if (trace) {
+            trace.addLog(
+              'info',
+              `SlotAccessResolver: Found coverage item ${itemId} in ${slotName}/${layer} covering ${targetSlot}`,
+              'SlotAccessResolver',
+              {
+                itemId,
+                sourceSlot: slotName,
+                layer,
+                targetSlot,
+                coveragePriority: candidate.coveragePriority,
+                covers: coverageMapping.covers
+              }
+            );
+          }
+        }
+      }
+    }
+    
+    return coverageCandidates;
+  }
+
+  /**
    * Resolves slot access from a clothing access object
    *
    * @param {object} clothingAccess - The clothing access object from ClothingStepResolver
@@ -224,7 +282,7 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
    * @returns {string|null} The entity ID of the item in the slot or null
    */
   function resolveSlotAccess(clothingAccess, slotName, ctx) {
-    const { equipped, mode } = clothingAccess;
+    const { equipped, mode, entityId } = clothingAccess;
     const slotData = equipped[slotName];
 
     // Enhanced structured tracing integration
@@ -232,12 +290,49 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
     const structuredTrace = ctx?.structuredTrace;
     const performanceMonitor = ctx?.performanceMonitor;
 
-    if (!slotData) {
+    // Build candidates from both direct slot items and coverage mapping
+    const candidates = [];
+    
+    // First, collect items directly equipped to the slot
+    if (slotData) {
+      const layers = LAYER_PRIORITY[mode] || LAYER_PRIORITY.topmost;
+      
+      for (const layer of layers) {
+        if (slotData[layer]) {
+          const candidate = {
+            itemId: slotData[layer],
+            layer: layer,
+            coveragePriority: getCoveragePriorityFromMode(mode, layer),
+            source: 'direct',
+            priority: 0, // Will be calculated
+          };
+          
+          candidates.push(candidate);
+        }
+      }
+    }
+    
+    // Then, collect items from other slots with coverage mapping
+    if (isCoverageResolutionEnabled()) {
+      const coverageCandidates = collectCoverageItems(entityId, slotName, equipped, trace);
+      
+      // Add coverage candidates to the main candidates list
+      for (const coverageCandidate of coverageCandidates) {
+        // Check if this layer should be included based on mode
+        const layers = LAYER_PRIORITY[mode] || LAYER_PRIORITY.topmost;
+        if (layers.includes(coverageCandidate.layer)) {
+          coverageCandidate.priority = 0; // Will be calculated
+          candidates.push(coverageCandidate);
+        }
+      }
+    }
+
+    if (candidates.length === 0) {
       if (trace) {
         const availableSlots = Object.keys(equipped || {});
         trace.addLog(
           'info',
-          `SlotAccessResolver: No data found for slot ${slotName}. Available slots: ${availableSlots.join(', ') || 'none'}`,
+          `SlotAccessResolver: No items found for slot ${slotName} (direct or via coverage). Available slots: ${availableSlots.join(', ') || 'none'}`,
           'SlotAccessResolver',
           { slotName, availableSlots, mode }
         );
@@ -251,7 +346,7 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
             slotName,
             availableSlots: Object.keys(equipped || {}),
             mode,
-            reason: 'slot_not_found'
+            reason: 'no_candidates_found'
           });
         }
       }
@@ -259,103 +354,60 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
       return null;
     }
 
-    const layers = LAYER_PRIORITY[mode] || LAYER_PRIORITY.topmost;
-
-    // Enhanced tracing: Show what's available in each layer
+    // Enhanced tracing: Show candidates from all sources
     if (trace) {
-      const layerAnalysis = {};
-      for (const layer of ['outer', 'base', 'underwear', 'accessories']) {
-        layerAnalysis[layer] = slotData[layer] || null;
+      const candidateSummary = {
+        total: candidates.length,
+        direct: candidates.filter(c => c.source === 'direct').length,
+        coverage: candidates.filter(c => c.source === 'coverage_mapping').length,
+        byLayer: {}
+      };
+      
+      for (const candidate of candidates) {
+        if (!candidateSummary.byLayer[candidate.layer]) {
+          candidateSummary.byLayer[candidate.layer] = [];
+        }
+        candidateSummary.byLayer[candidate.layer].push({
+          itemId: candidate.itemId,
+          source: candidate.source,
+          sourceSlot: candidate.sourceSlot
+        });
       }
 
       trace.addLog(
         'info',
-        `SlotAccessResolver: Analyzing slot ${slotName} with mode ${mode}`,
+        `SlotAccessResolver: Found ${candidates.length} candidates for slot ${slotName}`,
         'SlotAccessResolver',
         {
           slotName,
           mode,
-          layerPriority: layers,
-          availableLayers: layerAnalysis,
+          candidateSummary,
           excludesAccessories: mode === 'topmost_no_accessories',
         }
       );
     }
 
-    // Build candidates for priority-based selection
-    const candidates = [];
-    let candidateCollectionSpan = null;
-
     // Structured trace: Start candidate collection phase
+    let candidateCollectionSpan = null;
     if (structuredTrace) {
       candidateCollectionSpan = structuredTrace.startSpan('candidate_collection', {
         slotName,
         mode,
-        layersToCheck: layers
+        candidateCount: candidates.length
       });
-    }
-
-    for (const layer of layers) {
-      if (slotData[layer]) {
-        const candidate = {
-          itemId: slotData[layer],
-          layer: layer,
-          coveragePriority: getCoveragePriorityFromMode(mode, layer),
-          source: 'coverage',
-          priority: 0, // Will be calculated
-        };
-        
-        candidates.push(candidate);
-
-        // Structured trace: Log candidate found
-        if (candidateCollectionSpan) {
-          candidateCollectionSpan.addEvent('candidate_found', {
-            itemId: candidate.itemId,
-            layer: candidate.layer,
-            coveragePriority: candidate.coveragePriority,
-            source: candidate.source
-          });
-        }
+      
+      // Log each candidate found
+      for (const candidate of candidates) {
+        candidateCollectionSpan.addEvent('candidate_found', {
+          itemId: candidate.itemId,
+          layer: candidate.layer,
+          coveragePriority: candidate.coveragePriority,
+          source: candidate.source,
+          sourceSlot: candidate.sourceSlot
+        });
       }
-    }
-
-    // Structured trace: Complete candidate collection
-    if (candidateCollectionSpan) {
-      candidateCollectionSpan.addAttributes({
-        totalCandidatesFound: candidates.length,
-        checkedLayers: layers,
-        availableLayers: Object.keys(slotData)
-      });
+      
       structuredTrace.endSpan(candidateCollectionSpan);
-    }
-
-    // If no candidates, return null with enhanced tracing
-    if (candidates.length === 0) {
-      if (trace) {
-        const hasAccessoriesOnly =
-          slotData.accessories &&
-          !slotData.outer &&
-          !slotData.base &&
-          !slotData.underwear;
-        const failureReason =
-          hasAccessoriesOnly && mode === 'topmost_no_accessories'
-            ? 'Only accessories available but mode excludes accessories'
-            : 'No items found in any checked layers';
-
-        trace.addLog(
-          'info',
-          `SlotAccessResolver: No item selected from slot ${slotName} (${failureReason})`,
-          'SlotAccessResolver',
-          {
-            slotName,
-            mode,
-            failureReason,
-            hasAccessoriesOnly,
-            checkedLayers: layers,
-          }
-        );
-      }
-      return null;
     }
 
     // Calculate priorities and sort candidates

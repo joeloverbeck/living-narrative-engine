@@ -5,7 +5,6 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { CoreMotivationsGenerator } from '../../../../src/characterBuilder/services/CoreMotivationsGenerator.js';
-import { CoreMotivation } from '../../../../src/characterBuilder/models/coreMotivation.js';
 
 describe('CoreMotivationsGenerator - Event Dispatch', () => {
   let generator;
@@ -65,7 +64,7 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
         dispatchCalls.push(args);
 
         // Simulate the real eventBus behavior to reproduce the error
-        const [firstArg, secondArg] = args;
+        const [firstArg] = args;
 
         if (typeof firstArg === 'object' && firstArg !== null) {
           // This reproduces the error that happens in production
@@ -131,8 +130,8 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
         clichés: { items: [] },
       };
       try {
-        await generator.generate(params);
-      } catch (error) {
+        await generator.generate(params, { maxRetries: 0 });
+      } catch {
         // Expected to fail with LLM error
       }
 
@@ -216,7 +215,7 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
         direction,
         clichés: { items: [] },
       };
-      const result = await generator.generate(params);
+      const result = await generator.generate(params, { maxRetries: 0 });
 
       // Assert - Should return generated motivations
       expect(result).toBeDefined();
@@ -226,21 +225,20 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
       expect(dispatchCalls.length).toBeGreaterThanOrEqual(2); // Started + Completed
 
       // Check that dispatches use correct format (string eventName, object payload)
-      for (const call of dispatchCalls) {
+      const validStringCalls = dispatchCalls.filter(call => typeof call[0] === 'string');
+      expect(validStringCalls.length).toBeGreaterThan(0);
+      
+      validStringCalls.forEach(call => {
         const [eventName, payload] = call;
+        expect(typeof eventName).toBe('string');
+        expect(eventName).toMatch(/^core:/); // Should be namespaced
 
-        // After fix: first arg should be string, second should be object
-        if (typeof eventName === 'string') {
-          expect(typeof eventName).toBe('string');
-          expect(eventName).toMatch(/^core:/); // Should be namespaced
-
-          if (payload) {
-            expect(typeof payload).toBe('object');
-            expect(payload).toHaveProperty('conceptId');
-            expect(payload).toHaveProperty('directionId');
-          }
-        }
-      }
+        // Check payload exists and is an object before asserting properties
+        expect(payload).toBeDefined();
+        expect(typeof payload).toBe('object');
+        expect(payload).toHaveProperty('conceptId');
+        expect(payload).toHaveProperty('directionId');
+      });
 
       // No errors should be logged with correct format
       expect(mockLogger.error).not.toHaveBeenCalledWith(
@@ -274,7 +272,7 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
         direction,
         clichés: { items: [] },
       };
-      await expect(generator.generate(params)).rejects.toThrow();
+      await expect(generator.generate(params, { maxRetries: 0 })).rejects.toThrow();
 
       // Assert - Should dispatch both started and failed events
       expect(dispatchCalls.length).toBeGreaterThanOrEqual(2);
@@ -320,20 +318,20 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
         clichés: { items: [] },
       };
       try {
-        await generator.generate(params);
-      } catch (error) {
+        await generator.generate(params, { maxRetries: 0 });
+      } catch {
         // Expected
       }
 
       // Assert
       const startedCall = dispatchCalls[0];
-      if (startedCall) {
-        const payload = startedCall[0]?.payload || startedCall[1];
-        expect(payload).toEqual({
-          conceptId: 'concept-123',
-          directionId: 'direction-456',
-        });
-      }
+      expect(startedCall).toBeDefined();
+      
+      const payload = startedCall[0]?.payload || startedCall[1];
+      expect(payload).toEqual({
+        conceptId: 'concept-123',
+        directionId: 'direction-456',
+      });
     });
   });
 });
