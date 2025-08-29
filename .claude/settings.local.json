@@ -313,7 +313,15 @@
       "Bash(NODE_ENV=test npx jest tests/integration/logging/remoteLoggerBatchingInefficiency.integration.test.js --no-coverage --verbose --testNamePattern=\"should show batching efficiency\")",
       "Bash(NODE_ENV=test npm run test:unit tests/unit/logging/remoteLoggerNetworkFailure.test.js)",
       "Bash(NODE_ENV=test npm run test:unit tests/unit/logging/remoteLogger.test.js)",
-      "Bash(NODE_ENV=test npx jest tests/integration/scopeDsl/clothingCoverageResolution.integration.test.js --no-coverage --verbose)"
+      "Bash(NODE_ENV=test npx jest tests/integration/scopeDsl/clothingCoverageResolution.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/logging/loggerStrategy.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/feelArmMusclesHulkingSupport.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/clothing/coverageMappingSlotResolution.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/placeYourselfBehindActionDiscovery.integration.test.js --no-coverage --testNamePattern=\"should discover place_yourself_behind action when actor can face target\")",
+      "Bash(NODE_ENV=test npx jest tests/unit/actions/tracing/recovery/recoveryManager.test.js --coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/place_yourself_behind_action.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/rules/placeYourselfBehindRule.integration.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/rules/placeYourselfBehindRule.integration.test.js --no-coverage --verbose)"
     ],
     "deny": []
   }

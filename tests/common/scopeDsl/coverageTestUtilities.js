@@ -52,7 +52,7 @@ export class CoverageTestUtilities {
           const entity = {
             id: itemId,
             components: {
-              'core:coverage_mapping': {
+              'clothing:coverage_mapping': {
                 covers: [coverageSlot],
                 coveragePriority: layer === 'outer' ? 'outer' : 'base',
               },
@@ -92,7 +92,7 @@ export class CoverageTestUtilities {
     const entity = {
       id: characterId,
       components: {
-        'core:equipment': equipment,
+        'clothing:equipment': equipment,
         'core:actor': { name: 'Test Character' },
       },
     };
@@ -120,6 +120,21 @@ export class CoverageTestUtilities {
         const entity = this.entityManager.getEntity(entityId);
         return entity;
       },
+      getComponentData: (entityId, componentId) => {
+        return this.entityManager.getComponentData(entityId, componentId);
+      },
+      hasComponent: (entityId, componentId) => {
+        return this.entityManager.hasComponent(entityId, componentId);
+      },
+      getEntityInstance: (entityId) => {
+        return this.entityManager.getEntityInstance(entityId);
+      },
+      getEntitiesWithComponent: (componentId) => {
+        return this.entityManager.getEntitiesWithComponent(componentId);
+      },
+      getEntities: () => {
+        return this.entityManager.getEntities();
+      },
     };
 
     const mockLogger = {
@@ -141,13 +156,15 @@ export class CoverageTestUtilities {
    * @param {object} equipment - Equipment configuration
    * @param {string} mode - Resolution mode
    * @param {boolean} enableTrace - Whether to enable tracing
+   * @param {string} entityId - Entity ID for the context
    * @returns {object} Mock context for testing
    */
-  createMockContext(equipment, mode = 'topmost', enableTrace = false) {
+  createMockContext(equipment, mode = 'topmost', enableTrace = false, entityId = 'test_character') {
     const clothingAccess = {
       __clothingSlotAccess: true,
       equipped: equipment,
       mode: mode,
+      entityId: entityId,
       type: 'clothing_slot_access',
     };
 
@@ -165,7 +182,7 @@ export class CoverageTestUtilities {
     } : null;
 
     return {
-      getValue: () => ({ entityId: 'test_character', mode }),
+      getValue: () => ({ entityId: entityId, mode }),
       dispatcher: {
         resolve: () => new Set([clothingAccess]),
       },

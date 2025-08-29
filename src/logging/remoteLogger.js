@@ -274,6 +274,12 @@ class RemoteLogger {
   #throttleWindowMs;
 
   /**
+   * @private
+   * @type {*}
+   */
+  #performanceMonitor;
+
+  /**
    * Creates a RemoteLogger instance compatible with LoggerStrategy dependency injection.
    *
    * @param {object} options - Configuration options
@@ -281,11 +287,13 @@ class RemoteLogger {
    * @param {object} [options.dependencies] - Dependencies
    * @param {ILogger} [options.dependencies.consoleLogger] - Fallback console logger
    * @param {*} [options.dependencies.eventBus] - Event bus for error reporting
+   * @param {*} [options.dependencies.performanceMonitor] - Optional performance monitor
    */
   constructor({ config = {}, dependencies = {} } = {}) {
     // Validate and set dependencies
     this.#fallbackLogger = dependencies.consoleLogger || console;
     this.#eventBus = dependencies.eventBus || null;
+    this.#performanceMonitor = dependencies.performanceMonitor || null;
 
     // Set configuration with defaults
     const defaultConfig = {
@@ -761,6 +769,11 @@ class RemoteLogger {
 
       // Update adaptive batch size based on current conditions
       this.#updateAdaptiveBatchSize();
+      
+      // Track buffer size in performance monitor
+      if (this.#performanceMonitor && typeof this.#performanceMonitor.monitorBufferSize === 'function') {
+        this.#performanceMonitor.monitorBufferSize(this.#buffer.length, this.#maxBufferSize);
+      }
 
       // Check if we need to flush based on adaptive batch size or payload size
       if (this.#shouldFlushBatch()) {
@@ -980,9 +993,21 @@ class RemoteLogger {
     }
 
     this.#currentFlushPromise = (async () => {
+      const flushStartTime = Date.now();
+      
       try {
         await this.#sendBatch(logsToSend);
+        
+        // Track successful flush in performance monitor
+        if (this.#performanceMonitor && typeof this.#performanceMonitor.monitorBatchFlush === 'function') {
+          this.#performanceMonitor.monitorBatchFlush(logsToSend.length, Date.now() - flushStartTime, true);
+        }
       } catch (error) {
+        // Track failed flush in performance monitor
+        if (this.#performanceMonitor && typeof this.#performanceMonitor.monitorBatchFlush === 'function') {
+          this.#performanceMonitor.monitorBatchFlush(logsToSend.length, Date.now() - flushStartTime, false);
+        }
+        
         // Handle failure based on error type
         this.#handleSendFailure(error, logsToSend);
 
@@ -2096,6 +2121,34 @@ class RemoteLogger {
    */
   async flush() {
     await this.#flush();
+  }
+
+  /**
+   * Gets the current buffer size
+   * 
+   * @returns {number} Number of logs in buffer
+   */
+  getBufferSize() {
+    return this.#buffer.length;
+  }
+
+  /**
+   * Gets batch metrics for performance monitoring
+   * 
+   * @returns {Object} Batch metrics including size, success rate, etc.
+   */
+  getBatchMetrics() {
+    return {
+      currentBufferSize: this.#buffer.length,
+      maxBufferSize: this.#maxBufferSize,
+      bufferUtilization: (this.#buffer.length / this.#maxBufferSize) * 100,
+      adaptiveBatchSize: this.#adaptiveBatchSize,
+      baseBatchSize: this.#batchSize,
+      flushInterval: this.#flushInterval,
+      isCircuitOpen: this.#circuitBreaker?.isOpen() || false,
+      pendingFlush: this.#currentFlushPromise !== null,
+      bufferPressureThreshold: this.#bufferPressureThreshold,
+    };
   }
 
   /**

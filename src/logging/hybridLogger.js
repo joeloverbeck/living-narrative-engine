@@ -63,15 +63,22 @@ class HybridLogger {
   #sensitiveDataFilter;
 
   /**
+   * @private
+   * @type {*}
+   */
+  #performanceMonitor;
+
+  /**
    * Creates a HybridLogger instance.
    *
    * @param {object} dependencies - Required dependencies
    * @param {ILogger} dependencies.consoleLogger - Console logger instance
    * @param {ILogger} dependencies.remoteLogger - Remote logger instance
    * @param {*} dependencies.categoryDetector - LogCategoryDetector instance
+   * @param {*} [dependencies.performanceMonitor] - Optional performance monitor
    * @param {HybridLoggerFilters} [config] - Filter configuration
    */
-  constructor({ consoleLogger, remoteLogger, categoryDetector }, config = {}) {
+  constructor({ consoleLogger, remoteLogger, categoryDetector, performanceMonitor }, config = {}) {
     // Validate required dependencies
     validateDependency(consoleLogger, 'ILogger', undefined, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
@@ -86,6 +93,7 @@ class HybridLogger {
     this.#consoleLogger = consoleLogger;
     this.#remoteLogger = remoteLogger;
     this.#categoryDetector = categoryDetector;
+    this.#performanceMonitor = performanceMonitor;
 
     // Set up default filter configuration
     this.#filters = {
@@ -247,9 +255,20 @@ class HybridLogger {
    * @param {any[]} args - Additional log arguments
    */
   #logToDestinations(level, message, args) {
+    const startTime = Date.now();
+    
     try {
       // Detect category once for efficiency
       const category = this.#categoryDetector.detectCategory(message);
+
+      // Track performance metrics if monitor is available
+      if (this.#performanceMonitor && typeof this.#performanceMonitor.monitorLogOperation === 'function') {
+        this.#performanceMonitor.monitorLogOperation(level, message, {
+          category,
+          argsCount: args.length,
+          messageLength: message.length,
+        });
+      }
 
       // Log to console if filters allow
       if (this.#shouldLogToConsole(level, category)) {
@@ -437,6 +456,27 @@ class HybridLogger {
    */
   getRemoteLogger() {
     return this.#remoteLogger;
+  }
+
+  /**
+   * Gets performance metrics if performance monitor is available
+   *
+   * @returns {Object|null} Performance metrics or null if not available
+   */
+  getPerformanceMetrics() {
+    if (this.#performanceMonitor && typeof this.#performanceMonitor.getLoggingMetrics === 'function') {
+      return this.#performanceMonitor.getLoggingMetrics();
+    }
+    return null;
+  }
+
+  /**
+   * Gets the performance monitor instance
+   *
+   * @returns {*} The performance monitor instance or undefined
+   */
+  getPerformanceMonitor() {
+    return this.#performanceMonitor;
   }
 }
 

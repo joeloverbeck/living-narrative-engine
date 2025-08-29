@@ -2,6 +2,7 @@
  * @file Service for generating core motivations via LLM
  * @see CharacterBuilderService.js
  */
+/* eslint-env node */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import {
@@ -13,6 +14,16 @@ import {
 } from '../prompts/coreMotivationsGenerationPrompt.js';
 import { CoreMotivation } from '../models/coreMotivation.js';
 import { CHARACTER_BUILDER_EVENTS } from './characterBuilderService.js';
+
+/**
+ * Retry configuration for core motivations generation
+ * Uses minimal delays in test environment to speed up test execution
+ */
+const RETRY_CONFIG = {
+  maxRetries: 2,
+  baseDelayMs: process.env.NODE_ENV === 'test' ? 1 : 1000,
+  maxDelayMs: process.env.NODE_ENV === 'test' ? 5 : 4000,
+};
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -187,7 +198,7 @@ export class CoreMotivationsGenerator {
     try {
       // Use retry mechanism with configurable retry count
       const maxRetries =
-        options.maxRetries !== undefined ? options.maxRetries : 2;
+        options.maxRetries !== undefined ? options.maxRetries : RETRY_CONFIG.maxRetries;
       const retryParams = {
         concept,
         direction,
@@ -431,7 +442,7 @@ export class CoreMotivationsGenerator {
    * @returns {Promise<object>} Parsed and validated response
    * @throws {CoreMotivationsGenerationError} If all attempts fail
    */
-  async #generateWithRetry(params, maxRetries = 2) {
+  async #generateWithRetry(params, maxRetries = RETRY_CONFIG.maxRetries) {
     let lastError;
     let attemptCount = 0;
 
@@ -474,8 +485,11 @@ export class CoreMotivationsGenerator {
         lastError = error;
 
         if (attempt <= maxRetries) {
-          // Calculate exponential backoff delay (1s, 2s, 4s, ...)
-          const delayMs = Math.pow(2, attempt) * 1000;
+          // Calculate exponential backoff delay using config
+          const delayMs = Math.min(
+            RETRY_CONFIG.baseDelayMs * Math.pow(2, attempt),
+            RETRY_CONFIG.maxDelayMs
+          );
 
           this.#logger.warn(
             `CoreMotivationsGenerator: Attempt ${attempt} failed, retrying in ${delayMs}ms`,

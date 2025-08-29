@@ -1,0 +1,19 @@
+{
+  "id": "intimacy:sling_arm_around_shoulders",
+  "name": "Sling an arm around shoulders",
+  "description": "Put an arm around someone's shoulders in a friendly or affectionate gesture",
+  "targets": "intimacy:close_actors_facing_each_other",
+  "required_components": {
+    "actor": ["positioning:closeness"]
+  },
+  "forbidden_components": {
+    "actor": ["intimacy:kissing"]
+  },
+  "template": "sling an arm around {target}'s shoulders",
+  "visual": {
+    "backgroundColor": "#ad1457",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#c2185b",
+    "hoverTextColor": "#fce4ec"
+  }
+}

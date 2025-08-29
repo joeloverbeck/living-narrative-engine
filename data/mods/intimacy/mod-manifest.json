@@ -42,11 +42,14 @@
       "pull_back_breathlessly.action.json",
       "pull_back_in_revulsion.action.json",
       "run_fingers_through_hair.action.json",
+      "sling_arm_around_shoulders.action.json",
       "suck_on_neck_to_leave_hickey.action.json",
       "suck_on_tongue.action.json",
       "thumb_wipe_cheek.action.json"
     ],
-    "components": ["kissing.component.json"],
+    "components": [
+      "kissing.component.json"
+    ],
     "conditions": [
       "actor-is-in-closeness.condition.json",
       "actor-is-kiss-receiver.condition.json",
@@ -74,6 +77,7 @@
       "event-is-action-pull-back-breathlessly.condition.json",
       "event-is-action-pull-back-in-revulsion.condition.json",
       "event-is-action-run-fingers-through-hair.condition.json",
+      "event-is-action-sling_arm_around_shoulders.condition.json",
       "event-is-action-suck-on-neck-to-leave-hickey.condition.json",
       "event-is-action-suck-on-tongue.condition.json",
       "event-is-action-thumb-wipe-cheek.condition.json",
@@ -111,6 +115,7 @@
       "place_hand_on_waist.rule.json",
       "pull_back_breathlessly.rule.json",
       "pull_back_in_revulsion.rule.json",
+      "sling_arm_around_shoulders.rule.json",
       "suck_on_tongue.rule.json",
       "thumb_wipe_cheek.rule.json"
     ],
