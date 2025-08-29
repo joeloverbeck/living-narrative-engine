@@ -134,6 +134,7 @@ describe('ScopeEngine helper methods', () => {
       expect(createSourceResolver).toHaveBeenCalledWith({
         entitiesGateway,
         locationProvider,
+        errorHandler: null,
       });
       expect(createStepResolver).toHaveBeenCalledWith({ entitiesGateway });
       expect(createFilterResolver).toHaveBeenCalledWith({

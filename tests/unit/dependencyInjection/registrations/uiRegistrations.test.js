@@ -110,20 +110,34 @@ describe('registerUI - main orchestration function', () => {
     expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Complete.');
   });
 
+  it('should verify Registrar is used for service registration', () => {
+    const mockRegistrarInstance = {
+      register: jest.fn(),
+      singletonFactory: jest.fn(),
+    };
+    MockRegistrar.mockImplementation(() => mockRegistrarInstance);
+
+    registerUI(mockContainer, mockUiElements);
+
+    // Verify the registrar instance was created and used
+    expect(MockRegistrar).toHaveBeenCalledWith(mockContainer);
+    expect(MockRegistrar).toHaveBeenCalledTimes(1);
+  });
+
   describe('error handling', () => {
-    it('should handle missing container', () => {
+    it('should throw when accessing properties on null container', () => {
       expect(() => {
         registerUI(null, mockUiElements);
-      }).toThrow();
+      }).toThrow(/Cannot.*null/); // Will throw when new Registrar(null) is called
     });
 
-    it('should handle missing UI elements', () => {
+    it('should throw when accessing properties on null uiElements', () => {
       expect(() => {
         registerUI(mockContainer, null);
-      }).toThrow();
+      }).toThrow(/Cannot.*null/); // Will throw when accessing properties on null uiElements
     });
 
-    it('should continue if eager instantiation fails for ChatAlertRenderer', () => {
+    it('should fail if eager instantiation fails for ChatAlertRenderer', () => {
       const errorContainer = {
         resolve: jest.fn((token) => {
           if (token === tokens.ChatAlertRenderer) {
@@ -138,7 +152,7 @@ describe('registerUI - main orchestration function', () => {
       }).toThrow('Failed to instantiate ChatAlertRenderer');
     });
 
-    it('should handle null logger from container', () => {
+    it('should throw when logger is null and debug is called', () => {
       const containerWithNullLogger = {
         resolve: jest.fn((token) => {
           if (token === tokens.ILogger) {
@@ -150,7 +164,7 @@ describe('registerUI - main orchestration function', () => {
 
       expect(() => {
         registerUI(containerWithNullLogger, mockUiElements);
-      }).toThrow(); // Will throw when trying to call logger.debug
+      }).toThrow(/Cannot.*null/); // Will throw when trying to call logger.debug on null
     });
   });
 
@@ -162,6 +176,7 @@ describe('registerUI - main orchestration function', () => {
 
       expect(debugCalls).toEqual([
         'UI Registrations: Starting (Refactored DOM UI)...',
+        'UI Registrations: Registered IInputHandler (legacy) with VED.',
         `UI Registrations: Eagerly instantiated ${tokens.ChatAlertRenderer} to attach listeners.`,
         `UI Registrations: Eagerly instantiated ${tokens.ActionResultRenderer}.`,
         `UI Registrations: Eagerly instantiated ${tokens.GlobalKeyHandler}.`,
@@ -203,6 +218,67 @@ describe('registerUI - main orchestration function', () => {
       }).not.toThrow();
 
       expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Complete.');
+    });
+
+    it('should handle complete workflow from start to finish', () => {
+      const workflowContainer = {
+        resolve: jest.fn((token) => {
+          const services = {
+            [tokens.ILogger]: mockLogger,
+            [tokens.ChatAlertRenderer]: mockChatAlertRenderer,
+            [tokens.ActionResultRenderer]: mockActionResultRenderer,
+            [tokens.GlobalKeyHandler]: mockGlobalKeyHandler,
+          };
+          return services[token] || jest.fn();
+        }),
+      };
+
+      registerUI(workflowContainer, mockUiElements);
+
+      // Verify complete workflow
+      expect(MockRegistrar).toHaveBeenCalledWith(workflowContainer);
+      expect(workflowContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
+      expect(workflowContainer.resolve).toHaveBeenCalledWith(tokens.ChatAlertRenderer);
+      expect(workflowContainer.resolve).toHaveBeenCalledWith(tokens.ActionResultRenderer);
+      expect(workflowContainer.resolve).toHaveBeenCalledWith(tokens.GlobalKeyHandler);
+
+      // Verify logging sequence
+      expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Starting (Refactored DOM UI)...');
+      expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Complete.');
+    });
+
+    it('should properly handle UI elements destructuring', () => {
+      const elementsWithExtraProps = {
+        outputDiv: document.createElement('div'),
+        inputElement: document.createElement('input'),
+        titleElement: document.createElement('h1'),
+        document: document,
+        extraProp: 'should be ignored',
+        anotherExtra: 123,
+      };
+
+      expect(() => {
+        registerUI(mockContainer, elementsWithExtraProps);
+      }).not.toThrow();
+
+      expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Complete.');
+    });
+
+    it('should maintain proper separation between registration and eager instantiation', () => {
+      registerUI(mockContainer, mockUiElements);
+
+      const debugCalls = mockLogger.debug.mock.calls;
+      const messages = debugCalls.map(call => call[0]);
+
+      // Registration should happen before eager instantiation
+      const startIndex = messages.findIndex(msg => msg.includes('Starting'));
+      const legacyIndex = messages.findIndex(msg => msg.includes('Registered IInputHandler'));
+      const eagerStartIndex = messages.findIndex(msg => msg.includes('Eagerly instantiated'));
+      const completeIndex = messages.findIndex(msg => msg.includes('Complete'));
+
+      expect(startIndex).toBeLessThan(legacyIndex);
+      expect(legacyIndex).toBeLessThan(eagerStartIndex);
+      expect(eagerStartIndex).toBeLessThan(completeIndex);
     });
   });
 });

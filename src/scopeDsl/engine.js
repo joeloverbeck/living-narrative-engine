@@ -199,7 +199,11 @@ class ScopeEngine extends IScopeEngine {
       slotAccessResolver,
 
       // Existing resolvers maintain their order
-      createSourceResolver({ entitiesGateway, locationProvider }),
+      createSourceResolver({ 
+        entitiesGateway, 
+        locationProvider, 
+        errorHandler: this.errorHandler 
+      }),
       createStepResolver({ entitiesGateway }),
       createFilterResolver({
         logicEval,

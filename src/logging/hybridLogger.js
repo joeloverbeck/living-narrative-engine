@@ -4,6 +4,7 @@
  */
 
 import { validateDependency } from '../utils/dependencyUtils.js';
+import SensitiveDataFilter from './SensitiveDataFilter.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -20,6 +21,7 @@ import { validateDependency } from '../utils/dependencyUtils.js';
  * @typedef {object} HybridLoggerFilters
  * @property {FilterConfig} console - Console logging filter configuration
  * @property {FilterConfig} remote - Remote logging filter configuration
+ * @property {object} [filtering] - Sensitive data filtering configuration
  */
 
 /**
@@ -53,6 +55,12 @@ class HybridLogger {
    * @type {HybridLoggerFilters}
    */
   #filters;
+
+  /**
+   * @private
+   * @type {SensitiveDataFilter|null}
+   */
+  #sensitiveDataFilter;
 
   /**
    * Creates a HybridLogger instance.
@@ -93,6 +101,17 @@ class HybridLogger {
       },
       ...config,
     };
+
+    // Initialize sensitive data filter if configured
+    if (config.filtering && config.filtering.enabled !== false) {
+      this.#sensitiveDataFilter = new SensitiveDataFilter({
+        logger: consoleLogger, // Use console logger for filter's own logging
+        enabled: config.filtering.enabled,
+        config: config.filtering
+      });
+    } else {
+      this.#sensitiveDataFilter = null;
+    }
 
     // Log initialization to console only if console is enabled (to avoid recursive logging)
     if (
@@ -240,11 +259,22 @@ class HybridLogger {
             category,
             message
           );
-          this.#consoleLogger[level](formattedMessage, ...args);
+          
+          // Apply sensitive data filtering to console output if enabled
+          let filteredMessage = formattedMessage;
+          let filteredArgs = args;
+          if (this.#sensitiveDataFilter && this.#sensitiveDataFilter.isEnabled()) {
+            const strategy = this.#sensitiveDataFilter.strategy || 'mask';
+            filteredMessage = this.#sensitiveDataFilter.filter(formattedMessage, strategy);
+            filteredArgs = args.map(arg => this.#sensitiveDataFilter.filter(arg, strategy));
+          }
+          
+          this.#consoleLogger[level](filteredMessage, ...filteredArgs);
         } catch (consoleError) {
           // Console logging failed, but don't affect remote logging
           // Use fallback console.error to report the issue
           if (typeof console.error === 'function') {
+            // eslint-disable-next-line no-console
             console.error(
               '[HybridLogger] Console logging failed:',
               consoleError
@@ -274,6 +304,7 @@ class HybridLogger {
     } catch (error) {
       // Fallback error handling if everything fails
       if (typeof console.error === 'function') {
+        // eslint-disable-next-line no-console
         console.error(
           '[HybridLogger] Critical logging failure:',
           error,
@@ -338,12 +369,12 @@ class HybridLogger {
    */
   #matchesFilter(level, category, levelFilter, categoryFilter) {
     // Check level filter
-    if (levelFilter !== null && !levelFilter.includes(level)) {
+    if (levelFilter !== null && levelFilter && !levelFilter.includes(level)) {
       return false;
     }
 
     // Check category filter
-    if (categoryFilter !== null) {
+    if (categoryFilter !== null && categoryFilter) {
       if (!category || !categoryFilter.includes(category)) {
         return false;
       }
@@ -396,6 +427,16 @@ class HybridLogger {
     if (typeof this.#remoteLogger.waitForPendingFlushes === 'function') {
       await this.#remoteLogger.waitForPendingFlushes();
     }
+  }
+
+  /**
+   * Gets the remote logger instance for testing purposes.
+   * This method should only be used in test environments.
+   *
+   * @returns {ILogger} The remote logger instance
+   */
+  getRemoteLogger() {
+    return this.#remoteLogger;
   }
 }
 
