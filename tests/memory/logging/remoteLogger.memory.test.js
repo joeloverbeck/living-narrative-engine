@@ -116,6 +116,7 @@ describe('RemoteLogger - Memory Usage Tests', () => {
           requestTimeout: 1000, // Shorter timeout for test env
           categoryCacheSize: 50, // Small cache for memory test
           metadataLevel: 'minimal', // Reduce metadata collection for memory test
+          initialConnectionDelay: 0, // Disable startup delay for immediate flush in tests
         },
         dependencies: { consoleLogger: mockConsoleLogger },
       });
@@ -200,6 +201,7 @@ describe('RemoteLogger - Memory Usage Tests', () => {
           requestTimeout: 1000, // Shorter timeout for test env
           categoryCacheSize: 50, // Small cache for memory test
           metadataLevel: 'minimal', // Reduce metadata collection for memory test
+          initialConnectionDelay: 0, // Disable startup delay for immediate flush in tests
         },
         dependencies: { consoleLogger: mockConsoleLogger },
       });

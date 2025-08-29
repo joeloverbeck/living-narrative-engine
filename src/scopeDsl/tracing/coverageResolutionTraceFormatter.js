@@ -90,7 +90,27 @@ export class CoverageResolutionTraceFormatter {
 
       // Final selection summary
       output.push('\n--- Final Result ---');
-      output.push(`Selected: ${attrs.selectedItem || attrs.resultCount > 0 ? `${attrs.resultCount} items` : 'None'}`);
+      
+      // Try to get selectedItem from multiple sources
+      let selectedItem = attrs.selectedItem;
+      
+      // First try: main span attributes (enhanced by CoverageTracingEnhancer)
+      if (!selectedItem && childSpans.final_selection) {
+        const finalSelectionAttrs = childSpans.final_selection.getAttributes ? 
+          childSpans.final_selection.getAttributes() : 
+          childSpans.final_selection.attributes || {};
+        selectedItem = finalSelectionAttrs.selectedItem;
+      }
+      
+      // Display the selected item or fallback information
+      if (selectedItem && selectedItem !== 'none') {
+        output.push(`Selected: ${selectedItem}`);
+      } else if (attrs.resultCount > 0) {
+        output.push(`Selected: ${attrs.resultCount} items`);
+      } else {
+        output.push(`Selected: None`);
+      }
+      
       output.push(`Result Count: ${attrs.resultCount || 0}`);
       output.push(`Success: ${attrs.success !== false ? 'Yes' : 'No'}`);
 
@@ -110,26 +130,20 @@ export class CoverageResolutionTraceFormatter {
    * @returns {object|null} The coverage resolution span or null if not found
    */
   #findCoverageResolutionSpan(structuredTrace) {
-    try {
-      // Try different methods to get spans
-      let spans = [];
-      
-      if (structuredTrace.getSpans) {
-        spans = structuredTrace.getSpans();
-      } else if (structuredTrace.spans) {
-        spans = Array.isArray(structuredTrace.spans) ? structuredTrace.spans : Array.from(structuredTrace.spans.values());
-      }
-
-      // Find span with operation name 'coverage_resolution'
-      return spans.find(span => 
-        (span.operation === 'coverage_resolution') || 
-        (span.name === 'coverage_resolution')
-      ) || null;
-
-    } catch (error) {
-      this.#logger.warn('Error finding coverage resolution span:', error);
-      return null;
+    // Try different methods to get spans
+    let spans = [];
+    
+    if (structuredTrace.getSpans) {
+      spans = structuredTrace.getSpans();
+    } else if (structuredTrace.spans) {
+      spans = Array.isArray(structuredTrace.spans) ? structuredTrace.spans : Array.from(structuredTrace.spans.values());
     }
+
+    // Find span with operation name 'coverage_resolution'
+    return spans.find(span => 
+      (span.operation === 'coverage_resolution') || 
+      (span.name === 'coverage_resolution')
+    ) || null;
   }
 
   /**

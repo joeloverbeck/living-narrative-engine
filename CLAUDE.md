@@ -315,7 +315,7 @@ npm run start            # Build and serve main app only
 npm run start:all        # Start both services
 
 # Code Quality (ALWAYS run after modifications)
-npm run lint            # Fix ESLint issues
+npx eslint <modified-files>  # Fix ESLint issues (only on modified files)
 npm run format          # Format with Prettier
 npm run typecheck       # TypeScript type checking
 npm run scope:lint      # Validate scope DSL files
@@ -426,11 +426,17 @@ The project includes several character creation tools accessible from the main i
 ### Quality Standards
 
 - **Run after EVERY modification**:
-  - `npm run lint` - fix style issues
+  - `npx eslint <modified-files>` - fix style issues (target files only)
   - `npm run test:ci` - ensure all tests pass
   - `npm run typecheck` - verify types
 - **Comment non-obvious logic** with `// Reason:`
 - **Use domain-specific errors** not generic ones
+
+#### Linting Strategy for Performance
+- **For Claude Code sessions**: Use `npx eslint <file-paths>` on modified files only
+- **For full codebase validation**: Use `npm run lint` (may timeout on large codebases)
+- **Example**: `npx eslint src/entities/entityManager.js src/events/eventBus.js`
+- **Rationale**: Avoids timeout issues while maintaining code quality on changed files
 
 ### Documentation
 

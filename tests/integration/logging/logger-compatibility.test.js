@@ -304,6 +304,8 @@ describe('Logger Backward Compatibility', () => {
             endpoint: 'http://test/api/log',
             batchSize: 5,
             flushInterval: 100,
+            skipServerReadinessValidation: true, // Bypass health checks for testing
+            initialConnectionDelay: 0, // Enable immediate flushing
           },
           dependencies: {
             consoleLogger: consoleLogger,
@@ -363,6 +365,8 @@ describe('Logger Backward Compatibility', () => {
             endpoint: 'http://test/api/log',
             batchSize: 5,
             flushInterval: 100,
+            skipServerReadinessValidation: true, // Bypass health checks for testing
+            initialConnectionDelay: 0, // Enable immediate flushing
           },
           dependencies: {
             consoleLogger: consoleLogger,
@@ -377,7 +381,7 @@ describe('Logger Backward Compatibility', () => {
         expect(() => remoteLogger.error('test')).not.toThrow();
       });
 
-      it('should batch logs correctly', () => {
+      it('should batch logs correctly', async () => {
         // Send 4 logs (less than batch size)
         remoteLogger.debug('log 1');
         remoteLogger.debug('log 2');
@@ -389,6 +393,9 @@ describe('Logger Backward Compatibility', () => {
 
         // Send 5th log to trigger batch
         remoteLogger.debug('log 5');
+
+        // Wait for asynchronous flush
+        await new Promise((resolve) => setTimeout(resolve, 10));
 
         // Should send batch
         expect(mockFetch).toHaveBeenCalled();

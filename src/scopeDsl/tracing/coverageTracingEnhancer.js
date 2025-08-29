@@ -88,23 +88,53 @@ export class CoverageTracingEnhancer {
    */
   #createTracingWrapper(originalResolve, config) {
     return (node, ctx) => {
-      // Add structured trace to context if not present and tracing is enabled
-      if (!ctx.structuredTrace && config.scopeDslTracing.coverageResolution.enabled) {
-        ctx.structuredTrace = this.#structuredTraceFactory.create();
-        ctx.performanceMonitor = this.#performanceMonitor;
-        ctx.coverageTraceFormatter = this.#traceFormatter;
+      // Check if we should trace this node before creating any trace infrastructure
+      if (config.scopeDslTracing.coverageResolution.enabled && this.#shouldTrace(node, ctx)) {
+        // Add structured trace to context if not present
+        if (!ctx.structuredTrace) {
+          ctx.structuredTrace = this.#structuredTraceFactory.create();
+          ctx.performanceMonitor = this.#performanceMonitor;
+          ctx.coverageTraceFormatter = this.#traceFormatter;
 
-        this.#logger.debug('Added structured trace to resolution context');
-      }
+          this.#logger.debug('Added structured trace to resolution context');
+        }
 
-      // If structured trace is available, wrap resolution with coverage tracing
-      if (ctx.structuredTrace && this.#shouldTrace(node, ctx)) {
-        return this.#resolveWithStructuredTracing(originalResolve, node, ctx, config);
+        // Wrap resolution with coverage tracing
+        // Validate that the existing structured trace has required methods
+        if (this.#isValidStructuredTrace(ctx.structuredTrace)) {
+          return this.#resolveWithStructuredTracing(originalResolve, node, ctx, config);
+        } else {
+          this.#logger.warn('Existing structured trace is invalid, creating new one');
+          // Replace invalid trace with a new valid one
+          ctx.structuredTrace = this.#structuredTraceFactory.create();
+          return this.#resolveWithStructuredTracing(originalResolve, node, ctx, config);
+        }
       }
 
       // Fallback to original resolution without structured tracing
       return originalResolve(node, ctx);
     };
+  }
+
+  /**
+   * Validates that a structured trace object has all required methods
+   *
+   * @private
+   * @param {object} structuredTrace - The structured trace object to validate
+   * @returns {boolean} Whether the structured trace is valid
+   */
+  #isValidStructuredTrace(structuredTrace) {
+    if (!structuredTrace) return false;
+    
+    const requiredMethods = ['startSpan', 'endSpan', 'getActiveSpan', 'getSpans'];
+    
+    for (const method of requiredMethods) {
+      if (typeof structuredTrace[method] !== 'function') {
+        return false;
+      }
+    }
+    
+    return true;
   }
 
   /**
@@ -152,10 +182,21 @@ export class CoverageTracingEnhancer {
   #resolveWithStructuredTracing(originalResolve, node, ctx, config) {
     const { structuredTrace, performanceMonitor } = ctx;
     
+    // Determine the mode from the parent field
+    const modeMap = {
+      'topmost_clothing': 'topmost',
+      'topmost_clothing_no_accessories': 'topmost_no_accessories',
+      'all_clothing': 'all',
+      'outer_clothing': 'outer',
+      'base_clothing': 'base',
+      'underwear': 'underwear'
+    };
+    const mode = modeMap[node.parent?.field] || 'unknown';
+    
     // Create a coverage resolution span
     const span = structuredTrace.startSpan('coverage_resolution', {
       targetSlot: node.field,
-      mode: 'unknown', // Will be updated when we have clothing access object
+      mode: mode,
       strategy: 'coverage', // Default strategy
       nodeType: node.type,
       parentField: node.parent?.field || 'unknown'
@@ -172,11 +213,39 @@ export class CoverageTracingEnhancer {
       // Wrap the original resolution to capture coverage-specific tracing
       const result = this.#interceptResolutionPhases(originalResolve, node, ctx, span, config);
 
-      // Add final result attributes
-      span.addAttributes({
+      // Extract selected item from result set and child spans
+      let selectedItem = null;
+      if (result.size > 0) {
+        selectedItem = Array.from(result)[0]; // Get first item from result set
+      }
+
+      // Also try to get selectedItem from final_selection child span if available
+      const allSpans = structuredTrace.getSpans ? structuredTrace.getSpans() : [];
+      const finalSelectionSpan = allSpans.find(s => 
+        (s.operation === 'final_selection' || s.name === 'final_selection') && 
+        s.parentId === span.id
+      );
+      
+      if (finalSelectionSpan) {
+        const finalSelectionAttrs = finalSelectionSpan.getAttributes ? 
+          finalSelectionSpan.getAttributes() : 
+          finalSelectionSpan.attributes || {};
+        if (finalSelectionAttrs.selectedItem && finalSelectionAttrs.selectedItem !== 'none') {
+          selectedItem = finalSelectionAttrs.selectedItem;
+        }
+      }
+
+      // Add final result attributes including the selected item
+      const finalAttributes = {
         resultCount: result.size,
         success: true
-      });
+      };
+      
+      if (selectedItem) {
+        finalAttributes.selectedItem = selectedItem;
+      }
+      
+      span.addAttributes(finalAttributes);
 
       span.setStatus('success');
       this.#logger.debug(`Coverage resolution completed successfully for slot: ${node.field}, results: ${result.size}`);
@@ -261,7 +330,7 @@ export class CoverageTracingEnhancer {
       // Fallback to basic performance logging
       return {
         markPhaseStart: () => {},
-        markPhaseEnd: () => {},
+        markPhaseEnd: () => 0,
         getMetrics: () => ({})
       };
     }

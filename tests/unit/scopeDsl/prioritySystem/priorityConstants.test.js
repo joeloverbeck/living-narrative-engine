@@ -200,40 +200,72 @@ describe('PriorityConstants', () => {
   });
 
   describe('Constants Immutability', () => {
-    it('should not allow modification of COVERAGE_PRIORITY values', () => {
+    it('should have frozen COVERAGE_PRIORITY object', () => {
+      // Check if the object is frozen
+      expect(Object.isFrozen(COVERAGE_PRIORITY)).toBe(true);
+      
+      // Verify that attempting to modify throws in strict mode or has no effect
       const originalValue = COVERAGE_PRIORITY.outer;
-      
-      // Attempt to modify should not affect the original
-      expect(() => {
+      try {
         COVERAGE_PRIORITY.outer = 999;
-      }).not.toThrow(); // Assignment might not throw in non-strict mode
-      
-      // But the original should remain unchanged if properly frozen/immutable
-      // Note: This test might pass even if the object is mutable in ES modules
-      expect(typeof COVERAGE_PRIORITY.outer).toBe('number');
+      } catch (e) {
+        // Will throw TypeError in strict mode if frozen
+      }
+      expect(COVERAGE_PRIORITY.outer).toBe(originalValue);
     });
 
-    it('should not allow modification of LAYER_PRIORITY_WITHIN_COVERAGE values', () => {
+    it('should have frozen LAYER_PRIORITY_WITHIN_COVERAGE object', () => {
+      // Check if the object is frozen
+      expect(Object.isFrozen(LAYER_PRIORITY_WITHIN_COVERAGE)).toBe(true);
+      
+      // Verify that attempting to modify has no effect
       const originalValue = LAYER_PRIORITY_WITHIN_COVERAGE.outer;
-      
-      // Attempt to modify
-      expect(() => {
+      try {
         LAYER_PRIORITY_WITHIN_COVERAGE.outer = 999;
-      }).not.toThrow();
-      
-      expect(typeof LAYER_PRIORITY_WITHIN_COVERAGE.outer).toBe('number');
+      } catch (e) {
+        // Will throw TypeError in strict mode if frozen
+      }
+      expect(LAYER_PRIORITY_WITHIN_COVERAGE.outer).toBe(originalValue);
     });
 
-    it('should not allow modification of validation arrays', () => {
-      const originalLength = VALID_COVERAGE_PRIORITIES.length;
+    it('should have frozen validation arrays', () => {
+      // Check if arrays are frozen
+      expect(Object.isFrozen(VALID_COVERAGE_PRIORITIES)).toBe(true);
+      expect(Object.isFrozen(VALID_LAYERS)).toBe(true);
       
-      // Attempt to modify array
-      expect(() => {
+      // Verify original lengths are preserved
+      const originalCoverageLength = VALID_COVERAGE_PRIORITIES.length;
+      const originalLayersLength = VALID_LAYERS.length;
+      
+      // Attempt to modify (will throw or have no effect if frozen)
+      try {
         VALID_COVERAGE_PRIORITIES.push('invalid');
-      }).not.toThrow();
+      } catch (e) {
+        // Will throw TypeError if frozen
+      }
       
-      // Note: In practice, you might want to freeze these arrays
-      // expect(VALID_COVERAGE_PRIORITIES).toHaveLength(originalLength);
+      try {
+        VALID_LAYERS.push('invalid');
+      } catch (e) {
+        // Will throw TypeError if frozen
+      }
+      
+      expect(VALID_COVERAGE_PRIORITIES).toHaveLength(originalCoverageLength);
+      expect(VALID_LAYERS).toHaveLength(originalLayersLength);
+    });
+
+    it('should have frozen PRIORITY_CONFIG object', () => {
+      // Check if the config object is frozen
+      expect(Object.isFrozen(PRIORITY_CONFIG)).toBe(true);
+      
+      // Verify that attempting to modify has no effect
+      const originalValue = PRIORITY_CONFIG.maxCacheSize;
+      try {
+        PRIORITY_CONFIG.maxCacheSize = 9999;
+      } catch (e) {
+        // Will throw TypeError in strict mode if frozen
+      }
+      expect(PRIORITY_CONFIG.maxCacheSize).toBe(originalValue);
     });
   });
 

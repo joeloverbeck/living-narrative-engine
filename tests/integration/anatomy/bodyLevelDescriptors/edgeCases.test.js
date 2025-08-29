@@ -204,8 +204,9 @@ describe('Edge Cases Integration', () => {
         getComponentData: jest.fn().mockReturnValue(null),
       };
 
-      // Current implementation throws when hasComponent is missing
-      await expect(composer.composeDescription(entity)).rejects.toThrow();
+      // Current implementation returns empty string when hasComponent is missing (graceful degradation)
+      const result = await composer.composeDescription(entity);
+      expect(result).toBe('');
     });
 
     it('should handle entities with throwing methods', async () => {

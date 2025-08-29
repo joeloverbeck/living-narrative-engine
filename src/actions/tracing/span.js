@@ -212,6 +212,15 @@ export class Span {
   }
 
   /**
+   * Adds multiple attributes on the span (alias for setAttributes for compatibility)
+   *
+   * @param {SpanAttributes} attributes - The attributes to add
+   */
+  addAttributes(attributes) {
+    return this.setAttributes(attributes);
+  }
+
+  /**
    * Sets an error on the span
    *
    * @param {Error} error - The error to capture
@@ -225,6 +234,39 @@ export class Span {
     this.#status = 'error';
     this.setAttribute('error.message', error.message);
     this.setAttribute('error.stack', error.stack);
+  }
+
+  /**
+   * Records an error on the span (alias for setError for compatibility)
+   *
+   * @param {Error} error - The error to record
+   */
+  recordError(error) {
+    return this.setError(error);
+  }
+
+  /**
+   * Adds an event to the span (stored as a timestamped attribute for compatibility)
+   *
+   * @param {string} name - The event name
+   * @param {object} [attributes] - The event attributes
+   */
+  addEvent(name, attributes = {}) {
+    if (typeof name !== 'string' || name.trim() === '') {
+      throw new Error('Event name must be a non-empty string');
+    }
+    
+    // Initialize events array in attributes if not present
+    if (!this.#attributes.events) {
+      this.#attributes.events = [];
+    }
+    
+    // Add the event with timestamp
+    this.#attributes.events.push({
+      name,
+      timestamp: performance.now(),
+      attributes: attributes || {}
+    });
   }
 
   /**

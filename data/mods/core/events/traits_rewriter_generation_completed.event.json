@@ -1,0 +1,52 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "core:traits_rewriter_generation_completed",
+  "description": "Dispatched when traits rewriter generation completes successfully.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "characterName": {
+        "description": "The name of the character that was processed",
+        "type": "string"
+      },
+      "result": {
+        "description": "The generation result containing rewritten traits",
+        "type": "object",
+        "properties": {
+          "characterName": {
+            "type": "string"
+          },
+          "rewrittenTraits": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "processingTime": {
+            "type": "number"
+          },
+          "originalTraitCount": {
+            "type": "number"
+          },
+          "rewrittenTraitCount": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": true
+      },
+      "processingTime": {
+        "description": "Time taken to complete generation in milliseconds",
+        "type": "number"
+      },
+      "timestamp": {
+        "description": "ISO 8601 timestamp of when generation completed",
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "required": ["characterName", "result", "processingTime", "timestamp"],
+    "additionalProperties": true
+  }
+}

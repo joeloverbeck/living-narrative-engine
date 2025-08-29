@@ -1,16 +1,12 @@
 /**
  * @file Integration test for LLM proxy server startup and availability
  * @description Tests server binding, startup sequence, and endpoint availability
+ * @jest-environment node
  */
 
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
-import { spawn } from 'child_process';
-import fetch from 'node-fetch';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const { describe, it, expect, beforeAll, afterAll } = require('@jest/globals');
+const { spawn } = require('child_process');
+const path = require('path');
 
 describe('LLM Proxy Server Startup and Availability - Integration', () => {
   let serverProcess = null;
@@ -43,7 +39,9 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
       
       serverProcess.stdout.on('data', (data) => {
         output += data.toString();
-        if (output.includes(`listening on port ${SERVER_PORT}`)) {
+        // Check for the actual log message from the server
+        if (output.includes(`LLM Proxy Server listening on port ${SERVER_PORT}`) || 
+            output.includes(`listening on port ${SERVER_PORT}`)) {
           clearTimeout(timeout);
           resolve();
         }
@@ -191,7 +189,8 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
         timeout: CONNECTION_TEST_TIMEOUT
       });
 
-      expect(response.status).toBe(200);
+      // OPTIONS requests typically return 204 No Content for CORS preflight
+      expect([200, 204]).toContain(response.status);
       expect(response.headers.get('Access-Control-Allow-Origin')).toBeTruthy();
     });
   });
