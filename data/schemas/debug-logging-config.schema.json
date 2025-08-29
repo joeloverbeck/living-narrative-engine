@@ -206,6 +206,40 @@
         }
       },
       "additionalProperties": false
+    },
+    "filtering": {
+      "type": "object",
+      "description": "Sensitive data filtering configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable sensitive data filtering",
+          "default": true
+        },
+        "strategy": {
+          "type": "string",
+          "enum": ["mask", "partial", "hash", "remove"],
+          "description": "Default replacement strategy for sensitive data",
+          "default": "mask"
+        },
+        "patterns": {
+          "type": "object",
+          "description": "Custom patterns for sensitive data detection",
+          "additionalProperties": {
+            "type": "string",
+            "description": "Regular expression pattern as string"
+          }
+        },
+        "strategies": {
+          "type": "object",
+          "description": "Custom replacement strategies",
+          "additionalProperties": {
+            "type": "string",
+            "description": "Replacement strategy implementation"
+          }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": ["enabled", "mode"],

@@ -14,6 +14,7 @@ adventure games and immersive simulations. The core philosophy is **extreme modd
   the data components attached to them. This promotes flexibility and emergent gameplay.
 - **Mod Support:** The engine is built from the ground up to support mods, treating even core content as potentially
   replaceable data packs.
+- **Intelligent Clothing Coverage System:** Advanced clothing resolution system that considers item layering, coverage priorities, and realistic clothing interactions for immersive gameplay.
 
 The long-term vision includes integrating AI agents (LLMs) to drive dynamic NPC interactions and behaviours, creating
 truly living narratives.

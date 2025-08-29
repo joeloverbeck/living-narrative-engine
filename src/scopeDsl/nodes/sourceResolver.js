@@ -3,6 +3,8 @@
  * @typedef {import('../core/gateways.js').EntityGateway} EntityGateway
  */
 import { UnknownSourceError } from '../../errors/unknownSourceError.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
+import { ErrorCodes } from '../constants/errorCodes.js';
 
 /**
  * @typedef {object} LocationProvider
@@ -15,12 +17,20 @@ import { UnknownSourceError } from '../../errors/unknownSourceError.js';
  * @param {object} deps - Dependencies
  * @param {EntityGateway} deps.entitiesGateway - Gateway for entity operations
  * @param {LocationProvider} deps.locationProvider - Provider for current location
+ * @param {object} deps.errorHandler - Error handler for centralized error management
  * @returns {NodeResolver} Source node resolver
  */
 export default function createSourceResolver({
   entitiesGateway,
   locationProvider,
+  errorHandler = null,
 }) {
+  // Only validate if provided (for backward compatibility)
+  if (errorHandler) {
+    validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
+      requiredMethods: ['handleError', 'getErrorBuffer'],
+    });
+  }
   /**
    * Collects entity IDs lacking the specified component.
    *
@@ -66,29 +76,36 @@ export default function createSourceResolver({
         const error = new Error(
           'SourceResolver: actorEntity is missing from context'
         );
-        console.error('[CRITICAL] SourceResolver missing actorEntity:', {
-          hasCtx: !!ctx,
-          ctxKeys: ctx ? Object.keys(ctx) : [],
-          nodeType: node?.type,
-          nodeKind: node?.kind,
-          nodeParam: node?.param,
-          depth: ctx?.depth,
-          callStack: new Error().stack,
-        });
-        throw error;
+        if (errorHandler) {
+          errorHandler.handleError(
+            error,
+            ctx,
+            'SourceResolver',
+            ErrorCodes.MISSING_ACTOR
+          );
+          return new Set(); // Return empty set when using error handler
+        } else {
+          // Fallback for backward compatibility
+          throw error;
+        }
       }
 
       if (!actorEntity.id || typeof actorEntity.id !== 'string') {
         const error = new Error(
           `SourceResolver: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}`
         );
-        console.error('[CRITICAL] SourceResolver actorEntity has invalid ID:', {
-          actorId: actorEntity.id,
-          actorIdType: typeof actorEntity.id,
-          nodeKind: node?.kind,
-          callStack: new Error().stack,
-        });
-        throw error;
+        if (errorHandler) {
+          errorHandler.handleError(
+            error,
+            ctx,
+            'SourceResolver',
+            ErrorCodes.INVALID_ACTOR_ID
+          );
+          return new Set(); // Return empty set when using error handler
+        } else {
+          // Fallback for backward compatibility
+          throw error;
+        }
       }
 
       let result = new Set();
@@ -153,8 +170,21 @@ export default function createSourceResolver({
           break;
         }
 
-        default:
-          throw new UnknownSourceError(node.kind);
+        default: {
+          const error = new UnknownSourceError(node.kind);
+          if (errorHandler) {
+            errorHandler.handleError(
+              error,
+              ctx,
+              'SourceResolver',
+              ErrorCodes.INVALID_NODE_TYPE
+            );
+            return new Set(); // Return empty set when using error handler
+          } else {
+            // Fallback for backward compatibility
+            throw error;
+          }
+        }
       }
 
       // Add trace logging if available

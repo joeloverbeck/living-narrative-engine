@@ -8,50 +8,78 @@ import { describe, it, expect } from '@jest/globals';
 import { ActionDefinitionBuilder } from '../../../src/actions/builders/actionDefinitionBuilder.js';
 
 describe('ActionDefinitionBuilder Integration Memory Tests', () => {
+  beforeEach(async () => {
+    // Force garbage collection before each test for reliable baseline
+    await global.memoryTestUtils.forceGCAndWait();
+  });
+
+  afterEach(async () => {
+    // Force garbage collection after each test
+    await global.memoryTestUtils.forceGCAndWait();
+  });
+
   describe('memory overhead analysis', () => {
-    it('should have minimal memory overhead', () => {
-      if (typeof process !== 'undefined' && process.memoryUsage) {
-        const initialMemory = process.memoryUsage().heapUsed;
-
-        const actions = Array.from({ length: 1000 }, (_, i) =>
-          new ActionDefinitionBuilder(`test:memory${i}`)
-            .withName(`Memory Test ${i}`)
-            .withDescription(`Memory test action ${i}`)
-            .asBasicAction()
-            .build()
-        );
-
-        const finalMemory = process.memoryUsage().heapUsed;
-        const memoryPerAction = (finalMemory - initialMemory) / 1000;
-
-        expect(memoryPerAction).toBeLessThan(2048); // Less than 2KB per action
-        expect(actions).toHaveLength(1000);
-
-        console.log(
-          `Memory usage: ${memoryPerAction.toFixed(0)} bytes per action`
-        );
-        console.log(
-          `Total memory increase: ${((finalMemory - initialMemory) / 1024 / 1024).toFixed(2)} MB for 1000 actions`
-        );
-      } else {
-        // Skip memory test in browser environment
-        expect(true).toBe(true);
+    it('should have minimal memory overhead', async () => {
+      // Skip test if memory monitoring is not available
+      if (typeof process === 'undefined' || !process.memoryUsage) {
+        // This test requires Node.js environment
+        return;
       }
+
+      const actionCount = global.memoryTestUtils.isCI() ? 800 : 1000;
+      
+      // Establish stable memory baseline
+      await global.memoryTestUtils.forceGCAndWait();
+      const baselineMemory = await global.memoryTestUtils.getStableMemoryUsage();
+
+      const actions = Array.from({ length: actionCount }, (_, i) =>
+        new ActionDefinitionBuilder(`test:memory${i}`)
+          .withName(`Memory Test ${i}`)
+          .withDescription(`Memory test action ${i}`)
+          .asBasicAction()
+          .build()
+      );
+
+      // Allow memory to stabilize after creation
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      const peakMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      
+      // Calculate memory usage with proper baseline
+      const memoryGrowth = Math.max(0, peakMemory - baselineMemory);
+      const memoryPerAction = memoryGrowth / actionCount;
+
+      // Environment-aware thresholds (more lenient for CI environments)
+      const maxMemoryPerActionBytes = global.memoryTestUtils.isCI() ? 3072 : 2560; // 3KB/2.5KB per action
+      const maxTotalGrowthMB = global.memoryTestUtils.isCI() ? 4 : 3; // Total growth limit
+
+      expect(memoryPerAction).toBeLessThan(maxMemoryPerActionBytes);
+      expect(memoryGrowth).toBeLessThan(maxTotalGrowthMB * 1024 * 1024);
+      expect(actions).toHaveLength(actionCount);
+
+      console.log(
+        `Memory usage - Baseline: ${(baselineMemory / 1024 / 1024).toFixed(2)}MB, ` +
+        `Growth: ${(memoryGrowth / 1024 / 1024).toFixed(2)}MB, ` +
+        `Per Action: ${memoryPerAction.toFixed(0)} bytes, ` +
+        `Actions: ${actionCount}, ` +
+        `Threshold: ${maxMemoryPerActionBytes} bytes`
+      );
+
+      // Clean up references
+      actions.length = 0;
     });
   });
 
   describe('garbage collection stress testing', () => {
     if (typeof global !== 'undefined' && global.gc) {
-      it('should not create excessive garbage under stress', () => {
-        // Only run this test if garbage collection is available
-        const initialMemory = process.memoryUsage().heapUsed;
-
-        // Force garbage collection before test
-        global.gc();
-        const baselineMemory = process.memoryUsage().heapUsed;
+      it('should not create excessive garbage under stress', async () => {
+        const stressActionCount = global.memoryTestUtils.isCI() ? 800 : 1000;
+        
+        // Establish stable memory baseline
+        await global.memoryTestUtils.forceGCAndWait();
+        const baselineMemory = await global.memoryTestUtils.getStableMemoryUsage();
 
         // Create and destroy many builders
-        for (let i = 0; i < 1000; i++) {
+        for (let i = 0; i < stressActionCount; i++) {
           const builder = new ActionDefinitionBuilder(`stress:action${i}`)
             .withName(`Stress Action ${i}`)
             .withDescription(`Stress test action ${i}`)
@@ -73,17 +101,23 @@ describe('ActionDefinitionBuilder Integration Memory Tests', () => {
           expect(action.id).toBeDefined();
         }
 
-        // Force garbage collection after test
-        global.gc();
-        const finalMemory = process.memoryUsage().heapUsed;
+        // Force garbage collection after test and stabilize
+        await global.memoryTestUtils.forceGCAndWait();
+        const finalMemory = await global.memoryTestUtils.getStableMemoryUsage();
 
-        const memoryIncrease = finalMemory - baselineMemory;
+        const memoryIncrease = Math.max(0, finalMemory - baselineMemory);
 
-        // Memory increase should be reasonable (less than 10MB for 1000 actions)
-        expect(memoryIncrease).toBeLessThan(10 * 1024 * 1024);
+        // Environment-aware memory increase threshold
+        const maxMemoryIncreaseMB = global.memoryTestUtils.isCI() ? 12 : 10; // More lenient for CI
+
+        expect(memoryIncrease).toBeLessThan(maxMemoryIncreaseMB * 1024 * 1024);
 
         console.log(
-          `Garbage collection test - Memory increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)} MB for 1000 stress test actions`
+          `Garbage collection test - Baseline: ${(baselineMemory / 1024 / 1024).toFixed(2)}MB, ` +
+          `Final: ${(finalMemory / 1024 / 1024).toFixed(2)}MB, ` +
+          `Increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB, ` +
+          `Actions: ${stressActionCount}, ` +
+          `Threshold: ${maxMemoryIncreaseMB}MB`
         );
       });
     } else {

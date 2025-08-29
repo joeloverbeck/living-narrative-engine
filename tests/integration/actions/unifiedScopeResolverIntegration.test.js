@@ -1,140 +1,111 @@
 /**
  * @file Integration tests for UnifiedScopeResolver delegation from TargetResolutionService
+ * Optimized for performance using lightweight test bed
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import AppContainer from '../../../src/dependencyInjection/appContainer.js';
-import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
-import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { describe, it, expect, beforeAll, beforeEach, afterAll, jest } from '@jest/globals';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import {
   TARGET_DOMAIN_SELF,
   TARGET_DOMAIN_NONE,
 } from '../../../src/constants/targetDomains.js';
 import { ActionResult } from '../../../src/actions/core/actionResult.js';
-import { createMockCacheStrategy } from '../../common/doubles/mockCacheStrategy.js';
+import { createMockCacheStrategy, getSharedMockCacheStrategy } from '../../common/doubles/mockCacheStrategy.js';
 import { UnifiedScopeResolver } from '../../../src/actions/scopes/unifiedScopeResolver.js';
+import { createUnifiedScopeResolverTestBed } from '../../common/testHelpers/unifiedScopeResolverTestBed.js';
 
 describe('UnifiedScopeResolver Integration', () => {
-  let container;
+  let testBed;
   let targetResolutionService;
   let unifiedScopeResolver;
 
-  beforeEach(async () => {
-    // Create DOM elements needed by container configuration
-    const outputDiv = document.createElement('div');
-    const inputElement = document.createElement('input');
-    const titleElement = document.createElement('h1');
+  beforeAll(() => {
+    // Create lightweight test bed once
+    testBed = createUnifiedScopeResolverTestBed().initialize();
+    targetResolutionService = testBed.targetResolutionService;
+    unifiedScopeResolver = testBed.resolver;
+  });
 
-    // Create and configure container
-    container = new AppContainer();
-    await configureContainer(container, {
-      outputDiv,
-      inputElement,
-      titleElement,
-      document,
-    });
+  afterAll(() => {
+    testBed.cleanup();
+  });
 
-    // Resolve services
-    targetResolutionService = container.resolve(
-      tokens.ITargetResolutionService
-    );
-    unifiedScopeResolver = container.resolve(tokens.IUnifiedScopeResolver);
+  beforeEach(() => {
+    // Reset mocks but keep instances
+    testBed.resetMocks();
   });
 
   describe('TargetResolutionService delegation to UnifiedScopeResolver', () => {
     it('should successfully resolve special scope NONE', () => {
-      const actorEntity = {
+      const actorEntity = testBed.createActor({
         id: 'actor123',
-        definitionId: 'core:actor',
-        componentTypeIds: [],
-      };
+      });
 
-      const discoveryContext = {
-        currentLocation: 'location1',
-      };
+      const context = testBed.createContext({
+        actor: actorEntity,
+        actorLocation: 'location1',
+      });
 
-      const result = targetResolutionService.resolveTargets(
-        TARGET_DOMAIN_NONE,
-        actorEntity,
-        discoveryContext
-      );
+      const result = unifiedScopeResolver.resolve(TARGET_DOMAIN_NONE, context);
 
       expect(result.success).toBe(true);
-      expect(result.value).toHaveLength(1);
-      expect(result.value[0]).toEqual(ActionTargetContext.noTarget());
+      expect(result.value.size).toBe(0);
+      expect(result.value).toEqual(new Set());
     });
 
     it('should successfully resolve special scope SELF', () => {
-      const actorEntity = {
+      const actorEntity = testBed.createActor({
         id: 'actor456',
-        definitionId: 'core:actor',
-        componentTypeIds: [],
-      };
+      });
 
-      const discoveryContext = {
-        currentLocation: 'location2',
-      };
+      const context = testBed.createContext({
+        actor: actorEntity,
+        actorLocation: 'location2',
+      });
 
-      const result = targetResolutionService.resolveTargets(
-        TARGET_DOMAIN_SELF,
-        actorEntity,
-        discoveryContext
-      );
+      const result = unifiedScopeResolver.resolve(TARGET_DOMAIN_SELF, context);
 
       expect(result.success).toBe(true);
-      expect(result.value).toHaveLength(1);
-      expect(result.value[0]).toEqual(
-        ActionTargetContext.forEntity('actor456')
-      );
+      expect(result.value.size).toBe(1);
+      expect(result.value).toEqual(new Set(['actor456']));
     });
 
     it('should handle validation errors consistently', () => {
-      const discoveryContext = {
-        currentLocation: 'location3',
+      const context = {
+        actor: null, // Invalid actor
+        actorLocation: 'location3',
       };
 
-      // Test with null actor
-      const result = targetResolutionService.resolveTargets(
-        'test:invalid-scope',
-        null,
-        discoveryContext
-      );
+      const result = unifiedScopeResolver.resolve('test:invalid-scope', context);
 
       expect(result.success).toBe(false);
       expect(result.errors).toHaveLength(1);
-      // The error context is wrapped, need to access the actual error
-      const errorContext = result.errors[0];
-      expect(errorContext.error.message).toContain(
+      expect(result.errors[0].message).toContain(
         'Resolution context is missing actor entity'
       );
-      expect(errorContext.error.name).toBe('InvalidContextError');
+      expect(result.errors[0].name).toBe('InvalidContextError');
     });
 
     it('should handle missing scope definitions', () => {
-      const actorEntity = {
+      const actorEntity = testBed.createActor({
         id: 'actor789',
-        definitionId: 'core:actor',
-        componentTypeIds: [],
-      };
+      });
 
-      const discoveryContext = {
-        currentLocation: 'location4',
-      };
+      const context = testBed.createContext({
+        actor: actorEntity,
+        actorLocation: 'location4',
+      });
 
       // Use a scope that doesn't exist
-      const result = targetResolutionService.resolveTargets(
+      const result = unifiedScopeResolver.resolve(
         'test:non-existent-scope',
-        actorEntity,
-        discoveryContext
+        context
       );
 
       expect(result.success).toBe(false);
       expect(result.errors).toHaveLength(1);
-      // The error context is wrapped, need to access the actual error
-      const errorContext = result.errors[0];
-      expect(errorContext.error.message).toContain('Missing scope definition');
-      expect(errorContext.error.name).toBe('ScopeNotFoundError');
+      expect(result.errors[0].message).toContain('Missing scope definition');
+      expect(result.errors[0].name).toBe('ScopeNotFoundError');
     });
   });
 
@@ -278,21 +249,21 @@ describe('UnifiedScopeResolver Integration', () => {
   });
 
   describe('Context Validation', () => {
-    it('should validate various invalid actor ID scenarios', () => {
-      const testCases = [
-        { id: null, description: 'null actor ID' },
-        { id: undefined, description: 'undefined actor ID' },
-        { id: '', description: 'empty string actor ID' },
-        { id: '   ', description: 'whitespace actor ID' },
-        { id: 'null', description: 'string "null" actor ID' },
-        { id: 'undefined', description: 'string "undefined" actor ID' },
-      ];
+    const invalidActorIdCases = [
+      { id: null, description: 'null actor ID' },
+      { id: undefined, description: 'undefined actor ID' },
+      { id: '', description: 'empty string actor ID' },
+      { id: '   ', description: 'whitespace actor ID' },
+      { id: 'null', description: 'string "null" actor ID' },
+      { id: 'undefined', description: 'string "undefined" actor ID' },
+    ];
 
-      testCases.forEach(({ id, description }) => {
-        const context = {
+    it.each(invalidActorIdCases)(
+      'should validate invalid actor ID scenario: $description',
+      ({ id }) => {
+        const context = testBed.createContext({
           actor: { id },
-          actorLocation: 'location1',
-        };
+        });
 
         const result = unifiedScopeResolver.resolve('some-scope', context);
 
@@ -300,12 +271,12 @@ describe('UnifiedScopeResolver Integration', () => {
         expect(result.errors).toHaveLength(1);
         expect(result.errors[0].message).toContain('Invalid actor entity ID');
         expect(result.errors[0].name).toBe('InvalidActorIdError');
-      });
-    });
+      }
+    );
 
     it('should fail when actor location is missing', () => {
       const context = {
-        actor: { id: 'valid-actor-id' },
+        actor: testBed.createActor({ id: 'valid-actor-id' }),
         // actorLocation is missing
       };
 
@@ -320,11 +291,10 @@ describe('UnifiedScopeResolver Integration', () => {
     });
 
     it('should provide proper error context for validation failures', () => {
-      const context = {
-        actor: { id: '' },
-        actorLocation: 'location1',
+      const context = testBed.createContext({
+        actor: testBed.createActor({ id: '' }),
         actionId: 'test-action-456',
-      };
+      });
 
       const result = unifiedScopeResolver.resolve('test-scope', context);
 
@@ -571,22 +541,7 @@ describe('UnifiedScopeResolver Integration', () => {
 
     beforeEach(() => {
       mockCacheStrategy = createMockCacheStrategy();
-
-      // Create UnifiedScopeResolver with cache strategy
-      unifiedScopeResolverWithCache = new UnifiedScopeResolver({
-        scopeRegistry: container.resolve(tokens.IScopeRegistry),
-        scopeEngine: container.resolve(tokens.IScopeEngine),
-        entityManager: container.resolve(tokens.IEntityManager),
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: container.resolve(tokens.DslParser),
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
-        cacheStrategy: mockCacheStrategy,
-      });
+      unifiedScopeResolverWithCache = testBed.createResolverWithCache(mockCacheStrategy);
     });
 
     it('should return cached result when cache hit occurs (lines 189-194)', () => {
@@ -613,28 +568,13 @@ describe('UnifiedScopeResolver Integration', () => {
       const expectedKey = 'test:cached-scope:cache-hit-actor:location1';
       mockCacheStrategy._preloadCache(expectedKey, cachedResult);
 
-      // Mock scope registry for non-special scope
-      const mockScopeRegistry = {
-        getScope: jest.fn(() => ({
-          expr: 'cached.test.scope',
-          ast: { type: 'field', name: 'cached' },
-        })),
-      };
-
-      const testResolver = new UnifiedScopeResolver({
-        scopeRegistry: mockScopeRegistry,
-        scopeEngine: container.resolve(tokens.IScopeEngine),
-        entityManager: container.resolve(tokens.IEntityManager),
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: container.resolve(tokens.DslParser),
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
-        cacheStrategy: mockCacheStrategy,
+      // Override scope registry for this test
+      testBed.scopeRegistry.getScope.mockReturnValue({
+        expr: 'cached.test.scope',
+        ast: { type: 'field', name: 'cached' },
       });
+
+      const testResolver = testBed.createResolverWithCache(mockCacheStrategy);
 
       // This call should hit cache and execute lines 189-194
       const result = testResolver.resolve('test:cached-scope', context, {
@@ -714,33 +654,17 @@ describe('UnifiedScopeResolver Integration', () => {
 
   describe('AST Parsing Error Tests', () => {
     it('should handle DSL parser exceptions (lines 388, 394)', () => {
-      // Mock the DSL parser to throw an error
-      const mockDslParser = {
-        parse: jest.fn(() => {
-          const error = new Error('Invalid DSL syntax');
-          throw error;
-        }),
-      };
-
-      const mockScopeRegistry = {
-        getScope: jest.fn(() => ({
-          expr: 'invalid.syntax[malformed',
-        })),
-      };
-
-      const testResolver = new UnifiedScopeResolver({
-        scopeRegistry: mockScopeRegistry,
-        scopeEngine: container.resolve(tokens.IScopeEngine),
-        entityManager: container.resolve(tokens.IEntityManager),
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: mockDslParser,
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
+      // Override mocks for this test
+      testBed.dslParser.parse.mockImplementation(() => {
+        const error = new Error('Invalid DSL syntax');
+        throw error;
       });
+
+      testBed.scopeRegistry.getScope.mockReturnValue({
+        expr: 'invalid.syntax[malformed',
+      });
+
+      const testResolver = testBed.resolver;
 
       const context = {
         actor: { id: 'test-actor' },
@@ -753,7 +677,7 @@ describe('UnifiedScopeResolver Integration', () => {
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0].name).toBe('ScopeParseError');
       expect(result.errors[0].message).toContain('Invalid DSL syntax');
-      expect(mockDslParser.parse).toHaveBeenCalledWith(
+      expect(testBed.dslParser.parse).toHaveBeenCalledWith(
         'invalid.syntax[malformed'
       );
     });
@@ -761,31 +685,14 @@ describe('UnifiedScopeResolver Integration', () => {
 
   describe('Scope Engine Error Tests', () => {
     it('should handle scope engine throwing invalid result error (lines 410, 423)', () => {
-      // Mock scope engine to return invalid result
-      const mockScopeEngine = {
-        resolve: jest.fn(() => null), // Invalid - should be a Set
-      };
-
-      const mockScopeRegistry = {
-        getScope: jest.fn(() => ({
-          expr: 'valid.expression',
-          ast: { type: 'field', name: 'valid' },
-        })),
-      };
-
-      const testResolver = new UnifiedScopeResolver({
-        scopeRegistry: mockScopeRegistry,
-        scopeEngine: mockScopeEngine,
-        entityManager: container.resolve(tokens.IEntityManager),
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: container.resolve(tokens.DslParser),
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
+      // Override mocks for this test
+      testBed.scopeEngine.resolve.mockReturnValue(null); // Invalid - should be a Set
+      testBed.scopeRegistry.getScope.mockReturnValue({
+        expr: 'valid.expression',
+        ast: { type: 'field', name: 'valid' },
       });
+
+      const testResolver = testBed.resolver;
 
       const context = {
         actor: { id: 'test-actor', componentTypeIds: [] },
@@ -802,33 +709,17 @@ describe('UnifiedScopeResolver Integration', () => {
     });
 
     it('should handle scope engine throwing runtime error (lines 429-439)', () => {
-      // Mock scope engine to throw an error
-      const mockScopeEngine = {
-        resolve: jest.fn(() => {
-          throw new Error('Runtime scope resolution error');
-        }),
-      };
-
-      const mockScopeRegistry = {
-        getScope: jest.fn(() => ({
-          expr: 'runtime.error.expression',
-          ast: { type: 'field', name: 'runtime' },
-        })),
-      };
-
-      const testResolver = new UnifiedScopeResolver({
-        scopeRegistry: mockScopeRegistry,
-        scopeEngine: mockScopeEngine,
-        entityManager: container.resolve(tokens.IEntityManager),
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: container.resolve(tokens.DslParser),
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
+      // Override mocks for this test  
+      testBed.scopeEngine.resolve.mockImplementation(() => {
+        throw new Error('Runtime scope resolution error');
       });
+
+      testBed.scopeRegistry.getScope.mockReturnValue({
+        expr: 'runtime.error.expression',
+        ast: { type: 'field', name: 'runtime' },
+      });
+
+      const testResolver = testBed.resolver;
 
       const context = {
         actor: { id: 'test-actor', componentTypeIds: [] },
@@ -875,30 +766,15 @@ describe('UnifiedScopeResolver Integration', () => {
     });
 
     it('should handle partial component loading failures (lines 541-545, 554-556)', () => {
-      // Mock entity manager to fail on some components
-      const mockEntityManager = {
-        getComponentData: jest.fn((entityId, componentTypeId) => {
-          if (componentTypeId === 'valid-component') {
-            return { type: 'valid', data: 'test' };
-          }
-          throw new Error(`Component ${componentTypeId} not found`);
-        }),
-        getEntityInstance: jest.fn((entityId) => ({ id: entityId })),
-      };
-
-      const testResolver = new UnifiedScopeResolver({
-        scopeRegistry: container.resolve(tokens.IScopeRegistry),
-        scopeEngine: container.resolve(tokens.IScopeEngine),
-        entityManager: mockEntityManager,
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: container.resolve(tokens.DslParser),
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
+      // Override entity manager for this test
+      testBed.entityManager.getComponentData.mockImplementation((entityId, componentTypeId) => {
+        if (componentTypeId === 'valid-component') {
+          return { type: 'valid', data: 'test' };
+        }
+        throw new Error(`Component ${componentTypeId} not found`);
       });
+
+      const testResolver = testBed.resolver;
 
       const actorEntity = {
         id: 'partial-components-actor',
@@ -927,27 +803,12 @@ describe('UnifiedScopeResolver Integration', () => {
     });
 
     it('should fail when all components fail to load (lines 554-556)', () => {
-      // Mock entity manager to fail on all components
-      const mockEntityManager = {
-        getComponentData: jest.fn(() => {
-          throw new Error('All components failed');
-        }),
-        getEntityInstance: jest.fn((entityId) => ({ id: entityId })),
-      };
-
-      const testResolver = new UnifiedScopeResolver({
-        scopeRegistry: container.resolve(tokens.IScopeRegistry),
-        scopeEngine: container.resolve(tokens.IScopeEngine),
-        entityManager: mockEntityManager,
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: container.resolve(tokens.DslParser),
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
+      // Override entity manager for this test
+      testBed.entityManager.getComponentData.mockImplementation(() => {
+        throw new Error('All components failed');
       });
+
+      const testResolver = testBed.resolver;
 
       const actorEntity = {
         id: 'all-components-fail-actor',
@@ -970,27 +831,12 @@ describe('UnifiedScopeResolver Integration', () => {
     });
 
     it('should handle actor building runtime error (line 567)', () => {
-      // Mock entity manager to throw unexpected error
-      const mockEntityManager = {
-        getComponentData: jest.fn(() => {
-          throw new Error('Unexpected runtime error');
-        }),
-        getEntityInstance: jest.fn((entityId) => ({ id: entityId })),
-      };
-
-      const testResolver = new UnifiedScopeResolver({
-        scopeRegistry: container.resolve(tokens.IScopeRegistry),
-        scopeEngine: container.resolve(tokens.IScopeEngine),
-        entityManager: mockEntityManager,
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: container.resolve(tokens.DslParser),
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
+      // Override entity manager for this test
+      testBed.entityManager.getComponentData.mockImplementation(() => {
+        throw new Error('Unexpected runtime error');
       });
+
+      const testResolver = testBed.resolver;
 
       const actorEntity = {
         id: 'runtime-error-actor',
@@ -1012,44 +858,24 @@ describe('UnifiedScopeResolver Integration', () => {
 
   describe('Entity Validation Tests', () => {
     it('should handle entity validation failures (lines 616-619, 624-639)', () => {
-      // Mock entity manager to return non-existent entities during validation
-      const mockEntityManager = {
-        getComponentData: jest.fn(() => ({})),
-        getEntityInstance: jest.fn((entityId) => {
-          if (entityId === 'non-existent-entity') {
-            return null; // Entity doesn't exist
-          }
-          return { id: entityId };
-        }),
-      };
-
-      // Mock scope engine to return non-existent entities
-      const mockScopeEngine = {
-        resolve: jest.fn(
-          () => new Set(['existing-entity', 'non-existent-entity'])
-        ),
-      };
-
-      const mockScopeRegistry = {
-        getScope: jest.fn(() => ({
-          expr: 'validation.test',
-          ast: { type: 'field', name: 'test' },
-        })),
-      };
-
-      const testResolver = new UnifiedScopeResolver({
-        scopeRegistry: mockScopeRegistry,
-        scopeEngine: mockScopeEngine,
-        entityManager: mockEntityManager,
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: container.resolve(tokens.DslParser),
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
+      // Override mocks for this test
+      testBed.entityManager.getEntityInstance.mockImplementation((entityId) => {
+        if (entityId === 'non-existent-entity') {
+          return null; // Entity doesn't exist
+        }
+        return { id: entityId };
       });
+
+      testBed.scopeEngine.resolve.mockReturnValue(
+        new Set(['existing-entity', 'non-existent-entity'])
+      );
+
+      testBed.scopeRegistry.getScope.mockReturnValue({
+        expr: 'validation.test',
+        ast: { type: 'field', name: 'test' },
+      });
+
+      const testResolver = testBed.resolver;
 
       const context = {
         actor: { id: 'validation-actor', componentTypeIds: [] },
@@ -1069,47 +895,28 @@ describe('UnifiedScopeResolver Integration', () => {
     });
 
     it('should handle entity manager throwing error during validation (lines 616-619)', () => {
-      // Mock entity manager to throw error during validation
-      const mockEntityManager = {
-        getComponentData: jest.fn(() => ({})),
-        getEntityInstance: jest.fn((entityId) => {
-          if (entityId === 'error-entity') {
-            throw new Error('Entity lookup failed');
-          }
-          return { id: entityId };
-        }),
-      };
-
-      // Mock scope engine to return entities including one that causes error
-      const mockScopeEngine = {
-        resolve: jest.fn(() => new Set(['good-entity', 'error-entity'])),
-      };
-
-      const mockScopeRegistry = {
-        getScope: jest.fn(() => ({
-          expr: 'validation.error',
-          ast: { type: 'field', name: 'test' },
-        })),
-      };
-
-      const testResolver = new UnifiedScopeResolver({
-        scopeRegistry: mockScopeRegistry,
-        scopeEngine: mockScopeEngine,
-        entityManager: mockEntityManager,
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: container.resolve(tokens.DslParser),
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
+      // Override mocks for this test
+      testBed.entityManager.getEntityInstance.mockImplementation((entityId) => {
+        if (entityId === 'error-entity') {
+          throw new Error('Entity lookup failed');
+        }
+        return { id: entityId };
       });
 
-      const context = {
-        actor: { id: 'validation-actor', componentTypeIds: [] },
-        actorLocation: 'location1',
-      };
+      testBed.scopeEngine.resolve.mockReturnValue(
+        new Set(['good-entity', 'error-entity'])
+      );
+
+      testBed.scopeRegistry.getScope.mockReturnValue({
+        expr: 'validation.error',
+        ast: { type: 'field', name: 'test' },
+      });
+
+      const testResolver = testBed.resolver;
+
+      const context = testBed.createContext({
+        actor: testBed.createActor({ id: 'validation-actor' }),
+      });
 
       const result = testResolver.resolve(
         'test:validation-error-scope',
@@ -1127,33 +934,18 @@ describe('UnifiedScopeResolver Integration', () => {
 
   describe('Error Suggestion Generation Tests', () => {
     it('should generate suggestions for ScopeParseError (lines 717-722)', () => {
-      const mockDslParser = {
-        parse: jest.fn(() => {
-          const error = new Error('Syntax error at position 5');
-          error.name = 'ScopeParseError';
-          throw error;
-        }),
-      };
-
-      const mockScopeRegistry = {
-        getScope: jest.fn(() => ({
-          expr: 'malformed[syntax',
-        })),
-      };
-
-      const testResolver = new UnifiedScopeResolver({
-        scopeRegistry: mockScopeRegistry,
-        scopeEngine: container.resolve(tokens.IScopeEngine),
-        entityManager: container.resolve(tokens.IEntityManager),
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: mockDslParser,
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
+      // Override mocks for this test
+      testBed.dslParser.parse.mockImplementation(() => {
+        const error = new Error('Syntax error at position 5');
+        error.name = 'ScopeParseError';
+        throw error;
       });
+
+      testBed.scopeRegistry.getScope.mockReturnValue({
+        expr: 'malformed[syntax',
+      });
+
+      const testResolver = testBed.resolver;
 
       const context = {
         actor: { id: 'parse-error-actor' },
@@ -1174,37 +966,15 @@ describe('UnifiedScopeResolver Integration', () => {
     });
 
     it('should generate suggestions for InvalidResolvedEntitiesError (lines 733-738)', () => {
-      // Mock entity manager that returns null for validation
-      const mockEntityManager = {
-        getComponentData: jest.fn(() => ({})),
-        getEntityInstance: jest.fn(() => null),
-      };
-
-      // Mock scope engine to return entities
-      const mockScopeEngine = {
-        resolve: jest.fn(() => new Set(['invalid-entity'])),
-      };
-
-      const mockScopeRegistry = {
-        getScope: jest.fn(() => ({
-          expr: 'entity.resolution',
-          ast: { type: 'field', name: 'test' },
-        })),
-      };
-
-      const testResolver = new UnifiedScopeResolver({
-        scopeRegistry: mockScopeRegistry,
-        scopeEngine: mockScopeEngine,
-        entityManager: mockEntityManager,
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: container.resolve(tokens.DslParser),
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
+      // Override mocks for this test
+      testBed.entityManager.getEntityInstance.mockReturnValue(null);
+      testBed.scopeEngine.resolve.mockReturnValue(new Set(['invalid-entity']));
+      testBed.scopeRegistry.getScope.mockReturnValue({
+        expr: 'entity.resolution',
+        ast: { type: 'field', name: 'test' },
       });
+
+      const testResolver = testBed.resolver;
 
       const context = {
         actor: { id: 'invalid-entities-actor', componentTypeIds: [] },
@@ -1235,26 +1005,12 @@ describe('UnifiedScopeResolver Integration', () => {
 
   describe('Self Scope Component Building Failure', () => {
     it('should handle self scope when component building fails (line 348)', () => {
-      // Mock entity manager to always fail component loading
-      const mockEntityManager = {
-        getComponentData: jest.fn(() => {
-          throw new Error('Component loading failed');
-        }),
-      };
-
-      const testResolver = new UnifiedScopeResolver({
-        scopeRegistry: container.resolve(tokens.IScopeRegistry),
-        scopeEngine: container.resolve(tokens.IScopeEngine),
-        entityManager: mockEntityManager,
-        jsonLogicEvaluationService: container.resolve(
-          tokens.JsonLogicEvaluationService
-        ),
-        dslParser: container.resolve(tokens.DslParser),
-        logger: container.resolve(tokens.ILogger),
-        actionErrorContextBuilder: container.resolve(
-          tokens.IActionErrorContextBuilder
-        ),
+      // Override entity manager for this test
+      testBed.entityManager.getComponentData.mockImplementation(() => {
+        throw new Error('Component loading failed');
       });
+
+      const testResolver = testBed.resolver;
 
       const actorEntity = {
         id: 'self-scope-fail-actor',

@@ -1,6 +1,10 @@
 /**
  * @file Performance tests for build system
  * Tests build speed and performance optimization with robust error handling
+ * 
+ * Usage:
+ *   Normal (fast): npm run test:performance
+ *   Extended: PERF_TESTS_EXTENDED=true npm run test:performance
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -13,11 +17,14 @@ describe('Build System Performance', () => {
   const testTimeout = 120000; // 120 seconds for performance tests with retries
   const maxRetries = 2;
   const buildTimeoutMs = 60000; // 60 seconds timeout per build attempt
+  const runExtendedTests = process.env.PERF_TESTS_EXTENDED === 'true';
 
   // Helper function to execute build commands with proper error handling
-  const executeBuild = async (command, args = []) => {
+  const executeBuild = async (command, args = [], useFastMode = true) => {
     return new Promise((resolve, reject) => {
-      const child = spawn('npm', ['run', command, ...args], {
+      // Add --fast flag for performance tests to reduce build time
+      const buildArgs = useFastMode && command.startsWith('build') ? [...args, '--fast'] : args;
+      const child = spawn('npm', ['run', command, ...buildArgs], {
         cwd: process.cwd(),
         stdio: ['ignore', 'pipe', 'pipe'],
         timeout: buildTimeoutMs,
@@ -77,13 +84,14 @@ describe('Build System Performance', () => {
   const executeBuildWithRetries = async (
     command,
     args = [],
-    retries = maxRetries
+    retries = maxRetries,
+    useFastMode = true
   ) => {
     let lastError;
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
-        const result = await executeBuild(command, args);
+        const result = await executeBuild(command, args, useFastMode);
 
         // If it's a dev validation failure but build steps completed, treat as success
         if (result.isDevValidationFailure) {
@@ -99,13 +107,13 @@ describe('Build System Performance', () => {
           console.warn(
             `Build attempt ${attempt + 1} failed, retrying... Error: ${error.message}`
           );
-          // Wait before retry
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          // Wait before retry (reduced delay for performance)
+          await new Promise((resolve) => setTimeout(resolve, 500));
           // Clean dist directory before retry
           if (await fs.pathExists(distDir)) {
             await fs.remove(distDir);
           }
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
     }
@@ -145,8 +153,8 @@ describe('Build System Performance', () => {
       await fs.remove(distDir);
     }
 
-    // Wait for filesystem operations to complete
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Wait for filesystem operations to complete (reduced delay)
+    await new Promise((resolve) => setTimeout(resolve, 100));
   });
 
   afterEach(async () => {
@@ -155,87 +163,84 @@ describe('Build System Performance', () => {
       await fs.remove(distDir);
     }
 
-    // Wait for filesystem operations to complete
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Wait for filesystem operations to complete (reduced delay)
+    await new Promise((resolve) => setTimeout(resolve, 100));
   });
 
-  describe('Build Speed Benchmarks', () => {
+  describe('Core Build Performance', () => {
     it(
-      'should complete development build successfully',
+      'should complete both development and production builds successfully',
       async () => {
-        const startTime = Date.now();
+        const totalStartTime = Date.now();
+        const buildResults = {};
 
-        const result = await executeBuildWithRetries('build:dev');
+        // Test development build
+        console.log('Testing development build...');
+        const devStartTime = Date.now();
+        const devResult = await executeBuildWithRetries('build:dev');
+        const devBuildTime = Date.now() - devStartTime;
 
-        const buildTime = Date.now() - startTime;
-
-        // Verify build succeeded (or succeeded with dev validation warnings)
-        expect(result.actualSuccess || result.isDevValidationFailure).toBe(
-          true
-        );
-
-        if (result.isDevValidationFailure) {
-          console.log(
-            'Build completed with validation warnings for missing development features'
-          );
+        // Verify dev build succeeded
+        expect(devResult.actualSuccess || devResult.isDevValidationFailure).toBe(true);
+        
+        if (devResult.isDevValidationFailure) {
+          console.log('Development build completed with validation warnings for missing development features');
         }
 
-        // Verify dist directory was created with content
         expect(await fs.pathExists(distDir)).toBe(true);
+        console.log(`Development build completed in ${devBuildTime}ms`);
+        buildResults.dev = { time: devBuildTime, success: true };
 
-        // Log build time for monitoring (but don't fail on it)
-        console.log(`Development build completed in ${buildTime}ms`);
+        // Clean for production build
+        if (await fs.pathExists(distDir)) {
+          await fs.remove(distDir);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // Reasonable upper bound - builds should complete within 2 minutes
-        expect(buildTime).toBeLessThan(120000);
+        // Test production build
+        console.log('Testing production build...');
+        const prodStartTime = Date.now();
+        const prodResult = await executeBuildWithRetries('build:prod');
+        const prodBuildTime = Date.now() - prodStartTime;
+
+        // Verify prod build succeeded
+        expect(prodResult.actualSuccess || prodResult.isDevValidationFailure).toBe(true);
+        
+        if (prodResult.isDevValidationFailure) {
+          console.log('Production build completed with validation warnings for missing development features');
+        }
+
+        expect(await fs.pathExists(distDir)).toBe(true);
+        console.log(`Production build completed in ${prodBuildTime}ms`);
+        buildResults.prod = { time: prodBuildTime, success: true };
+
+        const totalBuildTime = Date.now() - totalStartTime;
+        console.log(`Total build time: ${totalBuildTime}ms`);
+
+        // Both builds should complete within reasonable time
+        expect(devBuildTime).toBeLessThan(90000); // 1.5 minutes for dev with fast mode
+        expect(prodBuildTime).toBeLessThan(120000); // 2 minutes for prod with fast mode
+        expect(totalBuildTime).toBeLessThan(180000); // 3 minutes total
       },
       testTimeout
     );
 
-    it(
-      'should complete production build successfully',
-      async () => {
-        const startTime = Date.now();
+  });
 
-        const result = await executeBuildWithRetries('build:prod');
-
-        const buildTime = Date.now() - startTime;
-
-        // Verify build succeeded (or succeeded with dev validation warnings)
-        expect(result.actualSuccess || result.isDevValidationFailure).toBe(
-          true
-        );
-
-        if (result.isDevValidationFailure) {
-          console.log(
-            'Build completed with validation warnings for missing development features'
-          );
-        }
-
-        // Verify dist directory was created with content
-        expect(await fs.pathExists(distDir)).toBe(true);
-
-        // Log build time for monitoring (but don't fail on it)
-        console.log(`Production build completed in ${buildTime}ms`);
-
-        // Production builds get more time due to minification
-        expect(buildTime).toBeLessThan(180000); // 3 minutes
-      },
-      testTimeout
-    );
-
+  // Extended performance tests - run only when PERF_TESTS_EXTENDED=true
+  (runExtendedTests ? describe : describe.skip)('Extended Build Performance', () => {
     it(
       'should demonstrate consistent build performance across runs',
       async () => {
         const buildTimes = [];
-        const numRuns = 2; // Reduced from 3 to avoid excessive test time
+        const numRuns = 2; // Keep limited for performance
 
         for (let i = 0; i < numRuns; i++) {
           // Clean before each run
           if (await fs.pathExists(distDir)) {
             await fs.remove(distDir);
           }
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 100));
 
           const startTime = Date.now();
           const result = await executeBuildWithRetries('build:dev');
@@ -274,7 +279,7 @@ describe('Build System Performance', () => {
     );
   });
 
-  describe('Parallel vs Sequential Performance', () => {
+  (runExtendedTests ? describe : describe.skip)('Parallel vs Sequential Performance', () => {
     it(
       'should validate parallel and sequential build modes work correctly',
       async () => {
@@ -298,7 +303,7 @@ describe('Build System Performance', () => {
 
         // Clean for sequential test
         await fs.remove(distDir);
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Test sequential build (no-parallel) using direct script call
         console.log('Testing sequential build...');

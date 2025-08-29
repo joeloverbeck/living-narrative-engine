@@ -3,9 +3,12 @@
  * @see loggerStrategy.js, circuitBreaker.js
  */
 
+/* global process */
+
 import CircuitBreaker from './circuitBreaker.js';
 import LogCategoryDetector from './logCategoryDetector.js';
 import LogMetadataEnricher from './logMetadataEnricher.js';
+import SensitiveDataFilter from './SensitiveDataFilter.js';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -39,6 +42,7 @@ import { v4 as uuidv4 } from 'uuid';
  * @property {boolean} [enableCategoryCache] - Enable category detection caching
  * @property {number} [categoryCacheSize] - Category cache size
  * @property {string[]} [debugFilters] - Patterns to filter out from debug logs to reduce noise
+ * @property {object} [filtering] - Sensitive data filtering configuration
  */
 
 /**
@@ -89,6 +93,12 @@ class RemoteLogger {
    * @type {number|null}
    */
   #flushTimer;
+
+  /**
+   * @private
+   * @type {SensitiveDataFilter|null}
+   */
+  #sensitiveDataFilter;
 
   /**
    * @private
@@ -409,6 +419,17 @@ class RemoteLogger {
       lazyLoadExpensive: mergedConfig.metadataLevel === 'full',
     });
 
+    // Initialize sensitive data filter if configured
+    if (mergedConfig.filtering && mergedConfig.filtering.enabled !== false) {
+      this.#sensitiveDataFilter = new SensitiveDataFilter({
+        logger: this.#fallbackLogger,
+        enabled: mergedConfig.filtering.enabled,
+        config: mergedConfig.filtering
+      });
+    } else {
+      this.#sensitiveDataFilter = null;
+    }
+
     // Set up page lifecycle handling
     this.#setupLifecycleHandlers();
 
@@ -709,7 +730,17 @@ class RemoteLogger {
       this.#handleBufferPressure();
 
       // Create enriched log entry
-      const logEntry = this.#enrichLogEntry(level, message, metadata);
+      let logEntry = this.#enrichLogEntry(level, message, metadata);
+
+      // Apply sensitive data filtering if enabled
+      if (this.#sensitiveDataFilter && this.#sensitiveDataFilter.isEnabled()) {
+        const strategy = this.#sensitiveDataFilter.strategy || 'mask';
+        logEntry = {
+          ...logEntry,
+          message: this.#sensitiveDataFilter.filter(logEntry.message, strategy),
+          metadata: logEntry.metadata ? this.#sensitiveDataFilter.filter(logEntry.metadata, strategy) : undefined
+        };
+      }
 
       // Apply debug filters to reduce anatomy-related noise
       if (level === 'debug' && this.#shouldFilterDebugLog(message)) {
@@ -2046,6 +2077,16 @@ class RemoteLogger {
         maxServerBatchSize: this.#maxServerBatchSize,
       },
     };
+  }
+
+  /**
+   * Gets the current buffer contents for testing purposes.
+   * This method should only be used in test environments.
+   *
+   * @returns {DebugLogEntry[]} Copy of the current buffer
+   */
+  getBuffer() {
+    return [...this.#buffer];
   }
 
   /**
