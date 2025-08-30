@@ -39,6 +39,7 @@ import { AnatomyLoadingDetector } from '../../domUI/visualizer/AnatomyLoadingDet
 import { VisualizerStateController } from '../../domUI/visualizer/VisualizerStateController.js';
 import SaveGameUI from '../../domUI/saveGameUI.js';
 import LoadGameUI from '../../domUI/loadGameUI.js';
+import { PortraitModalRenderer } from '../../domUI/portraitModalRenderer.js';
 import { EngineUIManager } from '../../domUI'; // Corrected import path if EngineUIManager is also in domUI/index.js or directly from its file
 
 // --- JSDoc Imports ---
@@ -143,6 +144,18 @@ export function registerDomElements(
 export function registerRenderers(registrar, logger) {
   registerWithLog(
     registrar,
+    tokens.PortraitModalRenderer,
+    (c) => new PortraitModalRenderer({
+      documentContext: c.resolve(tokens.IDocumentContext),
+      domElementFactory: c.resolve(tokens.DomElementFactory),
+      logger: c.resolve(tokens.ILogger),
+      validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+    }),
+    { lifecycle: 'singletonFactory' },
+    logger
+  );
+  registerWithLog(
+    registrar,
     tokens.SpeechBubbleRenderer,
     SpeechBubbleRenderer,
     {
@@ -154,6 +167,7 @@ export function registerRenderers(registrar, logger) {
         tokens.IEntityManager,
         tokens.DomElementFactory,
         tokens.EntityDisplayDataProvider,
+        tokens.PortraitModalRenderer,
       ],
     },
     logger

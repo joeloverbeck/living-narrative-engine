@@ -356,7 +356,18 @@
       "Bash(NODE_ENV=test npx jest tests/integration/logging/remoteLoggerBootstrapRaceCondition.integration.test.js --testNamePattern=\"should properly handle circuit breaker during bootstrap failures\" --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/integration/scopeDsl/ --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/integration/configuration/actionTraceConfigLoaderDI.test.js --no-coverage --verbose)",
-      "Bash(NODE_ENV=test npx jest tests/integration/configuration/actionTraceConfigLoaderDI.test.js --no-coverage --silent)"
+      "Bash(NODE_ENV=test npx jest tests/integration/configuration/actionTraceConfigLoaderDI.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/common/mods/ModTestHandlerFactory.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/common/mods/ModTestHandlerFactory.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/common/mods/ModTestHandlerFactoryMigration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/performance/common/mods/ModTestHandlerFactory.performance.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/common/mods/ModTestHandlerFactory.test.js tests/integration/common/mods/ModTestHandlerFactoryMigration.test.js tests/performance/common/mods/ModTestHandlerFactory.performance.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.helpers.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/dependencyInjection/registrations/uiRegistrations.registerRenderers.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/performance/common/mods/ModTestHandlerFactory.performance.test.js --config jest.config.performance.js --env=jsdom --no-coverage --verbose)",
+      "Bash(NODE_ENV=test timeout 30 npx jest tests/unit/dependencyInjection/ --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/performance/common/mods/ModTestHandlerFactory.performance.test.js --config jest.config.performance.js --env=jsdom --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/domUI/portraitModalIntegration.test.js --no-coverage --verbose)"
     ],
     "deny": []
   }

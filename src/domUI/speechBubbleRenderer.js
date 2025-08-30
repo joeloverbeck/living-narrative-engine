@@ -5,6 +5,7 @@
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { DISPLAY_SPEECH_ID, PORTRAIT_CLICKED } from '../constants/eventIds.js';
+import { validateDependency } from '../utils/dependencyUtils.js';
 import {
   PLAYER_COMPONENT_ID,
   PLAYER_TYPE_COMPONENT_ID,
@@ -20,6 +21,7 @@ import { DEFAULT_SPEAKER_NAME } from './uiDefaults.js';
  * @typedef {import('./domElementFactory.js').default} DomElementFactory
  * @typedef {import('../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider
  * @typedef {import('../entities/entity.js').default} Entity
+ * @typedef {import('./portraitModalRenderer.js').PortraitModalRenderer} PortraitModalRenderer
  */
 
 /**
@@ -29,6 +31,7 @@ import { DEFAULT_SPEAKER_NAME } from './uiDefaults.js';
 export class SpeechBubbleRenderer extends BoundDomRendererBase {
   #entityManager;
   #entityDisplayDataProvider;
+  #portraitModalRenderer;
 
   /**
    * The actual DOM element where speech bubbles will be appended.
@@ -49,6 +52,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
    * @param {IEntityManager} dependencies.entityManager - Entity manager.
    * @param {DomElementFactory} dependencies.domElementFactory - Element factory.
    * @param {EntityDisplayDataProvider} dependencies.entityDisplayDataProvider - Provider for display data.
+   * @param {PortraitModalRenderer} dependencies.portraitModalRenderer - Portrait modal renderer for direct modal display.
    */
   constructor({
     logger,
@@ -57,6 +61,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
     entityManager,
     domElementFactory,
     entityDisplayDataProvider,
+    portraitModalRenderer,
   }) {
     const elementsConfig = {
       outputDivElement: { selector: '#outputDiv', required: true }, // For scrolling
@@ -83,6 +88,17 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
 
     this.#entityManager = entityManager;
     this.#entityDisplayDataProvider = entityDisplayDataProvider;
+
+    // Add validation and storage for portraitModalRenderer with graceful handling
+    if (portraitModalRenderer) {
+      validateDependency(portraitModalRenderer, 'IPortraitModalRenderer', this.logger, {
+        requiredMethods: ['showModal', 'hideModal']
+      });
+      this.#portraitModalRenderer = portraitModalRenderer;
+    } else {
+      this.logger.warn(`${this._logPrefix} PortraitModalRenderer not available - using event dispatch fallback`);
+      this.#portraitModalRenderer = null;
+    }
 
     if (this.elements.speechContainer) {
       this.effectiveSpeechContainer = this.elements.speechContainer;
@@ -283,19 +299,17 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
         // Add click handler to dispatch PORTRAIT_CLICKED event
         this._addDomListener(portraitImg, 'click', () => {
           this.logger.debug(`${this._logPrefix} Portrait clicked for ${speakerName}`);
-          if (this.validatedEventDispatcher) {
+          
+          // Try direct modal first, fall back to event dispatch
+          if (this.#portraitModalRenderer) {
             try {
-              this.validatedEventDispatcher.dispatch({
-                type: PORTRAIT_CLICKED,
-                payload: {
-                  portraitPath,
-                  speakerName,
-                  originalElement: portraitImg
-                }
-              });
+              this.#portraitModalRenderer.showModal(portraitPath, speakerName, portraitImg);
             } catch (error) {
-              this.logger.error(`${this._logPrefix} Failed to dispatch PORTRAIT_CLICKED event`, error);
+              this.logger.error(`${this._logPrefix} Failed to show portrait modal directly`, error);
+              this.#fallbackToEventDispatch(portraitPath, speakerName, portraitImg);
             }
+          } else {
+            this.#fallbackToEventDispatch(portraitPath, speakerName, portraitImg);
           }
         });
         
@@ -403,6 +417,31 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
     this.logger.debug(
       `${this._logPrefix} Rendered speech for ${speakerName}${isPlayer ? ' (Player)' : ''}.`
     );
+  }
+
+  /**
+   * Fallback method to use event dispatch when direct modal is not available.
+   *
+   * @private
+   * @param {string} portraitPath - Path to portrait image
+   * @param {string} speakerName - Name of the speaker
+   * @param {HTMLElement} portraitImg - Portrait image element
+   */
+  #fallbackToEventDispatch(portraitPath, speakerName, portraitImg) {
+    if (this.validatedEventDispatcher) {
+      try {
+        this.validatedEventDispatcher.dispatch({
+          type: PORTRAIT_CLICKED,
+          payload: {
+            portraitPath,
+            speakerName,
+            originalElement: portraitImg
+          }
+        });
+      } catch (error) {
+        this.logger.error(`${this._logPrefix} Failed to dispatch PORTRAIT_CLICKED event`, error);
+      }
+    }
   }
 
   /**

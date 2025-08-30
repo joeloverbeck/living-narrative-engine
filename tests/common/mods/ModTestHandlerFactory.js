@@ -11,6 +11,9 @@ import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandler
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
+import { validateDependency } from '../../../src/utils/dependencyUtils.js';
+
+/* global jest */
 
 /**
  * Factory class for creating standardized operation handlers for mod tests.
@@ -20,14 +23,54 @@ import AddComponentHandler from '../../../src/logic/operationHandlers/addCompone
  */
 export class ModTestHandlerFactory {
   /**
+   * Validates required dependencies for handler creation.
+   * 
+   * @private
+   * @param {object} entityManager - Entity manager instance
+   * @param {object} eventBus - Event bus instance
+   * @param {object} logger - Logger instance
+   * @param {string} methodName - Name of calling method for error context
+   * @throws {Error} If any required dependency is missing or invalid
+   */
+  static #validateDependencies(entityManager, eventBus, logger, methodName) {
+    if (!entityManager) {
+      throw new Error(`ModTestHandlerFactory.${methodName}: entityManager is required`);
+    }
+
+    if (!eventBus) {
+      throw new Error(`ModTestHandlerFactory.${methodName}: eventBus is required`);
+    }
+
+    if (!logger) {
+      throw new Error(`ModTestHandlerFactory.${methodName}: logger is required`);
+    }
+
+    // Validate entityManager has required methods
+    validateDependency(entityManager, 'entityManager', logger, {
+      requiredMethods: ['getEntityInstance', 'getComponentData'],
+    });
+
+    // Validate eventBus has required methods
+    validateDependency(eventBus, 'eventBus', logger, {
+      requiredMethods: ['dispatch'],
+    });
+
+    // Validate logger has required methods
+    validateDependency(logger, 'logger', console, {
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
+    });
+  }
+  /**
    * Creates the standard set of handlers used by most mod integration tests.
    * 
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance  
    * @param {object} logger - Logger instance
    * @returns {object} Standard handlers object with common operation handlers
+   * @throws {Error} If any required parameter is missing or invalid
    */
   static createStandardHandlers(entityManager, eventBus, logger) {
+    this.#validateDependencies(entityManager, eventBus, logger, 'createStandardHandlers');
     const safeDispatcher = {
       dispatch: jest.fn((eventType, payload) => {
         eventBus.dispatch(eventType, payload);
@@ -68,8 +111,10 @@ export class ModTestHandlerFactory {
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
    * @returns {object} Extended handlers object including ADD_COMPONENT handler
+   * @throws {Error} If any required parameter is missing or invalid
    */
   static createHandlersWithAddComponent(entityManager, eventBus, logger) {
+    this.#validateDependencies(entityManager, eventBus, logger, 'createHandlersWithAddComponent');
     const baseHandlers = this.createStandardHandlers(entityManager, eventBus, logger);
     
     const safeDispatcher = {
@@ -96,8 +141,10 @@ export class ModTestHandlerFactory {
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
    * @returns {object} Minimal handlers object with essential operations only
+   * @throws {Error} If any required parameter is missing or invalid
    */
   static createMinimalHandlers(entityManager, eventBus, logger) {
+    this.#validateDependencies(entityManager, eventBus, logger, 'createMinimalHandlers');
     const safeDispatcher = {
       dispatch: jest.fn((eventType, payload) => {
         eventBus.dispatch(eventType, payload);
@@ -135,13 +182,15 @@ export class ModTestHandlerFactory {
    * @param {boolean} options.includeQueryComponent - Whether to include QUERY_COMPONENT handler
    * @param {Array<string>} options.additionalHandlers - Additional handler types to include
    * @returns {object} Custom handlers object based on options
+   * @throws {Error} If any required parameter is missing or invalid
    */
   static createCustomHandlers(entityManager, eventBus, logger, options = {}) {
+    this.#validateDependencies(entityManager, eventBus, logger, 'createCustomHandlers');
     const {
       includeAddComponent = false,
       includeSetVariable = true,
       includeQueryComponent = true,
-      additionalHandlers = []
+      additionalHandlers: _additionalHandlers = []
     } = options;
 
     const safeDispatcher = {
@@ -217,8 +266,17 @@ export class ModTestHandlerFactory {
    * 
    * @param {object} eventBus - Event bus instance
    * @returns {object} Safe dispatcher that wraps event bus dispatch
+   * @throws {Error} If eventBus is missing or invalid
    */
   static createSafeDispatcher(eventBus) {
+    if (!eventBus) {
+      throw new Error('ModTestHandlerFactory.createSafeDispatcher: eventBus is required');
+    }
+
+    // Validate eventBus has required methods
+    validateDependency(eventBus, 'eventBus', console, {
+      requiredMethods: ['dispatch'],
+    });
     return {
       dispatch: jest.fn((eventType, payload) => {
         eventBus.dispatch(eventType, payload);

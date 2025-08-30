@@ -40,6 +40,7 @@ export const uiTokens = freeze({
   VisualizerState: 'VisualizerState',
   AnatomyLoadingDetector: 'AnatomyLoadingDetector',
   VisualizerStateController: 'VisualizerStateController',
+  PortraitModalRenderer: 'PortraitModalRenderer',
   // Anatomy Renderer Components
   LayoutEngine: 'LayoutEngine',
   RadialLayoutStrategy: 'RadialLayoutStrategy',
