@@ -23,6 +23,10 @@ jest.mock('../../../../src/domUI/index.js', () => ({
   LlmSelectionModal: jest.fn(),
 }));
 
+jest.mock('../../../../src/domUI/portraitModalRenderer.js', () => ({
+  PortraitModalRenderer: jest.fn(),
+}));
+
 jest.mock('../../../../src/domUI/saveGameUI.js', () => jest.fn());
 jest.mock('../../../../src/domUI/loadGameUI.js', () => jest.fn());
 
@@ -67,10 +71,55 @@ describe('registerRenderers', () => {
           tokens.IEntityManager,
           tokens.DomElementFactory,
           tokens.EntityDisplayDataProvider,
+          tokens.PortraitModalRenderer,
         ],
       },
       mockLogger
     );
+  });
+
+  describe('PortraitModalRenderer factory', () => {
+    it('should register PortraitModalRenderer as singleton factory', () => {
+      registerRenderers(mockRegistrar, mockLogger);
+
+      const portraitModalCall = mockRegisterWithLog.mock.calls.find(
+        (call) => call[1] === tokens.PortraitModalRenderer
+      );
+      
+      expect(portraitModalCall).toBeDefined();
+      expect(portraitModalCall[3].lifecycle).toBe('singletonFactory');
+    });
+
+    it('should create PortraitModalRenderer with correct dependencies', () => {
+      registerRenderers(mockRegistrar, mockLogger);
+
+      const portraitModalCall = mockRegisterWithLog.mock.calls.find(
+        (call) => call[1] === tokens.PortraitModalRenderer
+      );
+      
+      const factory = portraitModalCall[2];
+      const mockContainer = {
+        resolve: jest.fn((token) => {
+          const mocks = {
+            [tokens.ILogger]: mockLogger,
+            [tokens.IDocumentContext]: { query: jest.fn() },
+            [tokens.IValidatedEventDispatcher]: { dispatch: jest.fn() },
+            [tokens.DomElementFactory]: { createElement: jest.fn() },
+          };
+          return mocks[token] || jest.fn();
+        }),
+      };
+
+      const MockPortraitModalRenderer = require('../../../../src/domUI/portraitModalRenderer.js').PortraitModalRenderer;
+      const result = factory(mockContainer);
+
+      expect(MockPortraitModalRenderer).toHaveBeenCalledWith({
+        documentContext: expect.any(Object),
+        domElementFactory: expect.any(Object),
+        logger: mockLogger,
+        validatedEventDispatcher: expect.any(Object),
+      });
+    });
   });
 
   describe('TitleRenderer factory', () => {
@@ -617,10 +666,11 @@ describe('registerRenderers', () => {
     registerRenderers(mockRegistrar, mockLogger);
 
     // Count total registrations
-    expect(mockRegisterWithLog).toHaveBeenCalledTimes(12);
+    expect(mockRegisterWithLog).toHaveBeenCalledTimes(13);
     
     // Verify all tokens were registered
     const registeredTokens = mockRegisterWithLog.mock.calls.map(call => call[1]);
+    expect(registeredTokens).toContain(tokens.PortraitModalRenderer);
     expect(registeredTokens).toContain(tokens.SpeechBubbleRenderer);
     expect(registeredTokens).toContain(tokens.TitleRenderer);
     expect(registeredTokens).toContain(tokens.LocationRenderer);

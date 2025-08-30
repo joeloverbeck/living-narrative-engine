@@ -136,7 +136,10 @@ describe('ScopeEngine helper methods', () => {
         locationProvider,
         errorHandler: null,
       });
-      expect(createStepResolver).toHaveBeenCalledWith({ entitiesGateway });
+      expect(createStepResolver).toHaveBeenCalledWith({ 
+        entitiesGateway,
+        errorHandler: null 
+      });
       expect(createFilterResolver).toHaveBeenCalledWith({
         logicEval,
         entitiesGateway,

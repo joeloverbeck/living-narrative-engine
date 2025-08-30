@@ -4,16 +4,31 @@
  *
  * @param {object} dependencies - Injected dependencies
  * @param {object} dependencies.entitiesGateway - Gateway for entity data access
+ * @param {object} [dependencies.errorHandler] - Optional centralized error handler
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
 import { getOrBuildComponents } from '../core/entityHelpers.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
+import { ErrorCodes } from '../constants/errorCodes.js';
 
 /**
+ * Creates a Step node resolver with injected dependencies
  *
- * @param root0
- * @param root0.entitiesGateway
+ * @param {object} root0 - Dependencies object
+ * @param {object} root0.entitiesGateway - Gateway for entity data access
+ * @param {object} [root0.errorHandler] - Optional centralized error handler
+ * @returns {object} NodeResolver with canResolve and resolve methods
  */
-export default function createStepResolver({ entitiesGateway }) {
+export default function createStepResolver({ 
+  entitiesGateway,
+  errorHandler = null,
+}) {
+  // Only validate if provided (for backward compatibility)
+  if (errorHandler) {
+    validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
+      requiredMethods: ['handleError', 'getErrorBuffer'],
+    });
+  }
   /**
    * Retrieves a single component value from an entity.
    *
@@ -23,27 +38,39 @@ export default function createStepResolver({ entitiesGateway }) {
    * @returns {any} The component data or undefined.
    */
   function extractFieldFromEntity(entityId, field) {
-    // First try to get it as a component
-    const componentData = entitiesGateway.getComponentData(entityId, field);
-    if (componentData !== undefined) {
-      return componentData; // Return null or any other value, but not undefined
-    }
+    try {
+      // First try to get it as a component
+      const componentData = entitiesGateway.getComponentData(entityId, field);
+      if (componentData !== undefined) {
+        return componentData; // Return null or any other value, but not undefined
+      }
 
-    // If not found as a component, search within all component data for the field
-    const entity = entitiesGateway.getEntityInstance(entityId);
-    if (entity && entity.componentTypeIds) {
-      for (const componentId of entity.componentTypeIds) {
-        const compData = entitiesGateway.getComponentData(
-          entityId,
-          componentId
-        );
-        if (compData && typeof compData === 'object' && field in compData) {
-          return compData[field];
+      // If not found as a component, search within all component data for the field
+      const entity = entitiesGateway.getEntityInstance(entityId);
+      if (entity && entity.componentTypeIds) {
+        for (const componentId of entity.componentTypeIds) {
+          const compData = entitiesGateway.getComponentData(
+            entityId,
+            componentId
+          );
+          if (compData && typeof compData === 'object' && field in compData) {
+            return compData[field];
+          }
         }
       }
-    }
 
-    return undefined;
+      return undefined;
+    } catch (error) {
+      if (errorHandler) {
+        errorHandler.handleError(
+          new Error(`StepResolver: Failed to extract field '${field}' from entity '${entityId}': ${error.message}`),
+          { entityId, field, originalError: error.message },
+          'StepResolver',
+          ErrorCodes.COMPONENT_RESOLUTION_FAILED
+        );
+      }
+      return undefined;
+    }
   }
 
   /**
@@ -68,11 +95,23 @@ export default function createStepResolver({ entitiesGateway }) {
    * @returns {any} Extracted value or undefined.
    */
   function resolveEntityParentValue(entityId, field, trace) {
-    if (field === 'components') {
-      return getOrBuildComponents(entityId, null, entitiesGateway, trace);
-    }
+    try {
+      if (field === 'components') {
+        return getOrBuildComponents(entityId, null, entitiesGateway, trace);
+      }
 
-    return extractFieldFromEntity(entityId, field);
+      return extractFieldFromEntity(entityId, field);
+    } catch (error) {
+      if (errorHandler) {
+        errorHandler.handleError(
+          new Error(`StepResolver: Failed to resolve entity parent value for field '${field}' on entity '${entityId}': ${error.message}`),
+          { entityId, field, originalError: error.message },
+          'StepResolver',
+          ErrorCodes.STEP_RESOLUTION_FAILED
+        );
+      }
+      return undefined;
+    }
   }
 
   /**
@@ -127,6 +166,22 @@ export default function createStepResolver({ entitiesGateway }) {
         const error = new Error(
           'StepResolver: actorEntity is missing from context'
         );
+        if (errorHandler) {
+          errorHandler.handleError(
+            error,
+            {
+              ...ctx,
+              nodeType: node?.type,
+              field: node?.field,
+              parentNodeType: node?.parent?.type,
+            },
+            'StepResolver',
+            ErrorCodes.MISSING_ACTOR
+          );
+          return new Set(); // Return empty set when using error handler
+        }
+        // Keep existing behavior when no errorHandler (backward compatibility)
+        // eslint-disable-next-line no-console
         console.error('[CRITICAL] StepResolver missing actorEntity:', {
           hasCtx: !!ctx,
           ctxKeys: ctx ? Object.keys(ctx) : [],

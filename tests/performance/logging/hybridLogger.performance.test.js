@@ -487,4 +487,127 @@ describe('HybridLogger Performance', () => {
       expect(console.error).toHaveBeenCalledTimes(iterationsPerLevel); // Bypassed filter
     });
   });
+
+  describe('Enhanced Critical Logging Performance', () => {
+    it('should maintain sub-millisecond overhead per critical log', () => {
+      const iterations = 1000;
+      const maxOverheadPerLog = 0.001; // 1 microsecond max per log
+      
+      const logger = new HybridLogger({
+        consoleLogger,
+        remoteLogger,
+        categoryDetector,
+      }, {
+        console: {
+          categories: ['ui'], // Restrictive filter
+          levels: ['info'], // Should be bypassed
+          enabled: true,
+        },
+        remote: { categories: null, levels: null, enabled: false },
+        criticalLogging: {
+          alwaysShowInConsole: true,
+          bufferSize: 100,
+        },
+      });
+      
+      // Warmup
+      for (let i = 0; i < 50; i++) {
+        logger.warn(`Warmup warning ${i}`);
+      }
+      jest.clearAllMocks();
+      
+      const startTime = performance.now();
+      
+      for (let i = 0; i < iterations; i++) {
+        logger.warn(`Performance test warning ${i}`);
+      }
+      
+      const endTime = performance.now();
+      const totalTime = endTime - startTime;
+      const averageTimePerLog = totalTime / iterations;
+      
+      expect(averageTimePerLog).toBeLessThan(maxOverheadPerLog * 1000); // Convert to ms
+      
+      // Verify all logs were processed
+      expect(console.warn).toHaveBeenCalledTimes(iterations);
+      
+      const bufferStats = logger.getCriticalBufferStats();
+      // The buffer may include warnings from warmup runs, so check it's at least the expected count
+      expect(bufferStats.totalWarnings).toBeGreaterThanOrEqual(iterations);
+    });
+    
+    it('should scale buffer operations linearly with size', () => {
+      const bufferSizes = [10, 50, 100];
+      const iterations = 200;
+      const results = [];
+      
+      for (const bufferSize of bufferSizes) {
+        const logger = new HybridLogger({
+          consoleLogger,
+          remoteLogger,
+          categoryDetector,
+        }, {
+          console: { categories: null, levels: null, enabled: false },
+          remote: { categories: null, levels: null, enabled: false },
+          criticalLogging: { bufferSize },
+        });
+        
+        const startTime = performance.now();
+        
+        for (let i = 0; i < iterations; i++) {
+          logger.warn(`Scaling test ${i}`);
+        }
+        
+        const endTime = performance.now();
+        results.push(endTime - startTime);
+      }
+      
+      // Performance should scale roughly linearly
+      // Larger buffers shouldn't be significantly slower per operation
+      const ratioSmallToMedium = results[1] / results[0];
+      const ratioMediumToLarge = results[2] / results[1];
+      
+      // Should not have exponential growth
+      expect(ratioSmallToMedium).toBeLessThan(2);
+      expect(ratioMediumToLarge).toBeLessThan(2);
+    });
+    
+    it('should maintain performance with high buffer utilization', () => {
+      const bufferSize = 50;
+      const iterations = 1000;
+      const maxTimePerOperation = 2; // 2ms per operation max
+      
+      const logger = new HybridLogger({
+        consoleLogger,
+        remoteLogger,
+        categoryDetector,
+      }, {
+        console: { categories: null, levels: null, enabled: false },
+        remote: { categories: null, levels: null, enabled: false },
+        criticalLogging: { bufferSize },
+      });
+      
+      // Fill buffer to capacity first
+      for (let i = 0; i < bufferSize; i++) {
+        logger.warn(`Fill buffer ${i}`);
+      }
+      
+      const startTime = performance.now();
+      
+      // Continue logging with full buffer (circular operations)
+      for (let i = 0; i < iterations; i++) {
+        logger.error(`High utilization error ${i}`);
+      }
+      
+      const endTime = performance.now();
+      const totalTime = endTime - startTime;
+      const averageTimePerOperation = totalTime / iterations;
+      
+      expect(averageTimePerOperation).toBeLessThan(maxTimePerOperation);
+      
+      const stats = logger.getCriticalBufferStats();
+      expect(stats.currentSize).toBe(bufferSize);
+      expect(stats.totalErrors).toBe(iterations);
+    });
+  });
 });

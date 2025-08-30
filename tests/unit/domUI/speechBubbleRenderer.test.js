@@ -10,7 +10,7 @@ import {
 } from '@jest/globals';
 import { SpeechBubbleRenderer } from '../../../src/domUI';
 import { BoundDomRendererBase } from '../../../src/domUI';
-import { DISPLAY_SPEECH_ID } from '../../../src/constants/eventIds';
+import { DISPLAY_SPEECH_ID, PORTRAIT_CLICKED } from '../../../src/constants/eventIds';
 import {
   PLAYER_COMPONENT_ID,
   PLAYER_TYPE_COMPONENT_ID,
@@ -215,6 +215,11 @@ const createMockEntityDisplayDataProvider = () => ({
   getEntityPortraitPath: jest.fn().mockReturnValue(null),
 });
 
+const createMockPortraitModalRenderer = () => ({
+  showModal: jest.fn(),
+  hideModal: jest.fn(),
+});
+
 describe('SpeechBubbleRenderer', () => {
   let logger,
     docContext,
@@ -222,6 +227,7 @@ describe('SpeechBubbleRenderer', () => {
     entityManager,
     domFactory,
     entityDisplayDataProvider,
+    portraitModalRenderer,
     renderer;
   let mockOutputDiv, mockMessageList;
 
@@ -233,6 +239,7 @@ describe('SpeechBubbleRenderer', () => {
     entityManager = createMockEntityManager();
     domFactory = createMockDomElementFactory();
     entityDisplayDataProvider = createMockEntityDisplayDataProvider();
+    portraitModalRenderer = createMockPortraitModalRenderer();
     mockOutputDiv = docContext._mockOutputDivElement;
     mockMessageList = docContext._mockMessageListElement;
     mockOutputDiv.scrollHeight = 100;
@@ -243,6 +250,7 @@ describe('SpeechBubbleRenderer', () => {
       entityManager,
       domElementFactory: domFactory,
       entityDisplayDataProvider,
+      portraitModalRenderer,
     });
   });
 
@@ -254,6 +262,7 @@ describe('SpeechBubbleRenderer', () => {
         validatedEventDispatcher: eventDispatcher,
         domElementFactory: domFactory,
         entityDisplayDataProvider,
+        portraitModalRenderer,
         // entityManager is missing
       };
 
@@ -269,6 +278,7 @@ describe('SpeechBubbleRenderer', () => {
         validatedEventDispatcher: eventDispatcher,
         entityManager,
         domElementFactory: domFactory,
+        portraitModalRenderer,
         // entityDisplayDataProvider is missing
       };
 
@@ -293,6 +303,7 @@ describe('SpeechBubbleRenderer', () => {
         entityManager,
         domElementFactory: domFactory,
         entityDisplayDataProvider,
+        portraitModalRenderer,
       });
 
       // Should have been called with our expected message
@@ -316,6 +327,7 @@ describe('SpeechBubbleRenderer', () => {
         entityManager,
         domElementFactory: domFactory,
         entityDisplayDataProvider,
+        portraitModalRenderer,
       });
 
       // Should have been called with our expected message
@@ -323,6 +335,128 @@ describe('SpeechBubbleRenderer', () => {
         '[SpeechBubbleRenderer] Critical: Effective speech container (#message-list or #outputDiv) could not be determined as #outputDiv was also not found or bound.',
       ]);
       expect(testRenderer.effectiveSpeechContainer).toBeNull();
+    });
+
+    it('should warn when portraitModalRenderer is not provided and set to null', () => {
+      const deps = {
+        logger,
+        documentContext: docContext,
+        validatedEventDispatcher: eventDispatcher,
+        entityManager,
+        domElementFactory: domFactory,
+        entityDisplayDataProvider,
+        // portraitModalRenderer is missing (null/undefined)
+      };
+
+      new SpeechBubbleRenderer(deps);
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        '[SpeechBubbleRenderer] PortraitModalRenderer not available - using event dispatch fallback'
+      );
+    });
+  });
+
+  describe('portrait modal integration', () => {
+    let mockPortraitImg, eventHandlers;
+
+    beforeEach(() => {
+      mockPortraitImg = createGenericMockElement('img');
+      eventHandlers = {};
+      domFactory.img.mockReturnValue(mockPortraitImg);
+      entityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/test-portrait.jpg');
+      entityDisplayDataProvider.getEntityName.mockReturnValue('TestSpeaker');
+      
+      // Mock _addDomListener to capture event handlers
+      jest
+        .spyOn(renderer, '_addDomListener')
+        .mockImplementation((element, event, handler) => {
+          eventHandlers[event] = handler;
+        });
+    });
+
+    it('should use modal renderer directly when available', () => {
+      renderer.renderSpeech({
+        entityId: 'test-entity',
+        speechContent: 'Hello world',
+      });
+
+      // Trigger the click event
+      expect(eventHandlers.click).toBeDefined();
+      eventHandlers.click();
+
+      expect(portraitModalRenderer.showModal).toHaveBeenCalledWith(
+        '/test-portrait.jpg',
+        'TestSpeaker',
+        mockPortraitImg
+      );
+      expect(eventDispatcher.dispatch).not.toHaveBeenCalled();
+    });
+
+    it('should fallback to event dispatch when modal renderer fails', () => {
+      portraitModalRenderer.showModal.mockImplementation(() => {
+        throw new Error('Modal renderer error');
+      });
+
+      renderer.renderSpeech({
+        entityId: 'test-entity',
+        speechContent: 'Hello world',
+      });
+
+      // Trigger the click event
+      expect(eventHandlers.click).toBeDefined();
+      eventHandlers.click();
+
+      expect(portraitModalRenderer.showModal).toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalledWith(
+        '[SpeechBubbleRenderer] Failed to show portrait modal directly',
+        expect.any(Error)
+      );
+      expect(eventDispatcher.dispatch).toHaveBeenCalledWith({
+        type: PORTRAIT_CLICKED,
+        payload: {
+          portraitPath: '/test-portrait.jpg',
+          speakerName: 'TestSpeaker',
+          originalElement: mockPortraitImg
+        }
+      });
+    });
+
+    it('should use event dispatch fallback when modal renderer unavailable', () => {
+      // Create renderer without portraitModalRenderer
+      const rendererWithoutModal = new SpeechBubbleRenderer({
+        logger,
+        documentContext: docContext,
+        validatedEventDispatcher: eventDispatcher,
+        entityManager,
+        domElementFactory: domFactory,
+        entityDisplayDataProvider,
+        // portraitModalRenderer is null
+      });
+
+      const noModalEventHandlers = {};
+      jest
+        .spyOn(rendererWithoutModal, '_addDomListener')
+        .mockImplementation((element, event, handler) => {
+          noModalEventHandlers[event] = handler;
+        });
+
+      rendererWithoutModal.renderSpeech({
+        entityId: 'test-entity',
+        speechContent: 'Hello world',
+      });
+
+      // Trigger the click event
+      expect(noModalEventHandlers.click).toBeDefined();
+      noModalEventHandlers.click();
+
+      expect(eventDispatcher.dispatch).toHaveBeenCalledWith({
+        type: PORTRAIT_CLICKED,
+        payload: {
+          portraitPath: '/test-portrait.jpg',
+          speakerName: 'TestSpeaker',
+          originalElement: mockPortraitImg
+        }
+      });
     });
   });
 

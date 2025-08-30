@@ -204,7 +204,10 @@ class ScopeEngine extends IScopeEngine {
         locationProvider, 
         errorHandler: this.errorHandler 
       }),
-      createStepResolver({ entitiesGateway }),
+      createStepResolver({ 
+        entitiesGateway, 
+        errorHandler: this.errorHandler 
+      }),
       createFilterResolver({
         logicEval,
         entitiesGateway,

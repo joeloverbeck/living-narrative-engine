@@ -1,16 +1,18 @@
 import { jest } from '@jest/globals';
 import createStepResolver from '../../../../src/scopeDsl/nodes/stepResolver.js';
 import {
-  createMockEntity,
+
   createTestEntity,
 } from '../../../common/mockFactories/entities.js';
 
 describe('StepResolver', () => {
   let resolver;
+  let resolverWithErrorHandler;
   let entitiesGateway;
   let dispatcher;
   let trace;
   let consoleErrorSpy;
+  let errorHandler;
 
   beforeEach(() => {
     // Mock entitiesGateway
@@ -30,10 +32,20 @@ describe('StepResolver', () => {
       addLog: jest.fn(),
     };
 
+    // Mock errorHandler
+    errorHandler = {
+      handleError: jest.fn(),
+      getErrorBuffer: jest.fn(),
+    };
+
     // Spy on console.error for error logging tests
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 
+    // Create resolver without errorHandler (legacy behavior)
     resolver = createStepResolver({ entitiesGateway });
+    
+    // Create resolver with errorHandler (new behavior)
+    resolverWithErrorHandler = createStepResolver({ entitiesGateway, errorHandler });
   });
 
   afterEach(() => {
@@ -55,7 +67,7 @@ describe('StepResolver', () => {
 
   describe('resolve', () => {
     describe('error handling', () => {
-      it('should throw error when actorEntity is missing from context', () => {
+      it('should throw error when actorEntity is missing from context (without errorHandler)', () => {
         const node = { type: 'Step', field: 'name', parent: {} };
         const ctx = { dispatcher, trace }; // Missing actorEntity
 
@@ -75,6 +87,30 @@ describe('StepResolver', () => {
             callStack: expect.any(String),
           })
         );
+      });
+
+      it('should use error handler when actorEntity is missing from context (with errorHandler)', () => {
+        const node = { type: 'Step', field: 'name', parent: {} };
+        const ctx = { dispatcher, trace }; // Missing actorEntity
+
+        const result = resolverWithErrorHandler.resolve(node, ctx);
+
+        expect(result).toEqual(new Set()); // Should return empty set
+        expect(errorHandler.handleError).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: 'StepResolver: actorEntity is missing from context'
+          }),
+          expect.objectContaining({
+            dispatcher,
+            trace,
+            nodeType: 'Step',
+            field: 'name',
+            parentNodeType: undefined,
+          }),
+          'StepResolver',
+          'SCOPE_1001' // ErrorCodes.MISSING_ACTOR
+        );
+        expect(consoleErrorSpy).not.toHaveBeenCalled();
       });
 
       it('should throw error when context is null', () => {

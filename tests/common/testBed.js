@@ -3,6 +3,7 @@
  */
 
 import { jest } from '@jest/globals';
+import { createMockElement } from './testHelpers/thematicDirectionDOMSetup.js';
 
 // Action tracing classes imported dynamically to avoid circular dependencies
 
@@ -19,6 +20,7 @@ export function createTestBed() {
     },
     mockValidatedEventDispatcher: {
       dispatch: jest.fn(),
+      subscribe: jest.fn(),
     },
     mockEventDispatchService: {
       dispatchWithLogging: jest.fn(),
@@ -36,6 +38,13 @@ export function createTestBed() {
 
   return {
     ...mockObjects,
+    
+    // Convenience aliases for common mock objects
+    logger: mockObjects.mockLogger,
+    eventDispatcher: mockObjects.mockValidatedEventDispatcher,
+    entityManager: {
+      getEntityInstance: jest.fn(),
+    },
 
     createMockEntityManager(options = {}) {
       const { hasBatchSupport = true, enableBatchOperations = true } = options;
@@ -287,6 +296,10 @@ export function createTestBed() {
     },
 
     createMock(name, methods) {
+      if (methods.length === 0) {
+        // If no methods specified, return a jest function
+        return jest.fn();
+      }
       const mock = {};
       methods.forEach((method) => {
         mock[method] = jest.fn();
@@ -330,6 +343,8 @@ export function createTestBed() {
         ...overrides,
       };
     },
+
+    createMockElement,
 
     cleanup() {
       jest.clearAllMocks();
