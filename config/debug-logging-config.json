@@ -103,6 +103,8 @@
     "enableVisualNotifications": true,
     "bufferSize": 50,
     "notificationPosition": "top-right",
-    "autoDismissAfter": null
+    "autoDismissAfter": null,
+    "soundEnabled": false,
+    "minimumLevel": "warn"
   }
 }

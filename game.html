@@ -324,6 +324,63 @@
       </div>
     </div>
 
+    <!-- Portrait Modal - Character portrait viewer -->
+    <div class="portrait-modal-overlay modal-overlay" 
+         role="dialog" 
+         aria-modal="true" 
+         aria-labelledby="portrait-modal-title"
+         aria-describedby="portrait-modal-description"
+         style="display: none;">
+      
+      <div class="portrait-modal-content modal-content">
+        <!-- Modal Header -->
+        <div class="portrait-modal-header">
+          <h2 id="portrait-modal-title" class="portrait-modal-title">
+            Character Portrait
+          </h2>
+          <button class="portrait-modal-close" 
+                  aria-label="Close portrait modal"
+                  type="button">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="portrait-modal-body">
+          <div class="portrait-image-container">
+            <!-- Loading Spinner -->
+            <div class="portrait-loading-spinner" 
+                 role="status" 
+                 aria-live="polite">
+              <span class="visually-hidden">Loading portrait...</span>
+              <span aria-hidden="true">Loading...</span>
+            </div>
+            
+            <!-- Main Portrait Image -->
+            <img class="portrait-modal-image" 
+                 src="" 
+                 alt=""
+                 role="img"
+                 aria-describedby="portrait-modal-description" />
+            
+            <!-- Error Message -->
+            <div class="portrait-error-message" 
+                 role="alert" 
+                 aria-live="assertive"
+                 style="display: none;">
+              <span class="error-icon" aria-hidden="true">⚠️</span>
+              <span class="error-text">Failed to load portrait</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Hidden description for screen readers -->
+        <div id="portrait-modal-description" class="visually-hidden">
+          High resolution portrait image viewer for character artwork
+        </div>
+      </div>
+    </div>
+
     <script src="bundle.js"></script>
     <script>
       window.bootstrapApp().then(() => {

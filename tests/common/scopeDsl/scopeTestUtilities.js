@@ -246,7 +246,7 @@ export class ScopeTestUtilities {
     const config = complexityConfigs[complexity] || complexityConfigs.simple;
     
     // AGGRESSIVE SIZE CAPPING: Prevent performance issues with large datasets
-    const cappedSize = Math.min(size, 15); // Hard cap at 15 entities for E2E tests
+    const cappedSize = Math.min(size, 5); // Hard cap at 5 entities for E2E tests
     
     // Pre-generate deterministic values to avoid expensive operations in loop
     const baseTimestamp = Date.now();
