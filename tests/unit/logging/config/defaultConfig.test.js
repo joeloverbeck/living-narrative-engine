@@ -322,6 +322,8 @@ describe('Default Configuration', () => {
         'console.showCategory',
         'performance.enableMetrics',
         'performance.slowLogThreshold',
+        'criticalLogging.soundEnabled',
+        'criticalLogging.minimumLevel',
       ];
 
       Object.values(ENV_VAR_MAPPINGS).forEach((path) => {

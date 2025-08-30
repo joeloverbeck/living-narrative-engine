@@ -282,6 +282,17 @@
             }
           ],
           "default": null
+        },
+        "soundEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Play sound when critical logs occur (optional feature)"
+        },
+        "minimumLevel": {
+          "type": "string",
+          "enum": ["warn", "error"],
+          "default": "warn",
+          "description": "Minimum level to consider as critical (warn includes both warnings and errors)"
         }
       },
       "additionalProperties": false

@@ -56,6 +56,21 @@ export const DEFAULT_CONFIG = {
     memoryWarningThreshold: 100, // MB
     slowLogThreshold: 1000, // From existing config
   },
+  filtering: {
+    enabled: true,
+    strategy: 'mask',
+    patterns: {},
+    strategies: {},
+  },
+  criticalLogging: {
+    alwaysShowInConsole: true,
+    enableVisualNotifications: true,
+    bufferSize: 50,
+    notificationPosition: 'top-right',
+    autoDismissAfter: null,
+    soundEnabled: false,
+    minimumLevel: 'warn',
+  },
 };
 
 /**
@@ -284,5 +299,7 @@ export const ENV_VAR_MAPPINGS = {
   DEBUG_LOG_CONSOLE_CATEGORY: 'console.showCategory',
   DEBUG_LOG_PERFORMANCE_METRICS: 'performance.enableMetrics',
   DEBUG_LOG_PERFORMANCE_THRESHOLD: 'performance.slowLogThreshold',
+  DEBUG_LOG_CRITICAL_SOUND_ENABLED: 'criticalLogging.soundEnabled',
+  DEBUG_LOG_CRITICAL_MINIMUM_LEVEL: 'criticalLogging.minimumLevel',
   DEBUG_LOG_LEVEL: 'logLevel', // Legacy support
 };
