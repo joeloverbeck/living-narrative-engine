@@ -97,5 +97,12 @@
       "hash": "hash",
       "remove": ""
     }
+  },
+  "criticalLogging": {
+    "alwaysShowInConsole": true,
+    "enableVisualNotifications": true,
+    "bufferSize": 50,
+    "notificationPosition": "top-right",
+    "autoDismissAfter": null
   }
 }

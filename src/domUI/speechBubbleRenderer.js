@@ -4,7 +4,7 @@
  */
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
-import { DISPLAY_SPEECH_ID } from '../constants/eventIds.js';
+import { DISPLAY_SPEECH_ID, PORTRAIT_CLICKED } from '../constants/eventIds.js';
 import {
   PLAYER_COMPONENT_ID,
   PLAYER_TYPE_COMPONENT_ID,
@@ -273,6 +273,40 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       );
       if (portraitImg) {
         hasPortrait = true;
+        
+        // Make portrait clickable
+        portraitImg.style.cursor = 'pointer';
+        portraitImg.setAttribute('tabindex', '0');
+        portraitImg.setAttribute('role', 'button');
+        portraitImg.setAttribute('aria-label', `View full portrait of ${speakerName}`);
+        
+        // Add click handler to dispatch PORTRAIT_CLICKED event
+        this._addDomListener(portraitImg, 'click', () => {
+          this.logger.debug(`${this._logPrefix} Portrait clicked for ${speakerName}`);
+          if (this.validatedEventDispatcher) {
+            try {
+              this.validatedEventDispatcher.dispatch({
+                type: PORTRAIT_CLICKED,
+                payload: {
+                  portraitPath,
+                  speakerName,
+                  originalElement: portraitImg
+                }
+              });
+            } catch (error) {
+              this.logger.error(`${this._logPrefix} Failed to dispatch PORTRAIT_CLICKED event`, error);
+            }
+          }
+        });
+        
+        // Add keyboard handler for accessibility (Enter/Space to activate)
+        this._addDomListener(portraitImg, 'keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            portraitImg.click();
+          }
+        });
+        
         this._addDomListener(portraitImg, 'load', () => this.scrollToBottom(), {
           once: true,
         });

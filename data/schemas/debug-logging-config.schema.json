@@ -240,6 +240,51 @@
         }
       },
       "additionalProperties": false
+    },
+    "criticalLogging": {
+      "type": "object",
+      "description": "Critical logging configuration for warnings and errors",
+      "properties": {
+        "alwaysShowInConsole": {
+          "type": "boolean",
+          "description": "Always show warnings and errors in console regardless of filters",
+          "default": true
+        },
+        "enableVisualNotifications": {
+          "type": "boolean",
+          "description": "Enable visual notifications for critical logs",
+          "default": true
+        },
+        "bufferSize": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 100,
+          "description": "Size of the critical log buffer",
+          "default": 50
+        },
+        "notificationPosition": {
+          "type": "string",
+          "enum": ["top-right", "top-left", "bottom-right", "bottom-left"],
+          "description": "Position of visual notifications on screen",
+          "default": "top-right"
+        },
+        "autoDismissAfter": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 30000,
+              "description": "Auto-dismiss notifications after milliseconds"
+            },
+            {
+              "type": "null",
+              "description": "Don't auto-dismiss notifications"
+            }
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": ["enabled", "mode"],
