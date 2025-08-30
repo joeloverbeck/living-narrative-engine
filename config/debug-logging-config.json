@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/debug-logging-config.schema.json",
-  "enabled": true,
+  "enabled": false,
   "mode": "development",
   "fallbackToConsole": true,
   "logLevel": "INFO",

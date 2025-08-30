@@ -121,7 +121,7 @@ describe('PromptBuilder (template-based)', () => {
       '<perception_log>\nTest perception 1\nTest perception 2\n</perception_log>'
     );
     expect(prompt).toContain(
-      '<thoughts>\n- Test thought 1\n- Test thought 2\n</thoughts>'
+      '<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- Test thought 1\n- Test thought 2\n\nGenerate a fresh, unique thought that builds upon your mental state.\n</thoughts>'
     );
     expect(prompt).toContain(
       '<notes>\n## Other\n### General\n- Test note 1\n- Test note 2\n</notes>'
@@ -167,7 +167,9 @@ describe('PromptBuilder (template-based)', () => {
     const prompt = await builder.build(TEST_LLM_ID, dataWithSomeEmptySections);
 
     // Should contain sections with content
-    expect(prompt).toContain('<thoughts>\n- I have a thought\n</thoughts>');
+    expect(prompt).toContain(
+      '<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- I have a thought\n\nGenerate a fresh, unique thought that builds upon your mental state.\n</thoughts>'
+    );
     expect(prompt).toContain('<goals>\n- Complete the quest\n</goals>');
 
     // Should NOT contain empty notes section

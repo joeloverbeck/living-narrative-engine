@@ -5,7 +5,7 @@
   "description": "Position yourself behind someone, causing them to face away from you.",
   "targets": {
     "primary": {
-      "scope": "positioning:actors_in_location_facing",
+      "scope": "positioning:actors_in_location_not_facing_away_from_actor",
       "placeholder": "target",
       "description": "Actor to position yourself behind"
     }

@@ -396,7 +396,12 @@ export class PromptDataFormatter {
     if (!content) {
       return '';
     }
-    return `<thoughts>\n${content}\n</thoughts>`;
+    return `<thoughts>
+Recent thoughts (avoid repeating or barely rephrasing these):
+${content}
+
+Generate a fresh, unique thought that builds upon your mental state.
+</thoughts>`;
   }
 
   /**
@@ -407,9 +412,10 @@ export class PromptDataFormatter {
    */
   formatThoughtsVoiceGuidance(thoughtsArray) {
     if (!thoughtsArray || thoughtsArray.length === 0) {
-      return '';
+      return "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style.";
     }
-    return "INNER VOICE REMINDER: Your thoughts below must reflect your character's authentic mental voice and personality patterns.";
+    
+    return "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style.";
   }
 
   /**

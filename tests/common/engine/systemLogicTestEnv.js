@@ -198,6 +198,7 @@ export function createBaseRuleEnvironment({
       operationInterpreter,
       systemLogicInterpreter: interpreter,
       actionIndex,
+      handlers,
     };
   }
 
@@ -210,8 +211,11 @@ export function createBaseRuleEnvironment({
     operationInterpreter: init.operationInterpreter,
     jsonLogic,
     systemLogicInterpreter: init.systemLogicInterpreter,
+    // Alias for backward compatibility with tests
+    systemLogicOrchestrator: init.systemLogicInterpreter,
     entityManager: init.entityManager,
     actionIndex: init.actionIndex,
+    handlers: init.handlers,
     logger: testLogger,
     dataRegistry: testDataRegistry,
     cleanup: () => {

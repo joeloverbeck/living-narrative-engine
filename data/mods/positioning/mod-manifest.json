@@ -38,6 +38,7 @@
       "actor-is-in-closeness.condition.json",
       "both-actors-facing-each-other.condition.json",
       "entity-in-facing-away.condition.json",
+      "entity-not-facing-away-from-actor.condition.json",
       "entity-not-in-facing-away.condition.json",
       "event-is-action-get-close.condition.json",
       "event-is-action-get-up-from-furniture.condition.json",
@@ -75,6 +76,7 @@
     "scopes": [
       "actors_im_facing_away_from.scope",
       "actors_in_location_facing.scope",
+      "actors_in_location_not_facing_away_from_actor.scope",
       "available_furniture.scope",
       "close_actors.scope",
       "close_actors_facing_each_other_or_behind_target.scope",

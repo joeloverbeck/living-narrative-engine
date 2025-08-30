@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "exercise:event-is-action-show-off-biceps",
+  "description": "Checks if the triggering event is for the 'exercise:show_off_biceps' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "exercise:show_off_biceps"]
+  }
+}

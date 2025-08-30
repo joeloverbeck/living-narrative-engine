@@ -1,68 +1,122 @@
- FAIL  tests/performance/logging/remoteLogger.integration.performance.test.js (158.881 s)
-  ● RemoteLogger - Performance Integration Tests › performance under load › should handle burst logging without loss
-
-    expect(received).toBeLessThan(expected)
-
-    Expected: < 500
-    Received:   3000
-
-      186 |
-      187 |       // Performance assertions
-    > 188 |       expect(metrics.totalTime).toBeLessThan(500); // Under 500ms for burst processing
-          |                                 ^
-      189 |
-      190 |       // All logs should be processed
-      191 |       const stats = remoteLogger.getStats();
-
-      at Object.toBeLessThan (tests/performance/logging/remoteLogger.integration.performance.test.js:188:33)
-
-  ● RemoteLogger - Performance Integration Tests › performance under load › should maintain performance with large log entries
-
-    expect(received).toBe(expected) // Object.is equality
-
-    Expected: 1
-    Received: 2
-
-      232 |       const metrics = benchmark.end();
-      233 |
-    > 234 |       expect(mockServer.getRequestCount()).toBe(1);
-          |                                            ^
-      235 |
-      236 |       // Should handle large entries without significant delay
-      237 |       expect(metrics.totalTime).toBeLessThan(200); // Under 200ms for large entry processing
-
-      at Object.toBe (tests/performance/logging/remoteLogger.integration.performance.test.js:234:44)
-
-  ● RemoteLogger - Performance Integration Tests › performance benchmarks › should handle category detection with cache efficiently
-
-    thrown: "Exceeded timeout of 15000 ms for a test.
-    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
-
-      243 |
-      244 |   describe('performance benchmarks', () => {
-    > 245 |     it('should handle category detection with cache efficiently', async () => {
-          |       ^
-      246 |       const benchmark = performanceTracker.startBenchmark(
-      247 |         'category-detection-cache'
-      248 |       );
-
-      at tests/performance/logging/remoteLogger.integration.performance.test.js:245:7
-      at tests/performance/logging/remoteLogger.integration.performance.test.js:244:11
-      at Object.<anonymous> (tests/performance/logging/remoteLogger.integration.performance.test.js:69:9)
-
-  ● RemoteLogger - Performance Integration Tests › performance benchmarks › should handle burst logging with enhanced features
-
-    expect(received).toBeLessThan(expected)
-
-    Expected: < 400
-    Received:   3000
-
-      382 |
-      383 |       // Should handle burst efficiently
-    > 384 |       expect(metrics.totalTime).toBeLessThan(400); // Less than 400ms for 1000 logs
-          |                                 ^
-      385 |
-      386 |       const stats = remoteLogger.getStats();
-      387 |       expect(stats.bufferSize).toBe(0); // All logs should be sent
-
-      at Object.toBeLessThan (tests/performance/logging/remoteLogger.integration.performance.test.js:384:33)
+[ActionButtonsRenderer] Actions with visual properties: {total: 12, withVisualProps: 12, withNullVisual: 0, missingVisual: 0, visualDetails: Array(12)}
+consoleLogger.js:151 ActionIndexingService: 12/12 actions have visual properties for p_erotica:garazi_ibarrola_instance (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+consoleLogger.js:151 [ActionButtonsRenderer] Actions with visual properties: {total: 12, withVisualProps: 12, withNullVisual: 0, missingVisual: 0, visualDetails: Array(12)}
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:perceptible_event'. Dispatch SKIPPED. Errors: [/perceptionType]: must be equal to one of the allowed values {payload: {…}, errors: Array(1)}
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+validatePayload_fn @ validatedEventDispatcher.js:150
+dispatch @ validatedEventDispatcher.js:225
+dispatchViaValidatedDispatcher_fn @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:95
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:490
+processRule_fn @ systemLogicInterpreter.js:448
+handleEvent_fn @ systemLogicInterpreter.js:351
+await in handleEvent_fn
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:198
+dispatch @ validatedEventDispatcher.js:228
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:149
+dispatchAction @ commandProcessor.js:213
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+(anonymous) @ turnManager.js:595
+setTimeout
+setTimeout @ RealScheduler.js:13
+handleTurnEndedEvent_fn @ turnManager.js:594
+(anonymous) @ turnManager.js:189
+(anonymous) @ turnEventSubscription.js:57
+setTimeout
+setTimeout @ RealScheduler.js:13
+wrapped @ turnEventSubscription.js:57
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:198
+dispatch @ validatedEventDispatcher.js:228
+dispatchViaValidatedDispatcher_fn @ dispatchEventHandler.js:138
+execute @ dispatchEventHandler.js:172
+(anonymous) @ interpreterRegistrations.js:59
+execute @ operationInterpreter.js:95
+executeActionSequence @ actionSequence.js:114
+await in executeActionSequence
+_executeActions @ systemLogicInterpreter.js:490
+processRule_fn @ systemLogicInterpreter.js:448
+handleEvent_fn @ systemLogicInterpreter.js:351
+await in handleEvent_fn
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:198
+dispatch @ validatedEventDispatcher.js:228
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchWithErrorHandling @ eventDispatchService.js:149
+dispatchAction @ commandProcessor.js:213
+_dispatchAction @ commandProcessingWorkflow.js:204
+processCommand @ commandProcessingWorkflow.js:480
+_processCommandInternal @ processingCommandState.js:333
+_executeAction @ processingWorkflow.js:261
+await in _executeAction
+run @ processingWorkflow.js:87
+await in run
+enterState @ processingCommandState.js:290
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestProcessingCommandStateTransition @ baseTurnHandler.js:677
+requestProcessingCommandStateTransition @ turnContext.js:253
+run @ actionDecisionWorkflow.js:62
+await in run
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183
+await in finalizeGameStart_fn
+finalizeNewGameSuccess @ gameSessionManager.js:204
+finalizeInitializationSuccess_fn @ gameEngine.js:285
+startNewGame @ gameEngine.js:321Understand this error
+consoleLogger.js:151 ActionIndexingService: 12/12 actions have visual properties for p_erotica:jon_etxebarria_instance (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]

@@ -127,17 +127,17 @@ describe('Prompt Assembly with template-based system', () => {
   test('Entity with one thought includes the formatted section', async () => {
     const prompt = await buildPrompt(['OnlyThought']);
 
-    // Should include the thoughts section with the thought
-    expect(prompt).toContain('<thoughts>\n- OnlyThought\n</thoughts>');
+    // Should include the thoughts section with the thought and guidance text
+    expect(prompt).toContain('<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- OnlyThought\n\nGenerate a fresh, unique thought that builds upon your mental state.\n</thoughts>');
     expect(prompt).toContain('OnlyThought');
   });
 
   test('Entity with multiple thoughts formats them correctly', async () => {
     const prompt = await buildPrompt(['First thought', 'Second thought']);
 
-    // Should include both thoughts formatted correctly
+    // Should include both thoughts formatted correctly with enhanced formatting
     expect(prompt).toContain(
-      '<thoughts>\n- First thought\n- Second thought\n</thoughts>'
+      '<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- First thought\n- Second thought\n\nGenerate a fresh, unique thought that builds upon your mental state.\n</thoughts>'
     );
     expect(prompt).toContain('First thought');
     expect(prompt).toContain('Second thought');

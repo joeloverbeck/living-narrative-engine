@@ -1,0 +1,30 @@
+{
+  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
+  "id": "exercise",
+  "version": "1.0.0",
+  "name": "exercise",
+  "description": "This module includes actions related to exercising and the bodybuilding world.",
+  "author": "joeloverbeck",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "show_off_biceps.action.json"
+    ],
+    "rules": [
+      "handle_show_off_biceps.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-show-off-biceps.condition.json"
+    ]
+  }
+}
