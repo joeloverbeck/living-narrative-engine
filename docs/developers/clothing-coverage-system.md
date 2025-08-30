@@ -26,18 +26,18 @@ Priority calculation uses a two-tier system:
 
 ```javascript
 const COVERAGE_PRIORITY = {
-  'outer': 100,      // Outer layer coverage
-  'base': 200,       // Base layer coverage
-  'underwear': 300,  // Underwear layer coverage
-  'accessories': 350, // Accessory layer coverage
-  'direct': 400      // Direct slot equipment (fallback)
+  outer: 100, // Outer layer coverage
+  base: 200, // Base layer coverage
+  underwear: 300, // Underwear layer coverage
+  accessories: 350, // Accessory layer coverage
+  direct: 400, // Direct slot equipment (fallback)
 };
 
 const LAYER_PRIORITY_WITHIN_COVERAGE = {
-  'outer': 10,       // Within same coverage, outer wins
-  'base': 20,
-  'underwear': 30,
-  'accessories': 40
+  outer: 10, // Within same coverage, outer wins
+  base: 20,
+  underwear: 30,
+  accessories: 40,
 };
 ```
 

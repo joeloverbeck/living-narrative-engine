@@ -15,14 +15,14 @@ import { ModAssertionHelpers } from './ModAssertionHelpers.js';
 
 /**
  * Factory class for creating specialized mod test environments.
- * 
+ *
  * Provides high-level abstractions for setting up common mod testing scenarios,
  * eliminating the boilerplate setup required in individual test files.
  */
 export class ModTestFixture {
   /**
    * Creates a test fixture for a mod action.
-   * 
+   *
    * @param {string} modId - The mod identifier (e.g., 'intimacy', 'positioning')
    * @param {string} actionId - The action identifier (e.g., 'kiss_cheek', 'kneel_before')
    * @param {object} ruleFile - The rule definition JSON
@@ -31,12 +31,18 @@ export class ModTestFixture {
    * @returns {ModActionTestFixture} Configured test fixture for the action
    */
   static forAction(modId, actionId, ruleFile, conditionFile, options = {}) {
-    return new ModActionTestFixture(modId, actionId, ruleFile, conditionFile, options);
+    return new ModActionTestFixture(
+      modId,
+      actionId,
+      ruleFile,
+      conditionFile,
+      options
+    );
   }
 
   /**
    * Creates a test fixture for a mod rule.
-   * 
+   *
    * @param {string} modId - The mod identifier
    * @param {string} ruleId - The rule identifier
    * @param {object} ruleFile - The rule definition JSON
@@ -45,12 +51,18 @@ export class ModTestFixture {
    * @returns {ModRuleTestFixture} Configured test fixture for the rule
    */
   static forRule(modId, ruleId, ruleFile, conditionFile, options = {}) {
-    return new ModRuleTestFixture(modId, ruleId, ruleFile, conditionFile, options);
+    return new ModRuleTestFixture(
+      modId,
+      ruleId,
+      ruleFile,
+      conditionFile,
+      options
+    );
   }
 
   /**
    * Creates a test fixture for a specific mod category.
-   * 
+   *
    * @param {string} categoryName - The mod category (e.g., 'positioning', 'intimacy')
    * @param {object} options - Configuration options
    * @returns {ModCategoryTestFixture} Configured test fixture for the category
@@ -72,7 +84,7 @@ class BaseModTestFixture {
 
   /**
    * Sets up the test environment.
-   * 
+   *
    * @param {object} ruleFile - Rule definition
    * @param {object} conditionFile - Condition definition
    * @param {string} conditionId - Condition identifier
@@ -92,7 +104,9 @@ class BaseModTestFixture {
       ),
     };
 
-    const handlerFactory = ModTestHandlerFactory.getHandlerFactoryForCategory(this.modId);
+    const handlerFactory = ModTestHandlerFactory.getHandlerFactoryForCategory(
+      this.modId
+    );
 
     this.testEnv = createRuleTestEnvironment({
       createHandlers: handlerFactory,
@@ -104,7 +118,7 @@ class BaseModTestFixture {
 
   /**
    * Resets the test environment with new entities.
-   * 
+   *
    * @param {Array<object>} entities - Entities to load
    */
   reset(entities = []) {
@@ -124,7 +138,7 @@ class BaseModTestFixture {
 
   /**
    * Gets the event bus from the test environment.
-   * 
+   *
    * @returns {object} Event bus instance
    */
   get eventBus() {
@@ -133,7 +147,7 @@ class BaseModTestFixture {
 
   /**
    * Gets the captured events from the test environment.
-   * 
+   *
    * @returns {Array} Captured events array
    */
   get events() {
@@ -142,7 +156,7 @@ class BaseModTestFixture {
 
   /**
    * Gets the entity manager from the test environment.
-   * 
+   *
    * @returns {object} Entity manager instance
    */
   get entityManager() {
@@ -151,7 +165,7 @@ class BaseModTestFixture {
 
   /**
    * Gets the logger from the test environment.
-   * 
+   *
    * @returns {object} Logger instance
    */
   get logger() {
@@ -168,14 +182,14 @@ export class ModActionTestFixture extends BaseModTestFixture {
     this.actionId = actionId;
     this.ruleFile = ruleFile;
     this.conditionFile = conditionFile;
-    
+
     const conditionId = `${modId}:event-is-action-${actionId.replace(`${modId}:`, '')}`;
     this.setupEnvironment(ruleFile, conditionFile, conditionId);
   }
 
   /**
    * Creates a standard actor-target setup for the action.
-   * 
+   *
    * @param {Array<string>} [names] - Names for actor and target
    * @param {object} [options] - Additional options
    * @returns {object} Object with actor and target entities
@@ -189,7 +203,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
     });
 
     const entities = [scenario.actor, scenario.target];
-    
+
     // Add room if needed
     if (options.includeRoom !== false) {
       entities.unshift(ModEntityScenarios.createRoom('room1', 'Test Room'));
@@ -201,7 +215,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * Creates close actors scenario (common for intimacy and positioning tests).
-   * 
+   *
    * @param {Array<string>} [names] - Actor names
    * @param {object} [options] - Additional options
    * @returns {object} Object with actor and target entities
@@ -215,13 +229,17 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * Creates anatomy scenario for body-related actions.
-   * 
+   *
    * @param {Array<string>} [names] - Actor names
    * @param {Array<string>} [bodyParts] - Body part types
    * @param {object} [options] - Additional options
    * @returns {object} Object with entities and body parts
    */
-  createAnatomyScenario(names = ['Alice', 'Bob'], bodyParts = ['torso', 'breast', 'breast'], options = {}) {
+  createAnatomyScenario(
+    names = ['Alice', 'Bob'],
+    bodyParts = ['torso', 'breast', 'breast'],
+    options = {}
+  ) {
     const scenario = ModEntityScenarios.createAnatomyScenario({
       names,
       location: 'room1',
@@ -230,7 +248,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
     });
 
     const entities = scenario.allEntities;
-    
+
     // Add room if needed
     if (options.includeRoom !== false) {
       entities.unshift(ModEntityScenarios.createRoom('room1', 'Test Room'));
@@ -242,7 +260,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * Creates multi-actor scenario with observers.
-   * 
+   *
    * @param {Array<string>} [names] - All actor names
    * @param {object} [options] - Additional options
    * @returns {object} Object with main entities and observers
@@ -256,7 +274,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
     });
 
     const entities = scenario.allEntities;
-    
+
     // Add room if needed
     if (options.includeRoom !== false) {
       entities.unshift(ModEntityScenarios.createRoom('room1', 'Test Room'));
@@ -268,24 +286,22 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * Executes the action with standard parameters.
-   * 
+   *
    * @param {string} actorId - Actor entity ID
    * @param {string} targetId - Target entity ID
    * @param {object} [options] - Additional options
    * @returns {Promise} Promise that resolves when action is dispatched
    */
   async executeAction(actorId, targetId, options = {}) {
-    const {
-      originalInput,
-      additionalPayload = {},
-    } = options;
+    const { originalInput, additionalPayload = {} } = options;
 
     const payload = {
       eventName: 'core:attempt_action',
       actorId,
       actionId: this.actionId,
       targetId,
-      originalInput: originalInput || `${this.actionId.split(':')[1]} ${targetId}`,
+      originalInput:
+        originalInput || `${this.actionId.split(':')[1]} ${targetId}`,
       ...additionalPayload,
     };
 
@@ -294,17 +310,21 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * Asserts that the action executed successfully.
-   * 
+   *
    * @param {string} expectedMessage - Expected success message
    * @param {object} [options] - Additional assertion options
    */
   assertActionSuccess(expectedMessage, options = {}) {
-    ModAssertionHelpers.assertActionSuccess(this.events, expectedMessage, options);
+    ModAssertionHelpers.assertActionSuccess(
+      this.events,
+      expectedMessage,
+      options
+    );
   }
 
   /**
    * Asserts that the perceptible event was generated correctly.
-   * 
+   *
    * @param {object} expectedEvent - Expected event properties
    */
   assertPerceptibleEvent(expectedEvent) {
@@ -313,7 +333,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * Asserts that a component was added to an entity.
-   * 
+   *
    * @param {string} entityId - Entity ID to check
    * @param {string} componentId - Component ID that should exist
    * @param {object} [expectedData] - Expected component data
@@ -329,7 +349,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * Asserts that the action failed (no success events).
-   * 
+   *
    * @param {object} [options] - Failure assertion options
    */
   assertActionFailure(options = {}) {
@@ -338,11 +358,14 @@ export class ModActionTestFixture extends BaseModTestFixture {
 
   /**
    * Asserts that only expected events were generated.
-   * 
+   *
    * @param {Array<string>} allowedEventTypes - Allowed event types
    */
   assertOnlyExpectedEvents(allowedEventTypes) {
-    ModAssertionHelpers.assertOnlyExpectedEvents(this.events, allowedEventTypes);
+    ModAssertionHelpers.assertOnlyExpectedEvents(
+      this.events,
+      allowedEventTypes
+    );
   }
 
   /**
@@ -366,7 +389,7 @@ export class ModRuleTestFixture extends ModActionTestFixture {
 
   /**
    * Tests that the rule triggers for the correct action ID.
-   * 
+   *
    * @param {string} actorId - Actor entity ID
    * @param {string} correctActionId - Action ID that should trigger the rule
    * @param {string} targetId - Target entity ID
@@ -380,7 +403,7 @@ export class ModRuleTestFixture extends ModActionTestFixture {
 
   /**
    * Tests that the rule does not trigger for incorrect action IDs.
-   * 
+   *
    * @param {string} actorId - Actor entity ID
    * @param {string} wrongActionId - Action ID that should not trigger the rule
    * @param {string} [targetId] - Target entity ID
@@ -417,7 +440,7 @@ export class ModCategoryTestFixture extends BaseModTestFixture {
 
   /**
    * Creates category-specific entity scenarios.
-   * 
+   *
    * @param {string} scenarioType - Type of scenario to create
    * @param {object} [options] - Scenario options
    * @returns {object} Created scenario
@@ -442,7 +465,7 @@ export class ModCategoryTestFixture extends BaseModTestFixture {
 
   /**
    * Gets category-specific default entities.
-   * 
+   *
    * @returns {Array} Array of default entities for the category
    */
   getDefaultEntities() {

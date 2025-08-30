@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import createSlotAccessResolver from '../../../../src/scopeDsl/nodes/slotAccessResolver.js';
-import { 
-  calculatePriorityWithValidation, 
+import {
+  calculatePriorityWithValidation,
   sortCandidatesWithTieBreaking,
   calculateCoveragePriorityOptimized,
   clearPriorityCache,
-  getCacheStats
+  getCacheStats,
 } from '../../../../src/scopeDsl/prioritySystem/priorityCalculator.js';
 import { createTestBed } from '../../../common/testBed.js';
 
@@ -30,7 +30,7 @@ describe('SlotAccessResolver', () => {
     const mockSpan = {
       addEvent: jest.fn(),
       addAttributes: jest.fn(),
-      id: 'test-span-id'
+      id: 'test-span-id',
     };
 
     return {
@@ -43,8 +43,11 @@ describe('SlotAccessResolver', () => {
     };
   };
 
-  const assertStructuredTracingCalled = (mockStructuredTrace, expectedOperations) => {
-    expectedOperations.forEach(operation => {
+  const assertStructuredTracingCalled = (
+    mockStructuredTrace,
+    expectedOperations
+  ) => {
+    expectedOperations.forEach((operation) => {
       expect(mockStructuredTrace.startSpan).toHaveBeenCalledWith(
         operation,
         expect.any(Object)
@@ -66,14 +69,14 @@ describe('SlotAccessResolver', () => {
       hands: { accessories: 'watch_id' },
     },
     layeredOutfit: {
-      torso_upper: { 
-        outer: 'winter_coat_id', 
-        base: 'sweater_id', 
-        underwear: 'undershirt_id' 
+      torso_upper: {
+        outer: 'winter_coat_id',
+        base: 'sweater_id',
+        underwear: 'undershirt_id',
       },
-      torso_lower: { 
-        base: 'thermal_pants_id', 
-        underwear: 'underwear_id' 
+      torso_lower: {
+        base: 'thermal_pants_id',
+        underwear: 'underwear_id',
       },
     },
   };
@@ -764,15 +767,20 @@ describe('SlotAccessResolver', () => {
   describe('SlotAccessResolver - Enhanced Coverage', () => {
     describe('Priority-based Resolution', () => {
       it('should select highest priority item using calculated priorities', () => {
-        const clothingAccess = createMockClothingAccess({
-          torso_upper: {
-            outer: 'jacket_id',
-            base: 'shirt_id',
-            underwear: 'undershirt_id'
+        const clothingAccess = createMockClothingAccess(
+          {
+            torso_upper: {
+              outer: 'jacket_id',
+              base: 'shirt_id',
+              underwear: 'undershirt_id',
+            },
           },
-        }, 'topmost');
+          'topmost'
+        );
 
-        mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+        mockContext.dispatcher.resolve.mockReturnValue(
+          new Set([clothingAccess])
+        );
 
         const node = {
           type: 'Step',
@@ -787,14 +795,19 @@ describe('SlotAccessResolver', () => {
       });
 
       it('should handle tie-breaking between same priority items', () => {
-        const clothingAccess = createMockClothingAccess({
-          torso_upper: {
-            outer: 'jacket_outer',
-            base: 'jacket_base', // Same coverage priority but different layers
+        const clothingAccess = createMockClothingAccess(
+          {
+            torso_upper: {
+              outer: 'jacket_outer',
+              base: 'jacket_base', // Same coverage priority but different layers
+            },
           },
-        }, 'topmost');
+          'topmost'
+        );
 
-        mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+        mockContext.dispatcher.resolve.mockReturnValue(
+          new Set([clothingAccess])
+        );
 
         const node = {
           type: 'Step',
@@ -809,15 +822,22 @@ describe('SlotAccessResolver', () => {
       });
 
       it('should prioritize items from coverage resolution over direct items', () => {
-        const clothingAccess = createMockClothingAccess({
-          torso_upper: {
-            base: 'coverage_shirt_id',
+        const clothingAccess = createMockClothingAccess(
+          {
+            torso_upper: {
+              base: 'coverage_shirt_id',
+            },
           },
-        }, 'base');
+          'base'
+        );
 
         // Mix clothing access object with regular entity
-        mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess, 'entity_1']));
-        mockEntitiesGateway.getComponentData.mockReturnValue('direct_component_value');
+        mockContext.dispatcher.resolve.mockReturnValue(
+          new Set([clothingAccess, 'entity_1'])
+        );
+        mockEntitiesGateway.getComponentData.mockReturnValue(
+          'direct_component_value'
+        );
 
         const node = {
           type: 'Step',
@@ -828,23 +848,33 @@ describe('SlotAccessResolver', () => {
         const result = resolver.resolve(node, mockContext);
 
         // Should include both items (coverage has priority in sorting, but both are returned)
-        expect(result).toEqual(new Set(['coverage_shirt_id', 'direct_component_value']));
+        expect(result).toEqual(
+          new Set(['coverage_shirt_id', 'direct_component_value'])
+        );
       });
 
       it('should handle multiple clothing access objects with priority comparison', () => {
-        const highPriorityClothing = createMockClothingAccess({
-          torso_upper: {
-            outer: 'high_priority_jacket',
+        const highPriorityClothing = createMockClothingAccess(
+          {
+            torso_upper: {
+              outer: 'high_priority_jacket',
+            },
           },
-        }, 'outer');
+          'outer'
+        );
 
-        const lowPriorityClothing = createMockClothingAccess({
-          torso_upper: {
-            underwear: 'low_priority_underwear',
+        const lowPriorityClothing = createMockClothingAccess(
+          {
+            torso_upper: {
+              underwear: 'low_priority_underwear',
+            },
           },
-        }, 'underwear');
+          'underwear'
+        );
 
-        mockContext.dispatcher.resolve.mockReturnValue(new Set([highPriorityClothing, lowPriorityClothing]));
+        mockContext.dispatcher.resolve.mockReturnValue(
+          new Set([highPriorityClothing, lowPriorityClothing])
+        );
 
         const node = {
           type: 'Step',
@@ -855,13 +885,20 @@ describe('SlotAccessResolver', () => {
         const result = resolver.resolve(node, mockContext);
 
         // Should return both items (system returns all found items)
-        expect(result).toEqual(new Set(['high_priority_jacket', 'low_priority_underwear']));
+        expect(result).toEqual(
+          new Set(['high_priority_jacket', 'low_priority_underwear'])
+        );
       });
 
       it('should handle priority calculation with realistic layered outfit', () => {
-        const clothingAccess = createMockClothingAccess(REALISTIC_EQUIPMENT_SCENARIOS.layeredOutfit, 'topmost');
+        const clothingAccess = createMockClothingAccess(
+          REALISTIC_EQUIPMENT_SCENARIOS.layeredOutfit,
+          'topmost'
+        );
 
-        mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+        mockContext.dispatcher.resolve.mockReturnValue(
+          new Set([clothingAccess])
+        );
 
         const node = {
           type: 'Step',
@@ -878,14 +915,19 @@ describe('SlotAccessResolver', () => {
 
     describe('Mode-specific Priority Handling', () => {
       it('should respect topmost_no_accessories mode', () => {
-        const clothingAccess = createMockClothingAccess({
-          torso_upper: {
-            accessories: 'necklace_id',
-            base: 'shirt_id',
+        const clothingAccess = createMockClothingAccess(
+          {
+            torso_upper: {
+              accessories: 'necklace_id',
+              base: 'shirt_id',
+            },
           },
-        }, 'topmost_no_accessories');
+          'topmost_no_accessories'
+        );
 
-        mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+        mockContext.dispatcher.resolve.mockReturnValue(
+          new Set([clothingAccess])
+        );
 
         const node = {
           type: 'Step',
@@ -900,15 +942,20 @@ describe('SlotAccessResolver', () => {
       });
 
       it('should handle specific layer modes correctly', () => {
-        const clothingAccess = createMockClothingAccess({
-          torso_upper: {
-            outer: 'jacket_id',
-            base: 'shirt_id',
-            underwear: 'undershirt_id'
+        const clothingAccess = createMockClothingAccess(
+          {
+            torso_upper: {
+              outer: 'jacket_id',
+              base: 'shirt_id',
+              underwear: 'undershirt_id',
+            },
           },
-        }, 'underwear');
+          'underwear'
+        );
 
-        mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+        mockContext.dispatcher.resolve.mockReturnValue(
+          new Set([clothingAccess])
+        );
 
         const node = {
           type: 'Step',
@@ -923,15 +970,20 @@ describe('SlotAccessResolver', () => {
       });
 
       it('should handle all mode returning highest priority item', () => {
-        const clothingAccess = createMockClothingAccess({
-          torso_upper: {
-            outer: 'jacket_id',
-            base: 'shirt_id',
-            accessories: 'necklace_id'
+        const clothingAccess = createMockClothingAccess(
+          {
+            torso_upper: {
+              outer: 'jacket_id',
+              base: 'shirt_id',
+              accessories: 'necklace_id',
+            },
           },
-        }, 'all');
+          'all'
+        );
 
-        mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+        mockContext.dispatcher.resolve.mockReturnValue(
+          new Set([clothingAccess])
+        );
 
         const node = {
           type: 'Step',
@@ -946,13 +998,18 @@ describe('SlotAccessResolver', () => {
       });
 
       it('should return empty set for missing layer in specific mode', () => {
-        const clothingAccess = createMockClothingAccess({
-          torso_upper: {
-            base: 'shirt_id',
+        const clothingAccess = createMockClothingAccess(
+          {
+            torso_upper: {
+              base: 'shirt_id',
+            },
           },
-        }, 'outer'); // Requesting outer but only base available
+          'outer'
+        ); // Requesting outer but only base available
 
-        mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+        mockContext.dispatcher.resolve.mockReturnValue(
+          new Set([clothingAccess])
+        );
 
         const node = {
           type: 'Step',
@@ -971,9 +1028,13 @@ describe('SlotAccessResolver', () => {
   describe('Priority Calculation Integration', () => {
     it('should use calculatePriorityWithValidation for priority calculation', () => {
       const mockLogger = testBed.createMockLogger();
-      
-      const result = calculatePriorityWithValidation('outer', 'outer', mockLogger);
-      
+
+      const result = calculatePriorityWithValidation(
+        'outer',
+        'outer',
+        mockLogger
+      );
+
       expect(typeof result).toBe('number');
       expect(result).toBeGreaterThan(0);
     });
@@ -981,12 +1042,12 @@ describe('SlotAccessResolver', () => {
     it('should cache priority calculations for performance', () => {
       // Clear cache first
       clearPriorityCache();
-      
+
       const score1 = calculateCoveragePriorityOptimized('base', 'outer');
       const score2 = calculateCoveragePriorityOptimized('base', 'outer');
-      
+
       expect(score1).toBe(score2);
-      
+
       const stats = getCacheStats();
       expect(stats.size).toBeGreaterThan(0);
     });
@@ -1009,7 +1070,11 @@ describe('SlotAccessResolver', () => {
       const mockLogger = testBed.createMockLogger();
 
       // Test with invalid coverage priority
-      const result1 = calculatePriorityWithValidation('invalid_priority', 'base', mockLogger);
+      const result1 = calculatePriorityWithValidation(
+        'invalid_priority',
+        'base',
+        mockLogger
+      );
       expect(typeof result1).toBe('number');
       expect(mockLogger.warn).toHaveBeenCalled();
 
@@ -1017,7 +1082,11 @@ describe('SlotAccessResolver', () => {
       mockLogger.warn.mockClear();
 
       // Test with invalid layer
-      const result2 = calculatePriorityWithValidation('base', 'invalid_layer', mockLogger);
+      const result2 = calculatePriorityWithValidation(
+        'base',
+        'invalid_layer',
+        mockLogger
+      );
       expect(typeof result2).toBe('number');
       expect(mockLogger.warn).toHaveBeenCalled();
     });
@@ -1026,7 +1095,10 @@ describe('SlotAccessResolver', () => {
       // Test that outer beats base beats underwear in topmost mode
       const outerPriority = calculatePriorityWithValidation('outer', 'outer');
       const basePriority = calculatePriorityWithValidation('base', 'base');
-      const underwearPriority = calculatePriorityWithValidation('underwear', 'underwear');
+      const underwearPriority = calculatePriorityWithValidation(
+        'underwear',
+        'underwear'
+      );
 
       // Lower numbers indicate higher priority
       expect(outerPriority).toBeLessThan(basePriority);
@@ -1035,7 +1107,7 @@ describe('SlotAccessResolver', () => {
 
     it('should handle cache statistics and management', () => {
       clearPriorityCache();
-      
+
       // Populate cache with different combinations
       calculateCoveragePriorityOptimized('outer', 'outer');
       calculateCoveragePriorityOptimized('base', 'base');
@@ -1062,9 +1134,12 @@ describe('SlotAccessResolver', () => {
     });
 
     it('should create candidate collection spans during resolution', () => {
-      const clothingAccess = createMockClothingAccess({
-        torso_upper: { outer: 'jacket_id' },
-      }, 'topmost');
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: { outer: 'jacket_id' },
+        },
+        'topmost'
+      );
 
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -1086,9 +1161,12 @@ describe('SlotAccessResolver', () => {
     });
 
     it('should log candidate found events with structured tracing', () => {
-      const clothingAccess = createMockClothingAccess({
-        torso_upper: { outer: 'jacket_id' },
-      }, 'topmost');
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: { outer: 'jacket_id' },
+        },
+        'topmost'
+      );
 
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -1110,9 +1188,12 @@ describe('SlotAccessResolver', () => {
     });
 
     it('should create priority calculation spans', () => {
-      const clothingAccess = createMockClothingAccess({
-        torso_upper: { outer: 'jacket_id', base: 'shirt_id' },
-      }, 'topmost');
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: { outer: 'jacket_id', base: 'shirt_id' },
+        },
+        'topmost'
+      );
 
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -1133,9 +1214,12 @@ describe('SlotAccessResolver', () => {
     });
 
     it('should create final selection spans with results', () => {
-      const clothingAccess = createMockClothingAccess({
-        torso_upper: { outer: 'jacket_id' },
-      }, 'topmost');
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: { outer: 'jacket_id' },
+        },
+        'topmost'
+      );
 
       mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -1160,11 +1244,15 @@ describe('SlotAccessResolver', () => {
     it('should handle missing equipment component gracefully', () => {
       const mockContextLocal = {
         dispatcher: {
-          resolve: jest.fn().mockReturnValue(new Set([{
-            __clothingSlotAccess: true,
-            equipped: {}, // Empty equipment object instead of null
-            mode: 'topmost',
-          }])),
+          resolve: jest.fn().mockReturnValue(
+            new Set([
+              {
+                __clothingSlotAccess: true,
+                equipped: {}, // Empty equipment object instead of null
+                mode: 'topmost',
+              },
+            ])
+          ),
         },
         trace: { addLog: jest.fn() },
       };
@@ -1197,13 +1285,17 @@ describe('SlotAccessResolver', () => {
     it('should handle empty slot data without throwing', () => {
       const mockContextLocal = {
         dispatcher: {
-          resolve: jest.fn().mockReturnValue(new Set([{
-            __clothingSlotAccess: true,
-            equipped: {
-              torso_upper: {}, // Empty slot
-            },
-            mode: 'topmost',
-          }])),
+          resolve: jest.fn().mockReturnValue(
+            new Set([
+              {
+                __clothingSlotAccess: true,
+                equipped: {
+                  torso_upper: {}, // Empty slot
+                },
+                mode: 'topmost',
+              },
+            ])
+          ),
         },
         trace: { addLog: jest.fn() },
       };
@@ -1248,7 +1340,9 @@ describe('SlotAccessResolver', () => {
         mode: 'topmost',
       };
 
-      mockContext.dispatcher.resolve.mockReturnValue(new Set([malformedClothingAccess]));
+      mockContext.dispatcher.resolve.mockReturnValue(
+        new Set([malformedClothingAccess])
+      );
 
       const node = {
         type: 'Step',
@@ -1262,5 +1356,4 @@ describe('SlotAccessResolver', () => {
       }).not.toThrow();
     });
   });
-
 });

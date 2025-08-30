@@ -111,7 +111,7 @@ describe('ActionButtonsRenderer Performance Validation', () => {
     // - Recent feature additions (visual styling, accessibility checks, hover states)
     // - System variability (GC pauses, CPU scheduling, other processes)
     // - Production performance in real browsers would be significantly better
-    // 
+    //
     // The maximum threshold is more lenient than average to tolerate occasional spikes
     // from garbage collection or system load without causing false test failures
     expect(avgTime).toBeLessThan(20); // 20ms average (typical performance expectation)

@@ -1,10 +1,10 @@
 /**
  * @file EXAMPLE: Converted integration test for intimacy:kiss_cheek action using new mod test infrastructure
  * @description Demonstrates how the old test structure converts to the new architecture
- * 
+ *
  * BEFORE: 180+ lines with significant boilerplate
  * AFTER: ~60 lines with clear, maintainable structure
- * 
+ *
  * This file shows the conversion pattern that will be applied to all 50+ mod test files.
  */
 
@@ -13,10 +13,10 @@ import kissCheekRule from '../../../../data/mods/intimacy/rules/kiss_cheek.rule.
 import eventIsActionKissCheek from '../../../../data/mods/intimacy/conditions/event-is-action-kiss-cheek.condition.json';
 
 // NEW: Import the mod testing infrastructure
-import { 
-  ModTestFixture, 
-  ModEntityScenarios, 
-  ModAssertionHelpers 
+import {
+  ModTestFixture,
+  ModEntityScenarios,
+  ModAssertionHelpers,
 } from '../index.js';
 
 describe('intimacy:kiss_cheek action integration (CONVERTED)', () => {
@@ -25,9 +25,9 @@ describe('intimacy:kiss_cheek action integration (CONVERTED)', () => {
   beforeEach(() => {
     // NEW: Single line setup instead of 20+ lines
     testFixture = ModTestFixture.forAction(
-      'intimacy', 
-      'intimacy:kiss_cheek', 
-      kissCheekRule, 
+      'intimacy',
+      'intimacy:kiss_cheek',
+      kissCheekRule,
       eventIsActionKissCheek
     );
   });
@@ -45,7 +45,9 @@ describe('intimacy:kiss_cheek action integration (CONVERTED)', () => {
     await testFixture.executeAction(actor.id, target.id);
 
     // NEW: Standardized success assertion
-    testFixture.assertActionSuccess("Alice leans in to kiss Bob's cheek softly.");
+    testFixture.assertActionSuccess(
+      "Alice leans in to kiss Bob's cheek softly."
+    );
   });
 
   it('perception log shows correct message for kiss cheek action', async () => {
@@ -64,18 +66,25 @@ describe('intimacy:kiss_cheek action integration (CONVERTED)', () => {
 
   it('handles multiple close partners correctly', async () => {
     // NEW: Multi-actor scenario creation
-    const scenario = testFixture.createMultiActorScenario(['Alice', 'Bob', 'Charlie']);
+    const scenario = testFixture.createMultiActorScenario([
+      'Alice',
+      'Bob',
+      'Charlie',
+    ]);
 
     // First action
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
-    
+
     let expectedMessage = "Alice leans in to kiss Bob's cheek softly.";
     testFixture.assertActionSuccess(expectedMessage);
-    
+
     // Clear events and test second action
     testFixture.clearEvents();
-    await testFixture.executeAction(scenario.actor.id, scenario.observers[0].id);
-    
+    await testFixture.executeAction(
+      scenario.actor.id,
+      scenario.observers[0].id
+    );
+
     expectedMessage = "Alice leans in to kiss Charlie's cheek softly.";
     testFixture.assertActionSuccess(expectedMessage);
   });
@@ -99,7 +108,10 @@ describe('intimacy:kiss_cheek action integration (CONVERTED)', () => {
   });
 
   it('generates proper perceptible event for observers', async () => {
-    const { actor, target } = testFixture.createCloseActors(['Elena', 'Marcus']);
+    const { actor, target } = testFixture.createCloseActors([
+      'Elena',
+      'Marcus',
+    ]);
 
     await testFixture.executeAction(actor.id, target.id);
 
@@ -114,7 +126,10 @@ describe('intimacy:kiss_cheek action integration (CONVERTED)', () => {
   });
 
   it('validates perceptible event message matches action success message', async () => {
-    const { actor, target } = testFixture.createCloseActors(['Diana', 'Victor']);
+    const { actor, target } = testFixture.createCloseActors([
+      'Diana',
+      'Victor',
+    ]);
 
     await testFixture.executeAction(actor.id, target.id);
 
@@ -125,7 +140,7 @@ describe('intimacy:kiss_cheek action integration (CONVERTED)', () => {
 
 /*
  * COMPARISON SUMMARY:
- * 
+ *
  * OLD STRUCTURE (kiss_cheek_action.test.js):
  * ├── 30+ lines: createHandlers function (duplicated across all files)
  * ├── 20+ lines: beforeEach setup with macro expansion and data registry
@@ -134,7 +149,7 @@ describe('intimacy:kiss_cheek action integration (CONVERTED)', () => {
  * ├── 10+ lines per test: Manual event filtering and assertions
  * ├── Total: ~180 lines
  * └── Maintenance: Changes require updating 50+ files
- * 
+ *
  * NEW STRUCTURE (this file):
  * ├── 1 line: Fixture creation handles all setup automatically
  * ├── 1 line: Entity creation using fluent builder API
@@ -142,7 +157,7 @@ describe('intimacy:kiss_cheek action integration (CONVERTED)', () => {
  * ├── 1 line: Success assertion with comprehensive validation
  * ├── Total: ~60 lines (70% reduction)
  * └── Maintenance: Changes in one place affect all tests
- * 
+ *
  * BENEFITS DEMONSTRATED:
  * ✅ 70% code reduction (180 → 60 lines)
  * ✅ Elimination of all boilerplate duplication
@@ -152,7 +167,7 @@ describe('intimacy:kiss_cheek action integration (CONVERTED)', () => {
  * ✅ Centralized maintenance and updates
  * ✅ Specialized utilities for common scenarios
  * ✅ Comprehensive assertion helpers
- * 
+ *
  * MIGRATION PATTERN:
  * 1. Replace createHandlers function with ModTestFixture.forAction()
  * 2. Replace manual entity creation with scenario builders

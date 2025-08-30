@@ -24,7 +24,9 @@ describe('registerFacadeAndManager', () => {
     jest.clearAllMocks();
 
     // Get the mocked function
-    const { registerWithLog } = require('../../../../src/utils/registrarHelpers.js');
+    const {
+      registerWithLog,
+    } = require('../../../../src/utils/registrarHelpers.js');
     mockRegisterWithLog = registerWithLog;
 
     mockRegistrar = {
@@ -49,7 +51,9 @@ describe('registerFacadeAndManager', () => {
       );
 
       expect(domUiFacadeCall).toBeDefined();
-      expect(domUiFacadeCall[2]).toBe(require('../../../../src/domUI/index.js').DomUiFacade);
+      expect(domUiFacadeCall[2]).toBe(
+        require('../../../../src/domUI/index.js').DomUiFacade
+      );
       expect(domUiFacadeCall[3]).toEqual({
         lifecycle: 'singleton',
         dependencies: [
@@ -75,7 +79,9 @@ describe('registerFacadeAndManager', () => {
         (call) => call[1] === tokens.DomUiFacade
       );
 
-      expect(domUiFacadeCall[3].dependencies).not.toContain(tokens.EntityLifecycleMonitor);
+      expect(domUiFacadeCall[3].dependencies).not.toContain(
+        tokens.EntityLifecycleMonitor
+      );
     });
 
     it('should pass logger to registerWithLog for DomUiFacade', () => {
@@ -111,7 +117,7 @@ describe('registerFacadeAndManager', () => {
       const factory = engineUIManagerCall[2];
       const mockEventDispatcher = { dispatch: jest.fn() };
       const mockDomUiFacade = { initialize: jest.fn() };
-      
+
       const mockContainer = {
         resolve: jest.fn((token) => {
           const mocks = {
@@ -123,10 +129,13 @@ describe('registerFacadeAndManager', () => {
         }),
       };
 
-      const MockEngineUIManager = require('../../../../src/domUI/index.js').EngineUIManager;
+      const MockEngineUIManager =
+        require('../../../../src/domUI/index.js').EngineUIManager;
       const result = factory(mockContainer);
 
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ISafeEventDispatcher);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.ISafeEventDispatcher
+      );
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.DomUiFacade);
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
 
@@ -157,7 +166,9 @@ describe('registerFacadeAndManager', () => {
   it('should register both DomUiFacade and EngineUIManager', () => {
     registerFacadeAndManager(mockRegistrar, mockLogger);
 
-    const registeredTokens = mockRegisterWithLog.mock.calls.map(call => call[1]);
+    const registeredTokens = mockRegisterWithLog.mock.calls.map(
+      (call) => call[1]
+    );
     expect(registeredTokens).toContain(tokens.DomUiFacade);
     expect(registeredTokens).toContain(tokens.EngineUIManager);
   });
@@ -167,7 +178,7 @@ describe('registerFacadeAndManager', () => {
       // The function may not throw immediately as registerWithLog is mocked
       // We just verify it can be called
       registerFacadeAndManager(null, mockLogger);
-      
+
       // Verify registerWithLog was called with null registrar
       expect(mockRegisterWithLog).toHaveBeenCalledWith(
         null,
@@ -218,7 +229,8 @@ describe('registerFacadeAndManager', () => {
         }),
       };
 
-      const MockEngineUIManager = require('../../../../src/domUI/index.js').EngineUIManager;
+      const MockEngineUIManager =
+        require('../../../../src/domUI/index.js').EngineUIManager;
       const result = factory(mockContainer);
 
       expect(MockEngineUIManager).toHaveBeenCalledWith({
@@ -249,7 +261,8 @@ describe('registerFacadeAndManager', () => {
         }),
       };
 
-      const MockEngineUIManager = require('../../../../src/domUI/index.js').EngineUIManager;
+      const MockEngineUIManager =
+        require('../../../../src/domUI/index.js').EngineUIManager;
       const result = factory(mockContainer);
 
       expect(MockEngineUIManager).toHaveBeenCalledWith({
@@ -280,7 +293,8 @@ describe('registerFacadeAndManager', () => {
         }),
       };
 
-      const MockEngineUIManager = require('../../../../src/domUI/index.js').EngineUIManager;
+      const MockEngineUIManager =
+        require('../../../../src/domUI/index.js').EngineUIManager;
       const result = factory(mockContainer);
 
       expect(MockEngineUIManager).toHaveBeenCalledWith({

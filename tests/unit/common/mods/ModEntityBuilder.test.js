@@ -4,37 +4,45 @@
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import { ModEntityBuilder, ModEntityScenarios } from '../../../../tests/common/mods/ModEntityBuilder.js';
-import { 
-  NAME_COMPONENT_ID, 
+import {
+  ModEntityBuilder,
+  ModEntityScenarios,
+} from '../../../../tests/common/mods/ModEntityBuilder.js';
+import {
+  NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
-  DESCRIPTION_COMPONENT_ID 
+  DESCRIPTION_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 
 describe('ModEntityBuilder', () => {
   describe('constructor', () => {
     it('should create builder with entity ID', () => {
       const builder = new ModEntityBuilder('test_entity');
-      
+
       expect(builder.entityData).toEqual({
         id: 'test_entity',
-        components: {}
+        components: {},
       });
     });
 
     it('should allow method chaining from constructor', () => {
       const result = new ModEntityBuilder('test_entity').withName('Test');
-      
+
       expect(result).toBeInstanceOf(ModEntityBuilder);
       expect(result.entityData.components[NAME_COMPONENT_ID]).toEqual({
-        text: 'Test'
+        text: 'Test',
       });
     });
 
     it('should handle various entity ID formats', () => {
-      const formats = ['simple', 'test:namespaced', 'actor1', 'p_erotica:character_instance'];
-      
-      formats.forEach(id => {
+      const formats = [
+        'simple',
+        'test:namespaced',
+        'actor1',
+        'p_erotica:character_instance',
+      ];
+
+      formats.forEach((id) => {
         const builder = new ModEntityBuilder(id);
         expect(builder.entityData.id).toBe(id);
       });
@@ -56,32 +64,41 @@ describe('ModEntityBuilder', () => {
 
     it('should set NAME_COMPONENT_ID with text property', () => {
       const result = builder.withName('Alice');
-      
+
       expect(result.entityData.components[NAME_COMPONENT_ID]).toEqual({
-        text: 'Alice'
+        text: 'Alice',
       });
     });
 
     it('should return this for method chaining', () => {
       const result = builder.withName('Alice');
-      
+
       expect(result).toBe(builder);
     });
 
     it('should handle various name formats', () => {
-      const names = ['Alice', 'Bob the Builder', 'Character-With-Hyphens', 'Unicode名前'];
-      
-      names.forEach(name => {
+      const names = [
+        'Alice',
+        'Bob the Builder',
+        'Character-With-Hyphens',
+        'Unicode名前',
+      ];
+
+      names.forEach((name) => {
         const testBuilder = new ModEntityBuilder('test');
         testBuilder.withName(name);
-        expect(testBuilder.entityData.components[NAME_COMPONENT_ID].text).toBe(name);
+        expect(testBuilder.entityData.components[NAME_COMPONENT_ID].text).toBe(
+          name
+        );
       });
     });
 
     it('should overwrite existing name when called multiple times', () => {
       builder.withName('First Name').withName('Second Name');
-      
-      expect(builder.entityData.components[NAME_COMPONENT_ID].text).toBe('Second Name');
+
+      expect(builder.entityData.components[NAME_COMPONENT_ID].text).toBe(
+        'Second Name'
+      );
     });
 
     it('should throw error for blank name', () => {
@@ -100,22 +117,24 @@ describe('ModEntityBuilder', () => {
 
     it('should set DESCRIPTION_COMPONENT_ID with text property', () => {
       const result = builder.withDescription('Test description');
-      
+
       expect(result.entityData.components[DESCRIPTION_COMPONENT_ID]).toEqual({
-        text: 'Test description'
+        text: 'Test description',
       });
     });
 
     it('should return this for method chaining', () => {
       const result = builder.withDescription('Test description');
-      
+
       expect(result).toBe(builder);
     });
 
     it('should throw error for blank description', () => {
       expect(() => builder.withDescription('')).toThrow('Entity description');
       expect(() => builder.withDescription(null)).toThrow('Entity description');
-      expect(() => builder.withDescription(undefined)).toThrow('Entity description');
+      expect(() => builder.withDescription(undefined)).toThrow(
+        'Entity description'
+      );
     });
   });
 
@@ -128,32 +147,41 @@ describe('ModEntityBuilder', () => {
 
     it('should set POSITION_COMPONENT_ID with locationId', () => {
       const result = builder.atLocation('room1');
-      
+
       expect(result.entityData.components[POSITION_COMPONENT_ID]).toEqual({
-        locationId: 'room1'
+        locationId: 'room1',
       });
     });
 
     it('should return this for method chaining', () => {
       const result = builder.atLocation('room1');
-      
+
       expect(result).toBe(builder);
     });
 
     it('should handle various location ID formats', () => {
-      const locations = ['room1', 'core:bedroom', 'test:location_instance', 'kitchen_area'];
-      
-      locations.forEach(location => {
+      const locations = [
+        'room1',
+        'core:bedroom',
+        'test:location_instance',
+        'kitchen_area',
+      ];
+
+      locations.forEach((location) => {
         const testBuilder = new ModEntityBuilder('test');
         testBuilder.atLocation(location);
-        expect(testBuilder.entityData.components[POSITION_COMPONENT_ID].locationId).toBe(location);
+        expect(
+          testBuilder.entityData.components[POSITION_COMPONENT_ID].locationId
+        ).toBe(location);
       });
     });
 
     it('should overwrite existing location when called multiple times', () => {
       builder.atLocation('room1').atLocation('room2');
-      
-      expect(builder.entityData.components[POSITION_COMPONENT_ID].locationId).toBe('room2');
+
+      expect(
+        builder.entityData.components[POSITION_COMPONENT_ID].locationId
+      ).toBe('room2');
     });
 
     it('should throw error for blank location ID', () => {
@@ -173,26 +201,26 @@ describe('ModEntityBuilder', () => {
     it('should set location to match another entity', () => {
       const otherEntity = {
         components: {
-          [POSITION_COMPONENT_ID]: { locationId: 'shared_room' }
-        }
+          [POSITION_COMPONENT_ID]: { locationId: 'shared_room' },
+        },
       };
-      
+
       const result = builder.inSameLocationAs(otherEntity);
-      
+
       expect(result.entityData.components[POSITION_COMPONENT_ID]).toEqual({
-        locationId: 'shared_room'
+        locationId: 'shared_room',
       });
     });
 
     it('should return this for method chaining', () => {
       const otherEntity = {
         components: {
-          [POSITION_COMPONENT_ID]: { locationId: 'shared_room' }
-        }
+          [POSITION_COMPONENT_ID]: { locationId: 'shared_room' },
+        },
       };
-      
+
       const result = builder.inSameLocationAs(otherEntity);
-      
+
       expect(result).toBe(builder);
     });
 
@@ -203,14 +231,18 @@ describe('ModEntityBuilder', () => {
 
     it('should throw error if other entity has no position component', () => {
       const otherEntity = { components: {} };
-      
-      expect(() => builder.inSameLocationAs(otherEntity)).toThrow('must have a position component');
+
+      expect(() => builder.inSameLocationAs(otherEntity)).toThrow(
+        'must have a position component'
+      );
     });
 
     it('should throw error if other entity has no components', () => {
       const otherEntity = {};
-      
-      expect(() => builder.inSameLocationAs(otherEntity)).toThrow('must have a position component');
+
+      expect(() => builder.inSameLocationAs(otherEntity)).toThrow(
+        'must have a position component'
+      );
     });
   });
 
@@ -223,30 +255,32 @@ describe('ModEntityBuilder', () => {
 
     it('should create positioning:closeness component with single partner', () => {
       const result = builder.closeToEntity('partner1');
-      
+
       expect(result.entityData.components['positioning:closeness']).toEqual({
-        partners: ['partner1']
+        partners: ['partner1'],
       });
     });
 
     it('should handle array of partner IDs', () => {
       const result = builder.closeToEntity(['partner1', 'partner2']);
-      
+
       expect(result.entityData.components['positioning:closeness']).toEqual({
-        partners: ['partner1', 'partner2']
+        partners: ['partner1', 'partner2'],
       });
     });
 
     it('should return this for method chaining', () => {
       const result = builder.closeToEntity('partner1');
-      
+
       expect(result).toBe(builder);
     });
 
     it('should overwrite existing partners when called multiple times', () => {
       builder.closeToEntity('partner1').closeToEntity(['partner2', 'partner3']);
-      
-      expect(builder.entityData.components['positioning:closeness'].partners).toEqual(['partner2', 'partner3']);
+
+      expect(
+        builder.entityData.components['positioning:closeness'].partners
+      ).toEqual(['partner2', 'partner3']);
     });
   });
 
@@ -260,13 +294,15 @@ describe('ModEntityBuilder', () => {
     it('should add component with provided data', () => {
       const componentData = { value: 42, text: 'test' };
       const result = builder.withComponent('test:component', componentData);
-      
-      expect(result.entityData.components['test:component']).toEqual(componentData);
+
+      expect(result.entityData.components['test:component']).toEqual(
+        componentData
+      );
     });
 
     it('should return this for method chaining', () => {
       const result = builder.withComponent('test:component', { data: true });
-      
+
       expect(result).toBe(builder);
     });
 
@@ -275,9 +311,9 @@ describe('ModEntityBuilder', () => {
         ['core:actor', { isActor: true }],
         ['positioning:facing', { direction: 'north' }],
         ['anatomy:part', { subType: 'torso' }],
-        ['custom:component', { customData: 'value' }]
+        ['custom:component', { customData: 'value' }],
       ];
-      
+
       components.forEach(([componentId, data]) => {
         const testBuilder = new ModEntityBuilder('test');
         testBuilder.withComponent(componentId, data);
@@ -288,22 +324,33 @@ describe('ModEntityBuilder', () => {
     it('should overwrite existing component when called with same ID', () => {
       const firstData = { value: 1 };
       const secondData = { value: 2 };
-      
-      builder.withComponent('test:component', firstData)
-             .withComponent('test:component', secondData);
-      
-      expect(builder.entityData.components['test:component']).toEqual(secondData);
+
+      builder
+        .withComponent('test:component', firstData)
+        .withComponent('test:component', secondData);
+
+      expect(builder.entityData.components['test:component']).toEqual(
+        secondData
+      );
     });
 
     it('should throw error for blank component ID', () => {
-      expect(() => builder.withComponent('', { data: true })).toThrow('Component ID');
-      expect(() => builder.withComponent(null, { data: true })).toThrow('Component ID');
-      expect(() => builder.withComponent(undefined, { data: true })).toThrow('Component ID');
+      expect(() => builder.withComponent('', { data: true })).toThrow(
+        'Component ID'
+      );
+      expect(() => builder.withComponent(null, { data: true })).toThrow(
+        'Component ID'
+      );
+      expect(() => builder.withComponent(undefined, { data: true })).toThrow(
+        'Component ID'
+      );
     });
 
     it('should throw error for missing component data', () => {
       expect(() => builder.withComponent('test:component', null)).toThrow();
-      expect(() => builder.withComponent('test:component', undefined)).toThrow();
+      expect(() =>
+        builder.withComponent('test:component', undefined)
+      ).toThrow();
     });
   });
 
@@ -316,25 +363,27 @@ describe('ModEntityBuilder', () => {
 
     it('should add anatomy:body component with root part', () => {
       const result = builder.withBody('torso1');
-      
+
       expect(result.entityData.components['anatomy:body']).toEqual({
-        body: { root: 'torso1' }
+        body: { root: 'torso1' },
       });
     });
 
     it('should return this for method chaining', () => {
       const result = builder.withBody('torso1');
-      
+
       expect(result).toBe(builder);
     });
 
     it('should handle various root part IDs', () => {
       const rootParts = ['torso1', 'core:torso', 'body_root', 'main_body_part'];
-      
-      rootParts.forEach(rootPart => {
+
+      rootParts.forEach((rootPart) => {
         const testBuilder = new ModEntityBuilder('test');
         testBuilder.withBody(rootPart);
-        expect(testBuilder.entityData.components['anatomy:body'].body.root).toBe(rootPart);
+        expect(
+          testBuilder.entityData.components['anatomy:body'].body.root
+        ).toBe(rootPart);
       });
     });
   });
@@ -350,41 +399,41 @@ describe('ModEntityBuilder', () => {
       const options = {
         parent: 'torso1',
         children: ['arm1', 'arm2'],
-        subType: 'torso'
+        subType: 'torso',
       };
-      
+
       const result = builder.asBodyPart(options);
-      
+
       expect(result.entityData.components['anatomy:part']).toEqual({
         parent: 'torso1',
         children: ['arm1', 'arm2'],
-        subType: 'torso'
+        subType: 'torso',
       });
     });
 
     it('should handle default options', () => {
       const result = builder.asBodyPart({ subType: 'arm' });
-      
+
       expect(result.entityData.components['anatomy:part']).toEqual({
         parent: null,
         children: [],
-        subType: 'arm'
+        subType: 'arm',
       });
     });
 
     it('should handle empty options object', () => {
       const result = builder.asBodyPart({});
-      
+
       expect(result.entityData.components['anatomy:part']).toEqual({
         parent: null,
         children: [],
-        subType: undefined
+        subType: undefined,
       });
     });
 
     it('should return this for method chaining', () => {
       const result = builder.asBodyPart({ subType: 'arm' });
-      
+
       expect(result).toBe(builder);
     });
   });
@@ -398,15 +447,17 @@ describe('ModEntityBuilder', () => {
 
     it('should add positioning:kneeling_before component', () => {
       const result = builder.kneelingBefore('target1');
-      
-      expect(result.entityData.components['positioning:kneeling_before']).toEqual({
-        entityId: 'target1'
+
+      expect(
+        result.entityData.components['positioning:kneeling_before']
+      ).toEqual({
+        entityId: 'target1',
       });
     });
 
     it('should return this for method chaining', () => {
       const result = builder.kneelingBefore('target1');
-      
+
       expect(result).toBe(builder);
     });
   });
@@ -420,25 +471,27 @@ describe('ModEntityBuilder', () => {
 
     it('should add positioning:facing component', () => {
       const result = builder.facing('north');
-      
+
       expect(result.entityData.components['positioning:facing']).toEqual({
-        direction: 'north'
+        direction: 'north',
       });
     });
 
     it('should return this for method chaining', () => {
       const result = builder.facing('south');
-      
+
       expect(result).toBe(builder);
     });
 
     it('should handle various directions', () => {
       const directions = ['north', 'south', 'east', 'west', 'away', 'towards'];
-      
-      directions.forEach(direction => {
+
+      directions.forEach((direction) => {
         const testBuilder = new ModEntityBuilder('test');
         testBuilder.facing(direction);
-        expect(testBuilder.entityData.components['positioning:facing'].direction).toBe(direction);
+        expect(
+          testBuilder.entityData.components['positioning:facing'].direction
+        ).toBe(direction);
       });
     });
   });
@@ -453,13 +506,15 @@ describe('ModEntityBuilder', () => {
     it('should add clothing:items component', () => {
       const clothingData = { items: ['shirt', 'pants'] };
       const result = builder.withClothing(clothingData);
-      
-      expect(result.entityData.components['clothing:items']).toEqual(clothingData);
+
+      expect(result.entityData.components['clothing:items']).toEqual(
+        clothingData
+      );
     });
 
     it('should return this for method chaining', () => {
       const result = builder.withClothing({ items: [] });
-      
+
       expect(result).toBe(builder);
     });
   });
@@ -473,15 +528,15 @@ describe('ModEntityBuilder', () => {
 
     it('should set room name and return builder', () => {
       const result = builder.asRoom('Test Room');
-      
+
       expect(result.entityData.components[NAME_COMPONENT_ID]).toEqual({
-        text: 'Test Room'
+        text: 'Test Room',
       });
     });
 
     it('should return this for method chaining', () => {
       const result = builder.asRoom('Test Room');
-      
+
       expect(result).toBe(builder);
     });
   });
@@ -497,44 +552,48 @@ describe('ModEntityBuilder', () => {
       const components = {
         'test:component1': { data: 'value1' },
         'test:component2': { data: 'value2' },
-        'core:actor': { isActor: true }
+        'core:actor': { isActor: true },
       };
-      
+
       const result = builder.withComponents(components);
-      
-      expect(result.entityData.components).toEqual(expect.objectContaining(components));
+
+      expect(result.entityData.components).toEqual(
+        expect.objectContaining(components)
+      );
     });
 
     it('should merge with existing components', () => {
       builder.withName('Alice');
-      
+
       const additionalComponents = {
-        'test:component': { data: 'value' }
+        'test:component': { data: 'value' },
       };
-      
+
       builder.withComponents(additionalComponents);
-      
+
       expect(builder.entityData.components).toEqual({
         [NAME_COMPONENT_ID]: { text: 'Alice' },
-        'test:component': { data: 'value' }
+        'test:component': { data: 'value' },
       });
     });
 
     it('should overwrite existing components with same ID', () => {
       builder.withName('Alice');
-      
+
       const overrideComponents = {
-        [NAME_COMPONENT_ID]: { text: 'Bob' }
+        [NAME_COMPONENT_ID]: { text: 'Bob' },
       };
-      
+
       builder.withComponents(overrideComponents);
-      
-      expect(builder.entityData.components[NAME_COMPONENT_ID]).toEqual({ text: 'Bob' });
+
+      expect(builder.entityData.components[NAME_COMPONENT_ID]).toEqual({
+        text: 'Bob',
+      });
     });
 
     it('should return this for method chaining', () => {
       const result = builder.withComponents({});
-      
+
       expect(result).toBe(builder);
     });
   });
@@ -544,34 +603,36 @@ describe('ModEntityBuilder', () => {
       const builder = new ModEntityBuilder('test_entity')
         .withName('Alice')
         .atLocation('room1');
-      
+
       expect(() => builder.validate()).not.toThrow();
     });
 
     it('should return this for method chaining', () => {
       const builder = new ModEntityBuilder('test_entity');
       const result = builder.validate();
-      
+
       expect(result).toBe(builder);
     });
 
     it('should throw error for invalid position component', () => {
       const builder = new ModEntityBuilder('test_entity');
       builder.entityData.components[POSITION_COMPONENT_ID] = {}; // Missing locationId
-      
-      expect(() => builder.validate()).toThrow('Position component must have locationId');
+
+      expect(() => builder.validate()).toThrow(
+        'Position component must have locationId'
+      );
     });
 
     it('should throw error for invalid name component', () => {
       const builder = new ModEntityBuilder('test_entity');
       builder.entityData.components[NAME_COMPONENT_ID] = {}; // Missing text
-      
+
       expect(() => builder.validate()).toThrow('Name component must have text');
     });
 
     it('should pass validation with minimal entity', () => {
       const builder = new ModEntityBuilder('test_entity');
-      
+
       expect(() => builder.validate()).not.toThrow();
     });
   });
@@ -583,14 +644,14 @@ describe('ModEntityBuilder', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .build();
-      
+
       expect(entity).toEqual({
         id: 'test_entity',
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] }
-        }
+          'positioning:closeness': { partners: ['target1'] },
+        },
       });
     });
 
@@ -598,17 +659,17 @@ describe('ModEntityBuilder', () => {
       const builder = new ModEntityBuilder('test_entity').withName('Alice');
       const entity1 = builder.build();
       const entity2 = builder.build();
-      
+
       expect(entity1).toEqual(entity2);
       expect(entity1).not.toBe(entity2);
     });
 
     it('should handle empty components', () => {
       const entity = new ModEntityBuilder('test_entity').build();
-      
+
       expect(entity).toEqual({
         id: 'test_entity',
-        components: {}
+        components: {},
       });
     });
   });
@@ -624,7 +685,7 @@ describe('ModEntityBuilder', () => {
         .facing('north')
         .withComponent('custom:trait', { value: 'special' })
         .build();
-      
+
       expect(entity).toEqual({
         id: 'complex_entity',
         components: {
@@ -634,8 +695,8 @@ describe('ModEntityBuilder', () => {
           'anatomy:body': { body: { root: 'torso1' } },
           'positioning:kneeling_before': { entityId: 'target1' },
           'positioning:facing': { direction: 'north' },
-          'custom:trait': { value: 'special' }
-        }
+          'custom:trait': { value: 'special' },
+        },
       });
     });
 
@@ -645,13 +706,13 @@ describe('ModEntityBuilder', () => {
         .atLocation('room1')
         .closeToEntity('target1')
         .build();
-      
+
       const entity2 = new ModEntityBuilder('test')
         .closeToEntity('target1')
         .atLocation('room1')
         .withName('Alice')
         .build();
-      
+
       expect(entity1).toEqual(entity2);
     });
   });
@@ -661,60 +722,64 @@ describe('ModEntityScenarios', () => {
   describe('createActorTargetPair', () => {
     it('should create basic actor-target pair with defaults', () => {
       const { actor, target } = ModEntityScenarios.createActorTargetPair();
-      
+
       expect(actor).toEqual({
         id: 'actor1',
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' }
-        }
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+        },
       });
-      
+
       expect(target).toEqual({
         id: 'target1',
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' }
-        }
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+        },
       });
     });
 
     it('should create pair with custom names', () => {
       const { actor, target } = ModEntityScenarios.createActorTargetPair({
-        names: ['Charlie', 'Diana']
+        names: ['Charlie', 'Diana'],
       });
-      
+
       expect(actor.components[NAME_COMPONENT_ID].text).toBe('Charlie');
       expect(target.components[NAME_COMPONENT_ID].text).toBe('Diana');
     });
 
     it('should create pair with custom location', () => {
       const { actor, target } = ModEntityScenarios.createActorTargetPair({
-        location: 'custom_room'
+        location: 'custom_room',
       });
-      
-      expect(actor.components[POSITION_COMPONENT_ID].locationId).toBe('custom_room');
-      expect(target.components[POSITION_COMPONENT_ID].locationId).toBe('custom_room');
+
+      expect(actor.components[POSITION_COMPONENT_ID].locationId).toBe(
+        'custom_room'
+      );
+      expect(target.components[POSITION_COMPONENT_ID].locationId).toBe(
+        'custom_room'
+      );
     });
 
     it('should add closeness when closeProximity is true', () => {
       const { actor, target } = ModEntityScenarios.createActorTargetPair({
-        closeProximity: true
+        closeProximity: true,
       });
-      
+
       expect(actor.components['positioning:closeness']).toEqual({
-        partners: ['target1']
+        partners: ['target1'],
       });
       expect(target.components['positioning:closeness']).toEqual({
-        partners: ['actor1']
+        partners: ['actor1'],
       });
     });
 
     it('should not add closeness when closeProximity is false', () => {
       const { actor, target } = ModEntityScenarios.createActorTargetPair({
-        closeProximity: false
+        closeProximity: false,
       });
-      
+
       expect(actor.components['positioning:closeness']).toBeUndefined();
       expect(target.components['positioning:closeness']).toBeUndefined();
     });
@@ -723,61 +788,75 @@ describe('ModEntityScenarios', () => {
   describe('createMultiActorScenario', () => {
     it('should create scenario with default names', () => {
       const result = ModEntityScenarios.createMultiActorScenario();
-      
+
       expect(result.actor.components[NAME_COMPONENT_ID].text).toBe('Alice');
       expect(result.target.components[NAME_COMPONENT_ID].text).toBe('Bob');
       expect(result.observers).toHaveLength(2);
-      expect(result.observers[0].components[NAME_COMPONENT_ID].text).toBe('Charlie');
-      expect(result.observers[1].components[NAME_COMPONENT_ID].text).toBe('Diana');
+      expect(result.observers[0].components[NAME_COMPONENT_ID].text).toBe(
+        'Charlie'
+      );
+      expect(result.observers[1].components[NAME_COMPONENT_ID].text).toBe(
+        'Diana'
+      );
       expect(result.allEntities).toHaveLength(4);
     });
 
     it('should create scenario with custom names', () => {
       const result = ModEntityScenarios.createMultiActorScenario({
-        names: ['John', 'Jane', 'Jack']
+        names: ['John', 'Jane', 'Jack'],
       });
-      
+
       expect(result.actor.components[NAME_COMPONENT_ID].text).toBe('John');
       expect(result.target.components[NAME_COMPONENT_ID].text).toBe('Jane');
       expect(result.observers).toHaveLength(1);
-      expect(result.observers[0].components[NAME_COMPONENT_ID].text).toBe('Jack');
+      expect(result.observers[0].components[NAME_COMPONENT_ID].text).toBe(
+        'Jack'
+      );
     });
 
     it('should place all entities in same location', () => {
       const result = ModEntityScenarios.createMultiActorScenario({
-        location: 'multi_room'
+        location: 'multi_room',
       });
-      
+
       const allEntities = [result.actor, result.target, ...result.observers];
-      allEntities.forEach(entity => {
-        expect(entity.components[POSITION_COMPONENT_ID].locationId).toBe('multi_room');
+      allEntities.forEach((entity) => {
+        expect(entity.components[POSITION_COMPONENT_ID].locationId).toBe(
+          'multi_room'
+        );
       });
     });
 
     it('should set up closeness relationships based on closeToMain', () => {
       const result = ModEntityScenarios.createMultiActorScenario({
-        closeToMain: 2
+        closeToMain: 2,
       });
-      
+
       // Actor should be close to target and first observer (closeToMain >= 1 and index + 2 = 2 <= closeToMain)
-      expect(result.actor.components['positioning:closeness'].partners).toEqual(['target1', 'observer1']);
-      
+      expect(result.actor.components['positioning:closeness'].partners).toEqual(
+        ['target1', 'observer1']
+      );
+
       // Target should be close to actor (closeToMain >= 1)
-      expect(result.target.components['positioning:closeness'].partners).toEqual(['actor1']);
-      
+      expect(
+        result.target.components['positioning:closeness'].partners
+      ).toEqual(['actor1']);
+
       // First observer should be close to actor (index + 2 = 2, which <= closeToMain)
-      expect(result.observers[0].components['positioning:closeness'].partners).toEqual(['actor1']);
+      expect(
+        result.observers[0].components['positioning:closeness'].partners
+      ).toEqual(['actor1']);
     });
   });
 
   describe('createAnatomyScenario', () => {
     it('should create anatomy scenario with default configuration', () => {
       const result = ModEntityScenarios.createAnatomyScenario();
-      
+
       expect(result.actor.components[NAME_COMPONENT_ID].text).toBe('Alice');
       expect(result.target.components[NAME_COMPONENT_ID].text).toBe('Bob');
       expect(result.target.components['anatomy:body']).toEqual({
-        body: { root: 'torso1' }
+        body: { root: 'torso1' },
       });
       expect(result.bodyParts).toHaveLength(3);
       expect(result.allEntities).toHaveLength(5); // actor + target + 3 body parts
@@ -785,30 +864,34 @@ describe('ModEntityScenarios', () => {
 
     it('should create anatomy scenario with custom body parts', () => {
       const result = ModEntityScenarios.createAnatomyScenario({
-        bodyParts: ['torso', 'arm']
+        bodyParts: ['torso', 'arm'],
       });
-      
+
       expect(result.bodyParts).toHaveLength(2);
-      expect(result.bodyParts[0].components['anatomy:part'].subType).toBe('torso');
-      expect(result.bodyParts[1].components['anatomy:part'].subType).toBe('arm');
+      expect(result.bodyParts[0].components['anatomy:part'].subType).toBe(
+        'torso'
+      );
+      expect(result.bodyParts[1].components['anatomy:part'].subType).toBe(
+        'arm'
+      );
     });
 
     it('should set up proper body part hierarchy', () => {
       const result = ModEntityScenarios.createAnatomyScenario({
-        bodyParts: ['torso', 'arm', 'leg']
+        bodyParts: ['torso', 'arm', 'leg'],
       });
-      
+
       // Root part (torso) should have no parent
-      const rootPart = result.bodyParts.find(part => 
-        part.components['anatomy:part'].subType === 'torso'
+      const rootPart = result.bodyParts.find(
+        (part) => part.components['anatomy:part'].subType === 'torso'
       );
       expect(rootPart.components['anatomy:part'].parent).toBeNull();
-      
+
       // Non-root parts should have torso as parent
-      const nonRootParts = result.bodyParts.filter(part => 
-        part.components['anatomy:part'].subType !== 'torso'
+      const nonRootParts = result.bodyParts.filter(
+        (part) => part.components['anatomy:part'].subType !== 'torso'
       );
-      nonRootParts.forEach(part => {
+      nonRootParts.forEach((part) => {
         expect(part.components['anatomy:part'].parent).toBe('torso1');
       });
     });
@@ -817,23 +900,26 @@ describe('ModEntityScenarios', () => {
   describe('createRoom', () => {
     it('should create room with default values', () => {
       const room = ModEntityScenarios.createRoom();
-      
+
       expect(room).toEqual({
         id: 'room1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'Test Room' }
-        }
+          [NAME_COMPONENT_ID]: { text: 'Test Room' },
+        },
       });
     });
 
     it('should create room with custom ID and name', () => {
-      const room = ModEntityScenarios.createRoom('custom_room', 'Custom Room Name');
-      
+      const room = ModEntityScenarios.createRoom(
+        'custom_room',
+        'Custom Room Name'
+      );
+
       expect(room).toEqual({
         id: 'custom_room',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'Custom Room Name' }
-        }
+          [NAME_COMPONENT_ID]: { text: 'Custom Room Name' },
+        },
       });
     });
   });
@@ -841,7 +927,7 @@ describe('ModEntityScenarios', () => {
   describe('createPositioningScenario', () => {
     it('should create standing positioning scenario by default', () => {
       const result = ModEntityScenarios.createPositioningScenario();
-      
+
       expect(result.actor.components[NAME_COMPONENT_ID].text).toBe('Alice');
       expect(result.target.components[NAME_COMPONENT_ID].text).toBe('Bob');
       expect(result.actor.components['positioning:closeness']).toBeDefined();
@@ -850,34 +936,38 @@ describe('ModEntityScenarios', () => {
 
     it('should create kneeling positioning scenario', () => {
       const result = ModEntityScenarios.createPositioningScenario({
-        positioning: 'kneeling'
+        positioning: 'kneeling',
       });
-      
+
       expect(result.actor.components['positioning:kneeling_before']).toEqual({
-        entityId: 'target1'
+        entityId: 'target1',
       });
     });
 
     it('should create facing_away positioning scenario', () => {
       const result = ModEntityScenarios.createPositioningScenario({
-        positioning: 'facing_away'
+        positioning: 'facing_away',
       });
-      
+
       expect(result.target.components['positioning:facing']).toEqual({
-        direction: 'away'
+        direction: 'away',
       });
     });
 
     it('should use custom names and location', () => {
       const result = ModEntityScenarios.createPositioningScenario({
         names: ['John', 'Jane'],
-        location: 'position_room'
+        location: 'position_room',
       });
-      
+
       expect(result.actor.components[NAME_COMPONENT_ID].text).toBe('John');
       expect(result.target.components[NAME_COMPONENT_ID].text).toBe('Jane');
-      expect(result.actor.components[POSITION_COMPONENT_ID].locationId).toBe('position_room');
-      expect(result.target.components[POSITION_COMPONENT_ID].locationId).toBe('position_room');
+      expect(result.actor.components[POSITION_COMPONENT_ID].locationId).toBe(
+        'position_room'
+      );
+      expect(result.target.components[POSITION_COMPONENT_ID].locationId).toBe(
+        'position_room'
+      );
     });
   });
 });

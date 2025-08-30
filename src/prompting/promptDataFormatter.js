@@ -414,7 +414,7 @@ Generate a fresh, unique thought that builds upon your mental state.
     if (!thoughtsArray || thoughtsArray.length === 0) {
       return "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style.";
     }
-    
+
     return "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style.";
   }
 

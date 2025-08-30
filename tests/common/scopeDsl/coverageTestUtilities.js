@@ -88,7 +88,7 @@ export class CoverageTestUtilities {
   async createCharacter(options = {}) {
     const characterId = `test:character_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const equipment = options.equipment || { equipped: {} };
-    
+
     const entity = {
       id: characterId,
       components: {
@@ -99,13 +99,13 @@ export class CoverageTestUtilities {
 
     // Store entity definition
     this.dataRegistry.store('entityDefinitions', characterId, entity);
-    
+
     // Create entity instance
     await this.entityManager.createEntityInstance(characterId, {
       instanceId: characterId,
       definitionId: characterId,
     });
-    
+
     return { id: characterId, equipment };
   }
 
@@ -159,7 +159,12 @@ export class CoverageTestUtilities {
    * @param {string} entityId - Entity ID for the context
    * @returns {object} Mock context for testing
    */
-  createMockContext(equipment, mode = 'topmost', enableTrace = false, entityId = 'test_character') {
+  createMockContext(
+    equipment,
+    mode = 'topmost',
+    enableTrace = false,
+    entityId = 'test_character'
+  ) {
     const clothingAccess = {
       __clothingSlotAccess: true,
       equipped: equipment,
@@ -168,18 +173,20 @@ export class CoverageTestUtilities {
       type: 'clothing_slot_access',
     };
 
-    const mockTrace = enableTrace ? {
-      addLog: (_level, _message, _source) => {
-        // Mock trace logging
-      },
-      coverageResolution: {
-        strategy: this.determineStrategy(equipment),
-        priorityCalculation: {
-          cacheHits: Math.floor(Math.random() * 10),
-          cacheMisses: Math.floor(Math.random() * 3),
-        },
-      },
-    } : null;
+    const mockTrace = enableTrace
+      ? {
+          addLog: (_level, _message, _source) => {
+            // Mock trace logging
+          },
+          coverageResolution: {
+            strategy: this.determineStrategy(equipment),
+            priorityCalculation: {
+              cacheHits: Math.floor(Math.random() * 10),
+              cacheMisses: Math.floor(Math.random() * 3),
+            },
+          },
+        }
+      : null;
 
     return {
       getValue: () => ({ entityId: entityId, mode }),
@@ -198,14 +205,14 @@ export class CoverageTestUtilities {
    */
   determineStrategy(equipment) {
     if (!equipment) return 'legacy';
-    
+
     let totalItems = 0;
     for (const slot in equipment) {
       for (const _layer in equipment[slot]) {
         totalItems++;
       }
     }
-    
+
     // Simple cases with 1 item use legacy, complex cases use coverage
     return totalItems === 1 ? 'legacy' : 'coverage';
   }

@@ -8,24 +8,24 @@ import { ModTestFixture } from './ModTestFixture.js';
 
 /**
  * Base class for mod action integration tests.
- * 
+ *
  * Provides standardized setup, teardown, and common test patterns for mod action tests.
  * Eliminates boilerplate code and ensures consistent testing patterns across all mod actions.
- * 
+ *
  * @example
  * class KissCheekActionTest extends ModActionTestBase {
  *   constructor() {
  *     super('intimacy', 'intimacy:kiss_cheek', kissCheekRule, eventIsActionKissCheek);
  *   }
  * }
- * 
+ *
  * const testSuite = new KissCheekActionTest();
  * testSuite.runStandardTests();
  */
 export class ModActionTestBase {
   /**
    * Creates a new mod action test base.
-   * 
+   *
    * @param {string} modId - The mod identifier (e.g., 'intimacy', 'positioning')
    * @param {string} actionId - The full action ID (e.g., 'intimacy:kiss_cheek')
    * @param {object} ruleFile - The rule definition JSON object
@@ -46,14 +46,14 @@ export class ModActionTestBase {
       defaultNames: ['Alice', 'Bob'],
       ...options,
     };
-    
+
     this.testFixture = null;
     this.actionName = actionId.split(':')[1] || actionId;
   }
 
   /**
    * Sets up the test fixture before each test.
-   * 
+   *
    * @protected
    */
   setupTestFixture() {
@@ -68,7 +68,7 @@ export class ModActionTestBase {
 
   /**
    * Cleans up the test fixture after each test.
-   * 
+   *
    * @protected
    */
   cleanupTestFixture() {
@@ -80,7 +80,7 @@ export class ModActionTestBase {
   /**
    * Creates the standard beforeEach and afterEach hooks.
    * Call this in your describe block to set up the standard lifecycle.
-   * 
+   *
    * @protected
    */
   setupStandardHooks() {
@@ -95,7 +95,7 @@ export class ModActionTestBase {
 
   /**
    * Creates a standard actor-target scenario for the test.
-   * 
+   *
    * @param {Array<string>} [names] - Names for actor and target
    * @param {object} [options] - Additional scenario options
    * @returns {object} Object with actor and target entities
@@ -109,19 +109,23 @@ export class ModActionTestBase {
 
   /**
    * Creates an anatomy scenario for body-related actions.
-   * 
+   *
    * @param {Array<string>} [names] - Names for actor and target
    * @param {Array<string>} [bodyParts] - Body part types to create
    * @param {object} [options] - Additional scenario options
    * @returns {object} Object with entities and body parts
    */
-  createAnatomyScenario(names = this.options.defaultNames, bodyParts = ['torso', 'breast', 'breast'], options = {}) {
+  createAnatomyScenario(
+    names = this.options.defaultNames,
+    bodyParts = ['torso', 'breast', 'breast'],
+    options = {}
+  ) {
     return this.testFixture.createAnatomyScenario(names, bodyParts, options);
   }
 
   /**
    * Executes the action with standard parameters.
-   * 
+   *
    * @param {string} actorId - Actor entity ID
    * @param {string} targetId - Target entity ID
    * @param {object} [options] - Additional execution options
@@ -133,7 +137,7 @@ export class ModActionTestBase {
 
   /**
    * Asserts that the action executed successfully.
-   * 
+   *
    * @param {string} expectedMessage - Expected success message
    * @param {object} [options] - Additional assertion options
    */
@@ -143,7 +147,7 @@ export class ModActionTestBase {
 
   /**
    * Asserts that the perceptible event was generated correctly.
-   * 
+   *
    * @param {object} expectedEvent - Expected event properties
    */
   assertPerceptibleEvent(expectedEvent) {
@@ -153,7 +157,7 @@ export class ModActionTestBase {
   /**
    * Determines if this action requires closeness between actors.
    * Override this method in subclasses to specify closeness requirements.
-   * 
+   *
    * @returns {boolean} True if action requires closeness
    * @protected
    */
@@ -161,30 +165,34 @@ export class ModActionTestBase {
     // Default behavior: intimacy and some positioning actions require closeness
     const closenessCategories = ['intimacy', 'sex'];
     const closenessActions = ['kiss_', 'hug_', 'fondle_', 'massage_'];
-    
+
     if (closenessCategories.includes(this.modId)) {
       return true;
     }
-    
-    return closenessActions.some(action => this.actionName.includes(action));
+
+    return closenessActions.some((action) => this.actionName.includes(action));
   }
 
   /**
    * Determines if this action requires anatomy components.
    * Override this method in subclasses to specify anatomy requirements.
-   * 
+   *
    * @returns {boolean} True if action requires anatomy components
    * @protected
    */
   requiresAnatomy() {
-    const anatomyActions = ['fondle_breasts', 'fondle_penis', 'suckle_testicle'];
+    const anatomyActions = [
+      'fondle_breasts',
+      'fondle_penis',
+      'suckle_testicle',
+    ];
     return anatomyActions.includes(this.actionName);
   }
 
   /**
    * Gets the expected success message format for this action.
    * Override this method in subclasses to provide action-specific messages.
-   * 
+   *
    * @param {string} actorName - Actor name
    * @param {string} targetName - Target name
    * @returns {string} Expected success message
@@ -197,74 +205,82 @@ export class ModActionTestBase {
 
   /**
    * Runs the standard success test for this action.
-   * 
+   *
    * @param {string} testName - Name for the test case
    * @param {function} [customSetup] - Custom setup function
    * @param {function} [customAssertions] - Custom assertion function
    */
   runSuccessTest(testName, customSetup = null, customAssertions = null) {
-    it(testName || `successfully executes ${this.actionName} action`, async () => {
-      let scenario;
-      
-      if (customSetup) {
-        scenario = customSetup.call(this);
-      } else if (this.requiresAnatomy()) {
-        scenario = this.createAnatomyScenario();
-      } else {
-        scenario = this.createStandardScenario();
+    it(
+      testName || `successfully executes ${this.actionName} action`,
+      async () => {
+        let scenario;
+
+        if (customSetup) {
+          scenario = customSetup.call(this);
+        } else if (this.requiresAnatomy()) {
+          scenario = this.createAnatomyScenario();
+        } else {
+          scenario = this.createStandardScenario();
+        }
+
+        await this.executeAction(scenario.actor.id, scenario.target.id);
+
+        const expectedMessage = this.getExpectedSuccessMessage(
+          scenario.actor.components['core:name'].text,
+          scenario.target.components['core:name'].text
+        );
+
+        this.assertActionSuccess(expectedMessage);
+
+        if (customAssertions) {
+          customAssertions.call(this, scenario);
+        }
       }
-
-      await this.executeAction(scenario.actor.id, scenario.target.id);
-
-      const expectedMessage = this.getExpectedSuccessMessage(
-        scenario.actor.components['core:name'].text,
-        scenario.target.components['core:name'].text
-      );
-
-      this.assertActionSuccess(expectedMessage);
-
-      if (customAssertions) {
-        customAssertions.call(this, scenario);
-      }
-    });
+    );
   }
 
   /**
    * Runs the standard perceptible event test for this action.
-   * 
+   *
    * @param {string} testName - Name for the test case
    * @param {function} [customSetup] - Custom setup function
    */
   runPerceptibleEventTest(testName, customSetup = null) {
-    it(testName || `creates correct perceptible event for ${this.actionName}`, async () => {
-      const scenario = customSetup ? customSetup.call(this) : this.createStandardScenario();
+    it(
+      testName || `creates correct perceptible event for ${this.actionName}`,
+      async () => {
+        const scenario = customSetup
+          ? customSetup.call(this)
+          : this.createStandardScenario();
 
-      await this.executeAction(scenario.actor.id, scenario.target.id);
+        await this.executeAction(scenario.actor.id, scenario.target.id);
 
-      const expectedMessage = this.getExpectedSuccessMessage(
-        scenario.actor.components['core:name'].text,
-        scenario.target.components['core:name'].text
-      );
+        const expectedMessage = this.getExpectedSuccessMessage(
+          scenario.actor.components['core:name'].text,
+          scenario.target.components['core:name'].text
+        );
 
-      this.assertPerceptibleEvent({
-        descriptionText: expectedMessage,
-        locationId: this.options.defaultLocation,
-        actorId: scenario.actor.id,
-        targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
-      });
-    });
+        this.assertPerceptibleEvent({
+          descriptionText: expectedMessage,
+          locationId: this.options.defaultLocation,
+          actorId: scenario.actor.id,
+          targetId: scenario.target.id,
+          perceptionType: 'action_target_general',
+        });
+      }
+    );
   }
 
   /**
    * Runs the standard rule selectivity test (action only fires for correct action ID).
-   * 
+   *
    * @param {string} testName - Name for the test case
    */
   runRuleSelectivityTest(testName) {
     it(testName || `only fires for correct action ID`, async () => {
       const scenario = this.createStandardScenario();
-      
+
       // Try with a different action
       const wrongActionId = 'core:wait';
       const payload = {
@@ -283,7 +299,7 @@ export class ModActionTestBase {
 
   /**
    * Runs the standard graceful failure test for missing entities.
-   * 
+   *
    * @param {string} testName - Name for the test case
    */
   runMissingEntityTest(testName) {
@@ -301,14 +317,16 @@ export class ModActionTestBase {
 
   /**
    * Runs a test with multiple actors in the same location.
-   * 
+   *
    * @param {string} testName - Name for the test case
    */
   runMultiActorTest(testName) {
     it(testName || `works with multiple actors in location`, async () => {
-      const scenario = this.testFixture.createMultiActorScenario(
-        ['Alice', 'Bob', 'Charlie']
-      );
+      const scenario = this.testFixture.createMultiActorScenario([
+        'Alice',
+        'Bob',
+        'Charlie',
+      ]);
 
       await this.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -327,7 +345,7 @@ export class ModActionTestBase {
   /**
    * Runs all standard tests for this action.
    * Call this method in your describe block to run the complete test suite.
-   * 
+   *
    * @param {object} [options] - Options for test execution
    * @param {boolean} [options.includeSuccess] - Include success test (default: true)
    * @param {boolean} [options.includePerceptibleEvent] - Include perceptible event test (default: true)
@@ -378,12 +396,13 @@ export class ModActionTestBase {
 
   /**
    * Creates a describe block with all standard tests.
-   * 
+   *
    * @param {string} [description] - Description for the test suite
    * @param {object} [options] - Options passed to runStandardTests
    */
   createTestSuite(description, options = {}) {
-    const testDescription = description || `${this.actionId} action integration`;
+    const testDescription =
+      description || `${this.actionId} action integration`;
 
     describe(testDescription, () => {
       this.runStandardTests(options);

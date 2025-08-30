@@ -1,16 +1,16 @@
 /**
  * @file SlotAccessResolver Memory Test Suite
- * 
+ *
  * This memory test suite validates the memory management characteristics of
  * the SlotAccessResolver and its caching mechanisms, focusing on:
  * - Cache memory efficiency
  * - Memory growth patterns during cache population
  * - Proper cache size limits
- * 
+ *
  * Memory Targets:
  * - Cache should not grow indefinitely
  * - Cache size should remain bounded under repeated operations
- * 
+ *
  * Note: This test uses the dedicated 'npm run test:memory' runner
  */
 
@@ -25,7 +25,7 @@ import {
 import {
   calculateCoveragePriorityOptimized,
   clearPriorityCache,
-  getCacheStats
+  getCacheStats,
 } from '../../../../src/scopeDsl/prioritySystem/priorityCalculator.js';
 
 // Set timeout for memory tests
@@ -42,7 +42,7 @@ describe('SlotAccessResolver Memory Management', () => {
   beforeEach(() => {
     // Clear cache before each test
     clearPriorityCache();
-    
+
     // Reset memory metrics
     memoryMetrics = {
       initialCacheSize: 0,
@@ -76,10 +76,10 @@ describe('SlotAccessResolver Memory Management', () => {
 
     // Verify cache is being used
     expect(finalStats.size).toBeGreaterThan(0);
-    
+
     // Verify cache doesn't grow indefinitely
     expect(finalStats.size).toBeLessThan(10); // Should not grow indefinitely
-    
+
     // Log metrics for monitoring
     console.log('Memory Test Metrics:', {
       initialCacheSize: memoryMetrics.initialCacheSize,
@@ -141,7 +141,7 @@ describe('SlotAccessResolver Memory Management', () => {
     // Maximum theoretical size is layers.length * (layers.length - 1)
     const maxExpectedSize = layers.length * (layers.length - 1);
     expect(finalStats.size).toBeLessThanOrEqual(maxExpectedSize);
-    
+
     console.log('Diverse operations cache stats:', {
       operationCount: operations.length * 5,
       uniqueOperations: operations.length,

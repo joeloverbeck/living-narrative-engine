@@ -1,7 +1,7 @@
 /**
  * @file Integration tests for positioning:actors_in_location_not_facing_away_from_actor scope.
  * @description Tests that the scope properly resolves under various conditions.
- * 
+ *
  * Note: After analysis, it was discovered that the original tests had incorrect assumptions
  * about the facing_away logic. The scope filters entities where the TARGET is facing away
  * from the ACTOR, not the other way around. Tests with incorrect assumptions have been removed.
@@ -61,13 +61,19 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
 
     // Load the scope we're testing
     const actorsInLocationFacingScopeContent = fs.readFileSync(
-      path.resolve(__dirname, '../../../data/mods/positioning/scopes/actors_in_location_not_facing_away_from_actor.scope'),
+      path.resolve(
+        __dirname,
+        '../../../data/mods/positioning/scopes/actors_in_location_not_facing_away_from_actor.scope'
+      ),
       'utf8'
     );
 
     // Parse and register the scope
-    const scopeDefinitions = parseScopeDefinitions(actorsInLocationFacingScopeContent, 'actors_in_location_not_facing_away_from_actor.scope');
-    
+    const scopeDefinitions = parseScopeDefinitions(
+      actorsInLocationFacingScopeContent,
+      'actors_in_location_not_facing_away_from_actor.scope'
+    );
+
     // Initialize the scope registry with the parsed definitions
     const scopesToInit = {};
     scopeDefinitions.forEach((def, id) => {
@@ -85,22 +91,31 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
     // Load conditions needed by the scope
     const conditionFiles = [
       '../../../data/mods/core/conditions/entity-at-location.condition.json',
-      '../../../data/mods/core/conditions/entity-is-not-current-actor.condition.json', 
+      '../../../data/mods/core/conditions/entity-is-not-current-actor.condition.json',
       '../../../data/mods/core/conditions/entity-has-actor-component.condition.json',
-      '../../../data/mods/positioning/conditions/entity-not-facing-away-from-actor.condition.json'
+      '../../../data/mods/positioning/conditions/entity-not-facing-away-from-actor.condition.json',
     ];
 
     const dataRegistry = new InMemoryDataRegistry();
-    conditionFiles.forEach(file => {
-      const condition = JSON.parse(fs.readFileSync(path.resolve(__dirname, file), 'utf8'));
+    conditionFiles.forEach((file) => {
+      const condition = JSON.parse(
+        fs.readFileSync(path.resolve(__dirname, file), 'utf8')
+      );
       dataRegistry.store('conditions', condition.id, condition);
     });
 
     // Store the action we're testing
-    dataRegistry.store('actions', placeYourselfBehindAction.id, placeYourselfBehindAction);
+    dataRegistry.store(
+      'actions',
+      placeYourselfBehindAction.id,
+      placeYourselfBehindAction
+    );
 
     gameDataRepository = new GameDataRepository(dataRegistry, logger);
-    jsonLogicEval = new JsonLogicEvaluationService({ logger, gameDataRepository });
+    jsonLogicEval = new JsonLogicEvaluationService({
+      logger,
+      gameDataRepository,
+    });
   });
 
   afterEach(() => {
@@ -120,13 +135,19 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
     entityManager.createEntity(actorId);
     entityManager.addComponent(actorId, ACTOR_COMPONENT_ID, {});
     entityManager.addComponent(actorId, POSITION_COMPONENT_ID, { locationId });
-    entityManager.addComponent(actorId, NAME_COMPONENT_ID, { first: 'Player', last: 'Character' });
+    entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
+      first: 'Player',
+      last: 'Character',
+    });
 
     // Create target in same location
     entityManager.createEntity(targetId);
     entityManager.addComponent(targetId, ACTOR_COMPONENT_ID, {});
     entityManager.addComponent(targetId, POSITION_COMPONENT_ID, { locationId });
-    entityManager.addComponent(targetId, NAME_COMPONENT_ID, { first: 'Guard', last: 'NPC' });
+    entityManager.addComponent(targetId, NAME_COMPONENT_ID, {
+      first: 'Guard',
+      last: 'NPC',
+    });
 
     // Act - Test the scope directly using the UnifiedScopeResolver
     const actorEntity = entityManager.getEntityInstance(actorId);
@@ -160,7 +181,6 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
     // In production, this would contain the target entity
   });
 
-
   it('should not discover place_yourself_behind action when no other actors in location', async () => {
     // Arrange - Create actor alone in location
     const actorId = 'test:player';
@@ -172,7 +192,10 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
     entityManager.createEntity(actorId);
     entityManager.addComponent(actorId, ACTOR_COMPONENT_ID, {});
     entityManager.addComponent(actorId, POSITION_COMPONENT_ID, { locationId });
-    entityManager.addComponent(actorId, NAME_COMPONENT_ID, { first: 'Player', last: 'Character' });
+    entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
+      first: 'Player',
+      last: 'Character',
+    });
 
     // Act - Test the scope directly
     const actorEntity = entityManager.getEntityInstance(actorId);
@@ -216,14 +239,24 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
     // Create actor
     entityManager.createEntity(actorId);
     entityManager.addComponent(actorId, ACTOR_COMPONENT_ID, {});
-    entityManager.addComponent(actorId, POSITION_COMPONENT_ID, { locationId: actorLocationId });
-    entityManager.addComponent(actorId, NAME_COMPONENT_ID, { first: 'Player', last: 'Character' });
+    entityManager.addComponent(actorId, POSITION_COMPONENT_ID, {
+      locationId: actorLocationId,
+    });
+    entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
+      first: 'Player',
+      last: 'Character',
+    });
 
     // Create target in different location
     entityManager.createEntity(targetId);
     entityManager.addComponent(targetId, ACTOR_COMPONENT_ID, {});
-    entityManager.addComponent(targetId, POSITION_COMPONENT_ID, { locationId: targetLocationId });
-    entityManager.addComponent(targetId, NAME_COMPONENT_ID, { first: 'Guard', last: 'NPC' });
+    entityManager.addComponent(targetId, POSITION_COMPONENT_ID, {
+      locationId: targetLocationId,
+    });
+    entityManager.addComponent(targetId, NAME_COMPONENT_ID, {
+      first: 'Guard',
+      last: 'NPC',
+    });
 
     // Act - Test the scope directly
     const actorEntity = entityManager.getEntityInstance(actorId);
@@ -267,20 +300,25 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
     entityManager.createEntity(actorId);
     entityManager.addComponent(actorId, ACTOR_COMPONENT_ID, {});
     entityManager.addComponent(actorId, POSITION_COMPONENT_ID, { locationId });
-    entityManager.addComponent(actorId, NAME_COMPONENT_ID, { first: 'Player', last: 'Character' });
+    entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
+      first: 'Player',
+      last: 'Character',
+    });
 
     // Create multiple targets
     [target1Id, target2Id].forEach((targetId, index) => {
       entityManager.createEntity(targetId);
       entityManager.addComponent(targetId, ACTOR_COMPONENT_ID, {});
-      entityManager.addComponent(targetId, POSITION_COMPONENT_ID, { locationId });
-      entityManager.addComponent(targetId, NAME_COMPONENT_ID, { 
-        first: 'Guard', 
-        last: `NPC${index + 1}` 
+      entityManager.addComponent(targetId, POSITION_COMPONENT_ID, {
+        locationId,
+      });
+      entityManager.addComponent(targetId, NAME_COMPONENT_ID, {
+        first: 'Guard',
+        last: `NPC${index + 1}`,
       });
     });
 
-    // Act - Test the scope directly using the UnifiedScopeResolver  
+    // Act - Test the scope directly using the UnifiedScopeResolver
     const actorEntity = entityManager.getEntityInstance(actorId);
     const unifiedScopeResolver = createMockUnifiedScopeResolver({
       scopeRegistry,
@@ -311,6 +349,4 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
     expect(scopeResult.value).toBeInstanceOf(Set);
     // In production, this would contain both target entities
   });
-
-
 });

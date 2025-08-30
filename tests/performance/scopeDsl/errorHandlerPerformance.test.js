@@ -1,20 +1,27 @@
 /**
  * @file Performance tests for ScopeDslErrorHandler
  * @description Tests the performance characteristics of error handling operations
- * 
+ *
  * Performance Targets (CI Environment):
  * - Error handling: <1ms per error (basic)
  * - Error handling with complex context: <2ms per error
  * - Buffer clearing: minimal overhead even with repeated operations
  * - Buffer management: efficient memory usage with bounded buffer size
  * - Scaling: Linear performance characteristics with consistent time per operation
- * 
+ *
  * Note: Thresholds are adjusted for CI environments where performance can vary
  * due to resource contention and lack of JIT optimization warmup.
  */
 
 import { jest } from '@jest/globals';
-import { describe, it, expect, beforeEach, afterEach, beforeAll } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+} from '@jest/globals';
 import ScopeDslErrorHandler from '../../../src/scopeDsl/core/scopeDslErrorHandler.js';
 import { performance } from 'perf_hooks';
 import { createUltraLightContainer } from '../../common/testing/ultraLightContainer.js';
@@ -145,11 +152,12 @@ describe('ScopeDslErrorHandler Performance', () => {
         const clearStart = performance.now();
         errorHandler.clearErrorBuffer();
         const clearDuration = performance.now() - clearStart;
-        
+
         clearingTimes.push(clearDuration);
       }
 
-      const avgClearTime = clearingTimes.reduce((a, b) => a + b, 0) / clearingTimes.length;
+      const avgClearTime =
+        clearingTimes.reduce((a, b) => a + b, 0) / clearingTimes.length;
       const maxClearTime = Math.max(...clearingTimes);
 
       // Buffer clearing should be very fast
@@ -236,8 +244,6 @@ describe('ScopeDslErrorHandler Performance', () => {
     });
   });
 
-
-
   describe('Performance Scaling', () => {
     it('should scale linearly with error count', () => {
       const testSizes = [100, 500, 1000, 2000];
@@ -266,7 +272,7 @@ describe('ScopeDslErrorHandler Performance', () => {
       }
 
       // Verify linear scaling (time per error should be consistent)
-      const avgTimes = timings.map(t => t.avgTime);
+      const avgTimes = timings.map((t) => t.avgTime);
       const minAvgTime = Math.min(...avgTimes);
       const maxAvgTime = Math.max(...avgTimes);
 
@@ -281,4 +287,3 @@ describe('ScopeDslErrorHandler Performance', () => {
     });
   });
 });
-

@@ -3,10 +3,10 @@
  * Performance benchmark for priority calculation system
  */
 
-import { 
-  calculateCoveragePriorityOptimized, 
-  clearPriorityCache, 
-  getCacheStats 
+import {
+  calculateCoveragePriorityOptimized,
+  clearPriorityCache,
+  getCacheStats,
 } from './src/scopeDsl/prioritySystem/priorityCalculator.js';
 
 console.log('=== Priority System Performance Benchmark ===\n');
@@ -19,7 +19,9 @@ const iterations = 10000;
 console.log(`Test parameters:`);
 console.log(`- Coverage types: ${testCoverages.length}`);
 console.log(`- Layer types: ${testLayers.length}`);
-console.log(`- Total combinations: ${testCoverages.length * testLayers.length}`);
+console.log(
+  `- Total combinations: ${testCoverages.length * testLayers.length}`
+);
 console.log(`- Iterations per test: ${iterations}`);
 console.log('');
 
@@ -40,7 +42,9 @@ const endCold = process.hrtime.bigint();
 const coldDuration = Number(endCold - startCold) / 1000000; // Convert to milliseconds
 
 console.log(`Cold start duration: ${coldDuration.toFixed(2)}ms`);
-console.log(`Average per calculation: ${(coldDuration / iterations).toFixed(4)}ms`);
+console.log(
+  `Average per calculation: ${(coldDuration / iterations).toFixed(4)}ms`
+);
 
 const cacheStats = getCacheStats();
 console.log(`Cache size after cold run: ${cacheStats.size}`);
@@ -60,11 +64,14 @@ const endWarm = process.hrtime.bigint();
 const warmDuration = Number(endWarm - startWarm) / 1000000; // Convert to milliseconds
 
 console.log(`Warm run duration: ${warmDuration.toFixed(2)}ms`);
-console.log(`Average per calculation: ${(warmDuration / iterations).toFixed(4)}ms`);
+console.log(
+  `Average per calculation: ${(warmDuration / iterations).toFixed(4)}ms`
+);
 console.log('');
 
 // Performance analysis
-const performanceImprovement = ((coldDuration - warmDuration) / coldDuration) * 100;
+const performanceImprovement =
+  ((coldDuration - warmDuration) / coldDuration) * 100;
 const speedup = coldDuration / warmDuration;
 
 console.log('📊 PERFORMANCE ANALYSIS:');
@@ -75,22 +82,32 @@ console.log(`Speed multiplier: ${speedup.toFixed(1)}x faster`);
 const targetImprovement = 50;
 console.log('');
 if (performanceImprovement >= targetImprovement) {
-  console.log(`✅ TARGET MET: ${performanceImprovement.toFixed(1)}% improvement exceeds ${targetImprovement}% target`);
+  console.log(
+    `✅ TARGET MET: ${performanceImprovement.toFixed(1)}% improvement exceeds ${targetImprovement}% target`
+  );
 } else {
-  console.log(`❌ TARGET MISSED: ${performanceImprovement.toFixed(1)}% improvement below ${targetImprovement}% target`);
+  console.log(
+    `❌ TARGET MISSED: ${performanceImprovement.toFixed(1)}% improvement below ${targetImprovement}% target`
+  );
 }
 
 // Cache efficiency analysis
 console.log('');
 console.log('💾 CACHE ANALYSIS:');
-console.log(`Expected unique combinations: ${testCoverages.length * testLayers.length}`);
+console.log(
+  `Expected unique combinations: ${testCoverages.length * testLayers.length}`
+);
 console.log(`Actual cache entries: ${cacheStats.size}`);
-console.log(`Cache efficiency: ${cacheStats.size === (testCoverages.length * testLayers.length) ? 'Perfect' : 'Suboptimal'}`);
+console.log(
+  `Cache efficiency: ${cacheStats.size === testCoverages.length * testLayers.length ? 'Perfect' : 'Suboptimal'}`
+);
 
 // Memory usage estimation
 const estimatedMemoryPerEntry = 50; // bytes (rough estimate)
 const totalMemoryUsage = cacheStats.size * estimatedMemoryPerEntry;
-console.log(`Estimated memory usage: ${totalMemoryUsage} bytes (~${(totalMemoryUsage/1024).toFixed(1)}KB)`);
+console.log(
+  `Estimated memory usage: ${totalMemoryUsage} bytes (~${(totalMemoryUsage / 1024).toFixed(1)}KB)`
+);
 
 console.log('');
 console.log('🎯 BENCHMARK COMPLETE');

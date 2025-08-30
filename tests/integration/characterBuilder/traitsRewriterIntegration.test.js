@@ -20,7 +20,7 @@ describe('TraitsRewriter Integration', () => {
     mockLogger = testBed.mockLogger;
 
     // Fix the LLMAdapter mock to return correct format (content instead of result)
-    // The IntegrationTestBed creates a mock that returns {success, result} 
+    // The IntegrationTestBed creates a mock that returns {success, result}
     // but TraitsRewriterGenerator expects {content}
     const correctedLLMAdapter = {
       init: jest.fn().mockResolvedValue(),
@@ -31,13 +31,16 @@ describe('TraitsRewriter Integration', () => {
           content: JSON.stringify({
             characterName: 'Test Character',
             rewrittenTraits: {
-              'core:personality': 'I am a test character with complex personality traits.',
+              'core:personality':
+                'I am a test character with complex personality traits.',
               'core:likes': 'I enjoy testing and performance validation.',
               'core:fears': 'I fear system failures and poor performance.',
-              'core:goals': 'I strive to maintain excellent performance under all conditions.',
-              'core:dislikes': 'I dislike inefficient processes and slow responses.',
-            }
-          })
+              'core:goals':
+                'I strive to maintain excellent performance under all conditions.',
+              'core:dislikes':
+                'I dislike inefficient processes and slow responses.',
+            },
+          }),
         });
       }),
     };
@@ -48,8 +51,8 @@ describe('TraitsRewriter Integration', () => {
       validate: jest.fn().mockReturnValue(true),
       validateAgainstSchema: jest.fn().mockReturnValue({
         isValid: true,
-        errors: []
-      })
+        errors: [],
+      }),
     };
     container.setOverride(tokens.ISchemaValidator, mockSchemaValidator);
 
@@ -69,14 +72,17 @@ describe('TraitsRewriter Integration', () => {
     it('should complete full generation workflow with all components', async () => {
       const characterData = {
         'core:name': { text: 'Integration Test Character' },
-        'core:personality': { text: 'A character for testing the complete integration workflow' },
+        'core:personality': {
+          text: 'A character for testing the complete integration workflow',
+        },
         'core:likes': { text: 'Comprehensive testing and quality validation' },
         'core:fears': { text: 'System failures and integration issues' },
         'core:goals': { text: 'Successful completion of all workflow stages' },
       };
 
       // Step 1: Generate rewritten traits
-      const generationResult = await services.generator.generateRewrittenTraits(characterData);
+      const generationResult =
+        await services.generator.generateRewrittenTraits(characterData);
       expect(generationResult).toHaveProperty('rewrittenTraits');
       expect(generationResult.rewrittenTraits).toBeDefined();
 
@@ -84,18 +90,22 @@ describe('TraitsRewriter Integration', () => {
       const mockRawResponse = JSON.stringify({
         characterName: 'Integration Test Character',
         rewrittenTraits: {
-          'core:personality': 'I am a character designed for testing integration workflows.',
-          'core:likes': 'I enjoy comprehensive testing and quality validation processes.',
-          'core:fears': 'I fear system failures and integration problems that might arise.',
-          'core:goals': 'I aim to successfully complete all workflow stages without issues.',
-        }
+          'core:personality':
+            'I am a character designed for testing integration workflows.',
+          'core:likes':
+            'I enjoy comprehensive testing and quality validation processes.',
+          'core:fears':
+            'I fear system failures and integration problems that might arise.',
+          'core:goals':
+            'I aim to successfully complete all workflow stages without issues.',
+        },
       });
-      
+
       const processedResult = await services.processor.processResponse(
         mockRawResponse,
         characterData
       );
-      
+
       expect(processedResult).toHaveProperty('characterName');
       expect(processedResult).toHaveProperty('rewrittenTraits');
       expect(processedResult.characterName).toBe('Integration Test Character');
@@ -106,10 +116,10 @@ describe('TraitsRewriter Integration', () => {
         processedResult.rewrittenTraits,
         { characterName: processedResult.characterName }
       );
-      
+
       expect(enhancedResult).toHaveProperty('sections');
       expect(enhancedResult.sections).toHaveLength(4);
-      
+
       // Verify sections have basic structure (may not have titles/content in all implementations)
       expect(enhancedResult.sections).toBeDefined();
       expect(Array.isArray(enhancedResult.sections)).toBe(true);
@@ -125,23 +135,32 @@ describe('TraitsRewriter Integration', () => {
       };
 
       // Test data flow: Input → Generator → Processor → Enhancer
-      const generated = await services.generator.generateRewrittenTraits(inputCharacter);
-      
+      const generated =
+        await services.generator.generateRewrittenTraits(inputCharacter);
+
       const mockLLMResponse = JSON.stringify({
         characterName: 'Data Flow Test Character',
         rewrittenTraits: {
-          'core:personality': 'I am focused on testing smooth data flow between system components.',
-          'core:likes': 'I appreciate efficient data processing and seamless integration.',
-        }
+          'core:personality':
+            'I am focused on testing smooth data flow between system components.',
+          'core:likes':
+            'I appreciate efficient data processing and seamless integration.',
+        },
       });
-      
-      const processed = await services.processor.processResponse(mockLLMResponse, inputCharacter);
-      const enhanced = services.enhancer.enhanceForDisplay(processed.rewrittenTraits, { characterName: processed.characterName });
+
+      const processed = await services.processor.processResponse(
+        mockLLMResponse,
+        inputCharacter
+      );
+      const enhanced = services.enhancer.enhanceForDisplay(
+        processed.rewrittenTraits,
+        { characterName: processed.characterName }
+      );
 
       // Verify data integrity throughout the pipeline
       expect(processed.characterName).toBe(inputCharacter['core:name'].text);
       expect(enhanced.sections).toHaveLength(2);
-      
+
       // Check that original trait types are preserved
       const processedTraitKeys = Object.keys(processed.rewrittenTraits);
       expect(processedTraitKeys).toContain('core:personality');
@@ -162,18 +181,20 @@ describe('TraitsRewriter Integration', () => {
       };
 
       // First verify normal operation
-      const normalResult = await services.generator.generateRewrittenTraits(validCharacter);
+      const normalResult =
+        await services.generator.generateRewrittenTraits(validCharacter);
       expect(normalResult).toHaveProperty('rewrittenTraits');
 
       // Test processor error handling with malformed response
       const malformedResponse = '{"invalid": json}';
-      
+
       await expect(
         services.processor.processResponse(malformedResponse, validCharacter)
       ).rejects.toThrow();
 
       // Verify system remains stable after error
-      const recoveryResult = await services.generator.generateRewrittenTraits(validCharacter);
+      const recoveryResult =
+        await services.generator.generateRewrittenTraits(validCharacter);
       expect(recoveryResult).toHaveProperty('rewrittenTraits');
 
       mockLogger.info('Cross-component error handling integration validated');
@@ -193,7 +214,8 @@ describe('TraitsRewriter Integration', () => {
         'core:personality': { text: 'Testing service dependencies' },
       };
 
-      const result = await services.generator.generateRewrittenTraits(testCharacter);
+      const result =
+        await services.generator.generateRewrittenTraits(testCharacter);
       expect(result).toHaveProperty('rewrittenTraits');
 
       // Verify mock dependencies are working
@@ -216,13 +238,15 @@ describe('TraitsRewriter Integration', () => {
       };
 
       // Process two different characters
-      const result1 = await services.generator.generateRewrittenTraits(character1);
-      const result2 = await services.generator.generateRewrittenTraits(character2);
+      const result1 =
+        await services.generator.generateRewrittenTraits(character1);
+      const result2 =
+        await services.generator.generateRewrittenTraits(character2);
 
       // Verify both produce valid results
       expect(result1).toHaveProperty('rewrittenTraits');
       expect(result2).toHaveProperty('rewrittenTraits');
-      
+
       // Services maintain isolation by having same mock behavior but different input processing
       expect(result1.rewrittenTraits).toBeDefined();
       expect(result2.rewrittenTraits).toBeDefined();

@@ -308,7 +308,10 @@ describe('sex:press_against_back action integration', () => {
     );
     expect(perceptibleEvents).toHaveLength(1);
     expect(perceptibleEvents[0].payload).toHaveProperty('descriptionText');
-    expect(perceptibleEvents[0].payload).toHaveProperty('perceptionType', 'action_target_general');
+    expect(perceptibleEvents[0].payload).toHaveProperty(
+      'perceptionType',
+      'action_target_general'
+    );
     expect(perceptibleEvents[0].payload).toHaveProperty('locationId', 'room1');
     expect(perceptibleEvents[0].payload).toHaveProperty('targetId', 'beth');
   });

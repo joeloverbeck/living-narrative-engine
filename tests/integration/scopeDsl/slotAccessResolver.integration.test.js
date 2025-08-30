@@ -41,7 +41,7 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
           outer: 'hat_010',
           accessories: 'glasses_011',
         },
-        left_arm_clothing: {},  // Empty slot for testing
+        left_arm_clothing: {}, // Empty slot for testing
         right_arm_clothing: {
           accessories: 'bracelet_012',
         },
@@ -94,9 +94,17 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
     it('should maintain expected priority ordering from existing system', () => {
       const astUpper = parser.parse('actor.topmost_clothing.torso_upper');
       const astHands = parser.parse('actor.topmost_clothing.hands');
-      
-      const resultUpper = engine.resolve(astUpper, mockActorEntity, mockRuntimeContext);
-      const resultHands = engine.resolve(astHands, mockActorEntity, mockRuntimeContext);
+
+      const resultUpper = engine.resolve(
+        astUpper,
+        mockActorEntity,
+        mockRuntimeContext
+      );
+      const resultHands = engine.resolve(
+        astHands,
+        mockActorEntity,
+        mockRuntimeContext
+      );
 
       // Should prioritize outer layers over accessories
       expect(resultUpper).toEqual(new Set(['leather_jacket_001'])); // outer over accessories
@@ -111,18 +119,20 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
       expect(result).toEqual(
         new Set([
           'leather_jacket_001', // torso_upper outer
-          'jeans_004',         // torso_lower outer
-          'boots_006',         // feet outer
-          'leggings_007',      // legs base (no outer)
-          'gloves_009',        // hands outer
-          'hat_010',           // head_gear outer
+          'jeans_004', // torso_lower outer
+          'boots_006', // feet outer
+          'leggings_007', // legs base (no outer)
+          'gloves_009', // hands outer
+          'hat_010', // head_gear outer
           // Note: right_arm_clothing only has accessories, not included in topmost for empty slots
         ])
       );
     });
 
     it('should handle topmost_no_accessories mode correctly with enhancements', () => {
-      const ast = parser.parse('actor.topmost_clothing_no_accessories.right_arm_clothing');
+      const ast = parser.parse(
+        'actor.topmost_clothing_no_accessories.right_arm_clothing'
+      );
       const result = engine.resolve(ast, mockActorEntity, mockRuntimeContext);
 
       // Should return empty set as only accessories exist in this slot
@@ -170,8 +180,16 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
       const astAll = parser.parse('actor.all_clothing.torso_upper');
       const astUnderwear = parser.parse('actor.underwear.torso_upper');
 
-      const resultAll = engine.resolve(astAll, mockActorEntity, mockRuntimeContext);
-      const resultUnderwear = engine.resolve(astUnderwear, mockActorEntity, mockRuntimeContext);
+      const resultAll = engine.resolve(
+        astAll,
+        mockActorEntity,
+        mockRuntimeContext
+      );
+      const resultUnderwear = engine.resolve(
+        astUnderwear,
+        mockActorEntity,
+        mockRuntimeContext
+      );
 
       // all_clothing should return all layers from torso_upper
       expect(resultAll.size).toBe(1); // Only one item returned by all_clothing mode
@@ -233,8 +251,14 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
 
   describe('Backward Compatibility', () => {
     it('should work with existing scopes unchanged', () => {
-      const complexAst = parser.parse('actor.topmost_clothing.torso_upper | actor.topmost_clothing.torso_lower');
-      const result = engine.resolve(complexAst, mockActorEntity, mockRuntimeContext);
+      const complexAst = parser.parse(
+        'actor.topmost_clothing.torso_upper | actor.topmost_clothing.torso_lower'
+      );
+      const result = engine.resolve(
+        complexAst,
+        mockActorEntity,
+        mockRuntimeContext
+      );
 
       expect(result).toEqual(new Set(['leather_jacket_001', 'jeans_004']));
     });
@@ -249,9 +273,18 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
 
     it('should work correctly with all modes (topmost, no_accessories, etc.)', () => {
       const tests = [
-        { expr: 'actor.topmost_clothing.hands', expected: new Set(['gloves_009']) },
-        { expr: 'actor.topmost_clothing_no_accessories.hands', expected: new Set(['gloves_009']) },
-        { expr: 'actor.outer_clothing.hands', expected: new Set(['gloves_009']) },
+        {
+          expr: 'actor.topmost_clothing.hands',
+          expected: new Set(['gloves_009']),
+        },
+        {
+          expr: 'actor.topmost_clothing_no_accessories.hands',
+          expected: new Set(['gloves_009']),
+        },
+        {
+          expr: 'actor.outer_clothing.hands',
+          expected: new Set(['gloves_009']),
+        },
         { expr: 'actor.all_clothing.hands', expected: new Set(['gloves_009']) }, // all_clothing works like topmost
       ];
 
@@ -298,8 +331,13 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
       mockRuntimeContext.entityManager.getComponentData.mockReturnValue(null);
 
       const ast = parser.parse('actor.topmost_clothing.torso_upper');
-      const result = engine.resolve(ast, mockActorEntity, mockRuntimeContext, trace);
-      
+      const result = engine.resolve(
+        ast,
+        mockActorEntity,
+        mockRuntimeContext,
+        trace
+      );
+
       // Should handle gracefully with empty result
       expect(result).toEqual(new Set());
     });
@@ -340,7 +378,7 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
 
       // Should correctly resolve mixed scenarios:
       // - torso_upper: has outer (leather_jacket_001)
-      // - legs: has base only (leggings_007)  
+      // - legs: has base only (leggings_007)
       // - right_arm_clothing: has accessories only, but not included in topmost for slots with only accessories
       expect(result).toContain('leather_jacket_001');
       expect(result).toContain('leggings_007');
@@ -353,10 +391,17 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
       const largeEquipment = {
         equipped: {},
       };
-      
+
       // Add items to all slots
-      const slots = ['torso_upper', 'torso_lower', 'legs', 'feet', 'head_gear', 'hands'];
-      slots.forEach(slot => {
+      const slots = [
+        'torso_upper',
+        'torso_lower',
+        'legs',
+        'feet',
+        'head_gear',
+        'hands',
+      ];
+      slots.forEach((slot) => {
         largeEquipment.equipped[slot] = {
           outer: `${slot}_outer_001`,
           base: `${slot}_base_002`,
@@ -365,7 +410,9 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
         };
       });
 
-      mockRuntimeContext.entityManager.getComponentData.mockReturnValue(largeEquipment);
+      mockRuntimeContext.entityManager.getComponentData.mockReturnValue(
+        largeEquipment
+      );
 
       const startTime = performance.now();
       const ast = parser.parse('actor.all_clothing[]');

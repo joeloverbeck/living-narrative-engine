@@ -255,17 +255,17 @@ export class Span {
     if (typeof name !== 'string' || name.trim() === '') {
       throw new Error('Event name must be a non-empty string');
     }
-    
+
     // Initialize events array in attributes if not present
     if (!this.#attributes.events) {
       this.#attributes.events = [];
     }
-    
+
     // Add the event with timestamp
     this.#attributes.events.push({
       name,
       timestamp: performance.now(),
-      attributes: attributes || {}
+      attributes: attributes || {},
     });
   }
 

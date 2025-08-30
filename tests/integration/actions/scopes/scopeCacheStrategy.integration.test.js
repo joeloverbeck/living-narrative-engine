@@ -473,10 +473,14 @@ describe('ScopeCacheStrategy Integration Tests', () => {
         scopeRegistry: testBed.container.resolve('IScopeRegistry'),
         scopeEngine: testBed.container.resolve('IScopeEngine'),
         entityManager: testBed.container.resolve('IEntityManager'),
-        jsonLogicEvaluationService: testBed.container.resolve('JsonLogicEvaluationService'),
+        jsonLogicEvaluationService: testBed.container.resolve(
+          'JsonLogicEvaluationService'
+        ),
         dslParser: testBed.container.resolve('DslParser'),
         logger: testBed.container.resolve('ILogger'),
-        actionErrorContextBuilder: testBed.container.resolve('IActionErrorContextBuilder'),
+        actionErrorContextBuilder: testBed.container.resolve(
+          'IActionErrorContextBuilder'
+        ),
         cacheStrategy: cacheStrategy,
       });
 
@@ -487,7 +491,9 @@ describe('ScopeCacheStrategy Integration Tests', () => {
 
       // Mock the resolver to return consistent results
       const mockResult = ActionResult.success(new Set(['mock-entity']));
-      testBed.container.resolve('IScopeEngine').resolve.mockReturnValue(mockResult);
+      testBed.container
+        .resolve('IScopeEngine')
+        .resolve.mockReturnValue(mockResult);
 
       // First call - should miss cache and potentially populate it
       const result1 = testResolver.resolve(TARGET_DOMAIN_SELF, context, {

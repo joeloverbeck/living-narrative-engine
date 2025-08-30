@@ -11,7 +11,15 @@
  * - Error handling and graceful degradation
  */
 
-import { describe, beforeAll, afterAll, beforeEach, afterEach, test, expect } from '@jest/globals';
+import {
+  describe,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+  test,
+  expect,
+} from '@jest/globals';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
 import { AvailableActionsProvider } from '../../../src/data/providers/availableActionsProvider.js';
@@ -50,49 +58,59 @@ describe('ScopeDsl Integration with Action System E2E', () => {
     containerSetup = await createMinimalTestContainer({
       logLevel: 'WARN', // Reduce log verbosity for tests
     });
-    
+
     container = containerSetup.container;
     services = containerSetup.services;
-    
+
     // Get services from minimal container
     entityManager = services.entityManager;
     scopeRegistry = services.scopeRegistry;
     scopeEngine = services.scopeEngine;
     dslParser = services.dslParser;
-    
+
     // For ActionDiscoveryService, we'll create a minimal mock since it's not in minimal container
     actionDiscoveryService = {
       async getValidActions(actor, context, options = {}) {
         // Simplified implementation for testing
         const actions = [
-          { id: 'core:wait', actionId: 'core:wait', command: 'wait', params: { targetId: null } },
-          { id: 'core:go', actionId: 'core:go', command: 'go north', params: { targetId: 'test-location-2' } }
+          {
+            id: 'core:wait',
+            actionId: 'core:wait',
+            command: 'wait',
+            params: { targetId: null },
+          },
+          {
+            id: 'core:go',
+            actionId: 'core:go',
+            command: 'go north',
+            params: { targetId: 'test-location-2' },
+          },
         ];
         return {
           actions,
-          trace: options.trace ? { logs: ['Mock trace log'] } : undefined
+          trace: options.trace ? { logs: ['Mock trace log'] } : undefined,
         };
-      }
+      },
     };
-    
+
     // Mock target resolution service
     targetResolutionService = {
       resolveTargets(scopeId, actor, context, trace, testId) {
         return {
           success: true,
-          data: ['test-target-1', 'test-target-2']
+          data: ['test-target-1', 'test-target-2'],
         };
-      }
+      },
     };
-    
+
     // Mock available actions provider
     availableActionsProvider = {
       async get(actor, context, logger) {
         return [
           { id: 'core:wait', actionId: 'core:wait' },
-          { id: 'core:go', actionId: 'core:go' }
+          { id: 'core:go', actionId: 'core:go' },
         ];
-      }
+      },
     };
 
     // Set up test infrastructure once for all tests
@@ -122,7 +140,7 @@ describe('ScopeDsl Integration with Action System E2E', () => {
       registry: services.dataRegistry,
     });
 
-    // Create test actors using ActionTestUtilities  
+    // Create test actors using ActionTestUtilities
     testActors = await ActionTestUtilities.createTestActors({
       entityManager,
       registry: services.dataRegistry,
@@ -194,7 +212,7 @@ describe('ScopeDsl Integration with Action System E2E', () => {
           description: 'Available exits from current location',
         },
         {
-          id: 'test:followable_actors', 
+          id: 'test:followable_actors',
           expr: 'entities(core:actor)[{"!=": [{"var": "id"}, {"var": "actor.id"}]}]',
           description: 'Other actors that can be followed',
         },
@@ -379,8 +397,11 @@ describe('ScopeDsl Integration with Action System E2E', () => {
       const traceLogs = discoveredActions.trace?.logs || [];
       const prereqLogs = traceLogs.filter((log) => {
         // Handle both string and object log formats
-        const message = typeof log === 'string' ? log : (log.message || '');
-        return typeof message === 'string' && message.toLowerCase().includes('prerequisite');
+        const message = typeof log === 'string' ? log : log.message || '';
+        return (
+          typeof message === 'string' &&
+          message.toLowerCase().includes('prerequisite')
+        );
       });
 
       // Should have some prerequisite-related trace entries
@@ -488,7 +509,7 @@ describe('ScopeDsl Integration with Action System E2E', () => {
       );
       const baseContext = await createActionDiscoveryContext();
 
-      // OPTIMIZED: Simplified position change test  
+      // OPTIMIZED: Simplified position change test
       const initialActions = await actionDiscoveryService.getValidActions(
         playerEntity,
         baseContext
@@ -499,7 +520,9 @@ describe('ScopeDsl Integration with Action System E2E', () => {
       // OPTIMIZED: Mock the position change instead of using addComponent
       // This avoids validation errors in minimal container setup
       testActors.player.components = testActors.player.components || {};
-      testActors.player.components['core:position'] = { locationId: 'test-location-2' };
+      testActors.player.components['core:position'] = {
+        locationId: 'test-location-2',
+      };
 
       // Create updated context with mock location
       const updatedContext = await createActionDiscoveryContext();
@@ -509,10 +532,12 @@ describe('ScopeDsl Integration with Action System E2E', () => {
         playerEntity,
         updatedContext
       );
-      
+
       expect(updatedActions.actions).toBeDefined();
       expect(Array.isArray(updatedActions.actions)).toBe(true);
-      expect(updatedActions.actions.map(a => getActionId(a))).toContain('core:wait');
+      expect(updatedActions.actions.map((a) => getActionId(a))).toContain(
+        'core:wait'
+      );
     });
 
     test('should reflect component changes in scope filtering', async () => {
@@ -541,7 +566,9 @@ describe('ScopeDsl Integration with Action System E2E', () => {
       // Should still have basic actions
       expect(lockedActions.actions).toBeDefined();
       expect(Array.isArray(lockedActions.actions)).toBe(true);
-      expect(lockedActions.actions.map(a => getActionId(a))).toContain('core:wait');
+      expect(lockedActions.actions.map((a) => getActionId(a))).toContain(
+        'core:wait'
+      );
     });
 
     test('should handle entity creation and removal in scope results', async () => {
@@ -562,7 +589,11 @@ describe('ScopeDsl Integration with Action System E2E', () => {
         newActorId,
         newActorComponents
       );
-      services.dataRegistry.store('entityDefinitions', newActorId, newActorDefinition);
+      services.dataRegistry.store(
+        'entityDefinitions',
+        newActorId,
+        newActorDefinition
+      );
 
       await entityManager.createEntityInstance(newActorId, {
         instanceId: newActorId,
@@ -639,7 +670,7 @@ describe('ScopeDsl Integration with Action System E2E', () => {
       times.forEach((time) => {
         expect(time).toBeLessThan(100); // Reduced from 500ms for minimal mock
       });
-      
+
       // Verify we get consistent results
       expect(times.length).toBe(2);
     });
@@ -687,7 +718,11 @@ describe('ScopeDsl Integration with Action System E2E', () => {
         required_components: { actor: [] },
       };
 
-      services.dataRegistry.store('actions', actionWithBadScope.id, actionWithBadScope);
+      services.dataRegistry.store(
+        'actions',
+        actionWithBadScope.id,
+        actionWithBadScope
+      );
 
       // Should not crash when discovering actions
       const result = await actionDiscoveryService.getValidActions(

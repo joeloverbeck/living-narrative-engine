@@ -3,7 +3,14 @@
  * Tests the full integration of LoggingPerformanceMonitor with HybridLogger and RemoteLogger
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { LoggingPerformanceMonitor } from '../../../src/logging/loggingPerformanceMonitor.js';
 import { LoggingPerformanceReporter } from '../../../src/logging/loggingPerformanceReporter.js';
 import { LoggingResourceMonitor } from '../../../src/logging/loggingResourceMonitor.js';
@@ -126,9 +133,12 @@ describe('Logging Performance Monitoring Integration', () => {
       // Test batch flush monitoring directly (avoid RemoteLogger CircuitBreaker issues)
       const batchSize = 10;
       const startTime = performance.now() - 50; // 50ms ago
-      
-      const result = await performanceMonitor.monitorBatchFlush(batchSize, startTime);
-      
+
+      const result = await performanceMonitor.monitorBatchFlush(
+        batchSize,
+        startTime
+      );
+
       expect(result).toHaveProperty('batchSize');
       expect(result).toHaveProperty('success');
       expect(result.batchSize).toBe(batchSize);
@@ -181,7 +191,9 @@ describe('Logging Performance Monitoring Integration', () => {
       const report = reporter.generateReport();
 
       expect(report.health).toHaveProperty('status');
-      expect(['healthy', 'warning', 'critical']).toContain(report.health.status);
+      expect(['healthy', 'warning', 'critical']).toContain(
+        report.health.status
+      );
       expect(report.health).toHaveProperty('score');
       expect(report.health.score).toBeGreaterThanOrEqual(0);
       expect(report.health.score).toBeLessThanOrEqual(100);
@@ -242,7 +254,7 @@ describe('Logging Performance Monitoring Integration', () => {
       for (let i = 0; i < 100; i++) {
         performanceMonitor.monitorLogOperation('info', `High volume log ${i}`);
       }
-      
+
       await performanceMonitor.monitorBatchFlush(5, performance.now() - 300); // Small batch, slow flush
       performanceMonitor.monitorBufferSize(80); // High buffer usage
     });
@@ -262,12 +274,12 @@ describe('Logging Performance Monitoring Integration', () => {
       const analysis = advisor.analyzeAndAdvise();
 
       expect(Array.isArray(analysis.patterns)).toBe(true);
-      
+
       // Should detect high volume pattern
       const highVolumePattern = analysis.patterns.find(
         (p) => p.type === 'high_volume'
       );
-      
+
       if (highVolumePattern) {
         expect(highVolumePattern).toHaveProperty('severity');
         expect(highVolumePattern).toHaveProperty('description');
@@ -278,12 +290,12 @@ describe('Logging Performance Monitoring Integration', () => {
       const analysis = advisor.analyzeAndAdvise();
 
       expect(Array.isArray(analysis.bottlenecks)).toBe(true);
-      
+
       // Should identify buffer pressure
       const bufferBottleneck = analysis.bottlenecks.find(
         (b) => b.type === 'buffer_pressure'
       );
-      
+
       if (bufferBottleneck) {
         expect(bufferBottleneck).toHaveProperty('severity');
         expect(bufferBottleneck).toHaveProperty('impact');
@@ -295,7 +307,7 @@ describe('Logging Performance Monitoring Integration', () => {
       const analysis = advisor.analyzeAndAdvise();
 
       expect(analysis.configChanges).toBeDefined();
-      
+
       // Check for specific config recommendations
       if (analysis.configChanges.batchSize) {
         expect(analysis.configChanges.batchSize).toHaveProperty('current');
@@ -308,7 +320,7 @@ describe('Logging Performance Monitoring Integration', () => {
       const analysis = advisor.analyzeAndAdvise();
 
       expect(Array.isArray(analysis.priority)).toBe(true);
-      
+
       if (analysis.priority.length > 0) {
         const firstAction = analysis.priority[0];
         expect(firstAction).toHaveProperty('priority');
@@ -329,15 +341,18 @@ describe('Logging Performance Monitoring Integration', () => {
       // Check that threshold violations are recorded in metrics
       const metrics = performanceMonitor.getLoggingMetrics();
       expect(metrics).toBeDefined();
-      
+
       // Verify monitoring is working (basic functionality test)
       expect(metrics.volume.totalLogsProcessed).toBeGreaterThan(0);
     });
 
     it('should monitor batch operations', async () => {
       // Test batch flush monitoring (without event dependencies)
-      const result = await performanceMonitor.monitorBatchFlush(50, performance.now() - 300);
-      
+      const result = await performanceMonitor.monitorBatchFlush(
+        50,
+        performance.now() - 300
+      );
+
       expect(result).toHaveProperty('batchSize');
       expect(result).toHaveProperty('duration');
       expect(result.batchSize).toBe(50);
@@ -357,14 +372,14 @@ describe('Logging Performance Monitoring Integration', () => {
   describe('System-wide performance impact', () => {
     it('should have reasonable overhead on normal logging', async () => {
       const startTime = Date.now();
-      
+
       // Perform many log operations
       for (let i = 0; i < 1000; i++) {
         hybridLogger.info(`Performance test log ${i}`);
       }
-      
+
       const duration = Date.now() - startTime;
-      
+
       // Should complete within reasonable time (adjusted for CI environment)
       expect(duration).toBeLessThan(500); // 500ms for 1000 logs (more realistic for CI)
     });
@@ -377,7 +392,7 @@ describe('Logging Performance Monitoring Integration', () => {
       }
 
       const metrics = performanceMonitor.getLoggingMetrics();
-      
+
       // Check that metrics are being tracked with correct property paths
       expect(metrics.volume.totalLogsProcessed).toBe(logCount);
       expect(metrics.latency.logProcessing).toHaveProperty('p50');

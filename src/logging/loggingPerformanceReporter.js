@@ -16,10 +16,10 @@ export class LoggingPerformanceReporter {
   #logger;
   #reportHistory;
   #aggregationPeriods;
-  
+
   /**
    * Creates a new LoggingPerformanceReporter instance
-   * 
+   *
    * @param {object} dependencies - Required dependencies
    * @param {object} dependencies.monitor - LoggingPerformanceMonitor instance
    * @param {ILogger} dependencies.logger - Logger for internal use
@@ -29,17 +29,17 @@ export class LoggingPerformanceReporter {
     validateDependency(monitor, 'LoggingPerformanceMonitor', undefined, {
       requiredMethods: ['getLoggingMetrics', 'getAlerts', 'getRecordedMetrics'],
     });
-    
+
     validateDependency(logger, 'ILogger', undefined, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
     });
-    
+
     this.#monitor = monitor;
     this.#logger = logger;
-    
+
     // Initialize report history for trend analysis
     this.#reportHistory = [];
-    
+
     // Define aggregation periods
     this.#aggregationPeriods = {
       realtime: 0, // Current snapshot
@@ -48,7 +48,7 @@ export class LoggingPerformanceReporter {
       lastHour: 60 * 60 * 1000,
       last24Hours: 24 * 60 * 60 * 1000,
     };
-    
+
     // Configuration
     this.maxHistorySize = config.maxHistorySize || 1000;
     this.healthThresholds = config.healthThresholds || {
@@ -59,10 +59,10 @@ export class LoggingPerformanceReporter {
       memoryUsageMB: { critical: 100, warning: 50 },
     };
   }
-  
+
   /**
    * Generates a comprehensive performance report
-   * 
+   *
    * @returns {object} Performance report with all metrics
    */
   generateReport() {
@@ -70,18 +70,18 @@ export class LoggingPerformanceReporter {
     const metrics = this.#monitor.getLoggingMetrics();
     const alerts = this.#monitor.getAlerts();
     const recordedMetrics = this.#monitor.getRecordedMetrics();
-    
+
     // Calculate derived metrics
     const errorRate = this.#calculateErrorRate(metrics);
     const throughputTrend = this.#calculateThroughputTrend();
-    
+
     // Assess health
     const health = this.#assessHealth(metrics, alerts);
-    
+
     // Build report
     const report = {
       timestamp,
-      
+
       // Executive summary
       summary: {
         status: health.status,
@@ -89,10 +89,10 @@ export class LoggingPerformanceReporter {
         logsProcessed: metrics.volume.totalLogsProcessed,
         successRate: metrics.reliability.successRate,
         avgLatency: metrics.latency.logProcessing.p50,
-        activeAlerts: alerts.filter(a => a.severity === 'critical').length,
+        activeAlerts: alerts.filter((a) => a.severity === 'critical').length,
         recommendations: health.recommendations.slice(0, 3), // Top 3
       },
-      
+
       // Real-time metrics
       current: {
         logsPerSecond: metrics.throughput.logsPerSecond,
@@ -103,31 +103,37 @@ export class LoggingPerformanceReporter {
         activeSpans: metrics.activeSpans,
         currentConcurrency: metrics.currentConcurrency,
       },
-      
+
       // Throughput metrics
       throughput: {
         ...metrics.throughput,
         trend: throughputTrend,
         peak: this.#findPeakThroughput(),
       },
-      
+
       // Latency metrics with percentiles
       latency: {
         logProcessing: metrics.latency.logProcessing,
         batchTransmission: metrics.latency.batchTransmission,
         endToEnd: {
-          p50: (metrics.latency.logProcessing.p50 || 0) + (metrics.latency.batchTransmission.p50 || 0),
-          p95: (metrics.latency.logProcessing.p95 || 0) + (metrics.latency.batchTransmission.p95 || 0),
-          p99: (metrics.latency.logProcessing.p99 || 0) + (metrics.latency.batchTransmission.p99 || 0),
+          p50:
+            (metrics.latency.logProcessing.p50 || 0) +
+            (metrics.latency.batchTransmission.p50 || 0),
+          p95:
+            (metrics.latency.logProcessing.p95 || 0) +
+            (metrics.latency.batchTransmission.p95 || 0),
+          p99:
+            (metrics.latency.logProcessing.p99 || 0) +
+            (metrics.latency.batchTransmission.p99 || 0),
         },
       },
-      
+
       // Resource utilization
       resources: {
         ...metrics.resources,
         trend: this.#calculateResourceTrend(),
       },
-      
+
       // Reliability metrics
       reliability: {
         ...metrics.reliability,
@@ -135,64 +141,70 @@ export class LoggingPerformanceReporter {
         batchSuccessRate: this.#calculateBatchSuccessRate(metrics),
         uptime: this.#calculateUptime(metrics),
       },
-      
+
       // Volume breakdown
       volume: {
         ...metrics.volume,
         topCategories: this.#getTopCategories(metrics.volume.categoryCounts),
         growthRate: this.#calculateVolumeGrowthRate(),
       },
-      
+
       // Batch processing metrics
       batches: {
         ...metrics.batches,
         efficiency: this.#calculateBatchEfficiency(metrics.batches),
       },
-      
+
       // Health assessment
       health,
-      
+
       // Recent alerts
       alerts: {
-        critical: alerts.filter(a => a.severity === 'critical').slice(0, 10),
-        warning: alerts.filter(a => a.severity === 'warning').slice(0, 10),
+        critical: alerts.filter((a) => a.severity === 'critical').slice(0, 10),
+        warning: alerts.filter((a) => a.severity === 'warning').slice(0, 10),
         total: alerts.length,
         byType: this.#groupAlertsByType(alerts),
       },
-      
+
       // Aggregated metrics for different time periods
       aggregated: this.#generateAggregatedMetrics(recordedMetrics),
-      
+
       // Optimization opportunities
       optimizations: this.#identifyOptimizations(metrics, alerts),
     };
-    
+
     // Store in history
     this.#addToHistory(report);
-    
+
     return report;
   }
-  
+
   /**
    * Generates a dashboard-specific data format
-   * 
+   *
    * @returns {object} Dashboard data
    */
   generateDashboardData() {
     const report = this.generateReport();
-    
+
     return {
       // Key metrics for dashboard display
       kpis: {
         logsPerSecond: {
           value: report.current.logsPerSecond,
           trend: report.throughput.trend,
-          status: this.#getMetricStatus(report.current.logsPerSecond, 'throughput'),
+          status: this.#getMetricStatus(
+            report.current.logsPerSecond,
+            'throughput'
+          ),
         },
         successRate: {
           value: report.summary.successRate,
           trend: this.#calculateSuccessRateTrend(),
-          status: this.#getMetricStatus(report.summary.successRate, 'successRate'),
+          status: this.#getMetricStatus(
+            report.summary.successRate,
+            'successRate'
+          ),
         },
         avgLatency: {
           value: report.summary.avgLatency,
@@ -202,10 +214,13 @@ export class LoggingPerformanceReporter {
         bufferPressure: {
           value: report.current.bufferPressure,
           trend: this.#calculateBufferTrend(),
-          status: this.#getMetricStatus(report.current.bufferPressure, 'bufferPressure'),
+          status: this.#getMetricStatus(
+            report.current.bufferPressure,
+            'bufferPressure'
+          ),
         },
       },
-      
+
       // Time series data for charts
       timeSeries: {
         throughput: this.#getTimeSeriesData('throughput'),
@@ -213,26 +228,26 @@ export class LoggingPerformanceReporter {
         errors: this.#getTimeSeriesData('errors'),
         memory: this.#getTimeSeriesData('memory'),
       },
-      
+
       // Category distribution for pie chart
       categoryDistribution: report.volume.topCategories,
-      
+
       // Alert summary for status indicators
       alertSummary: {
         critical: report.alerts.critical.length,
         warning: report.alerts.warning.length,
         types: report.alerts.byType,
       },
-      
+
       // Health score for gauge
       health: {
         score: report.health.score,
         status: report.health.status,
         components: report.health.components,
       },
-      
+
       // Quick actions based on current state
-      actions: report.optimizations.slice(0, 5).map(opt => ({
+      actions: report.optimizations.slice(0, 5).map((opt) => ({
         title: opt.issue,
         description: opt.suggestion,
         priority: opt.priority,
@@ -240,10 +255,10 @@ export class LoggingPerformanceReporter {
       })),
     };
   }
-  
+
   /**
    * Calculates error rate from metrics
-   * 
+   *
    * @private
    * @param {object} metrics - Current metrics
    * @returns {number} Error rate percentage
@@ -253,10 +268,10 @@ export class LoggingPerformanceReporter {
     const errors = metrics.reliability.failureCount;
     return total > 0 ? (errors / total) * 100 : 0;
   }
-  
+
   /**
    * Calculates batch success rate
-   * 
+   *
    * @private
    * @param {object} metrics - Current metrics
    * @returns {number} Batch success rate percentage
@@ -265,10 +280,10 @@ export class LoggingPerformanceReporter {
     const { totalBatches, successfulBatches } = metrics.batches;
     return totalBatches > 0 ? (successfulBatches / totalBatches) * 100 : 100;
   }
-  
+
   /**
    * Calculates batch processing efficiency
-   * 
+   *
    * @private
    * @param {object} batchMetrics - Batch metrics
    * @returns {number} Efficiency score (0-100)
@@ -277,13 +292,13 @@ export class LoggingPerformanceReporter {
     const { averageBatchSize, totalBatches, successfulBatches } = batchMetrics;
     const successRate = totalBatches > 0 ? successfulBatches / totalBatches : 1;
     const sizeEfficiency = Math.min(averageBatchSize / 100, 1); // Optimal batch size ~100
-    
+
     return (successRate * 0.7 + sizeEfficiency * 0.3) * 100;
   }
-  
+
   /**
    * Assesses overall health based on metrics and alerts
-   * 
+   *
    * @private
    * @param {object} metrics - Current metrics
    * @param {Array} alerts - Current alerts
@@ -291,26 +306,43 @@ export class LoggingPerformanceReporter {
    */
   #assessHealth(metrics, alerts) {
     const components = {
-      throughput: this.#assessComponent(metrics.throughput.logsPerSecond, 'throughput'),
-      latency: this.#assessComponent(metrics.latency.logProcessing.p95, 'latency'),
-      reliability: this.#assessComponent(metrics.reliability.successRate, 'successRate'),
-      resources: this.#assessComponent(metrics.resources.bufferPressure, 'bufferPressure'),
+      throughput: this.#assessComponent(
+        metrics.throughput.logsPerSecond,
+        'throughput'
+      ),
+      latency: this.#assessComponent(
+        metrics.latency.logProcessing.p95,
+        'latency'
+      ),
+      reliability: this.#assessComponent(
+        metrics.reliability.successRate,
+        'successRate'
+      ),
+      resources: this.#assessComponent(
+        metrics.resources.bufferPressure,
+        'bufferPressure'
+      ),
       memory: this.#assessComponent(metrics.resources.memoryUsageMB, 'memory'),
     };
-    
+
     // Calculate overall score
-    const scores = Object.values(components).map(c => c.score);
-    const overallScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-    
+    const scores = Object.values(components).map((c) => c.score);
+    const overallScore =
+      scores.reduce((sum, score) => sum + score, 0) / scores.length;
+
     // Determine status
     let status = 'healthy';
     if (overallScore < 50) status = 'critical';
     else if (overallScore < 75) status = 'degraded';
     else if (overallScore < 90) status = 'warning';
-    
+
     // Generate recommendations
-    const recommendations = this.#generateRecommendations(components, metrics, alerts);
-    
+    const recommendations = this.#generateRecommendations(
+      components,
+      metrics,
+      alerts
+    );
+
     return {
       status,
       score: Math.round(overallScore),
@@ -319,21 +351,24 @@ export class LoggingPerformanceReporter {
       lastAssessed: new Date().toISOString(),
     };
   }
-  
+
   /**
    * Assesses a single health component
-   * 
+   *
    * @private
    * @param {number} value - Metric value
    * @param {string} type - Metric type
    * @returns {object} Component assessment
    */
   #assessComponent(value, type) {
-    const thresholds = this.healthThresholds[type] || { critical: 100, warning: 75 };
-    
+    const thresholds = this.healthThresholds[type] || {
+      critical: 100,
+      warning: 75,
+    };
+
     let score = 100;
     let status = 'healthy';
-    
+
     if (type === 'successRate') {
       // Higher is better
       if (value < thresholds.critical) {
@@ -353,13 +388,13 @@ export class LoggingPerformanceReporter {
         status = 'warning';
       }
     }
-    
+
     return { value, score, status };
   }
-  
+
   /**
    * Generates health recommendations
-   * 
+   *
    * @private
    * @param {object} components - Health components
    * @param {object} metrics - Current metrics
@@ -368,7 +403,7 @@ export class LoggingPerformanceReporter {
    */
   #generateRecommendations(components, metrics, alerts) {
     const recommendations = [];
-    
+
     // Check each component
     if (components.latency.status !== 'healthy') {
       recommendations.push({
@@ -378,7 +413,7 @@ export class LoggingPerformanceReporter {
         suggestion: 'Consider reducing log verbosity or increasing batch size',
       });
     }
-    
+
     if (components.resources.status !== 'healthy') {
       recommendations.push({
         category: 'resources',
@@ -387,7 +422,7 @@ export class LoggingPerformanceReporter {
         suggestion: 'Increase flush frequency or reduce log volume',
       });
     }
-    
+
     if (components.reliability.status !== 'healthy') {
       recommendations.push({
         category: 'reliability',
@@ -396,7 +431,7 @@ export class LoggingPerformanceReporter {
         suggestion: 'Check remote logger connectivity and error logs',
       });
     }
-    
+
     if (components.memory.status !== 'healthy') {
       recommendations.push({
         category: 'resources',
@@ -405,7 +440,7 @@ export class LoggingPerformanceReporter {
         suggestion: 'Reduce buffer size or implement more aggressive cleanup',
       });
     }
-    
+
     // Check for frequent alerts
     const frequentAlerts = this.#findFrequentAlerts(alerts);
     if (frequentAlerts.length > 0) {
@@ -416,16 +451,16 @@ export class LoggingPerformanceReporter {
         suggestion: 'Review and adjust threshold configurations',
       });
     }
-    
+
     return recommendations.sort((a, b) => {
       const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
       return priorityOrder[a.priority] - priorityOrder[b.priority];
     });
   }
-  
+
   /**
    * Identifies optimization opportunities
-   * 
+   *
    * @private
    * @param {object} metrics - Current metrics
    * @param {Array} alerts - Current alerts
@@ -433,7 +468,7 @@ export class LoggingPerformanceReporter {
    */
   #identifyOptimizations(metrics, alerts) {
     const optimizations = [];
-    
+
     // Batch size optimization
     if (metrics.batches.averageBatchSize < 50) {
       optimizations.push({
@@ -441,11 +476,12 @@ export class LoggingPerformanceReporter {
         priority: 'medium',
         issue: 'Small batch sizes',
         impact: 'Increased overhead',
-        suggestion: 'Increase batch size threshold to reduce transmission overhead',
+        suggestion:
+          'Increase batch size threshold to reduce transmission overhead',
         expectedImprovement: '20-30% reduction in network calls',
       });
     }
-    
+
     // Category filtering
     const topCategories = this.#getTopCategories(metrics.volume.categoryCounts);
     if (topCategories.length > 0 && topCategories[0].percentage > 50) {
@@ -458,7 +494,7 @@ export class LoggingPerformanceReporter {
         expectedImprovement: '30-40% reduction in log volume',
       });
     }
-    
+
     // Memory optimization
     if (metrics.resources.memoryUsageMB > 30) {
       optimizations.push({
@@ -470,7 +506,7 @@ export class LoggingPerformanceReporter {
         expectedImprovement: '40-50% memory reduction',
       });
     }
-    
+
     // Alert storm detection
     const alertRate = alerts.length / (metrics.batches.totalBatches || 1);
     if (alertRate > 5) {
@@ -483,13 +519,13 @@ export class LoggingPerformanceReporter {
         expectedImprovement: '70% reduction in alert noise',
       });
     }
-    
+
     return optimizations;
   }
-  
+
   /**
    * Groups alerts by type
-   * 
+   *
    * @private
    * @param {Array} alerts - Alerts to group
    * @returns {object} Grouped alerts
@@ -501,10 +537,10 @@ export class LoggingPerformanceReporter {
     }
     return grouped;
   }
-  
+
   /**
    * Finds frequently occurring alerts
-   * 
+   *
    * @private
    * @param {Array} alerts - Alerts to analyze
    * @returns {Array} Frequent alert types
@@ -516,17 +552,20 @@ export class LoggingPerformanceReporter {
       .sort((a, b) => b.count - a.count)
       .slice(0, 3);
   }
-  
+
   /**
    * Gets top categories by volume
-   * 
+   *
    * @private
    * @param {object} categoryCounts - Category counts
    * @returns {Array} Top categories with percentages
    */
   #getTopCategories(categoryCounts) {
-    const total = Object.values(categoryCounts).reduce((sum, count) => sum + count, 0);
-    
+    const total = Object.values(categoryCounts).reduce(
+      (sum, count) => sum + count,
+      0
+    );
+
     return Object.entries(categoryCounts)
       .map(([name, count]) => ({
         name,
@@ -536,20 +575,20 @@ export class LoggingPerformanceReporter {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
   }
-  
+
   /**
    * Generates aggregated metrics for different time periods
-   * 
+   *
    * @private
    * @param {object} recordedMetrics - Recorded metrics
    * @returns {object} Aggregated metrics
    */
   #generateAggregatedMetrics(recordedMetrics) {
     const aggregated = {};
-    
+
     for (const [period, duration] of Object.entries(this.#aggregationPeriods)) {
       if (period === 'realtime') continue;
-      
+
       aggregated[period] = {
         totalLogs: recordedMetrics[`logs.total.${period}`]?.value || 0,
         totalBytes: recordedMetrics[`logs.bytes.${period}`]?.value || 0,
@@ -557,59 +596,61 @@ export class LoggingPerformanceReporter {
         avgLatency: recordedMetrics[`latency.avg.${period}`]?.value || 0,
       };
     }
-    
+
     return aggregated;
   }
-  
+
   /**
    * Calculates throughput trend
-   * 
+   *
    * @private
    * @returns {string} Trend direction (up, down, stable)
    */
   #calculateThroughputTrend() {
     if (this.#reportHistory.length < 2) return 'stable';
-    
+
     const recent = this.#reportHistory.slice(-5);
-    const values = recent.map(r => r.current.logsPerSecond);
-    
+    const values = recent.map((r) => r.current.logsPerSecond);
+
     return this.#calculateTrend(values);
   }
-  
+
   /**
    * Calculates generic trend from values
-   * 
+   *
    * @private
    * @param {number[]} values - Values to analyze
    * @returns {string} Trend direction
    */
   #calculateTrend(values) {
     if (values.length < 2) return 'stable';
-    
+
     const firstHalf = values.slice(0, Math.floor(values.length / 2));
     const secondHalf = values.slice(Math.floor(values.length / 2));
-    
-    const firstAvg = firstHalf.reduce((sum, v) => sum + v, 0) / firstHalf.length;
-    const secondAvg = secondHalf.reduce((sum, v) => sum + v, 0) / secondHalf.length;
-    
+
+    const firstAvg =
+      firstHalf.reduce((sum, v) => sum + v, 0) / firstHalf.length;
+    const secondAvg =
+      secondHalf.reduce((sum, v) => sum + v, 0) / secondHalf.length;
+
     const change = ((secondAvg - firstAvg) / firstAvg) * 100;
-    
+
     if (change > 10) return 'up';
     if (change < -10) return 'down';
     return 'stable';
   }
-  
+
   /**
    * Gets time series data for charts
-   * 
+   *
    * @private
    * @param {string} metric - Metric type
    * @returns {Array} Time series data points
    */
   #getTimeSeriesData(metric) {
-    return this.#reportHistory.slice(-100).map(report => {
+    return this.#reportHistory.slice(-100).map((report) => {
       let value;
-      
+
       switch (metric) {
         case 'throughput':
           value = report.current.logsPerSecond;
@@ -626,43 +667,43 @@ export class LoggingPerformanceReporter {
         default:
           value = 0;
       }
-      
+
       return {
         timestamp: report.timestamp,
         value,
       };
     });
   }
-  
+
   /**
    * Adds report to history and manages size
-   * 
+   *
    * @private
    * @param {object} report - Report to add
    */
   #addToHistory(report) {
     this.#reportHistory.push(report);
-    
+
     if (this.#reportHistory.length > this.maxHistorySize) {
       this.#reportHistory = this.#reportHistory.slice(-this.maxHistorySize);
     }
   }
-  
+
   /**
    * Finds peak throughput from history
-   * 
+   *
    * @private
    * @returns {number} Peak logs per second
    */
   #findPeakThroughput() {
     if (this.#reportHistory.length === 0) return 0;
-    
-    return Math.max(...this.#reportHistory.map(r => r.current.logsPerSecond));
+
+    return Math.max(...this.#reportHistory.map((r) => r.current.logsPerSecond));
   }
-  
+
   /**
    * Calculates uptime percentage
-   * 
+   *
    * @private
    * @param {object} metrics - Current metrics
    * @returns {number} Uptime percentage
@@ -671,89 +712,93 @@ export class LoggingPerformanceReporter {
     // Simple uptime based on success rate
     return metrics.reliability.successRate;
   }
-  
+
   /**
    * Calculates volume growth rate
-   * 
+   *
    * @private
    * @returns {number} Growth rate percentage
    */
   #calculateVolumeGrowthRate() {
     if (this.#reportHistory.length < 10) return 0;
-    
-    const oldVolume = this.#reportHistory[this.#reportHistory.length - 10].volume.totalLogsProcessed;
-    const newVolume = this.#reportHistory[this.#reportHistory.length - 1].volume.totalLogsProcessed;
-    
+
+    const oldVolume =
+      this.#reportHistory[this.#reportHistory.length - 10].volume
+        .totalLogsProcessed;
+    const newVolume =
+      this.#reportHistory[this.#reportHistory.length - 1].volume
+        .totalLogsProcessed;
+
     return ((newVolume - oldVolume) / oldVolume) * 100;
   }
-  
+
   /**
    * Calculates resource usage trend
-   * 
+   *
    * @private
    * @returns {string} Trend direction
    */
   #calculateResourceTrend() {
     if (this.#reportHistory.length < 2) return 'stable';
-    
+
     const recent = this.#reportHistory.slice(-5);
-    const values = recent.map(r => r.current.memoryUsageMB);
-    
+    const values = recent.map((r) => r.current.memoryUsageMB);
+
     return this.#calculateTrend(values);
   }
-  
+
   /**
    * Calculates success rate trend
-   * 
+   *
    * @private
    * @returns {string} Trend direction
    */
   #calculateSuccessRateTrend() {
     if (this.#reportHistory.length < 2) return 'stable';
-    
+
     const recent = this.#reportHistory.slice(-5);
-    const values = recent.map(r => r.summary.successRate);
-    
+    const values = recent.map((r) => r.summary.successRate);
+
     return this.#calculateTrend(values);
   }
-  
+
   /**
    * Calculates latency trend
-   * 
+   *
    * @private
    * @returns {string} Trend direction
    */
   #calculateLatencyTrend() {
     if (this.#reportHistory.length < 2) return 'stable';
-    
+
     const recent = this.#reportHistory.slice(-5);
-    const values = recent.map(r => r.summary.avgLatency);
-    
+    const values = recent.map((r) => r.summary.avgLatency);
+
     // For latency, reverse the trend (up is bad)
     const trend = this.#calculateTrend(values);
     if (trend === 'up') return 'degrading';
     if (trend === 'down') return 'improving';
     return 'stable';
   }
-  
+
   /**
    * Calculates buffer pressure trend
-   * 
+   *
    * @private
    * @returns {string} Trend direction
    */
   #calculateBufferTrend() {
     if (this.#reportHistory.length < 2) return 'stable';
-    
+
     const recent = this.#reportHistory.slice(-5);
-    const values = recent.map(r => r.current.bufferPressure);
-    
+    const values = recent.map((r) => r.current.bufferPressure);
+
     return this.#calculateTrend(values);
   }
-  
+
   /**
    * Gets metric status for dashboard
-   * 
+   *
    * @private
    * @param {number} value - Metric value
    * @param {string} type - Metric type
@@ -761,7 +806,7 @@ export class LoggingPerformanceReporter {
    */
   #getMetricStatus(value, type) {
     const assessment = this.#assessComponent(value, type);
-    
+
     switch (assessment.status) {
       case 'healthy':
         return 'good';

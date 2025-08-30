@@ -37,7 +37,7 @@ import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTes
  * Creates handlers needed for the place_yourself_behind rule.
  *
  * @param {object} entityManager - Entity manager instance
- * @param {object} eventBus - Event bus instance  
+ * @param {object} eventBus - Event bus instance
  * @param {object} logger - Logger instance
  * @returns {object} Handlers object
  */
@@ -61,9 +61,9 @@ function createHandlers(entityManager, eventBus, logger) {
       safeEventDispatcher: safeDispatcher,
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_EVENT: new DispatchEventHandler({ 
-      dispatcher: eventBus, 
-      logger 
+    DISPATCH_EVENT: new DispatchEventHandler({
+      dispatcher: eventBus,
+      logger,
     }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,
@@ -112,11 +112,13 @@ describe('Place Yourself Behind Action Integration Tests', () => {
         }
         return null;
       },
-      getAllSystemRules: () => [{ ...placeYourselfBehindRule, actions: expanded }],
+      getAllSystemRules: () => [
+        { ...placeYourselfBehindRule, actions: expanded },
+      ],
     };
 
-    testEnv = createRuleTestEnvironment({ 
-      createHandlers, 
+    testEnv = createRuleTestEnvironment({
+      createHandlers,
       dataRegistry,
       entities: [],
       rules: [{ ...placeYourselfBehindRule, actions: expanded }],
@@ -140,22 +142,22 @@ describe('Place Yourself Behind Action Integration Tests', () => {
         components: {
           [NAME_COMPONENT_ID]: {
             first: 'Player',
-            last: 'Character'
+            last: 'Character',
           },
           [POSITION_COMPONENT_ID]: {
-            locationId
-          }
-        }
+            locationId,
+          },
+        },
       },
       {
         id: targetId,
         components: {
           [NAME_COMPONENT_ID]: {
             first: 'Guard',
-            last: 'NPC'
-          }
-        }
-      }
+            last: 'NPC',
+          },
+        },
+      },
     ]);
 
     // Act - Dispatch the action attempt event
@@ -174,7 +176,9 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     // Assert - Verify target receives the facing_away component
     const target = testEnv.entityManager.getEntityInstance(targetId);
     expect(target?.components['positioning:facing_away']).toBeDefined();
-    expect(target.components['positioning:facing_away'].facing_away_from).toContain(actorId);
+    expect(
+      target.components['positioning:facing_away'].facing_away_from
+    ).toContain(actorId);
 
     // Assert - Verify actor does NOT receive the facing_away component
     const actor = testEnv.entityManager.getEntityInstance(actorId);
@@ -202,34 +206,34 @@ describe('Place Yourself Behind Action Integration Tests', () => {
         components: {
           [NAME_COMPONENT_ID]: {
             first: 'Player',
-            last: 'One'
+            last: 'One',
           },
           [POSITION_COMPONENT_ID]: {
-            locationId
-          }
-        }
+            locationId,
+          },
+        },
       },
       {
         id: actor2Id,
         components: {
           [NAME_COMPONENT_ID]: {
             first: 'Player',
-            last: 'Two'
+            last: 'Two',
           },
           [POSITION_COMPONENT_ID]: {
-            locationId
-          }
-        }
+            locationId,
+          },
+        },
       },
       {
         id: targetId,
         components: {
           [NAME_COMPONENT_ID]: {
             first: 'Guard',
-            last: 'NPC'
-          }
-        }
-      }
+            last: 'NPC',
+          },
+        },
+      },
     ]);
 
     // Act - First actor places themselves behind target
@@ -253,9 +257,15 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     // Assert - Target should be facing away from both actors
     const target = testEnv.entityManager.getEntityInstance(targetId);
     expect(target?.components['positioning:facing_away']).toBeDefined();
-    expect(target.components['positioning:facing_away'].facing_away_from).toContain(actor1Id);
-    expect(target.components['positioning:facing_away'].facing_away_from).toContain(actor2Id);
-    expect(target.components['positioning:facing_away'].facing_away_from).toHaveLength(2);
+    expect(
+      target.components['positioning:facing_away'].facing_away_from
+    ).toContain(actor1Id);
+    expect(
+      target.components['positioning:facing_away'].facing_away_from
+    ).toContain(actor2Id);
+    expect(
+      target.components['positioning:facing_away'].facing_away_from
+    ).toHaveLength(2);
   });
 
   it('should work with entities that already have facing_away relationships', async () => {
@@ -271,25 +281,25 @@ describe('Place Yourself Behind Action Integration Tests', () => {
         components: {
           [NAME_COMPONENT_ID]: {
             first: 'Player',
-            last: 'Character'
+            last: 'Character',
           },
           [POSITION_COMPONENT_ID]: {
-            locationId
-          }
-        }
+            locationId,
+          },
+        },
       },
       {
         id: targetId,
         components: {
           [NAME_COMPONENT_ID]: {
             first: 'Guard',
-            last: 'NPC'
+            last: 'NPC',
           },
           'positioning:facing_away': {
-            facing_away_from: [existingActorId]
-          }
-        }
-      }
+            facing_away_from: [existingActorId],
+          },
+        },
+      },
     ]);
 
     // Act - Player places themselves behind target
@@ -304,8 +314,14 @@ describe('Place Yourself Behind Action Integration Tests', () => {
     // Assert - Target should be facing away from both original and new actor
     const target = testEnv.entityManager.getEntityInstance(targetId);
     expect(target?.components['positioning:facing_away']).toBeDefined();
-    expect(target.components['positioning:facing_away'].facing_away_from).toContain(existingActorId);
-    expect(target.components['positioning:facing_away'].facing_away_from).toContain(actorId);
-    expect(target.components['positioning:facing_away'].facing_away_from).toHaveLength(2);
+    expect(
+      target.components['positioning:facing_away'].facing_away_from
+    ).toContain(existingActorId);
+    expect(
+      target.components['positioning:facing_away'].facing_away_from
+    ).toContain(actorId);
+    expect(
+      target.components['positioning:facing_away'].facing_away_from
+    ).toHaveLength(2);
   });
 });

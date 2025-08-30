@@ -3,14 +3,25 @@
  * Optimized for performance using lightweight test bed
  */
 
-import { describe, it, expect, beforeAll, beforeEach, afterAll, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterAll,
+  jest,
+} from '@jest/globals';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import {
   TARGET_DOMAIN_SELF,
   TARGET_DOMAIN_NONE,
 } from '../../../src/constants/targetDomains.js';
 import { ActionResult } from '../../../src/actions/core/actionResult.js';
-import { createMockCacheStrategy, getSharedMockCacheStrategy } from '../../common/doubles/mockCacheStrategy.js';
+import {
+  createMockCacheStrategy,
+  getSharedMockCacheStrategy,
+} from '../../common/doubles/mockCacheStrategy.js';
 import { UnifiedScopeResolver } from '../../../src/actions/scopes/unifiedScopeResolver.js';
 import { createUnifiedScopeResolverTestBed } from '../../common/testHelpers/unifiedScopeResolverTestBed.js';
 
@@ -76,7 +87,10 @@ describe('UnifiedScopeResolver Integration', () => {
         actorLocation: 'location3',
       };
 
-      const result = unifiedScopeResolver.resolve('test:invalid-scope', context);
+      const result = unifiedScopeResolver.resolve(
+        'test:invalid-scope',
+        context
+      );
 
       expect(result.success).toBe(false);
       expect(result.errors).toHaveLength(1);
@@ -541,7 +555,8 @@ describe('UnifiedScopeResolver Integration', () => {
 
     beforeEach(() => {
       mockCacheStrategy = createMockCacheStrategy();
-      unifiedScopeResolverWithCache = testBed.createResolverWithCache(mockCacheStrategy);
+      unifiedScopeResolverWithCache =
+        testBed.createResolverWithCache(mockCacheStrategy);
     });
 
     it('should return cached result when cache hit occurs (lines 189-194)', () => {
@@ -709,7 +724,7 @@ describe('UnifiedScopeResolver Integration', () => {
     });
 
     it('should handle scope engine throwing runtime error (lines 429-439)', () => {
-      // Override mocks for this test  
+      // Override mocks for this test
       testBed.scopeEngine.resolve.mockImplementation(() => {
         throw new Error('Runtime scope resolution error');
       });
@@ -767,12 +782,14 @@ describe('UnifiedScopeResolver Integration', () => {
 
     it('should handle partial component loading failures (lines 541-545, 554-556)', () => {
       // Override entity manager for this test
-      testBed.entityManager.getComponentData.mockImplementation((entityId, componentTypeId) => {
-        if (componentTypeId === 'valid-component') {
-          return { type: 'valid', data: 'test' };
+      testBed.entityManager.getComponentData.mockImplementation(
+        (entityId, componentTypeId) => {
+          if (componentTypeId === 'valid-component') {
+            return { type: 'valid', data: 'test' };
+          }
+          throw new Error(`Component ${componentTypeId} not found`);
         }
-        throw new Error(`Component ${componentTypeId} not found`);
-      });
+      );
 
       const testResolver = testBed.resolver;
 

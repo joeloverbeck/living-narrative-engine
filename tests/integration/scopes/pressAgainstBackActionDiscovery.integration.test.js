@@ -84,7 +84,11 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
     const dataRegistry = new InMemoryDataRegistry({ logger });
 
     // Store the action
-    dataRegistry.store('actions', pressAgainstBackAction.id, pressAgainstBackAction);
+    dataRegistry.store(
+      'actions',
+      pressAgainstBackAction.id,
+      pressAgainstBackAction
+    );
 
     // Store the actual condition from the file system
     const actualCondition = JSON.parse(
@@ -133,7 +137,7 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
     });
 
     scopeEngine = new ScopeEngine();
-    
+
     // Create mock prerequisite service that can be configured per test
     mockPrerequisiteEvaluationService = {
       evaluateActionConditions: jest.fn(),
@@ -151,7 +155,9 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
     mockMultiTargetResolutionStage = createMockMultiTargetResolutionStage();
 
     const gameDataRepository = {
-      getAllActionDefinitions: jest.fn().mockReturnValue([pressAgainstBackAction]),
+      getAllActionDefinitions: jest
+        .fn()
+        .mockReturnValue([pressAgainstBackAction]),
       get: jest.fn((type, id) => dataRegistry.get(type, id)),
     };
 
@@ -165,29 +171,29 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
     });
     const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
-        getCandidateActions: jest
-          .fn()
-          .mockImplementation((actor, trace) => {
-            // Get all actions
-            const allActions = gameDataRepository.getAllActionDefinitions();
-            
-            // Filter based on required_components (like the real ActionIndex does)
-            return allActions.filter(actionDef => {
-              if (!actionDef.required_components?.actor) {
-                return true; // No requirements, include it
-              }
-              
-              // Get actor components
-              const actorComponents = actor.getAllComponents ? 
-                Object.keys(actor.getAllComponents()) : 
-                (actor.components ? Object.keys(actor.components) : []);
-              
-              // Check if actor has all required components
-              return actionDef.required_components.actor.every(requiredComponent => 
-                actorComponents.includes(requiredComponent)
-              );
-            });
-          }),
+        getCandidateActions: jest.fn().mockImplementation((actor, trace) => {
+          // Get all actions
+          const allActions = gameDataRepository.getAllActionDefinitions();
+
+          // Filter based on required_components (like the real ActionIndex does)
+          return allActions.filter((actionDef) => {
+            if (!actionDef.required_components?.actor) {
+              return true; // No requirements, include it
+            }
+
+            // Get actor components
+            const actorComponents = actor.getAllComponents
+              ? Object.keys(actor.getAllComponents())
+              : actor.components
+                ? Object.keys(actor.components)
+                : [];
+
+            // Check if actor has all required components
+            return actionDef.required_components.actor.every(
+              (requiredComponent) => actorComponents.includes(requiredComponent)
+            );
+          });
+        }),
       },
       prerequisiteService: mockPrerequisiteEvaluationService,
       targetService: targetResolutionService,
@@ -223,7 +229,7 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
 
   /**
    * Sets up test entities with an actor that has breast anatomy and a target.
-   * 
+   *
    * @param {object} targetFacingConfig - Additional configuration for the target entity
    */
   function setupEntitiesWithBreasts(targetFacingConfig = {}) {
@@ -350,17 +356,17 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
   }
 
   describe('action discovery tests', () => {
-
-
     it('should not discover action when actor lacks breast anatomy', async () => {
       // Arrange
       setupEntitiesWithoutBreasts();
 
       // Mock the prerequisite evaluation to fail for breast check
-      mockPrerequisiteEvaluationService.evaluateActionConditions.mockResolvedValue({
-        success: false,
-        errors: ['You need breasts to perform this action.'],
-      });
+      mockPrerequisiteEvaluationService.evaluateActionConditions.mockResolvedValue(
+        {
+          success: false,
+          errors: ['You need breasts to perform this action.'],
+        }
+      );
 
       // Act
       const actorEntity = entityManager.getEntityInstance('actor1');
@@ -377,12 +383,14 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
 
     it('should not discover action when target is facing toward actor', async () => {
       // Arrange - target facing toward actor instead of away
-      
+
       // Mock the prerequisite evaluation to pass for breast check (scope should filter out the action)
-      mockPrerequisiteEvaluationService.evaluateActionConditions.mockResolvedValue({
-        success: true,
-        errors: [],
-      });
+      mockPrerequisiteEvaluationService.evaluateActionConditions.mockResolvedValue(
+        {
+          success: true,
+          errors: [],
+        }
+      );
 
       setupEntitiesWithBreasts({
         'positioning:facing_away': {
@@ -405,12 +413,14 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
 
     it('should not discover action when actors are not in closeness', async () => {
       // Arrange - entities without closeness relationship
-      
+
       // Mock the prerequisite evaluation to pass for breast check (closeness should filter out the action)
-      mockPrerequisiteEvaluationService.evaluateActionConditions.mockResolvedValue({
-        success: true,
-        errors: [],
-      });
+      mockPrerequisiteEvaluationService.evaluateActionConditions.mockResolvedValue(
+        {
+          success: true,
+          errors: [],
+        }
+      );
 
       const entities = [
         {
@@ -455,6 +465,5 @@ describe('Press Against Back Action Discovery Integration Tests', () => {
       );
       expect(pressAgainstBackActions).toHaveLength(0);
     });
-
   });
 });

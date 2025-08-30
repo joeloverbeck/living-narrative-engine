@@ -9,17 +9,20 @@ This specification defines the implementation of a park bench entity with dual s
 ### Existing System Components
 
 **allows_sitting Component Structure:**
+
 - **Location**: `data/mods/positioning/components/allows_sitting.component.json`
-- **ID**: `positioning:allows_sitting`  
+- **ID**: `positioning:allows_sitting`
 - **Schema**: Array of 1-10 spots where `null` = empty, `entityId` = occupied
 - **Usage**: Sequential spot allocation (0→1→2) with atomic operations
 
 **Current Park Location Reference:**
+
 - **Location**: `.private/data/mods/p_erotica/entities/definitions/park.location.json`
 - **Description**: References "a weathered bench whose wooden slats are silvered by years of rain and sun" but no actual bench entity exists
 - **Context**: Literary style with detailed environmental descriptions
 
 **Sitting Mechanics:**
+
 - **Rules**: `handle_sit_down.rule.json` and `handle_get_up_from_furniture.rule.json`
 - **Logic**: Atomic spot claiming with sequential fallback
 - **Components**: Adds `positioning:sitting_on` with furniture_id and spot_index
@@ -56,7 +59,7 @@ This specification defines the implementation of a park bench entity with dual s
 ### Non-Functional Requirements
 
 1. **Performance**: Minimal impact on existing systems
-2. **Maintainability**: Clear, well-documented code structure  
+2. **Maintainability**: Clear, well-documented code structure
 3. **Extensibility**: Design allows for future furniture additions
 4. **Consistency**: Follows all established project patterns
 
@@ -90,16 +93,19 @@ This specification defines the implementation of a park bench entity with dual s
 ### 2. Integration Considerations
 
 **Mod Manifest Updates:**
+
 - Entity must be added to the `content.entities.definitions` array in mod-manifest.json
 - Add "park_bench.entity.json" to the definitions list
 - Follows established entity naming conventions
 
 **Location Integration:**
+
 - Bench entity can be placed in park location through instances
 - Description complements existing park location narrative
 - Maintains literary consistency with established style
 
 **Rule Compatibility:**
+
 - Existing `handle_sit_down.rule.json` supports 2-spot configuration
 - Atomic operations work correctly with dual occupancy
 - `handle_get_up_from_furniture.rule.json` properly clears spots
@@ -108,6 +114,7 @@ This specification defines the implementation of a park bench entity with dual s
 ### 3. Testing Strategy
 
 **Unit Tests:**
+
 ```javascript
 // Test entity structure validation
 describe('Park Bench Entity', () => {
@@ -125,6 +132,7 @@ describe('Park Bench Entity', () => {
 ```
 
 **Integration Tests:**
+
 ```javascript
 // Test dual occupancy scenarios
 describe('Park Bench Seating Integration', () => {
@@ -135,19 +143,27 @@ describe('Park Bench Seating Integration', () => {
 
     // First actor sits
     await processAction('positioning:sit_down', actor1.id, bench.id);
-    expect(bench.components['positioning:allows_sitting'].spots[0]).toBe(actor1.id);
+    expect(bench.components['positioning:allows_sitting'].spots[0]).toBe(
+      actor1.id
+    );
 
     // Second actor sits
     await processAction('positioning:sit_down', actor2.id, bench.id);
-    expect(bench.components['positioning:allows_sitting'].spots[1]).toBe(actor2.id);
+    expect(bench.components['positioning:allows_sitting'].spots[1]).toBe(
+      actor2.id
+    );
   });
 
   it('should prevent third actor from sitting when full', async () => {
     const bench = createEntity('p_erotica:park_bench');
     // ... fill both spots ...
     const actor3 = createTestActor('actor3');
-    
-    const result = await processAction('positioning:sit_down', actor3.id, bench.id);
+
+    const result = await processAction(
+      'positioning:sit_down',
+      actor3.id,
+      bench.id
+    );
     expect(result.success).toBe(false);
   });
 
@@ -158,6 +174,7 @@ describe('Park Bench Seating Integration', () => {
 ```
 
 **User Experience Tests:**
+
 - Verify bench appears in appropriate contexts
 - Test narrative flow with dual occupancy
 - Validate descriptive text rendering
@@ -174,7 +191,7 @@ data/mods/p_erotica/
 │       └── ...                          # other entities
 ├── portraits/
 │   ├── park_bench.png                   # new portrait image
-│   └── ...                              # other portraits  
+│   └── ...                              # other portraits
 └── mod-manifest.json                    # existing, no changes needed
 ```
 
@@ -182,20 +199,20 @@ data/mods/p_erotica/
 
 ### Acceptance Tests
 
-1. **Entity Loading**: 
+1. **Entity Loading**:
    - ✅ Entity loads without schema validation errors
    - ✅ All required components are properly structured
    - ✅ Namespaced ID follows project conventions
 
 2. **Seating Functionality**:
    - ✅ Two actors can sit simultaneously on the bench
-   - ✅ Third actor cannot sit when bench is full  
+   - ✅ Third actor cannot sit when bench is full
    - ✅ Actors can stand up and free their spots
    - ✅ Spot allocation follows sequential logic (0 then 1, with system supporting up to spot 2)
 
 3. **System Integration**:
    - ✅ Works with existing positioning rules without modification
-   - ✅ Movement locking functions correctly while sitting  
+   - ✅ Movement locking functions correctly while sitting
    - ✅ Perceptible events are dispatched properly
    - ✅ Entity appears in game contexts appropriately
 
@@ -209,29 +226,32 @@ data/mods/p_erotica/
 
 - **Compatibility**: 100% compatibility with existing positioning system
 - **Coverage**: Complete dual-occupancy test coverage
-- **Performance**: No measurable impact on game performance  
+- **Performance**: No measurable impact on game performance
 - **Maintainability**: Code follows all established project patterns
 
 ## Implementation Timeline
 
 1. **Phase 1**: Entity structure definition and validation
-2. **Phase 2**: Integration testing and rule compatibility verification  
+2. **Phase 2**: Integration testing and rule compatibility verification
 3. **Phase 3**: Portrait creation and visual integration
 4. **Phase 4**: User acceptance testing and documentation
 
 ## Risk Assessment
 
 **Low Risk Items**:
+
 - Entity definition (follows established patterns)
 - Component integration (uses existing allows_sitting)
 - Rule compatibility (no modifications required)
 
-**Medium Risk Items**:  
+**Medium Risk Items**:
+
 - Portrait creation and integration
 - Narrative consistency with existing content
 - Edge cases in dual occupancy scenarios
 
 **Mitigation Strategies**:
+
 - Comprehensive integration testing
 - Code review focusing on existing pattern compliance
 - Staged deployment with validation at each step

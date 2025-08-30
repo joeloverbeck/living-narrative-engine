@@ -5,7 +5,7 @@ import {
   sortCandidatesWithTieBreaking,
   applyContextualModifiers,
   clearPriorityCache,
-  getCacheStats
+  getCacheStats,
 } from '../../../../src/scopeDsl/prioritySystem/priorityCalculator.js';
 
 describe('PriorityCalculator', () => {
@@ -31,12 +31,18 @@ describe('PriorityCalculator', () => {
     });
 
     it('should calculate priority for underwear coverage and underwear layer', () => {
-      const result = calculateCoveragePriorityOptimized('underwear', 'underwear');
+      const result = calculateCoveragePriorityOptimized(
+        'underwear',
+        'underwear'
+      );
       expect(result).toBe(330); // 300 (underwear coverage) + 30 (underwear layer)
     });
 
     it('should calculate priority for direct coverage with accessories layer', () => {
-      const result = calculateCoveragePriorityOptimized('direct', 'accessories');
+      const result = calculateCoveragePriorityOptimized(
+        'direct',
+        'accessories'
+      );
       expect(result).toBe(440); // 400 (direct coverage) + 40 (accessories layer)
     });
 
@@ -60,10 +66,10 @@ describe('PriorityCalculator', () => {
     it('should cache calculation results', () => {
       // First calculation should be cached
       const result1 = calculateCoveragePriorityOptimized('outer', 'outer');
-      
+
       // Second calculation should use cache
       const result2 = calculateCoveragePriorityOptimized('outer', 'outer');
-      
+
       expect(result1).toBe(result2);
       expect(result1).toBe(110);
     });
@@ -71,8 +77,14 @@ describe('PriorityCalculator', () => {
     it('should handle multiple different cache keys', () => {
       const result1 = calculateCoveragePriorityOptimized('outer', 'outer');
       const result2 = calculateCoveragePriorityOptimized('base', 'base');
-      const result3 = calculateCoveragePriorityOptimized('underwear', 'underwear');
-      const result4 = calculateCoveragePriorityOptimized('direct', 'accessories');
+      const result3 = calculateCoveragePriorityOptimized(
+        'underwear',
+        'underwear'
+      );
+      const result4 = calculateCoveragePriorityOptimized(
+        'direct',
+        'accessories'
+      );
 
       expect(result1).toBe(110);
       expect(result2).toBe(220);
@@ -92,16 +104,16 @@ describe('PriorityCalculator', () => {
         ['underwear', 'underwear'],
         ['direct', 'accessories'],
         ['outer', 'base'],
-        ['base', 'underwear']
+        ['base', 'underwear'],
       ];
 
       // Calculate all once
-      const firstResults = testCases.map(([coverage, layer]) => 
+      const firstResults = testCases.map(([coverage, layer]) =>
         calculateCoveragePriorityOptimized(coverage, layer)
       );
 
       // Calculate all again
-      const secondResults = testCases.map(([coverage, layer]) => 
+      const secondResults = testCases.map(([coverage, layer]) =>
         calculateCoveragePriorityOptimized(coverage, layer)
       );
 
@@ -118,43 +130,58 @@ describe('PriorityCalculator', () => {
 
     it('should handle invalid coverage priority with warning', () => {
       const mockLogger = {
-        warn: jest.fn()
+        warn: jest.fn(),
       };
 
-      const result = calculatePriorityWithValidation('invalid_coverage', 'outer', mockLogger);
-      
+      const result = calculatePriorityWithValidation(
+        'invalid_coverage',
+        'outer',
+        mockLogger
+      );
+
       expect(result).toBe(410); // Fallback to 'direct' coverage
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Invalid coverage priority: invalid_coverage")
+        expect.stringContaining('Invalid coverage priority: invalid_coverage')
       );
     });
 
     it('should handle invalid layer with warning', () => {
       const mockLogger = {
-        warn: jest.fn()
+        warn: jest.fn(),
       };
 
-      const result = calculatePriorityWithValidation('outer', 'invalid_layer', mockLogger);
-      
+      const result = calculatePriorityWithValidation(
+        'outer',
+        'invalid_layer',
+        mockLogger
+      );
+
       expect(result).toBe(120); // Fallback to 'base' layer
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Invalid layer: invalid_layer")
+        expect.stringContaining('Invalid layer: invalid_layer')
       );
     });
 
     it('should handle both invalid inputs with warnings', () => {
       const mockLogger = {
-        warn: jest.fn()
+        warn: jest.fn(),
       };
 
-      const result = calculatePriorityWithValidation('invalid_coverage', 'invalid_layer', mockLogger);
-      
+      const result = calculatePriorityWithValidation(
+        'invalid_coverage',
+        'invalid_layer',
+        mockLogger
+      );
+
       expect(result).toBe(420); // Both fallbacks applied
       expect(mockLogger.warn).toHaveBeenCalledTimes(2);
     });
 
     it('should work without logger', () => {
-      const result = calculatePriorityWithValidation('invalid_coverage', 'outer');
+      const result = calculatePriorityWithValidation(
+        'invalid_coverage',
+        'outer'
+      );
       expect(result).toBe(410); // Should still work with fallbacks
     });
 
@@ -162,7 +189,7 @@ describe('PriorityCalculator', () => {
       const validCoverages = ['outer', 'base', 'underwear', 'direct'];
       const mockLogger = { warn: jest.fn() };
 
-      validCoverages.forEach(coverage => {
+      validCoverages.forEach((coverage) => {
         calculatePriorityWithValidation(coverage, 'outer', mockLogger);
       });
 
@@ -173,7 +200,7 @@ describe('PriorityCalculator', () => {
       const validLayers = ['outer', 'base', 'underwear', 'accessories'];
       const mockLogger = { warn: jest.fn() };
 
-      validLayers.forEach(layer => {
+      validLayers.forEach((layer) => {
         calculatePriorityWithValidation('outer', layer, mockLogger);
       });
 
@@ -186,19 +213,19 @@ describe('PriorityCalculator', () => {
       const candidates = [
         { itemId: 'item3', priority: 330, source: 'coverage' },
         { itemId: 'item1', priority: 110, source: 'coverage' },
-        { itemId: 'item2', priority: 220, source: 'coverage' }
+        { itemId: 'item2', priority: 220, source: 'coverage' },
       ];
 
       const sorted = sortCandidatesWithTieBreaking(candidates);
 
-      expect(sorted.map(c => c.itemId)).toEqual(['item1', 'item2', 'item3']);
-      expect(sorted.map(c => c.priority)).toEqual([110, 220, 330]);
+      expect(sorted.map((c) => c.itemId)).toEqual(['item1', 'item2', 'item3']);
+      expect(sorted.map((c) => c.priority)).toEqual([110, 220, 330]);
     });
 
     it('should break ties by source preference (coverage over direct)', () => {
       const candidates = [
         { itemId: 'direct_item', priority: 220, source: 'direct' },
-        { itemId: 'coverage_item', priority: 220, source: 'coverage' }
+        { itemId: 'coverage_item', priority: 220, source: 'coverage' },
       ];
 
       const sorted = sortCandidatesWithTieBreaking(candidates);
@@ -210,8 +237,18 @@ describe('PriorityCalculator', () => {
     it('should break ties by equipment timestamp (more recent first)', () => {
       const now = Date.now();
       const candidates = [
-        { itemId: 'old_item', priority: 220, source: 'coverage', equipTimestamp: now - 1000 },
-        { itemId: 'new_item', priority: 220, source: 'coverage', equipTimestamp: now }
+        {
+          itemId: 'old_item',
+          priority: 220,
+          source: 'coverage',
+          equipTimestamp: now - 1000,
+        },
+        {
+          itemId: 'new_item',
+          priority: 220,
+          source: 'coverage',
+          equipTimestamp: now,
+        },
       ];
 
       const sorted = sortCandidatesWithTieBreaking(candidates);
@@ -223,7 +260,7 @@ describe('PriorityCalculator', () => {
     it('should break final ties by alphabetical item ID order', () => {
       const candidates = [
         { itemId: 'zebra_item', priority: 220, source: 'coverage' },
-        { itemId: 'alpha_item', priority: 220, source: 'coverage' }
+        { itemId: 'alpha_item', priority: 220, source: 'coverage' },
       ];
 
       const sorted = sortCandidatesWithTieBreaking(candidates);
@@ -235,10 +272,30 @@ describe('PriorityCalculator', () => {
     it('should handle complex multi-level tie breaking', () => {
       const now = Date.now();
       const candidates = [
-        { itemId: 'zebra_direct', priority: 220, source: 'direct', equipTimestamp: now - 200 },
-        { itemId: 'alpha_coverage_old', priority: 220, source: 'coverage', equipTimestamp: now - 1000 },
-        { itemId: 'beta_coverage_new', priority: 220, source: 'coverage', equipTimestamp: now },
-        { itemId: 'alpha_direct', priority: 220, source: 'direct', equipTimestamp: now - 500 }
+        {
+          itemId: 'zebra_direct',
+          priority: 220,
+          source: 'direct',
+          equipTimestamp: now - 200,
+        },
+        {
+          itemId: 'alpha_coverage_old',
+          priority: 220,
+          source: 'coverage',
+          equipTimestamp: now - 1000,
+        },
+        {
+          itemId: 'beta_coverage_new',
+          priority: 220,
+          source: 'coverage',
+          equipTimestamp: now,
+        },
+        {
+          itemId: 'alpha_direct',
+          priority: 220,
+          source: 'direct',
+          equipTimestamp: now - 500,
+        },
       ];
 
       const sorted = sortCandidatesWithTieBreaking(candidates);
@@ -248,18 +305,18 @@ describe('PriorityCalculator', () => {
       // 2. alpha_coverage_old (coverage + older timestamp)
       // 3. zebra_direct (direct + newer timestamp, comes first among direct items)
       // 4. alpha_direct (direct + older timestamp, comes second among direct items)
-      expect(sorted.map(c => c.itemId)).toEqual([
+      expect(sorted.map((c) => c.itemId)).toEqual([
         'beta_coverage_new',
         'alpha_coverage_old',
         'zebra_direct',
-        'alpha_direct'
+        'alpha_direct',
       ]);
     });
 
     it('should handle candidates without timestamps', () => {
       const candidates = [
         { itemId: 'item_b', priority: 220, source: 'coverage' },
-        { itemId: 'item_a', priority: 220, source: 'coverage' }
+        { itemId: 'item_a', priority: 220, source: 'coverage' },
       ];
 
       const sorted = sortCandidatesWithTieBreaking(candidates);
@@ -270,8 +327,18 @@ describe('PriorityCalculator', () => {
 
     it('should maintain sort stability for identical items', () => {
       const candidates = [
-        { itemId: 'item_same', priority: 220, source: 'coverage', equipTimestamp: 1000 },
-        { itemId: 'item_same', priority: 220, source: 'coverage', equipTimestamp: 1000 }
+        {
+          itemId: 'item_same',
+          priority: 220,
+          source: 'coverage',
+          equipTimestamp: 1000,
+        },
+        {
+          itemId: 'item_same',
+          priority: 220,
+          source: 'coverage',
+          equipTimestamp: 1000,
+        },
       ];
 
       const sorted = sortCandidatesWithTieBreaking(candidates);
@@ -286,25 +353,25 @@ describe('PriorityCalculator', () => {
     it('should return base priority when contextual modifiers disabled', () => {
       const candidate = { coveragePriority: 'outer', damaged: true };
       const context = { weather: 'cold' };
-      
+
       const result = applyContextualModifiers(110, candidate, context);
-      
+
       expect(result).toBe(110); // No modification when disabled
     });
 
     it('should return base priority when no context provided', () => {
       const candidate = { coveragePriority: 'outer' };
-      
+
       const result = applyContextualModifiers(110, candidate, null);
-      
+
       expect(result).toBe(110);
     });
 
     it('should return base priority when context is undefined', () => {
       const candidate = { coveragePriority: 'outer' };
-      
+
       const result = applyContextualModifiers(110, candidate, undefined);
-      
+
       expect(result).toBe(110);
     });
   });
@@ -314,20 +381,20 @@ describe('PriorityCalculator', () => {
       // Add some entries to cache
       calculateCoveragePriorityOptimized('outer', 'outer');
       calculateCoveragePriorityOptimized('base', 'base');
-      
+
       let stats = getCacheStats();
       expect(stats.size).toBe(2);
 
       // Clear cache
       clearPriorityCache();
-      
+
       stats = getCacheStats();
       expect(stats.size).toBe(0);
     });
 
     it('should report correct cache statistics', () => {
       const stats = getCacheStats();
-      
+
       expect(stats).toHaveProperty('size');
       expect(stats).toHaveProperty('maxSize');
       expect(stats).toHaveProperty('enabled');
@@ -340,11 +407,11 @@ describe('PriorityCalculator', () => {
       // This test assumes the cache limit is reasonable (e.g., 1000)
       // We'll add a few entries and verify they're stored
       const testEntries = 5;
-      
+
       for (let i = 0; i < testEntries; i++) {
         calculateCoveragePriorityOptimized(`test${i}`, `layer${i}`);
       }
-      
+
       const stats = getCacheStats();
       expect(stats.size).toBe(testEntries);
     });
@@ -376,7 +443,9 @@ describe('PriorityCalculator', () => {
     });
 
     it('should handle sorting single candidate', () => {
-      const candidates = [{ itemId: 'single', priority: 220, source: 'coverage' }];
+      const candidates = [
+        { itemId: 'single', priority: 220, source: 'coverage' },
+      ];
       const sorted = sortCandidatesWithTieBreaking(candidates);
       expect(sorted).toHaveLength(1);
       expect(sorted[0].itemId).toBe('single');

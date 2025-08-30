@@ -132,7 +132,6 @@ describe('TraitsRewriterGenerator', () => {
       'estimateTokens',
     ]);
 
-
     // Set up default mock behaviors
     mockLlmConfigManager.getActiveConfiguration.mockReturnValue({
       name: 'test-config',

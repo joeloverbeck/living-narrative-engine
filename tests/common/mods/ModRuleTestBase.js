@@ -9,24 +9,24 @@ import { ModTestFixture } from './ModTestFixture.js';
 
 /**
  * Base class for mod rule integration tests.
- * 
+ *
  * Extends ModActionTestBase with rule-specific functionality and test patterns.
  * Focuses on testing rule behavior, event handling, and rule selectivity.
- * 
+ *
  * @example
  * class KissCheekRuleTest extends ModRuleTestBase {
  *   constructor() {
  *     super('intimacy', 'intimacy_handle_kiss_cheek', kissCheekRule, eventIsActionKissCheek);
  *   }
  * }
- * 
+ *
  * const testSuite = new KissCheekRuleTest();
  * testSuite.runStandardRuleTests();
  */
 export class ModRuleTestBase extends ModActionTestBase {
   /**
    * Creates a new mod rule test base.
-   * 
+   *
    * @param {string} modId - The mod identifier (e.g., 'intimacy', 'positioning')
    * @param {string} ruleId - The rule identifier (e.g., 'intimacy_handle_kiss_cheek')
    * @param {object} ruleFile - The rule definition JSON object
@@ -36,17 +36,19 @@ export class ModRuleTestBase extends ModActionTestBase {
    */
   constructor(modId, ruleId, ruleFile, conditionFile, options = {}) {
     // For rules, we derive the action ID from the rule or use provided one
-    const actionId = options.associatedActionId || ModRuleTestBase.deriveActionIdFromRule(ruleId);
-    
+    const actionId =
+      options.associatedActionId ||
+      ModRuleTestBase.deriveActionIdFromRule(ruleId);
+
     super(modId, actionId, ruleFile, conditionFile, options);
-    
+
     this.ruleId = ruleId;
     this.associatedActionId = actionId;
   }
 
   /**
    * Derives the action ID from a rule ID.
-   * 
+   *
    * @param {string} ruleId - The rule identifier
    * @returns {string} Derived action ID
    * @static
@@ -72,7 +74,7 @@ export class ModRuleTestBase extends ModActionTestBase {
 
   /**
    * Sets up the test fixture for rule testing.
-   * 
+   *
    * @protected
    */
   setupTestFixture() {
@@ -87,84 +89,95 @@ export class ModRuleTestBase extends ModActionTestBase {
 
   /**
    * Tests that the rule triggers for the correct action ID.
-   * 
+   *
    * @param {string} actorId - Actor entity ID
    * @param {string} targetId - Target entity ID
    * @param {string} [actionId] - Action ID to test (defaults to associated action)
    * @returns {Promise} Promise that resolves when action is dispatched
    */
-  async testRuleTriggers(actorId, targetId, actionId = this.associatedActionId) {
+  async testRuleTriggers(
+    actorId,
+    targetId,
+    actionId = this.associatedActionId
+  ) {
     return this.testFixture.testRuleTriggers(actorId, actionId, targetId);
   }
 
   /**
    * Tests that the rule does not trigger for incorrect action IDs.
-   * 
+   *
    * @param {string} actorId - Actor entity ID
    * @param {string} wrongActionId - Action ID that should not trigger the rule
    * @param {string} [targetId] - Target entity ID
    * @returns {Promise} Promise that resolves when action is dispatched
    */
   async testRuleDoesNotTrigger(actorId, wrongActionId, targetId = null) {
-    return this.testFixture.testRuleDoesNotTrigger(actorId, wrongActionId, targetId);
+    return this.testFixture.testRuleDoesNotTrigger(
+      actorId,
+      wrongActionId,
+      targetId
+    );
   }
 
   /**
    * Runs the standard rule execution test.
-   * 
+   *
    * @param {string} testName - Name for the test case
    * @param {function} [customSetup] - Custom setup function
    * @param {function} [customAssertions] - Custom assertion function
    */
   runRuleExecutionTest(testName, customSetup = null, customAssertions = null) {
-    it(testName || `performs ${this.associatedActionId} action successfully`, async () => {
-      let scenario;
-      
-      if (customSetup) {
-        scenario = customSetup.call(this);
-      } else if (this.requiresAnatomy()) {
-        scenario = this.createAnatomyScenario();
-      } else {
-        scenario = this.createStandardScenario();
+    it(
+      testName || `performs ${this.associatedActionId} action successfully`,
+      async () => {
+        let scenario;
+
+        if (customSetup) {
+          scenario = customSetup.call(this);
+        } else if (this.requiresAnatomy()) {
+          scenario = this.createAnatomyScenario();
+        } else {
+          scenario = this.createStandardScenario();
+        }
+
+        await this.testRuleTriggers(scenario.actor.id, scenario.target.id);
+
+        // Assert standard event sequence
+        const eventTypes = this.testFixture.events.map((e) => e.eventType);
+        expect(eventTypes).toEqual(
+          expect.arrayContaining([
+            'core:perceptible_event',
+            'core:display_successful_action_result',
+            'core:turn_ended',
+          ])
+        );
+
+        if (customAssertions) {
+          customAssertions.call(this, scenario);
+        }
       }
-
-      await this.testRuleTriggers(scenario.actor.id, scenario.target.id);
-
-      // Assert standard event sequence
-      const eventTypes = this.testFixture.events.map((e) => e.eventType);
-      expect(eventTypes).toEqual(
-        expect.arrayContaining([
-          'core:perceptible_event',
-          'core:display_successful_action_result',
-          'core:turn_ended',
-        ])
-      );
-
-      if (customAssertions) {
-        customAssertions.call(this, scenario);
-      }
-    });
+    );
   }
 
   /**
    * Runs the rule selectivity test (rule only fires for specific actions).
-   * 
+   *
    * @param {string} testName - Name for the test case
    * @param {Array<string>} [wrongActions] - Actions that should not trigger the rule
    */
   runRuleSelectivityTest(testName, wrongActions = ['core:wait']) {
     it(testName || 'does not fire rule for different action', async () => {
       const scenario = this.createStandardScenario();
-      
+
       for (const wrongAction of wrongActions) {
         const initialEventCount = this.testFixture.events.length;
-        
+
         await this.testRuleDoesNotTrigger(scenario.actor.id, wrongAction);
-        
+
         // Rule should not trigger for different actions
         const newEventCount = this.testFixture.events.length;
         expect(newEventCount).toBe(initialEventCount + 1); // Only the dispatched event
-        
+
         // Clear events for next iteration
         this.testFixture.clearEvents();
       }
@@ -173,7 +186,7 @@ export class ModRuleTestBase extends ModActionTestBase {
 
   /**
    * Runs a test for rule error handling with missing entities.
-   * 
+   *
    * @param {string} testName - Name for the test case
    */
   runRuleErrorHandlingTest(testName) {
@@ -188,8 +201,11 @@ export class ModRuleTestBase extends ModActionTestBase {
           actorId: scenario.actor.id,
           targetId: 'nonexistent',
         };
-        
-        await this.testFixture.eventBus.dispatch('core:attempt_action', payload);
+
+        await this.testFixture.eventBus.dispatch(
+          'core:attempt_action',
+          payload
+        );
       }).not.toThrow();
 
       // With missing target, rule should fail during execution
@@ -200,7 +216,7 @@ export class ModRuleTestBase extends ModActionTestBase {
 
   /**
    * Runs a test verifying the rule generates correct event messages.
-   * 
+   *
    * @param {string} testName - Name for the test case
    * @param {function} [messageGenerator] - Function to generate expected message
    */
@@ -212,7 +228,7 @@ export class ModRuleTestBase extends ModActionTestBase {
 
       await this.testRuleTriggers(scenario.actor.id, scenario.target.id);
 
-      const expectedMessage = messageGenerator 
+      const expectedMessage = messageGenerator
         ? messageGenerator.call(this, actorName, targetName)
         : this.getExpectedSuccessMessage(actorName, targetName);
 
@@ -232,7 +248,7 @@ export class ModRuleTestBase extends ModActionTestBase {
 
   /**
    * Runs a test for rule event sequence validation.
-   * 
+   *
    * @param {string} testName - Name for the test case
    * @param {Array<string>} [expectedSequence] - Expected event sequence
    */
@@ -244,7 +260,7 @@ export class ModRuleTestBase extends ModActionTestBase {
 
       const defaultSequence = [
         'core:attempt_action',
-        'core:perceptible_event', 
+        'core:perceptible_event',
         'core:display_successful_action_result',
         'core:turn_ended',
       ];
@@ -258,13 +274,15 @@ export class ModRuleTestBase extends ModActionTestBase {
 
       // Verify order of key events
       const perceptibleIndex = eventTypes.indexOf('core:perceptible_event');
-      const successIndex = eventTypes.indexOf('core:display_successful_action_result');
+      const successIndex = eventTypes.indexOf(
+        'core:display_successful_action_result'
+      );
       const turnEndIndex = eventTypes.indexOf('core:turn_ended');
 
       if (perceptibleIndex !== -1 && successIndex !== -1) {
         expect(perceptibleIndex).toBeLessThan(successIndex);
       }
-      
+
       if (successIndex !== -1 && turnEndIndex !== -1) {
         expect(successIndex).toBeLessThan(turnEndIndex);
       }
@@ -273,7 +291,7 @@ export class ModRuleTestBase extends ModActionTestBase {
 
   /**
    * Runs a test for rule condition validation.
-   * 
+   *
    * @param {string} testName - Name for the test case
    * @param {function} setupInvalidConditions - Function to set up conditions that should prevent rule execution
    */
@@ -293,7 +311,7 @@ export class ModRuleTestBase extends ModActionTestBase {
 
   /**
    * Runs all standard rule tests.
-   * 
+   *
    * @param {object} [options] - Options for test execution
    * @param {boolean} [options.includeExecution] - Include rule execution test (default: true)
    * @param {boolean} [options.includeSelectivity] - Include rule selectivity test (default: true)
@@ -344,7 +362,7 @@ export class ModRuleTestBase extends ModActionTestBase {
 
   /**
    * Creates a describe block with all standard rule tests.
-   * 
+   *
    * @param {string} [description] - Description for the test suite
    * @param {object} [options] - Options passed to runStandardRuleTests
    */
@@ -358,7 +376,7 @@ export class ModRuleTestBase extends ModActionTestBase {
 
   /**
    * Overrides the success test to use rule-specific execution.
-   * 
+   *
    * @param {string} testName - Name for the test case
    * @param {function} customSetup - Custom setup function
    * @param {function} customAssertions - Custom assertion function
@@ -369,7 +387,7 @@ export class ModRuleTestBase extends ModActionTestBase {
 
   /**
    * Overrides the rule selectivity test to use rule-specific logic.
-   * 
+   *
    * @param {string} testName - Name for the test case
    */
   runRuleSelectivityTest(testName) {

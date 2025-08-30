@@ -66,7 +66,9 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
               '!': {
                 in: [
                   { var: 'entity.id' },
-                  { var: 'actor.components.positioning:facing_away.facing_away_from' },
+                  {
+                    var: 'actor.components.positioning:facing_away.facing_away_from',
+                  },
                 ],
               },
             },
@@ -74,7 +76,9 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
               '!': {
                 in: [
                   { var: 'actor.id' },
-                  { var: 'entity.components.positioning:facing_away.facing_away_from' },
+                  {
+                    var: 'entity.components.positioning:facing_away.facing_away_from',
+                  },
                 ],
               },
             },
@@ -130,10 +134,15 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
 
   describe('Arm Build Recognition', () => {
     // Helper to create entities with anatomy
-    function setupEntitiesWithArms(actorId, targetId, armBuild, facingAwayConfig = {}) {
+    function setupEntitiesWithArms(
+      actorId,
+      targetId,
+      armBuild,
+      facingAwayConfig = {}
+    ) {
       const targetTorsoId = `${targetId}:torso`;
       const targetArmId = `${targetId}:arm`;
-      
+
       const entities = [
         {
           id: actorId,
@@ -177,7 +186,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
           },
         },
       ];
-      
+
       if (armBuild) {
         entities.push({
           id: targetArmId,
@@ -193,9 +202,9 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
           },
         });
       }
-      
+
       entityManager.setEntities(entities);
-      
+
       // Mock bodyGraphService to find arms
       mockBodyGraphService.findPartsByType.mockImplementation(
         (rootId, partType) => {
@@ -209,7 +218,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
     it('should recognize actors with muscular arms', () => {
       const actorId = 'test:actor';
       const targetId = 'test:target';
-      
+
       setupEntitiesWithArms(actorId, targetId, 'muscular');
 
       // Parse and resolve the scope
@@ -217,17 +226,17 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
       const scopeDef = scopeRegistry.getScope(
         'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'
       );
-      
+
       const parser = new DefaultDslParser({ logger });
       const ast = parser.parse(scopeDef.expr);
-      
+
       const runtimeCtx = {
         entityManager,
         jsonLogicEval,
         logger,
         actor: actorEntity,
       };
-      
+
       const result = scopeEngine.resolve(ast, actorEntity, runtimeCtx);
 
       expect(result).toContain(targetId);
@@ -236,7 +245,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
     it('should recognize actors with hulking arms', () => {
       const actorId = 'test:actor';
       const targetId = 'test:garazi';
-      
+
       setupEntitiesWithArms(actorId, targetId, 'hulking');
 
       // Parse and resolve the scope
@@ -244,17 +253,17 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
       const scopeDef = scopeRegistry.getScope(
         'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'
       );
-      
+
       const parser = new DefaultDslParser({ logger });
       const ast = parser.parse(scopeDef.expr);
-      
+
       const runtimeCtx = {
         entityManager,
         jsonLogicEval,
         logger,
         actor: actorEntity,
       };
-      
+
       const result = scopeEngine.resolve(ast, actorEntity, runtimeCtx);
 
       expect(result).toContain(targetId);
@@ -263,7 +272,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
     it('should not recognize actors with other arm builds', () => {
       const actorId = 'test:actor';
       const targetId = 'test:weak_target';
-      
+
       setupEntitiesWithArms(actorId, targetId, 'weak');
 
       // Parse and resolve the scope
@@ -271,17 +280,17 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
       const scopeDef = scopeRegistry.getScope(
         'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'
       );
-      
+
       const parser = new DefaultDslParser({ logger });
       const ast = parser.parse(scopeDef.expr);
-      
+
       const runtimeCtx = {
         entityManager,
         jsonLogicEval,
         logger,
         actor: actorEntity,
       };
-      
+
       const result = scopeEngine.resolve(ast, actorEntity, runtimeCtx);
 
       expect(result).not.toContain(targetId);
@@ -290,7 +299,7 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
     it('should work with facing conditions - both facing each other', () => {
       const actorId = 'test:actor';
       const targetId = 'test:target';
-      
+
       // Neither is facing away - they're facing each other
       setupEntitiesWithArms(actorId, targetId, 'hulking', {});
 
@@ -299,17 +308,17 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
       const scopeDef = scopeRegistry.getScope(
         'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'
       );
-      
+
       const parser = new DefaultDslParser({ logger });
       const ast = parser.parse(scopeDef.expr);
-      
+
       const runtimeCtx = {
         entityManager,
         jsonLogicEval,
         logger,
         actor: actorEntity,
       };
-      
+
       const result = scopeEngine.resolve(ast, actorEntity, runtimeCtx);
 
       expect(result).toContain(targetId);
@@ -318,26 +327,28 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
     it('should work with facing conditions - actor behind target', () => {
       const actorId = 'test:actor';
       const targetId = 'test:target';
-      
+
       // Target is facing away from actor (actor is behind target)
-      setupEntitiesWithArms(actorId, targetId, 'hulking', { targetFacingAway: true });
+      setupEntitiesWithArms(actorId, targetId, 'hulking', {
+        targetFacingAway: true,
+      });
 
       // Parse and resolve the scope
       const actorEntity = entityManager.getEntityInstance(actorId);
       const scopeDef = scopeRegistry.getScope(
         'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'
       );
-      
+
       const parser = new DefaultDslParser({ logger });
       const ast = parser.parse(scopeDef.expr);
-      
+
       const runtimeCtx = {
         entityManager,
         jsonLogicEval,
         logger,
         actor: actorEntity,
       };
-      
+
       const result = scopeEngine.resolve(ast, actorEntity, runtimeCtx);
 
       expect(result).toContain(targetId);
@@ -346,26 +357,28 @@ describe('Feel Arm Muscles Scope - Hulking Build Support', () => {
     it('should not match if actor is facing away but target is not', () => {
       const actorId = 'test:actor';
       const targetId = 'test:target';
-      
+
       // Actor is facing away from target (invalid position)
-      setupEntitiesWithArms(actorId, targetId, 'hulking', { actorFacingAway: true });
+      setupEntitiesWithArms(actorId, targetId, 'hulking', {
+        actorFacingAway: true,
+      });
 
       // Parse and resolve the scope
       const actorEntity = entityManager.getEntityInstance(actorId);
       const scopeDef = scopeRegistry.getScope(
         'intimacy:actors_with_muscular_arms_facing_each_other_or_behind_target'
       );
-      
+
       const parser = new DefaultDslParser({ logger });
       const ast = parser.parse(scopeDef.expr);
-      
+
       const runtimeCtx = {
         entityManager,
         jsonLogicEval,
         logger,
         actor: actorEntity,
       };
-      
+
       const result = scopeEngine.resolve(ast, actorEntity, runtimeCtx);
 
       // Should not match because actor is facing away (not behind or facing each other)

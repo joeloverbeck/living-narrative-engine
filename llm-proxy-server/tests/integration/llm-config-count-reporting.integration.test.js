@@ -19,7 +19,7 @@ describe('LLM Configuration Count Reporting Integration', () => {
     logger = new ConsoleLogger();
     fileSystemReader = new NodeFileSystemReader();
     appConfigService = getAppConfigService(logger);
-    
+
     llmConfigService = new LlmConfigService(
       fileSystemReader,
       logger,
@@ -35,25 +35,25 @@ describe('LLM Configuration Count Reporting Integration', () => {
   it('should correctly count LLM configurations from loaded config object', async () => {
     // Initialize the service with actual config file
     await llmConfigService.initialize();
-    
+
     // Verify service is operational
     expect(llmConfigService.isOperational()).toBe(true);
-    
+
     // Get the loaded configs
     const llmConfigs = llmConfigService.getLlmConfigs();
-    
+
     // Verify the structure and count
     expect(llmConfigs).not.toBeNull();
     expect(llmConfigs.configs).toBeDefined();
     expect(typeof llmConfigs.configs).toBe('object');
-    
+
     // Count configs using the correct property name
     const configCount = Object.keys(llmConfigs.configs).length;
     expect(configCount).toBeGreaterThan(0);
-    
+
     // Verify we're accessing the correct property (not llmConfigs.llms)
     expect(llmConfigs.llms).toBeUndefined();
-    
+
     // Based on the actual config file, we should have 4 configurations
     expect(configCount).toBe(4);
   });
@@ -61,12 +61,12 @@ describe('LLM Configuration Count Reporting Integration', () => {
   it('should handle empty configuration object correctly', () => {
     const emptyConfig = {
       defaultConfigId: 'test',
-      configs: {}
+      configs: {},
     };
-    
+
     const configCount = Object.keys(emptyConfig.configs).length;
     expect(configCount).toBe(0);
-    
+
     // Verify the bug scenario - accessing wrong property returns undefined
     expect(emptyConfig.llms).toBeUndefined();
     if (emptyConfig.llms) {
@@ -79,24 +79,24 @@ describe('LLM Configuration Count Reporting Integration', () => {
     const mockConfig = {
       defaultConfigId: 'test',
       configs: {
-        'config1': { configId: 'config1' },
-        'config2': { configId: 'config2' },
-        'config3': { configId: 'config3' },
-        'config4': { configId: 'config4' }
-      }
+        config1: { configId: 'config1' },
+        config2: { configId: 'config2' },
+        config3: { configId: 'config3' },
+        config4: { configId: 'config4' },
+      },
     };
-    
+
     // Correct way (what should be used)
     const correctCount = Object.keys(mockConfig.configs).length;
     expect(correctCount).toBe(4);
-    
+
     // Bug reproduction (what was being used before fix)
     let buggyCount = 0;
     if (mockConfig && mockConfig.llms) {
       buggyCount = Object.keys(mockConfig.llms).length;
     }
     expect(buggyCount).toBe(0); // This demonstrates the bug
-    
+
     // Verify the bug would cause incorrect reporting
     expect(buggyCount).not.toBe(correctCount);
   });

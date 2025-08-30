@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:portrait_modal_closed",
+  "description": "Dispatched when a portrait modal is closed after displaying a character's portrait image.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "portraitPath": {
+        "description": "Path to the portrait image file that was displayed",
+        "type": "string"
+      },
+      "speakerName": {
+        "description": "Name of the character whose portrait was displayed",
+        "type": "string"
+      }
+    },
+    "required": ["portraitPath", "speakerName"],
+    "additionalProperties": false
+  }
+}

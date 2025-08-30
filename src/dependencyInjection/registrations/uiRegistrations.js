@@ -145,12 +145,13 @@ export function registerRenderers(registrar, logger) {
   registerWithLog(
     registrar,
     tokens.PortraitModalRenderer,
-    (c) => new PortraitModalRenderer({
-      documentContext: c.resolve(tokens.IDocumentContext),
-      domElementFactory: c.resolve(tokens.DomElementFactory),
-      logger: c.resolve(tokens.ILogger),
-      validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-    }),
+    (c) =>
+      new PortraitModalRenderer({
+        documentContext: c.resolve(tokens.IDocumentContext),
+        domElementFactory: c.resolve(tokens.DomElementFactory),
+        logger: c.resolve(tokens.ILogger),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+      }),
     { lifecycle: 'singletonFactory' },
     logger
   );

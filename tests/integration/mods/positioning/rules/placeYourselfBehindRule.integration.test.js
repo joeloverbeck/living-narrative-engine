@@ -110,11 +110,13 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
         }
         return null;
       },
-      getAllSystemRules: () => [{ ...placeYourselfBehindRule, actions: expanded }],
+      getAllSystemRules: () => [
+        { ...placeYourselfBehindRule, actions: expanded },
+      ],
     };
 
-    testEnv = createRuleTestEnvironment({ 
-      createHandlers, 
+    testEnv = createRuleTestEnvironment({
+      createHandlers,
       dataRegistry,
       entities: [],
       rules: [{ ...placeYourselfBehindRule, actions: expanded }],
@@ -135,17 +137,16 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Create entities with required components
     testEnv.entityManager.createEntity(actorId);
     testEnv.entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
-      text: 'Actor Smith'
+      text: 'Actor Smith',
     });
     testEnv.entityManager.addComponent(actorId, POSITION_COMPONENT_ID, {
-      locationId
+      locationId,
     });
 
     testEnv.entityManager.createEntity(targetId);
     testEnv.entityManager.addComponent(targetId, NAME_COMPONENT_ID, {
-      text: 'Target Jones'
+      text: 'Target Jones',
     });
-
 
     // Create event payload
     const eventPayload = {
@@ -165,7 +166,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
       targetId,
       'positioning:facing_away'
     );
-    
+
     expect(facingAwayComponent).toBeDefined();
     expect(facingAwayComponent.facing_away_from).toEqual([actorId]);
   });
@@ -180,21 +181,20 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Create entities with required components
     testEnv.entityManager.createEntity(actorId);
     testEnv.entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
-      text: 'Actor Smith'
+      text: 'Actor Smith',
     });
     testEnv.entityManager.addComponent(actorId, POSITION_COMPONENT_ID, {
-      locationId
+      locationId,
     });
 
     testEnv.entityManager.createEntity(targetId);
     testEnv.entityManager.addComponent(targetId, NAME_COMPONENT_ID, {
-      text: 'Target Jones'
+      text: 'Target Jones',
     });
     // Target already faces away from someone else
     testEnv.entityManager.addComponent(targetId, 'positioning:facing_away', {
-      facing_away_from: [existingFacingAwayId]
+      facing_away_from: [existingFacingAwayId],
     });
-
 
     // Create event payload
     const eventPayload = {
@@ -214,9 +214,11 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
       targetId,
       'positioning:facing_away'
     );
-    
+
     expect(facingAwayComponent).toBeDefined();
-    expect(facingAwayComponent.facing_away_from).toContain(existingFacingAwayId);
+    expect(facingAwayComponent.facing_away_from).toContain(
+      existingFacingAwayId
+    );
     expect(facingAwayComponent.facing_away_from).toContain(actorId);
     expect(facingAwayComponent.facing_away_from).toHaveLength(2);
   });
@@ -230,21 +232,20 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Create entities with required components
     testEnv.entityManager.createEntity(actorId);
     testEnv.entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
-      text: 'Actor Smith'
+      text: 'Actor Smith',
     });
     testEnv.entityManager.addComponent(actorId, POSITION_COMPONENT_ID, {
-      locationId
+      locationId,
     });
 
     testEnv.entityManager.createEntity(targetId);
     testEnv.entityManager.addComponent(targetId, NAME_COMPONENT_ID, {
-      text: 'Target Jones'
+      text: 'Target Jones',
     });
     // Target already faces away from the actor
     testEnv.entityManager.addComponent(targetId, 'positioning:facing_away', {
-      facing_away_from: [actorId]
+      facing_away_from: [actorId],
     });
-
 
     // Create event payload
     const eventPayload = {
@@ -264,7 +265,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
       targetId,
       'positioning:facing_away'
     );
-    
+
     expect(facingAwayComponent).toBeDefined();
     expect(facingAwayComponent.facing_away_from).toEqual([actorId]);
     expect(facingAwayComponent.facing_away_from).toHaveLength(1);
@@ -279,17 +280,16 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Create entities with required components
     testEnv.entityManager.createEntity(actorId);
     testEnv.entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
-      text: 'John Smith'
+      text: 'John Smith',
     });
     testEnv.entityManager.addComponent(actorId, POSITION_COMPONENT_ID, {
-      locationId
+      locationId,
     });
 
     testEnv.entityManager.createEntity(targetId);
     testEnv.entityManager.addComponent(targetId, NAME_COMPONENT_ID, {
-      text: 'Jane Jones'
+      text: 'Jane Jones',
     });
-
 
     // Create event payload
     const eventPayload = {
@@ -305,12 +305,13 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     await testEnv.systemLogicOrchestrator.processEvent(eventPayload);
 
     // Assert - Check that the perceptible event was dispatched with correct message
-    expect(testEnv.handlers.DISPATCH_EVENT.execute).toHaveBeenNthCalledWith(2,
+    expect(testEnv.handlers.DISPATCH_EVENT.execute).toHaveBeenNthCalledWith(
+      2,
       expect.objectContaining({
         eventType: 'core:perceptible_event',
         payload: expect.objectContaining({
-          descriptionText: 'John Smith places themselves behind Jane Jones.'
-        })
+          descriptionText: 'John Smith places themselves behind Jane Jones.',
+        }),
       }),
       expect.any(Object)
     );
@@ -325,17 +326,16 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Create entities with required components
     testEnv.entityManager.createEntity(actorId);
     testEnv.entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
-      text: 'Actor Smith'
+      text: 'Actor Smith',
     });
     testEnv.entityManager.addComponent(actorId, POSITION_COMPONENT_ID, {
-      locationId
+      locationId,
     });
 
     testEnv.entityManager.createEntity(targetId);
     testEnv.entityManager.addComponent(targetId, NAME_COMPONENT_ID, {
-      text: 'Target Jones'
+      text: 'Target Jones',
     });
-
 
     // Create event payload
     const eventPayload = {
@@ -356,8 +356,8 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
         eventType: 'positioning:actor_placed_behind',
         payload: {
           actor: actorId,
-          target: targetId
-        }
+          target: targetId,
+        },
       }),
       expect.any(Object)
     );

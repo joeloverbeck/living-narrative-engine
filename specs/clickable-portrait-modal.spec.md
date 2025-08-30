@@ -5,6 +5,7 @@
 **Last Validated**: 2025-08-30
 
 ### Verified Existing Components
+
 1. **Modal Base Class**: `BaseModalRenderer` exists at `src/domUI/baseModalRenderer.js` and provides common modal behaviors
 2. **Parent Classes**: `BoundDomRendererBase` and `RendererBase` exist with `_addDomListener` method for event management
 3. **Speech Bubble System**: `SpeechBubbleRenderer` exists with `#addPortrait` method (lines 266-303)
@@ -13,11 +14,13 @@
 6. **Speech Bubble CSS**: Portrait styles exist in `css/components/_speech-bubbles.css`
 
 ### Components That Need To Be Created
+
 1. **PortraitModalRenderer Class**: Does not exist, needs to be created at `src/domUI/portraitModalRenderer.js`
 2. **Portrait Modal CSS**: File `css/components/_portrait-modal.css` does not exist, needs to be created
 3. **Modal HTML Structure**: The portrait modal HTML structure needs to be added to the main HTML file
 
 ### Critical Corrections
+
 1. **EntityId Parameter**: The `#addPortrait` method currently does NOT receive `entityId` as a parameter. It only receives `(container, portraitPath, speakerName)`. The method needs to be modified to also receive `entityId` OR the player detection logic needs to be moved to the calling context.
 2. **WCAG Compliance**: The existing modal infrastructure has only basic accessibility support (aria-hidden attributes). Full WCAG 2.1 AA compliance needs to be implemented from scratch.
 3. **Test Structure**: Correctly uses `@jest/globals` and `createTestBed` pattern.
@@ -29,16 +32,19 @@ This specification defines the implementation of clickable AI character portrait
 ### Implementation Requirements Summary
 
 **Files That Need to Be Created:**
+
 - `src/domUI/portraitModalRenderer.js` - New modal renderer class
 - `css/components/_portrait-modal.css` - New CSS file for portrait modal styles
 - Modal HTML structure needs to be added to the main HTML file
 
 **Files That Need to Be Modified:**
+
 - `src/domUI/speechBubbleRenderer.js` - Modify `#addPortrait` method signature and add click handlers
 - The main HTML file - Add portrait modal DOM structure
 - CSS imports - Include the new `_portrait-modal.css` file
 
 **Existing Infrastructure to Leverage:**
+
 - `BaseModalRenderer` class for modal behaviors
 - `BoundDomRendererBase` and `RendererBase` for event management
 - Modal CSS patterns in `_modals.css`
@@ -55,6 +61,7 @@ This specification defines the implementation of clickable AI character portrait
 ### Existing Speech Bubble System
 
 **Location**: `src/domUI/speechBubbleRenderer.js`
+
 - **Portrait Integration**: Line 266-303 (`#addPortrait` method)
 - **Portrait Creation**: Uses `domElementFactory.img()` with class `speech-portrait`
 - **Current Behavior**: Static display only, no interaction
@@ -62,6 +69,7 @@ This specification defines the implementation of clickable AI character portrait
 - **Extends**: `BoundDomRendererBase` class which provides `_addDomListener` method for event management
 
 **CSS Styling**: `css/components/_speech-bubbles.css`
+
 ```css
 .speech-entry .speech-portrait {
   width: var(--portrait-size-large, 100px);
@@ -77,12 +85,14 @@ This specification defines the implementation of clickable AI character portrait
 ```
 
 **Modal Infrastructure**: `css/components/_modals.css`
+
 - Existing modal system with backdrop, transitions, and responsive design
 - `.modal-overlay` and `.modal-content` classes available for reuse
 - Basic accessibility support with `aria-hidden` attributes
 - **Note**: Full WCAG 2.1 AA compliance will need to be implemented as part of this feature
 
 **Existing Modal Base Class**: `src/domUI/baseModalRenderer.js`
+
 - Abstract class that extends `BoundDomRendererBase`
 - Provides common modal behaviors: visibility management, focus handling, escape key support
 - Includes status message functionality and lifecycle hooks
@@ -165,7 +175,12 @@ SpeechBubbleRenderer (existing)
 import { BaseModalRenderer } from './baseModalRenderer.js';
 
 export class PortraitModalRenderer extends BaseModalRenderer {
-  constructor({ documentContext, domElementFactory, logger, validatedEventDispatcher }) {
+  constructor({
+    documentContext,
+    domElementFactory,
+    logger,
+    validatedEventDispatcher,
+  }) {
     // Configure elements for BaseModalRenderer
     const elementsConfig = {
       modalElement: '.portrait-modal-overlay',
@@ -173,11 +188,16 @@ export class PortraitModalRenderer extends BaseModalRenderer {
       statusMessageElement: '.portrait-error-message',
       modalImage: '.portrait-modal-image',
       loadingSpinner: '.portrait-loading-spinner',
-      modalTitle: '#portrait-modal-title'
+      modalTitle: '#portrait-modal-title',
     };
-    
-    super({ logger, documentContext, validatedEventDispatcher, elementsConfig });
-    
+
+    super({
+      logger,
+      documentContext,
+      validatedEventDispatcher,
+      elementsConfig,
+    });
+
     this.domElementFactory = domElementFactory;
     // Additional initialization
   }
@@ -222,26 +242,28 @@ export class PortraitModalRenderer extends BaseModalRenderer {
 **Method**: `#addPortrait()` (line 266-303)
 
 **IMPORTANT**: Currently this method signature is:
+
 ```javascript
 #addPortrait(container, portraitPath, speakerName) {
 ```
 
 It needs to be modified to include `entityId`:
+
 ```javascript
 #addPortrait(container, portraitPath, speakerName, entityId) {
   // ... existing code ...
-  
+
   if (portraitPath) {
     const portraitImg = this.domElementFactory.img(/*...existing params...*/);
     if (portraitImg) {
       // Existing functionality preserved
       hasPortrait = true;
-      
+
       // NEW: Add clickable functionality for AI portraits
       // Determine if entity is AI (not a human player)
       const speakerEntity = this.#entityManager.getEntityInstance(entityId);
       let isAICharacter = true; // Default to AI character
-      
+
       if (speakerEntity) {
         if (speakerEntity.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
           const playerTypeData = speakerEntity.getComponentData(PLAYER_TYPE_COMPONENT_ID);
@@ -250,18 +272,18 @@ It needs to be modified to include `entityId`:
           isAICharacter = false; // Has player component, so it's a human player
         }
       }
-      
+
       if (isAICharacter) {
         portraitImg.classList.add('clickable');
         portraitImg.style.cursor = 'pointer';
         portraitImg.setAttribute('aria-label', `Click to view larger portrait of ${speakerName}`);
         portraitImg.setAttribute('role', 'button');
         portraitImg.setAttribute('tabindex', '0');
-        
+
         this._addDomListener(portraitImg, 'click', () => {
           this.#portraitModalRenderer.showModal(portraitPath, speakerName, portraitImg);
         });
-        
+
         this._addDomListener(portraitImg, 'keydown', (event) => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
@@ -269,7 +291,7 @@ It needs to be modified to include `entityId`:
           }
         });
       }
-      
+
       // ... rest of existing code ...
     }
   }
@@ -277,6 +299,7 @@ It needs to be modified to include `entityId`:
 ```
 
 **CRITICAL IMPLEMENTATION NOTE**: The `entityId` parameter is NOT currently passed to `#addPortrait`. The calling code in the `renderSpeech()` method (around line 356) needs to be modified from:
+
 ```javascript
 const hasPortrait = this.#addPortrait(
   speechEntryDiv,
@@ -286,12 +309,13 @@ const hasPortrait = this.#addPortrait(
 ```
 
 To:
+
 ```javascript
 const hasPortrait = this.#addPortrait(
   speechEntryDiv,
   portraitPath,
   speakerName,
-  entityId  // This needs to be added
+  entityId // This needs to be added
 );
 ```
 
@@ -300,16 +324,28 @@ Alternatively, the `isPlayer` detection logic could be moved from `#createSpeech
 ### HTML Structure
 
 #### Modal DOM Structure (NEEDS TO BE ADDED TO THE MAIN HTML FILE)
+
 ```html
-<div class="portrait-modal-overlay modal-overlay" role="dialog" aria-modal="true" aria-labelledby="portrait-modal-title">
+<div
+  class="portrait-modal-overlay modal-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="portrait-modal-title"
+>
   <div class="portrait-modal-content modal-content">
     <div class="portrait-modal-header">
-      <h2 id="portrait-modal-title" class="portrait-modal-title">Character Portrait</h2>
-      <button class="portrait-modal-close" aria-label="Close portrait modal">&times;</button>
+      <h2 id="portrait-modal-title" class="portrait-modal-title">
+        Character Portrait
+      </h2>
+      <button class="portrait-modal-close" aria-label="Close portrait modal">
+        &times;
+      </button>
     </div>
     <div class="portrait-modal-body">
       <div class="portrait-image-container">
-        <div class="portrait-loading-spinner" aria-hidden="true">Loading...</div>
+        <div class="portrait-loading-spinner" aria-hidden="true">
+          Loading...
+        </div>
         <img class="portrait-modal-image" alt="" />
         <div class="portrait-error-message" role="alert" style="display: none;">
           Failed to load portrait
@@ -364,7 +400,9 @@ Alternatively, the `isPlayer` detection logic could be moved from `#createSpeech
   padding: var(--spacing-xs);
   color: var(--secondary-text-color);
   border-radius: var(--border-radius-sm);
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  transition:
+    background-color 0.2s ease-in-out,
+    color 0.2s ease-in-out;
 }
 
 .portrait-modal-close:hover,
@@ -420,7 +458,9 @@ Alternatively, the `isPlayer` detection logic could be moved from `#createSpeech
 
 /* Clickable Portrait Styles */
 .speech-portrait.clickable {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
   cursor: pointer;
 }
 
@@ -440,7 +480,7 @@ Alternatively, the `isPlayer` detection logic could be moved from `#createSpeech
     margin: var(--spacing-sm);
     padding: var(--spacing-sm);
   }
-  
+
   .portrait-modal-image {
     max-height: 60vh;
   }
@@ -452,7 +492,7 @@ Alternatively, the `isPlayer` detection logic could be moved from `#createSpeech
     align-items: flex-start;
     gap: var(--spacing-sm);
   }
-  
+
   .portrait-modal-close {
     align-self: flex-end;
   }
@@ -489,7 +529,7 @@ Alternatively, the `isPlayer` detection logic could be moved from `#createSpeech
   .speech-portrait.clickable {
     transition: none;
   }
-  
+
   .portrait-modal-overlay.visible,
   .portrait-modal-overlay:not(.visible) {
     animation: none;
@@ -528,12 +568,14 @@ Alternatively, the `isPlayer` detection logic could be moved from `#createSpeech
 ### Visual States
 
 #### Portrait States
+
 - **Default**: Standard speech bubble portrait appearance
 - **Hover** (AI portraits only): Subtle scale and shadow effect
 - **Focus**: Outline indicating keyboard focus
 - **Active**: Brief press effect on click
 
 #### Modal States
+
 - **Loading**: Spinner centered in modal while image loads
 - **Loaded**: Full portrait displayed with smooth fade-in
 - **Error**: Error message with option to retry or close
@@ -565,7 +607,10 @@ Alternatively, the `isPlayer` detection logic could be moved from `#createSpeech
 ```javascript
 // ARIA attributes for clickable portraits
 portraitImg.setAttribute('role', 'button');
-portraitImg.setAttribute('aria-label', `Click to view larger portrait of ${speakerName}`);
+portraitImg.setAttribute(
+  'aria-label',
+  `Click to view larger portrait of ${speakerName}`
+);
 portraitImg.setAttribute('tabindex', '0');
 
 // Modal accessibility
@@ -596,11 +641,11 @@ import { createTestBed } from '../../common/testBed.js';
 
 describe('PortraitModalRenderer', () => {
   let testBed;
-  
+
   beforeEach(() => {
     testBed = createTestBed();
   });
-  
+
   describe('Modal Display', () => {
     it('should extend BaseModalRenderer properly');
     it('should create modal with correct ARIA attributes');
@@ -608,14 +653,14 @@ describe('PortraitModalRenderer', () => {
     it('should handle image loading errors gracefully');
     it('should manage focus correctly when opening modal');
   });
-  
+
   describe('User Interactions', () => {
     it('should close modal on backdrop click');
     it('should close modal on ESC key press');
     it('should close modal on close button click');
     it('should return focus to original element on close');
   });
-  
+
   describe('Accessibility', () => {
     it('should meet WCAG 2.1 AA contrast requirements');
     it('should support keyboard navigation');
@@ -656,6 +701,7 @@ describe('Speech Bubble Portrait Modal Integration', () => {
 ## Implementation Phases
 
 ### Phase 1: Core Functionality (2-3 days)
+
 - [ ] Create `PortraitModalRenderer` class extending `BaseModalRenderer`
 - [ ] Modify `SpeechBubbleRenderer#addPortrait` to accept `entityId` parameter
 - [ ] Update `renderSpeech` method to pass `entityId` to `#addPortrait`
@@ -664,6 +710,7 @@ describe('Speech Bubble Portrait Modal Integration', () => {
 - [ ] Add keyboard event handling (ESC key)
 
 ### Phase 2: UI/UX Polish (1-2 days)
+
 - [ ] Create new CSS file `css/components/_portrait-modal.css`
 - [ ] Add portrait modal HTML structure to main HTML file
 - [ ] Import new CSS file in the main CSS bundle
@@ -672,6 +719,7 @@ describe('Speech Bubble Portrait Modal Integration', () => {
 - [ ] Add hover effects for clickable portraits
 
 ### Phase 3: Accessibility & Testing (1-2 days)
+
 - [ ] Implement full WCAG 2.1 AA compliance (currently only basic support exists)
 - [ ] Add proper ARIA attributes and focus management
 - [ ] Add keyboard navigation support (Tab, Enter, Space, ESC)
@@ -680,6 +728,7 @@ describe('Speech Bubble Portrait Modal Integration', () => {
 - [ ] Perform accessibility testing
 
 ### Phase 4: Integration & Refinement (1 day)
+
 - [ ] Integration testing with existing speech bubble system
 - [ ] Ensure compatibility with existing modal infrastructure
 - [ ] Performance optimization for image loading

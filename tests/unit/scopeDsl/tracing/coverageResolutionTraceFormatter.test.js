@@ -3,7 +3,14 @@
  * @see ../../../../src/scopeDsl/tracing/coverageResolutionTraceFormatter.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { CoverageResolutionTraceFormatter } from '../../../../src/scopeDsl/tracing/coverageResolutionTraceFormatter.js';
 
 describe('CoverageResolutionTraceFormatter', () => {
@@ -13,19 +20,19 @@ describe('CoverageResolutionTraceFormatter', () => {
 
   beforeEach(() => {
     mockHumanReadableFormatter = {
-      format: jest.fn().mockReturnValue('formatted output')
+      format: jest.fn().mockReturnValue('formatted output'),
     };
 
     mockLogger = {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
-      debug: jest.fn()
+      debug: jest.fn(),
     };
 
     formatter = new CoverageResolutionTraceFormatter({
       humanReadableFormatter: mockHumanReadableFormatter,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -42,7 +49,7 @@ describe('CoverageResolutionTraceFormatter', () => {
       expect(() => {
         new CoverageResolutionTraceFormatter({
           humanReadableFormatter: null,
-          logger: mockLogger
+          logger: mockLogger,
         });
       }).toThrow();
     });
@@ -51,7 +58,7 @@ describe('CoverageResolutionTraceFormatter', () => {
       expect(() => {
         new CoverageResolutionTraceFormatter({
           humanReadableFormatter: mockHumanReadableFormatter,
-          logger: null
+          logger: null,
         });
       }).toThrow();
     });
@@ -69,7 +76,7 @@ describe('CoverageResolutionTraceFormatter', () => {
           mode: 'topmost_clothing',
           strategy: 'coverage',
           resultCount: 2,
-          success: true
+          success: true,
         },
         startTime: 1000,
         endTime: 1042,
@@ -79,14 +86,14 @@ describe('CoverageResolutionTraceFormatter', () => {
           mode: 'topmost_clothing',
           strategy: 'coverage',
           resultCount: 2,
-          success: true
-        })
+          success: true,
+        }),
       };
 
       // mockChildSpans definition removed - not used
 
       mockStructuredTrace = {
-        getSpans: jest.fn().mockReturnValue([mockCoverageSpan])
+        getSpans: jest.fn().mockReturnValue([mockCoverageSpan]),
       };
     });
 
@@ -98,7 +105,7 @@ describe('CoverageResolutionTraceFormatter', () => {
 
     it('should handle structured trace with no coverage resolution span', () => {
       const emptyTrace = {
-        getSpans: jest.fn().mockReturnValue([])
+        getSpans: jest.fn().mockReturnValue([]),
       };
 
       const result = formatter.formatCoverageTrace(emptyTrace);
@@ -125,11 +132,11 @@ describe('CoverageResolutionTraceFormatter', () => {
     it('should handle missing attributes gracefully', () => {
       const spanWithoutAttrs = {
         operation: 'coverage_resolution',
-        getAttributes: jest.fn().mockReturnValue({})
+        getAttributes: jest.fn().mockReturnValue({}),
       };
 
       const traceWithoutAttrs = {
-        getSpans: jest.fn().mockReturnValue([spanWithoutAttrs])
+        getSpans: jest.fn().mockReturnValue([spanWithoutAttrs]),
       };
 
       const result = formatter.formatCoverageTrace(traceWithoutAttrs);
@@ -160,23 +167,26 @@ describe('CoverageResolutionTraceFormatter', () => {
         operation: 'coverage_resolution',
         getAttributes: jest.fn().mockImplementation(() => {
           throw new Error('Attribute access error');
-        })
+        }),
       };
 
       const errorTrace = {
-        getSpans: jest.fn().mockReturnValue([errorSpan])
+        getSpans: jest.fn().mockReturnValue([errorSpan]),
       };
 
       const result = formatter.formatCoverageTrace(errorTrace);
 
       expect(result).toContain('Coverage Resolution Trace Formatting Error');
       expect(result).toContain('Error: Attribute access error');
-      expect(mockLogger.error).toHaveBeenCalledWith('Error formatting coverage trace:', expect.any(Error));
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error formatting coverage trace:',
+        expect.any(Error)
+      );
     });
 
     it('should handle alternative span access methods', () => {
       const altTrace = {
-        spans: [mockCoverageSpan] // Array instead of getSpans method
+        spans: [mockCoverageSpan], // Array instead of getSpans method
       };
 
       const result = formatter.formatCoverageTrace(altTrace);
@@ -186,7 +196,7 @@ describe('CoverageResolutionTraceFormatter', () => {
 
     it('should handle Map-based spans', () => {
       const mapTrace = {
-        spans: new Map([['coverage-span-1', mockCoverageSpan]])
+        spans: new Map([['coverage-span-1', mockCoverageSpan]]),
       };
 
       const result = formatter.formatCoverageTrace(mapTrace);
@@ -200,11 +210,11 @@ describe('CoverageResolutionTraceFormatter', () => {
       const spanWithDuration = {
         operation: 'coverage_resolution',
         duration: 50,
-        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' })
+        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' }),
       };
 
       const trace = {
-        getSpans: jest.fn().mockReturnValue([spanWithDuration])
+        getSpans: jest.fn().mockReturnValue([spanWithDuration]),
       };
 
       const result = formatter.formatCoverageTrace(trace);
@@ -216,11 +226,11 @@ describe('CoverageResolutionTraceFormatter', () => {
         operation: 'coverage_resolution',
         startTime: 1000,
         endTime: 1075,
-        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' })
+        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' }),
       };
 
       const trace = {
-        getSpans: jest.fn().mockReturnValue([spanWithTimes])
+        getSpans: jest.fn().mockReturnValue([spanWithTimes]),
       };
 
       const result = formatter.formatCoverageTrace(trace);
@@ -230,11 +240,11 @@ describe('CoverageResolutionTraceFormatter', () => {
     it('should handle missing duration information', () => {
       const spanWithoutDuration = {
         operation: 'coverage_resolution',
-        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' })
+        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' }),
       };
 
       const trace = {
-        getSpans: jest.fn().mockReturnValue([spanWithoutDuration])
+        getSpans: jest.fn().mockReturnValue([spanWithoutDuration]),
       };
 
       const result = formatter.formatCoverageTrace(trace);
@@ -254,7 +264,7 @@ describe('CoverageResolutionTraceFormatter', () => {
           mode: 'topmost_clothing',
           strategy: 'coverage',
           resultCount: 2,
-          success: true
+          success: true,
         },
         startTime: 1000,
         endTime: 1042,
@@ -264,8 +274,8 @@ describe('CoverageResolutionTraceFormatter', () => {
           mode: 'topmost_clothing',
           strategy: 'coverage',
           resultCount: 2,
-          success: true
-        })
+          success: true,
+        }),
       };
     });
 
@@ -279,14 +289,16 @@ describe('CoverageResolutionTraceFormatter', () => {
           field: 'torso_upper',
           hasParent: true,
           parentField: 'topmost_clothing',
-          resultCount: 2
+          resultCount: 2,
         }),
         getEvents: jest.fn().mockReturnValue([]),
-        duration: 10
+        duration: 10,
       };
 
       const traceWithChildSpans = {
-        getSpans: jest.fn().mockReturnValue([baseCoverageSpan, nodeAnalysisSpan])
+        getSpans: jest
+          .fn()
+          .mockReturnValue([baseCoverageSpan, nodeAnalysisSpan]),
       };
 
       const result = formatter.formatCoverageTrace(traceWithChildSpans);
@@ -309,7 +321,7 @@ describe('CoverageResolutionTraceFormatter', () => {
         getAttributes: jest.fn().mockReturnValue({
           totalCandidatesFound: 3,
           checkedLayers: ['outer', 'base'],
-          availableLayers: ['outer', 'base', 'underwear']
+          availableLayers: ['outer', 'base', 'underwear'],
         }),
         getEvents: jest.fn().mockReturnValue([
           {
@@ -317,23 +329,25 @@ describe('CoverageResolutionTraceFormatter', () => {
             attributes: {
               itemId: 'leather_jacket',
               layer: 'outer',
-              priority: 100
-            }
+              priority: 100,
+            },
           },
           {
             name: 'candidate_found',
             attributes: {
               itemId: 'cotton_shirt',
               layer: 'base',
-              priority: 75
-            }
-          }
+              priority: 75,
+            },
+          },
         ]),
-        duration: 15
+        duration: 15,
       };
 
       const traceWithChildSpans = {
-        getSpans: jest.fn().mockReturnValue([baseCoverageSpan, candidateCollectionSpan])
+        getSpans: jest
+          .fn()
+          .mockReturnValue([baseCoverageSpan, candidateCollectionSpan]),
       };
 
       const result = formatter.formatCoverageTrace(traceWithChildSpans);
@@ -353,7 +367,7 @@ describe('CoverageResolutionTraceFormatter', () => {
         parentId: 'coverage-span-1',
         getAttributes: jest.fn().mockReturnValue({
           calculationMethod: 'standard',
-          totalCalculations: 2
+          totalCalculations: 2,
         }),
         getEvents: jest.fn().mockReturnValue([
           {
@@ -361,15 +375,17 @@ describe('CoverageResolutionTraceFormatter', () => {
             attributes: {
               itemId: 'leather_jacket',
               priority: 100,
-              method: 'coverage_priority'
-            }
-          }
+              method: 'coverage_priority',
+            },
+          },
         ]),
-        duration: 8
+        duration: 8,
       };
 
       const traceWithChildSpans = {
-        getSpans: jest.fn().mockReturnValue([baseCoverageSpan, priorityCalculationSpan])
+        getSpans: jest
+          .fn()
+          .mockReturnValue([baseCoverageSpan, priorityCalculationSpan]),
       };
 
       const result = formatter.formatCoverageTrace(traceWithChildSpans);
@@ -378,7 +394,9 @@ describe('CoverageResolutionTraceFormatter', () => {
       expect(result).toContain('Calculation Method: standard');
       expect(result).toContain('Total Calculations: 2');
       expect(result).toContain('Calculation Time: 8ms');
-      expect(result).toContain('leather_jacket: priority 100 (coverage_priority)');
+      expect(result).toContain(
+        'leather_jacket: priority 100 (coverage_priority)'
+      );
     });
   });
 
@@ -387,25 +405,29 @@ describe('CoverageResolutionTraceFormatter', () => {
       const spanWithSmallMs = {
         operation: 'coverage_resolution',
         duration: 0,
-        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' })
+        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' }),
       };
-      const traceSmallMs = { getSpans: jest.fn().mockReturnValue([spanWithSmallMs]) };
+      const traceSmallMs = {
+        getSpans: jest.fn().mockReturnValue([spanWithSmallMs]),
+      };
       const resultSmallMs = formatter.formatCoverageTrace(traceSmallMs);
       expect(resultSmallMs).toContain('Duration: <1ms');
 
       const spanWithSubMs = {
         operation: 'coverage_resolution',
         duration: 0.5,
-        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' })
+        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' }),
       };
-      const traceSubMs = { getSpans: jest.fn().mockReturnValue([spanWithSubMs]) };
+      const traceSubMs = {
+        getSpans: jest.fn().mockReturnValue([spanWithSubMs]),
+      };
       const resultSubMs = formatter.formatCoverageTrace(traceSubMs);
       expect(resultSubMs).toContain('Duration: <1ms');
 
       const spanWith42Ms = {
         operation: 'coverage_resolution',
         duration: 42,
-        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' })
+        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' }),
       };
       const trace42Ms = { getSpans: jest.fn().mockReturnValue([spanWith42Ms]) };
       const result42Ms = formatter.formatCoverageTrace(trace42Ms);
@@ -414,9 +436,11 @@ describe('CoverageResolutionTraceFormatter', () => {
       const spanWith500Ms = {
         operation: 'coverage_resolution',
         duration: 500,
-        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' })
+        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' }),
       };
-      const trace500Ms = { getSpans: jest.fn().mockReturnValue([spanWith500Ms]) };
+      const trace500Ms = {
+        getSpans: jest.fn().mockReturnValue([spanWith500Ms]),
+      };
       const result500Ms = formatter.formatCoverageTrace(trace500Ms);
       expect(result500Ms).toContain('Duration: 500ms');
     });
@@ -425,18 +449,22 @@ describe('CoverageResolutionTraceFormatter', () => {
       const spanWith1500Ms = {
         operation: 'coverage_resolution',
         duration: 1500,
-        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' })
+        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' }),
       };
-      const trace1500Ms = { getSpans: jest.fn().mockReturnValue([spanWith1500Ms]) };
+      const trace1500Ms = {
+        getSpans: jest.fn().mockReturnValue([spanWith1500Ms]),
+      };
       const result1500Ms = formatter.formatCoverageTrace(trace1500Ms);
       expect(result1500Ms).toContain('Duration: 1.50sms'); // Note: production code has bug - adds "ms" to already formatted duration
 
       const spanWith5000Ms = {
         operation: 'coverage_resolution',
         duration: 5000,
-        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' })
+        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' }),
       };
-      const trace5000Ms = { getSpans: jest.fn().mockReturnValue([spanWith5000Ms]) };
+      const trace5000Ms = {
+        getSpans: jest.fn().mockReturnValue([spanWith5000Ms]),
+      };
       const result5000Ms = formatter.formatCoverageTrace(trace5000Ms);
       expect(result5000Ms).toContain('Duration: 5.00sms'); // Note: production code has bug - adds "ms" to already formatted duration
     });
@@ -445,21 +473,24 @@ describe('CoverageResolutionTraceFormatter', () => {
       const spanWith65000Ms = {
         operation: 'coverage_resolution',
         duration: 65000,
-        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' })
+        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' }),
       };
-      const trace65000Ms = { getSpans: jest.fn().mockReturnValue([spanWith65000Ms]) };
+      const trace65000Ms = {
+        getSpans: jest.fn().mockReturnValue([spanWith65000Ms]),
+      };
       const result65000Ms = formatter.formatCoverageTrace(trace65000Ms);
       expect(result65000Ms).toContain('Duration: 1m 5.0sms'); // Note: production code has bug - adds "ms" to already formatted duration
 
       const spanWith125000Ms = {
         operation: 'coverage_resolution',
         duration: 125000,
-        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' })
+        getAttributes: jest.fn().mockReturnValue({ targetSlot: 'test' }),
       };
-      const trace125000Ms = { getSpans: jest.fn().mockReturnValue([spanWith125000Ms]) };
+      const trace125000Ms = {
+        getSpans: jest.fn().mockReturnValue([spanWith125000Ms]),
+      };
       const result125000Ms = formatter.formatCoverageTrace(trace125000Ms);
       expect(result125000Ms).toContain('Duration: 2m 5.0sms'); // Note: production code has bug - adds "ms" to already formatted duration
     });
   });
-
 });

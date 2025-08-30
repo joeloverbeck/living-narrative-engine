@@ -585,15 +585,15 @@ describe('High Concurrency Memory Management', () => {
       // Conditional detailed logging for performance
       if (ENABLE_DEBUG_LOGGING) {
         logger.info('Memory pressure analysis during concurrency', {
-        concurrentOperations,
-        entityCount,
-        baselineMemoryMB: `${(baselineMemory.heapUsed / 1024 / 1024).toFixed(2)}MB`,
-        peakMemoryMB: `${(peakMemoryReading.heapUsed / 1024 / 1024).toFixed(2)}MB`,
-        memoryGrowthMB: `${memoryGrowthMB.toFixed(2)}MB`,
-        postOperationMemoryMB: `${(postOperationMemory.heapUsed / 1024 / 1024).toFixed(2)}MB`,
-        residualGrowthMB: `${(residualMemoryGrowth / 1024 / 1024).toFixed(2)}MB`,
-        cleanupEfficiency: `${(memoryCleanupEfficiency * 100).toFixed(1)}%`,
-        memoryReadingsCount: memoryReadings.length,
+          concurrentOperations,
+          entityCount,
+          baselineMemoryMB: `${(baselineMemory.heapUsed / 1024 / 1024).toFixed(2)}MB`,
+          peakMemoryMB: `${(peakMemoryReading.heapUsed / 1024 / 1024).toFixed(2)}MB`,
+          memoryGrowthMB: `${memoryGrowthMB.toFixed(2)}MB`,
+          postOperationMemoryMB: `${(postOperationMemory.heapUsed / 1024 / 1024).toFixed(2)}MB`,
+          residualGrowthMB: `${(residualMemoryGrowth / 1024 / 1024).toFixed(2)}MB`,
+          cleanupEfficiency: `${(memoryCleanupEfficiency * 100).toFixed(1)}%`,
+          memoryReadingsCount: memoryReadings.length,
         });
       }
     });

@@ -7,6 +7,7 @@ This specification defines the requirements and implementation guidelines for en
 ## Problem Statement
 
 ### Current Behavior
+
 - When remote logging is enabled, logs are sent to the Node.js API server for storage
 - The HybridLogger's default console filters restrict output to specific categories and levels
 - Warnings and errors get lost in the remote logging process
@@ -14,6 +15,7 @@ This specification defines the requirements and implementation guidelines for en
 - No conspicuous indication when warnings or errors occur
 
 ### Impact
+
 - Delayed bug detection during development
 - Missed critical errors that could affect gameplay
 - Reduced developer productivity due to lack of immediate feedback
@@ -24,12 +26,14 @@ This specification defines the requirements and implementation guidelines for en
 ### Functional Requirements
 
 #### FR1: Always Show Critical Logs in Console
+
 - **FR1.1**: Warnings and errors MUST always appear in the browser console when they occur
 - **FR1.2**: Console output for critical logs MUST bypass any filter configurations
 - **FR1.3**: Critical console logs MUST maintain their native console styling (yellow for warnings, red for errors)
 - **FR1.4**: This behavior MUST be configurable but default to enabled
 
 #### FR2: Visual Notification System
+
 - **FR2.1**: A floating notification badge MUST appear when warnings or errors occur
 - **FR2.2**: The badge MUST show separate counts for warnings (yellow) and errors (red)
 - **FR2.3**: The badge MUST be clickable to expand into a panel showing recent critical logs
@@ -37,12 +41,14 @@ This specification defines the requirements and implementation guidelines for en
 - **FR2.5**: The notification system MUST be toggleable via configuration
 
 #### FR3: Critical Log Buffer
+
 - **FR3.1**: The system MUST maintain a buffer of the last N critical logs in memory
 - **FR3.2**: The buffer size MUST be configurable (default: 50 logs)
 - **FR3.3**: Each buffered log MUST include: timestamp, level, message, source location, and category
 - **FR3.4**: The buffer MUST be accessible to the visual notification system
 
 #### FR4: Configuration Options
+
 - **FR4.1**: New configuration options MUST be added to `debug-logging-config.json`
 - **FR4.2**: All new options MUST have sensible defaults that work out-of-the-box
 - **FR4.3**: Configuration changes MUST take effect without requiring application restart
@@ -50,16 +56,19 @@ This specification defines the requirements and implementation guidelines for en
 ### Non-Functional Requirements
 
 #### NFR1: Performance
+
 - **NFR1.1**: The visibility enhancements MUST NOT degrade logging performance by more than 5%
 - **NFR1.2**: The critical log buffer MUST use minimal memory (max 10KB for 50 logs)
 - **NFR1.3**: Visual notifications MUST render within 100ms of log occurrence
 
 #### NFR2: User Experience
+
 - **NFR2.1**: Visual notifications MUST NOT obstruct gameplay or UI elements
 - **NFR2.2**: The notification badge MUST be draggable to reposition if needed
 - **NFR2.3**: Console output MUST remain readable and not clutter the console
 
 #### NFR3: Compatibility
+
 - **NFR3.1**: The solution MUST work with all existing logging configurations
 - **NFR3.2**: The solution MUST be backward compatible with current logging API
 - **NFR3.3**: The solution MUST work in all supported browsers (Chrome, Firefox, Safari, Edge)
@@ -115,12 +124,14 @@ This specification defines the requirements and implementation guidelines for en
 **File**: `src/logging/hybridLogger.js`
 
 **Existing Architecture Context**:
+
 - HybridLogger already has a `#filters` private field containing console and remote filter configurations
 - Existing methods: `setConsoleFilter()`, `setRemoteFilter()`, `updateFilters()`
 - The `#logToDestinations()` method handles routing to ConsoleLogger and RemoteLogger
 - The `#shouldLogToConsole()` method determines if a log should go to console based on filters
 
 **Modifications**:
+
 - Add `#criticalBuffer` array to store recent warnings/errors
 - Add `#notifier` reference to CriticalLogNotifier instance
 - **Enhance `#shouldLogToConsole()` method** to:
@@ -135,6 +146,7 @@ This specification defines the requirements and implementation guidelines for en
 - Add `clearCriticalBuffer()` method to clear the buffer
 
 **New Configuration Interface**:
+
 ```javascript
 {
   criticalLogging: {
@@ -152,6 +164,7 @@ This specification defines the requirements and implementation guidelines for en
 **File**: `src/logging/criticalLogNotifier.js`
 
 **Responsibilities**:
+
 - Render floating badge with warning/error counts
 - Manage expandable panel for log details
 - Handle user interactions (expand/collapse/dismiss)
@@ -159,6 +172,7 @@ This specification defines the requirements and implementation guidelines for en
 - Provide API for HybridLogger integration
 
 **Key Methods**:
+
 ```javascript
 class CriticalLogNotifier {
   constructor(config) // Initialize with configuration
@@ -171,6 +185,7 @@ class CriticalLogNotifier {
 ```
 
 **DOM Structure**:
+
 ```html
 <div class="lne-critical-log-notifier" data-position="top-right">
   <div class="lne-badge-container">
@@ -195,6 +210,7 @@ class CriticalLogNotifier {
 **File**: `data/schemas/debug-logging-config.schema.json`
 
 Add new properties to the schema:
+
 ```json
 {
   "criticalLogging": {
@@ -238,12 +254,14 @@ Add new properties to the schema:
 ### Implementation Plan
 
 #### Phase 1: Core Functionality (Priority: High)
+
 1. Modify HybridLogger to always output warnings/errors to console
 2. Implement critical log buffer in HybridLogger
 3. Update configuration schema and defaults
 4. Write unit tests for bypass logic
 
 #### Phase 2: Visual Notifications (Priority: High)
+
 1. Create CriticalLogNotifier class
 2. Integrate notifier with HybridLogger
 3. Implement basic badge and panel UI
@@ -251,6 +269,7 @@ Add new properties to the schema:
 5. Write integration tests
 
 #### Phase 3: Enhanced Features (Priority: Medium)
+
 1. Add drag-to-reposition functionality
 2. Implement localStorage persistence for position
 3. Add keyboard shortcuts for quick dismissal
@@ -258,6 +277,7 @@ Add new properties to the schema:
 5. Add export functionality for critical logs
 
 #### Phase 4: Polish and Optimization (Priority: Low)
+
 1. Add animations for badge appearance
 2. Implement smart positioning to avoid UI conflicts
 3. Add sound notifications (optional, configurable)
@@ -267,18 +287,21 @@ Add new properties to the schema:
 ## Testing Strategy
 
 ### Unit Tests
+
 - Test HybridLogger bypass logic for critical logs
 - Test critical buffer management (add, retrieve, clear)
 - Test configuration loading and validation
 - Test CriticalLogNotifier methods in isolation
 
 ### Integration Tests
+
 - Test end-to-end flow from log call to console output
 - Test visual notification triggering
 - Test configuration changes taking effect
 - Test interaction between HybridLogger and CriticalLogNotifier
 
 ### Manual Testing Checklist
+
 - [ ] Warnings appear in console when remote logging is enabled
 - [ ] Errors appear in console when remote logging is enabled
 - [ ] Notification badge appears for warnings
@@ -294,6 +317,7 @@ Add new properties to the schema:
 ## Migration Guide
 
 ### For Existing Users
+
 1. Update to the latest version
 2. No configuration changes required (defaults will work)
 3. Optional: Customize settings in `debug-logging-config.json`
@@ -302,6 +326,7 @@ Add new properties to the schema:
    - `config/logger-config.json` - For general logger configuration loaded by LoggerConfigLoader
 
 ### For Developers
+
 1. No API changes required
 2. Existing logging code continues to work
 3. New features are automatically available
@@ -317,12 +342,14 @@ Add new properties to the schema:
 ## Performance Metrics
 
 ### Success Criteria
+
 - Console output latency: < 10ms additional overhead
 - Notification render time: < 100ms from log occurrence
 - Memory usage: < 10KB for 50 log entries
 - CPU usage: < 1% additional during active logging
 
 ### Monitoring
+
 - Track notification render performance
 - Monitor critical buffer memory usage
 - Log any performance degradation warnings
@@ -331,6 +358,7 @@ Add new properties to the schema:
 ## Rollback Plan
 
 If issues arise:
+
 1. Set `criticalLogging.alwaysShowInConsole` to `false`
 2. Set `criticalLogging.enableVisualNotifications` to `false`
 3. System reverts to original behavior
@@ -339,6 +367,7 @@ If issues arise:
 ## Future Enhancements
 
 ### Potential Features (Not in Current Scope)
+
 - Integration with browser DevTools API
 - Remote notification to other developers
 - Critical log analytics dashboard
@@ -351,6 +380,7 @@ If issues arise:
 ## Acceptance Criteria
 
 The implementation is complete when:
+
 1. All functional requirements are met
 2. All non-functional requirements are satisfied
 3. All tests pass with >80% coverage

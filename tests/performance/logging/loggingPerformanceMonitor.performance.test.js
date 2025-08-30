@@ -24,7 +24,7 @@ describe('Logging Performance Monitor - Performance Tests', () => {
     eventBus = new EventBus({ logger: console });
     consoleLogger = new ConsoleLogger();
     categoryDetector = new LogCategoryDetector({ logger: consoleLogger });
-    
+
     remoteLogger = new RemoteLogger({
       config: {
         batchSize: 100,
@@ -111,12 +111,15 @@ describe('Logging Performance Monitor - Performance Tests', () => {
       baselineRounds.sort((a, b) => a - b);
       monitoredRounds.sort((a, b) => a - b);
       const baselineMedian = baselineRounds[Math.floor(measurementRounds / 2)];
-      const monitoredMedian = monitoredRounds[Math.floor(measurementRounds / 2)];
+      const monitoredMedian =
+        monitoredRounds[Math.floor(measurementRounds / 2)];
 
       // Calculate overhead with defensive handling
-      const overhead = baselineMedian > 0 ? 
-        ((monitoredMedian - baselineMedian) / baselineMedian) * 100 : 0;
-      
+      const overhead =
+        baselineMedian > 0
+          ? ((monitoredMedian - baselineMedian) / baselineMedian) * 100
+          : 0;
+
       console.log(`Baseline median: ${baselineMedian.toFixed(2)}ms`);
       console.log(`Monitored median: ${monitoredMedian.toFixed(2)}ms`);
       console.log(`Overhead: ${overhead.toFixed(2)}%`);
@@ -159,7 +162,7 @@ describe('Logging Performance Monitor - Performance Tests', () => {
 
       // Calculate statistics
       const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
-      
+
       // Calculate percentiles
       times.sort((a, b) => a - b);
       const p50 = times[Math.floor(times.length * 0.5)];
@@ -183,31 +186,36 @@ describe('Logging Performance Monitor - Performance Tests', () => {
       const iterations = 5000;
       const batchSizes = [10, 25, 50, 100];
       let successfulOperations = 0;
-      
+
       const start = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         const batchSize = batchSizes[i % batchSizes.length];
         const flushTime = 20 + Math.random() * 30;
         const success = Math.random() > 0.1;
-        
+
         try {
           performanceMonitor.monitorBatchFlush(batchSize, flushTime, success);
           successfulOperations++;
         } catch (error) {
           // Count failures but don't fail the test
-          console.warn(`Batch monitoring operation ${i} failed: ${error.message}`);
+          console.warn(
+            `Batch monitoring operation ${i} failed: ${error.message}`
+          );
         }
       }
-      
+
       const duration = performance.now() - start;
-      const opsPerSecond = successfulOperations > 0 ? (successfulOperations / duration) * 1000 : 0;
-      
+      const opsPerSecond =
+        successfulOperations > 0 ? (successfulOperations / duration) * 1000 : 0;
+
       console.log(`Batch monitoring performance:`);
       console.log(`  Total time: ${duration.toFixed(2)}ms`);
-      console.log(`  Successful operations: ${successfulOperations}/${iterations}`);
+      console.log(
+        `  Successful operations: ${successfulOperations}/${iterations}`
+      );
       console.log(`  Operations/second: ${opsPerSecond.toFixed(0)}`);
-      
+
       // More reasonable performance expectation
       expect(opsPerSecond).toBeGreaterThan(1000); // At least 1,000 ops/sec
       expect(successfulOperations).toBeGreaterThan(iterations * 0.8); // At least 80% success
@@ -217,9 +225,9 @@ describe('Logging Performance Monitor - Performance Tests', () => {
       const iterations = 10000;
       const maxBufferSize = 1000;
       let successfulOperations = 0;
-      
+
       const start = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         const currentSize = Math.floor(Math.random() * maxBufferSize);
         try {
@@ -227,18 +235,27 @@ describe('Logging Performance Monitor - Performance Tests', () => {
           successfulOperations++;
         } catch (error) {
           // Count failures but don't fail the test
-          console.warn(`Buffer monitoring operation ${i} failed: ${error.message}`);
+          console.warn(
+            `Buffer monitoring operation ${i} failed: ${error.message}`
+          );
         }
       }
-      
+
       const duration = performance.now() - start;
-      const avgTimePerOp = successfulOperations > 0 ? duration / successfulOperations : duration / iterations;
-      
+      const avgTimePerOp =
+        successfulOperations > 0
+          ? duration / successfulOperations
+          : duration / iterations;
+
       console.log(`Buffer monitoring performance:`);
       console.log(`  Total time: ${duration.toFixed(2)}ms`);
-      console.log(`  Successful operations: ${successfulOperations}/${iterations}`);
-      console.log(`  Average time per operation: ${(avgTimePerOp * 1000).toFixed(3)}μs`);
-      
+      console.log(
+        `  Successful operations: ${successfulOperations}/${iterations}`
+      );
+      console.log(
+        `  Average time per operation: ${(avgTimePerOp * 1000).toFixed(3)}μs`
+      );
+
       // More reasonable timing expectations - 1ms per operation is acceptable
       expect(avgTimePerOp).toBeLessThan(1.0);
       expect(successfulOperations).toBeGreaterThan(iterations * 0.8); // At least 80% success
@@ -250,7 +267,8 @@ describe('Logging Performance Monitor - Performance Tests', () => {
     beforeEach(() => {
       // Generate substantial test data with error handling
       let logOperations = 0;
-      for (let i = 0; i < 1000; i++) { // Reduced for performance
+      for (let i = 0; i < 1000; i++) {
+        // Reduced for performance
         try {
           performanceMonitor.monitorLogOperation(
             ['info', 'warn', 'error', 'debug'][i % 4],
@@ -261,12 +279,15 @@ describe('Logging Performance Monitor - Performance Tests', () => {
           );
           logOperations++;
         } catch (error) {
-          console.warn(`Log operation ${i} failed during setup: ${error.message}`);
+          console.warn(
+            `Log operation ${i} failed during setup: ${error.message}`
+          );
         }
       }
-      
+
       let batchOperations = 0;
-      for (let i = 0; i < 100; i++) { // Reduced for performance
+      for (let i = 0; i < 100; i++) {
+        // Reduced for performance
         try {
           performanceMonitor.monitorBatchFlush(
             20 + Math.floor(Math.random() * 80),
@@ -275,18 +296,22 @@ describe('Logging Performance Monitor - Performance Tests', () => {
           );
           batchOperations++;
         } catch (error) {
-          console.warn(`Batch operation ${i} failed during setup: ${error.message}`);
+          console.warn(
+            `Batch operation ${i} failed during setup: ${error.message}`
+          );
         }
       }
-      
-      console.log(`Setup completed: ${logOperations} log ops, ${batchOperations} batch ops`);
+
+      console.log(
+        `Setup completed: ${logOperations} log ops, ${batchOperations} batch ops`
+      );
     });
 
     it('should aggregate metrics reasonably quickly', () => {
       const iterations = 10; // Reduced iterations for stability
       const times = [];
       let successfulCalls = 0;
-      
+
       for (let i = 0; i < iterations; i++) {
         const start = performance.now();
         try {
@@ -294,11 +319,11 @@ describe('Logging Performance Monitor - Performance Tests', () => {
           const duration = performance.now() - start;
           times.push(duration);
           successfulCalls++;
-          
+
           // Verify metrics structure (flexible checking)
           expect(metrics).toBeDefined();
           expect(typeof metrics).toBe('object');
-          
+
           // Don't require specific properties, just verify it's a valid object
           if (metrics.throughput) {
             expect(typeof metrics.throughput).toBe('object');
@@ -314,15 +339,16 @@ describe('Logging Performance Monitor - Performance Tests', () => {
           times.push(100); // Default fallback time
         }
       }
-      
-      const avgTime = times.length > 0 ? times.reduce((a, b) => a + b, 0) / times.length : 0;
+
+      const avgTime =
+        times.length > 0 ? times.reduce((a, b) => a + b, 0) / times.length : 0;
       const maxTime = times.length > 0 ? Math.max(...times) : 0;
-      
+
       console.log(`Metrics aggregation performance:`);
       console.log(`  Successful calls: ${successfulCalls}/${iterations}`);
       console.log(`  Average: ${avgTime.toFixed(3)}ms`);
       console.log(`  Max: ${maxTime.toFixed(3)}ms`);
-      
+
       // More lenient performance expectations
       expect(avgTime).toBeLessThan(100); // 100ms average
       expect(maxTime).toBeLessThan(200); // 200ms max
@@ -333,7 +359,7 @@ describe('Logging Performance Monitor - Performance Tests', () => {
       // Add many latency samples using proper monitoring operations
       const sampleCount = 1000; // Reduced for performance
       let samplesAdded = 0;
-      
+
       for (let i = 0; i < sampleCount; i++) {
         try {
           // Use actual monitoring operations instead of direct recordMetric
@@ -345,11 +371,11 @@ describe('Logging Performance Monitor - Performance Tests', () => {
           console.warn(`Sample ${i} failed: ${error.message}`);
         }
       }
-      
+
       const start = performance.now();
       let metrics;
       let duration = 0;
-      
+
       try {
         metrics = performanceMonitor.getLoggingMetrics();
         duration = performance.now() - start;
@@ -358,9 +384,11 @@ describe('Logging Performance Monitor - Performance Tests', () => {
         metrics = {};
         duration = performance.now() - start;
       }
-      
-      console.log(`Percentile calculation for ${samplesAdded} samples: ${duration.toFixed(2)}ms`);
-      
+
+      console.log(
+        `Percentile calculation for ${samplesAdded} samples: ${duration.toFixed(2)}ms`
+      );
+
       // Flexible latency structure checking
       if (metrics.latency && typeof metrics.latency === 'object') {
         // Don't require specific properties, just verify structure if present
@@ -368,7 +396,7 @@ describe('Logging Performance Monitor - Performance Tests', () => {
           expect(typeof metrics.latency.logProcessing).toBe('object');
         }
       }
-      
+
       // More lenient performance expectation
       expect(duration).toBeLessThan(1000); // 1 second should be enough
       expect(samplesAdded).toBeGreaterThan(0); // Sanity check
@@ -378,37 +406,42 @@ describe('Logging Performance Monitor - Performance Tests', () => {
   describe('Concurrent operation performance', () => {
     it('should handle concurrent monitoring without major failures', async () => {
       const concurrentOps = 10; // Reduced for stability
-      const opsPerWorker = 10;  // Reduced for stability
-      
+      const opsPerWorker = 10; // Reduced for stability
+
       const worker = async (id) => {
         const start = performance.now();
         let successfulOps = 0;
-        
+
         for (let i = 0; i < opsPerWorker; i++) {
           try {
-            performanceMonitor.monitorLogOperation('info', `Worker ${id} log ${i}`);
+            performanceMonitor.monitorLogOperation(
+              'info',
+              `Worker ${id} log ${i}`
+            );
             successfulOps++;
-            
+
             if (i % 10 === 0) {
               performanceMonitor.monitorBatchFlush(25, 50, true);
               successfulOps++;
             }
-            
+
             if (i % 5 === 0) {
               performanceMonitor.monitorBufferSize(i, 1000);
               successfulOps++;
             }
           } catch (error) {
-            console.warn(`Worker ${id} operation ${i} failed: ${error.message}`);
+            console.warn(
+              `Worker ${id} operation ${i} failed: ${error.message}`
+            );
           }
         }
-        
+
         return {
           duration: performance.now() - start,
           successfulOps,
         };
       };
-      
+
       const start = performance.now();
       const results = await Promise.all(
         Array(concurrentOps)
@@ -416,17 +449,24 @@ describe('Logging Performance Monitor - Performance Tests', () => {
           .map((_, i) => worker(i))
       );
       const totalDuration = performance.now() - start;
-      
-      const avgWorkerTime = results.reduce((a, b) => a + b.duration, 0) / results.length;
-      const totalSuccessfulOps = results.reduce((a, b) => a + b.successfulOps, 0);
-      const opsPerSecond = totalSuccessfulOps > 0 ? (totalSuccessfulOps / totalDuration) * 1000 : 0;
-      
+
+      const avgWorkerTime =
+        results.reduce((a, b) => a + b.duration, 0) / results.length;
+      const totalSuccessfulOps = results.reduce(
+        (a, b) => a + b.successfulOps,
+        0
+      );
+      const opsPerSecond =
+        totalSuccessfulOps > 0
+          ? (totalSuccessfulOps / totalDuration) * 1000
+          : 0;
+
       console.log(`Concurrent operations performance:`);
       console.log(`  Total duration: ${totalDuration.toFixed(2)}ms`);
       console.log(`  Average worker time: ${avgWorkerTime.toFixed(2)}ms`);
       console.log(`  Total successful operations: ${totalSuccessfulOps}`);
       console.log(`  Operations/second: ${opsPerSecond.toFixed(0)}`);
-      
+
       // More reasonable expectations for concurrent performance
       expect(opsPerSecond).toBeGreaterThan(100); // At least 100 ops/sec
       expect(totalSuccessfulOps).toBeGreaterThan(0); // Some operations should succeed
@@ -439,7 +479,7 @@ describe('Logging Performance Monitor - Performance Tests', () => {
       const initialMemory = process.memoryUsage().heapUsed;
       const iterations = 1000; // Reduced for stability
       let successfulOperations = 0;
-      
+
       // Perform many monitoring operations
       for (let i = 0; i < iterations; i++) {
         try {
@@ -447,42 +487,46 @@ describe('Logging Performance Monitor - Performance Tests', () => {
             processingTime: Math.random() * 2,
           });
           successfulOperations++;
-          
+
           if (i % 100 === 0) {
             performanceMonitor.monitorBatchFlush(50, 100, true);
           }
-          
+
           if (i % 50 === 0) {
             performanceMonitor.monitorBufferSize(Math.random() * 1000, 1000);
           }
-          
+
           // Periodically get metrics to trigger any cleanup
           if (i % 200 === 0) {
             try {
               performanceMonitor.getLoggingMetrics();
             } catch (error) {
-              console.warn(`Metrics call failed during memory test: ${error.message}`);
+              console.warn(
+                `Metrics call failed during memory test: ${error.message}`
+              );
             }
           }
         } catch (error) {
           console.warn(`Monitoring operation ${i} failed: ${error.message}`);
         }
       }
-      
+
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
       }
-      
+
       const finalMemory = process.memoryUsage().heapUsed;
       const memoryIncrease = (finalMemory - initialMemory) / (1024 * 1024); // Convert to MB
-      
+
       console.log(`Memory usage:`);
       console.log(`  Initial: ${(initialMemory / 1024 / 1024).toFixed(2)}MB`);
       console.log(`  Final: ${(finalMemory / 1024 / 1024).toFixed(2)}MB`);
       console.log(`  Increase: ${memoryIncrease.toFixed(2)}MB`);
-      console.log(`  Successful operations: ${successfulOperations}/${iterations}`);
-      
+      console.log(
+        `  Successful operations: ${successfulOperations}/${iterations}`
+      );
+
       // More reasonable memory expectations - should not increase by more than 50MB
       expect(memoryIncrease).toBeLessThan(50);
       expect(successfulOperations).toBeGreaterThan(iterations * 0.5); // At least 50% success
@@ -497,19 +541,24 @@ describe('Logging Performance Monitor - Performance Tests', () => {
       let batchCount = 0;
       let successfulLogs = 0;
       let successfulBatches = 0;
-      
+
       // Simulate production logging patterns with error handling
       while (Date.now() - startTime < testDuration) {
         try {
           // Mix of log levels with realistic distribution
-          const level = Math.random() < 0.7 ? 'info' : 
-                       Math.random() < 0.9 ? 'debug' : 
-                       Math.random() < 0.95 ? 'warn' : 'error';
-          
+          const level =
+            Math.random() < 0.7
+              ? 'info'
+              : Math.random() < 0.9
+                ? 'debug'
+                : Math.random() < 0.95
+                  ? 'warn'
+                  : 'error';
+
           hybridLoggerWithMonitoring[level](`Production log ${logCount}`);
           logCount++;
           successfulLogs++;
-          
+
           // Simulate periodic batch flushes
           if (logCount % 50 === 0) {
             try {
@@ -521,11 +570,13 @@ describe('Logging Performance Monitor - Performance Tests', () => {
               batchCount++;
               successfulBatches++;
             } catch (error) {
-              console.warn(`Batch flush ${batchCount} failed: ${error.message}`);
+              console.warn(
+                `Batch flush ${batchCount} failed: ${error.message}`
+              );
               batchCount++;
             }
           }
-          
+
           // Simulate buffer monitoring
           if (logCount % 10 === 0) {
             try {
@@ -538,14 +589,17 @@ describe('Logging Performance Monitor - Performance Tests', () => {
             }
           }
         } catch (error) {
-          console.warn(`Logging operation ${logCount} failed: ${error.message}`);
+          console.warn(
+            `Logging operation ${logCount} failed: ${error.message}`
+          );
           logCount++;
         }
       }
-      
+
       const actualDuration = Date.now() - startTime;
-      const logsPerSecond = successfulLogs > 0 ? (successfulLogs / actualDuration) * 1000 : 0;
-      
+      const logsPerSecond =
+        successfulLogs > 0 ? (successfulLogs / actualDuration) * 1000 : 0;
+
       // Get final metrics with error handling
       let metrics = {};
       try {
@@ -553,15 +607,19 @@ describe('Logging Performance Monitor - Performance Tests', () => {
       } catch (error) {
         console.warn(`Failed to get final metrics: ${error.message}`);
       }
-      
+
       console.log(`Production scenario results:`);
       console.log(`  Duration: ${actualDuration}ms`);
       console.log(`  Total logs attempted: ${logCount}`);
       console.log(`  Successful logs: ${successfulLogs}`);
       console.log(`  Logs/second: ${logsPerSecond.toFixed(0)}`);
-      console.log(`  Successful batch flushes: ${successfulBatches}/${batchCount}`);
-      console.log(`  Categories tracked: ${Object.keys(metrics.categories || {}).length}`);
-      
+      console.log(
+        `  Successful batch flushes: ${successfulBatches}/${batchCount}`
+      );
+      console.log(
+        `  Categories tracked: ${Object.keys(metrics.categories || {}).length}`
+      );
+
       // More reasonable performance expectations
       expect(logsPerSecond).toBeGreaterThan(500); // At least 500 logs/sec
       expect(successfulLogs).toBeGreaterThan(0); // Some logs should succeed

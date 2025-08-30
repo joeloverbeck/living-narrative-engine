@@ -4,7 +4,11 @@
  */
 
 import { BaseModalRenderer } from './baseModalRenderer.js';
-import { validateDependency, assertNonBlankString, assertPresent } from '../utils/dependencyUtils.js';
+import {
+  validateDependency,
+  assertNonBlankString,
+  assertPresent,
+} from '../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 
 /**
@@ -25,16 +29,19 @@ export class PortraitModalRenderer extends BaseModalRenderer {
   #imageElement;
   #loadingSpinner;
   #errorMessage;
-  
+
   // Accessibility enhancement fields
   #focusableElements = [];
   #firstFocusableElement = null;
   #lastFocusableElement = null;
   #liveRegion = null;
-  
+
   // Touch support fields
   #touchStartX = 0;
   #touchStartY = 0;
+
+  // Reduced motion preference
+  #prefersReducedMotion = false;
 
   /**
    * Constructs a PortraitModalRenderer instance.
@@ -45,7 +52,12 @@ export class PortraitModalRenderer extends BaseModalRenderer {
    * @param {import('../interfaces/coreServices.js').ILogger} dependencies.logger - The logger instance.
    * @param {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} dependencies.validatedEventDispatcher - The event dispatcher.
    */
-  constructor({ documentContext, domElementFactory, logger, validatedEventDispatcher }) {
+  constructor({
+    documentContext,
+    domElementFactory,
+    logger,
+    validatedEventDispatcher,
+  }) {
     // Configuration for BaseModalRenderer
     const elementsConfig = {
       modalElement: '.portrait-modal-overlay',
@@ -53,18 +65,111 @@ export class PortraitModalRenderer extends BaseModalRenderer {
       statusMessageElement: '.portrait-error-message',
       modalImage: '.portrait-modal-image',
       loadingSpinner: '.portrait-loading-spinner',
-      modalTitle: '#portrait-modal-title'
+      modalTitle: '#portrait-modal-title',
     };
-    
-    super({ logger, documentContext, validatedEventDispatcher, elementsConfig });
-    
-    validateDependency(domElementFactory, 'IDomElementFactory', logger, {
-      requiredMethods: ['img', 'div', 'button']
+
+    super({
+      logger,
+      documentContext,
+      validatedEventDispatcher,
+      elementsConfig,
     });
-    
+
+    validateDependency(domElementFactory, 'IDomElementFactory', logger, {
+      requiredMethods: ['img', 'div', 'button'],
+    });
+
     this.#domElementFactory = domElementFactory;
     this.#initializeElements();
     this.#setupAccessibilityFeatures();
+    this.#setupAriaAttributes();
+    this.#setupReducedMotionSupport();
+    this.#setupTouchAccessibility();
+    this.#setupHighContrastSupport();
+  }
+
+  /**
+   * Sets up static ARIA attributes for accessibility compliance.
+   * These attributes must be set during construction phase for proper screen reader support.
+   *
+   * @private
+   */
+  #setupAriaAttributes() {
+    // Modal element ARIA setup
+    if (this.elements.modalElement) {
+      this.elements.modalElement.setAttribute('role', 'dialog');
+      this.elements.modalElement.setAttribute('aria-modal', 'true');
+      this.elements.modalElement.setAttribute(
+        'aria-labelledby',
+        'portrait-modal-title'
+      );
+    }
+
+    // Loading spinner ARIA setup
+    if (this.elements.loadingSpinner) {
+      this.elements.loadingSpinner.setAttribute('role', 'status');
+      this.elements.loadingSpinner.setAttribute('aria-live', 'polite');
+      this.elements.loadingSpinner.setAttribute(
+        'aria-label',
+        'Loading portrait image'
+      );
+    }
+  }
+
+  /**
+   * Sets up reduced motion support based on user preferences.
+   * Respects the prefers-reduced-motion media query for accessibility.
+   *
+   * @private
+   */
+  #setupReducedMotionSupport() {
+    // Check if matchMedia is available (may not be in test environment)
+    if (
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function'
+    ) {
+      // Detect user's motion preference
+      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      this.#prefersReducedMotion = mediaQuery.matches;
+
+      // Listen for changes in motion preference
+      mediaQuery.addEventListener('change', (e) => {
+        this.#prefersReducedMotion = e.matches;
+        this.logger.debug(
+          `${this._logPrefix} Reduced motion preference changed to: ${e.matches}`
+        );
+      });
+    }
+  }
+
+  /**
+   * Sets up touch accessibility with minimum target sizes.
+   * Ensures WCAG 2.1 AA compliance for touch targets (minimum 44x44px).
+   *
+   * @private
+   */
+  #setupTouchAccessibility() {
+    // Ensure minimum 44x44px touch targets for WCAG compliance
+    if (this.elements.closeButton && this.elements.closeButton.style) {
+      const buttonStyles = this.elements.closeButton.style;
+      if (!buttonStyles.minWidth) buttonStyles.minWidth = '44px';
+      if (!buttonStyles.minHeight) buttonStyles.minHeight = '44px';
+    }
+  }
+
+  /**
+   * Sets up high contrast mode support for Windows accessibility.
+   * Ensures modal has solid borders for visibility in high contrast mode.
+   *
+   * @private
+   */
+  #setupHighContrastSupport() {
+    // Ensure modal has solid borders for high contrast mode
+    if (this.elements.modalElement && this.elements.modalElement.style) {
+      if (!this.elements.modalElement.style.border) {
+        this.elements.modalElement.style.border = '1px solid transparent';
+      }
+    }
   }
 
   /**
@@ -97,9 +202,24 @@ export class PortraitModalRenderer extends BaseModalRenderer {
    */
   showModal(portraitPath, speakerName, originalElement) {
     // Validate parameters
-    assertNonBlankString(portraitPath, 'portraitPath', 'showModal validation', this.logger);
-    assertNonBlankString(speakerName, 'speakerName', 'showModal validation', this.logger);
-    assertPresent(originalElement, 'originalElement is required', InvalidArgumentError, this.logger);
+    assertNonBlankString(
+      portraitPath,
+      'portraitPath',
+      'showModal validation',
+      this.logger
+    );
+    assertNonBlankString(
+      speakerName,
+      'speakerName',
+      'showModal validation',
+      this.logger
+    );
+    assertPresent(
+      originalElement,
+      'originalElement is required',
+      InvalidArgumentError,
+      this.logger
+    );
 
     // Store state
     this.#currentPortraitPath = portraitPath;
@@ -116,6 +236,8 @@ export class PortraitModalRenderer extends BaseModalRenderer {
     if (this.#imageElement) {
       this.#imageElement.src = '';
       this.#imageElement.classList.remove('loaded');
+      // Set alt text immediately for screen readers
+      this.#imageElement.alt = `Portrait of ${speakerName}`;
     }
 
     // Show the modal using parent class method
@@ -129,32 +251,34 @@ export class PortraitModalRenderer extends BaseModalRenderer {
    * @override
    */
   _onShow() {
-    this.logger.debug(`${this._logPrefix} Starting portrait load for ${this.#currentSpeakerName}`);
-    
+    this.logger.debug(
+      `${this._logPrefix} Starting portrait load for ${this.#currentSpeakerName}`
+    );
+
     // Announce modal opening with current speaker name
     const speakerName = this.#currentSpeakerName || 'Character';
     this.#announceToScreenReader(`Opened portrait modal for ${speakerName}`);
-    
+
     // Start loading the portrait image
     this.#loadPortraitImage(this.#currentPortraitPath);
 
-    // Add fade-in animation class if modal element exists
-    if (this.elements.modalElement) {
+    // Add fade-in animation class only if reduced motion is not preferred
+    if (this.elements.modalElement && !this.#prefersReducedMotion) {
       this.elements.modalElement.classList.add('fade-in');
     }
 
     // Dispatch event for modal opened
     if (this.validatedEventDispatcher) {
       try {
-        this.validatedEventDispatcher.dispatch({
-          type: 'PORTRAIT_MODAL_OPENED',
-          payload: {
-            portraitPath: this.#currentPortraitPath,
-            speakerName: this.#currentSpeakerName
-          }
+        this.validatedEventDispatcher.dispatch('core:portrait_modal_opened', {
+          portraitPath: this.#currentPortraitPath,
+          speakerName: this.#currentSpeakerName,
         });
       } catch (error) {
-        this.logger.error(`${this._logPrefix} Failed to dispatch PORTRAIT_MODAL_OPENED event`, error);
+        this.logger.error(
+          `${this._logPrefix} Failed to dispatch core:portrait_modal_opened event`,
+          error
+        );
       }
     }
   }
@@ -178,29 +302,45 @@ export class PortraitModalRenderer extends BaseModalRenderer {
     }
 
     // Return focus to original element
-    if (this.#originalFocusElement && typeof this.#originalFocusElement.focus === 'function') {
+    if (
+      this.#originalFocusElement &&
+      typeof this.#originalFocusElement.focus === 'function'
+    ) {
       try {
-        if (this.documentContext.document.body.contains(this.#originalFocusElement) &&
-            this.#originalFocusElement.offsetParent !== null) {
+        if (
+          this.documentContext.document.body.contains(
+            this.#originalFocusElement
+          ) &&
+          this.#originalFocusElement.offsetParent !== null
+        ) {
           this.#originalFocusElement.focus();
+        } else {
+          // Element is no longer in DOM or not visible
+          this.logger.warn(
+            `${this._logPrefix} Could not return focus to original element`,
+            new Error('Element not in DOM or not visible')
+          );
         }
       } catch (error) {
-        this.logger.warn(`${this._logPrefix} Could not return focus to original element`, error);
+        this.logger.warn(
+          `${this._logPrefix} Could not return focus to original element`,
+          error
+        );
       }
     }
 
     // Dispatch event for modal closed
     if (this.validatedEventDispatcher) {
       try {
-        this.validatedEventDispatcher.dispatch({
-          type: 'PORTRAIT_MODAL_CLOSED',
-          payload: {
-            portraitPath: portraitPath,
-            speakerName: speakerName
-          }
+        this.validatedEventDispatcher.dispatch('core:portrait_modal_closed', {
+          portraitPath: portraitPath,
+          speakerName: speakerName,
         });
       } catch (error) {
-        this.logger.error(`${this._logPrefix} Failed to dispatch PORTRAIT_MODAL_CLOSED event`, error);
+        this.logger.error(
+          `${this._logPrefix} Failed to dispatch core:portrait_modal_closed event`,
+          error
+        );
       }
     }
 
@@ -231,25 +371,25 @@ export class PortraitModalRenderer extends BaseModalRenderer {
       this.#loadingSpinner.style.display = 'block';
       this.#loadingSpinner.setAttribute('aria-hidden', 'false');
     }
-    
+
     if (this.#imageElement) {
       this.#imageElement.classList.remove('loaded');
     }
-    
+
     // Announce loading to screen reader
     this.#announceToScreenReader('Loading portrait image');
-    
+
     // Create new image object for preloading
     const tempImg = new Image();
-    
+
     tempImg.onload = () => {
       this.#handleImageLoad(tempImg, portraitPath);
     };
-    
+
     tempImg.onerror = () => {
       this.#handleImageError(tempImg);
     };
-    
+
     // Start loading
     tempImg.src = portraitPath;
   }
@@ -269,25 +409,28 @@ export class PortraitModalRenderer extends BaseModalRenderer {
       this.#loadingSpinner.style.display = 'none';
       this.#loadingSpinner.setAttribute('aria-hidden', 'true');
     }
-    
+
     // Announce successful loading to screen reader
     this.#announceToScreenReader('Portrait image loaded successfully');
-    
+
     // Update modal image
     if (this.#imageElement) {
       this.#imageElement.src = portraitPath;
       this.#imageElement.alt = `Portrait of ${this.#currentSpeakerName}`;
-      
+
       // Add loaded class for animation
       this.#imageElement.classList.add('loaded');
-      
+
       // Calculate optimal dimensions
       const maxWidth = window.innerWidth * 0.9;
       const maxHeight = window.innerHeight * 0.7;
-      
-      if (tempImg.naturalWidth > maxWidth || tempImg.naturalHeight > maxHeight) {
+
+      if (
+        tempImg.naturalWidth > maxWidth ||
+        tempImg.naturalHeight > maxHeight
+      ) {
         const aspectRatio = tempImg.naturalWidth / tempImg.naturalHeight;
-        
+
         if (aspectRatio > maxWidth / maxHeight) {
           this.#imageElement.style.width = `${maxWidth}px`;
           this.#imageElement.style.height = 'auto';
@@ -317,12 +460,12 @@ export class PortraitModalRenderer extends BaseModalRenderer {
       this.#loadingSpinner.style.display = 'none';
       this.#loadingSpinner.setAttribute('aria-hidden', 'true');
     }
-    
+
     const errorMessage = 'Failed to load portrait';
-    
+
     // Show error message using BaseModalRenderer's method
     this._displayStatusMessage(errorMessage, 'error');
-    
+
     // Announce error to screen reader with assertive live region
     this.#announceError(errorMessage);
   }
@@ -339,7 +482,7 @@ export class PortraitModalRenderer extends BaseModalRenderer {
       this.#imageElement.style.width = '';
       this.#imageElement.style.height = '';
     }
-    
+
     // Clear stored references
     this.#currentPortraitPath = null;
     this.#currentSpeakerName = null;
@@ -369,11 +512,13 @@ export class PortraitModalRenderer extends BaseModalRenderer {
     liveRegion.setAttribute('aria-live', 'polite');
     liveRegion.setAttribute('aria-atomic', 'true');
     liveRegion.className = 'sr-only portrait-modal-announcer';
-    
+
     this.documentContext.document.body.appendChild(liveRegion);
     this.#liveRegion = liveRegion;
-    
-    this.logger.debug(`${this._logPrefix} Live region created for screen reader announcements`);
+
+    this.logger.debug(
+      `${this._logPrefix} Live region created for screen reader announcements`
+    );
   }
 
   /**
@@ -384,36 +529,42 @@ export class PortraitModalRenderer extends BaseModalRenderer {
   #setupFocusTrap() {
     this._addDomListener(this.documentContext.document, 'keydown', (event) => {
       if (!this.isVisible) return;
-      
-      switch(event.key) {
+
+      switch (event.key) {
         case 'Tab':
           this.#refreshFocusableElements();
           this.#handleTabKey(event);
           break;
-          
+
         case 'Home':
           // Jump to first focusable element
           this.#refreshFocusableElements();
           if (this.#firstFocusableElement) {
             event.preventDefault();
             this.#firstFocusableElement.focus();
-            this.logger.debug(`${this._logPrefix} Home key pressed, focused first element`);
+            this.logger.debug(
+              `${this._logPrefix} Home key pressed, focused first element`
+            );
           }
           break;
-          
+
         case 'End':
           // Jump to last focusable element
           this.#refreshFocusableElements();
           if (this.#lastFocusableElement) {
             event.preventDefault();
             this.#lastFocusableElement.focus();
-            this.logger.debug(`${this._logPrefix} End key pressed, focused last element`);
+            this.logger.debug(
+              `${this._logPrefix} End key pressed, focused last element`
+            );
           }
           break;
       }
     });
-    
-    this.logger.debug(`${this._logPrefix} Focus trap and enhanced keyboard navigation set up`);
+
+    this.logger.debug(
+      `${this._logPrefix} Focus trap and enhanced keyboard navigation set up`
+    );
   }
 
   /**
@@ -428,15 +579,18 @@ export class PortraitModalRenderer extends BaseModalRenderer {
       'input:not([disabled])',
       'select:not([disabled])',
       'textarea:not([disabled])',
-      '[tabindex]:not([tabindex="-1"])'
+      '[tabindex]:not([tabindex="-1"])',
     ];
-    
+
     if (this.elements.modalElement) {
       this.#focusableElements = Array.from(
-        this.elements.modalElement.querySelectorAll(focusableSelectors.join(','))
+        this.elements.modalElement.querySelectorAll(
+          focusableSelectors.join(',')
+        )
       );
       this.#firstFocusableElement = this.#focusableElements[0] || null;
-      this.#lastFocusableElement = this.#focusableElements[this.#focusableElements.length - 1] || null;
+      this.#lastFocusableElement =
+        this.#focusableElements[this.#focusableElements.length - 1] || null;
     }
   }
 
@@ -448,22 +602,30 @@ export class PortraitModalRenderer extends BaseModalRenderer {
    */
   #handleTabKey(event) {
     if (!this.#focusableElements.length) return;
-    
+
     const activeElement = this.documentContext.document.activeElement;
-    
+    const currentIndex = this.#focusableElements.indexOf(activeElement);
+
     if (event.shiftKey) {
       // Shift + Tab - going backwards
-      if (activeElement === this.#firstFocusableElement) {
+      if (currentIndex === 0 || currentIndex === -1) {
         event.preventDefault();
         this.#lastFocusableElement?.focus();
-        this.logger.debug(`${this._logPrefix} Focus trap: wrapped to last element`);
+        this.logger.debug(
+          `${this._logPrefix} Focus trap: wrapped to last element`
+        );
       }
     } else {
       // Tab - going forwards
-      if (activeElement === this.#lastFocusableElement) {
+      if (
+        currentIndex === this.#focusableElements.length - 1 ||
+        currentIndex === -1
+      ) {
         event.preventDefault();
         this.#firstFocusableElement?.focus();
-        this.logger.debug(`${this._logPrefix} Focus trap: wrapped to first element`);
+        this.logger.debug(
+          `${this._logPrefix} Focus trap: wrapped to first element`
+        );
       }
     }
   }
@@ -475,7 +637,9 @@ export class PortraitModalRenderer extends BaseModalRenderer {
    */
   #setupTouchHandlers() {
     if (!this.#imageElement) {
-      this.logger.warn(`${this._logPrefix} Modal image element not found, touch handlers not added`);
+      this.logger.warn(
+        `${this._logPrefix} Modal image element not found, touch handlers not added`
+      );
       return;
     }
 
@@ -493,7 +657,9 @@ export class PortraitModalRenderer extends BaseModalRenderer {
 
       // Swipe down to close (minimum 50px swipe distance)
       if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > 50) {
-        this.logger.debug(`${this._logPrefix} Swipe down detected, closing modal`);
+        this.logger.debug(
+          `${this._logPrefix} Swipe down detected, closing modal`
+        );
         this.hide();
       }
     });
@@ -509,21 +675,25 @@ export class PortraitModalRenderer extends BaseModalRenderer {
    */
   #announceToScreenReader(message) {
     if (!this.#liveRegion) {
-      this.logger.warn(`${this._logPrefix} Live region not available for announcement: ${message}`);
+      this.logger.warn(
+        `${this._logPrefix} Live region not available for announcement: ${message}`
+      );
       return;
     }
-    
+
     // Clear previous announcement
     this.#liveRegion.textContent = '';
-    
+
     // Set new announcement with delay for screen reader detection
     setTimeout(() => {
       if (this.#liveRegion) {
         this.#liveRegion.textContent = message;
-        this.logger.debug(`${this._logPrefix} Announced to screen reader: ${message}`);
+        this.logger.debug(
+          `${this._logPrefix} Announced to screen reader: ${message}`
+        );
       }
     }, 100);
-    
+
     // Clear after announcement
     setTimeout(() => {
       if (this.#liveRegion) {
@@ -545,10 +715,12 @@ export class PortraitModalRenderer extends BaseModalRenderer {
     errorAnnouncement.setAttribute('aria-live', 'assertive');
     errorAnnouncement.className = 'sr-only';
     errorAnnouncement.textContent = errorMessage;
-    
+
     this.documentContext.document.body.appendChild(errorAnnouncement);
-    this.logger.debug(`${this._logPrefix} Error announced to screen reader: ${errorMessage}`);
-    
+    this.logger.debug(
+      `${this._logPrefix} Error announced to screen reader: ${errorMessage}`
+    );
+
     // Remove after announcement
     setTimeout(() => {
       if (errorAnnouncement.parentNode) {
@@ -575,16 +747,16 @@ export class PortraitModalRenderer extends BaseModalRenderer {
 
   destroy() {
     this.logger.debug(`${this._logPrefix} Destroying PortraitModalRenderer`);
-    
+
     // Clean up live region
     if (this.#liveRegion && this.#liveRegion.parentNode) {
       this.#liveRegion.parentNode.removeChild(this.#liveRegion);
       this.#liveRegion = null;
     }
-    
+
     // Clean up any resources
     this.#cleanup();
-    
+
     // Call parent destroy
     super.destroy();
   }

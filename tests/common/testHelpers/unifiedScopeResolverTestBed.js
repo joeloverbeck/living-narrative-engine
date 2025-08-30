@@ -34,7 +34,10 @@ export class UnifiedScopeResolverTestBed {
           return null;
         }
         // Return mock scope definition for testing
-        if (scopeName.includes('non-existent') || scopeName.includes('missing')) {
+        if (
+          scopeName.includes('non-existent') ||
+          scopeName.includes('missing')
+        ) {
           return null;
         }
         return {
@@ -89,7 +92,9 @@ export class UnifiedScopeResolverTestBed {
     mocks.targetResolutionService = {
       resolveTargets: jest.fn((scopeName, actor, discoveryContext) => {
         // This will be bound after initialization
-        return ActionResult.failure([new Error('TargetResolutionService not properly initialized')]);
+        return ActionResult.failure([
+          new Error('TargetResolutionService not properly initialized'),
+        ]);
       }),
     };
 
@@ -117,7 +122,7 @@ export class UnifiedScopeResolverTestBed {
    */
   createResolverWithCache(cacheStrategy = null) {
     const mockCache = cacheStrategy || createMockCacheStrategy();
-    
+
     return new UnifiedScopeResolver({
       ...this.mocks,
       cacheStrategy: mockCache,
@@ -192,12 +197,24 @@ export class UnifiedScopeResolverTestBed {
   }
 
   // Getter methods for easy access to mocks
-  get scopeRegistry() { return this.mocks.scopeRegistry; }
-  get scopeEngine() { return this.mocks.scopeEngine; }
-  get entityManager() { return this.mocks.entityManager; }
-  get logger() { return this.mocks.logger; }
-  get dslParser() { return this.mocks.dslParser; }
-  get actionErrorContextBuilder() { return this.mocks.actionErrorContextBuilder; }
+  get scopeRegistry() {
+    return this.mocks.scopeRegistry;
+  }
+  get scopeEngine() {
+    return this.mocks.scopeEngine;
+  }
+  get entityManager() {
+    return this.mocks.entityManager;
+  }
+  get logger() {
+    return this.mocks.logger;
+  }
+  get dslParser() {
+    return this.mocks.dslParser;
+  }
+  get actionErrorContextBuilder() {
+    return this.mocks.actionErrorContextBuilder;
+  }
 }
 
 /**

@@ -13,10 +13,10 @@ import { assertPresent } from '../../../src/utils/dependencyUtils.js';
 
 /**
  * Builder class for creating test entities with a fluent API.
- * 
+ *
  * Eliminates the need for manual entity object construction in mod tests,
  * providing a clear, readable way to build complex entity structures.
- * 
+ *
  * @example
  * const actor = new ModEntityBuilder('actor1')
  *   .withName('Alice')
@@ -27,12 +27,12 @@ import { assertPresent } from '../../../src/utils/dependencyUtils.js';
 export class ModEntityBuilder {
   /**
    * Creates a new entity builder.
-   * 
+   *
    * @param {string} id - The entity ID
    */
   constructor(id) {
     string.assertNonBlank(id, 'Entity ID', 'ModEntityBuilder constructor');
-    
+
     this.entityData = {
       id,
       components: {},
@@ -41,63 +41,83 @@ export class ModEntityBuilder {
 
   /**
    * Sets the entity's name component.
-   * 
+   *
    * @param {string} name - The display name for the entity
    * @returns {ModEntityBuilder} This builder for chaining
    */
   withName(name) {
     string.assertNonBlank(name, 'Entity name', 'ModEntityBuilder.withName');
-    
+
     this.entityData.components[NAME_COMPONENT_ID] = { text: name };
     return this;
   }
 
   /**
    * Sets the entity's description component.
-   * 
+   *
    * @param {string} description - The description text for the entity
    * @returns {ModEntityBuilder} This builder for chaining
    */
   withDescription(description) {
-    string.assertNonBlank(description, 'Entity description', 'ModEntityBuilder.withDescription');
-    
-    this.entityData.components[DESCRIPTION_COMPONENT_ID] = { text: description };
+    string.assertNonBlank(
+      description,
+      'Entity description',
+      'ModEntityBuilder.withDescription'
+    );
+
+    this.entityData.components[DESCRIPTION_COMPONENT_ID] = {
+      text: description,
+    };
     return this;
   }
 
   /**
    * Sets the entity's location.
-   * 
+   *
    * @param {string} locationId - The location entity ID
    * @returns {ModEntityBuilder} This builder for chaining
    */
   atLocation(locationId) {
-    string.assertNonBlank(locationId, 'Location ID', 'ModEntityBuilder.atLocation');
-    
+    string.assertNonBlank(
+      locationId,
+      'Location ID',
+      'ModEntityBuilder.atLocation'
+    );
+
     this.entityData.components[POSITION_COMPONENT_ID] = { locationId };
     return this;
   }
 
   /**
    * Sets the entity's location to match another entity's location.
-   * 
+   *
    * @param {object} otherEntity - The entity whose location to match
    * @returns {ModEntityBuilder} This builder for chaining
    */
   inSameLocationAs(otherEntity) {
-    assertPresent(otherEntity, 'Other entity is required', 'ModEntityBuilder.inSameLocationAs');
-    
-    if (!otherEntity.components || !otherEntity.components[POSITION_COMPONENT_ID]) {
-      throw new Error('ModEntityBuilder.inSameLocationAs: otherEntity must have a position component');
+    assertPresent(
+      otherEntity,
+      'Other entity is required',
+      'ModEntityBuilder.inSameLocationAs'
+    );
+
+    if (
+      !otherEntity.components ||
+      !otherEntity.components[POSITION_COMPONENT_ID]
+    ) {
+      throw new Error(
+        'ModEntityBuilder.inSameLocationAs: otherEntity must have a position component'
+      );
     }
-    
-    const otherLocation = otherEntity.components[POSITION_COMPONENT_ID].locationId;
+
+    const otherLocation =
+      otherEntity.components[POSITION_COMPONENT_ID].locationId;
     return this.atLocation(otherLocation);
   }
 
   /**
    * Adds positioning:closeness component with the specified partners.
-   * 
+   *
    * @param {string|Array<string>} partnerIds - Single partner ID or array of partner IDs
    * @returns {ModEntityBuilder} This builder for chaining
    */
@@ -109,22 +129,30 @@ export class ModEntityBuilder {
 
   /**
    * Adds a custom component to the entity.
-   * 
+   *
    * @param {string} componentId - The component type ID
    * @param {object} componentData - The component data
    * @returns {ModEntityBuilder} This builder for chaining
    */
   withComponent(componentId, componentData) {
-    string.assertNonBlank(componentId, 'Component ID', 'ModEntityBuilder.withComponent');
-    assertPresent(componentData, 'Component data is required', 'ModEntityBuilder.withComponent');
-    
+    string.assertNonBlank(
+      componentId,
+      'Component ID',
+      'ModEntityBuilder.withComponent'
+    );
+    assertPresent(
+      componentData,
+      'Component data is required',
+      'ModEntityBuilder.withComponent'
+    );
+
     this.entityData.components[componentId] = componentData;
     return this;
   }
 
   /**
    * Adds anatomy:body component with the specified body structure.
-   * 
+   *
    * @param {string} rootPartId - The root body part entity ID
    * @returns {ModEntityBuilder} This builder for chaining
    */
@@ -137,7 +165,7 @@ export class ModEntityBuilder {
 
   /**
    * Adds an anatomy:part component for body parts.
-   * 
+   *
    * @param {object} options - Part configuration
    * @param {string} [options.parent] - Parent part entity ID
    * @param {Array<string>} [options.children] - Child part entity IDs
@@ -156,7 +184,7 @@ export class ModEntityBuilder {
 
   /**
    * Adds positioning:kneeling_before component.
-   * 
+   *
    * @param {string} targetEntityId - The entity being knelt before
    * @returns {ModEntityBuilder} This builder for chaining
    */
@@ -169,7 +197,7 @@ export class ModEntityBuilder {
 
   /**
    * Adds positioning:facing component.
-   * 
+   *
    * @param {string} direction - The facing direction
    * @returns {ModEntityBuilder} This builder for chaining
    */
@@ -182,7 +210,7 @@ export class ModEntityBuilder {
 
   /**
    * Adds a clothing component.
-   * 
+   *
    * @param {object} clothingData - The clothing configuration
    * @returns {ModEntityBuilder} This builder for chaining
    */
@@ -193,7 +221,7 @@ export class ModEntityBuilder {
 
   /**
    * Marks this entity as a room/location.
-   * 
+   *
    * @param {string} roomName - The room display name
    * @returns {ModEntityBuilder} This builder for chaining
    */
@@ -205,7 +233,7 @@ export class ModEntityBuilder {
 
   /**
    * Creates multiple components at once from an object.
-   * 
+   *
    * @param {object} components - Object mapping component IDs to component data
    * @returns {ModEntityBuilder} This builder for chaining
    */
@@ -216,7 +244,7 @@ export class ModEntityBuilder {
 
   /**
    * Validates the entity structure before building.
-   * 
+   *
    * @returns {ModEntityBuilder} This builder for chaining
    * @throws {Error} If entity structure is invalid
    */
@@ -225,29 +253,35 @@ export class ModEntityBuilder {
     if (!this.entityData.id) {
       throw new Error('ModEntityBuilder.validate: Entity ID is required');
     }
-    
+
     // Validate components structure
     if (typeof this.entityData.components !== 'object') {
-      throw new Error('ModEntityBuilder.validate: Components must be an object');
+      throw new Error(
+        'ModEntityBuilder.validate: Components must be an object'
+      );
     }
-    
+
     // Validate required components if any exist
     const hasPosition = this.entityData.components[POSITION_COMPONENT_ID];
     if (hasPosition && !hasPosition.locationId) {
-      throw new Error('ModEntityBuilder.validate: Position component must have locationId');
+      throw new Error(
+        'ModEntityBuilder.validate: Position component must have locationId'
+      );
     }
-    
+
     const hasName = this.entityData.components[NAME_COMPONENT_ID];
     if (hasName && !hasName.text) {
-      throw new Error('ModEntityBuilder.validate: Name component must have text');
+      throw new Error(
+        'ModEntityBuilder.validate: Name component must have text'
+      );
     }
-    
+
     return this;
   }
 
   /**
    * Returns the built entity object.
-   * 
+   *
    * @returns {object} The complete entity object
    */
   build() {
@@ -261,7 +295,7 @@ export class ModEntityBuilder {
 export class ModEntityScenarios {
   /**
    * Creates a basic actor-target pair in the same room.
-   * 
+   *
    * @param {object} options - Configuration options
    * @param {Array<string>} [options.names] - Names for actor and target
    * @param {string} [options.location] - Location ID
@@ -298,7 +332,7 @@ export class ModEntityScenarios {
 
   /**
    * Creates a multi-actor scenario with observers.
-   * 
+   *
    * @param {object} options - Configuration options
    * @param {Array<string>} options.names - Names for all entities
    * @param {string} [options.location] - Location ID
@@ -322,7 +356,7 @@ export class ModEntityScenarios {
 
     // Collect all close relationships for the actor
     const actorPartners = [];
-    
+
     // Add close proximity to target if requested
     if (closeToMain >= 1) {
       actorPartners.push('target1');
@@ -381,7 +415,7 @@ export class ModEntityScenarios {
 
   /**
    * Creates an anatomy scenario with body parts.
-   * 
+   *
    * @param {object} options - Configuration options
    * @param {Array<string>} [options.names] - Names for actor and target
    * @param {string} [options.location] - Location ID
@@ -418,13 +452,14 @@ export class ModEntityScenarios {
     bodyParts.forEach((partType, index) => {
       const partId = `${partType}${partCounter++}`;
       const isRoot = index === 0;
-      
-      const part = new ModEntityBuilder(partId)
-        .asBodyPart({
-          parent: isRoot ? null : 'torso1',
-          children: isRoot ? bodyParts.slice(1).map((_, i) => `${bodyParts[i + 1]}${i + 2}`) : [],
-          subType: partType,
-        });
+
+      const part = new ModEntityBuilder(partId).asBodyPart({
+        parent: isRoot ? null : 'torso1',
+        children: isRoot
+          ? bodyParts.slice(1).map((_, i) => `${bodyParts[i + 1]}${i + 2}`)
+          : [],
+        subType: partType,
+      });
 
       bodyPartEntities.push(part.build());
     });
@@ -439,7 +474,7 @@ export class ModEntityScenarios {
 
   /**
    * Creates a room entity with the specified name.
-   * 
+   *
    * @param {string} [roomId] - The room entity ID
    * @param {string} [roomName] - The room display name
    * @returns {object} The room entity
@@ -450,7 +485,7 @@ export class ModEntityScenarios {
 
   /**
    * Creates entities for positioning tests.
-   * 
+   *
    * @param {object} options - Configuration options
    * @param {Array<string>} [options.names] - Entity names
    * @param {string} [options.location] - Location ID
@@ -464,7 +499,11 @@ export class ModEntityScenarios {
       positioning = 'standing',
     } = options;
 
-    const scenario = this.createActorTargetPair({ names, location, closeProximity: true });
+    const scenario = this.createActorTargetPair({
+      names,
+      location,
+      closeProximity: true,
+    });
 
     // Add positioning-specific setup
     if (positioning === 'kneeling') {

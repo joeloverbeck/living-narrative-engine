@@ -52,9 +52,9 @@ describe('LLM Adapter Integration E2E', () => {
   beforeAll(async () => {
     // Initialize test bed once with performance optimizations
     testBed = new LLMAdapterTestBed({
-      lightweight: true,      // Skip file system operations
+      lightweight: true, // Skip file system operations
       skipSchemaLoading: false, // Keep schema loading as LLM adapter needs schemas
-      networkDelay: 0         // No artificial network delays
+      networkDelay: 0, // No artificial network delays
     });
     await testBed.initialize();
   });
@@ -67,7 +67,7 @@ describe('LLM Adapter Integration E2E', () => {
   beforeEach(async () => {
     // Reset test bed state between tests (much faster than full reinit)
     await testBed.reset();
-    
+
     // Clear any events from previous tests
     testBed.clearRecordedEvents();
   });

@@ -18,9 +18,7 @@ import cors from 'cors';
 import { getAppConfigService } from '../../src/config/appConfig.js';
 import { ConsoleLogger } from '../../src/consoleLogger.js';
 import debugRoutes from '../../src/routes/debugRoutes.js';
-import {
-  createSecurityMiddleware,
-} from '../../src/middleware/security.js';
+import { createSecurityMiddleware } from '../../src/middleware/security.js';
 import {
   createTimeoutMiddleware,
   createSizeLimitConfig,
@@ -80,13 +78,13 @@ describe('Debug Log CORS Integration Tests', () => {
   afterEach(async () => {
     // Restore original environment
     process.env = originalEnv;
-    
+
     if (server) {
       await new Promise((resolve) => {
         server.close(resolve);
       });
     }
-    
+
     jest.clearAllMocks();
   });
 
@@ -119,7 +117,9 @@ describe('Debug Log CORS Integration Tests', () => {
       expect(response.headers['access-control-allow-origin']).toBe(
         'http://localhost:8080'
       );
-      expect(response.headers['access-control-allow-methods']).toContain('POST');
+      expect(response.headers['access-control-allow-methods']).toContain(
+        'POST'
+      );
       expect(response.headers['access-control-allow-headers']).toContain(
         'Content-Type'
       );
@@ -139,7 +139,9 @@ describe('Debug Log CORS Integration Tests', () => {
       expect(response.headers['access-control-allow-origin']).toBe(
         'http://127.0.0.1:8080'
       );
-      expect(response.headers['access-control-allow-methods']).toContain('POST');
+      expect(response.headers['access-control-allow-methods']).toContain(
+        'POST'
+      );
       expect(response.headers['access-control-allow-headers']).toContain(
         'Content-Type'
       );
@@ -159,7 +161,9 @@ describe('Debug Log CORS Integration Tests', () => {
       expect(response.headers['access-control-allow-origin']).toBe(
         'http://localhost:8081'
       );
-      expect(response.headers['access-control-allow-methods']).toContain('POST');
+      expect(response.headers['access-control-allow-methods']).toContain(
+        'POST'
+      );
     });
 
     /**
@@ -176,7 +180,9 @@ describe('Debug Log CORS Integration Tests', () => {
       expect(response.headers['access-control-allow-origin']).toBe(
         'http://127.0.0.1:8081'
       );
-      expect(response.headers['access-control-allow-methods']).toContain('POST');
+      expect(response.headers['access-control-allow-methods']).toContain(
+        'POST'
+      );
     });
   });
 
@@ -329,31 +335,33 @@ describe('Debug Log CORS Integration Tests', () => {
     test('should handle empty PROXY_ALLOWED_ORIGIN gracefully', async () => {
       // Clear the CORS configuration
       process.env.PROXY_ALLOWED_ORIGIN = '';
-      
+
       // Create a new app without CORS configuration
       const noCorsApp = express();
       noCorsApp.use(createSecurityMiddleware());
-      
+
       const noCorsConfigService = getAppConfigService(mockLogger);
       const noCorsOrigins = noCorsConfigService.getAllowedOriginsArray();
-      
+
       // When no origins are configured, CORS middleware is not applied
       if (noCorsOrigins.length === 0) {
         // App should still work but without CORS headers
         noCorsApp.use(express.json());
         noCorsApp.use('/api/debug-log', debugRoutes);
-        
+
         const noCorsServer = noCorsApp.listen(0);
-        
+
         try {
           const response = await request(noCorsApp)
             .post('/api/debug-log')
             .set('Content-Type', 'application/json')
             .send(validDebugLogRequest);
-          
+
           expect(response.status).toBe(200);
           // No CORS headers should be present
-          expect(response.headers['access-control-allow-origin']).toBeUndefined();
+          expect(
+            response.headers['access-control-allow-origin']
+          ).toBeUndefined();
         } finally {
           await new Promise((resolve) => {
             noCorsServer.close(resolve);

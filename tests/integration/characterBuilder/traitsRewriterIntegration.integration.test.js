@@ -4,7 +4,14 @@
  * event system integration, and error handling across service boundaries
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TraitsRewriterGenerator } from '../../../src/characterBuilder/services/TraitsRewriterGenerator.js';
 import { TraitsRewriterResponseProcessor } from '../../../src/characterBuilder/services/TraitsRewriterResponseProcessor.js';
 import { TraitsRewriterDisplayEnhancer } from '../../../src/characterBuilder/services/TraitsRewriterDisplayEnhancer.js';
@@ -42,11 +49,11 @@ describe('TraitsRewriter Integration Tests', () => {
         } catch (error) {
           // Simulate repair behavior for malformed JSON
           // Return a valid response with at least one trait to avoid errors
-          return { 
-            characterName: 'Test Character', 
+          return {
+            characterName: 'Test Character',
             rewrittenTraits: {
-              'core:personality': 'Default repaired trait content'
-            }
+              'core:personality': 'Default repaired trait content',
+            },
           };
         }
       }),
@@ -106,14 +113,14 @@ describe('TraitsRewriter Integration Tests', () => {
       // Arrange
       const characterDefinition = {
         'core:name': { text: 'Elena Vasquez' },
-        'core:personality': { 
-          text: 'Analytical software engineer with perfectionist tendencies' 
+        'core:personality': {
+          text: 'Analytical software engineer with perfectionist tendencies',
         },
-        'core:likes': { 
-          text: 'Clean code, challenging algorithms, espresso, and mystery novels' 
+        'core:likes': {
+          text: 'Clean code, challenging algorithms, espresso, and mystery novels',
         },
-        'core:fears': { 
-          text: 'Public speaking, being seen as incompetent, and system failures' 
+        'core:fears': {
+          text: 'Public speaking, being seen as incompetent, and system failures',
         },
       };
 
@@ -121,10 +128,13 @@ describe('TraitsRewriter Integration Tests', () => {
       const mockLLMResponse = JSON.stringify({
         characterName: 'Elena Vasquez',
         rewrittenTraits: {
-          'core:personality': 'I am an analytical software engineer who strives for perfection in every line of code I write.',
-          'core:likes': 'I enjoy tackling challenging algorithms over a perfect espresso, and I find mystery novels fascinating.',
-          'core:fears': 'I fear being judged when speaking publicly and worry about making critical mistakes that could cause system failures.',
-        }
+          'core:personality':
+            'I am an analytical software engineer who strives for perfection in every line of code I write.',
+          'core:likes':
+            'I enjoy tackling challenging algorithms over a perfect espresso, and I find mystery novels fascinating.',
+          'core:fears':
+            'I fear being judged when speaking publicly and worry about making critical mistakes that could cause system failures.',
+        },
       });
 
       // Set up the mock LLM strategy factory response - it expects an object with content property
@@ -157,15 +167,15 @@ describe('TraitsRewriter Integration Tests', () => {
       expect(generatorResult).toHaveProperty('rewrittenTraits');
       expect(generatorResult).toHaveProperty('characterName', 'Elena Vasquez');
       expect(generatorResult).toHaveProperty('processingTime');
-      
+
       // Assert - Test ResponseProcessor result
       expect(processedResult).toHaveProperty('characterName');
       expect(processedResult).toHaveProperty('rewrittenTraits');
-      
+
       // Assert - Test DisplayEnhancer result
       expect(displayData).toHaveProperty('sections');
       expect(displayData.sections).toHaveLength(3); // personality, likes, fears
-      
+
       // Verify LLM strategy factory was called
       expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -186,15 +196,17 @@ describe('TraitsRewriter Integration Tests', () => {
       const mockLLMResponse = JSON.stringify({
         characterName: 'Partial Character',
         rewrittenTraits: {
-          'core:personality': 'I have a basic personality trait that defines who I am.',
-        }
+          'core:personality':
+            'I have a basic personality trait that defines who I am.',
+        },
       });
 
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue({
         content: mockLLMResponse,
       });
 
-      const result = await services.generator.generateRewrittenTraits(partialCharacterData);
+      const result =
+        await services.generator.generateRewrittenTraits(partialCharacterData);
 
       expect(result.rewrittenTraits).toHaveProperty('core:personality');
       expect(Object.keys(result.rewrittenTraits)).toHaveLength(1);
@@ -203,22 +215,26 @@ describe('TraitsRewriter Integration Tests', () => {
     it('should maintain data integrity across service boundaries', async () => {
       const characterData = {
         'core:name': { text: 'Test <script>alert("xss")</script> Character' },
-        'core:personality': { text: 'I have "quotes" and \'apostrophes\' & ampersands' },
+        'core:personality': {
+          text: 'I have "quotes" and \'apostrophes\' & ampersands',
+        },
       };
 
       // Mock LLM response with potentially problematic content
       const mockLLMResponse = JSON.stringify({
         characterName: 'Test Character',
         rewrittenTraits: {
-          'core:personality': 'I am someone with quotes and apostrophes in my speech.',
-        }
+          'core:personality':
+            'I am someone with quotes and apostrophes in my speech.',
+        },
       });
 
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue({
         content: mockLLMResponse,
       });
 
-      const generated = await services.generator.generateRewrittenTraits(characterData);
+      const generated =
+        await services.generator.generateRewrittenTraits(characterData);
       // Test ResponseProcessor independently with mocked raw response
       const processed = await services.processor.processResponse(
         mockLLMResponse,
@@ -246,7 +262,9 @@ describe('TraitsRewriter Integration Tests', () => {
       expect(services.enhancer).toBeDefined();
 
       // Verify services have expected methods
-      expect(typeof services.generator.generateRewrittenTraits).toBe('function');
+      expect(typeof services.generator.generateRewrittenTraits).toBe(
+        'function'
+      );
       expect(typeof services.processor.processResponse).toBe('function');
       expect(typeof services.enhancer.enhanceForDisplay).toBe('function');
     });
@@ -261,8 +279,9 @@ describe('TraitsRewriter Integration Tests', () => {
       const mockLLMResponse = JSON.stringify({
         characterName: 'Test Character',
         rewrittenTraits: {
-          'core:personality': 'I am a brave and loyal companion, always ready to help.',
-        }
+          'core:personality':
+            'I am a brave and loyal companion, always ready to help.',
+        },
       });
 
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue({
@@ -270,7 +289,8 @@ describe('TraitsRewriter Integration Tests', () => {
       });
 
       // Generator creates LLM request and processes it internally
-      const generatorResult = await services.generator.generateRewrittenTraits(characterData);
+      const generatorResult =
+        await services.generator.generateRewrittenTraits(characterData);
 
       // ResponseProcessor is tested independently with mocked raw response
       // since Generator doesn't expose the raw LLM response
@@ -280,20 +300,22 @@ describe('TraitsRewriter Integration Tests', () => {
       );
 
       expect(processorResult.rewrittenTraits).toBeDefined();
-      expect(processorResult.characterName).toBe(characterData['core:name'].text);
+      expect(processorResult.characterName).toBe(
+        characterData['core:name'].text
+      );
     });
 
     it('should coordinate between ResponseProcessor and DisplayEnhancer', async () => {
       const processedTraits = {
-        'core:personality': 'I am a brave and loyal companion, always ready to help.',
+        'core:personality':
+          'I am a brave and loyal companion, always ready to help.',
         'core:likes': 'I enjoy adventures and helping friends.',
       };
       const characterName = 'Test Character';
 
-      const displayData = services.enhancer.enhanceForDisplay(
-        processedTraits,
-        { characterName: characterName }
-      );
+      const displayData = services.enhancer.enhanceForDisplay(processedTraits, {
+        characterName: characterName,
+      });
 
       // Verify proper data transformation
       expect(displayData.sections).toBeInstanceOf(Array);
@@ -307,16 +329,17 @@ describe('TraitsRewriter Integration Tests', () => {
     it('should dispatch events correctly throughout workflow', async () => {
       const capturedEvents = [];
       const eventSpy = {
-        getEventsByType: (type) => capturedEvents.filter(e => e.type === type)
+        getEventsByType: (type) =>
+          capturedEvents.filter((e) => e.type === type),
       };
-      
+
       // Mock event bus to capture events
       const originalDispatch = services.eventBus.dispatch;
       services.eventBus.dispatch = (event) => {
         capturedEvents.push(event);
         return originalDispatch.call(services.eventBus, event);
       };
-      
+
       const characterData = {
         'core:name': { text: 'Test Character' },
         'core:personality': { text: 'A brave and loyal companion' },
@@ -327,7 +350,7 @@ describe('TraitsRewriter Integration Tests', () => {
         characterName: 'Test Character',
         rewrittenTraits: {
           'core:personality': 'I am a brave and loyal companion.',
-        }
+        },
       });
 
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue({
@@ -339,18 +362,17 @@ describe('TraitsRewriter Integration Tests', () => {
 
       // Verify events were dispatched (specific events may vary based on implementation)
       expect(capturedEvents.length).toBeGreaterThanOrEqual(0);
-      
+
       // Restore original dispatch
       services.eventBus.dispatch = originalDispatch;
     });
 
-
     it('should maintain event correlation across services', async () => {
       const events = [];
       const eventTracker = {
-        getAllEvents: () => events
+        getAllEvents: () => events,
       };
-      
+
       // Mock event bus to track events
       const originalDispatch = services.eventBus.dispatch;
       services.eventBus.dispatch = (event) => {
@@ -361,7 +383,7 @@ describe('TraitsRewriter Integration Tests', () => {
         events.push(event);
         return originalDispatch.call(services.eventBus, event);
       };
-      
+
       const characterData = {
         'core:name': { text: 'Test Character' },
         'core:personality': { text: 'A brave and loyal companion' },
@@ -372,7 +394,7 @@ describe('TraitsRewriter Integration Tests', () => {
         characterName: 'Test Character',
         rewrittenTraits: {
           'core:personality': 'I am a brave and loyal companion.',
-        }
+        },
       });
 
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue({
@@ -408,7 +430,9 @@ describe('TraitsRewriter Integration Tests', () => {
 
     it('should handle LLM service failures gracefully', async () => {
       const faultyLLMStrategyFactory = {
-        getAIDecision: jest.fn().mockRejectedValue(new Error('LLM_SERVICE_ERROR'))
+        getAIDecision: jest
+          .fn()
+          .mockRejectedValue(new Error('LLM_SERVICE_ERROR')),
       };
 
       // Create generator with faulty LLM strategy factory
@@ -439,7 +463,8 @@ describe('TraitsRewriter Integration Tests', () => {
     });
 
     it('should recover from partial failures', async () => {
-      const malformedLLMResponse = '{"characterName": "Test", "rewrittenTraits": {"invalid": "json"';
+      const malformedLLMResponse =
+        '{"characterName": "Test", "rewrittenTraits": {"invalid": "json"';
       const characterDefinition = {
         'core:name': { text: 'Test Character' },
         'core:personality': { text: 'A brave and loyal companion' },
@@ -473,7 +498,7 @@ describe('TraitsRewriter Integration Tests', () => {
 
   describe('Data Integrity Tests', () => {
     it('should preserve character name integrity across all services', async () => {
-      const originalName = 'Elena María Vásquez-O\'Connor';
+      const originalName = "Elena María Vásquez-O'Connor";
       const characterData = {
         'core:name': { text: originalName },
         'core:personality': { text: 'Complex personality' },
@@ -484,14 +509,15 @@ describe('TraitsRewriter Integration Tests', () => {
         characterName: originalName,
         rewrittenTraits: {
           'core:personality': 'I have a complex personality.',
-        }
+        },
       });
 
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue({
         content: mockLLMResponse,
       });
 
-      const generated = await services.generator.generateRewrittenTraits(characterData);
+      const generated =
+        await services.generator.generateRewrittenTraits(characterData);
       // Test ResponseProcessor independently with mocked raw response
       const processed = await services.processor.processResponse(
         mockLLMResponse,
@@ -511,7 +537,9 @@ describe('TraitsRewriter Integration Tests', () => {
     it('should handle special characters in trait content safely', async () => {
       const characterData = {
         'core:name': { text: 'Test Character' },
-        'core:personality': { text: 'Personality with "quotes", \'apostrophes\', & symbols' },
+        'core:personality': {
+          text: 'Personality with "quotes", \'apostrophes\', & symbols',
+        },
         'core:likes': { text: 'Things with <brackets> and {braces}' },
       };
 
@@ -519,16 +547,18 @@ describe('TraitsRewriter Integration Tests', () => {
       const mockLLMResponse = JSON.stringify({
         characterName: 'Test Character',
         rewrittenTraits: {
-          'core:personality': 'I have a personality with "quotes", \'apostrophes\', & symbols.',
+          'core:personality':
+            'I have a personality with "quotes", \'apostrophes\', & symbols.',
           'core:likes': 'I enjoy things with brackets and braces in them.',
-        }
+        },
       });
 
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue({
         content: mockLLMResponse,
       });
 
-      const generated = await services.generator.generateRewrittenTraits(characterData);
+      const generated =
+        await services.generator.generateRewrittenTraits(characterData);
       // Test ResponseProcessor independently with mocked raw response
       const processed = await services.processor.processResponse(
         mockLLMResponse,
@@ -563,14 +593,15 @@ describe('TraitsRewriter Integration Tests', () => {
           'core:personality': 'I have a test personality.',
           'core:likes': 'I like test things.',
           'core:fears': 'I fear test scenarios.',
-        }
+        },
       });
 
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue({
         content: mockLLMResponse,
       });
 
-      const generated = await services.generator.generateRewrittenTraits(characterData);
+      const generated =
+        await services.generator.generateRewrittenTraits(characterData);
       // Test ResponseProcessor independently with mocked raw response
       const processed = await services.processor.processResponse(
         mockLLMResponse,
@@ -578,10 +609,12 @@ describe('TraitsRewriter Integration Tests', () => {
       );
 
       // Verify all original trait types are present in rewritten traits
-      const originalTraitKeys = Object.keys(characterData).filter(key => key !== 'core:name');
+      const originalTraitKeys = Object.keys(characterData).filter(
+        (key) => key !== 'core:name'
+      );
       const rewrittenTraitKeys = Object.keys(processed.rewrittenTraits);
-      
-      originalTraitKeys.forEach(key => {
+
+      originalTraitKeys.forEach((key) => {
         expect(rewrittenTraitKeys).toContain(key);
       });
     });
@@ -591,7 +624,9 @@ describe('TraitsRewriter Integration Tests', () => {
     it('should complete full integration workflow within acceptable time', async () => {
       const characterData = {
         'core:name': { text: 'Performance Test Character' },
-        'core:personality': { text: 'A character designed for performance testing' },
+        'core:personality': {
+          text: 'A character designed for performance testing',
+        },
         'core:likes': { text: 'Fast responses and efficient processing' },
         'core:fears': { text: 'Slow performance and timeouts' },
       };
@@ -603,7 +638,7 @@ describe('TraitsRewriter Integration Tests', () => {
           'core:personality': 'I am designed for performance testing.',
           'core:likes': 'I enjoy fast responses and efficient processing.',
           'core:fears': 'I worry about slow performance and timeouts.',
-        }
+        },
       });
 
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue({
@@ -613,7 +648,8 @@ describe('TraitsRewriter Integration Tests', () => {
       const startTime = performance.now();
 
       // Execute complete workflow
-      const generated = await services.generator.generateRewrittenTraits(characterData);
+      const generated =
+        await services.generator.generateRewrittenTraits(characterData);
       // Test ResponseProcessor independently with mocked raw response
       const processed = await services.processor.processResponse(
         mockLLMResponse,
@@ -628,7 +664,7 @@ describe('TraitsRewriter Integration Tests', () => {
 
       // Verify workflow completed successfully
       expect(enhanced.sections).toHaveLength(3);
-      
+
       // Should complete within reasonable time (excluding LLM call since it's mocked)
       expect(duration).toBeLessThan(100); // 100ms for service coordination
     });
@@ -643,15 +679,16 @@ describe('TraitsRewriter Integration Tests', () => {
       const mockLLMResponse = JSON.stringify({
         characterName: 'Empty Test Character',
         rewrittenTraits: {
-          'core:personality': 'I have a test personality.'
-        }
+          'core:personality': 'I have a test personality.',
+        },
       });
 
       mockLlmStrategyFactory.getAIDecision.mockResolvedValue({
         content: mockLLMResponse,
       });
 
-      const generated = await services.generator.generateRewrittenTraits(characterData);
+      const generated =
+        await services.generator.generateRewrittenTraits(characterData);
       // Test ResponseProcessor independently with mocked raw response
       const processed = await services.processor.processResponse(
         mockLLMResponse,
@@ -669,16 +706,18 @@ describe('TraitsRewriter Integration Tests', () => {
 
     it('should validate service method signatures and return types', () => {
       // Generator service validation
-      expect(typeof services.generator.generateRewrittenTraits).toBe('function');
-      
+      expect(typeof services.generator.generateRewrittenTraits).toBe(
+        'function'
+      );
+
       // Processor service validation
       expect(typeof services.processor.processResponse).toBe('function');
-      
+
       // Enhancer service validation
       expect(typeof services.enhancer.enhanceForDisplay).toBe('function');
       expect(typeof services.enhancer.formatForExport).toBe('function');
       expect(typeof services.enhancer.generateExportFilename).toBe('function');
-      
+
       // All core services validated - controller not needed for integration tests
     });
   });

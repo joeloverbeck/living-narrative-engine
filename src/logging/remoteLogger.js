@@ -373,7 +373,8 @@ class RemoteLogger {
     this.#retryBaseDelay = mergedConfig.retryBaseDelay;
     this.#retryMaxDelay = mergedConfig.retryMaxDelay;
     this.#initialConnectionDelay = mergedConfig.initialConnectionDelay;
-    this.#skipServerReadinessValidation = mergedConfig.skipServerReadinessValidation;
+    this.#skipServerReadinessValidation =
+      mergedConfig.skipServerReadinessValidation;
     this.#requestTimeout = mergedConfig.requestTimeout;
     this.#maxBufferSize = mergedConfig.maxBufferSize;
     this.#maxServerBatchSize = mergedConfig.maxServerBatchSize;
@@ -432,7 +433,7 @@ class RemoteLogger {
       this.#sensitiveDataFilter = new SensitiveDataFilter({
         logger: this.#fallbackLogger,
         enabled: mergedConfig.filtering.enabled,
-        config: mergedConfig.filtering
+        config: mergedConfig.filtering,
       });
     } else {
       this.#sensitiveDataFilter = null;
@@ -492,7 +493,9 @@ class RemoteLogger {
       errors.push('initialConnectionDelay cannot be negative');
     }
     if (config.initialConnectionDelay > 30000) {
-      warnings.push('initialConnectionDelay > 30s may delay logging significantly');
+      warnings.push(
+        'initialConnectionDelay > 30s may delay logging significantly'
+      );
     }
 
     // Validate retry configuration
@@ -550,7 +553,7 @@ class RemoteLogger {
   /**
    * Determines the appropriate endpoint based on the current page origin
    * to avoid CORS issues between localhost and 127.0.0.1
-   * 
+   *
    * @private
    * @param {string} configEndpoint - The configured endpoint
    * @returns {string} The adjusted endpoint URL
@@ -569,13 +572,14 @@ class RemoteLogger {
       // If the endpoint uses localhost but the page is served from 127.0.0.1,
       // or vice versa, adjust the endpoint to match
       if (
-        (endpointUrl.hostname === 'localhost' && pageHostname === '127.0.0.1') ||
+        (endpointUrl.hostname === 'localhost' &&
+          pageHostname === '127.0.0.1') ||
         (endpointUrl.hostname === '127.0.0.1' && pageHostname === 'localhost')
       ) {
         // Replace the hostname in the endpoint with the page's hostname
         endpointUrl.hostname = pageHostname;
         const adjustedEndpoint = endpointUrl.toString();
-        
+
         if (
           this.#fallbackLogger &&
           typeof this.#fallbackLogger.debug === 'function'
@@ -584,7 +588,7 @@ class RemoteLogger {
             `[RemoteLogger] Adjusted endpoint from ${configEndpoint} to ${adjustedEndpoint} to match page origin`
           );
         }
-        
+
         return adjustedEndpoint;
       }
     } catch (error) {
@@ -746,7 +750,9 @@ class RemoteLogger {
         logEntry = {
           ...logEntry,
           message: this.#sensitiveDataFilter.filter(logEntry.message, strategy),
-          metadata: logEntry.metadata ? this.#sensitiveDataFilter.filter(logEntry.metadata, strategy) : undefined
+          metadata: logEntry.metadata
+            ? this.#sensitiveDataFilter.filter(logEntry.metadata, strategy)
+            : undefined,
         };
       }
 
@@ -769,10 +775,16 @@ class RemoteLogger {
 
       // Update adaptive batch size based on current conditions
       this.#updateAdaptiveBatchSize();
-      
+
       // Track buffer size in performance monitor
-      if (this.#performanceMonitor && typeof this.#performanceMonitor.monitorBufferSize === 'function') {
-        this.#performanceMonitor.monitorBufferSize(this.#buffer.length, this.#maxBufferSize);
+      if (
+        this.#performanceMonitor &&
+        typeof this.#performanceMonitor.monitorBufferSize === 'function'
+      ) {
+        this.#performanceMonitor.monitorBufferSize(
+          this.#buffer.length,
+          this.#maxBufferSize
+        );
       }
 
       // Check if we need to flush based on adaptive batch size or payload size
@@ -994,20 +1006,34 @@ class RemoteLogger {
 
     this.#currentFlushPromise = (async () => {
       const flushStartTime = Date.now();
-      
+
       try {
         await this.#sendBatch(logsToSend);
-        
+
         // Track successful flush in performance monitor
-        if (this.#performanceMonitor && typeof this.#performanceMonitor.monitorBatchFlush === 'function') {
-          this.#performanceMonitor.monitorBatchFlush(logsToSend.length, Date.now() - flushStartTime, true);
+        if (
+          this.#performanceMonitor &&
+          typeof this.#performanceMonitor.monitorBatchFlush === 'function'
+        ) {
+          this.#performanceMonitor.monitorBatchFlush(
+            logsToSend.length,
+            Date.now() - flushStartTime,
+            true
+          );
         }
       } catch (error) {
         // Track failed flush in performance monitor
-        if (this.#performanceMonitor && typeof this.#performanceMonitor.monitorBatchFlush === 'function') {
-          this.#performanceMonitor.monitorBatchFlush(logsToSend.length, Date.now() - flushStartTime, false);
+        if (
+          this.#performanceMonitor &&
+          typeof this.#performanceMonitor.monitorBatchFlush === 'function'
+        ) {
+          this.#performanceMonitor.monitorBatchFlush(
+            logsToSend.length,
+            Date.now() - flushStartTime,
+            false
+          );
         }
-        
+
         // Handle failure based on error type
         this.#handleSendFailure(error, logsToSend);
 
@@ -1016,7 +1042,10 @@ class RemoteLogger {
           // Don't requeue - these logs won't succeed on retry
           this.#fallbackLogger?.warn(
             '[RemoteLogger] Discarding batch due to client error',
-            { error: error?.message || String(error), logCount: logsToSend.length }
+            {
+              error: error?.message || String(error),
+              logCount: logsToSend.length,
+            }
           );
         } else {
           // For server errors (5xx) or network issues, consider limited requeue
@@ -1241,7 +1270,7 @@ class RemoteLogger {
         method: 'GET',
         signal: abortController.signal,
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
       });
 
@@ -1272,12 +1301,13 @@ class RemoteLogger {
       // Log readiness validation result (only first time or on status change)
       if (
         !this.#serverReadinessValidated ||
-        (this.#serverReadinessCache && this.#serverReadinessCache.ready !== serverReady)
+        (this.#serverReadinessCache &&
+          this.#serverReadinessCache.ready !== serverReady)
       ) {
-        const logMessage = serverReady 
+        const logMessage = serverReady
           ? `[RemoteLogger] Server readiness validated: endpoint available`
           : `[RemoteLogger] Server readiness check failed: HTTP ${response.status}`;
-        
+
         if (
           this.#fallbackLogger &&
           typeof this.#fallbackLogger.debug === 'function'
@@ -1315,19 +1345,17 @@ class RemoteLogger {
       // Log readiness failure (only first time or on error change)
       if (
         !this.#serverReadinessValidated ||
-        (this.#serverReadinessCache && this.#serverReadinessCache.error !== errorMessage)
+        (this.#serverReadinessCache &&
+          this.#serverReadinessCache.error !== errorMessage)
       ) {
         if (
           this.#fallbackLogger &&
           typeof this.#fallbackLogger.debug === 'function'
         ) {
-          this.#fallbackLogger.debug(
-            `[RemoteLogger] ${errorMessage}`,
-            {
-              endpoint: healthEndpoint,
-              error: error.message,
-            }
-          );
+          this.#fallbackLogger.debug(`[RemoteLogger] ${errorMessage}`, {
+            endpoint: healthEndpoint,
+            error: error.message,
+          });
         }
       }
 
@@ -1410,15 +1438,18 @@ class RemoteLogger {
         return await fn();
       } catch (error) {
         lastError = error;
-        
+
         // Log retry attempts for debugging
-        if (this.#fallbackLogger && typeof this.#fallbackLogger.debug === 'function') {
+        if (
+          this.#fallbackLogger &&
+          typeof this.#fallbackLogger.debug === 'function'
+        ) {
           this.#fallbackLogger.debug(
             `[RemoteLogger] Retrying batch send (attempt ${attempt + 1}/${maxAttempts})`,
             {
               error: error.message,
               isConnectionError: this.#isConnectionError(error),
-              willRetry: attempt < maxAttempts - 1
+              willRetry: attempt < maxAttempts - 1,
             }
           );
         }
@@ -1620,32 +1651,32 @@ class RemoteLogger {
 
   /**
    * Calculates the recent logging rate (logs per second over the last 2 seconds).
-   * 
+   *
    * @private
    * @returns {number} Logging rate in logs per second
    */
   #calculateRecentLoggingRate() {
     const now = Date.now();
     const twoSecondsAgo = now - 2000;
-    
+
     // Remove old timestamps (older than 2 seconds)
     this.#recentLogTimestamps = this.#recentLogTimestamps.filter(
-      timestamp => timestamp > twoSecondsAgo
+      (timestamp) => timestamp > twoSecondsAgo
     );
-    
+
     // Calculate rate: logs in last 2 seconds / 2
     return this.#recentLogTimestamps.length / 2;
   }
 
   /**
    * Records a log timestamp for rate calculation.
-   * 
+   *
    * @private
    */
   #recordLogTimestamp() {
     const now = Date.now();
     this.#recentLogTimestamps.push(now);
-    
+
     // Keep array size reasonable (max 1000 entries = ~10 seconds at 100 logs/sec)
     if (this.#recentLogTimestamps.length > 1000) {
       this.#recentLogTimestamps = this.#recentLogTimestamps.slice(-500);
@@ -1654,7 +1685,7 @@ class RemoteLogger {
 
   /**
    * Updates the adaptive batch size based on current logging rate and buffer conditions.
-   * 
+   *
    * New strategy: During high-volume periods (like game startup), use larger batches
    * to reduce HTTP request overhead. Only use smaller batches if buffer is critically full.
    *
@@ -1666,18 +1697,18 @@ class RemoteLogger {
       this.#adaptiveBatchSize = this.#batchSize;
       return;
     }
-    
+
     const now = Date.now();
     const currentSize = this.#buffer.length;
     const bufferUtilization = currentSize / this.#maxBufferSize;
-    
+
     // Calculate recent logging rate (logs per second over last 2 seconds)
     const recentLogRate = this.#calculateRecentLoggingRate();
-    
+
     // Detect high-volume periods (like game initialization)
     const isHighVolumePhase = recentLogRate > 50; // More than 50 logs/second
     const isCriticalBuffer = bufferUtilization > 0.9; // Buffer nearly full
-    
+
     if (isCriticalBuffer) {
       // Critical: buffer nearly full, use smaller batches to flush quickly
       this.#adaptiveBatchSize = Math.max(10, Math.floor(this.#batchSize * 0.6));
@@ -1696,20 +1727,17 @@ class RemoteLogger {
       // Low utilization: use normal batch size
       this.#adaptiveBatchSize = this.#batchSize;
     }
-    
+
     // Debug logging for development
     if (process.env.NODE_ENV === 'development' && this.#fallbackLogger?.debug) {
-      this.#fallbackLogger.debug(
-        '[RemoteLogger] Adaptive batching update',
-        {
-          recentLogRate,
-          isHighVolumePhase,
-          bufferUtilization,
-          currentBufferSize: currentSize,
-          adaptiveBatchSize: this.#adaptiveBatchSize,
-          baseBatchSize: this.#batchSize
-        }
-      );
+      this.#fallbackLogger.debug('[RemoteLogger] Adaptive batching update', {
+        recentLogRate,
+        isHighVolumePhase,
+        bufferUtilization,
+        currentBufferSize: currentSize,
+        adaptiveBatchSize: this.#adaptiveBatchSize,
+        baseBatchSize: this.#batchSize,
+      });
     }
   }
 
@@ -1982,19 +2010,19 @@ class RemoteLogger {
    */
   #calculateConnectionBackoff(attempt) {
     // Use longer base delays for connection errors, but respect test configuration
-    const connectionBaseDelay = process.env.NODE_ENV === 'test' 
-      ? this.#retryBaseDelay 
-      : Math.max(this.#retryBaseDelay, 2000); // Minimum 2 seconds in production
+    const connectionBaseDelay =
+      process.env.NODE_ENV === 'test'
+        ? this.#retryBaseDelay
+        : Math.max(this.#retryBaseDelay, 2000); // Minimum 2 seconds in production
     const exponentialDelay = connectionBaseDelay * Math.pow(1.5, attempt); // Gentler exponential growth
-    const jitter = process.env.NODE_ENV === 'test' 
-      ? 0 
-      : Math.random() * 1000; // No jitter in tests for predictable timing
+    const jitter = process.env.NODE_ENV === 'test' ? 0 : Math.random() * 1000; // No jitter in tests for predictable timing
     const totalDelay = exponentialDelay + jitter;
 
     // Cap at a reasonable maximum for connection retries, but respect test configuration
-    const connectionMaxDelay = process.env.NODE_ENV === 'test' 
-      ? this.#retryMaxDelay 
-      : Math.max(this.#retryMaxDelay, 15000); // Minimum 15 seconds max in production
+    const connectionMaxDelay =
+      process.env.NODE_ENV === 'test'
+        ? this.#retryMaxDelay
+        : Math.max(this.#retryMaxDelay, 15000); // Minimum 15 seconds max in production
     return Math.min(totalDelay, connectionMaxDelay);
   }
 
@@ -2126,7 +2154,7 @@ class RemoteLogger {
 
   /**
    * Gets the current buffer size
-   * 
+   *
    * @returns {number} Number of logs in buffer
    */
   getBufferSize() {
@@ -2135,7 +2163,7 @@ class RemoteLogger {
 
   /**
    * Gets batch metrics for performance monitoring
-   * 
+   *
    * @returns {Object} Batch metrics including size, success rate, etc.
    */
   getBatchMetrics() {

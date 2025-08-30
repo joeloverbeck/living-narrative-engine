@@ -121,7 +121,8 @@ Generate a fresh, unique thought that builds upon your mental state.
       const result1 = formatter.formatThoughtsVoiceGuidance(singleThought);
       const result2 = formatter.formatThoughtsVoiceGuidance(multipleThoughts);
 
-      const expectedGuidance = "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style.";
+      const expectedGuidance =
+        "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style.";
 
       expect(result1).toBe(expectedGuidance);
       expect(result2).toBe(expectedGuidance);
@@ -131,7 +132,7 @@ Generate a fresh, unique thought that builds upon your mental state.
   describe('formatThoughtsVoiceGuidance - Enhanced Functionality', () => {
     test('basic guidance contains key authenticity phrases', () => {
       const result = formatter.formatThoughtsVoiceGuidance([]);
-      
+
       expect(result).toContain('INNER VOICE GUIDANCE');
       expect(result).toContain('authentically reflect');
       expect(result).toContain('unique mental voice');
@@ -142,7 +143,7 @@ Generate a fresh, unique thought that builds upon your mental state.
     test('enhanced guidance contains key anti-repetition phrases', () => {
       const thoughts = [{ text: 'Test thought', timestamp: '2024-01-01' }];
       const result = formatter.formatThoughtsVoiceGuidance(thoughts);
-      
+
       expect(result).toContain('INNER VOICE GUIDANCE');
       expect(result).toContain('fresh and unique');
       expect(result).toContain('do not repeat');
@@ -155,9 +156,9 @@ Generate a fresh, unique thought that builds upon your mental state.
     test('different behavior for empty vs populated thoughts arrays', () => {
       const emptyResult = formatter.formatThoughtsVoiceGuidance([]);
       const populatedResult = formatter.formatThoughtsVoiceGuidance([
-        { text: 'Test', timestamp: '2024-01-01' }
+        { text: 'Test', timestamp: '2024-01-01' },
       ]);
-      
+
       expect(emptyResult).not.toBe(populatedResult);
       expect(emptyResult).toContain('Generate thoughts');
       expect(populatedResult).toContain('do not repeat');
@@ -168,16 +169,20 @@ Generate a fresh, unique thought that builds upon your mental state.
     test('enhanced section contains anti-repetition instructions', () => {
       const thoughts = [{ text: 'Test thought', timestamp: '2024-01-01' }];
       const result = formatter.formatThoughtsSection(thoughts);
-      
-      expect(result).toContain('Recent thoughts (avoid repeating or barely rephrasing these):');
-      expect(result).toContain('Generate a fresh, unique thought that builds upon your mental state.');
+
+      expect(result).toContain(
+        'Recent thoughts (avoid repeating or barely rephrasing these):'
+      );
+      expect(result).toContain(
+        'Generate a fresh, unique thought that builds upon your mental state.'
+      );
       expect(result).toContain('- Test thought');
     });
 
     test('enhanced section maintains proper XML structure', () => {
       const thoughts = [{ text: 'Test', timestamp: '2024-01-01' }];
       const result = formatter.formatThoughtsSection(thoughts);
-      
+
       expect(result).toMatch(/^<thoughts>.*<\/thoughts>$/s);
       expect(result.split('\n')).toHaveLength(6); // Expected number of lines in new format
     });

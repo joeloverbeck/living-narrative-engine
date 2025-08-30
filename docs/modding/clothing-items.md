@@ -25,16 +25,19 @@ Every clothing item requires these core components:
 ## Required Components
 
 ### core:name
+
 - **Purpose**: Display name for the item
 - **Required**: Yes
 - **Example**: `{ "text": "Blue Jeans" }`
 
 ### core:description
+
 - **Purpose**: Detailed description of the item
 - **Required**: Yes
 - **Example**: `{ "text": "Classic denim jeans with a comfortable fit." }`
 
 ### clothing:wearable
+
 - **Purpose**: Defines how and where the item can be worn
 - **Required**: Yes
 - **Properties**:
@@ -125,6 +128,7 @@ Add visual and material properties:
 ```
 
 Available descriptors:
+
 - `descriptors:color_extended`: Color properties
 - `descriptors:texture`: Texture properties
 - `descriptors:size`: Size information
@@ -139,8 +143,8 @@ Here's a complete example of a winter coat with multi-region coverage:
   "id": "my_mod:winter_parka",
   "components": {
     "core:name": { "text": "Winter Parka" },
-    "core:description": { 
-      "text": "Heavy-duty winter parka with insulated lining and waterproof exterior." 
+    "core:description": {
+      "text": "Heavy-duty winter parka with insulated lining and waterproof exterior."
     },
     "clothing:wearable": {
       "layer": "outer",
@@ -168,16 +172,19 @@ Here's a complete example of a winter coat with multi-region coverage:
 ## Troubleshooting
 
 ### Coverage Not Working
+
 - Check that `covers` array includes the target slot
 - Verify `coveragePriority` is spelled correctly
 - Ensure the component schema is valid
 
 ### Wrong Item Selected in Actions
+
 - Review the priority system rules
 - Use tracing to debug resolution logic
 - Check for conflicting coverage mappings
 
 ### Item Not Appearing
+
 - Verify the mod is loaded in `game.json`
 - Check entity ID follows `modId:itemName` format
 - Ensure all required components are present

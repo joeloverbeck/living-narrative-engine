@@ -137,8 +137,12 @@ export default function createScopeReferenceResolver({
   cycleDetector,
 }) {
   return {
-    canResolve(node) { /* ... */ },
-    resolve(node, ctx) { /* ... */ }
+    canResolve(node) {
+      /* ... */
+    },
+    resolve(node, ctx) {
+      /* ... */
+    },
   };
 }
 ```
@@ -157,10 +161,14 @@ export default function createScopeReferenceResolver({
   validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
     requiredMethods: ['handleError'],
   });
-  
+
   return {
-    canResolve(node) { /* ... */ },
-    resolve(node, ctx) { /* ... */ }
+    canResolve(node) {
+      /* ... */
+    },
+    resolve(node, ctx) {
+      /* ... */
+    },
   };
 }
 ```
@@ -178,9 +186,11 @@ export default function createScopeReferenceResolver({
 ## Testing Requirements
 
 ### Test File Location
+
 - `tests/unit/scopeDsl/nodes/scopeReferenceResolver.test.js` (new file to be created)
 
 ### Unit Tests Required
+
 - Test `canResolve()` method with ScopeReference and non-ScopeReference nodes
 - Test successful scope resolution with valid scope ID
 - Test circular reference detection and error handling
@@ -191,23 +201,25 @@ export default function createScopeReferenceResolver({
 - Test context validation and error reporting
 
 ### Integration Tests
+
 - Test with real scope registry and cycle detector
 - Test error handling integration with IScopeDslErrorHandler
 - Test trace logging functionality
 
 ### Test Structure Pattern
+
 ```javascript
 describe('ScopeReferenceResolver', () => {
   let testBed;
-  
+
   beforeEach(() => {
     testBed = createTestBed();
   });
-  
+
   describe('canResolve', () => {
     // Test method recognition
   });
-  
+
   describe('resolve', () => {
     // Test resolution scenarios
     // Test error scenarios
@@ -238,7 +250,7 @@ describe('ScopeReferenceResolver', () => {
 ## Related Components
 
 - Error codes: `src/scopeDsl/constants/errorCodes.js`
-- Error handler interface: `IScopeDslErrorHandler` (token in `src/dependencyInjection/tokens/tokens-core.js`)  
+- Error handler interface: `IScopeDslErrorHandler` (token in `src/dependencyInjection/tokens/tokens-core.js`)
 - Cycle detector: Already integrated via `cycleDetector` dependency
 - Scope registry: Uses `scopeRegistry.getScopeAst()` method
 

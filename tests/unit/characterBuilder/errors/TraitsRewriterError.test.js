@@ -84,11 +84,15 @@ describe('TraitsRewriterError', () => {
     });
 
     it('should have GENERATION_FAILED code', () => {
-      expect(TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED).toBe('GENERATION_FAILED');
+      expect(TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED).toBe(
+        'GENERATION_FAILED'
+      );
     });
 
     it('should have VALIDATION_FAILED code', () => {
-      expect(TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED).toBe('VALIDATION_FAILED');
+      expect(TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED).toBe(
+        'VALIDATION_FAILED'
+      );
     });
 
     it('should have MISSING_TRAITS code', () => {
@@ -121,7 +125,10 @@ describe('TraitsRewriterError', () => {
       it('should create error with proper message and context', () => {
         const reason = 'Missing required fields';
         const context = { characterName: 'TestChar' };
-        const error = TraitsRewriterError.forInvalidCharacterDefinition(reason, context);
+        const error = TraitsRewriterError.forInvalidCharacterDefinition(
+          reason,
+          context
+        );
 
         expect(error).toBeInstanceOf(TraitsRewriterError);
         expect(error.message).toBe(`Invalid character definition: ${reason}`);
@@ -148,10 +155,18 @@ describe('TraitsRewriterError', () => {
         const reason = 'LLM request failed';
         const context = { attempt: 3 };
         const cause = new Error('Network error');
-        const error = TraitsRewriterError.forGenerationFailure(reason, context, cause);
+        const error = TraitsRewriterError.forGenerationFailure(
+          reason,
+          context,
+          cause
+        );
 
-        expect(error.message).toBe(`Traits rewriter generation failed: ${reason}`);
-        expect(error.context.errorCode).toBe(TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED);
+        expect(error.message).toBe(
+          `Traits rewriter generation failed: ${reason}`
+        );
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED
+        );
         expect(error.context.stage).toBe('generation');
         expect(error.context.attempt).toBe(3);
         expect(error.cause).toBe(cause);
@@ -161,7 +176,9 @@ describe('TraitsRewriterError', () => {
         const reason = 'Generation timeout';
         const error = TraitsRewriterError.forGenerationFailure(reason);
 
-        expect(error.context.errorCode).toBe(TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED
+        );
         expect(error.cause).toBeNull();
       });
     });
@@ -171,10 +188,16 @@ describe('TraitsRewriterError', () => {
         const field = 'traits';
         const reason = 'Invalid format';
         const context = { characterName: 'TestChar' };
-        const error = TraitsRewriterError.forValidationFailure(field, reason, context);
+        const error = TraitsRewriterError.forValidationFailure(
+          field,
+          reason,
+          context
+        );
 
         expect(error.message).toBe(`Validation failed for ${field}: ${reason}`);
-        expect(error.context.errorCode).toBe(TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED
+        );
         expect(error.context.stage).toBe('validation');
         expect(error.context.validationField).toBe(field);
         expect(error.context.validationReason).toBe(reason);
@@ -186,10 +209,17 @@ describe('TraitsRewriterError', () => {
       it('should create error with proper message and context', () => {
         const characterName = 'TestCharacter';
         const context = { attempt: 2 };
-        const error = TraitsRewriterError.forMissingTraits(characterName, context);
+        const error = TraitsRewriterError.forMissingTraits(
+          characterName,
+          context
+        );
 
-        expect(error.message).toBe(`No extractable traits found for character: ${characterName}`);
-        expect(error.context.errorCode).toBe(TRAITS_REWRITER_ERROR_CODES.MISSING_TRAITS);
+        expect(error.message).toBe(
+          `No extractable traits found for character: ${characterName}`
+        );
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.MISSING_TRAITS
+        );
         expect(error.context.stage).toBe('trait_extraction');
         expect(error.context.attempt).toBe(2);
       });
@@ -203,7 +233,9 @@ describe('TraitsRewriterError', () => {
         const error = TraitsRewriterError.forLLMFailure(reason, context, cause);
 
         expect(error.message).toBe(`LLM request failed: ${reason}`);
-        expect(error.context.errorCode).toBe(TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED
+        );
         expect(error.context.stage).toBe('llm_request');
         expect(error.context.provider).toBe('openai');
         expect(error.cause).toBe(cause);
@@ -215,10 +247,16 @@ describe('TraitsRewriterError', () => {
         const reason = 'Invalid JSON response';
         const context = { responseLength: 1024 };
         const cause = new SyntaxError('Unexpected token');
-        const error = TraitsRewriterError.forParsingFailure(reason, context, cause);
+        const error = TraitsRewriterError.forParsingFailure(
+          reason,
+          context,
+          cause
+        );
 
         expect(error.message).toBe(`Response parsing failed: ${reason}`);
-        expect(error.context.errorCode).toBe(TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED
+        );
         expect(error.context.stage).toBe('response_parsing');
         expect(error.context.responseLength).toBe(1024);
         expect(error.cause).toBe(cause);
@@ -232,7 +270,9 @@ describe('TraitsRewriterError', () => {
         const error = TraitsRewriterError.forQualityFailure(issues, context);
 
         expect(error.message).toBe(`Response quality issues: ${issues}`);
-        expect(error.context.errorCode).toBe(TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED
+        );
         expect(error.context.stage).toBe('quality_validation');
         expect(error.context.qualityScore).toBe(0.3);
       });
@@ -243,10 +283,16 @@ describe('TraitsRewriterError', () => {
         const reason = 'File write permission denied';
         const context = { filePath: '/tmp/traits.json' };
         const cause = new Error('EACCES');
-        const error = TraitsRewriterError.forExportFailure(reason, context, cause);
+        const error = TraitsRewriterError.forExportFailure(
+          reason,
+          context,
+          cause
+        );
 
         expect(error.message).toBe(`Export operation failed: ${reason}`);
-        expect(error.context.errorCode).toBe(TRAITS_REWRITER_ERROR_CODES.EXPORT_FAILED);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.EXPORT_FAILED
+        );
         expect(error.context.stage).toBe('export');
         expect(error.context.filePath).toBe('/tmp/traits.json');
         expect(error.cause).toBe(cause);
@@ -258,12 +304,18 @@ describe('TraitsRewriterError', () => {
         const format = 'xml';
         const supportedFormats = ['json', 'txt', 'csv'];
         const context = { requestedBy: 'user' };
-        const error = TraitsRewriterError.forInvalidFormat(format, supportedFormats, context);
+        const error = TraitsRewriterError.forInvalidFormat(
+          format,
+          supportedFormats,
+          context
+        );
 
         expect(error.message).toBe(
           `Invalid format '${format}'. Supported formats: ${supportedFormats.join(', ')}`
         );
-        expect(error.context.errorCode).toBe(TRAITS_REWRITER_ERROR_CODES.INVALID_FORMAT);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.INVALID_FORMAT
+        );
         expect(error.context.stage).toBe('format_validation');
         expect(error.context.requestedFormat).toBe(format);
         expect(error.context.supportedFormats).toEqual(supportedFormats);
@@ -276,14 +328,21 @@ describe('TraitsRewriterError', () => {
         const reason = 'Content contains unsafe patterns';
         const context = { unsafePatterns: ['<script>', 'javascript:'] };
         const cause = new Error('Sanitization blocked');
-        const error = TraitsRewriterError.forSanitizationFailure(reason, context, cause);
+        const error = TraitsRewriterError.forSanitizationFailure(
+          reason,
+          context,
+          cause
+        );
 
         expect(error.message).toBe(`Content sanitization failed: ${reason}`);
         expect(error.context.errorCode).toBe(
           TRAITS_REWRITER_ERROR_CODES.CONTENT_SANITIZATION_FAILED
         );
         expect(error.context.stage).toBe('content_sanitization');
-        expect(error.context.unsafePatterns).toEqual(['<script>', 'javascript:']);
+        expect(error.context.unsafePatterns).toEqual([
+          '<script>',
+          'javascript:',
+        ]);
         expect(error.cause).toBe(cause);
       });
     });
@@ -311,7 +370,9 @@ describe('TraitsRewriterError', () => {
       expect(Object.getPrototypeOf(TraitsRewriterError.prototype)).toBe(
         CharacterBuilderError.prototype
       );
-      expect(Object.getPrototypeOf(CharacterBuilderError.prototype)).toBe(Error.prototype);
+      expect(Object.getPrototypeOf(CharacterBuilderError.prototype)).toBe(
+        Error.prototype
+      );
     });
   });
 
@@ -385,8 +446,14 @@ describe('TraitsRewriterError', () => {
     it('should maintain constructor signature compatibility', () => {
       // Test that the constructor can be called in ways existing services use it
       const error1 = new TraitsRewriterError('Message only');
-      const error2 = new TraitsRewriterError('Message with context', { stage: 'test' });
-      const error3 = new TraitsRewriterError('Full signature', { stage: 'test' }, new Error('cause'));
+      const error2 = new TraitsRewriterError('Message with context', {
+        stage: 'test',
+      });
+      const error3 = new TraitsRewriterError(
+        'Full signature',
+        { stage: 'test' },
+        new Error('cause')
+      );
 
       expect(error1).toBeInstanceOf(TraitsRewriterError);
       expect(error2).toBeInstanceOf(TraitsRewriterError);

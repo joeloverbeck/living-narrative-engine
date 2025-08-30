@@ -49,7 +49,11 @@ export class LoggingPerformanceAdvisor {
       timestamp: Date.now(),
       patterns: this.#detectPerformancePatterns(metrics),
       bottlenecks: this.#identifyBottlenecks(metrics, resources),
-      recommendations: this.#generateRecommendations(metrics, resources, alerts),
+      recommendations: this.#generateRecommendations(
+        metrics,
+        resources,
+        alerts
+      ),
       configChanges: this.#suggestConfigurationChanges(metrics, resources),
       priority: this.#prioritizeActions(metrics, resources, alerts),
     };
@@ -91,7 +95,8 @@ export class LoggingPerformanceAdvisor {
     }
 
     // Detect batch inefficiency
-    const batchEfficiency = metrics.batching?.avgBatchSize / metrics.batching?.maxBatchSize;
+    const batchEfficiency =
+      metrics.batching?.avgBatchSize / metrics.batching?.maxBatchSize;
     if (batchEfficiency < 0.5) {
       patterns.push({
         type: 'batch_inefficiency',
@@ -135,7 +140,8 @@ export class LoggingPerformanceAdvisor {
           p99Latency: metrics.latency.p99,
           p95Latency: metrics.latency.p95,
         },
-        recommendation: 'Consider increasing batch size or implementing local buffering',
+        recommendation:
+          'Consider increasing batch size or implementing local buffering',
       });
     }
 
@@ -148,7 +154,8 @@ export class LoggingPerformanceAdvisor {
         metrics: {
           bufferSize: resources.bufferSize,
           maxBufferSize: resources.maxBufferSize,
-          utilizationPercent: (resources.bufferSize / resources.maxBufferSize) * 100,
+          utilizationPercent:
+            (resources.bufferSize / resources.maxBufferSize) * 100,
         },
         recommendation: 'Increase flush frequency or buffer size',
       });
@@ -164,7 +171,8 @@ export class LoggingPerformanceAdvisor {
           majorGCCount: resources.gcMetrics.majorGCCount,
           totalGCTime: resources.gcMetrics.totalGCTime,
         },
-        recommendation: 'Optimize object allocation and consider memory pooling',
+        recommendation:
+          'Optimize object allocation and consider memory pooling',
       });
     }
 
@@ -242,7 +250,10 @@ export class LoggingPerformanceAdvisor {
     recommendations.push(...categoryOptimizations);
 
     // Performance mode recommendations
-    if (metrics.throughput?.logsPerSecond > 500 && !this.#isPerformanceModeEnabled()) {
+    if (
+      metrics.throughput?.logsPerSecond > 500 &&
+      !this.#isPerformanceModeEnabled()
+    ) {
       recommendations.push({
         priority: 'high',
         action: 'enable_performance_mode',
@@ -286,7 +297,10 @@ export class LoggingPerformanceAdvisor {
     }
 
     // Flush interval recommendations
-    const optimalFlushInterval = this.#calculateOptimalFlushInterval(metrics, resources);
+    const optimalFlushInterval = this.#calculateOptimalFlushInterval(
+      metrics,
+      resources
+    );
     configChanges.flushInterval = {
       current: metrics.batching?.flushInterval || 5000,
       recommended: optimalFlushInterval,
@@ -362,7 +376,10 @@ export class LoggingPerformanceAdvisor {
     }
 
     // Low priority actions (nice to have)
-    if (!this.#isCompressionEnabled() && metrics.throughput?.bytesPerSecond > 5000) {
+    if (
+      !this.#isCompressionEnabled() &&
+      metrics.throughput?.bytesPerSecond > 5000
+    ) {
       actions.push({
         priority: 4,
         urgency: 'low',
@@ -380,11 +397,14 @@ export class LoggingPerformanceAdvisor {
    */
   #analyzeCategoryDistribution(metrics) {
     const categories = metrics.categories || {};
-    const total = Object.values(categories).reduce((sum, count) => sum + count, 0);
-    
+    const total = Object.values(categories).reduce(
+      (sum, count) => sum + count,
+      0
+    );
+
     const distribution = {};
     let maxPercent = 0;
-    
+
     for (const [category, count] of Object.entries(categories)) {
       const percent = (count / total) * 100;
       distribution[category] = percent;
@@ -394,7 +414,9 @@ export class LoggingPerformanceAdvisor {
     return {
       distribution,
       imbalanced: maxPercent > 50,
-      dominant: Object.entries(distribution).find(([, p]) => p === maxPercent)?.[0],
+      dominant: Object.entries(distribution).find(
+        ([, p]) => p === maxPercent
+      )?.[0],
     };
   }
 
@@ -429,7 +451,7 @@ export class LoggingPerformanceAdvisor {
   #calculateOptimalBatchSize(metrics) {
     const throughput = metrics.throughput?.logsPerSecond || 100;
     const latencyTarget = 100; // ms
-    
+
     // Balance between efficiency and latency
     let optimalSize = Math.min(
       Math.ceil(throughput * (latencyTarget / 1000)),
@@ -445,21 +467,21 @@ export class LoggingPerformanceAdvisor {
   #calculateOptimalFlushInterval(metrics, resources) {
     const throughput = metrics.throughput?.logsPerSecond || 100;
     const bufferPressure = resources.bufferSize / resources.maxBufferSize;
-    
+
     // More frequent flushes under pressure
     let baseInterval = 5000; // 5 seconds
-    
+
     if (bufferPressure > 0.7) {
       baseInterval = 1000; // 1 second
     } else if (bufferPressure > 0.5) {
       baseInterval = 2500; // 2.5 seconds
     }
-    
+
     // Adjust for throughput
     if (throughput > 1000) {
       baseInterval = Math.min(baseInterval, 1000);
     }
-    
+
     return baseInterval;
   }
 
@@ -469,13 +491,13 @@ export class LoggingPerformanceAdvisor {
   #suggestCategoryFiltering(metrics) {
     const categories = metrics.categories || {};
     const noisyCategories = [];
-    
+
     for (const [category, count] of Object.entries(categories)) {
       if (count > 5000) {
         noisyCategories.push(category);
       }
     }
-    
+
     if (noisyCategories.length > 0) {
       return {
         current: 'all categories enabled',
@@ -484,7 +506,7 @@ export class LoggingPerformanceAdvisor {
         expectedReduction: '50-70% log volume',
       };
     }
-    
+
     return null;
   }
 
@@ -509,12 +531,12 @@ export class LoggingPerformanceAdvisor {
    */
   #updateOptimizationHistory(analysis) {
     this.#optimizationHistory.push(analysis);
-    
+
     // Keep only last 100 analyses
     if (this.#optimizationHistory.length > 100) {
       this.#optimizationHistory.shift();
     }
-    
+
     // Track which recommendations have been applied
     for (const recommendation of analysis.recommendations) {
       const key = recommendation.action;
@@ -535,7 +557,7 @@ export class LoggingPerformanceAdvisor {
    */
   getTrendingRecommendations() {
     const trends = [];
-    
+
     for (const [action, count] of this.#configRecommendations.entries()) {
       if (count > 3) {
         trends.push({
@@ -546,7 +568,7 @@ export class LoggingPerformanceAdvisor {
         });
       }
     }
-    
+
     return trends;
   }
 }

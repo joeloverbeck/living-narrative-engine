@@ -103,7 +103,10 @@ class HybridLogger {
    * @param {*} [dependencies.performanceMonitor] - Optional performance monitor
    * @param {HybridLoggerFilters} [config] - Filter configuration
    */
-  constructor({ consoleLogger, remoteLogger, categoryDetector, performanceMonitor }, config = {}) {
+  constructor(
+    { consoleLogger, remoteLogger, categoryDetector, performanceMonitor },
+    config = {}
+  ) {
     // Validate required dependencies
     validateDependency(consoleLogger, 'ILogger', undefined, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
@@ -141,7 +144,7 @@ class HybridLogger {
       enableVisualNotifications: true,
       bufferSize: 50,
       notificationPosition: 'top-right',
-      autoDismissAfter: null
+      autoDismissAfter: null,
     };
 
     // Initialize sensitive data filter if configured
@@ -149,7 +152,7 @@ class HybridLogger {
       this.#sensitiveDataFilter = new SensitiveDataFilter({
         logger: consoleLogger, // Use console logger for filter's own logging
         enabled: config.filtering.enabled,
-        config: config.filtering
+        config: config.filtering,
       });
     } else {
       this.#sensitiveDataFilter = null;
@@ -162,7 +165,7 @@ class HybridLogger {
       totalWarnings: 0,
       totalErrors: 0,
       oldestTimestamp: null,
-      newestTimestamp: null
+      newestTimestamp: null,
     };
 
     // Log initialization to console only if console is enabled (to avoid recursive logging)
@@ -190,27 +193,27 @@ class HybridLogger {
     if (level !== 'warn' && level !== 'error') {
       return; // Only buffer critical logs
     }
-    
+
     const logEntry = {
       timestamp: new Date().toISOString(),
       level,
       message,
       category,
       metadata,
-      id: uuidv4() // Using uuid package
+      id: uuidv4(), // Using uuid package
     };
-    
+
     // Add to buffer (circular buffer logic)
     this.#criticalBuffer.push(logEntry);
-    
+
     // Maintain buffer size limit
     if (this.#criticalBuffer.length > this.#maxBufferSize) {
       this.#criticalBuffer.shift(); // Remove oldest
     }
-    
+
     // Update metadata
     this.#updateBufferMetadata(level);
-    
+
     return logEntry;
   }
 
@@ -226,7 +229,7 @@ class HybridLogger {
     } else if (level === 'error') {
       this.#bufferMetadata.totalErrors++;
     }
-    
+
     const now = new Date().toISOString();
     if (!this.#bufferMetadata.oldestTimestamp) {
       this.#bufferMetadata.oldestTimestamp = now;
@@ -252,10 +255,10 @@ class HybridLogger {
    */
   warn(message, ...args) {
     const category = this.#categoryDetector.detectCategory(message);
-    
+
     // Add to critical buffer
     this.#addToCriticalBuffer('warn', message, category, { args });
-    
+
     // Existing warn logic...
     this.#logToDestinations('warn', message, args);
   }
@@ -268,10 +271,10 @@ class HybridLogger {
    */
   error(message, ...args) {
     const category = this.#categoryDetector.detectCategory(message);
-    
+
     // Add to critical buffer
     this.#addToCriticalBuffer('error', message, category, { args });
-    
+
     // Existing error logic...
     this.#logToDestinations('error', message, args);
   }
@@ -370,13 +373,16 @@ class HybridLogger {
    */
   #logToDestinations(level, message, args) {
     // Performance tracking could be added here if needed
-    
+
     try {
       // Detect category once for efficiency
       const category = this.#categoryDetector.detectCategory(message);
 
       // Track performance metrics if monitor is available
-      if (this.#performanceMonitor && typeof this.#performanceMonitor.monitorLogOperation === 'function') {
+      if (
+        this.#performanceMonitor &&
+        typeof this.#performanceMonitor.monitorLogOperation === 'function'
+      ) {
         this.#performanceMonitor.monitorLogOperation(level, message, {
           category,
           argsCount: args.length,
@@ -392,16 +398,24 @@ class HybridLogger {
             category,
             message
           );
-          
+
           // Apply sensitive data filtering to console output if enabled
           let filteredMessage = formattedMessage;
           let filteredArgs = args;
-          if (this.#sensitiveDataFilter && this.#sensitiveDataFilter.isEnabled()) {
+          if (
+            this.#sensitiveDataFilter &&
+            this.#sensitiveDataFilter.isEnabled()
+          ) {
             const strategy = this.#sensitiveDataFilter.strategy || 'mask';
-            filteredMessage = this.#sensitiveDataFilter.filter(formattedMessage, strategy);
-            filteredArgs = args.map(arg => this.#sensitiveDataFilter.filter(arg, strategy));
+            filteredMessage = this.#sensitiveDataFilter.filter(
+              formattedMessage,
+              strategy
+            );
+            filteredArgs = args.map((arg) =>
+              this.#sensitiveDataFilter.filter(arg, strategy)
+            );
           }
-          
+
           this.#consoleLogger[level](filteredMessage, ...filteredArgs);
         } catch (consoleError) {
           // Console logging failed, but don't affect remote logging
@@ -462,7 +476,10 @@ class HybridLogger {
     }
 
     // Check if this is a critical log that should bypass filters
-    if (this.#criticalLoggingConfig && this.#criticalLoggingConfig.alwaysShowInConsole) {
+    if (
+      this.#criticalLoggingConfig &&
+      this.#criticalLoggingConfig.alwaysShowInConsole
+    ) {
       if (level === 'warn' || level === 'error') {
         return true; // Always show critical logs
       }
@@ -582,7 +599,7 @@ class HybridLogger {
 
   /**
    * Get all critical logs from the buffer
-   * 
+   *
    * @param {object} options - Filter options
    * @param {string} options.level - Filter by level ('warn', 'error', or null for both)
    * @param {number} options.limit - Maximum number of logs to return
@@ -590,31 +607,31 @@ class HybridLogger {
    */
   getCriticalLogs(options = {}) {
     let logs = [...this.#criticalBuffer]; // Create copy
-    
+
     if (options.level) {
-      logs = logs.filter(log => log.level === options.level);
+      logs = logs.filter((log) => log.level === options.level);
     }
-    
+
     if (options.limit) {
       logs = logs.slice(-options.limit);
     }
-    
+
     return logs;
   }
-  
+
   /**
    * Get critical buffer metadata
-   * 
+   *
    * @returns {object} Buffer statistics
    */
   getCriticalBufferStats() {
     return {
       currentSize: this.#criticalBuffer.length,
       maxSize: this.#maxBufferSize,
-      ...this.#bufferMetadata
+      ...this.#bufferMetadata,
     };
   }
-  
+
   /**
    * Clear the critical log buffer
    */
@@ -624,7 +641,7 @@ class HybridLogger {
       totalWarnings: 0,
       totalErrors: 0,
       oldestTimestamp: null,
-      newestTimestamp: null
+      newestTimestamp: null,
     };
   }
 
@@ -634,7 +651,10 @@ class HybridLogger {
    * @returns {object|null} Performance metrics or null if not available
    */
   getPerformanceMetrics() {
-    if (this.#performanceMonitor && typeof this.#performanceMonitor.getLoggingMetrics === 'function') {
+    if (
+      this.#performanceMonitor &&
+      typeof this.#performanceMonitor.getLoggingMetrics === 'function'
+    ) {
       return this.#performanceMonitor.getLoggingMetrics();
     }
     return null;

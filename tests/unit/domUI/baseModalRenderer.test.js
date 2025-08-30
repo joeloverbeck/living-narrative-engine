@@ -66,8 +66,8 @@ jest.mock('../../../src/domUI/boundDomRendererBase.js', () => {
     this._addDomListener = currentMockAddDomListener;
   });
 
-  // For `super.destroy()` calls from BaseModalRenderer
-  MockCtor.prototype.destroy = currentMockSuperDestroyFn;
+  // For `super.dispose()` calls from BaseModalRenderer
+  MockCtor.prototype.dispose = currentMockSuperDestroyFn;
   // If BaseModalRenderer uses super._addSubscription or other RendererBase methods, they'd need to be on prototype.
   // MockCtor.prototype._addSubscription = jest.fn(); // Example if needed
 
@@ -858,7 +858,7 @@ describe('BaseModalRenderer', () => {
       expect(hideSpy).not.toHaveBeenCalled();
     });
 
-    it('should call super.destroy() if it exists', () => {
+    it('should call super.dispose() if it exists', () => {
       baseModalInstance.destroy();
       expect(mockSuperDestroy).toHaveBeenCalled();
     });

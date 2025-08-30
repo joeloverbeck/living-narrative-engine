@@ -125,7 +125,7 @@ describe('Enhanced Action Tracing Validation', () => {
     expect(noItemsLog).toBeDefined();
     expect(noItemsLog.data.slotName).toBe('torso_lower');
     expect(noItemsLog.data.mode).toBe('topmost_no_accessories');
-    
+
     // The available slots should include torso_lower since it has accessories
     expect(noItemsLog.data.availableSlots).toContain('torso_lower');
   });

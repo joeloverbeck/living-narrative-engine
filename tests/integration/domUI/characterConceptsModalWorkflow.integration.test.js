@@ -60,8 +60,10 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
         updatedAt: Date.now() - 3600000,
       },
     ];
-    
-    characterBuilderService = createMockCharacterBuilderService({ existingConcepts });
+
+    characterBuilderService = createMockCharacterBuilderService({
+      existingConcepts,
+    });
     container = await createTestContainer({
       mockServices: {
         [tokens.CharacterBuilderService]: characterBuilderService,
@@ -94,22 +96,24 @@ describe('Character Concepts Manager - Modal Workflow Integration', () => {
 
     // Configure mock service to dispatch events for controller
     const originalCreate = characterBuilderService.createCharacterConcept;
-    characterBuilderService.createCharacterConcept = jest.fn().mockImplementation(async (conceptText) => {
-      const result = await originalCreate(conceptText);
-      
-      // Dispatch the events that the controller expects
-      eventBus.dispatch('core:character-concept-created', {
-        concept: result,
+    characterBuilderService.createCharacterConcept = jest
+      .fn()
+      .mockImplementation(async (conceptText) => {
+        const result = await originalCreate(conceptText);
+
+        // Dispatch the events that the controller expects
+        eventBus.dispatch('core:character-concept-created', {
+          concept: result,
+        });
+
+        eventBus.dispatch('core:statistics-updated', {
+          totalConcepts: 2,
+          conceptsWithDirections: 1,
+          totalDirections: 3,
+        });
+
+        return result;
       });
-      
-      eventBus.dispatch('core:statistics-updated', {
-        totalConcepts: 2,
-        conceptsWithDirections: 1,
-        totalDirections: 3,
-      });
-      
-      return result;
-    });
 
     // Create controller
     controller = new CharacterConceptsManagerController({

@@ -6,7 +6,14 @@
  * @see ../../../src/scopeDsl/nodes/slotAccessResolver.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { CoverageTracingEnhancer } from '../../../src/scopeDsl/tracing/coverageTracingEnhancer.js';
 import { CoverageResolutionTraceFormatter } from '../../../src/scopeDsl/tracing/coverageResolutionTraceFormatter.js';
 import createSlotAccessResolver from '../../../src/scopeDsl/nodes/slotAccessResolver.js';
@@ -27,24 +34,26 @@ describe('Coverage Resolution Tracing Integration', () => {
   beforeEach(() => {
     // Mock entities gateway with clothing data
     mockEntitiesGateway = {
-      getComponentData: jest.fn().mockImplementation((entityId, componentType) => {
-        if (componentType === 'clothing:equipment') {
-          return {
-            equipped: {
-              torso_upper: {
-                outer: 'leather_jacket_01',
-                base: 'cotton_shirt_02',
-                underwear: 'undershirt_03'
+      getComponentData: jest
+        .fn()
+        .mockImplementation((entityId, componentType) => {
+          if (componentType === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_upper: {
+                  outer: 'leather_jacket_01',
+                  base: 'cotton_shirt_02',
+                  underwear: 'undershirt_03',
+                },
+                legs: {
+                  outer: 'jeans_01',
+                  underwear: 'boxers_01',
+                },
               },
-              legs: {
-                outer: 'jeans_01',
-                underwear: 'boxers_01'
-              }
-            }
-          };
-        }
-        return null;
-      })
+            };
+          }
+          return null;
+        }),
     };
 
     // Mock logger
@@ -52,7 +61,7 @@ describe('Coverage Resolution Tracing Integration', () => {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
-      debug: jest.fn()
+      debug: jest.fn(),
     };
 
     // Mock action trace filter for HumanReadableFormatter
@@ -61,8 +70,8 @@ describe('Coverage Resolution Tracing Integration', () => {
       getInclusionConfig: jest.fn().mockReturnValue({
         includeComponentData: true,
         includePrerequisites: true,
-        includeTargets: true
-      })
+        includeTargets: true,
+      }),
     };
 
     // Mock performance monitor
@@ -70,28 +79,31 @@ describe('Coverage Resolution Tracing Integration', () => {
       startMeasurement: jest.fn().mockReturnValue('measurement-123'),
       endMeasurement: jest.fn().mockReturnValue(42),
       recordMetrics: jest.fn(),
-      getMetrics: jest.fn().mockReturnValue({})
+      getMetrics: jest.fn().mockReturnValue({}),
     };
 
     // Create real human readable formatter
-    humanReadableFormatter = new HumanReadableFormatter({
-      logger: mockLogger,
-      actionTraceFilter: mockActionTraceFilter
-    }, {
-      enableColors: false,
-      lineWidth: 80,
-      indentSize: 2
-    });
+    humanReadableFormatter = new HumanReadableFormatter(
+      {
+        logger: mockLogger,
+        actionTraceFilter: mockActionTraceFilter,
+      },
+      {
+        enableColors: false,
+        lineWidth: 80,
+        indentSize: 2,
+      }
+    );
 
     // Create real trace formatter
     traceFormatter = new CoverageResolutionTraceFormatter({
       humanReadableFormatter: humanReadableFormatter,
-      logger: mockLogger
+      logger: mockLogger,
     });
 
     // Mock structured trace factory
     mockStructuredTraceFactory = {
-      create: jest.fn().mockImplementation(() => new StructuredTrace())
+      create: jest.fn().mockImplementation(() => new StructuredTrace()),
     };
 
     // Create tracing enhancer
@@ -99,12 +111,12 @@ describe('Coverage Resolution Tracing Integration', () => {
       structuredTraceFactory: mockStructuredTraceFactory,
       performanceMonitor: mockPerformanceMonitor,
       traceFormatter: traceFormatter,
-      logger: mockLogger
+      logger: mockLogger,
     });
 
     // Create slot access resolver
     slotAccessResolver = createSlotAccessResolver({
-      entitiesGateway: mockEntitiesGateway
+      entitiesGateway: mockEntitiesGateway,
     });
   });
 
@@ -124,12 +136,15 @@ describe('Coverage Resolution Tracing Integration', () => {
             verbosity: 'standard',
             includePerformanceMetrics: true,
             includeCandidateDetails: true,
-            includePhaseBreakdown: true
-          }
-        }
+            includePhaseBreakdown: true,
+          },
+        },
       };
 
-      enhancedResolver = tracingEnhancer.enhanceSlotAccessResolver(slotAccessResolver, traceConfig);
+      enhancedResolver = tracingEnhancer.enhanceSlotAccessResolver(
+        slotAccessResolver,
+        traceConfig
+      );
     });
 
     it('should trace complete coverage resolution workflow', () => {
@@ -138,8 +153,8 @@ describe('Coverage Resolution Tracing Integration', () => {
         field: 'torso_upper',
         parent: {
           type: 'Step',
-          field: 'topmost_clothing'
-        }
+          field: 'topmost_clothing',
+        },
       };
 
       const parentResults = new Set([
@@ -149,20 +164,20 @@ describe('Coverage Resolution Tracing Integration', () => {
             torso_upper: {
               outer: 'leather_jacket_01',
               base: 'cotton_shirt_02',
-              underwear: 'undershirt_03'
-            }
+              underwear: 'undershirt_03',
+            },
           },
-          mode: 'topmost'
-        }
+          mode: 'topmost',
+        },
       ]);
 
       const mockCtx = {
         dispatcher: {
-          resolve: jest.fn().mockReturnValue(parentResults)
+          resolve: jest.fn().mockReturnValue(parentResults),
         },
         trace: {
-          addLog: jest.fn()
-        }
+          addLog: jest.fn(),
+        },
       };
 
       const result = enhancedResolver.resolve(clothingNode, mockCtx);
@@ -181,7 +196,9 @@ describe('Coverage Resolution Tracing Integration', () => {
       expect(mockStructuredTraceFactory.create).toHaveBeenCalled();
 
       // Verify performance monitoring was called
-      expect(mockPerformanceMonitor.startMeasurement).toHaveBeenCalledWith('coverage_resolution');
+      expect(mockPerformanceMonitor.startMeasurement).toHaveBeenCalledWith(
+        'coverage_resolution'
+      );
       expect(mockPerformanceMonitor.endMeasurement).toHaveBeenCalled();
     });
 
@@ -191,8 +208,8 @@ describe('Coverage Resolution Tracing Integration', () => {
         field: 'torso_upper',
         parent: {
           type: 'Step',
-          field: 'topmost_clothing'
-        }
+          field: 'topmost_clothing',
+        },
       };
 
       const parentResults = new Set([
@@ -202,20 +219,20 @@ describe('Coverage Resolution Tracing Integration', () => {
             torso_upper: {
               outer: 'leather_jacket_01',
               base: 'cotton_shirt_02',
-              underwear: 'undershirt_03'
-            }
+              underwear: 'undershirt_03',
+            },
           },
-          mode: 'topmost'
-        }
+          mode: 'topmost',
+        },
       ]);
 
       const mockCtx = {
         dispatcher: {
-          resolve: jest.fn().mockReturnValue(parentResults)
+          resolve: jest.fn().mockReturnValue(parentResults),
         },
         trace: {
-          addLog: jest.fn()
-        }
+          addLog: jest.fn(),
+        },
       };
 
       enhancedResolver.resolve(clothingNode, mockCtx);
@@ -224,25 +241,37 @@ describe('Coverage Resolution Tracing Integration', () => {
       const spans = structuredTrace.getSpans();
 
       // Should have coverage_resolution span and child spans
-      const coverageSpan = spans.find(s => s.operation === 'coverage_resolution');
+      const coverageSpan = spans.find(
+        (s) => s.operation === 'coverage_resolution'
+      );
       expect(coverageSpan).toBeDefined();
       expect(coverageSpan.attributes.targetSlot).toBe('torso_upper');
 
       // Should have child spans for different phases
-      const nodeAnalysisSpan = spans.find(s => s.operation === 'node_analysis');
+      const nodeAnalysisSpan = spans.find(
+        (s) => s.operation === 'node_analysis'
+      );
       expect(nodeAnalysisSpan).toBeDefined();
 
-      const candidateCollectionSpan = spans.find(s => s.operation === 'candidate_collection');
+      const candidateCollectionSpan = spans.find(
+        (s) => s.operation === 'candidate_collection'
+      );
       expect(candidateCollectionSpan).toBeDefined();
       expect(candidateCollectionSpan.attributes.candidateCount).toBe(3);
 
-      const priorityCalculationSpan = spans.find(s => s.operation === 'priority_calculation');
+      const priorityCalculationSpan = spans.find(
+        (s) => s.operation === 'priority_calculation'
+      );
       expect(priorityCalculationSpan).toBeDefined();
       expect(priorityCalculationSpan.attributes.totalCalculations).toBe(3);
 
-      const finalSelectionSpan = spans.find(s => s.operation === 'final_selection');
+      const finalSelectionSpan = spans.find(
+        (s) => s.operation === 'final_selection'
+      );
       expect(finalSelectionSpan).toBeDefined();
-      expect(finalSelectionSpan.attributes.selectedItem).toBe('leather_jacket_01');
+      expect(finalSelectionSpan.attributes.selectedItem).toBe(
+        'leather_jacket_01'
+      );
     });
 
     it('should trace mode filtering for specific clothing modes', () => {
@@ -251,8 +280,8 @@ describe('Coverage Resolution Tracing Integration', () => {
         field: 'torso_upper',
         parent: {
           type: 'Step',
-          field: 'outer_clothing'
-        }
+          field: 'outer_clothing',
+        },
       };
 
       const parentResults = new Set([
@@ -262,20 +291,20 @@ describe('Coverage Resolution Tracing Integration', () => {
             torso_upper: {
               outer: 'leather_jacket_01',
               base: 'cotton_shirt_02',
-              underwear: 'undershirt_03'
-            }
+              underwear: 'undershirt_03',
+            },
           },
-          mode: 'outer'
-        }
+          mode: 'outer',
+        },
       ]);
 
       const mockCtx = {
         dispatcher: {
-          resolve: jest.fn().mockReturnValue(parentResults)
+          resolve: jest.fn().mockReturnValue(parentResults),
         },
         trace: {
-          addLog: jest.fn()
-        }
+          addLog: jest.fn(),
+        },
       };
 
       const result = enhancedResolver.resolve(clothingNode, mockCtx);
@@ -284,8 +313,10 @@ describe('Coverage Resolution Tracing Integration', () => {
       expect(Array.from(result)[0]).toBe('leather_jacket_01');
 
       const structuredTrace = mockCtx.structuredTrace;
-      const candidateCollectionSpan = structuredTrace.getSpans().find(s => s.operation === 'candidate_collection');
-      
+      const candidateCollectionSpan = structuredTrace
+        .getSpans()
+        .find((s) => s.operation === 'candidate_collection');
+
       // Should only find one candidate for outer mode
       expect(candidateCollectionSpan.attributes.candidateCount).toBe(1);
     });
@@ -296,8 +327,8 @@ describe('Coverage Resolution Tracing Integration', () => {
         field: 'head_gear',
         parent: {
           type: 'Step',
-          field: 'topmost_clothing'
-        }
+          field: 'topmost_clothing',
+        },
       };
 
       const parentResults = new Set([
@@ -305,21 +336,21 @@ describe('Coverage Resolution Tracing Integration', () => {
           __clothingSlotAccess: true,
           equipped: {
             torso_upper: {
-              outer: 'leather_jacket_01'
-            }
+              outer: 'leather_jacket_01',
+            },
             // No head_gear slot
           },
-          mode: 'topmost'
-        }
+          mode: 'topmost',
+        },
       ]);
 
       const mockCtx = {
         dispatcher: {
-          resolve: jest.fn().mockReturnValue(parentResults)
+          resolve: jest.fn().mockReturnValue(parentResults),
         },
         trace: {
-          addLog: jest.fn()
-        }
+          addLog: jest.fn(),
+        },
       };
 
       const result = enhancedResolver.resolve(clothingNode, mockCtx);
@@ -329,20 +360,22 @@ describe('Coverage Resolution Tracing Integration', () => {
 
       // Should still have structured trace with proper event logging
       expect(mockCtx.structuredTrace).toBeDefined();
-      
-      const coverageSpan = mockCtx.structuredTrace.getSpans().find(s => s.operation === 'coverage_resolution');
+
+      const coverageSpan = mockCtx.structuredTrace
+        .getSpans()
+        .find((s) => s.operation === 'coverage_resolution');
       expect(coverageSpan).toBeDefined();
-      
+
       // Should log no slot data event
       const events = coverageSpan.events || [];
-      const noSlotEvent = events.find(e => e.name === 'no_slot_data');
-      
+      const noSlotEvent = events.find((e) => e.name === 'no_slot_data');
+
       // Skip assertions if event not found (may indicate different tracing implementation)
       if (!noSlotEvent) {
         console.warn('Expected no_slot_data event not found in trace events');
         return;
       }
-      
+
       expect(noSlotEvent.attributes.slotName).toBe('head_gear');
       expect(noSlotEvent.attributes.reason).toBe('slot_not_found');
     });
@@ -353,19 +386,19 @@ describe('Coverage Resolution Tracing Integration', () => {
         field: 'name',
         parent: {
           type: 'Step',
-          field: 'actor'
-        }
+          field: 'actor',
+        },
       };
 
       const parentResults = new Set(['actor_123']);
 
       const mockCtx = {
         dispatcher: {
-          resolve: jest.fn().mockReturnValue(parentResults)
+          resolve: jest.fn().mockReturnValue(parentResults),
         },
         trace: {
-          addLog: jest.fn()
-        }
+          addLog: jest.fn(),
+        },
       };
 
       enhancedResolver.resolve(nonClothingNode, mockCtx);
@@ -381,8 +414,8 @@ describe('Coverage Resolution Tracing Integration', () => {
         field: 'torso_upper',
         parent: {
           type: 'Step',
-          field: 'topmost_clothing'
-        }
+          field: 'topmost_clothing',
+        },
       };
 
       const parentResults = new Set([
@@ -392,26 +425,27 @@ describe('Coverage Resolution Tracing Integration', () => {
             torso_upper: {
               outer: 'leather_jacket_01',
               base: 'cotton_shirt_02',
-              underwear: 'undershirt_03'
-            }
+              underwear: 'undershirt_03',
+            },
           },
-          mode: 'topmost'
-        }
+          mode: 'topmost',
+        },
       ]);
 
       const mockCtx = {
         dispatcher: {
-          resolve: jest.fn().mockReturnValue(parentResults)
+          resolve: jest.fn().mockReturnValue(parentResults),
         },
         trace: {
-          addLog: jest.fn()
-        }
+          addLog: jest.fn(),
+        },
       };
 
       enhancedResolver.resolve(clothingNode, mockCtx);
 
       const structuredTrace = mockCtx.structuredTrace;
-      const formattedOutput = traceFormatter.formatCoverageTrace(structuredTrace);
+      const formattedOutput =
+        traceFormatter.formatCoverageTrace(structuredTrace);
 
       // Verify comprehensive trace output
       expect(formattedOutput).toContain('=== Coverage Resolution Trace ===');
@@ -428,12 +462,15 @@ describe('Coverage Resolution Tracing Integration', () => {
       const disabledConfig = {
         scopeDslTracing: {
           coverageResolution: {
-            enabled: false
-          }
-        }
+            enabled: false,
+          },
+        },
       };
 
-      const resolver = tracingEnhancer.enhanceSlotAccessResolver(slotAccessResolver, disabledConfig);
+      const resolver = tracingEnhancer.enhanceSlotAccessResolver(
+        slotAccessResolver,
+        disabledConfig
+      );
 
       // Should return original resolver unchanged
       expect(resolver).toBe(slotAccessResolver);
@@ -445,7 +482,10 @@ describe('Coverage Resolution Tracing Integration', () => {
     it('should handle missing configuration gracefully', () => {
       const emptyConfig = {};
 
-      const resolver = tracingEnhancer.enhanceSlotAccessResolver(slotAccessResolver, emptyConfig);
+      const resolver = tracingEnhancer.enhanceSlotAccessResolver(
+        slotAccessResolver,
+        emptyConfig
+      );
 
       // Should return original resolver when config is missing
       expect(resolver).toBe(slotAccessResolver);
@@ -458,12 +498,15 @@ describe('Coverage Resolution Tracing Integration', () => {
             enabled: true,
             verbosity: 'verbose',
             includeCandidateDetails: true,
-            includePerformanceMetrics: true
-          }
-        }
+            includePerformanceMetrics: true,
+          },
+        },
       };
 
-      const resolver = tracingEnhancer.enhanceSlotAccessResolver(slotAccessResolver, verboseConfig);
+      const resolver = tracingEnhancer.enhanceSlotAccessResolver(
+        slotAccessResolver,
+        verboseConfig
+      );
 
       expect(resolver).not.toBe(slotAccessResolver);
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -478,26 +521,29 @@ describe('Coverage Resolution Tracing Integration', () => {
         canResolve: jest.fn().mockReturnValue(true),
         resolve: jest.fn().mockImplementation(() => {
           throw new Error('Resolution failed');
-        })
+        }),
       };
 
       const traceConfig = {
         scopeDslTracing: {
           coverageResolution: {
-            enabled: true
-          }
-        }
+            enabled: true,
+          },
+        },
       };
 
-      const enhancedFaultyResolver = tracingEnhancer.enhanceSlotAccessResolver(faultyResolver, traceConfig);
+      const enhancedFaultyResolver = tracingEnhancer.enhanceSlotAccessResolver(
+        faultyResolver,
+        traceConfig
+      );
 
       const clothingNode = {
         type: 'Step',
         field: 'torso_upper',
         parent: {
           type: 'Step',
-          field: 'topmost_clothing'
-        }
+          field: 'topmost_clothing',
+        },
       };
 
       const mockCtx = {};
@@ -520,14 +566,17 @@ describe('Coverage Resolution Tracing Integration', () => {
       const faultyTrace = {
         getSpans: jest.fn().mockImplementation(() => {
           throw new Error('Trace access failed');
-        })
+        }),
       };
 
       const result = traceFormatter.formatCoverageTrace(faultyTrace);
 
       expect(result).toContain('Coverage Resolution Trace Formatting Error');
       expect(result).toContain('Error: Trace access failed');
-      expect(mockLogger.error).toHaveBeenCalledWith('Error formatting coverage trace:', expect.any(Error));
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error formatting coverage trace:',
+        expect.any(Error)
+      );
     });
   });
 
@@ -537,20 +586,23 @@ describe('Coverage Resolution Tracing Integration', () => {
         scopeDslTracing: {
           coverageResolution: {
             enabled: true,
-            includePerformanceMetrics: true
-          }
-        }
+            includePerformanceMetrics: true,
+          },
+        },
       };
 
-      const enhancedResolver = tracingEnhancer.enhanceSlotAccessResolver(slotAccessResolver, traceConfig);
+      const enhancedResolver = tracingEnhancer.enhanceSlotAccessResolver(
+        slotAccessResolver,
+        traceConfig
+      );
 
       const clothingNode = {
         type: 'Step',
         field: 'torso_upper',
         parent: {
           type: 'Step',
-          field: 'topmost_clothing'
-        }
+          field: 'topmost_clothing',
+        },
       };
 
       const parentResults = new Set([
@@ -558,49 +610,59 @@ describe('Coverage Resolution Tracing Integration', () => {
           __clothingSlotAccess: true,
           equipped: {
             torso_upper: {
-              outer: 'leather_jacket_01'
-            }
+              outer: 'leather_jacket_01',
+            },
           },
-          mode: 'topmost'
-        }
+          mode: 'topmost',
+        },
       ]);
 
       const mockCtx = {
         dispatcher: {
-          resolve: jest.fn().mockReturnValue(parentResults)
+          resolve: jest.fn().mockReturnValue(parentResults),
         },
         trace: {
-          addLog: jest.fn()
-        }
+          addLog: jest.fn(),
+        },
       };
 
       enhancedResolver.resolve(clothingNode, mockCtx);
 
       // Should have called performance monitoring
-      expect(mockPerformanceMonitor.startMeasurement).toHaveBeenCalledWith('coverage_resolution');
+      expect(mockPerformanceMonitor.startMeasurement).toHaveBeenCalledWith(
+        'coverage_resolution'
+      );
       expect(mockPerformanceMonitor.endMeasurement).toHaveBeenCalled();
 
       // Should have added performance attributes to span
       const spans = mockCtx.structuredTrace.getSpans();
-      const coverageSpan = spans.find(s => s.operation === 'coverage_resolution');
+      const coverageSpan = spans.find(
+        (s) => s.operation === 'coverage_resolution'
+      );
       expect(coverageSpan.attributes.duration).toBe(42);
     });
 
     it('should create performance monitoring utilities', () => {
       const mockCtx = {
-        performanceMonitor: mockPerformanceMonitor
+        performanceMonitor: mockPerformanceMonitor,
       };
 
       const perfUtils = tracingEnhancer.createPerformanceMonitoring(mockCtx);
-      
-      const marker = perfUtils.markPhaseStart('test_phase');
-      const duration = perfUtils.markPhaseEnd('test_phase', marker, { additionalMetric: 'value' });
 
-      expect(mockPerformanceMonitor.startMeasurement).toHaveBeenCalledWith('coverage_test_phase');
-      expect(mockPerformanceMonitor.endMeasurement).toHaveBeenCalledWith(marker);
+      const marker = perfUtils.markPhaseStart('test_phase');
+      const duration = perfUtils.markPhaseEnd('test_phase', marker, {
+        additionalMetric: 'value',
+      });
+
+      expect(mockPerformanceMonitor.startMeasurement).toHaveBeenCalledWith(
+        'coverage_test_phase'
+      );
+      expect(mockPerformanceMonitor.endMeasurement).toHaveBeenCalledWith(
+        marker
+      );
       expect(mockPerformanceMonitor.recordMetrics).toHaveBeenCalledWith({
         coverage_test_phase_duration: 42,
-        additionalMetric: 'value'
+        additionalMetric: 'value',
       });
       expect(duration).toBe(42);
     });

@@ -33,9 +33,12 @@ jest.mock('../../../../src/domUI/visualizer/AnatomyLoadingDetector.js', () => ({
   AnatomyLoadingDetector: jest.fn(),
 }));
 
-jest.mock('../../../../src/domUI/visualizer/VisualizerStateController.js', () => ({
-  VisualizerStateController: jest.fn(),
-}));
+jest.mock(
+  '../../../../src/domUI/visualizer/VisualizerStateController.js',
+  () => ({
+    VisualizerStateController: jest.fn(),
+  })
+);
 
 jest.mock('../../../../src/input/globalKeyHandler.js', () => jest.fn());
 jest.mock('../../../../src/input/inputHandler.js', () => jest.fn());
@@ -119,11 +122,17 @@ describe('registerUI - integration test', () => {
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'UI Registrations: Starting (Refactored DOM UI)...'
     );
-    expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Complete.');
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'UI Registrations: Complete.'
+    );
 
     // Verify eager instantiations
-    expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ChatAlertRenderer);
-    expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ActionResultRenderer);
+    expect(mockContainer.resolve).toHaveBeenCalledWith(
+      tokens.ChatAlertRenderer
+    );
+    expect(mockContainer.resolve).toHaveBeenCalledWith(
+      tokens.ActionResultRenderer
+    );
     expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.GlobalKeyHandler);
   });
 
@@ -131,9 +140,10 @@ describe('registerUI - integration test', () => {
     registerUI(mockContainer, mockUiElements);
 
     // Check that registrations were made (via register or singletonFactory)
-    const totalCalls = mockContainer.register.mock.calls.length + 
-                      mockContainer.singletonFactory.mock.calls.length;
-    
+    const totalCalls =
+      mockContainer.register.mock.calls.length +
+      mockContainer.singletonFactory.mock.calls.length;
+
     // We expect at least some registrations to have been made
     expect(totalCalls).toBeGreaterThan(0);
   });
@@ -152,8 +162,8 @@ describe('registerUI - integration test', () => {
     mockContainer.resolve = jest.fn((token) => {
       if (token === tokens.ILogger) return mockLogger;
       if (token === tokens.IDocumentContext) return mockDocumentContext;
-      return { 
-        dispatch: jest.fn(), 
+      return {
+        dispatch: jest.fn(),
         getEntity: jest.fn(),
         initialize: jest.fn(),
       };
@@ -162,20 +172,30 @@ describe('registerUI - integration test', () => {
     registerUI(mockContainer, mockUiElements);
 
     // The registration should complete even with missing container
-    expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Complete.');
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'UI Registrations: Complete.'
+    );
   });
 
   it('should log all eager instantiation messages', () => {
     registerUI(mockContainer, mockUiElements);
 
     const debugCalls = mockLogger.debug.mock.calls;
-    const messages = debugCalls.map(call => call[0]);
+    const messages = debugCalls.map((call) => call[0]);
 
     // Check for all expected debug messages
-    expect(messages).toContain('UI Registrations: Starting (Refactored DOM UI)...');
-    expect(messages).toContain(`UI Registrations: Eagerly instantiated ${tokens.ChatAlertRenderer} to attach listeners.`);
-    expect(messages).toContain(`UI Registrations: Eagerly instantiated ${tokens.ActionResultRenderer}.`);
-    expect(messages).toContain(`UI Registrations: Eagerly instantiated ${tokens.GlobalKeyHandler}.`);
+    expect(messages).toContain(
+      'UI Registrations: Starting (Refactored DOM UI)...'
+    );
+    expect(messages).toContain(
+      `UI Registrations: Eagerly instantiated ${tokens.ChatAlertRenderer} to attach listeners.`
+    );
+    expect(messages).toContain(
+      `UI Registrations: Eagerly instantiated ${tokens.ActionResultRenderer}.`
+    );
+    expect(messages).toContain(
+      `UI Registrations: Eagerly instantiated ${tokens.GlobalKeyHandler}.`
+    );
     expect(messages).toContain('UI Registrations: Complete.');
   });
 
@@ -191,7 +211,9 @@ describe('registerUI - integration test', () => {
       registerUI(mockContainer, minimalUiElements);
     }).not.toThrow();
 
-    expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Complete.');
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'UI Registrations: Complete.'
+    );
   });
 
   it('should work with custom document object', () => {
@@ -207,6 +229,8 @@ describe('registerUI - integration test', () => {
 
     registerUI(mockContainer, customUiElements);
 
-    expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Complete.');
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'UI Registrations: Complete.'
+    );
   });
 });

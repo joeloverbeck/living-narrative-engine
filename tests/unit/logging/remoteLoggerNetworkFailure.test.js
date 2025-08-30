@@ -1,5 +1,5 @@
 /**
- * @file Tests for RemoteLogger network failure scenarios  
+ * @file Tests for RemoteLogger network failure scenarios
  * @description Reproduces and tests fixes for "Failed to fetch" connectivity issues
  */
 
@@ -94,7 +94,7 @@ describe('RemoteLogger - Network Failure Scenarios', () => {
 
   beforeEach(() => {
     setupGlobalMocks();
-    
+
     // Create a mock fallback logger to capture fallback behavior
     mockFallbackLogger = {
       info: jest.fn(),
@@ -153,10 +153,11 @@ describe('RemoteLogger - Network Failure Scenarios', () => {
 
     it('should handle network timeout scenarios gracefully', async () => {
       // Configure fetch to simulate timeout
-      mockFetch.mockImplementation(() => 
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), 100)
-        )
+      mockFetch.mockImplementation(
+        () =>
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timeout')), 100)
+          )
       );
 
       const remoteLogger = new RemoteLogger({
@@ -253,33 +254,39 @@ describe('RemoteLogger - Network Failure Scenarios', () => {
       for (let batch = 0; batch < 5; batch++) {
         remoteLogger.error(`Batch ${batch} - Error 1`);
         remoteLogger.error(`Batch ${batch} - Error 2`);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Verify multiple failures were logged to fallback (one per batch plus retries)
-      expect(mockFallbackLogger.warn.mock.calls.length).toBeGreaterThanOrEqual(5);
-      
+      expect(mockFallbackLogger.warn.mock.calls.length).toBeGreaterThanOrEqual(
+        5
+      );
+
       // Verify the first few calls show 'closed' circuit breaker state
       const firstCall = mockFallbackLogger.warn.mock.calls[0];
-      expect(firstCall[1]).toEqual(expect.objectContaining({
-        circuitBreakerState: 'closed',
-      }));
+      expect(firstCall[1]).toEqual(
+        expect.objectContaining({
+          circuitBreakerState: 'closed',
+        })
+      );
     });
   });
 
   describe('Network recovery scenarios', () => {
     it('should resume sending when network connectivity is restored', async () => {
       let shouldFail = true;
-      
+
       // Configure fetch to fail initially, then succeed
       mockFetch.mockImplementation(() => {
         if (shouldFail) {
           return Promise.reject(new Error('Failed to fetch'));
         }
-        return Promise.resolve(new Response('{"success": true}', { 
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        }));
+        return Promise.resolve(
+          new Response('{"success": true}', {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        );
       });
 
       const remoteLogger = new RemoteLogger({
@@ -298,7 +305,7 @@ describe('RemoteLogger - Network Failure Scenarios', () => {
       // Send first batch (should fail)
       remoteLogger.error('First error');
       remoteLogger.warn('First warning');
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify first batch failed
       expect(mockFallbackLogger.warn).toHaveBeenCalledWith(
@@ -315,7 +322,7 @@ describe('RemoteLogger - Network Failure Scenarios', () => {
       // Send second batch (should succeed)
       remoteLogger.info('Recovery test info');
       remoteLogger.debug('Recovery test debug');
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify second batch succeeded (no fallback warnings)
       expect(mockFallbackLogger.warn).not.toHaveBeenCalled();
@@ -348,21 +355,23 @@ describe('RemoteLogger - Network Failure Scenarios', () => {
       });
 
       // Send a single log entry that will fail to send remotely
-      remoteLogger.error('Test error message', { 
+      remoteLogger.error('Test error message', {
         component: 'TestComponent',
-        details: { userId: 123, action: 'test' }
+        details: { userId: 123, action: 'test' },
       });
 
       // Wait for processing
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify the original log was sent to fallback logger (with REMOTE_FALLBACK prefix)
       expect(mockFallbackLogger.error).toHaveBeenCalledWith(
         '[REMOTE_FALLBACK] Test error message',
-        [expect.objectContaining({
-          component: 'TestComponent',
-          details: { userId: 123, action: 'test' }
-        })]
+        [
+          expect.objectContaining({
+            component: 'TestComponent',
+            details: { userId: 123, action: 'test' },
+          }),
+        ]
       );
 
       // Verify the failure was also logged

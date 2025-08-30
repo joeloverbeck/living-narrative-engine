@@ -128,7 +128,9 @@ describe('Prompt Assembly with template-based system', () => {
     const prompt = await buildPrompt(['OnlyThought']);
 
     // Should include the thoughts section with the thought and guidance text
-    expect(prompt).toContain('<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- OnlyThought\n\nGenerate a fresh, unique thought that builds upon your mental state.\n</thoughts>');
+    expect(prompt).toContain(
+      '<thoughts>\nRecent thoughts (avoid repeating or barely rephrasing these):\n- OnlyThought\n\nGenerate a fresh, unique thought that builds upon your mental state.\n</thoughts>'
+    );
     expect(prompt).toContain('OnlyThought');
   });
 

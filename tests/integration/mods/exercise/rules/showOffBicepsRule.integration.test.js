@@ -14,7 +14,9 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
     it('should have proper rule identification', () => {
       // Assert: Rule should have correct identifiers
       expect(showOffBicepsRule.rule_id).toBe('handle_show_off_biceps');
-      expect(showOffBicepsRule.comment).toBe('Handles the \'exercise:show_off_biceps\' action. Dispatches descriptive text and ends the turn.');
+      expect(showOffBicepsRule.comment).toBe(
+        "Handles the 'exercise:show_off_biceps' action. Dispatches descriptive text and ends the turn."
+      );
     });
 
     it('should only process core:attempt_action events', () => {
@@ -24,13 +26,17 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
 
     it('should use condition reference', () => {
       // Assert: Rule should use condition_ref instead of inline logic
-      expect(showOffBicepsRule.condition.condition_ref).toBe('exercise:event-is-action-show-off-biceps');
+      expect(showOffBicepsRule.condition.condition_ref).toBe(
+        'exercise:event-is-action-show-off-biceps'
+      );
       expect(showOffBicepsRule.condition.logic).toBeUndefined();
     });
 
     it('should have proper schema reference', () => {
       // Assert: Should reference the correct schema
-      expect(showOffBicepsRule.$schema).toBe('schema://living-narrative-engine/rule.schema.json');
+      expect(showOffBicepsRule.$schema).toBe(
+        'schema://living-narrative-engine/rule.schema.json'
+      );
     });
   });
 
@@ -62,7 +68,9 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
       const thirdAction = showOffBicepsRule.actions[2];
       expect(thirdAction.type).toBe('SET_VARIABLE');
       expect(thirdAction.parameters.variable_name).toBe('logMessage');
-      expect(thirdAction.parameters.value).toBe('{context.actorName} flexes their arms, showing off the bulging biceps and triceps.');
+      expect(thirdAction.parameters.value).toBe(
+        '{context.actorName} flexes their arms, showing off the bulging biceps and triceps.'
+      );
     });
 
     it('should set perceptionType variable', () => {
@@ -78,7 +86,9 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
       const fifthAction = showOffBicepsRule.actions[4];
       expect(fifthAction.type).toBe('SET_VARIABLE');
       expect(fifthAction.parameters.variable_name).toBe('locationId');
-      expect(fifthAction.parameters.value).toBe('{context.actorPosition.locationId}');
+      expect(fifthAction.parameters.value).toBe(
+        '{context.actorPosition.locationId}'
+      );
     });
 
     it('should set targetId variable to null for no-target action', () => {
@@ -130,22 +140,26 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
             return logSuccessAndEndTurnMacro;
           }
           return undefined;
-        }
+        },
       };
 
       // Act: Expand the macro
-      const expandedActions = expandMacros(showOffBicepsRule.actions, macroRegistry);
-      
+      const expandedActions = expandMacros(
+        showOffBicepsRule.actions,
+        macroRegistry
+      );
+
       // Find the perceptible event dispatch
       const perceptibleEventDispatch = expandedActions.find(
-        action => action.type === 'DISPATCH_EVENT' && 
-                  action.parameters?.eventType === 'core:perceptible_event'
+        (action) =>
+          action.type === 'DISPATCH_EVENT' &&
+          action.parameters?.eventType === 'core:perceptible_event'
       );
 
       // Assert: Perceptible event should be dispatched with correct payload
       expect(perceptibleEventDispatch).toBeDefined();
       expect(perceptibleEventDispatch.parameters.payload).toBeDefined();
-      
+
       const payload = perceptibleEventDispatch.parameters.payload;
       expect(payload.eventName).toBe('core:perceptible_event');
       expect(payload.locationId).toBe('{context.locationId}');
@@ -164,26 +178,29 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
             return logSuccessAndEndTurnMacro;
           }
           return undefined;
-        }
+        },
       };
 
       // Act: Expand the macro using correct format
-      const expandedActions = expandMacros(showOffBicepsRule.actions, macroRegistry);
-      
+      const expandedActions = expandMacros(
+        showOffBicepsRule.actions,
+        macroRegistry
+      );
+
       // Assert: Check expanded actions include event dispatch and end turn
       expect(expandedActions).toBeDefined();
       expect(Array.isArray(expandedActions)).toBe(true);
       expect(expandedActions.length).toBeGreaterThan(5);
-      
+
       // Should contain dispatch event for perceptible log
       const dispatchEvents = expandedActions.filter(
-        action => action.type === 'DISPATCH_EVENT'
+        (action) => action.type === 'DISPATCH_EVENT'
       );
       expect(dispatchEvents.length).toBeGreaterThan(0);
 
       // Should contain end turn operation
       const endTurnActions = expandedActions.filter(
-        action => action.type === 'END_TURN'
+        (action) => action.type === 'END_TURN'
       );
       expect(endTurnActions.length).toBe(1);
       expect(endTurnActions[0].parameters.success).toBe(true);
@@ -197,21 +214,26 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
             return logSuccessAndEndTurnMacro;
           }
           return undefined;
-        }
+        },
       };
 
       // Act: Expand the macro
-      const expandedActions = expandMacros(showOffBicepsRule.actions, macroRegistry);
+      const expandedActions = expandMacros(
+        showOffBicepsRule.actions,
+        macroRegistry
+      );
 
       // Assert: Original SET_VARIABLE operations should remain
       const setVariableOps = expandedActions.filter(
-        action => action.type === 'SET_VARIABLE'
+        (action) => action.type === 'SET_VARIABLE'
       );
-      
+
       expect(setVariableOps.length).toBeGreaterThanOrEqual(4);
-      
+
       // Check that necessary variables are still set
-      const variableNames = setVariableOps.map(op => op.parameters.variable_name);
+      const variableNames = setVariableOps.map(
+        (op) => op.parameters.variable_name
+      );
       expect(variableNames).toContain('logMessage');
       expect(variableNames).toContain('perceptionType');
       expect(variableNames).toContain('locationId');
@@ -222,13 +244,15 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
   describe('Condition Logic Validation', () => {
     it('should correctly identify show_off_biceps action via condition', () => {
       // Verify the condition reference is correct
-      expect(showOffBicepsRule.condition.condition_ref).toBe('exercise:event-is-action-show-off-biceps');
-      
+      expect(showOffBicepsRule.condition.condition_ref).toBe(
+        'exercise:event-is-action-show-off-biceps'
+      );
+
       // Verify the condition file has correct logic
       expect(showOffBicepsCondition.logic).toBeDefined();
       expect(showOffBicepsCondition.logic['==']).toEqual([
-        { 'var': 'event.payload.actionId' },
-        'exercise:show_off_biceps'
+        { var: 'event.payload.actionId' },
+        'exercise:show_off_biceps',
       ]);
     });
 
@@ -237,8 +261,8 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
       const showOffBicepsEvent = {
         type: 'core:attempt_action',
         payload: {
-          actionId: 'exercise:show_off_biceps'
-        }
+          actionId: 'exercise:show_off_biceps',
+        },
       };
 
       // Simple logic evaluation - checks the condition structure
@@ -255,8 +279,8 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
       const differentEvent = {
         type: 'core:attempt_action',
         payload: {
-          actionId: 'core:wait'
-        }
+          actionId: 'core:wait',
+        },
       };
 
       // Simple logic evaluation

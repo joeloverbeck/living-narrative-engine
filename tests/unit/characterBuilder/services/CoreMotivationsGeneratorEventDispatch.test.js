@@ -225,10 +225,12 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
       expect(dispatchCalls.length).toBeGreaterThanOrEqual(2); // Started + Completed
 
       // Check that dispatches use correct format (string eventName, object payload)
-      const validStringCalls = dispatchCalls.filter(call => typeof call[0] === 'string');
+      const validStringCalls = dispatchCalls.filter(
+        (call) => typeof call[0] === 'string'
+      );
       expect(validStringCalls.length).toBeGreaterThan(0);
-      
-      validStringCalls.forEach(call => {
+
+      validStringCalls.forEach((call) => {
         const [eventName, payload] = call;
         expect(typeof eventName).toBe('string');
         expect(eventName).toMatch(/^core:/); // Should be namespaced
@@ -272,7 +274,9 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
         direction,
         clichés: { items: [] },
       };
-      await expect(generator.generate(params, { maxRetries: 0 })).rejects.toThrow();
+      await expect(
+        generator.generate(params, { maxRetries: 0 })
+      ).rejects.toThrow();
 
       // Assert - Should dispatch both started and failed events
       expect(dispatchCalls.length).toBeGreaterThanOrEqual(2);
@@ -326,7 +330,7 @@ describe('CoreMotivationsGenerator - Event Dispatch', () => {
       // Assert
       const startedCall = dispatchCalls[0];
       expect(startedCall).toBeDefined();
-      
+
       const payload = startedCall[0]?.payload || startedCall[1];
       expect(payload).toEqual({
         conceptId: 'concept-123',

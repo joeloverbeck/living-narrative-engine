@@ -96,9 +96,11 @@ module.exports = {
     format: 'iife',
     define: {
       // Inject environment variables for browser build
-      '__PROXY_HOST__': JSON.stringify(process.env.PROXY_HOST || 'localhost'),
-      '__PROXY_PORT__': JSON.stringify(process.env.PROXY_PORT || '3001'),
-      '__PROXY_USE_HTTPS__': JSON.stringify(process.env.PROXY_USE_HTTPS || 'false'),
+      __PROXY_HOST__: JSON.stringify(process.env.PROXY_HOST || 'localhost'),
+      __PROXY_PORT__: JSON.stringify(process.env.PROXY_PORT || '3001'),
+      __PROXY_USE_HTTPS__: JSON.stringify(
+        process.env.PROXY_USE_HTTPS || 'false'
+      ),
     },
   },
 

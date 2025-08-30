@@ -201,7 +201,7 @@ describe('RemoteLogger - Performance Integration Tests', () => {
       });
 
       remoteLogger = new RemoteLogger({
-        config: { 
+        config: {
           batchSize: 1,
           initialConnectionDelay: 0, // No delay for tests
         },
@@ -282,7 +282,7 @@ describe('RemoteLogger - Performance Integration Tests', () => {
       const duration = endTime - startTime;
       const metrics = benchmark.end();
 
-      // Should process 2000 messages quickly with cache  
+      // Should process 2000 messages quickly with cache
       expect(metrics.totalTime).toBeLessThan(1000); // Less than 1000ms for 2000 messages
 
       const stats = remoteLogger.getStats();
@@ -338,7 +338,7 @@ describe('RemoteLogger - Performance Integration Tests', () => {
       // Performance assertions
       // Minimal should be fastest
       expect(results.minimal).toBeLessThanOrEqual(results.standard);
-      
+
       // Note: We don't compare standard vs full timing because the performance difference
       // is too small to measure reliably. JavaScript timing noise (GC, scheduler, etc.)
       // dominates the tiny difference of adding a few metadata properties.

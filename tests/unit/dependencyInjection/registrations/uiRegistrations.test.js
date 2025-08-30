@@ -24,7 +24,8 @@ describe('registerUI - main orchestration function', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    MockRegistrar = require('../../../../src/utils/registrarHelpers.js').Registrar;
+    MockRegistrar =
+      require('../../../../src/utils/registrarHelpers.js').Registrar;
 
     mockLogger = {
       debug: jest.fn(),
@@ -80,7 +81,9 @@ describe('registerUI - main orchestration function', () => {
   it('should eagerly instantiate ChatAlertRenderer', () => {
     registerUI(mockContainer, mockUiElements);
 
-    expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ChatAlertRenderer);
+    expect(mockContainer.resolve).toHaveBeenCalledWith(
+      tokens.ChatAlertRenderer
+    );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `UI Registrations: Eagerly instantiated ${tokens.ChatAlertRenderer} to attach listeners.`
     );
@@ -89,7 +92,9 @@ describe('registerUI - main orchestration function', () => {
   it('should eagerly instantiate ActionResultRenderer', () => {
     registerUI(mockContainer, mockUiElements);
 
-    expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ActionResultRenderer);
+    expect(mockContainer.resolve).toHaveBeenCalledWith(
+      tokens.ActionResultRenderer
+    );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `UI Registrations: Eagerly instantiated ${tokens.ActionResultRenderer}.`
     );
@@ -107,7 +112,9 @@ describe('registerUI - main orchestration function', () => {
   it('should log completion message', () => {
     registerUI(mockContainer, mockUiElements);
 
-    expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Complete.');
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'UI Registrations: Complete.'
+    );
   });
 
   it('should verify Registrar is used for service registration', () => {
@@ -172,7 +179,7 @@ describe('registerUI - main orchestration function', () => {
     it('should log messages in correct sequence', () => {
       registerUI(mockContainer, mockUiElements);
 
-      const debugCalls = mockLogger.debug.mock.calls.map(call => call[0]);
+      const debugCalls = mockLogger.debug.mock.calls.map((call) => call[0]);
 
       expect(debugCalls).toEqual([
         'UI Registrations: Starting (Refactored DOM UI)...',
@@ -190,7 +197,7 @@ describe('registerUI - main orchestration function', () => {
       registerUI(mockContainer, mockUiElements);
 
       const resolveCalls = mockContainer.resolve.mock.calls;
-      const tokenOrder = resolveCalls.map(call => call[0]);
+      const tokenOrder = resolveCalls.map((call) => call[0]);
 
       // Logger should be resolved first
       expect(tokenOrder[0]).toBe(tokens.ILogger);
@@ -217,7 +224,9 @@ describe('registerUI - main orchestration function', () => {
         registerUI(mockContainer, customUiElements);
       }).not.toThrow();
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Complete.');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'UI Registrations: Complete.'
+      );
     });
 
     it('should handle complete workflow from start to finish', () => {
@@ -238,13 +247,23 @@ describe('registerUI - main orchestration function', () => {
       // Verify complete workflow
       expect(MockRegistrar).toHaveBeenCalledWith(workflowContainer);
       expect(workflowContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(workflowContainer.resolve).toHaveBeenCalledWith(tokens.ChatAlertRenderer);
-      expect(workflowContainer.resolve).toHaveBeenCalledWith(tokens.ActionResultRenderer);
-      expect(workflowContainer.resolve).toHaveBeenCalledWith(tokens.GlobalKeyHandler);
+      expect(workflowContainer.resolve).toHaveBeenCalledWith(
+        tokens.ChatAlertRenderer
+      );
+      expect(workflowContainer.resolve).toHaveBeenCalledWith(
+        tokens.ActionResultRenderer
+      );
+      expect(workflowContainer.resolve).toHaveBeenCalledWith(
+        tokens.GlobalKeyHandler
+      );
 
       // Verify logging sequence
-      expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Starting (Refactored DOM UI)...');
-      expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Complete.');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'UI Registrations: Starting (Refactored DOM UI)...'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'UI Registrations: Complete.'
+      );
     });
 
     it('should properly handle UI elements destructuring', () => {
@@ -261,20 +280,28 @@ describe('registerUI - main orchestration function', () => {
         registerUI(mockContainer, elementsWithExtraProps);
       }).not.toThrow();
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('UI Registrations: Complete.');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'UI Registrations: Complete.'
+      );
     });
 
     it('should maintain proper separation between registration and eager instantiation', () => {
       registerUI(mockContainer, mockUiElements);
 
       const debugCalls = mockLogger.debug.mock.calls;
-      const messages = debugCalls.map(call => call[0]);
+      const messages = debugCalls.map((call) => call[0]);
 
       // Registration should happen before eager instantiation
-      const startIndex = messages.findIndex(msg => msg.includes('Starting'));
-      const legacyIndex = messages.findIndex(msg => msg.includes('Registered IInputHandler'));
-      const eagerStartIndex = messages.findIndex(msg => msg.includes('Eagerly instantiated'));
-      const completeIndex = messages.findIndex(msg => msg.includes('Complete'));
+      const startIndex = messages.findIndex((msg) => msg.includes('Starting'));
+      const legacyIndex = messages.findIndex((msg) =>
+        msg.includes('Registered IInputHandler')
+      );
+      const eagerStartIndex = messages.findIndex((msg) =>
+        msg.includes('Eagerly instantiated')
+      );
+      const completeIndex = messages.findIndex((msg) =>
+        msg.includes('Complete')
+      );
 
       expect(startIndex).toBeLessThan(legacyIndex);
       expect(legacyIndex).toBeLessThan(eagerStartIndex);

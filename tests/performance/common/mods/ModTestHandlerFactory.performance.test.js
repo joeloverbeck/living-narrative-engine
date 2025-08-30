@@ -15,15 +15,18 @@ describe('ModTestHandlerFactory Performance Tests', () => {
 
   beforeEach(() => {
     entityManager = new SimpleEntityManager([
-      { id: 'perf-test-entity', components: { 'core:name': { name: 'Performance Test' } } }
+      {
+        id: 'perf-test-entity',
+        components: { 'core:name': { name: 'Performance Test' } },
+      },
     ]);
-    
+
     eventBus = {
       dispatch: jest.fn(),
       subscribe: jest.fn(),
       unsubscribe: jest.fn(),
     };
-    
+
     logger = {
       info: jest.fn(),
       warn: jest.fn(),
@@ -72,13 +75,14 @@ describe('ModTestHandlerFactory Performance Tests', () => {
    */
   function runPerformanceTest(testName, factoryMethod, args, iterations = 100) {
     const times = [];
-    
+
     for (let i = 0; i < iterations; i++) {
       const { executionTime } = measureExecutionTime(factoryMethod, ...args);
       times.push(executionTime);
     }
 
-    const averageTime = times.reduce((sum, time) => sum + time, 0) / times.length;
+    const averageTime =
+      times.reduce((sum, time) => sum + time, 0) / times.length;
     const minTime = Math.min(...times);
     const maxTime = Math.max(...times);
 
@@ -104,14 +108,16 @@ describe('ModTestHandlerFactory Performance Tests', () => {
 
       // Performance threshold: should average under 10ms per creation
       expect(results.averageTime).toBeLessThan(10);
-      
+
       // Should not have any extremely slow outliers (>50ms)
       expect(results.maxTime).toBeLessThan(50);
 
       // Should be consistently fast (min should be reasonable)
       expect(results.minTime).toBeGreaterThan(0);
 
-      console.log(`createStandardHandlers: avg=${results.averageTime.toFixed(2)}ms, min=${results.minTime.toFixed(2)}ms, max=${results.maxTime.toFixed(2)}ms`);
+      console.log(
+        `createStandardHandlers: avg=${results.averageTime.toFixed(2)}ms, min=${results.minTime.toFixed(2)}ms, max=${results.maxTime.toFixed(2)}ms`
+      );
     });
 
     it('should create handlers with ADD_COMPONENT within performance threshold', () => {
@@ -126,7 +132,9 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       expect(results.averageTime).toBeLessThan(12);
       expect(results.maxTime).toBeLessThan(60);
 
-      console.log(`createHandlersWithAddComponent: avg=${results.averageTime.toFixed(2)}ms, min=${results.minTime.toFixed(2)}ms, max=${results.maxTime.toFixed(2)}ms`);
+      console.log(
+        `createHandlersWithAddComponent: avg=${results.averageTime.toFixed(2)}ms, min=${results.minTime.toFixed(2)}ms, max=${results.maxTime.toFixed(2)}ms`
+      );
     });
 
     it('should create minimal handlers faster than standard handlers', () => {
@@ -145,10 +153,14 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       );
 
       // Minimal handlers should be faster (or at least not significantly slower)
-      expect(minimalResults.averageTime).toBeLessThanOrEqual(standardResults.averageTime * 1.1);
+      expect(minimalResults.averageTime).toBeLessThanOrEqual(
+        standardResults.averageTime * 1.1
+      );
       expect(minimalResults.averageTime).toBeLessThan(8);
 
-      console.log(`createMinimalHandlers: avg=${minimalResults.averageTime.toFixed(2)}ms vs standard=${standardResults.averageTime.toFixed(2)}ms`);
+      console.log(
+        `createMinimalHandlers: avg=${minimalResults.averageTime.toFixed(2)}ms vs standard=${standardResults.averageTime.toFixed(2)}ms`
+      );
     });
 
     it('should create custom handlers within reasonable time regardless of options', () => {
@@ -171,7 +183,9 @@ describe('ModTestHandlerFactory Performance Tests', () => {
         expect(results.averageTime).toBeLessThan(15);
         expect(results.maxTime).toBeLessThan(70);
 
-        console.log(`createCustomHandlers[${index}]: avg=${results.averageTime.toFixed(2)}ms, options=${JSON.stringify(options)}`);
+        console.log(
+          `createCustomHandlers[${index}]: avg=${results.averageTime.toFixed(2)}ms, options=${JSON.stringify(options)}`
+        );
       });
     });
 
@@ -187,7 +201,9 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       expect(results.averageTime).toBeLessThan(1);
       expect(results.maxTime).toBeLessThan(5);
 
-      console.log(`createSafeDispatcher: avg=${results.averageTime.toFixed(2)}ms, min=${results.minTime.toFixed(2)}ms, max=${results.maxTime.toFixed(2)}ms`);
+      console.log(
+        `createSafeDispatcher: avg=${results.averageTime.toFixed(2)}ms, min=${results.minTime.toFixed(2)}ms, max=${results.maxTime.toFixed(2)}ms`
+      );
     });
   });
 
@@ -197,7 +213,13 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       const handlers = [];
 
       for (let i = 0; i < iterations; i++) {
-        handlers.push(ModTestHandlerFactory.createStandardHandlers(entityManager, eventBus, logger));
+        handlers.push(
+          ModTestHandlerFactory.createStandardHandlers(
+            entityManager,
+            eventBus,
+            logger
+          )
+        );
       }
 
       // Each handler set should have exactly 7 handlers
@@ -216,10 +238,14 @@ describe('ModTestHandlerFactory Performance Tests', () => {
 
     it('should handle repeated factory calls without memory leaks', () => {
       const iterations = 100;
-      
+
       for (let i = 0; i < iterations; i++) {
-        const handlers = ModTestHandlerFactory.createStandardHandlers(entityManager, eventBus, logger);
-        
+        const handlers = ModTestHandlerFactory.createStandardHandlers(
+          entityManager,
+          eventBus,
+          logger
+        );
+
         // Use handlers to ensure they're not optimized away
         expect(handlers.GET_NAME).toBeDefined();
         expect(handlers.DISPATCH_EVENT).toBeDefined();
@@ -238,11 +264,11 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       entitySizes.forEach((size) => {
         const entities = Array.from({ length: size }, (_, i) => ({
           id: `entity-${i}`,
-          components: { 'core:name': { name: `Entity ${i}` } }
+          components: { 'core:name': { name: `Entity ${i}` } },
         }));
 
         const largEntityManager = new SimpleEntityManager(entities);
-        
+
         const result = runPerformanceTest(
           `size_${size}`,
           ModTestHandlerFactory.createStandardHandlers,
@@ -255,10 +281,12 @@ describe('ModTestHandlerFactory Performance Tests', () => {
 
       // Performance should not degrade significantly with entity manager size
       // (since factory doesn't iterate through entities)
-      const smallSize = results.find(r => r.size === 1);
-      const largeSize = results.find(r => r.size === 100);
+      const smallSize = results.find((r) => r.size === 1);
+      const largeSize = results.find((r) => r.size === 100);
 
-      expect(largeSize.averageTime).toBeLessThanOrEqual(smallSize.averageTime * 2);
+      expect(largeSize.averageTime).toBeLessThanOrEqual(
+        smallSize.averageTime * 2
+      );
 
       console.log('Performance by entity count:', results);
     });
@@ -273,7 +301,11 @@ describe('ModTestHandlerFactory Performance Tests', () => {
         promises.push(
           new Promise((resolve) => {
             const start = performance.now();
-            const handlers = ModTestHandlerFactory.createStandardHandlers(entityManager, eventBus, logger);
+            const handlers = ModTestHandlerFactory.createStandardHandlers(
+              entityManager,
+              eventBus,
+              logger
+            );
             const end = performance.now();
             resolve({ handlers, time: end - start });
           })
@@ -284,15 +316,18 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       const endTime = performance.now();
 
       const totalTime = endTime - startTime;
-      const averageTime = results.reduce((sum, r) => sum + r.time, 0) / results.length;
+      const averageTime =
+        results.reduce((sum, r) => sum + r.time, 0) / results.length;
 
       // Concurrent calls should not significantly impact individual performance
       expect(averageTime).toBeLessThan(20);
-      
+
       // Total time should be reasonable (not linearly scaling with concurrent calls)
       expect(totalTime).toBeLessThan(concurrentCalls * 20);
 
-      console.log(`Concurrent performance: ${concurrentCalls} calls in ${totalTime.toFixed(2)}ms, avg=${averageTime.toFixed(2)}ms per call`);
+      console.log(
+        `Concurrent performance: ${concurrentCalls} calls in ${totalTime.toFixed(2)}ms, avg=${averageTime.toFixed(2)}ms per call`
+      );
 
       // All results should be valid
       results.forEach(({ handlers }) => {
@@ -318,8 +353,10 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       // Factory should be competitive with manual creation (not necessarily faster due to validation overhead)
       // The real benefit is code reduction, not necessarily speed improvement
       expect(factoryResults.averageTime).toBeLessThan(50); // Reasonable upper bound
-      
-      console.log(`Factory performance: ${factoryResults.averageTime.toFixed(2)}ms (estimated manual: ~${estimatedManualTime}ms)`);
+
+      console.log(
+        `Factory performance: ${factoryResults.averageTime.toFixed(2)}ms (estimated manual: ~${estimatedManualTime}ms)`
+      );
     });
 
     it('should validate that category-based factory selection has minimal overhead', () => {
@@ -331,24 +368,31 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       );
 
       const categoryFactoryResults = [];
-      
+
       for (let i = 0; i < 50; i++) {
         const start = performance.now();
-        const factory = ModTestHandlerFactory.getHandlerFactoryForCategory('intimacy');
+        const factory =
+          ModTestHandlerFactory.getHandlerFactoryForCategory('intimacy');
         const handlers = factory(entityManager, eventBus, logger);
         const end = performance.now();
         categoryFactoryResults.push(end - start);
-        
+
         // Use handlers to ensure they're not optimized away
         expect(handlers).toBeDefined();
       }
 
-      const categoryAverageTime = categoryFactoryResults.reduce((sum, time) => sum + time, 0) / categoryFactoryResults.length;
+      const categoryAverageTime =
+        categoryFactoryResults.reduce((sum, time) => sum + time, 0) /
+        categoryFactoryResults.length;
 
       // Category-based selection should add minimal overhead (allow up to 3x due to function lookup)
-      expect(categoryAverageTime).toBeLessThanOrEqual(directCallResults.averageTime * 3);
+      expect(categoryAverageTime).toBeLessThanOrEqual(
+        directCallResults.averageTime * 3
+      );
 
-      console.log(`Category factory overhead: direct=${directCallResults.averageTime.toFixed(2)}ms, category=${categoryAverageTime.toFixed(2)}ms`);
+      console.log(
+        `Category factory overhead: direct=${directCallResults.averageTime.toFixed(2)}ms, category=${categoryAverageTime.toFixed(2)}ms`
+      );
     });
   });
 
@@ -357,7 +401,10 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       // This test runs at the end to summarize all performance data collected
       const summary = {
         factoryMethods: Object.keys(performanceResults).length,
-        totalIterations: Object.values(performanceResults).reduce((sum, results) => sum + results.length, 0),
+        totalIterations: Object.values(performanceResults).reduce(
+          (sum, results) => sum + results.length,
+          0
+        ),
         averagePerformance: {},
       };
 
@@ -372,9 +419,11 @@ describe('ModTestHandlerFactory Performance Tests', () => {
       console.log(`Methods tested: ${summary.factoryMethods}`);
       console.log(`Total iterations: ${summary.totalIterations}`);
       console.log('Average performance:');
-      Object.entries(summary.averagePerformance).forEach(([method, avgTime]) => {
-        console.log(`  ${method}: ${avgTime}ms`);
-      });
+      Object.entries(summary.averagePerformance).forEach(
+        ([method, avgTime]) => {
+          console.log(`  ${method}: ${avgTime}ms`);
+        }
+      );
 
       // All methods should meet performance criteria
       Object.values(summary.averagePerformance).forEach((time) => {

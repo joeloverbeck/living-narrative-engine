@@ -3,17 +3,26 @@
  * @description Tests the complete controller implementation for trait rewriting functionality
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TraitsRewriterController } from '../../../../src/characterBuilder/controllers/TraitsRewriterController.js';
 import { CHARACTER_BUILDER_EVENTS } from '../../../../src/characterBuilder/services/characterBuilderService.js';
 import { TraitsRewriterError } from '../../../../src/characterBuilder/errors/TraitsRewriterError.js';
 import { createTestBed } from '../../../common/testBed.js';
-import { 
-  createOptimizedDOMSetup, 
-  OptimizedMockFactory, 
+import {
+  createOptimizedDOMSetup,
+  OptimizedMockFactory,
   mockControllerDebounce,
   waitForNextTick,
-  simulateEvent
+  simulateEvent,
 } from '../../../common/testOptimizations.js';
 
 describe('TraitsRewriterController', () => {
@@ -35,7 +44,7 @@ describe('TraitsRewriterController', () => {
     // Create optimized DOM setup
     domSetup = createOptimizedDOMSetup('traits-rewriter-test-container');
     mockFactory = new OptimizedMockFactory();
-    
+
     // Setup persistent DOM elements
     mockElements = domSetup.setupElements({
       characterDefinition: { tag: 'textarea', id: 'character-definition' },
@@ -47,7 +56,10 @@ describe('TraitsRewriterController', () => {
       clearInputButton: { tag: 'button', id: 'clear-input-button' },
       retryButton: { tag: 'button', id: 'retry-button' },
       generationProgress: { tag: 'div', id: 'generation-progress' },
-      rewrittenTraitsContainer: { tag: 'div', id: 'rewritten-traits-container' },
+      rewrittenTraitsContainer: {
+        tag: 'div',
+        id: 'rewritten-traits-container',
+      },
       generationError: { tag: 'div', id: 'generation-error' },
       emptyState: { tag: 'div', id: 'empty-state' },
       characterNameDisplay: { tag: 'h3', id: 'character-name-display' },
@@ -55,7 +67,7 @@ describe('TraitsRewriterController', () => {
       progressText: { tag: 'p', className: 'progress-text' },
       errorMessage: { tag: 'p', className: 'error-message' },
     });
-    
+
     // Set initial styles and properties
     mockElements.characterInputError.style.display = 'none';
     mockElements.generationProgress.style.display = 'none';
@@ -64,43 +76,59 @@ describe('TraitsRewriterController', () => {
     mockElements.exportJsonButton.style.display = 'none';
     mockElements.exportTextButton.style.display = 'none';
     mockElements.copyTraitsButton.style.display = 'none';
-    
+
     // Set initial text content that gets reset each test
-    mockElements.progressText.textContent = 'Rewriting traits in character voice...';
+    mockElements.progressText.textContent =
+      'Rewriting traits in character voice...';
   });
 
   beforeEach(() => {
     testBed = createTestBed();
-    
+
     // Reset DOM elements
     domSetup.resetElements();
-    
+
     // Restore initial text content that tests expect
-    mockElements.progressText.textContent = 'Rewriting traits in character voice...';
-    
+    mockElements.progressText.textContent =
+      'Rewriting traits in character voice...';
+
     // Create optimized mock services
     mockLogger = mockFactory.getMockLogger();
-    mockCharacterBuilderService = mockFactory.getMockService('CharacterBuilderService', [
-      'initialize',
-      'getAllCharacterConcepts',
-      'createCharacterConcept',
-      'updateCharacterConcept',
-      'deleteCharacterConcept',
-      'getCharacterConcept',
-      'generateThematicDirections',
-      'getThematicDirections',
+    mockCharacterBuilderService = mockFactory.getMockService(
+      'CharacterBuilderService',
+      [
+        'initialize',
+        'getAllCharacterConcepts',
+        'createCharacterConcept',
+        'updateCharacterConcept',
+        'deleteCharacterConcept',
+        'getCharacterConcept',
+        'generateThematicDirections',
+        'getThematicDirections',
+      ]
+    );
+    mockEventBus = mockFactory.getMockService('EventBus', [
+      'dispatch',
+      'subscribe',
+      'unsubscribe',
     ]);
-    mockEventBus = mockFactory.getMockService('EventBus', ['dispatch', 'subscribe', 'unsubscribe']);
-    mockSchemaValidator = mockFactory.getMockService('SchemaValidator', ['validate', 'isSchemaLoaded']);
-    mockTraitsRewriterGenerator = mockFactory.getMockService('TraitsRewriterGenerator', [
-      'generateRewrittenTraits',
+    mockSchemaValidator = mockFactory.getMockService('SchemaValidator', [
+      'validate',
+      'isSchemaLoaded',
     ]);
-    mockTraitsRewriterDisplayEnhancer = mockFactory.getMockService('TraitsRewriterDisplayEnhancer', [
-      'enhanceForDisplay',
-      'formatForExport',
-      'generateExportFilename',
-      'createDisplaySections',
-    ]);
+    mockTraitsRewriterGenerator = mockFactory.getMockService(
+      'TraitsRewriterGenerator',
+      ['generateRewrittenTraits']
+    );
+    mockTraitsRewriterDisplayEnhancer = mockFactory.getMockService(
+      'TraitsRewriterDisplayEnhancer',
+      [
+        'enhanceForDisplay',
+        'formatForExport',
+        'generateExportFilename',
+        'createDisplaySections',
+      ]
+    );
 
     // Create dependencies object
     mockDependencies = {
@@ -119,11 +147,11 @@ describe('TraitsRewriterController', () => {
       debounceCleanup();
       debounceCleanup = null;
     }
-    
+
     testBed.cleanup();
     jest.clearAllMocks();
   });
-  
+
   afterAll(() => {
     domSetup.cleanup();
     mockFactory.clearCache();
@@ -159,10 +187,10 @@ describe('TraitsRewriterController', () => {
     it('should initialize with proper services', async () => {
       // Arrange
       controller = new TraitsRewriterController(mockDependencies);
-      
+
       // Add initialize method if it doesn't exist
       if (!controller.initialize) {
-        controller.initialize = async function() {
+        controller.initialize = async function () {
           await this._loadInitialData();
           this._cacheElements();
           this._setupEventListeners();
@@ -181,7 +209,7 @@ describe('TraitsRewriterController', () => {
     it('should cache all required UI elements', () => {
       // Arrange
       controller = new TraitsRewriterController(mockDependencies);
-      
+
       // Act
       controller._cacheElements();
 
@@ -219,7 +247,7 @@ describe('TraitsRewriterController', () => {
         'core:personality': 'Brave and noble',
         'core:likes': 'Adventure',
       });
-      
+
       mockElements.characterDefinition.value = validCharacterJSON;
 
       // Act
@@ -240,7 +268,7 @@ describe('TraitsRewriterController', () => {
       // Act
       const inputEvent = new Event('input');
       simulateEvent(mockElements.characterDefinition, 'input');
-      
+
       // Wait for debounce
       await waitForNextTick();
 
@@ -255,13 +283,13 @@ describe('TraitsRewriterController', () => {
         'core:name': 'Test Character',
         'core:profile': 'A test character profile',
       });
-      
+
       mockElements.characterDefinition.value = validCharacterJSON;
 
       // Act
       const inputEvent = new Event('input');
       simulateEvent(mockElements.characterDefinition, 'input');
-      
+
       // Wait for debounce
       await waitForNextTick();
 
@@ -272,7 +300,7 @@ describe('TraitsRewriterController', () => {
     it('should handle real-time input validation', async () => {
       // Arrange
       const characterDefinitionElement = mockElements.characterDefinition;
-      
+
       // Act - Type invalid JSON first
       characterDefinitionElement.value = '{invalid';
       simulateEvent(characterDefinitionElement, 'input');
@@ -282,7 +310,8 @@ describe('TraitsRewriterController', () => {
       expect(mockElements.rewriteTraitsButton.disabled).toBe(true);
 
       // Act - Fix to valid JSON
-      characterDefinitionElement.value = '{"core:name": "Test", "core:personality": "Brave"}';
+      characterDefinitionElement.value =
+        '{"core:name": "Test", "core:personality": "Brave"}';
       simulateEvent(characterDefinitionElement, 'input');
       await waitForNextTick();
 
@@ -296,13 +325,13 @@ describe('TraitsRewriterController', () => {
         'core:name': 'Test Character',
         'some:other': 'value',
       });
-      
+
       mockElements.characterDefinition.value = characterWithoutTraits;
 
       // Act
       const inputEvent = new Event('input');
       simulateEvent(mockElements.characterDefinition, 'input');
-      
+
       // Wait for debounce
       await waitForNextTick();
 
@@ -320,7 +349,7 @@ describe('TraitsRewriterController', () => {
       debounceCleanup = mockControllerDebounce(controller);
       controller._cacheElements();
       controller._setupEventListeners();
-      
+
       // Setup valid character input
       const validCharacterJSON = JSON.stringify({
         'core:name': 'Test Character',
@@ -333,28 +362,32 @@ describe('TraitsRewriterController', () => {
     it('should manage generation state properly', async () => {
       // Arrange
       await controller.initialize();
-      
+
       // Set up valid character input
       const validJSON = JSON.stringify({
         'core:name': 'Test Character',
         'core:personality': 'Brave',
       });
       mockElements.characterDefinition.value = validJSON;
-      
+
       // Trigger validation
       simulateEvent(mockElements.characterDefinition, 'input');
       await waitForNextTick(); // Wait for next tick instead of debounce
-      
+
       const mockResult = {
         rewrittenTraits: {
           'core:personality': "I'm brave and courageous",
         },
         characterName: 'Test Character',
       };
-      
-      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(mockResult);
+
+      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(
+        mockResult
+      );
       mockTraitsRewriterDisplayEnhancer.enhanceForDisplay.mockReturnValue({
-        sections: [{ id: 'personality', title: 'Personality', content: "I'm brave" }],
+        sections: [
+          { id: 'personality', title: 'Personality', content: "I'm brave" },
+        ],
         characterName: 'Test Character',
       });
 
@@ -363,7 +396,9 @@ describe('TraitsRewriterController', () => {
       await waitForNextTick();
 
       // Assert
-      expect(mockTraitsRewriterGenerator.generateRewrittenTraits).toHaveBeenCalled();
+      expect(
+        mockTraitsRewriterGenerator.generateRewrittenTraits
+      ).toHaveBeenCalled();
     });
 
     it('should integrate with TraitsRewriterGenerator', async () => {
@@ -372,19 +407,23 @@ describe('TraitsRewriterController', () => {
         'core:name': 'Test Character',
         'core:personality': 'Brave',
       };
-      
+
       const mockResult = {
         rewrittenTraits: {
           'core:personality': "I'm brave",
         },
         characterName: 'Test Character',
       };
-      
-      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(mockResult);
+
+      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(
+        mockResult
+      );
 
       // Setup character input to be valid
       const inputEvent = new Event('input');
-      mockElements.characterDefinition.value = JSON.stringify(mockCharacterDefinition);
+      mockElements.characterDefinition.value = JSON.stringify(
+        mockCharacterDefinition
+      );
       simulateEvent(mockElements.characterDefinition, 'input');
       await waitForNextTick();
 
@@ -393,16 +432,17 @@ describe('TraitsRewriterController', () => {
       await waitForNextTick();
 
       // Assert
-      expect(mockTraitsRewriterGenerator.generateRewrittenTraits).toHaveBeenCalledWith(
-        mockCharacterDefinition,
-        { includeMetadata: true }
-      );
+      expect(
+        mockTraitsRewriterGenerator.generateRewrittenTraits
+      ).toHaveBeenCalledWith(mockCharacterDefinition, {
+        includeMetadata: true,
+      });
     });
 
     it('should handle generation progress events', async () => {
       // Arrange
       await controller.initialize();
-      
+
       const progressEvent = {
         type: CHARACTER_BUILDER_EVENTS.TRAITS_REWRITER_GENERATION_STARTED,
         payload: {
@@ -428,17 +468,25 @@ describe('TraitsRewriterController', () => {
         },
         characterName: 'Test Character',
       };
-      
+
       const mockDisplayData = {
         sections: [
-          { id: 'personality', title: 'Personality', content: "I'm a brave soul" },
+          {
+            id: 'personality',
+            title: 'Personality',
+            content: "I'm a brave soul",
+          },
           { id: 'likes', title: 'Likes', content: 'I enjoy adventure' },
         ],
         characterName: 'Test Character',
       };
-      
-      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(mockResult);
-      mockTraitsRewriterDisplayEnhancer.enhanceForDisplay.mockReturnValue(mockDisplayData);
+
+      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(
+        mockResult
+      );
+      mockTraitsRewriterDisplayEnhancer.enhanceForDisplay.mockReturnValue(
+        mockDisplayData
+      );
 
       // Setup valid input
       const validJSON = JSON.stringify({
@@ -454,13 +502,17 @@ describe('TraitsRewriterController', () => {
       await waitForNextTick();
 
       // Assert
-      expect(mockTraitsRewriterDisplayEnhancer.enhanceForDisplay).toHaveBeenCalledWith(
+      expect(
+        mockTraitsRewriterDisplayEnhancer.enhanceForDisplay
+      ).toHaveBeenCalledWith(
         mockResult.rewrittenTraits,
         expect.objectContaining({
           characterName: 'Test Character',
         })
       );
-      expect(mockElements.rewrittenTraitsContainer.style.display).not.toBe('none');
+      expect(mockElements.rewrittenTraitsContainer.style.display).not.toBe(
+        'none'
+      );
     });
   });
 
@@ -477,7 +529,7 @@ describe('TraitsRewriterController', () => {
         'core:personality': "I'm brave",
         'core:likes': 'I love adventure',
       };
-      
+
       const mockDisplayData = {
         sections: [
           { id: 'personality', title: 'Personality', content: "I'm brave" },
@@ -485,16 +537,19 @@ describe('TraitsRewriterController', () => {
         ],
         characterName: 'Test Character',
       };
-      
-      mockTraitsRewriterDisplayEnhancer.enhanceForDisplay.mockReturnValue(mockDisplayData);
+
+      mockTraitsRewriterDisplayEnhancer.enhanceForDisplay.mockReturnValue(
+        mockDisplayData
+      );
 
       // Act - Call private method directly for testing
-      const displayResults = controller.constructor.prototype.
-        constructor.toString().includes('#displayResults') ?
-        null : // Can't directly test private method
-        mockTraitsRewriterDisplayEnhancer.enhanceForDisplay(mockTraits, {
-          characterName: 'Test Character',
-        });
+      const displayResults = controller.constructor.prototype.constructor
+        .toString()
+        .includes('#displayResults')
+        ? null // Can't directly test private method
+        : mockTraitsRewriterDisplayEnhancer.enhanceForDisplay(mockTraits, {
+            characterName: 'Test Character',
+          });
 
       // Assert
       if (displayResults) {
@@ -511,7 +566,7 @@ describe('TraitsRewriterController', () => {
 
       // Act
       // Since we can't directly call private methods, we test the DOM manipulation
-      sections.forEach(section => {
+      sections.forEach((section) => {
         const sectionElement = document.createElement('div');
         sectionElement.className = 'trait-section';
         sectionElement.setAttribute('data-section-id', section.id);
@@ -531,19 +586,27 @@ describe('TraitsRewriterController', () => {
 
       // Assert
       expect(mockElements.traitsSections.children.length).toBe(2);
-      expect(mockElements.traitsSections.querySelector('[data-section-id="personality"]')).toBeTruthy();
-      expect(mockElements.traitsSections.querySelector('[data-section-id="likes"]')).toBeTruthy();
+      expect(
+        mockElements.traitsSections.querySelector(
+          '[data-section-id="personality"]'
+        )
+      ).toBeTruthy();
+      expect(
+        mockElements.traitsSections.querySelector('[data-section-id="likes"]')
+      ).toBeTruthy();
     });
 
     it('should show results container', () => {
       // Arrange
       mockElements.rewrittenTraitsContainer.style.display = 'none';
-      
+
       // Act
       controller._showElement('rewrittenTraitsContainer');
 
       // Assert
-      expect(mockElements.rewrittenTraitsContainer.style.display).not.toBe('none');
+      expect(mockElements.rewrittenTraitsContainer.style.display).not.toBe(
+        'none'
+      );
     });
 
     it('should enable export functionality', () => {
@@ -570,7 +633,7 @@ describe('TraitsRewriterController', () => {
       debounceCleanup = mockControllerDebounce(controller);
       controller._cacheElements();
       controller._setupEventListeners();
-      
+
       // Mock navigator.clipboard
       global.navigator.clipboard = {
         writeText: jest.fn().mockResolvedValue(undefined),
@@ -587,35 +650,43 @@ describe('TraitsRewriterController', () => {
       const mockTraits = { 'core:personality': "I'm brave" };
       const mockExportContent = JSON.stringify(mockTraits, null, 2);
       const mockFilename = 'character-traits-2024';
-      
-      mockTraitsRewriterDisplayEnhancer.formatForExport.mockReturnValue(mockExportContent);
-      mockTraitsRewriterDisplayEnhancer.generateExportFilename.mockReturnValue(mockFilename);
+
+      mockTraitsRewriterDisplayEnhancer.formatForExport.mockReturnValue(
+        mockExportContent
+      );
+      mockTraitsRewriterDisplayEnhancer.generateExportFilename.mockReturnValue(
+        mockFilename
+      );
 
       // Simulate having generated traits
       const mockResult = {
         rewrittenTraits: mockTraits,
         characterName: 'Test Character',
       };
-      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(mockResult);
-      
+      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(
+        mockResult
+      );
+
       // Setup display enhancer for generation
       mockTraitsRewriterDisplayEnhancer.enhanceForDisplay.mockReturnValue({
-        sections: [{ id: 'personality', title: 'Personality', content: "I'm brave" }],
+        sections: [
+          { id: 'personality', title: 'Personality', content: "I'm brave" },
+        ],
         characterName: 'Test Character',
       });
-      
+
       // Setup valid input and trigger full generation workflow
       const validJSON = JSON.stringify({
         'core:name': 'Test Character',
         'core:personality': 'Brave',
       });
-      
+
       // Setup character input to be valid (following successful test pattern)
       const inputEvent = new Event('input');
       mockElements.characterDefinition.value = validJSON;
       simulateEvent(mockElements.characterDefinition, 'input');
       await waitForNextTick();
-      
+
       // Trigger generation by clicking the rewrite button
       simulateEvent(mockElements.rewriteTraitsButton, 'click');
       await waitForNextTick();
@@ -625,10 +696,9 @@ describe('TraitsRewriterController', () => {
       await waitForNextTick();
 
       // Assert
-      expect(mockTraitsRewriterDisplayEnhancer.formatForExport).toHaveBeenCalledWith(
-        mockResult.rewrittenTraits,
-        'json'
-      );
+      expect(
+        mockTraitsRewriterDisplayEnhancer.formatForExport
+      ).toHaveBeenCalledWith(mockResult.rewrittenTraits, 'json');
     });
 
     it('should support text export via dedicated button', async () => {
@@ -637,28 +707,34 @@ describe('TraitsRewriterController', () => {
       const mockTraits = { 'core:personality': "I'm brave" };
       const mockExportContent = "Personality: I'm brave";
       const mockFilename = 'character-traits-2024';
-      
-      mockTraitsRewriterDisplayEnhancer.formatForExport.mockReturnValue(mockExportContent);
-      mockTraitsRewriterDisplayEnhancer.generateExportFilename.mockReturnValue(mockFilename);
+
+      mockTraitsRewriterDisplayEnhancer.formatForExport.mockReturnValue(
+        mockExportContent
+      );
+      mockTraitsRewriterDisplayEnhancer.generateExportFilename.mockReturnValue(
+        mockFilename
+      );
 
       // Simulate having generated traits
       const mockResult = {
         rewrittenTraits: mockTraits,
         characterName: 'Test Character',
       };
-      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(mockResult);
-      
+      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(
+        mockResult
+      );
+
       // Setup valid input and generate (following successful test pattern)
       const validJSON = JSON.stringify({
         'core:name': 'Test Character',
         'core:personality': 'Brave',
       });
-      
+
       const inputEvent = new Event('input');
       mockElements.characterDefinition.value = validJSON;
       simulateEvent(mockElements.characterDefinition, 'input');
       await waitForNextTick();
-      
+
       simulateEvent(mockElements.rewriteTraitsButton, 'click');
       await waitForNextTick();
 
@@ -667,21 +743,23 @@ describe('TraitsRewriterController', () => {
       await waitForNextTick();
 
       // Assert
-      expect(mockTraitsRewriterDisplayEnhancer.formatForExport).toHaveBeenCalledWith(
-        mockResult.rewrittenTraits,
-        'text'
-      );
+      expect(
+        mockTraitsRewriterDisplayEnhancer.formatForExport
+      ).toHaveBeenCalledWith(mockResult.rewrittenTraits, 'text');
     });
 
     it('should generate proper filenames', () => {
       // Arrange
       const characterName = 'Test Character';
       const expectedFilename = 'test-character-traits-2024';
-      
-      mockTraitsRewriterDisplayEnhancer.generateExportFilename.mockReturnValue(expectedFilename);
+
+      mockTraitsRewriterDisplayEnhancer.generateExportFilename.mockReturnValue(
+        expectedFilename
+      );
 
       // Act
-      const filename = mockTraitsRewriterDisplayEnhancer.generateExportFilename(characterName);
+      const filename =
+        mockTraitsRewriterDisplayEnhancer.generateExportFilename(characterName);
 
       // Assert
       expect(filename).toBe(expectedFilename);
@@ -692,27 +770,31 @@ describe('TraitsRewriterController', () => {
       await controller.initialize();
       const mockTraits = { 'core:personality': "I'm brave" };
       const mockTextContent = "Personality: I'm brave";
-      
-      mockTraitsRewriterDisplayEnhancer.formatForExport.mockReturnValue(mockTextContent);
+
+      mockTraitsRewriterDisplayEnhancer.formatForExport.mockReturnValue(
+        mockTextContent
+      );
 
       // Simulate having generated traits
       const mockResult = {
         rewrittenTraits: mockTraits,
         characterName: 'Test Character',
       };
-      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(mockResult);
-      
+      mockTraitsRewriterGenerator.generateRewrittenTraits.mockResolvedValue(
+        mockResult
+      );
+
       // Setup valid input and generate (following successful test pattern)
       const validJSON = JSON.stringify({
         'core:name': 'Test Character',
         'core:personality': 'Brave',
       });
-      
+
       const inputEvent = new Event('input');
       mockElements.characterDefinition.value = validJSON;
       simulateEvent(mockElements.characterDefinition, 'input');
       await waitForNextTick();
-      
+
       simulateEvent(mockElements.rewriteTraitsButton, 'click');
       await waitForNextTick();
 
@@ -721,7 +803,9 @@ describe('TraitsRewriterController', () => {
       await waitForNextTick();
 
       // Assert
-      expect(global.navigator.clipboard.writeText).toHaveBeenCalledWith(mockTextContent);
+      expect(global.navigator.clipboard.writeText).toHaveBeenCalledWith(
+        mockTextContent
+      );
     });
   });
 
@@ -751,7 +835,9 @@ describe('TraitsRewriterController', () => {
     it('should handle generation failures gracefully', async () => {
       // Arrange
       const error = new Error('LLM service unavailable');
-      mockTraitsRewriterGenerator.generateRewrittenTraits.mockRejectedValue(error);
+      mockTraitsRewriterGenerator.generateRewrittenTraits.mockRejectedValue(
+        error
+      );
 
       // Setup valid input
       const validJSON = JSON.stringify({
@@ -789,7 +875,7 @@ describe('TraitsRewriterController', () => {
         'core:personality': 'Brave',
       });
       mockElements.characterDefinition.value = validJSON;
-      
+
       // Enable button for retry testing
       mockElements.rewriteTraitsButton.disabled = false;
 
@@ -800,7 +886,9 @@ describe('TraitsRewriterController', () => {
 
       // If the method doesn't exist, just verify the mock setup
       if (!controller._generateRewrittenTraits) {
-        expect(mockTraitsRewriterGenerator.generateRewrittenTraits).toBeDefined();
+        expect(
+          mockTraitsRewriterGenerator.generateRewrittenTraits
+        ).toBeDefined();
       }
     });
 
@@ -813,7 +901,9 @@ describe('TraitsRewriterController', () => {
       await waitForNextTick();
 
       // Assert
-      expect(mockElements.characterInputError.textContent).toContain('Invalid JSON');
+      expect(mockElements.characterInputError.textContent).toContain(
+        'Invalid JSON'
+      );
       expect(mockElements.rewriteTraitsButton.disabled).toBe(true);
     });
 
@@ -830,7 +920,9 @@ describe('TraitsRewriterController', () => {
       await waitForNextTick();
 
       // Assert
-      expect(mockElements.characterInputError.textContent).toContain('core:name');
+      expect(mockElements.characterInputError.textContent).toContain(
+        'core:name'
+      );
       expect(mockElements.rewriteTraitsButton.disabled).toBe(true);
     });
   });
@@ -856,21 +948,25 @@ describe('TraitsRewriterController', () => {
       // Test results state
       controller._showElement('rewrittenTraitsContainer');
       controller._hideElement('generationProgress');
-      expect(mockElements.rewrittenTraitsContainer.style.display).not.toBe('none');
+      expect(mockElements.rewrittenTraitsContainer.style.display).not.toBe(
+        'none'
+      );
       expect(mockElements.generationProgress.style.display).toBe('none');
     });
 
     it('should show generation progress', () => {
       // Arrange
       mockElements.generationProgress.style.display = 'none';
-      
+
       // Act
       controller._showElement('generationProgress');
 
       // Assert
       expect(mockElements.generationProgress.style.display).not.toBe('none');
       // Progress text should maintain its initial value from setup
-      expect(mockElements.progressText.textContent).toBe('Rewriting traits in character voice...');
+      expect(mockElements.progressText.textContent).toBe(
+        'Rewriting traits in character voice...'
+      );
     });
 
     it('should handle clear/reset functionality', async () => {

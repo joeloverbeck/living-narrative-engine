@@ -310,11 +310,11 @@ describe('furniture sitting system', () => {
         targetId: chair,
       });
 
-      // Then get up
+      // Then get up - provide targetId so rule operations can resolve 'target' reference
       await testEnv.dispatchAction({
         actionId: 'positioning:get_up_from_furniture',
         actorId: actor,
-        targetId: chair,
+        targetId: chair,  // Required for rule operations to resolve 'target' entity_ref
       });
 
       // Check that sitting_on component is removed

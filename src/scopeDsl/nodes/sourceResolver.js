@@ -144,6 +144,19 @@ export default function createSourceResolver({
             // Positive component - entities WITH the component
             const entities =
               entitiesGateway.getEntitiesWithComponent(componentId);
+
+            // Enhanced logging for debugging park bench issue
+            if (componentId === 'positioning:allows_sitting') {
+              console.log(
+                `[DEBUG] Looking for entities with positioning:allows_sitting component. Found ${entities?.length || 0} entities`
+              );
+              if (entities && entities.length > 0) {
+                entities.forEach((e) => {
+                  console.log(`[DEBUG] Found furniture entity: ${e.id}`);
+                });
+              }
+            }
+
             result = new Set(
               (entities || [])
                 .map((e) => e.id)

@@ -120,29 +120,31 @@ if (allowedOriginsArray.length > 0) {
     `LLM Proxy Server: Configuring CORS for ${allowedOriginsArray.length} origin(s)`
   );
   proxyLogger.debug('CORS allowed origins:', { origins: allowedOriginsArray });
-  
+
   const corsOptions = {
     origin: allowedOriginsArray,
     methods: [HTTP_METHOD_POST, HTTP_METHOD_OPTIONS],
     allowedHeaders: [HTTP_HEADER_CONTENT_TYPE, 'X-Title', 'HTTP-Referer'],
   };
   app.use(cors(corsOptions));
-  
+
   // Log successful CORS middleware application
   proxyLogger.debug('CORS middleware applied successfully');
 } else {
   // Check if in development mode and provide helpful warning
-  const nodeEnv = appConfigService.getNodeEnv ? appConfigService.getNodeEnv() : 'production';
+  const nodeEnv = appConfigService.getNodeEnv
+    ? appConfigService.getNodeEnv()
+    : 'production';
   if (nodeEnv === 'development') {
     proxyLogger.warn(
       'LLM Proxy Server: CORS not configured in development mode. ' +
-      'To enable browser access, set PROXY_ALLOWED_ORIGIN environment variable. ' +
-      'Example: PROXY_ALLOWED_ORIGIN="http://localhost:8080,http://127.0.0.1:8080"'
+        'To enable browser access, set PROXY_ALLOWED_ORIGIN environment variable. ' +
+        'Example: PROXY_ALLOWED_ORIGIN="http://localhost:8080,http://127.0.0.1:8080"'
     );
   } else {
     proxyLogger.warn(
       'LLM Proxy Server: PROXY_ALLOWED_ORIGIN environment variable not set or empty. ' +
-      'CORS will not be configured. This may cause issues with browser-based clients.'
+        'CORS will not be configured. This may cause issues with browser-based clients.'
     );
   }
 }
@@ -428,7 +430,9 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
     proxyLogger.info('--- LLM Proxy Server Startup Summary ---');
     // AC 4.a: Message: LLM Proxy Server listening on port [PORT]
     proxyLogger.info(`LLM Proxy Server listening on port ${PORT}`);
-    proxyLogger.info(`LLM Proxy Server: Binding to 0.0.0.0:${PORT} (accessible via localhost:${PORT} and 127.0.0.1:${PORT})`);
+    proxyLogger.info(
+      `LLM Proxy Server: Binding to 0.0.0.0:${PORT} (accessible via localhost:${PORT} and 127.0.0.1:${PORT})`
+    );
 
     // AC 4.a: Default Port Usage Note
     // Using appConfigService.isProxyPortDefaulted() which was added in appConfig.js

@@ -1,10 +1,4 @@
-import {
-  describe,
-  expect,
-  it,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, expect, it, beforeEach, jest } from '@jest/globals';
 import createSourceResolver from '../../../../src/scopeDsl/nodes/sourceResolver.js';
 
 describe('sourceResolver', () => {
@@ -56,10 +50,10 @@ describe('sourceResolver', () => {
       getErrorBuffer: jest.fn(() => []),
     };
 
-    resolver = createSourceResolver({ 
-      entitiesGateway, 
-      locationProvider, 
-      errorHandler 
+    resolver = createSourceResolver({
+      entitiesGateway,
+      locationProvider,
+      errorHandler,
     });
   });
 
@@ -202,7 +196,10 @@ describe('sourceResolver', () => {
       });
 
       it('should throw UnknownSourceError for unknown source kinds when no error handler', () => {
-        const resolverWithoutHandler = createSourceResolver({ entitiesGateway, locationProvider });
+        const resolverWithoutHandler = createSourceResolver({
+          entitiesGateway,
+          locationProvider,
+        });
         const node = { type: 'Source', kind: 'unknown' };
         const ctx = { actorEntity: { id: 'actor123' } };
 
@@ -235,7 +232,10 @@ describe('sourceResolver', () => {
       });
 
       it('should throw error when actorEntity is missing and no error handler', () => {
-        const resolverWithoutHandler = createSourceResolver({ entitiesGateway, locationProvider });
+        const resolverWithoutHandler = createSourceResolver({
+          entitiesGateway,
+          locationProvider,
+        });
         const node = { type: 'Source', kind: 'actor' };
         const ctx = {}; // Missing actorEntity
 
@@ -316,7 +316,8 @@ describe('sourceResolver', () => {
 
         expect(errorHandler.handleError).toHaveBeenCalledWith(
           expect.objectContaining({
-            message: 'SourceResolver: actorEntity has invalid ID: {"invalid":"object"}',
+            message:
+              'SourceResolver: actorEntity has invalid ID: {"invalid":"object"}',
           }),
           ctx,
           'SourceResolver',
@@ -409,11 +410,13 @@ describe('sourceResolver', () => {
     describe('with error handler', () => {
       it('should validate error handler interface', () => {
         // Test that the error handler is properly validated
-        expect(() => createSourceResolver({
-          entitiesGateway,
-          locationProvider,
-          errorHandler: { invalidInterface: true }
-        })).toThrow('Invalid or missing method');
+        expect(() =>
+          createSourceResolver({
+            entitiesGateway,
+            locationProvider,
+            errorHandler: { invalidInterface: true },
+          })
+        ).toThrow('Invalid or missing method');
       });
 
       it('should use error handler for all error scenarios', () => {
@@ -422,27 +425,27 @@ describe('sourceResolver', () => {
             name: 'missing actorEntity',
             ctx: {},
             node: { type: 'Source', kind: 'actor' },
-            expectedCode: 'SCOPE_1001'
+            expectedCode: 'SCOPE_1001',
           },
           {
             name: 'invalid actor ID',
             ctx: { actorEntity: { id: null } },
             node: { type: 'Source', kind: 'actor' },
-            expectedCode: 'SCOPE_1002'
+            expectedCode: 'SCOPE_1002',
           },
           {
             name: 'unknown source kind',
             ctx: { actorEntity: { id: 'actor123' } },
             node: { type: 'Source', kind: 'invalidKind' },
-            expectedCode: 'SCOPE_2001'
-          }
+            expectedCode: 'SCOPE_2001',
+          },
         ];
 
         testCases.forEach(({ ctx, node, expectedCode }) => {
           errorHandler.handleError.mockClear();
-          
+
           resolver.resolve(node, ctx);
-          
+
           expect(errorHandler.handleError).toHaveBeenCalledWith(
             expect.any(Error),
             ctx,
@@ -457,9 +460,9 @@ describe('sourceResolver', () => {
         const ctx = { actorEntity: { id: 'actor123' } };
 
         errorHandler.handleError.mockClear();
-        
+
         const result = resolver.resolve(node, ctx);
-        
+
         expect(result).toBeInstanceOf(Set);
         expect(result.has('actor123')).toBe(true);
         expect(errorHandler.handleError).not.toHaveBeenCalled();
@@ -470,7 +473,10 @@ describe('sourceResolver', () => {
       let resolverWithoutHandler;
 
       beforeEach(() => {
-        resolverWithoutHandler = createSourceResolver({ entitiesGateway, locationProvider });
+        resolverWithoutHandler = createSourceResolver({
+          entitiesGateway,
+          locationProvider,
+        });
       });
 
       it('should throw errors for missing actorEntity', () => {
@@ -505,7 +511,7 @@ describe('sourceResolver', () => {
         const ctx = { actorEntity: { id: 'actor123' } };
 
         const result = resolverWithoutHandler.resolve(node, ctx);
-        
+
         expect(result).toBeInstanceOf(Set);
         expect(result.has('actor123')).toBe(true);
       });

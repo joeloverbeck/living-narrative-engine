@@ -525,7 +525,7 @@ describe('LoggerStrategy', () => {
 
       // Mock ConsoleLogger to work but RemoteLogger to fail
       const workingConsoleLogger = new ConsoleLogger();
-      
+
       // Create a strategy with development mode but force HybridLogger to fail
       // by making the remoteLogger creation throw
       const strategy = new LoggerStrategy({
@@ -544,7 +544,7 @@ describe('LoggerStrategy', () => {
 
       // The logger should still work (falls back to something safe)
       expect(() => strategy.info('test')).not.toThrow();
-      
+
       errorSpy.mockRestore();
     });
 
@@ -615,7 +615,9 @@ describe('LoggerStrategy', () => {
       });
 
       strategy.setLogLevel('reload');
-      expect(mockLogger.info).toHaveBeenCalledWith('[LoggerStrategy] Configuration reloaded');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[LoggerStrategy] Configuration reloaded'
+      );
     });
 
     it('should handle reset command', () => {
@@ -627,15 +629,15 @@ describe('LoggerStrategy', () => {
 
       // Verify initial mode
       expect(strategy.getMode()).toBe(LoggerMode.PRODUCTION);
-      
+
       // Reset should revert to defaults
       strategy.setLogLevel('reset');
-      
+
       // Should have reset mode (will be test mode since JEST_WORKER_ID is set)
       // The important thing is that reset was executed and config was reset
       const newMode = strategy.getMode();
       expect([LoggerMode.TEST, LoggerMode.CONSOLE]).toContain(newMode);
-      
+
       // Logger should be created successfully
       const logger = strategy.getCurrentLogger();
       expect(logger).toBeDefined();
@@ -686,19 +688,21 @@ describe('LoggerStrategy', () => {
       });
 
       const status = strategy.setLogLevel('status');
-      
-      expect(status).toEqual(expect.objectContaining({
-        mode: LoggerMode.TEST,
-        logLevel: 'INFO',
-        bufferedLogs: 0,
-        config: expect.objectContaining({
-          enabled: expect.any(Boolean),
-          fallbackToConsole: expect.any(Boolean),
-        }),
-        logger: expect.objectContaining({
-          type: expect.any(String),
-        }),
-      }));
+
+      expect(status).toEqual(
+        expect.objectContaining({
+          mode: LoggerMode.TEST,
+          logLevel: 'INFO',
+          bufferedLogs: 0,
+          config: expect.objectContaining({
+            enabled: expect.any(Boolean),
+            fallbackToConsole: expect.any(Boolean),
+          }),
+          logger: expect.objectContaining({
+            type: expect.any(String),
+          }),
+        })
+      );
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         '[LoggerStrategy] Status:',
@@ -715,7 +719,7 @@ describe('LoggerStrategy', () => {
 
       // Try an invalid input that's not a mode, log level, or special command
       strategy.setLogLevel('unknown-invalid-input');
-      
+
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('[LoggerStrategy] Invalid setLogLevel input:')
       );
@@ -743,7 +747,7 @@ describe('LoggerStrategy', () => {
 
       // Apply null configuration (invalid)
       strategy.setLogLevel({ mode: null });
-      
+
       // Should log error about invalid configuration
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('[LoggerStrategy] Invalid configuration:')
@@ -763,7 +767,9 @@ describe('LoggerStrategy', () => {
       });
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('[LoggerStrategy] Invalid configuration: Categories must be an object')
+        expect.stringContaining(
+          '[LoggerStrategy] Invalid configuration: Categories must be an object'
+        )
       );
     });
 
@@ -784,7 +790,9 @@ describe('LoggerStrategy', () => {
       });
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('[LoggerStrategy] Invalid configuration: Invalid log level for category test')
+        expect.stringContaining(
+          '[LoggerStrategy] Invalid configuration: Invalid log level for category test'
+        )
       );
     });
 
@@ -803,7 +811,9 @@ describe('LoggerStrategy', () => {
       });
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('[LoggerStrategy] Invalid configuration: Category test must be an object')
+        expect.stringContaining(
+          '[LoggerStrategy] Invalid configuration: Category test must be an object'
+        )
       );
     });
 
@@ -876,11 +886,11 @@ describe('LoggerStrategy', () => {
       // Switch to a different mode with a logger that doesn't support batch
       strategy.setLogLevel('none');
       strategy.setLogLevel('test');
-      
+
       // Set up a new mock logger without processBatch
       const anotherStrategy = new LoggerStrategy({
         mode: LoggerMode.TEST,
-        dependencies: { 
+        dependencies: {
           mockLogger: {
             info: jest.fn(),
             warn: jest.fn(),
@@ -892,7 +902,7 @@ describe('LoggerStrategy', () => {
 
       // Trigger mode switch to transfer buffer
       anotherStrategy.setLogLevel('console');
-      
+
       // Verify mode was switched
       expect(anotherStrategy.getMode()).toBe(LoggerMode.CONSOLE);
     });

@@ -20,7 +20,7 @@ describe('Sensitive Data Filtering Integration', () => {
 
   beforeEach(() => {
     testBed = createTestBed();
-    
+
     mockConsoleLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -85,8 +85,9 @@ describe('Sensitive Data Filtering Integration', () => {
     });
 
     it('should filter sensitive data in log messages', (done) => {
-      const sensitiveMessage = 'User login with API_KEY=sk-1234567890abcdef successful';
-      
+      const sensitiveMessage =
+        'User login with API_KEY=sk-1234567890abcdef successful';
+
       // Mock the flush to capture what would be sent
       const originalFlush = remoteLogger._flush;
       remoteLogger._flush = jest.fn();
@@ -97,11 +98,11 @@ describe('Sensitive Data Filtering Integration', () => {
         // Access buffer through public method to check filtered content
         const buffer = remoteLogger.getBuffer();
         expect(buffer.length).toBeGreaterThan(0);
-        
+
         const logEntry = buffer[buffer.length - 1];
         expect(logEntry.message).not.toContain('sk-1234567890abcdef');
         expect(logEntry.message).toContain('[REDACTED]');
-        
+
         done();
       }, 100);
     });
@@ -117,10 +118,10 @@ describe('Sensitive Data Filtering Integration', () => {
       setTimeout(() => {
         const buffer = remoteLogger.getBuffer();
         const logEntry = buffer[buffer.length - 1];
-        
+
         expect(logEntry.message).not.toContain('abc123def456');
         expect(logEntry.message).toContain('[REDACTED]');
-        
+
         done();
       }, 100);
     });
@@ -141,15 +142,20 @@ describe('Sensitive Data Filtering Integration', () => {
       setTimeout(() => {
         const buffer = remoteLogger.getBuffer();
         const logEntry = buffer[buffer.length - 1];
-        
-        if (logEntry && logEntry.metadata && logEntry.metadata.originalArgs && logEntry.metadata.originalArgs[0]) {
+
+        if (
+          logEntry &&
+          logEntry.metadata &&
+          logEntry.metadata.originalArgs &&
+          logEntry.metadata.originalArgs[0]
+        ) {
           const args = logEntry.metadata.originalArgs[0];
           expect(args.user).toBe('john');
           expect(args.password).toBe('[REDACTED]');
           expect(args.apiKey).toBe('[REDACTED]');
           expect(args.normalData).toBe('public info');
         }
-        
+
         done();
       }, 100);
     });
@@ -180,9 +186,9 @@ describe('Sensitive Data Filtering Integration', () => {
       setTimeout(() => {
         const buffer = loggerWithoutFilter.getBuffer();
         const logEntry = buffer[buffer.length - 1];
-        
+
         expect(logEntry.message).toBe(sensitiveMessage);
-        
+
         loggerWithoutFilter.destroy?.();
         done();
       }, 100);
@@ -237,35 +243,40 @@ describe('Sensitive Data Filtering Integration', () => {
     });
 
     afterEach(() => {
-      if (hybridLogger && hybridLogger.getRemoteLogger && hybridLogger.getRemoteLogger().destroy) {
+      if (
+        hybridLogger &&
+        hybridLogger.getRemoteLogger &&
+        hybridLogger.getRemoteLogger().destroy
+      ) {
         hybridLogger.getRemoteLogger().destroy();
       }
     });
 
     it('should filter sensitive data in console output', () => {
-      const sensitiveMessage = 'Login successful with password: mySecretPassword123';
-      
+      const sensitiveMessage =
+        'Login successful with password: mySecretPassword123';
+
       // Clear any previous console calls before test
       mockConsoleLogger.info.mockClear();
-      
+
       hybridLogger.info(sensitiveMessage);
 
       expect(mockConsoleLogger.info).toHaveBeenCalled();
-      
+
       // Find the call that contains our test message (not initialization messages)
-      const relevantCall = mockConsoleLogger.info.mock.calls.find(call => 
-        call[0] && call[0].includes('Login successful')
+      const relevantCall = mockConsoleLogger.info.mock.calls.find(
+        (call) => call[0] && call[0].includes('Login successful')
       );
       expect(relevantCall).toBeDefined();
-      
+
       const loggedMessage = relevantCall[0];
-      
+
       // Verify sensitive data is filtered out
       expect(loggedMessage).not.toContain('mySecretPassword123');
-      
+
       // Verify some form of masking is present (account for category prefix)
       expect(loggedMessage).toMatch(/password:\s*[a-zA-Z*]+\d+/); // Pattern: prefix + asterisks + suffix
-      
+
       // Verify the message has category formatting
       expect(loggedMessage).toMatch(/^\[.*:.*\]/);
     });
@@ -293,7 +304,8 @@ describe('Sensitive Data Filtering Integration', () => {
     });
 
     it('should filter both console and remote destinations independently', (done) => {
-      const sensitiveMessage = 'API operation with apiKey: sk-1234567890abcdef completed';
+      const sensitiveMessage =
+        'API operation with apiKey: sk-1234567890abcdef completed';
 
       // Clear previous mock calls
       mockConsoleLogger.info.mockClear();
@@ -307,21 +319,21 @@ describe('Sensitive Data Filtering Integration', () => {
 
       // Check console filtering immediately
       expect(mockConsoleLogger.info).toHaveBeenCalled();
-      
+
       // Find the call that contains our test message
-      const relevantConsoleCall = mockConsoleLogger.info.mock.calls.find(call => 
-        call[0] && call[0].includes('API operation')
+      const relevantConsoleCall = mockConsoleLogger.info.mock.calls.find(
+        (call) => call[0] && call[0].includes('API operation')
       );
       expect(relevantConsoleCall).toBeDefined();
-      
+
       const consoleMessage = relevantConsoleCall[0];
-      
+
       // Verify sensitive API key data is filtered out from console
       expect(consoleMessage).not.toContain('sk-1234567890abcdef');
-      
+
       // Verify some form of masking is present in console
       expect(consoleMessage).toMatch(/apiKey:\s*[a-zA-Z0-9*\[\]-]+/); // Pattern includes partial masking format
-      
+
       // Verify category formatting in console
       expect(consoleMessage).toMatch(/^\[.*:.*\]/);
 
@@ -333,7 +345,9 @@ describe('Sensitive Data Filtering Integration', () => {
           // Verify sensitive data is filtered from remote logs
           expect(logEntry.message).not.toContain('sk-1234567890abcdef');
           // Verify some form of filtering occurred (flexible pattern)
-          expect(logEntry.message).toMatch(/apiKey:\s*[a-zA-Z0-9*\[\]-]+|REDACTED/);
+          expect(logEntry.message).toMatch(
+            /apiKey:\s*[a-zA-Z0-9*\[\]-]+|REDACTED/
+          );
         }
         done();
       }, 100);
@@ -341,7 +355,8 @@ describe('Sensitive Data Filtering Integration', () => {
 
     it('should handle different filtering strategies per destination', () => {
       // This test demonstrates that console uses 'partial' while remote uses 'mask'
-      const sensitiveMessage = 'Processing payment with creditCard: 1234567890123456';
+      const sensitiveMessage =
+        'Processing payment with creditCard: 1234567890123456';
 
       // Clear any previous console calls before test
       mockConsoleLogger.error.mockClear();
@@ -350,21 +365,21 @@ describe('Sensitive Data Filtering Integration', () => {
 
       // Console should use partial masking
       expect(mockConsoleLogger.error).toHaveBeenCalled();
-      
+
       // Find the call that contains our test message (not initialization messages)
-      const relevantCall = mockConsoleLogger.error.mock.calls.find(call => 
-        call[0] && call[0].includes('Processing payment')
+      const relevantCall = mockConsoleLogger.error.mock.calls.find(
+        (call) => call[0] && call[0].includes('Processing payment')
       );
       expect(relevantCall).toBeDefined();
-      
+
       const consoleMessage = relevantCall[0];
-      
+
       // Verify sensitive credit card data is filtered out
       expect(consoleMessage).not.toContain('1234567890123456');
-      
+
       // Verify some form of masking is present (flexible pattern to account for different masking strategies)
       expect(consoleMessage).toMatch(/creditCard:\s*[a-zA-Z0-9*\[\]]+/); // Pattern includes partial masking format
-      
+
       // Verify the message has category formatting
       expect(consoleMessage).toMatch(/^\[.*:.*\]/);
     });
@@ -386,7 +401,7 @@ describe('Sensitive Data Filtering Integration', () => {
             eventBus: mockEventBus,
           },
         });
-        
+
         logger.info('test message');
         logger.destroy?.();
       }).not.toThrow();
@@ -412,7 +427,7 @@ describe('Sensitive Data Filtering Integration', () => {
             eventBus: mockEventBus,
           },
         });
-        
+
         logger.info('test message');
         logger.destroy?.();
       }).not.toThrow();
@@ -435,11 +450,10 @@ describe('Sensitive Data Filtering Integration', () => {
             eventBus: mockEventBus,
           },
         });
-        
+
         logger.info('test', circularObj);
         logger.destroy?.();
       }).not.toThrow();
     });
   });
-
 });

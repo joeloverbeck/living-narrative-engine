@@ -31,7 +31,9 @@ class CriticalLogNotifier extends RendererBase {
   #badgeContainer = null;
   #panel = null;
   #updateTimer = null;
-  
+  #keyboardHandler = null;
+  #animationTimer = null;
+
   /**
    * Creates a new CriticalLogNotifier instance.
    *
@@ -42,23 +44,35 @@ class CriticalLogNotifier extends RendererBase {
    * @param {*} dependencies.hybridLogger - HybridLogger instance with critical buffer
    * @param {NotifierConfig} [dependencies.config] - Configuration object
    */
-  constructor({ logger, documentContext, validatedEventDispatcher, hybridLogger, config = {} }) {
+  constructor({
+    logger,
+    documentContext,
+    validatedEventDispatcher,
+    hybridLogger,
+    config = {},
+  }) {
     super({ logger, documentContext, validatedEventDispatcher });
-    
+
     validateDependency(hybridLogger, 'HybridLogger', logger, {
-      requiredMethods: ['getCriticalLogs', 'getCriticalBufferStats', 'clearCriticalBuffer']
+      requiredMethods: [
+        'getCriticalLogs',
+        'getCriticalBufferStats',
+        'clearCriticalBuffer',
+      ],
     });
-    
+
     this.#hybridLogger = hybridLogger;
     this.#config = this.#validateConfig(config);
     this.#maxRecentLogs = this.#config.maxRecentLogs || 20;
     this.#position = this.#loadPosition();
-    
+
     this.#initialize();
-    
-    this.logger.debug(`${this._logPrefix} Initialized with position: ${this.#position}`);
+
+    this.logger.debug(
+      `${this._logPrefix} Initialized with position: ${this.#position}`
+    );
   }
-  
+
   /**
    * Validates and applies default configuration values.
    *
@@ -73,12 +87,12 @@ class CriticalLogNotifier extends RendererBase {
       autoDismissAfter: null,
       soundEnabled: false,
       maxRecentLogs: 20,
-      alwaysShowInConsole: true
+      alwaysShowInConsole: true,
     };
-    
+
     return { ...defaults, ...config };
   }
-  
+
   /**
    * Initialize the notifier if visual notifications are enabled.
    *
@@ -89,22 +103,22 @@ class CriticalLogNotifier extends RendererBase {
       this.logger.debug(`${this._logPrefix} Visual notifications disabled`);
       return;
     }
-    
+
     this.#createContainer();
     this.#attachEventListeners();
     this.#startUpdateTimer();
-    
+
     // Set up auto-dismiss if configured
     if (this.#config.autoDismissAfter) {
       this.#setupAutoDismiss();
     }
-    
+
     // Subscribe to critical log events if available
     this._subscribe('CRITICAL_LOG_ADDED', (event) => {
       this.#handleNewCriticalLog(event.payload);
     });
   }
-  
+
   /**
    * Creates the main container and UI elements.
    *
@@ -116,24 +130,38 @@ class CriticalLogNotifier extends RendererBase {
     if (existing) {
       existing.remove();
     }
-    
+
     this.#container = this.documentContext.create('div');
     this.#container.className = 'lne-critical-log-notifier';
     this.#container.setAttribute('data-position', this.#position);
     this.#container.hidden = true;
-    
+
+    // Add smooth transition styles
+    this.#applyContainerStyles(this.#container);
+
     // Create badge container
     this.#badgeContainer = this.#createBadgeContainer();
     this.#container.appendChild(this.#badgeContainer);
-    
+
     // Create expandable panel
     this.#panel = this.#createPanel();
     this.#container.appendChild(this.#panel);
-    
+
     // Add to DOM
     this.documentContext.query('body').appendChild(this.#container);
   }
-  
+
+  /**
+   * Applies animation styles to the main container.
+   *
+   * @private
+   * @param {HTMLElement} container - Container element
+   */
+  #applyContainerStyles(container) {
+    container.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    container.style.transformOrigin = 'top right';
+  }
+
   /**
    * Creates the badge container with warning and error badges.
    *
@@ -145,25 +173,25 @@ class CriticalLogNotifier extends RendererBase {
     container.className = 'lne-badge-container';
     container.setAttribute('role', 'status');
     container.setAttribute('aria-label', 'Critical log notifications');
-    
+
     // Create warning badge
     const warningBadge = this.documentContext.create('span');
     warningBadge.className = 'lne-warning-badge';
     warningBadge.hidden = true;
     warningBadge.setAttribute('aria-label', 'Warning count');
-    
+
     // Create error badge
     const errorBadge = this.documentContext.create('span');
     errorBadge.className = 'lne-error-badge';
     errorBadge.hidden = true;
     errorBadge.setAttribute('aria-label', 'Error count');
-    
+
     container.appendChild(warningBadge);
     container.appendChild(errorBadge);
-    
+
     return container;
   }
-  
+
   /**
    * Creates the expandable log panel.
    *
@@ -176,38 +204,44 @@ class CriticalLogNotifier extends RendererBase {
     panel.hidden = true;
     panel.setAttribute('role', 'log');
     panel.setAttribute('aria-label', 'Critical logs panel');
-    
+
+    // Add animation styles
+    panel.style.transition = 'opacity 0.2s ease, transform 0.2s ease-out';
+    panel.style.transformOrigin = 'top right';
+    panel.style.opacity = '0';
+    panel.style.transform = 'scaleY(0)';
+
     // Header
     const header = this.documentContext.create('div');
     header.className = 'lne-log-header';
-    
+
     const title = this.documentContext.create('span');
     title.textContent = 'Recent Critical Logs';
-    
+
     const clearBtn = this.documentContext.create('button');
     clearBtn.className = 'lne-clear-btn';
     clearBtn.textContent = 'Clear';
     clearBtn.setAttribute('aria-label', 'Clear all logs');
-    
+
     const closeBtn = this.documentContext.create('button');
     closeBtn.className = 'lne-close-btn';
     closeBtn.innerHTML = '&times;';
     closeBtn.setAttribute('aria-label', 'Close panel');
-    
+
     header.appendChild(title);
     header.appendChild(clearBtn);
     header.appendChild(closeBtn);
-    
+
     // Log list
     const logList = this.documentContext.create('div');
     logList.className = 'lne-log-list';
-    
+
     panel.appendChild(header);
     panel.appendChild(logList);
-    
+
     return panel;
   }
-  
+
   /**
    * Attaches DOM event listeners using RendererBase's managed system.
    *
@@ -218,27 +252,79 @@ class CriticalLogNotifier extends RendererBase {
     this._addDomListener(this.#badgeContainer, 'click', () => {
       this.#handleToggle();
     });
-    
+
+    // Right-click dismiss on badge
+    this._addDomListener(this.#badgeContainer, 'contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.#handleDismiss();
+      this.logger.debug(`${this._logPrefix} Right-click dismiss triggered`);
+    });
+
     // Clear button
     const clearBtn = this.#panel.querySelector('.lne-clear-btn');
     this._addDomListener(clearBtn, 'click', () => {
       this.#handleClear();
     });
-    
+
     // Close button
     const closeBtn = this.#panel.querySelector('.lne-close-btn');
     this._addDomListener(closeBtn, 'click', () => {
       this.#handleCollapse();
     });
-    
+
     // Dismiss on outside click
-    this._addDomListener(this.documentContext.query('body'), 'click', (event) => {
-      if (!this.#container.contains(event.target) && this.#isExpanded) {
-        this.#handleCollapse();
+    this._addDomListener(
+      this.documentContext.query('body'),
+      'click',
+      (event) => {
+        if (!this.#container.contains(event.target) && this.#isExpanded) {
+          this.#handleCollapse();
+        }
       }
-    });
+    );
+
+    // Setup keyboard shortcuts
+    this.#setupKeyboardShortcuts();
   }
-  
+
+  /**
+   * Sets up keyboard shortcuts for notification control.
+   *
+   * @private
+   */
+  #setupKeyboardShortcuts() {
+    const handleKeyboard = (e) => {
+      // Only handle if notifier is visible
+      if (!this.#container || this.#container.hidden) return;
+
+      // Escape to collapse panel
+      if (e.key === 'Escape') {
+        if (this.#isExpanded) {
+          this.#handleCollapse();
+          this.logger.debug(
+            `${this._logPrefix} Panel collapsed via Escape key`
+          );
+        }
+      }
+
+      // Ctrl+Shift+L to toggle panel
+      if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+        e.preventDefault();
+        this.#handleToggle();
+        this.logger.debug(`${this._logPrefix} Panel toggled via Ctrl+Shift+L`);
+      }
+    };
+
+    // Use document for keyboard events to ensure they work from any focus state
+    this.documentContext
+      .query('document')
+      .addEventListener('keydown', handleKeyboard);
+
+    // Store reference for cleanup
+    this.#keyboardHandler = handleKeyboard;
+  }
+
   /**
    * Starts the update timer to refresh log data periodically.
    *
@@ -249,7 +335,7 @@ class CriticalLogNotifier extends RendererBase {
       this.#updateFromHybridLogger();
     }, 1000); // Update every second
   }
-  
+
   /**
    * Updates log data from HybridLogger's critical buffer.
    *
@@ -259,26 +345,35 @@ class CriticalLogNotifier extends RendererBase {
     if (this.#isDismissed) {
       return;
     }
-    
+
     try {
-      const logs = this.#hybridLogger.getCriticalLogs({ limit: this.#maxRecentLogs });
-      
+      const logs = this.#hybridLogger.getCriticalLogs({
+        limit: this.#maxRecentLogs,
+      });
+
       // Update counts from logs
-      this.#logCounts.warnings = logs.filter(log => log.level === 'warn').length;
-      this.#logCounts.errors = logs.filter(log => log.level === 'error').length;
-      
+      this.#logCounts.warnings = logs.filter(
+        (log) => log.level === 'warn'
+      ).length;
+      this.#logCounts.errors = logs.filter(
+        (log) => log.level === 'error'
+      ).length;
+
       // Update recent logs with display time
-      this.#recentLogs = logs.map(log => ({
+      this.#recentLogs = logs.map((log) => ({
         ...log,
-        displayTime: new Date(log.timestamp).toLocaleTimeString()
+        displayTime: new Date(log.timestamp).toLocaleTimeString(),
       }));
-      
+
       this.#updateDisplay();
     } catch (error) {
-      this.logger.error(`${this._logPrefix} Failed to update from HybridLogger`, error);
+      this.logger.error(
+        `${this._logPrefix} Failed to update from HybridLogger`,
+        error
+      );
     }
   }
-  
+
   /**
    * Handles new critical log events.
    *
@@ -289,18 +384,21 @@ class CriticalLogNotifier extends RendererBase {
     if (!this.#config.enableVisualNotifications || this.#isDismissed) {
       return;
     }
-    
+
     if (this.#config.soundEnabled) {
       this.#playNotificationSound(logEntry.level);
     }
-    
+
     // Dispatch notification event
     this.validatedEventDispatcher.dispatch({
       type: 'CRITICAL_NOTIFICATION_SHOWN',
-      payload: { level: logEntry.level, count: this.#logCounts[logEntry.level + 's'] }
+      payload: {
+        level: logEntry.level,
+        count: this.#logCounts[logEntry.level + 's'],
+      },
     });
   }
-  
+
   /**
    * Updates the visual display of badges and panel.
    *
@@ -308,18 +406,34 @@ class CriticalLogNotifier extends RendererBase {
    */
   #updateDisplay() {
     if (!this.#container) return;
-    
+
     this.#updateBadges(this.#logCounts);
-    
+
     if (this.#isExpanded) {
       this.#updateLogPanel(this.#recentLogs);
     }
-    
-    // Show container if there are critical logs
+
+    // Show/hide container with animation if there are critical logs
     const hasLogs = this.#logCounts.warnings > 0 || this.#logCounts.errors > 0;
-    this.#container.hidden = !hasLogs;
+
+    if (hasLogs && this.#container.hidden) {
+      // Show with animation
+      this.#container.hidden = false;
+      requestAnimationFrame(() => {
+        this.#container.style.opacity = '1';
+        this.#container.style.transform = 'scale(1)';
+      });
+    } else if (!hasLogs && !this.#container.hidden) {
+      // Hide with animation
+      this.#container.style.opacity = '0';
+      this.#container.style.transform = 'scale(0.9)';
+
+      setTimeout(() => {
+        this.#container.hidden = true;
+      }, 300); // Match animation duration
+    }
   }
-  
+
   /**
    * Updates badge counts and visibility.
    *
@@ -327,9 +441,10 @@ class CriticalLogNotifier extends RendererBase {
    * @param {LogCounts} counts - Current log counts
    */
   #updateBadges(counts) {
-    const warningBadge = this.#badgeContainer.querySelector('.lne-warning-badge');
+    const warningBadge =
+      this.#badgeContainer.querySelector('.lne-warning-badge');
     const errorBadge = this.#badgeContainer.querySelector('.lne-error-badge');
-    
+
     // Update warning badge
     if (counts.warnings > 0) {
       warningBadge.textContent = counts.warnings > 99 ? '99+' : counts.warnings;
@@ -337,7 +452,7 @@ class CriticalLogNotifier extends RendererBase {
     } else {
       warningBadge.hidden = true;
     }
-    
+
     // Update error badge
     if (counts.errors > 0) {
       errorBadge.textContent = counts.errors > 99 ? '99+' : counts.errors;
@@ -346,7 +461,7 @@ class CriticalLogNotifier extends RendererBase {
       errorBadge.hidden = true;
     }
   }
-  
+
   /**
    * Updates the log panel with recent entries.
    *
@@ -356,14 +471,14 @@ class CriticalLogNotifier extends RendererBase {
   #updateLogPanel(logs) {
     const logList = this.#panel.querySelector('.lne-log-list');
     logList.innerHTML = '';
-    
+
     // Add logs in reverse order (newest first)
-    [...logs].reverse().forEach(log => {
+    [...logs].reverse().forEach((log) => {
       const entry = this.#createLogEntry(log);
       logList.appendChild(entry);
     });
   }
-  
+
   /**
    * Creates a DOM element for a log entry.
    *
@@ -374,26 +489,95 @@ class CriticalLogNotifier extends RendererBase {
   #createLogEntry(log) {
     const entry = this.documentContext.create('div');
     entry.className = `lne-log-entry lne-log-${log.level}`;
-    
+
+    // Add slide-in animation
+    entry.style.animation = 'slideIn 0.3s ease';
+    entry.style.opacity = '0';
+
+    // Define animation keyframes inline
+    if (!this.documentContext.query('#lne-log-animations')) {
+      const style = this.documentContext.create('style');
+      style.id = 'lne-log-animations';
+      style.textContent = `
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `;
+      this.documentContext.query('head').appendChild(style);
+    }
+
     const time = this.documentContext.create('span');
     time.className = 'lne-log-time';
-    time.textContent = log.displayTime;
-    
+    time.textContent = this.#formatTimestamp(log.timestamp);
+
     const level = this.documentContext.create('span');
     level.className = 'lne-log-level';
     level.textContent = log.level.toUpperCase();
-    
+
     const message = this.documentContext.create('span');
     message.className = 'lne-log-message';
-    message.textContent = this.#sanitizeMessage(log.message);
-    
+    message.textContent = this.#formatLogMessage(log);
+
     entry.appendChild(time);
     entry.appendChild(level);
     entry.appendChild(message);
-    
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      entry.style.opacity = '1';
+    });
+
     return entry;
   }
-  
+
+  /**
+   * Formats a log message with truncation and category prefix.
+   *
+   * @private
+   * @param {CriticalLogEntry} log - Log entry
+   * @returns {string} Formatted message
+   */
+  #formatLogMessage(log) {
+    const maxLength = 200;
+    let message = this.#sanitizeMessage(log.message);
+
+    // Add category prefix if present and not 'general'
+    if (log.category && log.category !== 'general') {
+      message = `[${log.category}] ${message}`;
+    }
+
+    // Truncate long messages
+    if (message.length > maxLength) {
+      message = message.substring(0, maxLength - 3) + '...';
+    }
+
+    return message;
+  }
+
+  /**
+   * Formats timestamp with millisecond precision.
+   *
+   * @private
+   * @param {number} timestamp - Unix timestamp
+   * @returns {string} Formatted time string
+   */
+  #formatTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  }
+
   /**
    * Sanitizes message text to prevent XSS.
    *
@@ -406,7 +590,7 @@ class CriticalLogNotifier extends RendererBase {
     div.textContent = String(message);
     return div.innerHTML;
   }
-  
+
   /**
    * Handles toggle between expanded and collapsed states.
    *
@@ -419,7 +603,7 @@ class CriticalLogNotifier extends RendererBase {
       this.#handleExpand();
     }
   }
-  
+
   /**
    * Handles expanding the log panel.
    *
@@ -429,15 +613,21 @@ class CriticalLogNotifier extends RendererBase {
     this.#isExpanded = true;
     this.#updateLogPanel(this.#recentLogs);
     this.#panel.hidden = false;
-    
+
+    // Animate panel expansion
+    requestAnimationFrame(() => {
+      this.#panel.style.opacity = '1';
+      this.#panel.style.transform = 'scaleY(1)';
+    });
+
     this.logger.debug(`${this._logPrefix} Panel expanded`);
-    
+
     this.validatedEventDispatcher.dispatch({
       type: 'CRITICAL_LOG_PANEL_EXPANDED',
-      payload: { logCount: this.#recentLogs.length }
+      payload: { logCount: this.#recentLogs.length },
     });
   }
-  
+
   /**
    * Handles collapsing the log panel.
    *
@@ -445,16 +635,29 @@ class CriticalLogNotifier extends RendererBase {
    */
   #handleCollapse() {
     this.#isExpanded = false;
-    this.#panel.hidden = true;
-    
+
+    // Animate panel collapse
+    this.#panel.style.opacity = '0';
+    this.#panel.style.transform = 'scaleY(0)';
+
+    // Hide after animation completes
+    if (this.#animationTimer) {
+      clearTimeout(this.#animationTimer);
+    }
+
+    this.#animationTimer = setTimeout(() => {
+      this.#panel.hidden = true;
+      this.#animationTimer = null;
+    }, 200); // Match animation duration
+
     this.logger.debug(`${this._logPrefix} Panel collapsed`);
-    
+
     this.validatedEventDispatcher.dispatch({
       type: 'CRITICAL_LOG_PANEL_COLLAPSED',
-      payload: {}
+      payload: {},
     });
   }
-  
+
   /**
    * Handles clearing all logs and resetting counts.
    *
@@ -463,20 +666,20 @@ class CriticalLogNotifier extends RendererBase {
   #handleClear() {
     // Clear HybridLogger's critical buffer
     this.#hybridLogger.clearCriticalBuffer();
-    
+
     // Reset local state
     this.#logCounts = { warnings: 0, errors: 0 };
     this.#recentLogs = [];
     this.#updateDisplay();
-    
+
     this.logger.debug(`${this._logPrefix} Logs cleared`);
-    
+
     this.validatedEventDispatcher.dispatch({
       type: 'CRITICAL_LOGS_CLEARED',
-      payload: {}
+      payload: {},
     });
   }
-  
+
   /**
    * Loads position preference from storage.
    *
@@ -491,7 +694,7 @@ class CriticalLogNotifier extends RendererBase {
       return this.#config.notificationPosition;
     }
   }
-  
+
   /**
    * Saves position preference to storage.
    *
@@ -502,10 +705,13 @@ class CriticalLogNotifier extends RendererBase {
     try {
       localStorage.setItem('lne-critical-notifier-position', position);
     } catch (e) {
-      this.logger.warn(`${this._logPrefix} Failed to save position preference`, e);
+      this.logger.warn(
+        `${this._logPrefix} Failed to save position preference`,
+        e
+      );
     }
   }
-  
+
   /**
    * Sets up auto-dismiss functionality.
    *
@@ -513,19 +719,19 @@ class CriticalLogNotifier extends RendererBase {
    */
   #setupAutoDismiss() {
     let dismissTimer;
-    
+
     const resetTimer = () => {
       if (dismissTimer) clearTimeout(dismissTimer);
-      
+
       dismissTimer = setTimeout(() => {
         this.#handleDismiss();
       }, this.#config.autoDismissAfter);
     };
-    
+
     // Subscribe to critical log events to reset timer
     this._subscribe('CRITICAL_LOG_ADDED', resetTimer);
   }
-  
+
   /**
    * Handles dismissing notifications temporarily.
    *
@@ -533,21 +739,28 @@ class CriticalLogNotifier extends RendererBase {
    */
   #handleDismiss() {
     this.#isDismissed = true;
-    this.#container.hidden = true;
-    
+
+    // Animate dismissal
+    this.#container.style.opacity = '0';
+    this.#container.style.transform = 'scale(0.9)';
+
+    setTimeout(() => {
+      this.#container.hidden = true;
+    }, 300); // Match animation duration
+
     this.logger.debug(`${this._logPrefix} Notifications dismissed`);
-    
+
     // Reset dismissed state after delay
     setTimeout(() => {
       this.#isDismissed = false;
     }, 30000); // 30 seconds
-    
+
     this.validatedEventDispatcher.dispatch({
       type: 'CRITICAL_NOTIFICATIONS_DISMISSED',
-      payload: {}
+      payload: {},
     });
   }
-  
+
   /**
    * Plays notification sound (placeholder for future implementation).
    *
@@ -557,11 +770,13 @@ class CriticalLogNotifier extends RendererBase {
   #playNotificationSound(type) {
     // Future enhancement - not implemented in initial version
     // Could use Web Audio API or simple audio element
-    this.logger.debug(`${this._logPrefix} Sound notification for ${type} (not implemented)`);
+    this.logger.debug(
+      `${this._logPrefix} Sound notification for ${type} (not implemented)`
+    );
   }
-  
+
   // Public API methods
-  
+
   /**
    * Get current notification counts.
    *
@@ -570,16 +785,19 @@ class CriticalLogNotifier extends RendererBase {
   getCounts() {
     return { ...this.#logCounts };
   }
-  
+
   /**
    * Check if notifier is currently showing.
    *
    * @returns {boolean} True if visible and not dismissed
    */
   isVisible() {
-    return !this.#isDismissed && (this.#logCounts.warnings > 0 || this.#logCounts.errors > 0);
+    return (
+      !this.#isDismissed &&
+      (this.#logCounts.warnings > 0 || this.#logCounts.errors > 0)
+    );
   }
-  
+
   /**
    * Update notification position.
    *
@@ -588,25 +806,40 @@ class CriticalLogNotifier extends RendererBase {
   updatePosition(newPosition) {
     this.#position = newPosition;
     this.#savePosition(newPosition);
-    
+
     if (this.#container) {
       this.#container.setAttribute('data-position', newPosition);
     }
-    
+
     this.logger.debug(`${this._logPrefix} Position updated to: ${newPosition}`);
   }
-  
+
   /**
    * Override dispose to clean up timers and call parent cleanup.
    */
   dispose() {
+    // Clean up update timer
     if (this.#updateTimer) {
       clearInterval(this.#updateTimer);
       this.#updateTimer = null;
     }
-    
+
+    // Clean up animation timer
+    if (this.#animationTimer) {
+      clearTimeout(this.#animationTimer);
+      this.#animationTimer = null;
+    }
+
+    // Clean up keyboard handler
+    if (this.#keyboardHandler) {
+      this.documentContext
+        .query('document')
+        .removeEventListener('keydown', this.#keyboardHandler);
+      this.#keyboardHandler = null;
+    }
+
     this.logger.debug(`${this._logPrefix} Disposing with cleanup`);
-    
+
     // Call parent dispose for automatic VED and DOM cleanup
     super.dispose();
   }

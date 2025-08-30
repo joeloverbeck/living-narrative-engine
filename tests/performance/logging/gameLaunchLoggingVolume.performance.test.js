@@ -65,7 +65,7 @@ describe('Game Launch - Logging Volume Performance', () => {
     performanceTestBed = createPerformanceTestBed();
     performanceTracker = performanceTestBed.createPerformanceTracker();
     mockLogger = performanceTestBed.mockLogger;
-    
+
     // Create mock event bus manually since performanceTestBed doesn't have createMock
     mockEventBus = {
       dispatch: jest.fn(),
@@ -127,7 +127,9 @@ describe('Game Launch - Logging Volume Performance', () => {
       },
     });
 
-    const benchmark = performanceTracker.startBenchmark('game-launch-simulation');
+    const benchmark = performanceTracker.startBenchmark(
+      'game-launch-simulation'
+    );
 
     // Simulate game engine startup logging patterns
     simulateGameInitialization(remoteLogger);
@@ -171,7 +173,9 @@ describe('Game Launch - Logging Volume Performance', () => {
       },
     });
 
-    const benchmark = performanceTracker.startBenchmark('high-volume-entity-creation');
+    const benchmark = performanceTracker.startBenchmark(
+      'high-volume-entity-creation'
+    );
     const entityCount = 500;
 
     // Simulate entity creation burst (common cause of overflow)
@@ -201,7 +205,7 @@ describe('Game Launch - Logging Volume Performance', () => {
 
     // Performance assertions - adjusted for test environment with mock timing
     expect(metrics.totalTime).toBeLessThan(10000); // Should handle burst efficiently
-    
+
     // Should handle burst without buffer overflow
     expect(mockLogger.warn).not.toHaveBeenCalledWith(
       expect.stringContaining('Buffer overflow'),
@@ -249,14 +253,16 @@ describe('Game Launch - Logging Volume Performance', () => {
       },
     });
 
-    const benchmark = performanceTracker.startBenchmark('complete-game-launch-benchmark');
+    const benchmark = performanceTracker.startBenchmark(
+      'complete-game-launch-benchmark'
+    );
 
     // Simulate complete game launch sequence
     simulateCompleteGameLaunch(remoteLogger);
 
     // Force flush to ensure all logs are sent
     await remoteLogger.flush();
-    
+
     // Advance time to trigger timer-based flushes and wait for them to complete
     advanceMockTime(350); // Trigger flushInterval (300ms)
     await jest.runAllTimersAsync();
@@ -312,7 +318,9 @@ describe('Game Launch - Logging Volume Performance', () => {
       },
     });
 
-    const benchmark = performanceTracker.startBenchmark('stability-demonstration');
+    const benchmark = performanceTracker.startBenchmark(
+      'stability-demonstration'
+    );
     const iterations = 5;
 
     // Run the same high-volume scenario that previously caused issues
@@ -413,7 +421,7 @@ function simulateGameInitialization(logger) {
     entities: 200,
     locations: 10,
   });
-  
+
   advanceMockTime(50);
 }
 

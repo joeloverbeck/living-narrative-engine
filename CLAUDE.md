@@ -433,6 +433,7 @@ The project includes several character creation tools accessible from the main i
 - **Use domain-specific errors** not generic ones
 
 #### Linting Strategy for Performance
+
 - **For Claude Code sessions**: Use `npx eslint <file-paths>` on modified files only
 - **For full codebase validation**: Use `npm run lint` (may timeout on large codebases)
 - **Example**: `npx eslint src/entities/entityManager.js src/events/eventBus.js`

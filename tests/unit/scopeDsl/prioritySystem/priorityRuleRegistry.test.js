@@ -50,7 +50,7 @@ describe('PriorityRuleRegistry', () => {
   describe('Rule Registration and Management', () => {
     it('should register new priority rule successfully', () => {
       const customRule = (candidate) => 50;
-      
+
       registry.registerRule('custom', customRule);
 
       expect(registry.hasRule('custom')).toBe(true);
@@ -63,17 +63,17 @@ describe('PriorityRuleRegistry', () => {
     it('should throw error when registering non-function rule', () => {
       expect(() => {
         registry.registerRule('invalid', 'not-a-function');
-      }).toThrow('Priority rule \'invalid\' must be a function');
+      }).toThrow("Priority rule 'invalid' must be a function");
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Priority rule \'invalid\' must be a function'
+        "Priority rule 'invalid' must be a function"
       );
     });
 
     it('should remove existing rule successfully', () => {
       const customRule = (candidate) => 50;
       registry.registerRule('custom', customRule);
-      
+
       const removed = registry.removeRule('custom');
 
       expect(removed).toBe(true);
@@ -112,7 +112,7 @@ describe('PriorityRuleRegistry', () => {
       registry.registerRule('custom2', (candidate) => 20);
 
       const ruleNames = registry.getRuleNames();
-      
+
       expect(ruleNames).toContain('coverage');
       expect(ruleNames).toContain('layer');
       expect(ruleNames).toContain('custom1');
@@ -133,45 +133,45 @@ describe('PriorityRuleRegistry', () => {
   describe('Default Rules Behavior', () => {
     it('should calculate priority using coverage rule', () => {
       const candidate = { coveragePriority: 'outer', layer: 'base' };
-      
+
       // Remove layer rule to isolate coverage rule
       registry.removeRule('layer');
-      
+
       const priority = registry.calculatePriority(candidate);
       expect(priority).toBe(100); // COVERAGE_PRIORITY.outer
     });
 
     it('should calculate priority using layer rule', () => {
       const candidate = { coveragePriority: 'invalid', layer: 'outer' };
-      
+
       // Remove coverage rule to isolate layer rule
       registry.removeRule('coverage');
-      
+
       const priority = registry.calculatePriority(candidate);
       expect(priority).toBe(10); // LAYER_PRIORITY_WITHIN_COVERAGE.outer
     });
 
     it('should handle invalid coverage priority with fallback', () => {
       const candidate = { coveragePriority: 'invalid', layer: 'outer' };
-      
+
       registry.removeRule('layer');
-      
+
       const priority = registry.calculatePriority(candidate);
       expect(priority).toBe(400); // COVERAGE_PRIORITY.direct fallback
     });
 
     it('should handle invalid layer with fallback', () => {
       const candidate = { coveragePriority: 'outer', layer: 'invalid' };
-      
+
       registry.removeRule('coverage');
-      
+
       const priority = registry.calculatePriority(candidate);
       expect(priority).toBe(20); // LAYER_PRIORITY_WITHIN_COVERAGE.base fallback
     });
 
     it('should combine coverage and layer rules for total priority', () => {
       const candidate = { coveragePriority: 'outer', layer: 'outer' };
-      
+
       const priority = registry.calculatePriority(candidate);
       expect(priority).toBe(110); // 100 (outer coverage) + 10 (outer layer)
     });
@@ -183,7 +183,7 @@ describe('PriorityRuleRegistry', () => {
         coveragePriority: 'base',
         layer: 'underwear',
         itemId: 'test_item',
-        source: 'coverage'
+        source: 'coverage',
       };
 
       const priority = registry.calculatePriority(candidate);
@@ -192,7 +192,7 @@ describe('PriorityRuleRegistry', () => {
 
     it('should handle null candidate gracefully', () => {
       const priority = registry.calculatePriority(null);
-      
+
       expect(priority).toBe(Number.MAX_SAFE_INTEGER);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Invalid candidate provided to calculatePriority',
@@ -202,7 +202,7 @@ describe('PriorityRuleRegistry', () => {
 
     it('should handle undefined candidate gracefully', () => {
       const priority = registry.calculatePriority(undefined);
-      
+
       expect(priority).toBe(Number.MAX_SAFE_INTEGER);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Invalid candidate provided to calculatePriority',
@@ -212,7 +212,7 @@ describe('PriorityRuleRegistry', () => {
 
     it('should handle non-object candidate gracefully', () => {
       const priority = registry.calculatePriority('invalid-candidate');
-      
+
       expect(priority).toBe(Number.MAX_SAFE_INTEGER);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Invalid candidate provided to calculatePriority',
@@ -233,10 +233,12 @@ describe('PriorityRuleRegistry', () => {
       // Should continue with other rules despite error
       expect(priority).toBe(110); // Default rules still work
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Priority rule \'error-rule\' failed for candidate:'),
+        expect.stringContaining(
+          "Priority rule 'error-rule' failed for candidate:"
+        ),
         expect.objectContaining({
           candidate: candidate,
-          error: 'Rule calculation failed'
+          error: 'Rule calculation failed',
         })
       );
     });
@@ -269,7 +271,7 @@ describe('PriorityRuleRegistry', () => {
       const candidates = [
         { itemId: 'item1', coveragePriority: 'outer', layer: 'outer' },
         { itemId: 'item2', coveragePriority: 'base', layer: 'base' },
-        { itemId: 'item3', coveragePriority: 'underwear', layer: 'underwear' }
+        { itemId: 'item3', coveragePriority: 'underwear', layer: 'underwear' },
       ];
 
       const processed = registry.processCandidates(candidates);
@@ -315,7 +317,7 @@ describe('PriorityRuleRegistry', () => {
         { itemId: 'valid', coveragePriority: 'outer', layer: 'outer' },
         null,
         { itemId: 'invalid' }, // Missing required properties
-        undefined
+        undefined,
       ];
 
       const processed = registry.processCandidates(candidates);
@@ -371,20 +373,23 @@ describe('PriorityRuleRegistry', () => {
   describe('Complex Integration Scenarios', () => {
     it('should handle weather-based priority rules', () => {
       registry.registerRule('weather', (candidate) => {
-        if (candidate.weather === 'cold' && candidate.coveragePriority === 'outer') {
+        if (
+          candidate.weather === 'cold' &&
+          candidate.coveragePriority === 'outer'
+        ) {
           return -10; // Higher priority (lower number) for outer layers in cold weather
         }
         return 0;
       });
 
-      const coldCandidate = { 
-        coveragePriority: 'outer', 
+      const coldCandidate = {
+        coveragePriority: 'outer',
         layer: 'outer',
-        weather: 'cold'
+        weather: 'cold',
       };
-      const warmCandidate = { 
-        coveragePriority: 'outer', 
-        layer: 'outer'
+      const warmCandidate = {
+        coveragePriority: 'outer',
+        layer: 'outer',
       };
 
       const coldPriority = registry.calculatePriority(coldCandidate);
@@ -399,15 +404,15 @@ describe('PriorityRuleRegistry', () => {
         return candidate.damaged ? 50 : 0; // Lower priority for damaged items
       });
 
-      const damagedCandidate = { 
-        coveragePriority: 'outer', 
+      const damagedCandidate = {
+        coveragePriority: 'outer',
         layer: 'outer',
-        damaged: true
+        damaged: true,
       };
-      const intactCandidate = { 
-        coveragePriority: 'outer', 
+      const intactCandidate = {
+        coveragePriority: 'outer',
         layer: 'outer',
-        damaged: false
+        damaged: false,
       };
 
       const damagedPriority = registry.calculatePriority(damagedCandidate);
@@ -435,7 +440,7 @@ describe('PriorityRuleRegistry', () => {
         layer: 'outer',
         weather: 'cold',
         social: 'formal',
-        damaged: false
+        damaged: false,
       };
 
       const priority = registry.calculatePriority(candidate);

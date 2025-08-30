@@ -1,11 +1,11 @@
 /**
  * @file SlotAccessResolver Performance Test Suite
- * 
+ *
  * This performance test suite validates the performance characteristics of
  * the SlotAccessResolver, measuring:
  * - Resolution time for slot access operations
  * - Performance consistency across different equipment configurations
- * 
+ *
  * Performance Targets:
  * - Resolution time: < 1ms per operation
  * - Performance consistency: Max timing < 2x min timing
@@ -55,34 +55,38 @@ describe('SlotAccessResolver Performance', () => {
       hands: { accessories: 'watch_id' },
     },
     layeredOutfit: {
-      torso_upper: { 
-        outer: 'winter_coat_id', 
-        base: 'sweater_id', 
-        underwear: 'undershirt_id' 
+      torso_upper: {
+        outer: 'winter_coat_id',
+        base: 'sweater_id',
+        underwear: 'undershirt_id',
       },
-      torso_lower: { 
-        base: 'thermal_pants_id', 
-        underwear: 'underwear_id' 
+      torso_lower: {
+        base: 'thermal_pants_id',
+        underwear: 'underwear_id',
       },
     },
   };
 
   beforeEach(() => {
     testBed = createTestBed();
-    
+
     // Create mock entities gateway with correct methods
-    const mockEntitiesGateway = testBed.createMock('entitiesGateway', ['getComponentData']);
-    mockEntitiesGateway.getComponentData.mockImplementation((entityId, componentType) => {
-      if (componentType === 'clothing:equipment') {
-        return {
-          equipped: {
-            torso_upper: { outer: 'jacket_1', base: 'shirt_1' },
-            torso_lower: { base: 'pants_1' },
-          },
-        };
+    const mockEntitiesGateway = testBed.createMock('entitiesGateway', [
+      'getComponentData',
+    ]);
+    mockEntitiesGateway.getComponentData.mockImplementation(
+      (entityId, componentType) => {
+        if (componentType === 'clothing:equipment') {
+          return {
+            equipped: {
+              torso_upper: { outer: 'jacket_1', base: 'shirt_1' },
+              torso_lower: { base: 'pants_1' },
+            },
+          };
+        }
+        return null;
       }
-      return null;
-    });
+    );
 
     // Create resolver (only entitiesGateway parameter)
     resolver = createSlotAccessResolver({
@@ -105,11 +109,14 @@ describe('SlotAccessResolver Performance', () => {
   });
 
   test('should complete resolution within reasonable time', () => {
-    const clothingAccess = createMockClothingAccess({
-      torso_upper: { outer: 'jacket', base: 'shirt' },
-      torso_lower: { base: 'pants' },
-      legs: { base: 'jeans' },
-    }, 'topmost');
+    const clothingAccess = createMockClothingAccess(
+      {
+        torso_upper: { outer: 'jacket', base: 'shirt' },
+        torso_lower: { base: 'pants' },
+        legs: { base: 'jeans' },
+      },
+      'topmost'
+    );
 
     mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
@@ -133,7 +140,10 @@ describe('SlotAccessResolver Performance', () => {
     const testConfigurations = [
       { name: 'casualWear', config: REALISTIC_EQUIPMENT_SCENARIOS.casualWear },
       { name: 'formalWear', config: REALISTIC_EQUIPMENT_SCENARIOS.formalWear },
-      { name: 'layeredOutfit', config: REALISTIC_EQUIPMENT_SCENARIOS.layeredOutfit },
+      {
+        name: 'layeredOutfit',
+        config: REALISTIC_EQUIPMENT_SCENARIOS.layeredOutfit,
+      },
     ];
 
     const node = {
@@ -157,7 +167,7 @@ describe('SlotAccessResolver Performance', () => {
 
       // Actual measurement with larger sample size
       const startTime = performance.now();
-      
+
       for (let i = 0; i < MEASUREMENT_ITERATIONS; i++) {
         resolver.resolve(node, mockContext);
       }
@@ -167,18 +177,21 @@ describe('SlotAccessResolver Performance', () => {
     });
 
     // Extract timing values for comparison
-    const timingValues = timings.map(t => t.avgTime);
+    const timingValues = timings.map((t) => t.avgTime);
     const minTiming = Math.min(...timingValues);
     const maxTiming = Math.max(...timingValues);
     const ratio = maxTiming / minTiming;
 
     // Log detailed timing information for analysis
     console.log('Performance timing details:', {
-      timings: timings.map(t => ({ name: t.name, avgTime: t.avgTime.toFixed(6) })),
+      timings: timings.map((t) => ({
+        name: t.name,
+        avgTime: t.avgTime.toFixed(6),
+      })),
       minTiming: minTiming.toFixed(6),
       maxTiming: maxTiming.toFixed(6),
       ratio: ratio.toFixed(2),
-      threshold: 5
+      threshold: 5,
     });
 
     // Verify performance consistency with realistic threshold

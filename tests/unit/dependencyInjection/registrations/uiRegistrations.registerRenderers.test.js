@@ -39,7 +39,9 @@ describe('registerRenderers', () => {
     jest.clearAllMocks();
 
     // Get the mocked function
-    const { registerWithLog } = require('../../../../src/utils/registrarHelpers.js');
+    const {
+      registerWithLog,
+    } = require('../../../../src/utils/registrarHelpers.js');
     mockRegisterWithLog = registerWithLog;
 
     mockRegistrar = {
@@ -85,7 +87,7 @@ describe('registerRenderers', () => {
       const portraitModalCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.PortraitModalRenderer
       );
-      
+
       expect(portraitModalCall).toBeDefined();
       expect(portraitModalCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -96,7 +98,7 @@ describe('registerRenderers', () => {
       const portraitModalCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.PortraitModalRenderer
       );
-      
+
       const factory = portraitModalCall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -110,7 +112,8 @@ describe('registerRenderers', () => {
         }),
       };
 
-      const MockPortraitModalRenderer = require('../../../../src/domUI/portraitModalRenderer.js').PortraitModalRenderer;
+      const MockPortraitModalRenderer =
+        require('../../../../src/domUI/portraitModalRenderer.js').PortraitModalRenderer;
       const result = factory(mockContainer);
 
       expect(MockPortraitModalRenderer).toHaveBeenCalledWith({
@@ -129,7 +132,7 @@ describe('registerRenderers', () => {
       const titleRendererCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.TitleRenderer
       );
-      
+
       expect(titleRendererCall).toBeDefined();
       expect(titleRendererCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -140,7 +143,7 @@ describe('registerRenderers', () => {
       const titleRendererCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.TitleRenderer
       );
-      
+
       const factory = titleRendererCall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -154,12 +157,17 @@ describe('registerRenderers', () => {
         }),
       };
 
-      const MockTitleRenderer = require('../../../../src/domUI/index.js').TitleRenderer;
+      const MockTitleRenderer =
+        require('../../../../src/domUI/index.js').TitleRenderer;
       const result = factory(mockContainer);
 
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ISafeEventDispatcher);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.IDocumentContext
+      );
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.ISafeEventDispatcher
+      );
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.titleElement);
       expect(MockTitleRenderer).toHaveBeenCalled();
     });
@@ -172,7 +180,7 @@ describe('registerRenderers', () => {
       const locationRendererCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.LocationRenderer
       );
-      
+
       expect(locationRendererCall).toBeDefined();
       expect(locationRendererCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -183,13 +191,15 @@ describe('registerRenderers', () => {
       const locationRendererCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.LocationRenderer
       );
-      
+
       const factory = locationRendererCall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
           const mocks = {
             [tokens.ILogger]: mockLogger,
-            [tokens.IDocumentContext]: { query: jest.fn().mockReturnValue(null) },
+            [tokens.IDocumentContext]: {
+              query: jest.fn().mockReturnValue(null),
+            },
             [tokens.ISafeEventDispatcher]: { dispatch: jest.fn() },
             [tokens.DomElementFactory]: { createElement: jest.fn() },
             [tokens.IEntityManager]: { getEntity: jest.fn() },
@@ -200,7 +210,8 @@ describe('registerRenderers', () => {
         }),
       };
 
-      const MockLocationRenderer = require('../../../../src/domUI/index.js').LocationRenderer;
+      const MockLocationRenderer =
+        require('../../../../src/domUI/index.js').LocationRenderer;
       const result = factory(mockContainer);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -215,14 +226,16 @@ describe('registerRenderers', () => {
       const locationRendererCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.LocationRenderer
       );
-      
+
       const factory = locationRendererCall[2];
       const mockLocationContainer = document.createElement('div');
       const mockContainer = {
         resolve: jest.fn((token) => {
           const mocks = {
             [tokens.ILogger]: mockLogger,
-            [tokens.IDocumentContext]: { query: jest.fn().mockReturnValue(mockLocationContainer) },
+            [tokens.IDocumentContext]: {
+              query: jest.fn().mockReturnValue(mockLocationContainer),
+            },
             [tokens.ISafeEventDispatcher]: { dispatch: jest.fn() },
             [tokens.DomElementFactory]: { createElement: jest.fn() },
             [tokens.IEntityManager]: { getEntity: jest.fn() },
@@ -233,7 +246,8 @@ describe('registerRenderers', () => {
         }),
       };
 
-      const MockLocationRenderer = require('../../../../src/domUI/index.js').LocationRenderer;
+      const MockLocationRenderer =
+        require('../../../../src/domUI/index.js').LocationRenderer;
       const result = factory(mockContainer);
 
       expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -257,7 +271,7 @@ describe('registerRenderers', () => {
       const actionButtonsCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.ActionButtonsRenderer
       );
-      
+
       expect(actionButtonsCall).toBeDefined();
       expect(actionButtonsCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -268,7 +282,7 @@ describe('registerRenderers', () => {
       const actionButtonsCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.ActionButtonsRenderer
       );
-      
+
       const factory = actionButtonsCall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -283,7 +297,8 @@ describe('registerRenderers', () => {
         }),
       };
 
-      const MockActionButtonsRenderer = require('../../../../src/domUI/index.js').ActionButtonsRenderer;
+      const MockActionButtonsRenderer =
+        require('../../../../src/domUI/index.js').ActionButtonsRenderer;
       const result = factory(mockContainer);
 
       expect(MockActionButtonsRenderer).toHaveBeenCalledWith({
@@ -305,7 +320,7 @@ describe('registerRenderers', () => {
       const perceptionLogCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.PerceptionLogRenderer
       );
-      
+
       expect(perceptionLogCall).toBeDefined();
       expect(perceptionLogCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -316,7 +331,7 @@ describe('registerRenderers', () => {
       const perceptionLogCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.PerceptionLogRenderer
       );
-      
+
       const factory = perceptionLogCall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -331,7 +346,8 @@ describe('registerRenderers', () => {
         }),
       };
 
-      const MockPerceptionLogRenderer = require('../../../../src/domUI/index.js').PerceptionLogRenderer;
+      const MockPerceptionLogRenderer =
+        require('../../../../src/domUI/index.js').PerceptionLogRenderer;
       const result = factory(mockContainer);
 
       expect(MockPerceptionLogRenderer).toHaveBeenCalledWith({
@@ -351,7 +367,7 @@ describe('registerRenderers', () => {
       const saveGameServiceCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.SaveGameService
       );
-      
+
       expect(saveGameServiceCall).toBeDefined();
       expect(saveGameServiceCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -362,7 +378,7 @@ describe('registerRenderers', () => {
       const saveGameServiceCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.SaveGameService
       );
-      
+
       const factory = saveGameServiceCall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -374,7 +390,8 @@ describe('registerRenderers', () => {
         }),
       };
 
-      const MockSaveGameService = require('../../../../src/domUI/index.js').SaveGameService;
+      const MockSaveGameService =
+        require('../../../../src/domUI/index.js').SaveGameService;
       const result = factory(mockContainer);
 
       expect(MockSaveGameService).toHaveBeenCalledWith({
@@ -391,7 +408,7 @@ describe('registerRenderers', () => {
       const saveGameUICall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.SaveGameUI
       );
-      
+
       expect(saveGameUICall).toBeDefined();
       expect(saveGameUICall[3].lifecycle).toBe('singletonFactory');
     });
@@ -402,7 +419,7 @@ describe('registerRenderers', () => {
       const saveGameUICall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.SaveGameUI
       );
-      
+
       const factory = saveGameUICall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -439,7 +456,7 @@ describe('registerRenderers', () => {
       const loadGameUICall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.LoadGameUI
       );
-      
+
       expect(loadGameUICall).toBeDefined();
       expect(loadGameUICall[3].lifecycle).toBe('singletonFactory');
     });
@@ -450,7 +467,7 @@ describe('registerRenderers', () => {
       const loadGameUICall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.LoadGameUI
       );
-      
+
       const factory = loadGameUICall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -487,7 +504,7 @@ describe('registerRenderers', () => {
       const llmSelectionCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.LlmSelectionModal
       );
-      
+
       expect(llmSelectionCall).toBeDefined();
       expect(llmSelectionCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -498,7 +515,7 @@ describe('registerRenderers', () => {
       const llmSelectionCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.LlmSelectionModal
       );
-      
+
       const factory = llmSelectionCall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -513,7 +530,8 @@ describe('registerRenderers', () => {
         }),
       };
 
-      const MockLlmSelectionModal = require('../../../../src/domUI/index.js').LlmSelectionModal;
+      const MockLlmSelectionModal =
+        require('../../../../src/domUI/index.js').LlmSelectionModal;
       const result = factory(mockContainer);
 
       expect(MockLlmSelectionModal).toHaveBeenCalledWith({
@@ -533,7 +551,7 @@ describe('registerRenderers', () => {
       const currentTurnActorCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.CurrentTurnActorRenderer
       );
-      
+
       expect(currentTurnActorCall).toBeDefined();
       expect(currentTurnActorCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -544,7 +562,7 @@ describe('registerRenderers', () => {
       const currentTurnActorCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.CurrentTurnActorRenderer
       );
-      
+
       const factory = currentTurnActorCall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -559,7 +577,8 @@ describe('registerRenderers', () => {
         }),
       };
 
-      const MockCurrentTurnActorRenderer = require('../../../../src/domUI/index.js').CurrentTurnActorRenderer;
+      const MockCurrentTurnActorRenderer =
+        require('../../../../src/domUI/index.js').CurrentTurnActorRenderer;
       const result = factory(mockContainer);
 
       expect(MockCurrentTurnActorRenderer).toHaveBeenCalledWith({
@@ -579,7 +598,7 @@ describe('registerRenderers', () => {
       const chatAlertCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.ChatAlertRenderer
       );
-      
+
       expect(chatAlertCall).toBeDefined();
       expect(chatAlertCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -590,7 +609,7 @@ describe('registerRenderers', () => {
       const chatAlertCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.ChatAlertRenderer
       );
-      
+
       const factory = chatAlertCall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -605,7 +624,8 @@ describe('registerRenderers', () => {
         }),
       };
 
-      const MockChatAlertRenderer = require('../../../../src/domUI/index.js').ChatAlertRenderer;
+      const MockChatAlertRenderer =
+        require('../../../../src/domUI/index.js').ChatAlertRenderer;
       const result = factory(mockContainer);
 
       expect(MockChatAlertRenderer).toHaveBeenCalledWith({
@@ -625,7 +645,7 @@ describe('registerRenderers', () => {
       const actionResultCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.ActionResultRenderer
       );
-      
+
       expect(actionResultCall).toBeDefined();
       expect(actionResultCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -636,7 +656,7 @@ describe('registerRenderers', () => {
       const actionResultCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.ActionResultRenderer
       );
-      
+
       const factory = actionResultCall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -650,7 +670,8 @@ describe('registerRenderers', () => {
         }),
       };
 
-      const MockActionResultRenderer = require('../../../../src/domUI/index.js').ActionResultRenderer;
+      const MockActionResultRenderer =
+        require('../../../../src/domUI/index.js').ActionResultRenderer;
       const result = factory(mockContainer);
 
       expect(MockActionResultRenderer).toHaveBeenCalledWith({
@@ -667,9 +688,11 @@ describe('registerRenderers', () => {
 
     // Count total registrations
     expect(mockRegisterWithLog).toHaveBeenCalledTimes(13);
-    
+
     // Verify all tokens were registered
-    const registeredTokens = mockRegisterWithLog.mock.calls.map(call => call[1]);
+    const registeredTokens = mockRegisterWithLog.mock.calls.map(
+      (call) => call[1]
+    );
     expect(registeredTokens).toContain(tokens.PortraitModalRenderer);
     expect(registeredTokens).toContain(tokens.SpeechBubbleRenderer);
     expect(registeredTokens).toContain(tokens.TitleRenderer);

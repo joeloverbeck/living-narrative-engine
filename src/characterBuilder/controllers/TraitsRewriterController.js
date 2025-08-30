@@ -60,7 +60,8 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
     this.#validateTraitsRewriterDependencies(dependencies);
 
     this.#traitsRewriterGenerator = dependencies.traitsRewriterGenerator;
-    this.#traitsRewriterDisplayEnhancer = dependencies.traitsRewriterDisplayEnhancer;
+    this.#traitsRewriterDisplayEnhancer =
+      dependencies.traitsRewriterDisplayEnhancer;
 
     // Logger call moved to _loadInitialData to avoid constructor timing issues
   }
@@ -72,7 +73,9 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
    * @returns {Promise<void>}
    */
   async _loadInitialData() {
-    this.logger.info('TraitsRewriterController: Complete implementation initialized');
+    this.logger.info(
+      'TraitsRewriterController: Complete implementation initialized'
+    );
     this.logger.debug('TraitsRewriterController: Loading initial data');
 
     // Initialize UI with empty state
@@ -156,12 +159,16 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
     const inputElement = this._getElement('characterDefinition');
     if (inputElement) {
       // Real-time validation on input with debouncing
-      this._addEventListener('characterDefinition', 'input',
+      this._addEventListener(
+        'characterDefinition',
+        'input',
         this._debounce(this.#handleCharacterInput.bind(this), 500)
       );
 
       // Validation on blur
-      this._addEventListener('characterDefinition', 'blur',
+      this._addEventListener(
+        'characterDefinition',
+        'blur',
         this.#handleCharacterInput.bind(this)
       );
     }
@@ -188,15 +195,17 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       }
 
       // Validate JSON and character definition
-      const characterDefinition = await this.#validateCharacterDefinition(inputText);
+      const characterDefinition =
+        await this.#validateCharacterDefinition(inputText);
       this.#currentCharacterDefinition = characterDefinition;
 
       // Clear errors and enable generation
       this._hideElement('characterInputError');
       this.#updateGenerateButtonState(true);
 
-      this.logger.debug('TraitsRewriterController: Valid character input received');
-
+      this.logger.debug(
+        'TraitsRewriterController: Valid character input received'
+      );
     } catch (error) {
       this.#currentCharacterDefinition = null;
       this.#updateGenerateButtonState(false);
@@ -214,7 +223,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
    */
   async #validateCharacterDefinition(inputText) {
     let parsed;
-    
+
     // Parse JSON
     try {
       parsed = JSON.parse(inputText);
@@ -237,13 +246,24 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
 
     // Check for at least one trait to rewrite
     const traitKeys = [
-      'core:personality', 'core:likes', 'core:dislikes', 'core:fears',
-      'core:goals', 'core:notes', 'core:profile', 'core:secrets',
-      'core:strengths', 'core:weaknesses', 'core:background',
-      'core:motivations', 'core:beliefs', 'core:hobbies', 'core:relationships'
+      'core:personality',
+      'core:likes',
+      'core:dislikes',
+      'core:fears',
+      'core:goals',
+      'core:notes',
+      'core:profile',
+      'core:secrets',
+      'core:strengths',
+      'core:weaknesses',
+      'core:background',
+      'core:motivations',
+      'core:beliefs',
+      'core:hobbies',
+      'core:relationships',
     ];
 
-    const hasTraits = traitKeys.some(key => parsed[key]);
+    const hasTraits = traitKeys.some((key) => parsed[key]);
     if (!hasTraits) {
       throw new TraitsRewriterError(
         'Character definition must include at least one trait to rewrite',
@@ -262,17 +282,23 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
    */
   #setupControlButtons() {
     // Rewrite traits button
-    this._addEventListener('rewriteTraitsButton', 'click',
+    this._addEventListener(
+      'rewriteTraitsButton',
+      'click',
       this.#generateRewrittenTraits.bind(this)
     );
 
     // Clear input button
-    this._addEventListener('clearInputButton', 'click',
+    this._addEventListener(
+      'clearInputButton',
+      'click',
       this.#clearAll.bind(this)
     );
 
     // Retry button
-    this._addEventListener('retryButton', 'click',
+    this._addEventListener(
+      'retryButton',
+      'click',
       this.#generateRewrittenTraits.bind(this)
     );
   }
@@ -284,17 +310,23 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
    */
   #setupExportHandling() {
     // JSON export button
-    this._addEventListener('exportJsonButton', 'click',
+    this._addEventListener(
+      'exportJsonButton',
+      'click',
       this.#exportToJSON.bind(this)
     );
 
     // Text export button
-    this._addEventListener('exportTextButton', 'click',
+    this._addEventListener(
+      'exportTextButton',
+      'click',
       this.#exportToText.bind(this)
     );
 
     // Copy to clipboard button
-    this._addEventListener('copyTraitsButton', 'click',
+    this._addEventListener(
+      'copyTraitsButton',
+      'click',
       this.#copyToClipboard.bind(this)
     );
   }
@@ -331,16 +363,16 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       this.logger.info('TraitsRewriterController: Starting trait generation');
 
       // Generate rewritten traits
-      const result = await this.#traitsRewriterGenerator.generateRewrittenTraits(
-        this.#currentCharacterDefinition,
-        { includeMetadata: true }
-      );
+      const result =
+        await this.#traitsRewriterGenerator.generateRewrittenTraits(
+          this.#currentCharacterDefinition,
+          { includeMetadata: true }
+        );
 
       this.#lastGeneratedTraits = result;
 
       // Display results
       await this.#displayResults(result);
-
     } catch (error) {
       this.logger.error('TraitsRewriterController: Generation failed', error);
       this.#displayError(error);
@@ -365,7 +397,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
         generatedTraits.rewrittenTraits,
         {
           characterName: generatedTraits.characterName || 'Character',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         }
       );
 
@@ -390,11 +422,16 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       this._showElement('exportTextButton');
       this._showElement('copyTraitsButton');
 
-      this.logger.info('TraitsRewriterController: Results displayed successfully');
-
+      this.logger.info(
+        'TraitsRewriterController: Results displayed successfully'
+      );
     } catch (error) {
       this.logger.error('TraitsRewriterController: Display failed', error);
-      throw new TraitsRewriterError('Failed to display results', 'DISPLAY_FAILED', { error });
+      throw new TraitsRewriterError(
+        'Failed to display results',
+        'DISPLAY_FAILED',
+        { error }
+      );
     }
   }
 
@@ -409,7 +446,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
     // Clear existing sections
     container.innerHTML = '';
 
-    sections.forEach(section => {
+    sections.forEach((section) => {
       const sectionElement = document.createElement('div');
       sectionElement.className = 'trait-section';
       sectionElement.setAttribute('data-section-id', section.id);
@@ -420,7 +457,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
 
       const contentElement = document.createElement('div');
       contentElement.className = 'trait-content';
-      
+
       // Handle HTML-enhanced content if available
       if (section.htmlContent) {
         contentElement.innerHTML = section.htmlContent;
@@ -453,9 +490,10 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       );
 
       // Generate filename
-      const filename = this.#traitsRewriterDisplayEnhancer.generateExportFilename(
-        this.#lastGeneratedTraits.characterName
-      );
+      const filename =
+        this.#traitsRewriterDisplayEnhancer.generateExportFilename(
+          this.#lastGeneratedTraits.characterName
+        );
 
       // Trigger download
       this.#downloadFile(exportContent, filename, 'json');
@@ -464,10 +502,11 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       this.#showExportSuccess(`${filename}.json`);
 
       this.logger.info('TraitsRewriterController: JSON export successful');
-
     } catch (error) {
       this.logger.error('TraitsRewriterController: JSON export failed', error);
-      this.#displayError(new TraitsRewriterError('Export failed', 'EXPORT_FAILED', { error }));
+      this.#displayError(
+        new TraitsRewriterError('Export failed', 'EXPORT_FAILED', { error })
+      );
     }
   }
 
@@ -490,9 +529,10 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       );
 
       // Generate filename
-      const filename = this.#traitsRewriterDisplayEnhancer.generateExportFilename(
-        this.#lastGeneratedTraits.characterName
-      );
+      const filename =
+        this.#traitsRewriterDisplayEnhancer.generateExportFilename(
+          this.#lastGeneratedTraits.characterName
+        );
 
       // Trigger download
       this.#downloadFile(exportContent, filename, 'text');
@@ -501,10 +541,11 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       this.#showExportSuccess(`${filename}.txt`);
 
       this.logger.info('TraitsRewriterController: Text export successful');
-
     } catch (error) {
       this.logger.error('TraitsRewriterController: Text export failed', error);
-      this.#displayError(new TraitsRewriterError('Export failed', 'EXPORT_FAILED', { error }));
+      this.#displayError(
+        new TraitsRewriterError('Export failed', 'EXPORT_FAILED', { error })
+      );
     }
   }
 
@@ -532,11 +573,17 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       // Show success feedback
       this.#showCopySuccess();
 
-      this.logger.info('TraitsRewriterController: Copy to clipboard successful');
-
+      this.logger.info(
+        'TraitsRewriterController: Copy to clipboard successful'
+      );
     } catch (error) {
-      this.logger.error('TraitsRewriterController: Copy to clipboard failed', error);
-      this.#displayError(new TraitsRewriterError('Copy failed', 'COPY_FAILED', { error }));
+      this.logger.error(
+        'TraitsRewriterController: Copy to clipboard failed',
+        error
+      );
+      this.#displayError(
+        new TraitsRewriterError('Copy failed', 'COPY_FAILED', { error })
+      );
     }
   }
 
@@ -566,7 +613,9 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
     // Disable generate button
     this.#updateGenerateButtonState(false);
 
-    this.logger.debug('TraitsRewriterController: Cleared all input and reset UI');
+    this.logger.debug(
+      'TraitsRewriterController: Cleared all input and reset UI'
+    );
   }
 
   /**
@@ -576,16 +625,22 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
    */
   #subscribeToGenerationEvents() {
     // Listen for generation started
-    this._subscribeToEvent(CHARACTER_BUILDER_EVENTS.TRAITS_REWRITER_GENERATION_STARTED,
-      this.#handleGenerationProgress.bind(this));
+    this._subscribeToEvent(
+      CHARACTER_BUILDER_EVENTS.TRAITS_REWRITER_GENERATION_STARTED,
+      this.#handleGenerationProgress.bind(this)
+    );
 
     // Listen for generation completed
-    this._subscribeToEvent(CHARACTER_BUILDER_EVENTS.TRAITS_REWRITER_GENERATION_COMPLETED,
-      this.#handleGenerationComplete.bind(this));
+    this._subscribeToEvent(
+      CHARACTER_BUILDER_EVENTS.TRAITS_REWRITER_GENERATION_COMPLETED,
+      this.#handleGenerationComplete.bind(this)
+    );
 
     // Listen for generation failed
-    this._subscribeToEvent(CHARACTER_BUILDER_EVENTS.TRAITS_REWRITER_GENERATION_FAILED,
-      this.#handleGenerationError.bind(this));
+    this._subscribeToEvent(
+      CHARACTER_BUILDER_EVENTS.TRAITS_REWRITER_GENERATION_FAILED,
+      this.#handleGenerationError.bind(this)
+    );
   }
 
   /**
@@ -596,7 +651,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
    */
   #handleGenerationProgress(event) {
     this.logger.debug('TraitsRewriterController: Generation progress', event);
-    
+
     // Update progress text if available
     const progressText = this._getElement('progressText');
     if (progressText && event.payload?.message) {
@@ -612,7 +667,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
    */
   #handleGenerationComplete(event) {
     this.logger.debug('TraitsRewriterController: Generation complete', event);
-    
+
     // Dispatch UI state change event
     this._getEventBus().dispatch({
       type: CHARACTER_BUILDER_EVENTS.UI_STATE_CHANGED,
@@ -633,7 +688,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
    */
   #handleGenerationError(event) {
     this.logger.error('TraitsRewriterController: Generation error', event);
-    
+
     if (event.payload?.error) {
       this.#displayError(event.payload.error);
     }
@@ -647,7 +702,7 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
    */
   #displayError(error) {
     const errorMessage = error instanceof Error ? error.message : error;
-    
+
     // Update error message element
     const errorElement = this._getElement('errorMessage');
     if (errorElement) {
@@ -702,10 +757,10 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
     const controls = [
       'rewriteTraitsButton',
       'clearInputButton',
-      'characterDefinition'
+      'characterDefinition',
     ];
 
-    controls.forEach(controlId => {
+    controls.forEach((controlId) => {
       const element = this._getElement(controlId);
       if (element) {
         element.disabled = !enabled;
@@ -787,7 +842,11 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       'TraitsRewriterDisplayEnhancer',
       logger,
       {
-        requiredMethods: ['enhanceForDisplay', 'formatForExport', 'generateExportFilename'],
+        requiredMethods: [
+          'enhanceForDisplay',
+          'formatForExport',
+          'generateExportFilename',
+        ],
       }
     );
   }

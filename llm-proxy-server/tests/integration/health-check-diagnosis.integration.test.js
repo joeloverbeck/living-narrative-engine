@@ -17,7 +17,7 @@ describe('Health Check Endpoint Diagnosis', () => {
     // Create minimal Express app with health routes
     app = express();
     app.use('/health', healthRoutes);
-    
+
     server = app.listen(TEST_PORT, 'localhost', () => {
       console.log(`Test server listening on http://localhost:${TEST_PORT}`);
       done();
@@ -34,7 +34,7 @@ describe('Health Check Endpoint Diagnosis', () => {
 
   it('should respond to basic health check endpoint', async () => {
     const response = await request(app).get('/health');
-    
+
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('status', 'ok');
     expect(response.body).toHaveProperty('service', 'llm-proxy-server');
@@ -44,7 +44,7 @@ describe('Health Check Endpoint Diagnosis', () => {
 
   it('should respond to readiness check endpoint', async () => {
     const response = await request(app).get('/health/ready');
-    
+
     // Should return 200 or 503 depending on services availability
     expect([200, 503]).toContain(response.status);
     expect(response.body).toHaveProperty('service', 'llm-proxy-server');
@@ -53,7 +53,7 @@ describe('Health Check Endpoint Diagnosis', () => {
 
   it('should respond to liveness check endpoint', async () => {
     const response = await request(app).get('/health/live');
-    
+
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('status', 'alive');
     expect(response.body).toHaveProperty('service', 'llm-proxy-server');
@@ -62,7 +62,7 @@ describe('Health Check Endpoint Diagnosis', () => {
 
   it('should respond to detailed health check endpoint', async () => {
     const response = await request(app).get('/health/detailed');
-    
+
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('status', 'ok');
     expect(response.body).toHaveProperty('system');
@@ -75,23 +75,22 @@ describe('Health Check Endpoint Diagnosis', () => {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000);
-      
+
       const response = await fetch(`http://localhost:${TEST_PORT}/health`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        signal: controller.signal
+        signal: controller.signal,
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       expect(response.ok).toBe(true);
       expect(response.status).toBe(200);
-      
+
       const data = await response.json();
       expect(data).toHaveProperty('status', 'ok');
-      
     } catch (error) {
       // This should help us understand what's causing the health check failures
       console.error('Health check simulation failed:', error.message);
@@ -105,7 +104,7 @@ describe('Health Check Endpoint Diagnosis', () => {
       .get('/health')
       .set('Origin', 'http://localhost:8080')
       .set('User-Agent', 'RemoteLogger/1.0');
-    
+
     expect(response.status).toBe(200);
     // Note: CORS headers might not be present since we don't have CORS middleware in this test
     // but the request should still succeed

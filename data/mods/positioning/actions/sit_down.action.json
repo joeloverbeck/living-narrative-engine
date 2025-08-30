@@ -10,7 +10,7 @@
   "forbidden_components": {
     "actor": ["positioning:sitting_on", "positioning:kneeling_before"]
   },
-  "template": "sit down on {target.components.core:description.short}",
+  "template": "sit down on {target}",
   "prerequisites": [],
   "visual": {
     "backgroundColor": "#bf360c",

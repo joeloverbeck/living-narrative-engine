@@ -64,19 +64,23 @@ describe('AppConfigService - Environment Variable Logging Issues', () => {
 
       // Check that debug logs contain clear "not set" messages instead of confusing 'undefined' strings
       const debugCalls = logger.debug.mock.calls;
-      
+
       // Find specific log entries
-      const nodeEnvLog = debugCalls.find(call => 
+      const nodeEnvLog = debugCalls.find((call) =>
         call[0].includes('NODE_ENV')
       );
-      const cacheEnabledLog = debugCalls.find(call => 
+      const cacheEnabledLog = debugCalls.find((call) =>
         call[0].includes('CACHE_ENABLED')
       );
 
       // The fixed behavior should show clear "not set" messages
-      expect(nodeEnvLog[0]).toContain("NODE_ENV not set in environment. Using default: 'development'");
-      expect(cacheEnabledLog[0]).toContain("CACHE_ENABLED not set in environment. Using default: true");
-      
+      expect(nodeEnvLog[0]).toContain(
+        "NODE_ENV not set in environment. Using default: 'development'"
+      );
+      expect(cacheEnabledLog[0]).toContain(
+        'CACHE_ENABLED not set in environment. Using default: true'
+      );
+
       // Should NOT contain the confusing "undefined" messages
       expect(nodeEnvLog[0]).not.toContain('undefined');
       expect(cacheEnabledLog[0]).not.toContain('undefined');
@@ -96,28 +100,32 @@ describe('AppConfigService - Environment Variable Logging Issues', () => {
 
       // Check that debug logs are clear when values are set
       const debugCalls = logger.debug.mock.calls;
-      
-      const nodeEnvLog = debugCalls.find(call => 
+
+      const nodeEnvLog = debugCalls.find((call) =>
         call[0].includes('NODE_ENV found in environment:')
       );
-      const cacheEnabledLog = debugCalls.find(call => 
+      const cacheEnabledLog = debugCalls.find((call) =>
         call[0].includes('CACHE_ENABLED found in environment:')
       );
 
       // These should be clear and correct
-      expect(nodeEnvLog[0]).toContain("NODE_ENV found in environment: 'production'");
-      expect(cacheEnabledLog[0]).toContain("CACHE_ENABLED found in environment: 'false'");
+      expect(nodeEnvLog[0]).toContain(
+        "NODE_ENV found in environment: 'production'"
+      );
+      expect(cacheEnabledLog[0]).toContain(
+        "CACHE_ENABLED found in environment: 'false'"
+      );
     });
 
     test('should demonstrate the difference between "not set" vs "set to undefined"', () => {
       // This test shows that the fix correctly distinguishes between "not set" and other states
-      
+
       delete process.env.NODE_ENV;
-      
+
       const service = getAppConfigService(logger);
-      
+
       const debugCalls = logger.debug.mock.calls;
-      const nodeEnvLog = debugCalls.find(call => 
+      const nodeEnvLog = debugCalls.find((call) =>
         call[0].includes('NODE_ENV')
       );
 
@@ -141,9 +149,9 @@ describe('AppConfigService - Environment Variable Logging Issues', () => {
       expect(service.isCacheEnabled()).toBe(false); // Empty string evaluates to false for boolean
 
       const debugCalls = logger.debug.mock.calls;
-      
+
       // Should log that empty strings were found (this is different from undefined)
-      const nodeEnvLog = debugCalls.find(call => 
+      const nodeEnvLog = debugCalls.find((call) =>
         call[0].includes('NODE_ENV found in environment:')
       );
       expect(nodeEnvLog[0]).toContain("NODE_ENV found in environment: ''");
