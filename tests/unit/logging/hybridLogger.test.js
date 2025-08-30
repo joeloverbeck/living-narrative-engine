@@ -962,7 +962,7 @@ describe('HybridLogger', () => {
         {
           console: { categories: null, levels: null, enabled: true },
           remote: { categories: null, levels: null, enabled: true },
-          criticalLogging: { bufferSize: 5 } // Small buffer for testing
+          criticalLogging: { bufferSize: 5 }, // Small buffer for testing
         }
       );
     });
@@ -994,7 +994,7 @@ describe('HybridLogger', () => {
     describe('Buffer Population', () => {
       it('should add warning logs to buffer', () => {
         mockCategoryDetector.detectCategory.mockReturnValue('test');
-        
+
         hybridLogger.warn('Test warning', 'extra arg');
 
         const logs = hybridLogger.getCriticalLogs();
@@ -1009,7 +1009,7 @@ describe('HybridLogger', () => {
 
       it('should add error logs to buffer', () => {
         mockCategoryDetector.detectCategory.mockReturnValue('error');
-        
+
         hybridLogger.error('Test error', { errorCode: 500 });
 
         const logs = hybridLogger.getCriticalLogs();
@@ -1025,7 +1025,7 @@ describe('HybridLogger', () => {
 
         const logs = hybridLogger.getCriticalLogs();
         expect(logs).toHaveLength(0);
-        
+
         const stats = hybridLogger.getCriticalBufferStats();
         expect(stats.currentSize).toBe(0);
       });
@@ -1047,7 +1047,7 @@ describe('HybridLogger', () => {
 
         const logs = hybridLogger.getCriticalLogs();
         expect(logs).toHaveLength(5);
-        
+
         // Should contain the last 5 warnings
         expect(logs[0].message).toBe('Warning 2');
         expect(logs[4].message).toBe('Warning 6');
@@ -1083,13 +1083,13 @@ describe('HybridLogger', () => {
       it('should filter by level - warnings only', () => {
         const logs = hybridLogger.getCriticalLogs({ level: 'warn' });
         expect(logs).toHaveLength(2);
-        expect(logs.every(log => log.level === 'warn')).toBe(true);
+        expect(logs.every((log) => log.level === 'warn')).toBe(true);
       });
 
       it('should filter by level - errors only', () => {
         const logs = hybridLogger.getCriticalLogs({ level: 'error' });
         expect(logs).toHaveLength(2);
-        expect(logs.every(log => log.level === 'error')).toBe(true);
+        expect(logs.every((log) => log.level === 'error')).toBe(true);
       });
 
       it('should limit number of returned logs', () => {
@@ -1110,10 +1110,10 @@ describe('HybridLogger', () => {
       it('should return copy of logs array', () => {
         const logs = hybridLogger.getCriticalLogs();
         logs.push({ fake: 'entry' });
-        
+
         const logsAgain = hybridLogger.getCriticalLogs();
         expect(logsAgain).toHaveLength(4);
-        expect(logsAgain.find(log => log.fake === 'entry')).toBeUndefined();
+        expect(logsAgain.find((log) => log.fake === 'entry')).toBeUndefined();
       });
     });
 
@@ -1145,29 +1145,31 @@ describe('HybridLogger', () => {
 
         const logs = hybridLogger.getCriticalLogs();
         expect(logs[0].id).not.toBe(logs[1].id);
-        expect(logs[0].id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+        expect(logs[0].id).toMatch(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        );
       });
 
       it('should handle buffer operations without affecting logging', () => {
         // Verify logging still works normally
         hybridLogger.warn('Test warning');
-        
+
         expect(mockConsoleLogger.warn).toHaveBeenCalled();
         expect(mockRemoteLogger.warn).toHaveBeenCalled();
-        
+
         // And buffer was populated
         expect(hybridLogger.getCriticalLogs()).toHaveLength(1);
       });
 
       it('should not affect non-critical logging performance', () => {
         const startTime = Date.now();
-        
+
         for (let i = 0; i < 100; i++) {
           hybridLogger.info(`Info message ${i}`);
         }
-        
+
         const endTime = Date.now();
-        
+
         // Should complete quickly (buffer not involved)
         expect(endTime - startTime).toBeLessThan(100);
         expect(hybridLogger.getCriticalLogs()).toHaveLength(0);
@@ -1186,7 +1188,7 @@ describe('HybridLogger', () => {
       mockCategoryDetector = {
         detectCategory: jest.fn(() => 'engine'),
       };
-      
+
       const criticalLoggingConfig = {
         console: {
           categories: ['ui'], // Restrictive filter
@@ -1199,56 +1201,59 @@ describe('HybridLogger', () => {
           enableVisualNotifications: true,
           bufferSize: 50,
           notificationPosition: 'top-right',
-          autoDismissAfter: null
-        }
+          autoDismissAfter: null,
+        },
       };
-      
-      hybridLogger = new HybridLogger({
-        consoleLogger: mockConsoleLogger,
-        remoteLogger: mockRemoteLogger,
-        categoryDetector: mockCategoryDetector,
-      }, criticalLoggingConfig);
-      
+
+      hybridLogger = new HybridLogger(
+        {
+          consoleLogger: mockConsoleLogger,
+          remoteLogger: mockRemoteLogger,
+          categoryDetector: mockCategoryDetector,
+        },
+        criticalLoggingConfig
+      );
+
       // Clear initialization calls
       jest.clearAllMocks();
     });
-    
+
     describe('Critical Log Bypass Edge Cases', () => {
       it('should bypass console filters for warnings with any category when alwaysShowInConsole is true', () => {
         // Mock category as 'engine' (not in allowed 'ui' categories)
         mockCategoryDetector.detectCategory.mockReturnValue('engine');
-        
+
         hybridLogger.warn('Test warning');
-        
+
         expect(mockConsoleLogger.warn).toHaveBeenCalledWith(
           '[ENGINE:WARN] Test warning'
         );
       });
-      
+
       it('should bypass console filters for errors with any level when alwaysShowInConsole is true', () => {
         // Mock category as 'database' (not in allowed categories)
         mockCategoryDetector.detectCategory.mockReturnValue('database');
-        
+
         const error = new Error('Test error');
         hybridLogger.error('Test error message', error);
-        
+
         expect(mockConsoleLogger.error).toHaveBeenCalledWith(
           '[DATABASE:ERROR] Test error message',
           error
         );
       });
-      
+
       it('should still respect filters for non-critical logs', () => {
         // Category 'engine' is not in allowed 'ui' categories
         mockCategoryDetector.detectCategory.mockReturnValue('engine');
-        
+
         hybridLogger.info('Test info');
         hybridLogger.debug('Test debug');
-        
+
         expect(mockConsoleLogger.info).not.toHaveBeenCalled();
         expect(mockConsoleLogger.debug).not.toHaveBeenCalled();
       });
-      
+
       it('should restore original filtering behavior when alwaysShowInConsole is false', () => {
         const config = {
           console: {
@@ -1261,46 +1266,49 @@ describe('HybridLogger', () => {
             alwaysShowInConsole: false, // Disabled
           },
         };
-        
-        hybridLogger = new HybridLogger({
-          consoleLogger: mockConsoleLogger,
-          remoteLogger: mockRemoteLogger,
-          categoryDetector: mockCategoryDetector,
-        }, config);
-        
+
+        hybridLogger = new HybridLogger(
+          {
+            consoleLogger: mockConsoleLogger,
+            remoteLogger: mockRemoteLogger,
+            categoryDetector: mockCategoryDetector,
+          },
+          config
+        );
+
         // Clear initialization call
         jest.clearAllMocks();
-        
+
         // Mock category as 'engine' (not in allowed categories)
         mockCategoryDetector.detectCategory.mockReturnValue('engine');
-        
+
         // Warning should be filtered out when critical bypass is disabled
         hybridLogger.warn('Test warning');
-        
+
         expect(mockConsoleLogger.warn).not.toHaveBeenCalled();
         expect(mockRemoteLogger.warn).toHaveBeenCalled();
       });
-      
+
       it('should handle undefined category with critical bypass enabled', () => {
         mockCategoryDetector.detectCategory.mockReturnValue(undefined);
-        
+
         hybridLogger.warn('Warning with undefined category');
-        
+
         expect(mockConsoleLogger.warn).toHaveBeenCalledWith(
           '[GENERAL:WARN] Warning with undefined category'
         );
       });
-      
+
       it('should handle null category with critical bypass enabled', () => {
         mockCategoryDetector.detectCategory.mockReturnValue(null);
-        
+
         hybridLogger.error('Error with null category');
-        
+
         expect(mockConsoleLogger.error).toHaveBeenCalledWith(
           '[GENERAL:ERROR] Error with null category'
         );
       });
-      
+
       it('should not affect remote logging filters with critical bypass', () => {
         const config = {
           console: {
@@ -1317,21 +1325,24 @@ describe('HybridLogger', () => {
             alwaysShowInConsole: true,
           },
         };
-        
-        hybridLogger = new HybridLogger({
-          consoleLogger: mockConsoleLogger,
-          remoteLogger: mockRemoteLogger,
-          categoryDetector: mockCategoryDetector,
-        }, config);
-        
+
+        hybridLogger = new HybridLogger(
+          {
+            consoleLogger: mockConsoleLogger,
+            remoteLogger: mockRemoteLogger,
+            categoryDetector: mockCategoryDetector,
+          },
+          config
+        );
+
         // Clear initialization call
         jest.clearAllMocks();
-        
+
         mockCategoryDetector.detectCategory.mockReturnValue('engine');
-        
+
         // Error should bypass console filters but not remote filters
         hybridLogger.error('Error message');
-        
+
         expect(mockConsoleLogger.error).toHaveBeenCalled(); // Bypassed console filter
         expect(mockRemoteLogger.error).not.toHaveBeenCalled(); // Still filtered for remote
       });
@@ -1340,20 +1351,23 @@ describe('HybridLogger', () => {
 
   describe('Enhanced Critical Log Buffer Features', () => {
     beforeEach(() => {
-      hybridLogger = new HybridLogger({
-        consoleLogger: mockConsoleLogger,
-        remoteLogger: mockRemoteLogger,
-        categoryDetector: mockCategoryDetector,
-      }, {
-        console: { categories: null, levels: null, enabled: true },
-        remote: { categories: null, levels: null, enabled: true },
-        criticalLogging: { bufferSize: 5 } // Small buffer for testing
-      });
-      
+      hybridLogger = new HybridLogger(
+        {
+          consoleLogger: mockConsoleLogger,
+          remoteLogger: mockRemoteLogger,
+          categoryDetector: mockCategoryDetector,
+        },
+        {
+          console: { categories: null, levels: null, enabled: true },
+          remote: { categories: null, levels: null, enabled: true },
+          criticalLogging: { bufferSize: 5 }, // Small buffer for testing
+        }
+      );
+
       // Clear initialization calls
       jest.clearAllMocks();
     });
-    
+
     describe('Buffer Edge Cases', () => {
       it('should handle buffer operations with category detection failures', () => {
         // The current implementation throws errors when category detection fails
@@ -1361,20 +1375,20 @@ describe('HybridLogger', () => {
         mockCategoryDetector.detectCategory.mockImplementation(() => {
           throw new Error('Category detection failed');
         });
-        
+
         // The error should propagate from the warn method
         expect(() => {
           hybridLogger.warn('Warning with failed detection');
         }).toThrow('Category detection failed');
-        
+
         const logs = hybridLogger.getCriticalLogs();
         expect(logs).toHaveLength(0); // No logs should be added when category detection fails
       });
-      
+
       it('should maintain buffer integrity during high-frequency logging', () => {
         const warningCount = 20;
         const errorCount = 15;
-        
+
         // Rapid logging
         for (let i = 0; i < warningCount; i++) {
           hybridLogger.warn(`Warning ${i}`);
@@ -1382,92 +1396,97 @@ describe('HybridLogger', () => {
         for (let i = 0; i < errorCount; i++) {
           hybridLogger.error(`Error ${i}`);
         }
-        
+
         const stats = hybridLogger.getCriticalBufferStats();
         expect(stats.currentSize).toBe(5); // Limited by buffer size
         expect(stats.totalWarnings).toBe(warningCount);
         expect(stats.totalErrors).toBe(errorCount);
       });
-      
+
       it('should generate unique IDs for concurrent log entries', () => {
         // Simulate rapid concurrent logging
         const promises = [];
         for (let i = 0; i < 10; i++) {
-          promises.push(Promise.resolve().then(() => {
-            hybridLogger.warn(`Concurrent warning ${i}`);
-          }));
+          promises.push(
+            Promise.resolve().then(() => {
+              hybridLogger.warn(`Concurrent warning ${i}`);
+            })
+          );
         }
-        
+
         return Promise.all(promises).then(() => {
           const logs = hybridLogger.getCriticalLogs();
-          const ids = logs.map(log => log.id);
+          const ids = logs.map((log) => log.id);
           const uniqueIds = new Set(ids);
-          
+
           expect(uniqueIds.size).toBe(logs.length);
         });
       });
-      
+
       it('should preserve log order in buffer under normal conditions', () => {
         hybridLogger.warn('First warning');
         hybridLogger.error('First error');
         hybridLogger.warn('Second warning');
-        
+
         const logs = hybridLogger.getCriticalLogs();
         expect(logs[0].message).toBe('First warning');
         expect(logs[1].message).toBe('First error');
         expect(logs[2].message).toBe('Second warning');
       });
-      
+
       it('should handle buffer overflow correctly with mixed log types', () => {
         // Fill beyond capacity with mixed types
         for (let i = 0; i < 3; i++) {
           hybridLogger.warn(`Warning ${i}`);
           hybridLogger.error(`Error ${i}`);
         }
-        
+
         const logs = hybridLogger.getCriticalLogs();
         expect(logs).toHaveLength(5); // Buffer size limit
-        
+
         // Should contain most recent logs
-        const messages = logs.map(log => log.message);
+        const messages = logs.map((log) => log.message);
         expect(messages).toContain('Warning 2');
         expect(messages).toContain('Error 2');
         expect(messages).not.toContain('Warning 0'); // Oldest should be evicted
       });
-      
+
       it('should handle zero buffer size gracefully', () => {
-        hybridLogger = new HybridLogger({
-          consoleLogger: mockConsoleLogger,
-          remoteLogger: mockRemoteLogger,
-          categoryDetector: mockCategoryDetector,
-        }, {
-          console: { categories: null, levels: null, enabled: true },
-          remote: { categories: null, levels: null, enabled: true },
-          criticalLogging: { bufferSize: 0 }
-        });
-        
+        hybridLogger = new HybridLogger(
+          {
+            consoleLogger: mockConsoleLogger,
+            remoteLogger: mockRemoteLogger,
+            categoryDetector: mockCategoryDetector,
+          },
+          {
+            console: { categories: null, levels: null, enabled: true },
+            remote: { categories: null, levels: null, enabled: true },
+            criticalLogging: { bufferSize: 0 },
+          }
+        );
+
         // Clear initialization calls
         jest.clearAllMocks();
-        
+
         hybridLogger.warn('Test warning');
         hybridLogger.error('Test error');
-        
+
         const logs = hybridLogger.getCriticalLogs();
         const stats = hybridLogger.getCriticalBufferStats();
-        
+
         // The implementation may fall back to a default size when 0 is specified
         // Let's test that the configuration was at least processed
         expect(typeof stats.maxSize).toBe('number');
         expect(stats.maxSize).toBeGreaterThanOrEqual(0);
-        
-        // Should still track totals regardless of buffer behavior  
+
+        // Should still track totals regardless of buffer behavior
         expect(stats.totalWarnings).toBe(1);
         expect(stats.totalErrors).toBe(1);
-        
+
         // Verify logs were created (even if buffer size falls back to default)
         expect(logs.length).toBe(stats.currentSize);
-        expect(logs.some(log => log.level === 'warn')).toBe(true);
-        expect(logs.some(log => log.level === 'error')).toBe(true);
+        expect(logs.some((log) => log.level === 'warn')).toBe(true);
+        expect(logs.some((log) => log.level === 'error')).toBe(true);
       });
     });
   });

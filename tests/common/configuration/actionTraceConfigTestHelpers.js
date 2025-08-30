@@ -15,7 +15,7 @@ import { Registrar } from '../../../src/utils/registrarHelpers.js';
 /**
  * Creates a lightweight container optimized for ActionTraceConfigLoader testing
  * Includes only essential dependencies without heavy file I/O operations
- * 
+ *
  * @returns {Promise<AppContainer>} Configured test container
  */
 export async function createActionTraceConfigTestContainer() {
@@ -79,15 +79,16 @@ export async function createActionTraceConfigTestContainer() {
   const { default: ActionTraceConfigLoader } = await import(
     '../../../src/configuration/actionTraceConfigLoader.js'
   );
-  
+
   container.register(
     tokens.IActionTraceConfigLoader,
-    (container) => new ActionTraceConfigLoader({
-      traceConfigLoader: container.resolve(tokens.ITraceConfigLoader),
-      logger: container.resolve(tokens.ILogger),
-      validator: container.resolve(tokens.ISchemaValidator),
-      cacheTtl: 60000, // 1 minute cache for tests
-    }),
+    (container) =>
+      new ActionTraceConfigLoader({
+        traceConfigLoader: container.resolve(tokens.ITraceConfigLoader),
+        logger: container.resolve(tokens.ILogger),
+        validator: container.resolve(tokens.ISchemaValidator),
+        cacheTtl: 60000, // 1 minute cache for tests
+      }),
     { lifecycle: 'singleton' }
   );
 
@@ -96,23 +97,23 @@ export async function createActionTraceConfigTestContainer() {
 
 /**
  * Creates performance monitoring utilities for tracking test execution time
- * 
+ *
  * @returns {object} Performance monitoring utilities
  */
 export function createPerformanceMonitor() {
   let startTime;
-  
+
   return {
     start() {
       startTime = process.hrtime.bigint();
     },
-    
+
     end() {
       const endTime = process.hrtime.bigint();
       const durationMs = Number(endTime - startTime) / 1_000_000;
       return durationMs;
     },
-    
+
     assertUnder(maxMs, operation) {
       const duration = this.end();
       if (duration > maxMs) {
@@ -121,20 +122,22 @@ export function createPerformanceMonitor() {
         );
       }
       return duration;
-    }
+    },
   };
 }
 
 /**
  * Resets container state between tests without full recreation
  * Much faster than creating a new container
- * 
+ *
  * @param {AppContainer} container - Container to reset
  */
 export function resetContainerForNextTest(container) {
   // Reset mock call counts
   const safeDispatcher = container.resolve(tokens.ISafeEventDispatcher);
-  const validatedDispatcher = container.resolve(tokens.IValidatedEventDispatcher);
+  const validatedDispatcher = container.resolve(
+    tokens.IValidatedEventDispatcher
+  );
   const schemaValidator = container.resolve(tokens.ISchemaValidator);
   const traceConfigLoader = container.resolve(tokens.ITraceConfigLoader);
 
@@ -153,7 +156,9 @@ export function resetContainerForNextTest(container) {
 
   // Reset ActionTraceConfigLoader internal state if it has reset methods
   try {
-    const actionTraceConfigLoader = container.resolve(tokens.IActionTraceConfigLoader);
+    const actionTraceConfigLoader = container.resolve(
+      tokens.IActionTraceConfigLoader
+    );
     if (actionTraceConfigLoader.resetStatistics) {
       actionTraceConfigLoader.resetStatistics();
     }
@@ -167,36 +172,42 @@ export function resetContainerForNextTest(container) {
  */
 export const PERFORMANCE_THRESHOLDS = {
   CONTAINER_SETUP_MS: 100, // Container setup should be under 100ms
-  SINGLE_TEST_MS: 50,      // Individual tests should be under 50ms
-  TOTAL_SUITE_MS: 3000,    // Total suite should be under 3s
+  SINGLE_TEST_MS: 50, // Individual tests should be under 50ms
+  TOTAL_SUITE_MS: 3000, // Total suite should be under 3s
   SERVICE_RESOLUTION_MS: 10, // Service resolution should be under 10ms
 };
 
 /**
  * Validates that essential ActionTraceConfigLoader functionality works
  * Used as a smoke test after optimization changes
- * 
+ *
  * @param {AppContainer} container - Container to validate
  */
 export function validateActionTraceConfigLoaderBasics(container) {
-  const actionTraceConfigLoader = container.resolve(tokens.IActionTraceConfigLoader);
-  
+  const actionTraceConfigLoader = container.resolve(
+    tokens.IActionTraceConfigLoader
+  );
+
   // Verify core interface
   if (!actionTraceConfigLoader) {
     throw new Error('ActionTraceConfigLoader not resolved');
   }
-  
+
   const requiredMethods = [
-    'loadConfig', 'isEnabled', 'shouldTraceAction', 
-    'getStatistics', 'resetStatistics', 'testPattern'
+    'loadConfig',
+    'isEnabled',
+    'shouldTraceAction',
+    'getStatistics',
+    'resetStatistics',
+    'testPattern',
   ];
-  
+
   for (const method of requiredMethods) {
     if (typeof actionTraceConfigLoader[method] !== 'function') {
       throw new Error(`ActionTraceConfigLoader missing method: ${method}`);
     }
   }
-  
+
   // Verify basic functionality
   const stats = actionTraceConfigLoader.getStatistics();
   if (!stats || typeof stats.totalLookups !== 'number') {

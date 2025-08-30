@@ -38,7 +38,7 @@ export function createTestBed() {
 
   return {
     ...mockObjects,
-    
+
     // Convenience aliases for common mock objects
     logger: mockObjects.mockLogger,
     eventDispatcher: mockObjects.mockValidatedEventDispatcher,

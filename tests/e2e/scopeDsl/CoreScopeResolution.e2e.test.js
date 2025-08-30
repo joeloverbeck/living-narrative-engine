@@ -14,15 +14,23 @@
  * Coverage: Workflows 1, 2, 3, 6 (complete scope-to-entities pipeline)
  */
 
-import { describe, beforeAll, afterAll, beforeEach, afterEach, test, expect } from '@jest/globals';
+import {
+  describe,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+  test,
+  expect,
+} from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { ActionTestUtilities } from '../../common/actions/actionTestUtilities.js';
 import { ScopeTestUtilities } from '../../common/scopeDsl/scopeTestUtilities.js';
 import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
-import { 
-  createMinimalTestContainer, 
-  createMinimalGameContext 
+import {
+  createMinimalTestContainer,
+  createMinimalGameContext,
 } from '../../common/scopeDsl/minimalTestContainer.js';
 
 /**
@@ -117,7 +125,10 @@ describe('Core Scope Resolution E2E', () => {
         'test:actor_source',
         playerEntity,
         gameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        }
       );
 
       expect(result).toBeDefined();
@@ -138,7 +149,10 @@ describe('Core Scope Resolution E2E', () => {
         'test:location_source',
         playerEntity,
         gameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        }
       );
 
       expect(result).toBeDefined();
@@ -159,7 +173,10 @@ describe('Core Scope Resolution E2E', () => {
         'test:entities_with_component',
         playerEntity,
         gameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        }
       );
 
       expect(result).toBeDefined();
@@ -187,7 +204,10 @@ describe('Core Scope Resolution E2E', () => {
           'test:non-existent-scope',
           playerEntity,
           gameContext,
-          { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+          {
+            scopeRegistry: services.scopeRegistry,
+            scopeEngine: services.scopeEngine,
+          }
         )
       ).rejects.toThrow('Scope not found');
     });
@@ -236,10 +256,13 @@ describe('Core Scope Resolution E2E', () => {
 
         // Remove existing entity instance first, then recreate
         await services.entityManager.removeEntityInstance(testActors.player.id);
-        await services.entityManager.createEntityInstance(testActors.player.id, {
-          instanceId: testActors.player.id,
-          definitionId: testActors.player.id,
-        });
+        await services.entityManager.createEntityInstance(
+          testActors.player.id,
+          {
+            instanceId: testActors.player.id,
+            definitionId: testActors.player.id,
+          }
+        );
       }
 
       const gameContext = await createGameContext();
@@ -248,7 +271,10 @@ describe('Core Scope Resolution E2E', () => {
         'test:nested_component_access',
         playerEntity,
         gameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        }
       );
 
       expect(result).toBeDefined();
@@ -269,7 +295,10 @@ describe('Core Scope Resolution E2E', () => {
         'test:missing_component_access',
         playerEntity,
         gameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        }
       );
 
       expect(result).toBeDefined();
@@ -289,7 +318,10 @@ describe('Core Scope Resolution E2E', () => {
       const mockEntities = await ScopeTestUtilities.createMockEntityDataset(
         5,
         'simple', // Reduced from 'complex' to 'simple'
-        { entityManager: services.entityManager, registry: services.dataRegistry }
+        {
+          entityManager: services.entityManager,
+          registry: services.dataRegistry,
+        }
       );
 
       const gameContext = await createGameContext();
@@ -299,7 +331,10 @@ describe('Core Scope Resolution E2E', () => {
         'test:entities_with_component',
         playerEntity,
         gameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        }
       );
 
       expect(result).toBeDefined();
@@ -355,7 +390,10 @@ describe('Core Scope Resolution E2E', () => {
         'test:json_logic_filter',
         playerEntity,
         gameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        }
       );
 
       expect(result).toBeDefined();
@@ -411,7 +449,10 @@ describe('Core Scope Resolution E2E', () => {
         'test:complex_multi_filter',
         playerEntity,
         gameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        }
       );
 
       expect(result).toBeDefined();
@@ -436,7 +477,10 @@ describe('Core Scope Resolution E2E', () => {
         'test:json_logic_filter',
         playerEntity,
         gameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine },
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        },
         { trace: true }
       );
 
@@ -476,7 +520,10 @@ describe('Core Scope Resolution E2E', () => {
         'test:json_logic_filter',
         playerEntity,
         gameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        }
       );
 
       expect(result).toBeDefined();
@@ -495,8 +542,11 @@ describe('Core Scope Resolution E2E', () => {
       // OPTIMIZED: Create smaller dataset for performance testing (10 entities vs 100)
       const largeDataset = await ScopeTestUtilities.createMockEntityDataset(
         10, // Reduced from 100 to 10
-        'simple', // Reduced from 'moderate' to 'simple'  
-        { entityManager: services.entityManager, registry: services.dataRegistry }
+        'simple', // Reduced from 'moderate' to 'simple'
+        {
+          entityManager: services.entityManager,
+          registry: services.dataRegistry,
+        }
       );
 
       const playerEntity = await services.entityManager.getEntityInstance(
@@ -510,7 +560,10 @@ describe('Core Scope Resolution E2E', () => {
         'test:entities_with_component',
         playerEntity,
         gameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        }
       );
       const endTime = Date.now();
 
@@ -535,19 +588,28 @@ describe('Core Scope Resolution E2E', () => {
           'test:actor_source',
           playerEntity,
           gameContext,
-          { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+          {
+            scopeRegistry: services.scopeRegistry,
+            scopeEngine: services.scopeEngine,
+          }
         ),
         ScopeTestUtilities.resolveScopeE2E(
           'test:location_source',
           playerEntity,
           gameContext,
-          { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+          {
+            scopeRegistry: services.scopeRegistry,
+            scopeEngine: services.scopeEngine,
+          }
         ),
         ScopeTestUtilities.resolveScopeE2E(
           'test:entities_with_component',
           playerEntity,
           gameContext,
-          { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+          {
+            scopeRegistry: services.scopeRegistry,
+            scopeEngine: services.scopeEngine,
+          }
         ),
       ];
 
@@ -572,14 +634,20 @@ describe('Core Scope Resolution E2E', () => {
         'test:entities_with_component',
         playerEntity,
         gameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        }
       );
 
       const result2 = await ScopeTestUtilities.resolveScopeE2E(
         'test:entities_with_component',
         playerEntity,
         gameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        }
       );
 
       expect(result1.size).toBe(result2.size);
@@ -626,7 +694,10 @@ describe('Core Scope Resolution E2E', () => {
           'test:invalid_scope',
           playerEntity,
           gameContext,
-          { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+          {
+            scopeRegistry: services.scopeRegistry,
+            scopeEngine: services.scopeEngine,
+          }
         )
       ).rejects.toThrow();
 
@@ -645,7 +716,10 @@ describe('Core Scope Resolution E2E', () => {
           'test:completely-non-existent-scope',
           playerEntity,
           gameContext,
-          { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+          {
+            scopeRegistry: services.scopeRegistry,
+            scopeEngine: services.scopeEngine,
+          }
         );
         fail('Expected error was not thrown');
       } catch (error) {
@@ -669,7 +743,10 @@ describe('Core Scope Resolution E2E', () => {
         'test:actor_source',
         playerEntity,
         minimalGameContext,
-        { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
+        {
+          scopeRegistry: services.scopeRegistry,
+          scopeEngine: services.scopeEngine,
+        }
       );
 
       expect(result).toBeDefined();

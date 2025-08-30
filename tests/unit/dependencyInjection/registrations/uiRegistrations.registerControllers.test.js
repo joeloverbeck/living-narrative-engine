@@ -23,9 +23,12 @@ jest.mock('../../../../src/domUI/visualizer/AnatomyLoadingDetector.js', () => ({
   AnatomyLoadingDetector: jest.fn(),
 }));
 
-jest.mock('../../../../src/domUI/visualizer/VisualizerStateController.js', () => ({
-  VisualizerStateController: jest.fn(),
-}));
+jest.mock(
+  '../../../../src/domUI/visualizer/VisualizerStateController.js',
+  () => ({
+    VisualizerStateController: jest.fn(),
+  })
+);
 
 jest.mock('../../../../src/input/globalKeyHandler.js', () => jest.fn());
 
@@ -38,7 +41,9 @@ describe('registerControllers', () => {
     jest.clearAllMocks();
 
     // Get the mocked function
-    const { registerWithLog } = require('../../../../src/utils/registrarHelpers.js');
+    const {
+      registerWithLog,
+    } = require('../../../../src/utils/registrarHelpers.js');
     mockRegisterWithLog = registerWithLog;
 
     mockRegistrar = {
@@ -61,7 +66,7 @@ describe('registerControllers', () => {
       const inputStateCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.InputStateController
       );
-      
+
       expect(inputStateCall).toBeDefined();
       expect(inputStateCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -72,7 +77,7 @@ describe('registerControllers', () => {
       const inputStateCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.InputStateController
       );
-      
+
       const factory = inputStateCall[2];
       const mockInputElement = document.createElement('input');
       const mockContainer = {
@@ -87,14 +92,19 @@ describe('registerControllers', () => {
         }),
       };
 
-      const MockInputStateController = require('../../../../src/domUI/index.js').InputStateController;
+      const MockInputStateController =
+        require('../../../../src/domUI/index.js').InputStateController;
       const result = factory(mockContainer);
 
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ISafeEventDispatcher);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.IDocumentContext
+      );
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.ISafeEventDispatcher
+      );
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.inputElement);
-      
+
       expect(MockInputStateController).toHaveBeenCalledWith({
         logger: mockLogger,
         documentContext: expect.any(Object),
@@ -111,7 +121,7 @@ describe('registerControllers', () => {
       const globalKeyCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.GlobalKeyHandler
       );
-      
+
       expect(globalKeyCall).toBeDefined();
       expect(globalKeyCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -122,7 +132,7 @@ describe('registerControllers', () => {
       const globalKeyCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.GlobalKeyHandler
       );
-      
+
       const factory = globalKeyCall[2];
       const mockDocument = document;
       const mockEventDispatcher = { dispatch: jest.fn() };
@@ -140,8 +150,13 @@ describe('registerControllers', () => {
       const result = factory(mockContainer);
 
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.WindowDocument);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
-      expect(MockGlobalKeyHandler).toHaveBeenCalledWith(mockDocument, mockEventDispatcher);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.IValidatedEventDispatcher
+      );
+      expect(MockGlobalKeyHandler).toHaveBeenCalledWith(
+        mockDocument,
+        mockEventDispatcher
+      );
     });
   });
 
@@ -152,7 +167,7 @@ describe('registerControllers', () => {
       const processingIndicatorCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.ProcessingIndicatorController
       );
-      
+
       expect(processingIndicatorCall).toBeDefined();
       expect(processingIndicatorCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -163,7 +178,7 @@ describe('registerControllers', () => {
       const processingIndicatorCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.ProcessingIndicatorController
       );
-      
+
       const factory = processingIndicatorCall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -177,14 +192,21 @@ describe('registerControllers', () => {
         }),
       };
 
-      const MockProcessingIndicatorController = require('../../../../src/domUI/index.js').ProcessingIndicatorController;
+      const MockProcessingIndicatorController =
+        require('../../../../src/domUI/index.js').ProcessingIndicatorController;
       const result = factory(mockContainer);
 
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IDocumentContext);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ISafeEventDispatcher);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.DomElementFactory);
-      
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.IDocumentContext
+      );
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.ISafeEventDispatcher
+      );
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.DomElementFactory
+      );
+
       expect(MockProcessingIndicatorController).toHaveBeenCalledWith({
         logger: mockLogger,
         documentContext: expect.any(Object),
@@ -201,7 +223,7 @@ describe('registerControllers', () => {
       const visualizerStateCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.VisualizerState
       );
-      
+
       expect(visualizerStateCall).toBeDefined();
       expect(visualizerStateCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -212,7 +234,7 @@ describe('registerControllers', () => {
       const visualizerStateCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.VisualizerState
       );
-      
+
       const factory = visualizerStateCall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -223,7 +245,9 @@ describe('registerControllers', () => {
         }),
       };
 
-      const { VisualizerState: MockVisualizerState } = require('../../../../src/domUI/visualizer/VisualizerState.js');
+      const {
+        VisualizerState: MockVisualizerState,
+      } = require('../../../../src/domUI/visualizer/VisualizerState.js');
       const result = factory(mockContainer);
 
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
@@ -240,7 +264,7 @@ describe('registerControllers', () => {
       const anatomyLoadingCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.AnatomyLoadingDetector
       );
-      
+
       expect(anatomyLoadingCall).toBeDefined();
       expect(anatomyLoadingCall[3].lifecycle).toBe('singletonFactory');
     });
@@ -251,7 +275,7 @@ describe('registerControllers', () => {
       const anatomyLoadingCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.AnatomyLoadingDetector
       );
-      
+
       const factory = anatomyLoadingCall[2];
       const mockEntityManager = { getEntity: jest.fn() };
       const mockEventDispatcher = { dispatch: jest.fn() };
@@ -266,13 +290,17 @@ describe('registerControllers', () => {
         }),
       };
 
-      const { AnatomyLoadingDetector: MockAnatomyLoadingDetector } = require('../../../../src/domUI/visualizer/AnatomyLoadingDetector.js');
+      const {
+        AnatomyLoadingDetector: MockAnatomyLoadingDetector,
+      } = require('../../../../src/domUI/visualizer/AnatomyLoadingDetector.js');
       const result = factory(mockContainer);
 
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.IValidatedEventDispatcher
+      );
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      
+
       expect(MockAnatomyLoadingDetector).toHaveBeenCalledWith({
         entityManager: mockEntityManager,
         eventDispatcher: mockEventDispatcher,
@@ -288,9 +316,11 @@ describe('registerControllers', () => {
       const visualizerStateControllerCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.VisualizerStateController
       );
-      
+
       expect(visualizerStateControllerCall).toBeDefined();
-      expect(visualizerStateControllerCall[3].lifecycle).toBe('singletonFactory');
+      expect(visualizerStateControllerCall[3].lifecycle).toBe(
+        'singletonFactory'
+      );
     });
 
     it('should create VisualizerStateController with correct dependencies', () => {
@@ -299,13 +329,13 @@ describe('registerControllers', () => {
       const visualizerStateControllerCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.VisualizerStateController
       );
-      
+
       const factory = visualizerStateControllerCall[2];
       const mockVisualizerState = { setState: jest.fn() };
       const mockAnatomyLoadingDetector = { detect: jest.fn() };
       const mockEventDispatcher = { dispatch: jest.fn() };
       const mockEntityManager = { getEntity: jest.fn() };
-      
+
       const mockContainer = {
         resolve: jest.fn((token) => {
           const mocks = {
@@ -319,15 +349,23 @@ describe('registerControllers', () => {
         }),
       };
 
-      const { VisualizerStateController: MockVisualizerStateController } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
+      const {
+        VisualizerStateController: MockVisualizerStateController,
+      } = require('../../../../src/domUI/visualizer/VisualizerStateController.js');
       const result = factory(mockContainer);
 
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.VisualizerState);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.AnatomyLoadingDetector);
-      expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.VisualizerState
+      );
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.AnatomyLoadingDetector
+      );
+      expect(mockContainer.resolve).toHaveBeenCalledWith(
+        tokens.IValidatedEventDispatcher
+      );
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
       expect(mockContainer.resolve).toHaveBeenCalledWith(tokens.ILogger);
-      
+
       expect(MockVisualizerStateController).toHaveBeenCalledWith({
         visualizerState: mockVisualizerState,
         anatomyLoadingDetector: mockAnatomyLoadingDetector,
@@ -343,9 +381,11 @@ describe('registerControllers', () => {
 
     // Count total registrations (6 controllers)
     expect(mockRegisterWithLog).toHaveBeenCalledTimes(6);
-    
+
     // Verify all tokens were registered
-    const registeredTokens = mockRegisterWithLog.mock.calls.map(call => call[1]);
+    const registeredTokens = mockRegisterWithLog.mock.calls.map(
+      (call) => call[1]
+    );
     expect(registeredTokens).toContain(tokens.InputStateController);
     expect(registeredTokens).toContain(tokens.GlobalKeyHandler);
     expect(registeredTokens).toContain(tokens.ProcessingIndicatorController);
@@ -359,7 +399,7 @@ describe('registerControllers', () => {
       // The function may not throw immediately as registerWithLog is mocked
       // We just verify it can be called
       registerControllers(null, mockLogger);
-      
+
       // Verify registerWithLog was called with null registrar
       expect(mockRegisterWithLog).toHaveBeenCalledWith(
         null,
@@ -376,7 +416,7 @@ describe('registerControllers', () => {
       const inputStateCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.InputStateController
       );
-      
+
       const factory = inputStateCall[2];
       const faultyContainer = {
         resolve: jest.fn(() => {
@@ -395,7 +435,7 @@ describe('registerControllers', () => {
       const visualizerStateCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.VisualizerState
       );
-      
+
       const factory = visualizerStateCall[2];
       const mockContainer = {
         resolve: jest.fn((token) => {
@@ -406,8 +446,10 @@ describe('registerControllers', () => {
         }),
       };
 
-      const { VisualizerState: MockVisualizerState } = require('../../../../src/domUI/visualizer/VisualizerState.js');
-      
+      const {
+        VisualizerState: MockVisualizerState,
+      } = require('../../../../src/domUI/visualizer/VisualizerState.js');
+
       expect(() => {
         const result = factory(mockContainer);
       }).not.toThrow();
@@ -425,7 +467,7 @@ describe('registerControllers', () => {
       const visualizerStateControllerCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.VisualizerStateController
       );
-      
+
       const factory = visualizerStateControllerCall[2];
       const mockContainer = {
         resolve: jest.fn(() => jest.fn()),
@@ -434,7 +476,7 @@ describe('registerControllers', () => {
       factory(mockContainer);
 
       const resolveCalls = mockContainer.resolve.mock.calls;
-      
+
       // Verify all expected dependencies were resolved
       expect(resolveCalls).toEqual(
         expect.arrayContaining([

@@ -19,7 +19,7 @@ describe('Sensitive Data Filtering Performance', () => {
 
   beforeEach(() => {
     testBed = createPerformanceTestBed();
-    
+
     mockConsoleLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -64,16 +64,16 @@ describe('Sensitive Data Filtering Performance', () => {
       logger._flush = jest.fn();
 
       const startTime = performance.now();
-      
+
       for (let i = 0; i < 1000; i++) {
         logger.info(`Log entry ${i} with password: secret${i}`);
       }
-      
+
       const endTime = performance.now();
       const duration = endTime - startTime;
 
       expect(duration).toBeLessThan(1000); // Should complete in under 1 second
-      
+
       logger.destroy?.();
     });
 
@@ -102,7 +102,7 @@ describe('Sensitive Data Filtering Performance', () => {
       const endTime = performance.now();
 
       expect(endTime - startTime).toBeLessThan(100); // Should be fast
-      
+
       logger.destroy?.();
     });
   });

@@ -27,10 +27,11 @@ describe('ActionDefinitionBuilder Integration Memory Tests', () => {
       }
 
       const actionCount = global.memoryTestUtils.isCI() ? 800 : 1000;
-      
+
       // Establish stable memory baseline
       await global.memoryTestUtils.forceGCAndWait();
-      const baselineMemory = await global.memoryTestUtils.getStableMemoryUsage();
+      const baselineMemory =
+        await global.memoryTestUtils.getStableMemoryUsage();
 
       const actions = Array.from({ length: actionCount }, (_, i) =>
         new ActionDefinitionBuilder(`test:memory${i}`)
@@ -43,13 +44,15 @@ describe('ActionDefinitionBuilder Integration Memory Tests', () => {
       // Allow memory to stabilize after creation
       await new Promise((resolve) => setTimeout(resolve, 50));
       const peakMemory = await global.memoryTestUtils.getStableMemoryUsage();
-      
+
       // Calculate memory usage with proper baseline
       const memoryGrowth = Math.max(0, peakMemory - baselineMemory);
       const memoryPerAction = memoryGrowth / actionCount;
 
       // Environment-aware thresholds (more lenient for CI environments)
-      const maxMemoryPerActionBytes = global.memoryTestUtils.isCI() ? 3072 : 2560; // 3KB/2.5KB per action
+      const maxMemoryPerActionBytes = global.memoryTestUtils.isCI()
+        ? 3072
+        : 2560; // 3KB/2.5KB per action
       const maxTotalGrowthMB = global.memoryTestUtils.isCI() ? 4 : 3; // Total growth limit
 
       expect(memoryPerAction).toBeLessThan(maxMemoryPerActionBytes);
@@ -58,10 +61,10 @@ describe('ActionDefinitionBuilder Integration Memory Tests', () => {
 
       console.log(
         `Memory usage - Baseline: ${(baselineMemory / 1024 / 1024).toFixed(2)}MB, ` +
-        `Growth: ${(memoryGrowth / 1024 / 1024).toFixed(2)}MB, ` +
-        `Per Action: ${memoryPerAction.toFixed(0)} bytes, ` +
-        `Actions: ${actionCount}, ` +
-        `Threshold: ${maxMemoryPerActionBytes} bytes`
+          `Growth: ${(memoryGrowth / 1024 / 1024).toFixed(2)}MB, ` +
+          `Per Action: ${memoryPerAction.toFixed(0)} bytes, ` +
+          `Actions: ${actionCount}, ` +
+          `Threshold: ${maxMemoryPerActionBytes} bytes`
       );
 
       // Clean up references
@@ -73,10 +76,11 @@ describe('ActionDefinitionBuilder Integration Memory Tests', () => {
     if (typeof global !== 'undefined' && global.gc) {
       it('should not create excessive garbage under stress', async () => {
         const stressActionCount = global.memoryTestUtils.isCI() ? 800 : 1000;
-        
+
         // Establish stable memory baseline
         await global.memoryTestUtils.forceGCAndWait();
-        const baselineMemory = await global.memoryTestUtils.getStableMemoryUsage();
+        const baselineMemory =
+          await global.memoryTestUtils.getStableMemoryUsage();
 
         // Create and destroy many builders
         for (let i = 0; i < stressActionCount; i++) {
@@ -114,10 +118,10 @@ describe('ActionDefinitionBuilder Integration Memory Tests', () => {
 
         console.log(
           `Garbage collection test - Baseline: ${(baselineMemory / 1024 / 1024).toFixed(2)}MB, ` +
-          `Final: ${(finalMemory / 1024 / 1024).toFixed(2)}MB, ` +
-          `Increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB, ` +
-          `Actions: ${stressActionCount}, ` +
-          `Threshold: ${maxMemoryIncreaseMB}MB`
+            `Final: ${(finalMemory / 1024 / 1024).toFixed(2)}MB, ` +
+            `Increase: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB, ` +
+            `Actions: ${stressActionCount}, ` +
+            `Threshold: ${maxMemoryIncreaseMB}MB`
         );
       });
     } else {

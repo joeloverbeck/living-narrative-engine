@@ -72,7 +72,9 @@ export async function configureBaseContainer(container, options = {}) {
     registerActionTracing(container);
 
     if (logger)
-      logger.debug('[BaseContainerConfig] Registering logging performance monitoring...');
+      logger.debug(
+        '[BaseContainerConfig] Registering logging performance monitoring...'
+      );
     registerLoggingPerformance(container);
 
     if (logger)

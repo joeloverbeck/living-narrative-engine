@@ -198,7 +198,9 @@ export class CoreMotivationsGenerator {
     try {
       // Use retry mechanism with configurable retry count
       const maxRetries =
-        options.maxRetries !== undefined ? options.maxRetries : RETRY_CONFIG.maxRetries;
+        options.maxRetries !== undefined
+          ? options.maxRetries
+          : RETRY_CONFIG.maxRetries;
       const retryParams = {
         concept,
         direction,

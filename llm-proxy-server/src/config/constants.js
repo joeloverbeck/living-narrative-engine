@@ -252,7 +252,7 @@ export const RATE_LIMIT_GENERAL_WINDOW_MS = 15 * 60 * 1000;
  * Higher limits for development to support game initialization logging.
  * @type {number}
  */
-export const RATE_LIMIT_GENERAL_MAX_REQUESTS = 
+export const RATE_LIMIT_GENERAL_MAX_REQUESTS =
   process.env.NODE_ENV === 'production' ? 100 : 2000;
 
 /**
@@ -266,7 +266,7 @@ export const RATE_LIMIT_LLM_WINDOW_MS = 60 * 1000;
  * Higher limits for development to support rapid prototyping and testing.
  * @type {number}
  */
-export const RATE_LIMIT_LLM_MAX_REQUESTS = 
+export const RATE_LIMIT_LLM_MAX_REQUESTS =
   process.env.NODE_ENV === 'production' ? 10 : 100;
 
 /**

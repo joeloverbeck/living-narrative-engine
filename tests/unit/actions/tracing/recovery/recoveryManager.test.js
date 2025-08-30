@@ -446,7 +446,9 @@ describe('RecoveryManager', () => {
       expect(isOpen).toBe(true);
 
       // Test with component that doesn't exist
-      const nonExistentOpen = recoveryManager.isCircuitOpen('NonExistentComponent');
+      const nonExistentOpen = recoveryManager.isCircuitOpen(
+        'NonExistentComponent'
+      );
       expect(nonExistentOpen).toBe(false);
     });
   });
@@ -470,12 +472,17 @@ describe('RecoveryManager', () => {
 
       // We'll test the restart service path by manually calling the method
       const strategy = { action: RecoveryAction.RESTART_SERVICE, priority: 1 };
-      
+
       // Use reflection to access the private method for testing
-      const handleRestartService = customRecoveryManager.constructor.prototype['#handleRestartService'];
+      const handleRestartService =
+        customRecoveryManager.constructor.prototype['#handleRestartService'];
       if (handleRestartService) {
-        const result = await handleRestartService.call(customRecoveryManager, errorInfo, strategy);
-        
+        const result = await handleRestartService.call(
+          customRecoveryManager,
+          errorInfo,
+          strategy
+        );
+
         expect(result).toEqual({
           action: RecoveryAction.RESTART_SERVICE,
           shouldContinue: false,
@@ -599,7 +606,7 @@ describe('RecoveryManager', () => {
     it('should successfully use registered fallback handler', async () => {
       const fallbackHandler = jest.fn().mockResolvedValue('fallback-success');
       const componentName = 'FallbackTestComponent';
-      
+
       recoveryManager.registerFallbackMode(componentName, fallbackHandler);
 
       const errorInfo = {
@@ -622,9 +629,11 @@ describe('RecoveryManager', () => {
     });
 
     it('should handle fallback handler rejection', async () => {
-      const fallbackHandler = jest.fn().mockRejectedValue(new Error('Fallback handler failed'));
+      const fallbackHandler = jest
+        .fn()
+        .mockRejectedValue(new Error('Fallback handler failed'));
       const componentName = 'FailingFallbackComponent';
-      
+
       recoveryManager.registerFallbackMode(componentName, fallbackHandler);
 
       const errorInfo = {
@@ -656,7 +665,7 @@ describe('RecoveryManager', () => {
   describe('Error Tracking and Time Windows', () => {
     it('should reset error count after time window expires', async () => {
       const componentName = 'TimeWindowComponent';
-      
+
       // Mock Date.now to control time
       const originalDateNow = Date.now;
       let mockTime = 1000000;

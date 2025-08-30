@@ -19,7 +19,7 @@ import { ErrorCodes } from '../constants/errorCodes.js';
  * @param {object} [root0.errorHandler] - Optional centralized error handler
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
-export default function createStepResolver({ 
+export default function createStepResolver({
   entitiesGateway,
   errorHandler = null,
 }) {
@@ -63,7 +63,9 @@ export default function createStepResolver({
     } catch (error) {
       if (errorHandler) {
         errorHandler.handleError(
-          new Error(`StepResolver: Failed to extract field '${field}' from entity '${entityId}': ${error.message}`),
+          new Error(
+            `StepResolver: Failed to extract field '${field}' from entity '${entityId}': ${error.message}`
+          ),
           { entityId, field, originalError: error.message },
           'StepResolver',
           ErrorCodes.COMPONENT_RESOLUTION_FAILED
@@ -104,7 +106,9 @@ export default function createStepResolver({
     } catch (error) {
       if (errorHandler) {
         errorHandler.handleError(
-          new Error(`StepResolver: Failed to resolve entity parent value for field '${field}' on entity '${entityId}': ${error.message}`),
+          new Error(
+            `StepResolver: Failed to resolve entity parent value for field '${field}' on entity '${entityId}': ${error.message}`
+          ),
           { entityId, field, originalError: error.message },
           'StepResolver',
           ErrorCodes.STEP_RESOLUTION_FAILED

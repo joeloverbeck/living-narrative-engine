@@ -1,7 +1,7 @@
 /**
  * @file Performance tests for build system
  * Tests build speed and performance optimization with robust error handling
- * 
+ *
  * Usage:
  *   npm run test:performance
  */
@@ -21,7 +21,8 @@ describe('Build System Performance', () => {
   const executeBuild = async (command, args = [], useFastMode = true) => {
     return new Promise((resolve, reject) => {
       // Add --fast flag for performance tests to reduce build time
-      const buildArgs = useFastMode && command.startsWith('build') ? [...args, '--fast'] : args;
+      const buildArgs =
+        useFastMode && command.startsWith('build') ? [...args, '--fast'] : args;
       const child = spawn('npm', ['run', command, ...buildArgs], {
         cwd: process.cwd(),
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -179,10 +180,14 @@ describe('Build System Performance', () => {
         const devBuildTime = Date.now() - devStartTime;
 
         // Verify dev build succeeded
-        expect(devResult.actualSuccess || devResult.isDevValidationFailure).toBe(true);
-        
+        expect(
+          devResult.actualSuccess || devResult.isDevValidationFailure
+        ).toBe(true);
+
         if (devResult.isDevValidationFailure) {
-          console.log('Development build completed with validation warnings for missing development features');
+          console.log(
+            'Development build completed with validation warnings for missing development features'
+          );
         }
 
         expect(await fs.pathExists(distDir)).toBe(true);
@@ -202,10 +207,14 @@ describe('Build System Performance', () => {
         const prodBuildTime = Date.now() - prodStartTime;
 
         // Verify prod build succeeded
-        expect(prodResult.actualSuccess || prodResult.isDevValidationFailure).toBe(true);
-        
+        expect(
+          prodResult.actualSuccess || prodResult.isDevValidationFailure
+        ).toBe(true);
+
         if (prodResult.isDevValidationFailure) {
-          console.log('Production build completed with validation warnings for missing development features');
+          console.log(
+            'Production build completed with validation warnings for missing development features'
+          );
         }
 
         expect(await fs.pathExists(distDir)).toBe(true);
@@ -222,7 +231,6 @@ describe('Build System Performance', () => {
       },
       testTimeout
     );
-
   });
 
   // Extended performance tests

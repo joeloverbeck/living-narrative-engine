@@ -9,10 +9,12 @@ The new architecture reduces test code by 70-80% while improving maintainability
 ## Key Components
 
 ### Base Classes
+
 - **`ModActionTestBase`** - Base class for action integration tests
 - **`ModRuleTestBase`** - Base class for rule integration tests (extends ModActionTestBase)
 
 ### Test Fixtures
+
 - **`ModTestFixture`** - Factory for creating test environments
 - **`ModTestHandlerFactory`** - Centralized handler creation
 - **`ModEntityBuilder`** - Fluent API for entity creation
@@ -32,9 +34,9 @@ describe('intimacy:kiss_cheek action integration', () => {
 
   beforeEach(() => {
     testFixture = ModTestFixture.forAction(
-      'intimacy', 
-      'intimacy:kiss_cheek', 
-      ruleFile, 
+      'intimacy',
+      'intimacy:kiss_cheek',
+      ruleFile,
       conditionFile
     );
   });
@@ -45,10 +47,12 @@ describe('intimacy:kiss_cheek action integration', () => {
 
   it('successfully executes kiss cheek action', async () => {
     const { actor, target } = testFixture.createCloseActors(['Alice', 'Bob']);
-    
+
     await testFixture.executeAction(actor.id, target.id);
-    
-    testFixture.assertActionSuccess("Alice leans in to kiss Bob's cheek softly.");
+
+    testFixture.assertActionSuccess(
+      "Alice leans in to kiss Bob's cheek softly."
+    );
   });
 });
 ```
@@ -60,7 +64,12 @@ import { ModActionTestBase } from '../common/mods/index.js';
 
 class KissCheekActionTest extends ModActionTestBase {
   constructor() {
-    super('intimacy', 'intimacy:kiss_cheek', kissCheekRule, eventIsActionKissCheek);
+    super(
+      'intimacy',
+      'intimacy:kiss_cheek',
+      kissCheekRule,
+      eventIsActionKissCheek
+    );
   }
 
   // Override for custom success message
@@ -80,16 +89,26 @@ describe('intimacy:kiss_cheek action integration', () => {
 
 ```javascript
 // Simple actor-target pair
-const { actor, target } = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+const { actor, target } = testFixture.createStandardActorTarget([
+  'Alice',
+  'Bob',
+]);
 
 // Close actors (for intimacy actions)
 const { actor, target } = testFixture.createCloseActors(['Alice', 'Bob']);
 
 // Multi-actor scenario with observers
-const scenario = testFixture.createMultiActorScenario(['Alice', 'Bob', 'Charlie']);
+const scenario = testFixture.createMultiActorScenario([
+  'Alice',
+  'Bob',
+  'Charlie',
+]);
 
 // Anatomy scenario (for body-related actions)
-const scenario = testFixture.createAnatomyScenario(['Alice', 'Bob'], ['torso', 'breast', 'breast']);
+const scenario = testFixture.createAnatomyScenario(
+  ['Alice', 'Bob'],
+  ['torso', 'breast', 'breast']
+);
 
 // Custom entities with builder
 const actor = new ModEntityBuilder('actor1')
@@ -104,11 +123,11 @@ const actor = new ModEntityBuilder('actor1')
 
 ```javascript
 // Standard action success
-testFixture.assertActionSuccess("Expected success message");
+testFixture.assertActionSuccess('Expected success message');
 
 // Perceptible event validation
 testFixture.assertPerceptibleEvent({
-  descriptionText: "Expected description",
+  descriptionText: 'Expected description',
   locationId: 'room1',
   actorId: 'actor1',
   targetId: 'target1',
@@ -116,7 +135,7 @@ testFixture.assertPerceptibleEvent({
 
 // Component addition (for positioning actions)
 testFixture.assertComponentAdded('actor1', 'positioning:kneeling_before', {
-  entityId: 'target1'
+  entityId: 'target1',
 });
 
 // Rule selectivity (action only fires for correct ID)
@@ -128,6 +147,7 @@ testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
 ### Converting Existing Tests
 
 1. **Replace Handler Creation**
+
    ```javascript
    // OLD: 30+ lines
    function createHandlers(entityManager, eventBus, logger) {
@@ -139,6 +159,7 @@ testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
    ```
 
 2. **Replace Entity Setup**
+
    ```javascript
    // OLD: Manual object construction
    testEnv.reset([
@@ -158,6 +179,7 @@ testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
    ```
 
 3. **Replace Action Execution**
+
    ```javascript
    // OLD: Manual event dispatch
    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
@@ -173,6 +195,7 @@ testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
    ```
 
 4. **Replace Assertions**
+
    ```javascript
    // OLD: Manual event filtering and assertions
    const successEvent = testEnv.events.find(
@@ -199,21 +222,25 @@ testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
 ## Category-Specific Patterns
 
 ### Intimacy/Sex Actions
+
 - Usually require closeness between actors
 - Use `createCloseActors()` for entity setup
 - May need anatomy components for certain actions
 
 ### Positioning Actions
+
 - May add components during execution (use ADD_COMPONENT handler)
 - Often change entity state (kneeling, facing, etc.)
 - Use `createPositioningScenario()` for specialized setups
 
-### Violence Actions  
+### Violence Actions
+
 - Simple actor-target interactions
 - Use standard entity setup
 - Focus on damage or status effects
 
 ### Exercise Actions
+
 - Often self-targeted or simple interactions
 - May have equipment or stat requirements
 
@@ -246,7 +273,7 @@ class CustomActionTest extends ModActionTestBase {
     it('handles special scenario', async () => {
       const entity = this.createCustomScenario();
       this.testFixture.reset([entity]);
-      
+
       // Custom test logic
       await this.executeAction(entity.id, 'special_target');
       // Custom assertions

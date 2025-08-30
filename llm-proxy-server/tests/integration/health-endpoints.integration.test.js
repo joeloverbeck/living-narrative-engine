@@ -206,7 +206,7 @@ describe('Health Check Endpoints Integration', () => {
       mockCacheService.getMemoryInfo.mockReturnValue({
         currentBytes: 2048,
         maxBytes: 4096,
-        usagePercent: "50.00",
+        usagePercent: '50.00',
         averageEntrySize: 82,
         entryCount: 25,
       });
@@ -250,7 +250,7 @@ describe('Health Check Endpoints Integration', () => {
                 memoryUsage: {
                   currentBytes: 2048,
                   maxBytes: 4096,
-                  usagePercent: "50.00",
+                  usagePercent: '50.00',
                   averageEntrySize: 82,
                   entryCount: 25,
                 },

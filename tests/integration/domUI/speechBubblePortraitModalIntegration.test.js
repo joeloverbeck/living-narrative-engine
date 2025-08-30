@@ -2,7 +2,14 @@
  * @file Integration test to verify SpeechBubbleRenderer and PortraitModalRenderer work together
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { SpeechBubbleRenderer } from '../../../src/domUI/speechBubbleRenderer.js';
 import { PortraitModalRenderer } from '../../../src/domUI/portraitModalRenderer.js';
@@ -125,10 +132,16 @@ describe('SpeechBubbleRenderer and PortraitModalRenderer Integration', () => {
     // Register dependencies
     container.register('ILogger', mockLogger);
     container.register('IDocumentContext', mockDocumentContext);
-    container.register('IValidatedEventDispatcher', mockValidatedEventDispatcher);
+    container.register(
+      'IValidatedEventDispatcher',
+      mockValidatedEventDispatcher
+    );
     container.register('IEntityManager', mockEntityManager);
     container.register('DomElementFactory', mockDomElementFactory);
-    container.register('EntityDisplayDataProvider', mockEntityDisplayDataProvider);
+    container.register(
+      'EntityDisplayDataProvider',
+      mockEntityDisplayDataProvider
+    );
   });
 
   afterEach(() => {
@@ -196,7 +209,11 @@ describe('SpeechBubbleRenderer and PortraitModalRenderer Integration', () => {
 
       // Show the modal
       const mockElement = { focus: jest.fn(), offsetParent: {} };
-      portraitModalRenderer.showModal('/test/portrait.jpg', 'Test Speaker', mockElement);
+      portraitModalRenderer.showModal(
+        '/test/portrait.jpg',
+        'Test Speaker',
+        mockElement
+      );
       expect(portraitModalRenderer.isVisible).toBe(true);
 
       // Hide using hideModal method
@@ -205,11 +222,25 @@ describe('SpeechBubbleRenderer and PortraitModalRenderer Integration', () => {
     });
 
     it('should work with DI container registration', () => {
-      // Register PortraitModalRenderer in container
-      container.register('PortraitModalRenderer', PortraitModalRenderer);
-      
+      // Register PortraitModalRenderer in container with proper class registration
+      container.register('PortraitModalRenderer', PortraitModalRenderer, {
+        lifecycle: 'singleton',
+        dependencies: ['IDocumentContext', 'DomElementFactory', 'ILogger', 'IValidatedEventDispatcher']
+      });
+
       // Register SpeechBubbleRenderer that depends on PortraitModalRenderer
-      container.register('SpeechBubbleRenderer', SpeechBubbleRenderer);
+      container.register('SpeechBubbleRenderer', SpeechBubbleRenderer, {
+        lifecycle: 'singleton',
+        dependencies: [
+          'ILogger',
+          'IDocumentContext',
+          'IValidatedEventDispatcher',
+          'IEntityManager',
+          'DomElementFactory',
+          'EntityDisplayDataProvider',
+          'PortraitModalRenderer'
+        ]
+      });
 
       // This should successfully resolve without errors
       expect(() => {

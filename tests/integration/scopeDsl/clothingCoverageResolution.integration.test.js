@@ -4,13 +4,20 @@
  * working with real game data, actions, and scope DSL queries. Tests ensure the system works
  * correctly in actual gameplay scenarios.
  * @see workflows/INTCLOTCOV-009-integration-tests-real-world-scenarios.md
- * 
+ *
  * Note: These tests focus on the integration patterns and infrastructure setup.
  * The actual clothing resolution logic requires specialized resolvers and
  * complex runtime setups that are demonstrated in the E2E test suite.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
@@ -53,7 +60,7 @@ describe('Clothing Coverage Resolution Integration', () => {
       warn: jest.fn(),
       error: jest.fn(),
     };
-    
+
     registry = new InMemoryDataRegistry();
 
     // Set up event infrastructure with mocked validator
@@ -65,14 +72,14 @@ describe('Clothing Coverage Resolution Integration', () => {
       getValidator: jest.fn(() => () => true),
       isSchemaLoaded: jest.fn(() => true),
     };
-    
+
     const validatedEventDispatcher = new ValidatedEventDispatcher({
       eventBus,
       gameDataRepository: new GameDataRepository(registry, logger),
       schemaValidator,
       logger,
     });
-    
+
     safeEventDispatcher = new SafeEventDispatcher({
       validatedEventDispatcher,
       logger,
@@ -108,7 +115,7 @@ describe('Clothing Coverage Resolution Integration', () => {
     clothingStepResolver = createClothingStepResolver({ entitiesGateway });
     slotAccessResolver = createSlotAccessResolver({ entitiesGateway });
 
-    // Set up scope infrastructure  
+    // Set up scope infrastructure
     scopeRegistry = new ScopeRegistry({ logger });
     scopeEngine = new ScopeEngine();
     gameDataRepository = new GameDataRepository(registry, logger);
@@ -130,30 +137,50 @@ describe('Clothing Coverage Resolution Integration', () => {
     registry.store('entityDefinitions', 'test:character', characterDefinition);
 
     // Store mock clothing item data for coverage testing
-    registry.store('clothing:dark_indigo_denim_jeans', 'clothing:coverage_mapping', {
-      covers: ['legs', 'torso_lower'],
-      priority: 2,
-    });
+    registry.store(
+      'clothing:dark_indigo_denim_jeans',
+      'clothing:coverage_mapping',
+      {
+        covers: ['legs', 'torso_lower'],
+        priority: 2,
+      }
+    );
 
-    registry.store('clothing:white_cotton_panties', 'clothing:coverage_mapping', {
-      covers: ['torso_lower'],
-      priority: 1,
-    });
+    registry.store(
+      'clothing:white_cotton_panties',
+      'clothing:coverage_mapping',
+      {
+        covers: ['torso_lower'],
+        priority: 1,
+      }
+    );
 
-    registry.store('clothing:dark_olive_cotton_twill_chore_jacket', 'clothing:coverage_mapping', {
-      covers: ['torso_upper', 'torso_lower'],
-      priority: 3,
-    });
+    registry.store(
+      'clothing:dark_olive_cotton_twill_chore_jacket',
+      'clothing:coverage_mapping',
+      {
+        covers: ['torso_upper', 'torso_lower'],
+        priority: 3,
+      }
+    );
 
-    registry.store('clothing:forest_green_cotton_linen_button_down', 'clothing:coverage_mapping', {
-      covers: ['torso_upper'],
-      priority: 2,
-    });
+    registry.store(
+      'clothing:forest_green_cotton_linen_button_down',
+      'clothing:coverage_mapping',
+      {
+        covers: ['torso_upper'],
+        priority: 2,
+      }
+    );
 
-    registry.store('clothing:white_thigh_high_socks_pink_hearts', 'clothing:coverage_mapping', {
-      covers: ['legs', 'torso_lower'],
-      priority: 2,
-    });
+    registry.store(
+      'clothing:white_thigh_high_socks_pink_hearts',
+      'clothing:coverage_mapping',
+      {
+        covers: ['legs', 'torso_lower'],
+        priority: 2,
+      }
+    );
   });
 
   afterEach(() => {
@@ -164,46 +191,59 @@ describe('Clothing Coverage Resolution Integration', () => {
     it('should create characters with clothing equipment and validate infrastructure', async () => {
       // Create character with real clothing items using EntityManager
       const characterId = 'test:character_with_jeans';
-      
-      const createResult = await entityManager.createEntityInstance('test:character', {
-        instanceId: characterId,
-        componentOverrides: {
-          [NAME_COMPONENT_ID]: { text: 'Test Character' },
-          'clothing:equipment': {
-            slots: {
-              legs: { base: 'clothing:dark_indigo_denim_jeans' },
-              torso_lower: { underwear: 'clothing:white_cotton_panties' },
-            }
+
+      const createResult = await entityManager.createEntityInstance(
+        'test:character',
+        {
+          instanceId: characterId,
+          componentOverrides: {
+            [NAME_COMPONENT_ID]: { text: 'Test Character' },
+            'clothing:equipment': {
+              slots: {
+                legs: { base: 'clothing:dark_indigo_denim_jeans' },
+                torso_lower: { underwear: 'clothing:white_cotton_panties' },
+              },
+            },
           },
-        },
-      });
+        }
+      );
 
       // Validate the infrastructure is working - entity creation succeeded
       expect(createResult).toBeDefined();
       expect(createResult.constructor.name).toBe('Entity');
-      
+
       // Validate that the entity was successfully created and logged properly
-      const creationLogEntry = logger.debug.mock.calls.find(call => 
+      const creationLogEntry = logger.debug.mock.calls.find((call) =>
         call[0]?.includes?.(`Entity created: ${characterId}`)
       );
       expect(creationLogEntry).toBeDefined();
-      
+
       // Validate that the clothing equipment component was indexed
-      const equipmentIndexLogEntry = logger.debug.mock.calls.find(call =>
-        call[0]?.includes?.(`Indexed component 'clothing:equipment' for entity '${characterId}'`)
+      const equipmentIndexLogEntry = logger.debug.mock.calls.find((call) =>
+        call[0]?.includes?.(
+          `Indexed component 'clothing:equipment' for entity '${characterId}'`
+        )
       );
       expect(equipmentIndexLogEntry).toBeDefined();
-      
+
       // Validate that entity was added to repository with expected component count
-      const repositoryLogEntry = logger.debug.mock.calls.find(call =>
-        call[0]?.includes?.(`Entity '${characterId}' added to repository with 7 components indexed.`)
+      const repositoryLogEntry = logger.debug.mock.calls.find((call) =>
+        call[0]?.includes?.(
+          `Entity '${characterId}' added to repository with 7 components indexed.`
+        )
       );
       expect(repositoryLogEntry).toBeDefined();
 
       // Validate that clothing coverage data is accessible
-      const jeansData = registry.get('clothing:dark_indigo_denim_jeans', 'clothing:coverage_mapping');
-      const pantiesData = registry.get('clothing:white_cotton_panties', 'clothing:coverage_mapping');
-      
+      const jeansData = registry.get(
+        'clothing:dark_indigo_denim_jeans',
+        'clothing:coverage_mapping'
+      );
+      const pantiesData = registry.get(
+        'clothing:white_cotton_panties',
+        'clothing:coverage_mapping'
+      );
+
       expect(jeansData).toBeDefined();
       expect(jeansData.covers).toContain('torso_lower');
       expect(pantiesData).toBeDefined();
@@ -212,12 +252,15 @@ describe('Clothing Coverage Resolution Integration', () => {
       // Validate scope parsing and registry work with simple test scope
       // Note: Complex clothing-specific scopes are not supported by scopeDsl
       const scopeContent = `test:simple_scope := entities(core:actor)[]`;
-      const scopeDefinitions = parseScopeDefinitions(scopeContent, 'test.scope');
+      const scopeDefinitions = parseScopeDefinitions(
+        scopeContent,
+        'test.scope'
+      );
       const scopeDef = scopeDefinitions.get('test:simple_scope');
-      
+
       expect(scopeDef).toBeDefined();
       expect(scopeDef.ast).toBeDefined();
-      
+
       scopeRegistry.initialize({
         'test:simple_scope': scopeDef,
       });
@@ -228,7 +271,7 @@ describe('Clothing Coverage Resolution Integration', () => {
 
     it('should validate complex layering data structure', async () => {
       const characterId = 'test:character_with_layers';
-      
+
       await entityManager.createEntityInstance('test:character', {
         instanceId: characterId,
         componentOverrides: {
@@ -240,7 +283,7 @@ describe('Clothing Coverage Resolution Integration', () => {
                 base: 'clothing:forest_green_cotton_linen_button_down',
               },
               torso_lower: { underwear: 'clothing:white_cotton_panties' },
-            }
+            },
           },
         },
       });
@@ -248,28 +291,47 @@ describe('Clothing Coverage Resolution Integration', () => {
       // Validate the complex layering was created correctly
       const character = entityManager.getEntityInstance(characterId);
       expect(character).toBeDefined();
-      
+
       const equipment = character.getComponentData('clothing:equipment');
       expect(equipment).toBeDefined();
-      expect(equipment.slots.torso_upper.outer).toBe('clothing:dark_olive_cotton_twill_chore_jacket');
-      expect(equipment.slots.torso_upper.base).toBe('clothing:forest_green_cotton_linen_button_down');
-      expect(equipment.slots.torso_lower.underwear).toBe('clothing:white_cotton_panties');
+      expect(equipment.slots.torso_upper.outer).toBe(
+        'clothing:dark_olive_cotton_twill_chore_jacket'
+      );
+      expect(equipment.slots.torso_upper.base).toBe(
+        'clothing:forest_green_cotton_linen_button_down'
+      );
+      expect(equipment.slots.torso_lower.underwear).toBe(
+        'clothing:white_cotton_panties'
+      );
 
       // Validate coverage mapping data for complex items
-      const jacketData = registry.get('clothing:dark_olive_cotton_twill_chore_jacket', 'clothing:coverage_mapping');
-      const shirtData = registry.get('clothing:forest_green_cotton_linen_button_down', 'clothing:coverage_mapping');
-      
+      const jacketData = registry.get(
+        'clothing:dark_olive_cotton_twill_chore_jacket',
+        'clothing:coverage_mapping'
+      );
+      const shirtData = registry.get(
+        'clothing:forest_green_cotton_linen_button_down',
+        'clothing:coverage_mapping'
+      );
+
       expect(jacketData).toBeDefined();
-      expect(jacketData.covers).toEqual(expect.arrayContaining(['torso_upper', 'torso_lower']));
+      expect(jacketData.covers).toEqual(
+        expect.arrayContaining(['torso_upper', 'torso_lower'])
+      );
       expect(shirtData).toBeDefined();
       expect(shirtData.covers).toContain('torso_upper');
 
       // Validate that entities gateway can access the data
-      const equipmentFromGateway = entitiesGateway.getComponentData(characterId, 'clothing:equipment');
+      const equipmentFromGateway = entitiesGateway.getComponentData(
+        characterId,
+        'clothing:equipment'
+      );
       expect(equipmentFromGateway).toBeDefined();
       // Check if the gateway returns the data properly
       if (equipmentFromGateway && equipmentFromGateway.slots) {
-        expect(equipmentFromGateway.slots.torso_upper.outer).toBe('clothing:dark_olive_cotton_twill_chore_jacket');
+        expect(equipmentFromGateway.slots.torso_upper.outer).toBe(
+          'clothing:dark_olive_cotton_twill_chore_jacket'
+        );
       }
     });
 
@@ -300,7 +362,7 @@ describe('Clothing Coverage Resolution Integration', () => {
             slots: {
               legs: { base: 'clothing:dark_indigo_denim_jeans' },
               torso_lower: { underwear: 'clothing:white_cotton_panties' },
-            }
+            },
           },
         },
       });
@@ -344,7 +406,7 @@ describe('Clothing Coverage Resolution Integration', () => {
           'clothing:equipment': {
             slots: {
               torso_lower: { underwear: 'clothing:white_cotton_panties' },
-            }
+            },
           },
         },
       });
@@ -359,7 +421,6 @@ describe('Clothing Coverage Resolution Integration', () => {
       // Actual clothing scope resolution is not implemented in scopeDsl
       expect(mockActionResult.text).toContain('over the panties');
     });
-
   });
 
   // Scope DSL Integration tests removed - they test non-existent clothing-specific scope resolution

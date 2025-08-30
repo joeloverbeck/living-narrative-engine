@@ -732,7 +732,7 @@ class AppConfigService {
     if (this._proxyAllowedOrigin && this._proxyAllowedOrigin.trim() !== '') {
       return this._proxyAllowedOrigin.split(',').map((origin) => origin.trim());
     }
-    
+
     return [];
   }
 

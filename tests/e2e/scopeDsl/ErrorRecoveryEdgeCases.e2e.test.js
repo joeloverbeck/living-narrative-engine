@@ -192,7 +192,7 @@ describe('ScopeDSL Error Recovery and Edge Cases E2E', () => {
    */
   async function createCorruptedEntities() {
     const corruptedEntities = [];
-    
+
     // Use a shared counter to avoid ID conflicts across tests
     const timestamp = Date.now();
 

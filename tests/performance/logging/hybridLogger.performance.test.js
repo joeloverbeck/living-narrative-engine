@@ -1,7 +1,7 @@
 /**
  * @file Performance tests for HybridLogger
  * @see src/logging/hybridLogger.js
- * 
+ *
  * Performance Test Strategy:
  * - These tests measure micro-benchmarks in a non-deterministic environment
  * - Thresholds are intentionally lenient to account for:
@@ -9,17 +9,17 @@
  *   - Garbage collection timing
  *   - System load and CPU frequency scaling
  *   - Mock function overhead variations
- * 
+ *
  * Critical Logging Overhead Test:
  * - Expects <20% overhead (increased from 5% to reduce flakiness)
  * - Uses 100 warmup iterations for JIT stability
  * - Provides detailed failure messages for debugging
- * 
+ *
  * Buffer Scaling Test:
  * - Expects <3x scaling ratio (increased from 2x for reliability)
  * - Tests linear scaling with different buffer sizes
  * - Includes warmup for each measurement
- * 
+ *
  * These thresholds will still catch genuine performance regressions
  * while avoiding false positives from environmental factors.
  */
@@ -362,7 +362,8 @@ describe('HybridLogger Performance', () => {
       const iterations = 1000;
       const baselineMaxDuration = 2000; // 2ms per message baseline (adjusted for test environment)
       const maxOverheadPercent = 20; // 20% max overhead (increased for environmental variability)
-      const maxDurationWithOverhead = baselineMaxDuration * (1 + maxOverheadPercent / 100);
+      const maxDurationWithOverhead =
+        baselineMaxDuration * (1 + maxOverheadPercent / 100);
 
       // Test with critical logging DISABLED but still showing warnings/errors (baseline)
       // This provides a fair comparison by having both loggers actually output logs
@@ -438,22 +439,27 @@ describe('HybridLogger Performance', () => {
       const criticalDuration = performance.now() - criticalStart;
 
       // Calculate overhead
-      const overheadPercent = ((criticalDuration - baselineDuration) / baselineDuration) * 100;
+      const overheadPercent =
+        ((criticalDuration - baselineDuration) / baselineDuration) * 100;
 
       // Assertions with descriptive error messages
       expect(criticalDuration).toBeLessThan(maxDurationWithOverhead);
-      
+
       // More lenient overhead check with helpful error message
       if (overheadPercent >= maxOverheadPercent) {
         console.log(`Performance test failed - Overhead too high`);
         console.log(`  Baseline duration: ${baselineDuration.toFixed(2)}ms`);
-        console.log(`  Critical logging duration: ${criticalDuration.toFixed(2)}ms`);
+        console.log(
+          `  Critical logging duration: ${criticalDuration.toFixed(2)}ms`
+        );
         console.log(`  Actual overhead: ${overheadPercent.toFixed(2)}%`);
         console.log(`  Max allowed overhead: ${maxOverheadPercent}%`);
-        console.log(`  Note: This may be due to environmental factors like GC or system load`);
+        console.log(
+          `  Note: This may be due to environmental factors like GC or system load`
+        );
       }
       expect(overheadPercent).toBeLessThan(maxOverheadPercent);
-      
+
       // Verify critical logs were actually shown (bypassed filters)
       expect(console.warn).toHaveBeenCalledTimes(iterations);
       expect(console.error).toHaveBeenCalledTimes(iterations);
@@ -518,92 +524,101 @@ describe('HybridLogger Performance', () => {
     it('should maintain sub-millisecond overhead per critical log', () => {
       const iterations = 1000;
       const maxOverheadPerLog = 0.001; // 1 microsecond max per log
-      
-      const logger = new HybridLogger({
-        consoleLogger,
-        remoteLogger,
-        categoryDetector,
-      }, {
-        console: {
-          categories: ['ui'], // Restrictive filter
-          levels: ['info'], // Should be bypassed
-          enabled: true,
+
+      const logger = new HybridLogger(
+        {
+          consoleLogger,
+          remoteLogger,
+          categoryDetector,
         },
-        remote: { categories: null, levels: null, enabled: false },
-        criticalLogging: {
-          alwaysShowInConsole: true,
-          bufferSize: 100,
-        },
-      });
-      
+        {
+          console: {
+            categories: ['ui'], // Restrictive filter
+            levels: ['info'], // Should be bypassed
+            enabled: true,
+          },
+          remote: { categories: null, levels: null, enabled: false },
+          criticalLogging: {
+            alwaysShowInConsole: true,
+            bufferSize: 100,
+          },
+        }
+      );
+
       // Warmup
       for (let i = 0; i < 50; i++) {
         logger.warn(`Warmup warning ${i}`);
       }
       jest.clearAllMocks();
-      
+
       const startTime = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         logger.warn(`Performance test warning ${i}`);
       }
-      
+
       const endTime = performance.now();
       const totalTime = endTime - startTime;
       const averageTimePerLog = totalTime / iterations;
-      
+
       expect(averageTimePerLog).toBeLessThan(maxOverheadPerLog * 1000); // Convert to ms
-      
+
       // Verify all logs were processed
       expect(console.warn).toHaveBeenCalledTimes(iterations);
-      
+
       const bufferStats = logger.getCriticalBufferStats();
       // The buffer may include warnings from warmup runs, so check it's at least the expected count
       expect(bufferStats.totalWarnings).toBeGreaterThanOrEqual(iterations);
     });
-    
+
     it('should scale buffer operations linearly with size', () => {
       const bufferSizes = [10, 50, 100];
       const iterations = 200;
       const results = [];
-      
+
       for (const bufferSize of bufferSizes) {
-        const logger = new HybridLogger({
-          consoleLogger,
-          remoteLogger,
-          categoryDetector,
-        }, {
-          console: { categories: null, levels: null, enabled: false },
-          remote: { categories: null, levels: null, enabled: false },
-          criticalLogging: { bufferSize },
-        });
-        
+        const logger = new HybridLogger(
+          {
+            consoleLogger,
+            remoteLogger,
+            categoryDetector,
+          },
+          {
+            console: { categories: null, levels: null, enabled: false },
+            remote: { categories: null, levels: null, enabled: false },
+            criticalLogging: { bufferSize },
+          }
+        );
+
         // Add warmup for each buffer size test
         for (let i = 0; i < 100; i++) {
           logger.warn(`Warmup ${i}`);
         }
         jest.clearAllMocks();
-        
+
         const startTime = performance.now();
-        
+
         for (let i = 0; i < iterations; i++) {
           logger.warn(`Scaling test ${i}`);
         }
-        
+
         const endTime = performance.now();
         results.push(endTime - startTime);
       }
-      
+
       // Performance should scale roughly linearly
       // Larger buffers shouldn't be significantly slower per operation
       const ratioSmallToMedium = results[1] / results[0];
       const ratioMediumToLarge = results[2] / results[1];
-      
+
       // More lenient threshold (3x instead of 2x) to account for environmental variability
       const maxScalingRatio = 3;
-      
+
       // Add helpful debugging output on failure
-      if (ratioSmallToMedium >= maxScalingRatio || ratioMediumToLarge >= maxScalingRatio) {
+      if (
+        ratioSmallToMedium >= maxScalingRatio ||
+        ratioMediumToLarge >= maxScalingRatio
+      ) {
         console.log(`Buffer scaling test failed - Non-linear scaling detected`);
         console.log(`  Buffer size 10: ${results[0].toFixed(2)}ms`);
         console.log(`  Buffer size 50: ${results[1].toFixed(2)}ms`);
@@ -611,47 +626,52 @@ describe('HybridLogger Performance', () => {
         console.log(`  Ratio 10→50: ${ratioSmallToMedium.toFixed(2)}x`);
         console.log(`  Ratio 50→100: ${ratioMediumToLarge.toFixed(2)}x`);
         console.log(`  Max allowed ratio: ${maxScalingRatio}x`);
-        console.log(`  Note: Minor variations are expected due to array resizing and GC`);
+        console.log(
+          `  Note: Minor variations are expected due to array resizing and GC`
+        );
       }
-      
+
       // Should not have exponential growth
       expect(ratioSmallToMedium).toBeLessThan(maxScalingRatio);
       expect(ratioMediumToLarge).toBeLessThan(maxScalingRatio);
     });
-    
+
     it('should maintain performance with high buffer utilization', () => {
       const bufferSize = 50;
       const iterations = 1000;
       const maxTimePerOperation = 2; // 2ms per operation max
-      
-      const logger = new HybridLogger({
-        consoleLogger,
-        remoteLogger,
-        categoryDetector,
-      }, {
-        console: { categories: null, levels: null, enabled: false },
-        remote: { categories: null, levels: null, enabled: false },
-        criticalLogging: { bufferSize },
-      });
-      
+
+      const logger = new HybridLogger(
+        {
+          consoleLogger,
+          remoteLogger,
+          categoryDetector,
+        },
+        {
+          console: { categories: null, levels: null, enabled: false },
+          remote: { categories: null, levels: null, enabled: false },
+          criticalLogging: { bufferSize },
+        }
+      );
+
       // Fill buffer to capacity first
       for (let i = 0; i < bufferSize; i++) {
         logger.warn(`Fill buffer ${i}`);
       }
-      
+
       const startTime = performance.now();
-      
+
       // Continue logging with full buffer (circular operations)
       for (let i = 0; i < iterations; i++) {
         logger.error(`High utilization error ${i}`);
       }
-      
+
       const endTime = performance.now();
       const totalTime = endTime - startTime;
       const averageTimePerOperation = totalTime / iterations;
-      
+
       expect(averageTimePerOperation).toBeLessThan(maxTimePerOperation);
-      
+
       const stats = logger.getCriticalBufferStats();
       expect(stats.currentSize).toBe(bufferSize);
       expect(stats.totalErrors).toBe(iterations);

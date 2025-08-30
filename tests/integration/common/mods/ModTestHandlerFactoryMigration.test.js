@@ -3,7 +3,14 @@
  * @description Validates that factory-created handlers behave identically to manually created handlers
  */
 
-import { describe, it, expect, beforeEach, jest, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  jest,
+  afterEach,
+} from '@jest/globals';
 import { ModTestHandlerFactory } from '../../../common/mods/ModTestHandlerFactory.js';
 import { SimpleEntityManager } from '../../../common/entities/index.js';
 
@@ -85,7 +92,10 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         logger,
         addPerceptionLogEntryHandler: { execute: jest.fn() },
       }),
-      DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+      DISPATCH_EVENT: new DispatchEventHandler({
+        dispatcher: eventBus,
+        logger,
+      }),
       END_TURN: new EndTurnHandler({
         safeEventDispatcher: safeDispatcher,
         logger,
@@ -102,7 +112,11 @@ describe('ModTestHandlerFactory Migration Validation', () => {
    * @param {object} logger - Logger instance
    * @returns {object} Manually created handlers object with ADD_COMPONENT
    */
-  function createManualHandlersWithAddComponent(entityManager, eventBus, logger) {
+  function createManualHandlersWithAddComponent(
+    entityManager,
+    eventBus,
+    logger
+  ) {
     const baseHandlers = createManualHandlers(entityManager, eventBus, logger);
     const safeDispatcher = {
       dispatch: jest.fn((eventType, payload) => {
@@ -128,7 +142,11 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         eventBus,
         logger
       );
-      const manualHandlers = createManualHandlers(entityManager, eventBus, logger);
+      const manualHandlers = createManualHandlers(
+        entityManager,
+        eventBus,
+        logger
+      );
 
       // Compare handler keys
       const factoryKeys = Object.keys(factoryHandlers).sort();
@@ -137,7 +155,9 @@ describe('ModTestHandlerFactory Migration Validation', () => {
 
       // Compare handler types
       factoryKeys.forEach((key) => {
-        expect(factoryHandlers[key].constructor).toBe(manualHandlers[key].constructor);
+        expect(factoryHandlers[key].constructor).toBe(
+          manualHandlers[key].constructor
+        );
         expect(typeof factoryHandlers[key].execute).toBe('function');
         expect(typeof manualHandlers[key].execute).toBe('function');
       });
@@ -149,7 +169,11 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         eventBus,
         logger
       );
-      const manualHandlers = createManualHandlers(entityManager, eventBus, logger);
+      const manualHandlers = createManualHandlers(
+        entityManager,
+        eventBus,
+        logger
+      );
 
       // Test GET_TIMESTAMP handler behavior
       // Both handlers should return the same type of result
@@ -166,7 +190,11 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         eventBus,
         logger
       );
-      const manualHandlers = createManualHandlers(entityManager, eventBus, logger);
+      const manualHandlers = createManualHandlers(
+        entityManager,
+        eventBus,
+        logger
+      );
 
       // All handlers should have the same structure
       Object.keys(factoryHandlers).forEach((key) => {
@@ -178,18 +206,21 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         expect(manualHandler.execute).toBeDefined();
 
         // Both should be instances of the same class
-        expect(factoryHandler.constructor.name).toBe(manualHandler.constructor.name);
+        expect(factoryHandler.constructor.name).toBe(
+          manualHandler.constructor.name
+        );
       });
     });
   });
 
   describe('Handlers with ADD_COMPONENT Comparison', () => {
     it('should create extended handlers identical to manual creation', () => {
-      const factoryHandlers = ModTestHandlerFactory.createHandlersWithAddComponent(
-        entityManager,
-        eventBus,
-        logger
-      );
+      const factoryHandlers =
+        ModTestHandlerFactory.createHandlersWithAddComponent(
+          entityManager,
+          eventBus,
+          logger
+        );
       const manualHandlers = createManualHandlersWithAddComponent(
         entityManager,
         eventBus,
@@ -204,15 +235,18 @@ describe('ModTestHandlerFactory Migration Validation', () => {
       // Should include ADD_COMPONENT
       expect(factoryHandlers.ADD_COMPONENT).toBeDefined();
       expect(manualHandlers.ADD_COMPONENT).toBeDefined();
-      expect(factoryHandlers.ADD_COMPONENT.constructor).toBe(manualHandlers.ADD_COMPONENT.constructor);
+      expect(factoryHandlers.ADD_COMPONENT.constructor).toBe(
+        manualHandlers.ADD_COMPONENT.constructor
+      );
     });
 
     it('should have ADD_COMPONENT handler with identical interface', () => {
-      const factoryHandlers = ModTestHandlerFactory.createHandlersWithAddComponent(
-        entityManager,
-        eventBus,
-        logger
-      );
+      const factoryHandlers =
+        ModTestHandlerFactory.createHandlersWithAddComponent(
+          entityManager,
+          eventBus,
+          logger
+        );
       const manualHandlers = createManualHandlersWithAddComponent(
         entityManager,
         eventBus,
@@ -224,14 +258,17 @@ describe('ModTestHandlerFactory Migration Validation', () => {
 
       expect(factoryAddComponent.execute).toBeDefined();
       expect(manualAddComponent.execute).toBeDefined();
-      expect(factoryAddComponent.constructor.name).toBe(manualAddComponent.constructor.name);
+      expect(factoryAddComponent.constructor.name).toBe(
+        manualAddComponent.constructor.name
+      );
     });
   });
 
   describe('Safe Dispatcher Comparison', () => {
     it('should create safe dispatcher identical to manual implementation', () => {
-      const factorySafeDispatcher = ModTestHandlerFactory.createSafeDispatcher(eventBus);
-      
+      const factorySafeDispatcher =
+        ModTestHandlerFactory.createSafeDispatcher(eventBus);
+
       // Manual safe dispatcher creation (as done in existing test files)
       const manualSafeDispatcher = {
         dispatch: jest.fn((eventType, payload) => {
@@ -250,7 +287,8 @@ describe('ModTestHandlerFactory Migration Validation', () => {
     });
 
     it('should dispatch events identically to manual implementation', async () => {
-      const factorySafeDispatcher = ModTestHandlerFactory.createSafeDispatcher(eventBus);
+      const factorySafeDispatcher =
+        ModTestHandlerFactory.createSafeDispatcher(eventBus);
       const manualSafeDispatcher = {
         dispatch: jest.fn((eventType, payload) => {
           eventBus.dispatch(eventType, payload);
@@ -262,11 +300,17 @@ describe('ModTestHandlerFactory Migration Validation', () => {
       const testPayload = { data: 'test' };
 
       // Test factory dispatcher
-      const factoryResult = await factorySafeDispatcher.dispatch(testEvent, testPayload);
-      
+      const factoryResult = await factorySafeDispatcher.dispatch(
+        testEvent,
+        testPayload
+      );
+
       // Reset event bus mock and test manual dispatcher
       jest.clearAllMocks();
-      const manualResult = await manualSafeDispatcher.dispatch(testEvent, testPayload);
+      const manualResult = await manualSafeDispatcher.dispatch(
+        testEvent,
+        testPayload
+      );
 
       // Both should return the same result
       expect(factoryResult).toBe(manualResult);
@@ -276,25 +320,39 @@ describe('ModTestHandlerFactory Migration Validation', () => {
 
   describe('Category-based Factory Selection Validation', () => {
     it('should provide positioning factory that matches manual handler creation', () => {
-      const positioningFactory = ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
-      const factoryHandlers = positioningFactory(entityManager, eventBus, logger);
-      const manualHandlers = createManualHandlersWithAddComponent(entityManager, eventBus, logger);
+      const positioningFactory =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
+      const factoryHandlers = positioningFactory(
+        entityManager,
+        eventBus,
+        logger
+      );
+      const manualHandlers = createManualHandlersWithAddComponent(
+        entityManager,
+        eventBus,
+        logger
+      );
 
       const factoryKeys = Object.keys(factoryHandlers).sort();
       const manualKeys = Object.keys(manualHandlers).sort();
-      
+
       expect(factoryKeys).toEqual(manualKeys);
       expect(factoryHandlers.ADD_COMPONENT).toBeDefined();
     });
 
     it('should provide standard factory for intimacy that matches manual creation', () => {
-      const intimacyFactory = ModTestHandlerFactory.getHandlerFactoryForCategory('intimacy');
+      const intimacyFactory =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('intimacy');
       const factoryHandlers = intimacyFactory(entityManager, eventBus, logger);
-      const manualHandlers = createManualHandlers(entityManager, eventBus, logger);
+      const manualHandlers = createManualHandlers(
+        entityManager,
+        eventBus,
+        logger
+      );
 
       const factoryKeys = Object.keys(factoryHandlers).sort();
       const manualKeys = Object.keys(manualHandlers).sort();
-      
+
       expect(factoryKeys).toEqual(manualKeys);
       expect(factoryHandlers.ADD_COMPONENT).toBeUndefined();
     });
@@ -307,12 +365,18 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         eventBus,
         logger
       );
-      const manualHandlers = createManualHandlers(entityManager, eventBus, logger);
+      const manualHandlers = createManualHandlers(
+        entityManager,
+        eventBus,
+        logger
+      );
 
       // Both handlers should be configured and functional
       expect(factoryHandlers.QUERY_COMPONENT.execute).toBeDefined();
       expect(manualHandlers.QUERY_COMPONENT.execute).toBeDefined();
-      expect(factoryHandlers.QUERY_COMPONENT.constructor).toBe(manualHandlers.QUERY_COMPONENT.constructor);
+      expect(factoryHandlers.QUERY_COMPONENT.constructor).toBe(
+        manualHandlers.QUERY_COMPONENT.constructor
+      );
     });
 
     it('should configure GET_NAME handler with same dependencies as manual', () => {
@@ -321,11 +385,17 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         eventBus,
         logger
       );
-      const manualHandlers = createManualHandlers(entityManager, eventBus, logger);
+      const manualHandlers = createManualHandlers(
+        entityManager,
+        eventBus,
+        logger
+      );
 
       expect(factoryHandlers.GET_NAME.execute).toBeDefined();
       expect(manualHandlers.GET_NAME.execute).toBeDefined();
-      expect(factoryHandlers.GET_NAME.constructor).toBe(manualHandlers.GET_NAME.constructor);
+      expect(factoryHandlers.GET_NAME.constructor).toBe(
+        manualHandlers.GET_NAME.constructor
+      );
     });
 
     it('should configure DISPATCH_PERCEPTIBLE_EVENT handler with same dependencies as manual', () => {
@@ -334,11 +404,17 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         eventBus,
         logger
       );
-      const manualHandlers = createManualHandlers(entityManager, eventBus, logger);
+      const manualHandlers = createManualHandlers(
+        entityManager,
+        eventBus,
+        logger
+      );
 
       expect(factoryHandlers.DISPATCH_PERCEPTIBLE_EVENT.execute).toBeDefined();
       expect(manualHandlers.DISPATCH_PERCEPTIBLE_EVENT.execute).toBeDefined();
-      expect(factoryHandlers.DISPATCH_PERCEPTIBLE_EVENT.constructor).toBe(manualHandlers.DISPATCH_PERCEPTIBLE_EVENT.constructor);
+      expect(factoryHandlers.DISPATCH_PERCEPTIBLE_EVENT.constructor).toBe(
+        manualHandlers.DISPATCH_PERCEPTIBLE_EVENT.constructor
+      );
     });
   });
 
@@ -349,23 +425,29 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         eventBus,
         logger
       );
-      const manualHandlers = createManualHandlers(entityManager, eventBus, logger);
+      const manualHandlers = createManualHandlers(
+        entityManager,
+        eventBus,
+        logger
+      );
 
       // Verify that all handlers exist and have the same type
       const expectedHandlerNames = [
         'QUERY_COMPONENT',
-        'GET_NAME', 
+        'GET_NAME',
         'GET_TIMESTAMP',
         'DISPATCH_PERCEPTIBLE_EVENT',
         'DISPATCH_EVENT',
         'END_TURN',
-        'SET_VARIABLE'
+        'SET_VARIABLE',
       ];
 
       expectedHandlerNames.forEach((handlerName) => {
         expect(factoryHandlers[handlerName]).toBeDefined();
         expect(manualHandlers[handlerName]).toBeDefined();
-        expect(factoryHandlers[handlerName].constructor.name).toBe(manualHandlers[handlerName].constructor.name);
+        expect(factoryHandlers[handlerName].constructor.name).toBe(
+          manualHandlers[handlerName].constructor.name
+        );
       });
     });
 
@@ -375,7 +457,7 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         eventBus,
         logger
       );
-      
+
       // Factory handlers should be directly usable as replacements
       expect(typeof factoryHandlers.GET_TIMESTAMP.execute).toBe('function');
       expect(typeof factoryHandlers.SET_VARIABLE.execute).toBe('function');
@@ -388,22 +470,22 @@ describe('ModTestHandlerFactory Migration Validation', () => {
     it('should reduce code duplication while maintaining identical functionality', () => {
       // This test validates the core promise of the factory:
       // Reduced code duplication with identical functionality
-      
+
       const factoryHandlers = ModTestHandlerFactory.createStandardHandlers(
         entityManager,
         eventBus,
         logger
       );
-      
+
       // Factory should create exactly 7 standard handlers
       expect(Object.keys(factoryHandlers)).toHaveLength(7);
-      
+
       // Each handler should be properly configured
       Object.values(factoryHandlers).forEach((handler) => {
         expect(handler.execute).toBeDefined();
         expect(typeof handler.execute).toBe('function');
       });
-      
+
       // Factory usage reduces from ~30 lines to ~1 line per test file
       // This represents a >90% reduction in handler creation code
     });

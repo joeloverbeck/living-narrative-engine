@@ -102,7 +102,8 @@ describe('SensitiveDataFilter', () => {
     });
 
     it('should filter JWT tokens', () => {
-      const input = 'Token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.Gfx6VO9tcxwk6xqx9yYzSfebfeakZp5JYIgP_edcw_A';
+      const input =
+        'Token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.Gfx6VO9tcxwk6xqx9yYzSfebfeakZp5JYIgP_edcw_A';
       const result = filter.filter(input);
       expect(result).toContain('[REDACTED]');
       expect(result).toContain('Token:');
@@ -116,7 +117,8 @@ describe('SensitiveDataFilter', () => {
     });
 
     it('should filter private keys', () => {
-      const input = '-----BEGIN RSA PRIVATE KEY-----\\nMIIEpAIBAAKCAQEA...\\n-----END RSA PRIVATE KEY-----';
+      const input =
+        '-----BEGIN RSA PRIVATE KEY-----\\nMIIEpAIBAAKCAQEA...\\n-----END RSA PRIVATE KEY-----';
       const result = filter.filter(input);
       expect(result).toBe('[REDACTED]');
     });
@@ -294,7 +296,7 @@ describe('SensitiveDataFilter', () => {
 
     it('should return original data on filter error', () => {
       const input = 'test data';
-      
+
       // Create a filter with a pattern that will cause an error during execution
       const brokenFilter = new SensitiveDataFilter({
         logger: mockLogger,
@@ -305,10 +307,10 @@ describe('SensitiveDataFilter', () => {
           },
         },
       });
-      
+
       // Override the filter method to simulate an error
       const originalFilter = brokenFilter.filter;
-      brokenFilter.filter = function(data) {
+      brokenFilter.filter = function (data) {
         if (typeof data === 'string' && data === input) {
           // Simulate internal error during filtering
           try {
@@ -341,7 +343,7 @@ describe('SensitiveDataFilter', () => {
   describe('Performance', () => {
     it('should handle large strings efficiently', () => {
       const largeString = 'normal text '.repeat(10000) + ' password: secret123';
-      
+
       const startTime = Date.now();
       const result = filter.filter(largeString);
       const endTime = Date.now();
@@ -396,7 +398,7 @@ describe('SensitiveDataFilter', () => {
     });
 
     it('should not filter non-sensitive keys', () => {
-      const input = { 
+      const input = {
         username: 'john',
         userId: '12345',
         isActive: true,
@@ -413,7 +415,7 @@ describe('SensitiveDataFilter', () => {
       const longValue = 'verylongpassword1234567890';
       const input = { password: longValue };
       const result = filter.filter(input, 'partial');
-      
+
       const maskedValue = result.password;
       expect(maskedValue).toMatch(/ver\*+890/);
       expect(maskedValue.length).toBe(longValue.length);
@@ -423,7 +425,7 @@ describe('SensitiveDataFilter', () => {
       const shortValue = 'short';
       const input = { password: shortValue };
       const result = filter.filter(input, 'partial');
-      
+
       expect(result.password).toBe('[REDACTED]');
     });
   });
@@ -433,21 +435,21 @@ describe('SensitiveDataFilter', () => {
       const input = 'password: secret123';
       const result1 = filter.filter(input, 'hash');
       const result2 = filter.filter(input, 'hash');
-      
+
       expect(result1).toBe(result2);
     });
 
     it('should produce different hashes for different inputs', () => {
       const result1 = filter.filter('password: secret123', 'hash');
       const result2 = filter.filter('password: different456', 'hash');
-      
+
       expect(result1).not.toBe(result2);
     });
 
     it('should produce valid hex hash format', () => {
       const input = 'password: secret123';
       const result = filter.filter(input, 'hash');
-      
+
       expect(result).toMatch(/\[HASH:[A-F0-9]+\]/);
     });
   });

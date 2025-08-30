@@ -4,7 +4,14 @@
  * focusing on variable setting, message formatting, and macro integration
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import pressAgainstBackRule from '../../../../../data/mods/sex/rules/handle_press_against_back.rule.json';
 import eventIsActionPressAgainstBack from '../../../../../data/mods/sex/conditions/event-is-action-press-against-back.condition.json';
 import logSuccessMacro from '../../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
@@ -332,11 +339,11 @@ describe('Press Against Back Rule Integration Tests', () => {
     // Without targetId, the SET_VARIABLE operation that uses {event.payload.targetId}
     // should either fail gracefully or use undefined/null
     const types = testEnv.events.map((e) => e.eventType);
-    
+
     // The rule might still execute, but the targetId variable will be undefined
     // This tests the rule's robustness to malformed data
     expect(types).toContain('core:attempt_action');
-    
+
     // If the rule partially executes but fails during variable resolution,
     // we should not see the complete success sequence
     const perceptibleEvents = testEnv.events.filter(
@@ -382,7 +389,7 @@ describe('Press Against Back Rule Integration Tests', () => {
     // Assert - rule should handle missing position gracefully
     const types = testEnv.events.map((e) => e.eventType);
     expect(types).toContain('core:attempt_action');
-    
+
     // The QUERY_COMPONENT for actor position might fail, but rule should handle gracefully
     // Either the rule will fail early, or locationId will be undefined/null
     const perceptibleEvents = testEnv.events.filter(

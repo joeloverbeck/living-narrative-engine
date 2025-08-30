@@ -4,7 +4,10 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import { COVERAGE_PRIORITY, LAYER_PRIORITY_WITHIN_COVERAGE } from './priorityConstants.js';
+import {
+  COVERAGE_PRIORITY,
+  LAYER_PRIORITY_WITHIN_COVERAGE,
+} from './priorityConstants.js';
 
 /**
  * Extensible priority rule system for future enhancements
@@ -23,7 +26,7 @@ class PriorityRuleRegistry {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
-    
+
     this.#logger = logger;
     this.#rules = new Map();
     this.registerDefaultRules();
@@ -37,12 +40,18 @@ class PriorityRuleRegistry {
   registerDefaultRules() {
     // Standard coverage priority rules
     this.registerRule('coverage', (candidate) => {
-      return COVERAGE_PRIORITY[candidate.coveragePriority] || COVERAGE_PRIORITY.direct;
+      return (
+        COVERAGE_PRIORITY[candidate.coveragePriority] ||
+        COVERAGE_PRIORITY.direct
+      );
     });
 
     // Layer priority rules
     this.registerRule('layer', (candidate) => {
-      return LAYER_PRIORITY_WITHIN_COVERAGE[candidate.layer] || LAYER_PRIORITY_WITHIN_COVERAGE.base;
+      return (
+        LAYER_PRIORITY_WITHIN_COVERAGE[candidate.layer] ||
+        LAYER_PRIORITY_WITHIN_COVERAGE.base
+      );
     });
   }
 
@@ -73,7 +82,9 @@ class PriorityRuleRegistry {
     if (removed) {
       this.#logger.debug(`Removed priority rule: ${name}`);
     } else {
-      this.#logger.warn(`Attempted to remove non-existent priority rule: ${name}`);
+      this.#logger.warn(
+        `Attempted to remove non-existent priority rule: ${name}`
+      );
     }
     return removed;
   }
@@ -110,7 +121,9 @@ class PriorityRuleRegistry {
    */
   calculatePriority(candidate) {
     if (!candidate || typeof candidate !== 'object') {
-      this.#logger.warn('Invalid candidate provided to calculatePriority', { candidate });
+      this.#logger.warn('Invalid candidate provided to calculatePriority', {
+        candidate,
+      });
       return Number.MAX_SAFE_INTEGER; // Lowest priority for invalid candidates
     }
 
@@ -120,7 +133,7 @@ class PriorityRuleRegistry {
     for (const [currentRuleName, calculator] of this.#rules) {
       try {
         const contribution = calculator(candidate);
-        
+
         if (typeof contribution !== 'number' || isNaN(contribution)) {
           this.#logger.warn(
             `Priority rule '${currentRuleName}' returned invalid number: ${contribution}`,
@@ -151,15 +164,17 @@ class PriorityRuleRegistry {
    */
   processCandidates(candidates) {
     if (!Array.isArray(candidates)) {
-      this.#logger.warn('processCandidates called with non-array input', { candidates });
+      this.#logger.warn('processCandidates called with non-array input', {
+        candidates,
+      });
       return [];
     }
 
-    return candidates.map(candidate => {
+    return candidates.map((candidate) => {
       const priority = this.calculatePriority(candidate);
       return {
         ...candidate,
-        priority
+        priority,
       };
     });
   }
@@ -182,7 +197,7 @@ class PriorityRuleRegistry {
     return {
       ruleCount: this.#rules.size,
       ruleNames: this.getRuleNames(),
-      hasDefaults: this.hasRule('coverage') && this.hasRule('layer')
+      hasDefaults: this.hasRule('coverage') && this.hasRule('layer'),
     };
   }
 }

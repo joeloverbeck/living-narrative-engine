@@ -5,7 +5,10 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
-import { calculatePriorityWithValidation, sortCandidatesWithTieBreaking } from '../prioritySystem/priorityCalculator.js';
+import {
+  calculatePriorityWithValidation,
+  sortCandidatesWithTieBreaking,
+} from '../prioritySystem/priorityCalculator.js';
 
 /**
  * Feature flags for coverage system enhancement
@@ -79,16 +82,20 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
     // Enhancement: Add additional coverage validation logic here
     // This builds on the existing sophisticated candidate-based resolution
     // that already includes priority calculation and tie-breaking
-    
+
     if (!slotItem || !ctx.trace) {
       return slotItem;
     }
-    
+
     // Add enhanced tracing or validation logic
     if (COVERAGE_FEATURES.enableCoverageResolution && isClothingSlot(field)) {
-      ctx.trace.addLog('info', `Enhanced coverage applied for ${field}`, 'CoverageEnhancer');
+      ctx.trace.addLog(
+        'info',
+        `Enhanced coverage applied for ${field}`,
+        'CoverageEnhancer'
+      );
     }
-    
+
     return slotItem;
   }
 
@@ -102,12 +109,12 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
   function getCoveragePriorityFromMode(mode, layer) {
     // Map layer directly to coverage priority in most cases
     const layerToCoverage = {
-      'outer': 'outer',
-      'base': 'base', 
-      'underwear': 'underwear',
-      'accessories': 'base' // Accessories treated as base coverage
+      outer: 'outer',
+      base: 'base',
+      underwear: 'underwear',
+      accessories: 'base', // Accessories treated as base coverage
     };
-    
+
     return layerToCoverage[layer] || 'direct';
   }
 
@@ -120,7 +127,7 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
    * @returns {Function} Wrapped resolution function with error handling
    */
   function safeResolveCoverageAwareSlot(resolveFn, targetSlot, trace) {
-    return function(...args) {
+    return function (...args) {
       const startTime = performance.now();
 
       try {
@@ -166,7 +173,10 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
    */
   function selectResolutionStrategy(entityId, targetSlot) {
     // For simple cases, use legacy resolution
-    const equipment = entitiesGateway.getComponentData(entityId, 'clothing:equipment');
+    const equipment = entitiesGateway.getComponentData(
+      entityId,
+      'clothing:equipment'
+    );
     if (!equipment || !equipment.equipped) {
       return 'legacy';
     }
@@ -226,20 +236,23 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
    */
   function collectCoverageItems(entityId, targetSlot, equipped, trace) {
     const coverageCandidates = [];
-    
+
     // Check all equipped slots for items with coverage mapping
     for (const [slotName, slotData] of Object.entries(equipped || {})) {
       if (!slotData || slotName === targetSlot) {
         continue; // Skip empty slots and the target slot itself
       }
-      
+
       // Check each layer in the slot
       for (const [layer, itemId] of Object.entries(slotData)) {
         if (!itemId) continue;
-        
+
         // Get the item's coverage mapping component
-        const coverageMapping = entitiesGateway.getComponentData(itemId, 'clothing:coverage_mapping');
-        
+        const coverageMapping = entitiesGateway.getComponentData(
+          itemId,
+          'clothing:coverage_mapping'
+        );
+
         if (coverageMapping?.covers?.includes(targetSlot)) {
           const candidate = {
             itemId: itemId,
@@ -248,9 +261,9 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
             coveragePriority: coverageMapping.coveragePriority || 'base',
             source: 'coverage_mapping',
           };
-          
+
           coverageCandidates.push(candidate);
-          
+
           if (trace) {
             trace.addLog(
               'info',
@@ -262,14 +275,14 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
                 layer,
                 targetSlot,
                 coveragePriority: candidate.coveragePriority,
-                covers: coverageMapping.covers
+                covers: coverageMapping.covers,
               }
             );
           }
         }
       }
     }
-    
+
     return coverageCandidates;
   }
 
@@ -292,11 +305,11 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
 
     // Build candidates from both direct slot items and coverage mapping
     const candidates = [];
-    
+
     // First, collect items directly equipped to the slot
     if (slotData) {
       const layers = LAYER_PRIORITY[mode] || LAYER_PRIORITY.topmost;
-      
+
       for (const layer of layers) {
         if (slotData[layer]) {
           const candidate = {
@@ -306,16 +319,21 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
             source: 'direct',
             priority: 0, // Will be calculated
           };
-          
+
           candidates.push(candidate);
         }
       }
     }
-    
+
     // Then, collect items from other slots with coverage mapping
     if (isCoverageResolutionEnabled()) {
-      const coverageCandidates = collectCoverageItems(entityId, slotName, equipped, trace);
-      
+      const coverageCandidates = collectCoverageItems(
+        entityId,
+        slotName,
+        equipped,
+        trace
+      );
+
       // Add coverage candidates to the main candidates list
       for (const coverageCandidate of coverageCandidates) {
         // Check if this layer should be included based on mode
@@ -346,7 +364,7 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
             slotName,
             availableSlots: Object.keys(equipped || {}),
             mode,
-            reason: 'no_candidates_found'
+            reason: 'no_candidates_found',
           });
         }
       }
@@ -358,11 +376,12 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
     if (trace) {
       const candidateSummary = {
         total: candidates.length,
-        direct: candidates.filter(c => c.source === 'direct').length,
-        coverage: candidates.filter(c => c.source === 'coverage_mapping').length,
-        byLayer: {}
+        direct: candidates.filter((c) => c.source === 'direct').length,
+        coverage: candidates.filter((c) => c.source === 'coverage_mapping')
+          .length,
+        byLayer: {},
       };
-      
+
       for (const candidate of candidates) {
         if (!candidateSummary.byLayer[candidate.layer]) {
           candidateSummary.byLayer[candidate.layer] = [];
@@ -370,7 +389,7 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
         candidateSummary.byLayer[candidate.layer].push({
           itemId: candidate.itemId,
           source: candidate.source,
-          sourceSlot: candidate.sourceSlot
+          sourceSlot: candidate.sourceSlot,
         });
       }
 
@@ -390,12 +409,15 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
     // Structured trace: Start candidate collection phase
     let candidateCollectionSpan = null;
     if (structuredTrace) {
-      candidateCollectionSpan = structuredTrace.startSpan('candidate_collection', {
-        slotName,
-        mode,
-        candidateCount: candidates.length
-      });
-      
+      candidateCollectionSpan = structuredTrace.startSpan(
+        'candidate_collection',
+        {
+          slotName,
+          mode,
+          candidateCount: candidates.length,
+        }
+      );
+
       // Log each candidate found
       for (const candidate of candidates) {
         candidateCollectionSpan.addEvent('candidate_found', {
@@ -403,29 +425,34 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
           layer: candidate.layer,
           coveragePriority: candidate.coveragePriority,
           source: candidate.source,
-          sourceSlot: candidate.sourceSlot
+          sourceSlot: candidate.sourceSlot,
         });
       }
-      
+
       structuredTrace.endSpan(candidateCollectionSpan);
     }
 
     // Calculate priorities and sort candidates
     let priorityCalculationSpan = null;
-    
+
     // Structured trace: Start priority calculation phase
     if (structuredTrace) {
-      priorityCalculationSpan = structuredTrace.startSpan('priority_calculation', {
-        candidateCount: candidates.length,
-        calculationMethod: 'standard'
-      });
+      priorityCalculationSpan = structuredTrace.startSpan(
+        'priority_calculation',
+        {
+          candidateCount: candidates.length,
+          calculationMethod: 'standard',
+        }
+      );
     }
 
     for (const candidate of candidates) {
       candidate.priority = calculatePriorityWithValidation(
         candidate.coveragePriority,
         candidate.layer,
-        trace ? { warn: (msg) => trace.addLog('warn', msg, 'SlotAccessResolver') } : null
+        trace
+          ? { warn: (msg) => trace.addLog('warn', msg, 'SlotAccessResolver') }
+          : null
       );
 
       // Structured trace: Log priority calculation
@@ -434,7 +461,7 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
           itemId: candidate.itemId,
           priority: candidate.priority,
           coveragePriority: candidate.coveragePriority,
-          layer: candidate.layer
+          layer: candidate.layer,
         });
       }
     }
@@ -442,18 +469,18 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
     // Structured trace: Complete priority calculation
     if (priorityCalculationSpan) {
       priorityCalculationSpan.addAttributes({
-        totalCalculations: candidates.length
+        totalCalculations: candidates.length,
       });
       structuredTrace.endSpan(priorityCalculationSpan);
     }
 
     // Final selection with structured tracing
     let finalSelectionSpan = null;
-    
+
     // Structured trace: Start final selection phase
     if (structuredTrace) {
       finalSelectionSpan = structuredTrace.startSpan('final_selection', {
-        candidateCount: candidates.length
+        candidateCount: candidates.length,
       });
     }
 
@@ -466,16 +493,18 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
         selectedItem: selectedCandidate?.itemId || 'none',
         reason: 'highest_priority',
         totalCandidates: sortedCandidates.length,
-        tieBreakingUsed: sortedCandidates.length > 1 && 
-                          sortedCandidates[0].priority === sortedCandidates[1]?.priority
+        tieBreakingUsed:
+          sortedCandidates.length > 1 &&
+          sortedCandidates[0].priority === sortedCandidates[1]?.priority,
       });
 
       finalSelectionSpan.addAttributes({
         selectedItem: selectedCandidate?.itemId || 'none',
         selectionReason: 'highest_priority',
         finalCandidates: sortedCandidates.length,
-        tieBreakingUsed: sortedCandidates.length > 1 && 
-                          sortedCandidates[0].priority === sortedCandidates[1]?.priority
+        tieBreakingUsed:
+          sortedCandidates.length > 1 &&
+          sortedCandidates[0].priority === sortedCandidates[1]?.priority,
       });
 
       structuredTrace.endSpan(finalSelectionSpan);
@@ -486,17 +515,17 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
         'info',
         `SlotAccessResolver: Selected item from slot ${slotName}, layer ${selectedCandidate.layer}`,
         'SlotAccessResolver',
-        { 
-          slotName, 
-          layer: selectedCandidate.layer, 
-          itemId: selectedCandidate.itemId, 
+        {
+          slotName,
+          layer: selectedCandidate.layer,
+          itemId: selectedCandidate.itemId,
           mode,
           priority: selectedCandidate.priority,
-          totalCandidates: candidates.length
+          totalCandidates: candidates.length,
         }
       );
     }
-    
+
     return selectedCandidate.itemId;
   }
 
@@ -549,7 +578,11 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
             const slotItem = resolveSlotAccess(subItem, field, ctx);
             if (slotItem) {
               // Enhancement: Apply additional coverage validation here
-              const enhancedResult = applyEnhancedCoverage(slotItem, field, ctx);
+              const enhancedResult = applyEnhancedCoverage(
+                slotItem,
+                field,
+                ctx
+              );
               resultSet.add(enhancedResult || slotItem);
             }
           }

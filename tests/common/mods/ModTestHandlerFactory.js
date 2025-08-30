@@ -17,14 +17,14 @@ import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
 /**
  * Factory class for creating standardized operation handlers for mod tests.
- * 
+ *
  * Eliminates the need for each test file to define its own createHandlers function,
  * providing consistent handler creation across all mod integration tests.
  */
 export class ModTestHandlerFactory {
   /**
    * Validates required dependencies for handler creation.
-   * 
+   *
    * @private
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
@@ -34,15 +34,21 @@ export class ModTestHandlerFactory {
    */
   static #validateDependencies(entityManager, eventBus, logger, methodName) {
     if (!entityManager) {
-      throw new Error(`ModTestHandlerFactory.${methodName}: entityManager is required`);
+      throw new Error(
+        `ModTestHandlerFactory.${methodName}: entityManager is required`
+      );
     }
 
     if (!eventBus) {
-      throw new Error(`ModTestHandlerFactory.${methodName}: eventBus is required`);
+      throw new Error(
+        `ModTestHandlerFactory.${methodName}: eventBus is required`
+      );
     }
 
     if (!logger) {
-      throw new Error(`ModTestHandlerFactory.${methodName}: logger is required`);
+      throw new Error(
+        `ModTestHandlerFactory.${methodName}: logger is required`
+      );
     }
 
     // Validate entityManager has required methods
@@ -62,15 +68,20 @@ export class ModTestHandlerFactory {
   }
   /**
    * Creates the standard set of handlers used by most mod integration tests.
-   * 
+   *
    * @param {object} entityManager - Entity manager instance
-   * @param {object} eventBus - Event bus instance  
+   * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
    * @returns {object} Standard handlers object with common operation handlers
    * @throws {Error} If any required parameter is missing or invalid
    */
   static createStandardHandlers(entityManager, eventBus, logger) {
-    this.#validateDependencies(entityManager, eventBus, logger, 'createStandardHandlers');
+    this.#validateDependencies(
+      entityManager,
+      eventBus,
+      logger,
+      'createStandardHandlers'
+    );
     const safeDispatcher = {
       dispatch: jest.fn((eventType, payload) => {
         eventBus.dispatch(eventType, payload);
@@ -95,7 +106,10 @@ export class ModTestHandlerFactory {
         logger,
         addPerceptionLogEntryHandler: { execute: jest.fn() },
       }),
-      DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+      DISPATCH_EVENT: new DispatchEventHandler({
+        dispatcher: eventBus,
+        logger,
+      }),
       END_TURN: new EndTurnHandler({
         safeEventDispatcher: safeDispatcher,
         logger,
@@ -106,7 +120,7 @@ export class ModTestHandlerFactory {
 
   /**
    * Creates handlers with ADD_COMPONENT support for positioning and state-changing actions.
-   * 
+   *
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
@@ -114,9 +128,18 @@ export class ModTestHandlerFactory {
    * @throws {Error} If any required parameter is missing or invalid
    */
   static createHandlersWithAddComponent(entityManager, eventBus, logger) {
-    this.#validateDependencies(entityManager, eventBus, logger, 'createHandlersWithAddComponent');
-    const baseHandlers = this.createStandardHandlers(entityManager, eventBus, logger);
-    
+    this.#validateDependencies(
+      entityManager,
+      eventBus,
+      logger,
+      'createHandlersWithAddComponent'
+    );
+    const baseHandlers = this.createStandardHandlers(
+      entityManager,
+      eventBus,
+      logger
+    );
+
     const safeDispatcher = {
       dispatch: jest.fn((eventType, payload) => {
         eventBus.dispatch(eventType, payload);
@@ -136,7 +159,7 @@ export class ModTestHandlerFactory {
 
   /**
    * Creates minimal handlers for simple tests that don't need all operations.
-   * 
+   *
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
@@ -144,7 +167,12 @@ export class ModTestHandlerFactory {
    * @throws {Error} If any required parameter is missing or invalid
    */
   static createMinimalHandlers(entityManager, eventBus, logger) {
-    this.#validateDependencies(entityManager, eventBus, logger, 'createMinimalHandlers');
+    this.#validateDependencies(
+      entityManager,
+      eventBus,
+      logger,
+      'createMinimalHandlers'
+    );
     const safeDispatcher = {
       dispatch: jest.fn((eventType, payload) => {
         eventBus.dispatch(eventType, payload);
@@ -172,7 +200,7 @@ export class ModTestHandlerFactory {
 
   /**
    * Creates custom handlers based on specific requirements.
-   * 
+   *
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
@@ -185,12 +213,17 @@ export class ModTestHandlerFactory {
    * @throws {Error} If any required parameter is missing or invalid
    */
   static createCustomHandlers(entityManager, eventBus, logger, options = {}) {
-    this.#validateDependencies(entityManager, eventBus, logger, 'createCustomHandlers');
+    this.#validateDependencies(
+      entityManager,
+      eventBus,
+      logger,
+      'createCustomHandlers'
+    );
     const {
       includeAddComponent = false,
       includeSetVariable = true,
       includeQueryComponent = true,
-      additionalHandlers: _additionalHandlers = []
+      additionalHandlers: _additionalHandlers = [],
     } = options;
 
     const safeDispatcher = {
@@ -212,7 +245,10 @@ export class ModTestHandlerFactory {
         logger,
         addPerceptionLogEntryHandler: { execute: jest.fn() },
       }),
-      DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+      DISPATCH_EVENT: new DispatchEventHandler({
+        dispatcher: eventBus,
+        logger,
+      }),
       END_TURN: new EndTurnHandler({
         safeEventDispatcher: safeDispatcher,
         logger,
@@ -245,7 +281,7 @@ export class ModTestHandlerFactory {
 
   /**
    * Determines the appropriate handler factory method based on mod category.
-   * 
+   *
    * @param {string} modCategory - The mod category (e.g., 'positioning', 'intimacy')
    * @returns {Function} The appropriate factory method for the category
    */
@@ -258,19 +294,23 @@ export class ModTestHandlerFactory {
       intimacy: this.createStandardHandlers.bind(this),
     };
 
-    return categoryMappings[modCategory] || this.createStandardHandlers.bind(this);
+    return (
+      categoryMappings[modCategory] || this.createStandardHandlers.bind(this)
+    );
   }
 
   /**
    * Creates a safe event dispatcher for use in handlers.
-   * 
+   *
    * @param {object} eventBus - Event bus instance
    * @returns {object} Safe dispatcher that wraps event bus dispatch
    * @throws {Error} If eventBus is missing or invalid
    */
   static createSafeDispatcher(eventBus) {
     if (!eventBus) {
-      throw new Error('ModTestHandlerFactory.createSafeDispatcher: eventBus is required');
+      throw new Error(
+        'ModTestHandlerFactory.createSafeDispatcher: eventBus is required'
+      );
     }
 
     // Validate eventBus has required methods

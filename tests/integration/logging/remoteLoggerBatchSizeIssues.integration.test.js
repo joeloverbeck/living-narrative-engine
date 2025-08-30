@@ -99,7 +99,7 @@ describe('RemoteLogger - Batch Size Issues Integration', () => {
         dependencies: {
           eventBus: mockEventBus,
           consoleLogger: mockFallbackLogger,
-        }
+        },
       });
 
       // Generate logs that exceed server limit
@@ -139,7 +139,7 @@ describe('RemoteLogger - Batch Size Issues Integration', () => {
         dependencies: {
           eventBus: mockEventBus,
           consoleLogger: mockFallbackLogger,
-        }
+        },
       });
 
       // Mock fetch to always return 400 to simulate server rejection
@@ -197,12 +197,13 @@ describe('RemoteLogger - Batch Size Issues Integration', () => {
         dependencies: {
           eventBus: mockEventBus,
           consoleLogger: mockFallbackLogger,
-        }
+        },
       });
 
       // Generate logs with large messages to exceed 1MB payload but stay under 1000 count
       const largeMessage = 'x'.repeat(2000); // 2KB message
-      for (let i = 0; i < 600; i++) { // 600 logs * ~2KB each = ~1.2MB
+      for (let i = 0; i < 600; i++) {
+        // 600 logs * ~2KB each = ~1.2MB
         remoteLogger.debug(`${largeMessage} - message ${i}`);
       }
 
@@ -240,7 +241,7 @@ describe('RemoteLogger - Batch Size Issues Integration', () => {
         dependencies: {
           eventBus: mockEventBus,
           consoleLogger: mockFallbackLogger,
-        }
+        },
       });
 
       // Mock server to fail consistently

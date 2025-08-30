@@ -404,6 +404,7 @@ class JsonLogicEvaluationService extends BaseService {
     this.#logger.debug(
       `Evaluating rule: ${ruleSummary}. Context keys: ${Object.keys(context || {}).join(', ')}`
     );
+    
 
     try {
       let rawResult;

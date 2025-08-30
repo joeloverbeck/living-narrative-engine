@@ -3,7 +3,14 @@
  * @see ../../../../src/scopeDsl/tracing/coverageTracingEnhancer.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { CoverageTracingEnhancer } from '../../../../src/scopeDsl/tracing/coverageTracingEnhancer.js';
 
 describe('CoverageTracingEnhancer', () => {
@@ -22,42 +29,42 @@ describe('CoverageTracingEnhancer', () => {
       addAttributes: jest.fn(),
       addEvent: jest.fn(),
       setStatus: jest.fn(),
-      recordError: jest.fn()
+      recordError: jest.fn(),
     };
 
     mockStructuredTrace = {
       startSpan: jest.fn().mockReturnValue(mockSpan),
       endSpan: jest.fn(),
       getActiveSpan: jest.fn().mockReturnValue(mockSpan),
-      getSpans: jest.fn().mockReturnValue([])
+      getSpans: jest.fn().mockReturnValue([]),
     };
 
     mockStructuredTraceFactory = {
-      create: jest.fn().mockReturnValue(mockStructuredTrace)
+      create: jest.fn().mockReturnValue(mockStructuredTrace),
     };
 
     mockPerformanceMonitor = {
       startMeasurement: jest.fn().mockReturnValue('measurement-1'),
       endMeasurement: jest.fn().mockReturnValue(42),
-      recordMetrics: jest.fn()
+      recordMetrics: jest.fn(),
     };
 
     mockTraceFormatter = {
-      formatCoverageTrace: jest.fn().mockReturnValue('formatted trace output')
+      formatCoverageTrace: jest.fn().mockReturnValue('formatted trace output'),
     };
 
     mockLogger = {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
-      debug: jest.fn()
+      debug: jest.fn(),
     };
 
     enhancer = new CoverageTracingEnhancer({
       structuredTraceFactory: mockStructuredTraceFactory,
       performanceMonitor: mockPerformanceMonitor,
       traceFormatter: mockTraceFormatter,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -77,7 +84,7 @@ describe('CoverageTracingEnhancer', () => {
           structuredTraceFactory: null,
           performanceMonitor: mockPerformanceMonitor,
           traceFormatter: mockTraceFormatter,
-          logger: mockLogger
+          logger: mockLogger,
         });
       }).toThrow();
     });
@@ -85,10 +92,12 @@ describe('CoverageTracingEnhancer', () => {
     it('should validate structured trace factory methods', () => {
       expect(() => {
         new CoverageTracingEnhancer({
-          structuredTraceFactory: { /* missing create method */ },
+          structuredTraceFactory: {
+            /* missing create method */
+          },
           performanceMonitor: mockPerformanceMonitor,
           traceFormatter: mockTraceFormatter,
-          logger: mockLogger
+          logger: mockLogger,
         });
       }).toThrow();
     });
@@ -101,16 +110,16 @@ describe('CoverageTracingEnhancer', () => {
     beforeEach(() => {
       mockSlotAccessResolver = {
         canResolve: jest.fn().mockReturnValue(true),
-        resolve: jest.fn().mockReturnValue(new Set(['item1']))
+        resolve: jest.fn().mockReturnValue(new Set(['item1'])),
       };
 
       mockConfig = {
         scopeDslTracing: {
           coverageResolution: {
             enabled: true,
-            verbosity: 'standard'
-          }
-        }
+            verbosity: 'standard',
+          },
+        },
       };
     });
 
@@ -118,13 +127,16 @@ describe('CoverageTracingEnhancer', () => {
       const disabledConfig = {
         scopeDslTracing: {
           coverageResolution: {
-            enabled: false
-          }
-        }
+            enabled: false,
+          },
+        },
       };
 
-      const result = enhancer.enhanceSlotAccessResolver(mockSlotAccessResolver, disabledConfig);
-      
+      const result = enhancer.enhanceSlotAccessResolver(
+        mockSlotAccessResolver,
+        disabledConfig
+      );
+
       expect(result).toBe(mockSlotAccessResolver);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Coverage resolution tracing disabled, returning unmodified resolver'
@@ -132,8 +144,11 @@ describe('CoverageTracingEnhancer', () => {
     });
 
     it('should return enhanced resolver when tracing enabled', () => {
-      const result = enhancer.enhanceSlotAccessResolver(mockSlotAccessResolver, mockConfig);
-      
+      const result = enhancer.enhanceSlotAccessResolver(
+        mockSlotAccessResolver,
+        mockConfig
+      );
+
       expect(result).not.toBe(mockSlotAccessResolver);
       expect(result.canResolve).toBeDefined();
       expect(result.resolve).toBeDefined();
@@ -143,31 +158,39 @@ describe('CoverageTracingEnhancer', () => {
     });
 
     it('should preserve canResolve method', () => {
-      const result = enhancer.enhanceSlotAccessResolver(mockSlotAccessResolver, mockConfig);
-      
+      const result = enhancer.enhanceSlotAccessResolver(
+        mockSlotAccessResolver,
+        mockConfig
+      );
+
       result.canResolve('test-node');
-      
-      expect(mockSlotAccessResolver.canResolve).toHaveBeenCalledWith('test-node');
+
+      expect(mockSlotAccessResolver.canResolve).toHaveBeenCalledWith(
+        'test-node'
+      );
     });
 
     it('should enhance resolve method with structured tracing', () => {
-      const result = enhancer.enhanceSlotAccessResolver(mockSlotAccessResolver, mockConfig);
-      
+      const result = enhancer.enhanceSlotAccessResolver(
+        mockSlotAccessResolver,
+        mockConfig
+      );
+
       const mockNode = {
         type: 'Step',
         field: 'torso_upper',
         parent: {
           type: 'Step',
-          field: 'topmost_clothing'
-        }
+          field: 'topmost_clothing',
+        },
       };
-      
+
       const mockCtx = {
-        trace: { addLog: jest.fn() }
+        trace: { addLog: jest.fn() },
       };
-      
+
       result.resolve(mockNode, mockCtx);
-      
+
       expect(mockCtx.structuredTrace).toBeDefined();
       expect(mockCtx.performanceMonitor).toBeDefined();
       expect(mockCtx.coverageTraceFormatter).toBeDefined();
@@ -187,19 +210,22 @@ describe('CoverageTracingEnhancer', () => {
     beforeEach(() => {
       const mockSlotAccessResolver = {
         canResolve: jest.fn().mockReturnValue(true),
-        resolve: jest.fn().mockReturnValue(new Set(['item1']))
+        resolve: jest.fn().mockReturnValue(new Set(['item1'])),
       };
 
       mockConfig = {
         scopeDslTracing: {
           coverageResolution: {
             enabled: true,
-            verbosity: 'standard'
-          }
-        }
+            verbosity: 'standard',
+          },
+        },
       };
 
-      enhancedResolver = enhancer.enhanceSlotAccessResolver(mockSlotAccessResolver, mockConfig);
+      enhancedResolver = enhancer.enhanceSlotAccessResolver(
+        mockSlotAccessResolver,
+        mockConfig
+      );
     });
 
     it('should add structured trace to context when not present', () => {
@@ -208,14 +234,14 @@ describe('CoverageTracingEnhancer', () => {
         field: 'torso_upper',
         parent: {
           type: 'Step',
-          field: 'topmost_clothing'
-        }
+          field: 'topmost_clothing',
+        },
       };
-      
+
       const mockCtx = {};
-      
+
       enhancedResolver.resolve(mockNode, mockCtx);
-      
+
       expect(mockCtx.structuredTrace).toBe(mockStructuredTrace);
       expect(mockCtx.performanceMonitor).toBe(mockPerformanceMonitor);
       expect(mockCtx.coverageTraceFormatter).toBe(mockTraceFormatter);
@@ -226,23 +252,23 @@ describe('CoverageTracingEnhancer', () => {
         startSpan: jest.fn().mockReturnValue(mockSpan),
         endSpan: jest.fn(),
         getActiveSpan: jest.fn().mockReturnValue(mockSpan),
-        getSpans: jest.fn().mockReturnValue([])
+        getSpans: jest.fn().mockReturnValue([]),
       };
       const mockNode = {
         type: 'Step',
         field: 'torso_upper',
         parent: {
           type: 'Step',
-          field: 'topmost_clothing'
-        }
+          field: 'topmost_clothing',
+        },
       };
-      
+
       const mockCtx = {
-        structuredTrace: existingTrace
+        structuredTrace: existingTrace,
       };
-      
+
       enhancedResolver.resolve(mockNode, mockCtx);
-      
+
       expect(mockCtx.structuredTrace).toBe(existingTrace);
     });
 
@@ -252,19 +278,22 @@ describe('CoverageTracingEnhancer', () => {
         field: 'torso_upper',
         parent: {
           type: 'Step',
-          field: 'topmost_clothing'
-        }
+          field: 'topmost_clothing',
+        },
       };
-      
+
       const mockCtx = {};
-      
+
       enhancedResolver.resolve(clothingNode, mockCtx);
-      
-      expect(mockStructuredTrace.startSpan).toHaveBeenCalledWith('coverage_resolution', expect.objectContaining({
-        targetSlot: 'torso_upper',
-        nodeType: 'Step',
-        parentField: 'topmost_clothing'
-      }));
+
+      expect(mockStructuredTrace.startSpan).toHaveBeenCalledWith(
+        'coverage_resolution',
+        expect.objectContaining({
+          targetSlot: 'torso_upper',
+          nodeType: 'Step',
+          parentField: 'topmost_clothing',
+        })
+      );
     });
 
     it('should not trace non-clothing nodes', () => {
@@ -273,14 +302,14 @@ describe('CoverageTracingEnhancer', () => {
         field: 'name',
         parent: {
           type: 'Step',
-          field: 'actor'
-        }
+          field: 'actor',
+        },
       };
-      
+
       const mockCtx = {};
-      
+
       enhancedResolver.resolve(nonClothingNode, mockCtx);
-      
+
       expect(mockStructuredTrace.startSpan).not.toHaveBeenCalled();
     });
 
@@ -290,19 +319,21 @@ describe('CoverageTracingEnhancer', () => {
         field: 'torso_upper',
         parent: {
           type: 'Step',
-          field: 'topmost_clothing'
-        }
+          field: 'topmost_clothing',
+        },
       };
-      
+
       const mockCtx = {};
-      
+
       const result = enhancedResolver.resolve(mockNode, mockCtx);
-      
+
       expect(result).toEqual(new Set(['item1']));
-      expect(mockSpan.addAttributes).toHaveBeenCalledWith(expect.objectContaining({
-        resultCount: 1,
-        success: true
-      }));
+      expect(mockSpan.addAttributes).toHaveBeenCalledWith(
+        expect.objectContaining({
+          resultCount: 1,
+          success: true,
+        })
+      );
       expect(mockSpan.setStatus).toHaveBeenCalledWith('success');
       expect(mockStructuredTrace.endSpan).toHaveBeenCalledWith(mockSpan);
     });
@@ -312,31 +343,36 @@ describe('CoverageTracingEnhancer', () => {
         canResolve: jest.fn().mockReturnValue(true),
         resolve: jest.fn().mockImplementation(() => {
           throw new Error('Resolution failed');
-        })
+        }),
       };
 
-      const errorEnhancedResolver = enhancer.enhanceSlotAccessResolver(mockSlotAccessResolver, mockConfig);
+      const errorEnhancedResolver = enhancer.enhanceSlotAccessResolver(
+        mockSlotAccessResolver,
+        mockConfig
+      );
 
       const mockNode = {
         type: 'Step',
         field: 'torso_upper',
         parent: {
           type: 'Step',
-          field: 'topmost_clothing'
-        }
+          field: 'topmost_clothing',
+        },
       };
-      
+
       const mockCtx = {};
-      
+
       expect(() => {
         errorEnhancedResolver.resolve(mockNode, mockCtx);
       }).toThrow('Resolution failed');
 
       expect(mockSpan.recordError).toHaveBeenCalled();
-      expect(mockSpan.addAttributes).toHaveBeenCalledWith(expect.objectContaining({
-        error: 'Resolution failed',
-        errorType: 'Error'
-      }));
+      expect(mockSpan.addAttributes).toHaveBeenCalledWith(
+        expect.objectContaining({
+          error: 'Resolution failed',
+          errorType: 'Error',
+        })
+      );
       expect(mockStructuredTrace.endSpan).toHaveBeenCalledWith(mockSpan);
     });
   });
@@ -344,7 +380,7 @@ describe('CoverageTracingEnhancer', () => {
   describe('createPerformanceMonitoring', () => {
     it('should create performance monitoring utilities', () => {
       const mockCtx = {
-        performanceMonitor: mockPerformanceMonitor
+        performanceMonitor: mockPerformanceMonitor,
       };
 
       const perfUtils = enhancer.createPerformanceMonitoring(mockCtx);
@@ -367,18 +403,24 @@ describe('CoverageTracingEnhancer', () => {
 
     it('should track phase performance', () => {
       const mockCtx = {
-        performanceMonitor: mockPerformanceMonitor
+        performanceMonitor: mockPerformanceMonitor,
       };
 
       const perfUtils = enhancer.createPerformanceMonitoring(mockCtx);
       const marker = perfUtils.markPhaseStart('candidate_collection');
-      const duration = perfUtils.markPhaseEnd('candidate_collection', marker, { extra: 'data' });
+      const duration = perfUtils.markPhaseEnd('candidate_collection', marker, {
+        extra: 'data',
+      });
 
-      expect(mockPerformanceMonitor.startMeasurement).toHaveBeenCalledWith('coverage_candidate_collection');
-      expect(mockPerformanceMonitor.endMeasurement).toHaveBeenCalledWith(marker);
+      expect(mockPerformanceMonitor.startMeasurement).toHaveBeenCalledWith(
+        'coverage_candidate_collection'
+      );
+      expect(mockPerformanceMonitor.endMeasurement).toHaveBeenCalledWith(
+        marker
+      );
       expect(mockPerformanceMonitor.recordMetrics).toHaveBeenCalledWith({
         coverage_candidate_collection_duration: 42,
-        extra: 'data'
+        extra: 'data',
       });
       expect(duration).toBe(42);
     });
@@ -386,7 +428,10 @@ describe('CoverageTracingEnhancer', () => {
 
   describe('createTraceEventHelper', () => {
     it('should create trace event helper', () => {
-      const eventHelper = enhancer.createTraceEventHelper(mockSpan, 'candidate_collection');
+      const eventHelper = enhancer.createTraceEventHelper(
+        mockSpan,
+        'candidate_collection'
+      );
 
       expect(eventHelper.logCandidateFound).toBeDefined();
       expect(eventHelper.logCandidateFiltered).toBeDefined();
@@ -405,53 +450,65 @@ describe('CoverageTracingEnhancer', () => {
     });
 
     it('should log candidate found events', () => {
-      const eventHelper = enhancer.createTraceEventHelper(mockSpan, 'candidate_collection');
-      
+      const eventHelper = enhancer.createTraceEventHelper(
+        mockSpan,
+        'candidate_collection'
+      );
+
       eventHelper.logCandidateFound('item1', 'outer', 100);
 
       expect(mockSpan.addEvent).toHaveBeenCalledWith('candidate_found', {
         phase: 'candidate_collection',
         itemId: 'item1',
         layer: 'outer',
-        priority: 100
+        priority: 100,
       });
     });
 
     it('should log candidate filtered events', () => {
-      const eventHelper = enhancer.createTraceEventHelper(mockSpan, 'mode_filtering');
-      
+      const eventHelper = enhancer.createTraceEventHelper(
+        mockSpan,
+        'mode_filtering'
+      );
+
       eventHelper.logCandidateFiltered('item1', 'mode_mismatch');
 
       expect(mockSpan.addEvent).toHaveBeenCalledWith('candidate_filtered', {
         phase: 'mode_filtering',
         itemId: 'item1',
-        reason: 'mode_mismatch'
+        reason: 'mode_mismatch',
       });
     });
 
     it('should log selection events', () => {
-      const eventHelper = enhancer.createTraceEventHelper(mockSpan, 'final_selection');
-      
+      const eventHelper = enhancer.createTraceEventHelper(
+        mockSpan,
+        'final_selection'
+      );
+
       eventHelper.logSelection('item1', 'highest_priority', 3);
 
       expect(mockSpan.addEvent).toHaveBeenCalledWith('selection_made', {
         phase: 'final_selection',
         selectedItem: 'item1',
         reason: 'highest_priority',
-        totalCandidates: 3
+        totalCandidates: 3,
       });
     });
 
     it('should handle missing parameters gracefully', () => {
-      const eventHelper = enhancer.createTraceEventHelper(mockSpan, 'test_phase');
-      
+      const eventHelper = enhancer.createTraceEventHelper(
+        mockSpan,
+        'test_phase'
+      );
+
       eventHelper.logCandidateFound(null, undefined, 0);
 
       expect(mockSpan.addEvent).toHaveBeenCalledWith('candidate_found', {
         phase: 'test_phase',
         itemId: 'unknown',
         layer: 'unknown',
-        priority: 0
+        priority: 0,
       });
     });
   });

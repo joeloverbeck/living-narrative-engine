@@ -535,7 +535,7 @@ export class BaseModalRenderer extends BoundDomRendererBase {
       this.hide();
     }
 
-    super.destroy(); // Handles VED subscriptions and DOM listeners removal
+    super.dispose(); // Handles VED subscriptions and DOM listeners removal
 
     this._previouslyFocusedElement = null; // Clear reference
     this.logger.debug(`${this._logPrefix} Destroyed.`);

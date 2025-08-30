@@ -17,20 +17,20 @@ import { SafeEventDispatcher } from '../../src/events/safeEventDispatcher.js';
  */
 export async function createTestContainer(options = {}) {
   const { enableLogging = false, mockServices = {} } = options;
-  
+
   const container = new AppContainer();
-  
+
   // Create minimal logger (silent by default for performance)
   const logLevel = enableLogging ? LogLevel.DEBUG : LogLevel.ERROR;
   const logger = new ConsoleLogger(logLevel);
   container.register(tokens.ILogger, () => logger);
-  
+
   // Create mock validated event dispatcher
   const mockValidatedDispatcher = {
     dispatch: jest.fn().mockImplementation((eventType, payload) => {
       // Immediately call subscribers
       if (mockValidatedDispatcher._subscribers[eventType]) {
-        mockValidatedDispatcher._subscribers[eventType].forEach(callback => {
+        mockValidatedDispatcher._subscribers[eventType].forEach((callback) => {
           setImmediate(() => callback({ type: eventType, payload }));
         });
       }
@@ -40,10 +40,11 @@ export async function createTestContainer(options = {}) {
         mockValidatedDispatcher._subscribers[eventType] = [];
       }
       mockValidatedDispatcher._subscribers[eventType].push(callback);
-      
+
       // Return unsubscribe function
       return () => {
-        const index = mockValidatedDispatcher._subscribers[eventType].indexOf(callback);
+        const index =
+          mockValidatedDispatcher._subscribers[eventType].indexOf(callback);
         if (index > -1) {
           mockValidatedDispatcher._subscribers[eventType].splice(index, 1);
         }
@@ -51,7 +52,8 @@ export async function createTestContainer(options = {}) {
     }),
     unsubscribe: jest.fn().mockImplementation((eventType, callback) => {
       if (mockValidatedDispatcher._subscribers[eventType]) {
-        const index = mockValidatedDispatcher._subscribers[eventType].indexOf(callback);
+        const index =
+          mockValidatedDispatcher._subscribers[eventType].indexOf(callback);
         if (index > -1) {
           mockValidatedDispatcher._subscribers[eventType].splice(index, 1);
         }
@@ -59,15 +61,15 @@ export async function createTestContainer(options = {}) {
     }),
     _subscribers: {},
   };
-  
+
   // Create safe event dispatcher
-  const eventBus = new SafeEventDispatcher({ 
+  const eventBus = new SafeEventDispatcher({
     validatedEventDispatcher: mockValidatedDispatcher,
-    logger 
+    logger,
   });
   container.register(tokens.ISafeEventDispatcher, () => eventBus);
   container.register(tokens.IEventDispatcher, () => eventBus);
-  
+
   // Register minimal schema validator mock
   const mockSchemaValidator = {
     validate: () => ({ isValid: true, errors: [] }),
@@ -78,12 +80,12 @@ export async function createTestContainer(options = {}) {
     getSchema: () => null,
   };
   container.register(tokens.ISchemaValidator, () => mockSchemaValidator);
-  
+
   // Register any additional mock services
   for (const [token, service] of Object.entries(mockServices)) {
     container.register(token, () => service);
   }
-  
+
   return container;
 }
 
@@ -95,14 +97,16 @@ export async function createTestContainer(options = {}) {
  */
 export function createMockCharacterBuilderService(options = {}) {
   const { existingConcepts = [] } = options;
-  
+
   let concepts = [...existingConcepts];
   let nextId = 1000;
-  
+
   return {
     // Core required methods with immediate resolution
-    getAllCharacterConcepts: jest.fn().mockImplementation(() => Promise.resolve([...concepts])),
-    
+    getAllCharacterConcepts: jest
+      .fn()
+      .mockImplementation(() => Promise.resolve([...concepts])),
+
     createCharacterConcept: jest.fn().mockImplementation((conceptText) => {
       const newConcept = {
         id: `concept-${nextId++}`,
@@ -115,9 +119,9 @@ export function createMockCharacterBuilderService(options = {}) {
       concepts.push(newConcept);
       return Promise.resolve(newConcept);
     }),
-    
+
     updateCharacterConcept: jest.fn().mockImplementation((id, conceptText) => {
-      const concept = concepts.find(c => c.id === id);
+      const concept = concepts.find((c) => c.id === id);
       if (concept) {
         concept.concept = conceptText;
         concept.updated = Date.now();
@@ -126,31 +130,35 @@ export function createMockCharacterBuilderService(options = {}) {
       }
       return Promise.resolve(false);
     }),
-    
+
     deleteCharacterConcept: jest.fn().mockImplementation((id) => {
-      const index = concepts.findIndex(c => c.id === id);
+      const index = concepts.findIndex((c) => c.id === id);
       if (index >= 0) {
         concepts.splice(index, 1);
         return Promise.resolve(true);
       }
       return Promise.resolve(false);
     }),
-    
+
     getCharacterConcept: jest.fn().mockImplementation((id) => {
-      const concept = concepts.find(c => c.id === id);
+      const concept = concepts.find((c) => c.id === id);
       return Promise.resolve(concept || null);
     }),
-    
+
     // Additional methods for compatibility
     getThematicDirections: jest.fn().mockResolvedValue([]),
     generateThematicDirections: jest.fn().mockResolvedValue([]),
     initialize: jest.fn().mockResolvedValue(undefined),
-    
+
     // Test utility methods
     _testHelpers: {
       getConcepts: () => [...concepts],
-      setConcepts: (newConcepts) => { concepts = [...newConcepts]; },
-      clearConcepts: () => { concepts = []; },
+      setConcepts: (newConcepts) => {
+        concepts = [...newConcepts];
+      },
+      clearConcepts: () => {
+        concepts = [];
+      },
     },
   };
 }
@@ -237,7 +245,7 @@ export function createFastIndexedDBMock() {
  */
 export function createMinimalModalDOM(options = {}) {
   const { includeSearchElements = true, includeStatsElements = true } = options;
-  
+
   let html = `
     <div id="character-concepts-manager-container">
       <div id="concepts-container"></div>
@@ -252,11 +260,11 @@ export function createMinimalModalDOM(options = {}) {
       <button id="retry-btn">Retry</button>
       <button id="back-to-menu-btn">Back</button>
   `;
-  
+
   if (includeSearchElements) {
     html += `<input id="concept-search" type="text" />`;
   }
-  
+
   if (includeStatsElements) {
     html += `
       <div class="stats-display"></div>
@@ -265,7 +273,7 @@ export function createMinimalModalDOM(options = {}) {
       <span id="total-directions">0</span>
     `;
   }
-  
+
   html += `
       <!-- Create/Edit Modal -->
       <div id="concept-modal" class="modal" style="display: none;">
@@ -295,7 +303,7 @@ export function createMinimalModalDOM(options = {}) {
       </div>
     </div>
   `;
-  
+
   return html;
 }
 
@@ -310,37 +318,43 @@ export function createFastFormValidation(debounceMs = 50) {
       if (!value || typeof value !== 'string') {
         return { isValid: false, error: 'Input is required' };
       }
-      
+
       const trimmedValue = value.trim();
       const length = trimmedValue.length;
-      
+
       if (length < minLength) {
-        return { isValid: false, error: `Input must be at least ${minLength} characters` };
+        return {
+          isValid: false,
+          error: `Input must be at least ${minLength} characters`,
+        };
       }
-      
+
       if (length > maxLength) {
-        return { isValid: false, error: `Input must be no more than ${maxLength} characters` };
+        return {
+          isValid: false,
+          error: `Input must be no more than ${maxLength} characters`,
+        };
       }
-      
+
       return { isValid: true };
     },
-    
-    setupValidation: function(textarea, saveButton, options = {}) {
+
+    setupValidation: function (textarea, saveButton, options = {}) {
       const { debounceMs: customDebounce = debounceMs } = options;
       let timeoutId;
-      
+
       const validateInput = () => {
         const validation = this.validateTextInput(textarea.value, 50, 3000);
         saveButton.disabled = !validation.isValid;
       };
-      
+
       textarea.addEventListener('input', () => {
         clearTimeout(timeoutId);
         timeoutId = setTimeout(validateInput, customDebounce);
       });
-      
+
       // Initial validation
       validateInput();
-    }
+    },
   };
 }

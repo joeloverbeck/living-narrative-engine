@@ -236,6 +236,19 @@ export class ActionIndex {
     this.#logger.debug(
       `ActionIndex: Retrieved ${candidates.length} candidate actions for actor ${actorEntity.id}.`
     );
+
+    // Enhanced logging for debugging sit_down action
+    const hasSitDown = candidates.some((c) => c.id === 'positioning:sit_down');
+    if (!hasSitDown && actorEntity.id === 'p_erotica:ane_arrieta_instance') {
+      console.log('[DEBUG] sit_down action not available for Ane Arrieta');
+      console.log('  - Actor components:', actorComponentTypes);
+      console.log('  - Forbidden candidates:', forbiddenCandidates);
+      console.log('  - Total candidates found:', candidates.length);
+      console.log(
+        '  - Candidate action IDs:',
+        candidates.map((c) => c.id)
+      );
+    }
     return candidates;
   }
 }

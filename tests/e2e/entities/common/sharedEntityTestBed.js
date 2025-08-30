@@ -45,12 +45,12 @@ export class SharedEntityTestBed extends BaseTestBed {
     // Optimized event tracking (specific events only)
     this.componentEvents = [];
     this.eventSubscriptions = [];
-    
+
     // Entity pool management
     this.entityPool = new Map();
     this.nextEntityIndex = 1;
     this.createdEntityIds = new Set();
-    
+
     // Schema cache
     this.schemasRegistered = false;
   }
@@ -86,7 +86,9 @@ export class SharedEntityTestBed extends BaseTestBed {
     // Set up optimized event monitoring (specific events only)
     this.setupOptimizedEventMonitoring();
 
-    this.logger.debug('SharedEntityTestBed initialized with shared infrastructure');
+    this.logger.debug(
+      'SharedEntityTestBed initialized with shared infrastructure'
+    );
   }
 
   /**
@@ -176,12 +178,20 @@ export class SharedEntityTestBed extends BaseTestBed {
   /**
    * Get or create a test entity from the pool
    */
-  async getOrCreateTestEntity(definitionId, options = {}, customDefinition = null) {
-    const { instanceId, componentOverrides = {}, reuseExisting = true } = options;
+  async getOrCreateTestEntity(
+    definitionId,
+    options = {},
+    customDefinition = null
+  ) {
+    const {
+      instanceId,
+      componentOverrides = {},
+      reuseExisting = true,
+    } = options;
 
     // Generate pool key
     const poolKey = `${definitionId}_${JSON.stringify(componentOverrides)}`;
-    
+
     if (reuseExisting && this.entityPool.has(poolKey)) {
       const cachedEntity = this.entityPool.get(poolKey);
       this.logger.debug(`Reusing cached entity: ${cachedEntity.id}`);
@@ -190,20 +200,24 @@ export class SharedEntityTestBed extends BaseTestBed {
 
     // Create new entity
     await this.ensureEntityDefinitionExists(definitionId, customDefinition);
-    
-    const entityInstanceId = instanceId || `test_entity_${this.nextEntityIndex++}`;
+
+    const entityInstanceId =
+      instanceId || `test_entity_${this.nextEntityIndex++}`;
     const createOptions = { instanceId: entityInstanceId };
-    
+
     if (Object.keys(componentOverrides).length > 0) {
       createOptions.componentOverrides = componentOverrides;
     }
 
-    const entity = await this.entityManager.createEntityInstance(definitionId, createOptions);
-    
+    const entity = await this.entityManager.createEntityInstance(
+      definitionId,
+      createOptions
+    );
+
     // Cache for reuse
     this.entityPool.set(poolKey, entity);
     this.createdEntityIds.add(entity.id);
-    
+
     this.logger.debug(`Created and cached new entity: ${entity.id}`);
     return entity;
   }
@@ -218,7 +232,7 @@ export class SharedEntityTestBed extends BaseTestBed {
       // Remove non-definition components
       const definitionComponentIds = Object.keys(definition.components);
       const currentComponentIds = entity.getComponentIds();
-      
+
       for (const componentId of currentComponentIds) {
         if (!definitionComponentIds.includes(componentId)) {
           try {
@@ -229,7 +243,7 @@ export class SharedEntityTestBed extends BaseTestBed {
         }
       }
     }
-    
+
     this.logger.debug(`Reset entity state: ${entity.id}`);
     return entity;
   }
@@ -306,7 +320,9 @@ export class SharedEntityTestBed extends BaseTestBed {
           issues.push(`Entity ${entityId} not found`);
         } else if (entity.id !== entityId) {
           isConsistent = false;
-          issues.push(`Entity ID mismatch: expected ${entityId}, got ${entity.id}`);
+          issues.push(
+            `Entity ID mismatch: expected ${entityId}, got ${entity.id}`
+          );
         }
       } catch (error) {
         isConsistent = false;
@@ -315,7 +331,9 @@ export class SharedEntityTestBed extends BaseTestBed {
     }
 
     if (!isConsistent) {
-      throw new Error(`Repository consistency check failed: ${issues.join(', ')}`);
+      throw new Error(
+        `Repository consistency check failed: ${issues.join(', ')}`
+      );
     }
 
     return { isConsistent: true, issues: [], entityCount: idsToCheck.length };
@@ -327,10 +345,10 @@ export class SharedEntityTestBed extends BaseTestBed {
   async resetForNextTest() {
     // Clear events but keep subscriptions
     this.clearEvents();
-    
+
     // Reset entity pool if needed (optional - can reuse entities)
     // this.entityPool.clear();
-    
+
     this.logger.debug('SharedEntityTestBed reset for next test');
   }
 
@@ -351,7 +369,9 @@ export class SharedEntityTestBed extends BaseTestBed {
       try {
         await this.entityManager.removeEntityInstance(entityId);
       } catch (error) {
-        this.logger.warn(`Failed to cleanup entity ${entityId}: ${error.message}`);
+        this.logger.warn(
+          `Failed to cleanup entity ${entityId}: ${error.message}`
+        );
       }
     }
 

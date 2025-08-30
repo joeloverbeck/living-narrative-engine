@@ -248,6 +248,30 @@ export default function createFilterResolver({
               );
             }
 
+            // Special logging for park bench debugging
+            if (item === 'p_erotica:park_bench_instance') {
+              console.log('[DEBUG] Evaluating park bench in filter:');
+              console.log(
+                '  - Entity components:',
+                evalCtx.entity?.components
+                  ? Object.keys(evalCtx.entity.components)
+                  : 'none'
+              );
+              console.log(
+                '  - Actor locationId:',
+                evalCtx.actor?.components?.['core:position']?.locationId
+              );
+              console.log(
+                '  - Entity locationId:',
+                evalCtx.entity?.components?.['core:position']?.locationId
+              );
+              console.log(
+                '  - Sitting spots:',
+                evalCtx.entity?.components?.['positioning:allows_sitting']
+                  ?.spots
+              );
+            }
+
             const evalResult = logicEval.evaluate(node.logic, evalCtx);
             if (evalResult) {
               result.add(item);

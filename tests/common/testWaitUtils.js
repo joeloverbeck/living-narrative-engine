@@ -23,27 +23,37 @@ export async function flushPromises() {
  * @param {number} timeout - Maximum wait time in ms (default: 1000)
  * @returns {Promise<void>}
  */
-export function waitForElementStyle(element, property, expectedValue, timeout = 1000) {
+export function waitForElementStyle(
+  element,
+  property,
+  expectedValue,
+  timeout = 1000
+) {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
-    
+
     const checkStyle = () => {
-      const currentValue = element.style[property] || getComputedStyle(element)[property];
-      
+      const currentValue =
+        element.style[property] || getComputedStyle(element)[property];
+
       if (currentValue === expectedValue) {
         resolve();
         return;
       }
-      
+
       if (Date.now() - startTime > timeout) {
-        reject(new Error(`Timeout waiting for ${property} to be ${expectedValue}. Current: ${currentValue}`));
+        reject(
+          new Error(
+            `Timeout waiting for ${property} to be ${expectedValue}. Current: ${currentValue}`
+          )
+        );
         return;
       }
-      
+
       // Use requestAnimationFrame for DOM-related checks
       requestAnimationFrame(checkStyle);
     };
-    
+
     checkStyle();
   });
 }
@@ -76,32 +86,41 @@ export function waitForModalClose(modal, timeout = 500) {
  * @param {number} timeout - Maximum wait time in ms (default: 500)
  * @returns {Promise<void>}
  */
-export function waitForElementAttribute(element, attribute, expectedValue, timeout = 500) {
+export function waitForElementAttribute(
+  element,
+  attribute,
+  expectedValue,
+  timeout = 500
+) {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
-    
+
     const checkAttribute = () => {
       let currentValue;
-      
+
       if (attribute === 'disabled') {
         currentValue = element.disabled;
       } else {
         currentValue = element.getAttribute(attribute);
       }
-      
+
       if (currentValue === expectedValue) {
         resolve();
         return;
       }
-      
+
       if (Date.now() - startTime > timeout) {
-        reject(new Error(`Timeout waiting for ${attribute} to be ${expectedValue}. Current: ${currentValue}`));
+        reject(
+          new Error(
+            `Timeout waiting for ${attribute} to be ${expectedValue}. Current: ${currentValue}`
+          )
+        );
         return;
       }
-      
+
       requestAnimationFrame(checkAttribute);
     };
-    
+
     checkAttribute();
   });
 }
@@ -113,8 +132,17 @@ export function waitForElementAttribute(element, attribute, expectedValue, timeo
  * @param {number} timeout - Maximum wait time in ms (default: 500)
  * @returns {Promise<void>}
  */
-export function waitForValidation(submitButton, expectedDisabledState, timeout = 500) {
-  return waitForElementAttribute(submitButton, 'disabled', expectedDisabledState, timeout);
+export function waitForValidation(
+  submitButton,
+  expectedDisabledState,
+  timeout = 500
+) {
+  return waitForElementAttribute(
+    submitButton,
+    'disabled',
+    expectedDisabledState,
+    timeout
+  );
 }
 
 /**
@@ -130,13 +158,13 @@ export function waitForEvent(target, eventType, timeout = 1000) {
       target.removeEventListener(eventType, handleEvent);
       reject(new Error(`Timeout waiting for ${eventType} event`));
     }, timeout);
-    
+
     const handleEvent = (event) => {
       clearTimeout(timeoutId);
       target.removeEventListener(eventType, handleEvent);
       resolve(event);
     };
-    
+
     target.addEventListener(eventType, handleEvent);
   });
 }
@@ -149,27 +177,36 @@ export function waitForEvent(target, eventType, timeout = 1000) {
  * @param {number} timeout - Maximum wait time in ms (default: 1000)
  * @returns {Promise<Array>}
  */
-export function waitForCapturedEvents(eventArray, filterFn, expectedCount = 1, timeout = 1000) {
+export function waitForCapturedEvents(
+  eventArray,
+  filterFn,
+  expectedCount = 1,
+  timeout = 1000
+) {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
-    
+
     const checkEvents = () => {
       const matchingEvents = eventArray.filter(filterFn);
-      
+
       if (matchingEvents.length >= expectedCount) {
         resolve(matchingEvents);
         return;
       }
-      
+
       if (Date.now() - startTime > timeout) {
-        reject(new Error(`Timeout waiting for ${expectedCount} events. Found: ${matchingEvents.length}`));
+        reject(
+          new Error(
+            `Timeout waiting for ${expectedCount} events. Found: ${matchingEvents.length}`
+          )
+        );
         return;
       }
-      
+
       // Check again after a short delay
       setTimeout(checkEvents, 10);
     };
-    
+
     checkEvents();
   });
 }
@@ -194,21 +231,25 @@ export async function waitForIndexedDB() {
 export function waitForInputValue(input, expectedValue, timeout = 500) {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
-    
+
     const checkValue = () => {
       if (input.value === expectedValue) {
         resolve();
         return;
       }
-      
+
       if (Date.now() - startTime > timeout) {
-        reject(new Error(`Timeout waiting for input value to be "${expectedValue}". Current: "${input.value}"`));
+        reject(
+          new Error(
+            `Timeout waiting for input value to be "${expectedValue}". Current: "${input.value}"`
+          )
+        );
         return;
       }
-      
+
       requestAnimationFrame(checkValue);
     };
-    
+
     checkValue();
   });
 }

@@ -305,13 +305,16 @@ class FileTraceOutputHandler {
         bodySize: JSON.stringify(requestBody).length,
       });
 
-      const response = await fetch(getEndpointConfig().getTracesWriteEndpoint(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await fetch(
+        getEndpointConfig().getTracesWriteEndpoint(),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

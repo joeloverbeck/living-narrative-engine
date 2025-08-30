@@ -223,39 +223,39 @@ export class ScopeTestUtilities {
   ) {
     const { reuseDefinitions = true } = options;
     const entities = [];
-    
+
     // HEAVILY OPTIMIZED: Minimal complexity for maximum performance
     const complexityConfigs = {
       simple: {
         componentCount: 2, // Reduced from 3
-        nestedLevels: 0,   // Eliminated nesting
+        nestedLevels: 0, // Eliminated nesting
         arrayProperties: 0,
       },
       moderate: {
         componentCount: 3, // Reduced from 4
-        nestedLevels: 1,   // Reduced from 2 
+        nestedLevels: 1, // Reduced from 2
         arrayProperties: 0, // Eliminated arrays
       },
       complex: {
         componentCount: 4, // Reduced from 6
-        nestedLevels: 1,   // Reduced from 2
+        nestedLevels: 1, // Reduced from 2
         arrayProperties: 1, // Reduced from 2
       },
     };
 
     const config = complexityConfigs[complexity] || complexityConfigs.simple;
-    
+
     // AGGRESSIVE SIZE CAPPING: Prevent performance issues with large datasets
     const cappedSize = Math.min(size, 5); // Hard cap at 5 entities for E2E tests
-    
+
     // Pre-generate deterministic values to avoid expensive operations in loop
     const baseTimestamp = Date.now();
-    
+
     // Create entity definitions in batches for better performance
     const definitions = [];
     for (let i = 0; i < cappedSize; i++) {
       const entityId = `mock-entity-${baseTimestamp}-${i}`;
-      
+
       // OPTIMIZED: Minimal component structure
       const components = {
         'core:actor': { isPlayer: i === 0 },
@@ -273,7 +273,7 @@ export class ScopeTestUtilities {
 
       if (config.componentCount > 3) {
         components['core:health'] = {
-          current: Math.max(20, 100 - (i * 5)), // Deterministic health
+          current: Math.max(20, 100 - i * 5), // Deterministic health
           max: 100,
         };
       }

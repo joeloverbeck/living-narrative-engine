@@ -258,8 +258,8 @@ export function registerInfrastructure(container) {
         config: {
           enableVisualNotifications: true,
           notificationPosition: 'top-right',
-          maxRecentLogs: 20
-        }
+          maxRecentLogs: 20,
+        },
       }),
     {
       lifecycle: 'singleton',
@@ -275,7 +275,9 @@ export function registerInfrastructure(container) {
       lifecycle: 'singleton',
     }
   );
-  safeDebug(`Registered ${String(tokens.CriticalLogNotifier)} -> ICriticalLogNotifier.`);
+  safeDebug(
+    `Registered ${String(tokens.CriticalLogNotifier)} -> ICriticalLogNotifier.`
+  );
 
   safeDebug('Infrastructure Registration: complete.');
 }

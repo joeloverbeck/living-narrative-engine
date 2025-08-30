@@ -51,7 +51,11 @@ Enable tracing to debug coverage resolution:
 
 ```javascript
 const trace = {};
-const result = scopeEngine.resolve('clothing:target_topmost_torso_lower_clothing', context, trace);
+const result = scopeEngine.resolve(
+  'clothing:target_topmost_torso_lower_clothing',
+  context,
+  trace
+);
 
 console.log(trace.coverageResolution);
 // Shows: candidates, priorities, filtering, selection reasoning

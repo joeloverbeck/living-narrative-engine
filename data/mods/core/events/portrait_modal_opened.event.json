@@ -1,0 +1,20 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:portrait_modal_opened",
+  "description": "Dispatched when a portrait modal is opened to display a character's portrait image.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "portraitPath": {
+        "description": "Path to the portrait image file",
+        "type": "string"
+      },
+      "speakerName": {
+        "description": "Name of the character whose portrait is being displayed",
+        "type": "string"
+      }
+    },
+    "required": ["portraitPath", "speakerName"],
+    "additionalProperties": false
+  }
+}

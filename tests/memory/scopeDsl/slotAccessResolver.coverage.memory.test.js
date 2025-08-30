@@ -1,19 +1,19 @@
 /**
  * @file SlotAccessResolver Coverage Memory Test Suite
- * 
+ *
  * This memory test suite validates the memory management characteristics of
  * the SlotAccessResolver coverage resolution system and its caching mechanisms, focusing on:
  * - Cache memory efficiency and bounded growth
  * - Memory leak detection during intensive operations
  * - Memory usage patterns during cache population
  * - Proper cache size limits and eviction
- * 
+ *
  * Memory Targets:
  * - Cache should not grow indefinitely
  * - Memory increase <20MB after 10k operations
  * - Cache size should remain bounded under repeated operations
  * - Proper memory cleanup after garbage collection
- * 
+ *
  * Note: Run with NODE_ENV=test node --expose-gc ./node_modules/.bin/jest
  */
 
@@ -26,15 +26,15 @@ import {
   jest,
 } from '@jest/globals';
 import { createUltraLightContainer } from '../../common/testing/ultraLightContainer.js';
-import { 
-  CoverageTestUtilities, 
-  PERFORMANCE_TARGETS
+import {
+  CoverageTestUtilities,
+  PERFORMANCE_TARGETS,
 } from '../../common/scopeDsl/coverageTestUtilities.js';
 import createSlotAccessResolver from '../../../src/scopeDsl/nodes/slotAccessResolver.js';
 import {
   calculateCoveragePriorityOptimized,
   clearPriorityCache,
-  getCacheStats
+  getCacheStats,
 } from '../../../src/scopeDsl/prioritySystem/priorityCalculator.js';
 
 // Set timeout for memory tests
@@ -58,20 +58,20 @@ describe('SlotAccessResolver Coverage Memory', () => {
   beforeEach(() => {
     container = createUltraLightContainer();
     testUtilities = new CoverageTestUtilities(container);
-    
+
     const testBed = testUtilities.createSlotAccessTestBed();
     slotAccessResolver = createSlotAccessResolver(testBed);
-    
+
     // Clear cache before each test
     if (typeof clearPriorityCache === 'function') {
       clearPriorityCache();
     }
-    
+
     // Force GC before each test for clean baseline
     if (global.gc) {
       global.gc();
     }
-    
+
     // Reset memory metrics
     memoryMetrics = {
       initialCacheSize: 0,
@@ -86,11 +86,11 @@ describe('SlotAccessResolver Coverage Memory', () => {
   afterEach(() => {
     // Clean up after each test
     container.cleanup();
-    
+
     if (typeof clearPriorityCache === 'function') {
       clearPriorityCache();
     }
-    
+
     if (global.gc) {
       global.gc();
     }
@@ -98,7 +98,9 @@ describe('SlotAccessResolver Coverage Memory', () => {
 
   describe('Memory Usage Monitoring', () => {
     test('should maintain stable memory usage during intensive operations', async () => {
-      const equipment = testUtilities.generateEquipment(20, { coverageItems: 10 });
+      const equipment = testUtilities.generateEquipment(20, {
+        coverageItems: 10,
+      });
       const character = await testUtilities.createCharacter({ equipment });
 
       const node = {
@@ -107,7 +109,10 @@ describe('SlotAccessResolver Coverage Memory', () => {
         parent: { type: 'Step' },
       };
 
-      const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost');
+      const mockContext = testUtilities.createMockContext(
+        character.equipment.equipped,
+        'topmost'
+      );
 
       const initialMemory = process.memoryUsage().heapUsed;
       memoryMetrics.initialMemory = initialMemory;
@@ -123,7 +128,9 @@ describe('SlotAccessResolver Coverage Memory', () => {
 
           // Log memory increase for monitoring, but don't fail test
           if (increase > 50 * 1024 * 1024) {
-            console.warn(`High memory increase at iteration ${i}: ${(increase / 1024 / 1024).toFixed(2)}MB`);
+            console.warn(
+              `High memory increase at iteration ${i}: ${(increase / 1024 / 1024).toFixed(2)}MB`
+            );
           }
         }
       }
@@ -148,7 +155,10 @@ describe('SlotAccessResolver Coverage Memory', () => {
 
     test('should handle cache size limits properly', async () => {
       // Test priority calculation cache if available
-      if (typeof getCacheStats !== 'function' || typeof calculateCoveragePriorityOptimized !== 'function') {
+      if (
+        typeof getCacheStats !== 'function' ||
+        typeof calculateCoveragePriorityOptimized !== 'function'
+      ) {
         console.log('Cache functions not available, skipping cache size test');
         return;
       }
@@ -196,8 +206,13 @@ describe('SlotAccessResolver Coverage Memory', () => {
   describe('Cache Memory Management', () => {
     test('should handle memory efficiently with caching', () => {
       // Test priority calculator caching if available
-      if (typeof clearPriorityCache !== 'function' || typeof getCacheStats !== 'function') {
-        console.log('Cache functions not available, skipping cache memory test');
+      if (
+        typeof clearPriorityCache !== 'function' ||
+        typeof getCacheStats !== 'function'
+      ) {
+        console.log(
+          'Cache functions not available, skipping cache memory test'
+        );
         return;
       }
       {
@@ -222,10 +237,10 @@ describe('SlotAccessResolver Coverage Memory', () => {
 
         // Verify cache is being used
         expect(finalStats.size).toBeGreaterThan(0);
-        
+
         // Verify cache doesn't grow indefinitely
         expect(finalStats.size).toBeLessThan(10); // Should not grow indefinitely
-        
+
         // Log metrics for monitoring
         console.log('Memory Test Metrics:', {
           initialCacheSize: memoryMetrics.initialCacheSize,
@@ -236,8 +251,13 @@ describe('SlotAccessResolver Coverage Memory', () => {
     });
 
     test('should maintain stable cache size under repeated identical operations', () => {
-      if (typeof clearPriorityCache !== 'function' || typeof getCacheStats !== 'function') {
-        console.log('Cache functions not available, skipping cache stability test');
+      if (
+        typeof clearPriorityCache !== 'function' ||
+        typeof getCacheStats !== 'function'
+      ) {
+        console.log(
+          'Cache functions not available, skipping cache stability test'
+        );
         return;
       }
       {
@@ -271,8 +291,13 @@ describe('SlotAccessResolver Coverage Memory', () => {
     });
 
     test('should handle diverse layer combinations without excessive memory growth', () => {
-      if (typeof clearPriorityCache !== 'function' || typeof getCacheStats !== 'function') {
-        console.log('Cache functions not available, skipping diverse combinations test');
+      if (
+        typeof clearPriorityCache !== 'function' ||
+        typeof getCacheStats !== 'function'
+      ) {
+        console.log(
+          'Cache functions not available, skipping diverse combinations test'
+        );
         return;
       }
       {
@@ -305,7 +330,7 @@ describe('SlotAccessResolver Coverage Memory', () => {
         // Maximum theoretical size is layers.length * (layers.length - 1)
         const maxExpectedSize = layers.length * (layers.length - 1);
         expect(finalStats.size).toBeLessThanOrEqual(maxExpectedSize);
-        
+
         console.log('Diverse operations cache stats:', {
           operationCount: operations.length * 5,
           uniqueOperations: operations.length,
@@ -322,9 +347,9 @@ describe('SlotAccessResolver Coverage Memory', () => {
 
       // Create and resolve multiple characters to test for memory leaks
       for (let i = 0; i < 100; i++) {
-        const equipment = testUtilities.generateEquipment(10, { 
+        const equipment = testUtilities.generateEquipment(10, {
           coverageItems: 5,
-          variety: true 
+          variety: true,
         });
         const character = await testUtilities.createCharacter({ equipment });
 
@@ -334,7 +359,10 @@ describe('SlotAccessResolver Coverage Memory', () => {
           parent: { type: 'Step' },
         };
 
-        const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost');
+        const mockContext = testUtilities.createMockContext(
+          character.equipment.equipped,
+          'topmost'
+        );
 
         // Perform some resolutions
         for (let j = 0; j < 10; j++) {
@@ -345,7 +373,7 @@ describe('SlotAccessResolver Coverage Memory', () => {
         container.cleanup();
         container = createUltraLightContainer();
         testUtilities = new CoverageTestUtilities(container);
-        
+
         const testBed = testUtilities.createSlotAccessTestBed();
         slotAccessResolver = createSlotAccessResolver(testBed);
 
@@ -354,7 +382,9 @@ describe('SlotAccessResolver Coverage Memory', () => {
           global.gc();
           const currentMemory = process.memoryUsage().heapUsed;
           const increase = currentMemory - initialMemory;
-          console.log(`Memory after ${i + 1} iterations: ${(increase / 1024 / 1024).toFixed(2)}MB increase`);
+          console.log(
+            `Memory after ${i + 1} iterations: ${(increase / 1024 / 1024).toFixed(2)}MB increase`
+          );
         }
       }
 
@@ -380,9 +410,9 @@ describe('SlotAccessResolver Coverage Memory', () => {
       // Create multiple characters for concurrent operations
       const characters = [];
       for (let i = 0; i < 20; i++) {
-        const equipment = testUtilities.generateEquipment(8, { 
+        const equipment = testUtilities.generateEquipment(8, {
           coverageItems: 4,
-          variety: true 
+          variety: true,
         });
         characters.push(await testUtilities.createCharacter({ equipment }));
       }
@@ -396,7 +426,10 @@ describe('SlotAccessResolver Coverage Memory', () => {
       // Perform intensive concurrent operations
       for (let iteration = 0; iteration < 50; iteration++) {
         const promises = characters.map((char) => {
-          const mockContext = testUtilities.createMockContext(char.equipment.equipped, 'topmost');
+          const mockContext = testUtilities.createMockContext(
+            char.equipment.equipped,
+            'topmost'
+          );
           return Promise.resolve(slotAccessResolver.resolve(node, mockContext));
         });
 

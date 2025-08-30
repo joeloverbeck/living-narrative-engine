@@ -1,9 +1,6 @@
 import { jest } from '@jest/globals';
 import createStepResolver from '../../../../src/scopeDsl/nodes/stepResolver.js';
-import {
-
-  createTestEntity,
-} from '../../../common/mockFactories/entities.js';
+import { createTestEntity } from '../../../common/mockFactories/entities.js';
 
 describe('StepResolver', () => {
   let resolver;
@@ -43,9 +40,12 @@ describe('StepResolver', () => {
 
     // Create resolver without errorHandler (legacy behavior)
     resolver = createStepResolver({ entitiesGateway });
-    
+
     // Create resolver with errorHandler (new behavior)
-    resolverWithErrorHandler = createStepResolver({ entitiesGateway, errorHandler });
+    resolverWithErrorHandler = createStepResolver({
+      entitiesGateway,
+      errorHandler,
+    });
   });
 
   afterEach(() => {
@@ -98,7 +98,7 @@ describe('StepResolver', () => {
         expect(result).toEqual(new Set()); // Should return empty set
         expect(errorHandler.handleError).toHaveBeenCalledWith(
           expect.objectContaining({
-            message: 'StepResolver: actorEntity is missing from context'
+            message: 'StepResolver: actorEntity is missing from context',
           }),
           expect.objectContaining({
             dispatcher,

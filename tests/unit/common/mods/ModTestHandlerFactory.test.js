@@ -3,7 +3,14 @@
  * @description Comprehensive test coverage for the handler factory methods
  */
 
-import { describe, it, expect, beforeEach, jest, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  jest,
+  afterEach,
+} from '@jest/globals';
 import { ModTestHandlerFactory } from '../../../common/mods/ModTestHandlerFactory.js';
 
 describe('ModTestHandlerFactory', () => {
@@ -73,39 +80,79 @@ describe('ModTestHandlerFactory', () => {
 
     it('should throw error when entityManager is missing', () => {
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(null, mockEventBus, mockLogger);
-      }).toThrow('ModTestHandlerFactory.createStandardHandlers: entityManager is required');
+        ModTestHandlerFactory.createStandardHandlers(
+          null,
+          mockEventBus,
+          mockLogger
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createStandardHandlers: entityManager is required'
+      );
 
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(undefined, mockEventBus, mockLogger);
-      }).toThrow('ModTestHandlerFactory.createStandardHandlers: entityManager is required');
+        ModTestHandlerFactory.createStandardHandlers(
+          undefined,
+          mockEventBus,
+          mockLogger
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createStandardHandlers: entityManager is required'
+      );
     });
 
     it('should throw error when eventBus is missing', () => {
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(mockEntityManager, null, mockLogger);
-      }).toThrow('ModTestHandlerFactory.createStandardHandlers: eventBus is required');
+        ModTestHandlerFactory.createStandardHandlers(
+          mockEntityManager,
+          null,
+          mockLogger
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createStandardHandlers: eventBus is required'
+      );
 
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(mockEntityManager, undefined, mockLogger);
-      }).toThrow('ModTestHandlerFactory.createStandardHandlers: eventBus is required');
+        ModTestHandlerFactory.createStandardHandlers(
+          mockEntityManager,
+          undefined,
+          mockLogger
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createStandardHandlers: eventBus is required'
+      );
     });
 
     it('should throw error when logger is missing', () => {
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(mockEntityManager, mockEventBus, null);
-      }).toThrow('ModTestHandlerFactory.createStandardHandlers: logger is required');
+        ModTestHandlerFactory.createStandardHandlers(
+          mockEntityManager,
+          mockEventBus,
+          null
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createStandardHandlers: logger is required'
+      );
 
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(mockEntityManager, mockEventBus, undefined);
-      }).toThrow('ModTestHandlerFactory.createStandardHandlers: logger is required');
+        ModTestHandlerFactory.createStandardHandlers(
+          mockEntityManager,
+          mockEventBus,
+          undefined
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createStandardHandlers: logger is required'
+      );
     });
 
     it('should throw error when entityManager lacks required methods', () => {
       const invalidEntityManager = { wrongMethod: jest.fn() };
 
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(invalidEntityManager, mockEventBus, mockLogger);
+        ModTestHandlerFactory.createStandardHandlers(
+          invalidEntityManager,
+          mockEventBus,
+          mockLogger
+        );
       }).toThrow();
     });
 
@@ -113,7 +160,11 @@ describe('ModTestHandlerFactory', () => {
       const invalidEventBus = { wrongMethod: jest.fn() };
 
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(mockEntityManager, invalidEventBus, mockLogger);
+        ModTestHandlerFactory.createStandardHandlers(
+          mockEntityManager,
+          invalidEventBus,
+          mockLogger
+        );
       }).toThrow();
     });
 
@@ -121,7 +172,11 @@ describe('ModTestHandlerFactory', () => {
       const invalidLogger = { wrongMethod: jest.fn() };
 
       expect(() => {
-        ModTestHandlerFactory.createStandardHandlers(mockEntityManager, mockEventBus, invalidLogger);
+        ModTestHandlerFactory.createStandardHandlers(
+          mockEntityManager,
+          mockEventBus,
+          invalidLogger
+        );
       }).toThrow();
     });
 
@@ -138,7 +193,9 @@ describe('ModTestHandlerFactory', () => {
       expect(typeof handlers.QUERY_COMPONENT.execute).toBe('function');
       expect(typeof handlers.GET_NAME.execute).toBe('function');
       expect(typeof handlers.GET_TIMESTAMP.execute).toBe('function');
-      expect(typeof handlers.DISPATCH_PERCEPTIBLE_EVENT.execute).toBe('function');
+      expect(typeof handlers.DISPATCH_PERCEPTIBLE_EVENT.execute).toBe(
+        'function'
+      );
       expect(typeof handlers.DISPATCH_EVENT.execute).toBe('function');
       expect(typeof handlers.END_TURN.execute).toBe('function');
       expect(typeof handlers.SET_VARIABLE.execute).toBe('function');
@@ -187,8 +244,14 @@ describe('ModTestHandlerFactory', () => {
 
     it('should throw error when dependencies are missing', () => {
       expect(() => {
-        ModTestHandlerFactory.createHandlersWithAddComponent(null, mockEventBus, mockLogger);
-      }).toThrow('ModTestHandlerFactory.createHandlersWithAddComponent: entityManager is required');
+        ModTestHandlerFactory.createHandlersWithAddComponent(
+          null,
+          mockEventBus,
+          mockLogger
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createHandlersWithAddComponent: entityManager is required'
+      );
     });
   });
 
@@ -200,7 +263,11 @@ describe('ModTestHandlerFactory', () => {
         mockLogger
       );
 
-      const expectedHandlers = ['GET_NAME', 'DISPATCH_PERCEPTIBLE_EVENT', 'END_TURN'];
+      const expectedHandlers = [
+        'GET_NAME',
+        'DISPATCH_PERCEPTIBLE_EVENT',
+        'END_TURN',
+      ];
 
       expectedHandlers.forEach((handlerKey) => {
         expect(handlers).toHaveProperty(handlerKey);
@@ -230,8 +297,14 @@ describe('ModTestHandlerFactory', () => {
 
     it('should throw error when dependencies are missing', () => {
       expect(() => {
-        ModTestHandlerFactory.createMinimalHandlers(null, mockEventBus, mockLogger);
-      }).toThrow('ModTestHandlerFactory.createMinimalHandlers: entityManager is required');
+        ModTestHandlerFactory.createMinimalHandlers(
+          null,
+          mockEventBus,
+          mockLogger
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createMinimalHandlers: entityManager is required'
+      );
     });
   });
 
@@ -314,15 +387,22 @@ describe('ModTestHandlerFactory', () => {
 
     it('should throw error when dependencies are missing', () => {
       expect(() => {
-        ModTestHandlerFactory.createCustomHandlers(null, mockEventBus, mockLogger);
-      }).toThrow('ModTestHandlerFactory.createCustomHandlers: entityManager is required');
+        ModTestHandlerFactory.createCustomHandlers(
+          null,
+          mockEventBus,
+          mockLogger
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createCustomHandlers: entityManager is required'
+      );
     });
   });
 
   describe('getHandlerFactoryForCategory', () => {
     it('should return createHandlersWithAddComponent for positioning', () => {
-      const factory = ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
-      
+      const factory =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
+
       // Test by calling the factory and checking if it produces the expected result
       const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
       expect(handlers.ADD_COMPONENT).toBeDefined(); // Only positioning has ADD_COMPONENT
@@ -333,7 +413,8 @@ describe('ModTestHandlerFactory', () => {
       const categories = ['exercise', 'violence', 'sex', 'intimacy'];
 
       categories.forEach((category) => {
-        const factory = ModTestHandlerFactory.getHandlerFactoryForCategory(category);
+        const factory =
+          ModTestHandlerFactory.getHandlerFactoryForCategory(category);
         const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
         expect(handlers.ADD_COMPONENT).toBeUndefined(); // Standard handlers don't have ADD_COMPONENT
         expect(Object.keys(handlers)).toHaveLength(7); // 7 standard handlers
@@ -344,7 +425,8 @@ describe('ModTestHandlerFactory', () => {
       const unknownCategories = ['unknown', 'test', ''];
 
       unknownCategories.forEach((category) => {
-        const factory = ModTestHandlerFactory.getHandlerFactoryForCategory(category);
+        const factory =
+          ModTestHandlerFactory.getHandlerFactoryForCategory(category);
         const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
         expect(handlers.ADD_COMPONENT).toBeUndefined(); // Standard handlers don't have ADD_COMPONENT
         expect(Object.keys(handlers)).toHaveLength(7); // 7 standard handlers
@@ -352,8 +434,9 @@ describe('ModTestHandlerFactory', () => {
     });
 
     it('should return bound methods that can be called directly', () => {
-      const factory = ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
-      
+      const factory =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
+
       // Should be able to call the returned factory method
       const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
       expect(handlers.ADD_COMPONENT).toBeDefined();
@@ -362,14 +445,16 @@ describe('ModTestHandlerFactory', () => {
 
   describe('createSafeDispatcher', () => {
     it('should create dispatcher with jest mock function', () => {
-      const dispatcher = ModTestHandlerFactory.createSafeDispatcher(mockEventBus);
+      const dispatcher =
+        ModTestHandlerFactory.createSafeDispatcher(mockEventBus);
 
       expect(dispatcher).toHaveProperty('dispatch');
       expect(jest.isMockFunction(dispatcher.dispatch)).toBe(true);
     });
 
     it('should dispatch events through provided eventBus', () => {
-      const dispatcher = ModTestHandlerFactory.createSafeDispatcher(mockEventBus);
+      const dispatcher =
+        ModTestHandlerFactory.createSafeDispatcher(mockEventBus);
       const eventType = 'TEST_EVENT';
       const payload = { test: 'data' };
 
@@ -380,21 +465,26 @@ describe('ModTestHandlerFactory', () => {
     });
 
     it('should return Promise.resolve(true) from dispatch', async () => {
-      const dispatcher = ModTestHandlerFactory.createSafeDispatcher(mockEventBus);
-      
+      const dispatcher =
+        ModTestHandlerFactory.createSafeDispatcher(mockEventBus);
+
       const result = await dispatcher.dispatch('TEST_EVENT', {});
-      
+
       expect(result).toBe(true);
     });
 
     it('should throw error when eventBus is missing', () => {
       expect(() => {
         ModTestHandlerFactory.createSafeDispatcher(null);
-      }).toThrow('ModTestHandlerFactory.createSafeDispatcher: eventBus is required');
+      }).toThrow(
+        'ModTestHandlerFactory.createSafeDispatcher: eventBus is required'
+      );
 
       expect(() => {
         ModTestHandlerFactory.createSafeDispatcher(undefined);
-      }).toThrow('ModTestHandlerFactory.createSafeDispatcher: eventBus is required');
+      }).toThrow(
+        'ModTestHandlerFactory.createSafeDispatcher: eventBus is required'
+      );
     });
 
     it('should throw error when eventBus lacks required methods', () => {
@@ -413,7 +503,7 @@ describe('ModTestHandlerFactory', () => {
         mockEventBus,
         mockLogger
       );
-      
+
       const customHandlers = ModTestHandlerFactory.createCustomHandlers(
         mockEntityManager,
         mockEventBus,
@@ -422,13 +512,21 @@ describe('ModTestHandlerFactory', () => {
       );
 
       // Both should have the same core handlers
-      const commonHandlers = ['GET_NAME', 'GET_TIMESTAMP', 'DISPATCH_PERCEPTIBLE_EVENT', 'DISPATCH_EVENT', 'END_TURN'];
-      
+      const commonHandlers = [
+        'GET_NAME',
+        'GET_TIMESTAMP',
+        'DISPATCH_PERCEPTIBLE_EVENT',
+        'DISPATCH_EVENT',
+        'END_TURN',
+      ];
+
       commonHandlers.forEach((handlerKey) => {
         expect(standardHandlers[handlerKey]).toBeDefined();
         expect(customHandlers[handlerKey]).toBeDefined();
         // Both handlers should be instances of the same class
-        expect(standardHandlers[handlerKey].constructor).toBe(customHandlers[handlerKey].constructor);
+        expect(standardHandlers[handlerKey].constructor).toBe(
+          customHandlers[handlerKey].constructor
+        );
       });
     });
 

@@ -9,7 +9,14 @@
  * E2E test coverage analysis for Component Mutation Safety.
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from '@jest/globals';
 import SharedEntityTestBed from './common/sharedEntityTestBed.js';
 
 describe('Component Mutation E2E Workflow', () => {
@@ -172,10 +179,14 @@ describe('Component Mutation E2E Workflow', () => {
       };
 
       const instanceId = 'test_component_override_001';
-      const entity = await testBed.getOrCreateTestEntity(definitionId, {
-        instanceId,
-        reuseExisting: false,
-      }, customDefinition);
+      const entity = await testBed.getOrCreateTestEntity(
+        definitionId,
+        {
+          instanceId,
+          reuseExisting: false,
+        },
+        customDefinition
+      );
 
       // Verify entity has definition component
       expect(entity.hasComponent('core:position')).toBe(true);
@@ -257,10 +268,14 @@ describe('Component Mutation E2E Workflow', () => {
       };
 
       const instanceId = 'test_component_removal_001';
-      const entity = await testBed.getOrCreateTestEntity(definitionId, {
-        instanceId,
-        reuseExisting: false,
-      }, customDefinition);
+      const entity = await testBed.getOrCreateTestEntity(
+        definitionId,
+        {
+          instanceId,
+          reuseExisting: false,
+        },
+        customDefinition
+      );
 
       // Add component override
       const overrideData = { locationId: 'test:override_location' };
@@ -423,7 +438,11 @@ describe('Component Mutation E2E Workflow', () => {
 
       // Act - Add components (optimized: could be batched if EntityManager supported batch operations)
       const addPromises = componentSequence.map((component) =>
-        testBed.entityManager.addComponent(instanceId, component.id, component.data)
+        testBed.entityManager.addComponent(
+          instanceId,
+          component.id,
+          component.data
+        )
       );
       await Promise.all(addPromises);
 
@@ -446,9 +465,11 @@ describe('Component Mutation E2E Workflow', () => {
 
       // Act - Remove components (batched for better performance)
       const removePromises = componentSequence.map((component) =>
-        testBed.entityManager.removeComponent(instanceId, component.id).catch(() => {
-          // Ignore removal errors for robustness
-        })
+        testBed.entityManager
+          .removeComponent(instanceId, component.id)
+          .catch(() => {
+            // Ignore removal errors for robustness
+          })
       );
       await Promise.all(removePromises);
 
@@ -569,7 +590,8 @@ describe('Component Mutation E2E Workflow', () => {
       );
 
       // Verify component was added
-      const retrievedEntity = await testBed.entityManager.getEntityInstance(instanceId);
+      const retrievedEntity =
+        await testBed.entityManager.getEntityInstance(instanceId);
       expect(retrievedEntity.hasComponent(componentTypeId)).toBe(true);
 
       // Act - Remove component (no performance monitoring overhead)

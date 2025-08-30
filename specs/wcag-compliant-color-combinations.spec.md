@@ -18,15 +18,15 @@ This specification provides a curated collection of pre-validated color combinat
 
 ### Active Mod Assignments
 
-| Mod | Color Scheme | Section | Background Color |
-|-----|-------------|---------|------------------|
-| Core | Classic Blue-Grey | 1.1 | `#455a64` |
-| Violence | Dark Crimson | 2.2 | `#8b0000` |
-| Intimacy | Rose Pink | 3.2 | `#ad1457` |
-| Clothing | Earth Brown | 4.2 | `#6d4c41` |
-| Sex | Mystic Purple | 5.1 | `#4a148c` |
-| Positioning | Deep Orange Energy | 9.2 | `#bf360c` |
-| Exercise | Orange Flame | 2.3 | `#e65100` |
+| Mod         | Color Scheme       | Section | Background Color |
+| ----------- | ------------------ | ------- | ---------------- |
+| Core        | Classic Blue-Grey  | 1.1     | `#455a64`        |
+| Violence    | Dark Crimson       | 2.2     | `#8b0000`        |
+| Intimacy    | Rose Pink          | 3.2     | `#ad1457`        |
+| Clothing    | Earth Brown        | 4.2     | `#6d4c41`        |
+| Sex         | Mystic Purple      | 5.1     | `#4a148c`        |
+| Positioning | Deep Orange Energy | 9.2     | `#bf360c`        |
+| Exercise    | Orange Flame       | 2.3     | `#e65100`        |
 
 ### Available Color Combinations
 

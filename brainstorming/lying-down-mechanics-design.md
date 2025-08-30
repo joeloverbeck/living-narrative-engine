@@ -10,12 +10,14 @@ This document explores the design and implementation of lying down mechanics for
 ## Design Goals
 
 ### Primary Objectives
+
 1. **Enable lying down actions** - Allow entities to lie down in supine or prone positions
 2. **Track positional state** - Maintain clear state of whether entity is lying down and orientation
 3. **Support multiple use cases** - Enable intimacy interactions, exercise actions, and general gameplay
 4. **Maintain system consistency** - Follow established component patterns from positioning module
 
 ### Secondary Objectives
+
 - Enable smooth transitions between lying positions (rolling over)
 - Support surface-aware lying (beds, floors, mats)
 - Integrate with movement locking system
@@ -58,12 +60,14 @@ Following the **Single-Target Positional State Pattern** identified in the refer
 #### Design Rationale
 
 **Single Component Approach**: Rather than separate `lying_prone` and `lying_supine` components, we use a single component with an orientation field. This:
+
 - Reduces component proliferation
 - Simplifies state queries (check one component instead of two)
 - Makes transitions easier (modify orientation vs remove/add components)
 - Follows the pattern of `positioning:sitting_on` which tracks both state and details
 
 **Surface Tracking**: The optional `surface_id` field enables:
+
 - Lying on specific furniture (beds, couches)
 - Surface-specific bonuses or restrictions
 - Preventing multiple entities on single-person surfaces
@@ -97,7 +101,11 @@ However, the unified approach is preferred for simplicity and consistency of sta
     "actor": ["core:actor"]
   },
   "forbidden_components": {
-    "actor": ["positioning:lying_down", "positioning:kneeling_before", "positioning:sitting_on"]
+    "actor": [
+      "positioning:lying_down",
+      "positioning:kneeling_before",
+      "positioning:sitting_on"
+    ]
   },
   "template": "lie down on your back",
   "visual": {
@@ -120,7 +128,11 @@ However, the unified approach is preferred for simplicity and consistency of sta
     "actor": ["core:actor"]
   },
   "forbidden_components": {
-    "actor": ["positioning:lying_down", "positioning:kneeling_before", "positioning:sitting_on"]
+    "actor": [
+      "positioning:lying_down",
+      "positioning:kneeling_before",
+      "positioning:sitting_on"
+    ]
   },
   "template": "lie down on your stomach",
   "visual": {
@@ -185,7 +197,11 @@ However, the unified approach is preferred for simplicity and consistency of sta
     "actor": ["core:actor"]
   },
   "forbidden_components": {
-    "actor": ["positioning:lying_down", "positioning:kneeling_before", "positioning:sitting_on"]
+    "actor": [
+      "positioning:lying_down",
+      "positioning:kneeling_before",
+      "positioning:sitting_on"
+    ]
   },
   "template": "lie down on {target.components.core:description.short}",
   "visual": {
@@ -277,7 +293,7 @@ However, the unified approach is preferred for simplicity and consistency of sta
         "variable_name": "newOrientation",
         "value": {
           "if": [
-            {"==": [{"var": "context.currentState.orientation"}, "supine"]},
+            { "==": [{ "var": "context.currentState.orientation" }, "supine"] },
             "prone",
             "supine"
           ]
@@ -309,7 +325,7 @@ However, the unified approach is preferred for simplicity and consistency of sta
         "variable_name": "orientationText",
         "value": {
           "if": [
-            {"==": [{"var": "context.newOrientation"}, "prone"]},
+            { "==": [{ "var": "context.newOrientation" }, "prone"] },
             "stomach",
             "back"
           ]
@@ -380,6 +396,7 @@ However, the unified approach is preferred for simplicity and consistency of sta
 ### Basic Scopes
 
 #### actors_lying_down.scope
+
 ```
 positioning:actors_lying_down := entities(positioning:lying_down)[][{
   "condition_ref": "core:entity-has-actor-component"
@@ -387,6 +404,7 @@ positioning:actors_lying_down := entities(positioning:lying_down)[][{
 ```
 
 #### actors_lying_prone.scope
+
 ```
 positioning:actors_lying_prone := entities(positioning:lying_down)[][{
   "and": [
@@ -397,6 +415,7 @@ positioning:actors_lying_prone := entities(positioning:lying_down)[][{
 ```
 
 #### actors_lying_supine.scope
+
 ```
 positioning:actors_lying_supine := entities(positioning:lying_down)[][{
   "and": [
@@ -409,6 +428,7 @@ positioning:actors_lying_supine := entities(positioning:lying_down)[][{
 ### Integration Scopes (Examples)
 
 #### close_actors_lying_down.scope
+
 ```
 positioning:close_actors_lying_down := actor.components.positioning:closeness.partners[][{
   "!!": {"var": "components.positioning:lying_down"}
@@ -416,6 +436,7 @@ positioning:close_actors_lying_down := actor.components.positioning:closeness.pa
 ```
 
 #### actor_lying_beside_target.scope
+
 ```
 positioning:actor_lying_beside_target := actor.components.positioning:closeness.partners[][{
   "and": [
@@ -434,6 +455,7 @@ positioning:actor_lying_beside_target := actor.components.positioning:closeness.
 ### Basic Conditions
 
 #### actor-is-lying-down.condition.json
+
 ```json
 {
   "id": "positioning:actor-is-lying-down",
@@ -447,13 +469,14 @@ positioning:actor_lying_beside_target := actor.components.positioning:closeness.
 ```
 
 #### actor-is-lying-prone.condition.json
+
 ```json
 {
   "id": "positioning:actor-is-lying-prone",
   "description": "Checks if the actor is lying face-down",
   "logic": {
     "==": [
-      {"var": "actor.components.positioning:lying_down.orientation"},
+      { "var": "actor.components.positioning:lying_down.orientation" },
       "prone"
     ]
   }
@@ -461,13 +484,14 @@ positioning:actor_lying_beside_target := actor.components.positioning:closeness.
 ```
 
 #### actor-is-lying-supine.condition.json
+
 ```json
 {
   "id": "positioning:actor-is-lying-supine",
   "description": "Checks if the actor is lying face-up",
   "logic": {
     "==": [
-      {"var": "actor.components.positioning:lying_down.orientation"},
+      { "var": "actor.components.positioning:lying_down.orientation" },
       "supine"
     ]
   }
@@ -475,15 +499,16 @@ positioning:actor_lying_beside_target := actor.components.positioning:closeness.
 ```
 
 #### actor-can-lie-down.condition.json
+
 ```json
 {
   "id": "positioning:actor-can-lie-down",
   "description": "Checks if actor can lie down (not already in positional state)",
   "logic": {
     "none": [
-      {"var": "actor.components.positioning:lying_down"},
-      {"var": "actor.components.positioning:kneeling_before"},
-      {"var": "actor.components.positioning:sitting_on"}
+      { "var": "actor.components.positioning:lying_down" },
+      { "var": "actor.components.positioning:kneeling_before" },
+      { "var": "actor.components.positioning:sitting_on" }
     ]
   }
 }
@@ -494,6 +519,7 @@ positioning:actor_lying_beside_target := actor.components.positioning:closeness.
 ### Movement System Integration
 
 The lying down mechanics integrate with the existing movement locking system:
+
 - **LOCK_MOVEMENT** operation called when lying down
 - **UNLOCK_MOVEMENT** operation called when getting up
 - Movement restrictions prevent location changes while lying
@@ -501,6 +527,7 @@ The lying down mechanics integrate with the existing movement locking system:
 ### Positioning Hierarchy
 
 Positional states are mutually exclusive:
+
 1. **Standing** (default, no component)
 2. **Sitting** (positioning:sitting_on)
 3. **Kneeling** (positioning:kneeling_before)
@@ -511,6 +538,7 @@ Transitions between states require explicit actions.
 ### Closeness Integration
 
 Lying down can be combined with closeness for intimate scenarios:
+
 - Actors can be close while one or both are lying down
 - Enables "lying beside" or "lying together" scenarios
 - Supports intimate actions that require horizontal positioning
@@ -518,6 +546,7 @@ Lying down can be combined with closeness for intimate scenarios:
 ### Facing Away Integration
 
 The facing_away component can work with lying down:
+
 - Prone position naturally faces away from those behind
 - Supine position faces away from those below/beneath
 - Enables positional awareness for intimate actions
@@ -542,7 +571,7 @@ The facing_away component can work with lying down:
 
 ### Exercise Scenarios
 
-1. **Plank Exercise**: 
+1. **Plank Exercise**:
    - Start with lie_down_on_stomach
    - Transition to plank position (future action)
    - Track duration for fitness benefits
@@ -584,6 +613,7 @@ The facing_away component can work with lying down:
 ### Surface Component (`positioning:allows_lying`)
 
 Similar to `allows_sitting`, furniture could have:
+
 ```json
 {
   "id": "positioning:allows_lying",
@@ -657,6 +687,7 @@ Similar to `allows_sitting`, furniture could have:
 ## Implementation Priority
 
 ### Phase 1: Core Implementation (MVP)
+
 1. ✅ Create `positioning:lying_down` component
 2. ✅ Implement basic actions (lie down supine/prone, roll over, get up)
 3. ✅ Add movement locking integration
@@ -664,18 +695,21 @@ Similar to `allows_sitting`, furniture could have:
 5. ✅ Test with existing positioning system
 
 ### Phase 2: Integration Enhancement
+
 1. Add surface targeting (lie on bed/mat)
 2. Integrate with closeness for "lying together"
 3. Add orientation-aware scopes for intimacy
 4. Create transition actions (sit to lie, kneel to lie)
 
 ### Phase 3: Use Case Implementation
+
 1. Add exercise actions (plank, push-ups)
 2. Implement rest/sleep mechanics
 3. Create intimacy-specific actions requiring lying
 4. Add medical/care scenarios
 
 ### Phase 4: Advanced Features
+
 1. Implement crawling movement
 2. Add comfort and fatigue systems
 3. Create surface-specific benefits
@@ -684,24 +718,28 @@ Similar to `allows_sitting`, furniture could have:
 ## Testing Strategy
 
 ### Component Testing
+
 - Validate schema with various orientation values
 - Test state persistence across saves
 - Verify movement lock integration
 - Test surface reference handling
 
 ### Action Testing
+
 - Verify mutual exclusivity with other positions
 - Test all transitions (stand→lie, lie→stand)
 - Validate roll over orientation switching
 - Test surface-targeted lying
 
 ### Integration Testing
+
 - Test with closeness circles
 - Verify facing_away interactions
 - Test with movement system
 - Validate scope resolutions
 
 ### Scenario Testing
+
 - Run through intimacy scenarios
 - Test exercise sequences
 - Verify rest/sleep mechanics
@@ -714,6 +752,7 @@ Similar to `allows_sitting`, furniture could have:
 **Decision**: Use single `positioning:lying_down` with orientation field
 
 **Rationale**:
+
 - Simpler state queries (one component check)
 - Easier transitions (modify vs remove/add)
 - Consistent with `sitting_on` pattern
@@ -726,6 +765,7 @@ Similar to `allows_sitting`, furniture could have:
 **Decision**: Lock movement when lying down
 
 **Rationale**:
+
 - Consistent with sitting and kneeling
 - Prevents unrealistic instant movement
 - Forces deliberate position changes
@@ -738,6 +778,7 @@ Similar to `allows_sitting`, furniture could have:
 **Decision**: Optional surface_id field in main component
 
 **Rationale**:
+
 - Allows both ground and furniture lying
 - Simple queries for surface-specific actions
 - Efficient component structure
@@ -750,6 +791,7 @@ Similar to `allows_sitting`, furniture could have:
 The lying down mechanics provide a robust foundation for horizontal positioning in the Living Narrative Engine. By following established component patterns and integrating with existing systems, these mechanics enable diverse gameplay scenarios from intimate interactions to exercise routines.
 
 The design prioritizes:
+
 - **Simplicity**: Single component with clear state
 - **Consistency**: Follows existing positioning patterns
 - **Extensibility**: Ready for future features
@@ -760,24 +802,29 @@ This implementation will enhance the narrative possibilities while maintaining t
 ## Appendix: Quick Reference
 
 ### Component
+
 - `positioning:lying_down` - Tracks lying state with orientation
 
 ### Actions
+
 - `positioning:lie_down_on_back` - Lie supine
 - `positioning:lie_down_on_stomach` - Lie prone
 - `positioning:roll_over` - Switch orientation
 - `positioning:get_up_from_lying` - Stand up
 
 ### Key Fields
+
 - `orientation`: "prone" | "supine"
 - `surface_id`: Optional surface reference
 
 ### Scopes
+
 - `positioning:actors_lying_down` - All lying actors
 - `positioning:actors_lying_prone` - Face-down actors
 - `positioning:actors_lying_supine` - Face-up actors
 
 ### Integration Points
+
 - Movement locking system
 - Closeness circles
 - Facing away mechanics

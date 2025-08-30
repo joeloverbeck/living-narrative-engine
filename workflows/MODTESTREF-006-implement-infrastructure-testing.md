@@ -27,6 +27,7 @@ The mod test infrastructure consists of multiple interconnected components that 
 ### Migration Risk Mitigation
 
 Before migrating 48 existing test files, we need confidence that:
+
 - New infrastructure produces identical test behavior
 - All mod categories are supported correctly
 - Edge cases and error scenarios work properly
@@ -37,6 +38,7 @@ Before migrating 48 existing test files, we need confidence that:
 ### Test Structure Organization
 
 **Directory Structure**:
+
 ```
 tests/
 ├── unit/common/mods/           # Unit tests for each component
@@ -123,11 +125,11 @@ import eventIsActionKneel from '../../../data/mods/positioning/conditions/eventI
 describe('Real Mod Integration Testing', () => {
   describe('Intimacy Category Integration', () => {
     let test;
-    
+
     beforeEach(() => {
       test = ModTestFixture.forAction('intimacy', 'kiss_cheek', {
         ruleFile: kissCheekRule,
-        conditionFile: eventIsActionKissCheek
+        conditionFile: eventIsActionKissCheek,
       });
       test.beforeEach();
     });
@@ -135,7 +137,7 @@ describe('Real Mod Integration Testing', () => {
     it('should execute intimate actions with real mod files', async () => {
       const { actor, target } = test.createCloseActors(['Alice', 'Bob']);
       test.resetWithEntities([actor, target]);
-      
+
       await test.executeAction(actor.id, target.id);
       test.assertActionSuccess("Alice leans in to kiss Bob's cheek softly.");
     });
@@ -146,11 +148,11 @@ describe('Real Mod Integration Testing', () => {
 
   describe('Positioning Category Integration', () => {
     let test;
-    
+
     beforeEach(() => {
       test = ModTestFixture.forAction('positioning', 'kneel_before', {
         ruleFile: kneelBeforeRule,
-        conditionFile: eventIsActionKneel
+        conditionFile: eventIsActionKneel,
       });
       test.beforeEach();
     });
@@ -158,7 +160,7 @@ describe('Real Mod Integration Testing', () => {
     it('should execute positioning actions with real mod files', async () => {
       const { actor, target } = test.createCloseActors(['Alice', 'Bob']);
       test.resetWithEntities([actor, target]);
-      
+
       await test.executeAction(actor.id, target.id);
       test.assertActionSuccess();
       test.assertComponentAdded(actor.id, 'positioning:kneeling_before');
@@ -169,7 +171,7 @@ describe('Real Mod Integration Testing', () => {
   });
 
   // Similar test suites for sex, violence, exercise categories
-  
+
   describe('Cross-Category Compatibility', () => {
     it('should support mixed category testing scenarios');
     it('should handle category transitions correctly');
@@ -193,28 +195,29 @@ describe('Infrastructure Performance Validation', () => {
   let performanceData = {
     setupTimes: [],
     executionTimes: [],
-    assertionTimes: []
+    assertionTimes: [],
   };
 
   describe('Test Setup Performance', () => {
     it('should create test fixtures within acceptable time limits', () => {
       const iterations = 50;
       const setupTimes = [];
-      
+
       for (let i = 0; i < iterations; i++) {
         const startTime = performance.now();
         const test = ModTestFixture.forAction('intimacy', 'kiss_cheek');
         test.beforeEach();
         const endTime = performance.now();
-        
+
         setupTimes.push(endTime - startTime);
       }
-      
-      const averageSetupTime = setupTimes.reduce((a, b) => a + b) / setupTimes.length;
-      
+
+      const averageSetupTime =
+        setupTimes.reduce((a, b) => a + b) / setupTimes.length;
+
       // Should be faster than 50ms on average
       expect(averageSetupTime).toBeLessThan(50);
-      
+
       // No individual setup should take longer than 100ms
       expect(Math.max(...setupTimes)).toBeLessThan(100);
     });
@@ -265,7 +268,7 @@ describe('Infrastructure Error Handling', () => {
       expect(() => {
         ModTestFixture.forAction('test', 'malformed', {
           ruleFile: '{ invalid json }',
-          conditionFile: validCondition
+          conditionFile: validCondition,
         });
       }).toThrow(/Invalid rule file format/);
     });
@@ -279,7 +282,7 @@ describe('Infrastructure Error Handling', () => {
       expect(() => {
         ModTestFixture.forAction('', 'action_id');
       }).toThrow(/Mod ID.*required/);
-      
+
       expect(() => {
         ModTestFixture.forAction('mod_id', '');
       }).toThrow(/Action ID.*required/);
@@ -294,7 +297,7 @@ describe('Infrastructure Error Handling', () => {
     it('should handle entity creation failures', async () => {
       const test = ModTestFixture.forAction('intimacy', 'kiss_cheek');
       test.beforeEach();
-      
+
       // Try to create entity with invalid configuration
       expect(() => {
         test.createActorWithAnatomy('', ''); // Empty parameters
@@ -304,10 +307,10 @@ describe('Infrastructure Error Handling', () => {
     it('should handle action execution failures gracefully', async () => {
       const test = ModTestFixture.forAction('intimacy', 'kiss_cheek');
       test.beforeEach();
-      
+
       const { actor, target } = test.createCloseActors();
       test.resetWithEntities([actor, target]);
-      
+
       // Try to execute action with invalid parameters
       await expect(async () => {
         await test.executeAction('', target.id); // Empty actor ID
@@ -320,7 +323,7 @@ describe('Infrastructure Error Handling', () => {
 
   describe('Edge Case Handling', () => {
     it('should handle empty entity arrays');
-    it('should handle missing event arrays'); 
+    it('should handle missing event arrays');
     it('should handle circular entity relationships');
     it('should handle extremely large data sets');
   });
@@ -343,26 +346,26 @@ describe('Complete Infrastructure Workflow', () => {
       // Create test fixture
       const test = ModTestFixture.forAction('intimacy', 'kiss_cheek');
       test.beforeEach();
-      
+
       // Create entities
       const { actor, target } = test.createCloseActors(['Alice', 'Bob']);
       test.resetWithEntities([actor, target]);
-      
+
       // Execute action
       await test.executeAction(actor.id, target.id);
-      
+
       // Validate results
       test.assertActionSuccess("Alice leans in to kiss Bob's cheek softly.");
-      
+
       // Validate event sequence
       const events = test.getEvents();
       expect(events).toBeDefined();
       expect(events.length).toBeGreaterThan(0);
-      
+
       // Validate entity state
       const entityManager = test.getEntityManager();
       expect(entityManager).toBeDefined();
-      
+
       // Complete workflow succeeded
       expect(true).toBe(true); // Workflow completed without errors
     });
@@ -376,18 +379,24 @@ describe('Complete Infrastructure Workflow', () => {
     it('should recover gracefully from action failures', async () => {
       const test = ModTestFixture.forAction('intimacy', 'kiss_cheek');
       test.beforeEach();
-      
+
       // Create entities without closeness (should fail)
-      const actor = new test.ModEntityBuilder('actor1').withName('Alice').atLocation('room1').build();
-      const target = new test.ModEntityBuilder('target1').withName('Bob').atLocation('room2').build();
+      const actor = new test.ModEntityBuilder('actor1')
+        .withName('Alice')
+        .atLocation('room1')
+        .build();
+      const target = new test.ModEntityBuilder('target1')
+        .withName('Bob')
+        .atLocation('room2')
+        .build();
       test.resetWithEntities([actor, target]);
-      
+
       // Execute action (should fail due to distance)
       await test.executeAction(actor.id, target.id);
-      
+
       // Validate failure is handled correctly
       test.assertActionFailure();
-      
+
       // Test environment should still be usable
       const events = test.getEvents();
       expect(events).toBeDefined();
@@ -401,12 +410,12 @@ describe('Complete Infrastructure Workflow', () => {
     it('should execute positioning workflows correctly', async () => {
       const test = ModTestFixture.forPositioningAction('kneel_before');
       test.beforeEach();
-      
+
       const { actor, target } = test.createCloseActors();
       test.resetWithEntities([actor, target]);
-      
+
       await test.executeAction(actor.id, target.id);
-      
+
       test.assertActionSuccess();
       test.assertComponentAdded(actor.id, 'positioning:kneeling_before');
     });
@@ -436,20 +445,22 @@ describe('Migration Validation', () => {
     it('should produce identical results to existing manual test', async () => {
       // Create old-style test environment manually
       const oldStyleTest = createOldStyleTest();
-      
+
       // Create new infrastructure test
       const newTest = ModTestFixture.forAction('intimacy', 'kiss_cheek', {
         ruleFile: kissCheekRule,
-        conditionFile: eventIsActionKissCheek
+        conditionFile: eventIsActionKissCheek,
       });
       newTest.beforeEach();
-      
+
       // Execute same test scenario with both approaches
       const oldResult = await executeOldStyleTest(oldStyleTest);
       const newResult = await executeNewStyleTest(newTest);
-      
+
       // Compare results
-      expect(normalizeEvents(newResult.events)).toEqual(normalizeEvents(oldResult.events));
+      expect(normalizeEvents(newResult.events)).toEqual(
+        normalizeEvents(oldResult.events)
+      );
       expect(newResult.entities).toEqual(oldResult.entities);
     });
 
@@ -461,16 +472,16 @@ describe('Migration Validation', () => {
   describe('Performance Comparison', () => {
     it('should perform comparably to existing manual tests', async () => {
       const iterations = 10;
-      
+
       // Measure old approach
       const oldTimes = await measureOldStylePerformance(iterations);
-      
+
       // Measure new approach
       const newTimes = await measureNewStylePerformance(iterations);
-      
+
       const oldAverage = oldTimes.reduce((a, b) => a + b) / oldTimes.length;
       const newAverage = newTimes.reduce((a, b) => a + b) / newTimes.length;
-      
+
       // New approach should be no more than 20% slower
       expect(newAverage).toBeLessThan(oldAverage * 1.2);
     });
@@ -504,30 +515,35 @@ function normalizeEvents(events) {
 ## Implementation Steps
 
 ### Step 1: Create Unit Test Suite
+
 1. Create comprehensive unit tests for each infrastructure component
 2. Ensure 100% coverage for all public methods and interfaces
 3. Test edge cases and error conditions thoroughly
 4. Validate parameter validation and error messages
 
 ### Step 2: Implement Integration Tests
+
 1. Create component integration tests for all infrastructure interactions
 2. Test real mod file integration with samples from each category
 3. Validate error handling across component boundaries
 4. Test configuration propagation and customization
 
 ### Step 3: Add Performance Validation
+
 1. Create performance benchmarks for all major operations
 2. Set acceptable performance thresholds based on existing test performance
 3. Add memory usage monitoring and leak detection
 4. Test scalability with large numbers of tests and entities
 
 ### Step 4: Implement End-to-End Testing
+
 1. Create complete workflow tests that exercise entire infrastructure
 2. Add migration validation tests that compare old vs new behavior
 3. Test complex scenarios with multiple components and interactions
 4. Validate error recovery and test environment consistency
 
 ### Step 5: Create Diagnostic and Debugging Tools
+
 1. Add diagnostic utilities for troubleshooting infrastructure issues
 2. Create test helpers for common testing scenarios
 3. Add performance monitoring and reporting tools
@@ -546,6 +562,7 @@ function normalizeEvents(events) {
 ### Success Criteria
 
 **Functional Validation**:
+
 - [ ] All infrastructure components work together without conflicts
 - [ ] Real mod files execute correctly with new infrastructure
 - [ ] All mod categories supported with appropriate customization
@@ -553,6 +570,7 @@ function normalizeEvents(events) {
 - [ ] Performance is within acceptable thresholds (no more than 20% slower)
 
 **Quality Validation**:
+
 - [ ] Test coverage exceeds 95% for all infrastructure code
 - [ ] Integration tests demonstrate real-world compatibility
 - [ ] Performance tests validate scalability requirements
@@ -562,6 +580,7 @@ function normalizeEvents(events) {
 ### Acceptance Criteria
 
 **Migration Readiness**:
+
 - [ ] Infrastructure produces identical behavior to existing manual tests
 - [ ] All 48 existing test patterns can be reproduced with new infrastructure
 - [ ] Performance is acceptable for large test suites
@@ -569,6 +588,7 @@ function normalizeEvents(events) {
 - [ ] Documentation supports developer onboarding
 
 **Production Quality**:
+
 - [ ] Zero critical bugs in infrastructure components
 - [ ] Comprehensive test coverage with no gaps
 - [ ] Performance meets or exceeds existing test performance
@@ -578,21 +598,25 @@ function normalizeEvents(events) {
 ## Success Metrics
 
 ### Infrastructure Reliability
+
 - **Target**: Zero critical infrastructure bugs
 - **Measurement**: Bug reports and test failure analysis
 - **Success**: Infrastructure passes all validation tests consistently
 
 ### Performance Validation
+
 - **Target**: No more than 20% performance degradation
 - **Measurement**: Benchmark comparison with existing manual tests
 - **Success**: All operations within acceptable performance thresholds
 
 ### Developer Confidence
+
 - **Target**: High developer confidence in infrastructure reliability
 - **Measurement**: Developer feedback and infrastructure adoption rate
 - **Success**: Developers prefer new infrastructure over manual test creation
 
 ### Migration Readiness
+
 - **Target**: Infrastructure ready for large-scale migration
 - **Measurement**: Successful reproduction of all existing test behaviors
 - **Success**: All 48 test files can be migrated without behavior changes
@@ -600,20 +624,24 @@ function normalizeEvents(events) {
 ## Integration Points
 
 ### Pre-Migration Validation
+
 - **MODTESTREF-001-005**: Validates integration of all previous infrastructure work
 - Must confirm all components work together before migration begins
 
 ### Migration Support
+
 - **MODTESTREF-007**: Provides confidence and validation tools for migration process
 - Infrastructure testing results inform migration strategy and risk assessment
 
 ### Future Foundation
+
 - **Community Mods**: Infrastructure testing ensures platform ready for community use
 - **Automated Testing**: Foundation for future automated test generation and validation
 
 ## Next Steps
 
 Upon completion, this testing infrastructure will:
+
 1. **Validate Migration Readiness**: Confirm infrastructure is ready for MODTESTREF-007
 2. **Provide Debugging Tools**: Support migration process with diagnostic utilities
 3. **Establish Quality Standards**: Set benchmarks for future infrastructure development

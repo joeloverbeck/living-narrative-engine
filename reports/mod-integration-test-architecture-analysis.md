@@ -7,12 +7,14 @@ This report analyzes the architecture of the mod integration test suites in `tes
 ### Current State Assessment
 
 **Strengths:**
+
 - Comprehensive coverage of mod functionality
 - Well-organized by mod categories (exercise, sex, positioning, violence, intimacy)
 - Consistent use of existing test infrastructure (`createRuleTestEnvironment`)
 - Good separation between action tests and rule tests
 
 **Critical Concerns:**
+
 - Massive code duplication (40-60 lines per test file)
 - No specialized base classes for mod testing
 - Inconsistent test patterns across different mod categories
@@ -33,6 +35,7 @@ This report analyzes the architecture of the mod integration test suites in `tes
 #### Test File Structure Analysis
 
 **File Distribution:**
+
 ```
 tests/integration/mods/
 ├── exercise/ (2 files)
@@ -53,6 +56,7 @@ tests/integration/mods/
 ```
 
 **Total Impact:**
+
 - **48 test files** with significant code duplication
 - **Estimated 1,920+ lines of duplicated code** (40 lines × 48 files)
 - **5 different mod categories** with inconsistent patterns
@@ -100,6 +104,7 @@ function createHandlers(entityManager, eventBus, logger) {
 ```
 
 **Variations observed:**
+
 - Some files add `ADD_COMPONENT` handler
 - Intimacy tests sometimes omit `SET_VARIABLE` handler
 - Handler order varies between files
@@ -188,6 +193,7 @@ expect(turnEndedEvent).toBeDefined();
 #### Positioning Tests
 
 **Special Requirements:**
+
 - Often need `positioning:closeness` components
 - May add components during execution (`ADD_COMPONENT` handler)
 - Test positioning state changes
@@ -204,6 +210,7 @@ expect(actor.components['positioning:kneeling_before']).toBeDefined();
 #### Intimacy Tests
 
 **Special Requirements:**
+
 - Almost always need `positioning:closeness` components
 - Largest category with 25 test files
 - Most consistent patterns due to volume
@@ -211,6 +218,7 @@ expect(actor.components['positioning:kneeling_before']).toBeDefined();
 #### Sex/Violence Tests
 
 **Special Requirements:**
+
 - May need anatomy components for complex actions
 - Often test failure scenarios for missing prerequisites
 
@@ -224,12 +232,14 @@ expect(actor.components['positioning:kneeling_before']).toBeDefined();
 #### Exercise Tests
 
 **Special Requirements:**
+
 - Smallest category (2 files)
 - Simple patterns focused on basic action execution
 
 ### Test Infrastructure Dependencies
 
 **Current Dependencies:**
+
 - `createRuleTestEnvironment` from `tests/common/engine/systemLogicTestEnv.js`
 - Multiple operation handlers imported individually
 - Constants from `src/constants/`
@@ -238,6 +248,7 @@ expect(actor.components['positioning:kneeling_before']).toBeDefined();
 **Infrastructure Analysis:**
 
 The existing `systemLogicTestEnv.js` provides good foundational infrastructure but is generic. Mod tests need specialized utilities that understand:
+
 - Common mod component patterns
 - Standard entity relationship setups
 - Mod-specific assertion patterns
@@ -248,12 +259,14 @@ The existing `systemLogicTestEnv.js` provides good foundational infrastructure b
 ### 1. Code Duplication Scale
 
 **Current Impact:**
+
 - **1,920+ duplicated lines** across 48 files
 - **Handler creation**: 30 lines × 48 = 1,440 lines
 - **Setup patterns**: 10 lines × 48 = 480 lines
 - **Additional duplication** in imports, constants, utilities
 
 **Maintenance Burden:**
+
 - Changes to handler creation require updating 48+ files
 - New operation handlers need to be added to every file manually
 - Inconsistencies creep in due to copy-paste errors
@@ -262,6 +275,7 @@ The existing `systemLogicTestEnv.js` provides good foundational infrastructure b
 ### 2. Inconsistent Test Patterns
 
 **Handler Variations:**
+
 ```javascript
 // Some files include ADD_COMPONENT
 ADD_COMPONENT: new AddComponentHandler({
@@ -278,20 +292,22 @@ DISPATCH_PERCEPTIBLE_EVENT vs. DISPATCH_EVENT ordering
 ```
 
 **Entity Setup Variations:**
+
 ```javascript
 // Some files use simple IDs
-id: 'actor1'
+id: 'actor1';
 
-// Others use namespaced IDs  
-id: 'test:actor1'
+// Others use namespaced IDs
+id: 'test:actor1';
 
 // Production-style IDs in some tests
-id: 'p_erotica:iker_aguirre_instance'
+id: 'p_erotica:iker_aguirre_instance';
 ```
 
 ### 3. Missing Specialized Utilities
 
 **Common Scenarios Lacking Utilities:**
+
 - Setting up actor-target relationships with closeness
 - Creating multi-actor scenarios with observers
 - Setting up anatomy structures for body-related actions
@@ -303,11 +319,13 @@ id: 'p_erotica:iker_aguirre_instance'
 ### 4. Scalability Concerns
 
 **Current Growth Pattern:**
+
 - 48 files across 5 categories = ~10 files per category
 - Each new mod category will likely need 8-15 test files
 - Each new action/rule needs its own integration test
 
 **Projected Scale Issues:**
+
 - **100 mod categories** = 1,000+ test files
 - **5,000+ duplicated files** with current patterns
 - **150,000+ lines of duplicated code**
@@ -316,6 +334,7 @@ id: 'p_erotica:iker_aguirre_instance'
 ### 5. Test Brittleness
 
 **Current Fragility Points:**
+
 - Direct imports of operation handlers make tests brittle to refactoring
 - Hardcoded event type strings throughout tests
 - Complex setup requirements that break easily
@@ -326,6 +345,7 @@ id: 'p_erotica:iker_aguirre_instance'
 ### 1. Mod-Specific Base Classes
 
 **ModActionTestBase**
+
 ```javascript
 class ModActionTestBase {
   constructor(modId, actionId, ruleFile, conditionFile) {
@@ -359,6 +379,7 @@ class ModActionTestBase {
 ```
 
 **ModRuleTestBase**
+
 ```javascript
 class ModRuleTestBase extends ModActionTestBase {
   // Specialized for rule testing scenarios
@@ -369,6 +390,7 @@ class ModRuleTestBase extends ModActionTestBase {
 ### 2. Specialized Test Utilities
 
 **ModEntityBuilder (Fluent API)**
+
 ```javascript
 const actor = new ModEntityBuilder('actor1')
   .withName('Alice')
@@ -379,6 +401,7 @@ const actor = new ModEntityBuilder('actor1')
 ```
 
 **ModTestHandlerFactory**
+
 ```javascript
 class ModTestHandlerFactory {
   static createStandardHandlers(entityManager, eventBus, logger) {
@@ -393,13 +416,19 @@ class ModTestHandlerFactory {
 ```
 
 **ModAssertionHelpers**
+
 ```javascript
 class ModAssertionHelpers {
   static assertActionWorkflow(events, expectedFlow) {
     // Validates complete action execution workflow
   }
 
-  static assertComponentAdded(entityManager, entityId, componentId, expectedData) {
+  static assertComponentAdded(
+    entityManager,
+    entityId,
+    componentId,
+    expectedData
+  ) {
     // Validates component addition for positioning actions
   }
 
@@ -412,6 +441,7 @@ class ModAssertionHelpers {
 ### 3. Test Environment Factory
 
 **ModTestFixture**
+
 ```javascript
 class ModTestFixture {
   static forAction(modId, actionId, options = {}) {
@@ -433,17 +463,20 @@ class ModTestFixture {
 ### Phase 1: Infrastructure Creation (Week 1)
 
 **Day 1-2: Base Infrastructure**
+
 1. Create `tests/common/mods/` directory structure
 2. Implement `ModTestHandlerFactory` with standard handler creation
 3. Create `ModEntityBuilder` with fluent API for entity creation
 4. Implement `ModAssertionHelpers` with common assertion patterns
 
 **Day 3-4: Base Classes**
+
 1. Implement `ModActionTestBase` class with standard action test patterns
 2. Implement `ModRuleTestBase` class extending action base for rule testing
 3. Create `ModTestFixture` factory for easy test environment creation
 
 **Day 5: Integration and Testing**
+
 1. Create comprehensive unit tests for new infrastructure
 2. Create example usage documentation
 3. Test infrastructure with sample mod test conversion
@@ -453,31 +486,37 @@ class ModTestFixture {
 **Migration Approach: By Category**
 
 **Week 2 - Exercise & Violence (6 files):**
+
 - Smallest categories, good for validating migration pattern
 - Exercise: 2 files (show_off_biceps_action, rules/showOffBicepsRule)
 - Violence: 4 files (slap_action, sucker_punch_action, 2 rule files)
 
 **Week 3 - Positioning (8 files):**
+
 - Medium complexity with special positioning component requirements
 - Good test case for handling ADD_COMPONENT variations
 
 **Week 4 - Sex (9 files):**
+
 - Contains anatomy component complexity
 - Tests infrastructure's flexibility with different entity setups
 
 **Week 5 - Intimacy (25 files):**
+
 - Largest category - validates infrastructure can handle scale
 - Most consistent patterns - should be straightforward once pattern is established
 
 ### Phase 3: Documentation and Patterns (Week 6)
 
 **Documentation Creation:**
+
 1. Migration guide for converting existing mod tests
-2. Best practices guide for new mod test development  
+2. Best practices guide for new mod test development
 3. Architecture decision records documenting the new patterns
 4. Examples and templates for common mod test scenarios
 
 **Pattern Establishment:**
+
 1. Create templates for new mod test development
 2. Establish coding standards for mod tests
 3. Create validation tools to ensure consistency
@@ -486,11 +525,13 @@ class ModTestFixture {
 ### Phase 4: Optimization and Enhancement (Week 7-8)
 
 **Performance Optimization:**
+
 1. Optimize test execution speed with shared setup
 2. Implement test result caching where appropriate
 3. Add parallel execution support for independent tests
 
 **Advanced Features:**
+
 1. Add support for complex multi-actor scenarios
 2. Implement specialized assertions for mod-specific patterns
 3. Create debugging utilities for mod test development
@@ -501,16 +542,19 @@ class ModTestFixture {
 ### Quantitative Improvements
 
 **Code Reduction:**
+
 - **70-80% reduction** in duplicated code
 - **From 1,920+ lines to ~400 lines** of unique code
 - **Estimated savings: 1,520+ lines** of maintenance burden
 
 **Development Speed:**
+
 - **New mod tests:** 15 minutes instead of 45 minutes
 - **Maintenance updates:** Single location instead of 48+ files
 - **Debugging:** Centralized utilities instead of scattered code
 
 **Test Reliability:**
+
 - **Consistent patterns** across all mod categories
 - **Standardized assertions** reduce false positives/negatives
 - **Centralized maintenance** reduces inconsistencies
@@ -518,18 +562,21 @@ class ModTestFixture {
 ### Qualitative Improvements
 
 **Developer Experience:**
+
 - Easier onboarding for new team members
 - Clear patterns to follow for new mod development
 - Less cognitive load when writing tests
 - Better error messages and debugging support
 
 **Maintainability:**
+
 - Single source of truth for mod test patterns
 - Easier to update when core systems change
 - Better test organization and discoverability
 - Reduced risk of copy-paste errors
 
 **Scalability:**
+
 - Architecture supports thousands of mod tests
 - New mod categories easy to add
 - Consistent quality across all mod tests
@@ -540,6 +587,7 @@ class ModTestFixture {
 ### File-by-File Migration Process
 
 **Step 1: Identify Conversion Patterns**
+
 ```javascript
 // Before (example from kiss_cheek_action.test.js)
 function createHandlers(entityManager, eventBus, logger) {
@@ -548,13 +596,15 @@ function createHandlers(entityManager, eventBus, logger) {
 
 describe('intimacy:kiss_cheek action integration', () => {
   let testEnv;
-  
+
   beforeEach(() => {
     // 20+ lines of setup
   });
 
   it('successfully executes kiss cheek action between close actors', async () => {
-    testEnv.reset([/* complex entity setup */]);
+    testEnv.reset([
+      /* complex entity setup */
+    ]);
     await testEnv.eventBus.dispatch(/* complex dispatch */);
     // Manual assertions
   });
@@ -583,12 +633,14 @@ describe('intimacy:kiss_cheek action integration', () => {
 ```
 
 **Step 2: Validate Conversions**
+
 - Run existing tests to capture baseline behavior
 - Convert to new infrastructure
 - Validate identical behavior with new implementation
 - Compare test execution performance
 
 **Step 3: Update Documentation**
+
 - Update each converted file with usage examples
 - Document any category-specific patterns discovered
 - Create migration notes for complex cases
@@ -616,6 +668,7 @@ describe('intimacy:kiss_cheek action integration', () => {
 ### Success Metrics
 
 **Migration Success Criteria:**
+
 - [ ] All existing tests pass with new infrastructure
 - [ ] Code duplication reduced by >70%
 - [ ] Test development time reduced by >60%
@@ -623,6 +676,7 @@ describe('intimacy:kiss_cheek action integration', () => {
 - [ ] Documentation complete and validated
 
 **Performance Targets:**
+
 - Test execution time: No more than 10% slower
 - Memory usage: No more than 20% increase
 - Setup time: 50% faster for new test creation
@@ -632,12 +686,14 @@ describe('intimacy:kiss_cheek action integration', () => {
 ### Scalability Planning
 
 **Projected Growth Handling:**
+
 - Architecture supports 1,000+ mod categories
 - Infrastructure can handle 10,000+ individual test files
 - Patterns established for community mod testing
 - Framework extensible for specialized mod types
 
 **Future Enhancements:**
+
 1. **Auto-generation** of basic mod tests from mod definitions
 2. **Visual test builders** for complex scenarios
 3. **Integration with mod development tools**
@@ -647,12 +703,14 @@ describe('intimacy:kiss_cheek action integration', () => {
 ### Community Impact
 
 **Mod Developer Benefits:**
+
 - Easy testing framework for community mods
 - Clear patterns and examples to follow
 - Reduced barrier to entry for mod testing
 - Better quality assurance for community content
 
 **Maintainer Benefits:**
+
 - Consistent quality across all mod tests
 - Easy to review and approve community contributions
 - Automated validation of mod test quality
@@ -673,7 +731,7 @@ The proposed solution provides:
 Implementation should proceed in phases with careful validation at each step. The expected outcome is a test infrastructure that:
 
 - **Scales efficiently** with project growth
-- **Reduces maintenance burden** by 80%+  
+- **Reduces maintenance burden** by 80%+
 - **Improves test quality** through standardization
 - **Supports rapid mod development** with consistent patterns
 

@@ -3,13 +3,7 @@
  * @description Verifies that "Failed to fetch" errors are properly classified as non-retriable
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import RemoteLogger from '../../../src/logging/remoteLogger.js';
 
 // Mock UUID to have predictable session IDs
@@ -87,11 +81,11 @@ describe('RemoteLogger - Network Error Classification', () => {
       remoteLogger.warn('Test warning message');
 
       // Wait for batch processing
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Should only attempt to send once (no retries for non-retriable errors)
       expect(mockFetch).toHaveBeenCalledTimes(1);
-      
+
       // Verify the failure was logged with clear error message
       expect(mockFallbackLogger.warn).toHaveBeenCalledWith(
         '[RemoteLogger] Failed to send batch to server, falling back to console',
@@ -104,7 +98,9 @@ describe('RemoteLogger - Network Error Classification', () => {
 
     it('should handle NetworkError correctly', async () => {
       // Configure fetch to simulate NetworkError
-      mockFetch.mockRejectedValue(new Error('NetworkError when attempting to fetch resource'));
+      mockFetch.mockRejectedValue(
+        new Error('NetworkError when attempting to fetch resource')
+      );
 
       const remoteLogger = new RemoteLogger({
         config: {
@@ -126,11 +122,11 @@ describe('RemoteLogger - Network Error Classification', () => {
       remoteLogger.info('Test message for NetworkError');
 
       // Wait for processing
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       // Should not retry NetworkError (non-retriable)
       expect(mockFetch).toHaveBeenCalledTimes(1);
-      
+
       expect(mockFallbackLogger.warn).toHaveBeenCalledWith(
         '[RemoteLogger] Failed to send batch to server, falling back to console',
         expect.objectContaining({
@@ -141,7 +137,7 @@ describe('RemoteLogger - Network Error Classification', () => {
 
     it('should still retry server errors (5xx)', async () => {
       let callCount = 0;
-      
+
       // Configure fetch to return server error that should be retried
       mockFetch.mockImplementation(() => {
         callCount++;
@@ -152,7 +148,7 @@ describe('RemoteLogger - Network Error Classification', () => {
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ success: true, processed: 1 })
+          json: () => Promise.resolve({ success: true, processed: 1 }),
         });
       });
 
@@ -176,11 +172,11 @@ describe('RemoteLogger - Network Error Classification', () => {
       remoteLogger.debug('Test message for server error');
 
       // Wait for retries to complete
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Should retry server errors (3 attempts total)
       expect(mockFetch).toHaveBeenCalledTimes(3);
-      
+
       // Should not log to fallback since it eventually succeeded
       expect(mockFallbackLogger.warn).not.toHaveBeenCalled();
     });
@@ -201,7 +197,7 @@ describe('RemoteLogger - Network Error Classification', () => {
 
       for (const testCase of testCases) {
         jest.clearAllMocks();
-        
+
         mockFetch.mockRejectedValue(new Error(testCase.error));
 
         const remoteLogger = new RemoteLogger({
@@ -222,12 +218,14 @@ describe('RemoteLogger - Network Error Classification', () => {
         });
 
         remoteLogger.info(`Test message for ${testCase.error}`);
-        
-        // Wait for processing
-        await new Promise(resolve => setTimeout(resolve, 500));
 
-        console.log(`[DEBUG] Test case "${testCase.error}" - shouldRetry: ${testCase.shouldRetry}, actualCalls: ${mockFetch.mock.calls.length}`);
-        
+        // Wait for processing
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        console.log(
+          `[DEBUG] Test case "${testCase.error}" - shouldRetry: ${testCase.shouldRetry}, actualCalls: ${mockFetch.mock.calls.length}`
+        );
+
         if (testCase.shouldRetry) {
           // Should attempt multiple times for retriable errors
           expect(mockFetch).toHaveBeenCalledTimes(2);
@@ -235,8 +233,10 @@ describe('RemoteLogger - Network Error Classification', () => {
           // Should only attempt once for non-retriable errors
           expect(mockFetch).toHaveBeenCalledTimes(1);
         }
-        
-        console.log(`[DEBUG] Test case "${testCase.error}" - shouldRetry: ${testCase.shouldRetry}, actualCalls: ${mockFetch.mock.calls.length}`);
+
+        console.log(
+          `[DEBUG] Test case "${testCase.error}" - shouldRetry: ${testCase.shouldRetry}, actualCalls: ${mockFetch.mock.calls.length}`
+        );
 
         // All errors should be logged to fallback
         expect(mockFallbackLogger.warn).toHaveBeenCalledWith(

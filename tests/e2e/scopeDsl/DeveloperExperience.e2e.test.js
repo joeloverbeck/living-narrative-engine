@@ -13,7 +13,15 @@
  * Coverage: Cross-cutting developer experience concerns
  */
 
-import { describe, beforeAll, afterAll, beforeEach, afterEach, test, expect } from '@jest/globals';
+import {
+  describe,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+  test,
+  expect,
+} from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
@@ -105,7 +113,7 @@ describe('Developer Experience E2E', () => {
 
     // Register minimal entities and setup
     const registry = sharedContainer.resolve(tokens.IDataRegistry);
-    
+
     // Setup test conditions (minimal set)
     ScopeTestUtilities.setupScopeTestConditions(registry);
 
@@ -427,7 +435,10 @@ describe('Developer Experience E2E', () => {
       const smallDataset = await ScopeTestUtilities.createMockEntityDataset(
         15, // Reduced from 100
         'simple', // Reduced complexity
-        { entityManager, registry: sharedContainer.resolve(tokens.IDataRegistry) }
+        {
+          entityManager,
+          registry: sharedContainer.resolve(tokens.IDataRegistry),
+        }
       );
 
       // OPTIMIZED: Reduce iterations and simplify measurement
@@ -488,7 +499,7 @@ describe('Developer Experience E2E', () => {
       // Verify resolution worked
       expect(result).toBeDefined();
       expect(typeof memoryUsed).toBe('number');
-      
+
       // OPTIMIZED: Just verify memory tracking works, don't enforce specific limits
     });
 
@@ -554,30 +565,86 @@ describe('Developer Experience E2E', () => {
         // Basic examples
         { expr: 'actor', description: 'Actor source', category: 'basic' },
         { expr: 'location', description: 'Location source', category: 'basic' },
-        { expr: 'entities(core:item)', description: 'Entities with component', category: 'basic' },
-        { expr: 'entities(!core:hostile)', description: 'Entities without component', category: 'basic' },
+        {
+          expr: 'entities(core:item)',
+          description: 'Entities with component',
+          category: 'basic',
+        },
+        {
+          expr: 'entities(!core:hostile)',
+          description: 'Entities without component',
+          category: 'basic',
+        },
 
         // Navigation examples
-        { expr: 'actor.core:inventory', description: 'Component access', category: 'navigation' },
-        { expr: 'actor.core:inventory.items', description: 'Nested field access', category: 'navigation' },
-        { expr: 'actor.core:inventory.items[]', description: 'Array iteration', category: 'navigation' },
-        { expr: 'location.core:exits[]', description: 'Exit iteration', category: 'navigation' },
+        {
+          expr: 'actor.core:inventory',
+          description: 'Component access',
+          category: 'navigation',
+        },
+        {
+          expr: 'actor.core:inventory.items',
+          description: 'Nested field access',
+          category: 'navigation',
+        },
+        {
+          expr: 'actor.core:inventory.items[]',
+          description: 'Array iteration',
+          category: 'navigation',
+        },
+        {
+          expr: 'location.core:exits[]',
+          description: 'Exit iteration',
+          category: 'navigation',
+        },
 
         // Union operations
-        { expr: 'actor.core:inventory.items[] + location.core:items[]', description: 'Union with +', category: 'union' },
-        { expr: 'actor.followers[] | actor.partners[]', description: 'Union with |', category: 'union' },
+        {
+          expr: 'actor.core:inventory.items[] + location.core:items[]',
+          description: 'Union with +',
+          category: 'union',
+        },
+        {
+          expr: 'actor.followers[] | actor.partners[]',
+          description: 'Union with |',
+          category: 'union',
+        },
 
         // Clothing examples (simplified set)
-        { expr: 'actor.topmost_clothing', description: 'Topmost clothing access', category: 'clothing' },
-        { expr: 'actor.topmost_clothing.torso', description: 'Specific slot access', category: 'clothing' },
+        {
+          expr: 'actor.topmost_clothing',
+          description: 'Topmost clothing access',
+          category: 'clothing',
+        },
+        {
+          expr: 'actor.topmost_clothing.torso',
+          description: 'Specific slot access',
+          category: 'clothing',
+        },
 
         // Filter examples (reduced set)
-        { expr: 'entities(core:item)[][{"==": [{"var": "entity.id"}, "sword1"]}]', description: 'Entity ID filter', category: 'filter' },
-        { expr: 'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}]', description: 'Condition reference filter', category: 'filter' },
+        {
+          expr: 'entities(core:item)[][{"==": [{"var": "entity.id"}, "sword1"]}]',
+          description: 'Entity ID filter',
+          category: 'filter',
+        },
+        {
+          expr: 'location.core:exits[{"condition_ref": "core:exit-is-unblocked"}]',
+          description: 'Condition reference filter',
+          category: 'filter',
+        },
 
         // Tutorial examples
-        { expr: 'entities(core:npc)', description: 'Tutorial: All NPCs', category: 'tutorial' },
-        { expr: 'entities(!core:hostile)', description: 'Tutorial: Non-hostile entities', category: 'tutorial' },
+        {
+          expr: 'entities(core:npc)',
+          description: 'Tutorial: All NPCs',
+          category: 'tutorial',
+        },
+        {
+          expr: 'entities(!core:hostile)',
+          description: 'Tutorial: Non-hostile entities',
+          category: 'tutorial',
+        },
       ];
 
       let successCount = 0;
@@ -606,9 +673,11 @@ describe('Developer Experience E2E', () => {
       // Report results efficiently
       expect(failures).toHaveLength(0);
       expect(successCount).toBe(allDocumentationExamples.length);
-      
+
       // Single log statement instead of per-example logging
-      logger.info(`✓ Validated ${successCount} documentation examples across ${new Set(allDocumentationExamples.map(e => e.category)).size} categories`);
+      logger.info(
+        `✓ Validated ${successCount} documentation examples across ${new Set(allDocumentationExamples.map((e) => e.category)).size} categories`
+      );
     });
 
     // OPTIMIZED: Combined with main validation test above for efficiency
@@ -616,9 +685,7 @@ describe('Developer Experience E2E', () => {
       const gameContext = createGameContext();
 
       // OPTIMIZED: Test only essential source patterns for real resolution
-      const sourcePatterns = [
-        { scope: 'actor', expectedType: 'string' },
-      ];
+      const sourcePatterns = [{ scope: 'actor', expectedType: 'string' }];
 
       for (const { scope, expectedType } of sourcePatterns) {
         const ast = dslParser.parse(scope);
@@ -635,7 +702,7 @@ describe('Developer Experience E2E', () => {
 
         expect(result).toBeDefined();
         expect(result).toBeInstanceOf(Set);
-        
+
         // Just verify basic functionality without complex assertions
         if (expectedType === 'string') {
           expect(result.size).toBeGreaterThanOrEqual(0);

@@ -4,7 +4,7 @@ import {
   LAYER_PRIORITY_WITHIN_COVERAGE,
   VALID_COVERAGE_PRIORITIES,
   VALID_LAYERS,
-  PRIORITY_CONFIG
+  PRIORITY_CONFIG,
 } from '../../../../src/scopeDsl/prioritySystem/priorityConstants.js';
 
 describe('PriorityConstants', () => {
@@ -18,7 +18,7 @@ describe('PriorityConstants', () => {
     });
 
     it('should have numeric values for all coverage priorities', () => {
-      Object.values(COVERAGE_PRIORITY).forEach(value => {
+      Object.values(COVERAGE_PRIORITY).forEach((value) => {
         expect(typeof value).toBe('number');
         expect(value).toBeGreaterThan(0);
       });
@@ -28,7 +28,9 @@ describe('PriorityConstants', () => {
       // Outer should have highest priority (lowest number)
       expect(COVERAGE_PRIORITY.outer).toBeLessThan(COVERAGE_PRIORITY.base);
       expect(COVERAGE_PRIORITY.base).toBeLessThan(COVERAGE_PRIORITY.underwear);
-      expect(COVERAGE_PRIORITY.underwear).toBeLessThan(COVERAGE_PRIORITY.direct);
+      expect(COVERAGE_PRIORITY.underwear).toBeLessThan(
+        COVERAGE_PRIORITY.direct
+      );
     });
 
     it('should have specific expected values', () => {
@@ -40,7 +42,7 @@ describe('PriorityConstants', () => {
 
     it('should maintain consistent spacing between values', () => {
       const values = Object.values(COVERAGE_PRIORITY).sort((a, b) => a - b);
-      
+
       // Check that differences are consistent (100 apart)
       for (let i = 1; i < values.length; i++) {
         expect(values[i] - values[i - 1]).toBe(100);
@@ -58,7 +60,7 @@ describe('PriorityConstants', () => {
     });
 
     it('should have numeric values for all layer priorities', () => {
-      Object.values(LAYER_PRIORITY_WITHIN_COVERAGE).forEach(value => {
+      Object.values(LAYER_PRIORITY_WITHIN_COVERAGE).forEach((value) => {
         expect(typeof value).toBe('number');
         expect(value).toBeGreaterThan(0);
       });
@@ -66,9 +68,15 @@ describe('PriorityConstants', () => {
 
     it('should have correct priority ordering (lower = higher priority)', () => {
       // Outer should have highest priority (lowest number)
-      expect(LAYER_PRIORITY_WITHIN_COVERAGE.outer).toBeLessThan(LAYER_PRIORITY_WITHIN_COVERAGE.base);
-      expect(LAYER_PRIORITY_WITHIN_COVERAGE.base).toBeLessThan(LAYER_PRIORITY_WITHIN_COVERAGE.underwear);
-      expect(LAYER_PRIORITY_WITHIN_COVERAGE.underwear).toBeLessThan(LAYER_PRIORITY_WITHIN_COVERAGE.accessories);
+      expect(LAYER_PRIORITY_WITHIN_COVERAGE.outer).toBeLessThan(
+        LAYER_PRIORITY_WITHIN_COVERAGE.base
+      );
+      expect(LAYER_PRIORITY_WITHIN_COVERAGE.base).toBeLessThan(
+        LAYER_PRIORITY_WITHIN_COVERAGE.underwear
+      );
+      expect(LAYER_PRIORITY_WITHIN_COVERAGE.underwear).toBeLessThan(
+        LAYER_PRIORITY_WITHIN_COVERAGE.accessories
+      );
     });
 
     it('should have specific expected values', () => {
@@ -79,8 +87,10 @@ describe('PriorityConstants', () => {
     });
 
     it('should maintain consistent spacing between values', () => {
-      const values = Object.values(LAYER_PRIORITY_WITHIN_COVERAGE).sort((a, b) => a - b);
-      
+      const values = Object.values(LAYER_PRIORITY_WITHIN_COVERAGE).sort(
+        (a, b) => a - b
+      );
+
       // Check that differences are consistent (10 apart)
       for (let i = 1; i < values.length; i++) {
         expect(values[i] - values[i - 1]).toBe(10);
@@ -89,10 +99,14 @@ describe('PriorityConstants', () => {
 
     it('should have layer values that are smaller than coverage values', () => {
       // Layer priorities should be fine-grained adjustments within coverage categories
-      const maxLayerPriority = Math.max(...Object.values(LAYER_PRIORITY_WITHIN_COVERAGE));
-      const minCoverageSpacing = Math.min(...Object.values(COVERAGE_PRIORITY).slice(1).map((val, idx) => 
-        val - Object.values(COVERAGE_PRIORITY)[idx]
-      ));
+      const maxLayerPriority = Math.max(
+        ...Object.values(LAYER_PRIORITY_WITHIN_COVERAGE)
+      );
+      const minCoverageSpacing = Math.min(
+        ...Object.values(COVERAGE_PRIORITY)
+          .slice(1)
+          .map((val, idx) => val - Object.values(COVERAGE_PRIORITY)[idx])
+      );
 
       expect(maxLayerPriority).toBeLessThan(minCoverageSpacing);
     });
@@ -108,7 +122,7 @@ describe('PriorityConstants', () => {
     it('should match all keys from COVERAGE_PRIORITY object', () => {
       const coveragePriorityKeys = Object.keys(COVERAGE_PRIORITY).sort();
       const validCoveragesSorted = VALID_COVERAGE_PRIORITIES.slice().sort();
-      
+
       expect(validCoveragesSorted).toEqual(coveragePriorityKeys);
     });
 
@@ -135,9 +149,11 @@ describe('PriorityConstants', () => {
     });
 
     it('should match all keys from LAYER_PRIORITY_WITHIN_COVERAGE object', () => {
-      const layerPriorityKeys = Object.keys(LAYER_PRIORITY_WITHIN_COVERAGE).sort();
+      const layerPriorityKeys = Object.keys(
+        LAYER_PRIORITY_WITHIN_COVERAGE
+      ).sort();
       const validLayersSorted = VALID_LAYERS.slice().sort();
-      
+
       expect(validLayersSorted).toEqual(layerPriorityKeys);
     });
 
@@ -184,7 +200,9 @@ describe('PriorityConstants', () => {
     });
 
     it('should have valid default values', () => {
-      expect(VALID_COVERAGE_PRIORITIES).toContain(PRIORITY_CONFIG.defaultCoveragePriority);
+      expect(VALID_COVERAGE_PRIORITIES).toContain(
+        PRIORITY_CONFIG.defaultCoveragePriority
+      );
       expect(VALID_LAYERS).toContain(PRIORITY_CONFIG.defaultLayer);
       expect(PRIORITY_CONFIG.defaultCoveragePriority).toBe('direct');
       expect(PRIORITY_CONFIG.defaultLayer).toBe('base');
@@ -203,7 +221,7 @@ describe('PriorityConstants', () => {
     it('should have frozen COVERAGE_PRIORITY object', () => {
       // Check if the object is frozen
       expect(Object.isFrozen(COVERAGE_PRIORITY)).toBe(true);
-      
+
       // Verify that attempting to modify throws in strict mode or has no effect
       const originalValue = COVERAGE_PRIORITY.outer;
       try {
@@ -217,7 +235,7 @@ describe('PriorityConstants', () => {
     it('should have frozen LAYER_PRIORITY_WITHIN_COVERAGE object', () => {
       // Check if the object is frozen
       expect(Object.isFrozen(LAYER_PRIORITY_WITHIN_COVERAGE)).toBe(true);
-      
+
       // Verify that attempting to modify has no effect
       const originalValue = LAYER_PRIORITY_WITHIN_COVERAGE.outer;
       try {
@@ -232,24 +250,24 @@ describe('PriorityConstants', () => {
       // Check if arrays are frozen
       expect(Object.isFrozen(VALID_COVERAGE_PRIORITIES)).toBe(true);
       expect(Object.isFrozen(VALID_LAYERS)).toBe(true);
-      
+
       // Verify original lengths are preserved
       const originalCoverageLength = VALID_COVERAGE_PRIORITIES.length;
       const originalLayersLength = VALID_LAYERS.length;
-      
+
       // Attempt to modify (will throw or have no effect if frozen)
       try {
         VALID_COVERAGE_PRIORITIES.push('invalid');
       } catch (e) {
         // Will throw TypeError if frozen
       }
-      
+
       try {
         VALID_LAYERS.push('invalid');
       } catch (e) {
         // Will throw TypeError if frozen
       }
-      
+
       expect(VALID_COVERAGE_PRIORITIES).toHaveLength(originalCoverageLength);
       expect(VALID_LAYERS).toHaveLength(originalLayersLength);
     });
@@ -257,7 +275,7 @@ describe('PriorityConstants', () => {
     it('should have frozen PRIORITY_CONFIG object', () => {
       // Check if the config object is frozen
       expect(Object.isFrozen(PRIORITY_CONFIG)).toBe(true);
-      
+
       // Verify that attempting to modify has no effect
       const originalValue = PRIORITY_CONFIG.maxCacheSize;
       try {
@@ -272,23 +290,33 @@ describe('PriorityConstants', () => {
   describe('Cross-Constant Consistency', () => {
     it('should have consistent keys between objects and validation arrays', () => {
       // Coverage consistency
-      expect(new Set(Object.keys(COVERAGE_PRIORITY))).toEqual(new Set(VALID_COVERAGE_PRIORITIES));
-      
-      // Layer consistency  
-      expect(new Set(Object.keys(LAYER_PRIORITY_WITHIN_COVERAGE))).toEqual(new Set(VALID_LAYERS));
+      expect(new Set(Object.keys(COVERAGE_PRIORITY))).toEqual(
+        new Set(VALID_COVERAGE_PRIORITIES)
+      );
+
+      // Layer consistency
+      expect(new Set(Object.keys(LAYER_PRIORITY_WITHIN_COVERAGE))).toEqual(
+        new Set(VALID_LAYERS)
+      );
     });
 
     it('should have default values that exist in their respective constants', () => {
-      expect(COVERAGE_PRIORITY).toHaveProperty(PRIORITY_CONFIG.defaultCoveragePriority);
-      expect(LAYER_PRIORITY_WITHIN_COVERAGE).toHaveProperty(PRIORITY_CONFIG.defaultLayer);
+      expect(COVERAGE_PRIORITY).toHaveProperty(
+        PRIORITY_CONFIG.defaultCoveragePriority
+      );
+      expect(LAYER_PRIORITY_WITHIN_COVERAGE).toHaveProperty(
+        PRIORITY_CONFIG.defaultLayer
+      );
     });
 
     it('should maintain mathematical relationships', () => {
       // Combined priorities should not overflow or underflow
-      const maxCombined = Math.max(...Object.values(COVERAGE_PRIORITY)) + 
-                          Math.max(...Object.values(LAYER_PRIORITY_WITHIN_COVERAGE));
-      const minCombined = Math.min(...Object.values(COVERAGE_PRIORITY)) + 
-                          Math.min(...Object.values(LAYER_PRIORITY_WITHIN_COVERAGE));
+      const maxCombined =
+        Math.max(...Object.values(COVERAGE_PRIORITY)) +
+        Math.max(...Object.values(LAYER_PRIORITY_WITHIN_COVERAGE));
+      const minCombined =
+        Math.min(...Object.values(COVERAGE_PRIORITY)) +
+        Math.min(...Object.values(LAYER_PRIORITY_WITHIN_COVERAGE));
 
       expect(maxCombined).toBeLessThan(Number.MAX_SAFE_INTEGER);
       expect(minCombined).toBeGreaterThan(0);
@@ -297,10 +325,11 @@ describe('PriorityConstants', () => {
     it('should allow distinguishable priority calculations', () => {
       // All combinations should produce unique values
       const priorities = [];
-      
+
       for (const coverage of VALID_COVERAGE_PRIORITIES) {
         for (const layer of VALID_LAYERS) {
-          const priority = COVERAGE_PRIORITY[coverage] + LAYER_PRIORITY_WITHIN_COVERAGE[layer];
+          const priority =
+            COVERAGE_PRIORITY[coverage] + LAYER_PRIORITY_WITHIN_COVERAGE[layer];
           priorities.push(priority);
         }
       }
@@ -318,11 +347,11 @@ describe('PriorityConstants', () => {
 
     it('should have priority values that allow fast arithmetic', () => {
       // All values should be simple integers for fast calculation
-      Object.values(COVERAGE_PRIORITY).forEach(value => {
+      Object.values(COVERAGE_PRIORITY).forEach((value) => {
         expect(Number.isInteger(value)).toBe(true);
       });
-      
-      Object.values(LAYER_PRIORITY_WITHIN_COVERAGE).forEach(value => {
+
+      Object.values(LAYER_PRIORITY_WITHIN_COVERAGE).forEach((value) => {
         expect(Number.isInteger(value)).toBe(true);
       });
     });
@@ -333,8 +362,10 @@ describe('PriorityConstants', () => {
       // Values should leave room for intermediate priorities if needed
       const coverageGap = COVERAGE_PRIORITY.base - COVERAGE_PRIORITY.outer;
       expect(coverageGap).toBeGreaterThan(50); // Room for new categories
-      
-      const layerGap = LAYER_PRIORITY_WITHIN_COVERAGE.base - LAYER_PRIORITY_WITHIN_COVERAGE.outer;
+
+      const layerGap =
+        LAYER_PRIORITY_WITHIN_COVERAGE.base -
+        LAYER_PRIORITY_WITHIN_COVERAGE.outer;
       expect(layerGap).toBeGreaterThan(5); // Room for new layers
     });
 

@@ -1,13 +1,13 @@
 /**
  * @file SlotAccessResolver Coverage Performance Test Suite
- * 
+ *
  * This performance test suite validates the performance characteristics of
  * the SlotAccessResolver coverage resolution system, measuring:
  * - Baseline performance vs coverage resolution performance
  * - Performance scaling with equipment complexity
  * - Concurrent resolution performance
  * - Cache efficiency and optimization validation
- * 
+ *
  * Performance Targets:
  * - Simple cases: <2ms average (1 item)
  * - Moderate cases: <5ms average (5 items)
@@ -26,12 +26,12 @@ import {
   jest,
 } from '@jest/globals';
 import { createUltraLightContainer } from '../../common/testing/ultraLightContainer.js';
-import { 
-  CoverageTestUtilities, 
-  PerformanceTracker, 
+import {
+  CoverageTestUtilities,
+  PerformanceTracker,
   CacheEfficiencyTracker,
   PERFORMANCE_CONFIG,
-  PERFORMANCE_TARGETS
+  PERFORMANCE_TARGETS,
 } from '../../common/scopeDsl/coverageTestUtilities.js';
 import createSlotAccessResolver from '../../../src/scopeDsl/nodes/slotAccessResolver.js';
 import { performance } from 'perf_hooks';
@@ -49,7 +49,7 @@ describe('SlotAccessResolver Coverage Performance', () => {
     container = createUltraLightContainer();
     testUtilities = new CoverageTestUtilities(container);
     performanceTracker = new PerformanceTracker();
-    
+
     const testBed = testUtilities.createSlotAccessTestBed();
     slotAccessResolver = createSlotAccessResolver(testBed);
   });
@@ -80,7 +80,12 @@ describe('SlotAccessResolver Coverage Performance', () => {
           parent: { type: 'Step' },
         };
 
-        const mockContext = testUtilities.createMockContext(equipment.equipped, 'topmost', false, 'test_character');
+        const mockContext = testUtilities.createMockContext(
+          equipment.equipped,
+          'topmost',
+          false,
+          'test_character'
+        );
 
         const startTime = performance.now();
 
@@ -88,7 +93,8 @@ describe('SlotAccessResolver Coverage Performance', () => {
           slotAccessResolver.resolve(node, mockContext);
         }
 
-        const avgTime = (performance.now() - startTime) / PERFORMANCE_CONFIG.measurementRuns;
+        const avgTime =
+          (performance.now() - startTime) / PERFORMANCE_CONFIG.measurementRuns;
         baselines[scenario.name] = avgTime;
 
         console.log(
@@ -126,7 +132,12 @@ describe('SlotAccessResolver Coverage Performance', () => {
           parent: { type: 'Step' },
         };
 
-        const mockContext = testUtilities.createMockContext(equipment.equipped, 'topmost', false, 'test_character');
+        const mockContext = testUtilities.createMockContext(
+          equipment.equipped,
+          'topmost',
+          false,
+          'test_character'
+        );
 
         const startTime = performance.now();
 
@@ -134,7 +145,8 @@ describe('SlotAccessResolver Coverage Performance', () => {
           slotAccessResolver.resolve(node, mockContext);
         }
 
-        const avgTime = (performance.now() - startTime) / PERFORMANCE_CONFIG.measurementRuns;
+        const avgTime =
+          (performance.now() - startTime) / PERFORMANCE_CONFIG.measurementRuns;
         coverageResults[scenario.name] = avgTime;
 
         console.log(
@@ -188,7 +200,12 @@ describe('SlotAccessResolver Coverage Performance', () => {
           parent: { type: 'Step' },
         };
 
-        const mockContext = testUtilities.createMockContext(equipment.equipped, 'topmost', false, 'test_character');
+        const mockContext = testUtilities.createMockContext(
+          equipment.equipped,
+          'topmost',
+          false,
+          'test_character'
+        );
 
         const startTime = performance.now();
 
@@ -234,7 +251,12 @@ describe('SlotAccessResolver Coverage Performance', () => {
 
       // Resolve clothing for all characters concurrently
       const promises = characters.map((char) => {
-        const mockContext = testUtilities.createMockContext(char.equipment.equipped, 'topmost', false, char.id);
+        const mockContext = testUtilities.createMockContext(
+          char.equipment.equipped,
+          'topmost',
+          false,
+          char.id
+        );
         return Promise.resolve(slotAccessResolver.resolve(node, mockContext));
       });
 
@@ -254,7 +276,9 @@ describe('SlotAccessResolver Coverage Performance', () => {
 
   describe('Cache Efficiency', () => {
     test('should achieve high cache hit rates in typical scenarios', async () => {
-      const equipment = testUtilities.generateEquipment(10, { coverageItems: 5 });
+      const equipment = testUtilities.generateEquipment(10, {
+        coverageItems: 5,
+      });
       const characters = [];
 
       // Create multiple characters with similar equipment patterns
@@ -272,26 +296,37 @@ describe('SlotAccessResolver Coverage Performance', () => {
 
       // Perform resolutions with cache tracking
       for (const character of characters) {
-        const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', true, character.id);
+        const mockContext = testUtilities.createMockContext(
+          character.equipment.equipped,
+          'topmost',
+          true,
+          character.id
+        );
 
         slotAccessResolver.resolve(node, mockContext);
 
         if (mockContext.trace?.coverageResolution?.priorityCalculation) {
-          cacheTracker.record(mockContext.trace.coverageResolution.priorityCalculation);
+          cacheTracker.record(
+            mockContext.trace.coverageResolution.priorityCalculation
+          );
         }
       }
 
       const efficiency = cacheTracker.getEfficiency();
-      console.log(`Cache efficiency: ${(efficiency * 100).toFixed(1)}% hit rate`);
+      console.log(
+        `Cache efficiency: ${(efficiency * 100).toFixed(1)}% hit rate`
+      );
 
       // Should achieve good cache efficiency with similar equipment
       expect(efficiency).toBeGreaterThan(PERFORMANCE_TARGETS.cacheHitRate);
     });
 
     test('should provide performance benefit from caching', async () => {
-      const equipment = testUtilities.generateEquipment(15, { coverageItems: 8 });
+      const equipment = testUtilities.generateEquipment(15, {
+        coverageItems: 8,
+      });
       const character = await testUtilities.createCharacter({ equipment });
-      
+
       const node = {
         type: 'Step',
         field: 'torso_lower',
@@ -301,7 +336,12 @@ describe('SlotAccessResolver Coverage Performance', () => {
       // Test with warm cache
       let cacheTime = 0;
       for (let i = 0; i < 100; i++) {
-        const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', false, character.id);
+        const mockContext = testUtilities.createMockContext(
+          character.equipment.equipped,
+          'topmost',
+          false,
+          character.id
+        );
         const startTime = performance.now();
 
         slotAccessResolver.resolve(node, mockContext);
@@ -320,8 +360,12 @@ describe('SlotAccessResolver Coverage Performance', () => {
   describe('Optimization Validation', () => {
     test('should skip coverage resolution for simple cases', async () => {
       // Test optimization that uses legacy resolution for simple cases
-      const simpleEquipment = testUtilities.generateEquipment(1, { noCoverage: true });
-      const character = await testUtilities.createCharacter({ equipment: simpleEquipment });
+      const simpleEquipment = testUtilities.generateEquipment(1, {
+        noCoverage: true,
+      });
+      const character = await testUtilities.createCharacter({
+        equipment: simpleEquipment,
+      });
 
       const node = {
         type: 'Step',
@@ -329,7 +373,12 @@ describe('SlotAccessResolver Coverage Performance', () => {
         parent: { type: 'Step' },
       };
 
-      const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', true, character.id);
+      const mockContext = testUtilities.createMockContext(
+        character.equipment.equipped,
+        'topmost',
+        true,
+        character.id
+      );
 
       slotAccessResolver.resolve(node, mockContext);
 
@@ -343,8 +392,12 @@ describe('SlotAccessResolver Coverage Performance', () => {
     });
 
     test('should use coverage resolution for complex cases', async () => {
-      const complexEquipment = testUtilities.generateEquipment(10, { coverageItems: 5 });
-      const character = await testUtilities.createCharacter({ equipment: complexEquipment });
+      const complexEquipment = testUtilities.generateEquipment(10, {
+        coverageItems: 5,
+      });
+      const character = await testUtilities.createCharacter({
+        equipment: complexEquipment,
+      });
 
       const node = {
         type: 'Step',
@@ -352,7 +405,12 @@ describe('SlotAccessResolver Coverage Performance', () => {
         parent: { type: 'Step' },
       };
 
-      const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', true, character.id);
+      const mockContext = testUtilities.createMockContext(
+        character.equipment.equipped,
+        'topmost',
+        true,
+        character.id
+      );
 
       slotAccessResolver.resolve(node, mockContext);
 
@@ -365,7 +423,9 @@ describe('SlotAccessResolver Coverage Performance', () => {
     });
 
     test('should maintain performance with tracing disabled', async () => {
-      const equipment = testUtilities.generateEquipment(15, { coverageItems: 8 });
+      const equipment = testUtilities.generateEquipment(15, {
+        coverageItems: 8,
+      });
       const character = await testUtilities.createCharacter({ equipment });
 
       const node = {
@@ -378,7 +438,12 @@ describe('SlotAccessResolver Coverage Performance', () => {
       let tracingTime = 0;
       for (let i = 0; i < 100; i++) {
         const startTime = performance.now();
-        const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', true, character.id);
+        const mockContext = testUtilities.createMockContext(
+          character.equipment.equipped,
+          'topmost',
+          true,
+          character.id
+        );
 
         slotAccessResolver.resolve(node, mockContext);
 
@@ -390,7 +455,12 @@ describe('SlotAccessResolver Coverage Performance', () => {
       let noTracingTime = 0;
       for (let i = 0; i < 100; i++) {
         const startTime = performance.now();
-        const mockContext = testUtilities.createMockContext(character.equipment.equipped, 'topmost', false, character.id);
+        const mockContext = testUtilities.createMockContext(
+          character.equipment.equipped,
+          'topmost',
+          false,
+          character.id
+        );
 
         slotAccessResolver.resolve(node, mockContext);
 
@@ -406,7 +476,9 @@ describe('SlotAccessResolver Coverage Performance', () => {
       // Tracing overhead should be reasonable (allow higher overhead for lightweight operations)
       // If operations are very fast, overhead percentages can be higher
       if (noTracingTime <= 0.01) {
-        console.log('Operations too fast to measure overhead accurately, skipping');
+        console.log(
+          'Operations too fast to measure overhead accurately, skipping'
+        );
         return;
       }
       expect(overhead).toBeLessThan(300); // More lenient for micro-operations

@@ -33,7 +33,7 @@ describe('LogMaintenanceScheduler - Status Field Completeness', () => {
   beforeEach(() => {
     mockLogger = createMockLogger();
     mockLogStorageService = createMockLogStorageService();
-    
+
     // Clear all mocks
     jest.clearAllMocks();
   });
@@ -116,11 +116,13 @@ describe('LogMaintenanceScheduler - Status Field Completeness', () => {
 
       // This simulates exactly what happens in server.js line 543
       const logMessage = `Log Maintenance Scheduler ENABLED - Next rotation check: ${status.nextRotationCheck}, Next cleanup: ${status.nextCleanup}`;
-      
+
       // The resulting log message now contains meaningful information instead of "undefined"
-      expect(logMessage).toContain('Next rotation check: Scheduled but not running');
+      expect(logMessage).toContain(
+        'Next rotation check: Scheduled but not running'
+      );
       expect(logMessage).toContain('Next cleanup: Scheduled but not running');
-      
+
       // This fixes the confusing logs we were seeing in error_logs.txt
     });
   });
@@ -195,15 +197,11 @@ describe('LogMaintenanceScheduler - Status Field Completeness', () => {
     it('should handle invalid cron expressions gracefully in status', () => {
       // Test that invalid cron expressions are rejected during construction
       expect(() => {
-        new LogMaintenanceScheduler(
-          mockLogger,
-          mockLogStorageService,
-          {
-            enabled: true,
-            rotationCheckSchedule: 'invalid-cron',
-            cleanupSchedule: 'another-invalid-cron',
-          }
-        );
+        new LogMaintenanceScheduler(mockLogger, mockLogStorageService, {
+          enabled: true,
+          rotationCheckSchedule: 'invalid-cron',
+          cleanupSchedule: 'another-invalid-cron',
+        });
       }).toThrow('Invalid rotation check cron expression: invalid-cron');
 
       // This ensures configuration validation catches bad cron expressions early
@@ -233,7 +231,7 @@ describe('LogMaintenanceScheduler - Status Field Completeness', () => {
       // Should work with AppConfigService and provide complete status
       expect(status.isEnabled).toBe(true);
       expect(mockAppConfig.getDebugLoggingConfig).toHaveBeenCalled();
-      
+
       // Status now includes required fields
       expect(status.nextRotationCheck).toBe('Scheduled but not running');
       expect(status.nextCleanup).toBe('Scheduled but not running');

@@ -15,7 +15,7 @@ export const COVERAGE_PRIORITY = Object.freeze({
 });
 
 /**
- * Layer priority within coverage types - lower values indicate higher priority  
+ * Layer priority within coverage types - lower values indicate higher priority
  * Applied within each coverage category for fine-grained ordering
  */
 export const LAYER_PRIORITY_WITHIN_COVERAGE = Object.freeze({
@@ -28,12 +28,22 @@ export const LAYER_PRIORITY_WITHIN_COVERAGE = Object.freeze({
 /**
  * Valid coverage priority values for validation
  */
-export const VALID_COVERAGE_PRIORITIES = Object.freeze(['outer', 'base', 'underwear', 'direct']);
+export const VALID_COVERAGE_PRIORITIES = Object.freeze([
+  'outer',
+  'base',
+  'underwear',
+  'direct',
+]);
 
 /**
  * Valid layer values for validation
  */
-export const VALID_LAYERS = Object.freeze(['outer', 'base', 'underwear', 'accessories']);
+export const VALID_LAYERS = Object.freeze([
+  'outer',
+  'base',
+  'underwear',
+  'accessories',
+]);
 
 /**
  * Priority system configuration constants

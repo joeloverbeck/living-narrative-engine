@@ -61,29 +61,34 @@ class MockServer {
 
     // Determine if this is a health check or debug log request
     const isHealthCheck = url && url.includes('/health');
-    
+
     if (isHealthCheck) {
       this.healthRequestCount++;
-      
+
       // Check for health check failures first
       if (this.healthFailures[this.healthRequestCount - 1]) {
         throw this.healthFailures[this.healthRequestCount - 1];
       }
 
       // Return health response or default healthy response
-      const healthResponse = this.healthResponses[this.healthRequestCount - 1] || {
+      const healthResponse = this.healthResponses[
+        this.healthRequestCount - 1
+      ] || {
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ status: 'healthy', timestamp: Date.now() }),
+        json: () =>
+          Promise.resolve({ status: 'healthy', timestamp: Date.now() }),
       };
-      
+
       return healthResponse;
     } else {
       // Debug log request
       this.debugLogRequestCount++;
-      
+
       if (this.delays[this.debugLogRequestCount - 1]) {
-        await new Promise((resolve) => setTimeout(resolve, this.delays[this.debugLogRequestCount - 1]));
+        await new Promise((resolve) =>
+          setTimeout(resolve, this.delays[this.debugLogRequestCount - 1])
+        );
       }
 
       // Check if we have a failure response for this specific debug log request
@@ -200,8 +205,8 @@ describe('RemoteLogger Integration Tests', () => {
       });
 
       remoteLogger = new RemoteLogger({
-        config: createTestConfig({ 
-          batchSize: 3, 
+        config: createTestConfig({
+          batchSize: 3,
           flushInterval: 100,
         }),
         dependencies: { consoleLogger: mockConsoleLogger },
@@ -215,7 +220,7 @@ describe('RemoteLogger Integration Tests', () => {
 
       // Should have made at least one request (debug log)
       expect(mockServer.getDebugLogRequestCount()).toBe(1);
-      
+
       // Verify the debug log request was made correctly
       expect(global.fetch).toHaveBeenCalledWith(
         'http://localhost:3001/api/debug-log',
@@ -226,11 +231,11 @@ describe('RemoteLogger Integration Tests', () => {
       );
 
       // Find the debug log request in the fetch calls
-      const debugLogCall = global.fetch.mock.calls.find(call => 
-        call[0] === 'http://localhost:3001/api/debug-log'
+      const debugLogCall = global.fetch.mock.calls.find(
+        (call) => call[0] === 'http://localhost:3001/api/debug-log'
       );
       expect(debugLogCall).toBeDefined();
-      
+
       const requestBody = JSON.parse(debugLogCall[1].body);
       expect(requestBody.logs).toHaveLength(3);
       expect(requestBody.logs[0].level).toBe('info');
@@ -250,8 +255,8 @@ describe('RemoteLogger Integration Tests', () => {
       });
 
       remoteLogger = new RemoteLogger({
-        config: createTestConfig({ 
-          batchSize: 100, 
+        config: createTestConfig({
+          batchSize: 100,
           flushInterval: 50,
         }),
         dependencies: { consoleLogger: mockConsoleLogger },
@@ -282,8 +287,8 @@ describe('RemoteLogger Integration Tests', () => {
       });
 
       remoteLogger = new RemoteLogger({
-        config: createTestConfig({ 
-          batchSize: 2, 
+        config: createTestConfig({
+          batchSize: 2,
           flushInterval: 10,
         }),
         dependencies: { consoleLogger: mockConsoleLogger },
@@ -298,8 +303,8 @@ describe('RemoteLogger Integration Tests', () => {
       expect(mockServer.getDebugLogRequestCount()).toBeGreaterThanOrEqual(2); // 2 debug log requests
 
       // Find debug log requests
-      const debugLogCalls = global.fetch.mock.calls.filter(call => 
-        call[0] === 'http://localhost:3001/api/debug-log'
+      const debugLogCalls = global.fetch.mock.calls.filter(
+        (call) => call[0] === 'http://localhost:3001/api/debug-log'
       );
       expect(debugLogCalls.length).toBeGreaterThanOrEqual(2);
 
@@ -389,8 +394,8 @@ describe('RemoteLogger Integration Tests', () => {
       });
 
       remoteLogger = new RemoteLogger({
-        config: createTestConfig({ 
-          batchSize: 1, 
+        config: createTestConfig({
+          batchSize: 1,
           retryAttempts: 2,
         }),
         dependencies: { consoleLogger: mockConsoleLogger },
@@ -470,7 +475,9 @@ describe('RemoteLogger Integration Tests', () => {
       await jest.runAllTimersAsync();
 
       // No additional debug log requests should be made
-      expect(mockServer.getDebugLogRequestCount()).toBe(debugRequestCountBefore);
+      expect(mockServer.getDebugLogRequestCount()).toBe(
+        debugRequestCountBefore
+      );
 
       // Should fall back to console immediately
       expect(mockConsoleLogger.warn).toHaveBeenCalledWith(
@@ -543,11 +550,11 @@ describe('RemoteLogger Integration Tests', () => {
       await jest.runAllTimersAsync();
 
       // Find the debug log call
-      const minimalCall = global.fetch.mock.calls.find(call => 
-        call[0] === 'http://localhost:3001/api/debug-log'
+      const minimalCall = global.fetch.mock.calls.find(
+        (call) => call[0] === 'http://localhost:3001/api/debug-log'
       );
       expect(minimalCall).toBeDefined();
-      
+
       let requestBody = JSON.parse(minimalCall[1].body);
       let logEntry = requestBody.logs[0];
 
@@ -577,8 +584,8 @@ describe('RemoteLogger Integration Tests', () => {
       remoteLoggerFull.info('Full metadata test');
       await jest.runAllTimersAsync();
 
-      const fullCall = global.fetch.mock.calls.find(call => 
-        call[0] === 'http://localhost:3001/api/debug-log'
+      const fullCall = global.fetch.mock.calls.find(
+        (call) => call[0] === 'http://localhost:3001/api/debug-log'
       );
       expect(fullCall).toBeDefined();
 
@@ -639,8 +646,8 @@ describe('RemoteLogger Integration Tests', () => {
       await jest.runAllTimersAsync();
 
       // Filter to only debug log requests
-      const debugLogRequests = capturedRequests.filter(req => 
-        req.url === 'http://localhost:3001/api/debug-log'
+      const debugLogRequests = capturedRequests.filter(
+        (req) => req.url === 'http://localhost:3001/api/debug-log'
       );
       expect(debugLogRequests.length).toBeGreaterThanOrEqual(1);
 
@@ -700,8 +707,8 @@ describe('RemoteLogger Integration Tests', () => {
       await jest.runAllTimersAsync();
 
       // Filter to only debug log requests
-      const debugLogRequests = capturedRequests.filter(req => 
-        req.url === 'http://localhost:3001/api/debug-log'
+      const debugLogRequests = capturedRequests.filter(
+        (req) => req.url === 'http://localhost:3001/api/debug-log'
       );
       expect(debugLogRequests.length).toBeGreaterThanOrEqual(1);
 

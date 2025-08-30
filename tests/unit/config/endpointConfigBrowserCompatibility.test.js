@@ -15,7 +15,7 @@ describe('EndpointConfig Browser Compatibility', () => {
     originalGlobals = {
       __PROXY_HOST__: global.__PROXY_HOST__,
       __PROXY_PORT__: global.__PROXY_PORT__,
-      __PROXY_USE_HTTPS__: global.__PROXY_USE_HTTPS__
+      __PROXY_USE_HTTPS__: global.__PROXY_USE_HTTPS__,
     };
   });
 
@@ -27,7 +27,9 @@ describe('EndpointConfig Browser Compatibility', () => {
     global.__PROXY_USE_HTTPS__ = originalGlobals.__PROXY_USE_HTTPS__;
 
     // Reset the singleton instance
-    const { resetEndpointConfig } = await import('../../../src/config/endpointConfig.js');
+    const { resetEndpointConfig } = await import(
+      '../../../src/config/endpointConfig.js'
+    );
     resetEndpointConfig();
   });
 
@@ -43,13 +45,19 @@ describe('EndpointConfig Browser Compatibility', () => {
       global.__PROXY_PORT__ = '8080';
       global.__PROXY_USE_HTTPS__ = 'true';
 
-      const { getEndpointConfig, resetEndpointConfig } = await import('../../../src/config/endpointConfig.js');
+      const { getEndpointConfig, resetEndpointConfig } = await import(
+        '../../../src/config/endpointConfig.js'
+      );
       resetEndpointConfig(); // Ensure clean state
       const config = getEndpointConfig();
 
       expect(config.getBaseUrl()).toBe('https://example.com:8080');
-      expect(config.getDebugLogEndpoint()).toBe('https://example.com:8080/api/debug-log');
-      expect(config.getLlmRequestEndpoint()).toBe('https://example.com:8080/api/llm-request');
+      expect(config.getDebugLogEndpoint()).toBe(
+        'https://example.com:8080/api/debug-log'
+      );
+      expect(config.getLlmRequestEndpoint()).toBe(
+        'https://example.com:8080/api/llm-request'
+      );
     });
 
     it('should use default values when build-time constants are undefined', async () => {
@@ -58,13 +66,17 @@ describe('EndpointConfig Browser Compatibility', () => {
       global.__PROXY_PORT__ = undefined;
       global.__PROXY_USE_HTTPS__ = undefined;
 
-      const { getEndpointConfig, resetEndpointConfig } = await import('../../../src/config/endpointConfig.js');
+      const { getEndpointConfig, resetEndpointConfig } = await import(
+        '../../../src/config/endpointConfig.js'
+      );
       resetEndpointConfig(); // Ensure clean state
       const config = getEndpointConfig();
 
       // Should use hardcoded defaults
       expect(config.getBaseUrl()).toBe('http://localhost:3001');
-      expect(config.getDebugLogEndpoint()).toBe('http://localhost:3001/api/debug-log');
+      expect(config.getDebugLogEndpoint()).toBe(
+        'http://localhost:3001/api/debug-log'
+      );
     });
 
     it('should handle mixed defined/undefined build-time constants', async () => {
@@ -73,7 +85,9 @@ describe('EndpointConfig Browser Compatibility', () => {
       global.__PROXY_PORT__ = undefined;
       global.__PROXY_USE_HTTPS__ = 'false';
 
-      const { getEndpointConfig, resetEndpointConfig } = await import('../../../src/config/endpointConfig.js');
+      const { getEndpointConfig, resetEndpointConfig } = await import(
+        '../../../src/config/endpointConfig.js'
+      );
       resetEndpointConfig();
       const config = getEndpointConfig();
 
@@ -82,7 +96,9 @@ describe('EndpointConfig Browser Compatibility', () => {
     });
 
     it('should throw error when trying to use forEnvironment in browser', async () => {
-      const { default: EndpointConfig, resetEndpointConfig } = await import('../../../src/config/endpointConfig.js');
+      const { default: EndpointConfig, resetEndpointConfig } = await import(
+        '../../../src/config/endpointConfig.js'
+      );
       resetEndpointConfig();
 
       expect(() => {
@@ -99,8 +115,8 @@ describe('EndpointConfig Browser Compatibility', () => {
           env: {
             PROXY_HOST: 'localhost',
             PROXY_PORT: '3001',
-            PROXY_USE_HTTPS: 'false'
-          }
+            PROXY_USE_HTTPS: 'false',
+          },
         };
       }
     });
@@ -109,12 +125,14 @@ describe('EndpointConfig Browser Compatibility', () => {
       // Set up conflicting values
       global.process.env.PROXY_HOST = 'from-process-env';
       global.process.env.PROXY_PORT = '9000';
-      
+
       global.__PROXY_HOST__ = 'from-build-time';
       global.__PROXY_PORT__ = '8000';
       global.__PROXY_USE_HTTPS__ = 'true';
 
-      const { getEndpointConfig, resetEndpointConfig } = await import('../../../src/config/endpointConfig.js');
+      const { getEndpointConfig, resetEndpointConfig } = await import(
+        '../../../src/config/endpointConfig.js'
+      );
       resetEndpointConfig();
       const config = getEndpointConfig();
 
@@ -133,7 +151,9 @@ describe('EndpointConfig Browser Compatibility', () => {
       global.process.env.PROXY_PORT = '7000';
       global.process.env.PROXY_USE_HTTPS = 'true';
 
-      const { getEndpointConfig, resetEndpointConfig } = await import('../../../src/config/endpointConfig.js');
+      const { getEndpointConfig, resetEndpointConfig } = await import(
+        '../../../src/config/endpointConfig.js'
+      );
       resetEndpointConfig();
       const config = getEndpointConfig();
 
@@ -141,7 +161,9 @@ describe('EndpointConfig Browser Compatibility', () => {
     });
 
     it('should work with forEnvironment method', async () => {
-      const { default: EndpointConfig, resetEndpointConfig } = await import('../../../src/config/endpointConfig.js');
+      const { default: EndpointConfig, resetEndpointConfig } = await import(
+        '../../../src/config/endpointConfig.js'
+      );
       resetEndpointConfig();
 
       const config = EndpointConfig.forEnvironment('development');
@@ -160,7 +182,9 @@ describe('EndpointConfig Browser Compatibility', () => {
       delete global.process.env.PROXY_PORT;
       delete global.process.env.PROXY_USE_HTTPS;
 
-      const { getEndpointConfig, resetEndpointConfig } = await import('../../../src/config/endpointConfig.js');
+      const { getEndpointConfig, resetEndpointConfig } = await import(
+        '../../../src/config/endpointConfig.js'
+      );
       resetEndpointConfig();
       const config = getEndpointConfig();
 
@@ -176,7 +200,9 @@ describe('EndpointConfig Browser Compatibility', () => {
       global.__PROXY_PORT__ = '8080';
       global.__PROXY_USE_HTTPS__ = 'false';
 
-      const { getEndpointConfig, resetEndpointConfig } = await import('../../../src/config/endpointConfig.js');
+      const { getEndpointConfig, resetEndpointConfig } = await import(
+        '../../../src/config/endpointConfig.js'
+      );
       resetEndpointConfig();
       const config = getEndpointConfig();
 
@@ -184,9 +210,15 @@ describe('EndpointConfig Browser Compatibility', () => {
 
       expect(endpoints.baseUrl).toBe('http://test-host:8080');
       expect(endpoints.debugLog).toBe('http://test-host:8080/api/debug-log');
-      expect(endpoints.llmRequest).toBe('http://test-host:8080/api/llm-request');
-      expect(endpoints.tracesWrite).toBe('http://test-host:8080/api/traces/write');
-      expect(endpoints.tracesWriteBatch).toBe('http://test-host:8080/api/traces/write-batch');
+      expect(endpoints.llmRequest).toBe(
+        'http://test-host:8080/api/llm-request'
+      );
+      expect(endpoints.tracesWrite).toBe(
+        'http://test-host:8080/api/traces/write'
+      );
+      expect(endpoints.tracesWriteBatch).toBe(
+        'http://test-host:8080/api/traces/write-batch'
+      );
       expect(endpoints.health).toBe('http://test-host:8080/health');
     });
 
@@ -196,7 +228,9 @@ describe('EndpointConfig Browser Compatibility', () => {
       global.__PROXY_PORT__ = '443';
       global.__PROXY_USE_HTTPS__ = 'true';
 
-      const { getEndpointConfig, resetEndpointConfig } = await import('../../../src/config/endpointConfig.js');
+      const { getEndpointConfig, resetEndpointConfig } = await import(
+        '../../../src/config/endpointConfig.js'
+      );
       resetEndpointConfig();
       const config = getEndpointConfig();
 

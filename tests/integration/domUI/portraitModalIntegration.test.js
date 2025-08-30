@@ -14,22 +14,29 @@ describe('Portrait Modal Integration', () => {
 
   beforeEach(() => {
     testBed = createTestBed();
-    
+
     // Set up DOM elements
     mockOutputDiv = testBed.createMockElement('div');
     mockOutputDiv.scrollHeight = 100;
     mockMessageList = testBed.createMockElement('div');
     mockPortraitImg = testBed.createMockElement('img');
-    
+
     // Override addEventListener to capture click handler
     const originalAddEventListener = mockPortraitImg.addEventListener;
-    mockPortraitImg.addEventListener = jest.fn((eventType, handler, options) => {
-      originalAddEventListener.call(mockPortraitImg, eventType, handler, options);
-      if (eventType === 'click') {
-        mockPortraitImg._clickHandler = handler;
+    mockPortraitImg.addEventListener = jest.fn(
+      (eventType, handler, options) => {
+        originalAddEventListener.call(
+          mockPortraitImg,
+          eventType,
+          handler,
+          options
+        );
+        if (eventType === 'click') {
+          mockPortraitImg._clickHandler = handler;
+        }
       }
-    });
-    
+    );
+
     // Add click method to portrait image mock
     mockPortraitImg.click = jest.fn(() => {
       // Simulate click event
@@ -47,22 +54,32 @@ describe('Portrait Modal Integration', () => {
       },
       create: jest.fn(),
       document: {
-        createTextNode: jest.fn().mockReturnValue(testBed.createMockElement('text')),
-        body: testBed.createMockElement('body')
-      }
+        createTextNode: jest
+          .fn()
+          .mockReturnValue(testBed.createMockElement('text')),
+        body: testBed.createMockElement('body'),
+      },
     };
 
     const mockDomElementFactory = {
       img: jest.fn().mockReturnValue(mockPortraitImg),
-      create: jest.fn().mockImplementation((tag, options) => testBed.createMockElement(tag)),
-      span: jest.fn().mockImplementation((className) => testBed.createMockElement('span')),
-      div: jest.fn().mockImplementation((className) => testBed.createMockElement('div')),
-      button: jest.fn().mockImplementation((className) => testBed.createMockElement('button'))
+      create: jest
+        .fn()
+        .mockImplementation((tag, options) => testBed.createMockElement(tag)),
+      span: jest
+        .fn()
+        .mockImplementation((className) => testBed.createMockElement('span')),
+      div: jest
+        .fn()
+        .mockImplementation((className) => testBed.createMockElement('div')),
+      button: jest
+        .fn()
+        .mockImplementation((className) => testBed.createMockElement('button')),
     };
 
     const mockEntityDisplayDataProvider = {
       getEntityName: testBed.createMock('getEntityName', []),
-      getEntityPortraitPath: testBed.createMock('getEntityPortraitPath', [])
+      getEntityPortraitPath: testBed.createMock('getEntityPortraitPath', []),
     };
 
     // Create PortraitModalRenderer instance
@@ -97,7 +114,7 @@ describe('Portrait Modal Integration', () => {
   it('should integrate portrait modal renderer correctly with dependency injection', () => {
     expect(renderer).toBeDefined();
     expect(portraitModalRenderer).toBeDefined();
-    
+
     // Verify that the renderer received the modal renderer dependency
     expect(testBed.logger.warn).not.toHaveBeenCalledWith(
       expect.stringContaining('PortraitModalRenderer not available')
@@ -108,7 +125,7 @@ describe('Portrait Modal Integration', () => {
     // Set up entity data - recreate renderer with proper mock entity display data provider
     const mockEntityDisplayDataProvider = {
       getEntityName: jest.fn().mockReturnValue('Test Speaker'),
-      getEntityPortraitPath: jest.fn().mockReturnValue('/test-portrait.jpg')
+      getEntityPortraitPath: jest.fn().mockReturnValue('/test-portrait.jpg'),
     };
 
     // Recreate renderer with the mock entity display data provider
@@ -122,23 +139,35 @@ describe('Portrait Modal Integration', () => {
         },
         create: jest.fn(),
         document: {
-          createTextNode: jest.fn().mockReturnValue(testBed.createMockElement('text')),
-          body: testBed.createMockElement('body')
-        }
+          createTextNode: jest
+            .fn()
+            .mockReturnValue(testBed.createMockElement('text')),
+          body: testBed.createMockElement('body'),
+        },
       },
       validatedEventDispatcher: testBed.eventDispatcher,
       entityManager: testBed.entityManager,
       domElementFactory: {
         img: jest.fn().mockReturnValue(mockPortraitImg),
-        create: jest.fn().mockImplementation((tag, options) => testBed.createMockElement(tag)),
-        span: jest.fn().mockImplementation((className) => testBed.createMockElement('span')),
-        div: jest.fn().mockImplementation((className) => testBed.createMockElement('div')),
-        button: jest.fn().mockImplementation((className) => testBed.createMockElement('button'))
+        create: jest
+          .fn()
+          .mockImplementation((tag, options) => testBed.createMockElement(tag)),
+        span: jest
+          .fn()
+          .mockImplementation((className) => testBed.createMockElement('span')),
+        div: jest
+          .fn()
+          .mockImplementation((className) => testBed.createMockElement('div')),
+        button: jest
+          .fn()
+          .mockImplementation((className) =>
+            testBed.createMockElement('button')
+          ),
       },
       entityDisplayDataProvider: mockEntityDisplayDataProvider,
       portraitModalRenderer: portraitModalRenderer,
     });
-    
+
     // Mock the portrait modal renderer methods
     const showModalSpy = testBed.createMock('showModal', []);
     portraitModalRenderer.showModal = showModalSpy;
@@ -149,7 +178,7 @@ describe('Portrait Modal Integration', () => {
       speechContent: 'Hello world',
     });
 
-    // Verify portrait image was created 
+    // Verify portrait image was created
     expect(renderer.domElementFactory.img).toHaveBeenCalled();
     expect(mockPortraitImg.style.cursor).toBe('pointer');
     expect(mockPortraitImg.setAttribute).toHaveBeenCalledWith('tabindex', '0');
@@ -174,7 +203,7 @@ describe('Portrait Modal Integration', () => {
     // Set up entity data - recreate renderer with proper mock entity display data provider
     const mockEntityDisplayDataProvider = {
       getEntityName: jest.fn().mockReturnValue('Test Speaker'),
-      getEntityPortraitPath: jest.fn().mockReturnValue('/test-portrait.jpg')
+      getEntityPortraitPath: jest.fn().mockReturnValue('/test-portrait.jpg'),
     };
 
     // Recreate renderer with the mock entity display data provider
@@ -188,18 +217,30 @@ describe('Portrait Modal Integration', () => {
         },
         create: jest.fn(),
         document: {
-          createTextNode: jest.fn().mockReturnValue(testBed.createMockElement('text')),
-          body: testBed.createMockElement('body')
-        }
+          createTextNode: jest
+            .fn()
+            .mockReturnValue(testBed.createMockElement('text')),
+          body: testBed.createMockElement('body'),
+        },
       },
       validatedEventDispatcher: testBed.eventDispatcher,
       entityManager: testBed.entityManager,
       domElementFactory: {
         img: jest.fn().mockReturnValue(mockPortraitImg),
-        create: jest.fn().mockImplementation((tag, options) => testBed.createMockElement(tag)),
-        span: jest.fn().mockImplementation((className) => testBed.createMockElement('span')),
-        div: jest.fn().mockImplementation((className) => testBed.createMockElement('div')),
-        button: jest.fn().mockImplementation((className) => testBed.createMockElement('button'))
+        create: jest
+          .fn()
+          .mockImplementation((tag, options) => testBed.createMockElement(tag)),
+        span: jest
+          .fn()
+          .mockImplementation((className) => testBed.createMockElement('span')),
+        div: jest
+          .fn()
+          .mockImplementation((className) => testBed.createMockElement('div')),
+        button: jest
+          .fn()
+          .mockImplementation((className) =>
+            testBed.createMockElement('button')
+          ),
       },
       entityDisplayDataProvider: mockEntityDisplayDataProvider,
       portraitModalRenderer: portraitModalRenderer,

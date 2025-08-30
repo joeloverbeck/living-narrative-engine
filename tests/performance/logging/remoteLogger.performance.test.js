@@ -100,12 +100,12 @@ describe('RemoteLogger - Performance Benchmarks', () => {
       await remoteLogger.destroy();
       remoteLogger = null;
     }
-    
+
     // Clear all timers and mocks
     jest.clearAllTimers();
     jest.useRealTimers();
     jest.clearAllMocks();
-    
+
     // Clean up test bed
     performanceTestBed.cleanup();
   });
@@ -226,10 +226,10 @@ describe('RemoteLogger - Performance Benchmarks', () => {
   describe('Concurrent Operations Performance', () => {
     it('should handle concurrent flush operations efficiently', async () => {
       remoteLogger = new RemoteLogger({
-        config: { 
+        config: {
           batchSize: 1,
           skipServerReadinessValidation: true, // Skip health checks
-          initialConnectionDelay: 0 // No initial delay
+          initialConnectionDelay: 0, // No initial delay
         },
         dependencies: { consoleLogger: mockConsoleLogger },
       });
@@ -242,7 +242,7 @@ describe('RemoteLogger - Performance Benchmarks', () => {
       for (let i = 0; i < 20; i++) {
         remoteLogger.info(`Concurrent log ${i}`);
       }
-      
+
       // Force a flush to process all logs
       await remoteLogger.flush();
 
@@ -334,7 +334,7 @@ describe('RemoteLogger - Performance Benchmarks', () => {
           skipServerReadinessValidation: true, // Skip health checks for this test
           initialConnectionDelay: 0, // No initial delay
           retryAttempts: 0, // Don't retry, fail immediately
-          flushInterval: 10000 // Large interval to avoid auto-flush
+          flushInterval: 10000, // Large interval to avoid auto-flush
         },
         dependencies: { consoleLogger: mockConsoleLogger },
       });
@@ -346,7 +346,7 @@ describe('RemoteLogger - Performance Benchmarks', () => {
 
       // Force flush and expect failures
       await remoteLogger.flush().catch(() => {}); // First batch fails
-      await remoteLogger.flush().catch(() => {}); // Second batch fails  
+      await remoteLogger.flush().catch(() => {}); // Second batch fails
       await remoteLogger.flush().catch(() => {}); // Third batch should trip breaker
 
       // Circuit should be open after multiple failures

@@ -1,4 +1,7 @@
-import { calculatePriorityWithValidation, sortCandidatesWithTieBreaking } from '../prioritySystem/priorityCalculator.js';
+import {
+  calculatePriorityWithValidation,
+  sortCandidatesWithTieBreaking,
+} from '../prioritySystem/priorityCalculator.js';
 
 /**
  * Creates an ArrayIterationStep node resolver for flattening array values.
@@ -24,12 +27,12 @@ export default function createArrayIterationResolver() {
    */
   function getCoveragePriorityFromMode(mode, layer) {
     const layerToCoverage = {
-      'outer': 'outer',
-      'base': 'base', 
-      'underwear': 'underwear',
-      'accessories': 'base' // Accessories treated as base coverage
+      outer: 'outer',
+      base: 'base',
+      underwear: 'underwear',
+      accessories: 'base', // Accessories treated as base coverage
     };
-    
+
     return layerToCoverage[layer] || 'direct';
   }
 
@@ -74,13 +77,18 @@ export default function createArrayIterationResolver() {
       candidate.priority = calculatePriorityWithValidation(
         candidate.coveragePriority,
         candidate.layer,
-        trace ? { warn: (msg) => trace.addLog('warn', msg, 'ArrayIterationResolver') } : null
+        trace
+          ? {
+              warn: (msg) =>
+                trace.addLog('warn', msg, 'ArrayIterationResolver'),
+            }
+          : null
       );
     }
 
     // Sort candidates by priority and extract item IDs
     const sortedCandidates = sortCandidatesWithTieBreaking(candidates);
-    const result = sortedCandidates.map(candidate => candidate.itemId);
+    const result = sortedCandidates.map((candidate) => candidate.itemId);
 
     if (trace && result.length > 0) {
       trace.addLog(
@@ -91,7 +99,7 @@ export default function createArrayIterationResolver() {
           totalCandidates: candidates.length,
           resultCount: result.length,
           mode: mode,
-          topPriority: sortedCandidates[0]?.priority
+          topPriority: sortedCandidates[0]?.priority,
         }
       );
     }

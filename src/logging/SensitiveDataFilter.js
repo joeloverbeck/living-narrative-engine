@@ -29,7 +29,7 @@ class SensitiveDataFilter {
     this.#logger = logger;
     this.#enabled = enabled;
     this.#defaultStrategy = config.strategy || 'mask';
-    
+
     // Initialize default patterns for common sensitive data
     this.#patterns = {
       apiKey: /((?:api[_-]?key|apikey)[\s:=]+)([\w-]{10,})/gi,
@@ -41,8 +41,9 @@ class SensitiveDataFilter {
       ipAddress: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
       jwt: /eyJ[\w-]+\.eyJ[\w-]+\.[\w-]+/g,
       awsKey: /(?:AKIA|A3T|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[\w]{16}/g,
-      privateKey: /-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----[\s\S]+?-----END\s+(?:RSA\s+)?PRIVATE\s+KEY-----/g,
-      ...this.#parseCustomPatterns(config.patterns)
+      privateKey:
+        /-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----[\s\S]+?-----END\s+(?:RSA\s+)?PRIVATE\s+KEY-----/g,
+      ...this.#parseCustomPatterns(config.patterns),
     };
 
     // Initialize replacement strategies
@@ -51,7 +52,7 @@ class SensitiveDataFilter {
       partial: (match) => this.#partialMask(match),
       hash: (match) => this.#hashValue(match),
       remove: () => '',
-      ...config.strategies
+      ...config.strategies,
     };
   }
 
@@ -85,13 +86,15 @@ class SensitiveDataFilter {
    */
   #filterString(str, strategy) {
     let filtered = str;
-    
+
     for (const [patternName, pattern] of Object.entries(this.#patterns)) {
       if (pattern instanceof RegExp) {
-        const replacer = this.#replacementStrategies[strategy] || this.#replacementStrategies.mask;
+        const replacer =
+          this.#replacementStrategies[strategy] ||
+          this.#replacementStrategies.mask;
         filtered = filtered.replace(pattern, (match, ...groups) => {
           this.#logger.debug(`Filtered ${patternName} from log message`);
-          
+
           // Check if we have capturing groups (for patterns like password, apiKey)
           if (groups.length >= 2 && groups[0] && groups[1]) {
             // First group is the prefix, second group is the sensitive value
@@ -105,7 +108,7 @@ class SensitiveDataFilter {
         });
       }
     }
-    
+
     return filtered;
   }
 
@@ -116,16 +119,18 @@ class SensitiveDataFilter {
   #filterObject(obj, strategy) {
     // Handle arrays
     if (Array.isArray(obj)) {
-      return obj.map(item => this.filter(item, strategy));
+      return obj.map((item) => this.filter(item, strategy));
     }
 
     // Create a deep copy to avoid mutating original
     const filtered = {};
-    
+
     for (const [key, value] of Object.entries(obj)) {
       // Check if the key itself indicates sensitive data
       if (this.#isSensitiveKey(key)) {
-        const replacer = this.#replacementStrategies[strategy] || this.#replacementStrategies.mask;
+        const replacer =
+          this.#replacementStrategies[strategy] ||
+          this.#replacementStrategies.mask;
         filtered[key] = replacer(value, key);
         this.#logger.debug(`Filtered sensitive field: ${key}`);
       } else if (typeof value === 'string') {
@@ -136,7 +141,7 @@ class SensitiveDataFilter {
         filtered[key] = value;
       }
     }
-    
+
     return filtered;
   }
 
@@ -146,14 +151,30 @@ class SensitiveDataFilter {
    */
   #isSensitiveKey(key) {
     const sensitiveKeys = [
-      'password', 'passwd', 'pwd', 'secret', 'token', 'apikey', 
-      'api_key', 'apiKey', 'auth', 'authorization', 'credential',
-      'private', 'privateKey', 'private_key', 'ssn', 'social_security',
-      'credit_card', 'creditCard', 'card_number', 'cardNumber'
+      'password',
+      'passwd',
+      'pwd',
+      'secret',
+      'token',
+      'apikey',
+      'api_key',
+      'apiKey',
+      'auth',
+      'authorization',
+      'credential',
+      'private',
+      'privateKey',
+      'private_key',
+      'ssn',
+      'social_security',
+      'credit_card',
+      'creditCard',
+      'card_number',
+      'cardNumber',
     ];
-    
+
     const lowerKey = key.toLowerCase();
-    return sensitiveKeys.some(sensitive => lowerKey.includes(sensitive));
+    return sensitiveKeys.some((sensitive) => lowerKey.includes(sensitive));
   }
 
   /**
@@ -165,12 +186,12 @@ class SensitiveDataFilter {
     if (str.length <= 8) {
       return '[REDACTED]';
     }
-    
+
     const visibleChars = 3;
     const prefix = str.substring(0, visibleChars);
     const suffix = str.substring(str.length - visibleChars);
-    const masked = '*'.repeat(Math.max(0, str.length - (visibleChars * 2)));
-    
+    const masked = '*'.repeat(Math.max(0, str.length - visibleChars * 2));
+
     return `${prefix}${masked}${suffix}`;
   }
 
@@ -181,13 +202,13 @@ class SensitiveDataFilter {
   #hashValue(value) {
     const str = String(value);
     let hash = 0;
-    
+
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
-    
+
     return `[HASH:${Math.abs(hash).toString(16).toUpperCase()}]`;
   }
 
@@ -197,7 +218,7 @@ class SensitiveDataFilter {
    */
   #parseCustomPatterns(patterns = {}) {
     const parsed = {};
-    
+
     for (const [name, pattern] of Object.entries(patterns)) {
       try {
         if (typeof pattern === 'string') {
@@ -209,7 +230,7 @@ class SensitiveDataFilter {
         this.#logger.warn(`Invalid pattern for ${name}: ${pattern}`, err);
       }
     }
-    
+
     return parsed;
   }
 
@@ -221,11 +242,11 @@ class SensitiveDataFilter {
     if (config.enabled !== undefined) {
       this.#enabled = config.enabled;
     }
-    
+
     if (config.patterns) {
       Object.assign(this.#patterns, this.#parseCustomPatterns(config.patterns));
     }
-    
+
     if (config.strategies) {
       Object.assign(this.#replacementStrategies, config.strategies);
     }

@@ -3,12 +3,12 @@
  * @description Optimized priority calculation system with performance enhancements
  */
 
-import { 
-  COVERAGE_PRIORITY, 
+import {
+  COVERAGE_PRIORITY,
   LAYER_PRIORITY_WITHIN_COVERAGE,
   VALID_COVERAGE_PRIORITIES,
   VALID_LAYERS,
-  PRIORITY_CONFIG
+  PRIORITY_CONFIG,
 } from './priorityConstants.js';
 
 // Cache for pre-calculated priority scores
@@ -22,8 +22,11 @@ const PRIORITY_SCORE_CACHE = new Map();
  * @returns {number} Combined priority score (lower = higher priority)
  */
 function calculateCoveragePriority(coveragePriority, layer) {
-  const coverageScore = COVERAGE_PRIORITY[coveragePriority] || COVERAGE_PRIORITY.direct;
-  const layerScore = LAYER_PRIORITY_WITHIN_COVERAGE[layer] || LAYER_PRIORITY_WITHIN_COVERAGE.base;
+  const coverageScore =
+    COVERAGE_PRIORITY[coveragePriority] || COVERAGE_PRIORITY.direct;
+  const layerScore =
+    LAYER_PRIORITY_WITHIN_COVERAGE[layer] ||
+    LAYER_PRIORITY_WITHIN_COVERAGE.base;
   return coverageScore + layerScore;
 }
 
@@ -43,14 +46,14 @@ function getCachedPriorityScore(coveragePriority, layer) {
 
   if (!PRIORITY_SCORE_CACHE.has(cacheKey)) {
     const score = calculateCoveragePriority(coveragePriority, layer);
-    
+
     // Check cache size limit
     if (PRIORITY_SCORE_CACHE.size >= PRIORITY_CONFIG.maxCacheSize) {
       // Simple eviction: clear oldest entries (first inserted)
       const firstKey = PRIORITY_SCORE_CACHE.keys().next().value;
       PRIORITY_SCORE_CACHE.delete(firstKey);
     }
-    
+
     PRIORITY_SCORE_CACHE.set(cacheKey, score);
   }
 
@@ -80,14 +83,16 @@ function validatePriorityInputs(coveragePriority, layer, logger) {
 
   if (!VALID_LAYERS.includes(layer)) {
     if (logger && PRIORITY_CONFIG.logInvalidPriorities) {
-      logger.warn(`Invalid layer: ${layer}. Using '${PRIORITY_CONFIG.defaultLayer}' as fallback.`);
+      logger.warn(
+        `Invalid layer: ${layer}. Using '${PRIORITY_CONFIG.defaultLayer}' as fallback.`
+      );
     }
     validatedLayer = PRIORITY_CONFIG.defaultLayer;
   }
 
-  return { 
-    coveragePriority: validatedCoverage, 
-    layer: validatedLayer 
+  return {
+    coveragePriority: validatedCoverage,
+    layer: validatedLayer,
   };
 }
 
@@ -110,7 +115,11 @@ export function calculateCoveragePriorityOptimized(coveragePriority, layer) {
  * @param {object} logger - Optional logger for warnings
  * @returns {number} Priority score
  */
-export function calculatePriorityWithValidation(coveragePriority, layer, logger) {
+export function calculatePriorityWithValidation(
+  coveragePriority,
+  layer,
+  logger
+) {
   if (!PRIORITY_CONFIG.enableValidation) {
     return calculateCoveragePriorityOptimized(coveragePriority, layer);
   }

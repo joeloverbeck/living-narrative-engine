@@ -10,7 +10,10 @@ import {
 } from '@jest/globals';
 import { SpeechBubbleRenderer } from '../../../src/domUI';
 import { BoundDomRendererBase } from '../../../src/domUI';
-import { DISPLAY_SPEECH_ID, PORTRAIT_CLICKED } from '../../../src/constants/eventIds';
+import {
+  DISPLAY_SPEECH_ID,
+  PORTRAIT_CLICKED,
+} from '../../../src/constants/eventIds';
 import {
   PLAYER_COMPONENT_ID,
   PLAYER_TYPE_COMPONENT_ID,
@@ -363,9 +366,11 @@ describe('SpeechBubbleRenderer', () => {
       mockPortraitImg = createGenericMockElement('img');
       eventHandlers = {};
       domFactory.img.mockReturnValue(mockPortraitImg);
-      entityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/test-portrait.jpg');
+      entityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(
+        '/test-portrait.jpg'
+      );
       entityDisplayDataProvider.getEntityName.mockReturnValue('TestSpeaker');
-      
+
       // Mock _addDomListener to capture event handlers
       jest
         .spyOn(renderer, '_addDomListener')
@@ -416,8 +421,8 @@ describe('SpeechBubbleRenderer', () => {
         payload: {
           portraitPath: '/test-portrait.jpg',
           speakerName: 'TestSpeaker',
-          originalElement: mockPortraitImg
-        }
+          originalElement: mockPortraitImg,
+        },
       });
     });
 
@@ -454,8 +459,8 @@ describe('SpeechBubbleRenderer', () => {
         payload: {
           portraitPath: '/test-portrait.jpg',
           speakerName: 'TestSpeaker',
-          originalElement: mockPortraitImg
-        }
+          originalElement: mockPortraitImg,
+        },
       });
     });
   });

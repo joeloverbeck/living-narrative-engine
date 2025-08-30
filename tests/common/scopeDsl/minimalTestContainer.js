@@ -18,16 +18,16 @@ import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationSe
 
 /**
  * Creates a minimal container setup optimized for ScopeDSL E2E testing
- * 
+ *
  * This utility provides a lightweight alternative to the full configureContainer()
  * setup, focusing only on services needed for scope resolution testing.
- * 
+ *
  * Performance benefits:
  * - Skips heavy debug configuration loading
  * - Uses simple console logger instead of LoggerStrategy
  * - Avoids unnecessary service registrations
  * - Minimal DOM element requirements
- * 
+ *
  * @param {object} [options] - Configuration options
  * @param {boolean} [options.enableTracing=false] - Enable scope resolution tracing
  * @param {LogLevel} [options.logLevel=LogLevel.WARN] - Logger level for tests
@@ -58,11 +58,11 @@ export async function createMinimalTestContainer(options = {}) {
   container.register(tokens.IDataRegistry, dataRegistry);
 
   // Entity manager for entity lifecycle - note: registry param name, not dataRegistry
-  const entityManager = new EntityManager({ 
-    logger, 
+  const entityManager = new EntityManager({
+    logger,
     registry: dataRegistry,
     validator: { validate: () => ({ valid: true }) }, // Minimal validator
-    dispatcher: { dispatch: () => {} } // Minimal event dispatcher
+    dispatcher: { dispatch: () => {} }, // Minimal event dispatcher
   });
   container.register(tokens.IEntityManager, entityManager);
 
@@ -87,7 +87,7 @@ export async function createMinimalTestContainer(options = {}) {
   container.register(tokens.ISpatialIndexManager, spatialIndexManager);
 
   // Scope engine for resolution - matching production constructor signature
-  const scopeEngine = new ScopeEngine({ 
+  const scopeEngine = new ScopeEngine({
     scopeRegistry,
     errorHandler: null, // Use null for minimal testing setup
   });
@@ -99,7 +99,9 @@ export async function createMinimalTestContainer(options = {}) {
     logger.debug('[MinimalTestContainer] Tracing enabled for scope resolution');
   }
 
-  logger.debug('[MinimalTestContainer] Minimal container configuration complete');
+  logger.debug(
+    '[MinimalTestContainer] Minimal container configuration complete'
+  );
 
   return {
     container,
@@ -123,20 +125,26 @@ export async function createMinimalTestContainer(options = {}) {
 
 /**
  * Creates a game context optimized for testing
- * 
+ *
  * @param {object} services - Services from minimal container
  * @param {string} [locationId] - Current location ID
  * @returns {Promise<object>} Minimal game context
  */
-export async function createMinimalGameContext(services, locationId = 'test-location-1') {
-  const { entityManager, jsonLogicEval, logger, spatialIndexManager } = services;
-  
+export async function createMinimalGameContext(
+  services,
+  locationId = 'test-location-1'
+) {
+  const { entityManager, jsonLogicEval, logger, spatialIndexManager } =
+    services;
+
   let currentLocation = null;
   try {
     currentLocation = await entityManager.getEntityInstance(locationId);
   } catch (error) {
     // Location doesn't exist yet - will be created by test setup
-    logger.debug(`[MinimalTestContainer] Location ${locationId} not found, using null`);
+    logger.debug(
+      `[MinimalTestContainer] Location ${locationId} not found, using null`
+    );
   }
 
   return {
@@ -151,7 +159,7 @@ export async function createMinimalGameContext(services, locationId = 'test-loca
 
 /**
  * Validates that all required services for scope resolution are available
- * 
+ *
  * @param {object} container - Container to validate
  * @param {object} logger - Logger for validation messages
  * @returns {boolean} True if all services are properly registered
@@ -169,7 +177,7 @@ export function validateMinimalContainer(container, logger) {
   ];
 
   const missingServices = [];
-  
+
   for (const token of requiredTokens) {
     if (!container.isRegistered(token)) {
       missingServices.push(token);
@@ -183,7 +191,9 @@ export function validateMinimalContainer(container, logger) {
     return false;
   }
 
-  logger.debug('[MinimalTestContainer] All required services validated successfully');
+  logger.debug(
+    '[MinimalTestContainer] All required services validated successfully'
+  );
   return true;
 }
 

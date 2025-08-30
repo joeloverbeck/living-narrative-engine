@@ -20,22 +20,22 @@ class KissCheekActionTest extends ModActionTestBase {
   constructor() {
     super({
       modId: 'intimacy',
-      actionId: 'kiss_cheek', 
+      actionId: 'kiss_cheek',
       ruleFile: kissCheekRule,
       conditionFile: eventIsActionKissCheek,
-      handlerType: 'intimacy'
+      handlerType: 'intimacy',
     });
   }
 }
 
 describe('intimacy:kiss_cheek action integration', () => {
   let test;
-  
+
   beforeEach(() => {
     test = new KissCheekActionTest();
     test.beforeEach();
   });
-  
+
   // Test implementation
 });
 ```
@@ -62,6 +62,7 @@ describe('intimacy:kiss_cheek action integration', () => {
 **File Location**: `tests/common/mods/ModTestFixture.js`
 
 **Dependencies**:
+
 ```javascript
 // Base classes
 import { ModActionTestBase } from './ModActionTestBase.js';
@@ -76,7 +77,10 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 // Validation
-import { assertNonBlankString, assertPresent } from '../../src/utils/validationCore.js';
+import {
+  assertNonBlankString,
+  assertPresent,
+} from '../../src/utils/validationCore.js';
 ```
 
 ### Primary Factory Interface
@@ -144,26 +148,38 @@ class ModTestFixture {
 ### Auto-Detection and Convention System
 
 **File Path Conventions**:
+
 ```javascript
 // Expected file locations for auto-loading
 const MOD_FILE_CONVENTIONS = {
   rules: 'data/mods/{modId}/rules/{actionId}Rule.rule.json',
-  conditions: 'data/mods/{modId}/conditions/eventIsAction{ActionId}.condition.json',
+  conditions:
+    'data/mods/{modId}/conditions/eventIsAction{ActionId}.condition.json',
   alternativeRules: 'data/mods/{modId}/actions/{actionId}.rule.json',
-  alternativeConditions: 'data/mods/{modId}/conditions/{actionId}.condition.json'
+  alternativeConditions:
+    'data/mods/{modId}/conditions/{actionId}.condition.json',
 };
 
 // Category detection patterns
 const CATEGORY_PATTERNS = {
-  positioning: ['kneel', 'stand', 'sit', 'lie', 'turn', 'move', 'place_yourself'],
+  positioning: [
+    'kneel',
+    'stand',
+    'sit',
+    'lie',
+    'turn',
+    'move',
+    'place_yourself',
+  ],
   intimacy: ['kiss', 'hug', 'cuddle', 'embrace', 'caress', 'nuzzle', 'lean'],
   sex: ['fondle', 'rub', 'touch', 'press_against', 'suck', 'pump'],
   violence: ['slap', 'punch', 'hit', 'strike', 'attack'],
-  exercise: ['show_off', 'flex', 'exercise', 'workout']
+  exercise: ['show_off', 'flex', 'exercise', 'workout'],
 };
 ```
 
 **Auto-Detection Logic**:
+
 ```javascript
 static detectCategory(modId, actionId) {
   // Check explicit mod-based categories first
@@ -172,14 +188,14 @@ static detectCategory(modId, actionId) {
   if (modId === 'sex') return 'sex';
   if (modId === 'violence') return 'violence';
   if (modId === 'exercise') return 'exercise';
-  
+
   // Check action ID patterns
   for (const [category, patterns] of Object.entries(CATEGORY_PATTERNS)) {
     if (patterns.some(pattern => actionId.includes(pattern))) {
       return category;
     }
   }
-  
+
   // Default to standard if no pattern matches
   return 'standard';
 }
@@ -188,21 +204,22 @@ static detectCategory(modId, actionId) {
 ### Implementation Details
 
 **Primary Factory Method**:
+
 ```javascript
 static forAction(modId, actionId, options = {}) {
   assertNonBlankString(modId, 'Mod ID', 'ModTestFixture.forAction');
   assertNonBlankString(actionId, 'Action ID', 'ModTestFixture.forAction');
-  
+
   try {
     // Auto-detect category if not specified
     const category = options.category || this.detectCategory(modId, actionId);
-    
+
     // Load mod files automatically
     const { ruleFile, conditionFile } = this.loadModFiles(modId, actionId, options);
-    
+
     // Get category-specific configuration
     const defaultConfig = this.getDefaultConfig(category);
-    
+
     // Build complete configuration
     const config = {
       ...defaultConfig,
@@ -213,10 +230,10 @@ static forAction(modId, actionId, options = {}) {
       conditionFile,
       testCategory: category
     };
-    
+
     // Create appropriate base class instance
     return this.createTestInstance(category, config);
-    
+
   } catch (error) {
     throw new Error(`ModTestFixture.forAction failed for ${modId}:${actionId}: ${error.message}`);
   }
@@ -224,12 +241,13 @@ static forAction(modId, actionId, options = {}) {
 ```
 
 **File Loading System**:
+
 ```javascript
 static loadModFiles(modId, actionId, options = {}) {
   const errors = [];
   let ruleFile = null;
   let conditionFile = null;
-  
+
   // Try explicit file paths first
   if (options.ruleFile) {
     ruleFile = options.ruleFile;
@@ -237,7 +255,7 @@ static loadModFiles(modId, actionId, options = {}) {
   if (options.conditionFile) {
     conditionFile = options.conditionFile;
   }
-  
+
   // Auto-load rule file if not provided
   if (!ruleFile) {
     const rulePaths = [
@@ -245,7 +263,7 @@ static loadModFiles(modId, actionId, options = {}) {
       `data/mods/${modId}/actions/${actionId}.rule.json`,
       `data/mods/${modId}/rules/${actionId}.rule.json`
     ];
-    
+
     for (const path of rulePaths) {
       try {
         ruleFile = require(resolve(path));
@@ -255,7 +273,7 @@ static loadModFiles(modId, actionId, options = {}) {
       }
     }
   }
-  
+
   // Auto-load condition file if not provided
   if (!conditionFile) {
     const actionIdCapitalized = actionId.charAt(0).toUpperCase() + actionId.slice(1);
@@ -264,7 +282,7 @@ static loadModFiles(modId, actionId, options = {}) {
       `data/mods/${modId}/conditions/${actionId}.condition.json`,
       `data/mods/${modId}/conditions/eventIsAction${actionId}.condition.json`
     ];
-    
+
     for (const path of conditionPaths) {
       try {
         conditionFile = require(resolve(path));
@@ -274,7 +292,7 @@ static loadModFiles(modId, actionId, options = {}) {
       }
     }
   }
-  
+
   // Validate required files were loaded
   if (!ruleFile) {
     throw new Error(`Could not load rule file for ${modId}:${actionId}. Errors: ${errors.join(', ')}`);
@@ -282,12 +300,13 @@ static loadModFiles(modId, actionId, options = {}) {
   if (!conditionFile) {
     throw new Error(`Could not load condition file for ${modId}:${actionId}. Errors: ${errors.join(', ')}`);
   }
-  
+
   return { ruleFile, conditionFile };
 }
 ```
 
 **Test Instance Creation**:
+
 ```javascript
 static createTestInstance(category, config) {
   switch (category) {
@@ -308,6 +327,7 @@ static createTestInstance(category, config) {
 ```
 
 **Default Configuration by Category**:
+
 ```javascript
 static getDefaultConfig(category) {
   const configs = {
@@ -344,7 +364,7 @@ static getDefaultConfig(category) {
       defaultLocation: 'room1'
     }
   };
-  
+
   return configs[category] || configs.standard;
 }
 ```
@@ -352,6 +372,7 @@ static getDefaultConfig(category) {
 ### Convenience Methods
 
 **Category-Specific Shortcuts**:
+
 ```javascript
 static forPositioningAction(actionId, options = {}) {
   return this.forCategory('positioning', actionId, options);
@@ -375,12 +396,13 @@ static forExerciseAction(actionId, options = {}) {
 ```
 
 **Advanced Configuration**:
+
 ```javascript
 static custom(config) {
   assertPresent(config, 'Configuration is required for custom fixture');
   assertNonBlankString(config.modId, 'Mod ID', 'ModTestFixture.custom');
   assertNonBlankString(config.actionId, 'Action ID', 'ModTestFixture.custom');
-  
+
   const category = config.testCategory || 'standard';
   return this.createTestInstance(category, config);
 }
@@ -394,6 +416,7 @@ static fromConfig(configObject) {
 ### Usage Patterns
 
 **Before (manual base class setup)**:
+
 ```javascript
 import { ModActionTestBase } from '../common/mods/ModActionTestBase.js';
 import kissCheekRule from '../../data/mods/intimacy/rules/kissRule.rule.json';
@@ -406,14 +429,14 @@ class KissCheekActionTest extends ModActionTestBase {
       actionId: 'kiss_cheek',
       ruleFile: kissCheekRule,
       conditionFile: eventIsActionKissCheek,
-      handlerType: 'intimacy'
+      handlerType: 'intimacy',
     });
   }
 }
 
 describe('intimacy:kiss_cheek action integration', () => {
   let test;
-  
+
   beforeEach(() => {
     test = new KissCheekActionTest();
     test.beforeEach();
@@ -422,39 +445,41 @@ describe('intimacy:kiss_cheek action integration', () => {
 ```
 
 **After (fixture factory)**:
+
 ```javascript
 import { ModTestFixture } from '../common/mods/ModTestFixture.js';
 
 describe('intimacy:kiss_cheek action integration', () => {
   let test;
-  
+
   beforeEach(() => {
     test = ModTestFixture.forAction('intimacy', 'kiss_cheek');
     test.beforeEach();
   });
-  
+
   // Or even simpler for intimacy category
   // test = ModTestFixture.forIntimacyAction('kiss_cheek');
 });
 ```
 
 **Ultra-Simple Usage**:
+
 ```javascript
 import { ModTestFixture } from '../common/mods/ModTestFixture.js';
 
 describe('positioning:kneel_before action integration', () => {
   let test;
-  
+
   beforeEach(() => {
     // Auto-detects category, loads files, configures everything
     test = ModTestFixture.forAction('positioning', 'kneel_before');
     test.beforeEach();
   });
-  
+
   it('should execute kneeling action successfully', async () => {
     const { actor, target } = test.createCloseActors(['Alice', 'Bob']);
     test.resetWithEntities([actor, target]);
-    
+
     await test.executeAction(actor.id, target.id);
     test.assertActionSuccess();
     test.assertPositionChanged(actor.id, 'kneeling_before');
@@ -465,6 +490,7 @@ describe('positioning:kneel_before action integration', () => {
 ### Error Handling and Fallbacks
 
 **File Loading Error Handling**:
+
 ```javascript
 static loadModFiles(modId, actionId, options = {}) {
   try {
@@ -478,7 +504,7 @@ static loadModFiles(modId, actionId, options = {}) {
 
 static tryFallbackLocations(modId, actionId, options, originalError) {
   const fallbacks = this.getFallbackPaths(modId, actionId);
-  
+
   for (const fallback of fallbacks) {
     try {
       return this.loadFromPath(fallback.rule, fallback.condition);
@@ -486,27 +512,28 @@ static tryFallbackLocations(modId, actionId, options, originalError) {
       // Continue to next fallback
     }
   }
-  
+
   // All fallbacks failed
   throw new Error(`Could not load mod files for ${modId}:${actionId}. Original error: ${originalError.message}`);
 }
 ```
 
 **Category Detection Fallbacks**:
+
 ```javascript
 static detectCategory(modId, actionId) {
   // Try explicit mod name mapping first
   const explicitCategory = this.getExplicitCategory(modId);
   if (explicitCategory) return explicitCategory;
-  
+
   // Try action pattern matching
   const patternCategory = this.matchActionPatterns(actionId);
   if (patternCategory) return patternCategory;
-  
+
   // Try mod file location analysis
   const locationCategory = this.analyzeModFileLocations(modId);
   if (locationCategory) return locationCategory;
-  
+
   // Default fallback
   return 'standard';
 }
@@ -515,30 +542,35 @@ static detectCategory(modId, actionId) {
 ## Implementation Steps
 
 ### Step 1: Create Factory Core Structure
+
 1. Create `tests/common/mods/ModTestFixture.js`
 2. Implement basic factory interface with `forAction` and `forRule` methods
 3. Add auto-detection logic for categories
 4. Implement file loading system with convention-based paths
 
 ### Step 2: Implement Auto-Loading System
+
 1. Add file system utilities for dynamic mod file loading
 2. Implement convention-based file path resolution
 3. Add fallback mechanisms for non-standard file locations
 4. Test auto-loading with existing mod structures
 
 ### Step 3: Add Category-Specific Logic
+
 1. Implement category detection based on mod ID and action patterns
 2. Add default configurations for each category
 3. Create category-specific test instance factories
 4. Add convenience methods for each category
 
 ### Step 4: Integrate with Base Classes
+
 1. Wire factory to create appropriate base class instances
 2. Test integration with all existing base classes
 3. Add configuration override capabilities
 4. Validate configuration propagation
 
 ### Step 5: Add Error Handling and Validation
+
 1. Implement comprehensive error handling for file loading
 2. Add validation for configuration objects
 3. Create helpful error messages for common issues
@@ -551,6 +583,7 @@ static detectCategory(modId, actionId) {
 **File**: `tests/unit/common/mods/ModTestFixture.test.js`
 
 **Test Coverage**:
+
 ```javascript
 describe('ModTestFixture', () => {
   describe('forAction', () => {
@@ -590,12 +623,14 @@ describe('ModTestFixture', () => {
 ```
 
 ### Integration Testing
+
 1. Test fixture creation with real mod files from all categories
 2. Verify auto-detection works with existing mod structures
 3. Test error scenarios with missing or malformed files
 4. Validate integration with all base class types
 
 ### File System Testing
+
 1. Test file loading with various mod directory structures
 2. Verify convention-based path resolution works correctly
 3. Test fallback mechanisms with non-standard file locations
@@ -604,6 +639,7 @@ describe('ModTestFixture', () => {
 ## Acceptance Criteria
 
 ### Functional Requirements
+
 - [ ] Factory creates test fixtures with minimal configuration
 - [ ] Auto-detection correctly identifies mod categories
 - [ ] File loading handles various mod directory structures
@@ -612,6 +648,7 @@ describe('ModTestFixture', () => {
 - [ ] Configuration overrides work correctly
 
 ### Quality Requirements
+
 - [ ] 100% unit test coverage for all factory methods
 - [ ] Integration tests validate real-world usage scenarios
 - [ ] JSDoc documentation complete for all public methods
@@ -619,12 +656,14 @@ describe('ModTestFixture', () => {
 - [ ] Performance comparable to manual test setup
 
 ### Usability Requirements
+
 - [ ] Single method call creates fully configured test
 - [ ] Convention-based auto-detection reduces configuration
 - [ ] Clear error messages guide resolution of common issues
 - [ ] Category-specific methods provide intuitive shortcuts
 
 ### Reliability Requirements
+
 - [ ] Robust file loading with multiple fallback strategies
 - [ ] Category detection handles edge cases gracefully
 - [ ] Configuration validation prevents common mistakes
@@ -633,21 +672,25 @@ describe('ModTestFixture', () => {
 ## Success Metrics
 
 ### Development Speed Improvement
+
 - **Target**: 90% reduction in test setup code
 - **Measurement**: Lines of code needed to create new mod test
 - **Success**: From 50+ lines to <5 lines for standard test creation
 
 ### Developer Experience Enhancement
+
 - **Target**: Simplified test creation for all skill levels
 - **Measurement**: Developer feedback and onboarding time
 - **Success**: New developers can create mod tests in <10 minutes
 
 ### Consistency Improvement
+
 - **Target**: Standardized test creation across all mod categories
 - **Measurement**: Variation in test structure patterns
 - **Success**: >98% consistency in fixture-created tests
 
 ### Error Reduction
+
 - **Target**: Fewer test setup errors and faster debugging
 - **Measurement**: Setup error rates and resolution time
 - **Success**: 80%+ reduction in setup-related issues
@@ -655,20 +698,24 @@ describe('ModTestFixture', () => {
 ## Integration Points
 
 ### Infrastructure Dependencies
+
 - **MODTESTREF-001-004**: Integrates and orchestrates all previous infrastructure
 - Must work seamlessly with handlers, entity builder, assertions, and base classes
 
-### Migration Readiness  
+### Migration Readiness
+
 - **MODTESTREF-007**: Factory will be primary tool for migrating existing tests
 - Must support all patterns found in current 48 test files
 
 ### Future Extensibility
+
 - **New Mod Categories**: Factory must be easily extensible for new categories
 - **Community Mods**: Must support convention-based development for community
 
 ## Next Steps
 
 Upon completion, this factory will be ready for:
+
 1. **MODTESTREF-006**: Use in infrastructure testing to validate complete integration
 2. **MODTESTREF-007**: Primary tool for migrating all 48 existing test files
 3. **MODTESTREF-008**: Documentation of factory patterns and best practices

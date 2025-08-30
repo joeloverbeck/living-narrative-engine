@@ -185,16 +185,18 @@ export class IntegrationTestBed extends BaseTestBed {
           maxTokens: 1000,
         },
       }),
-      getAllConfigs: jest.fn().mockReturnValue([{
-        id: 'test-model',
-        provider: 'openai',
-        model: 'gpt-3.5-turbo',
-        enabled: true,
-        settings: {
-          temperature: 0.7,
-          maxTokens: 1000,
+      getAllConfigs: jest.fn().mockReturnValue([
+        {
+          id: 'test-model',
+          provider: 'openai',
+          model: 'gpt-3.5-turbo',
+          enabled: true,
+          settings: {
+            temperature: 0.7,
+            maxTokens: 1000,
+          },
         },
-      }]),
+      ]),
       isInitialized: jest.fn().mockReturnValue(true),
       isOperational: jest.fn().mockReturnValue(true),
       loadConfiguration: jest.fn().mockResolvedValue({
@@ -221,16 +223,18 @@ export class IntegrationTestBed extends BaseTestBed {
       getAllConfigurations: jest.fn().mockResolvedValue({
         llm: {
           defaultConfigId: 'test-model',
-          configs: [{
-            id: 'test-model',
-            provider: 'openai',
-            model: 'gpt-3.5-turbo',
-            enabled: true,
-            settings: {
-              temperature: 0.7,
-              maxTokens: 1000,
+          configs: [
+            {
+              id: 'test-model',
+              provider: 'openai',
+              model: 'gpt-3.5-turbo',
+              enabled: true,
+              settings: {
+                temperature: 0.7,
+                maxTokens: 1000,
+              },
             },
-          }],
+          ],
         },
       }),
       getAvailableOptions: jest.fn().mockResolvedValue(['test-model']),
@@ -238,7 +242,10 @@ export class IntegrationTestBed extends BaseTestBed {
     };
 
     // Override the LLMConfigurationManager before registration
-    this.container.setOverride(tokens.ILLMConfigurationManager, mockConfigManager);
+    this.container.setOverride(
+      tokens.ILLMConfigurationManager,
+      mockConfigManager
+    );
 
     // Create a mock TokenEstimator
     const mockTokenEstimator = {
@@ -256,12 +263,15 @@ export class IntegrationTestBed extends BaseTestBed {
         result: JSON.stringify({
           characterName: 'Test Character',
           rewrittenTraits: {
-            'core:personality': 'I am a test character with complex personality traits.',
+            'core:personality':
+              'I am a test character with complex personality traits.',
             'core:likes': 'I enjoy testing and performance validation.',
             'core:fears': 'I fear system failures and poor performance.',
-            'core:goals': 'I strive to maintain excellent performance under all conditions.',
-            'core:dislikes': 'I dislike inefficient processes and slow responses.',
-          }
+            'core:goals':
+              'I strive to maintain excellent performance under all conditions.',
+            'core:dislikes':
+              'I dislike inefficient processes and slow responses.',
+          },
         }),
       }),
     };
@@ -273,16 +283,21 @@ export class IntegrationTestBed extends BaseTestBed {
         // Simulate realistic response time like in the original test
         return new Promise((resolve) => {
           setTimeout(() => {
-            resolve(JSON.stringify({
-              characterName: 'Test Character',
-              rewrittenTraits: {
-                'core:personality': 'I am a test character with complex personality traits.',
-                'core:likes': 'I enjoy testing and performance validation.',
-                'core:fears': 'I fear system failures and poor performance.',
-                'core:goals': 'I strive to maintain excellent performance under all conditions.',
-                'core:dislikes': 'I dislike inefficient processes and slow responses.',
-              }
-            }));
+            resolve(
+              JSON.stringify({
+                characterName: 'Test Character',
+                rewrittenTraits: {
+                  'core:personality':
+                    'I am a test character with complex personality traits.',
+                  'core:likes': 'I enjoy testing and performance validation.',
+                  'core:fears': 'I fear system failures and poor performance.',
+                  'core:goals':
+                    'I strive to maintain excellent performance under all conditions.',
+                  'core:dislikes':
+                    'I dislike inefficient processes and slow responses.',
+                },
+              })
+            );
           }, 10); // 10ms simulated LLM response time
         });
       }),
@@ -292,7 +307,9 @@ export class IntegrationTestBed extends BaseTestBed {
     this.container.setOverride(tokens.LlmJsonService, mockLlmJsonService);
 
     if (this.mockLogger && this.mockLogger.debug) {
-      this.mockLogger.debug('IntegrationTestBed: LLM services overridden with mocks');
+      this.mockLogger.debug(
+        'IntegrationTestBed: LLM services overridden with mocks'
+      );
     }
   }
 
@@ -1268,17 +1285,18 @@ export class IntegrationTestBed extends BaseTestBed {
         },
         {
           id: 'core:traits_rewriter_generation_started',
-          description: 'Dispatched when traits rewriter generation begins for a character.',
+          description:
+            'Dispatched when traits rewriter generation begins for a character.',
           payloadSchema: {
             type: 'object',
             properties: {
               characterName: {
-                type: 'string'
+                type: 'string',
               },
               timestamp: {
                 type: 'string',
-                format: 'date-time'
-              }
+                format: 'date-time',
+              },
             },
             required: ['characterName', 'timestamp'],
             additionalProperties: true,
@@ -1286,26 +1304,32 @@ export class IntegrationTestBed extends BaseTestBed {
         },
         {
           id: 'core:traits_rewriter_generation_completed',
-          description: 'Dispatched when traits rewriter generation completes successfully.',
+          description:
+            'Dispatched when traits rewriter generation completes successfully.',
           payloadSchema: {
             type: 'object',
             properties: {
               characterName: {
-                type: 'string'
+                type: 'string',
               },
               result: {
                 type: 'object',
-                additionalProperties: true
+                additionalProperties: true,
               },
               processingTime: {
-                type: 'number'
+                type: 'number',
               },
               timestamp: {
                 type: 'string',
-                format: 'date-time'
-              }
+                format: 'date-time',
+              },
             },
-            required: ['characterName', 'result', 'processingTime', 'timestamp'],
+            required: [
+              'characterName',
+              'result',
+              'processingTime',
+              'timestamp',
+            ],
             additionalProperties: true,
           },
         },
@@ -1316,18 +1340,18 @@ export class IntegrationTestBed extends BaseTestBed {
             type: 'object',
             properties: {
               characterName: {
-                type: 'string'
+                type: 'string',
               },
               error: {
-                type: 'string'
+                type: 'string',
               },
               processingTime: {
-                type: 'number'
+                type: 'number',
               },
               timestamp: {
                 type: 'string',
-                format: 'date-time'
-              }
+                format: 'date-time',
+              },
             },
             required: ['error', 'timestamp'],
             additionalProperties: true,
@@ -1335,23 +1359,24 @@ export class IntegrationTestBed extends BaseTestBed {
         },
         {
           id: 'core:traits_rewriter_cache_hit',
-          description: 'Dispatched when a cache hit occurs in the traits rewriter service.',
+          description:
+            'Dispatched when a cache hit occurs in the traits rewriter service.',
           payloadSchema: {
             type: 'object',
             properties: {
               key: {
-                type: 'string'
+                type: 'string',
               },
               characterName: {
-                type: 'string'
+                type: 'string',
               },
               cacheType: {
-                type: 'string'
+                type: 'string',
               },
               timestamp: {
                 type: 'string',
-                format: 'date-time'
-              }
+                format: 'date-time',
+              },
             },
             required: ['key'],
             additionalProperties: true,
@@ -1410,8 +1435,10 @@ export class IntegrationTestBed extends BaseTestBed {
     try {
       // Instead of trying to create and initialize real LLM services,
       // we'll mock the critical methods that are failing
-      const configManager = this.container.resolve(tokens.ILLMConfigurationManager);
-      
+      const configManager = this.container.resolve(
+        tokens.ILLMConfigurationManager
+      );
+
       if (configManager) {
         // Mock the methods that are being called but not initialized
         configManager.init = jest.fn().mockResolvedValue();
@@ -1428,7 +1455,7 @@ export class IntegrationTestBed extends BaseTestBed {
         configManager.getAllConfigs = jest.fn().mockReturnValue([
           {
             id: 'test-model',
-            provider: 'openai',  
+            provider: 'openai',
             model: 'gpt-3.5-turbo',
             enabled: true,
             settings: {
@@ -1441,7 +1468,9 @@ export class IntegrationTestBed extends BaseTestBed {
         configManager.isOperational = jest.fn().mockReturnValue(true);
 
         if (this.mockLogger && this.mockLogger.debug) {
-          this.mockLogger.debug('IntegrationTestBed: LLM Configuration Manager mocked successfully');
+          this.mockLogger.debug(
+            'IntegrationTestBed: LLM Configuration Manager mocked successfully'
+          );
         }
       }
 
@@ -1459,16 +1488,19 @@ export class IntegrationTestBed extends BaseTestBed {
           });
 
           if (this.mockLogger && this.mockLogger.debug) {
-            this.mockLogger.debug('IntegrationTestBed: LLM Adapter mocked successfully');
+            this.mockLogger.debug(
+              'IntegrationTestBed: LLM Adapter mocked successfully'
+            );
           }
         }
       } catch (adapterError) {
         // LLM Adapter might not be registered in minimal mode, which is fine for some tests
         if (this.mockLogger && this.mockLogger.debug) {
-          this.mockLogger.debug(`IntegrationTestBed: LLM Adapter not available: ${adapterError.message}`);
+          this.mockLogger.debug(
+            `IntegrationTestBed: LLM Adapter not available: ${adapterError.message}`
+          );
         }
       }
-
     } catch (error) {
       if (this.mockLogger && this.mockLogger.error) {
         this.mockLogger.error(
@@ -1478,7 +1510,9 @@ export class IntegrationTestBed extends BaseTestBed {
       }
       // Don't throw - allow tests to continue even if LLM initialization fails
       if (this.mockLogger && this.mockLogger.warn) {
-        this.mockLogger.warn('IntegrationTestBed: Continuing with tests despite LLM initialization failure');
+        this.mockLogger.warn(
+          'IntegrationTestBed: Continuing with tests despite LLM initialization failure'
+        );
       }
     }
   }

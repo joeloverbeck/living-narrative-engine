@@ -11,8 +11,24 @@
     {
       "logic": {
         "or": [
-          {"hasPartOfTypeWithComponentValue": ["actor", "arm", "descriptors:build", "build", "muscular"]},
-          {"hasPartOfTypeWithComponentValue": ["actor", "arm", "descriptors:build", "build", "hulking"]}
+          {
+            "hasPartOfTypeWithComponentValue": [
+              "actor",
+              "arm",
+              "descriptors:build",
+              "build",
+              "muscular"
+            ]
+          },
+          {
+            "hasPartOfTypeWithComponentValue": [
+              "actor",
+              "arm",
+              "descriptors:build",
+              "build",
+              "hulking"
+            ]
+          }
         ]
       },
       "failure_message": "You don't have the muscular arms needed to show off."
@@ -20,7 +36,7 @@
   ],
   "visual": {
     "backgroundColor": "#e65100",
-    "textColor": "#ffffff", 
+    "textColor": "#ffffff",
     "hoverBackgroundColor": "#ff6f00",
     "hoverTextColor": "#ffffff"
   }

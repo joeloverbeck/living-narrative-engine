@@ -88,7 +88,7 @@ describe('LoggingPerformanceMonitor', () => {
   describe('monitorLogOperation', () => {
     it('should track log operation metrics', () => {
       const startTime = Date.now();
-      
+
       const result = monitor.monitorLogOperation('info', 'Test message', {
         category: 'test',
         argsCount: 2,
@@ -104,10 +104,12 @@ describe('LoggingPerformanceMonitor', () => {
 
     it('should detect category if not provided', () => {
       mockCategoryDetector.detectCategory.mockReturnValue('detected');
-      
+
       const result = monitor.monitorLogOperation('debug', 'Debug message');
 
-      expect(mockCategoryDetector.detectCategory).toHaveBeenCalledWith('Debug message');
+      expect(mockCategoryDetector.detectCategory).toHaveBeenCalledWith(
+        'Debug message'
+      );
       expect(result.category).toBe('detected');
     });
 
@@ -116,7 +118,11 @@ describe('LoggingPerformanceMonitor', () => {
         processingTime: 5,
       };
 
-      const result = monitor.monitorLogOperation('warn', 'Warning message', metadata);
+      const result = monitor.monitorLogOperation(
+        'warn',
+        'Warning message',
+        metadata
+      );
 
       expect(result).toHaveProperty('duration');
       expect(result.duration).toBeGreaterThan(0);
@@ -144,9 +150,9 @@ describe('LoggingPerformanceMonitor', () => {
     it('should update batch metrics', async () => {
       await monitor.monitorBatchFlush(30, Date.now());
       await monitor.monitorBatchFlush(40, Date.now());
-      
+
       const metrics = monitor.getLoggingMetrics();
-      
+
       expect(metrics.batches).toBeDefined();
       expect(metrics.batches.totalBatches).toBe(2);
       expect(metrics.batches.successfulBatches).toBe(2);
@@ -160,7 +166,6 @@ describe('LoggingPerformanceMonitor', () => {
       const metrics = monitor.getLoggingMetrics();
       expect(metrics.batches.averageBatchSize).toBeCloseTo(30, 1);
     });
-
   });
 
   describe('monitorBufferSize', () => {
@@ -249,7 +254,9 @@ describe('LoggingPerformanceMonitor', () => {
       expect(metrics.volume).toHaveProperty('categoryCounts');
       expect(metrics.volume.categoryCounts).toHaveProperty('api');
       expect(metrics.volume.categoryCounts).toHaveProperty('database');
-      expect(metrics.volume.categoryCounts.api).toBeGreaterThan(metrics.volume.categoryCounts.database);
+      expect(metrics.volume.categoryCounts.api).toBeGreaterThan(
+        metrics.volume.categoryCounts.database
+      );
     });
   });
 
@@ -259,7 +266,7 @@ describe('LoggingPerformanceMonitor', () => {
       const testEventBus = {
         dispatch: jest.fn(),
       };
-      
+
       // Set up monitor with low threshold
       const strictMonitor = new LoggingPerformanceMonitor({
         logger: mockLogger,
@@ -282,7 +289,7 @@ describe('LoggingPerformanceMonitor', () => {
       const testEventBus = {
         dispatch: jest.fn(),
       };
-      
+
       const strictMonitor = new LoggingPerformanceMonitor({
         logger: mockLogger,
         eventBus: testEventBus,

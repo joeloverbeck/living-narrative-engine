@@ -321,12 +321,20 @@ export function createEvaluationContext(
     ((!actor.components && actor.componentTypeIds) ||
       actor.components instanceof Map)
   ) {
+    if (trace) {
+      trace.addLog(
+        'debug',
+        `Processing actor components: actor=${actor.id}, has componentTypeIds=${!!actor.componentTypeIds}, componentTypeIds length=${actor.componentTypeIds?.length || 0}`,
+        'EntityHelpers'
+      );
+    }
+    
     actor = addComponentsToEntity(actor, actor.id);
   }
 
   const location = locationProvider.getLocation();
 
-  // Debug logging
+  // Enhanced debug logging for scope resolution issues
   if (trace) {
     trace.addLog(
       'debug',
@@ -341,9 +349,13 @@ export function createEvaluationContext(
         actorComponentKeys: actor?.components
           ? Object.keys(actor.components)
           : [],
+        actorHasSittingComponent: actor?.components?.['positioning:sitting_on'] ? 'YES' : 'NO',
+        actorSittingComponentData: actor?.components?.['positioning:sitting_on'] || 'NOT_FOUND',
+        wasActorPreprocessed: !!processedActor,
       }
     );
   }
+  
 
   // Create flattened context for easier JSON Logic access
   // This allows queries like {"var": "components.core:tags.tags"} to work directly

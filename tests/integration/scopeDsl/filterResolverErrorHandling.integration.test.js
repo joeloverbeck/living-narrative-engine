@@ -255,7 +255,6 @@ describe('FilterResolver Error Handling Integration', () => {
     });
   });
 
-
   // Helper functions for test data creation
   const createTestContext = () => ({
     actorEntity: { id: 'test-actor' },

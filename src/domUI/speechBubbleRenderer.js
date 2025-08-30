@@ -91,12 +91,19 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
 
     // Add validation and storage for portraitModalRenderer with graceful handling
     if (portraitModalRenderer) {
-      validateDependency(portraitModalRenderer, 'IPortraitModalRenderer', this.logger, {
-        requiredMethods: ['showModal', 'hideModal']
-      });
+      validateDependency(
+        portraitModalRenderer,
+        'IPortraitModalRenderer',
+        this.logger,
+        {
+          requiredMethods: ['showModal', 'hideModal'],
+        }
+      );
       this.#portraitModalRenderer = portraitModalRenderer;
     } else {
-      this.logger.warn(`${this._logPrefix} PortraitModalRenderer not available - using event dispatch fallback`);
+      this.logger.warn(
+        `${this._logPrefix} PortraitModalRenderer not available - using event dispatch fallback`
+      );
       this.#portraitModalRenderer = null;
     }
 
@@ -289,30 +296,50 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       );
       if (portraitImg) {
         hasPortrait = true;
-        
+
         // Make portrait clickable
         portraitImg.style.cursor = 'pointer';
         portraitImg.setAttribute('tabindex', '0');
         portraitImg.setAttribute('role', 'button');
-        portraitImg.setAttribute('aria-label', `View full portrait of ${speakerName}`);
-        
+        portraitImg.setAttribute(
+          'aria-label',
+          `View full portrait of ${speakerName}`
+        );
+
         // Add click handler to dispatch PORTRAIT_CLICKED event
         this._addDomListener(portraitImg, 'click', () => {
-          this.logger.debug(`${this._logPrefix} Portrait clicked for ${speakerName}`);
-          
+          this.logger.debug(
+            `${this._logPrefix} Portrait clicked for ${speakerName}`
+          );
+
           // Try direct modal first, fall back to event dispatch
           if (this.#portraitModalRenderer) {
             try {
-              this.#portraitModalRenderer.showModal(portraitPath, speakerName, portraitImg);
+              this.#portraitModalRenderer.showModal(
+                portraitPath,
+                speakerName,
+                portraitImg
+              );
             } catch (error) {
-              this.logger.error(`${this._logPrefix} Failed to show portrait modal directly`, error);
-              this.#fallbackToEventDispatch(portraitPath, speakerName, portraitImg);
+              this.logger.error(
+                `${this._logPrefix} Failed to show portrait modal directly`,
+                error
+              );
+              this.#fallbackToEventDispatch(
+                portraitPath,
+                speakerName,
+                portraitImg
+              );
             }
           } else {
-            this.#fallbackToEventDispatch(portraitPath, speakerName, portraitImg);
+            this.#fallbackToEventDispatch(
+              portraitPath,
+              speakerName,
+              portraitImg
+            );
           }
         });
-        
+
         // Add keyboard handler for accessibility (Enter/Space to activate)
         this._addDomListener(portraitImg, 'keydown', (event) => {
           if (event.key === 'Enter' || event.key === ' ') {
@@ -320,7 +347,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
             portraitImg.click();
           }
         });
-        
+
         this._addDomListener(portraitImg, 'load', () => this.scrollToBottom(), {
           once: true,
         });
@@ -435,11 +462,14 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
           payload: {
             portraitPath,
             speakerName,
-            originalElement: portraitImg
-          }
+            originalElement: portraitImg,
+          },
         });
       } catch (error) {
-        this.logger.error(`${this._logPrefix} Failed to dispatch PORTRAIT_CLICKED event`, error);
+        this.logger.error(
+          `${this._logPrefix} Failed to dispatch PORTRAIT_CLICKED event`,
+          error
+        );
       }
     }
   }

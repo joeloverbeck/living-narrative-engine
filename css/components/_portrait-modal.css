@@ -41,7 +41,9 @@
   flex-direction: column;
   opacity: 0;
   transform: scale(0.95);
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
 }
 
 .portrait-modal-overlay.visible .portrait-modal-content {
@@ -77,7 +79,9 @@
   padding: var(--spacing-xs);
   color: var(--secondary-text-color);
   border-radius: var(--border-radius-sm);
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  transition:
+    background-color 0.2s ease-in-out,
+    color 0.2s ease-in-out;
   line-height: 1;
   width: 2rem;
   height: 2rem;
@@ -151,7 +155,7 @@
 }
 
 .portrait-loading-spinner::before {
-  content: "";
+  content: '';
   display: block;
   width: 40px;
   height: 40px;
@@ -192,7 +196,9 @@
 
 /* Enhance speech bubble portraits that are clickable */
 .speech-portrait.clickable {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
   cursor: pointer;
 }
 
@@ -266,11 +272,11 @@
     margin: var(--spacing-sm);
     padding: var(--spacing-sm);
   }
-  
+
   .portrait-modal-image {
     max-height: 60vh;
   }
-  
+
   .portrait-modal-title {
     font-size: var(--font-size-h3);
   }
@@ -281,26 +287,26 @@
   .portrait-modal-overlay {
     padding: var(--spacing-xs);
   }
-  
+
   .portrait-modal-content {
     max-width: 100%;
     max-height: 100%;
     border-radius: 0;
     margin: 0;
   }
-  
+
   .portrait-modal-header {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-sm);
   }
-  
+
   .portrait-modal-close {
     position: absolute;
     top: var(--spacing-sm);
     right: var(--spacing-sm);
   }
-  
+
   .portrait-modal-image {
     max-height: 50vh;
   }
@@ -311,7 +317,7 @@
   .portrait-modal-title {
     font-size: var(--font-size-base);
   }
-  
+
   .portrait-modal-image {
     max-height: 40vh;
   }
@@ -339,11 +345,11 @@
   .portrait-modal-content {
     border: 2px solid var(--primary-text-color);
   }
-  
+
   .portrait-modal-close:focus-visible {
     outline-width: 3px;
   }
-  
+
   .speech-portrait.clickable:focus-visible {
     outline-width: 3px;
   }
@@ -359,15 +365,15 @@
     transition: none !important;
     animation: none !important;
   }
-  
+
   .portrait-modal-overlay.visible {
     opacity: 1;
   }
-  
+
   .portrait-modal-image.loaded {
     opacity: 1;
   }
-  
+
   .speech-portrait.clickable:hover {
     transform: none;
   }
@@ -378,7 +384,7 @@
   .portrait-modal-overlay {
     background-color: rgba(0, 0, 0, 0.9);
   }
-  
+
   .portrait-modal-content {
     box-shadow: 0 0 2rem rgba(0, 0, 0, 0.8);
   }

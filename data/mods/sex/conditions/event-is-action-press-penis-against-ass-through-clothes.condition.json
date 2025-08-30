@@ -4,7 +4,7 @@
   "description": "Checks if the triggering event is for the 'sex:press_penis_against_ass_through_clothes' action.",
   "logic": {
     "==": [
-      { "var": "event.payload.actionId" }, 
+      { "var": "event.payload.actionId" },
       "sex:press_penis_against_ass_through_clothes"
     ]
   }

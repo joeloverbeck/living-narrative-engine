@@ -243,7 +243,7 @@ class LogMaintenanceScheduler {
     // Calculate next execution times based on scheduler state
     let nextRotationCheck = 'Not scheduled';
     let nextCleanup = 'Not scheduled';
-    
+
     if (this.#config.enabled && this.#isRunning) {
       // For running scheduler, provide schedule information
       nextRotationCheck = `Per schedule: ${this.#config.rotationCheckSchedule}`;
@@ -253,7 +253,7 @@ class LogMaintenanceScheduler {
       nextRotationCheck = 'Scheduled but not running';
       nextCleanup = 'Scheduled but not running';
     }
-    
+
     return {
       isRunning: this.#isRunning,
       isEnabled: this.#config.enabled,
