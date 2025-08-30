@@ -35,6 +35,23 @@ export const ENTITY_SPOKE_ID = 'core:entity_spoke';
  */
 export const DISPLAY_SPEECH_ID = 'core:display_speech';
 
+/**
+ * @typedef {object} PortraitClickedPayload
+ * @property {string} portraitPath The path to the portrait image that was clicked.
+ * @property {string} speakerName The name of the character whose portrait was clicked.
+ * @property {HTMLElement} originalElement The portrait element that was clicked.
+ */
+
+/**
+ * Fired when a portrait image is clicked in the speech bubble.
+ * Used to trigger the portrait modal display.
+ *
+ * @type {string}
+ * @constant
+ * @see {PortraitClickedPayload}
+ */
+export const PORTRAIT_CLICKED = 'core:portrait_clicked';
+
 // Generic turn processing events fired for **any** actor type
 export const TURN_PROCESSING_STARTED = 'core:turn_processing_started';
 export const TURN_PROCESSING_ENDED = 'core:turn_processing_ended';

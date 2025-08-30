@@ -2,19 +2,48 @@
 
 ## Specification Validation Notes
 
-**Last Validated**: 2025-08-29
+**Last Validated**: 2025-08-30
 
-### Corrected Assumptions
-1. **Modal Base Class**: The spec now correctly references the existing `BaseModalRenderer` class that should be extended rather than creating a completely new modal implementation from scratch.
-2. **CSS Styling**: Updated the speech bubble portrait CSS to include all actual properties (border, background-color, flex-shrink) that were missing from the original spec.
-3. **Event Listener Management**: Clarified that `_addDomListener` is available through the `BoundDomRendererBase` parent class hierarchy.
-4. **Player Identification**: Corrected the logic for determining AI vs human characters using existing component IDs (`PLAYER_TYPE_COMPONENT_ID` and `PLAYER_COMPONENT_ID`).
-5. **WCAG Compliance**: Clarified that full WCAG 2.1 AA compliance needs to be implemented, as the existing modal infrastructure only has basic accessibility support.
-6. **Test Structure**: Updated test examples to follow the project's testing patterns using `@jest/globals` and `createTestBed`.
+### Verified Existing Components
+1. **Modal Base Class**: `BaseModalRenderer` exists at `src/domUI/baseModalRenderer.js` and provides common modal behaviors
+2. **Parent Classes**: `BoundDomRendererBase` and `RendererBase` exist with `_addDomListener` method for event management
+3. **Speech Bubble System**: `SpeechBubbleRenderer` exists with `#addPortrait` method (lines 266-303)
+4. **Component IDs**: `PLAYER_TYPE_COMPONENT_ID` and `PLAYER_COMPONENT_ID` exist in `src/constants/componentIds.js`
+5. **Modal CSS Infrastructure**: Basic modal styles exist in `css/components/_modals.css`
+6. **Speech Bubble CSS**: Portrait styles exist in `css/components/_speech-bubbles.css`
+
+### Components That Need To Be Created
+1. **PortraitModalRenderer Class**: Does not exist, needs to be created at `src/domUI/portraitModalRenderer.js`
+2. **Portrait Modal CSS**: File `css/components/_portrait-modal.css` does not exist, needs to be created
+3. **Modal HTML Structure**: The portrait modal HTML structure needs to be added to the main HTML file
+
+### Critical Corrections
+1. **EntityId Parameter**: The `#addPortrait` method currently does NOT receive `entityId` as a parameter. It only receives `(container, portraitPath, speakerName)`. The method needs to be modified to also receive `entityId` OR the player detection logic needs to be moved to the calling context.
+2. **WCAG Compliance**: The existing modal infrastructure has only basic accessibility support (aria-hidden attributes). Full WCAG 2.1 AA compliance needs to be implemented from scratch.
+3. **Test Structure**: Correctly uses `@jest/globals` and `createTestBed` pattern.
 
 ## Overview
 
 This specification defines the implementation of clickable AI character portraits within the Living Narrative Engine's chat system. When users click on AI character portraits displayed alongside speech bubbles, a modal will appear showing the portrait in high resolution, providing a better viewing experience for character artwork.
+
+### Implementation Requirements Summary
+
+**Files That Need to Be Created:**
+- `src/domUI/portraitModalRenderer.js` - New modal renderer class
+- `css/components/_portrait-modal.css` - New CSS file for portrait modal styles
+- Modal HTML structure needs to be added to the main HTML file
+
+**Files That Need to Be Modified:**
+- `src/domUI/speechBubbleRenderer.js` - Modify `#addPortrait` method signature and add click handlers
+- The main HTML file - Add portrait modal DOM structure
+- CSS imports - Include the new `_portrait-modal.css` file
+
+**Existing Infrastructure to Leverage:**
+- `BaseModalRenderer` class for modal behaviors
+- `BoundDomRendererBase` and `RendererBase` for event management
+- Modal CSS patterns in `_modals.css`
+- Component ID constants for player detection
+- Test infrastructure with `createTestBed`
 
 **Status**: Specification  
 **Priority**: Medium  
@@ -130,7 +159,7 @@ SpeechBubbleRenderer (existing)
 
 #### PortraitModalRenderer Class
 
-**Location**: `src/domUI/portraitModalRenderer.js`
+**Location**: `src/domUI/portraitModalRenderer.js` (THIS FILE DOES NOT EXIST - NEEDS TO BE CREATED)
 
 ```javascript
 import { BaseModalRenderer } from './baseModalRenderer.js';
@@ -192,6 +221,12 @@ export class PortraitModalRenderer extends BaseModalRenderer {
 
 **Method**: `#addPortrait()` (line 266-303)
 
+**IMPORTANT**: Currently this method signature is:
+```javascript
+#addPortrait(container, portraitPath, speakerName) {
+```
+
+It needs to be modified to include `entityId`:
 ```javascript
 #addPortrait(container, portraitPath, speakerName, entityId) {
   // ... existing code ...
@@ -241,11 +276,30 @@ export class PortraitModalRenderer extends BaseModalRenderer {
 }
 ```
 
-**Note**: The `entityId` parameter needs to be passed to `#addPortrait` method from the calling context in `render()` method.
+**CRITICAL IMPLEMENTATION NOTE**: The `entityId` parameter is NOT currently passed to `#addPortrait`. The calling code in the `renderSpeech()` method (around line 356) needs to be modified from:
+```javascript
+const hasPortrait = this.#addPortrait(
+  speechEntryDiv,
+  portraitPath,
+  speakerName
+);
+```
+
+To:
+```javascript
+const hasPortrait = this.#addPortrait(
+  speechEntryDiv,
+  portraitPath,
+  speakerName,
+  entityId  // This needs to be added
+);
+```
+
+Alternatively, the `isPlayer` detection logic could be moved from `#createSpeechElements` to be stored as a class property or passed differently.
 
 ### HTML Structure
 
-#### Modal DOM Structure
+#### Modal DOM Structure (NEEDS TO BE ADDED TO THE MAIN HTML FILE)
 ```html
 <div class="portrait-modal-overlay modal-overlay" role="dialog" aria-modal="true" aria-labelledby="portrait-modal-title">
   <div class="portrait-modal-content modal-content">
@@ -270,7 +324,7 @@ export class PortraitModalRenderer extends BaseModalRenderer {
 
 ### New Styles Required
 
-**File**: `css/components/_portrait-modal.css`
+**File**: `css/components/_portrait-modal.css` (THIS FILE DOES NOT EXIST - NEEDS TO BE CREATED)
 
 ```css
 /* Portrait Modal Specific Styles */
@@ -602,28 +656,35 @@ describe('Speech Bubble Portrait Modal Integration', () => {
 ## Implementation Phases
 
 ### Phase 1: Core Functionality (2-3 days)
-- [ ] Create `PortraitModalRenderer` class
-- [ ] Modify `SpeechBubbleRenderer` to add click handlers
+- [ ] Create `PortraitModalRenderer` class extending `BaseModalRenderer`
+- [ ] Modify `SpeechBubbleRenderer#addPortrait` to accept `entityId` parameter
+- [ ] Update `renderSpeech` method to pass `entityId` to `#addPortrait`
+- [ ] Add click handlers for AI portraits only (using existing player detection logic)
 - [ ] Implement basic modal show/hide functionality
 - [ ] Add keyboard event handling (ESC key)
 
 ### Phase 2: UI/UX Polish (1-2 days)
-- [ ] Create CSS styles for portrait modal
+- [ ] Create new CSS file `css/components/_portrait-modal.css`
+- [ ] Add portrait modal HTML structure to main HTML file
+- [ ] Import new CSS file in the main CSS bundle
 - [ ] Add loading and error states
 - [ ] Implement smooth animations
 - [ ] Add hover effects for clickable portraits
 
 ### Phase 3: Accessibility & Testing (1-2 days)
-- [ ] Implement ARIA attributes and focus management
-- [ ] Add keyboard navigation support
-- [ ] Create unit and integration tests
+- [ ] Implement full WCAG 2.1 AA compliance (currently only basic support exists)
+- [ ] Add proper ARIA attributes and focus management
+- [ ] Add keyboard navigation support (Tab, Enter, Space, ESC)
+- [ ] Create unit tests using `createTestBed` pattern
+- [ ] Create integration tests following existing patterns
 - [ ] Perform accessibility testing
 
 ### Phase 4: Integration & Refinement (1 day)
-- [ ] Integration testing with existing system
-- [ ] Performance optimization
+- [ ] Integration testing with existing speech bubble system
+- [ ] Ensure compatibility with existing modal infrastructure
+- [ ] Performance optimization for image loading
 - [ ] Cross-browser compatibility testing
-- [ ] Documentation updates
+- [ ] Update CLAUDE.md with new feature documentation
 
 ## Configuration and Maintenance
 

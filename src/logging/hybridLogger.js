@@ -64,6 +64,12 @@ class HybridLogger {
 
   /**
    * @private
+   * @type {object}
+   */
+  #criticalLoggingConfig;
+
+  /**
+   * @private
    * @type {*}
    */
   #performanceMonitor;
@@ -108,6 +114,15 @@ class HybridLogger {
         enabled: true,
       },
       ...config,
+    };
+
+    // Initialize critical logging configuration
+    this.#criticalLoggingConfig = config.criticalLogging || {
+      alwaysShowInConsole: true,
+      enableVisualNotifications: true,
+      bufferSize: 50,
+      notificationPosition: 'top-right',
+      autoDismissAfter: null
     };
 
     // Initialize sensitive data filter if configured
@@ -347,6 +362,14 @@ class HybridLogger {
       return false;
     }
 
+    // Check if this is a critical log that should bypass filters
+    if (this.#criticalLoggingConfig && this.#criticalLoggingConfig.alwaysShowInConsole) {
+      if (level === 'warn' || level === 'error') {
+        return true; // Always show critical logs
+      }
+    }
+
+    // Existing filter logic for non-critical logs
     return this.#matchesFilter(
       level,
       category,

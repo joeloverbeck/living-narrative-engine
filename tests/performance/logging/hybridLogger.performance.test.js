@@ -335,4 +335,156 @@ describe('HybridLogger Performance', () => {
       expect(console.error).toHaveBeenCalledTimes(iterationsPerLevel);
     });
   });
+
+  describe('Critical Logging Performance', () => {
+    it('should have minimal overhead (<5%) when critical logging bypass is enabled', () => {
+      const iterations = 1000;
+      const baselineMaxDuration = 2000; // 2ms per message baseline (adjusted for test environment)
+      const maxOverheadPercent = 5; // 5% max overhead
+      const maxDurationWithOverhead = baselineMaxDuration * (1 + maxOverheadPercent / 100);
+
+      // Test with critical logging DISABLED but still showing warnings/errors (baseline)
+      // This provides a fair comparison by having both loggers actually output logs
+      const baselineLogger = new HybridLogger(
+        {
+          consoleLogger: consoleLogger,
+          remoteLogger: remoteLogger,
+          categoryDetector: categoryDetector,
+        },
+        {
+          console: {
+            categories: null, // Allow all categories
+            levels: ['warn', 'error'], // Allow warn and error
+            enabled: true,
+          },
+          remote: { categories: null, levels: null, enabled: false },
+          criticalLogging: {
+            alwaysShowInConsole: false, // DISABLED - using normal filter path
+          },
+        }
+      );
+
+      // Warmup
+      for (let i = 0; i < 50; i++) {
+        baselineLogger.warn(`Warmup warning ${i}`);
+        baselineLogger.error(`Warmup error ${i}`);
+      }
+      jest.clearAllMocks();
+
+      // Baseline measurement
+      const baselineStart = performance.now();
+      for (let i = 0; i < iterations; i++) {
+        baselineLogger.warn(`Baseline warning ${i}`);
+        baselineLogger.error(`Baseline error ${i}`);
+      }
+      const baselineDuration = performance.now() - baselineStart;
+
+      jest.clearAllMocks();
+
+      // Test with critical logging ENABLED
+      const criticalLogger = new HybridLogger(
+        {
+          consoleLogger: consoleLogger,
+          remoteLogger: remoteLogger,
+          categoryDetector: categoryDetector,
+        },
+        {
+          console: {
+            categories: ['ui'], // Restrictive filter
+            levels: ['info'], // Restrictive filter
+            enabled: true,
+          },
+          remote: { categories: null, levels: null, enabled: false },
+          criticalLogging: {
+            alwaysShowInConsole: true, // ENABLED
+          },
+        }
+      );
+
+      // Warmup
+      for (let i = 0; i < 50; i++) {
+        criticalLogger.warn(`Warmup warning ${i}`);
+        criticalLogger.error(`Warmup error ${i}`);
+      }
+      jest.clearAllMocks();
+
+      // Critical logging measurement
+      const criticalStart = performance.now();
+      for (let i = 0; i < iterations; i++) {
+        criticalLogger.warn(`Critical warning ${i}`);
+        criticalLogger.error(`Critical error ${i}`);
+      }
+      const criticalDuration = performance.now() - criticalStart;
+
+      // Calculate overhead
+      const overheadPercent = ((criticalDuration - baselineDuration) / baselineDuration) * 100;
+
+      // Assertions
+      expect(criticalDuration).toBeLessThan(maxDurationWithOverhead);
+      expect(overheadPercent).toBeLessThan(maxOverheadPercent);
+      
+      // Log performance metrics for verification
+      console.log(`Baseline duration: ${baselineDuration.toFixed(2)}ms`);
+      console.log(`Critical logging duration: ${criticalDuration.toFixed(2)}ms`);
+      console.log(`Overhead: ${overheadPercent.toFixed(2)}%`);
+      
+      // Verify critical logs were actually shown (bypassed filters)
+      expect(console.warn).toHaveBeenCalledTimes(iterations);
+      expect(console.error).toHaveBeenCalledTimes(iterations);
+    });
+
+    it('should maintain performance with mixed critical and non-critical logs', () => {
+      const iterationsPerLevel = 250;
+      const maxDuration = 1600; // Slightly higher than baseline to account for bypass logic
+
+      const logger = new HybridLogger(
+        {
+          consoleLogger: consoleLogger,
+          remoteLogger: remoteLogger,
+          categoryDetector: categoryDetector,
+        },
+        {
+          console: {
+            categories: ['ui'], // Restrictive filter
+            levels: ['error'], // Only errors normally allowed
+            enabled: true,
+          },
+          remote: { categories: null, levels: null, enabled: false },
+          criticalLogging: {
+            alwaysShowInConsole: true,
+          },
+        }
+      );
+
+      // Warmup
+      for (let i = 0; i < 10; i++) {
+        logger.debug(`Warmup debug ${i}`);
+        logger.info(`Warmup info ${i}`);
+        logger.warn(`Warmup warn ${i}`);
+        logger.error(`Warmup error ${i}`);
+      }
+      jest.clearAllMocks();
+
+      const startTime = performance.now();
+
+      for (let i = 0; i < iterationsPerLevel; i++) {
+        logger.debug(`Debug message ${i}`); // Should be filtered
+        logger.info(`Info message ${i}`); // Should be filtered
+        logger.warn(`Warning message ${i}`); // Should bypass filter
+        logger.error(`Error message ${i}`); // Should bypass filter
+      }
+
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+
+      // Performance assertion
+      expect(duration).toBeLessThan(maxDuration);
+
+      // Verify filtering worked correctly
+      expect(console.debug).not.toHaveBeenCalled(); // Filtered out
+      expect(console.info).not.toHaveBeenCalled(); // Filtered out
+      expect(console.warn).toHaveBeenCalledTimes(iterationsPerLevel); // Bypassed filter
+      expect(console.error).toHaveBeenCalledTimes(iterationsPerLevel); // Bypassed filter
+    });
+  });
 });

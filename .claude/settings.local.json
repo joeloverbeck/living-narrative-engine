@@ -338,7 +338,18 @@
       "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/place_yourself_behind_action.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/integration/scopes/placeYourselfBehindActionDiscovery.integration.test.js --no-coverage -t \"should discover place_yourself_behind action when actor can face target\")",
       "Bash(NODE_ENV=test npx jest tests/integration/scopes/placeYourselfBehindActionDiscovery.integration.test.js --no-coverage --verbose -t \"should discover place_yourself_behind action when actor can face target\")",
-      "Bash(NODE_ENV=test npx jest tests/integration/scopes/placeYourselfBehindActionDiscovery.integration.test.js --no-coverage)"
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/placeYourselfBehindActionDiscovery.integration.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/core/rules/turnStartedRule.integration.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/rules/turnAroundRule.integration.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/intimacy/rules/kissCheekRule.integration.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/core/rules/ --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/core/rules/goRule.integration.test.js tests/integration/core/rules/stopFollowingRule.integration.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/intimacy/rules/kissCheekRule.integration.test.js tests/integration/mods/positioning/rules/turnAroundRule.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/rules/stepBackRule.integration.test.js tests/integration/mods/positioning/rules/getCloseRule.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/core/rules/ --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/*/rules/ --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/e2e/scopeDsl/CoreScopeResolution.e2e.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/e2e/scopeDsl/CoreScopeResolution.e2e.test.js --no-coverage --testNamePattern=\"should handle empty game contexts gracefully\")"
     ],
     "deny": []
   }

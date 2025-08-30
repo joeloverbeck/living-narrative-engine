@@ -66,6 +66,8 @@ This specification defines the requirements and implementation guidelines for en
 
 ## Technical Design
 
+**Note on Existing Architecture**: The HybridLogger already contains a sophisticated filter system with `#filters` private field and methods for managing console and remote filters (`setConsoleFilter()`, `setRemoteFilter()`, `updateFilters()`). Our enhancement will work within this existing architecture rather than bypassing it.
+
 ### Architecture Overview
 
 ```
@@ -77,15 +79,24 @@ This specification defines the requirements and implementation guidelines for en
 ┌─────────────────────────────────────────────┐
 │           HybridLogger                       │
 │  ┌─────────────────────────────────────┐    │
-│  │   Critical Log Interceptor          │    │
-│  │   - Bypass filters for warn/error   │    │
+│  │   Existing Filter System (#filters)  │    │
+│  │   - setConsoleFilter()              │    │
+│  │   - setRemoteFilter()               │    │
+│  │   - updateFilters()                 │    │
+│  └─────────────────────────────────────┘    │
+│                                              │
+│  ┌─────────────────────────────────────┐    │
+│  │   Enhanced #shouldLogToConsole()    │    │
+│  │   - Check critical log override     │    │
+│  │   - Apply existing filters for      │    │
+│  │     non-critical logs               │    │
 │  │   - Add to critical buffer          │    │
-│  │   - Trigger notifications           │    │
 │  └─────────────────────────────────────┘    │
 │                  │                           │
 │     ┌────────────┴────────────┐             │
 │     ▼                          ▼             │
 │  ConsoleLogger            RemoteLogger       │
+│  (#logToDestinations handles routing)        │
 └─────────────────────────────────────────────┘
                   │
                   ▼
@@ -103,13 +114,23 @@ This specification defines the requirements and implementation guidelines for en
 
 **File**: `src/logging/hybridLogger.js`
 
+**Existing Architecture Context**:
+- HybridLogger already has a `#filters` private field containing console and remote filter configurations
+- Existing methods: `setConsoleFilter()`, `setRemoteFilter()`, `updateFilters()`
+- The `#logToDestinations()` method handles routing to ConsoleLogger and RemoteLogger
+- The `#shouldLogToConsole()` method determines if a log should go to console based on filters
+
 **Modifications**:
 - Add `#criticalBuffer` array to store recent warnings/errors
 - Add `#notifier` reference to CriticalLogNotifier instance
+- **Enhance `#shouldLogToConsole()` method** to:
+  1. Check if log level is 'warn' or 'error' AND critical logging is enabled
+  2. If yes, return true regardless of existing filters
+  3. Otherwise, apply existing filter logic
 - Modify `warn()` and `error()` methods to:
-  1. Always call console logger for these levels
-  2. Add to critical buffer
-  3. Notify the visual notification system
+  1. Add to critical buffer
+  2. Notify the visual notification system
+  3. Let enhanced `#shouldLogToConsole()` handle console output decision
 - Add `getCriticalLogs()` method to retrieve buffered logs
 - Add `clearCriticalBuffer()` method to clear the buffer
 
@@ -276,6 +297,9 @@ Add new properties to the schema:
 1. Update to the latest version
 2. No configuration changes required (defaults will work)
 3. Optional: Customize settings in `debug-logging-config.json`
+4. Note: The system uses two configuration files:
+   - `config/debug-logging-config.json` - For debug logging settings including the new critical logging options
+   - `config/logger-config.json` - For general logger configuration loaded by LoggerConfigLoader
 
 ### For Developers
 1. No API changes required
@@ -341,13 +365,16 @@ The implementation is complete when:
 - [Original Issue Discussion](#problem-statement)
 - [HybridLogger Documentation](../src/logging/hybridLogger.js)
 - [Debug Logging Configuration](../config/debug-logging-config.json)
+- [Logger Configuration](../config/logger-config.json)
 - [ConsoleLogger Implementation](../src/logging/consoleLogger.js)
 - [RemoteLogger Implementation](../src/logging/remoteLogger.js)
+- [LoggerConfigLoader](../src/logging/config/loggerConfigLoader.js)
 
 ---
 
-**Document Version**: 1.0.0  
+**Document Version**: 1.1.0  
 **Last Updated**: 2024  
 **Status**: Ready for Implementation  
+**Changes in v1.1.0**: Corrected assumptions about HybridLogger's existing filter architecture and dual configuration system  
 **Author**: Claude (AI Assistant)  
 **Reviewer**: Pending

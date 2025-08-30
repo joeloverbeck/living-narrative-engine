@@ -389,6 +389,278 @@ describe('HybridLogger', () => {
     });
   });
 
+  describe('Critical Logging Bypass', () => {
+    it('should bypass console filters for warnings when criticalLogging.alwaysShowInConsole is true', () => {
+      hybridLogger = new HybridLogger(
+        {
+          consoleLogger: mockConsoleLogger,
+          remoteLogger: mockRemoteLogger,
+          categoryDetector: mockCategoryDetector,
+        },
+        {
+          console: {
+            categories: ['ui'], // Only UI category allowed
+            levels: ['info'], // Only info level allowed
+            enabled: true,
+          },
+          remote: { categories: null, levels: null, enabled: true },
+          criticalLogging: {
+            alwaysShowInConsole: true,
+          },
+        }
+      );
+
+      // Clear initialization call
+      jest.clearAllMocks();
+
+      // Mock category as 'engine' (not in allowed categories)
+      mockCategoryDetector.detectCategory.mockReturnValue('engine');
+
+      // Warning should bypass filters and appear in console
+      hybridLogger.warn('Critical warning');
+
+      expect(mockConsoleLogger.warn).toHaveBeenCalled();
+      expect(mockConsoleLogger.warn).toHaveBeenCalledWith(
+        '[ENGINE:WARN] Critical warning'
+      );
+    });
+
+    it('should bypass console filters for errors when criticalLogging.alwaysShowInConsole is true', () => {
+      hybridLogger = new HybridLogger(
+        {
+          consoleLogger: mockConsoleLogger,
+          remoteLogger: mockRemoteLogger,
+          categoryDetector: mockCategoryDetector,
+        },
+        {
+          console: {
+            categories: ['ui'], // Only UI category allowed
+            levels: ['debug'], // Only debug level allowed
+            enabled: true,
+          },
+          remote: { categories: null, levels: null, enabled: true },
+          criticalLogging: {
+            alwaysShowInConsole: true,
+          },
+        }
+      );
+
+      // Clear initialization call
+      jest.clearAllMocks();
+
+      // Mock category as 'engine' (not in allowed categories)
+      mockCategoryDetector.detectCategory.mockReturnValue('engine');
+
+      // Error should bypass filters and appear in console
+      hybridLogger.error('Critical error');
+
+      expect(mockConsoleLogger.error).toHaveBeenCalled();
+      expect(mockConsoleLogger.error).toHaveBeenCalledWith(
+        '[ENGINE:ERROR] Critical error'
+      );
+    });
+
+    it('should still respect filters for info logs even with criticalLogging enabled', () => {
+      hybridLogger = new HybridLogger(
+        {
+          consoleLogger: mockConsoleLogger,
+          remoteLogger: mockRemoteLogger,
+          categoryDetector: mockCategoryDetector,
+        },
+        {
+          console: {
+            categories: ['ui'], // Only UI category allowed
+            levels: ['warn', 'error'], // Only warn/error allowed
+            enabled: true,
+          },
+          remote: { categories: null, levels: null, enabled: true },
+          criticalLogging: {
+            alwaysShowInConsole: true,
+          },
+        }
+      );
+
+      // Clear initialization call
+      jest.clearAllMocks();
+
+      // Mock category as 'engine' (not in allowed categories)
+      mockCategoryDetector.detectCategory.mockReturnValue('engine');
+
+      // Info should still be filtered out
+      hybridLogger.info('Regular info message');
+
+      expect(mockConsoleLogger.info).not.toHaveBeenCalled();
+      expect(mockRemoteLogger.info).toHaveBeenCalled();
+    });
+
+    it('should still respect filters for debug logs even with criticalLogging enabled', () => {
+      hybridLogger = new HybridLogger(
+        {
+          consoleLogger: mockConsoleLogger,
+          remoteLogger: mockRemoteLogger,
+          categoryDetector: mockCategoryDetector,
+        },
+        {
+          console: {
+            categories: ['ui'], // Only UI category allowed
+            levels: ['warn', 'error'], // Only warn/error allowed
+            enabled: true,
+          },
+          remote: { categories: null, levels: null, enabled: true },
+          criticalLogging: {
+            alwaysShowInConsole: true,
+          },
+        }
+      );
+
+      // Clear initialization call
+      jest.clearAllMocks();
+
+      // Mock category as 'engine' (not in allowed categories)
+      mockCategoryDetector.detectCategory.mockReturnValue('engine');
+
+      // Debug should still be filtered out
+      hybridLogger.debug('Debug message');
+
+      expect(mockConsoleLogger.debug).not.toHaveBeenCalled();
+      expect(mockRemoteLogger.debug).toHaveBeenCalled();
+    });
+
+    it('should restore original behavior when criticalLogging.alwaysShowInConsole is false', () => {
+      hybridLogger = new HybridLogger(
+        {
+          consoleLogger: mockConsoleLogger,
+          remoteLogger: mockRemoteLogger,
+          categoryDetector: mockCategoryDetector,
+        },
+        {
+          console: {
+            categories: ['ui'], // Only UI category allowed
+            levels: ['info'], // Only info level allowed
+            enabled: true,
+          },
+          remote: { categories: null, levels: null, enabled: true },
+          criticalLogging: {
+            alwaysShowInConsole: false, // Disabled
+          },
+        }
+      );
+
+      // Clear initialization call
+      jest.clearAllMocks();
+
+      // Mock category as 'engine' (not in allowed categories)
+      mockCategoryDetector.detectCategory.mockReturnValue('engine');
+
+      // Warning should be filtered out when critical bypass is disabled
+      hybridLogger.warn('Warning message');
+
+      expect(mockConsoleLogger.warn).not.toHaveBeenCalled();
+      expect(mockRemoteLogger.warn).toHaveBeenCalled();
+    });
+
+    it('should use default critical logging config when not provided', () => {
+      hybridLogger = new HybridLogger(
+        {
+          consoleLogger: mockConsoleLogger,
+          remoteLogger: mockRemoteLogger,
+          categoryDetector: mockCategoryDetector,
+        },
+        {
+          console: {
+            categories: ['ui'], // Only UI category allowed
+            levels: ['info'], // Only info level allowed
+            enabled: true,
+          },
+          remote: { categories: null, levels: null, enabled: true },
+          // No criticalLogging config provided
+        }
+      );
+
+      // Clear initialization call
+      jest.clearAllMocks();
+
+      // Mock category as 'engine' (not in allowed categories)
+      mockCategoryDetector.detectCategory.mockReturnValue('engine');
+
+      // Should use default (alwaysShowInConsole: true)
+      hybridLogger.error('Error with default config');
+
+      expect(mockConsoleLogger.error).toHaveBeenCalled();
+      expect(mockConsoleLogger.error).toHaveBeenCalledWith(
+        '[ENGINE:ERROR] Error with default config'
+      );
+    });
+
+    it('should handle partial critical logging config', () => {
+      hybridLogger = new HybridLogger(
+        {
+          consoleLogger: mockConsoleLogger,
+          remoteLogger: mockRemoteLogger,
+          categoryDetector: mockCategoryDetector,
+        },
+        {
+          console: {
+            categories: ['ui'], // Only UI category allowed
+            levels: ['info'], // Only info level allowed
+            enabled: true,
+          },
+          remote: { categories: null, levels: null, enabled: true },
+          criticalLogging: {
+            alwaysShowInConsole: true,
+            // Other properties will use defaults
+          },
+        }
+      );
+
+      // Clear initialization call
+      jest.clearAllMocks();
+
+      mockCategoryDetector.detectCategory.mockReturnValue('engine');
+
+      // Should work with partial config
+      hybridLogger.warn('Warning with partial config');
+
+      expect(mockConsoleLogger.warn).toHaveBeenCalled();
+    });
+
+    it('should not affect remote logging filters', () => {
+      hybridLogger = new HybridLogger(
+        {
+          consoleLogger: mockConsoleLogger,
+          remoteLogger: mockRemoteLogger,
+          categoryDetector: mockCategoryDetector,
+        },
+        {
+          console: {
+            categories: ['ui'],
+            levels: ['info'],
+            enabled: true,
+          },
+          remote: {
+            categories: ['ui'], // Remote also has filters
+            levels: ['info'],
+            enabled: true,
+          },
+          criticalLogging: {
+            alwaysShowInConsole: true,
+          },
+        }
+      );
+
+      // Clear initialization call
+      jest.clearAllMocks();
+
+      mockCategoryDetector.detectCategory.mockReturnValue('engine');
+
+      // Error should bypass console filters but not remote filters
+      hybridLogger.error('Error message');
+
+      expect(mockConsoleLogger.error).toHaveBeenCalled(); // Bypassed console filter
+      expect(mockRemoteLogger.error).not.toHaveBeenCalled(); // Still filtered for remote
+    });
+  });
+
   describe('Console-Specific Methods', () => {
     beforeEach(() => {
       hybridLogger = new HybridLogger({
