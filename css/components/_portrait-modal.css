@@ -1,28 +1,15 @@
-# CLIPORMOD-002: Create Portrait Modal CSS Styles
+/* css/components/_portrait-modal.css */
 
-## Status
-🔴 NOT STARTED
+/* Portrait Modal Component - Displays portrait images in modal dialog */
 
-## Priority
-HIGH - Required for modal visual presentation
+/* ============================================
+   BASE MODAL STYLES
+   ============================================ */
 
-## Dependencies
-- None (can be done in parallel with CLIPORMOD-001)
-
-## Description
-Create the CSS stylesheet for the portrait modal component, including all visual styles, animations, responsive design, and accessibility considerations. The styles should integrate with the existing design system and use CSS custom properties for theming.
-
-## File to Create
-`css/components/_portrait-modal.css`
-
-## CSS Structure
-
-### 1. Base Modal Styles
-```css
 /* Portrait Modal Overlay - extends existing .modal-overlay */
 .portrait-modal-overlay {
   background-color: rgba(0, 0, 0, 0.8); /* Darker for image viewing */
-  z-index: var(--z-index-modal, 1000);
+  z-index: 1000; /* fallback for --z-index-modal */
   display: none;
   position: fixed;
   top: 0;
@@ -48,7 +35,7 @@ Create the CSS stylesheet for the portrait modal component, including all visual
   padding: var(--spacing-md);
   background-color: var(--panel-bg-color);
   border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--shadow-lg);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -61,10 +48,11 @@ Create the CSS stylesheet for the portrait modal component, including all visual
   opacity: 1;
   transform: scale(1);
 }
-```
 
-### 2. Modal Header Styles
-```css
+/* ============================================
+   MODAL HEADER STYLES
+   ============================================ */
+
 .portrait-modal-header {
   display: flex;
   justify-content: space-between;
@@ -78,7 +66,7 @@ Create the CSS stylesheet for the portrait modal component, including all visual
   margin: 0;
   font-size: var(--font-size-h3);
   color: var(--primary-text-color);
-  font-weight: var(--font-weight-semibold);
+  font-weight: 600; /* fallback for --font-weight-semibold */
 }
 
 .portrait-modal-close {
@@ -108,10 +96,11 @@ Create the CSS stylesheet for the portrait modal component, including all visual
   outline: 2px solid var(--accent-color-primary);
   outline-offset: 2px;
 }
-```
 
-### 3. Modal Body and Image Container
-```css
+/* ============================================
+   MODAL BODY AND IMAGE CONTAINER
+   ============================================ */
+
 .portrait-modal-body {
   flex: 1;
   display: flex;
@@ -146,10 +135,11 @@ Create the CSS stylesheet for the portrait modal component, including all visual
 .portrait-modal-image.loaded {
   opacity: 1;
 }
-```
 
-### 4. Loading and Error States
-```css
+/* ============================================
+   LOADING AND ERROR STATES
+   ============================================ */
+
 .portrait-loading-spinner {
   position: absolute;
   top: 50%;
@@ -195,10 +185,11 @@ Create the CSS stylesheet for the portrait modal component, including all visual
 .portrait-error-message.visible {
   display: block;
 }
-```
 
-### 5. Clickable Portrait Enhancement
-```css
+/* ============================================
+   CLICKABLE PORTRAIT ENHANCEMENT
+   ============================================ */
+
 /* Enhance speech bubble portraits that are clickable */
 .speech-portrait.clickable {
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
@@ -218,10 +209,11 @@ Create the CSS stylesheet for the portrait modal component, including all visual
 .speech-portrait.clickable:active {
   transform: scale(1.02);
 }
-```
 
-### 6. Animation Keyframes
-```css
+/* ============================================
+   ANIMATION KEYFRAMES
+   ============================================ */
+
 /* Fade in animation for modal appearance */
 @keyframes modalFadeIn {
   from {
@@ -253,10 +245,19 @@ Create the CSS stylesheet for the portrait modal component, including all visual
 .portrait-modal-overlay.fade-out {
   animation: modalFadeOut 0.3s ease-in forwards;
 }
-```
 
-### 7. Responsive Design
-```css
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+/* Large tablet/desktop breakpoint */
+@media (max-width: 1024px) {
+  .portrait-modal-content {
+    max-width: 92vw;
+    max-height: 92vh;
+  }
+}
+
 /* Tablet breakpoint */
 @media (max-width: 768px) {
   .portrait-modal-content {
@@ -271,7 +272,7 @@ Create the CSS stylesheet for the portrait modal component, including all visual
   }
   
   .portrait-modal-title {
-    font-size: var(--font-size-h4);
+    font-size: var(--font-size-h3);
   }
 }
 
@@ -308,17 +309,18 @@ Create the CSS stylesheet for the portrait modal component, including all visual
 /* Small mobile breakpoint */
 @media (max-width: 320px) {
   .portrait-modal-title {
-    font-size: var(--font-size-body);
+    font-size: var(--font-size-base);
   }
   
   .portrait-modal-image {
     max-height: 40vh;
   }
 }
-```
 
-### 8. Accessibility Enhancements
-```css
+/* ============================================
+   ACCESSIBILITY ENHANCEMENTS
+   ============================================ */
+
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   .portrait-modal-content {
@@ -368,59 +370,13 @@ Create the CSS stylesheet for the portrait modal component, including all visual
     box-shadow: 0 0 2rem rgba(0, 0, 0, 0.8);
   }
 }
-```
 
-### 9. Print Styles
-```css
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
 @media print {
   .portrait-modal-overlay {
     display: none !important;
   }
 }
-```
-
-## CSS Custom Properties Used
-These should be defined in the main theme or fallback values should be provided:
-- `--z-index-modal`
-- `--spacing-xs`, `--spacing-sm`, `--spacing-md`
-- `--panel-bg-color`
-- `--border-radius-sm`, `--border-radius-md`, `--border-radius-lg`
-- `--shadow-lg`, `--shadow-xl`
-- `--border-width`
-- `--border-color-subtle`
-- `--font-size-h3`, `--font-size-h4`, `--font-size-body`
-- `--primary-text-color`, `--secondary-text-color`
-- `--font-weight-semibold`
-- `--accent-color-primary`, `--accent-color-focus-ring`
-- `--error-text-color`, `--error-bg-color`
-
-## Integration Requirements
-After creating this file, it needs to be:
-1. Imported in the main CSS bundle (usually `css/main.css` or similar)
-2. Added to the CSS build process if applicable
-3. Verified that all CSS custom properties are defined in the theme
-
-## Testing Considerations
-- Test on multiple screen sizes
-- Verify animations work correctly
-- Check high contrast mode
-- Test with reduced motion preference
-- Verify all hover/focus states
-- Test on touch devices
-- Check print styles
-
-## Success Criteria
-- [ ] All styles follow existing design system conventions
-- [ ] Uses CSS custom properties for theming
-- [ ] Responsive design works on all screen sizes
-- [ ] Animations are smooth and performant
-- [ ] Accessibility features are properly implemented
-- [ ] Reduced motion preference is respected
-- [ ] High contrast mode is supported
-- [ ] Focus states are clearly visible
-- [ ] No style conflicts with existing modal styles
-
-## Notes
-- This CSS file should be created before or alongside CLIPORMOD-001
-- The HTML structure (CLIPORMOD-003) must match these class names
-- Consider performance impact of animations on lower-end devices

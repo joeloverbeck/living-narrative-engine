@@ -603,6 +603,12 @@ describe('Core Scope Resolution E2E', () => {
       );
       const gameContext = await createGameContext();
 
+      // Save original scope definitions to restore after test
+      const originalScopeDefinitions = ScopeTestUtilities.createTestScopes({
+        dslParser: services.dslParser,
+        logger: services.logger,
+      });
+
       // Create a scope with invalid AST structure (but still an object)
       const invalidScopeDefinitions = {
         'test:invalid_scope': {
@@ -623,6 +629,9 @@ describe('Core Scope Resolution E2E', () => {
           { scopeRegistry: services.scopeRegistry, scopeEngine: services.scopeEngine }
         )
       ).rejects.toThrow();
+
+      // Restore original scope definitions for subsequent tests
+      services.scopeRegistry.initialize(originalScopeDefinitions);
     });
 
     test('should provide meaningful error messages', async () => {
@@ -650,12 +659,10 @@ describe('Core Scope Resolution E2E', () => {
         testActors.player.id
       );
 
-      // Create minimal game context
-      const minimalGameContext = {
-        currentLocation: null,
-        entityManager: services.entityManager,
-        allEntities: [],
-      };
+      // Create minimal game context using the helper function but override location
+      const minimalGameContext = await createGameContext();
+      minimalGameContext.currentLocation = null;
+      minimalGameContext.allEntities = [];
 
       // Should handle null location gracefully
       const result = await ScopeTestUtilities.resolveScopeE2E(

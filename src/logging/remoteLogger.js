@@ -1133,18 +1133,6 @@ class RemoteLogger {
    * @returns {Promise<void>}
    */
   async #sendBatch(logs) {
-    // Validate server readiness before attempting to send
-    try {
-      const serverReady = await this.#validateServerReadiness();
-      if (!serverReady) {
-        // Server is not ready - throw an error to trigger fallback
-        throw new Error('Server not ready - health check failed');
-      }
-    } catch (error) {
-      // If server readiness check fails, treat as connection failure
-      throw new Error(`Server readiness validation failed: ${error.message}`);
-    }
-
     // Validate payload size before sending
     const payloadValidation = this.#validatePayloadSize(logs);
     if (!payloadValidation.valid) {
@@ -1165,7 +1153,20 @@ class RemoteLogger {
       }
     }
 
+    // Execute both server readiness validation and log sending within circuit breaker protection
     const result = await this.#circuitBreaker.execute(async () => {
+      // Validate server readiness before attempting to send
+      try {
+        const serverReady = await this.#validateServerReadiness();
+        if (!serverReady) {
+          // Server is not ready - throw an error to trigger circuit breaker failure
+          throw new Error('Server not ready - health check failed');
+        }
+      } catch (error) {
+        // If server readiness check fails, treat as connection failure
+        throw new Error(`Server readiness validation failed: ${error.message}`);
+      }
+
       return await this.#retryWithBackoff(
         () => this.#sendHttpRequest(logs),
         this.#retryAttempts

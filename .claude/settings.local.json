@@ -349,7 +349,12 @@
       "Bash(NODE_ENV=test npx jest tests/integration/core/rules/ --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/integration/mods/*/rules/ --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/e2e/scopeDsl/CoreScopeResolution.e2e.test.js --no-coverage --verbose)",
-      "Bash(NODE_ENV=test npx jest tests/e2e/scopeDsl/CoreScopeResolution.e2e.test.js --no-coverage --testNamePattern=\"should handle empty game contexts gracefully\")"
+      "Bash(NODE_ENV=test npx jest tests/e2e/scopeDsl/CoreScopeResolution.e2e.test.js --no-coverage --testNamePattern=\"should handle empty game contexts gracefully\")",
+      "Bash(NODE_ENV=test npx jest tests/unit/logging/hybridLogger.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/logging/hybridLogger.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/logging/hybridLogger.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/logging/remoteLoggerBootstrapRaceCondition.integration.test.js --testNamePattern=\"should properly handle circuit breaker during bootstrap failures\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopeDsl/ --no-coverage --silent)"
     ],
     "deny": []
   }
