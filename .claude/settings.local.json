@@ -321,7 +321,24 @@
       "Bash(NODE_ENV=test npx jest tests/unit/actions/tracing/recovery/recoveryManager.test.js --coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/place_yourself_behind_action.test.js --no-coverage)",
       "Bash(NODE_ENV=test npx jest tests/integration/rules/placeYourselfBehindRule.integration.test.js --no-coverage)",
-      "Bash(NODE_ENV=test npx jest tests/integration/rules/placeYourselfBehindRule.integration.test.js --no-coverage --verbose)"
+      "Bash(NODE_ENV=test npx jest tests/integration/rules/placeYourselfBehindRule.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/performance/scopeDsl/nodes/slotAccessResolver.performance.test.js --testNamePattern=\"should maintain consistent performance across different equipment configurations\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/performance/scopeDsl/nodes/slotAccessResolver.performance.test.js --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/placeYourselfBehindActionDiscovery.integration.test.js --no-coverage --verbose --testNamePattern=\"should discover place_yourself_behind action when actor can face target\")",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/placeYourselfBehindActionDiscovery.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/placeYourselfBehindActionDiscovery.integration.test.js --no-coverage --verbose -t \"should discover place_yourself_behind action when actor can face target\")",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/sex/press_against_back_action.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test node --expose-gc ./node_modules/.bin/jest tests/memory/scopeDsl/scopeDslErrorHandler.memory.test.js --config jest.config.memory.js --env=jsdom --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/rules/pressAgainstBackRule.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/rules/pressAgainstBackRule.integration.test.js --no-coverage --testNamePattern=\"rule executes with correct variable setting and message formatting\" --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/sex/fondle_penis_action.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/rules/pressAgainstBackRule.integration.test.js --no-coverage --testNamePattern=\"rule executes with correct variable setting and message formatting\")",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/placeYourselfBehindActionDiscovery.integration.test.js --no-coverage --verbose --testNamePattern=\"should discover place_yourself_behind action when actor can face target\")",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/placeYourselfBehindActionDiscovery.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/place_yourself_behind_action.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/placeYourselfBehindActionDiscovery.integration.test.js --no-coverage -t \"should discover place_yourself_behind action when actor can face target\")",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/placeYourselfBehindActionDiscovery.integration.test.js --no-coverage --verbose -t \"should discover place_yourself_behind action when actor can face target\")",
+      "Bash(NODE_ENV=test npx jest tests/integration/scopes/placeYourselfBehindActionDiscovery.integration.test.js --no-coverage)"
     ],
     "deny": []
   }

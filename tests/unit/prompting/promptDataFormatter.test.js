@@ -39,7 +39,13 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       const result = formatter.formatThoughtsSection(thoughts);
 
       expect(result).toBe(
-        '<thoughts>\n- First thought\n- Second thought\n</thoughts>'
+        `<thoughts>
+Recent thoughts (avoid repeating or barely rephrasing these):
+- First thought
+- Second thought
+
+Generate a fresh, unique thought that builds upon your mental state.
+</thoughts>`
       );
     });
 
@@ -54,7 +60,13 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       const result = formatter.formatThoughtsSection(thoughts);
 
       expect(result).toBe(
-        '<thoughts>\n- Valid thought\n- Another valid thought\n</thoughts>'
+        `<thoughts>
+Recent thoughts (avoid repeating or barely rephrasing these):
+- Valid thought
+- Another valid thought
+
+Generate a fresh, unique thought that builds upon your mental state.
+</thoughts>`
       );
     });
 
@@ -72,27 +84,33 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
   });
 
   describe('formatThoughtsVoiceGuidance', () => {
-    test('returns empty string when thoughts array is empty', () => {
+    test('returns basic guidance when thoughts array is empty', () => {
       const result = formatter.formatThoughtsVoiceGuidance([]);
-      expect(result).toBe('');
+      expect(result).toBe(
+        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+      );
     });
 
-    test('returns empty string when thoughts array is null/undefined', () => {
-      expect(formatter.formatThoughtsVoiceGuidance(null)).toBe('');
-      expect(formatter.formatThoughtsVoiceGuidance(undefined)).toBe('');
+    test('returns basic guidance when thoughts array is null/undefined', () => {
+      expect(formatter.formatThoughtsVoiceGuidance(null)).toBe(
+        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+      );
+      expect(formatter.formatThoughtsVoiceGuidance(undefined)).toBe(
+        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+      );
     });
 
-    test('returns voice guidance when thoughts exist', () => {
+    test('returns enhanced anti-repetition guidance when thoughts exist', () => {
       const thoughts = [{ text: 'First thought', timestamp: '2024-01-01' }];
 
       const result = formatter.formatThoughtsVoiceGuidance(thoughts);
 
       expect(result).toBe(
-        "INNER VOICE REMINDER: Your thoughts below must reflect your character's authentic mental voice and personality patterns."
+        "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
       );
     });
 
-    test('returns same guidance regardless of number of thoughts', () => {
+    test('returns same enhanced guidance regardless of number of thoughts', () => {
       const singleThought = [{ text: 'One thought', timestamp: '2024-01-01' }];
       const multipleThoughts = [
         { text: 'First thought', timestamp: '2024-01-01' },
@@ -103,12 +121,65 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       const result1 = formatter.formatThoughtsVoiceGuidance(singleThought);
       const result2 = formatter.formatThoughtsVoiceGuidance(multipleThoughts);
 
-      expect(result1).toBe(
-        "INNER VOICE REMINDER: Your thoughts below must reflect your character's authentic mental voice and personality patterns."
-      );
-      expect(result2).toBe(
-        "INNER VOICE REMINDER: Your thoughts below must reflect your character's authentic mental voice and personality patterns."
-      );
+      const expectedGuidance = "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style.";
+
+      expect(result1).toBe(expectedGuidance);
+      expect(result2).toBe(expectedGuidance);
+    });
+  });
+
+  describe('formatThoughtsVoiceGuidance - Enhanced Functionality', () => {
+    test('basic guidance contains key authenticity phrases', () => {
+      const result = formatter.formatThoughtsVoiceGuidance([]);
+      
+      expect(result).toContain('INNER VOICE GUIDANCE');
+      expect(result).toContain('authentically reflect');
+      expect(result).toContain('unique mental voice');
+      expect(result).toContain('personality patterns');
+      expect(result).toContain('internal speech style');
+    });
+
+    test('enhanced guidance contains key anti-repetition phrases', () => {
+      const thoughts = [{ text: 'Test thought', timestamp: '2024-01-01' }];
+      const result = formatter.formatThoughtsVoiceGuidance(thoughts);
+      
+      expect(result).toContain('INNER VOICE GUIDANCE');
+      expect(result).toContain('fresh and unique');
+      expect(result).toContain('do not repeat');
+      expect(result).toContain('barely rephrase');
+      expect(result).toContain('previous thoughts shown above');
+      expect(result).toContain('Build upon your existing mental state');
+      expect(result).toContain('new insights, reactions, or perspectives');
+    });
+
+    test('different behavior for empty vs populated thoughts arrays', () => {
+      const emptyResult = formatter.formatThoughtsVoiceGuidance([]);
+      const populatedResult = formatter.formatThoughtsVoiceGuidance([
+        { text: 'Test', timestamp: '2024-01-01' }
+      ]);
+      
+      expect(emptyResult).not.toBe(populatedResult);
+      expect(emptyResult).toContain('Generate thoughts');
+      expect(populatedResult).toContain('do not repeat');
+    });
+  });
+
+  describe('formatThoughtsSection - Enhanced Functionality', () => {
+    test('enhanced section contains anti-repetition instructions', () => {
+      const thoughts = [{ text: 'Test thought', timestamp: '2024-01-01' }];
+      const result = formatter.formatThoughtsSection(thoughts);
+      
+      expect(result).toContain('Recent thoughts (avoid repeating or barely rephrasing these):');
+      expect(result).toContain('Generate a fresh, unique thought that builds upon your mental state.');
+      expect(result).toContain('- Test thought');
+    });
+
+    test('enhanced section maintains proper XML structure', () => {
+      const thoughts = [{ text: 'Test', timestamp: '2024-01-01' }];
+      const result = formatter.formatThoughtsSection(thoughts);
+      
+      expect(result).toMatch(/^<thoughts>.*<\/thoughts>$/s);
+      expect(result.split('\n')).toHaveLength(6); // Expected number of lines in new format
     });
   });
 
@@ -169,7 +240,12 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
 
       // New section fields
       expect(result.thoughtsSection).toBe(
-        '<thoughts>\n- Test thought\n</thoughts>'
+        `<thoughts>
+Recent thoughts (avoid repeating or barely rephrasing these):
+- Test thought
+
+Generate a fresh, unique thought that builds upon your mental state.
+</thoughts>`
       );
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe('<goals>\n- Test goal\n</goals>');
@@ -185,7 +261,7 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
         promptDataWithThoughts
       );
       expect(resultWithThoughts.thoughtsVoiceGuidance).toBe(
-        "INNER VOICE REMINDER: Your thoughts below must reflect your character's authentic mental voice and personality patterns."
+        "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
       );
 
       // Test with empty thoughts array
@@ -194,13 +270,17 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       };
 
       const resultEmpty = formatter.formatPromptData(promptDataEmpty);
-      expect(resultEmpty.thoughtsVoiceGuidance).toBe('');
+      expect(resultEmpty.thoughtsVoiceGuidance).toBe(
+        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+      );
 
       // Test with no thoughts array
       const promptDataMissing = {};
 
       const resultMissing = formatter.formatPromptData(promptDataMissing);
-      expect(resultMissing.thoughtsVoiceGuidance).toBe('');
+      expect(resultMissing.thoughtsVoiceGuidance).toBe(
+        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+      );
     });
 
     test('formatNotes maintains backward compatibility with default options', () => {
@@ -262,7 +342,9 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       expect(result.thoughtsSection).toBe('');
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe('');
-      expect(result.thoughtsVoiceGuidance).toBe('');
+      expect(result.thoughtsVoiceGuidance).toBe(
+        "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style."
+      );
     });
 
     test('handles mixed empty and non-empty sections', () => {
@@ -276,7 +358,12 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
 
       // Should have thoughts and goals sections, but no notes section
       expect(result.thoughtsSection).toBe(
-        '<thoughts>\n- I have a thought\n</thoughts>'
+        `<thoughts>
+Recent thoughts (avoid repeating or barely rephrasing these):
+- I have a thought
+
+Generate a fresh, unique thought that builds upon your mental state.
+</thoughts>`
       );
       expect(result.notesSection).toBe('');
       expect(result.goalsSection).toBe(
@@ -324,7 +411,7 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       const result = formatter.formatThoughtsSection(thoughts);
 
       // Should have proper XML structure when content exists
-      expect(result).toMatch(/^<thoughts>\n.*\n<\/thoughts>$/);
+      expect(result).toMatch(/^<thoughts>.*<\/thoughts>$/s);
       expect(result).toContain('- Test');
     });
   });

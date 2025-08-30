@@ -147,6 +147,23 @@ class SystemLogicInterpreter extends BaseService {
     this.#logger.debug('SystemLogicInterpreter: shut down.');
   }
 
+  /**
+   * Public method for processing events directly (primarily for testing).
+   *
+   * @param {object} eventPayload - Event payload with eventType and payload properties
+   * @returns {Promise<void>} Promise that resolves when event processing is complete
+   */
+  async processEvent(eventPayload) {
+    // Convert the eventPayload format to internal event format
+    const event = {
+      type: eventPayload.eventType,
+      payload: eventPayload.payload,
+    };
+
+    // Use the internal event handler
+    return this.#handleEvent(event);
+  }
+
   /* --------------------------------------------------------------------- */
 
   /* Custom JsonLogic Operations                                          */

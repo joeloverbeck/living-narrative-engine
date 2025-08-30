@@ -4,9 +4,9 @@
   "actionTracing": {
     "enabled": false,
     "tracedActions": [
-      "intimacy:fondle_ass"
+      "exercise:show_off_biceps"
     ],
-    "outputDirectory": "./traces/covering",
+    "outputDirectory": "./traces/show-off-biceps",
     "verbosity": "verbose",
     "includeComponentData": true,
     "includePrerequisites": true,

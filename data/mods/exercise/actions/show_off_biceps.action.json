@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "exercise:show_off_biceps",
+  "name": "Show Off Biceps",
+  "description": "Flex your arms to show off your muscular biceps and triceps.",
+  "targets": "none",
+  "required_components": {},
+  "forbidden_components": {},
+  "template": "show off your muscular arms",
+  "prerequisites": [
+    {
+      "logic": {
+        "or": [
+          {"hasPartOfTypeWithComponentValue": ["actor", "arm", "descriptors:build", "build", "muscular"]},
+          {"hasPartOfTypeWithComponentValue": ["actor", "arm", "descriptors:build", "build", "hulking"]}
+        ]
+      },
+      "failure_message": "You don't have the muscular arms needed to show off."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#e65100",
+    "textColor": "#ffffff", 
+    "hoverBackgroundColor": "#ff6f00",
+    "hoverTextColor": "#ffffff"
+  }
+}

@@ -27,10 +27,12 @@ export function createMockMultiTargetResolutionStage(options = {}) {
     async executeInternal(context) {
       // For integration tests, create proper target contexts with default target
       // This allows the ActionFormattingStage to succeed without complex scope evaluation
+      const candidateActions = context.candidateActions || context.data?.candidateActions || [];
+      
       return PipelineResult.success({
         data: {
           ...context.data,
-          actionsWithTargets: context.candidateActions.map((actionDef) => ({
+          actionsWithTargets: candidateActions.map((actionDef) => ({
             actionDef,
             targetContexts: [
               {

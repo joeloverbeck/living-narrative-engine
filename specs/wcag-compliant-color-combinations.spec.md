@@ -12,6 +12,38 @@ This specification provides a curated collection of pre-validated color combinat
 - WCAG 2.1 AAA: 7:1+ contrast ratio (marked with 🌟)
 - All combinations tested for both normal and hover states
 
+## Current Usage Overview
+
+**Status**: 7 of 24 color combinations currently in use by existing mods (17 available)
+
+### Active Mod Assignments
+
+| Mod | Color Scheme | Section | Background Color |
+|-----|-------------|---------|------------------|
+| Core | Classic Blue-Grey | 1.1 | `#455a64` |
+| Violence | Dark Crimson | 2.2 | `#8b0000` |
+| Intimacy | Rose Pink | 3.2 | `#ad1457` |
+| Clothing | Earth Brown | 4.2 | `#6d4c41` |
+| Sex | Mystic Purple | 5.1 | `#4a148c` |
+| Positioning | Deep Orange Energy | 9.2 | `#bf360c` |
+| Exercise | Orange Flame | 2.3 | `#e65100` |
+
+### Available Color Combinations
+
+The following **17 color combinations** remain available for new mods:
+
+- **Neutral/System**: Slate Grey (1.2), Charcoal (1.3)
+- **Action/Combat**: Bold Red (2.1)
+- **Social/Intimacy**: Soft Purple (3.1), Deep Teal (3.3)
+- **Nature/Environment**: Forest Green (4.1), Ocean Blue (4.3)
+- **Magic/Special**: Golden Divine (5.2)
+- **Warning/Alert**: Amber Warning (6.1), Dark Red Alert (6.2)
+- **Dark Theme**: Deep Blue (7.1), Dark Purple (7.2), Midnight Green (7.3)
+- **High Contrast**: Pure Black & White (8.1), White & Black (8.2), Yellow on Black (8.3)
+- **Additional Versatile**: Indigo Professional (9.1), Cool Grey Modern (9.3)
+
+**Recommendation**: When creating new mods, select from the available combinations above to maintain visual consistency and avoid conflicts.
+
 ## Color Combination Sets
 
 ### 1. Neutral/System Colors
@@ -31,6 +63,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 4.54:1 ✅ AA
 - **Use Cases**: System actions, navigation, utilities
 - **Theme**: Professional, neutral, non-intrusive
+- ✅ **USED BY**: Core mod (follow, wait, go, dismiss, stop_following)
 
 #### 1.2 Slate Grey
 
@@ -47,6 +80,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 5.92:1 ✅ AA
 - **Use Cases**: Administrative actions, settings, configuration
 - **Theme**: Modern, sophisticated, calm
+- 🟢 **AVAILABLE**
 
 #### 1.3 Charcoal
 
@@ -63,6 +97,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 10.34:1 🌟 AAA
 - **Use Cases**: Dark theme default, low-energy actions
 - **Theme**: Minimal, elegant, understated
+- 🟢 **AVAILABLE**
 
 ### 2. Action/Combat Colors
 
@@ -81,6 +116,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 5.25:1 ✅ AA
 - **Use Cases**: Combat, aggressive actions, critical alerts
 - **Theme**: Danger, power, intensity
+- 🟢 **AVAILABLE**
 
 #### 2.2 Dark Crimson
 
@@ -97,6 +133,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 8.41:1 🌟 AAA
 - **Use Cases**: Berserker actions, blood magic, violence
 - **Theme**: Brutal, serious, high-stakes
+- ✅ **USED BY**: Violence mod (slap, sucker_punch)
 
 #### 2.3 Orange Flame
 
@@ -113,6 +150,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 4.56:1 ✅ AA
 - **Use Cases**: Fire attacks, energy bursts, special moves
 - **Theme**: Energy, excitement, dynamism
+- ✅ **USED BY**: Exercise mod (jumping, displaying biceps, squats, exercise machines)
 
 ### 3. Social/Intimacy Colors
 
@@ -131,6 +169,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 6.54:1 ✅ AA
 - **Use Cases**: Intimacy actions, romantic interactions
 - **Theme**: Romance, mystery, elegance
+- 🟢 **AVAILABLE**
 
 #### 3.2 Rose Pink
 
@@ -147,6 +186,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 6.54:1 ✅ AA
 - **Use Cases**: Affection, gentle touches, emotional actions
 - **Theme**: Warmth, tenderness, passion
+- ✅ **USED BY**: Intimacy mod (kissing, touching, affectionate interactions)
 
 #### 3.3 Deep Teal
 
@@ -163,6 +203,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 5.42:1 ✅ AA
 - **Use Cases**: Calming interactions, trust-building
 - **Theme**: Trust, stability, depth
+- 🟢 **AVAILABLE**
 
 ### 4. Nature/Environment Colors
 
@@ -181,6 +222,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 5.37:1 ✅ AA
 - **Use Cases**: Nature magic, outdoor actions, environmental
 - **Theme**: Growth, natural, organic
+- 🟢 **AVAILABLE**
 
 #### 4.2 Earth Brown
 
@@ -197,6 +239,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 6.17:1 ✅ AA
 - **Use Cases**: Ground abilities, crafting, physical items
 - **Theme**: Stability, reliability, groundedness
+- ✅ **USED BY**: Clothing mod (remove_clothing)
 
 #### 4.3 Ocean Blue
 
@@ -213,6 +256,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 6.26:1 ✅ AA
 - **Use Cases**: Water abilities, naval actions, fluid movements
 - **Theme**: Depth, flow, adaptability
+- 🟢 **AVAILABLE**
 
 ### 5. Magic/Special Colors
 
@@ -231,6 +275,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 10.89:1 🌟 AAA
 - **Use Cases**: Arcane magic, psychic abilities, enchantments
 - **Theme**: Mystical, powerful, otherworldly
+- ✅ **USED BY**: Sex mod (sexual interactions)
 
 #### 5.2 Golden Divine
 
@@ -247,6 +292,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 10.07:1 🌟 AAA
 - **Use Cases**: Divine magic, holy abilities, blessings
 - **Theme**: Sacred, radiant, powerful
+- 🟢 **AVAILABLE**
 
 ### 6. Warning/Alert Colors
 
@@ -265,6 +311,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 7.28:1 🌟 AAA
 - **Use Cases**: Caution actions, moderate warnings, attention
 - **Theme**: Alert, attention, caution
+- 🟢 **AVAILABLE**
 
 #### 6.2 Dark Red Alert
 
@@ -281,6 +328,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 7.13:1 🌟 AAA
 - **Use Cases**: Critical alerts, dangerous actions, urgent
 - **Theme**: Urgent, critical, immediate
+- 🟢 **AVAILABLE**
 
 ### 7. Dark Theme Optimized
 
@@ -299,6 +347,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 9.23:1 🌟 AAA
 - **Use Cases**: Primary actions in dark themes
 - **Theme**: Professional, focused, reliable
+- 🟢 **AVAILABLE**
 
 #### 7.2 Dark Purple
 
@@ -315,6 +364,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 11.45:1 🌟 AAA
 - **Use Cases**: Special abilities in dark themes
 - **Theme**: Premium, special, unique
+- 🟢 **AVAILABLE**
 
 #### 7.3 Midnight Green
 
@@ -331,6 +381,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 10.42:1 🌟 AAA
 - **Use Cases**: Success actions in dark themes
 - **Theme**: Success, achievement, progress
+- 🟢 **AVAILABLE**
 
 ### 8. High Contrast Options
 
@@ -349,6 +400,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 15.54:1 🌟 AAA
 - **Use Cases**: Maximum accessibility, vision impairment support
 - **Theme**: Ultimate clarity, maximum contrast
+- 🟢 **AVAILABLE**
 
 #### 8.2 White & Black
 
@@ -365,6 +417,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 15.54:1 🌟 AAA
 - **Use Cases**: Light theme high contrast
 - **Theme**: Clean, clear, accessible
+- 🟢 **AVAILABLE**
 
 #### 8.3 Yellow on Black
 
@@ -381,6 +434,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 15.42:1 🌟 AAA
 - **Use Cases**: High visibility, attention grabbing
 - **Theme**: Maximum visibility, alertness
+- 🟢 **AVAILABLE**
 
 ### 9. Additional Versatile Options
 
@@ -399,6 +453,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 9.89:1 🌟 AAA
 - **Use Cases**: Professional actions, business logic
 - **Theme**: Corporate, trustworthy, stable
+- 🟢 **AVAILABLE**
 
 #### 9.2 Deep Orange Energy
 
@@ -415,6 +470,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 6.28:1 ✅ AA
 - **Use Cases**: Energy actions, positioning, movement
 - **Theme**: Dynamic, energetic, active
+- ✅ **USED BY**: Positioning mod (get_close, step_back, turn_around, kneel_before, etc.)
 
 #### 9.3 Cool Grey Modern
 
@@ -431,6 +487,7 @@ This specification provides a curated collection of pre-validated color combinat
 - **Hover Contrast**: 7.04:1 🌟 AAA
 - **Use Cases**: Modern UI, neutral actions
 - **Theme**: Contemporary, balanced, versatile
+- 🟢 **AVAILABLE**
 
 ## Implementation Guidelines
 

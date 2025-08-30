@@ -20,6 +20,8 @@ export default class SimpleEntityManager {
   constructor(entities = []) {
     /** @type {Map<string, {id:string, components:Record<string, any>}>} */
     this.entities = new Map();
+    /** @type {Map<string, object>} Entity instance cache for consistent references */
+    this.entityInstanceCache = new Map();
     this.setEntities(entities);
 
     // Add activeEntities alias for compatibility with older code
@@ -33,6 +35,7 @@ export default class SimpleEntityManager {
    */
   setEntities(entities = []) {
     this.entities.clear();
+    this.entityInstanceCache.clear(); // Clear cache when entities change
     for (const e of entities) {
       const cloned = deepClone(e);
       this.entities.set(cloned.id, cloned);
@@ -51,10 +54,15 @@ export default class SimpleEntityManager {
       return undefined;
     }
 
+    // Check cache first for consistent object references
+    if (this.entityInstanceCache.has(id)) {
+      return this.entityInstanceCache.get(id);
+    }
+
     const entityManager = this; // Capture reference to fix closure issue
 
-    // Return an object that has a getComponentData method to satisfy isValidEntity
-    return {
+    // Create and cache the entity instance
+    const entityInstance = {
       id: entity.id,
       get components() {
         // Always get fresh data from the entity manager
@@ -89,6 +97,9 @@ export default class SimpleEntityManager {
         return currentEnt ? currentEnt.components : {};
       },
     };
+
+    this.entityInstanceCache.set(id, entityInstance);
+    return entityInstance;
   }
 
   /**
@@ -103,6 +114,17 @@ export default class SimpleEntityManager {
   }
 
   /**
+   * Alias for getComponentData - gets component data for an entity.
+   *
+   * @param {string} id - Entity id.
+   * @param {string} type - Component type.
+   * @returns {any} Component data or null.
+   */
+  getComponent(id, type) {
+    return this.getComponentData(id, type);
+  }
+
+  /**
    * Determines whether an entity has a component.
    *
    * @param {string} id - Entity id.
@@ -114,6 +136,21 @@ export default class SimpleEntityManager {
       this.entities.get(id)?.components || {},
       type
     );
+  }
+
+  /**
+   * Creates an empty entity with the given id.
+   * No-op if entity already exists.
+   *
+   * @param {string} id - Entity id.
+   * @returns {void}
+   */
+  createEntity(id) {
+    if (!this.entities.has(id)) {
+      this.entities.set(id, { id, components: {} });
+      // Clear cache for this entity since it's new
+      this.entityInstanceCache.delete(id);
+    }
   }
 
   /**
@@ -132,6 +169,8 @@ export default class SimpleEntityManager {
       this.entities.set(id, ent);
     }
     ent.components[type] = deepClone(data);
+    // Clear cache for this entity since its components changed
+    this.entityInstanceCache.delete(id);
     return Promise.resolve(true);
   }
 
@@ -146,6 +185,8 @@ export default class SimpleEntityManager {
     const ent = this.entities.get(id);
     if (ent) {
       delete ent.components[type];
+      // Clear cache for this entity since its components changed
+      this.entityInstanceCache.delete(id);
     }
   }
 

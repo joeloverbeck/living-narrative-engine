@@ -46,7 +46,7 @@ function createHandlers(entityManager, eventBus, logger) {
     }),
   };
 
-  return {
+  const handlers = {
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
       logger,
@@ -80,6 +80,12 @@ function createHandlers(entityManager, eventBus, logger) {
     }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
   };
+
+  // Spy on execute methods for handlers that need to be tested
+  jest.spyOn(handlers.DISPATCH_PERCEPTIBLE_EVENT, 'execute');
+  jest.spyOn(handlers.DISPATCH_EVENT, 'execute');
+
+  return handlers;
 }
 
 describe('Place Yourself Behind Rule Integration Tests', () => {
@@ -129,8 +135,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Create entities with required components
     testEnv.entityManager.createEntity(actorId);
     testEnv.entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
-      first: 'Actor',
-      last: 'Smith'
+      text: 'Actor Smith'
     });
     testEnv.entityManager.addComponent(actorId, POSITION_COMPONENT_ID, {
       locationId
@@ -138,8 +143,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
 
     testEnv.entityManager.createEntity(targetId);
     testEnv.entityManager.addComponent(targetId, NAME_COMPONENT_ID, {
-      first: 'Target',
-      last: 'Jones'
+      text: 'Target Jones'
     });
 
 
@@ -176,8 +180,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Create entities with required components
     testEnv.entityManager.createEntity(actorId);
     testEnv.entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
-      first: 'Actor',
-      last: 'Smith'
+      text: 'Actor Smith'
     });
     testEnv.entityManager.addComponent(actorId, POSITION_COMPONENT_ID, {
       locationId
@@ -185,8 +188,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
 
     testEnv.entityManager.createEntity(targetId);
     testEnv.entityManager.addComponent(targetId, NAME_COMPONENT_ID, {
-      first: 'Target',
-      last: 'Jones'
+      text: 'Target Jones'
     });
     // Target already faces away from someone else
     testEnv.entityManager.addComponent(targetId, 'positioning:facing_away', {
@@ -228,8 +230,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Create entities with required components
     testEnv.entityManager.createEntity(actorId);
     testEnv.entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
-      first: 'Actor',
-      last: 'Smith'
+      text: 'Actor Smith'
     });
     testEnv.entityManager.addComponent(actorId, POSITION_COMPONENT_ID, {
       locationId
@@ -237,8 +238,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
 
     testEnv.entityManager.createEntity(targetId);
     testEnv.entityManager.addComponent(targetId, NAME_COMPONENT_ID, {
-      first: 'Target',
-      last: 'Jones'
+      text: 'Target Jones'
     });
     // Target already faces away from the actor
     testEnv.entityManager.addComponent(targetId, 'positioning:facing_away', {
@@ -279,8 +279,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Create entities with required components
     testEnv.entityManager.createEntity(actorId);
     testEnv.entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
-      first: 'John',
-      last: 'Smith'
+      text: 'John Smith'
     });
     testEnv.entityManager.addComponent(actorId, POSITION_COMPONENT_ID, {
       locationId
@@ -288,8 +287,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
 
     testEnv.entityManager.createEntity(targetId);
     testEnv.entityManager.addComponent(targetId, NAME_COMPONENT_ID, {
-      first: 'Jane',
-      last: 'Jones'
+      text: 'Jane Jones'
     });
 
 
@@ -307,9 +305,12 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     await testEnv.systemLogicOrchestrator.processEvent(eventPayload);
 
     // Assert - Check that the perceptible event was dispatched with correct message
-    expect(testEnv.handlers.DISPATCH_PERCEPTIBLE_EVENT.execute).toHaveBeenCalledWith(
+    expect(testEnv.handlers.DISPATCH_EVENT.execute).toHaveBeenNthCalledWith(2,
       expect.objectContaining({
-        logMessage: 'John Smith places themselves behind Jane Jones.'
+        eventType: 'core:perceptible_event',
+        payload: expect.objectContaining({
+          descriptionText: 'John Smith places themselves behind Jane Jones.'
+        })
       }),
       expect.any(Object)
     );
@@ -324,8 +325,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Create entities with required components
     testEnv.entityManager.createEntity(actorId);
     testEnv.entityManager.addComponent(actorId, NAME_COMPONENT_ID, {
-      first: 'Actor',
-      last: 'Smith'
+      text: 'Actor Smith'
     });
     testEnv.entityManager.addComponent(actorId, POSITION_COMPONENT_ID, {
       locationId
@@ -333,8 +333,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
 
     testEnv.entityManager.createEntity(targetId);
     testEnv.entityManager.addComponent(targetId, NAME_COMPONENT_ID, {
-      first: 'Target',
-      last: 'Jones'
+      text: 'Target Jones'
     });
 
 
