@@ -47,7 +47,8 @@ describe('Portrait Modal Integration', () => {
       },
       create: jest.fn(),
       document: {
-        createTextNode: jest.fn().mockReturnValue(testBed.createMockElement('text'))
+        createTextNode: jest.fn().mockReturnValue(testBed.createMockElement('text')),
+        body: testBed.createMockElement('body')
       }
     };
 
@@ -121,7 +122,8 @@ describe('Portrait Modal Integration', () => {
         },
         create: jest.fn(),
         document: {
-          createTextNode: jest.fn().mockReturnValue(testBed.createMockElement('text'))
+          createTextNode: jest.fn().mockReturnValue(testBed.createMockElement('text')),
+          body: testBed.createMockElement('body')
         }
       },
       validatedEventDispatcher: testBed.eventDispatcher,
@@ -186,7 +188,8 @@ describe('Portrait Modal Integration', () => {
         },
         create: jest.fn(),
         document: {
-          createTextNode: jest.fn().mockReturnValue(testBed.createMockElement('text'))
+          createTextNode: jest.fn().mockReturnValue(testBed.createMockElement('text')),
+          body: testBed.createMockElement('body')
         }
       },
       validatedEventDispatcher: testBed.eventDispatcher,

@@ -25,6 +25,16 @@ export class PortraitModalRenderer extends BaseModalRenderer {
   #imageElement;
   #loadingSpinner;
   #errorMessage;
+  
+  // Accessibility enhancement fields
+  #focusableElements = [];
+  #firstFocusableElement = null;
+  #lastFocusableElement = null;
+  #liveRegion = null;
+  
+  // Touch support fields
+  #touchStartX = 0;
+  #touchStartY = 0;
 
   /**
    * Constructs a PortraitModalRenderer instance.
@@ -54,6 +64,7 @@ export class PortraitModalRenderer extends BaseModalRenderer {
     
     this.#domElementFactory = domElementFactory;
     this.#initializeElements();
+    this.#setupAccessibilityFeatures();
   }
 
   /**
@@ -120,6 +131,10 @@ export class PortraitModalRenderer extends BaseModalRenderer {
   _onShow() {
     this.logger.debug(`${this._logPrefix} Starting portrait load for ${this.#currentSpeakerName}`);
     
+    // Announce modal opening with current speaker name
+    const speakerName = this.#currentSpeakerName || 'Character';
+    this.#announceToScreenReader(`Opened portrait modal for ${speakerName}`);
+    
     // Start loading the portrait image
     this.#loadPortraitImage(this.#currentPortraitPath);
 
@@ -156,6 +171,11 @@ export class PortraitModalRenderer extends BaseModalRenderer {
     // Store values before cleanup for event dispatch
     const portraitPath = this.#currentPortraitPath;
     const speakerName = this.#currentSpeakerName;
+
+    // Announce before cleanup
+    if (speakerName) {
+      this.#announceToScreenReader(`Closed portrait modal for ${speakerName}`);
+    }
 
     // Return focus to original element
     if (this.#originalFocusElement && typeof this.#originalFocusElement.focus === 'function') {
@@ -209,11 +229,15 @@ export class PortraitModalRenderer extends BaseModalRenderer {
     // Show loading spinner
     if (this.#loadingSpinner) {
       this.#loadingSpinner.style.display = 'block';
+      this.#loadingSpinner.setAttribute('aria-hidden', 'false');
     }
     
     if (this.#imageElement) {
       this.#imageElement.classList.remove('loaded');
     }
+    
+    // Announce loading to screen reader
+    this.#announceToScreenReader('Loading portrait image');
     
     // Create new image object for preloading
     const tempImg = new Image();
@@ -243,7 +267,11 @@ export class PortraitModalRenderer extends BaseModalRenderer {
     // Hide loading spinner
     if (this.#loadingSpinner) {
       this.#loadingSpinner.style.display = 'none';
+      this.#loadingSpinner.setAttribute('aria-hidden', 'true');
     }
+    
+    // Announce successful loading to screen reader
+    this.#announceToScreenReader('Portrait image loaded successfully');
     
     // Update modal image
     if (this.#imageElement) {
@@ -279,18 +307,24 @@ export class PortraitModalRenderer extends BaseModalRenderer {
    * Handles image loading failure.
    *
    * @private
-   * @param {HTMLImageElement} tempImg - The temporary image that failed to load.
+   * @param {HTMLImageElement} _tempImg - The temporary image that failed to load.
    */
-  #handleImageError(tempImg) {
+  #handleImageError(_tempImg) {
     this.logger.error(`${this._logPrefix} Failed to load portrait image`);
 
     // Hide loading spinner
     if (this.#loadingSpinner) {
       this.#loadingSpinner.style.display = 'none';
+      this.#loadingSpinner.setAttribute('aria-hidden', 'true');
     }
     
+    const errorMessage = 'Failed to load portrait';
+    
     // Show error message using BaseModalRenderer's method
-    this._displayStatusMessage('Failed to load portrait', 'error');
+    this._displayStatusMessage(errorMessage, 'error');
+    
+    // Announce error to screen reader with assertive live region
+    this.#announceError(errorMessage);
   }
 
   /**
@@ -313,12 +347,240 @@ export class PortraitModalRenderer extends BaseModalRenderer {
   }
 
   /**
+   * Sets up accessibility features including focus trap, keyboard navigation,
+   * screen reader support, and touch gestures.
+   *
+   * @private
+   */
+  #setupAccessibilityFeatures() {
+    this.#createLiveRegion();
+    this.#setupFocusTrap();
+    this.#setupTouchHandlers();
+  }
+
+  /**
+   * Creates a live region for screen reader announcements.
+   *
+   * @private
+   */
+  #createLiveRegion() {
+    const liveRegion = this.#domElementFactory.div();
+    liveRegion.setAttribute('role', 'status');
+    liveRegion.setAttribute('aria-live', 'polite');
+    liveRegion.setAttribute('aria-atomic', 'true');
+    liveRegion.className = 'sr-only portrait-modal-announcer';
+    
+    this.documentContext.document.body.appendChild(liveRegion);
+    this.#liveRegion = liveRegion;
+    
+    this.logger.debug(`${this._logPrefix} Live region created for screen reader announcements`);
+  }
+
+  /**
+   * Sets up focus trap and enhanced keyboard navigation.
+   *
+   * @private
+   */
+  #setupFocusTrap() {
+    this._addDomListener(this.documentContext.document, 'keydown', (event) => {
+      if (!this.isVisible) return;
+      
+      switch(event.key) {
+        case 'Tab':
+          this.#refreshFocusableElements();
+          this.#handleTabKey(event);
+          break;
+          
+        case 'Home':
+          // Jump to first focusable element
+          this.#refreshFocusableElements();
+          if (this.#firstFocusableElement) {
+            event.preventDefault();
+            this.#firstFocusableElement.focus();
+            this.logger.debug(`${this._logPrefix} Home key pressed, focused first element`);
+          }
+          break;
+          
+        case 'End':
+          // Jump to last focusable element
+          this.#refreshFocusableElements();
+          if (this.#lastFocusableElement) {
+            event.preventDefault();
+            this.#lastFocusableElement.focus();
+            this.logger.debug(`${this._logPrefix} End key pressed, focused last element`);
+          }
+          break;
+      }
+    });
+    
+    this.logger.debug(`${this._logPrefix} Focus trap and enhanced keyboard navigation set up`);
+  }
+
+  /**
+   * Refreshes the list of focusable elements within the modal.
+   *
+   * @private
+   */
+  #refreshFocusableElements() {
+    const focusableSelectors = [
+      'button:not([disabled])',
+      '[href]',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])'
+    ];
+    
+    if (this.elements.modalElement) {
+      this.#focusableElements = Array.from(
+        this.elements.modalElement.querySelectorAll(focusableSelectors.join(','))
+      );
+      this.#firstFocusableElement = this.#focusableElements[0] || null;
+      this.#lastFocusableElement = this.#focusableElements[this.#focusableElements.length - 1] || null;
+    }
+  }
+
+  /**
+   * Handles Tab key navigation within the focus trap.
+   *
+   * @private
+   * @param {KeyboardEvent} event - The keyboard event
+   */
+  #handleTabKey(event) {
+    if (!this.#focusableElements.length) return;
+    
+    const activeElement = this.documentContext.document.activeElement;
+    
+    if (event.shiftKey) {
+      // Shift + Tab - going backwards
+      if (activeElement === this.#firstFocusableElement) {
+        event.preventDefault();
+        this.#lastFocusableElement?.focus();
+        this.logger.debug(`${this._logPrefix} Focus trap: wrapped to last element`);
+      }
+    } else {
+      // Tab - going forwards
+      if (activeElement === this.#lastFocusableElement) {
+        event.preventDefault();
+        this.#firstFocusableElement?.focus();
+        this.logger.debug(`${this._logPrefix} Focus trap: wrapped to first element`);
+      }
+    }
+  }
+
+  /**
+   * Sets up touch gesture handlers for mobile devices.
+   *
+   * @private
+   */
+  #setupTouchHandlers() {
+    if (!this.#imageElement) {
+      this.logger.warn(`${this._logPrefix} Modal image element not found, touch handlers not added`);
+      return;
+    }
+
+    this._addDomListener(this.#imageElement, 'touchstart', (e) => {
+      this.#touchStartX = e.touches[0].clientX;
+      this.#touchStartY = e.touches[0].clientY;
+    });
+
+    this._addDomListener(this.#imageElement, 'touchend', (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+
+      const deltaX = touchEndX - this.#touchStartX;
+      const deltaY = touchEndY - this.#touchStartY;
+
+      // Swipe down to close (minimum 50px swipe distance)
+      if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > 50) {
+        this.logger.debug(`${this._logPrefix} Swipe down detected, closing modal`);
+        this.hide();
+      }
+    });
+
+    this.logger.debug(`${this._logPrefix} Touch handlers set up successfully`);
+  }
+
+  /**
+   * Announces a message to screen readers using the live region.
+   *
+   * @private
+   * @param {string} message - The message to announce
+   */
+  #announceToScreenReader(message) {
+    if (!this.#liveRegion) {
+      this.logger.warn(`${this._logPrefix} Live region not available for announcement: ${message}`);
+      return;
+    }
+    
+    // Clear previous announcement
+    this.#liveRegion.textContent = '';
+    
+    // Set new announcement with delay for screen reader detection
+    setTimeout(() => {
+      if (this.#liveRegion) {
+        this.#liveRegion.textContent = message;
+        this.logger.debug(`${this._logPrefix} Announced to screen reader: ${message}`);
+      }
+    }, 100);
+    
+    // Clear after announcement
+    setTimeout(() => {
+      if (this.#liveRegion) {
+        this.#liveRegion.textContent = '';
+      }
+    }, 1000);
+  }
+
+  /**
+   * Announces an error message to screen readers using assertive live region.
+   *
+   * @private
+   * @param {string} errorMessage - The error message to announce
+   */
+  #announceError(errorMessage) {
+    // Create temporary assertive announcement for errors
+    const errorAnnouncement = this.#domElementFactory.div();
+    errorAnnouncement.setAttribute('role', 'alert');
+    errorAnnouncement.setAttribute('aria-live', 'assertive');
+    errorAnnouncement.className = 'sr-only';
+    errorAnnouncement.textContent = errorMessage;
+    
+    this.documentContext.document.body.appendChild(errorAnnouncement);
+    this.logger.debug(`${this._logPrefix} Error announced to screen reader: ${errorMessage}`);
+    
+    // Remove after announcement
+    setTimeout(() => {
+      if (errorAnnouncement.parentNode) {
+        errorAnnouncement.parentNode.removeChild(errorAnnouncement);
+      }
+    }, 3000);
+  }
+
+  /**
    * Cleans up all resources when the renderer is destroyed.
    *
    * @override
    */
+  /**
+   * Hides the portrait modal.
+   * This method acts as an alias to the inherited hide() method
+   * to satisfy the IPortraitModalRenderer interface requirement.
+   *
+   * @public
+   */
+  hideModal() {
+    this.hide();
+  }
+
   destroy() {
     this.logger.debug(`${this._logPrefix} Destroying PortraitModalRenderer`);
+    
+    // Clean up live region
+    if (this.#liveRegion && this.#liveRegion.parentNode) {
+      this.#liveRegion.parentNode.removeChild(this.#liveRegion);
+      this.#liveRegion = null;
+    }
     
     // Clean up any resources
     this.#cleanup();

@@ -147,6 +147,7 @@ describe('PortraitModalRenderer', () => {
 
     mockLoadingSpinner = {
       style: { display: 'none' },
+      setAttribute: jest.fn(),
     };
 
     mockModalTitle = {
@@ -162,7 +163,11 @@ describe('PortraitModalRenderer', () => {
     const mockDocument = {
       body: {
         contains: jest.fn(() => true),
+        appendChild: jest.fn(),
       },
+      activeElement: null,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
     };
 
     mockDocumentContext = {
@@ -182,9 +187,33 @@ describe('PortraitModalRenderer', () => {
 
     // Setup DOM element factory
     mockDomElementFactory = {
-      img: jest.fn(),
-      div: jest.fn(),
-      button: jest.fn(),
+      img: jest.fn(() => mockImageElement),
+      div: jest.fn(() => {
+        const mockDiv = {
+          setAttribute: jest.fn(),
+          className: '',
+          style: {},
+          appendChild: jest.fn(),
+          parentNode: null,
+          querySelectorAll: jest.fn(() => []),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        };
+        // Set parentNode reference for removal
+        mockDiv.parentNode = {
+          removeChild: jest.fn()
+        };
+        return mockDiv;
+      }),
+      button: jest.fn(() => {
+        const mockButton = {
+          setAttribute: jest.fn(),
+          className: '',
+          style: {},
+          focus: jest.fn(),
+        };
+        return mockButton;
+      }),
     };
 
     // Setup event dispatcher
@@ -593,6 +622,63 @@ describe('PortraitModalRenderer', () => {
       // Height is limiting for portrait orientation
       expect(mockImageElement.style.height).toBe('756px');
       expect(mockImageElement.style.width).toBe('auto');
+    });
+  });
+
+  describe('hideModal', () => {
+    beforeEach(() => {
+      renderer = new PortraitModalRenderer({
+        documentContext: mockDocumentContext,
+        domElementFactory: mockDomElementFactory,
+        logger: mockLogger,
+        validatedEventDispatcher: mockValidatedEventDispatcher,
+      });
+    });
+
+    it('should call the inherited hide method', () => {
+      // Show the modal first
+      renderer.showModal('/path/to/portrait.jpg', 'Speaker Name', mockOriginalElement);
+      expect(renderer.isVisible).toBe(true);
+      
+      // Spy on the hide method
+      const hideSpy = jest.spyOn(renderer, 'hide');
+      
+      // Call hideModal
+      renderer.hideModal();
+      
+      // Verify hide was called
+      expect(hideSpy).toHaveBeenCalled();
+      expect(renderer.isVisible).toBe(false);
+    });
+
+    it('should work identically to hide method', () => {
+      // Show the modal
+      renderer.showModal('/path/to/portrait.jpg', 'Speaker Name', mockOriginalElement);
+      
+      // Clear previous dispatch calls
+      mockValidatedEventDispatcher.dispatch.mockClear();
+      
+      // Call hideModal
+      renderer.hideModal();
+      
+      // Verify same behavior as hide
+      expect(renderer.isVisible).toBe(false);
+      expect(mockImageElement.src).toBe('');
+      expect(mockImageElement.style.width).toBe('');
+      expect(mockImageElement.style.height).toBe('');
+      expect(mockOriginalElement.focus).toHaveBeenCalled();
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith({
+        type: 'PORTRAIT_MODAL_CLOSED',
+        payload: {
+          portraitPath: '/path/to/portrait.jpg',
+          speakerName: 'Speaker Name',
+        },
+      });
+    });
+
+    it('should be part of the public interface', () => {
+      // Verify hideModal is a function on the instance
+      expect(typeof renderer.hideModal).toBe('function');
     });
   });
 

@@ -1,122 +1,321 @@
-[ActionButtonsRenderer] Actions with visual properties: {total: 12, withVisualProps: 12, withNullVisual: 0, missingVisual: 0, visualDetails: Array(12)}
-consoleLogger.js:151 ActionIndexingService: 12/12 actions have visual properties for p_erotica:garazi_ibarrola_instance (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
-consoleLogger.js:151 [ActionButtonsRenderer] Actions with visual properties: {total: 12, withVisualProps: 12, withNullVisual: 0, missingVisual: 0, visualDetails: Array(12)}
-consoleLogger.js:175 VED: Payload validation FAILED for event 'core:perceptible_event'. Dispatch SKIPPED. Errors: [/perceptionType]: must be equal to one of the allowed values {payload: {…}, errors: Array(1)}
+HighPrecisionTimer: Using performance.now() with 1μs resolution
+consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
+containerStages.js:39 Bootstrap Stage: setupDIContainerStage starting...
+containerConfig.js:48 [ContainerConfig] Starting container configuration...
+containerConfig.js:55 [ContainerConfig] Container is empty: false
+consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
+consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
+consoleLogger.js:151 [LoggerStrategy] Initialized with mode: console
+containerConfig.js:92 [ContainerConfig] Logger registered: true
+containerConfig.js:111 [ContainerConfig] Starting base container configuration...
+consoleLogger.js:151 Loaders Registration: All core services, loaders, and phases registered.
+consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
+containerConfig.js:128 [ContainerConfig] Base container configuration completed.
+containerConfig.js:149 [ContainerConfig] Service IEntityManager registered: true
+containerConfig.js:149 [ContainerConfig] Service IDataRegistry registered: true
+containerConfig.js:149 [ContainerConfig] Service ISchemaValidator registered: true
+containerConfig.js:179 [ContainerConfig] Container configuration completed successfully.
+containerStages.js:51 Bootstrap Stage: setupDIContainerStage completed successfully.
+containerStages.js:69 Bootstrap Stage: Resolving logger service...
+consoleLogger.js:151 EntityConfigProvider initialized successfully
+consoleLogger.js:151 MonitoringCoordinator initialized {enabled: true, checkInterval: 30000}
+consoleLogger.js:151 SpatialIndexManager initialized. {batchOperationsEnabled: true}
+consoleLogger.js:151 Default services created with configuration-aware settings {batchOperationsEnabled: true, spatialIndexingEnabled: true}
+consoleLogger.js:151 SpatialIndexManager initialized. {batchOperationsEnabled: false}
+consoleLogger.js:151 File System Access API supported - traces can be saved to filesystem
+consoleLogger.js:175 Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
 error @ consoleLogger.js:175
 error @ loggerStrategy.js:668
-validatePayload_fn @ validatedEventDispatcher.js:150
-dispatch @ validatedEventDispatcher.js:225
-dispatchViaValidatedDispatcher_fn @ dispatchEventHandler.js:138
-execute @ dispatchEventHandler.js:172
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:95
-executeActionSequence @ actionSequence.js:114
-await in executeActionSequence
-_executeActions @ systemLogicInterpreter.js:490
-processRule_fn @ systemLogicInterpreter.js:448
-handleEvent_fn @ systemLogicInterpreter.js:351
-await in handleEvent_fn
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-emitEvent_fn @ validatedEventDispatcher.js:198
-dispatch @ validatedEventDispatcher.js:228
-__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
-executeSafely_fn @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-dispatchWithErrorHandling @ eventDispatchService.js:149
-dispatchAction @ commandProcessor.js:213
-_dispatchAction @ commandProcessingWorkflow.js:204
-processCommand @ commandProcessingWorkflow.js:480
-_processCommandInternal @ processingCommandState.js:333
-_executeAction @ processingWorkflow.js:261
-await in _executeAction
-run @ processingWorkflow.js:87
-await in run
-enterState @ processingCommandState.js:290
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestProcessingCommandStateTransition @ baseTurnHandler.js:677
-requestProcessingCommandStateTransition @ turnContext.js:253
-run @ actionDecisionWorkflow.js:62
-await in run
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-(anonymous) @ turnManager.js:595
-setTimeout
-setTimeout @ RealScheduler.js:13
-handleTurnEndedEvent_fn @ turnManager.js:594
-(anonymous) @ turnManager.js:189
-(anonymous) @ turnEventSubscription.js:57
-setTimeout
-setTimeout @ RealScheduler.js:13
-wrapped @ turnEventSubscription.js:57
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-emitEvent_fn @ validatedEventDispatcher.js:198
-dispatch @ validatedEventDispatcher.js:228
-dispatchViaValidatedDispatcher_fn @ dispatchEventHandler.js:138
-execute @ dispatchEventHandler.js:172
-(anonymous) @ interpreterRegistrations.js:59
-execute @ operationInterpreter.js:95
-executeActionSequence @ actionSequence.js:114
-await in executeActionSequence
-_executeActions @ systemLogicInterpreter.js:490
-processRule_fn @ systemLogicInterpreter.js:448
-handleEvent_fn @ systemLogicInterpreter.js:351
-await in handleEvent_fn
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-emitEvent_fn @ validatedEventDispatcher.js:198
-dispatch @ validatedEventDispatcher.js:228
-__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
-executeSafely_fn @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-dispatchWithErrorHandling @ eventDispatchService.js:149
-dispatchAction @ commandProcessor.js:213
-_dispatchAction @ commandProcessingWorkflow.js:204
-processCommand @ commandProcessingWorkflow.js:480
-_processCommandInternal @ processingCommandState.js:333
-_executeAction @ processingWorkflow.js:261
-await in _executeAction
-run @ processingWorkflow.js:87
-await in run
-enterState @ processingCommandState.js:290
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestProcessingCommandStateTransition @ baseTurnHandler.js:677
-requestProcessingCommandStateTransition @ turnContext.js:253
-run @ actionDecisionWorkflow.js:62
-await in run
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183
-await in finalizeGameStart_fn
-finalizeNewGameSuccess @ gameSessionManager.js:204
-finalizeInitializationSuccess_fn @ gameEngine.js:285
-startNewGame @ gameEngine.js:321Understand this error
-consoleLogger.js:151 ActionIndexingService: 12/12 actions have visual properties for p_erotica:jon_etxebarria_instance (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+validateDependency @ dependencyUtils.js:157
+SpeechBubbleRenderer @ speechBubbleRenderer.js:94
+_instantiateClass @ appContainer.js:238
+_createInstance @ appContainer.js:183
+resolve @ appContainer.js:109
+(anonymous) @ appContainer.js:224
+_instantiateClass @ appContainer.js:213
+_createInstance @ appContainer.js:183
+resolve @ appContainer.js:109
+(anonymous) @ orchestrationRegistrations.js:62
+_invokeFactory @ appContainer.js:249
+_createInstance @ appContainer.js:190
+resolve @ appContainer.js:109
+GameEngine @ gameEngine.js:87
+createGameEngine @ main.js:109
+initializeGameEngineStage @ engineStages.js:32
+bootstrapApp @ main.js:108
+await in bootstrapApp
+(anonymous) @ game.html:386Understand this error
+appContainer.js:117 AppContainer: Error creating singleton instance for "SpeechBubbleRenderer": InvalidArgumentError: Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at validateDependency (dependencyUtils.js:158:15)
+    at new SpeechBubbleRenderer (speechBubbleRenderer.js:94:7)
+    at AppContainer._instantiateClass (appContainer.js:238:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at appContainer.js:224:44
+    at Array.forEach (<anonymous>)
+    at AppContainer._instantiateClass (appContainer.js:213:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+resolve @ appContainer.js:117
+(anonymous) @ appContainer.js:224
+_instantiateClass @ appContainer.js:213
+_createInstance @ appContainer.js:183
+resolve @ appContainer.js:109
+(anonymous) @ orchestrationRegistrations.js:62
+_invokeFactory @ appContainer.js:249
+_createInstance @ appContainer.js:190
+resolve @ appContainer.js:109
+GameEngine @ gameEngine.js:87
+createGameEngine @ main.js:109
+initializeGameEngineStage @ engineStages.js:32
+bootstrapApp @ main.js:108
+await in bootstrapApp
+(anonymous) @ game.html:386Understand this error
+appContainer.js:226 [AppContainer._instantiateClass for DomUiFacade] FAILED dependency resolution: Cannot resolve "SpeechBubbleRenderer" (for prop "speechBubbleRenderer") needed by "DomUiFacade". Error: Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at AppContainer.resolve (appContainer.js:121:15)
+    at appContainer.js:224:44
+    at Array.forEach (<anonymous>)
+    at AppContainer._instantiateClass (appContainer.js:213:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at orchestrationRegistrations.js:62:27
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)Caused by: InvalidArgumentError: Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at validateDependency (dependencyUtils.js:158:15)
+    at new SpeechBubbleRenderer (speechBubbleRenderer.js:94:7)
+    at AppContainer._instantiateClass (appContainer.js:238:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at appContainer.js:224:44
+    at Array.forEach (<anonymous>)
+    at AppContainer._instantiateClass (appContainer.js:213:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+(anonymous) @ appContainer.js:226
+_instantiateClass @ appContainer.js:213
+_createInstance @ appContainer.js:183
+resolve @ appContainer.js:109
+(anonymous) @ orchestrationRegistrations.js:62
+_invokeFactory @ appContainer.js:249
+_createInstance @ appContainer.js:190
+resolve @ appContainer.js:109
+GameEngine @ gameEngine.js:87
+createGameEngine @ main.js:109
+initializeGameEngineStage @ engineStages.js:32
+bootstrapApp @ main.js:108
+await in bootstrapApp
+(anonymous) @ game.html:386Understand this error
+appContainer.js:117 AppContainer: Error creating singleton instance for "DomUiFacade": Error: Failed to resolve dependency "SpeechBubbleRenderer" needed by "DomUiFacade" (registered as "DomUiFacade"): Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at appContainer.js:230:17
+    at Array.forEach (<anonymous>)
+    at AppContainer._instantiateClass (appContainer.js:213:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at orchestrationRegistrations.js:62:27
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at new GameEngine (gameEngine.js:87:19)Caused by: Error: Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at AppContainer.resolve (appContainer.js:121:15)
+    at appContainer.js:224:44
+    at Array.forEach (<anonymous>)
+    at AppContainer._instantiateClass (appContainer.js:213:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at orchestrationRegistrations.js:62:27
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)Caused by: InvalidArgumentError: Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at validateDependency (dependencyUtils.js:158:15)
+    at new SpeechBubbleRenderer (speechBubbleRenderer.js:94:7)
+    at AppContainer._instantiateClass (appContainer.js:238:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at appContainer.js:224:44
+    at Array.forEach (<anonymous>)
+    at AppContainer._instantiateClass (appContainer.js:213:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+resolve @ appContainer.js:117
+(anonymous) @ orchestrationRegistrations.js:62
+_invokeFactory @ appContainer.js:249
+_createInstance @ appContainer.js:190
+resolve @ appContainer.js:109
+GameEngine @ gameEngine.js:87
+createGameEngine @ main.js:109
+initializeGameEngineStage @ engineStages.js:32
+bootstrapApp @ main.js:108
+await in bootstrapApp
+(anonymous) @ game.html:386Understand this error
+appContainer.js:117 AppContainer: Error creating singleton instance for "IInitializationService": Error: Failed to create instance for "DomUiFacade" (lifecycle: singleton): Failed to resolve dependency "SpeechBubbleRenderer" needed by "DomUiFacade" (registered as "DomUiFacade"): Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at AppContainer.resolve (appContainer.js:121:15)
+    at orchestrationRegistrations.js:62:27
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at new GameEngine (gameEngine.js:87:19)
+    at createGameEngine (main.js:109:35)
+    at initializeGameEngineStage (engineStages.js:32:18)
+    at bootstrapApp (main.js:108:32)Caused by: Error: Failed to resolve dependency "SpeechBubbleRenderer" needed by "DomUiFacade" (registered as "DomUiFacade"): Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at appContainer.js:230:17
+    at Array.forEach (<anonymous>)
+    at AppContainer._instantiateClass (appContainer.js:213:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at orchestrationRegistrations.js:62:27
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at new GameEngine (gameEngine.js:87:19)Caused by: Error: Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at AppContainer.resolve (appContainer.js:121:15)
+    at appContainer.js:224:44
+    at Array.forEach (<anonymous>)
+    at AppContainer._instantiateClass (appContainer.js:213:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at orchestrationRegistrations.js:62:27
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)Caused by: InvalidArgumentError: Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at validateDependency (dependencyUtils.js:158:15)
+    at new SpeechBubbleRenderer (speechBubbleRenderer.js:94:7)
+    at AppContainer._instantiateClass (appContainer.js:238:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at appContainer.js:224:44
+    at Array.forEach (<anonymous>)
+    at AppContainer._instantiateClass (appContainer.js:213:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+resolve @ appContainer.js:117
+GameEngine @ gameEngine.js:87
+createGameEngine @ main.js:109
+initializeGameEngineStage @ engineStages.js:32
+bootstrapApp @ main.js:108
+await in bootstrapApp
+(anonymous) @ game.html:386Understand this error
+consoleLogger.js:175 GameEngine: CRITICAL - Failed to resolve one or more core services. Error: Failed to create instance for "IInitializationService" (lifecycle: singletonFactory): Failed to create instance for "DomUiFacade" (lifecycle: singleton): Failed to resolve dependency "SpeechBubbleRenderer" needed by "DomUiFacade" (registered as "DomUiFacade"): Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'. Error: Failed to create instance for "IInitializationService" (lifecycle: singletonFactory): Failed to create instance for "DomUiFacade" (lifecycle: singleton): Failed to resolve dependency "SpeechBubbleRenderer" needed by "DomUiFacade" (registered as "DomUiFacade"): Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at AppContainer.resolve (appContainer.js:121:15)
+    at new GameEngine (gameEngine.js:87:19)
+    at createGameEngine (main.js:109:35)
+    at initializeGameEngineStage (engineStages.js:32:18)
+    at bootstrapApp (main.js:108:32)Caused by: Error: Failed to create instance for "DomUiFacade" (lifecycle: singleton): Failed to resolve dependency "SpeechBubbleRenderer" needed by "DomUiFacade" (registered as "DomUiFacade"): Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at AppContainer.resolve (appContainer.js:121:15)
+    at orchestrationRegistrations.js:62:27
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at new GameEngine (gameEngine.js:87:19)
+    at createGameEngine (main.js:109:35)
+    at initializeGameEngineStage (engineStages.js:32:18)
+    at bootstrapApp (main.js:108:32)Caused by: Error: Failed to resolve dependency "SpeechBubbleRenderer" needed by "DomUiFacade" (registered as "DomUiFacade"): Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at appContainer.js:230:17
+    at Array.forEach (<anonymous>)
+    at AppContainer._instantiateClass (appContainer.js:213:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at orchestrationRegistrations.js:62:27
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at new GameEngine (gameEngine.js:87:19)Caused by: Error: Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at AppContainer.resolve (appContainer.js:121:15)
+    at appContainer.js:224:44
+    at Array.forEach (<anonymous>)
+    at AppContainer._instantiateClass (appContainer.js:213:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at orchestrationRegistrations.js:62:27
+    at AppContainer._invokeFactory (appContainer.js:249:12)
+    at AppContainer._createInstance (appContainer.js:190:19)
+    at AppContainer.resolve (appContainer.js:109:31)Caused by: InvalidArgumentError: Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at validateDependency (dependencyUtils.js:158:15)
+    at new SpeechBubbleRenderer (speechBubbleRenderer.js:94:7)
+    at AppContainer._instantiateClass (appContainer.js:238:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+    at appContainer.js:224:44
+    at Array.forEach (<anonymous>)
+    at AppContainer._instantiateClass (appContainer.js:213:12)
+    at AppContainer._createInstance (appContainer.js:183:19)
+    at AppContainer.resolve (appContainer.js:109:31)
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+GameEngine @ gameEngine.js:90
+createGameEngine @ main.js:109
+initializeGameEngineStage @ engineStages.js:32
+bootstrapApp @ main.js:108
+await in bootstrapApp
+(anonymous) @ game.html:386Understand this error
+consoleLogger.js:175 GameEngine Stage: Fatal error during GameEngine instantiation. Error: GameEngine: Failed to resolve core services. Failed to create instance for "IInitializationService" (lifecycle: singletonFactory): Failed to create instance for "DomUiFacade" (lifecycle: singleton): Failed to resolve dependency "SpeechBubbleRenderer" needed by "DomUiFacade" (registered as "DomUiFacade"): Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at new GameEngine (gameEngine.js:94:13)
+    at createGameEngine (main.js:109:35)
+    at initializeGameEngineStage (engineStages.js:32:18)
+    at bootstrapApp (main.js:108:32)
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+initializeGameEngineStage @ engineStages.js:38
+bootstrapApp @ main.js:108
+await in bootstrapApp
+(anonymous) @ game.html:386Understand this error
+consoleLogger.js:151 FileTraceOutputHandler initialized successfully
+consoleLogger.js:175 main.js: Bootstrap error caught in main orchestrator. Error Phase: "GameEngine Initialization" StageError: Fatal Error during GameEngine instantiation: GameEngine: Failed to resolve core services. Failed to create instance for "IInitializationService" (lifecycle: singletonFactory): Failed to create instance for "DomUiFacade" (lifecycle: singleton): Failed to resolve dependency "SpeechBubbleRenderer" needed by "DomUiFacade" (registered as "DomUiFacade"): Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'..
+    at createStageError (bootstrapperHelpers.js:120:10)
+    at stageFailure2 (bootstrapperHelpers.js:140:27)
+    at initializeGameEngineStage (engineStages.js:43:12)
+    at bootstrapApp (main.js:108:32)Caused by: Error: GameEngine: Failed to resolve core services. Failed to create instance for "IInitializationService" (lifecycle: singletonFactory): Failed to create instance for "DomUiFacade" (lifecycle: singleton): Failed to resolve dependency "SpeechBubbleRenderer" needed by "DomUiFacade" (registered as "DomUiFacade"): Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at new GameEngine (gameEngine.js:94:13)
+    at createGameEngine (main.js:109:35)
+    at initializeGameEngineStage (engineStages.js:32:18)
+    at bootstrapApp (main.js:108:32)
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+bootstrapApp @ main.js:175
+await in bootstrapApp
+(anonymous) @ game.html:386Understand this error
+consoleLogger.js:175 [errorUtils] [Bootstrapper Error - Phase: GameEngine Initialization] Critical error during application bootstrap in phase: GameEngine Initialization. StageError: Fatal Error during GameEngine instantiation: GameEngine: Failed to resolve core services. Failed to create instance for "IInitializationService" (lifecycle: singletonFactory): Failed to create instance for "DomUiFacade" (lifecycle: singleton): Failed to resolve dependency "SpeechBubbleRenderer" needed by "DomUiFacade" (registered as "DomUiFacade"): Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'..
+    at createStageError (bootstrapperHelpers.js:120:10)
+    at stageFailure2 (bootstrapperHelpers.js:140:27)
+    at initializeGameEngineStage (engineStages.js:43:12)
+    at bootstrapApp (main.js:108:32)Caused by: Error: GameEngine: Failed to resolve core services. Failed to create instance for "IInitializationService" (lifecycle: singletonFactory): Failed to create instance for "DomUiFacade" (lifecycle: singleton): Failed to resolve dependency "SpeechBubbleRenderer" needed by "DomUiFacade" (registered as "DomUiFacade"): Failed to create instance for "SpeechBubbleRenderer" (lifecycle: singleton): Invalid or missing method 'hideModal' on dependency 'IPortraitModalRenderer'.
+    at new GameEngine (gameEngine.js:94:13)
+    at createGameEngine (main.js:109:35)
+    at initializeGameEngineStage (engineStages.js:32:18)
+    at bootstrapApp (main.js:108:32)
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+error @ loggerUtils.js:96
+logStartupError @ startupErrorHandler.js:106
+displayFatalStartupError @ startupErrorHandler.js:275
+displayFatalStartupError @ errorUtils.js:33
+bootstrapApp @ main.js:186
+await in bootstrapApp
+(anonymous) @ game.html:386Understand this error
+consoleLogger.js:175 main.js: Critical: GameEngine not initialized before attempting Start Game stage.
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+beginGame @ main.js:224
+(anonymous) @ game.html:389
+Promise.then
+(anonymous) @ game.html:386Understand this error
+consoleLogger.js:175 [errorUtils] [Bootstrapper Error - Phase: Start Game] Critical: GameEngine not initialized before attempting Start Game stage. Error: Critical: GameEngine not initialized before attempting Start Game stage.
+    at beginGame (main.js:223:22)
+    at game.html:389:18
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+error @ loggerUtils.js:96
+logStartupError @ startupErrorHandler.js:106
+displayFatalStartupError @ startupErrorHandler.js:275
+displayFatalStartupError @ errorUtils.js:33
+beginGame @ main.js:225
+(anonymous) @ game.html:389
+Promise.then
+(anonymous) @ game.html:386Understand this error
+main.js:223 Uncaught (in promise) Error: Critical: GameEngine not initialized before attempting Start Game stage.
+    at beginGame (main.js:223:22)
+    at game.html:389:18
+beginGame @ main.js:223
+(anonymous) @ game.html:389
+Promise.then
+(anonymous) @ game.html:386Understand this error

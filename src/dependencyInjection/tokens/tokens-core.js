@@ -240,4 +240,7 @@ export const coreTokens = freeze({
   IMultiTargetResolutionStage: 'IMultiTargetResolutionStage',
   // Thematic Directions Manager Controller
   ThematicDirectionsManagerController: 'ThematicDirectionsManagerController',
+  // Critical Log Notifier
+  ICriticalLogNotifier: 'ICriticalLogNotifier',
+  CriticalLogNotifier: 'CriticalLogNotifier',
 });

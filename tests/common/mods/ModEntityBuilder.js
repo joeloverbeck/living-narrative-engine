@@ -6,7 +6,10 @@
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
+  DESCRIPTION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
+import { string } from '../../../src/utils/validationCore.js';
+import { assertPresent } from '../../../src/utils/dependencyUtils.js';
 
 /**
  * Builder class for creating test entities with a fluent API.
@@ -28,6 +31,8 @@ export class ModEntityBuilder {
    * @param {string} id - The entity ID
    */
   constructor(id) {
+    string.assertNonBlank(id, 'Entity ID', 'ModEntityBuilder constructor');
+    
     this.entityData = {
       id,
       components: {},
@@ -41,7 +46,22 @@ export class ModEntityBuilder {
    * @returns {ModEntityBuilder} This builder for chaining
    */
   withName(name) {
+    string.assertNonBlank(name, 'Entity name', 'ModEntityBuilder.withName');
+    
     this.entityData.components[NAME_COMPONENT_ID] = { text: name };
+    return this;
+  }
+
+  /**
+   * Sets the entity's description component.
+   * 
+   * @param {string} description - The description text for the entity
+   * @returns {ModEntityBuilder} This builder for chaining
+   */
+  withDescription(description) {
+    string.assertNonBlank(description, 'Entity description', 'ModEntityBuilder.withDescription');
+    
+    this.entityData.components[DESCRIPTION_COMPONENT_ID] = { text: description };
     return this;
   }
 
@@ -52,8 +72,27 @@ export class ModEntityBuilder {
    * @returns {ModEntityBuilder} This builder for chaining
    */
   atLocation(locationId) {
+    string.assertNonBlank(locationId, 'Location ID', 'ModEntityBuilder.atLocation');
+    
     this.entityData.components[POSITION_COMPONENT_ID] = { locationId };
     return this;
+  }
+
+  /**
+   * Sets the entity's location to match another entity's location.
+   * 
+   * @param {object} otherEntity - The entity whose location to match
+   * @returns {ModEntityBuilder} This builder for chaining
+   */
+  inSameLocationAs(otherEntity) {
+    assertPresent(otherEntity, 'Other entity is required', 'ModEntityBuilder.inSameLocationAs');
+    
+    if (!otherEntity.components || !otherEntity.components[POSITION_COMPONENT_ID]) {
+      throw new Error('ModEntityBuilder.inSameLocationAs: otherEntity must have a position component');
+    }
+    
+    const otherLocation = otherEntity.components[POSITION_COMPONENT_ID].locationId;
+    return this.atLocation(otherLocation);
   }
 
   /**
@@ -76,6 +115,9 @@ export class ModEntityBuilder {
    * @returns {ModEntityBuilder} This builder for chaining
    */
   withComponent(componentId, componentData) {
+    string.assertNonBlank(componentId, 'Component ID', 'ModEntityBuilder.withComponent');
+    assertPresent(componentData, 'Component data is required', 'ModEntityBuilder.withComponent');
+    
     this.entityData.components[componentId] = componentData;
     return this;
   }
@@ -173,6 +215,37 @@ export class ModEntityBuilder {
   }
 
   /**
+   * Validates the entity structure before building.
+   * 
+   * @returns {ModEntityBuilder} This builder for chaining
+   * @throws {Error} If entity structure is invalid
+   */
+  validate() {
+    // Validate entity ID
+    if (!this.entityData.id) {
+      throw new Error('ModEntityBuilder.validate: Entity ID is required');
+    }
+    
+    // Validate components structure
+    if (typeof this.entityData.components !== 'object') {
+      throw new Error('ModEntityBuilder.validate: Components must be an object');
+    }
+    
+    // Validate required components if any exist
+    const hasPosition = this.entityData.components[POSITION_COMPONENT_ID];
+    if (hasPosition && !hasPosition.locationId) {
+      throw new Error('ModEntityBuilder.validate: Position component must have locationId');
+    }
+    
+    const hasName = this.entityData.components[NAME_COMPONENT_ID];
+    if (hasName && !hasName.text) {
+      throw new Error('ModEntityBuilder.validate: Name component must have text');
+    }
+    
+    return this;
+  }
+
+  /**
    * Returns the built entity object.
    * 
    * @returns {object} The complete entity object
@@ -247,9 +320,25 @@ export class ModEntityScenarios {
       .withName(actorName)
       .atLocation(location);
 
+    // Collect all close relationships for the actor
+    const actorPartners = [];
+    
     // Add close proximity to target if requested
     if (closeToMain >= 1) {
-      actor.closeToEntity('target1');
+      actorPartners.push('target1');
+    }
+
+    // Add close proximity for additional close entities
+    observerNames.forEach((name, index) => {
+      if (index + 2 <= closeToMain) {
+        const observerId = `observer${index + 1}`;
+        actorPartners.push(observerId);
+      }
+    });
+
+    // Set all actor partnerships at once
+    if (actorPartners.length > 0) {
+      actor.closeToEntity(actorPartners);
     }
 
     entities.push(actor.build());
@@ -275,7 +364,6 @@ export class ModEntityScenarios {
       // Add close proximity for additional close entities
       if (index + 2 <= closeToMain) {
         observer.closeToEntity('actor1');
-        actor.closeToEntity(observerId);
       }
 
       return observer.build();
