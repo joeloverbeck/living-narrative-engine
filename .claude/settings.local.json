@@ -367,7 +367,15 @@
       "Bash(NODE_ENV=test npx jest tests/performance/common/mods/ModTestHandlerFactory.performance.test.js --config jest.config.performance.js --env=jsdom --no-coverage --verbose)",
       "Bash(NODE_ENV=test timeout 30 npx jest tests/unit/dependencyInjection/ --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/performance/common/mods/ModTestHandlerFactory.performance.test.js --config jest.config.performance.js --env=jsdom --no-coverage --silent)",
-      "Bash(NODE_ENV=test npx jest tests/integration/domUI/portraitModalIntegration.test.js --no-coverage --verbose)"
+      "Bash(NODE_ENV=test npx jest tests/integration/domUI/portraitModalIntegration.test.js --no-coverage --verbose)",
+      "mcp__morphllm-fast-apply__read_file",
+      "mcp__morphllm-fast-apply__search_files",
+      "Bash(NODE_ENV=test npx jest tests/unit/common/mods/ModEntityBuilder.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/common/mods/ModEntityBuilder.test.js --coverage --collectCoverageFrom=\"tests/common/mods/ModEntityBuilder.js\")",
+      "Bash(NODE_ENV=test npx jest tests/unit/domUI/portraitModalRenderer.accessibility.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/domUI/portraitModalRenderer.accessibility.simple.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/common/mods/ModEntityBuilder.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/domUI/portraitModalAccessibility.integration.test.js --no-coverage --verbose)"
     ],
     "deny": []
   }

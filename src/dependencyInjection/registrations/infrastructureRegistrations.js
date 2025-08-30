@@ -23,6 +23,7 @@ import { ServiceSetup } from '../../utils/serviceInitializerUtils.js';
 import { EventDispatchService } from '../../utils/eventDispatchService.js';
 import { ProductionPathConfiguration } from '../../configuration/productionPathConfiguration.js';
 import { TraceConfigLoader } from '../../configuration/traceConfigLoader.js';
+import CriticalLogNotifier from '../../logging/criticalLogNotifier.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -244,6 +245,37 @@ export function registerInfrastructure(container) {
       })
   );
   safeDebug(`Registered ${String(tokens.IScopeDslErrorHandler)}.`);
+
+  // Critical Log Notifier for visual notifications
+  container.register(
+    tokens.ICriticalLogNotifier,
+    (c) =>
+      new CriticalLogNotifier({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        hybridLogger: c.resolve(tokens.ILogger), // The actual logger which should be HybridLogger
+        config: {
+          enableVisualNotifications: true,
+          notificationPosition: 'top-right',
+          maxRecentLogs: 20
+        }
+      }),
+    {
+      lifecycle: 'singleton',
+    }
+  );
+  safeDebug(`Registered ${String(tokens.ICriticalLogNotifier)}.`);
+
+  // Register CriticalLogNotifier as the concrete implementation
+  container.register(
+    tokens.CriticalLogNotifier,
+    (c) => c.resolve(tokens.ICriticalLogNotifier),
+    {
+      lifecycle: 'singleton',
+    }
+  );
+  safeDebug(`Registered ${String(tokens.CriticalLogNotifier)} -> ICriticalLogNotifier.`);
 
   safeDebug('Infrastructure Registration: complete.');
 }
