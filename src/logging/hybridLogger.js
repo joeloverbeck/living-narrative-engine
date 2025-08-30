@@ -5,6 +5,7 @@
 
 import { validateDependency } from '../utils/dependencyUtils.js';
 import SensitiveDataFilter from './SensitiveDataFilter.js';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -75,6 +76,24 @@ class HybridLogger {
   #performanceMonitor;
 
   /**
+   * @private
+   * @type {Array}
+   */
+  #criticalBuffer;
+
+  /**
+   * @private
+   * @type {number}
+   */
+  #maxBufferSize;
+
+  /**
+   * @private
+   * @type {object}
+   */
+  #bufferMetadata;
+
+  /**
    * Creates a HybridLogger instance.
    *
    * @param {object} dependencies - Required dependencies
@@ -136,6 +155,16 @@ class HybridLogger {
       this.#sensitiveDataFilter = null;
     }
 
+    // Initialize critical buffer fields after existing initialization
+    this.#criticalBuffer = [];
+    this.#maxBufferSize = this.#criticalLoggingConfig?.bufferSize || 50;
+    this.#bufferMetadata = {
+      totalWarnings: 0,
+      totalErrors: 0,
+      oldestTimestamp: null,
+      newestTimestamp: null
+    };
+
     // Log initialization to console only if console is enabled (to avoid recursive logging)
     if (
       this.#filters.console.enabled &&
@@ -145,6 +174,64 @@ class HybridLogger {
         '[HybridLogger] Initialized with console and remote logging'
       );
     }
+  }
+
+  /**
+   * Adds a critical log entry to the buffer (warnings and errors only).
+   *
+   * @private
+   * @param {string} level - Log level ('warn' or 'error')
+   * @param {string} message - Log message
+   * @param {string|undefined} category - Log category
+   * @param {object} metadata - Additional metadata
+   * @returns {object|undefined} The created log entry or undefined if not critical
+   */
+  #addToCriticalBuffer(level, message, category, metadata = {}) {
+    if (level !== 'warn' && level !== 'error') {
+      return; // Only buffer critical logs
+    }
+    
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      level,
+      message,
+      category,
+      metadata,
+      id: uuidv4() // Using uuid package
+    };
+    
+    // Add to buffer (circular buffer logic)
+    this.#criticalBuffer.push(logEntry);
+    
+    // Maintain buffer size limit
+    if (this.#criticalBuffer.length > this.#maxBufferSize) {
+      this.#criticalBuffer.shift(); // Remove oldest
+    }
+    
+    // Update metadata
+    this.#updateBufferMetadata(level);
+    
+    return logEntry;
+  }
+
+  /**
+   * Updates buffer metadata with new log entry statistics.
+   *
+   * @private
+   * @param {string} level - Log level ('warn' or 'error')
+   */
+  #updateBufferMetadata(level) {
+    if (level === 'warn') {
+      this.#bufferMetadata.totalWarnings++;
+    } else if (level === 'error') {
+      this.#bufferMetadata.totalErrors++;
+    }
+    
+    const now = new Date().toISOString();
+    if (!this.#bufferMetadata.oldestTimestamp) {
+      this.#bufferMetadata.oldestTimestamp = now;
+    }
+    this.#bufferMetadata.newestTimestamp = now;
   }
 
   /**
@@ -164,6 +251,12 @@ class HybridLogger {
    * @param {...any} args - Additional arguments or objects to include in the warning output
    */
   warn(message, ...args) {
+    const category = this.#categoryDetector.detectCategory(message);
+    
+    // Add to critical buffer
+    this.#addToCriticalBuffer('warn', message, category, { args });
+    
+    // Existing warn logic...
     this.#logToDestinations('warn', message, args);
   }
 
@@ -174,6 +267,12 @@ class HybridLogger {
    * @param {...any} args - Additional arguments or objects to include in the error output
    */
   error(message, ...args) {
+    const category = this.#categoryDetector.detectCategory(message);
+    
+    // Add to critical buffer
+    this.#addToCriticalBuffer('error', message, category, { args });
+    
+    // Existing error logic...
     this.#logToDestinations('error', message, args);
   }
 
@@ -270,7 +369,7 @@ class HybridLogger {
    * @param {any[]} args - Additional log arguments
    */
   #logToDestinations(level, message, args) {
-    const startTime = Date.now();
+    // Performance tracking could be added here if needed
     
     try {
       // Detect category once for efficiency
@@ -482,9 +581,57 @@ class HybridLogger {
   }
 
   /**
+   * Get all critical logs from the buffer
+   * 
+   * @param {object} options - Filter options
+   * @param {string} options.level - Filter by level ('warn', 'error', or null for both)
+   * @param {number} options.limit - Maximum number of logs to return
+   * @returns {Array} Array of log entries
+   */
+  getCriticalLogs(options = {}) {
+    let logs = [...this.#criticalBuffer]; // Create copy
+    
+    if (options.level) {
+      logs = logs.filter(log => log.level === options.level);
+    }
+    
+    if (options.limit) {
+      logs = logs.slice(-options.limit);
+    }
+    
+    return logs;
+  }
+  
+  /**
+   * Get critical buffer metadata
+   * 
+   * @returns {object} Buffer statistics
+   */
+  getCriticalBufferStats() {
+    return {
+      currentSize: this.#criticalBuffer.length,
+      maxSize: this.#maxBufferSize,
+      ...this.#bufferMetadata
+    };
+  }
+  
+  /**
+   * Clear the critical log buffer
+   */
+  clearCriticalBuffer() {
+    this.#criticalBuffer = [];
+    this.#bufferMetadata = {
+      totalWarnings: 0,
+      totalErrors: 0,
+      oldestTimestamp: null,
+      newestTimestamp: null
+    };
+  }
+
+  /**
    * Gets performance metrics if performance monitor is available
    *
-   * @returns {Object|null} Performance metrics or null if not available
+   * @returns {object|null} Performance metrics or null if not available
    */
   getPerformanceMetrics() {
     if (this.#performanceMonitor && typeof this.#performanceMonitor.getLoggingMetrics === 'function') {

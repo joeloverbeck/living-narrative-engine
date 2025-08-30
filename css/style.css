@@ -25,6 +25,7 @@
 @import url('components/_speech-bubbles.css');
 @import url('components/_processing-indicator.css');
 @import url('components/_modals.css');
+@import url('components/_portrait-modal.css');
 @import url('components/_llm-selection-modal.css');
 @import url('components/_location-info.css');
 @import url('components/_actions-widget.css');

@@ -86,12 +86,10 @@ export async function createMinimalTestContainer(options = {}) {
   };
   container.register(tokens.ISpatialIndexManager, spatialIndexManager);
 
-  // Scope engine for resolution
+  // Scope engine for resolution - matching production constructor signature
   const scopeEngine = new ScopeEngine({ 
-    logger, 
-    dataRegistry,
-    jsonLogicEval,
-    spatialIndexManager,
+    scopeRegistry,
+    errorHandler: null, // Use null for minimal testing setup
   });
   container.register(tokens.IScopeEngine, scopeEngine);
 

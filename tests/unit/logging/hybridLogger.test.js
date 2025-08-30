@@ -948,4 +948,228 @@ describe('HybridLogger', () => {
       expect(mockConsoleLogger.debug).toHaveBeenCalled();
     });
   });
+
+  describe('Critical Log Buffer', () => {
+    beforeEach(() => {
+      hybridLogger = new HybridLogger(
+        {
+          consoleLogger: mockConsoleLogger,
+          remoteLogger: mockRemoteLogger,
+          categoryDetector: mockCategoryDetector,
+        },
+        {
+          console: { categories: null, levels: null, enabled: true },
+          remote: { categories: null, levels: null, enabled: true },
+          criticalLogging: { bufferSize: 5 } // Small buffer for testing
+        }
+      );
+    });
+
+    describe('Buffer Initialization', () => {
+      it('should initialize buffer with default size when no config', () => {
+        const defaultLogger = new HybridLogger({
+          consoleLogger: mockConsoleLogger,
+          remoteLogger: mockRemoteLogger,
+          categoryDetector: mockCategoryDetector,
+        });
+
+        const stats = defaultLogger.getCriticalBufferStats();
+        expect(stats.maxSize).toBe(50);
+        expect(stats.currentSize).toBe(0);
+      });
+
+      it('should initialize buffer with configured size', () => {
+        const stats = hybridLogger.getCriticalBufferStats();
+        expect(stats.maxSize).toBe(5);
+        expect(stats.currentSize).toBe(0);
+        expect(stats.totalWarnings).toBe(0);
+        expect(stats.totalErrors).toBe(0);
+        expect(stats.oldestTimestamp).toBeNull();
+        expect(stats.newestTimestamp).toBeNull();
+      });
+    });
+
+    describe('Buffer Population', () => {
+      it('should add warning logs to buffer', () => {
+        mockCategoryDetector.detectCategory.mockReturnValue('test');
+        
+        hybridLogger.warn('Test warning', 'extra arg');
+
+        const logs = hybridLogger.getCriticalLogs();
+        expect(logs).toHaveLength(1);
+        expect(logs[0].level).toBe('warn');
+        expect(logs[0].message).toBe('Test warning');
+        expect(logs[0].category).toBe('test');
+        expect(logs[0].metadata.args).toEqual(['extra arg']);
+        expect(logs[0].id).toBeDefined();
+        expect(logs[0].timestamp).toBeDefined();
+      });
+
+      it('should add error logs to buffer', () => {
+        mockCategoryDetector.detectCategory.mockReturnValue('error');
+        
+        hybridLogger.error('Test error', { errorCode: 500 });
+
+        const logs = hybridLogger.getCriticalLogs();
+        expect(logs).toHaveLength(1);
+        expect(logs[0].level).toBe('error');
+        expect(logs[0].message).toBe('Test error');
+        expect(logs[0].category).toBe('error');
+        expect(logs[0].metadata.args).toEqual([{ errorCode: 500 }]);
+      });
+
+      it('should not add info logs to buffer', () => {
+        hybridLogger.info('Info message');
+
+        const logs = hybridLogger.getCriticalLogs();
+        expect(logs).toHaveLength(0);
+        
+        const stats = hybridLogger.getCriticalBufferStats();
+        expect(stats.currentSize).toBe(0);
+      });
+
+      it('should not add debug logs to buffer', () => {
+        hybridLogger.debug('Debug message');
+
+        const logs = hybridLogger.getCriticalLogs();
+        expect(logs).toHaveLength(0);
+      });
+    });
+
+    describe('Circular Buffer Behavior', () => {
+      it('should maintain buffer size limit', () => {
+        // Fill buffer beyond its capacity (5)
+        for (let i = 0; i < 7; i++) {
+          hybridLogger.warn(`Warning ${i}`);
+        }
+
+        const logs = hybridLogger.getCriticalLogs();
+        expect(logs).toHaveLength(5);
+        
+        // Should contain the last 5 warnings
+        expect(logs[0].message).toBe('Warning 2');
+        expect(logs[4].message).toBe('Warning 6');
+      });
+
+      it('should update buffer statistics correctly', () => {
+        hybridLogger.warn('Warning 1');
+        hybridLogger.error('Error 1');
+        hybridLogger.warn('Warning 2');
+
+        const stats = hybridLogger.getCriticalBufferStats();
+        expect(stats.currentSize).toBe(3);
+        expect(stats.totalWarnings).toBe(2);
+        expect(stats.totalErrors).toBe(1);
+        expect(stats.oldestTimestamp).toBeDefined();
+        expect(stats.newestTimestamp).toBeDefined();
+      });
+    });
+
+    describe('getCriticalLogs filtering', () => {
+      beforeEach(() => {
+        hybridLogger.warn('Warning 1');
+        hybridLogger.error('Error 1');
+        hybridLogger.warn('Warning 2');
+        hybridLogger.error('Error 2');
+      });
+
+      it('should return all logs when no filter', () => {
+        const logs = hybridLogger.getCriticalLogs();
+        expect(logs).toHaveLength(4);
+      });
+
+      it('should filter by level - warnings only', () => {
+        const logs = hybridLogger.getCriticalLogs({ level: 'warn' });
+        expect(logs).toHaveLength(2);
+        expect(logs.every(log => log.level === 'warn')).toBe(true);
+      });
+
+      it('should filter by level - errors only', () => {
+        const logs = hybridLogger.getCriticalLogs({ level: 'error' });
+        expect(logs).toHaveLength(2);
+        expect(logs.every(log => log.level === 'error')).toBe(true);
+      });
+
+      it('should limit number of returned logs', () => {
+        const logs = hybridLogger.getCriticalLogs({ limit: 2 });
+        expect(logs).toHaveLength(2);
+        // Should return the most recent 2
+        expect(logs[0].message).toBe('Warning 2');
+        expect(logs[1].message).toBe('Error 2');
+      });
+
+      it('should combine level filter and limit', () => {
+        const logs = hybridLogger.getCriticalLogs({ level: 'warn', limit: 1 });
+        expect(logs).toHaveLength(1);
+        expect(logs[0].level).toBe('warn');
+        expect(logs[0].message).toBe('Warning 2');
+      });
+
+      it('should return copy of logs array', () => {
+        const logs = hybridLogger.getCriticalLogs();
+        logs.push({ fake: 'entry' });
+        
+        const logsAgain = hybridLogger.getCriticalLogs();
+        expect(logsAgain).toHaveLength(4);
+        expect(logsAgain.find(log => log.fake === 'entry')).toBeUndefined();
+      });
+    });
+
+    describe('clearCriticalBuffer', () => {
+      it('should clear buffer and reset metadata', () => {
+        hybridLogger.warn('Warning 1');
+        hybridLogger.error('Error 1');
+
+        expect(hybridLogger.getCriticalLogs()).toHaveLength(2);
+
+        hybridLogger.clearCriticalBuffer();
+
+        const logs = hybridLogger.getCriticalLogs();
+        const stats = hybridLogger.getCriticalBufferStats();
+
+        expect(logs).toHaveLength(0);
+        expect(stats.currentSize).toBe(0);
+        expect(stats.totalWarnings).toBe(0);
+        expect(stats.totalErrors).toBe(0);
+        expect(stats.oldestTimestamp).toBeNull();
+        expect(stats.newestTimestamp).toBeNull();
+      });
+    });
+
+    describe('Memory and Performance', () => {
+      it('should generate unique IDs for each log entry', () => {
+        hybridLogger.warn('Warning 1');
+        hybridLogger.warn('Warning 2');
+
+        const logs = hybridLogger.getCriticalLogs();
+        expect(logs[0].id).not.toBe(logs[1].id);
+        expect(logs[0].id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+      });
+
+      it('should handle buffer operations without affecting logging', () => {
+        // Verify logging still works normally
+        hybridLogger.warn('Test warning');
+        
+        expect(mockConsoleLogger.warn).toHaveBeenCalled();
+        expect(mockRemoteLogger.warn).toHaveBeenCalled();
+        
+        // And buffer was populated
+        expect(hybridLogger.getCriticalLogs()).toHaveLength(1);
+      });
+
+      it('should not affect non-critical logging performance', () => {
+        const startTime = Date.now();
+        
+        for (let i = 0; i < 100; i++) {
+          hybridLogger.info(`Info message ${i}`);
+        }
+        
+        const endTime = Date.now();
+        
+        // Should complete quickly (buffer not involved)
+        expect(endTime - startTime).toBeLessThan(100);
+        expect(hybridLogger.getCriticalLogs()).toHaveLength(0);
+      });
+    });
+  });
 });
