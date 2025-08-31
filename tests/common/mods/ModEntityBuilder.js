@@ -7,6 +7,7 @@ import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
   DESCRIPTION_COMPONENT_ID,
+  ACTOR_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { string } from '../../../src/utils/validationCore.js';
 import { assertPresent } from '../../../src/utils/dependencyUtils.js';
@@ -97,8 +98,7 @@ export class ModEntityBuilder {
   inSameLocationAs(otherEntity) {
     assertPresent(
       otherEntity,
-      'Other entity is required',
-      'ModEntityBuilder.inSameLocationAs'
+      'Other entity is required'
     );
 
     if (
@@ -142,11 +142,38 @@ export class ModEntityBuilder {
     );
     assertPresent(
       componentData,
-      'Component data is required',
-      'ModEntityBuilder.withComponent'
+      'Component data is required'
     );
 
     this.entityData.components[componentId] = componentData;
+    return this;
+  }
+
+  /**
+   * Sets the entity as an actor by adding the core:actor component.
+   *
+   * @param {object} [actorData] - Optional actor-specific data
+   * @returns {ModEntityBuilder} This builder for chaining
+   */
+  asActor(actorData = {}) {
+    this.entityData.components[ACTOR_COMPONENT_ID] = actorData;
+    return this;
+  }
+
+  /**
+   * Sets the entity's location component for close proximity checks.
+   *
+   * @param {string} locationId - The location ID
+   * @returns {ModEntityBuilder} This builder for chaining
+   */
+  withLocationComponent(locationId) {
+    string.assertNonBlank(
+      locationId,
+      'Location ID',
+      'ModEntityBuilder.withLocationComponent'
+    );
+
+    this.entityData.components['core:location'] = { location: locationId };
     return this;
   }
 
@@ -174,7 +201,7 @@ export class ModEntityBuilder {
    */
   asBodyPart(options = {}) {
     const { parent = null, children = [], subType } = options;
-    this.entityData.components['anatomy:part'] = {
+    this.entityData.components['anatomy:body_part'] = {
       parent,
       children,
       subType,
@@ -307,21 +334,28 @@ export class ModEntityScenarios {
       names = ['Alice', 'Bob'],
       location = 'room1',
       closeProximity = false,
+      idPrefix = '',
     } = options;
 
     const [actorName, targetName] = names;
+    const actorId = `${idPrefix}actor1`;
+    const targetId = `${idPrefix}target1`;
 
-    const actor = new ModEntityBuilder('actor1')
+    const actor = new ModEntityBuilder(actorId)
       .withName(actorName)
-      .atLocation(location);
+      .atLocation(location)
+      .withLocationComponent(location)
+      .asActor();
 
-    const target = new ModEntityBuilder('target1')
+    const target = new ModEntityBuilder(targetId)
       .withName(targetName)
-      .atLocation(location);
+      .atLocation(location)
+      .withLocationComponent(location)
+      .asActor();
 
     if (closeProximity) {
-      actor.closeToEntity('target1');
-      target.closeToEntity('actor1');
+      actor.closeToEntity(targetId);
+      target.closeToEntity(actorId);
     }
 
     return {
@@ -352,7 +386,8 @@ export class ModEntityScenarios {
     // Create main actor
     const actor = new ModEntityBuilder('actor1')
       .withName(actorName)
-      .atLocation(location);
+      .atLocation(location)
+      .withLocationComponent(location);
 
     // Collect all close relationships for the actor
     const actorPartners = [];
@@ -380,7 +415,8 @@ export class ModEntityScenarios {
     // Create target
     const target = new ModEntityBuilder('target1')
       .withName(targetName)
-      .atLocation(location);
+      .atLocation(location)
+      .withLocationComponent(location);
 
     if (closeToMain >= 1) {
       target.closeToEntity('actor1');
@@ -393,7 +429,8 @@ export class ModEntityScenarios {
       const observerId = `observer${index + 1}`;
       const observer = new ModEntityBuilder(observerId)
         .withName(name)
-        .atLocation(location);
+        .atLocation(location)
+        .withLocationComponent(location);
 
       // Add close proximity for additional close entities
       if (index + 2 <= closeToMain) {
@@ -435,13 +472,17 @@ export class ModEntityScenarios {
     const actor = new ModEntityBuilder('actor1')
       .withName(actorName)
       .atLocation(location)
-      .closeToEntity('target1');
+      .withLocationComponent(location)
+      .closeToEntity('target1')
+      .asActor();
 
     const target = new ModEntityBuilder('target1')
       .withName(targetName)
       .atLocation(location)
+      .withLocationComponent(location)
       .closeToEntity('actor1')
-      .withBody('torso1');
+      .withBody('torso1')
+      .asActor();
 
     const entities = [actor.build(), target.build()];
 
@@ -453,13 +494,16 @@ export class ModEntityScenarios {
       const partId = `${partType}${partCounter++}`;
       const isRoot = index === 0;
 
-      const part = new ModEntityBuilder(partId).asBodyPart({
-        parent: isRoot ? null : 'torso1',
-        children: isRoot
-          ? bodyParts.slice(1).map((_, i) => `${bodyParts[i + 1]}${i + 2}`)
-          : [],
-        subType: partType,
-      });
+      const part = new ModEntityBuilder(partId)
+        .asBodyPart({
+          parent: isRoot ? null : 'torso1',
+          children: isRoot
+            ? bodyParts.slice(1).map((_, i) => `${bodyParts[i + 1]}${i + 2}`)
+            : [],
+          subType: partType,
+        })
+        .atLocation(location)
+        .withLocationComponent(location);
 
       bodyPartEntities.push(part.build());
     });

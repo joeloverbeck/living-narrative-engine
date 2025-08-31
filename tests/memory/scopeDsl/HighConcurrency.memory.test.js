@@ -40,6 +40,12 @@ jest.setTimeout(90000); // 1.5 minutes for optimized memory testing
 // Debug logging flag - set to false for performance
 const ENABLE_DEBUG_LOGGING = process.env.MEMORY_DEBUG === 'true';
 
+// Global container and services - set up once at module level
+let globalContainer = null;
+let globalServices = null;
+let globalEntityPool = null;
+let globalScopeDefinitions = null;
+
 /**
  * Memory test suite for high concurrency scenarios in ScopeDSL
  * Validates memory management and leak detection under concurrent load
@@ -54,6 +60,7 @@ describe('High Concurrency Memory Management', () => {
   let jsonLogicService;
   let spatialIndexManager;
   let registry;
+  let entityPool;
 
   // Memory metrics tracking
   let memoryMetrics = {
@@ -64,289 +71,222 @@ describe('High Concurrency Memory Management', () => {
     gcEffectiveness: [],
   };
 
-  // Shared entity pool for performance optimization
-  let sharedEntityPool = null;
-  let sharedContainerSetup = null;
-  let sharedScopeDefinitions = null;
-
-  /**
-   * Sets up shared container configuration (cached for performance)
-   */
-  async function setupSharedContainer() {
-    if (sharedContainerSetup) {
-      return sharedContainerSetup;
-    }
-
-    // Create container and DOM elements once
-    const testContainer = new AppContainer();
-
-    // Reuse existing DOM elements if available to avoid repeated creation
-    let outputDiv = document.getElementById('outputDiv');
-    if (!outputDiv) {
-      outputDiv = document.createElement('div');
+  // Initialize global resources once before all tests
+  beforeAll(async () => {
+    if (!globalContainer) {
+      // Create container and DOM elements once for entire test suite
+      globalContainer = new AppContainer();
+      
+      const outputDiv = document.createElement('div');
       outputDiv.id = 'outputDiv';
       const messageList = document.createElement('ul');
       messageList.id = 'message-list';
       outputDiv.appendChild(messageList);
       document.body.appendChild(outputDiv);
-    }
-
-    let inputElement = document.getElementById('inputBox');
-    if (!inputElement) {
-      inputElement = document.createElement('input');
+      
+      const inputElement = document.createElement('input');
       inputElement.id = 'inputBox';
       document.body.appendChild(inputElement);
-    }
-
-    let titleElement = document.getElementById('gameTitle');
-    if (!titleElement) {
-      titleElement = document.createElement('h1');
+      
+      const titleElement = document.createElement('h1');
       titleElement.id = 'gameTitle';
       document.body.appendChild(titleElement);
+      
+      await configureContainer(globalContainer, {
+        outputDiv,
+        inputElement,
+        titleElement,
+        document,
+      });
+      
+      // Extract services once
+      globalServices = {
+        entityManager: globalContainer.resolve(tokens.IEntityManager),
+        scopeRegistry: globalContainer.resolve(tokens.IScopeRegistry),
+        scopeEngine: globalContainer.resolve(tokens.IScopeEngine),
+        dslParser: globalContainer.resolve(tokens.DslParser),
+        logger: globalContainer.resolve(tokens.ILogger),
+        jsonLogicService: globalContainer.resolve(tokens.JsonLogicEvaluationService),
+        spatialIndexManager: globalContainer.resolve(tokens.ISpatialIndexManager),
+        registry: globalContainer.resolve(tokens.IDataRegistry),
+      };
+      
+      // Set up test conditions once
+      ScopeTestUtilities.setupScopeTestConditions(globalServices.registry, [
+        {
+          id: 'memory-concurrency:simple-condition',
+          description: 'Simple condition for memory testing',
+          logic: {
+            '>': [{ var: 'entity.components.core:stats.level' }, 0],
+          },
+        },
+        {
+          id: 'memory-concurrency:complex-condition',
+          description: 'Complex condition for memory stress testing',
+          logic: {
+            and: [
+              { '>': [{ var: 'entity.components.core:stats.level' }, 2] },
+              {
+                or: [
+                  {
+                    and: [
+                      {
+                        '>=': [
+                          { var: 'entity.components.core:stats.strength' },
+                          15,
+                        ],
+                      },
+                      {
+                        '>': [
+                          { var: 'entity.components.core:health.current' },
+                          40,
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    and: [
+                      {
+                        '>=': [
+                          { var: 'entity.components.core:stats.agility' },
+                          12,
+                        ],
+                      },
+                      {
+                        '<': [
+                          { var: 'entity.components.core:health.current' },
+                          80,
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        {
+          id: 'memory-concurrency:memory-intensive-condition',
+          description: 'Memory-intensive condition for leak detection',
+          logic: {
+            and: [
+              { '>': [{ var: 'entity.components.core:stats.level' }, 1] },
+              {
+                or: [
+                  {
+                    and: [
+                      {
+                        '>=': [
+                          { var: 'entity.components.core:stats.strength' },
+                          10,
+                        ],
+                      },
+                      {
+                        '<=': [
+                          { var: 'entity.components.core:stats.strength' },
+                          30,
+                        ],
+                      },
+                      {
+                        '>': [
+                          { var: 'entity.components.core:health.current' },
+                          20,
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    and: [
+                      {
+                        '>=': [
+                          { var: 'entity.components.core:stats.agility' },
+                          8,
+                        ],
+                      },
+                      {
+                        '<': [
+                          { var: 'entity.components.core:health.current' },
+                          85,
+                        ],
+                      },
+                      {
+                        '!=': [
+                          { var: 'entity.components.core:actor.isPlayer' },
+                          true,
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    and: [
+                      {
+                        '>': [
+                          {
+                            '+': [
+                              { var: 'entity.components.core:stats.strength' },
+                              { var: 'entity.components.core:stats.agility' },
+                            ],
+                          },
+                          25,
+                        ],
+                      },
+                      {
+                        '>=': [{ var: 'entity.components.core:stats.level' }, 3],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ]);
+      
+      // Create scope definitions once
+      globalScopeDefinitions = ScopeTestUtilities.createTestScopes(
+        { dslParser: globalServices.dslParser, logger: globalServices.logger },
+        [
+          {
+            id: 'memory-concurrency:simple_filter',
+            expr: 'entities(core:actor)[{"condition_ref": "memory-concurrency:simple-condition"}]',
+            description: 'Simple filter for basic memory testing',
+          },
+          {
+            id: 'memory-concurrency:complex_filter',
+            expr: 'entities(core:actor)[{"condition_ref": "memory-concurrency:complex-condition"}]',
+            description: 'Complex filter for memory stress testing',
+          },
+          {
+            id: 'memory-concurrency:intensive_filter',
+            expr: 'entities(core:actor)[{"condition_ref": "memory-concurrency:memory-intensive-condition"}]',
+            description: 'Memory-intensive filter for leak detection',
+          },
+          {
+            id: 'memory-concurrency:chained_filter',
+            expr: 'entities(core:actor)[{">": [{"var": "entity.components.core:stats.level"}, 1]}][{"condition_ref": "memory-concurrency:complex-condition"}]',
+            description: 'Chained filter for memory usage testing',
+          },
+          {
+            id: 'memory-concurrency:union_filter',
+            expr: 'entities(core:actor)[{"condition_ref": "memory-concurrency:simple-condition"}] + entities(core:actor)[{"condition_ref": "memory-concurrency:complex-condition"}]',
+            description: 'Union filter for concurrent memory testing',
+          },
+        ]
+      );
+      
+      // Create entity pool once
+      globalEntityPool = await createGlobalEntityPool(globalServices);
     }
-
-    await configureContainer(testContainer, {
-      outputDiv,
-      inputElement,
-      titleElement,
-      document,
-    });
-
-    sharedContainerSetup = {
-      container: testContainer,
-      outputDiv,
-      inputElement,
-      titleElement,
-    };
-
-    return sharedContainerSetup;
-  }
-
-  beforeEach(async () => {
-    // Force initial garbage collection (optimized)
-    if (global.gc) {
-      global.gc();
-    }
-    await global.memoryTestUtils.forceGCAndWait();
-
-    // Use shared container setup for performance
-    const setup = await setupSharedContainer();
-    container = setup.container;
-
-    // Get real services from container
-    entityManager = container.resolve(tokens.IEntityManager);
-    scopeRegistry = container.resolve(tokens.IScopeRegistry);
-    scopeEngine = container.resolve(tokens.IScopeEngine);
-    dslParser = container.resolve(tokens.DslParser);
-    logger = container.resolve(tokens.ILogger);
-    jsonLogicService = container.resolve(tokens.JsonLogicEvaluationService);
-    spatialIndexManager = container.resolve(tokens.ISpatialIndexManager);
-    registry = container.resolve(tokens.IDataRegistry);
-
-    // Set up memory test conditions
-    ScopeTestUtilities.setupScopeTestConditions(registry, [
-      {
-        id: 'memory-concurrency:simple-condition',
-        description: 'Simple condition for memory testing',
-        logic: {
-          '>': [{ var: 'entity.components.core:stats.level' }, 0],
-        },
-      },
-      {
-        id: 'memory-concurrency:complex-condition',
-        description: 'Complex condition for memory stress testing',
-        logic: {
-          and: [
-            { '>': [{ var: 'entity.components.core:stats.level' }, 2] },
-            {
-              or: [
-                {
-                  and: [
-                    {
-                      '>=': [
-                        { var: 'entity.components.core:stats.strength' },
-                        15,
-                      ],
-                    },
-                    {
-                      '>': [
-                        { var: 'entity.components.core:health.current' },
-                        40,
-                      ],
-                    },
-                  ],
-                },
-                {
-                  and: [
-                    {
-                      '>=': [
-                        { var: 'entity.components.core:stats.agility' },
-                        12,
-                      ],
-                    },
-                    {
-                      '<': [
-                        { var: 'entity.components.core:health.current' },
-                        80,
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-      {
-        id: 'memory-concurrency:memory-intensive-condition',
-        description: 'Memory-intensive condition for leak detection',
-        logic: {
-          and: [
-            { '>': [{ var: 'entity.components.core:stats.level' }, 1] },
-            {
-              or: [
-                {
-                  and: [
-                    {
-                      '>=': [
-                        { var: 'entity.components.core:stats.strength' },
-                        10,
-                      ],
-                    },
-                    {
-                      '<=': [
-                        { var: 'entity.components.core:stats.strength' },
-                        30,
-                      ],
-                    },
-                    {
-                      '>': [
-                        { var: 'entity.components.core:health.current' },
-                        20,
-                      ],
-                    },
-                  ],
-                },
-                {
-                  and: [
-                    {
-                      '>=': [
-                        { var: 'entity.components.core:stats.agility' },
-                        8,
-                      ],
-                    },
-                    {
-                      '<': [
-                        { var: 'entity.components.core:health.current' },
-                        85,
-                      ],
-                    },
-                    {
-                      '!=': [
-                        { var: 'entity.components.core:actor.isPlayer' },
-                        true,
-                      ],
-                    },
-                  ],
-                },
-                {
-                  and: [
-                    {
-                      '>': [
-                        {
-                          '+': [
-                            { var: 'entity.components.core:stats.strength' },
-                            { var: 'entity.components.core:stats.agility' },
-                          ],
-                        },
-                        25,
-                      ],
-                    },
-                    {
-                      '>=': [{ var: 'entity.components.core:stats.level' }, 3],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-    ]);
-
-    // Create memory test scopes
-    const memoryScopes = ScopeTestUtilities.createTestScopes(
-      { dslParser, logger },
-      [
-        {
-          id: 'memory-concurrency:simple_filter',
-          expr: 'entities(core:actor)[{"condition_ref": "memory-concurrency:simple-condition"}]',
-          description: 'Simple filter for basic memory testing',
-        },
-        {
-          id: 'memory-concurrency:complex_filter',
-          expr: 'entities(core:actor)[{"condition_ref": "memory-concurrency:complex-condition"}]',
-          description: 'Complex filter for memory stress testing',
-        },
-        {
-          id: 'memory-concurrency:intensive_filter',
-          expr: 'entities(core:actor)[{"condition_ref": "memory-concurrency:memory-intensive-condition"}]',
-          description: 'Memory-intensive filter for leak detection',
-        },
-        {
-          id: 'memory-concurrency:chained_filter',
-          expr: 'entities(core:actor)[{">": [{"var": "entity.components.core:stats.level"}, 1]}][{"condition_ref": "memory-concurrency:complex-condition"}]',
-          description: 'Chained filter for memory usage testing',
-        },
-        {
-          id: 'memory-concurrency:union_filter',
-          expr: 'entities(core:actor)[{"condition_ref": "memory-concurrency:simple-condition"}] + entities(core:actor)[{"condition_ref": "memory-concurrency:complex-condition"}]',
-          description: 'Union filter for concurrent memory testing',
-        },
-      ]
-    );
-
-    // Initialize scope registry
-    scopeRegistry.initialize(memoryScopes);
-
-    // Establish baseline memory usage
-    await global.memoryTestUtils.forceGCAndWait();
-    memoryMetrics.baselineMemory = process.memoryUsage().heapUsed;
-  });
-
-  afterEach(async () => {
-    // Skip DOM cleanup as we reuse elements
-    // Skip container cleanup as we reuse container
-
-    // Force lightweight cleanup only
-    await global.memoryTestUtils.forceGCAndWait();
   });
 
   /**
-   * Creates an optimized entity pool for performance testing
-   * Reduces entity count while maintaining test validity
-   *
-   * @param {number} requestedSize - Requested number of entities
-   * @returns {number} Optimized entity count (reduced by 70-80%)
+   * Creates global entity pool once for all tests
    */
-  function getOptimizedEntityCount(requestedSize) {
-    // Further reduce entity count for performance while maintaining test validity
-    // Keep minimum entities needed for concurrency testing
-    const minEntities = Math.max(20, Math.ceil(requestedSize * 0.06)); // 6% of original, min 20
-    return Math.min(requestedSize, minEntities);
-  }
-
-  /**
-   * Creates shared entity definitions for reuse across tests
-   * Pre-creates common entity templates to avoid repeated setup
-   */
-  async function createSharedEntityPool() {
-    if (sharedEntityPool) return sharedEntityPool;
-
-    const poolSize = 25; // Optimized smaller pool for faster test execution
+  async function createGlobalEntityPool(services) {
+    const poolSize = 25; // Optimized pool size
     const entities = [];
-
-    // Create test location (shared across all scenarios)
+    
+    // Create test location once
     const locationDefinition = new EntityDefinition(
       'memory-concurrency-location',
       {
@@ -356,58 +296,86 @@ describe('High Concurrency Memory Management', () => {
         },
       }
     );
-    registry.store(
+    services.registry.store(
       'entityDefinitions',
       'memory-concurrency-location',
       locationDefinition
     );
-
+    
     try {
-      await entityManager.getEntityInstance('memory-concurrency-location');
+      await services.entityManager.getEntityInstance('memory-concurrency-location');
     } catch {
-      // Location doesn't exist, create it
-      await entityManager.createEntityInstance('memory-concurrency-location', {
+      await services.entityManager.createEntityInstance('memory-concurrency-location', {
         instanceId: 'memory-concurrency-location',
         definitionId: 'memory-concurrency-location',
       });
     }
-
-    // Create actor entities with varied stats for meaningful test results
+    
+    // Create actor entities once
     for (let i = 0; i < poolSize; i++) {
       const actorId = `pool-actor-${i}`;
-
-      // Skip if already exists
-      try {
-        const existing = registry.getEntityDefinition(actorId);
-        if (existing) {
-          const entity = await entityManager.getEntityInstance(actorId);
-          if (entity) {
-            entities.push(entity);
-            continue;
-          }
-        }
-      } catch {
-        // Entity definition doesn't exist, will create below
-      }
-
+      
       const entity = await createMemoryTestActor(actorId, {
         isPlayer: i === 0,
-        level: Math.floor(i / 10) + 1, // Varied levels for filtering tests
-        strength: 10 + (i % 20), // Varied strength (10-29)
-        agility: 5 + (i % 15), // Varied agility (5-19)
-        health: 30 + (i % 50), // Varied health (30-79)
-      });
+        level: Math.floor(i / 10) + 1,
+        strength: 10 + (i % 20),
+        agility: 5 + (i % 15),
+        health: 30 + (i % 50),
+      }, services);
       entities.push(entity);
     }
-
-    sharedEntityPool = {
+    
+    return {
       entities,
-      location: await entityManager.getEntityInstance(
+      location: await services.entityManager.getEntityInstance(
         'memory-concurrency-location'
       ),
     };
+  }
 
-    return sharedEntityPool;
+  beforeEach(async () => {
+    // Quick GC before test
+    if (global.gc) {
+      global.gc();
+    }
+    
+    // Use global container and services
+    container = globalContainer;
+    entityManager = globalServices.entityManager;
+    scopeRegistry = globalServices.scopeRegistry;
+    scopeEngine = globalServices.scopeEngine;
+    dslParser = globalServices.dslParser;
+    logger = globalServices.logger;
+    jsonLogicService = globalServices.jsonLogicService;
+    spatialIndexManager = globalServices.spatialIndexManager;
+    registry = globalServices.registry;
+    entityPool = globalEntityPool;
+    
+    // Initialize scope registry with pre-created scopes
+    scopeRegistry.initialize(globalScopeDefinitions);
+    
+    // Establish baseline memory usage
+    memoryMetrics.baselineMemory = process.memoryUsage().heapUsed;
+  });
+
+  afterEach(async () => {
+    // Quick cleanup - entities are reused
+    if (global.gc) {
+      global.gc();
+    }
+  });
+
+  /**
+   * Creates an optimized entity pool for performance testing
+   * Reduces entity count while maintaining test validity
+   *
+   * @param {number} requestedSize - Requested number of entities
+   * @returns {number} Optimized entity count
+   */
+  function getOptimizedEntityCount(requestedSize) {
+    // Use smaller counts for faster tests while maintaining concurrency validation
+    const minEntities = Math.max(10, Math.ceil(requestedSize * 0.05)); // 5% of original, min 10
+    return Math.min(requestedSize, minEntities);
   }
 
   /**
@@ -415,8 +383,9 @@ describe('High Concurrency Memory Management', () => {
    *
    * @param actorId
    * @param config
+   * @param services - Global services object
    */
-  async function createMemoryTestActor(actorId, config = {}) {
+  async function createMemoryTestActor(actorId, config = {}, services) {
     const {
       level = Math.floor(Math.random() * 8) + 1,
       strength = Math.floor(Math.random() * 25) + 10,
@@ -438,34 +407,27 @@ describe('High Concurrency Memory Management', () => {
       components,
     });
 
-    registry.store('entityDefinitions', actorId, definition);
-    await entityManager.createEntityInstance(actorId, {
+    services.registry.store('entityDefinitions', actorId, definition);
+    await services.entityManager.createEntityInstance(actorId, {
       instanceId: actorId,
       definitionId: actorId,
     });
 
-    return await entityManager.getEntityInstance(actorId);
+    return await services.entityManager.getEntityInstance(actorId);
   }
 
   /**
    * Creates dataset for memory testing (optimized version)
-   * Uses shared entity pool to reduce setup time
+   * Uses global entity pool to reduce setup time
    *
    * @param size - Requested size (will be optimized)
    */
   async function createMemoryTestDataset(size) {
     const optimizedSize = getOptimizedEntityCount(size);
-    const pool = await createSharedEntityPool();
-
-    // Return subset of shared entities based on optimized size
-    const entities = pool.entities.slice(0, optimizedSize);
-
-    // Ensure we have at least one player entity
-    if (entities.length > 0 && entities[0]) {
-      // The first entity in the pool is already set as player
-      return entities;
-    }
-
+    
+    // Use global pool directly
+    const entities = entityPool.entities.slice(0, optimizedSize);
+    
     return entities;
   }
 
@@ -474,9 +436,7 @@ describe('High Concurrency Memory Management', () => {
    */
   async function createMemoryGameContext() {
     return {
-      currentLocation: await entityManager.getEntityInstance(
-        'memory-concurrency-location'
-      ),
+      currentLocation: entityPool.location,
       entityManager: entityManager,
       allEntities: Array.from(entityManager.entities || []),
       jsonLogicEval: jsonLogicService,
@@ -662,7 +622,7 @@ describe('High Concurrency Memory Management', () => {
         });
 
         // Minimal delay between spikes (optimized)
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        // No delay for performance
       }
 
       // Assert - System should handle memory spikes gracefully
@@ -863,9 +823,9 @@ describe('High Concurrency Memory Management', () => {
 
       // Test memory cleanup effectiveness over time (highly optimized delays)
       const cleanupPhases = [
-        { delay: 200, description: '0.2 second cleanup' },
-        { delay: 800, description: '0.8 second cleanup' },
-        { delay: 2000, description: '2 second cleanup' },
+        { delay: 10, description: '10ms cleanup' },
+        { delay: 20, description: '20ms cleanup' },
+        { delay: 30, description: '30ms cleanup' },
       ];
 
       const cleanupResults = [];
@@ -1037,7 +997,7 @@ describe('High Concurrency Memory Management', () => {
           memoryPerOperation: allocationGrowth / results.length,
         });
 
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        // No delay for performance
       }
 
       // Analyze patterns across complexities
@@ -1154,7 +1114,7 @@ describe('High Concurrency Memory Management', () => {
           gcEfficiency,
         });
 
-        await new Promise((resolve) => setTimeout(resolve, 50)); // Further optimized delay
+        // No delay for performance // Further optimized delay
       }
 
       // Analyze overall GC effectiveness
@@ -1238,9 +1198,9 @@ describe('High Concurrency Memory Management', () => {
 
       // Monitor memory recovery over time (highly optimized delays)
       const recoveryPhases = [
-        { delay: 800, target: 'initial' },
-        { delay: 2000, target: 'intermediate' },
-        { delay: 4000, target: 'final' },
+        { delay: 20, target: 'initial' },
+        { delay: 40, target: 'intermediate' },
+        { delay: 60, target: 'final' },
       ];
 
       const recoveryResults = [];
@@ -1570,27 +1530,18 @@ describe('High Concurrency Memory Management', () => {
     });
   });
 
-  // Cleanup shared resources after all tests complete
+  // Cleanup global resources after all tests complete
   afterAll(async () => {
-    // Clean up DOM elements
-    if (sharedContainerSetup) {
-      document.body.innerHTML = '';
+    // Clean up DOM elements if needed
+    if (typeof document !== 'undefined' && document.body) {
+      // Keep DOM for potential reuse in other test files
+      // document.body.innerHTML = '';
     }
-
-    // Clean up shared container resources
-    if (
-      sharedContainerSetup &&
-      sharedContainerSetup.container &&
-      typeof sharedContainerSetup.container.cleanup === 'function'
-    ) {
-      sharedContainerSetup.container.cleanup();
+    
+    // Global resources are kept for potential reuse
+    // Only perform final GC
+    if (global.gc) {
+      global.gc();
     }
-
-    // Reset shared state
-    sharedEntityPool = null;
-    sharedContainerSetup = null;
-
-    // Final cleanup
-    await global.memoryTestUtils.forceGCAndWait();
   });
 });

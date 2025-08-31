@@ -33,6 +33,7 @@ import { parseFileSize } from '../config/debugLogConfigValidator.js';
  * @property {string} level - Log level: debug, info, warn, error
  * @property {string} message - Log message text
  * @property {string} [category] - Optional log category: engine, ui, ecs, ai, etc
+ * @property {string} [sourceCategory] - Optional client-provided source category from LogMetadataEnricher
  * @property {string} timestamp - ISO 8601 datetime string
  * @property {string} [source] - Optional source location: filename.js:line
  * @property {string} [sessionId] - Optional UUID v4 session identifier
@@ -365,7 +366,7 @@ class LogStorageService {
   }
 
   /**
-   * Groups logs by date and category for efficient batch processing
+   * Groups logs by date and routing destination for efficient batch processing
    * @private
    * @param {DebugLogEntry[]} logs - Array of log entries
    * @returns {Map<string, DebugLogEntry[]>} Map of group key to log entries
@@ -376,8 +377,10 @@ class LogStorageService {
     for (const log of logs) {
       try {
         const date = new Date(log.timestamp).toISOString().split('T')[0];
-        const category = this.#detectCategory(log);
-        const groupKey = `${date}:${category}`;
+        const filePath = this.#getFilePath(log, date);
+        
+        // Use file path as group key for level-based and category-based routing
+        const groupKey = `${date}:${path.basename(filePath, '.jsonl')}`;
 
         if (!groups.has(groupKey)) {
           groups.set(groupKey, []);
@@ -399,18 +402,24 @@ class LogStorageService {
   }
 
   /**
-   * Detects the category for a log entry using pattern matching
+   * Detects the category for a log entry, prioritizing client-provided categories
    * @private
    * @param {DebugLogEntry} log - Log entry to categorize
    * @returns {string} Detected category
    */
   #detectCategory(log) {
-    // Use explicit category if provided
+    // Priority 1: Use client-provided sourceCategory (from LogMetadataEnricher)
+    if (log.sourceCategory && typeof log.sourceCategory === 'string') {
+      return log.sourceCategory.toLowerCase();
+    }
+
+    // Priority 2: Use explicit category if provided
     if (log.category && typeof log.category === 'string') {
       return log.category.toLowerCase();
     }
 
-    // Try to match against patterns using message and source
+    // Minimal fallback - client's LogMetadataEnricher handles 40+ categories automatically
+    // Server-side pattern matching is de-emphasized in favor of client-provided data
     const searchText = `${log.message || ''} ${log.source || ''}`;
 
     for (const [category, pattern] of Object.entries(CATEGORY_PATTERNS)) {
@@ -474,6 +483,28 @@ class LogStorageService {
   }
 
   /**
+   * Gets the file path for a log entry with level-based routing priority
+   * @private
+   * @param {DebugLogEntry} log - Log entry to route
+   * @param {string} date - Date in YYYY-MM-DD format
+   * @returns {string} Full file path
+   */
+  #getFilePath(log, date) {
+    // Priority 1: Route by log level (NEW FUNCTIONALITY)
+    if (log.level === 'error') {
+      return path.join(this.#config.baseLogPath, date, 'error.jsonl');
+    }
+    
+    if (log.level === 'warn') {
+      return path.join(this.#config.baseLogPath, date, 'warning.jsonl');
+    }
+    
+    // Priority 2: Use client-provided sourceCategory or detected category
+    const category = this.#detectCategory(log);
+    return this.#getCategoryFilePath(date, category);
+  }
+
+  /**
    * Formats a log entry as JSONL string
    * @private
    * @param {DebugLogEntry} log - Log entry to format
@@ -525,8 +556,8 @@ class LogStorageService {
 
       for (const [groupKey, logs] of bufferSnapshot) {
         try {
-          const [date, category] = groupKey.split(':');
-          await this.#writeLogsToFile(date, category, logs);
+          const [date, fileBaseName] = groupKey.split(':');
+          await this.#writeLogsToFileWithPath(date, fileBaseName, logs);
           flushedCount += logs.length;
         } catch (error) {
           this.#logger.error(
@@ -567,7 +598,7 @@ class LogStorageService {
   }
 
   /**
-   * Writes logs to a specific file
+   * Writes logs to a specific file (legacy method for backward compatibility)
    * @private
    * @param {string} date - Date in YYYY-MM-DD format
    * @param {string} category - Log category
@@ -575,8 +606,20 @@ class LogStorageService {
    * @returns {Promise<void>}
    */
   async #writeLogsToFile(date, category, logs) {
+    await this.#writeLogsToFileWithPath(date, category, logs);
+  }
+
+  /**
+   * Writes logs to a specific file using the level-based routing system
+   * @private
+   * @param {string} date - Date in YYYY-MM-DD format
+   * @param {string} fileBaseName - Base file name (without .jsonl extension)
+   * @param {DebugLogEntry[]} logs - Array of log entries
+   * @returns {Promise<void>}
+   */
+  async #writeLogsToFileWithPath(date, fileBaseName, logs) {
     await this.#ensureDirectoryStructure(date);
-    const filePath = this.#getCategoryFilePath(date, category);
+    const filePath = path.join(this.#config.baseLogPath, date, `${fileBaseName}.jsonl`);
 
     // Format all logs as JSONL
     const jsonlData = logs.map((log) => this.#formatLogEntry(log)).join('');
@@ -612,7 +655,7 @@ class LogStorageService {
       }
 
       this.#logger.debug(
-        `LogStorageService.#writeLogsToFile: Wrote ${logs.length} logs to ${filePath}`
+        `LogStorageService.#writeLogsToFileWithPath: Wrote ${logs.length} logs to ${filePath}`
       );
     } catch (error) {
       // Clean up temp file if it exists

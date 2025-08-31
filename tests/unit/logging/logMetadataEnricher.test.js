@@ -402,16 +402,13 @@ describe('LogMetadataEnricher', () => {
     at remoteLogger.js:100:20
     at someFile.js:50:10`;
 
-      // Mock Error.stack
-      const originalError = global.Error;
-      global.Error = jest.fn().mockImplementation(() => ({
+      const mockError = jest.fn().mockImplementation(() => ({
         stack: chromeStack,
       }));
-
-      const source = enricher.detectSource();
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const source = testEnricher.detectSource(4);
       expect(source).toBe('someFile.js:50');
-
-      global.Error = originalError;
     });
 
     it('should parse Firefox stack trace format', () => {
@@ -421,15 +418,13 @@ Module._extensions..js@module.js:474:10
 remoteLogger@remoteLogger.js:100:20
 someFunction@someFile.js:50:10`;
 
-      const originalError = global.Error;
-      global.Error = jest.fn().mockImplementation(() => ({
+      const mockError = jest.fn().mockImplementation(() => ({
         stack: firefoxStack,
       }));
-
-      const source = enricher.detectSource();
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const source = testEnricher.detectSource(4);
       expect(source).toBe('someFile.js:50');
-
-      global.Error = originalError;
     });
 
     it('should parse Safari stack trace format', () => {
@@ -439,15 +434,13 @@ evaluateScript@[native code]
 remoteLogger@remoteLogger.js:100:20
 someFunction@someFile.js:50:10`;
 
-      const originalError = global.Error;
-      global.Error = jest.fn().mockImplementation(() => ({
+      const mockError = jest.fn().mockImplementation(() => ({
         stack: safariStack,
       }));
-
-      const source = enricher.detectSource();
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const source = testEnricher.detectSource(4);
       expect(source).toBe('someFile.js:50');
-
-      global.Error = originalError;
     });
 
     it('should skip internal logger frames', () => {
@@ -457,39 +450,33 @@ someFunction@someFile.js:50:10`;
     at logCategoryDetector.js:30:5
     at userCode.js:40:12`;
 
-      const originalError = global.Error;
-      global.Error = jest.fn().mockImplementation(() => ({
+      const mockError = jest.fn().mockImplementation(() => ({
         stack,
       }));
-
-      const source = enricher.detectSource();
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const source = testEnricher.detectSource(1);
       expect(source).toBe('userCode.js:40');
-
-      global.Error = originalError;
     });
 
     it('should handle missing stack trace', () => {
-      const originalError = global.Error;
-      global.Error = jest.fn().mockImplementation(() => ({
+      const mockError = jest.fn().mockImplementation(() => ({
         stack: undefined,
       }));
-
-      const source = enricher.detectSource();
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const source = testEnricher.detectSource(1);
       expect(source).toBeUndefined();
-
-      global.Error = originalError;
     });
 
     it('should handle stack trace parsing errors', () => {
-      const originalError = global.Error;
-      global.Error = jest.fn().mockImplementation(() => {
+      const mockError = jest.fn().mockImplementation(() => {
         throw new Error('Cannot create stack');
       });
-
-      const source = enricher.detectSource();
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const source = testEnricher.detectSource(1);
       expect(source).toBeUndefined();
-
-      global.Error = originalError;
     });
 
     it('should respect custom skip frames parameter', () => {
@@ -501,15 +488,366 @@ someFunction@someFile.js:50:10`;
     at frame5.js:50:8
     at frame6.js:60:3`;
 
-      const originalError = global.Error;
-      global.Error = jest.fn().mockImplementation(() => ({
+      const mockError = jest.fn().mockImplementation(() => ({
         stack,
       }));
-
-      const source = enricher.detectSource(6); // Skip 6 frames
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const source = testEnricher.detectSource(6); // Skip 6 frames
       expect(source).toBe('frame6.js:60');
+    });
+  });
 
-      global.Error = originalError;
+  describe('enrichment with sourceCategory', () => {
+    it('should add sourceCategory to enriched log entry', () => {
+      const logEntry = {
+        level: 'info',
+        message: 'Test message',
+        timestamp: Date.now(),
+      };
+
+      // Create a stack with enough frames for the default skipFrames=4
+      const stack = `Error
+    at frame1
+    at frame2
+    at frame3
+    at frame4
+    at Object.<anonymous> (/home/user/project/src/actions/userActions.js:10:15)
+    at Module._compile (module.js:456:26)`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const enriched = testEnricher.enrichLogEntrySync(logEntry);
+      
+      expect(enriched.source).toBe('userActions.js:10');
+      expect(enriched.sourceCategory).toBe('actions');
+    });
+
+    it('should add sourceCategory for error level in minimal mode', () => {
+      const minimalEnricher = new LogMetadataEnricher({
+        level: 'minimal',
+        enableSource: true,
+      });
+
+      const logEntry = {
+        level: 'error',
+        message: 'Error message',
+        timestamp: Date.now(),
+      };
+
+      // Create a stack with enough frames for the default skipFrames=4
+      const stack = `Error
+    at frame1
+    at frame2
+    at frame3
+    at frame4
+    at /home/user/project/src/entities/entityManager.js:25:10`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({
+        level: 'minimal',
+        enableSource: true,
+        ErrorConstructor: mockError
+      });
+      const enriched = testEnricher.enrichLogEntrySync(logEntry);
+      
+      expect(enriched.source).toBe('entityManager.js:25');
+      expect(enriched.sourceCategory).toBe('entities');
+    });
+
+    it('should not add sourceCategory when source detection is disabled', () => {
+      const noSourceEnricher = new LogMetadataEnricher({
+        level: 'standard',
+        enableSource: false,
+      });
+
+      const logEntry = {
+        level: 'info',
+        message: 'Test message',
+        timestamp: Date.now(),
+      };
+
+      const enriched = noSourceEnricher.enrichLogEntrySync(logEntry);
+      
+      expect(enriched.source).toBeUndefined();
+      expect(enriched.sourceCategory).toBeUndefined();
+    });
+
+    it('should add sourceCategory in async enrichment', async () => {
+      const logEntry = {
+        level: 'info',
+        message: 'Test message',
+        timestamp: Date.now(),
+      };
+
+      // Create a stack with enough frames for the default skipFrames=4
+      const stack = `Error
+    at frame1
+    at frame2
+    at frame3
+    at frame4
+    at /home/user/project/src/scopeDsl/parser.js:30:5`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const enriched = await testEnricher.enrichLogEntry(logEntry);
+      
+      expect(enriched.source).toBe('parser.js:30');
+      expect(enriched.sourceCategory).toBe('scopeDsl');
+    });
+
+    it('should set sourceCategory to general for unknown paths', () => {
+      const logEntry = {
+        level: 'info',
+        message: 'Test message',
+        timestamp: Date.now(),
+      };
+
+      // Create a stack with enough frames for the default skipFrames=4
+      const stack = `Error
+    at frame1
+    at frame2
+    at frame3
+    at frame4
+    at /random/unknown/path/file.js:10:15`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const enriched = testEnricher.enrichLogEntrySync(logEntry);
+      
+      expect(enriched.source).toBe('file.js:10');
+      expect(enriched.sourceCategory).toBe('general');
+    });
+  });
+
+  describe('detectSourceCategory', () => {
+    it('should detect actions category', () => {
+      const stack = `Error
+    at Object.<anonymous> (/home/user/project/src/actions/userActions.js:10:15)
+    at Module._compile (module.js:456:26)`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const category = testEnricher.detectSourceCategory(1);
+      expect(category).toBe('actions');
+    });
+
+    it('should detect logic category', () => {
+      const stack = `Error
+    at remoteLogger.js:100:20
+    at /home/user/project/src/logic/businessLogic.js:50:10`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const category = testEnricher.detectSourceCategory(1);
+      expect(category).toBe('logic');
+    });
+
+    it('should detect entities category', () => {
+      const stack = `Error
+    at remoteLogger.js:100:20
+    at /home/user/project/src/entities/entityManager.js:50:10`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const category = testEnricher.detectSourceCategory(1);
+      expect(category).toBe('entities');
+    });
+
+    it('should detect domUI category', () => {
+      const stack = `Error
+    at /home/user/project/src/domUI/renderer.js:25:15`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const category = testEnricher.detectSourceCategory(1);
+      expect(category).toBe('domUI');
+    });
+
+    it('should detect tests category', () => {
+      const stack = `Error
+    at /home/user/project/tests/unit/someTest.js:100:20`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const category = testEnricher.detectSourceCategory(1);
+      expect(category).toBe('tests');
+    });
+
+    it('should detect llm-proxy category', () => {
+      const stack = `Error
+    at /home/user/project/llm-proxy-server/server.js:50:10`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const category = testEnricher.detectSourceCategory(1);
+      expect(category).toBe('llm-proxy');
+    });
+
+    it('should return general for unknown paths', () => {
+      const stack = `Error
+    at /some/random/path/file.js:10:15`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const category = testEnricher.detectSourceCategory(1);
+      expect(category).toBe('general');
+    });
+
+    it('should return general when stack is unavailable', () => {
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack: undefined,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const category = testEnricher.detectSourceCategory(1);
+      expect(category).toBe('general');
+    });
+
+    it('should handle Windows path separators', () => {
+      const stack = `Error
+    at C:\\Users\\user\\project\\src\\scopeDsl\\parser.js:30:5`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const category = testEnricher.detectSourceCategory(1);
+      expect(category).toBe('scopeDsl');
+    });
+
+    it('should detect all 50 source categories correctly', () => {
+      const testCases = [
+        { path: '/project/src/actions/test.js', category: 'actions' },
+        { path: '/project/src/logic/test.js', category: 'logic' },
+        { path: '/project/src/entities/test.js', category: 'entities' },
+        { path: '/project/src/ai/test.js', category: 'ai' },
+        { path: '/project/src/domUI/test.js', category: 'domUI' },
+        { path: '/project/src/engine/test.js', category: 'engine' },
+        { path: '/project/src/events/test.js', category: 'events' },
+        { path: '/project/src/loaders/test.js', category: 'loaders' },
+        { path: '/project/src/scopeDsl/test.js', category: 'scopeDsl' },
+        { path: '/project/src/initializers/test.js', category: 'initializers' },
+        { path: '/project/src/dependencyInjection/test.js', category: 'dependencyInjection' },
+        { path: '/project/src/logging/test.js', category: 'logging' },
+        { path: '/project/src/config/test.js', category: 'config' },
+        { path: '/project/src/utils/test.js', category: 'utils' },
+        { path: '/project/src/services/test.js', category: 'services' },
+        { path: '/project/src/constants/test.js', category: 'constants' },
+        { path: '/project/src/storage/test.js', category: 'storage' },
+        { path: '/project/src/types/test.js', category: 'types' },
+        { path: '/project/src/alerting/test.js', category: 'alerting' },
+        { path: '/project/src/context/test.js', category: 'context' },
+        { path: '/project/src/turns/test.js', category: 'turns' },
+        { path: '/project/src/adapters/test.js', category: 'adapters' },
+        { path: '/project/src/query/test.js', category: 'query' },
+        { path: '/project/src/characterBuilder/test.js', category: 'characterBuilder' },
+        { path: '/project/src/prompting/test.js', category: 'prompting' },
+        { path: '/project/src/anatomy/test.js', category: 'anatomy' },
+        { path: '/project/src/scheduling/test.js', category: 'scheduling' },
+        { path: '/project/src/errors/test.js', category: 'errors' },
+        { path: '/project/src/interfaces/test.js', category: 'interfaces' },
+        { path: '/project/src/clothing/test.js', category: 'clothing' },
+        { path: '/project/src/input/test.js', category: 'input' },
+        { path: '/project/src/testing/test.js', category: 'testing' },
+        { path: '/project/src/configuration/test.js', category: 'configuration' },
+        { path: '/project/src/modding/test.js', category: 'modding' },
+        { path: '/project/src/persistence/test.js', category: 'persistence' },
+        { path: '/project/src/data/test.js', category: 'data' },
+        { path: '/project/src/shared/test.js', category: 'shared' },
+        { path: '/project/src/bootstrapper/test.js', category: 'bootstrapper' },
+        { path: '/project/src/commands/test.js', category: 'commands' },
+        { path: '/project/src/thematicDirection/test.js', category: 'thematicDirection' },
+        { path: '/project/src/models/test.js', category: 'models' },
+        { path: '/project/src/llms/test.js', category: 'llms' },
+        { path: '/project/src/validation/test.js', category: 'validation' },
+        { path: '/project/src/pathing/test.js', category: 'pathing' },
+        { path: '/project/src/formatting/test.js', category: 'formatting' },
+        { path: '/project/src/ports/test.js', category: 'ports' },
+        { path: '/project/src/shutdown/test.js', category: 'shutdown' },
+        { path: '/project/src/common/test.js', category: 'common' },
+        { path: '/project/src/clichesGenerator/test.js', category: 'clichesGenerator' },
+        { path: '/project/src/coreMotivationsGenerator/test.js', category: 'coreMotivationsGenerator' },
+        { path: '/project/src/thematicDirectionsManager/test.js', category: 'thematicDirectionsManager' },
+      ];
+
+      testCases.forEach(({ path, category }) => {
+        const stack = `Error
+    at ${path}:10:15`;
+        const mockError = jest.fn().mockImplementation(() => ({ stack }));
+        
+        const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+        const detectedCategory = testEnricher.detectSourceCategory(1);
+        expect(detectedCategory).toBe(category);
+      });
+    });
+
+    it('should skip internal logger frames when detecting category', () => {
+      const stack = `Error
+    at remoteLogger.js:10:15
+    at logMetadataEnricher.js:20:10
+    at logCategoryDetector.js:30:5
+    at /project/src/services/userService.js:40:12`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const category = testEnricher.detectSourceCategory(1);
+      expect(category).toBe('services');
+    });
+
+    it('should respect custom skip frames parameter', () => {
+      const stack = `Error
+    at frame1.js:10:15
+    at frame2.js:20:10
+    at frame3.js:30:5
+    at frame4.js:40:12
+    at frame5.js:50:8
+    at /project/src/utils/helper.js:60:3`;
+
+      const mockError = jest.fn().mockImplementation(() => ({
+        stack,
+      }));
+      
+      const testEnricher = new LogMetadataEnricher({ ErrorConstructor: mockError });
+      const category = testEnricher.detectSourceCategory(6);
+      expect(category).toBe('utils');
     });
   });
 

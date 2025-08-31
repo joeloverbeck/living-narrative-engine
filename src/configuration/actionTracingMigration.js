@@ -228,7 +228,8 @@ class ActionTracingConfigMigration {
         return typeof value === 'string' && value.trim() ? value : defaultValue;
 
       default:
-        return value ?? defaultValue;
+        /* istanbul ignore next - All fields are explicitly handled above */
+        return defaultValue;
     }
   }
 

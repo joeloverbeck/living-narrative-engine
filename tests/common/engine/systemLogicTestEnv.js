@@ -399,6 +399,7 @@ export function createBaseRuleEnvironment({
     unifiedScopeResolver: init.unifiedScopeResolver,
     logger: testLogger,
     dataRegistry: testDataRegistry,
+    createHandlers,
     cleanup: () => {
       interpreter.shutdown();
     },
@@ -425,6 +426,17 @@ export function resetRuleEnvironment(env, newEntities = []) {
   env.operationInterpreter = newEnv.operationInterpreter;
   env.systemLogicInterpreter = newEnv.systemLogicInterpreter;
   env.actionIndex = newEnv.actionIndex;
+  
+  // Clear the event bus events array if it has a _clearHandlers method
+  if (env.eventBus && typeof env.eventBus._clearHandlers === 'function') {
+    // Only clear the events, not the handlers themselves since we want to keep the SystemLogicInterpreter subscribed
+    if (env.eventBus.events && Array.isArray(env.eventBus.events)) {
+      env.eventBus.events.length = 0;
+    }
+  }
+  
+  // Update the events reference to the event bus's events array
+  env.events = env.eventBus.events;
 }
 
 /**
@@ -568,7 +580,7 @@ export function createRuleTestEnvironment(options) {
     // IMPORTANT: Give the SystemLogicInterpreter time to process the event
     // The interpreter listens to events asynchronously, so we need a small delay
     // to ensure rules are processed before the test continues
-    await new Promise(resolve => setTimeout(resolve, 50)); // Increased delay to ensure processing
+    await new Promise(resolve => setTimeout(resolve, 100)); // Increased delay to ensure processing
     
     console.log('[DISPATCH ACTION] Event dispatched, result:', result);
     return result;

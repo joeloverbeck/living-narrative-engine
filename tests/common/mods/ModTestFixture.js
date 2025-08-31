@@ -1,6 +1,6 @@
 /**
  * @file Factory for creating specialized mod test environments
- * @description Provides high-level test environment creation for common mod testing scenarios
+ * @description Provides high-level test environment creation for common mod testing scenarios with auto-loading capabilities
  */
 
 import { jest } from '@jest/globals';
@@ -8,56 +8,152 @@ import { createRuleTestEnvironment } from '../engine/systemLogicTestEnv.js';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
+import { promises as fs } from 'fs';
+import { resolve } from 'path';
 
 import { ModTestHandlerFactory } from './ModTestHandlerFactory.js';
-import { ModEntityBuilder, ModEntityScenarios } from './ModEntityBuilder.js';
+import { ModEntityScenarios } from './ModEntityBuilder.js';
 import { ModAssertionHelpers } from './ModAssertionHelpers.js';
+
+/**
+ * File naming conventions for auto-loading mod files
+ */
+const MOD_FILE_CONVENTIONS = {
+  // Rule file patterns (using underscore naming)
+  rules: [
+    'data/mods/{modId}/rules/{actionName}.rule.json',      // e.g., kiss_cheek.rule.json
+    'data/mods/{modId}/rules/handle_{actionName}.rule.json', // e.g., handle_kiss_cheek.rule.json
+    'data/mods/{modId}/rules/{fullActionId}.rule.json',     // e.g., intimacy_kiss_cheek.rule.json
+  ],
+  
+  // Condition file patterns (using hyphen naming)
+  conditions: [
+    'data/mods/{modId}/conditions/event-is-action-{actionName}.condition.json',  // e.g., event-is-action-kiss-cheek.condition.json
+    'data/mods/{modId}/conditions/{actionName}.condition.json',                  // e.g., kiss-cheek.condition.json
+    'data/mods/{modId}/conditions/event-is-action-{fullActionId}.condition.json', // e.g., event-is-action-intimacy-kiss-cheek.condition.json
+  ]
+};
+
+/**
+ * Extracts action name from full action ID
+ *
+ * @param {string} actionId - Action ID (e.g., 'intimacy:kiss_cheek')
+ * @returns {string} Action name (e.g., 'kiss_cheek')
+ */
+function extractActionName(actionId) {
+  return actionId.includes(':') ? actionId.split(':')[1] : actionId;
+}
 
 /**
  * Factory class for creating specialized mod test environments.
  *
  * Provides high-level abstractions for setting up common mod testing scenarios,
  * eliminating the boilerplate setup required in individual test files.
+ * 
+ * Enhanced with auto-loading capabilities to reduce manual file imports while
+ * maintaining full backward compatibility.
  */
 export class ModTestFixture {
   /**
    * Creates a test fixture for a mod action.
+   * 
+   * Enhanced version that supports auto-loading of rule and condition files
+   * when they are not provided, while maintaining full backward compatibility.
    *
    * @param {string} modId - The mod identifier (e.g., 'intimacy', 'positioning')
    * @param {string} actionId - The action identifier (e.g., 'kiss_cheek', 'kneel_before')
-   * @param {object} ruleFile - The rule definition JSON
-   * @param {object} conditionFile - The condition definition JSON
-   * @param {object} options - Additional configuration options
-   * @returns {ModActionTestFixture} Configured test fixture for the action
+   * @param {object|null} [ruleFile] - The rule definition JSON (auto-loaded if null/undefined)
+   * @param {object|null} [conditionFile] - The condition definition JSON (auto-loaded if null/undefined)
+   * @param {object} [options] - Additional configuration options
+   * @returns {Promise<ModActionTestFixture>} Configured test fixture for the action
+   * @throws {Error} If auto-loading fails when files are not provided
    */
-  static forAction(modId, actionId, ruleFile, conditionFile, options = {}) {
-    return new ModActionTestFixture(
-      modId,
-      actionId,
-      ruleFile,
-      conditionFile,
-      options
-    );
+  static async forAction(modId, actionId, ruleFile = null, conditionFile = null, options = {}) {
+    try {
+      let finalRuleFile = ruleFile;
+      let finalConditionFile = conditionFile;
+
+      // Auto-load files if not provided
+      if (!finalRuleFile || !finalConditionFile) {
+        // Load only the missing files
+        if (!finalRuleFile && !finalConditionFile) {
+          // Both files missing - load both
+          const loaded = await this.loadModFiles(modId, actionId);
+          finalRuleFile = loaded.ruleFile;
+          finalConditionFile = loaded.conditionFile;
+        } else {
+          // Partial loading - use tryAutoLoadFiles for individual file loading
+          const loaded = await this.tryAutoLoadFiles(modId, actionId);
+          finalRuleFile = finalRuleFile || loaded.ruleFile;
+          finalConditionFile = finalConditionFile || loaded.conditionFile;
+          
+          // Ensure we have both files after partial loading
+          if (!finalRuleFile) {
+            throw new Error(`Could not auto-load rule file for ${modId}:${actionId}`);
+          }
+          if (!finalConditionFile) {
+            throw new Error(`Could not auto-load condition file for ${modId}:${actionId}`);
+          }
+        }
+      }
+
+      // Use existing ModActionTestFixture constructor
+      return new ModActionTestFixture(modId, actionId, finalRuleFile, finalConditionFile, options);
+
+    } catch (error) {
+      throw new Error(`ModTestFixture.forAction failed for ${modId}:${actionId}: ${error.message}`);
+    }
   }
 
   /**
    * Creates a test fixture for a mod rule.
+   * 
+   * Enhanced version that supports auto-loading of rule and condition files
+   * when they are not provided, while maintaining full backward compatibility.
    *
    * @param {string} modId - The mod identifier
    * @param {string} ruleId - The rule identifier
-   * @param {object} ruleFile - The rule definition JSON
-   * @param {object} conditionFile - The condition definition JSON
-   * @param {object} options - Additional configuration options
-   * @returns {ModRuleTestFixture} Configured test fixture for the rule
+   * @param {object|null} [ruleFile] - The rule definition JSON (auto-loaded if null/undefined)
+   * @param {object|null} [conditionFile] - The condition definition JSON (auto-loaded if null/undefined)
+   * @param {object} [options] - Additional configuration options
+   * @returns {Promise<ModRuleTestFixture>} Configured test fixture for the rule
+   * @throws {Error} If auto-loading fails when files are not provided
    */
-  static forRule(modId, ruleId, ruleFile, conditionFile, options = {}) {
-    return new ModRuleTestFixture(
-      modId,
-      ruleId,
-      ruleFile,
-      conditionFile,
-      options
-    );
+  static async forRule(modId, ruleId, ruleFile = null, conditionFile = null, options = {}) {
+    try {
+      let finalRuleFile = ruleFile;
+      let finalConditionFile = conditionFile;
+
+      // Auto-load files if not provided
+      if (!finalRuleFile || !finalConditionFile) {
+        // Load only the missing files
+        if (!finalRuleFile && !finalConditionFile) {
+          // Both files missing - load both
+          const loaded = await this.loadModFiles(modId, ruleId);
+          finalRuleFile = loaded.ruleFile;
+          finalConditionFile = loaded.conditionFile;
+        } else {
+          // Partial loading - use tryAutoLoadFiles for individual file loading
+          const loaded = await this.tryAutoLoadFiles(modId, ruleId);
+          finalRuleFile = finalRuleFile || loaded.ruleFile;
+          finalConditionFile = finalConditionFile || loaded.conditionFile;
+          
+          // Ensure we have both files after partial loading
+          if (!finalRuleFile) {
+            throw new Error(`Could not auto-load rule file for ${modId}:${ruleId}`);
+          }
+          if (!finalConditionFile) {
+            throw new Error(`Could not auto-load condition file for ${modId}:${ruleId}`);
+          }
+        }
+      }
+
+      // Use existing ModRuleTestFixture constructor
+      return new ModRuleTestFixture(modId, ruleId, finalRuleFile, finalConditionFile, options);
+
+    } catch (error) {
+      throw new Error(`ModTestFixture.forRule failed for ${modId}:${ruleId}: ${error.message}`);
+    }
   }
 
   /**
@@ -69,6 +165,154 @@ export class ModTestFixture {
    */
   static forCategory(categoryName, options = {}) {
     return new ModCategoryTestFixture(categoryName, options);
+  }
+
+  /**
+   * Creates a test fixture for a mod action with explicit auto-loading.
+   * 
+   * This method always attempts to auto-load files and throws clear errors
+   * when files cannot be found, making it ideal for new tests.
+   *
+   * @param {string} modId - The mod identifier (e.g., 'intimacy', 'positioning')
+   * @param {string} actionId - The action identifier (e.g., 'kiss_cheek', 'kneel_before')
+   * @param {object} [options] - Additional configuration options
+   * @returns {Promise<ModActionTestFixture>} Configured test fixture for the action
+   * @throws {Error} If files cannot be auto-loaded
+   */
+  static async forActionAutoLoad(modId, actionId, options = {}) {
+    const { ruleFile, conditionFile } = await this.loadModFiles(modId, actionId);
+    return new ModActionTestFixture(modId, actionId, ruleFile, conditionFile, options);
+  }
+
+  /**
+   * Creates a test fixture for a mod rule with explicit auto-loading.
+   * 
+   * This method always attempts to auto-load files and throws clear errors
+   * when files cannot be found, making it ideal for new tests.
+   *
+   * @param {string} modId - The mod identifier
+   * @param {string} ruleId - The rule identifier
+   * @param {object} [options] - Additional configuration options
+   * @returns {Promise<ModRuleTestFixture>} Configured test fixture for the rule
+   * @throws {Error} If files cannot be auto-loaded
+   */
+  static async forRuleAutoLoad(modId, ruleId, options = {}) {
+    const { ruleFile, conditionFile } = await this.loadModFiles(modId, ruleId);
+    return new ModRuleTestFixture(modId, ruleId, ruleFile, conditionFile, options);
+  }
+
+  /**
+   * Attempts to auto-load rule and condition files without throwing errors.
+   * 
+   * This method is used internally for backward compatibility, returning null
+   * values when files cannot be found instead of throwing errors.
+   *
+   * @param {string} modId - The mod identifier
+   * @param {string} identifier - The action or rule identifier
+   * @returns {Promise<{ruleFile: object|null, conditionFile: object|null}>} Loaded files or null values
+   */
+  static async tryAutoLoadFiles(modId, identifier) {
+    try {
+      return await this.loadModFiles(modId, identifier);
+    } catch {
+      // Return null to indicate auto-loading failed (for backward compatibility)
+      return { ruleFile: null, conditionFile: null };
+    }
+  }
+
+  /**
+   * Loads mod rule and condition files based on naming conventions.
+   * 
+   * Attempts to find files using established naming patterns from the codebase.
+   * Throws descriptive errors with attempted paths when files cannot be found.
+   *
+   * @param {string} modId - The mod identifier
+   * @param {string} identifier - The action or rule identifier
+   * @returns {Promise<{ruleFile: object, conditionFile: object}>} Loaded rule and condition files
+   * @throws {Error} If files cannot be found with detailed error messages
+   */
+  static async loadModFiles(modId, identifier) {
+    const actionName = extractActionName(identifier);
+    const errors = [];
+    let ruleFile = null;
+    let conditionFile = null;
+
+    // Try to load rule file
+    const rulePaths = MOD_FILE_CONVENTIONS.rules.map(pattern => 
+      pattern
+        .replace('{modId}', modId)
+        .replace('{actionName}', actionName)
+        .replace('{fullActionId}', identifier.replace(':', '_'))
+    );
+
+    for (const rulePath of rulePaths) {
+      try {
+        const resolvedPath = resolve(rulePath);
+        const content = await fs.readFile(resolvedPath, 'utf8');
+        ruleFile = JSON.parse(content);
+        break;
+      } catch (error) {
+        errors.push(`Failed to load rule from ${rulePath}: ${error.message}`);
+      }
+    }
+
+    // Try to load condition file
+    const conditionPaths = MOD_FILE_CONVENTIONS.conditions.map(pattern =>
+      pattern
+        .replace('{modId}', modId)
+        .replace('{actionName}', actionName.replace(/_/g, '-')) // Convert all underscores to hyphens for condition files
+        .replace('{fullActionId}', identifier.replace(/[:_]/g, '-')) // Convert colons and underscores to hyphens
+    );
+
+    for (const conditionPath of conditionPaths) {
+      try {
+        const resolvedPath = resolve(conditionPath);
+        const content = await fs.readFile(resolvedPath, 'utf8');
+        conditionFile = JSON.parse(content);
+        break;
+      } catch (error) {
+        errors.push(`Failed to load condition from ${conditionPath}: ${error.message}`);
+      }
+    }
+
+    if (!ruleFile) {
+      throw new Error(`Could not load rule file for ${modId}:${identifier}. Tried paths: ${rulePaths.join(', ')}`);
+    }
+    if (!conditionFile) {
+      throw new Error(`Could not load condition file for ${modId}:${identifier}. Tried paths: ${conditionPaths.join(', ')}`);
+    }
+
+    return { ruleFile, conditionFile };
+  }
+
+  /**
+   * Returns conventional file paths for a given mod and identifier.
+   * 
+   * This utility method helps with debugging and understanding which
+   * paths will be tried during auto-loading.
+   *
+   * @param {string} modId - The mod identifier
+   * @param {string} identifier - The action or rule identifier
+   * @returns {{rulePaths: string[], conditionPaths: string[]}} Arrays of conventional paths
+   */
+  static getConventionalPaths(modId, identifier) {
+    const actionName = extractActionName(identifier);
+    
+    const rulePaths = MOD_FILE_CONVENTIONS.rules.map(pattern => 
+      pattern
+        .replace('{modId}', modId)
+        .replace('{actionName}', actionName)
+        .replace('{fullActionId}', identifier.replace(':', '_'))
+    );
+
+    const conditionPaths = MOD_FILE_CONVENTIONS.conditions.map(pattern =>
+      pattern
+        .replace('{modId}', modId)
+        .replace('{actionName}', actionName.replace(/_/g, '-'))
+        .replace('{fullActionId}', identifier.replace(/[:_]/g, '-'))
+    );
+
+    return { rulePaths, conditionPaths };
   }
 }
 
@@ -99,9 +343,13 @@ class BaseModTestFixture {
       getAllSystemRules: jest
         .fn()
         .mockReturnValue([{ ...ruleFile, actions: expanded }]),
-      getConditionDefinition: jest.fn((id) =>
-        id === conditionId ? conditionFile : undefined
-      ),
+      getConditionDefinition: jest.fn((id) => {
+        // Return condition file if the id matches either the generated conditionId or the actual condition file id
+        if (id === conditionId || (conditionFile && id === conditionFile.id)) {
+          return conditionFile;
+        }
+        return undefined;
+      }),
     };
 
     const handlerFactory = ModTestHandlerFactory.getHandlerFactoryForCategory(
@@ -183,7 +431,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
     this.ruleFile = ruleFile;
     this.conditionFile = conditionFile;
 
-    const conditionId = `${modId}:event-is-action-${actionId.replace(`${modId}:`, '')}`;
+    const conditionId = `${modId}:event-is-action-${actionId.replace(`${modId}:`, '').replace(/_/g, '-')}`;
     this.setupEnvironment(ruleFile, conditionFile, conditionId);
   }
 

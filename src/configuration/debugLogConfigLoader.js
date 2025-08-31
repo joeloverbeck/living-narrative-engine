@@ -273,11 +273,32 @@ export class DebugLogConfigLoader {
         }
       }
 
+      // Validate categorization configuration if present
+      if (parsedResponse.categorization !== undefined) {
+        const categorizationValidation = this.#validateCategorizationConfig(
+          parsedResponse.categorization,
+          logWarn
+        );
+        if (!categorizationValidation.isValid) {
+          logWarn(
+            `[DebugLogConfigLoader] 'categorization' configuration has issues: ${categorizationValidation.message}`
+          );
+          // Don't fail for categorization issues, just warn
+        }
+      }
+
+      // Apply source-based migration enhancements
+      const enhancedConfig = this.#handleSourceBasedMigration(
+        parsedResponse,
+        logDebug,
+        logWarn
+      );
+
       logDebug(
         `[DebugLogConfigLoader] Successfully loaded debug configuration from ${path}`
       );
 
-      return /** @type {DebugLogConfigurationFile} */ (parsedResponse);
+      return /** @type {DebugLogConfigurationFile} */ (enhancedConfig);
     } catch (error) {
       // Errors from fetchWithRetry (fetch/parse failures)
       logError(
@@ -339,6 +360,245 @@ export class DebugLogConfigLoader {
 
     // Check the enabled flag (defaults to true if not specified)
     return config.enabled !== false;
+  }
+
+  /**
+   * Validates categorization configuration structure
+   *
+   * @private
+   * @param {object} categorizationConfig - The categorization configuration
+   * @param {Function} logWarn - Warning logging function
+   * @returns {object} Validation result with isValid and message
+   */
+  #validateCategorizationConfig(categorizationConfig, logWarn) {
+    if (
+      typeof categorizationConfig !== 'object' ||
+      categorizationConfig === null
+    ) {
+      return {
+        isValid: false,
+        message: 'categorization must be an object',
+      };
+    }
+
+    const { strategy, sourceMappings, fallbackCategory } = categorizationConfig;
+
+    // Validate strategy
+    if (strategy !== undefined) {
+      const validStrategies = ['source-based', 'pattern-based', 'hybrid'];
+      if (!validStrategies.includes(strategy)) {
+        return {
+          isValid: false,
+          message: `strategy must be one of: ${validStrategies.join(', ')}`,
+        };
+      }
+    }
+
+    // Validate sourceMappings
+    if (sourceMappings !== undefined) {
+      if (
+        typeof sourceMappings !== 'object' ||
+        sourceMappings === null ||
+        Array.isArray(sourceMappings)
+      ) {
+        return {
+          isValid: false,
+          message: 'sourceMappings must be a non-null object',
+        };
+      }
+
+      // Validate sourceMappings entries
+      for (const [path, category] of Object.entries(sourceMappings)) {
+        if (typeof path !== 'string' || path.trim().length === 0) {
+          return {
+            isValid: false,
+            message: 'sourceMappings keys must be non-empty strings',
+          };
+        }
+        if (typeof category !== 'string' || category.trim().length === 0) {
+          return {
+            isValid: false,
+            message: 'sourceMappings values must be non-empty strings',
+          };
+        }
+      }
+    }
+
+    // Validate fallbackCategory
+    if (fallbackCategory !== undefined) {
+      if (
+        typeof fallbackCategory !== 'string' ||
+        fallbackCategory.trim().length === 0
+      ) {
+        return {
+          isValid: false,
+          message: 'fallbackCategory must be a non-empty string',
+        };
+      }
+    }
+
+    return { isValid: true };
+  }
+
+  /**
+   * Handles source-based migration by applying defaults and enhancements
+   *
+   * @private
+   * @param {object} config - The loaded configuration
+   * @param {Function} logDebug - Debug logging function
+   * @param {Function} logWarn - Warning logging function
+   * @returns {object} Enhanced configuration with migration support
+   */
+  #handleSourceBasedMigration(config, logDebug, logWarn) {
+    // Clone the config to avoid mutating the original
+    const enhancedConfig = JSON.parse(JSON.stringify(config));
+
+    // Initialize categorization section if not present
+    if (!enhancedConfig.categorization) {
+      enhancedConfig.categorization = {};
+      logDebug(
+        '[DebugLogConfigLoader] No categorization config found, applying defaults'
+      );
+    }
+
+    const categorization = enhancedConfig.categorization;
+
+    // Apply default strategy (hybrid for safe migration)
+    if (!categorization.strategy) {
+      categorization.strategy = 'hybrid';
+      logDebug(
+        '[DebugLogConfigLoader] Applied default categorization strategy: hybrid'
+      );
+    }
+
+    // Apply default stack trace extraction
+    if (categorization.enableStackTraceExtraction === undefined) {
+      categorization.enableStackTraceExtraction = true;
+    }
+
+    // Apply default source mappings if not present
+    if (!categorization.sourceMappings) {
+      categorization.sourceMappings = this.#getDefaultSourceMappings();
+      logDebug(
+        `[DebugLogConfigLoader] Applied default source mappings for ${
+          Object.keys(categorization.sourceMappings).length
+        } directories`
+      );
+    }
+
+    // Apply fallback category if not present
+    if (!categorization.fallbackCategory) {
+      categorization.fallbackCategory = 'general';
+    }
+
+    // Apply default migration settings
+    if (!categorization.migration) {
+      categorization.migration = {
+        mode: 'progressive',
+        preserveOldPatterns: true,
+        enableDualCategorization: false,
+      };
+      logDebug(
+        '[DebugLogConfigLoader] Applied default migration settings for progressive rollout'
+      );
+    }
+
+    // Apply default performance settings
+    if (!categorization.performance) {
+      categorization.performance = {
+        stackTrace: {
+          enabled: true,
+          skipFrames: 4,
+          maxDepth: 20,
+          cache: {
+            enabled: true,
+            maxSize: 200,
+            ttl: 300000,
+          },
+        },
+        fileOperations: {
+          bufferSize: 100,
+          flushInterval: 1000,
+          parallelWrites: true,
+          maxFileHandles: 50,
+        },
+      };
+    }
+
+    // Log migration warnings based on strategy
+    if (categorization.strategy === 'source-based') {
+      logWarn(
+        '[DebugLogConfigLoader] Source-based categorization active - pattern-based categorization disabled'
+      );
+    } else if (categorization.strategy === 'hybrid') {
+      logDebug(
+        '[DebugLogConfigLoader] Hybrid categorization mode - using both source and pattern-based routing'
+      );
+    }
+
+    return enhancedConfig;
+  }
+
+  /**
+   * Gets the default source directory mappings
+   *
+   * @private
+   * @returns {object} Default source mappings object
+   */
+  #getDefaultSourceMappings() {
+    return {
+      'src/actions': 'actions',
+      'src/logic': 'logic',
+      'src/entities': 'entities',
+      'src/ai': 'ai',
+      'src/domUI': 'domUI',
+      'src/engine': 'engine',
+      'src/events': 'events',
+      'src/loaders': 'loaders',
+      'src/scopeDsl': 'scopeDsl',
+      'src/initializers': 'initializers',
+      'src/dependencyInjection': 'dependencyInjection',
+      'src/logging': 'logging',
+      'src/configuration': 'configuration',
+      'src/utils': 'utils',
+      'src/constants': 'constants',
+      'src/storage': 'storage',
+      'src/types': 'types',
+      'src/alerting': 'alerting',
+      'src/context': 'context',
+      'src/turns': 'turns',
+      'src/adapters': 'adapters',
+      'src/query': 'query',
+      'src/characterBuilder': 'characterBuilder',
+      'src/prompting': 'prompting',
+      'src/anatomy': 'anatomy',
+      'src/scheduling': 'scheduling',
+      'src/errors': 'errors',
+      'src/interfaces': 'interfaces',
+      'src/clothing': 'clothing',
+      'src/input': 'input',
+      'src/testing': 'testing',
+      'src/modding': 'modding',
+      'src/persistence': 'persistence',
+      'src/data': 'data',
+      'src/shared': 'shared',
+      'src/bootstrapper': 'bootstrapper',
+      'src/commands': 'commands',
+      'src/thematicDirection': 'thematicDirection',
+      'src/models': 'models',
+      'src/llms': 'llms',
+      'src/validation': 'validation',
+      'src/pathing': 'pathing',
+      'src/formatting': 'formatting',
+      'src/ports': 'ports',
+      'src/shutdown': 'shutdown',
+      'src/clichesGenerator': 'clichesGenerator',
+      'src/coreMotivationsGenerator': 'coreMotivationsGenerator',
+      'src/thematicDirectionsManager': 'thematicDirectionsManager',
+      'src/services': 'services',
+      'tests': 'tests',
+      'llm-proxy-server': 'llm-proxy',
+    };
   }
 
   /**

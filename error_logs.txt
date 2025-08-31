@@ -1,0 +1,683 @@
+AnatomyInitializationService: Generated anatomy for entity 'p_erotica:jon_urena_instance'
+consoleLogger.js:151 AnatomyInitializationService: All anatomy generations completed
+consoleLogger.js:151 GameSessionManager._finalizeGameStart: Anatomy generation completed, starting turns.
+consoleLogger.js:151 CommandProcessor: Action execution tracing enabled
+consoleLogger.js:175 Failed to resolve scope 'core:potential_leaders': [TypeError: em?.entities?.values is not a function
+    at Object.getEntities (http://127.0.0.1:8081/…]
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:870
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Error evaluating scope 'core:potential_leaders': ScopeResolutionError: em?.entities?.values is not a function
+    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
+    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
+    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
+    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
+    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
+    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:890
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Failed to resolve scope 'core:actors_in_location': [TypeError: em?.entities?.values is not a function
+    at Object.getEntities (http://127.0.0.1:8081/…]
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:870
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+await in executeInternal
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Error evaluating scope 'core:actors_in_location': ScopeResolutionError: em?.entities?.values is not a function
+    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
+    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
+    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
+    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
+    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
+    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:890
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+await in executeInternal
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Failed to resolve scope 'positioning:actors_in_location_facing': [TypeError: em?.entities?.values is not a function
+    at Object.getEntities (http://127.0.0.1:8081/…]
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:870
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+await in executeInternal
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Error evaluating scope 'positioning:actors_in_location_facing': ScopeResolutionError: em?.entities?.values is not a function
+    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
+    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
+    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
+    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
+    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
+    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:890
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+await in executeInternal
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Failed to resolve scope 'positioning:actors_in_location_not_facing_away_from_actor': [TypeError: em?.entities?.values is not a function
+    at Object.getEntities (http://127.0.0.1:8081/…]
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:870
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+await in executeInternal
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Error evaluating scope 'positioning:actors_in_location_not_facing_away_from_actor': ScopeResolutionError: em?.entities?.values is not a function
+    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
+    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
+    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
+    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
+    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
+    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:890
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+await in executeInternal
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Failed to resolve scope 'core:actors_in_location': [TypeError: em?.entities?.values is not a function
+    at Object.getEntities (http://127.0.0.1:8081/…]
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:870
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+await in executeInternal
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Error evaluating scope 'core:actors_in_location': ScopeResolutionError: em?.entities?.values is not a function
+    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
+    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
+    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
+    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
+    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
+    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:890
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+await in executeInternal
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Failed to resolve scope 'core:actors_in_location': [TypeError: em?.entities?.values is not a function
+    at Object.getEntities (http://127.0.0.1:8081/…]
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:870
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+await in executeInternal
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Error evaluating scope 'core:actors_in_location': ScopeResolutionError: em?.entities?.values is not a function
+    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
+    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
+    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
+    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
+    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
+    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:890
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+await in executeInternal
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Failed to resolve scope 'core:actors_in_location': [TypeError: em?.entities?.values is not a function
+    at Object.getEntities (http://127.0.0.1:8081/…]
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:870
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+await in executeInternal
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:175 Error evaluating scope 'core:actors_in_location': ScopeResolutionError: em?.entities?.values is not a function
+    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
+    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
+    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
+    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
+    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
+    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
+    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
+    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:668
+resolveScope_fn @ MultiTargetResolutionStage.js:890
+await in resolveScope_fn
+resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
+executeInternal @ MultiTargetResolutionStage.js:227
+await in executeInternal
+execute @ PipelineStage.js:49
+executePipeline_fn @ Pipeline.js:85
+await in executePipeline_fn
+(anonymous) @ Pipeline.js:52
+withSpanAsync @ structuredTrace.js:241
+execute @ Pipeline.js:49
+discoverActions @ actionPipelineOrchestrator.js:113
+getValidActionsInternal_fn @ actionDiscoveryService.js:267
+trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
+withSpanAsync @ structuredTrace.js:241
+getValidActions @ actionDiscoveryService.js:205
+await in getValidActions
+get @ availableActionsProvider.js:174
+await in get
+buildChoices @ turnActionChoicePipeline.js:36
+decideAction @ genericTurnStrategy.js:45
+_decideAction @ awaitingActorDecisionState.js:189
+run @ actionDecisionWorkflow.js:34
+_handleActionDecision @ awaitingActorDecisionState.js:102
+enterState @ awaitingActorDecisionState.js:119
+await in enterState
+_transitionToState @ baseTurnHandler.js:260
+await in _transitionToState
+requestAwaitingInputStateTransition @ baseTurnHandler.js:661
+requestAwaitingInputStateTransition @ turnContext.js:249
+_requestAwaitingInput @ turnIdleState.js:140
+startTurn @ turnIdleState.js:72
+startTurn @ genericTurnHandler.js:134
+startTurn @ actorTurnHandler.js:64
+advanceTurn @ turnManager.js:444
+await in advanceTurn
+advanceTurn @ turnManager.js:338
+await in advanceTurn
+start @ turnManager.js:203
+finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
+consoleLogger.js:151 ActionDiscoveryService: Action discovery completed for actor p_erotica:jon_urena_instance with action tracing {actorId: 'p_erotica:jon_urena_instance', actionCount: 7, errorCount: 0, tracedActionCount: 2, totalStagesTracked: 7, …}
+consoleLogger.js:151 FileTraceOutputHandler: Writing trace to file {fileName: 'trace_discovery_p_erotica_jon_urena_instance_2025-08-30T18-05-17_876Z.json', actionId: 'discovery', actorId: 'p_erotica:jon_urena_instance', outputDirectory: './traces/sit-down'}

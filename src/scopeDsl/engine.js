@@ -90,9 +90,28 @@ class ScopeEngine extends IScopeEngine {
     return {
       getEntities: () => {
         const em = runtimeCtx?.entityManager;
-        return em?.getEntities
-          ? em.getEntities()
-          : Array.from(em?.entities?.values() || []);
+        if (em?.getEntities) {
+          return em.getEntities();
+        }
+        
+        // Fallback: try different entity storage patterns
+        if (em?.entities) {
+          // If entities is a Map, use .values()
+          if (typeof em.entities.values === 'function') {
+            return Array.from(em.entities.values());
+          }
+          // If entities is already an array
+          if (Array.isArray(em.entities)) {
+            return em.entities;
+          }
+          // If entities is an object, get values
+          if (typeof em.entities === 'object') {
+            return Object.values(em.entities);
+          }
+        }
+        
+        // Final fallback
+        return [];
       },
       getEntitiesWithComponent: (cid) =>
         runtimeCtx?.entityManager?.getEntitiesWithComponent(cid),

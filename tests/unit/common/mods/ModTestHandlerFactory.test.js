@@ -67,6 +67,7 @@ describe('ModTestHandlerFactory', () => {
         'DISPATCH_EVENT',
         'END_TURN',
         'SET_VARIABLE',
+        'LOG_MESSAGE',
       ];
 
       expectedHandlers.forEach((handlerKey) => {
@@ -75,7 +76,7 @@ describe('ModTestHandlerFactory', () => {
       });
 
       // Verify correct number of handlers
-      expect(Object.keys(handlers)).toHaveLength(7);
+      expect(Object.keys(handlers)).toHaveLength(8);
     });
 
     it('should throw error when entityManager is missing', () => {
@@ -219,6 +220,7 @@ describe('ModTestHandlerFactory', () => {
         'DISPATCH_EVENT',
         'END_TURN',
         'SET_VARIABLE',
+        'LOG_MESSAGE',
         'ADD_COMPONENT',
       ];
 
@@ -227,8 +229,8 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify correct number of handlers (7 standard + 1 ADD_COMPONENT)
-      expect(Object.keys(handlers)).toHaveLength(8);
+      // Verify correct number of handlers (8 standard + 1 ADD_COMPONENT)
+      expect(Object.keys(handlers)).toHaveLength(9);
     });
 
     it('should configure ADD_COMPONENT handler correctly', () => {
@@ -256,7 +258,7 @@ describe('ModTestHandlerFactory', () => {
   });
 
   describe('createMinimalHandlers', () => {
-    it('should create only 3 essential handlers', () => {
+    it('should create only 4 essential handlers', () => {
       const handlers = ModTestHandlerFactory.createMinimalHandlers(
         mockEntityManager,
         mockEventBus,
@@ -267,6 +269,7 @@ describe('ModTestHandlerFactory', () => {
         'GET_NAME',
         'DISPATCH_PERCEPTIBLE_EVENT',
         'END_TURN',
+        'LOG_MESSAGE',
       ];
 
       expectedHandlers.forEach((handlerKey) => {
@@ -274,11 +277,11 @@ describe('ModTestHandlerFactory', () => {
         expect(handlers[handlerKey]).toBeDefined();
       });
 
-      // Verify exactly 3 handlers
-      expect(Object.keys(handlers)).toHaveLength(3);
+      // Verify exactly 4 handlers
+      expect(Object.keys(handlers)).toHaveLength(4);
     });
 
-    it('should include GET_NAME, DISPATCH_PERCEPTIBLE_EVENT, END_TURN', () => {
+    it('should include GET_NAME, DISPATCH_PERCEPTIBLE_EVENT, END_TURN, LOG_MESSAGE', () => {
       const handlers = ModTestHandlerFactory.createMinimalHandlers(
         mockEntityManager,
         mockEventBus,
@@ -288,6 +291,7 @@ describe('ModTestHandlerFactory', () => {
       expect(handlers.GET_NAME).toBeDefined();
       expect(handlers.DISPATCH_PERCEPTIBLE_EVENT).toBeDefined();
       expect(handlers.END_TURN).toBeDefined();
+      expect(handlers.LOG_MESSAGE).toBeDefined();
 
       // Should not include other handlers
       expect(handlers.QUERY_COMPONENT).toBeUndefined();
@@ -406,7 +410,7 @@ describe('ModTestHandlerFactory', () => {
       // Test by calling the factory and checking if it produces the expected result
       const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
       expect(handlers.ADD_COMPONENT).toBeDefined(); // Only positioning has ADD_COMPONENT
-      expect(Object.keys(handlers)).toHaveLength(8); // 7 standard + 1 ADD_COMPONENT
+      expect(Object.keys(handlers)).toHaveLength(9); // 8 standard + 1 ADD_COMPONENT
     });
 
     it('should return createStandardHandlers for other categories', () => {
@@ -417,7 +421,7 @@ describe('ModTestHandlerFactory', () => {
           ModTestHandlerFactory.getHandlerFactoryForCategory(category);
         const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
         expect(handlers.ADD_COMPONENT).toBeUndefined(); // Standard handlers don't have ADD_COMPONENT
-        expect(Object.keys(handlers)).toHaveLength(7); // 7 standard handlers
+        expect(Object.keys(handlers)).toHaveLength(8); // 8 standard handlers
       });
     });
 
@@ -429,7 +433,7 @@ describe('ModTestHandlerFactory', () => {
           ModTestHandlerFactory.getHandlerFactoryForCategory(category);
         const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
         expect(handlers.ADD_COMPONENT).toBeUndefined(); // Standard handlers don't have ADD_COMPONENT
-        expect(Object.keys(handlers)).toHaveLength(7); // 7 standard handlers
+        expect(Object.keys(handlers)).toHaveLength(8); // 8 standard handlers
       });
     });
 

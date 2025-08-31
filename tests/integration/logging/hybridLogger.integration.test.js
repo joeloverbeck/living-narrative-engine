@@ -315,7 +315,7 @@ describe('HybridLogger Integration', () => {
           expectedCategory: 'VALIDATION',
         },
         { message: 'Network request timeout', expectedCategory: 'NETWORK' },
-        { message: 'Error occurred in system', expectedCategory: 'ERROR' },
+        { message: 'Error occurred in system', expectedCategory: 'GENERAL' },
       ];
 
       testCases.forEach(({ message, expectedCategory }) => {

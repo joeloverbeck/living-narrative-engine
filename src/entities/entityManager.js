@@ -524,7 +524,22 @@ class EntityManager extends IEntityManager {
    * @throws {InvalidArgumentError} If componentTypeId is invalid
    */
   getEntitiesWithComponent(componentTypeId) {
-    return this.#queryManager.getEntitiesWithComponent(componentTypeId);
+    const result = this.#queryManager.getEntitiesWithComponent(componentTypeId);
+    
+    // Enhanced logging for debugging park bench scope resolution issue
+    if (componentTypeId === 'positioning:allows_sitting') {
+      this.#logger.info(
+        `[DEBUG] EntityManager.getEntitiesWithComponent('positioning:allows_sitting'): found ${result?.length || 0} entities`,
+        result?.map(entity => ({
+          id: entity.id,
+          hasPositionComponent: this.hasComponent(entity.id, 'core:position'),
+          positionData: this.getComponentData(entity.id, 'core:position'),
+          allowsSittingData: this.getComponentData(entity.id, 'positioning:allows_sitting')
+        }))
+      );
+    }
+    
+    return result;
   }
 
   /**

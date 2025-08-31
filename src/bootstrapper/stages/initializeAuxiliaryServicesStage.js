@@ -9,6 +9,7 @@ import {
   initCurrentTurnActorRenderer,
   initSpeechBubbleRenderer,
   initProcessingIndicatorController,
+  initCriticalLogNotifier,
 } from './auxiliary/index.js';
 
 /**
@@ -94,6 +95,15 @@ export async function initializeAuxiliaryServicesStage(
     [
       'ProcessingIndicatorController',
       initProcessingIndicatorController({
+        container,
+        gameEngine,
+        logger,
+        tokens,
+      }),
+    ],
+    [
+      'CriticalLogNotifier',
+      initCriticalLogNotifier({
         container,
         gameEngine,
         logger,

@@ -222,9 +222,9 @@ describe('ModTestHandlerFactory Performance Tests', () => {
         );
       }
 
-      // Each handler set should have exactly 7 handlers
+      // Each handler set should have exactly 8 handlers
       handlers.forEach((handlerSet) => {
-        expect(Object.keys(handlerSet)).toHaveLength(7);
+        expect(Object.keys(handlerSet)).toHaveLength(8);
       });
 
       // Verify that handlers are properly instantiated (not sharing references inappropriately)
@@ -331,7 +331,7 @@ describe('ModTestHandlerFactory Performance Tests', () => {
 
       // All results should be valid
       results.forEach(({ handlers }) => {
-        expect(Object.keys(handlers)).toHaveLength(7);
+        expect(Object.keys(handlers)).toHaveLength(8);
       });
     });
   });

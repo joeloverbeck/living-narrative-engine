@@ -232,54 +232,91 @@ export default function createFilterResolver({
             }
 
             // Enhanced trace logging for debugging filter evaluation
+            const entityDetails = {
+              itemId: item,
+              hasEntityComponents: !!evalCtx.entity?.components,
+              entityComponentKeys: evalCtx.entity?.components
+                ? Object.keys(evalCtx.entity.components)
+                : [],
+              actorLocationId: evalCtx.actor?.components?.['core:position']?.locationId,
+              entityLocationId: evalCtx.entity?.components?.['core:position']?.locationId,
+              hasPositionComponent: !!evalCtx.entity?.components?.['core:position'],
+              hasAllowsSittingComponent: !!evalCtx.entity?.components?.['positioning:allows_sitting'],
+              allowsSittingSpots: evalCtx.entity?.components?.['positioning:allows_sitting']?.spots,
+              logic: node.logic,
+            };
+
             if (trace) {
               trace.addLog(
                 'debug',
                 `Evaluating filter for item ${item}`,
                 source,
-                {
-                  itemId: item,
-                  hasEntityComponents: !!evalCtx.entity?.components,
-                  entityComponentKeys: evalCtx.entity?.components
-                    ? Object.keys(evalCtx.entity.components)
-                    : [],
-                  logic: node.logic,
-                }
+                entityDetails
               );
             }
 
-            // Special logging for park bench debugging
-            if (item === 'p_erotica:park_bench_instance') {
-              console.log('[DEBUG] Evaluating park bench in filter:');
-              console.log(
-                '  - Entity components:',
-                evalCtx.entity?.components
-                  ? Object.keys(evalCtx.entity.components)
-                  : 'none'
-              );
-              console.log(
-                '  - Actor locationId:',
-                evalCtx.actor?.components?.['core:position']?.locationId
-              );
-              console.log(
-                '  - Entity locationId:',
-                evalCtx.entity?.components?.['core:position']?.locationId
-              );
-              console.log(
-                '  - Sitting spots:',
-                evalCtx.entity?.components?.['positioning:allows_sitting']
-                  ?.spots
-              );
-            }
 
             const evalResult = logicEval.evaluate(node.logic, evalCtx);
+            
+            // Enhanced trace logging with detailed filter evaluation results
             if (evalResult) {
               result.add(item);
               if (trace) {
-                trace.addLog('debug', `Item ${item} passed filter`, source);
+                trace.addLog('debug', `Item ${item} passed filter`, 
+                  'ScopeEngine.filterEvaluation', 
+                  {
+                    ...entityDetails,
+                    filterPassed: true,
+                    evaluationResult: evalResult
+                  }
+                );
               }
-            } else if (trace) {
-              trace.addLog('debug', `Item ${item} failed filter`, source);
+            } else {
+              if (trace) {
+                // For failed filters, try to provide more details about why it failed
+                const failureDetails = {
+                  ...entityDetails,
+                  filterPassed: false,
+                  evaluationResult: evalResult,
+                };
+
+                // Add specific failure analysis for common filter patterns
+                if (node.logic?.and || node.logic?.['==']) {
+                  failureDetails.filterAnalysis = 'Complex logic evaluation failed';
+                  
+                  // Try to analyze location matching specifically
+                  const locationCheck = node.logic?.and?.find(condition => 
+                    condition?.['==']?.[0]?.var === 'entity.components.core:position.locationId'
+                  );
+                  if (locationCheck) {
+                    const expectedLocation = evalCtx.actor?.components?.['core:position']?.locationId;
+                    const actualLocation = evalCtx.entity?.components?.['core:position']?.locationId;
+                    failureDetails.locationMismatch = {
+                      expected: expectedLocation,
+                      actual: actualLocation,
+                      matches: expectedLocation === actualLocation
+                    };
+                  }
+
+                  // Try to analyze spot availability
+                  const spotCheck = node.logic?.and?.find(condition =>
+                    condition?.some?.[0]?.var === 'entity.components.positioning:allows_sitting.spots'
+                  );
+                  if (spotCheck) {
+                    const spots = evalCtx.entity?.components?.['positioning:allows_sitting']?.spots;
+                    failureDetails.spotAvailability = {
+                      spots: spots,
+                      hasNullSpots: Array.isArray(spots) ? spots.some(spot => spot === null) : false,
+                      spotCount: Array.isArray(spots) ? spots.length : 0
+                    };
+                  }
+                }
+
+                trace.addLog('debug', `Item ${item} failed filter`,
+                  'ScopeEngine.filterEvaluation',
+                  failureDetails
+                );
+              }
             }
           } catch (error) {
             // Re-throw errors for missing condition references

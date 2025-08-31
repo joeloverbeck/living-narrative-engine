@@ -662,7 +662,7 @@ describe('RemoteLogger Integration Tests', () => {
 
       // Verify categories are detected correctly (order may vary due to batching)
       expect(allCategories).toContain('engine');
-      expect(allCategories).toContain('ecs');
+      expect(allCategories).toContain('warning'); // warn-level logs get 'warning' category
       expect(allCategories).toContain('ai');
       expect(allCategories).toContain('error');
       expect(allCategories).toContain('anatomy');
@@ -723,7 +723,7 @@ describe('RemoteLogger Integration Tests', () => {
 
       // Verify expected categories are present
       expect(allCategories).toContain('engine');
-      expect(allCategories).toContain('error'); // UI failures are categorized as errors
+      expect(allCategories).toContain('warning'); // warn-level logs get 'warning' category, not 'error'
       expect(allCategories).toContain('ai');
       expect(allCategories).toContain('network');
 

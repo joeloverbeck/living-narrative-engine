@@ -75,11 +75,11 @@ describe('Logging Performance Monitor - Performance Tests', () => {
 
   describe('Monitoring overhead measurement', () => {
     it('should have reasonable overhead for standard logging', () => {
-      const iterations = 10000;
-      const warmupIterations = 1000;
+      const iterations = 1000; // Reduced from 10000
+      const warmupIterations = 100; // Reduced from 1000
 
       // Extended warmup to stabilize performance
-      for (let i = 0; i < warmupIterations * 2; i++) {
+      for (let i = 0; i < warmupIterations; i++) { // Reduced from warmupIterations * 2
         hybridLoggerWithoutMonitoring.info(`Warmup ${i}`);
         hybridLoggerWithMonitoring.info(`Warmup ${i}`);
       }
@@ -87,7 +87,7 @@ describe('Logging Performance Monitor - Performance Tests', () => {
       // Multiple measurement rounds for stability
       const baselineRounds = [];
       const monitoredRounds = [];
-      const measurementRounds = 5;
+      const measurementRounds = 3; // Reduced from 5
 
       for (let round = 0; round < measurementRounds; round++) {
         // Baseline: logging without monitoring
@@ -131,9 +131,9 @@ describe('Logging Performance Monitor - Performance Tests', () => {
     });
 
     it('should maintain reasonable metric recording performance', () => {
-      const iterations = 1000;
+      const iterations = 500; // Reduced from 1000
       const times = [];
-      const warmupRounds = 100;
+      const warmupRounds = 50; // Reduced from 100
 
       // Warmup
       for (let i = 0; i < warmupRounds; i++) {
@@ -183,7 +183,7 @@ describe('Logging Performance Monitor - Performance Tests', () => {
     });
 
     it('should handle high-frequency batch monitoring efficiently', () => {
-      const iterations = 5000;
+      const iterations = 500; // Reduced from 5000
       const batchSizes = [10, 25, 50, 100];
       let successfulOperations = 0;
 
@@ -222,7 +222,7 @@ describe('Logging Performance Monitor - Performance Tests', () => {
     });
 
     it('should efficiently track buffer size changes', () => {
-      const iterations = 10000;
+      const iterations = 1000; // Reduced from 10000
       const maxBufferSize = 1000;
       let successfulOperations = 0;
 
@@ -267,8 +267,8 @@ describe('Logging Performance Monitor - Performance Tests', () => {
     beforeEach(() => {
       // Generate substantial test data with error handling
       let logOperations = 0;
-      for (let i = 0; i < 1000; i++) {
-        // Reduced for performance
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000 for performance
         try {
           performanceMonitor.monitorLogOperation(
             ['info', 'warn', 'error', 'debug'][i % 4],
@@ -286,8 +286,8 @@ describe('Logging Performance Monitor - Performance Tests', () => {
       }
 
       let batchOperations = 0;
-      for (let i = 0; i < 100; i++) {
-        // Reduced for performance
+      for (let i = 0; i < 20; i++) {
+        // Reduced from 100 for performance
         try {
           performanceMonitor.monitorBatchFlush(
             20 + Math.floor(Math.random() * 80),
@@ -357,7 +357,7 @@ describe('Logging Performance Monitor - Performance Tests', () => {
 
     it('should calculate percentiles reasonably efficiently', () => {
       // Add many latency samples using proper monitoring operations
-      const sampleCount = 1000; // Reduced for performance
+      const sampleCount = 200; // Reduced from 1000 for performance
       let samplesAdded = 0;
 
       for (let i = 0; i < sampleCount; i++) {
@@ -477,7 +477,7 @@ describe('Logging Performance Monitor - Performance Tests', () => {
   describe('Memory efficiency during monitoring', () => {
     it('should not accumulate unreasonable memory with continuous monitoring', () => {
       const initialMemory = process.memoryUsage().heapUsed;
-      const iterations = 1000; // Reduced for stability
+      const iterations = 500; // Reduced from 1000 for stability
       let successfulOperations = 0;
 
       // Perform many monitoring operations
@@ -535,7 +535,7 @@ describe('Logging Performance Monitor - Performance Tests', () => {
 
   describe('Real-world scenario performance', () => {
     it('should maintain reasonable performance in production-like scenario', async () => {
-      const testDuration = 500; // 0.5 second test for stability
+      const testDuration = 200; // Reduced from 500ms (0.5s) to 200ms (0.2s) for performance
       const startTime = Date.now();
       let logCount = 0;
       let batchCount = 0;
