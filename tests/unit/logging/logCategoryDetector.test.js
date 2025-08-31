@@ -3,10 +3,9 @@
  * @see src/logging/logCategoryDetector.js
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import LogCategoryDetector, {
-  LRUCache,
-} from '../../../src/logging/logCategoryDetector.js';
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import LogCategoryDetector from '../../../src/logging/logCategoryDetector.js';
+import LRUCache from '../../../src/utils/lruCache.js';
 
 describe('LRUCache', () => {
   let cache;
@@ -553,12 +552,10 @@ describe('LogCategoryDetector', () => {
 
     it('should clear cache when patterns change', () => {
       detector.detectCategory('Test message');
-      let stats = detector.getStats();
-      const initialCount = stats.detectionCount;
 
       detector.addPattern('new', /new/i);
 
-      stats = detector.getStats();
+      const stats = detector.getStats();
       expect(stats.detectionCount).toBe(0); // Cache cleared
     });
 

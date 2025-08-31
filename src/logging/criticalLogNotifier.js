@@ -5,6 +5,7 @@
 
 import { RendererBase } from '../domUI/rendererBase.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
+import DragHandler from './dragHandler.js';
 
 /** @typedef {import('./types.js').CriticalLogEntry} CriticalLogEntry */
 /** @typedef {import('./types.js').NotifierConfig} NotifierConfig */
@@ -33,6 +34,7 @@ class CriticalLogNotifier extends RendererBase {
   #updateTimer = null;
   #keyboardHandler = null;
   #animationTimer = null;
+  #dragHandler = null;
 
   /**
    * Creates a new CriticalLogNotifier instance.
@@ -107,6 +109,9 @@ class CriticalLogNotifier extends RendererBase {
     this.#createContainer();
     this.#attachEventListeners();
     this.#startUpdateTimer();
+
+    // Add drag functionality
+    this.#enableDragging();
 
     // Set up auto-dismiss if configured
     if (this.#config.autoDismissAfter) {
@@ -688,11 +693,18 @@ class CriticalLogNotifier extends RendererBase {
    */
   #loadPosition() {
     try {
-      const saved = localStorage.getItem('lne-critical-notifier-position');
-      return saved || this.#config.notificationPosition;
+      const customPosition = localStorage.getItem('lne-critical-notifier-position-custom');
+      if (customPosition === 'true') {
+        const saved = localStorage.getItem('lne-critical-notifier-position');
+        if (saved && this.#isValidPosition(saved)) {
+          return saved;
+        }
+      }
     } catch {
-      return this.#config.notificationPosition;
+      // Fallback to config
     }
+
+    return this.#config.notificationPosition;
   }
 
   /**
@@ -710,6 +722,63 @@ class CriticalLogNotifier extends RendererBase {
         e
       );
     }
+  }
+
+  /**
+   * Saves position preference with custom flag.
+   *
+   * @private
+   * @param {string} position - New position
+   */
+  #savePositionPreference(position) {
+    try {
+      localStorage.setItem('lne-critical-notifier-position', position);
+      localStorage.setItem('lne-critical-notifier-position-custom', 'true');
+      this.logger.debug(`${this._logPrefix} Position saved: ${position}`);
+    } catch (e) {
+      this.logger.warn(`${this._logPrefix} Failed to save position preference`, e);
+    }
+  }
+
+  /**
+   * Validates if a position string is valid.
+   *
+   * @private
+   * @param {string} position - Position to validate
+   * @returns {boolean} True if valid
+   */
+  #isValidPosition(position) {
+    const validPositions = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+    return validPositions.includes(position);
+  }
+
+  /**
+   * Enables drag functionality for the badge.
+   *
+   * @private
+   */
+  #enableDragging() {
+    if (this.#dragHandler) return;
+
+    const badgeContainer = this.#badgeContainer;
+    if (!badgeContainer) return;
+
+    this.#dragHandler = new DragHandler({
+      element: badgeContainer,
+      container: this.#container,
+      callbacks: {
+        onDragStart: () => {
+          this.logger.debug(`${this._logPrefix} User started dragging notification`);
+        },
+        onDragEnd: (position) => {
+          this.updatePosition(position);
+          this.#savePositionPreference(position);
+        },
+      },
+      logger: this.logger,
+    });
+
+    this.#dragHandler.enable();
   }
 
   /**
@@ -817,7 +886,30 @@ class CriticalLogNotifier extends RendererBase {
   /**
    * Override dispose to clean up timers and call parent cleanup.
    */
+  /**
+   * Reset position to default configuration.
+   */
+  resetPosition() {
+    try {
+      localStorage.removeItem('lne-critical-notifier-position');
+      localStorage.removeItem('lne-critical-notifier-position-custom');
+    } catch {
+      // Ignore storage errors
+    }
+
+    this.#position = this.#config.notificationPosition;
+    this.updatePosition(this.#position);
+    
+    this.logger.debug(`${this._logPrefix} Position reset to default: ${this.#position}`);
+  }
+
   dispose() {
+    // Clean up drag handler
+    if (this.#dragHandler) {
+      this.#dragHandler.destroy();
+      this.#dragHandler = null;
+    }
+
     // Clean up update timer
     if (this.#updateTimer) {
       clearInterval(this.#updateTimer);

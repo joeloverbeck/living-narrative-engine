@@ -3,6 +3,8 @@
  * @see remoteLogger.js
  */
 
+import LRUCache from '../utils/lruCache.js';
+
 /**
  * @typedef {object} SourceLocation
  * @property {string} file - File name
@@ -86,6 +88,18 @@ class LogMetadataEnricher {
   #ErrorConstructor;
 
   /**
+   * @private
+   * @type {LRUCache|null}
+   */
+  #stackTraceCache;
+
+  /**
+   * @private
+   * @type {object|null}
+   */
+  #sourceMapResolver;
+
+  /**
    * Creates a LogMetadataEnricher instance
    *
    * @param {EnricherConfig} [config] - Configuration options
@@ -98,6 +112,8 @@ class LogMetadataEnricher {
       enableBrowser = true,
       lazyLoadExpensive = false,
       ErrorConstructor = Error,
+      stackCacheSize = 200,
+      sourceMapResolver = null,
     } = config;
 
     this.#level = level;
@@ -106,9 +122,20 @@ class LogMetadataEnricher {
     this.#enableBrowser = enableBrowser;
     this.#lazyLoadExpensive = lazyLoadExpensive;
     this.#ErrorConstructor = ErrorConstructor;
+    this.#stackTraceCache = enableSource ? new LRUCache(stackCacheSize) : null;
+    this.#sourceMapResolver = sourceMapResolver;
 
     // Initialize browser-specific regex patterns for stack parsing
+    // Order matters - more specific patterns should come first
     this.#browserPatterns = new Map([
+      // Webpack patterns (check these first as they're more specific)
+      // webpack-dev: "at Function.name (webpack-internal:///./src/file.js:10:15)"
+      ['webpack-dev', /at\s+(?:(.+?)\s+)?\(webpack-internal:\/\/\/(.+?):(\d+):(\d+)\)/],
+      // webpack-prod: "at t.method (https://example.com/bundle.min.js:1:12345)"
+      ['webpack-prod', /at\s+([a-z])\.[a-z]+\s+\((.+?):(\d+):(\d+)\)/i],
+      // webpack-eval: "at Function eval at <anonymous> (file.js:10:20)"
+      ['webpack-eval', /at\s+.+?\s+eval\s+at\s+<anonymous>\s+\((.+?):(\d+):(\d+)\)/],
+      
       // Chrome/Edge: "at function (file:line:col)" or "at file:line:col"
       ['chrome', /at\s+(?:.*?\s+)?\(?(.+?):(\d+):(\d+)\)?/],
       // Firefox: "function@file:line:col"
@@ -463,18 +490,20 @@ class LogMetadataEnricher {
       const stack = new this.#ErrorConstructor().stack;
       if (!stack) return undefined;
 
-      const lines = stack.split('\n');
-
-      // Dynamic depth detection - skip internal frames
-      for (let i = skipFrames; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (line && !this.#isInternalFrame(line)) {
-          const parsed = this.#parseStackLine(line);
-          if (parsed) {
-            return parsed;
-          }
-        }
+      // Check cache first
+      const cacheKey = this.#getCacheKey(stack, skipFrames);
+      if (this.#stackTraceCache?.has(cacheKey)) {
+        return this.#stackTraceCache.get(cacheKey);
       }
+
+      const result = this.#parseStackWithEnhancements(stack, skipFrames);
+      
+      // Cache the result
+      if (this.#stackTraceCache && result) {
+        this.#stackTraceCache.set(cacheKey, result);
+      }
+      
+      return result;
     } catch {
       // Ignore source detection errors
     }
@@ -534,31 +563,146 @@ class LogMetadataEnricher {
   }
 
   /**
-   * Parse a stack trace line to extract file and line number
+   * Generate cache key for stack trace
+   * 
+   * @private
+   * @param {string} stack - Stack trace
+   * @param {number} skipFrames - Number of frames to skip
+   * @returns {string} Cache key
+   */
+  #getCacheKey(stack, skipFrames) {
+    // Use first 100 chars of stack + skipFrames for cache key
+    const prefix = stack.substring(0, 100);
+    let hash = 0;
+    for (let i = 0; i < stack.length; i++) {
+      const char = stack.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return `${prefix}:${skipFrames}:${hash}`;
+  }
+
+  /**
+   * Parse stack with enhanced webpack support
+   * 
+   * @private
+   * @param {string} stack - Stack trace
+   * @param {number} skipFrames - Number of frames to skip
+   * @returns {string|undefined} Parsed source location
+   */
+  #parseStackWithEnhancements(stack, skipFrames) {
+    const lines = stack.split('\n');
+    
+    for (let i = skipFrames; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (line && !this.#isInternalFrame(line)) {
+        // Try enhanced patterns including webpack
+        const parsed = this.#parseStackLineEnhanced(line);
+        if (parsed) {
+          return parsed;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Parse a stack trace line with enhanced webpack support
    *
    * @private
    * @param {string} line - Stack trace line
    * @returns {string|undefined} Parsed source location
    */
-  #parseStackLine(line) {
-    // Try each browser pattern
-    for (const [, pattern] of this.#browserPatterns) {
+  #parseStackLineEnhanced(line) {
+    // Try each browser pattern including new webpack patterns
+    for (const [patternName, pattern] of this.#browserPatterns) {
       const match = line.match(pattern);
       if (match) {
-        const file = match[1];
-        const lineNumber = match[2];
-
-        // Extract just the filename from the path
-        const fileName = file.split('/').pop().split('\\').pop();
-
-        return `${fileName}:${lineNumber}`;
+        // Special handling for webpack patterns
+        if (patternName.startsWith('webpack')) {
+          return this.#handleWebpackFrame(match, patternName);
+        }
+        // Regular browser handling (existing code)
+        return this.#extractSourceFromMatch(match);
       }
     }
-
     return undefined;
   }
 
+  /**
+   * Extract source from regular browser match
+   * 
+   * @private
+   * @param {Array} match - Regex match result
+   * @returns {string} Source location
+   */
+  #extractSourceFromMatch(match) {
+    const file = match[1];
+    const lineNumber = match[2];
+    // Extract just the filename from the path
+    const fileName = this.#normalizeFilePath(file);
+    return `${fileName}:${lineNumber}`;
+  }
 
+  /**
+   * Handle webpack-specific stack frames
+   * 
+   * @private
+   * @param {Array} match - Regex match result
+   * @param {string} patternType - Type of webpack pattern
+   * @returns {string} Source location
+   */
+  #handleWebpackFrame(match, patternType) {
+    if (patternType === 'webpack-eval') {
+      // webpack-eval has different capture groups
+      const [, file, lineNumber] = match;
+      const fileName = this.#normalizeFilePath(file);
+      return `${fileName}:${lineNumber}`;
+    }
+    
+    const [, , file, lineNumber, column] = match;
+    
+    if (patternType === 'webpack-dev') {
+      // webpack-internal:///./src/file.js -> src/file.js
+      const normalizedPath = file.replace(/^\.\//, '');
+      const fileName = normalizedPath.split('/').pop();
+      return `${fileName}:${lineNumber}`;
+    }
+    
+    if (patternType === 'webpack-prod' && this.#sourceMapResolver) {
+      // Attempt source map resolution for production builds
+      try {
+        const resolved = this.#sourceMapResolver.resolveSync(file, lineNumber, column);
+        if (resolved) {
+          return `${resolved.source}:${resolved.line}`;
+        }
+      } catch {
+        // Fall through to default handling
+      }
+    }
+    
+    // Fallback to basic extraction
+    const fileName = this.#normalizeFilePath(file);
+    return `${fileName}:${lineNumber}`;
+  }
+
+  /**
+   * Normalize file path by removing common prefixes and extracting filename
+   * 
+   * @private
+   * @param {string} path - File path
+   * @returns {string} Normalized filename
+   */
+  #normalizeFilePath(path) {
+    // Remove common prefixes
+    let normalized = path;
+    normalized = normalized.replace(/^(file:\/\/\/|https?:\/\/[^/]+\/)/, '');
+    normalized = normalized.replace(/^webpack-internal:\/\/\//, '');
+    normalized = normalized.replace(/^\.\//, '');
+    
+    // Extract just filename for display
+    return normalized.split('/').pop().split('\\').pop().split('?')[0];
+  }
 
   /**
    * Map file path to logical category

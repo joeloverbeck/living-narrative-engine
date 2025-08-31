@@ -56,6 +56,11 @@ export const DEFAULT_CONFIG = {
     memoryWarningThreshold: 100, // MB
     slowLogThreshold: 1000, // From existing config
   },
+  stackParsing: {
+    stackCacheSize: 200, // Number of stack traces to cache
+    sourceMapResolution: false, // Enable/disable source map resolution
+    webpackDetection: true, // Enable/disable webpack pattern detection
+  },
   filtering: {
     enabled: true,
     strategy: 'mask',

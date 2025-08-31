@@ -104,7 +104,7 @@
     "bufferSize": 50,
     "notificationPosition": "top-right",
     "autoDismissAfter": null,
-    "soundEnabled": false,
+    "soundEnabled": true,
     "minimumLevel": "warn"
   }
 }
