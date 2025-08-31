@@ -1,6 +1,36 @@
 /**
  * @file Integration tests for RemoteLogger with real network scenarios
  * @see src/logging/remoteLogger.js
+ * 
+ * IMPORTANT: RemoteLogger Buffering Modes & Behaviors
+ * ====================================================
+ * 
+ * RemoteLogger has two buffering modes:
+ * 
+ * 1. Priority Buffering (default in production):
+ *    - Logs are sent in priority order: error > warn > info > debug
+ *    - Ensures critical logs are sent first during network issues
+ *    - Error logs trigger immediate flush regardless of batch settings
+ *    - Optimizes for operational visibility of problems
+ * 
+ * 2. FIFO Buffering (used in most tests):
+ *    - Logs are sent in the order they were received
+ *    - Maintains chronological sequence of events
+ *    - Enabled via disablePriorityBuffering: true
+ *    - Provides predictable behavior for test assertions
+ * 
+ * Additional Behaviors:
+ * - Adaptive Batching: Dynamically adjusts batch sizes based on success/failure
+ * - Circuit Breaker: Prevents cascading failures during network outages
+ * - Memory Pressure: May trigger early flushes when buffers grow too large
+ * - Dual Buffer System: Maintains both legacy buffer and priority-specific buffers
+ * - Immediate Error Flush: Error logs always trigger immediate send, even in batch mode
+ * 
+ * Test Configuration Notes:
+ * - createTestConfig() sets disablePriorityBuffering: true by default
+ * - Priority buffering tests must explicitly enable it in their config
+ * - Always account for immediate error flush when writing assertions
+ * - Use jest.runOnlyPendingTimers() to control async timing in tests
  */
 
 import {
@@ -124,10 +154,19 @@ describe('RemoteLogger Integration Tests', () => {
   let originalFetch;
   let mockConsoleLogger;
 
-  // Helper function to create standardized test configuration
+  /**
+   * Helper function to create standardized test configuration
+   * 
+   * Default Configuration Rationale:
+   * - disablePriorityBuffering: true - Ensures FIFO log ordering for predictable test assertions
+   *   (Production uses priority buffering by default, but tests need deterministic ordering)
+   * - disableAdaptiveBatching: true - Prevents dynamic batch size changes during tests
+   * - Short timeouts and intervals - Speeds up test execution with fake timers
+   */
   const createTestConfig = (overrides = {}) => ({
     skipServerReadinessValidation: true,
     disableAdaptiveBatching: true, // Disable adaptive batching for predictable tests
+    disablePriorityBuffering: true, // Disable priority buffering to maintain FIFO order in tests
     initialConnectionDelay: 0, // Remove initial delay for tests
     retryBaseDelay: 10, // Fast retries for tests
     retryMaxDelay: 50, // Short max delay for tests
@@ -140,16 +179,18 @@ describe('RemoteLogger Integration Tests', () => {
 
   beforeEach(() => {
     jest.clearAllTimers();
+    jest.clearAllMocks(); // Clear all mocks before setting up new ones
     jest.useFakeTimers();
 
     // Mock Date.now() to work with Jest's fake timers
     // Jest's fake timers also mock Date.now automatically in newer versions
     jest.useFakeTimers('modern');
 
+    // Create a fresh mock server for each test
     mockServer = new MockServer();
     originalFetch = global.fetch;
 
-    // Mock fetch to use our mock server
+    // Mock fetch to use our mock server with a fresh implementation
     global.fetch = jest.fn().mockImplementation(async (url, config) => {
       return await mockServer.handleRequest(url);
     });
@@ -186,13 +227,26 @@ describe('RemoteLogger Integration Tests', () => {
   });
 
   afterEach(() => {
+    // Destroy the logger immediately
     if (remoteLogger) {
       remoteLogger.destroy();
+      remoteLogger = null;
     }
+    
+    // Clear pending timers without running them
+    jest.clearAllTimers();
+    
+    // Restore original fetch
     global.fetch = originalFetch;
-    jest.runOnlyPendingTimers();
+    
+    // Switch back to real timers
     jest.useRealTimers();
+    
+    // Clear all mocks
     jest.restoreAllMocks(); // This will restore Date.now
+    jest.clearAllMocks(); // Clear all mock call history
+    
+    // Reset mock server
     mockServer.reset();
   });
 
@@ -808,6 +862,166 @@ describe('RemoteLogger Integration Tests', () => {
 
       // Failed logs should fall back to console
       expect(mockConsoleLogger.warn).toHaveBeenCalled();
+    });
+  });
+
+  describe('priority buffering behavior', () => {
+    it('should send logs in priority order when priority buffering is enabled', async () => {
+      // Create config with priority buffering explicitly enabled
+      remoteLogger = new RemoteLogger({
+        config: createTestConfig({
+          disablePriorityBuffering: false, // Enable priority buffering
+          batchSize: 10,
+          flushInterval: 100,
+        }),
+        dependencies: { consoleLogger: mockConsoleLogger },
+      });
+
+      // Mock response for the immediate flush
+      mockServer.mockResponse({
+        ok: true,
+        json: () => Promise.resolve({ success: true, processed: 4 }),
+      });
+
+      // Add logs in mixed order (error will flush ALL logs immediately in priority order)
+      remoteLogger.debug('Debug message');
+      remoteLogger.info('Info message');
+      remoteLogger.warn('Warning message');
+      remoteLogger.error('Error message'); // This triggers immediate flush of ALL logs
+
+      await jest.runAllTimersAsync();
+
+      // Verify exactly one request was made (error triggers immediate flush with all logs)
+      expect(mockServer.getDebugLogRequestCount()).toBe(1);
+
+      // Find the debug log request
+      const debugLogCalls = global.fetch.mock.calls.filter(
+        (call) => call[0] === 'http://localhost:3001/api/debug-log'
+      );
+      expect(debugLogCalls.length).toBe(1);
+
+      // The single request should have all logs in priority order: error > warn > info > debug
+      const requestBody = JSON.parse(debugLogCalls[0][1].body);
+      expect(requestBody.logs).toHaveLength(4);
+      expect(requestBody.logs[0].level).toBe('error');
+      expect(requestBody.logs[0].message).toBe('Error message');
+      expect(requestBody.logs[1].level).toBe('warn');
+      expect(requestBody.logs[1].message).toBe('Warning message');
+      expect(requestBody.logs[2].level).toBe('info');
+      expect(requestBody.logs[2].message).toBe('Info message');
+      expect(requestBody.logs[3].level).toBe('debug');
+      expect(requestBody.logs[3].message).toBe('Debug message');
+    });
+
+    it('should send logs in FIFO order when priority buffering is disabled', async () => {
+      // Create config with priority buffering explicitly disabled
+      remoteLogger = new RemoteLogger({
+        config: createTestConfig({
+          disablePriorityBuffering: true, // Disable priority buffering
+          batchSize: 10,
+          flushInterval: 100,
+        }),
+        dependencies: { consoleLogger: mockConsoleLogger },
+      });
+
+      // Mock multiple responses since error logs trigger immediate flush
+      mockServer.mockResponse({
+        ok: true,
+        json: () => Promise.resolve({ success: true, processed: 2 }),
+      });
+      mockServer.mockResponse({
+        ok: true,
+        json: () => Promise.resolve({ success: true, processed: 2 }),
+      });
+
+      // Add logs in specific order (error will trigger immediate flush)
+      remoteLogger.debug('First debug');
+      remoteLogger.error('Second error'); // This triggers immediate flush
+      remoteLogger.info('Third info');
+      remoteLogger.warn('Fourth warn');
+
+      await jest.runAllTimersAsync();
+      
+      // Explicitly flush remaining logs
+      await remoteLogger.flush();
+      await jest.runAllTimersAsync();
+
+      // Verify requests were made
+      expect(mockServer.getDebugLogRequestCount()).toBeGreaterThanOrEqual(2);
+
+      // Find all debug log requests
+      const debugLogCalls = global.fetch.mock.calls.filter(
+        (call) => call[0] === 'http://localhost:3001/api/debug-log'
+      );
+      expect(debugLogCalls.length).toBeGreaterThanOrEqual(2);
+
+      // First request should have first debug and error (FIFO up to immediate flush)
+      const firstRequestBody = JSON.parse(debugLogCalls[0][1].body);
+      expect(firstRequestBody.logs).toHaveLength(2);
+      expect(firstRequestBody.logs[0].level).toBe('debug');
+      expect(firstRequestBody.logs[0].message).toBe('First debug');
+      expect(firstRequestBody.logs[1].level).toBe('error');
+      expect(firstRequestBody.logs[1].message).toBe('Second error');
+
+      // Second request should have remaining logs in FIFO order
+      const secondRequestBody = JSON.parse(debugLogCalls[1][1].body);
+      expect(secondRequestBody.logs).toHaveLength(2);
+      expect(secondRequestBody.logs[0].level).toBe('info');
+      expect(secondRequestBody.logs[0].message).toBe('Third info');
+      expect(secondRequestBody.logs[1].level).toBe('warn');
+      expect(secondRequestBody.logs[1].message).toBe('Fourth warn');
+    });
+
+    it('should handle priority buffering with large batches correctly', async () => {
+      // Create config with priority buffering enabled and larger batch size
+      remoteLogger = new RemoteLogger({
+        config: createTestConfig({
+          disablePriorityBuffering: false, // Enable priority buffering
+          batchSize: 20,
+          flushInterval: 100,
+        }),
+        dependencies: { consoleLogger: mockConsoleLogger },
+      });
+
+      // Mock multiple responses for error flushes and final batch
+      for (let i = 0; i < 5; i++) {
+        mockServer.mockResponse({
+          ok: true,
+          json: () => Promise.resolve({ success: true, processed: 3 + i }),
+        });
+      }
+
+      // Add logs WITHOUT errors first to build up a batch
+      for (let i = 0; i < 3; i++) {
+        remoteLogger.debug(`Debug ${i}`);
+        remoteLogger.info(`Info ${i}`);
+        remoteLogger.warn(`Warn ${i}`);
+      }
+
+      // Force flush to test priority ordering
+      await remoteLogger.flush();
+      await jest.runAllTimersAsync();
+
+      // Verify request was made
+      expect(mockServer.getDebugLogRequestCount()).toBeGreaterThanOrEqual(1);
+
+      // Find the debug log request
+      const debugLogCalls = global.fetch.mock.calls.filter(
+        (call) => call[0] === 'http://localhost:3001/api/debug-log'
+      );
+      expect(debugLogCalls.length).toBeGreaterThanOrEqual(1);
+
+      // Check the first batch for priority ordering
+      const requestBody = JSON.parse(debugLogCalls[0][1].body);
+      expect(requestBody.logs).toHaveLength(9);
+
+      // Verify priority order: warn > info > debug (no errors in this batch)
+      // All warn logs come first
+      expect(requestBody.logs.slice(0, 3).every(log => log.level === 'warn')).toBe(true);
+      // Then all info logs
+      expect(requestBody.logs.slice(3, 6).every(log => log.level === 'info')).toBe(true);
+      // Finally all debug logs
+      expect(requestBody.logs.slice(6, 9).every(log => log.level === 'debug')).toBe(true);
     });
   });
 });

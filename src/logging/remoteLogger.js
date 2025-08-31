@@ -257,6 +257,13 @@ class RemoteLogger {
 
   /**
    * @private
+   * @type {boolean}
+   * @description Disable priority buffer system (testing only)
+   */
+  #disablePriorityBuffering;
+
+  /**
+   * @private
    * @type {number}
    */
   #estimatedPayloadSize;
@@ -278,6 +285,30 @@ class RemoteLogger {
    * @type {*}
    */
   #performanceMonitor;
+
+  /**
+   * @private
+   * @type {Map<string, DebugLogEntry[]>}
+   */
+  #priorityBuffers;
+
+  /**
+   * @private
+   * @type {string[]}
+   */
+  #priorityLevels;
+
+  /**
+   * @private
+   * @type {number}
+   */
+  #memoryPressureThreshold;
+
+  /**
+   * @private
+   * @type {boolean}
+   */
+  #memoryMonitoringEnabled;
 
   /**
    * Creates a RemoteLogger instance compatible with LoggerStrategy dependency injection.
@@ -314,6 +345,7 @@ class RemoteLogger {
       maxBufferSize: 1500, // Slightly reduced to trigger overflow protection earlier
       maxServerBatchSize: 4000, // More conservative limit for better reliability
       disableAdaptiveBatching: false, // Disable dynamic batching (testing only)
+      disablePriorityBuffering: false, // Disable priority buffer system (testing only)
       debugFilters: [
         // Filter anatomy-related debug spam that causes buffer overflow
         'bodyComponent.body.descriptors.height: undefined',
@@ -380,6 +412,7 @@ class RemoteLogger {
     this.#maxServerBatchSize = mergedConfig.maxServerBatchSize;
     this.#debugFilters = mergedConfig.debugFilters || [];
     this.#disableAdaptiveBatching = mergedConfig.disableAdaptiveBatching;
+    this.#disablePriorityBuffering = mergedConfig.disablePriorityBuffering;
 
     // Initialize state
     this.#buffer = [];
@@ -393,6 +426,21 @@ class RemoteLogger {
     // Initialize enhanced buffer management
     this.#bufferPressureThreshold = Math.floor(this.#maxBufferSize * 0.75); // 75% threshold
     this.#adaptiveBatchSize = this.#batchSize;
+
+    // Initialize priority-based buffer management (only if enabled)
+    this.#priorityLevels = ['error', 'warn', 'info', 'debug'];
+    this.#priorityBuffers = new Map();
+    if (!this.#disablePriorityBuffering) {
+      this.#priorityLevels.forEach(level => {
+        this.#priorityBuffers.set(level, []);
+      });
+    }
+
+    // Initialize browser memory monitoring
+    this.#memoryMonitoringEnabled = typeof performance !== 'undefined' && 
+      performance.memory && 
+      typeof performance.memory.usedJSHeapSize === 'number';
+    this.#memoryPressureThreshold = 100 * 1024 * 1024; // 100MB threshold
 
     // Set initial connection delay expiry time
     this.#initialDelayExpiryTime = Date.now() + this.#initialConnectionDelay;
@@ -765,8 +813,12 @@ class RemoteLogger {
       const entrySize = this.#estimateLogEntrySize(logEntry);
       this.#estimatedPayloadSize += entrySize;
 
-      // Add to buffer
-      this.#buffer.push(logEntry);
+      // Add to priority buffer if enabled, otherwise use legacy buffer
+      if (this.#priorityBuffers.size > 0) {
+        this.#addToPriorityBuffer(logEntry);
+      } else {
+        this.#buffer.push(logEntry);
+      }
 
       // Record timestamp for logging rate calculation (only if adaptive batching is enabled)
       if (!this.#disableAdaptiveBatching) {
@@ -776,13 +828,24 @@ class RemoteLogger {
       // Update adaptive batch size based on current conditions
       this.#updateAdaptiveBatchSize();
 
-      // Track buffer size in performance monitor
+      // Check for memory pressure and handle if detected
+      if (this.#detectMemoryPressure()) {
+        // Handle memory pressure asynchronously without blocking
+        this.#handleMemoryPressure().catch(err => {
+          this.#fallbackLogger?.error('Error handling memory pressure:', err);
+        });
+        return; // Exit early after emergency flush initiation
+      }
+
+      // Track buffer size in performance monitor (use total buffer size for priority buffers)
       if (
         this.#performanceMonitor &&
         typeof this.#performanceMonitor.monitorBufferSize === 'function'
       ) {
+        const totalSize = this.#priorityBuffers.size > 0 ? 
+          this.#getTotalBufferSize() : this.#buffer.length;
         this.#performanceMonitor.monitorBufferSize(
-          this.#buffer.length,
+          totalSize,
           this.#maxBufferSize
         );
       }
@@ -951,7 +1014,11 @@ class RemoteLogger {
    * @private
    */
   #scheduleFlush() {
-    if (this.#flushTimer === null && this.#buffer.length > 0) {
+    // Check total buffer size including priority buffers for timer scheduling consistency
+    const totalBufferSize = this.#priorityBuffers.size > 0 ? 
+      this.#getTotalBufferSize() : this.#buffer.length;
+    
+    if (this.#flushTimer === null && totalBufferSize > 0) {
       this.#flushTimer = setTimeout(() => {
         this.#flushTimer = null;
         this.#flush();
@@ -971,7 +1038,11 @@ class RemoteLogger {
       return this.#currentFlushPromise;
     }
 
-    if (this.#buffer.length === 0) {
+    // Check total buffer size including priority buffers
+    const totalBufferSize = this.#priorityBuffers.size > 0 ? 
+      this.#getTotalBufferSize() : this.#buffer.length;
+    
+    if (totalBufferSize === 0) {
       return;
     }
 
@@ -1079,14 +1150,19 @@ class RemoteLogger {
     let iterations = 0;
     const maxIterations = 10; // Safety limit to prevent infinite loops
 
-    while (
-      (this.#buffer.length > 0 || this.#currentFlushPromise) &&
-      iterations < maxIterations
-    ) {
+    while (iterations < maxIterations) {
+      // Check total buffer size including priority buffers
+      const totalBufferSize = this.#priorityBuffers.size > 0 ? 
+        this.#getTotalBufferSize() : this.#buffer.length;
+      
+      if (totalBufferSize === 0 && !this.#currentFlushPromise) {
+        break; // No more data to flush
+      }
+      
       iterations++;
 
       // Trigger flush if there's data in buffer
-      if (this.#buffer.length > 0) {
+      if (totalBufferSize > 0) {
         await this.#flush();
       }
 
@@ -1100,7 +1176,9 @@ class RemoteLogger {
     }
 
     // Final check - if we hit max iterations, force one more flush
-    if (iterations >= maxIterations && this.#buffer.length > 0) {
+    const finalTotalBufferSize = this.#priorityBuffers.size > 0 ? 
+      this.#getTotalBufferSize() : this.#buffer.length;
+    if (iterations >= maxIterations && finalTotalBufferSize > 0) {
       await this.#flush();
     }
   }
@@ -1111,11 +1189,19 @@ class RemoteLogger {
    * @private
    */
   #flushSync() {
-    if (this.#buffer.length === 0) {
+    // Check total buffer size including priority buffers
+    const totalBufferSize = this.#priorityBuffers.size > 0 ? 
+      this.#getTotalBufferSize() : this.#buffer.length;
+    
+    if (totalBufferSize === 0) {
       return;
     }
 
-    const logsToSend = this.#buffer.splice(0);
+    // Use the same log selection logic as async flush
+    const logsToSend = this.#selectLogsForBatch();
+    
+    // For sync flush, we want to send everything, so clear all buffers
+    this.#clearAllBuffers();
 
     try {
       // Use sendBeacon if available for unload events
@@ -1748,11 +1834,27 @@ class RemoteLogger {
    * @returns {boolean} True if batch should be flushed
    */
   #shouldFlushBatch() {
-    const currentSize = this.#buffer.length;
+    // Use total buffer size if priority buffers are enabled
+    const currentSize = this.#priorityBuffers.size > 0 ? 
+      this.#getTotalBufferSize() : this.#buffer.length;
 
     // Flush if we've reached the adaptive batch size
     if (currentSize >= this.#adaptiveBatchSize) {
       return true;
+    }
+
+    // Priority-based flushing: flush immediately if error logs are present
+    if (this.#priorityBuffers.size > 0) {
+      const errorBuffer = this.#priorityBuffers.get('error');
+      if (errorBuffer && errorBuffer.length > 0) {
+        return true;
+      }
+      
+      // Flush if warning logs accumulate (lower threshold)
+      const warnBuffer = this.#priorityBuffers.get('warn');
+      if (warnBuffer && warnBuffer.length >= Math.max(5, this.#adaptiveBatchSize * 0.3)) {
+        return true;
+      }
     }
 
     // Flush if estimated payload approaches server limit (3MB threshold for safety)
@@ -1770,48 +1872,85 @@ class RemoteLogger {
   }
 
   /**
-   * Selects logs for batch sending with size protection.
+   * Selects logs for batching based on priority and adaptive batch size.
+   * Priority order: error > warn > info > debug
    *
    * @private
    * @returns {DebugLogEntry[]} Array of logs to send
    */
   #selectLogsForBatch() {
-    if (this.#buffer.length === 0) {
+    // Check if we have priority buffers or fall back to legacy buffer
+    const hasPriorityBuffers = this.#priorityBuffers.size > 0;
+    const totalBufferSize = hasPriorityBuffers ? this.#getTotalBufferSize() : this.#buffer.length;
+    
+    if (totalBufferSize === 0) {
       return [];
     }
 
     const maxPayloadSize = this.#maxServerBatchSize * 1024; // Convert KB to bytes
-    const maxBatchCount = Math.min(
-      this.#buffer.length,
-      this.#adaptiveBatchSize
-    );
+    const maxBatchCount = Math.min(totalBufferSize, this.#adaptiveBatchSize);
 
     let selectedLogs = [];
     let currentPayloadSize = 0;
 
-    for (let i = 0; i < maxBatchCount; i++) {
-      const log = this.#buffer[i];
-      const logSize = this.#estimateLogEntrySize(log);
+    if (hasPriorityBuffers) {
+      // Priority-based selection: error > warn > info > debug
+      for (const level of this.#priorityLevels) {
+        const buffer = this.#priorityBuffers.get(level);
+        if (!buffer || buffer.length === 0) {
+          continue;
+        }
 
-      // Check if adding this log would exceed our size limit
-      if (
-        currentPayloadSize + logSize > maxPayloadSize &&
-        selectedLogs.length > 0
-      ) {
-        break;
+        // Select logs from this priority level
+        for (let i = 0; i < buffer.length && selectedLogs.length < maxBatchCount; i++) {
+          const log = buffer[i];
+          const logSize = this.#estimateLogEntrySize(log);
+
+          // Check if adding this log would exceed our size limit
+          if (currentPayloadSize + logSize > maxPayloadSize && selectedLogs.length > 0) {
+            break;
+          }
+
+          selectedLogs.push(log);
+          currentPayloadSize += logSize;
+
+          // Hard safety limit to prevent enormous batches
+          if (selectedLogs.length >= this.#maxServerBatchSize) {
+            break;
+          }
+        }
+
+        // Break if we've reached our limits
+        if (selectedLogs.length >= maxBatchCount || selectedLogs.length >= this.#maxServerBatchSize) {
+          break;
+        }
       }
 
-      selectedLogs.push(log);
-      currentPayloadSize += logSize;
+      // Remove selected logs from priority buffers
+      this.#removeSelectedLogsFromBuffers(selectedLogs);
+    } else {
+      // Legacy buffer selection (original logic)
+      for (let i = 0; i < maxBatchCount; i++) {
+        const log = this.#buffer[i];
+        const logSize = this.#estimateLogEntrySize(log);
 
-      // Hard safety limit to prevent enormous batches
-      if (selectedLogs.length >= this.#maxServerBatchSize) {
-        break;
+        // Check if adding this log would exceed our size limit
+        if (currentPayloadSize + logSize > maxPayloadSize && selectedLogs.length > 0) {
+          break;
+        }
+
+        selectedLogs.push(log);
+        currentPayloadSize += logSize;
+
+        // Hard safety limit to prevent enormous batches
+        if (selectedLogs.length >= this.#maxServerBatchSize) {
+          break;
+        }
       }
+
+      // Remove selected logs from buffer
+      this.#buffer.splice(0, selectedLogs.length);
     }
-
-    // Remove selected logs from buffer
-    this.#buffer.splice(0, selectedLogs.length);
 
     return selectedLogs;
   }
@@ -2118,7 +2257,7 @@ class RemoteLogger {
   getStats() {
     return {
       sessionId: this.#sessionId,
-      bufferSize: this.#buffer.length,
+      bufferSize: this.#priorityBuffers.size > 0 ? this.#getTotalBufferSize() : this.#buffer.length,
       endpoint: this.#endpoint,
       circuitBreaker: this.#circuitBreaker.getStats(),
       categoryDetector: this.#categoryDetector.getStats(),
@@ -2137,10 +2276,22 @@ class RemoteLogger {
    * Gets the current buffer contents for testing purposes.
    * This method should only be used in test environments.
    *
-   * @returns {DebugLogEntry[]} Copy of the current buffer
+   * @returns {DebugLogEntry[]} Copy of all buffered logs (legacy + priority buffers)
    */
   getBuffer() {
-    return [...this.#buffer];
+    const allLogs = [...this.#buffer];
+    
+    // Add logs from priority buffers if they exist and contain data
+    if (this.#priorityBuffers.size > 0) {
+      for (const level of this.#priorityLevels) {
+        const buffer = this.#priorityBuffers.get(level);
+        if (buffer && buffer.length > 0) {
+          allLogs.push(...buffer);
+        }
+      }
+    }
+    
+    return allLogs;
   }
 
   /**
@@ -2158,7 +2309,7 @@ class RemoteLogger {
    * @returns {number} Number of logs in buffer
    */
   getBufferSize() {
-    return this.#buffer.length;
+    return this.#priorityBuffers.size > 0 ? this.#getTotalBufferSize() : this.#buffer.length;
   }
 
   /**
@@ -2174,10 +2325,123 @@ class RemoteLogger {
       adaptiveBatchSize: this.#adaptiveBatchSize,
       baseBatchSize: this.#batchSize,
       flushInterval: this.#flushInterval,
-      isCircuitOpen: this.#circuitBreaker?.isOpen() || false,
+      isCircuitOpen: this.#circuitBreaker?.getState ? this.#circuitBreaker.getState() === 'open' : false,
       pendingFlush: this.#currentFlushPromise !== null,
       bufferPressureThreshold: this.#bufferPressureThreshold,
     };
+  }
+
+  /**
+   * Adds a log to the appropriate priority buffer
+   *
+   * @private
+   * @param {Object} log - The log entry to buffer
+   */
+  #addToPriorityBuffer(log) {
+    const level = log.level || 'info';
+    const priority = this.#priorityLevels.indexOf(level);
+    const bufferKey = priority >= 0 ? level : 'info';
+    
+    if (!this.#priorityBuffers.has(bufferKey)) {
+      this.#priorityBuffers.set(bufferKey, []);
+    }
+    
+    this.#priorityBuffers.get(bufferKey).push(log);
+  }
+
+  /**
+   * Gets the total size of all priority buffers
+   *
+   * @private
+   * @returns {number} Total buffer size
+   */
+  #getTotalBufferSize() {
+    let total = 0;
+    for (const buffer of this.#priorityBuffers.values()) {
+      total += buffer.length;
+    }
+    return total + this.#buffer.length; // Include legacy buffer
+  }
+
+  /**
+   * Removes selected logs from priority buffers
+   *
+   * @private
+   * @param {Array} selectedLogs - Logs to remove from buffers
+   */
+  #removeSelectedLogsFromBuffers(selectedLogs) {
+    const selectedSet = new Set(selectedLogs);
+    
+    for (const [level, buffer] of this.#priorityBuffers.entries()) {
+      const remainingLogs = buffer.filter(log => !selectedSet.has(log));
+      this.#priorityBuffers.set(level, remainingLogs);
+    }
+    
+    // Also clean legacy buffer
+    this.#buffer = this.#buffer.filter(log => !selectedSet.has(log));
+  }
+
+  /**
+   * Detects browser memory pressure using performance.memory API
+   *
+   * @private
+   * @returns {boolean} True if memory pressure detected
+   */
+  #detectMemoryPressure() {
+    if (!this.#memoryMonitoringEnabled || typeof performance === 'undefined' || !performance.memory) {
+      return false;
+    }
+
+    const memoryInfo = performance.memory;
+    const usedMemory = memoryInfo.usedJSHeapSize;
+    const memoryLimit = memoryInfo.jsHeapSizeLimit;
+    const memoryUsage = usedMemory / memoryLimit;
+
+    return memoryUsage >= this.#memoryPressureThreshold;
+  }
+
+  /**
+   * Handles memory pressure by forcing immediate flush
+   *
+   * @private
+   * @returns {Promise<void>}
+   */
+  async #handleMemoryPressure() {
+    if (this.#getTotalBufferSize() > 0) {
+      this.#fallbackLogger?.warn('Memory pressure detected, forcing immediate flush', {
+        totalBufferSize: this.#getTotalBufferSize(),
+        memoryUsage: performance.memory ? 
+          (performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit) * 100 : 'unknown'
+      });
+      
+      await this.#flush();
+    }
+  }
+
+  /**
+   * Clears all buffers (both priority and legacy).
+   *
+   * @private
+   */
+  #clearAllBuffers() {
+    // Clear priority buffers
+    for (const buffer of this.#priorityBuffers.values()) {
+      // Clear metadata references to prevent memory leaks
+      for (const log of buffer) {
+        if (log.metadata) {
+          log.metadata = null;
+        }
+      }
+      buffer.length = 0;
+    }
+    
+    // Clear legacy buffer  
+    for (const log of this.#buffer) {
+      if (log.metadata) {
+        log.metadata = null;
+      }
+    }
+    this.#buffer.length = 0;
   }
 
   /**
@@ -2204,13 +2468,8 @@ class RemoteLogger {
     // Set unloading flag to prevent new operations
     this.#isUnloading = true;
 
-    // Clear buffer and cleanup metadata references
-    for (const log of this.#buffer) {
-      if (log.metadata) {
-        log.metadata = null;
-      }
-    }
-    this.#buffer.length = 0;
+    // Clear all buffers and cleanup metadata references
+    this.#clearAllBuffers();
 
     // Clear category cache
     if (this.#categoryDetector) {

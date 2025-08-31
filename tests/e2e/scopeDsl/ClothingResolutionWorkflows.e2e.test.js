@@ -35,9 +35,10 @@ describe('Clothing Resolution Workflows E2E', () => {
   let testWorld;
   let testActors;
   let clothingTestActor;
+  let cachedScopeDefinitions;
 
-  beforeEach(async () => {
-    // Create real container and configure it
+  beforeAll(async () => {
+    // Create and configure container once for all tests
     container = new AppContainer();
     await configureContainer(container, {
       outputDiv: document.createElement('div'),
@@ -46,48 +47,59 @@ describe('Clothing Resolution Workflows E2E', () => {
       document,
     });
 
-    // Get real services from container
+    // Get services from container
     entityManager = container.resolve(tokens.IEntityManager);
     scopeRegistry = container.resolve(tokens.IScopeRegistry);
     scopeEngine = container.resolve(tokens.IScopeEngine);
     dslParser = container.resolve(tokens.DslParser);
     logger = container.resolve(tokens.ILogger);
 
-    // Set up test world and actors
-    testWorld = await ActionTestUtilities.createStandardTestWorld({
-      entityManager,
-      registry: container.resolve(tokens.IDataRegistry),
-    });
-
-    testActors = await ActionTestUtilities.createTestActors({
-      entityManager,
-      registry: container.resolve(tokens.IDataRegistry),
-    });
-
-    // Create a specialized clothing test actor with equipment
-    clothingTestActor = await createClothingTestActor();
-
-    // Set up test conditions and scope definitions
+    // Cache scope definitions to avoid re-parsing
     ScopeTestUtilities.setupScopeTestConditions(
       container.resolve(tokens.IDataRegistry)
     );
 
-    const scopeDefinitions = ScopeTestUtilities.createTestScopes(
+    cachedScopeDefinitions = ScopeTestUtilities.createTestScopes(
       {
         dslParser,
         logger,
       },
       createClothingTestScopes()
     );
+  });
 
-    // Initialize scope registry with test definitions
-    scopeRegistry.initialize(scopeDefinitions);
+  beforeEach(async () => {
+    // Reset test state for each test
+    clothingTestActor = null;
+    clothingItemsCreated = false;
+
+    // Initialize scope registry with cached definitions
+    scopeRegistry.initialize(cachedScopeDefinitions);
+  });
+
+  beforeAll(async () => {
+    // Set up test world and actors once
+    const registry = container.resolve(tokens.IDataRegistry);
+    
+    testWorld = await ActionTestUtilities.createStandardTestWorld({
+      entityManager,
+      registry,
+    });
+
+    testActors = await ActionTestUtilities.createTestActors({
+      entityManager,
+      registry,
+    });
   });
 
   afterEach(async () => {
-    // Clean up resources
+    // Minimal cleanup needed
+  });
+
+  afterAll(async () => {
+    // Clean up container resources
     if (container) {
-      // Clean up any resources if needed
+      // Final cleanup if needed
     }
   });
 
@@ -103,16 +115,23 @@ describe('Clothing Resolution Workflows E2E', () => {
   /**
    * Creates game context for scope resolution
    *
+   * @param {string} [additionalEntityId] - Optional additional entity ID to include
    * @returns {object} Game context with required services
    */
-  function createGameContext() {
+  function createGameContext(additionalEntityId = null) {
+    const entities = [
+      ...(clothingTestActor ? [clothingTestActor.id] : []),
+      ...Object.values(testActors).map((a) => a.id),
+    ];
+    
+    if (additionalEntityId) {
+      entities.push(additionalEntityId);
+    }
+
     return {
       currentLocation: testWorld.currentLocation,
       entityManager,
-      allEntities: [
-        clothingTestActor.id,
-        ...Object.values(testActors).map((a) => a.id),
-      ],
+      allEntities: entities,
       jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
       logger,
       spatialIndexManager: container.resolve(tokens.ISpatialIndexManager),
@@ -120,12 +139,73 @@ describe('Clothing Resolution Workflows E2E', () => {
   }
 
   /**
-   * Creates a test actor with comprehensive clothing equipment
-   *
-   * @returns {object} Actor entity with clothing components
+   * Helper to create lightweight test actors with specific clothing configs
+   * 
+   * @param {string} actorId - Unique actor ID
+   * @param {object} clothingEquipment - Clothing equipment configuration
+   * @returns {Promise<string>} The created actor ID
    */
-  async function createClothingTestActor() {
+  async function createTestActor(actorId, clothingEquipment = {}) {
+    const registry = container.resolve(tokens.IDataRegistry);
+    
+    // Check if entity already exists
+    try {
+      const existingEntity = entityManager.getEntityInstance(actorId);
+      if (existingEntity) {
+        return actorId; // Return existing entity
+      }
+    } catch (error) {
+      // Entity doesn't exist, continue with creation
+    }
+
+    const components = {
+      'core:actor': {
+        name: `Test Actor ${actorId}`,
+        description: `Test actor for ${actorId}`,
+      },
+    };
+
+    if (Object.keys(clothingEquipment).length > 0) {
+      components['clothing:equipment'] = {
+        equipped: clothingEquipment,
+      };
+    }
+
+    const actorDefinition = createEntityDefinition(actorId, components);
+
+    registry.store('entityDefinitions', actorId, actorDefinition);
+
+    await entityManager.createEntityInstance(actorId, {
+      instanceId: actorId,
+      definitionId: actorId,
+    });
+
+    return actorId;
+  }
+
+  /**
+   * Gets or creates the clothing test actor (lazy loading)
+   *
+   * @returns {Promise<object>} Actor entity with clothing components
+   */
+  async function getClothingTestActor() {
+    if (clothingTestActor) {
+      return clothingTestActor;
+    }
+
     const actorId = 'clothing_test_actor';
+    const registry = container.resolve(tokens.IDataRegistry);
+
+    // Check if entity already exists
+    try {
+      const existingEntity = entityManager.getEntityInstance(actorId);
+      if (existingEntity) {
+        clothingTestActor = { id: actorId };
+        return clothingTestActor;
+      }
+    } catch (error) {
+      // Entity doesn't exist, continue with creation
+    }
 
     // Create actor with core components
     const actorDefinition = createEntityDefinition(actorId, {
@@ -160,9 +240,7 @@ describe('Clothing Resolution Workflows E2E', () => {
     });
 
     // Add the definition to the registry
-    container
-      .resolve(tokens.IDataRegistry)
-      .store('entityDefinitions', actorId, actorDefinition);
+    registry.store('entityDefinitions', actorId, actorDefinition);
 
     // Create the entity instance
     await entityManager.createEntityInstance(actorId, {
@@ -170,16 +248,24 @@ describe('Clothing Resolution Workflows E2E', () => {
       definitionId: actorId,
     });
 
-    // Create clothing item entities
-    await createClothingItemEntities();
+    // Create clothing item entities (lazy)
+    await ensureClothingItemEntities();
 
-    return { id: actorId };
+    clothingTestActor = { id: actorId };
+    return clothingTestActor;
   }
 
+  // Cache clothing items to avoid recreation
+  let clothingItemsCreated = false;
+
   /**
-   * Creates clothing item entities for testing
+   * Ensures clothing item entities exist (lazy creation)
    */
-  async function createClothingItemEntities() {
+  async function ensureClothingItemEntities() {
+    if (clothingItemsCreated) {
+      return;
+    }
+
     const clothingItems = [
       {
         id: 'jacket_001',
@@ -241,8 +327,10 @@ describe('Clothing Resolution Workflows E2E', () => {
 
     const registry = container.resolve(tokens.IDataRegistry);
 
+    // Batch create definitions first
+    const definitions = {};
     for (const item of clothingItems) {
-      const itemDefinition = createEntityDefinition(item.id, {
+      definitions[item.id] = createEntityDefinition(item.id, {
         'core:item': {
           name: item.name,
           description: `A ${item.name.toLowerCase()}`,
@@ -255,16 +343,32 @@ describe('Clothing Resolution Workflows E2E', () => {
           color: 'blue',
         },
       });
+    }
 
-      // Add the definition to the registry
-      registry.store('entityDefinitions', item.id, itemDefinition);
+    // Batch store definitions
+    for (const [id, definition] of Object.entries(definitions)) {
+      registry.store('entityDefinitions', id, definition);
+    }
 
-      // Create the entity instance
-      await entityManager.createEntityInstance(item.id, {
+    // Batch create instances, checking for existing entities
+    const instancePromises = clothingItems.map(async item => {
+      try {
+        const existingEntity = entityManager.getEntityInstance(item.id);
+        if (existingEntity) {
+          return; // Entity already exists
+        }
+      } catch (error) {
+        // Entity doesn't exist, create it
+      }
+
+      return entityManager.createEntityInstance(item.id, {
         instanceId: item.id,
         definitionId: item.id,
       });
-    }
+    });
+    
+    await Promise.all(instancePromises);
+    clothingItemsCreated = true;
   }
 
   /**
@@ -323,11 +427,12 @@ describe('Clothing Resolution Workflows E2E', () => {
    */
   describe('Basic Clothing Access', () => {
     test('should resolve topmost_clothing items', async () => {
+      const actor = await getClothingTestActor();
       const gameContext = createGameContext();
 
       const results = await ScopeTestUtilities.resolveScopeE2E(
         'test:topmost_clothing',
-        clothingTestActor,
+        actor,
         gameContext,
         { scopeRegistry, scopeEngine }
       );
@@ -349,12 +454,13 @@ describe('Clothing Resolution Workflows E2E', () => {
     });
 
     test('should resolve specific clothing slots', async () => {
+      const actor = await getClothingTestActor();
       const trace = createTraceContext();
       const gameContext = createGameContext();
 
       const results = await ScopeTestUtilities.resolveScopeE2E(
         'test:torso_upper_clothing',
-        clothingTestActor,
+        actor,
         gameContext,
         { scopeRegistry, scopeEngine },
         { trace: true }
@@ -366,12 +472,13 @@ describe('Clothing Resolution Workflows E2E', () => {
     });
 
     test('should apply layer priority correctly', async () => {
+      const actor = await getClothingTestActor();
       const gameContext = createGameContext();
 
       // Test outer layer priority
       const outerResults = await ScopeTestUtilities.resolveScopeE2E(
         'test:outer_clothing',
-        clothingTestActor,
+        actor,
         gameContext,
         { scopeRegistry, scopeEngine }
       );
@@ -386,7 +493,7 @@ describe('Clothing Resolution Workflows E2E', () => {
       // Test underwear layer
       const underwearResults = await ScopeTestUtilities.resolveScopeE2E(
         'test:underwear',
-        clothingTestActor,
+        actor,
         gameContext,
         { scopeRegistry, scopeEngine }
       );
@@ -398,32 +505,10 @@ describe('Clothing Resolution Workflows E2E', () => {
     });
 
     test('should handle missing equipment gracefully', async () => {
-      // Create actor without equipment
-      const emptyActorId = 'empty_clothing_actor';
-      const emptyActorDefinition = createEntityDefinition(emptyActorId, {
-        'core:actor': {
-          name: 'Empty Actor',
-          description: 'Actor without clothing',
-        },
-      });
+      // Create actor without equipment using helper
+      const emptyActorId = await createTestActor('empty_clothing_actor');
+      const gameContext = createGameContext(emptyActorId);
 
-      // Add the definition to the registry
-      container
-        .resolve(tokens.IDataRegistry)
-        .store('entityDefinitions', emptyActorId, emptyActorDefinition);
-
-      // Create the entity instance
-      await entityManager.createEntityInstance(emptyActorId, {
-        instanceId: emptyActorId,
-        definitionId: emptyActorId,
-      });
-
-      const gameContext = {
-        ...createGameContext(),
-        allEntities: [...createGameContext().allEntities, emptyActorId],
-      };
-
-      // Override actor for this test
       const results = await ScopeTestUtilities.resolveScopeE2E(
         'test:topmost_clothing',
         { id: emptyActorId },
@@ -442,12 +527,13 @@ describe('Clothing Resolution Workflows E2E', () => {
    */
   describe('Complex Clothing Scenarios', () => {
     test('should handle multiple layers correctly', async () => {
+      const actor = await getClothingTestActor();
       const gameContext = createGameContext();
 
       // Test all clothing layers
       const allResults = await ScopeTestUtilities.resolveScopeE2E(
         'test:all_clothing',
-        clothingTestActor,
+        actor,
         gameContext,
         { scopeRegistry, scopeEngine }
       );
@@ -471,11 +557,12 @@ describe('Clothing Resolution Workflows E2E', () => {
     });
 
     test('should resolve clothing unions', async () => {
+      const actor = await getClothingTestActor();
       const gameContext = createGameContext();
 
       const unionResults = await ScopeTestUtilities.resolveScopeE2E(
         'test:clothing_union',
-        clothingTestActor,
+        actor,
         gameContext,
         { scopeRegistry, scopeEngine }
       );
@@ -495,12 +582,13 @@ describe('Clothing Resolution Workflows E2E', () => {
     });
 
     test('should filter clothing by properties', async () => {
+      const actor = await getClothingTestActor();
       const gameContext = createGameContext();
 
       // First test that we can get all clothing items
       const allClothingResults = await ScopeTestUtilities.resolveScopeE2E(
         'test:all_clothing',
-        clothingTestActor,
+        actor,
         gameContext,
         { scopeRegistry, scopeEngine }
       );
@@ -516,38 +604,18 @@ describe('Clothing Resolution Workflows E2E', () => {
     });
 
     test('should handle missing equipment gracefully', async () => {
-      // Create actor with partial equipment
-      const partialActorId = 'partial_clothing_actor';
-      const partialActorDefinition = createEntityDefinition(partialActorId, {
-        'core:actor': {
-          name: 'Partially Clothed Actor',
-          description: 'Actor with limited clothing',
+      // Create actor with partial equipment using helper
+      const partialActorId = await createTestActor('partial_clothing_actor', {
+        torso_upper: {
+          base: 'shirt_001',
         },
-        'clothing:equipment': {
-          equipped: {
-            torso_upper: {
-              base: 'shirt_001',
-            },
-            // Missing other slots
-          },
-        },
+        // Missing other slots
       });
 
-      // Add the definition to the registry
-      container
-        .resolve(tokens.IDataRegistry)
-        .store('entityDefinitions', partialActorId, partialActorDefinition);
-
-      // Create the entity instance
-      await entityManager.createEntityInstance(partialActorId, {
-        instanceId: partialActorId,
-        definitionId: partialActorId,
-      });
-
-      const gameContext = {
-        ...createGameContext(),
-        allEntities: [...createGameContext().allEntities, partialActorId],
-      };
+      // Ensure clothing items exist
+      await ensureClothingItemEntities();
+      
+      const gameContext = createGameContext(partialActorId);
 
       const results = await ScopeTestUtilities.resolveScopeE2E(
         'test:topmost_clothing',
@@ -568,12 +636,13 @@ describe('Clothing Resolution Workflows E2E', () => {
    */
   describe('Action Integration', () => {
     test('should provide clothing targets for actions', async () => {
+      const actor = await getClothingTestActor();
       const gameContext = createGameContext();
 
       // Test that clothing scopes can be used for action targeting
       const torsoResults = await ScopeTestUtilities.resolveScopeE2E(
         'test:torso_upper_clothing',
-        clothingTestActor,
+        actor,
         gameContext,
         { scopeRegistry, scopeEngine }
       );
@@ -589,12 +658,13 @@ describe('Clothing Resolution Workflows E2E', () => {
     });
 
     test('should update after clothing changes', async () => {
+      const actor = await getClothingTestActor();
       const gameContext = createGameContext();
 
       // Initial state - test basic clothing resolution
       const initialResults = await ScopeTestUtilities.resolveScopeE2E(
         'test:torso_upper_clothing',
-        clothingTestActor,
+        actor,
         gameContext,
         { scopeRegistry, scopeEngine }
       );
@@ -602,49 +672,27 @@ describe('Clothing Resolution Workflows E2E', () => {
       expect(Array.from(initialResults)).toContain('jacket_001');
 
       // Create a new actor with different clothing configuration to test dynamic behavior
-      const modifiedActorId = 'modified_clothing_actor';
-      const modifiedActorDefinition = createEntityDefinition(modifiedActorId, {
-        'core:actor': {
-          name: 'Modified Clothing Actor',
-          description: 'Actor with modified clothing for testing updates',
+      const modifiedActorId = await createTestActor('modified_clothing_actor', {
+        torso_upper: {
+          base: 'shirt_001',
+          underwear: 'undershirt_001',
+          // No outer layer - demonstrates different clothing state
         },
-        'clothing:equipment': {
-          equipped: {
-            torso_upper: {
-              base: 'shirt_001',
-              underwear: 'undershirt_001',
-              // No outer layer - demonstrates different clothing state
-            },
-            torso_lower: {
-              outer: 'pants_001',
-              underwear: 'underwear_001',
-            },
-          },
+        torso_lower: {
+          outer: 'pants_001',
+          underwear: 'underwear_001',
         },
       });
 
-      // Add the definition to the registry
-      const registry = container.resolve(tokens.IDataRegistry);
-      registry.store(
-        'entityDefinitions',
-        modifiedActorId,
-        modifiedActorDefinition
-      );
-
-      // Create the entity instance
-      await entityManager.createEntityInstance(modifiedActorId, {
-        instanceId: modifiedActorId,
-        definitionId: modifiedActorId,
-      });
+      // Ensure clothing items exist
+      await ensureClothingItemEntities();
 
       // Test scope resolution with the modified actor
+      const modifiedGameContext = createGameContext(modifiedActorId);
       const modifiedResults = await ScopeTestUtilities.resolveScopeE2E(
         'test:torso_upper_clothing',
         { id: modifiedActorId },
-        {
-          ...gameContext,
-          allEntities: [...gameContext.allEntities, modifiedActorId],
-        },
+        modifiedGameContext,
         { scopeRegistry, scopeEngine }
       );
 
@@ -654,48 +702,29 @@ describe('Clothing Resolution Workflows E2E', () => {
     });
 
     test('should handle clothing removal actions', async () => {
-      const gameContext = createGameContext();
-
       // Create an actor without torso_upper clothing to test removal scenarios
-      const nakedActorId = 'naked_torso_actor';
-      const nakedActorDefinition = createEntityDefinition(nakedActorId, {
-        'core:actor': {
-          name: 'Naked Torso Actor',
-          description: 'Actor without torso upper clothing for testing removal',
+      const nakedActorId = await createTestActor('naked_torso_actor', {
+        // No torso_upper slot - demonstrates clothing removal
+        torso_lower: {
+          outer: 'pants_001',
+          underwear: 'underwear_001',
         },
-        'clothing:equipment': {
-          equipped: {
-            // No torso_upper slot - demonstrates clothing removal
-            torso_lower: {
-              outer: 'pants_001',
-              underwear: 'underwear_001',
-            },
-            feet: {
-              outer: 'shoes_001',
-              base: 'socks_001',
-            },
-          },
+        feet: {
+          outer: 'shoes_001',
+          base: 'socks_001',
         },
       });
 
-      // Add the definition to the registry
-      const registry = container.resolve(tokens.IDataRegistry);
-      registry.store('entityDefinitions', nakedActorId, nakedActorDefinition);
+      // Ensure clothing items exist
+      await ensureClothingItemEntities();
 
-      // Create the entity instance
-      await entityManager.createEntityInstance(nakedActorId, {
-        instanceId: nakedActorId,
-        definitionId: nakedActorId,
-      });
+      const gameContext = createGameContext(nakedActorId);
 
       // Verify scope handles missing slot
       const results = await ScopeTestUtilities.resolveScopeE2E(
         'test:torso_upper_clothing',
         { id: nakedActorId },
-        {
-          ...gameContext,
-          allEntities: [...gameContext.allEntities, nakedActorId],
-        },
+        gameContext,
         { scopeRegistry, scopeEngine }
       );
 
@@ -706,10 +735,7 @@ describe('Clothing Resolution Workflows E2E', () => {
       const otherSlotResults = await ScopeTestUtilities.resolveScopeE2E(
         'test:torso_lower_clothing',
         { id: nakedActorId },
-        {
-          ...gameContext,
-          allEntities: [...gameContext.allEntities, nakedActorId],
-        },
+        gameContext,
         { scopeRegistry, scopeEngine }
       );
 

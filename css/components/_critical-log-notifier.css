@@ -403,6 +403,139 @@
   opacity: 0.8;
 }
 
+/* Filter bar styling */
+.lne-filter-bar {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(40, 40, 40, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
+}
+
+.lne-search-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(20, 20, 20, 0.8);
+  color: #ffffff;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: border-color 0.2s ease;
+}
+
+.lne-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.lne-search-input:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+.lne-level-filter,
+.lne-category-filter,
+.lne-time-filter {
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(20, 20, 20, 0.8);
+  color: #ffffff;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.lne-level-filter:focus,
+.lne-category-filter:focus,
+.lne-time-filter:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+.lne-level-filter option,
+.lne-category-filter option,
+.lne-time-filter option {
+  background: rgba(20, 20, 20, 0.9);
+  color: #ffffff;
+}
+
+.lne-filter-stats {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 4px 8px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+/* Responsive adjustments for filter bar */
+@media (max-width: 640px) {
+  .lne-filter-bar {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .lne-search-input {
+    min-width: unset;
+  }
+
+  .lne-level-filter,
+  .lne-category-filter,
+  .lne-time-filter {
+    width: 100%;
+  }
+
+  .lne-filter-stats {
+    text-align: center;
+    white-space: normal;
+  }
+}
+
+/* Light mode adjustments for filter controls */
+@media (prefers-color-scheme: light) {
+  .lne-filter-bar {
+    background: rgba(250, 250, 250, 0.95);
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .lne-search-input,
+  .lne-level-filter,
+  .lne-category-filter,
+  .lne-time-filter {
+    background: rgba(255, 255, 255, 0.9);
+    color: #1f2937;
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .lne-search-input::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .lne-search-input:focus,
+  .lne-level-filter:focus,
+  .lne-category-filter:focus,
+  .lne-time-filter:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  }
+
+  .lne-level-filter option,
+  .lne-category-filter option,
+  .lne-time-filter option {
+    background: rgba(255, 255, 255, 0.9);
+    color: #1f2937;
+  }
+
+  .lne-filter-stats {
+    color: rgba(0, 0, 0, 0.7);
+  }
+}
+
 /* Print styles */
 @media print {
   .lne-critical-log-notifier {
