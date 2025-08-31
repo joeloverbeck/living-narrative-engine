@@ -108,7 +108,8 @@ describe('LoggingPerformanceMonitor', () => {
       const result = monitor.monitorLogOperation('debug', 'Debug message');
 
       expect(mockCategoryDetector.detectCategory).toHaveBeenCalledWith(
-        'Debug message'
+        'Debug message',
+        { level: 'debug' }
       );
       expect(result.category).toBe('detected');
     });

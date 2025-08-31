@@ -2,38 +2,39 @@
 
 ## Overview
 
-Execute the systematic migration of 48 existing mod integration test files to use the new infrastructure (ModTestHandlerFactory, ModEntityBuilder, ModAssertionHelpers, ModActionTestBase, ModTestFixture). Migration will proceed by category in phases to minimize risk and allow for iterative improvement.
+Execute the systematic migration of 56 existing mod integration test files to use the new infrastructure (ModTestHandlerFactory, ModEntityScenarios, ModAssertionHelpers, ModActionTestBase, ModTestFixture). Migration will proceed by category in phases to minimize risk and allow for iterative improvement.
 
 ## Problem Statement
 
 ### Migration Challenge
 
-The project currently has 48 mod integration test files across 5 categories with:
+The project currently has 56 mod integration test files across 5 categories with:
 
-- **1,920+ lines** of duplicated code that needs to be eliminated
+- **21,600+ lines** of duplicated code that needs to be eliminated
 - **Inconsistent patterns** that need to be standardized
 - **Different complexity levels** requiring category-specific migration approaches
+- **Mixed test patterns** requiring pattern-specific migration approaches
 - **Production dependencies** requiring zero-downtime migration
 
 ### File Distribution for Migration
 
 ```
 tests/integration/mods/
-├── exercise/ (2 files) - Simplest category
+├── exercise/ (2 files) - Schema validation patterns
 │   ├── show_off_biceps_action.test.js
 │   └── rules/showOffBicepsRule.integration.test.js
-├── violence/ (4 files) - Low complexity
+├── violence/ (4 files) - Low complexity, runtime integration
 │   ├── slap_action.test.js
 │   ├── sucker_punch_action.test.js
 │   └── rules/ (2 rule test files)
-├── positioning/ (8 files) - Medium complexity
-│   ├── 6 action test files
+├── positioning/ (13 files) - Medium complexity, mixed patterns
+│   ├── 11 action test files
 │   └── rules/ (2 rule test files)
-├── sex/ (9 files) - Medium-high complexity
-│   ├── 8 action test files
+├── sex/ (10 files) - Medium-high complexity, runtime integration
+│   ├── 9 action test files
 │   └── rules/pressAgainstBackRule.integration.test.js
-└── intimacy/ (25 files) - Highest volume
-    ├── 16 action test files
+└── intimacy/ (27 files) - Highest volume, runtime integration
+    ├── 18 action test files
     └── rules/ (9 rule test files)
 ```
 
@@ -50,11 +51,11 @@ tests/integration/mods/
 
 **Phased Approach by Category**:
 
-1. **Phase 1**: Exercise (2 files) - Validation phase
-2. **Phase 2**: Violence (4 files) - Pattern establishment
-3. **Phase 3**: Positioning (8 files) - Complexity validation
-4. **Phase 4**: Sex (9 files) - Edge case testing
-5. **Phase 5**: Intimacy (25 files) - Scale validation
+1. **Phase 1**: Exercise (2 files) - Schema validation pattern migration
+2. **Phase 2**: Violence (4 files) - Runtime integration pattern establishment
+3. **Phase 3**: Positioning (13 files) - Mixed pattern complexity validation
+4. **Phase 4**: Sex (10 files) - Complex runtime integration edge case testing
+5. **Phase 5**: Intimacy (27 files) - Large-scale runtime integration validation
 
 **Per-File Migration Process**:
 
@@ -120,123 +121,90 @@ class MigrationValidator {
 
 ### show_off_biceps_action.test.js Migration
 
-**Before** (current manual pattern):
+**Before** (current schema validation pattern):
 
 ```javascript
-import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
-import { QueryComponentHandler } from '../../../src/entities/components/operations/queryComponentHandler.js';
-// ... 15+ imports
+/**
+ * @file Integration tests for the exercise:show_off_biceps action.
+ * @description Tests basic action properties and structure validation.
+ */
 
-function createHandlers(entityManager, eventBus, logger) {
-  // 30+ lines of identical handler creation
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
-  };
-  return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    // ... 6 more handlers
-  };
-}
+import { describe, it, expect } from '@jest/globals';
+import showOffBicepsAction from '../../../../data/mods/exercise/actions/show_off_biceps.action.json';
 
-describe('exercise:show_off_biceps action integration', () => {
-  let testEnv;
-
-  beforeEach(() => {
-    // 20+ lines of setup
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(showOffBicepsRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
+describe('Exercise Mod: Show Off Biceps Action', () => {
+  describe('Action Properties', () => {
+    it('should have correct action properties', () => {
+      // Assert: Verify action structure
+      expect(showOffBicepsAction.id).toBe('exercise:show_off_biceps');
+      expect(showOffBicepsAction.name).toBe('Show Off Biceps');
+      expect(showOffBicepsAction.targets).toBe('none');
+      expect(showOffBicepsAction.template).toBe('show off your muscular arms');
     });
 
-    const dataRegistry = {
-      getAllSystemRules: jest
-        .fn()
-        .mockReturnValue([{ ...showOffBicepsRule, actions: expanded }]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'exercise:event-is-action-show-off-biceps'
-          ? eventIsActionShowOffBiceps
-          : undefined
-      ),
-    };
-
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      entities: [],
-      rules: [{ ...showOffBicepsRule, actions: expanded }],
-      dataRegistry,
-    });
-  });
-
-  it('should successfully execute show off biceps action', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'exercise:show_off_biceps',
-      originalInput: 'show_off_biceps',
+    it('should use correct Orange Flame visual styling', () => {
+      // Assert: Verify WCAG compliant colors
+      expect(showOffBicepsAction.visual.backgroundColor).toBe('#e65100');
+      expect(showOffBicepsAction.visual.textColor).toBe('#ffffff');
+      expect(showOffBicepsAction.visual.hoverBackgroundColor).toBe('#ff6f00');
+      expect(showOffBicepsAction.visual.hoverTextColor).toBe('#ffffff');
     });
 
-    const successEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:display_successful_action_result'
-    );
-    expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toContain(
-      'Alice shows off her biceps'
-    );
-
-    const perceptibleEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvent).toBeDefined();
-
-    const turnEndedEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:turn_ended'
-    );
-    expect(turnEndedEvent).toBeDefined();
+    it('should have prerequisites for muscular/hulking arms', () => {
+      // Assert: Verify prerequisites exist
+      expect(showOffBicepsAction.prerequisites).toHaveLength(1);
+      const prerequisite = showOffBicepsAction.prerequisites[0];
+      expect(prerequisite.logic.or).toBeDefined();
+      expect(prerequisite.logic.or).toHaveLength(2);
+    });
   });
 });
 ```
 
-**After** (using new infrastructure):
+**After** (using new infrastructure for schema validation):
 
 ```javascript
-import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
+import { ModAssertionHelpers } from '../../common/mods/ModAssertionHelpers.js';
 
-describe('exercise:show_off_biceps action integration', () => {
-  let test;
+describe('Exercise Mod: Show Off Biceps Action', () => {
+  let actionData;
 
-  beforeEach(() => {
-    test = ModTestFixture.forExerciseAction('show_off_biceps');
-    test.beforeEach();
+  beforeEach(async () => {
+    actionData = await ModAssertionHelpers.loadActionData('exercise', 'show_off_biceps');
   });
 
-  it('should successfully execute show off biceps action', async () => {
-    const actor = test.createActor('Alice');
-    test.resetWithEntities([actor]);
+  describe('Action Properties', () => {
+    it('should have correct action properties', () => {
+      ModAssertionHelpers.assertActionStructure(actionData, {
+        id: 'exercise:show_off_biceps',
+        name: 'Show Off Biceps',
+        targets: 'none',
+        template: 'show off your muscular arms'
+      });
+    });
 
-    await test.executeAction(actor.id);
-    test.assertActionSuccess('Alice shows off her biceps');
+    it('should use correct Orange Flame visual styling', () => {
+      ModAssertionHelpers.assertVisualStyling(actionData.visual, {
+        backgroundColor: '#e65100',
+        textColor: '#ffffff',
+        hoverBackgroundColor: '#ff6f00',
+        hoverTextColor: '#ffffff'
+      });
+    });
+
+    it('should have prerequisites for muscular/hulking arms', () => {
+      ModAssertionHelpers.assertPrerequisites(actionData.prerequisites, {
+        count: 1,
+        logicType: 'or',
+        conditions: ['muscular_arms', 'hulking_arms']
+      });
+    });
   });
 });
 ```
 
-**Code Reduction**: 55+ lines → 15 lines (73% reduction)
+**Code Reduction**: 45+ lines → 25 lines (44% reduction)
+**Note**: Exercise category uses schema validation pattern, not runtime integration
 
 ### Phase 1 Validation Process
 
@@ -318,20 +286,32 @@ it('should successfully execute slap action', async () => {
 **After**:
 
 ```javascript
-it('should successfully execute slap action', async () => {
-  const { actor, target } = test.createCloseActors(['Alice', 'Bob']);
-  test.resetWithEntities([actor, target]);
+// tests/integration/mods/violence/slap_action.test.js
+import { ModActionTestBase } from '../../../common/mods/ModActionTestBase.js';
+import slapRule from '../../../../data/mods/violence/rules/handle_slap.rule.json';
+import eventIsActionSlap from '../../../../data/mods/violence/conditions/event-is-action-slap.condition.json';
 
-  await test.executeAction(actor.id, target.id);
-  test.assertActionSuccess('Alice slaps Bob');
+class SlapActionTest extends ModActionTestBase {
+  constructor() {
+    super('violence', 'violence:slap', slapRule, eventIsActionSlap);
+  }
+}
+
+describe('Violence: Slap Action', () => {
+  const testSuite = new SlapActionTest();
+  testSuite.createTestSuite();
+});
+
+  await fixture.executeAction(actor.id, target.id);
+  fixture.assertActionSuccess('Alice slaps Bob');
 });
 ```
 
 ## Phase 3: Positioning Category Migration (Week 3)
 
-**Target Files** (8 files):
+**Target Files** (13 files):
 
-- 6 action test files (kneel_before, stand_behind, turn_around, etc.)
+- 11 action test files (kneel_before, stand_behind, turn_around, etc.)
 - 2 rule test files
 
 **Migration Challenges**:
@@ -343,18 +323,16 @@ it('should successfully execute slap action', async () => {
 **Infrastructure Usage**:
 
 ```javascript
-beforeEach(() => {
-  test = ModTestFixture.forPositioningAction('kneel_before');
-  test.beforeEach();
+beforeEach(async () => {
+  fixture = await ModTestFixture.forAction('positioning', 'kneel_before');
 });
 
 it('should add kneeling position component', async () => {
-  const { actor, target } = test.createCloseActors(['Alice', 'Bob']);
-  test.resetWithEntities([actor, target]);
+  const { actor, target } = fixture.createCloseActors(['Alice', 'Bob']);
 
-  await test.executeAction(actor.id, target.id);
-  test.assertActionSuccess();
-  test.assertComponentAdded(actor.id, 'positioning:kneeling_before', {
+  await fixture.executeAction(actor.id, target.id);
+  fixture.assertActionSuccess();
+  fixture.assertComponentAdded(actor.id, 'positioning:kneeling_before', {
     target: target.id,
   });
 });
@@ -362,9 +340,9 @@ it('should add kneeling position component', async () => {
 
 ## Phase 4: Sex Category Migration (Week 4)
 
-**Target Files** (9 files):
+**Target Files** (10 files):
 
-- 8 action test files (fondle_breasts, rub_penis, pump_penis, etc.)
+- 9 action test files (fondle_breasts, rub_penis, pump_penis, etc.)
 - 1 rule test file (pressAgainstBackRule)
 
 **Migration Challenges**:
@@ -393,9 +371,9 @@ class ModSexTestBase extends ModActionTestBase {
 
 ## Phase 5: Intimacy Category Migration (Week 5)
 
-**Target Files** (25 files):
+**Target Files** (27 files):
 
-- 16 action test files (kiss_cheek, hug, cuddle, caress, etc.)
+- 18 action test files (kiss_cheek, hug, cuddle, caress, etc.)
 - 9 rule test files
 
 **Migration Challenges**:
@@ -413,78 +391,83 @@ class ModSexTestBase extends ModActionTestBase {
 
 ## Migration Tooling and Automation
 
-### Migration Scripts
+### Missing Migration Infrastructure
 
-**File**: `scripts/migrateMod.js`
+**CRITICAL**: The following migration tooling referenced in this workflow **does not exist** and must be created before migration begins:
 
-```javascript
-#!/usr/bin/env node
+#### Required Scripts (Not Present)
 
-/**
- * Semi-automated migration script for mod test files
- * Usage: node scripts/migrateMod.js <category> <testFile>
- */
+1. **`scripts/migrateMod.js`** - Semi-automated migration script
+   - **Status**: Missing, needs implementation
+   - **Purpose**: Parse existing test files, extract configuration, generate new infrastructure-based tests
+   - **Dependencies**: AST parsing, template generation, file I/O utilities
 
-class ModTestMigrator {
-  static async migrateFile(category, filePath) {
-    // 1. Parse existing test file
-    // 2. Extract configuration (mod ID, action ID, etc.)
-    // 3. Generate new test file using infrastructure
-    // 4. Validate behavior matches original
-    // 5. Create backup and replace original
-  }
+2. **`scripts/validateMigration.js`** - Migration validation script  
+   - **Status**: Missing, needs implementation
+   - **Purpose**: Compare original vs migrated test behavior, generate validation reports
+   - **Dependencies**: Test result comparison, diff utilities, reporting framework
 
-  static generateMigratedTest(config) {
-    // Generate new test file content using templates
-  }
+3. **`scripts/compareMigrationResults.js`** - Test result comparison utility
+   - **Status**: Missing, needs implementation  
+   - **Purpose**: Compare JSON test outputs before/after migration
+   - **Dependencies**: JSON diff, test result parsing, performance metrics
 
-  static validateMigration(originalPath, migratedPath) {
-    // Run validation checks
-  }
-}
-```
+#### Available Migration-Related Scripts
 
-**File**: `scripts/validateMigration.js`
+Based on actual codebase analysis, these existing scripts could be leveraged:
 
-```javascript
-#!/usr/bin/env node
+- `scripts/capture-test-baseline.sh` - Test baseline capture (exists)
+- `scripts/validate-*-migration.js` (multiple) - Domain-specific validation scripts (exist)
+- `scripts/update-test-references.js` - Test reference updates (exists)
 
-/**
- * Validation script to compare original vs migrated test behavior
- */
+#### Required Infrastructure Before Migration
 
-class MigrationValidator {
-  static async validatePhase(phase) {
-    // Run all tests in phase and compare results
-    // Generate validation report
-    // Highlight any behavioral differences
-  }
-}
-```
+**Templates Directory**: `scripts/templates/` (missing)
+- Action test template
+- Rule test template  
+- ModActionTestBase configuration template
 
-### Migration Templates
+**Migration Utilities**: `scripts/lib/migration/` (missing)
+- AST parsing utilities
+- Test file transformation logic
+- Configuration extraction tools
+- Backup and rollback utilities
 
-**Action Test Template**:
+### Tooling Implementation Priority
+
+**Pre-Migration (Week 0)**:
+1. Create `scripts/migrateMod.js` with basic file parsing
+2. Implement `scripts/compareMigrationResults.js` for validation
+3. Create migration templates in `scripts/templates/`
+4. Test tooling with 1-2 sample files before full migration
+
+**During Migration**: 
+- Use existing validation scripts where applicable
+- Manual migration for complex cases where tooling insufficient
+
+### Required Migration Templates (Missing)
+
+**Action Test Template** (`scripts/templates/action-test.js.template`):
 
 ```javascript
 // Template for generating migrated action tests
-import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
+import { ModActionTestBase } from '../../../common/mods/ModActionTestBase.js';
+import {{actionId}}Rule from '../../../../data/mods/{{modId}}/rules/handle_{{actionId}}.rule.json';
+import eventIsAction{{ActionId}} from '../../../../data/mods/{{modId}}/conditions/event-is-action-{{actionId}}.condition.json';
 
-describe('{{modId}}:{{actionId}} action integration', () => {
-  let test;
+class {{ActionId}}ActionTest extends ModActionTestBase {
+  constructor() {
+    super('{{modId}}', '{{modId}}:{{actionId}}', {{actionId}}Rule, eventIsAction{{ActionId}});
+  }
+}
 
-  beforeEach(() => {
-    test = ModTestFixture.for{{Category}}Action('{{actionId}}');
-    test.beforeEach();
-  });
-
-  {{#tests}}
-  it('{{description}}', async () => {
-    {{testBody}}
-  });
-  {{/tests}}
+describe('{{ModId}}: {{ActionName}} Action', () => {
+  const testSuite = new {{ActionId}}ActionTest();
+  testSuite.createTestSuite();
 });
 ```
+
+**Note**: Template uses actual ModActionTestBase pattern observed in codebase, not the fictional ModTestFixture.forCategoryAction() pattern originally referenced.
 
 ## Rollback and Recovery Strategy
 
@@ -499,51 +482,56 @@ Each migration phase includes rollback capability:
 
 ### Recovery Process
 
-```javascript
-// scripts/rollbackMigration.js
-class MigrationRollback {
-  static async rollbackPhase(phase) {
-    // 1. Restore original test files from backup
-    // 2. Validate original tests still pass
-    // 3. Document rollback reasons
-    // 4. Plan remediation approach
-  }
-}
-```
+**Manual Rollback Process** (since `scripts/rollbackMigration.js` does not exist):
 
-## Implementation Timeline
+1. **Git-based rollback**: `git checkout HEAD~1 -- tests/integration/mods/<category>/`
+2. **Backup restoration**: Restore from manual backups if available
+3. **Test validation**: `npm run test:integration tests/integration/mods/<category>/`
+4. **Issue documentation**: Document rollback reasons in migration log
+5. **Remediation planning**: Analyze failures and plan alternative approach
+
+**Recommendation**: Implement proper rollback tooling before beginning migration phases.
+
+## Implementation Timeline (Revised for Actual Scope)
+
+### Week 0: Pre-Migration Setup (NEW)
+
+- **Day 1-2**: Create missing migration tooling (`scripts/migrateMod.js`, `scripts/validateMigration.js`) 
+- **Day 3**: Create migration templates in `scripts/templates/`
+- **Day 4**: Test migration tooling with 2-3 sample files
+- **Day 5**: Validate tooling and finalize migration process
 
 ### Week 1: Exercise Category (Phase 1)
 
-- **Day 1-2**: Infrastructure setup and validation tooling
-- **Day 3**: Migrate show_off_biceps_action.test.js
-- **Day 4**: Migrate showOffBicepsRule.integration.test.js
-- **Day 5**: Validation, performance testing, and phase review
+- **Day 1**: Migrate show_off_biceps_action.test.js (schema validation pattern)
+- **Day 2**: Infrastructure validation and pattern documentation
+- **Day 3-5**: Address any infrastructure gaps discovered during first migration
 
-### Week 2: Violence Category (Phase 2)
+### Week 2-3: Violence Category (Phase 2)
 
-- **Day 1**: Migrate slap_action.test.js
-- **Day 2**: Migrate sucker_punch_action.test.js
-- **Day 3**: Migrate violence rule test files
-- **Day 4-5**: Validation and pattern refinement
+- **Week 2**: Migrate violence action tests (4 files with complex entity setups)  
+- **Week 3**: Validation, pattern refinement, and performance testing
 
-### Week 3: Positioning Category (Phase 3)
+### Week 3-4: Positioning Category (Phase 3)
 
-- **Day 1-2**: Migrate positioning action tests (6 files)
-- **Day 3**: Migrate positioning rule tests (2 files)
-- **Day 4-5**: Complex positioning scenario validation
+- **Week 3 (partial) - Week 4**: Migrate positioning tests (13 files with complex component relationships)
+- **Focus**: ADD_COMPONENT handler patterns and positioning relationships
 
-### Week 4: Sex Category (Phase 4)
+### Week 5-6: Sex Category (Phase 4)  
 
-- **Day 1-3**: Migrate sex action tests (8 files)
-- **Day 4**: Migrate pressAgainstBackRule.integration.test.js
-- **Day 5**: Anatomy component validation and edge case testing
+- **Week 5-6**: Migrate sex category tests (10 files with complex anatomy requirements)
+- **Focus**: Anatomy component patterns and explicit content validation
 
-### Week 5: Intimacy Category (Phase 5)
+### Week 6-8: Intimacy Category (Phase 5)
 
-- **Day 1-3**: Migrate intimacy action tests (16 files)
-- **Day 4**: Migrate intimacy rule tests (9 files)
-- **Day 5**: Scale validation and final performance testing
+- **Week 6-8**: Migrate intimacy tests (27 files - largest category)
+- **Focus**: Scale validation and performance optimization
+- **Buffer time**: Additional week for largest category complexity
+
+**Total Timeline**: 8 weeks (vs original 5 weeks) due to:
+- Missing tooling requirements (+1 week)
+- 40% larger scope (56 vs 48 files, 21,600+ vs 1,920 lines) (+2 weeks)
+- More complex patterns than originally assumed
 
 ## Success Criteria and Validation
 
@@ -572,53 +560,77 @@ Each phase must meet these criteria before proceeding:
 - [ ] Team feedback incorporated and addressed
 - [ ] Infrastructure improvements identified and implemented
 
-### Final Migration Validation
+### Final Migration Validation (Revised Metrics)
 
 **Code Reduction Metrics**:
 
-- **Target**: 70-80% reduction in duplicated code
-- **Measurement**: Line count before/after migration
-- **Success**: From 1,920+ lines to <500 lines of unique code
+- **Target**: 85-90% reduction in duplicated code (revised for scale)
+- **Measurement**: Line count before/after migration  
+- **Success**: From 21,600+ lines to <1,500 lines of unique code
 
 **Performance Validation**:
 
-- **Target**: No more than 20% performance regression
+- **Target**: No more than 30% performance regression (adjusted for scale)
 - **Measurement**: Test suite execution time comparison
-- **Success**: All test categories execute within performance thresholds
+- **Success**: All test categories execute within revised performance thresholds
 
 **Developer Experience**:
 
 - **Target**: Easier test maintenance and development
 - **Measurement**: Developer feedback and new test creation time
-- **Success**: 60%+ reduction in time to create/modify tests
+- **Success**: 70%+ reduction in time to create/modify tests (improved with infrastructure maturity)
+
+**Migration Completion**:
+
+- **Target**: All 56 files successfully migrated within 8-week timeline
+- **Measurement**: File migration count and timeline adherence
+- **Success**: 100% migration completion with no rollbacks required
 
 ## Risk Mitigation
 
 ### Identified Risks and Mitigations
 
+**CRITICAL: Missing Tooling Risk**:
+
+- **Risk**: Required migration scripts (`migrateMod.js`, `validateMigration.js`, templates) do not exist
+- **Impact**: HIGH - Cannot execute automated migration without tooling
+- **Mitigation**: Implement missing tooling in Week 0 before migration begins
+- **Contingency**: Manual migration with increased timeline (7-8 weeks vs 5 weeks)
+
+**Scale Underestimation Risk**:
+
+- **Risk**: Original scope (48 files/1,920 lines) vs actual (56 files/21,600+ lines) - 40% larger
+- **Impact**: HIGH - Timeline and resource requirements significantly underestimated  
+- **Mitigation**: Revised timeline with additional phases and realistic estimates
+- **Contingency**: Phased delivery approach, deferring non-critical categories
+
 **Behavior Change Risk**:
 
 - **Risk**: Migration introduces subtle test behavior changes
-- **Mitigation**: Comprehensive baseline capture and validation
-- **Contingency**: Rollback capability with automated restoration
+- **Impact**: MEDIUM - Could break existing test assumptions
+- **Mitigation**: Comprehensive baseline capture and validation per phase
+- **Contingency**: Git-based rollback capability (automated tooling missing)
 
 **Performance Regression Risk**:
 
-- **Risk**: New infrastructure significantly slows test execution
-- **Mitigation**: Performance benchmarking and optimization
-- **Contingency**: Performance tuning or infrastructure optimization
+- **Risk**: New infrastructure significantly slows test execution (21,600+ lines vs 1,920)
+- **Impact**: MEDIUM - Developer productivity impact
+- **Mitigation**: Performance benchmarking and optimization, staged rollout
+- **Contingency**: Performance tuning or selective infrastructure adoption
 
 **Development Disruption Risk**:
 
 - **Risk**: Migration blocks ongoing development work
+- **Impact**: MEDIUM - Team productivity during 7-8 week migration
 - **Mitigation**: Feature branch strategy with gradual integration
 - **Contingency**: Parallel development tracks during migration
 
-**Infrastructure Bug Risk**:
+**Infrastructure Compatibility Risk**:
 
-- **Risk**: Infrastructure bugs discovered during migration
-- **Mitigation**: MODTESTREF-006 comprehensive testing
-- **Contingency**: Infrastructure fixes with migration pause/resume
+- **Risk**: Infrastructure bugs discovered during large-scale migration
+- **Impact**: HIGH - Could halt migration mid-stream
+- **Mitigation**: MODTESTREF-006 comprehensive testing, phased approach
+- **Contingency**: Infrastructure fixes with migration pause/resume capability
 
 ## Success Metrics
 
@@ -626,20 +638,20 @@ Each phase must meet these criteria before proceeding:
 
 **Code Reduction Achievement**:
 
-- **Baseline**: 1,920+ lines of duplicated code across 48 files
-- **Target**: <400 lines of unique code
-- **Success**: >80% reduction in code duplication
+- **Baseline**: 21,600+ lines of duplicated code across 56 files
+- **Target**: <1,500 lines of unique code (based on ModActionTestBase pattern)
+- **Success**: >90% reduction in code duplication
 
 **Performance Validation**:
 
 - **Baseline**: Current test execution times per category
-- **Target**: No more than 20% increase in execution time
+- **Target**: No more than 30% increase in execution time (adjusted for scale)
 - **Success**: All categories meet performance requirements
 
 **Migration Efficiency**:
 
-- **Target**: Average 2-3 files migrated per day during active migration
-- **Success**: All 48 files migrated within 5-week timeline
+- **Target**: Average 8-10 files migrated per week during active migration (revised)
+- **Success**: All 56 files migrated within 7-8 week timeline (includes tooling setup)
 
 ### Qualitative Metrics
 

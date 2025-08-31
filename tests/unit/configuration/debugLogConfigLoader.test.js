@@ -2,10 +2,10 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { DebugLogConfigLoader } from '../../../src/configuration/debugLogConfigLoader.js';
-import * as httpUtils from '../../../src/utils/httpUtils.js';
+import * as utilsIndex from '../../../src/utils/index.js';
 
-// Mock dependencies
-jest.mock('../../../src/utils/httpUtils.js');
+// Mock dependencies - mock the index file, not httpUtils directly
+jest.mock('../../../src/utils/index.js');
 
 describe('DebugLogConfigLoader', () => {
   let consoleErrorSpy;
@@ -14,6 +14,98 @@ describe('DebugLogConfigLoader', () => {
   let consoleInfoSpy;
   let mockLogger;
   let mockSafeEventDispatcher;
+
+  // Helper function to create expected enhanced config with default categorization
+  const createEnhancedConfig = (baseConfig) => {
+    const enhanced = { ...baseConfig };
+    
+    // Only add categorization if not already present
+    if (!enhanced.categorization) {
+      enhanced.categorization = {
+        strategy: 'hybrid',
+        enableStackTraceExtraction: true,
+        fallbackCategory: 'general',
+        sourceMappings: {
+          'src/actions': 'actions',
+          'src/logic': 'logic',
+          'src/entities': 'entities',
+          'src/ai': 'ai',
+          'src/domUI': 'domUI',
+          'src/engine': 'engine',
+          'src/events': 'events',
+          'src/loaders': 'loaders',
+          'src/scopeDsl': 'scopeDsl',
+          'src/initializers': 'initializers',
+          'src/dependencyInjection': 'dependencyInjection',
+          'src/logging': 'logging',
+          'src/configuration': 'configuration',
+          'src/utils': 'utils',
+          'src/constants': 'constants',
+          'src/storage': 'storage',
+          'src/types': 'types',
+          'src/alerting': 'alerting',
+          'src/context': 'context',
+          'src/turns': 'turns',
+          'src/adapters': 'adapters',
+          'src/query': 'query',
+          'src/characterBuilder': 'characterBuilder',
+          'src/prompting': 'prompting',
+          'src/anatomy': 'anatomy',
+          'src/scheduling': 'scheduling',
+          'src/errors': 'errors',
+          'src/interfaces': 'interfaces',
+          'src/clothing': 'clothing',
+          'src/input': 'input',
+          'src/testing': 'testing',
+          'src/modding': 'modding',
+          'src/persistence': 'persistence',
+          'src/data': 'data',
+          'src/shared': 'shared',
+          'src/bootstrapper': 'bootstrapper',
+          'src/commands': 'commands',
+          'src/thematicDirection': 'thematicDirection',
+          'src/models': 'models',
+          'src/llms': 'llms',
+          'src/validation': 'validation',
+          'src/pathing': 'pathing',
+          'src/formatting': 'formatting',
+          'src/ports': 'ports',
+          'src/shutdown': 'shutdown',
+          'src/clichesGenerator': 'clichesGenerator',
+          'src/coreMotivationsGenerator': 'coreMotivationsGenerator',
+          'src/thematicDirectionsManager': 'thematicDirectionsManager',
+          'src/services': 'services',
+          'tests': 'tests',
+          'llm-proxy-server': 'llm-proxy',
+        },
+        migration: {
+          mode: 'progressive',
+          preserveOldPatterns: true,
+          enableDualCategorization: false,
+        },
+        performance: {
+          stackTrace: {
+            enabled: true,
+            skipFrames: 4,
+            maxDepth: 20,
+            cache: {
+              enabled: true,
+              maxSize: 200,
+              ttl: 300000,
+            },
+          },
+          fileOperations: {
+            bufferSize: 100,
+            flushInterval: 1000,
+            parallelWrites: true,
+            maxFileHandles: 50,
+          },
+        },
+      };
+    }
+    
+    return enhanced;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -97,13 +189,13 @@ describe('DebugLogConfigLoader', () => {
         },
       };
 
-      httpUtils.fetchWithRetry.mockResolvedValue(mockConfig);
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const result = await loader.loadConfig();
 
-      expect(result).toEqual(mockConfig);
-      expect(httpUtils.fetchWithRetry).toHaveBeenCalledWith(
+      expect(result).toEqual(createEnhancedConfig(mockConfig));
+      expect(utilsIndex.fetchWithRetry).toHaveBeenCalledWith(
         'config/debug-logging-config.json',
         { method: 'GET', headers: { Accept: 'application/json' } },
         2,
@@ -121,13 +213,13 @@ describe('DebugLogConfigLoader', () => {
       const customPath = 'custom/debug-config.json';
       const mockConfig = { enabled: true, mode: 'console' };
 
-      httpUtils.fetchWithRetry.mockResolvedValue(mockConfig);
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const result = await loader.loadConfig(customPath);
 
-      expect(result).toEqual(mockConfig);
-      expect(httpUtils.fetchWithRetry).toHaveBeenCalledWith(
+      expect(result).toEqual(createEnhancedConfig(mockConfig));
+      expect(utilsIndex.fetchWithRetry).toHaveBeenCalledWith(
         customPath,
         expect.any(Object),
         expect.any(Number),
@@ -139,11 +231,12 @@ describe('DebugLogConfigLoader', () => {
     });
 
     it('should return empty object for empty config file', async () => {
-      httpUtils.fetchWithRetry.mockResolvedValue({});
+      utilsIndex.fetchWithRetry.mockResolvedValue({});
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const result = await loader.loadConfig();
 
+      // Empty configs return empty object without enhancement (early return in code)
       expect(result).toEqual({});
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -153,7 +246,7 @@ describe('DebugLogConfigLoader', () => {
     });
 
     it('should return error for malformed JSON (not an object)', async () => {
-      httpUtils.fetchWithRetry.mockResolvedValue('invalid json string');
+      utilsIndex.fetchWithRetry.mockResolvedValue('invalid json string');
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const result = await loader.loadConfig();
@@ -170,7 +263,7 @@ describe('DebugLogConfigLoader', () => {
         mode: 123, // Should be a string
       };
 
-      httpUtils.fetchWithRetry.mockResolvedValue(invalidConfig);
+      utilsIndex.fetchWithRetry.mockResolvedValue(invalidConfig);
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const result = await loader.loadConfig();
@@ -187,7 +280,7 @@ describe('DebugLogConfigLoader', () => {
         logLevel: false, // Should be a string
       };
 
-      httpUtils.fetchWithRetry.mockResolvedValue(invalidConfig);
+      utilsIndex.fetchWithRetry.mockResolvedValue(invalidConfig);
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const result = await loader.loadConfig();
@@ -204,13 +297,13 @@ describe('DebugLogConfigLoader', () => {
         mode: 'development',
       };
 
-      httpUtils.fetchWithRetry.mockResolvedValue(invalidConfig);
+      utilsIndex.fetchWithRetry.mockResolvedValue(invalidConfig);
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const result = await loader.loadConfig();
 
       expect(result.error).toBeUndefined();
-      expect(result).toEqual(invalidConfig);
+      expect(result).toEqual(createEnhancedConfig(invalidConfig));
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining("'enabled'")
       );
@@ -221,7 +314,7 @@ describe('DebugLogConfigLoader', () => {
 
     it('should handle fetch errors gracefully', async () => {
       const fetchError = new Error('Network error');
-      httpUtils.fetchWithRetry.mockRejectedValue(fetchError);
+      utilsIndex.fetchWithRetry.mockRejectedValue(fetchError);
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const result = await loader.loadConfig();
@@ -236,7 +329,7 @@ describe('DebugLogConfigLoader', () => {
 
     it('should handle parse errors gracefully', async () => {
       const parseError = new Error('Unexpected token in JSON');
-      httpUtils.fetchWithRetry.mockRejectedValue(parseError);
+      utilsIndex.fetchWithRetry.mockRejectedValue(parseError);
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const result = await loader.loadConfig();
@@ -249,25 +342,25 @@ describe('DebugLogConfigLoader', () => {
 
     it('should work without a logger (using console)', async () => {
       const mockConfig = { enabled: true, mode: 'production' };
-      httpUtils.fetchWithRetry.mockResolvedValue(mockConfig);
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
 
       const loader = new DebugLogConfigLoader();
       const result = await loader.loadConfig();
 
-      expect(result).toEqual(mockConfig);
+      expect(result).toEqual(createEnhancedConfig(mockConfig));
       expect(consoleDebugSpy).toHaveBeenCalled();
     });
 
     it('should create a no-op event dispatcher if not provided', async () => {
       const mockConfig = { enabled: true };
-      httpUtils.fetchWithRetry.mockResolvedValue(mockConfig);
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const result = await loader.loadConfig();
 
-      expect(result).toEqual(mockConfig);
+      expect(result).toEqual(createEnhancedConfig(mockConfig));
       // Verify fetchWithRetry was called with a dispatcher (even if it's a no-op)
-      expect(httpUtils.fetchWithRetry).toHaveBeenCalledWith(
+      expect(utilsIndex.fetchWithRetry).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(Object),
         expect.any(Number),
@@ -284,7 +377,7 @@ describe('DebugLogConfigLoader', () => {
   describe('isEnabled', () => {
     it('should return true when config is enabled', async () => {
       const mockConfig = { enabled: true, mode: 'development' };
-      httpUtils.fetchWithRetry.mockResolvedValue(mockConfig);
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const isEnabled = await loader.isEnabled();
@@ -294,7 +387,7 @@ describe('DebugLogConfigLoader', () => {
 
     it('should return false when config is explicitly disabled', async () => {
       const mockConfig = { enabled: false, mode: 'development' };
-      httpUtils.fetchWithRetry.mockResolvedValue(mockConfig);
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const isEnabled = await loader.isEnabled();
@@ -304,7 +397,7 @@ describe('DebugLogConfigLoader', () => {
 
     it('should return true when enabled is not specified (default)', async () => {
       const mockConfig = { mode: 'development' };
-      httpUtils.fetchWithRetry.mockResolvedValue(mockConfig);
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const isEnabled = await loader.isEnabled();
@@ -313,7 +406,7 @@ describe('DebugLogConfigLoader', () => {
     });
 
     it('should return false when config fails to load', async () => {
-      httpUtils.fetchWithRetry.mockRejectedValue(new Error('Load failed'));
+      utilsIndex.fetchWithRetry.mockRejectedValue(new Error('Load failed'));
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const isEnabled = await loader.isEnabled();
@@ -325,7 +418,7 @@ describe('DebugLogConfigLoader', () => {
   describe('getMode', () => {
     it('should return the configured mode', async () => {
       const mockConfig = { enabled: true, mode: 'production' };
-      httpUtils.fetchWithRetry.mockResolvedValue(mockConfig);
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const mode = await loader.getMode();
@@ -335,7 +428,7 @@ describe('DebugLogConfigLoader', () => {
 
     it('should return null when mode is not configured', async () => {
       const mockConfig = { enabled: true };
-      httpUtils.fetchWithRetry.mockResolvedValue(mockConfig);
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const mode = await loader.getMode();
@@ -344,7 +437,7 @@ describe('DebugLogConfigLoader', () => {
     });
 
     it('should return null when config fails to load', async () => {
-      httpUtils.fetchWithRetry.mockRejectedValue(new Error('Load failed'));
+      utilsIndex.fetchWithRetry.mockRejectedValue(new Error('Load failed'));
 
       const loader = new DebugLogConfigLoader({ logger: mockLogger });
       const mode = await loader.getMode();
@@ -373,6 +466,152 @@ describe('DebugLogConfigLoader', () => {
       expect(mockLogger.info).not.toHaveBeenCalledWith(
         expect.stringContaining('Using environment-specified')
       );
+    });
+  });
+
+  describe('source-based migration support', () => {
+    it('should apply default categorization settings when none exist', async () => {
+      const mockConfig = { enabled: true, mode: 'development' };
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
+
+      const loader = new DebugLogConfigLoader({ logger: mockLogger });
+      const config = await loader.loadConfig();
+
+      expect(config.categorization).toBeDefined();
+      expect(config.categorization.strategy).toBe('hybrid');
+      expect(config.categorization.enableStackTraceExtraction).toBe(true);
+      expect(config.categorization.sourceMappings).toBeDefined();
+      expect(config.categorization.fallbackCategory).toBe('general');
+    });
+
+    it('should preserve existing categorization settings', async () => {
+      const mockConfig = {
+        enabled: true,
+        mode: 'development',
+        categorization: {
+          strategy: 'source-based',
+          enableStackTraceExtraction: false,
+          sourceMappings: { 'custom/path': 'custom' },
+          fallbackCategory: 'custom-fallback',
+        },
+      };
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
+
+      const loader = new DebugLogConfigLoader({ logger: mockLogger });
+      const config = await loader.loadConfig();
+
+      expect(config.categorization.strategy).toBe('source-based');
+      expect(config.categorization.enableStackTraceExtraction).toBe(false);
+      expect(config.categorization.sourceMappings).toEqual({ 'custom/path': 'custom' });
+      expect(config.categorization.fallbackCategory).toBe('custom-fallback');
+    });
+
+    it('should apply default source mappings when missing', async () => {
+      const mockConfig = {
+        enabled: true,
+        categorization: { strategy: 'source-based' },
+      };
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
+
+      const loader = new DebugLogConfigLoader({ logger: mockLogger });
+      const config = await loader.loadConfig();
+
+      expect(config.categorization.sourceMappings).toBeDefined();
+      expect(config.categorization.sourceMappings['src/actions']).toBe('actions');
+      expect(config.categorization.sourceMappings['src/entities']).toBe('entities');
+      expect(config.categorization.sourceMappings['tests']).toBe('tests');
+      expect(Object.keys(config.categorization.sourceMappings).length).toBeGreaterThan(40);
+    });
+
+    it('should apply default migration settings', async () => {
+      const mockConfig = { enabled: true, categorization: {} };
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
+
+      const loader = new DebugLogConfigLoader({ logger: mockLogger });
+      const config = await loader.loadConfig();
+
+      expect(config.categorization.migration).toBeDefined();
+      expect(config.categorization.migration.mode).toBe('progressive');
+      expect(config.categorization.migration.preserveOldPatterns).toBe(true);
+      expect(config.categorization.migration.enableDualCategorization).toBe(false);
+    });
+
+    it('should apply default performance settings', async () => {
+      const mockConfig = { enabled: true, categorization: {} };
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
+
+      const loader = new DebugLogConfigLoader({ logger: mockLogger });
+      const config = await loader.loadConfig();
+
+      expect(config.categorization.performance).toBeDefined();
+      expect(config.categorization.performance.stackTrace).toBeDefined();
+      expect(config.categorization.performance.stackTrace.enabled).toBe(true);
+      expect(config.categorization.performance.stackTrace.skipFrames).toBe(4);
+      expect(config.categorization.performance.fileOperations).toBeDefined();
+      expect(config.categorization.performance.fileOperations.bufferSize).toBe(100);
+    });
+
+    it('should log appropriate warnings for different strategies', async () => {
+      const mockConfig = {
+        enabled: true,
+        categorization: { strategy: 'source-based' },
+      };
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
+
+      const loader = new DebugLogConfigLoader({ logger: mockLogger });
+      await loader.loadConfig();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        '[DebugLogConfigLoader] Source-based categorization active - pattern-based categorization disabled'
+      );
+    });
+
+    it('should log debug messages for hybrid strategy', async () => {
+      const mockConfig = {
+        enabled: true,
+        categorization: { strategy: 'hybrid' },
+      };
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
+
+      const loader = new DebugLogConfigLoader({ logger: mockLogger });
+      await loader.loadConfig();
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        '[DebugLogConfigLoader] Hybrid categorization mode - using both source and pattern-based routing'
+      );
+    });
+
+    it('should validate categorization configuration', async () => {
+      const mockConfig = {
+        enabled: true,
+        categorization: {
+          strategy: 'invalid-strategy',
+          sourceMappings: null,
+          fallbackCategory: '',
+        },
+      };
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
+
+      const loader = new DebugLogConfigLoader({ logger: mockLogger });
+      await loader.loadConfig();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('categorization\' configuration has issues')
+      );
+    });
+
+    it('should handle categorization validation gracefully', async () => {
+      const mockConfig = {
+        enabled: true,
+        categorization: { invalid: 'structure' },
+      };
+      utilsIndex.fetchWithRetry.mockResolvedValue(mockConfig);
+
+      const loader = new DebugLogConfigLoader({ logger: mockLogger });
+      const config = await loader.loadConfig();
+
+      expect(config).toBeDefined();
+      expect(config.categorization.strategy).toBe('hybrid'); // Default applied
     });
   });
 });

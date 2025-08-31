@@ -1126,11 +1126,37 @@ export class ActionTraceOutputService {
         continue;
       }
 
-      result.actions[actionId] = {
+      // Extract enhanced scope evaluation data for better visibility
+      const enhancedScopeData = data.stages?.enhanced_scope_evaluation;
+      const actionResult = {
         ...data,
         stageOrder: Object.keys(data.stages || {}),
         totalDuration: this.#calculateTotalDuration(data),
       };
+
+      // Add enhanced scope evaluation as a separate section for better debugging
+      if (enhancedScopeData?.data) {
+        actionResult.enhancedScopeEvaluation = {
+          scope: enhancedScopeData.data.scope,
+          timestamp: enhancedScopeData.data.timestamp,
+          entityDiscovery: enhancedScopeData.data.entityDiscovery,
+          filterEvaluations: enhancedScopeData.data.filterEvaluations,
+          summary: {
+            entitiesDiscovered: enhancedScopeData.data.entityDiscovery?.reduce(
+              (sum, discovery) => sum + (discovery.foundEntities || 0), 0
+            ) || 0,
+            entitiesEvaluated: enhancedScopeData.data.filterEvaluations?.length || 0,
+            entitiesPassed: enhancedScopeData.data.filterEvaluations?.filter(
+              evaluation => evaluation.filterPassed
+            ).length || 0,
+            entitiesFailed: enhancedScopeData.data.filterEvaluations?.filter(
+              evaluation => !evaluation.filterPassed
+            ).length || 0
+          }
+        };
+      }
+
+      result.actions[actionId] = actionResult;
     }
 
     return result;

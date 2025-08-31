@@ -115,29 +115,29 @@ describe('LogCategoryDetector', () => {
     });
   });
 
-  describe('category detection - error patterns', () => {
-    it('should detect error category with highest priority', () => {
-      expect(detector.detectCategory('Error: Something went wrong')).toBe(
-        'error'
-      );
-      expect(detector.detectCategory('Exception caught in handler')).toBe(
-        'error'
-      );
-      expect(detector.detectCategory('Request failed with status 500')).toBe(
-        'error'
-      );
-      expect(detector.detectCategory('Catch block triggered')).toBe('error');
-      expect(detector.detectCategory('Stack trace follows')).toBe('error');
+  describe('category detection - level-based error handling (UPDATED for SRCBASLOG-002)', () => {
+    it('should detect error category only with error level metadata', () => {
+      // Error pattern removed - these should not be categorized as error without level metadata
+      expect(detector.detectCategory('Error: Something went wrong')).not.toBe('error');
+      expect(detector.detectCategory('Exception caught in handler')).not.toBe('error');
+      expect(detector.detectCategory('Request failed with status 500')).not.toBe('error');
+      expect(detector.detectCategory('Catch block triggered')).not.toBe('error');
+      expect(detector.detectCategory('Stack trace follows')).not.toBe('error');
+      
+      // But should be categorized as error when level metadata provided
+      expect(detector.detectCategory('Error: Something went wrong', { level: 'error' })).toBe('error');
+      expect(detector.detectCategory('Exception caught in handler', { level: 'error' })).toBe('error');
     });
 
-    it('should prioritize error over other categories', () => {
-      expect(
-        detector.detectCategory('Engine error: initialization failed')
-      ).toBe('error');
-      expect(detector.detectCategory('UI component render error')).toBe(
-        'error'
-      );
-      expect(detector.detectCategory('Network request failed')).toBe('error');
+    it('should prioritize domain patterns over removed error pattern', () => {
+      // These should now be categorized by their domain patterns, not error
+      // Note: Pattern priorities affect matching - higher priority patterns win
+      expect(detector.detectCategory('Engine error: initialization failed')).toBe('initialization');
+      expect(detector.detectCategory('UI component render error')).toBe('ecs'); // 'component' matches ECS pattern (priority 95)
+      expect(detector.detectCategory('Network request failed')).toBe('network');
+      
+      // But level metadata should still override domain patterns
+      expect(detector.detectCategory('Engine error: initialization failed', { level: 'error' })).toBe('error');
     });
   });
 
@@ -443,9 +443,12 @@ describe('LogCategoryDetector', () => {
   });
 
   describe('priority rules', () => {
-    it('should prioritize error over specific patterns', () => {
+    it('should prioritize error level metadata over specific patterns', () => {
       const message = 'Engine initialization error occurred';
-      expect(detector.detectCategory(message)).toBe('error');
+      // Without level metadata, should use pattern matching (engine pattern has higher priority)
+      expect(detector.detectCategory(message)).toBe('engine');
+      // With error level metadata, should return error
+      expect(detector.detectCategory(message, { level: 'error' })).toBe('error');
     });
 
     it('should prioritize specific over general patterns', () => {
@@ -497,12 +500,12 @@ describe('LogCategoryDetector', () => {
         enableCache: false,
       });
 
-      const message = 'Engine error';
+      const message = 'GameEngine started';
       const result1 = noCacheDetector.detectCategory(message);
       const result2 = noCacheDetector.detectCategory(message);
 
-      expect(result1).toBe('error');
-      expect(result2).toBe('error');
+      expect(result1).toBe('engine');
+      expect(result2).toBe('engine');
 
       const stats = noCacheDetector.getStats();
       expect(stats.cacheEnabled).toBe(false);
@@ -522,7 +525,8 @@ describe('LogCategoryDetector', () => {
 
       const results = detector.detectCategories(messages);
 
-      expect(results).toEqual(['engine', 'ui', 'error', 'network', undefined]);
+      // Note: 'Error occurred' should not be categorized as error without level metadata
+      expect(results).toEqual(['engine', 'ui', undefined, 'network', undefined]);
     });
   });
 
@@ -561,16 +565,17 @@ describe('LogCategoryDetector', () => {
     it('should get all patterns', () => {
       const patterns = detector.getPatterns();
 
-      expect(patterns).toHaveProperty('error');
+      // Error pattern was removed in SRCBASLOG-002
+      expect(patterns).not.toHaveProperty('error');
       expect(patterns).toHaveProperty('engine');
       expect(patterns).toHaveProperty('ui');
       expect(patterns).toHaveProperty('ai');
       expect(patterns).toHaveProperty('network');
 
-      // Check pattern structure
-      expect(patterns.error).toHaveProperty('pattern');
-      expect(patterns.error).toHaveProperty('priority');
-      expect(patterns.error.priority).toBe(100); // Highest priority
+      // Check pattern structure (error pattern removed in SRCBASLOG-002)
+      expect(patterns.ecs).toHaveProperty('pattern');
+      expect(patterns.ecs).toHaveProperty('priority');
+      expect(patterns.ecs.priority).toBe(95); // Highest remaining priority
     });
   });
 
@@ -617,6 +622,224 @@ describe('LogCategoryDetector', () => {
 
       const stats = smallCacheDetector.getStats();
       expect(stats.cacheStats.size).toBeLessThanOrEqual(10);
+    });
+  });
+
+  describe('level-based categorization (SRCBASLOG-002)', () => {
+    it('should categorize error-level logs as error', () => {
+      const metadata = { level: 'error' };
+      const message = 'Some debug message';
+      expect(detector.detectCategory(message, metadata)).toBe('error');
+    });
+
+    it('should categorize warn-level logs as warning', () => {
+      const metadata = { level: 'warn' };
+      const message = 'Some debug message';
+      expect(detector.detectCategory(message, metadata)).toBe('warning');
+    });
+
+    it('should NOT categorize as error based on keywords alone', () => {
+      const metadata = { level: 'debug' };
+      const message = 'Action failed with error';
+      expect(detector.detectCategory(message, metadata)).not.toBe('error');
+      expect(detector.detectCategory(message, metadata)).toBe('actions'); // Should detect action pattern instead
+    });
+
+    it('should maintain backward compatibility without metadata', () => {
+      const message = 'EntityManager initialized';
+      const category = detector.detectCategory(message);
+      expect(category).toBe('ecs'); // Should still detect domain patterns
+    });
+
+    it('should prioritize level over pattern matching', () => {
+      const message = 'Engine error: initialization failed';
+      
+      // Without metadata, should use pattern matching (initialization pattern has priority)
+      expect(detector.detectCategory(message)).toBe('initialization');
+      
+      // With error level, should return error
+      expect(detector.detectCategory(message, { level: 'error' })).toBe('error');
+    });
+
+    it('should handle empty metadata gracefully', () => {
+      const message = 'GameEngine started successfully';
+      expect(detector.detectCategory(message, {})).toBe('engine');
+    });
+
+    it('should ignore undefined metadata', () => {
+      const message = 'GameEngine started successfully';
+      expect(detector.detectCategory(message, undefined)).toBe('engine');
+    });
+  });
+
+  describe('source-based categorization (future enhancement)', () => {
+    let sourceEnabledDetector;
+
+    beforeEach(() => {
+      sourceEnabledDetector = new LogCategoryDetector({
+        useSourceBased: true,
+      });
+    });
+
+    it('should use sourceCategory when provided and enabled', () => {
+      const metadata = {
+        level: 'debug',
+        sourceCategory: 'custom-source'
+      };
+      const message = 'Some message';
+      expect(sourceEnabledDetector.detectCategory(message, metadata)).toBe('custom-source');
+    });
+
+    it('should prioritize sourceCategory over pattern matching', () => {
+      const metadata = {
+        level: 'debug',
+        sourceCategory: 'custom-source'
+      };
+      const message = 'EntityManager initialized'; // Would normally be 'ecs'
+      expect(sourceEnabledDetector.detectCategory(message, metadata)).toBe('custom-source');
+    });
+
+    it('should fall back to patterns when sourceCategory missing', () => {
+      const metadata = { level: 'debug' };
+      const message = 'EntityManager initialized';
+      expect(sourceEnabledDetector.detectCategory(message, metadata)).toBe('ecs');
+    });
+
+    it('should still prioritize level over sourceCategory', () => {
+      const metadata = {
+        level: 'error',
+        sourceCategory: 'custom-source'
+      };
+      const message = 'Some error message';
+      expect(sourceEnabledDetector.detectCategory(message, metadata)).toBe('error');
+    });
+  });
+
+  describe('false positive elimination (SRCBASLOG-002)', () => {
+    it('should NOT categorize debug logs with error keywords as error', () => {
+      const testCases = [
+        'Error: Something went wrong',
+        'Exception caught in handler',
+        'Request failed with status 500',
+        'Catch block triggered',
+        'Stack trace follows',
+        'Action failed with validation error',
+        'Throw statement executed'
+      ];
+
+      testCases.forEach(message => {
+        // Without level metadata, should not be categorized as error
+        const category = detector.detectCategory(message);
+        expect(category).not.toBe('error');
+        
+        // With debug level, definitely should not be error
+        const categoryWithLevel = detector.detectCategory(message, { level: 'debug' });
+        expect(categoryWithLevel).not.toBe('error');
+      });
+    });
+
+    it('should categorize only level=error logs as error', () => {
+      const message = 'Action failed with error';
+      
+      // Should be error only when level is error
+      expect(detector.detectCategory(message, { level: 'error' })).toBe('error');
+      expect(detector.detectCategory(message, { level: 'warn' })).toBe('warning');
+      expect(detector.detectCategory(message, { level: 'info' })).toBe('actions');
+      expect(detector.detectCategory(message, { level: 'debug' })).toBe('actions');
+    });
+
+    it('should preserve domain pattern detection without error pattern', () => {
+      const testCases = [
+        { message: 'EntityManager failed to initialize', expected: 'ecs' },
+        { message: 'GameEngine error occurred', expected: 'engine' },
+        { message: 'AI model failed to load', expected: 'ai' },
+        { message: 'Action execution failed', expected: 'actions' }
+      ];
+
+      testCases.forEach(({ message, expected }) => {
+        const category = detector.detectCategory(message, { level: 'debug' });
+        expect(category).toBe(expected);
+      });
+    });
+  });
+
+  describe('cache functionality with metadata', () => {
+    it('should cache results with metadata', () => {
+      const message = 'EntityManager initialized';
+      const metadata = { level: 'debug' };
+      
+      // Clear any existing cache
+      detector.clearCache();
+      
+      // First call
+      const result1 = detector.detectCategory(message, metadata);
+      // Second call should use cache
+      const result2 = detector.detectCategory(message, metadata);
+      
+      expect(result1).toBe(result2);
+      expect(result1).toBe('ecs');
+      
+      const stats = detector.getStats();
+      expect(stats.cacheHits).toBeGreaterThan(0);
+    });
+
+    it('should differentiate cache keys for different metadata', () => {
+      const message = 'Test message';
+      
+      const errorResult = detector.detectCategory(message, { level: 'error' });
+      const debugResult = detector.detectCategory(message, { level: 'debug' });
+      
+      expect(errorResult).toBe('error');
+      expect(debugResult).toBeUndefined(); // No pattern match for generic message
+    });
+
+    it('should handle cache with source-based categorization', () => {
+      const sourceDetector = new LogCategoryDetector({
+        useSourceBased: true,
+        enableCache: true
+      });
+      
+      const message = 'Test message';
+      const metadata = { level: 'debug', sourceCategory: 'custom' };
+      
+      const result1 = sourceDetector.detectCategory(message, metadata);
+      const result2 = sourceDetector.detectCategory(message, metadata);
+      
+      expect(result1).toBe('custom');
+      expect(result2).toBe('custom');
+    });
+  });
+
+  describe('batch detection with metadata', () => {
+    it('should support batch detection with metadata array', () => {
+      const messages = ['Error occurred', 'Warning message', 'Debug info'];
+      const metadataArray = [
+        { level: 'error' },
+        { level: 'warn' },
+        { level: 'debug' }
+      ];
+      
+      const categories = detector.detectCategories(messages, metadataArray);
+      
+      expect(categories).toEqual(['error', 'warning', undefined]);
+    });
+
+    it('should handle batch detection with partial metadata', () => {
+      const messages = ['Error occurred', 'EntityManager started'];
+      const metadataArray = [{ level: 'error' }]; // Only metadata for first message
+      
+      const categories = detector.detectCategories(messages, metadataArray);
+      
+      expect(categories[0]).toBe('error');
+      expect(categories[1]).toBe('ecs'); // Should fall back to pattern matching
+    });
+
+    it('should maintain backward compatibility for batch detection', () => {
+      const messages = ['EntityManager started', 'GameEngine initialized'];
+      
+      const categories = detector.detectCategories(messages);
+      
+      expect(categories).toEqual(['ecs', 'engine']);
     });
   });
 });

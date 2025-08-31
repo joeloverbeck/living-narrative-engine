@@ -160,7 +160,7 @@ class HybridLogger {
 
     // Initialize critical buffer fields after existing initialization
     this.#criticalBuffer = [];
-    this.#maxBufferSize = this.#criticalLoggingConfig?.bufferSize || 50;
+    this.#maxBufferSize = this.#criticalLoggingConfig?.bufferSize ?? 50;
     this.#bufferMetadata = {
       totalWarnings: 0,
       totalErrors: 0,
@@ -192,6 +192,11 @@ class HybridLogger {
   #addToCriticalBuffer(level, message, category, metadata = {}) {
     if (level !== 'warn' && level !== 'error') {
       return; // Only buffer critical logs
+    }
+
+    // If buffer size is 0, don't store anything
+    if (this.#maxBufferSize === 0) {
+      return;
     }
 
     const logEntry = {
@@ -254,7 +259,7 @@ class HybridLogger {
    * @param {...any} args - Additional arguments or objects to include in the warning output
    */
   warn(message, ...args) {
-    const category = this.#categoryDetector.detectCategory(message);
+    const category = this.#categoryDetector.detectCategory(message, { level: 'warn' });
 
     // Add to critical buffer
     this.#addToCriticalBuffer('warn', message, category, { args });
@@ -270,7 +275,7 @@ class HybridLogger {
    * @param {...any} args - Additional arguments or objects to include in the error output
    */
   error(message, ...args) {
-    const category = this.#categoryDetector.detectCategory(message);
+    const category = this.#categoryDetector.detectCategory(message, { level: 'error' });
 
     // Add to critical buffer
     this.#addToCriticalBuffer('error', message, category, { args });
@@ -376,7 +381,7 @@ class HybridLogger {
 
     try {
       // Detect category once for efficiency
-      const category = this.#categoryDetector.detectCategory(message);
+      const category = this.#categoryDetector.detectCategory(message, { level });
 
       // Track performance metrics if monitor is available
       if (
@@ -471,18 +476,18 @@ class HybridLogger {
    * @returns {boolean} True if log should go to console
    */
   #shouldLogToConsole(level, category) {
-    if (!this.#filters.console.enabled) {
-      return false;
-    }
-
     // Check if this is a critical log that should bypass filters
     if (
       this.#criticalLoggingConfig &&
       this.#criticalLoggingConfig.alwaysShowInConsole
     ) {
       if (level === 'warn' || level === 'error') {
-        return true; // Always show critical logs
+        return true; // Always show critical logs, even if console is disabled
       }
+    }
+
+    if (!this.#filters.console.enabled) {
+      return false;
     }
 
     // Existing filter logic for non-critical logs

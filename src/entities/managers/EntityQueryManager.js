@@ -198,6 +198,27 @@ export default class EntityQueryManager {
       `EntityQueryManager.getEntitiesWithComponent found ${results.length} entities with component '${componentTypeId}' using index`
     );
 
+    // Enhanced logging for debugging park bench scope resolution issue
+    if (componentTypeId === 'positioning:allows_sitting') {
+      this.#logger.info(
+        `[DEBUG] EntityQueryManager detailed search for 'positioning:allows_sitting':`,
+        {
+          componentTypeId,
+          entityIdsFromIndex: Array.from(entityIds),
+          totalEntityIdsFound: entityIds.size,
+          entitiesFound: results.map(entity => ({
+            id: entity.id,
+            hasComponent: this.#entityRepository.hasComponent(entity.id, componentTypeId),
+            componentData: this.#entityRepository.getComponent(entity.id, componentTypeId)
+          })),
+          repositoryStats: {
+            totalEntities: this.#entityRepository.size,
+            hasComponentIndex: this.#entityRepository.hasComponentIndex ? this.#entityRepository.hasComponentIndex(componentTypeId) : 'unknown'
+          }
+        }
+      );
+    }
+
     return results;
   }
 

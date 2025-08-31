@@ -19,7 +19,7 @@ describe('ScopeEngine - Comprehensive Coverage Tests', () => {
 
     mockEntityManager = {
       getEntitiesWithComponent: jest.fn(),
-      getEntities: jest.fn(),
+      getEntities: jest.fn().mockReturnValue([]), // Always return empty array by default
       hasComponent: jest.fn(),
       getEntityInstance: jest.fn(),
       getComponentData: jest.fn(),

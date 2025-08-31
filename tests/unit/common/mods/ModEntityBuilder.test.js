@@ -12,6 +12,7 @@ import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
   DESCRIPTION_COMPONENT_ID,
+  ACTOR_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 
 describe('ModEntityBuilder', () => {
@@ -310,7 +311,7 @@ describe('ModEntityBuilder', () => {
       const components = [
         ['core:actor', { isActor: true }],
         ['positioning:facing', { direction: 'north' }],
-        ['anatomy:part', { subType: 'torso' }],
+        ['anatomy:body_part', { subType: 'torso' }],
         ['custom:component', { customData: 'value' }],
       ];
 
@@ -404,7 +405,7 @@ describe('ModEntityBuilder', () => {
 
       const result = builder.asBodyPart(options);
 
-      expect(result.entityData.components['anatomy:part']).toEqual({
+      expect(result.entityData.components['anatomy:body_part']).toEqual({
         parent: 'torso1',
         children: ['arm1', 'arm2'],
         subType: 'torso',
@@ -414,7 +415,7 @@ describe('ModEntityBuilder', () => {
     it('should handle default options', () => {
       const result = builder.asBodyPart({ subType: 'arm' });
 
-      expect(result.entityData.components['anatomy:part']).toEqual({
+      expect(result.entityData.components['anatomy:body_part']).toEqual({
         parent: null,
         children: [],
         subType: 'arm',
@@ -424,7 +425,7 @@ describe('ModEntityBuilder', () => {
     it('should handle empty options object', () => {
       const result = builder.asBodyPart({});
 
-      expect(result.entityData.components['anatomy:part']).toEqual({
+      expect(result.entityData.components['anatomy:body_part']).toEqual({
         parent: null,
         children: [],
         subType: undefined,
@@ -728,6 +729,8 @@ describe('ModEntityScenarios', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Alice' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'core:location': { location: 'room1' },
+          [ACTOR_COMPONENT_ID]: {},
         },
       });
 
@@ -736,6 +739,8 @@ describe('ModEntityScenarios', () => {
         components: {
           [NAME_COMPONENT_ID]: { text: 'Bob' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'core:location': { location: 'room1' },
+          [ACTOR_COMPONENT_ID]: {},
         },
       });
     });
@@ -868,10 +873,10 @@ describe('ModEntityScenarios', () => {
       });
 
       expect(result.bodyParts).toHaveLength(2);
-      expect(result.bodyParts[0].components['anatomy:part'].subType).toBe(
+      expect(result.bodyParts[0].components['anatomy:body_part'].subType).toBe(
         'torso'
       );
-      expect(result.bodyParts[1].components['anatomy:part'].subType).toBe(
+      expect(result.bodyParts[1].components['anatomy:body_part'].subType).toBe(
         'arm'
       );
     });
@@ -883,16 +888,16 @@ describe('ModEntityScenarios', () => {
 
       // Root part (torso) should have no parent
       const rootPart = result.bodyParts.find(
-        (part) => part.components['anatomy:part'].subType === 'torso'
+        (part) => part.components['anatomy:body_part'].subType === 'torso'
       );
-      expect(rootPart.components['anatomy:part'].parent).toBeNull();
+      expect(rootPart.components['anatomy:body_part'].parent).toBeNull();
 
       // Non-root parts should have torso as parent
       const nonRootParts = result.bodyParts.filter(
-        (part) => part.components['anatomy:part'].subType !== 'torso'
+        (part) => part.components['anatomy:body_part'].subType !== 'torso'
       );
       nonRootParts.forEach((part) => {
-        expect(part.components['anatomy:part'].parent).toBe('torso1');
+        expect(part.components['anatomy:body_part'].parent).toBe('torso1');
       });
     });
   });

@@ -25,6 +25,7 @@ const createValidLogEntry = (overrides = {}) => ({
   message: 'Integration test log message',
   timestamp: new Date().toISOString(),
   category: 'test',
+  sourceCategory: 'test', // Add sourceCategory for level-based routing testing
   source: 'integration.test.js:123',
   sessionId: '550e8400-e29b-41d4-a716-446655440000',
   metadata: { testRun: true },
@@ -605,6 +606,301 @@ describe('LogStorageService Integration Tests', () => {
           retryAttempt: 3,
         }),
       });
+    });
+  });
+
+  describe('Level-based routing integration', () => {
+    test('should create separate files for error and warning logs', async () => {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const logs = [
+        createValidLogEntry({ 
+          level: 'error', 
+          message: 'Critical system failure',
+          sourceCategory: 'actions' // Should be ignored for error level
+        }),
+        createValidLogEntry({ 
+          level: 'warn', 
+          message: 'Performance degradation detected',
+          sourceCategory: 'entities' // Should be ignored for warn level
+        }),
+        createValidLogEntry({ 
+          level: 'info', 
+          message: 'System initialized',
+          sourceCategory: 'bootstrapper' // Should be used for info level
+        }),
+        createValidLogEntry({ 
+          level: 'debug', 
+          message: 'Debug information',
+          sourceCategory: 'logic' // Should be used for debug level
+        })
+      ];
+
+      await service.writeLogs(logs);
+      await service.flushLogs();
+
+      // Check that error.jsonl exists and contains error log
+      const errorFilePath = path.join(tempDir, today, 'error.jsonl');
+      const errorFileExists = await fs.access(errorFilePath).then(() => true).catch(() => false);
+      expect(errorFileExists).toBe(true);
+
+      const errorContent = await fs.readFile(errorFilePath, 'utf8');
+      const errorLogs = errorContent.trim().split('\n').map(line => JSON.parse(line));
+      expect(errorLogs).toHaveLength(1);
+      expect(errorLogs[0]).toMatchObject({
+        level: 'error',
+        message: 'Critical system failure'
+      });
+
+      // Check that warning.jsonl exists and contains warning log
+      const warningFilePath = path.join(tempDir, today, 'warning.jsonl');
+      const warningFileExists = await fs.access(warningFilePath).then(() => true).catch(() => false);
+      expect(warningFileExists).toBe(true);
+
+      const warningContent = await fs.readFile(warningFilePath, 'utf8');
+      const warningLogs = warningContent.trim().split('\n').map(line => JSON.parse(line));
+      expect(warningLogs).toHaveLength(1);
+      expect(warningLogs[0]).toMatchObject({
+        level: 'warn',
+        message: 'Performance degradation detected'
+      });
+
+      // Check that category-based files exist for non-error/warn logs
+      const bootstrapperFilePath = path.join(tempDir, today, 'bootstrapper.jsonl');
+      const logicFilePath = path.join(tempDir, today, 'logic.jsonl');
+
+      const bootstrapperExists = await fs.access(bootstrapperFilePath).then(() => true).catch(() => false);
+      const logicExists = await fs.access(logicFilePath).then(() => true).catch(() => false);
+
+      expect(bootstrapperExists).toBe(true);
+      expect(logicExists).toBe(true);
+
+      // Verify category-based file contents
+      const bootstrapperContent = await fs.readFile(bootstrapperFilePath, 'utf8');
+      const logicContent = await fs.readFile(logicFilePath, 'utf8');
+
+      const bootstrapperLogs = bootstrapperContent.trim().split('\n').map(line => JSON.parse(line));
+      const logicLogs = logicContent.trim().split('\n').map(line => JSON.parse(line));
+
+      expect(bootstrapperLogs).toHaveLength(1);
+      expect(bootstrapperLogs[0]).toMatchObject({
+        level: 'info',
+        message: 'System initialized'
+      });
+
+      expect(logicLogs).toHaveLength(1);
+      expect(logicLogs[0]).toMatchObject({
+        level: 'debug',
+        message: 'Debug information'
+      });
+    });
+
+    test('should handle client-provided categories correctly', async () => {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Test all 40+ categories mentioned in the workflow
+      const clientCategories = [
+        'actions', 'logic', 'entities', 'domUI', 'events', 'scopeDsl', 'engine', 'ai', 
+        'loaders', 'logging', 'dependencyInjection', 'initializers', 'config', 
+        'configuration', 'constants', 'services', 'utils', 'storage', 'persistence',
+        'characterBuilder', 'prompting', 'anatomy', 'clothing', 'turns', 'scheduling',
+        'errors', 'types', 'interfaces', 'validation', 'alerting', 'context',
+        'adapters', 'query', 'input', 'testing', 'modding', 'data', 'shared',
+        'bootstrapper', 'commands', 'thematicDirection', 'models', 'llms',
+        'pathing', 'formatting', 'ports', 'shutdown', 'common', 'tests', 'llm-proxy'
+      ];
+
+      // Create one log for each category
+      const logs = clientCategories.map((category, index) => 
+        createValidLogEntry({
+          level: 'info',
+          message: `Log from ${category}`,
+          sourceCategory: category,
+          timestamp: new Date(Date.now() + index).toISOString() // Unique timestamps
+        })
+      );
+
+      await service.writeLogs(logs);
+      await service.flushLogs();
+
+      // Verify that files were created for each category
+      for (const category of clientCategories) {
+        const categoryFilePath = path.join(tempDir, today, `${category}.jsonl`);
+        const categoryFileExists = await fs.access(categoryFilePath).then(() => true).catch(() => false);
+        
+        expect(categoryFileExists).toBe(true);
+
+        const categoryContent = await fs.readFile(categoryFilePath, 'utf8');
+        const categoryLogs = categoryContent.trim().split('\n').map(line => JSON.parse(line));
+        
+        expect(categoryLogs).toHaveLength(1);
+        expect(categoryLogs[0]).toMatchObject({
+          level: 'info',
+          message: `Log from ${category}`,
+          sourceCategory: category
+        });
+      }
+    });
+
+    test('should prioritize level-based routing over sourceCategory', async () => {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const logs = [
+        createValidLogEntry({
+          level: 'error',
+          message: 'Error from actions',
+          sourceCategory: 'actions' // Should be ignored because level=error
+        }),
+        createValidLogEntry({
+          level: 'warn',
+          message: 'Warning from entities',  
+          sourceCategory: 'entities' // Should be ignored because level=warn
+        })
+      ];
+
+      await service.writeLogs(logs);
+      await service.flushLogs();
+
+      // Check that level-based files were created
+      const errorFilePath = path.join(tempDir, today, 'error.jsonl');
+      const warningFilePath = path.join(tempDir, today, 'warning.jsonl');
+
+      const errorExists = await fs.access(errorFilePath).then(() => true).catch(() => false);
+      const warningExists = await fs.access(warningFilePath).then(() => true).catch(() => false);
+
+      expect(errorExists).toBe(true);
+      expect(warningExists).toBe(true);
+
+      // Check that category-based files were NOT created for these logs
+      const actionsFilePath = path.join(tempDir, today, 'actions.jsonl');
+      const entitiesFilePath = path.join(tempDir, today, 'entities.jsonl');
+
+      const actionsExists = await fs.access(actionsFilePath).then(() => true).catch(() => false);
+      const entitiesExists = await fs.access(entitiesFilePath).then(() => true).catch(() => false);
+
+      expect(actionsExists).toBe(false);
+      expect(entitiesExists).toBe(false);
+
+      // Verify file contents
+      const errorContent = await fs.readFile(errorFilePath, 'utf8');
+      const warningContent = await fs.readFile(warningFilePath, 'utf8');
+
+      const errorLogs = errorContent.trim().split('\n').map(line => JSON.parse(line));
+      const warningLogs = warningContent.trim().split('\n').map(line => JSON.parse(line));
+
+      expect(errorLogs).toHaveLength(1);
+      expect(errorLogs[0].message).toBe('Error from actions');
+      expect(errorLogs[0].sourceCategory).toBe('actions'); // Should preserve sourceCategory in log
+
+      expect(warningLogs).toHaveLength(1);
+      expect(warningLogs[0].message).toBe('Warning from entities');
+      expect(warningLogs[0].sourceCategory).toBe('entities');
+    });
+
+    test('should handle mixed levels and maintain performance', async () => {
+      const startTime = Date.now();
+      const today = new Date().toISOString().split('T')[0];
+
+      // Create 200 logs with mixed levels and categories for performance testing
+      const logs = [];
+      const levels = ['error', 'warn', 'info', 'debug'];
+      const categories = ['actions', 'logic', 'entities', 'domUI', 'ai', 'events'];
+
+      for (let i = 0; i < 200; i++) {
+        logs.push(createValidLogEntry({
+          level: levels[i % 4],
+          sourceCategory: categories[i % 6],
+          message: `Performance test log ${i}`,
+          timestamp: new Date(Date.now() + i).toISOString()
+        }));
+      }
+
+      await service.writeLogs(logs);
+      await service.flushLogs();
+
+      const processingTime = Date.now() - startTime;
+
+      // Should process 200 logs in under 2 seconds (generous limit for integration test)
+      expect(processingTime).toBeLessThan(2000);
+
+      // Verify files were created
+      const errorFilePath = path.join(tempDir, today, 'error.jsonl');
+      const warningFilePath = path.join(tempDir, today, 'warning.jsonl');
+
+      const errorExists = await fs.access(errorFilePath).then(() => true).catch(() => false);
+      const warningExists = await fs.access(warningFilePath).then(() => true).catch(() => false);
+
+      expect(errorExists).toBe(true);
+      expect(warningExists).toBe(true);
+
+      // Count logs in level-based files
+      const errorContent = await fs.readFile(errorFilePath, 'utf8');
+      const warningContent = await fs.readFile(warningFilePath, 'utf8');
+
+      const errorCount = errorContent.trim().split('\n').length;
+      const warningCount = warningContent.trim().split('\n').length;
+
+      // Should have 50 error logs (every 4th log) and 50 warning logs
+      expect(errorCount).toBe(50);
+      expect(warningCount).toBe(50);
+
+      // Verify category files exist for info/debug logs
+      for (const category of categories) {
+        const categoryFilePath = path.join(tempDir, today, `${category}.jsonl`);
+        const categoryExists = await fs.access(categoryFilePath).then(() => true).catch(() => false);
+        expect(categoryExists).toBe(true);
+      }
+    });
+
+    test('should handle fallback when sourceCategory is invalid', async () => {
+      const today = new Date().toISOString().split('T')[0];
+
+      const logs = [
+        createValidLogEntry({
+          level: 'info',
+          message: 'Log with null sourceCategory',
+          sourceCategory: null
+        }),
+        createValidLogEntry({
+          level: 'info',
+          message: 'Log with invalid sourceCategory',
+          sourceCategory: 123
+        }),
+        createValidLogEntry({
+          level: 'info',
+          message: 'Log with empty sourceCategory',
+          sourceCategory: ''
+        }),
+        createValidLogEntry({
+          level: 'info',
+          message: 'Log with missing sourceCategory',
+          sourceCategory: undefined,
+          category: 'fallback' // Should use this as backup
+        })
+      ];
+
+      await service.writeLogs(logs);
+      await service.flushLogs();
+
+      // Should create general.jsonl for invalid sourceCategories and fallback.jsonl for the last log
+      const generalFilePath = path.join(tempDir, today, 'general.jsonl');
+      const fallbackFilePath = path.join(tempDir, today, 'fallback.jsonl');
+
+      const generalExists = await fs.access(generalFilePath).then(() => true).catch(() => false);
+      const fallbackExists = await fs.access(fallbackFilePath).then(() => true).catch(() => false);
+
+      expect(generalExists).toBe(true);
+      expect(fallbackExists).toBe(true);
+
+      // Verify content
+      const generalContent = await fs.readFile(generalFilePath, 'utf8');
+      const fallbackContent = await fs.readFile(fallbackFilePath, 'utf8');
+
+      const generalLogs = generalContent.trim().split('\n').map(line => JSON.parse(line));
+      const fallbackLogs = fallbackContent.trim().split('\n').map(line => JSON.parse(line));
+
+      expect(generalLogs).toHaveLength(3); // First 3 logs with invalid sourceCategory
+      expect(fallbackLogs).toHaveLength(1); // Last log with category fallback
     });
   });
 });

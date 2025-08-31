@@ -36,6 +36,7 @@
  * @property {boolean} [enablePerformance] - Enable performance metrics
  * @property {boolean} [enableBrowser] - Enable browser metadata
  * @property {boolean} [lazyLoadExpensive] - Use requestIdleCallback for expensive operations
+ * @property {Function} [ErrorConstructor] - Error constructor to use for stack trace generation
  */
 
 /**
@@ -79,6 +80,12 @@ class LogMetadataEnricher {
   #browserPatterns;
 
   /**
+   * @private
+   * @type {Function}
+   */
+  #ErrorConstructor;
+
+  /**
    * Creates a LogMetadataEnricher instance
    *
    * @param {EnricherConfig} [config] - Configuration options
@@ -90,6 +97,7 @@ class LogMetadataEnricher {
       enablePerformance = true,
       enableBrowser = true,
       lazyLoadExpensive = false,
+      ErrorConstructor = Error,
     } = config;
 
     this.#level = level;
@@ -97,6 +105,7 @@ class LogMetadataEnricher {
     this.#enablePerformance = enablePerformance;
     this.#enableBrowser = enableBrowser;
     this.#lazyLoadExpensive = lazyLoadExpensive;
+    this.#ErrorConstructor = ErrorConstructor;
 
     // Initialize browser-specific regex patterns for stack parsing
     this.#browserPatterns = new Map([
@@ -131,6 +140,10 @@ class LogMetadataEnricher {
       if (source) {
         enriched.source = source;
       }
+      
+      // Add source category for better categorization
+      const sourceCategory = this.detectSourceCategory();
+      enriched.sourceCategory = sourceCategory;
     }
 
     enriched.metadata = metadata;
@@ -159,6 +172,10 @@ class LogMetadataEnricher {
       if (source) {
         enriched.source = source;
       }
+      
+      // Add source category for better categorization
+      const sourceCategory = this.detectSourceCategory();
+      enriched.sourceCategory = sourceCategory;
     }
 
     enriched.metadata = metadata;
@@ -443,7 +460,7 @@ class LogMetadataEnricher {
    */
   detectSource(skipFrames = 4) {
     try {
-      const stack = new Error().stack;
+      const stack = new this.#ErrorConstructor().stack;
       if (!stack) return undefined;
 
       const lines = stack.split('\n');
@@ -462,6 +479,39 @@ class LogMetadataEnricher {
       // Ignore source detection errors
     }
     return undefined;
+  }
+
+  /**
+   * Detect source category from stack trace
+   *
+   * @param {number} [skipFrames] - Number of stack frames to skip
+   * @returns {string} Source category (defaults to 'general')
+   */
+  detectSourceCategory(skipFrames = 4) {
+    try {
+      const stack = new this.#ErrorConstructor().stack;
+      if (!stack) return 'general';
+
+      const lines = stack.split('\n');
+
+      // Dynamic depth detection - skip internal frames
+      for (let i = skipFrames; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line && !this.#isInternalFrame(line)) {
+          // Try each browser pattern to extract full path
+          for (const [, pattern] of this.#browserPatterns) {
+            const match = line.match(pattern);
+            if (match) {
+              const fullPath = match[1];
+              return this.#mapPathToCategory(fullPath);
+            }
+          }
+        }
+      }
+    } catch {
+      // Ignore source detection errors
+    }
+    return 'general';
   }
 
   /**
@@ -506,6 +556,106 @@ class LogMetadataEnricher {
     }
 
     return undefined;
+  }
+
+
+
+  /**
+   * Map file path to logical category
+   *
+   * @private
+   * @param {string} fullPath - Full file path
+   * @returns {string} Category name
+   */
+  #mapPathToCategory(fullPath) {
+    if (!fullPath) return 'general';
+
+    // Normalize path separators
+    const normalizedPath = fullPath.replace(/\\/g, '/');
+
+    // Define category mappings - ordered by expected frequency for performance
+    const categoryMappings = [
+      // Most common directories first
+      { pattern: /\/src\/actions\//, category: 'actions' },
+      { pattern: /\/src\/logic\//, category: 'logic' },
+      { pattern: /\/src\/entities\//, category: 'entities' },
+      { pattern: /\/src\/domUI\//, category: 'domUI' },
+      { pattern: /\/src\/events\//, category: 'events' },
+      { pattern: /\/src\/scopeDsl\//, category: 'scopeDsl' },
+      { pattern: /\/src\/engine\//, category: 'engine' },
+      { pattern: /\/src\/ai\//, category: 'ai' },
+      { pattern: /\/src\/loaders\//, category: 'loaders' },
+      { pattern: /\/src\/logging\//, category: 'logging' },
+      
+      // Infrastructure and configuration
+      { pattern: /\/src\/dependencyInjection\//, category: 'dependencyInjection' },
+      { pattern: /\/src\/initializers\//, category: 'initializers' },
+      { pattern: /\/src\/config\//, category: 'config' },
+      { pattern: /\/src\/configuration\//, category: 'configuration' },
+      { pattern: /\/src\/constants\//, category: 'constants' },
+      
+      // Service layer
+      { pattern: /\/src\/services\//, category: 'services' },
+      { pattern: /\/src\/utils\//, category: 'utils' },
+      { pattern: /\/src\/storage\//, category: 'storage' },
+      { pattern: /\/src\/persistence\//, category: 'persistence' },
+      
+      // Domain-specific
+      { pattern: /\/src\/characterBuilder\//, category: 'characterBuilder' },
+      { pattern: /\/src\/prompting\//, category: 'prompting' },
+      { pattern: /\/src\/anatomy\//, category: 'anatomy' },
+      { pattern: /\/src\/clothing\//, category: 'clothing' },
+      { pattern: /\/src\/turns\//, category: 'turns' },
+      { pattern: /\/src\/scheduling\//, category: 'scheduling' },
+      
+      // Error handling and types
+      { pattern: /\/src\/errors\//, category: 'errors' },
+      { pattern: /\/src\/types\//, category: 'types' },
+      { pattern: /\/src\/interfaces\//, category: 'interfaces' },
+      { pattern: /\/src\/validation\//, category: 'validation' },
+      
+      // Additional subsystems
+      { pattern: /\/src\/alerting\//, category: 'alerting' },
+      { pattern: /\/src\/context\//, category: 'context' },
+      { pattern: /\/src\/adapters\//, category: 'adapters' },
+      { pattern: /\/src\/query\//, category: 'query' },
+      { pattern: /\/src\/input\//, category: 'input' },
+      { pattern: /\/src\/testing\//, category: 'testing' },
+      { pattern: /\/src\/modding\//, category: 'modding' },
+      { pattern: /\/src\/data\//, category: 'data' },
+      { pattern: /\/src\/shared\//, category: 'shared' },
+      { pattern: /\/src\/bootstrapper\//, category: 'bootstrapper' },
+      { pattern: /\/src\/commands\//, category: 'commands' },
+      { pattern: /\/src\/models\//, category: 'models' },
+      { pattern: /\/src\/llms\//, category: 'llms' },
+      { pattern: /\/src\/pathing\//, category: 'pathing' },
+      { pattern: /\/src\/formatting\//, category: 'formatting' },
+      { pattern: /\/src\/ports\//, category: 'ports' },
+      { pattern: /\/src\/shutdown\//, category: 'shutdown' },
+      { pattern: /\/src\/common\//, category: 'common' },
+      
+      // Generator-specific directories
+      { pattern: /\/src\/thematicDirection\//, category: 'thematicDirection' },
+      { pattern: /\/src\/clichesGenerator\//, category: 'clichesGenerator' },
+      { pattern: /\/src\/coreMotivationsGenerator\//, category: 'coreMotivationsGenerator' },
+      { pattern: /\/src\/thematicDirectionsManager\//, category: 'thematicDirectionsManager' },
+      
+      // Test files
+      { pattern: /\/tests\//, category: 'tests' },
+      
+      // LLM proxy server
+      { pattern: /\/llm-proxy-server\//, category: 'llm-proxy' },
+    ];
+
+    // Check each pattern
+    for (const { pattern, category } of categoryMappings) {
+      if (pattern.test(normalizedPath)) {
+        return category;
+      }
+    }
+
+    // Default category for unmatched paths
+    return 'general';
   }
 
   /**

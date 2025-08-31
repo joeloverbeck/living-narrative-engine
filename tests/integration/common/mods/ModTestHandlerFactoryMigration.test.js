@@ -23,6 +23,7 @@ import DispatchPerceptibleEventHandler from '../../../../src/logic/operationHand
 import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
 import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
 import AddComponentHandler from '../../../../src/logic/operationHandlers/addComponentHandler.js';
+import LogHandler from '../../../../src/logic/operationHandlers/logHandler.js';
 
 describe('ModTestHandlerFactory Migration Validation', () => {
   let entityManager;
@@ -101,6 +102,7 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         logger,
       }),
       SET_VARIABLE: new SetVariableHandler({ logger }),
+      LOG_MESSAGE: new LogHandler({ logger }),
     };
   }
 
@@ -440,6 +442,7 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         'DISPATCH_EVENT',
         'END_TURN',
         'SET_VARIABLE',
+        'LOG_MESSAGE',
       ];
 
       expectedHandlerNames.forEach((handlerName) => {
@@ -477,8 +480,8 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         logger
       );
 
-      // Factory should create exactly 7 standard handlers
-      expect(Object.keys(factoryHandlers)).toHaveLength(7);
+      // Factory should create exactly 8 standard handlers
+      expect(Object.keys(factoryHandlers)).toHaveLength(8);
 
       // Each handler should be properly configured
       Object.values(factoryHandlers).forEach((handler) => {

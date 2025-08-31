@@ -136,33 +136,56 @@ export default function createSourceResolver({
             break;
           }
 
+          let entities = [];
+          let totalEntityCount = 0;
+          
           if (componentId.startsWith('!')) {
             // Negated component - entities WITHOUT the component
             const componentName = componentId.slice(1);
             result = collectEntitiesWithoutComponent(componentName);
+            totalEntityCount = entitiesGateway.getEntities().length;
+            entities = Array.from(result).map(id => ({ id }));
           } else {
             // Positive component - entities WITH the component
-            const entities =
-              entitiesGateway.getEntitiesWithComponent(componentId);
-
-            // Enhanced logging for debugging park bench issue
-            if (componentId === 'positioning:allows_sitting') {
-              console.log(
-                `[DEBUG] Looking for entities with positioning:allows_sitting component. Found ${entities?.length || 0} entities`
-              );
-              if (entities && entities.length > 0) {
-                entities.forEach((e) => {
-                  console.log(`[DEBUG] Found furniture entity: ${e.id}`);
-                });
-              }
-            }
+            entities = entitiesGateway.getEntitiesWithComponent(componentId) || [];
+            totalEntityCount = entitiesGateway.getEntities().length;
 
             result = new Set(
-              (entities || [])
+              entities
                 .map((e) => e.id)
                 .filter((id) => typeof id === 'string')
             );
           }
+
+          // Enhanced trace logging for entity discovery
+          if (trace) {
+            const entityDetails = entities.map(entity => {
+              // Get additional context for better debugging
+              const hasPositionComponent = entitiesGateway.hasComponent(entity.id, 'core:position');
+              const positionData = hasPositionComponent ? 
+                entitiesGateway.getComponentData(entity.id, 'core:position') : null;
+              
+              return {
+                id: entity.id,
+                hasComponent: true,
+                hasPosition: hasPositionComponent,
+                locationId: positionData?.locationId || null
+              };
+            });
+
+            trace.addLog('info', 
+              `Entity discovery for component '${componentId}': found ${entities.length}/${totalEntityCount} entities`, 
+              'ScopeEngine.entityDiscovery',
+              {
+                componentId,
+                totalEntities: totalEntityCount,
+                foundEntities: entities.length,
+                entityDetails,
+                resultIds: Array.from(result)
+              }
+            );
+          }
+
           break;
         }
 

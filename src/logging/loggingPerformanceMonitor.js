@@ -118,8 +118,8 @@ export class LoggingPerformanceMonitor extends PerformanceMonitor {
     const startTime = performance.now();
 
     try {
-      // Detect category
-      const category = this.#categoryDetector.detectCategory(message);
+      // Detect category with level metadata
+      const category = this.#categoryDetector.detectCategory(message, { level });
 
       // Track category metrics
       this.#updateCategoryMetrics(category, level);

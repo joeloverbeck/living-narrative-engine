@@ -143,7 +143,7 @@ export default class SimpleEntityManager {
    * No-op if entity already exists.
    *
    * @param {string} id - Entity id.
-   * @returns {void}
+   * @returns {object} The created entity instance.
    */
   createEntity(id) {
     if (!this.entities.has(id)) {
@@ -151,6 +151,7 @@ export default class SimpleEntityManager {
       // Clear cache for this entity since it's new
       this.entityInstanceCache.delete(id);
     }
+    return this.getEntityInstance(id);
   }
 
   /**
@@ -163,14 +164,16 @@ export default class SimpleEntityManager {
    * @returns {boolean|Promise<boolean>} Success status
    */
   addComponent(id, type, data) {
+    // Clear cache first to ensure fresh data is returned
+    this.entityInstanceCache.delete(id);
+    
     let ent = this.entities.get(id);
     if (!ent) {
       ent = { id, components: {} };
       this.entities.set(id, ent);
     }
     ent.components[type] = deepClone(data);
-    // Clear cache for this entity since its components changed
-    this.entityInstanceCache.delete(id);
+    
     return Promise.resolve(true);
   }
 

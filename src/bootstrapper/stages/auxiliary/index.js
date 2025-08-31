@@ -7,3 +7,4 @@ export { initLlmSelectionModal } from './initLlmSelectionModal.js';
 export { initCurrentTurnActorRenderer } from './initCurrentTurnActorRenderer.js';
 export { initSpeechBubbleRenderer } from './initSpeechBubbleRenderer.js';
 export { initProcessingIndicatorController } from './initProcessingIndicatorController.js';
+export { initCriticalLogNotifier } from './initCriticalLogNotifier.js';

@@ -435,6 +435,9 @@ describe('entityHelpers', () => {
           entityComponentKeys: ['core:name'],
           actorId: 'actor1',
           actorComponentKeys: ['core:actor'],
+          actorHasSittingComponent: 'NO',
+          actorSittingComponentData: 'NOT_FOUND',
+          wasActorPreprocessed: false,
         }
       );
     });

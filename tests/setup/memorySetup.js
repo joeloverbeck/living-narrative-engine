@@ -35,16 +35,15 @@ if (global.gc) {
 // Global memory test utilities
 global.memoryTestUtils = {
   /**
-   * Forces garbage collection and waits for stabilization (optimized)
+   * Forces garbage collection and waits for stabilization (highly optimized)
    *
    * @returns {Promise<void>}
    */
   async forceGCAndWait() {
     if (global.gc) {
       global.gc();
-      await new Promise((resolve) => setTimeout(resolve, 5)); // Optimized for performance
+      // Removed delays for maximum performance - GC is synchronous
       global.gc();
-      await new Promise((resolve) => setTimeout(resolve, 5)); // Optimized for performance
     }
   },
 
@@ -59,9 +58,7 @@ global.memoryTestUtils = {
     const measurements = [];
 
     for (let i = 0; i < samples; i++) {
-      if (i > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 1)); // Optimized for performance
-      }
+      // Removed delay for performance - measurements are fast enough
       measurements.push(process.memoryUsage().heapUsed);
     }
 

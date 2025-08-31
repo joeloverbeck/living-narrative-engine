@@ -1135,4 +1135,493 @@ describe('DebugLoggingConfigValidator', () => {
       );
     });
   });
+
+  describe('validateCategorizationStrategy', () => {
+    it('should validate source-based strategy with proper configuration', () => {
+      const config = {
+        categorization: {
+          strategy: 'source-based',
+          sourceMappings: {
+            'src/actions': 'actions',
+            'src/entities': 'entities',
+          },
+          enableStackTraceExtraction: true,
+        },
+      };
+
+      const result = validator.validateCategorizationStrategy(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.warnings).toEqual([]);
+    });
+
+    it('should validate pattern-based strategy', () => {
+      const config = {
+        categorization: {
+          strategy: 'pattern-based',
+        },
+      };
+
+      const result = validator.validateCategorizationStrategy(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should validate hybrid strategy with recommendations', () => {
+      const config = {
+        categorization: {
+          strategy: 'hybrid',
+          sourceMappings: {
+            'src/actions': 'actions',
+          },
+          migration: {
+            preserveOldPatterns: true,
+          },
+        },
+      };
+
+      const result = validator.validateCategorizationStrategy(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.warnings).toEqual([]);
+    });
+
+    it('should reject invalid strategy', () => {
+      const config = {
+        categorization: {
+          strategy: 'invalid-strategy',
+        },
+      };
+
+      const result = validator.validateCategorizationStrategy(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Invalid strategy \'invalid-strategy\'. Must be one of: source-based, pattern-based, hybrid'
+      );
+    });
+
+    it('should warn about source-based strategy without sourceMappings', () => {
+      const config = {
+        categorization: {
+          strategy: 'source-based',
+        },
+      };
+
+      const result = validator.validateCategorizationStrategy(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Source-based strategy requires sourceMappings configuration'
+      );
+    });
+
+    it('should warn about hybrid strategy without sourceMappings', () => {
+      const config = {
+        categorization: {
+          strategy: 'hybrid',
+        },
+      };
+
+      const result = validator.validateCategorizationStrategy(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Hybrid strategy should include sourceMappings for optimal performance'
+      );
+    });
+
+    it('should warn about pattern-based with unused sourceMappings', () => {
+      const config = {
+        categorization: {
+          strategy: 'pattern-based',
+          sourceMappings: {
+            'src/actions': 'actions',
+          },
+        },
+      };
+
+      const result = validator.validateCategorizationStrategy(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Pattern-based strategy does not use sourceMappings - consider removing or switching strategy'
+      );
+    });
+
+    it('should handle missing categorization configuration', () => {
+      const config = {};
+
+      const result = validator.validateCategorizationStrategy(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toEqual(['No categorization configuration found']);
+    });
+
+    it('should handle exceptions during strategy validation', () => {
+      const config = null;
+
+      const result = validator.validateCategorizationStrategy(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors[0]).toMatch(/Strategy validation error/);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during categorization strategy validation',
+        expect.any(Error)
+      );
+    });
+  });
+
+  describe('validateSourceMappings', () => {
+    it('should validate correct source mappings', () => {
+      const sourceMappings = {
+        'src/actions': 'actions',
+        'src/entities': 'entities',
+        'src/engine': 'engine',
+        'src/logging': 'logging',
+        'tests': 'tests',
+      };
+
+      const result = validator.validateSourceMappings(sourceMappings);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+      expect(result.warnings).toEqual([]);
+    });
+
+    it('should reject null source mappings', () => {
+      const result = validator.validateSourceMappings(null);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('Source mappings must be a non-null object');
+    });
+
+    it('should reject empty source mappings', () => {
+      const result = validator.validateSourceMappings({});
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('Source mappings cannot be empty');
+    });
+
+    it('should reject non-object source mappings', () => {
+      const result = validator.validateSourceMappings('not-an-object');
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('Source mappings must be a non-null object');
+    });
+
+    it('should reject invalid path keys', () => {
+      const sourceMappings = {
+        '': 'empty-path',
+        'valid/path': 'valid',
+      };
+
+      const result = validator.validateSourceMappings(sourceMappings);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('Source path \'\' must be a non-empty string');
+    });
+
+    it('should reject invalid category values', () => {
+      const sourceMappings = {
+        'src/actions': '',
+        'src/entities': 'valid',
+      };
+
+      const result = validator.validateSourceMappings(sourceMappings);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Category \'\' for path \'src/actions\' must be a non-empty string'
+      );
+    });
+
+    it('should warn about suspicious path patterns', () => {
+      const sourceMappings = {
+        '../suspicious/path': 'suspicious',
+        'src\\windows\\path': 'windows',
+        'valid/path': 'valid',
+      };
+
+      const result = validator.validateSourceMappings(sourceMappings);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Source path \'../suspicious/path\' contains suspicious characters'
+      );
+      expect(result.warnings).toContain(
+        'Source path \'src\\windows\\path\' contains suspicious characters'
+      );
+    });
+
+    it('should warn about missing common paths', () => {
+      const sourceMappings = {
+        'custom/path': 'custom',
+      };
+
+      const result = validator.validateSourceMappings(sourceMappings);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Missing mappings for common paths: src/actions, src/entities, src/engine, src/logging, tests'
+      );
+    });
+
+    it('should handle exceptions during source mappings validation', () => {
+      // Force an exception by mocking Object.entries to fail
+      const originalEntries = Object.entries;
+      Object.entries = null;
+
+      const result = validator.validateSourceMappings({ 'src/test': 'test' });
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors[0]).toMatch(/Source mappings validation error/);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during source mappings validation',
+        expect.any(Error)
+      );
+
+      Object.entries = originalEntries;
+    });
+  });
+
+  describe('categorization semantic validation', () => {
+    it('should validate source-based strategy with stack trace enabled', () => {
+      const config = {
+        categorization: {
+          strategy: 'source-based',
+          enableStackTraceExtraction: true,
+          sourceMappings: { 'src/actions': 'actions' },
+          performance: {
+            stackTrace: { enabled: true },
+          },
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should error on source-based strategy without stack trace extraction', () => {
+      const config = {
+        categorization: {
+          strategy: 'source-based',
+          enableStackTraceExtraction: false,
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Source-based categorization requires stack trace extraction to be enabled'
+      );
+    });
+
+    it('should error on source-based strategy with disabled stack trace performance', () => {
+      const config = {
+        categorization: {
+          strategy: 'source-based',
+          performance: {
+            stackTrace: { enabled: false },
+          },
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain(
+        'Source-based categorization requires stack trace performance settings to be enabled'
+      );
+    });
+
+    it('should warn about hybrid strategy without preserved patterns', () => {
+      const config = {
+        categorization: {
+          strategy: 'hybrid',
+          migration: {
+            preserveOldPatterns: false,
+          },
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Hybrid strategy should preserve old patterns for fallback'
+      );
+    });
+
+    it('should warn about incomplete source mappings', () => {
+      const config = {
+        categorization: {
+          sourceMappings: {
+            'src/actions': 'actions',
+            'src/entities': 'entities',
+          },
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Source mappings appear incomplete - fewer than 20 directories mapped'
+      );
+    });
+
+    it('should warn about fallback category not in categories config', () => {
+      const config = {
+        categorization: {
+          fallbackCategory: 'nonexistent',
+        },
+        categories: {
+          actions: { enabled: true, level: 'info' },
+          entities: { enabled: true, level: 'debug' },
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Fallback category \'nonexistent\' is not configured in categories'
+      );
+    });
+
+    it('should warn about cache size vs TTL imbalance', () => {
+      const config = {
+        categorization: {
+          performance: {
+            stackTrace: {
+              cache: {
+                maxSize: 2000,
+                ttl: 30000,
+              },
+            },
+          },
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Large cache size with short TTL may cause frequent cache churn'
+      );
+    });
+
+    it('should warn about file buffer vs flush imbalance', () => {
+      const config = {
+        categorization: {
+          performance: {
+            fileOperations: {
+              bufferSize: 800,
+              flushInterval: 200,
+            },
+          },
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Large file buffer with short flush interval may cause performance issues'
+      );
+    });
+
+    it('should warn about excessive file handles', () => {
+      const config = {
+        categorization: {
+          performance: {
+            fileOperations: {
+              maxFileHandles: 200,
+            },
+          },
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Very high file handle limit may cause system resource issues'
+      );
+    });
+
+    it('should warn about dual categorization performance impact', () => {
+      const config = {
+        categorization: {
+          migration: {
+            enableDualCategorization: true,
+          },
+        },
+      };
+
+      mockSchemaValidator.validateAgainstSchema.mockReturnValue({
+        isValid: true,
+        errors: [],
+      });
+
+      const result = validator.validateSemanticRules(config);
+
+      expect(result.isValid).toBe(true);
+      expect(result.warnings).toContain(
+        'Dual categorization enabled - may impact performance during migration'
+      );
+    });
+  });
 });

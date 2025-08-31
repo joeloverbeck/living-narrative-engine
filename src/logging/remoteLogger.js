@@ -812,8 +812,8 @@ class RemoteLogger {
   #enrichLogEntry(level, message, metadata) {
     const timestamp = new Date().toISOString();
 
-    // Use enhanced category detector
-    const category = this.#categoryDetector.detectCategory(message);
+    // Use enhanced category detector with level metadata
+    const category = this.#categoryDetector.detectCategory(message, { level });
 
     // Create base log entry
     const baseEntry = {

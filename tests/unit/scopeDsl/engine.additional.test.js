@@ -18,7 +18,7 @@ const mockEntityManager = {
   getComponentData: jest.fn(),
   hasComponent: jest.fn(),
   entities: [],
-  getEntities: jest.fn(), // For the alternative path in negative component queries
+  getEntities: jest.fn().mockReturnValue([]), // Always return empty array by default
 };
 
 const mockSpatialIndexManager = createMockSpatialIndexManager();
@@ -92,7 +92,7 @@ describe('ScopeEngine - Additional Coverage Tests', () => {
     mockEntityManager.getEntitiesInLocation = jest.fn();
     mockEntityManager.getComponentData = jest.fn();
     mockEntityManager.hasComponent = jest.fn();
-    mockEntityManager.getEntities = jest.fn();
+    mockEntityManager.getEntities = jest.fn().mockReturnValue([]); // Always return empty array by default
   });
 
   describe('Error scenarios and edge cases', () => {

@@ -241,6 +241,224 @@
       },
       "additionalProperties": false
     },
+    "categorization": {
+      "type": "object",
+      "description": "Source-based categorization configuration for log routing",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["source-based", "pattern-based", "hybrid"],
+          "description": "Categorization strategy - source-based uses file paths, pattern-based uses message patterns, hybrid uses both",
+          "default": "hybrid"
+        },
+        "enableStackTraceExtraction": {
+          "type": "boolean",
+          "description": "Enable stack trace extraction for source-based categorization",
+          "default": true
+        },
+        "sourceMappings": {
+          "type": "object",
+          "description": "Mapping from source directory paths to category names",
+          "additionalProperties": {
+            "type": "string",
+            "description": "Category name for this source directory"
+          },
+          "default": {
+            "src/actions": "actions",
+            "src/logic": "logic",
+            "src/entities": "entities",
+            "src/ai": "ai",
+            "src/domUI": "domUI",
+            "src/engine": "engine",
+            "src/events": "events",
+            "src/loaders": "loaders",
+            "src/scopeDsl": "scopeDsl",
+            "src/initializers": "initializers",
+            "src/dependencyInjection": "dependencyInjection",
+            "src/logging": "logging",
+            "src/configuration": "configuration",
+            "src/utils": "utils",
+            "src/constants": "constants",
+            "src/storage": "storage",
+            "src/types": "types",
+            "src/alerting": "alerting",
+            "src/context": "context",
+            "src/turns": "turns",
+            "src/adapters": "adapters",
+            "src/query": "query",
+            "src/characterBuilder": "characterBuilder",
+            "src/prompting": "prompting",
+            "src/anatomy": "anatomy",
+            "src/scheduling": "scheduling",
+            "src/errors": "errors",
+            "src/interfaces": "interfaces",
+            "src/clothing": "clothing",
+            "src/input": "input",
+            "src/testing": "testing",
+            "src/modding": "modding",
+            "src/persistence": "persistence",
+            "src/data": "data",
+            "src/shared": "shared",
+            "src/bootstrapper": "bootstrapper",
+            "src/commands": "commands",
+            "src/thematicDirection": "thematicDirection",
+            "src/models": "models",
+            "src/llms": "llms",
+            "src/validation": "validation",
+            "src/pathing": "pathing",
+            "src/formatting": "formatting",
+            "src/ports": "ports",
+            "src/shutdown": "shutdown",
+            "src/clichesGenerator": "clichesGenerator",
+            "src/coreMotivationsGenerator": "coreMotivationsGenerator",
+            "src/thematicDirectionsManager": "thematicDirectionsManager",
+            "src/services": "services",
+            "tests": "tests",
+            "llm-proxy-server": "llm-proxy"
+          }
+        },
+        "fallbackCategory": {
+          "type": "string",
+          "description": "Category to use when source cannot be determined",
+          "default": "general"
+        },
+        "levelBasedRouting": {
+          "type": "object",
+          "description": "Route specific log levels to different outputs",
+          "properties": {
+            "error": {
+              "type": "string",
+              "description": "Output file or destination for error logs",
+              "default": "error.jsonl"
+            },
+            "warn": {
+              "type": "string", 
+              "description": "Output file or destination for warning logs",
+              "default": "warning.jsonl"
+            }
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "migration": {
+          "type": "object",
+          "description": "Migration settings for progressive rollout",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": ["progressive", "immediate", "test"],
+              "description": "Migration rollout mode",
+              "default": "progressive"
+            },
+            "preserveOldPatterns": {
+              "type": "boolean",
+              "description": "Keep existing pattern-based categorization active during migration",
+              "default": true
+            },
+            "enableDualCategorization": {
+              "type": "boolean",
+              "description": "Enable both pattern and source categorization for comparison",
+              "default": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "performance": {
+          "type": "object", 
+          "description": "Performance tuning for source-based categorization",
+          "properties": {
+            "stackTrace": {
+              "type": "object",
+              "description": "Stack trace extraction settings",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable stack trace extraction",
+                  "default": true
+                },
+                "skipFrames": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 10,
+                  "description": "Number of stack frames to skip",
+                  "default": 4
+                },
+                "maxDepth": {
+                  "type": "integer",
+                  "minimum": 5,
+                  "maximum": 50,
+                  "description": "Maximum stack trace depth to analyze",
+                  "default": 20
+                },
+                "cache": {
+                  "type": "object",
+                  "description": "Stack trace caching settings",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Enable source path caching",
+                      "default": true
+                    },
+                    "maxSize": {
+                      "type": "integer",
+                      "minimum": 50,
+                      "maximum": 1000,
+                      "description": "Maximum cache entries",
+                      "default": 200
+                    },
+                    "ttl": {
+                      "type": "integer",
+                      "minimum": 60000,
+                      "maximum": 3600000,
+                      "description": "Cache TTL in milliseconds",
+                      "default": 300000
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "fileOperations": {
+              "type": "object",
+              "description": "File operation optimization settings",
+              "properties": {
+                "bufferSize": {
+                  "type": "integer",
+                  "minimum": 10,
+                  "maximum": 1000,
+                  "description": "Buffer size for file writes",
+                  "default": 100
+                },
+                "flushInterval": {
+                  "type": "integer",
+                  "minimum": 100,
+                  "maximum": 10000,
+                  "description": "File flush interval in milliseconds",
+                  "default": 1000
+                },
+                "parallelWrites": {
+                  "type": "boolean",
+                  "description": "Enable parallel file writes",
+                  "default": true
+                },
+                "maxFileHandles": {
+                  "type": "integer",
+                  "minimum": 10,
+                  "maximum": 200,
+                  "description": "Maximum concurrent file handles",
+                  "default": 50
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "criticalLogging": {
       "type": "object",
       "description": "Critical logging configuration for warnings and errors",

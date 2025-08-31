@@ -11,6 +11,7 @@ import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandler
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
+import LogHandler from '../../../src/logic/operationHandlers/logHandler.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
 
 /* global jest */
@@ -115,6 +116,7 @@ export class ModTestHandlerFactory {
         logger,
       }),
       SET_VARIABLE: new SetVariableHandler({ logger }),
+      LOG_MESSAGE: new LogHandler({ logger }),
     };
   }
 
@@ -195,6 +197,7 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
         logger,
       }),
+      LOG_MESSAGE: new LogHandler({ logger }),
     };
   }
 
@@ -253,6 +256,7 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
         logger,
       }),
+      LOG_MESSAGE: new LogHandler({ logger }),
     };
 
     // Add optional handlers based on configuration

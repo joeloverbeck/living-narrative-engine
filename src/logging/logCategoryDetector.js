@@ -130,6 +130,12 @@ class LogCategoryDetector {
   #cacheHits;
 
   /**
+   * @private
+   * @type {boolean}
+   */
+  #useSourceBased;
+
+  /**
    * Creates a LogCategoryDetector instance
    *
    * @param {DetectorConfig} [config] - Configuration options
@@ -139,12 +145,14 @@ class LogCategoryDetector {
       cacheSize = 200, // Reduced from 1000 to 200 for better memory efficiency
       enableCache = true,
       customPatterns = {},
+      useSourceBased = false, // Future enhancement for source-based categorization
     } = config;
 
     this.#cacheEnabled = enableCache;
     this.#cache = enableCache ? new LRUCache(cacheSize) : null;
     this.#detectionCount = 0;
     this.#cacheHits = 0;
+    this.#useSourceBased = useSourceBased;
 
     // Initialize patterns with priorities
     this.#patterns = new Map();
@@ -158,14 +166,10 @@ class LogCategoryDetector {
    * @param {object} customPatterns - Custom patterns to merge
    */
   #initializePatterns(customPatterns) {
-    // Priority 1: Error patterns (highest priority)
-    this.#patterns.set('error', {
-      pattern:
-        /\berror\b(?!\s+log)|exception|failed|failure|catch|throw|stack\s*trace/i,
-      priority: 100,
-    });
-
-    // Priority 2: Specific domain patterns (high priority)
+    // NOTE: Error pattern removed - now handled via level-based routing
+    // Pattern previously at priority 100: /\berror\b(?!\s+log)|exception|failed|failure|catch|throw|stack\s*trace/i
+    
+    // Priority 1: Specific domain patterns (high priority)
     this.#patterns.set('ecs', {
       pattern:
         /EntityManager|ComponentManager|SystemManager|entity\s+(actor|player|npc|item)|component\s+\w+|system\s+(physics|render|input)|\bECS\b/i,
@@ -269,9 +273,10 @@ class LogCategoryDetector {
    *
    * @private
    * @param {string} str - String to hash
+   * @param {object} [metadata] - Optional metadata to include in key
    * @returns {string} Hash string
    */
-  #hashString(str) {
+  #hashString(str, metadata = {}) {
     // Use first 50 chars + length + simple checksum for cache key
     // This reduces memory while maintaining good cache hit rates
     const maxLen = 50;
@@ -282,32 +287,20 @@ class LogCategoryDetector {
       hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32bit integer
     }
-    return `${prefix}:${str.length}:${hash}`;
+    
+    // Include metadata in cache key if present
+    const baseKey = `${prefix}:${str.length}:${hash}`;
+    return Object.keys(metadata).length > 0 ? `${baseKey}:${JSON.stringify(metadata)}` : baseKey;
   }
 
   /**
-   * Detect category from log message
+   * Detect category using pattern matching (fallback method)
    *
+   * @private
    * @param {string} message - Log message
    * @returns {string|undefined} Detected category or undefined
    */
-  detectCategory(message) {
-    if (!message || typeof message !== 'string') {
-      return undefined;
-    }
-
-    this.#detectionCount++;
-
-    // Generate cache key using hash for memory efficiency
-    const cacheKey =
-      this.#cacheEnabled && this.#cache ? this.#hashString(message) : null;
-
-    // Check cache first
-    if (cacheKey && this.#cache.has(cacheKey)) {
-      this.#cacheHits++;
-      return this.#cache.get(cacheKey);
-    }
-
+  #detectFromPatterns(message) {
     // Find matching categories with their priorities
     const matches = [];
     for (const [category, { pattern, priority }] of this.#patterns) {
@@ -317,11 +310,49 @@ class LogCategoryDetector {
     }
 
     // Sort by priority (highest first) and select the best match
-    let detectedCategory = undefined;
     if (matches.length > 0) {
       matches.sort((a, b) => b.priority - a.priority);
-      detectedCategory = matches[0].category;
+      return matches[0].category;
     }
+    
+    return undefined;
+  }
+
+  /**
+   * Detect category from log message with optional metadata
+   *
+   * @param {string} message - Log message
+   * @param {object} [metadata] - Optional metadata including level and sourceCategory
+   * @returns {string|undefined} Detected category or undefined
+   */
+  detectCategory(message, metadata = {}) {
+    if (!message || typeof message !== 'string') {
+      return undefined;
+    }
+
+    this.#detectionCount++;
+
+    // Priority 1: Use log level for errors and warnings
+    if (metadata.level === 'error') return 'error';
+    if (metadata.level === 'warn') return 'warning';
+    
+    // Priority 2: Use source-based categorization if available (future enhancement)
+    if (this.#useSourceBased && metadata.sourceCategory) {
+      return metadata.sourceCategory;
+    }
+
+    // Generate cache key using hash for memory efficiency (include metadata)
+    const cacheKey =
+      this.#cacheEnabled && this.#cache ? this.#hashString(message, metadata) : null;
+
+    // Check cache first
+    if (cacheKey && this.#cache.has(cacheKey)) {
+      this.#cacheHits++;
+      return this.#cache.get(cacheKey);
+    }
+
+    // Priority 3: Fallback to domain patterns (without error pattern)
+    const detectedCategory = this.#detectFromPatterns(message);
 
     // Cache the result using hashed key
     if (cacheKey && this.#cache) {
@@ -335,10 +366,11 @@ class LogCategoryDetector {
    * Batch detect categories for multiple messages
    *
    * @param {string[]} messages - Array of log messages
+   * @param {object[]} [metadataArray] - Optional array of metadata objects corresponding to messages
    * @returns {(string|undefined)[]} Array of detected categories
    */
-  detectCategories(messages) {
-    return messages.map((message) => this.detectCategory(message));
+  detectCategories(messages, metadataArray = []) {
+    return messages.map((message, index) => this.detectCategory(message, metadataArray[index] || {}));
   }
 
   /**

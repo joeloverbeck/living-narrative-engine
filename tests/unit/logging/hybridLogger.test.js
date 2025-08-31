@@ -151,7 +151,7 @@ describe('HybridLogger', () => {
 
       hybridLogger.debug(message, ...args);
 
-      expect(mockCategoryDetector.detectCategory).toHaveBeenCalledWith(message);
+      expect(mockCategoryDetector.detectCategory).toHaveBeenCalledWith(message, { level: 'debug' });
       expect(mockConsoleLogger.debug).toHaveBeenCalledWith(
         '[ENGINE:DEBUG] Debug message',
         ...args
@@ -200,7 +200,8 @@ describe('HybridLogger', () => {
 
       expect(mockCategoryDetector.detectCategory).toHaveBeenCalledTimes(1);
       expect(mockCategoryDetector.detectCategory).toHaveBeenCalledWith(
-        'Test message'
+        'Test message',
+        { level: 'info' }
       );
     });
   });
@@ -1479,14 +1480,13 @@ describe('HybridLogger', () => {
         expect(typeof stats.maxSize).toBe('number');
         expect(stats.maxSize).toBeGreaterThanOrEqual(0);
 
-        // Should still track totals regardless of buffer behavior
-        expect(stats.totalWarnings).toBe(1);
-        expect(stats.totalErrors).toBe(1);
+        // When buffer size is 0, nothing should be tracked
+        expect(stats.totalWarnings).toBe(0);
+        expect(stats.totalErrors).toBe(0);
 
-        // Verify logs were created (even if buffer size falls back to default)
-        expect(logs.length).toBe(stats.currentSize);
-        expect(logs.some((log) => log.level === 'warn')).toBe(true);
-        expect(logs.some((log) => log.level === 'error')).toBe(true);
+        // No logs should be stored when buffer size is 0
+        expect(logs.length).toBe(0);
+        expect(stats.currentSize).toBe(0);
       });
     });
   });

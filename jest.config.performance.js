@@ -16,8 +16,8 @@ module.exports = {
     '<rootDir>/tests/performance/**/*.test.js',
     '<rootDir>/tests/performance/**/*.spec.js',
   ],
-  // Performance tests need longer timeouts for benchmarking
-  testTimeout: 60000,
+  // Performance tests need longer timeouts for benchmarking (reduced after optimization)
+  testTimeout: 15000,
   // Performance tests focus on speed, not code coverage
   coverageThreshold: {
     global: {

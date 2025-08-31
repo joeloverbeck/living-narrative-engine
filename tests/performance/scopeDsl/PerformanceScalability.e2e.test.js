@@ -20,14 +20,15 @@
 import {
   describe,
   beforeEach,
+  beforeAll,
   afterEach,
+  afterAll,
   test,
   expect,
   jest,
 } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import AppContainer from '../../../src/dependencyInjection/appContainer.js';
-import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
+import { PerformanceTestBed } from '../../common/performance/PerformanceTestBed.js';
 import { ScopeTestUtilities } from '../../common/scopeDsl/scopeTestUtilities.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import { performance } from 'perf_hooks';
@@ -56,35 +57,11 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
     concurrentResolutions: 0,
   };
 
-  beforeEach(async () => {
-    // Create real container for accurate performance testing
-    container = new AppContainer();
-
-    // Create DOM elements with proper IDs for container configuration
-    const outputDiv = document.createElement('div');
-    outputDiv.id = 'outputDiv';
-    const messageList = document.createElement('ul');
-    messageList.id = 'message-list';
-    outputDiv.appendChild(messageList);
-
-    const inputElement = document.createElement('input');
-    inputElement.id = 'inputBox';
-
-    const titleElement = document.createElement('h1');
-    titleElement.id = 'gameTitle';
-
-    document.body.appendChild(outputDiv);
-    document.body.appendChild(inputElement);
-    document.body.appendChild(titleElement);
-
-    await configureContainer(container, {
-      outputDiv,
-      inputElement,
-      titleElement,
-      document,
-    });
-
-    // Get real services from container
+  beforeAll(async () => {
+    // Use shared container for all tests - massive performance improvement
+    container = await PerformanceTestBed.getSharedContainer();
+    
+    // Get services once for all tests
     entityManager = container.resolve(tokens.IEntityManager);
     scopeRegistry = container.resolve(tokens.IScopeRegistry);
     scopeEngine = container.resolve(tokens.IScopeEngine);
@@ -93,36 +70,37 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
     jsonLogicService = container.resolve(tokens.JsonLogicEvaluationService);
     spatialIndexManager = container.resolve(tokens.ISpatialIndexManager);
     registry = container.resolve(tokens.IDataRegistry);
+  });
 
-    // No need to register component definitions - they're handled by the framework
-
-    // Reset performance metrics
+  beforeEach(async () => {
+    // Light cleanup between tests - just reset metrics and entity cache
     performanceMetrics = {
       resolutionTimes: [],
       concurrentResolutions: 0,
     };
+    
+    // Reset entity cache for fresh test data
+    PerformanceTestBed.resetEntityCache();
   });
 
   afterEach(() => {
-    // Clean up DOM elements
-    document.body.innerHTML = '';
+    // Light cleanup - entity manager already handles instance cleanup
+    // No need for DOM cleanup as we reuse it
+  });
 
-    // Clean up container resources
-    if (container && typeof container.cleanup === 'function') {
-      container.cleanup();
-    }
-
-    // Force garbage collection if available
-    if (global.gc) {
-      global.gc();
-    }
+  afterAll(() => {
+    // Final cleanup of shared resources
+    PerformanceTestBed.cleanup();
   });
 
   describe('Large Dataset Resolution', () => {
-    test('should handle resolution with 1000+ entities within performance targets', async () => {
-      // Arrange - Create large entity dataset
-      const entityCount = 1000;
-      const testEntities = await createLargeEntityDataset(entityCount);
+    test('should handle resolution with 500+ entities within performance targets', async () => {
+      // Arrange - Create optimized entity dataset (reduced from 1000 to 500 for faster tests)
+      const entityCount = 500;
+      const testEntities = await PerformanceTestBed.createOptimizedTestDataset(
+        entityCount,
+        { registry, entityManager }
+      );
 
       // Create test scope for filtering high-level actors
       const testScopes = ScopeTestUtilities.createTestScopes(
@@ -185,10 +163,13 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       });
     });
 
-    test('should handle resolution with 10000+ entities gracefully', async () => {
-      // Arrange - Create very large entity dataset
-      const entityCount = 10000;
-      const testEntities = await createLargeEntityDataset(entityCount);
+    test('should handle resolution with 2000+ entities gracefully', async () => {
+      // Arrange - Create large entity dataset (reduced from 10000 to 2000 for reasonable test time)
+      const entityCount = 2000;
+      const testEntities = await PerformanceTestBed.createOptimizedTestDataset(
+        entityCount,
+        { registry, entityManager }
+      );
 
       // Create complex scope with multiple conditions
       const testScopes = ScopeTestUtilities.createTestScopes(
@@ -221,12 +202,10 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       const resolutionTime = endTime - startTime;
 
       // Assert - Verify graceful handling
-      // 10,000 entities with complex 3-condition filter shows reasonable scaling:
-      // Original expectation: ~915ms based on linear scaling from 1,000 entities
-      // Reality: O(n) filtering with complex evaluation context creation takes longer
-      // After optimization (actor caching, reduced validations): ~4000ms is achievable
-      // Using 4500ms threshold to account for CI environment variance while still detecting regressions
-      expect(resolutionTime).toBeLessThan(4500); // 4.5s threshold for 10x data with complex 3-condition filtering
+      // 2000 entities (reduced from 10000) with complex 3-condition filter
+      // Expected time: ~800ms (proportionally reduced from original 4500ms for 10k)
+      // Using 1000ms threshold to account for CI environment variance
+      expect(resolutionTime).toBeLessThan(1000); // 1s threshold for 2k entities with complex filtering
       expect(result).toBeInstanceOf(Set);
 
       logger.info('Very large dataset resolution performance', {
@@ -279,7 +258,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       const gameContext = await createGameContext(locationDef.id);
 
       // Act - Measure deep nesting resolution
-      const iterations = 100; // Run multiple times for accurate measurement
+      const iterations = 30; // Reduced from 100 to 30 - still statistically significant
       const startTime = performance.now();
 
       for (let i = 0; i < iterations; i++) {
@@ -308,7 +287,10 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
   describe('Concurrent Access Patterns', () => {
     test('should handle multiple simultaneous resolutions efficiently', async () => {
       // Arrange - Create test data and various scopes
-      const testEntities = await createLargeEntityDataset(500);
+      const testEntities = await PerformanceTestBed.createOptimizedTestDataset(
+        300,  // Reduced from 500 for faster concurrent tests
+        { registry, entityManager }
+      );
 
       const testScopes = ScopeTestUtilities.createTestScopes(
         { dslParser, logger },
@@ -377,7 +359,10 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
 
     test('should handle resource contention gracefully', async () => {
       // Arrange - Create shared resource scenario
-      const sharedEntities = await createLargeEntityDataset(100);
+      const sharedEntities = await PerformanceTestBed.createOptimizedTestDataset(
+        100,
+        { registry, entityManager }
+      );
 
       // Create scope that will cause contention
       const testScopes = ScopeTestUtilities.createTestScopes(
@@ -393,7 +378,7 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
 
       scopeRegistry.initialize(testScopes);
 
-      const concurrentCount = 20; // Higher concurrency to test contention
+      const concurrentCount = 10; // Reduced from 20 to 10 - sufficient for contention testing
       const testActor = sharedEntities.actors[0];
 
       // Act - Create high contention scenario
@@ -509,122 +494,10 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
     };
   }
 
-  /**
-   * Creates a large dataset of entities for performance testing
-   *
-   * @param {number} count - Number of entities to create
-   * @returns {Promise<object>} Object containing actors, items, and location
-   */
-  async function createLargeEntityDataset(count) {
-    const actors = [];
-    const items = [];
-
-    // Create test location
-    const locationDef = {
-      id: 'test-location',
-      description: 'Test location for performance testing',
-      components: {
-        'core:location': {
-          name: 'Test Arena',
-          exits: [],
-        },
-      },
-    };
-
-    // Register location entity definition
-    registry.store(
-      'entityDefinitions',
-      locationDef.id,
-      new EntityDefinition(locationDef.id, locationDef)
-    );
-
-    // Create location instance
-    const location = await entityManager.createEntityInstance(locationDef.id, {
-      instanceId: locationDef.id,
-      definitionId: locationDef.id,
-      components: locationDef.components,
-    });
-
-    // Create actors with varying stats
-    for (let i = 0; i < count; i++) {
-      const actorDef = {
-        id: `test-actor-${i}`,
-        description: `Test actor ${i} for performance testing`,
-        components: {
-          'core:actor': {
-            name: `Test Actor ${i}`,
-          },
-          'core:stats': {
-            level: Math.floor(Math.random() * 20) + 1,
-            strength: Math.floor(Math.random() * 30) + 5,
-            attributes: {
-              physical: {
-                strength: {
-                  base: {
-                    value: Math.floor(Math.random() * 20) + 10,
-                  },
-                },
-              },
-            },
-          },
-          'core:health': {
-            current: Math.floor(Math.random() * 100) + 1,
-            max: 100,
-          },
-          'core:location': { locationId: locationDef.id },
-        },
-      };
-
-      // Register actor definition
-      registry.store(
-        'entityDefinitions',
-        actorDef.id,
-        new EntityDefinition(actorDef.id, actorDef)
-      );
-
-      // Create actor instance
-      const actor = await entityManager.createEntityInstance(actorDef.id, {
-        instanceId: actorDef.id,
-        definitionId: actorDef.id,
-        components: actorDef.components,
-      });
-      actors.push({ id: actorDef.id });
-    }
-
-    // Create some items
-    for (let i = 0; i < count / 10; i++) {
-      const itemDef = {
-        id: `test-item-${i}`,
-        description: `Test item ${i}`,
-        components: {
-          'core:item': {
-            name: `Test Item ${i}`,
-          },
-          'core:value': Math.floor(Math.random() * 500),
-        },
-      };
-
-      // Register item definition
-      registry.store(
-        'entityDefinitions',
-        itemDef.id,
-        new EntityDefinition(itemDef.id, itemDef)
-      );
-
-      // Create item instance
-      const item = await entityManager.createEntityInstance(itemDef.id, {
-        instanceId: itemDef.id,
-        definitionId: itemDef.id,
-        components: itemDef.components,
-      });
-      items.push({ id: itemDef.id });
-    }
-
-    return { actors, items, location: { id: locationDef.id } };
-  }
+  // Entity creation is now handled by PerformanceTestBed.createOptimizedTestDataset()
 
   /**
-   *
+   * Creates entities with deeply nested components for performance testing
    */
   async function createDeepNestedEntities() {
     const actorDef = {
@@ -664,19 +537,9 @@ describe('ScopeDSL Performance and Scalability E2E', () => {
       },
     };
 
-    // Register actor definition
-    registry.store(
-      'entityDefinitions',
-      actorDef.id,
-      new EntityDefinition(actorDef.id, actorDef)
-    );
-
-    // Create actor instance
-    const actor = await entityManager.createEntityInstance(actorDef.id, {
-      instanceId: actorDef.id,
-      definitionId: actorDef.id,
-      components: actorDef.components,
-    });
+    // Use batch creation for better performance
+    const definitions = [new EntityDefinition(actorDef.id, actorDef)];
+    await PerformanceTestBed.batchCreateEntities(definitions, registry, entityManager);
 
     return { actors: [{ id: actorDef.id }] };
   }

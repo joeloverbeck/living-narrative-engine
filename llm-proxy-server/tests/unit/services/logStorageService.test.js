@@ -41,6 +41,7 @@ const createValidLogEntry = (overrides = {}) => ({
   message: 'Test log message',
   timestamp: '2024-01-15T10:30:00.000Z',
   category: 'test',
+  sourceCategory: 'test', // Add sourceCategory for new functionality testing
   source: 'test.js:123',
   sessionId: '550e8400-e29b-41d4-a716-446655440000',
   metadata: { userId: 'test-user' },
@@ -276,14 +277,17 @@ describe('LogStorageService', () => {
     test('should group logs by date and category', async () => {
       const logs = [
         createValidLogEntry({
+          sourceCategory: 'engine',
           category: 'engine',
           timestamp: '2024-01-15T10:30:00.000Z',
         }),
         createValidLogEntry({
+          sourceCategory: 'ui',
           category: 'ui',
           timestamp: '2024-01-15T10:31:00.000Z',
         }),
         createValidLogEntry({
+          sourceCategory: 'engine',
           category: 'engine',
           timestamp: '2024-01-16T10:30:00.000Z',
         }),
@@ -333,8 +337,28 @@ describe('LogStorageService', () => {
   });
 
   describe('Category Detection', () => {
-    test('should use explicit category when provided', async () => {
-      const logs = [createValidLogEntry({ category: 'custom' })];
+    test('should prioritize sourceCategory over explicit category', async () => {
+      const logs = [createValidLogEntry({ 
+        sourceCategory: 'client_provided', 
+        category: 'custom' 
+      })];
+      await service.writeLogs(logs);
+
+      // Flush to trigger file writing
+      await service.flushLogs();
+
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining('client_provided.jsonl'),
+        expect.any(String),
+        expect.any(Object)
+      );
+    });
+
+    test('should use explicit category when sourceCategory not provided', async () => {
+      const logs = [createValidLogEntry({ 
+        sourceCategory: undefined, 
+        category: 'custom' 
+      })];
       await service.writeLogs(logs);
 
       // Flush to trigger file writing
@@ -350,6 +374,7 @@ describe('LogStorageService', () => {
     test('should detect engine category from message patterns', async () => {
       const logs = [
         createValidLogEntry({
+          sourceCategory: undefined,
           category: undefined,
           message: 'GameEngine: Starting up',
         }),
@@ -368,6 +393,7 @@ describe('LogStorageService', () => {
     test('should detect ui category from message patterns', async () => {
       const logs = [
         createValidLogEntry({
+          sourceCategory: undefined,
           category: undefined,
           message: 'UI: Rendering component',
         }),
@@ -386,6 +412,7 @@ describe('LogStorageService', () => {
     test('should detect ecs category from message patterns', async () => {
       const logs = [
         createValidLogEntry({
+          sourceCategory: undefined,
           category: undefined,
           message: 'EntityManager: Creating entity',
         }),
@@ -404,6 +431,7 @@ describe('LogStorageService', () => {
     test('should detect ai category from message patterns', async () => {
       const logs = [
         createValidLogEntry({
+          sourceCategory: undefined,
           category: undefined,
           message: 'AI: Processing LLM response',
         }),
@@ -422,6 +450,7 @@ describe('LogStorageService', () => {
     test('should detect category from source field', async () => {
       const logs = [
         createValidLogEntry({
+          sourceCategory: undefined,
           category: undefined,
           message: 'Some message',
           source: 'entityManager.js:123',
@@ -441,6 +470,7 @@ describe('LogStorageService', () => {
     test('should fallback to general category when no pattern matches', async () => {
       const logs = [
         createValidLogEntry({
+          sourceCategory: undefined,
           category: undefined,
           message: 'Random message with no patterns',
           source: 'unknown.js:123',
@@ -460,6 +490,7 @@ describe('LogStorageService', () => {
     test('should handle case-insensitive pattern matching', async () => {
       const logs = [
         createValidLogEntry({
+          sourceCategory: undefined,
           category: undefined,
           message: 'gameengine is starting up',
         }),
@@ -1032,6 +1063,275 @@ describe('LogStorageService', () => {
 
       // No errors should occur due to concurrent operations
       expect(logger.error).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Level-based routing', () => {
+    describe('#getFilePath', () => {
+      test('should route error-level logs to error.jsonl', async () => {
+        const log = createValidLogEntry({ 
+          level: 'error', 
+          message: 'test error', 
+          sourceCategory: 'actions' 
+        });
+        
+        await service.writeLogs([log]);
+        await service.flushLogs();
+        
+        // Check that error.jsonl was used, not actions.jsonl
+        const writeFileCalls = fs.writeFile.mock.calls;
+        const errorCalls = writeFileCalls.filter(call => call[0].includes('error.jsonl'));
+        const actionsCalls = writeFileCalls.filter(call => call[0].includes('actions.jsonl'));
+        
+        expect(errorCalls.length).toBeGreaterThan(0);
+        expect(actionsCalls.length).toBe(0); // Level takes precedence over category
+      });
+
+      test('should route warning-level logs to warning.jsonl', async () => {
+        const log = createValidLogEntry({ 
+          level: 'warn', 
+          sourceCategory: 'entities' 
+        });
+        
+        await service.writeLogs([log]);
+        await service.flushLogs();
+        
+        // Verify warning.jsonl was written to
+        const writeFileCalls = fs.writeFile.mock.calls;
+        const warningCalls = writeFileCalls.filter(call => call[0].includes('warning.jsonl'));
+        expect(warningCalls.length).toBeGreaterThan(0);
+      });
+
+      test('should use sourceCategory for non-error/warn levels', async () => {
+        const log = createValidLogEntry({ 
+          level: 'debug', 
+          sourceCategory: 'actions' 
+        });
+        
+        await service.writeLogs([log]);
+        await service.flushLogs();
+        
+        // Verify actions.jsonl was written to
+        const writeFileCalls = fs.writeFile.mock.calls;
+        const actionsCalls = writeFileCalls.filter(call => call[0].includes('actions.jsonl'));
+        expect(actionsCalls.length).toBeGreaterThan(0);
+      });
+
+      test('should handle mixed level logs correctly', async () => {
+        const logs = [
+          createValidLogEntry({ level: 'error', sourceCategory: 'actions', message: 'error log' }),
+          createValidLogEntry({ level: 'warn', sourceCategory: 'entities', message: 'warning log' }),
+          createValidLogEntry({ level: 'info', sourceCategory: 'domUI', message: 'info log' }),
+          createValidLogEntry({ level: 'debug', sourceCategory: 'logic', message: 'debug log' }),
+        ];
+        
+        await service.writeLogs(logs);
+        await service.flushLogs();
+        
+        // Verify correct files were written to
+        const writeFileCalls = fs.writeFile.mock.calls;
+        
+        // Level-based routing: error and warn go to level-specific files
+        const errorCalls = writeFileCalls.filter(call => call[0].includes('error.jsonl'));
+        const warningCalls = writeFileCalls.filter(call => call[0].includes('warning.jsonl'));
+        
+        // Category-based routing: info and debug use sourceCategory
+        const domUICalls = writeFileCalls.filter(call => call[0].includes('domui.jsonl'));
+        const logicCalls = writeFileCalls.filter(call => call[0].includes('logic.jsonl'));
+        
+        expect(errorCalls.length).toBeGreaterThan(0);
+        expect(warningCalls.length).toBeGreaterThan(0);
+        expect(domUICalls.length).toBeGreaterThan(0);
+        expect(logicCalls.length).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  describe('Client category integration', () => {
+    describe('#detectCategory', () => {
+      test('should prioritize client sourceCategory over server patterns', async () => {
+        const log = createValidLogEntry({ 
+          level: 'info', 
+          message: 'GameEngine started', // Would match server "engine" pattern
+          sourceCategory: 'bootstrapper'  // Client-provided category
+        });
+        
+        await service.writeLogs([log]);
+        await service.flushLogs();
+        
+        // Should use bootstrapper.jsonl, not engine.jsonl
+        const writeFileCalls = fs.writeFile.mock.calls;
+        const bootstrapperCalls = writeFileCalls.filter(call => call[0].includes('bootstrapper.jsonl'));
+        const engineCalls = writeFileCalls.filter(call => call[0].includes('engine.jsonl'));
+        
+        expect(bootstrapperCalls.length).toBeGreaterThan(0);
+        expect(engineCalls.length).toBe(0);
+      });
+      
+      test('should accept all 40+ client categories', async () => {
+        const clientCategories = [
+          'actions', 'logic', 'entities', 'domUI', 'events', 'scopeDsl', 'engine', 'ai', 
+          'loaders', 'logging', 'dependencyInjection', 'initializers', 'config', 
+          'configuration', 'constants', 'services', 'utils', 'storage', 'persistence',
+          'characterBuilder', 'prompting', 'anatomy', 'clothing', 'turns', 'scheduling',
+          'errors', 'types', 'interfaces', 'validation', 'alerting', 'context',
+          'adapters', 'query', 'input', 'testing', 'modding', 'data', 'shared',
+          'bootstrapper', 'commands', 'thematicDirection', 'models', 'llms',
+          'pathing', 'formatting', 'ports', 'shutdown', 'common', 'tests', 'llm-proxy'
+        ];
+        
+        const logs = clientCategories.map(cat => 
+          createValidLogEntry({ level: 'info', sourceCategory: cat, message: `${cat} log` })
+        );
+        
+        const result = await service.writeLogs(logs);
+        await service.flushLogs();
+        
+        expect(result).toBe(clientCategories.length);
+        
+        // Verify all categories were processed without errors
+        expect(logger.error).not.toHaveBeenCalled();
+        expect(logger.warn).not.toHaveBeenCalled();
+        
+        // Check that files for each category were written (categories are lowercased)
+        const writeFileCalls = fs.writeFile.mock.calls;
+        clientCategories.forEach(cat => {
+          const lowercaseCat = cat.toLowerCase();
+          const categoryCalls = writeFileCalls.filter(call => call[0].includes(`${lowercaseCat}.jsonl`));
+          expect(categoryCalls.length).toBeGreaterThan(0);
+        });
+      });
+
+      test('should fall back to category field when sourceCategory missing', async () => {
+        const log = createValidLogEntry({ 
+          level: 'info', 
+          category: 'fallback',
+          sourceCategory: undefined,
+          message: 'test message'
+        });
+        
+        await service.writeLogs([log]);
+        await service.flushLogs();
+        
+        // Should use fallback.jsonl
+        const writeFileCalls = fs.writeFile.mock.calls;
+        const fallbackCalls = writeFileCalls.filter(call => call[0].includes('fallback.jsonl'));
+        expect(fallbackCalls.length).toBeGreaterThan(0);
+      });
+
+      test('should use general fallback when no categories provided', async () => {
+        const log = createValidLogEntry({ 
+          level: 'info', 
+          category: undefined,
+          sourceCategory: undefined,
+          message: 'uncategorized message'
+        });
+        
+        await service.writeLogs([log]);
+        await service.flushLogs();
+        
+        // Should use general.jsonl
+        const writeFileCalls = fs.writeFile.mock.calls;
+        const generalCalls = writeFileCalls.filter(call => call[0].includes('general.jsonl'));
+        expect(generalCalls.length).toBeGreaterThan(0);
+      });
+
+      test('should handle invalid sourceCategory gracefully', async () => {
+        const logs = [
+          createValidLogEntry({ level: 'info', sourceCategory: null, message: 'null category' }),
+          createValidLogEntry({ level: 'info', sourceCategory: 123, message: 'number category' }),
+          createValidLogEntry({ level: 'info', sourceCategory: {}, message: 'object category' }),
+          createValidLogEntry({ level: 'info', sourceCategory: '', message: 'empty category' }),
+        ];
+        
+        const result = await service.writeLogs(logs);
+        await service.flushLogs();
+        
+        expect(result).toBe(4);
+        
+        // Should handle gracefully and fall back to category field (test)
+        const writeFileCalls = fs.writeFile.mock.calls;
+        const testCalls = writeFileCalls.filter(call => call[0].includes('test.jsonl'));
+        expect(testCalls.length).toBeGreaterThan(0);
+      });
+
+      test('should handle level-based routing with invalid sourceCategory', async () => {
+        const logs = [
+          createValidLogEntry({ level: 'error', sourceCategory: null, message: 'error with null category' }),
+          createValidLogEntry({ level: 'warn', sourceCategory: 123, message: 'warning with invalid category' }),
+        ];
+        
+        await service.writeLogs(logs);
+        await service.flushLogs();
+        
+        // Level should take precedence over invalid categories
+        const writeFileCalls = fs.writeFile.mock.calls;
+        const errorCalls = writeFileCalls.filter(call => call[0].includes('error.jsonl'));
+        const warningCalls = writeFileCalls.filter(call => call[0].includes('warning.jsonl'));
+        
+        expect(errorCalls.length).toBeGreaterThan(0);
+        expect(warningCalls.length).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  describe('Batch processing with level-based routing', () => {
+    test('should efficiently group mixed level and category logs', async () => {
+      const logs = [];
+      
+      // Create 50 logs with mixed levels and categories
+      for (let i = 0; i < 50; i++) {
+        const levels = ['error', 'warn', 'info', 'debug'];
+        const categories = ['actions', 'logic', 'entities', 'domUI', 'ai'];
+        
+        logs.push(createValidLogEntry({
+          level: levels[i % 4],
+          sourceCategory: categories[i % 5],
+          message: `Log ${i}`,
+          timestamp: new Date(Date.now() + i).toISOString()
+        }));
+      }
+      
+      const result = await service.writeLogs(logs);
+      await service.flushLogs();
+      
+      expect(result).toBe(50);
+      
+      // Verify different file types were created
+      const writeFileCalls = fs.writeFile.mock.calls;
+      
+      const errorCalls = writeFileCalls.filter(call => call[0].includes('error.jsonl'));
+      const warningCalls = writeFileCalls.filter(call => call[0].includes('warning.jsonl'));
+      const categoryCalls = writeFileCalls.filter(call => 
+        call[0].includes('actions.jsonl') || call[0].includes('logic.jsonl') || 
+        call[0].includes('entities.jsonl') || call[0].includes('domUI.jsonl') || 
+        call[0].includes('ai.jsonl')
+      );
+      
+      expect(errorCalls.length).toBeGreaterThan(0);
+      expect(warningCalls.length).toBeGreaterThan(0);
+      expect(categoryCalls.length).toBeGreaterThan(0);
+    });
+
+    test('should maintain existing performance with level-based routing', async () => {
+      const start = Date.now();
+      
+      // Create 1000 logs similar to existing performance test
+      const logs = [];
+      for (let i = 0; i < 1000; i++) {
+        logs.push(createValidLogEntry({
+          level: i % 4 === 0 ? 'error' : i % 3 === 0 ? 'warn' : 'info',
+          sourceCategory: ['actions', 'logic', 'entities', 'domUI'][i % 4],
+          message: `Performance test log ${i}`,
+          timestamp: new Date(Date.now() + i).toISOString()
+        }));
+      }
+      
+      const result = await service.writeLogs(logs);
+      const duration = Date.now() - start;
+      
+      expect(result).toBe(1000);
+      expect(duration).toBeLessThan(1000); // Should maintain < 1 second performance
     });
   });
 });
