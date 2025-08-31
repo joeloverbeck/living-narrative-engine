@@ -1,16 +1,16 @@
-# SRCBASLOG-007: Optimize Performance for 40+ Log Files
+# SRCBASLOG-007: Optimize Performance for HTTP-Based Remote Logging
 
 ## Overview
 
-Implement comprehensive performance optimizations to handle the increased file I/O operations from managing 40+ separate log files per day. This includes caching strategies, buffering mechanisms, and file handle management.
+Implement comprehensive performance optimizations for the HTTP-based remote logging system that sends logs from the browser-based Living Narrative Engine to the llm-proxy-server. This includes optimizing batching strategies, improving network resilience, and reducing memory overhead for the RemoteLogger and HybridLogger components.
 
 ## Objectives
 
-- Implement intelligent caching for source extraction
-- Optimize file I/O operations for multiple destinations
-- Add buffering strategies to reduce write frequency
-- Manage file handles efficiently
-- Minimize performance overhead to < 5%
+- Optimize HTTP request batching and adaptive flushing
+- Improve circuit breaker responsiveness and recovery times
+- Enhance memory management for log buffering
+- Optimize log category detection and caching
+- Minimize performance overhead to < 5% of application runtime
 
 ## Dependencies
 
@@ -21,485 +21,315 @@ Implement comprehensive performance optimizations to handle the increased file I
 
 ### Performance Challenges
 
-With 40+ log files instead of ~10:
-- **4x more file operations** per logging cycle
-- **Increased file handle usage** (risk of EMFILE errors)
-- **Higher memory usage** for buffers
-- **More complex rotation and cleanup**
-- **Potential file system fragmentation**
+With increased logging volume in browser-based HTTP remote logging:
+- **Higher HTTP request frequency** to llm-proxy-server endpoint
+- **Increased memory pressure** from log buffering in browser environment
+- **Network latency impact** on logging performance
+- **Circuit breaker overhead** during network failures
+- **Category detection computation** cost for log classification
+- **Browser memory limits** constraining buffer sizes
 
 ### Optimization Strategies
 
-#### 1. Hierarchical Write Buffer
+#### 1. RemoteLogger Adaptive Batching Optimization
+
+Enhance the existing `RemoteLogger` class (src/logging/remoteLogger.js) with dynamic batching based on logging volume and network conditions:
+
+**Key Improvements:**
+- **Adaptive batch sizing**: Adjust `batchSize` based on recent throughput metrics
+- **Priority-based flushing**: Process error/warning logs with higher priority
+- **Memory pressure detection**: Implement emergency flush when buffer approaches browser memory limits
+- **Network condition awareness**: Adjust flush intervals based on circuit breaker state
 
 ```javascript
-// src/logging/hierarchicalWriteBuffer.js
-class HierarchicalWriteBuffer {
-  constructor(config = {}) {
-    this.#buffers = new Map(); // filePath -> buffer
-    this.#config = {
-      maxBufferSize: config.maxBufferSize || 100,
-      flushInterval: config.flushInterval || 1000,
-      maxMemoryUsage: config.maxMemoryUsage || 50 * 1024 * 1024, // 50MB
-      compressionThreshold: config.compressionThreshold || 1024 * 1024 // 1MB
-    };
-    this.#stats = {
-      writes: 0,
-      flushes: 0,
-      compressions: 0,
-      memoryUsage: 0
-    };
-    this.#startFlushTimer();
-  }
-  
-  add(filePath, log) {
-    if (!this.#buffers.has(filePath)) {
-      this.#buffers.set(filePath, {
-        logs: [],
-        size: 0,
-        lastWrite: Date.now(),
-        priority: this.#calculatePriority(filePath)
-      });
-    }
-    
-    const buffer = this.#buffers.get(filePath);
-    const logSize = JSON.stringify(log).length;
-    
-    // Check memory pressure
-    if (this.#stats.memoryUsage + logSize > this.#config.maxMemoryUsage) {
-      this.#emergencyFlush();
-    }
-    
-    buffer.logs.push(log);
-    buffer.size += logSize;
-    this.#stats.memoryUsage += logSize;
-    
-    // Flush if buffer is full
-    if (buffer.logs.length >= this.#config.maxBufferSize ||
-        buffer.size >= this.#config.compressionThreshold) {
-      this.#flushBuffer(filePath);
-    }
-  }
-  
-  #calculatePriority(filePath) {
-    // Higher priority for error/warning logs
-    if (filePath.includes('error.jsonl')) return 10;
-    if (filePath.includes('warning.jsonl')) return 9;
-    
-    // Medium priority for frequently accessed categories
-    const highTrafficCategories = ['actions', 'engine', 'entities', 'events'];
-    if (highTrafficCategories.some(cat => filePath.includes(cat))) return 5;
-    
-    return 1;
-  }
-  
-  async #flushBuffer(filePath) {
-    const buffer = this.#buffers.get(filePath);
-    if (!buffer || buffer.logs.length === 0) return;
-    
-    try {
-      // Compress if large
-      const data = buffer.size > this.#config.compressionThreshold
-        ? await this.#compressLogs(buffer.logs)
-        : buffer.logs;
-      
-      await this.#writeToFile(filePath, data);
-      
-      this.#stats.flushes++;
-      this.#stats.memoryUsage -= buffer.size;
-      
-      // Clear buffer
-      buffer.logs = [];
-      buffer.size = 0;
-      buffer.lastWrite = Date.now();
-    } catch (error) {
-      console.error(`Failed to flush buffer for ${filePath}:`, error);
-      // Keep logs in buffer for retry
-    }
-  }
-  
-  async #emergencyFlush() {
-    // Flush buffers by priority
-    const sortedBuffers = Array.from(this.#buffers.entries())
-      .sort((a, b) => b[1].priority - a[1].priority);
-    
-    for (const [filePath] of sortedBuffers) {
-      await this.#flushBuffer(filePath);
-      
-      // Check if enough memory freed
-      if (this.#stats.memoryUsage < this.#config.maxMemoryUsage * 0.7) {
-        break;
-      }
-    }
-  }
+// Enhancement to src/logging/remoteLogger.js
+// Add adaptive batching configuration
+const adaptiveConfig = {
+  minBatchSize: 10,
+  maxBatchSize: 200,
+  adaptiveThreshold: 0.8, // Adapt when buffer is 80% full
+  priorityLevels: ['error', 'warn', 'info', 'debug']
+};
+
+// Implement priority-based buffer management
+#priorityBuffers = new Map(); // level -> logs[]
+#adaptBatchSize(currentThroughput, networkLatency) {
+  // Dynamic batch size based on performance metrics
 }
 ```
 
-#### 2. File Handle Pool
+#### 2. LogCategoryDetector Caching Enhancement
+
+Optimize the existing `LogCategoryDetector` (src/logging/logCategoryDetector.js) to reduce computation overhead:
+
+**Key Improvements:**
+- **LRU cache for category patterns**: Cache detection results for frequently seen log patterns
+- **Precompiled regex patterns**: Convert string patterns to compiled regex for faster matching
+- **Category hint system**: Allow components to provide category hints to skip detection
 
 ```javascript
-// src/logging/fileHandlePool.js
-class FileHandlePool {
-  constructor(config = {}) {
-    this.#handles = new Map(); // filePath -> handle
-    this.#maxHandles = config.maxHandles || 50;
-    this.#ttl = config.ttl || 60000; // 1 minute
-    this.#accessTimes = new Map(); // filePath -> lastAccess
-    this.#locks = new Map(); // filePath -> promise
+// Enhancement to src/logging/logCategoryDetector.js
+#categoryCache = new LRUCache({ max: 1000, ttl: 300000 }); // 5 min TTL
+#precompiledPatterns = new Map(); // Compile regex patterns once
+
+detectCategory(message, hint = null) {
+  if (hint && this.#validateCategoryHint(hint)) return hint;
+  
+  const cacheKey = this.#generateCacheKey(message);
+  if (this.#categoryCache.has(cacheKey)) {
+    return this.#categoryCache.get(cacheKey);
   }
   
-  async getHandle(filePath) {
-    // Wait for any ongoing operations
-    if (this.#locks.has(filePath)) {
-      await this.#locks.get(filePath);
-    }
-    
-    // Return existing handle if available
-    if (this.#handles.has(filePath)) {
-      this.#accessTimes.set(filePath, Date.now());
-      return this.#handles.get(filePath);
-    }
-    
-    // Check if we need to free handles
-    if (this.#handles.size >= this.#maxHandles) {
-      await this.#evictLeastRecentlyUsed();
-    }
-    
-    // Open new handle
-    const handle = await this.#openFile(filePath);
-    this.#handles.set(filePath, handle);
-    this.#accessTimes.set(filePath, Date.now());
-    
-    // Schedule TTL cleanup
-    this.#scheduleCleanup(filePath);
-    
-    return handle;
-  }
-  
-  async #openFile(filePath) {
-    const lockPromise = (async () => {
-      try {
-        // Ensure directory exists
-        await fs.mkdir(path.dirname(filePath), { recursive: true });
-        
-        // Open file with append flag
-        return await fs.open(filePath, 'a');
-      } catch (error) {
-        if (error.code === 'EMFILE') {
-          // Too many open files - force eviction
-          await this.#forceEviction();
-          return this.#openFile(filePath);
-        }
-        throw error;
-      }
-    })();
-    
-    this.#locks.set(filePath, lockPromise);
-    const handle = await lockPromise;
-    this.#locks.delete(filePath);
-    
-    return handle;
-  }
-  
-  async #evictLeastRecentlyUsed() {
-    const sorted = Array.from(this.#accessTimes.entries())
-      .sort((a, b) => a[1] - b[1]);
-    
-    // Evict 20% of handles
-    const evictCount = Math.ceil(this.#maxHandles * 0.2);
-    
-    for (let i = 0; i < evictCount && i < sorted.length; i++) {
-      const [filePath] = sorted[i];
-      await this.#closeHandle(filePath);
-    }
-  }
-  
-  async #closeHandle(filePath) {
-    const handle = this.#handles.get(filePath);
-    if (handle) {
-      try {
-        await handle.close();
-      } catch (error) {
-        console.warn(`Failed to close handle for ${filePath}:`, error);
-      }
-      this.#handles.delete(filePath);
-      this.#accessTimes.delete(filePath);
-    }
-  }
+  // Existing detection logic with precompiled patterns
+  const category = this.#performDetection(message);
+  this.#categoryCache.set(cacheKey, category);
+  return category;
 }
 ```
 
-#### 3. Source Extraction Cache
+#### 3. HybridLogger Filtering Optimization
+
+Enhance the existing `HybridLogger` (src/logging/hybridLogger.js) with more efficient filtering:
+
+**Key Improvements:**
+- **Early filtering**: Filter logs before expensive processing steps
+- **Shared filter compilation**: Reuse compiled filters across console/remote loggers
+- **Dynamic filter updating**: Allow runtime filter updates without logger restart
 
 ```javascript
-// src/logging/sourceExtractionCache.js
-class SourceExtractionCache {
-  constructor(config = {}) {
-    this.#cache = new Map();
-    this.#maxSize = config.maxSize || 500;
-    this.#ttl = config.ttl || 300000; // 5 minutes
-    this.#hitRate = { hits: 0, misses: 0 };
-    this.#compressionEnabled = config.compression !== false;
-  }
-  
-  get(stackTrace) {
-    const key = this.#generateKey(stackTrace);
-    const entry = this.#cache.get(key);
-    
-    if (!entry) {
-      this.#hitRate.misses++;
-      return null;
-    }
-    
-    if (Date.now() - entry.timestamp > this.#ttl) {
-      this.#cache.delete(key);
-      this.#hitRate.misses++;
-      return null;
-    }
-    
-    this.#hitRate.hits++;
-    entry.accessCount++;
-    entry.lastAccess = Date.now();
-    
-    return entry.value;
-  }
-  
-  set(stackTrace, value) {
-    const key = this.#generateKey(stackTrace);
-    
-    // Check cache size
-    if (this.#cache.size >= this.#maxSize) {
-      this.#evict();
-    }
-    
-    this.#cache.set(key, {
-      value,
-      timestamp: Date.now(),
-      lastAccess: Date.now(),
-      accessCount: 1,
-      size: JSON.stringify(value).length
-    });
-  }
-  
-  #generateKey(stackTrace) {
-    if (!stackTrace) return 'empty';
-    
-    // Use first meaningful line as key
-    const lines = stackTrace.split('\n');
-    for (const line of lines) {
-      if (line && !line.includes('Error') && !line.includes('node_modules')) {
-        // Hash for shorter keys
-        return this.#hash(line);
-      }
-    }
-    
-    return this.#hash(stackTrace.substring(0, 200));
-  }
-  
-  #hash(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return hash.toString(36);
-  }
-  
-  #evict() {
-    // LFU (Least Frequently Used) with aging
-    const entries = Array.from(this.#cache.entries());
-    const now = Date.now();
-    
-    // Calculate scores (lower = evict first)
-    const scored = entries.map(([key, entry]) => {
-      const age = now - entry.timestamp;
-      const recency = now - entry.lastAccess;
-      const frequency = entry.accessCount;
-      
-      // Score formula: frequency / (age * recency)
-      const score = frequency / Math.max(1, (age / 1000) * (recency / 1000));
-      
-      return { key, score, entry };
-    });
-    
-    // Sort by score and evict lowest 20%
-    scored.sort((a, b) => a.score - b.score);
-    const evictCount = Math.ceil(this.#maxSize * 0.2);
-    
-    for (let i = 0; i < evictCount; i++) {
-      this.#cache.delete(scored[i].key);
-    }
-  }
-  
-  getStats() {
-    const total = this.#hitRate.hits + this.#hitRate.misses;
-    const hitRate = total > 0 ? this.#hitRate.hits / total : 0;
-    
-    return {
-      size: this.#cache.size,
-      maxSize: this.#maxSize,
-      hitRate: (hitRate * 100).toFixed(2) + '%',
-      hits: this.#hitRate.hits,
-      misses: this.#hitRate.misses,
-      memoryUsage: this.#calculateMemoryUsage()
-    };
-  }
+// Enhancement to src/logging/hybridLogger.js
+#compiledFilters = {
+  console: new CompiledFilterSet(),
+  remote: new CompiledFilterSet()
+};
+
+#shouldLog(destination, level, category, message) {
+  const filterSet = this.#compiledFilters[destination];
+  return filterSet.test(level, category, message);
 }
 ```
 
-#### 4. Batch Write Coordinator
+#### 4. CircuitBreaker Tuning for Network Resilience
+
+Optimize the existing `CircuitBreaker` (src/logging/circuitBreaker.js) for better network failure handling:
+
+**Key Improvements:**
+- **Exponential backoff**: Implement smarter retry timing
+- **Partial failure detection**: Distinguish between network and server errors
+- **Health check integration**: Add lightweight health checks before reopening circuit
+- **Adaptive thresholds**: Adjust failure thresholds based on historical performance
 
 ```javascript
-// src/logging/batchWriteCoordinator.js
-class BatchWriteCoordinator {
-  constructor(config = {}) {
-    this.#writeBuffer = new HierarchicalWriteBuffer(config.buffer);
-    this.#fileHandlePool = new FileHandlePool(config.handles);
-    this.#writeQueue = [];
-    this.#isProcessing = false;
-    this.#maxConcurrentWrites = config.maxConcurrentWrites || 5;
-  }
-  
-  async write(filePath, logs) {
-    // Add to buffer
-    for (const log of logs) {
-      this.#writeBuffer.add(filePath, log);
-    }
-    
-    // Process queue if not already processing
-    if (!this.#isProcessing) {
-      this.#processQueue();
-    }
-  }
-  
-  async #processQueue() {
-    this.#isProcessing = true;
-    
-    try {
-      const buffers = await this.#writeBuffer.getBuffersToFlush();
-      
-      // Group writes by priority
-      const prioritized = this.#prioritizeWrites(buffers);
-      
-      // Process in batches
-      for (const batch of prioritized) {
-        await this.#processBatch(batch);
-      }
-    } finally {
-      this.#isProcessing = false;
-    }
-  }
-  
-  async #processBatch(batch) {
-    const promises = batch.map(async ({ filePath, logs }) => {
-      try {
-        const handle = await this.#fileHandlePool.getHandle(filePath);
-        const content = logs.map(log => JSON.stringify(log)).join('\n') + '\n';
-        
-        await handle.appendFile(content);
-      } catch (error) {
-        console.error(`Batch write failed for ${filePath}:`, error);
-        // Add back to queue for retry
-        this.#writeQueue.push({ filePath, logs, retryCount: 1 });
-      }
-    });
-    
-    // Limit concurrent writes
-    const chunks = this.#chunkArray(promises, this.#maxConcurrentWrites);
-    for (const chunk of chunks) {
-      await Promise.allSettled(chunk);
-    }
-  }
-  
-  #prioritizeWrites(buffers) {
-    // Group by priority
-    const groups = {
-      critical: [], // errors, warnings
-      high: [],     // frequently accessed
-      normal: [],   // standard categories
-      low: []       // rarely accessed
-    };
-    
-    for (const buffer of buffers) {
-      if (buffer.filePath.includes('error') || buffer.filePath.includes('warning')) {
-        groups.critical.push(buffer);
-      } else if (buffer.size > 10000) {
-        groups.high.push(buffer);
-      } else if (buffer.logs.length > 50) {
-        groups.normal.push(buffer);
-      } else {
-        groups.low.push(buffer);
-      }
-    }
-    
-    return [groups.critical, groups.high, groups.normal, groups.low];
-  }
+// Enhancement to src/logging/circuitBreaker.js
+#adaptiveThresholds = {
+  baseFailureThreshold: 5,
+  currentThreshold: 5,
+  successfulRequestsToIncrease: 20
+};
+
+#isNetworkError(error) {
+  return error.name === 'NetworkError' || 
+         error.code === 'NETWORK_ERROR' ||
+         error.message.includes('fetch');
 }
 ```
 
 ## Performance Testing
 
+Use existing performance test infrastructure in `tests/performance/logging/` to validate optimizations.
+
 ### Benchmarks to Run
 
-1. **Throughput Test**
+1. **HTTP Request Throughput Test**
+   
+   Reference: `tests/performance/logging/remoteLogger.performance.test.js`
+   
    ```javascript
-   async function throughputTest() {
-     const coordinator = new BatchWriteCoordinator();
-     const startTime = Date.now();
-     const logCount = 100000;
-     
-     for (let i = 0; i < logCount; i++) {
-       const category = categories[i % categories.length];
-       await coordinator.write(`logs/${category}.jsonl`, [{
-         level: 'debug',
-         message: `Test log ${i}`,
-         timestamp: new Date().toISOString()
-       }]);
-     }
-     
-     const duration = Date.now() - startTime;
-     const throughput = logCount / (duration / 1000);
-     
-     console.log(`Throughput: ${throughput.toFixed(2)} logs/second`);
-   }
+   // Test RemoteLogger with varying batch sizes and logging volumes
+   describe('RemoteLogger Performance', () => {
+     it('should handle high-volume logging within performance targets', async () => {
+       const logger = new RemoteLogger({
+         batchSize: 50,
+         flushInterval: 2000,
+         endpoint: 'http://localhost:3001/api/debug-logs'
+       });
+       
+       const startTime = performance.now();
+       const logCount = 10000;
+       
+       for (let i = 0; i < logCount; i++) {
+         logger.info(`Performance test log ${i}`, { iteration: i });
+       }
+       
+       await logger.flush(); // Ensure all logs sent
+       const duration = performance.now() - startTime;
+       const throughput = logCount / (duration / 1000);
+       
+       expect(throughput).toBeGreaterThan(1000); // >1000 logs/second
+       expect(duration).toBeLessThan(10000); // <10 seconds total
+     });
+   });
    ```
 
-2. **Memory Usage Test**
-   - Monitor memory usage over time
-   - Test with different buffer sizes
-   - Verify memory cleanup
+2. **Memory Usage and Buffer Management Test**
+   
+   Reference: `tests/performance/logging/hybridLogger.performance.test.js`
+   
+   ```javascript
+   // Monitor browser memory usage during intensive logging
+   it('should maintain memory usage within browser limits', async () => {
+     const initialMemory = performance.memory.usedJSHeapSize;
+     const logger = new HybridLogger({/* config */});
+     
+     // Generate sustained logging load
+     for (let batch = 0; batch < 100; batch++) {
+       for (let i = 0; i < 100; i++) {
+         logger.debug(`Memory test ${batch}-${i}`, { data: 'x'.repeat(1000) });
+       }
+       await new Promise(resolve => setTimeout(resolve, 10)); // Allow processing
+     }
+     
+     const finalMemory = performance.memory.usedJSHeapSize;
+     const memoryGrowth = finalMemory - initialMemory;
+     
+     expect(memoryGrowth).toBeLessThan(50 * 1024 * 1024); // <50MB growth
+   });
+   ```
 
-3. **File Handle Test**
-   - Test with maximum file handles
-   - Verify proper cleanup
-   - Test EMFILE error handling
+3. **Circuit Breaker and Network Resilience Test**
+   
+   Reference: `tests/performance/logging/circuitBreaker.performance.test.js`
+   
+   ```javascript
+   // Test circuit breaker performance under network failures
+   it('should handle network failures without significant performance impact', async () => {
+     const circuitBreaker = new CircuitBreaker({
+       threshold: 5,
+       timeout: 1000
+     });
+     
+     // Simulate network failures and measure recovery time
+     const startTime = performance.now();
+     
+     // Test pattern: failures → recovery → normal operation
+     await simulateNetworkFailures(circuitBreaker, 10);
+     await simulateNetworkRecovery(circuitBreaker);
+     
+     const recoveryTime = performance.now() - startTime;
+     expect(recoveryTime).toBeLessThan(5000); // <5 second recovery
+   });
+   ```
+
+4. **Category Detection Performance Test**
+   
+   New test to add: `tests/performance/logging/logCategoryDetector.performance.test.js`
+   
+   ```javascript
+   // Benchmark category detection caching effectiveness
+   it('should achieve >80% cache hit rate with realistic log patterns', async () => {
+     const detector = new LogCategoryDetector({ enableCache: true });
+     const testMessages = generateRealisticLogMessages(1000);
+     
+     // First pass - populate cache
+     for (const message of testMessages) {
+       detector.detectCategory(message);
+     }
+     
+     // Second pass - measure cache performance
+     const startTime = performance.now();
+     for (const message of testMessages) {
+       detector.detectCategory(message);
+     }
+     const duration = performance.now() - startTime;
+     
+     const stats = detector.getCacheStats();
+     expect(stats.hitRate).toBeGreaterThan(0.8); // >80% hit rate
+     expect(duration).toBeLessThan(100); // <100ms for 1000 detections
+   });
+   ```
 
 ## Configuration Tuning
 
+Optimize configuration for actual logging components. Reference existing configuration patterns from the codebase.
+
+### RemoteLogger Optimized Configuration
+
 ```json
 {
-  "performance": {
-    "buffer": {
-      "maxBufferSize": 100,
-      "flushInterval": 1000,
-      "maxMemoryUsage": 52428800,
-      "compressionThreshold": 1048576
+  "remoteLogger": {
+    "endpoint": "http://localhost:3001/api/debug-logs",
+    "batchSize": 50,
+    "flushInterval": 2000,
+    "maxBufferSize": 1000,
+    "retryAttempts": 3,
+    "retryBaseDelay": 1000,
+    "retryMaxDelay": 30000,
+    "circuitBreakerThreshold": 5,
+    "circuitBreakerTimeout": 60000,
+    "requestTimeout": 10000,
+    "metadataLevel": "standard",
+    "enableCategoryCache": true,
+    "categoryCacheSize": 1000
+  }
+}
+```
+
+### HybridLogger Filtering Configuration
+
+```json
+{
+  "hybridLogger": {
+    "filters": {
+      "console": {
+        "levels": ["error", "warn", "info"],
+        "categories": null,
+        "enabled": true
+      },
+      "remote": {
+        "levels": ["error", "warn", "info", "debug"],
+        "categories": null,
+        "enabled": true
+      }
     },
-    "fileHandles": {
-      "maxHandles": 50,
-      "ttl": 60000,
-      "evictionRatio": 0.2
-    },
-    "cache": {
-      "maxSize": 500,
-      "ttl": 300000,
-      "compression": true
-    },
-    "writes": {
-      "maxConcurrentWrites": 5,
-      "retryAttempts": 3,
-      "retryDelay": 1000
+    "filtering": {
+      "patterns": ["password", "token", "secret"],
+      "replacement": "[FILTERED]"
+    }
+  }
+}
+```
+
+### CircuitBreaker Configuration
+
+```json
+{
+  "circuitBreaker": {
+    "failureThreshold": 5,
+    "successThreshold": 3,
+    "timeout": 60000,
+    "monitoringPeriod": 10000,
+    "fallback": {
+      "strategy": "buffer",
+      "maxBufferSize": 500
+    }
+  }
+}
+```
+
+### LogCategoryDetector Configuration
+
+```json
+{
+  "logCategoryDetector": {
+    "enableCache": true,
+    "cacheSize": 1000,
+    "cacheTTL": 300000,
+    "patterns": {
+      "engine": ["engine", "core", "system"],
+      "entities": ["entity", "component", "ecs"],
+      "actions": ["action", "handler", "operation"],
+      "events": ["event", "dispatch", "listener"],
+      "ui": ["dom", "render", "interface"]
     }
   }
 }
@@ -507,41 +337,64 @@ class BatchWriteCoordinator {
 
 ## Success Criteria
 
-- [ ] < 5% performance overhead vs current system
-- [ ] Cache hit rate > 80%
-- [ ] No EMFILE errors under load
-- [ ] Memory usage < 100MB
-- [ ] Throughput > 10,000 logs/second
-- [ ] Write latency < 10ms p99
-- [ ] Successful handling of 40+ concurrent files
+- [ ] < 5% performance overhead vs current logging system
+- [ ] Category detection cache hit rate > 80%
+- [ ] HTTP request batch efficiency > 90% (successful batches/total requests)
+- [ ] Browser memory usage growth < 50MB during intensive logging
+- [ ] Throughput > 1,000 logs/second in browser environment
+- [ ] HTTP request latency < 200ms p99 to llm-proxy-server
+- [ ] Circuit breaker recovery time < 5 seconds after network restoration
+- [ ] Log buffer utilization > 75% before flushing (efficient batching)
 
 ## Risk Assessment
 
 ### Risks
 
-1. **Memory Exhaustion**
-   - Mitigation: Emergency flush mechanism
-   - Memory usage monitoring
-   - Configurable limits
+1. **Browser Memory Exhaustion**
+   - Mitigation: Adaptive buffer size limits based on `performance.memory`
+   - Emergency flush when approaching memory limits
+   - Configurable maximum buffer sizes per logger instance
 
-2. **File Handle Exhaustion**
-   - Mitigation: Handle pooling
-   - Automatic eviction
-   - EMFILE error recovery
+2. **Network Connectivity Issues**
+   - Mitigation: Circuit breaker with exponential backoff
+   - Fallback to console-only logging during extended outages
+   - Intelligent retry strategies with connection health checks
 
-3. **Data Loss on Crash**
-   - Mitigation: Periodic flushes
-   - Write-ahead logging
-   - Graceful shutdown handlers
+3. **Log Data Loss During Browser Crashes**
+   - Mitigation: More aggressive flushing for critical log levels (error, warn)
+   - `navigator.sendBeacon()` for essential logs during page unload
+   - Consider `localStorage` buffering for critical logs (optional enhancement)
+
+4. **Performance Degradation Under High Load**
+   - Mitigation: Adaptive batching based on current system performance
+   - Priority-based log processing (errors first)
+   - Dynamic configuration adjustment based on browser capabilities
 
 ## Estimated Effort
 
-- Implementation: 10-12 hours
-- Testing: 4-5 hours
-- Performance tuning: 3-4 hours
-- Total: 17-21 hours
+- **RemoteLogger enhancements**: 6-8 hours
+  - Adaptive batching implementation
+  - Priority-based buffer management
+  - Memory pressure detection
+- **LogCategoryDetector optimization**: 3-4 hours
+  - LRU cache implementation
+  - Pattern precompilation
+  - Category hint system
+- **HybridLogger filtering improvements**: 2-3 hours
+  - Early filtering logic
+  - Shared filter compilation
+- **CircuitBreaker tuning**: 2-3 hours
+  - Exponential backoff refinement
+  - Health check integration
+- **Performance testing**: 4-5 hours
+  - Update existing performance tests
+  - Add new category detection benchmarks
+- **Configuration optimization**: 2-3 hours
+  - Tune parameters based on test results
+- **Total**: 19-26 hours
 
 ## Follow-up Tasks
 
-- SRCBASLOG-008: Add performance benchmarks
-- SRCBASLOG-009: Implement monitoring dashboard
+- SRCBASLOG-008: Implement performance monitoring dashboard for HTTP-based logging metrics
+- SRCBASLOG-009: Add real-time logging performance alerts and adaptive configuration
+- SRCBASLOG-010: Investigate `localStorage` buffering for critical logs during connectivity issues

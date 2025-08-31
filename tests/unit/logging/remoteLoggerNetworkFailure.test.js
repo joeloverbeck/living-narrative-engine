@@ -43,7 +43,7 @@ const originalNavigator = global.navigator;
 const originalPerformance = global.performance;
 
 /**
- *
+ * Sets up global browser API mocks for testing.
  */
 function setupGlobalMocks() {
   // Override window with our mock
@@ -80,7 +80,7 @@ function setupGlobalMocks() {
 }
 
 /**
- *
+ * Restores original global objects after testing.
  */
 function restoreGlobalMocks() {
   global.window = originalWindow;
@@ -186,13 +186,28 @@ describe('RemoteLogger - Network Failure Scenarios', () => {
       await remoteLogger.waitForPendingFlushes();
 
       // Verify fallback logger was used
-      expect(mockFallbackLogger.warn).toHaveBeenCalledWith(
-        '[RemoteLogger] Failed to send batch to server, falling back to console',
-        expect.objectContaining({
-          error: 'Request timeout',
-          logCount: 5,
-        })
+      // Due to priority buffer system, logs are sent in separate batches by level
+      // Error logs (1) are flushed immediately, then other logs (4) are batched
+      const warnCalls = mockFallbackLogger.warn.mock.calls;
+      const batchFailureCalls = warnCalls.filter(call => 
+        call[0] === '[RemoteLogger] Failed to send batch to server, falling back to console'
       );
+
+      // Should have batch failure calls for both error and other level batches
+      expect(batchFailureCalls.length).toBeGreaterThanOrEqual(1);
+      
+      // Verify total log count across all batches equals expected
+      const totalLogCount = batchFailureCalls.reduce((sum, call) => {
+        return sum + (call[1]?.logCount || 0);
+      }, 0);
+      expect(totalLogCount).toBe(5);
+      
+      // Verify all calls contain timeout error
+      batchFailureCalls.forEach(call => {
+        expect(call[1]).toEqual(expect.objectContaining({
+          error: 'Request timeout',
+        }));
+      });
     });
 
     it('should handle CORS errors when proxy server has incorrect configuration', async () => {
@@ -223,13 +238,28 @@ describe('RemoteLogger - Network Failure Scenarios', () => {
       await remoteLogger.waitForPendingFlushes();
 
       // Verify CORS error is handled gracefully
-      expect(mockFallbackLogger.warn).toHaveBeenCalledWith(
-        '[RemoteLogger] Failed to send batch to server, falling back to console',
-        expect.objectContaining({
-          error: 'CORS error',
-          logCount: 3,
-        })
+      // Due to priority buffer system, logs are sent in separate batches by level
+      // Error logs (1) are flushed immediately, then other logs (2) are batched
+      const warnCalls = mockFallbackLogger.warn.mock.calls;
+      const batchFailureCalls = warnCalls.filter(call => 
+        call[0] === '[RemoteLogger] Failed to send batch to server, falling back to console'
       );
+
+      // Should have batch failure calls for different priority levels
+      expect(batchFailureCalls.length).toBeGreaterThanOrEqual(1);
+      
+      // Verify total log count across all batches equals expected
+      const totalLogCount = batchFailureCalls.reduce((sum, call) => {
+        return sum + (call[1]?.logCount || 0);
+      }, 0);
+      expect(totalLogCount).toBe(3);
+      
+      // Verify all calls contain CORS error
+      batchFailureCalls.forEach(call => {
+        expect(call[1]).toEqual(expect.objectContaining({
+          error: 'CORS error',
+        }));
+      });
     });
 
     it('should demonstrate circuit breaker behavior after repeated failures', async () => {

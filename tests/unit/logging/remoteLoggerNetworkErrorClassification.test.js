@@ -41,8 +41,10 @@ global.navigator = {
 
 describe('RemoteLogger - Network Error Classification', () => {
   let mockFallbackLogger;
+  let createdLoggers = [];
 
   beforeEach(() => {
+    // Create fresh mock logger for each test
     mockFallbackLogger = {
       info: jest.fn(),
       warn: jest.fn(),
@@ -50,8 +52,24 @@ describe('RemoteLogger - Network Error Classification', () => {
       debug: jest.fn(),
     };
 
-    // Clear all mocks
+    // Reset created loggers array
+    createdLoggers = [];
+
+    // Clear all mocks including global fetch
     jest.clearAllMocks();
+    mockFetch.mockClear();
+  });
+
+  afterEach(async () => {
+    // Clean up any created loggers to prevent resource leaks
+    for (const logger of createdLoggers) {
+      try {
+        await logger.destroy();
+      } catch (error) {
+        // Ignore cleanup errors
+      }
+    }
+    createdLoggers = [];
   });
 
   describe('Failed to fetch error handling', () => {
@@ -62,26 +80,31 @@ describe('RemoteLogger - Network Error Classification', () => {
       const remoteLogger = new RemoteLogger({
         config: {
           endpoint: 'http://localhost:3001/api/logs',
-          batchSize: 2,
-          flushInterval: 50,
+          batchSize: 1, // Force immediate flush
+          flushInterval: 10, // Very short interval
           retryAttempts: 3, // This should be ignored for non-retriable errors
           initialConnectionDelay: 0, // No delay for testing
           skipServerReadinessValidation: true, // Skip health checks for testing
           circuitBreakerThreshold: 999, // Very high threshold to prevent circuit breaking during test
           retryBaseDelay: 10, // Very short delay for testing
           retryMaxDelay: 100, // Very short max delay for testing
+          maxBufferSize: 100, // Small buffer for testing
+          maxServerBatchSize: 50, // Small server batch for testing
         },
         dependencies: {
           consoleLogger: mockFallbackLogger,
         },
       });
 
+      // Track logger for cleanup
+      createdLoggers.push(remoteLogger);
+
       // Log message to trigger a batch (use info instead of error to avoid immediate flush)
       remoteLogger.info('Test info message');
       remoteLogger.warn('Test warning message');
 
-      // Wait for batch processing
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Force flush to trigger the network call immediately
+      await remoteLogger.flush();
 
       // Should only attempt to send once (no retries for non-retriable errors)
       expect(mockFetch).toHaveBeenCalledTimes(1);
@@ -91,7 +114,7 @@ describe('RemoteLogger - Network Error Classification', () => {
         '[RemoteLogger] Failed to send batch to server, falling back to console',
         expect.objectContaining({
           error: 'Failed to fetch',
-          logCount: 2,
+          logCount: 1,
         })
       );
     });
@@ -119,10 +142,13 @@ describe('RemoteLogger - Network Error Classification', () => {
         },
       });
 
+      // Track logger for cleanup
+      createdLoggers.push(remoteLogger);
+
       remoteLogger.info('Test message for NetworkError');
 
-      // Wait for processing
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      // Force flush to trigger the network call immediately
+      await remoteLogger.flush();
 
       // Should not retry NetworkError (non-retriable)
       expect(mockFetch).toHaveBeenCalledTimes(1);
@@ -169,12 +195,15 @@ describe('RemoteLogger - Network Error Classification', () => {
         },
       });
 
+      // Track logger for cleanup
+      createdLoggers.push(remoteLogger);
+
       remoteLogger.debug('Test message for server error');
 
-      // Wait for retries to complete
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Force flush to trigger the network call immediately
+      await remoteLogger.flush();
 
-      // Should retry server errors (3 attempts total)
+      // Should retry server errors (3 attempts total: retryAttempts: 3 = 3 total attempts)
       expect(mockFetch).toHaveBeenCalledTimes(3);
 
       // Should not log to fallback since it eventually succeeded
@@ -185,17 +214,27 @@ describe('RemoteLogger - Network Error Classification', () => {
   describe('Error classification behavior', () => {
     it('should properly differentiate retriable vs non-retriable errors', async () => {
       const testCases = [
-        { error: 'Failed to fetch', shouldRetry: false },
-        { error: 'NetworkError', shouldRetry: false },
-        { error: 'ERR_NETWORK', shouldRetry: false },
-        { error: 'HTTP 500: Internal Server Error', shouldRetry: true },
-        { error: 'HTTP 502: Bad Gateway', shouldRetry: true },
-        { error: 'Request timeout', shouldRetry: true },
-        { error: 'HTTP 401: Unauthorized', shouldRetry: false },
-        { error: 'HTTP 413: Payload Too Large', shouldRetry: false },
+        // Non-retriable network errors (handled by #isNonRetriableError)
+        { error: 'Failed to fetch', shouldRetry: false, category: 'network' },
+        { error: 'NetworkError', shouldRetry: false, category: 'network' },
+        { error: 'ERR_NETWORK', shouldRetry: false, category: 'network' },
+        { error: 'ENOTFOUND', shouldRetry: false, category: 'network' },
+        { error: 'certificate', shouldRetry: false, category: 'network' },
+        { error: 'HTTP 401: Unauthorized', shouldRetry: false, category: 'network' },
+        { error: 'HTTP 403: Forbidden', shouldRetry: false, category: 'network' },
+        // Retriable server errors
+        { error: 'HTTP 500: Internal Server Error', shouldRetry: true, category: 'server' },
+        { error: 'HTTP 502: Bad Gateway', shouldRetry: true, category: 'server' },
+        { error: 'Request timeout', shouldRetry: true, category: 'server' },
+        { error: 'ETIMEDOUT', shouldRetry: true, category: 'server' },
+        // Non-retriable client errors (handled by #isClientError)
+        { error: 'HTTP 413: Payload Too Large', shouldRetry: false, category: 'client' },
+        { error: 'HTTP 400: Bad Request', shouldRetry: false, category: 'client' },
+        { error: '400', shouldRetry: false, category: 'client' },
       ];
 
       for (const testCase of testCases) {
+        // Clear mocks and create fresh logger for each test case
         jest.clearAllMocks();
 
         mockFetch.mockRejectedValue(new Error(testCase.error));
@@ -204,39 +243,35 @@ describe('RemoteLogger - Network Error Classification', () => {
           config: {
             endpoint: 'http://localhost:3001/api/logs',
             batchSize: 1,
-            flushInterval: 50,
-            retryAttempts: 2,
+            flushInterval: 30, // Shorter interval for faster testing
+            retryAttempts: 2, // Use 2 retries to clearly show difference
             initialConnectionDelay: 0, // No delay for testing
             skipServerReadinessValidation: true, // Skip health checks for testing
             circuitBreakerThreshold: 999, // Very high threshold to prevent circuit breaking during test
-            retryBaseDelay: 10, // Very short delay for testing
-            retryMaxDelay: 100, // Very short max delay for testing
+            retryBaseDelay: 5, // Very short delay for testing
+            retryMaxDelay: 50, // Very short max delay for testing
           },
           dependencies: {
             consoleLogger: mockFallbackLogger,
           },
         });
 
+        // Track logger for cleanup
+        createdLoggers.push(remoteLogger);
+
+        // Log a message to trigger batch processing
         remoteLogger.info(`Test message for ${testCase.error}`);
 
-        // Wait for processing
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        console.log(
-          `[DEBUG] Test case "${testCase.error}" - shouldRetry: ${testCase.shouldRetry}, actualCalls: ${mockFetch.mock.calls.length}`
-        );
+        // Force flush to trigger the network call immediately
+        await remoteLogger.flush();
 
         if (testCase.shouldRetry) {
-          // Should attempt multiple times for retriable errors
+          // Should attempt multiple times for retriable errors (retryAttempts: 2 = 2 total attempts)
           expect(mockFetch).toHaveBeenCalledTimes(2);
         } else {
           // Should only attempt once for non-retriable errors
           expect(mockFetch).toHaveBeenCalledTimes(1);
         }
-
-        console.log(
-          `[DEBUG] Test case "${testCase.error}" - shouldRetry: ${testCase.shouldRetry}, actualCalls: ${mockFetch.mock.calls.length}`
-        );
 
         // All errors should be logged to fallback
         expect(mockFallbackLogger.warn).toHaveBeenCalledWith(

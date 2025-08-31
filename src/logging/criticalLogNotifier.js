@@ -6,6 +6,8 @@
 import { RendererBase } from '../domUI/rendererBase.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
 import DragHandler from './dragHandler.js';
+import LogFilter from './logFilter.js';
+import KeyboardShortcutsManager from './keyboardShortcutsManager.js';
 
 /** @typedef {import('./types.js').CriticalLogEntry} CriticalLogEntry */
 /** @typedef {import('./types.js').NotifierConfig} NotifierConfig */
@@ -35,6 +37,8 @@ class CriticalLogNotifier extends RendererBase {
   #keyboardHandler = null;
   #animationTimer = null;
   #dragHandler = null;
+  #logFilter = null;
+  #keyboardManager = null;
 
   /**
    * Creates a new CriticalLogNotifier instance.
@@ -107,6 +111,8 @@ class CriticalLogNotifier extends RendererBase {
     }
 
     this.#createContainer();
+    this.#initializeLogFilter();
+    this.#initializeKeyboardManager();
     this.#attachEventListeners();
     this.#startUpdateTimer();
 
@@ -241,10 +247,119 @@ class CriticalLogNotifier extends RendererBase {
     const logList = this.documentContext.create('div');
     logList.className = 'lne-log-list';
 
+    // Filter bar
+    const filterBar = this.#createFilterBar();
+    
     panel.appendChild(header);
+    panel.appendChild(filterBar);
     panel.appendChild(logList);
 
     return panel;
+  }
+
+  /**
+   * Creates the filter bar with search and filter controls.
+   *
+   * @private
+   * @returns {HTMLElement} Filter bar element
+   */
+  #createFilterBar() {
+    const filterBar = this.documentContext.create('div');
+    filterBar.className = 'lne-filter-bar';
+
+    // Search input
+    const searchInput = this.documentContext.create('input');
+    searchInput.className = 'lne-search-input';
+    searchInput.type = 'text';
+    searchInput.placeholder = 'Search logs...';
+    searchInput.setAttribute('aria-label', 'Search logs');
+
+    // Level filter
+    const levelFilter = this.documentContext.create('select');
+    levelFilter.className = 'lne-level-filter';
+    levelFilter.setAttribute('aria-label', 'Filter by level');
+    
+    const levelOptions = [
+      { value: 'all', text: 'All Levels' },
+      { value: 'warn', text: 'Warnings' },
+      { value: 'error', text: 'Errors' }
+    ];
+    
+    levelOptions.forEach(option => {
+      const optionElement = this.documentContext.create('option');
+      optionElement.value = option.value;
+      optionElement.textContent = option.text;
+      levelFilter.appendChild(optionElement);
+    });
+
+    // Category filter
+    const categoryFilter = this.documentContext.create('select');
+    categoryFilter.className = 'lne-category-filter';
+    categoryFilter.setAttribute('aria-label', 'Filter by category');
+    
+    // Time range filter
+    const timeFilter = this.documentContext.create('select');
+    timeFilter.className = 'lne-time-filter';
+    timeFilter.setAttribute('aria-label', 'Filter by time range');
+    
+    const timeOptions = [
+      { value: 'all', text: 'All Time' },
+      { value: 'last5min', text: 'Last 5 min' },
+      { value: 'last15min', text: 'Last 15 min' },
+      { value: 'last30min', text: 'Last 30 min' },
+      { value: 'lasthour', text: 'Last hour' }
+    ];
+    
+    timeOptions.forEach(option => {
+      const optionElement = this.documentContext.create('option');
+      optionElement.value = option.value;
+      optionElement.textContent = option.text;
+      timeFilter.appendChild(optionElement);
+    });
+
+    // Filter stats
+    const filterStats = this.documentContext.create('div');
+    filterStats.className = 'lne-filter-stats';
+
+    filterBar.appendChild(searchInput);
+    filterBar.appendChild(levelFilter);
+    filterBar.appendChild(categoryFilter);
+    filterBar.appendChild(timeFilter);
+    filterBar.appendChild(filterStats);
+
+    return filterBar;
+  }
+
+  /**
+   * Initialize the log filter component.
+   *
+   * @private
+   */
+  #initializeLogFilter() {
+    this.#logFilter = new LogFilter({
+      logger: this.logger,
+      callbacks: {
+        onFilterChange: (filteredLogs, stats) => {
+          this.#updateLogDisplay(filteredLogs);
+          this.#updateFilterStats(stats);
+        }
+      }
+    });
+  }
+
+  /**
+   * Initialize the enhanced keyboard manager.
+   *
+   * @private
+   */
+  #initializeKeyboardManager() {
+    this.#keyboardManager = new KeyboardShortcutsManager({
+      logger: this.logger
+    });
+    
+    this.#keyboardManager.setActionCallback((action, event) => {
+      this.#handleShortcutAction(action, event);
+    });
   }
 
   /**
@@ -289,8 +404,47 @@ class CriticalLogNotifier extends RendererBase {
       }
     );
 
+    // Filter controls event listeners
+    this.#attachFilterListeners();
+
     // Setup keyboard shortcuts
     this.#setupKeyboardShortcuts();
+  }
+
+  /**
+   * Attach event listeners for filter controls.
+   *
+   * @private
+   */
+  #attachFilterListeners() {
+    const searchInput = this.#panel.querySelector('.lne-search-input');
+    const levelFilter = this.#panel.querySelector('.lne-level-filter');
+    const categoryFilter = this.#panel.querySelector('.lne-category-filter');
+    const timeFilter = this.#panel.querySelector('.lne-time-filter');
+
+    // Search input with debouncing
+    let searchTimeout;
+    this._addDomListener(searchInput, 'input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        this.#logFilter.setFilter({ searchText: e.target.value });
+      }, 300);
+    });
+
+    // Level filter
+    this._addDomListener(levelFilter, 'change', (e) => {
+      this.#logFilter.setFilter({ level: e.target.value });
+    });
+
+    // Category filter  
+    this._addDomListener(categoryFilter, 'change', (e) => {
+      this.#logFilter.setFilter({ category: e.target.value });
+    });
+
+    // Time filter
+    this._addDomListener(timeFilter, 'change', (e) => {
+      this.#logFilter.setFilter({ timeRange: e.target.value });
+    });
   }
 
   /**
@@ -299,35 +453,157 @@ class CriticalLogNotifier extends RendererBase {
    * @private
    */
   #setupKeyboardShortcuts() {
-    const handleKeyboard = (e) => {
-      // Only handle if notifier is visible
-      if (!this.#container || this.#container.hidden) return;
+    // Now handled by KeyboardShortcutsManager
+    this.#keyboardManager.enable();
+  }
 
-      // Escape to collapse panel
-      if (e.key === 'Escape') {
-        if (this.#isExpanded) {
+  /**
+   * Handle keyboard shortcut actions.
+   *
+   * @private
+   * @param {string} action - The shortcut action to handle
+   * @param {Event} event - The keyboard event
+   */
+  #handleShortcutAction(action, event) {
+    switch (action) {
+      case 'close-panel':
+      case 'toggle-panel':
+        // Use existing methods
+        if (action === 'close-panel' && this.#isExpanded) {
           this.#handleCollapse();
-          this.logger.debug(
-            `${this._logPrefix} Panel collapsed via Escape key`
-          );
+        } else if (action === 'toggle-panel') {
+          this.#handleToggle();
         }
-      }
+        break;
+      case 'clear-all':
+        this.#handleClear();
+        break;
+      case 'dismiss':
+        this.#handleDismiss();
+        break;
+      case 'focus-search':
+        this.#focusSearchInput();
+        break;
+      case 'filter-warnings':
+        this.#logFilter.setFilter({ level: 'warn' });
+        this.#updateFilterUI();
+        break;
+      case 'filter-errors':
+        this.#logFilter.setFilter({ level: 'error' });
+        this.#updateFilterUI();
+        break;
+      case 'filter-all':
+        this.#logFilter.setFilter({ level: 'all' });
+        this.#updateFilterUI();
+        break;
+      case 'export':
+        this.#exportLogs();
+        break;
+      // Navigation handled in future iteration
+    }
+  }
 
-      // Ctrl+Shift+L to toggle panel
-      if (e.ctrlKey && e.shiftKey && e.key === 'L') {
-        e.preventDefault();
-        this.#handleToggle();
-        this.logger.debug(`${this._logPrefix} Panel toggled via Ctrl+Shift+L`);
-      }
-    };
+  /**
+   * Focus the search input field.
+   *
+   * @private
+   */
+  #focusSearchInput() {
+    if (!this.#isExpanded) {
+      this.#handleExpand();
+    }
+    
+    const searchInput = this.#panel.querySelector('.lne-search-input');
+    if (searchInput) {
+      searchInput.focus();
+    }
+  }
 
-    // Use document for keyboard events to ensure they work from any focus state
-    this.documentContext
-      .query('document')
-      .addEventListener('keydown', handleKeyboard);
+  /**
+   * Export logs in JSON format (placeholder for future implementation).
+   *
+   * @private
+   */
+  #exportLogs() {
+    if (this.#logFilter) {
+      const jsonData = this.#logFilter.exportAsJSON();
+      this.logger.debug(`${this._logPrefix} Logs exported`, { count: this.#logFilter.getFilteredLogs().length });
+      
+      // Future implementation: trigger download or copy to clipboard
+      // For now, just log that export was requested
+      console.log('Export requested - JSON data ready:', jsonData.length, 'characters');
+    }
+  }
 
-    // Store reference for cleanup
-    this.#keyboardHandler = handleKeyboard;
+  /**
+   * Update filter UI to reflect current filter state.
+   *
+   * @private
+   */
+  #updateFilterUI() {
+    const filterCriteria = this.#logFilter.getFilter();
+    
+    const levelFilter = this.#panel.querySelector('.lne-level-filter');
+    const categoryFilter = this.#panel.querySelector('.lne-category-filter');
+    const timeFilter = this.#panel.querySelector('.lne-time-filter');
+    
+    if (levelFilter) levelFilter.value = filterCriteria.level;
+    if (categoryFilter) categoryFilter.value = filterCriteria.category;
+    if (timeFilter) timeFilter.value = filterCriteria.timeRange;
+  }
+
+  /**
+   * Update the log display with filtered logs.
+   *
+   * @private
+   * @param {Array} filteredLogs - Filtered log entries
+   */
+  #updateLogDisplay(filteredLogs) {
+    if (this.#isExpanded) {
+      this.#updateLogPanel(filteredLogs);
+    }
+  }
+
+  /**
+   * Update filter statistics display.
+   *
+   * @private
+   * @param {Object} stats - Filter statistics
+   */
+  #updateFilterStats(stats) {
+    const filterStats = this.#panel.querySelector('.lne-filter-stats');
+    if (filterStats) {
+      filterStats.textContent = `${stats.filtered} of ${stats.total} logs (${stats.warnings} warnings, ${stats.errors} errors)`;
+    }
+    
+    // Update category filter options
+    this.#updateCategoryOptions(this.#logFilter.getCategories());
+  }
+
+  /**
+   * Update category filter options dynamically.
+   *
+   * @private
+   * @param {Array} categories - Available categories
+   */
+  #updateCategoryOptions(categories) {
+    const categoryFilter = this.#panel.querySelector('.lne-category-filter');
+    if (!categoryFilter) return;
+
+    const currentValue = categoryFilter.value;
+    categoryFilter.innerHTML = '';
+
+    categories.forEach(category => {
+      const option = this.documentContext.create('option');
+      option.value = category;
+      option.textContent = category === 'all' ? 'All Categories' : category;
+      categoryFilter.appendChild(option);
+    });
+
+    // Restore selection if still valid
+    if (categories.includes(currentValue)) {
+      categoryFilter.value = currentValue;
+    }
   }
 
   /**
@@ -369,6 +645,11 @@ class CriticalLogNotifier extends RendererBase {
         ...log,
         displayTime: new Date(log.timestamp).toLocaleTimeString(),
       }));
+
+      // Update the filter with new logs
+      if (this.#logFilter) {
+        this.#logFilter.setLogs(this.#recentLogs);
+      }
 
       this.#updateDisplay();
     } catch (error) {
@@ -922,7 +1203,18 @@ class CriticalLogNotifier extends RendererBase {
       this.#animationTimer = null;
     }
 
-    // Clean up keyboard handler
+    // Clean up keyboard manager
+    if (this.#keyboardManager) {
+      this.#keyboardManager.destroy();
+      this.#keyboardManager = null;
+    }
+
+    // Clean up log filter
+    if (this.#logFilter) {
+      this.#logFilter = null;
+    }
+
+    // Clean up old keyboard handler (if still present)
     if (this.#keyboardHandler) {
       this.documentContext
         .query('document')

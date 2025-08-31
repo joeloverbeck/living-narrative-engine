@@ -545,9 +545,7 @@ describe('RemoteLogger', () => {
       // Give the logger time to process the log and attempt retries
       // Using fake timers to control time progression
       jest.advanceTimersByTime(1000);
-
-      // Let promises resolve
-      await Promise.resolve();
+      await jest.runAllTimersAsync();
 
       // Verify that fetch was attempted (will be called for retries)
       expect(mockFetch).toHaveBeenCalled();
@@ -610,9 +608,7 @@ describe('RemoteLogger', () => {
 
       // Use fake timers to control the test flow
       jest.advanceTimersByTime(500);
-
-      // Let promises resolve
-      await Promise.resolve();
+      await jest.runAllTimersAsync();
 
       // Verify that the system attempted to send
       expect(mockFetch).toHaveBeenCalled();
@@ -1621,7 +1617,7 @@ describe('RemoteLogger', () => {
       clearTimeoutSpy.mockRestore();
     });
 
-    it('should handle unloading scenarios', () => {
+    it('should handle unloading scenarios', async () => {
       remoteLogger = new RemoteLogger({
         config: { batchSize: 5 },
         dependencies: {
@@ -1634,9 +1630,24 @@ describe('RemoteLogger', () => {
       remoteLogger.info('Unloading test log 1');
       remoteLogger.error('Unloading test log 2');
 
-      // Simulate page unload
-      const unloadEvent = new Event('beforeunload');
-      global.window?.dispatchEvent(unloadEvent);
+      // Allow some time for logs to be processed but not flushed yet
+      jest.advanceTimersByTime(10);
+
+      // Verify event listener was added
+      expect(mockWindowAddEventListener).toHaveBeenCalledWith(
+        'beforeunload',
+        expect.any(Function)
+      );
+
+      // Get the beforeunload listener function
+      const beforeunloadCall = mockWindowAddEventListener.mock.calls.find(
+        call => call[0] === 'beforeunload'
+      );
+      expect(beforeunloadCall).toBeTruthy();
+      
+      // Manually call the listener function (since global.window.dispatchEvent may not work with mocked addEventListener)
+      const beforeunloadListener = beforeunloadCall[1];
+      beforeunloadListener();
 
       // Should handle unloading gracefully - sendBeacon may be called in browser environment
       expect(mockSendBeacon).toHaveBeenCalledTimes(1); // sendBeacon is likely called during unload

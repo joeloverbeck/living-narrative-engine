@@ -82,17 +82,21 @@ export class ModTestFixture {
           finalRuleFile = loaded.ruleFile;
           finalConditionFile = loaded.conditionFile;
         } else {
-          // Partial loading - use tryAutoLoadFiles for individual file loading
-          const loaded = await this.tryAutoLoadFiles(modId, actionId);
-          finalRuleFile = finalRuleFile || loaded.ruleFile;
-          finalConditionFile = finalConditionFile || loaded.conditionFile;
-          
-          // Ensure we have both files after partial loading
+          // Partial loading - load individual files as needed
           if (!finalRuleFile) {
-            throw new Error(`Could not auto-load rule file for ${modId}:${actionId}`);
+            try {
+              finalRuleFile = await this.loadRuleFile(modId, actionId);
+            } catch {
+              throw new Error(`Could not auto-load rule file for ${modId}:${actionId}`);
+            }
           }
+          
           if (!finalConditionFile) {
-            throw new Error(`Could not auto-load condition file for ${modId}:${actionId}`);
+            try {
+              finalConditionFile = await this.loadConditionFile(modId, actionId);
+            } catch {
+              throw new Error(`Could not auto-load condition file for ${modId}:${actionId}`);
+            }
           }
         }
       }
@@ -133,17 +137,21 @@ export class ModTestFixture {
           finalRuleFile = loaded.ruleFile;
           finalConditionFile = loaded.conditionFile;
         } else {
-          // Partial loading - use tryAutoLoadFiles for individual file loading
-          const loaded = await this.tryAutoLoadFiles(modId, ruleId);
-          finalRuleFile = finalRuleFile || loaded.ruleFile;
-          finalConditionFile = finalConditionFile || loaded.conditionFile;
-          
-          // Ensure we have both files after partial loading
+          // Partial loading - load individual files as needed
           if (!finalRuleFile) {
-            throw new Error(`Could not auto-load rule file for ${modId}:${ruleId}`);
+            try {
+              finalRuleFile = await this.loadRuleFile(modId, ruleId);
+            } catch {
+              throw new Error(`Could not auto-load rule file for ${modId}:${ruleId}`);
+            }
           }
+          
           if (!finalConditionFile) {
-            throw new Error(`Could not auto-load condition file for ${modId}:${ruleId}`);
+            try {
+              finalConditionFile = await this.loadConditionFile(modId, ruleId);
+            } catch {
+              throw new Error(`Could not auto-load condition file for ${modId}:${ruleId}`);
+            }
           }
         }
       }
@@ -221,6 +229,82 @@ export class ModTestFixture {
   }
 
   /**
+   * Loads a single rule file based on naming conventions.
+   * 
+   * @param {string} modId - The mod identifier
+   * @param {string} identifier - The action or rule identifier
+   * @returns {Promise<object>} Loaded rule file
+   * @throws {Error} If file cannot be found
+   */
+  static async loadRuleFile(modId, identifier) {
+    const actionName = extractActionName(identifier);
+    const errors = [];
+
+    // Generate fullActionId - if identifier has no namespace, use modId_actionName pattern
+    const fullActionId = identifier.includes(':') 
+      ? identifier.replace(':', '_') 
+      : `${modId}_${actionName}`;
+
+    // Try to load rule file
+    const rulePaths = MOD_FILE_CONVENTIONS.rules.map(pattern => 
+      pattern
+        .replace('{modId}', modId)
+        .replace('{actionName}', actionName)
+        .replace('{fullActionId}', fullActionId)
+    );
+
+    for (const rulePath of rulePaths) {
+      try {
+        const resolvedPath = resolve(rulePath);
+        const content = await fs.readFile(resolvedPath, 'utf8');
+        return JSON.parse(content);
+      } catch (error) {
+        errors.push(`Failed to load rule from ${rulePath}: ${error.message}`);
+      }
+    }
+
+    throw new Error(`Could not load rule file for ${modId}:${identifier}. Tried paths: ${rulePaths.join(', ')}`);
+  }
+
+  /**
+   * Loads a single condition file based on naming conventions.
+   * 
+   * @param {string} modId - The mod identifier
+   * @param {string} identifier - The action or rule identifier
+   * @returns {Promise<object>} Loaded condition file
+   * @throws {Error} If file cannot be found
+   */
+  static async loadConditionFile(modId, identifier) {
+    const actionName = extractActionName(identifier);
+    const errors = [];
+
+    // Generate fullActionId for conditions - use hyphens instead of underscores
+    const fullActionIdForConditions = identifier.includes(':') 
+      ? identifier.replace(/[:_]/g, '-')
+      : `${modId}-${actionName.replace(/_/g, '-')}`;
+
+    // Try to load condition file
+    const conditionPaths = MOD_FILE_CONVENTIONS.conditions.map(pattern =>
+      pattern
+        .replace('{modId}', modId)
+        .replace('{actionName}', actionName.replace(/_/g, '-'))
+        .replace('{fullActionId}', fullActionIdForConditions)
+    );
+
+    for (const conditionPath of conditionPaths) {
+      try {
+        const resolvedPath = resolve(conditionPath);
+        const content = await fs.readFile(resolvedPath, 'utf8');
+        return JSON.parse(content);
+      } catch (error) {
+        errors.push(`Failed to load condition from ${conditionPath}: ${error.message}`);
+      }
+    }
+
+    throw new Error(`Could not load condition file for ${modId}:${identifier}. Tried paths: ${conditionPaths.join(', ')}`);
+  }
+
+  /**
    * Loads mod rule and condition files based on naming conventions.
    * 
    * Attempts to find files using established naming patterns from the codebase.
@@ -237,12 +321,17 @@ export class ModTestFixture {
     let ruleFile = null;
     let conditionFile = null;
 
+    // Generate fullActionId - if identifier has no namespace, use modId_actionName pattern
+    const fullActionId = identifier.includes(':') 
+      ? identifier.replace(':', '_') 
+      : `${modId}_${actionName}`;
+
     // Try to load rule file
     const rulePaths = MOD_FILE_CONVENTIONS.rules.map(pattern => 
       pattern
         .replace('{modId}', modId)
         .replace('{actionName}', actionName)
-        .replace('{fullActionId}', identifier.replace(':', '_'))
+        .replace('{fullActionId}', fullActionId)
     );
 
     for (const rulePath of rulePaths) {
@@ -256,12 +345,17 @@ export class ModTestFixture {
       }
     }
 
+    // Generate fullActionId for conditions - use hyphens instead of underscores
+    const fullActionIdForConditions = identifier.includes(':') 
+      ? identifier.replace(/[:_]/g, '-')
+      : `${modId}-${actionName.replace(/_/g, '-')}`;
+
     // Try to load condition file
     const conditionPaths = MOD_FILE_CONVENTIONS.conditions.map(pattern =>
       pattern
         .replace('{modId}', modId)
         .replace('{actionName}', actionName.replace(/_/g, '-')) // Convert all underscores to hyphens for condition files
-        .replace('{fullActionId}', identifier.replace(/[:_]/g, '-')) // Convert colons and underscores to hyphens
+        .replace('{fullActionId}', fullActionIdForConditions)
     );
 
     for (const conditionPath of conditionPaths) {
@@ -298,18 +392,28 @@ export class ModTestFixture {
   static getConventionalPaths(modId, identifier) {
     const actionName = extractActionName(identifier);
     
+    // Generate fullActionId - if identifier has no namespace, use modId_actionName pattern
+    const fullActionId = identifier.includes(':') 
+      ? identifier.replace(':', '_') 
+      : `${modId}_${actionName}`;
+    
     const rulePaths = MOD_FILE_CONVENTIONS.rules.map(pattern => 
       pattern
         .replace('{modId}', modId)
         .replace('{actionName}', actionName)
-        .replace('{fullActionId}', identifier.replace(':', '_'))
+        .replace('{fullActionId}', fullActionId)
     );
+
+    // Generate fullActionId for conditions - use hyphens instead of underscores
+    const fullActionIdForConditions = identifier.includes(':') 
+      ? identifier.replace(/[:_]/g, '-')
+      : `${modId}-${actionName.replace(/_/g, '-')}`;
 
     const conditionPaths = MOD_FILE_CONVENTIONS.conditions.map(pattern =>
       pattern
         .replace('{modId}', modId)
         .replace('{actionName}', actionName.replace(/_/g, '-'))
-        .replace('{fullActionId}', identifier.replace(/[:_]/g, '-'))
+        .replace('{fullActionId}', fullActionIdForConditions)
     );
 
     return { rulePaths, conditionPaths };
@@ -430,6 +534,10 @@ export class ModActionTestFixture extends BaseModTestFixture {
     this.actionId = actionId;
     this.ruleFile = ruleFile;
     this.conditionFile = conditionFile;
+    
+    // Add actionFile property for compatibility with categoryPatternValidation.test.js
+    // This contains the string representation of the action file content
+    this.actionFile = ruleFile ? JSON.stringify(ruleFile) : null;
 
     const conditionId = `${modId}:event-is-action-${actionId.replace(`${modId}:`, '').replace(/_/g, '-')}`;
     this.setupEnvironment(ruleFile, conditionFile, conditionId);
@@ -521,7 +629,8 @@ export class ModActionTestFixture extends BaseModTestFixture {
       ...options,
     });
 
-    const entities = scenario.allEntities;
+    // Create a copy of entities to avoid modifying the original scenario
+    const entities = [...scenario.allEntities];
 
     // Add room if needed
     if (options.includeRoom !== false) {

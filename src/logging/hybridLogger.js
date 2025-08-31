@@ -94,6 +94,13 @@ class HybridLogger {
   #bufferMetadata;
 
   /**
+   * Compiled filter sets for performance optimization
+   * @private
+   * @type {object}
+   */
+  #compiledFilters;
+
+  /**
    * Creates a HybridLogger instance.
    *
    * @param {object} dependencies - Required dependencies
@@ -167,6 +174,9 @@ class HybridLogger {
       oldestTimestamp: null,
       newestTimestamp: null,
     };
+
+    // Initialize compiled filter sets for performance optimization
+    this.#compileFilters();
 
     // Log initialization to console only if console is enabled (to avoid recursive logging)
     if (
@@ -265,7 +275,7 @@ class HybridLogger {
     this.#addToCriticalBuffer('warn', message, category, { args });
 
     // Existing warn logic...
-    this.#logToDestinations('warn', message, args);
+    this.#logToDestinations('warn', message, args, category);
   }
 
   /**
@@ -281,7 +291,7 @@ class HybridLogger {
     this.#addToCriticalBuffer('error', message, category, { args });
 
     // Existing error logic...
-    this.#logToDestinations('error', message, args);
+    this.#logToDestinations('error', message, args, category);
   }
 
   /**
@@ -355,6 +365,8 @@ class HybridLogger {
   setConsoleFilter(categories, levels) {
     this.#filters.console.categories = categories;
     this.#filters.console.levels = levels;
+    // Recompile filters for performance optimization
+    this.#compileFilters();
   }
 
   /**
@@ -366,6 +378,44 @@ class HybridLogger {
   setRemoteFilter(categories, levels) {
     this.#filters.remote.categories = categories;
     this.#filters.remote.levels = levels;
+    // Recompile filters for performance optimization
+    this.#compileFilters();
+  }
+
+  /**
+   * Updates filter configuration dynamically at runtime
+   *
+   * @param {object} filterUpdates - Filter configuration updates
+   * @param {FilterConfig} [filterUpdates.console] - Console filter updates
+   * @param {FilterConfig} [filterUpdates.remote] - Remote filter updates
+   */
+  updateFilters(filterUpdates) {
+    if (filterUpdates.console) {
+      if (filterUpdates.console.categories !== undefined) {
+        this.#filters.console.categories = filterUpdates.console.categories;
+      }
+      if (filterUpdates.console.levels !== undefined) {
+        this.#filters.console.levels = filterUpdates.console.levels;
+      }
+      if (filterUpdates.console.enabled !== undefined) {
+        this.#filters.console.enabled = filterUpdates.console.enabled;
+      }
+    }
+
+    if (filterUpdates.remote) {
+      if (filterUpdates.remote.categories !== undefined) {
+        this.#filters.remote.categories = filterUpdates.remote.categories;
+      }
+      if (filterUpdates.remote.levels !== undefined) {
+        this.#filters.remote.levels = filterUpdates.remote.levels;
+      }
+      if (filterUpdates.remote.enabled !== undefined) {
+        this.#filters.remote.enabled = filterUpdates.remote.enabled;
+      }
+    }
+
+    // Recompile filters after all updates
+    this.#compileFilters();
   }
 
   /**
@@ -375,13 +425,40 @@ class HybridLogger {
    * @param {string} level - Log level
    * @param {string} message - Log message
    * @param {any[]} args - Additional log arguments
+   * @param {string|undefined} [preDetectedCategory] - Pre-detected category to avoid dual detection
    */
-  #logToDestinations(level, message, args) {
-    // Performance tracking could be added here if needed
-
+  #logToDestinations(level, message, args, preDetectedCategory) {
     try {
-      // Detect category once for efficiency
-      const category = this.#categoryDetector.detectCategory(message, { level });
+      // Early filtering: Check if any destination needs this log before expensive operations
+      const needsConsole = this.#testCompiledFilter('console', level, undefined) ||
+        (this.#criticalLoggingConfig?.alwaysShowInConsole && (level === 'warn' || level === 'error'));
+      const needsRemote = this.#testCompiledFilter('remote', level, undefined);
+      
+      // Skip processing entirely if no destination needs this log
+      if (!needsConsole && !needsRemote) {
+        return;
+      }
+
+      // Use pre-detected category if available, otherwise detect if needed
+      let category = preDetectedCategory;
+      const needsCategoryDetection = this.#needsCategoryForFiltering(needsConsole, needsRemote);
+      if (!category && needsCategoryDetection) {
+        category = this.#categoryDetector.detectCategory(message, { level });
+      }
+
+      // Re-check filters with category information if needed
+      const finalConsoleCheck = needsConsole && (
+        !needsCategoryDetection || this.#testCompiledFilter('console', level, category) ||
+        (this.#criticalLoggingConfig?.alwaysShowInConsole && (level === 'warn' || level === 'error'))
+      );
+      const finalRemoteCheck = needsRemote && (
+        !needsCategoryDetection || this.#testCompiledFilter('remote', level, category)
+      );
+
+      // Skip if no destination needs this log after category detection
+      if (!finalConsoleCheck && !finalRemoteCheck) {
+        return;
+      }
 
       // Track performance metrics if monitor is available
       if (
@@ -395,8 +472,8 @@ class HybridLogger {
         });
       }
 
-      // Log to console if filters allow
-      if (this.#shouldLogToConsole(level, category)) {
+      // Log to console if final check passed
+      if (finalConsoleCheck) {
         try {
           const formattedMessage = this.#formatConsoleMessage(
             level,
@@ -435,8 +512,8 @@ class HybridLogger {
         }
       }
 
-      // Log to remote if filters allow
-      if (this.#shouldLogToRemote(level, category)) {
+      // Log to remote if final check passed
+      if (finalRemoteCheck) {
         try {
           this.#remoteLogger[level](message, ...args);
         } catch (remoteError) {
@@ -468,83 +545,89 @@ class HybridLogger {
   }
 
   /**
-   * Determines if a log should be sent to the console based on filters.
+   * Determines if category detection is needed for filtering
    *
    * @private
-   * @param {string} level - Log level
-   * @param {string|undefined} category - Log category
-   * @returns {boolean} True if log should go to console
+   * @param {boolean} needsConsole - Whether console destination might need this log
+   * @param {boolean} needsRemote - Whether remote destination might need this log
+   * @returns {boolean} True if category detection is needed
    */
-  #shouldLogToConsole(level, category) {
-    // Check if this is a critical log that should bypass filters
-    if (
-      this.#criticalLoggingConfig &&
-      this.#criticalLoggingConfig.alwaysShowInConsole
-    ) {
-      if (level === 'warn' || level === 'error') {
-        return true; // Always show critical logs, even if console is disabled
-      }
-    }
-
-    if (!this.#filters.console.enabled) {
-      return false;
-    }
-
-    // Existing filter logic for non-critical logs
-    return this.#matchesFilter(
-      level,
-      category,
-      this.#filters.console.levels,
-      this.#filters.console.categories
+  #needsCategoryForFiltering(needsConsole, needsRemote) {
+    return (
+      (needsConsole && this.#compiledFilters.console.testCategory !== null) ||
+      (needsRemote && this.#compiledFilters.remote.testCategory !== null)
     );
   }
 
   /**
-   * Determines if a log should be sent to remote based on filters.
+   * Compiles filter sets for performance optimization
    *
    * @private
-   * @param {string} level - Log level
-   * @param {string|undefined} category - Log category
-   * @returns {boolean} True if log should go to remote
    */
-  #shouldLogToRemote(level, category) {
-    if (!this.#filters.remote.enabled) {
-      return false;
-    }
-
-    return this.#matchesFilter(
-      level,
-      category,
-      this.#filters.remote.levels,
-      this.#filters.remote.categories
-    );
+  #compileFilters() {
+    this.#compiledFilters = {
+      console: this.#compileFilterSet(
+        this.#filters.console.enabled,
+        this.#filters.console.levels,
+        this.#filters.console.categories
+      ),
+      remote: this.#compileFilterSet(
+        this.#filters.remote.enabled,
+        this.#filters.remote.levels,  
+        this.#filters.remote.categories
+      ),
+    };
   }
 
   /**
-   * Checks if level and category match the specified filters.
+   * Compiles a single filter set for efficient testing
    *
    * @private
+   * @param {boolean} enabled - Whether destination is enabled
+   * @param {string[]|null} levels - Allowed levels, null for all
+   * @param {string[]|null} categories - Allowed categories, null for all
+   * @returns {object} Compiled filter set
+   */
+  #compileFilterSet(enabled, levels, categories) {
+    return {
+      enabled,
+      testLevel: levels === null ? null : new Set(levels),
+      testCategory: categories === null ? null : new Set(categories),
+    };
+  }
+
+  /**
+   * Tests if log passes compiled filter efficiently
+   *
+   * @private
+   * @param {string} destination - 'console' or 'remote'
    * @param {string} level - Log level
    * @param {string|undefined} category - Log category
-   * @param {string[]|null} levelFilter - Allowed levels, null for all
-   * @param {string[]|null} categoryFilter - Allowed categories, null for all
-   * @returns {boolean} True if matches filters
+   * @returns {boolean} True if log passes filter
    */
-  #matchesFilter(level, category, levelFilter, categoryFilter) {
-    // Check level filter
-    if (levelFilter !== null && levelFilter && !levelFilter.includes(level)) {
+  #testCompiledFilter(destination, level, category) {
+    const filter = this.#compiledFilters[destination];
+    
+    if (!filter.enabled) {
       return false;
     }
-
-    // Check category filter
-    if (categoryFilter !== null && categoryFilter) {
-      if (!category || !categoryFilter.includes(category)) {
+    
+    // Level check using Set for O(1) lookup
+    if (filter.testLevel !== null && !filter.testLevel.has(level)) {
+      return false;
+    }
+    
+    // Category check using Set for O(1) lookup
+    if (filter.testCategory !== null) {
+      if (!category || !filter.testCategory.has(category)) {
         return false;
       }
     }
-
+    
     return true;
   }
+
+
 
   /**
    * Formats console message with category and level prefix.
@@ -570,14 +653,6 @@ class HybridLogger {
     return JSON.parse(JSON.stringify(this.#filters));
   }
 
-  /**
-   * Updates the complete filter configuration.
-   *
-   * @param {HybridLoggerFilters} filters - New filter configuration
-   */
-  updateFilters(filters) {
-    this.#filters = { ...this.#filters, ...filters };
-  }
 
   /**
    * Waits for all pending remote flush operations to complete

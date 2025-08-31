@@ -313,4 +313,24 @@ export default class SimpleEntityManager {
     if (!entity) return [];
     return Object.keys(entity.components);
   }
+
+  /**
+   * Adds a complete entity to the manager.
+   * This is a convenience method for tests that build entities with ModEntityBuilder.
+   *
+   * @param {object} entityObject - Entity object with id and components
+   * @param {string} entityObject.id - Entity identifier
+   * @param {object} entityObject.components - Entity components
+   * @returns {void}
+   */
+  addEntity(entityObject) {
+    if (!entityObject || !entityObject.id) {
+      throw new Error('SimpleEntityManager.addEntity: entityObject must have an id property');
+    }
+
+    const cloned = deepClone(entityObject);
+    this.entities.set(cloned.id, cloned);
+    // Clear cache for this entity since it's new/updated
+    this.entityInstanceCache.delete(cloned.id);
+  }
 }

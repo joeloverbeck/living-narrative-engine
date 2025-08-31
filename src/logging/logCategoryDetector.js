@@ -95,13 +95,13 @@ class LogCategoryDetector {
     // Priority 1: Specific domain patterns (high priority)
     this.#patterns.set('ecs', {
       pattern:
-        /EntityManager|ComponentManager|SystemManager|entity\s+(actor|player|npc|item)|component\s+\w+|system\s+(physics|render|input)|\bECS\b/i,
+        /\b(EntityManager|ComponentManager|SystemManager)\b|entity\s+(actor|player|npc|item)|component\s+\w+|system\s+(physics|render|input)|\bECS\b/i,
       priority: 95,
     });
 
     this.#patterns.set('engine', {
       pattern:
-        /GameEngine|engineState|gameSession|gameEngine|game\s*loop|tick\s*rate|engine\s+(start|stop|init)/i,
+        /\bGameEngine\b|engineState|gameSession|gameEngine|game\s*loop|tick\s*rate|engine\s+(start|stop|init)|initialization\s+started/i,
       priority: 90,
     });
 
@@ -150,7 +150,7 @@ class LogCategoryDetector {
     // Priority 3: General domain patterns (medium priority)
     this.#patterns.set('ui', {
       pattern:
-        /\bUI\b|Renderer|domUI|\bdisplay\b|\bmodal\b|\bbutton\b|\bwidget\b|\bview\b|\blayout\b|\bstyle\b|\bcss\b/i,
+        /\bUI\b|\bRenderer\b|domUI|\bdisplay\b|\bmodal\b|\bbutton\b|\bwidget\b|\bview\b|\blayout\b|\bstyle\b|\bcss\b|updating\s+display/i,
       priority: 70,
     });
 
@@ -242,10 +242,42 @@ class LogCategoryDetector {
   }
 
   /**
+   * Validates a category hint to ensure it's a known category
+   *
+   * @private
+   * @param {string} hint - Category hint to validate
+   * @returns {boolean} True if hint is valid, false otherwise
+   */
+  #validateCategoryHint(hint) {
+    if (!hint || typeof hint !== 'string') {
+      return false;
+    }
+
+    // Allow level-based categories
+    if (['error', 'warning', 'info', 'debug'].includes(hint)) {
+      return true;
+    }
+
+    // Allow known pattern categories
+    if (this.#patterns.has(hint)) {
+      return true;
+    }
+
+    // Allow common categories that might be added dynamically
+    const knownCategories = [
+      'ecs', 'engine', 'ai', 'anatomy', 'persistence', 'actions', 'turns', 
+      'events', 'validation', 'ui', 'network', 'configuration', 
+      'initialization', 'performance'
+    ];
+
+    return knownCategories.includes(hint);
+  }
+
+  /**
    * Detect category from log message with optional metadata
    *
    * @param {string} message - Log message
-   * @param {object} [metadata] - Optional metadata including level and sourceCategory
+   * @param {object} [metadata] - Optional metadata including level, sourceCategory, and categoryHint
    * @returns {string|undefined} Detected category or undefined
    */
   detectCategory(message, metadata = {}) {
@@ -259,7 +291,12 @@ class LogCategoryDetector {
     if (metadata.level === 'error') return 'error';
     if (metadata.level === 'warn') return 'warning';
     
-    // Priority 2: Use source-based categorization if available (future enhancement)
+    // Priority 2: Use category hint if provided and valid
+    if (metadata.categoryHint && this.#validateCategoryHint(metadata.categoryHint)) {
+      return metadata.categoryHint;
+    }
+
+    // Priority 3: Use source-based categorization if available (future enhancement)
     if (this.#useSourceBased && metadata.sourceCategory) {
       return metadata.sourceCategory;
     }
@@ -274,7 +311,7 @@ class LogCategoryDetector {
       return this.#cache.get(cacheKey);
     }
 
-    // Priority 3: Fallback to domain patterns (without error pattern)
+    // Priority 4: Fallback to domain patterns (without error pattern)
     const detectedCategory = this.#detectFromPatterns(message);
 
     // Cache the result using hashed key
@@ -351,6 +388,35 @@ class LogCategoryDetector {
     this.#patterns.delete(category);
     // Clear cache when patterns change
     this.clearCache();
+  }
+
+  /**
+   * Get list of valid category hints
+   *
+   * @returns {string[]} Array of valid category hints
+   */
+  getValidCategoryHints() {
+    const hints = ['error', 'warning', 'info', 'debug']; // Level-based categories
+    
+    // Add pattern categories
+    for (const category of this.#patterns.keys()) {
+      hints.push(category);
+    }
+    
+    // Add common dynamic categories
+    const commonCategories = [
+      'ecs', 'engine', 'ai', 'anatomy', 'persistence', 'actions', 'turns', 
+      'events', 'validation', 'ui', 'network', 'configuration', 
+      'initialization', 'performance'
+    ];
+    
+    for (const category of commonCategories) {
+      if (!hints.includes(category)) {
+        hints.push(category);
+      }
+    }
+    
+    return hints.sort();
   }
 
   /**

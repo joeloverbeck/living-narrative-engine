@@ -17,18 +17,26 @@ import CircuitBreaker, {
 
 describe('CircuitBreaker', () => {
   let circuitBreaker;
+  let originalMathRandom;
 
   beforeEach(() => {
     jest.useFakeTimers();
+    // Mock Math.random to return 0.5 for predictable jitter (no variation)
+    originalMathRandom = Math.random;
+    Math.random = jest.fn(() => 0.5);
+    
     circuitBreaker = new CircuitBreaker({
       failureThreshold: 3,
       timeout: 1000,
       halfOpenMaxCalls: 2,
+      // Disable exponential backoff for most tests by using base = 1
+      exponentialBackoffBase: 1,
     });
   });
 
   afterEach(() => {
     jest.useRealTimers();
+    Math.random = originalMathRandom;
   });
 
   describe('constructor', () => {
@@ -233,6 +241,7 @@ describe('CircuitBreaker', () => {
           failureThreshold: 3,
           timeout: 1000,
           halfOpenMaxCalls: 1, // Only allow 1 call in half-open
+          exponentialBackoffBase: 1, // Disable exponential backoff
         });
 
         // Force to open state
@@ -258,6 +267,7 @@ describe('CircuitBreaker', () => {
           failureThreshold: 1,
           timeout: 1000,
           halfOpenMaxCalls: 2,
+          exponentialBackoffBase: 1, // Disable exponential backoff
         });
 
         // Force to open
@@ -479,6 +489,78 @@ describe('CircuitBreaker', () => {
       const stats = circuitBreaker.getStats();
       expect(stats.failureCount).toBe(0);
       expect(stats.successCount).toBe(0);
+    });
+  });
+
+  describe('exponential backoff', () => {
+    it('should use exponential backoff for timeout calculation', async () => {
+      // Create circuit breaker with exponential backoff enabled
+      const expCircuitBreaker = new CircuitBreaker({
+        failureThreshold: 3,
+        timeout: 1000,
+        exponentialBackoffBase: 2, // Enable exponential backoff
+        halfOpenMaxCalls: 2,
+      });
+
+      const failFn = jest.fn().mockRejectedValue(new Error('Test error'));
+
+      // Fail 3 times to open circuit
+      for (let i = 0; i < 3; i++) {
+        await expect(expCircuitBreaker.execute(failFn)).rejects.toThrow();
+      }
+      expect(expCircuitBreaker.getState()).toBe(CircuitBreakerState.OPEN);
+
+      const stats = expCircuitBreaker.getStats();
+      // With 3 consecutive failures: 1000ms * 2^3 = 8000ms (plus jitter)
+      expect(stats.nextBackoffTime).toBeGreaterThan(7000); // Account for jitter
+      expect(stats.nextBackoffTime).toBeLessThan(9000);
+
+      // Should still be open after original timeout (1000ms)
+      jest.advanceTimersByTime(1000);
+      const successFn = jest.fn().mockResolvedValue('success');
+      await expect(expCircuitBreaker.execute(successFn)).rejects.toThrow(
+        'Circuit breaker is OPEN - requests blocked'
+      );
+
+      // Should transition to half-open after exponential backoff time
+      jest.advanceTimersByTime(8000); // Wait for full backoff
+      await expCircuitBreaker.execute(successFn);
+      expect(expCircuitBreaker.getState()).toBe(CircuitBreakerState.HALF_OPEN);
+    });
+  });
+
+  describe('adaptive threshold', () => {
+    it('should track network vs server failures', async () => {
+      const networkError = new Error('ECONNREFUSED');
+      const serverError = new Error('Internal Server Error');
+
+      const networkFn = jest.fn().mockRejectedValue(networkError);
+      const serverFn = jest.fn().mockRejectedValue(serverError);
+
+      // Generate network and server failures
+      await expect(circuitBreaker.execute(networkFn)).rejects.toThrow();
+      await expect(circuitBreaker.execute(serverFn)).rejects.toThrow();
+
+      const stats = circuitBreaker.getStats();
+      expect(stats.networkFailureCount).toBe(1);
+      expect(stats.serverFailureCount).toBe(1);
+    });
+
+    it('should provide enhanced statistics', () => {
+      const stats = circuitBreaker.getStats();
+
+      // Check for enhanced stats fields not in original tests
+      expect(stats).toHaveProperty('baseFailureThreshold');
+      expect(stats).toHaveProperty('nextBackoffTime');
+      expect(stats).toHaveProperty('consecutiveSuccesses');
+      expect(stats).toHaveProperty('consecutiveFailures');
+      expect(stats).toHaveProperty('networkFailureCount');
+      expect(stats).toHaveProperty('serverFailureCount');
+      expect(stats).toHaveProperty('hasHealthCheck');
+
+      expect(stats.baseFailureThreshold).toBe(3);
+      expect(stats.hasHealthCheck).toBe(false);
+      expect(typeof stats.nextBackoffTime).toBe('number');
     });
   });
 

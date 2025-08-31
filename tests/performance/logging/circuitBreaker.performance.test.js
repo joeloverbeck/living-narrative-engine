@@ -12,19 +12,27 @@ import CircuitBreaker, {
 describe('CircuitBreaker Performance', () => {
   let circuitBreaker;
   let performanceTestBed;
+  let originalMathRandom;
 
   beforeEach(() => {
     performanceTestBed = createPerformanceTestBed();
     jest.useFakeTimers();
+    // Mock Math.random to return 0.5 for predictable jitter (no variation)
+    originalMathRandom = Math.random;
+    Math.random = jest.fn(() => 0.5);
+    
     circuitBreaker = new CircuitBreaker({
       failureThreshold: 3,
       timeout: 1000,
       halfOpenMaxCalls: 2,
+      // Disable exponential backoff for predictable timing in performance tests
+      exponentialBackoffBase: 1,
     });
   });
 
   afterEach(() => {
     jest.useRealTimers();
+    Math.random = originalMathRandom;
     performanceTestBed?.cleanup();
   });
 
