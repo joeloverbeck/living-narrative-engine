@@ -608,7 +608,7 @@ describe('Rate Limiting Middleware - Comprehensive Tests', () => {
       createdAdaptiveRateLimiters.push(rateLimiter);
       rateLimiter(req, res, next);
 
-      expect(rateLimiter.dynamicMax).toBe(100); // Default base max requests
+      expect(rateLimiter.dynamicMax).toBe(2000); // Default base max requests (test environment value)
     });
 
     test('keyGenerator tracks request patterns', () => {

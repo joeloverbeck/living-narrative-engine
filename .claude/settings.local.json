@@ -124,6 +124,10 @@
       "Bash(NODE_ENV=test npm run test:integration tests/integration/logging/compressionBehavior.integration.test.js --silent)",
       "Bash(NODE_ENV=test npx jest tests/integration/logging/compressionBehavior.integration.test.js --testNamePattern=\"should compress large payloads\" --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/unit/logging/remoteLogger.test.js --testNamePattern=\"Compression\" --no-coverage --silent)"
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/nodes/arrayIteration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/nodes/arrayIteration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --testNamePattern=\"edge\\[\\] with non-array field returns empty set\" --no-coverage --silent)"
     ],
     "deny": [],
     "ask": []

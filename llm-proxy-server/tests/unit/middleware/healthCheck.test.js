@@ -151,9 +151,9 @@ describe('Health Check Middleware', () => {
       mockCacheService = {
         set: jest.fn(),
         get: jest.fn(),
-        delete: jest.fn(),
-        size: jest.fn(),
-        getMemoryUsage: jest.fn().mockReturnValue({
+        invalidate: jest.fn(),
+        getSize: jest.fn(),
+        getMemoryInfo: jest.fn().mockReturnValue({
           used: 1024,
           total: 2048,
         }),
@@ -385,10 +385,10 @@ describe('Health Check Middleware', () => {
       mockCacheService.get.mockImplementation((key) => {
         return cacheStorage.get(key) || null;
       });
-      mockCacheService.delete.mockImplementation((key) => {
+      mockCacheService.invalidate.mockImplementation((key) => {
         return cacheStorage.delete(key);
       });
-      mockCacheService.size.mockReturnValue(10);
+      mockCacheService.getSize.mockReturnValue(10);
 
       const readinessCheck = createReadinessCheck({
         logger: mockLogger,
@@ -406,7 +406,7 @@ describe('Health Check Middleware', () => {
       expect(mockCacheService.get).toHaveBeenCalledWith(
         '__health_check_test__'
       );
-      expect(mockCacheService.delete).toHaveBeenCalledWith(
+      expect(mockCacheService.invalidate).toHaveBeenCalledWith(
         '__health_check_test__'
       );
 

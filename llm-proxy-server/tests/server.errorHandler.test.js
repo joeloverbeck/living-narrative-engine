@@ -52,7 +52,18 @@ beforeEach(() => {
 
   expressMock = jest.fn(() => app);
   expressMock.json = jest.fn(() => 'json-mw');
+  
+  // Create mock router with all methods used by route modules
+  const mockRouter = {
+    get: jest.fn(),
+    post: jest.fn(),
+    use: jest.fn(),
+    delete: jest.fn(),
+    put: jest.fn(),
+    patch: jest.fn(),
+  };
   expressMock.Router = jest.fn(() => mockRouter);
+  
   jest.doMock('express', () => ({
     __esModule: true,
     default: expressMock,
@@ -248,7 +259,12 @@ const loadServer = async () => {
   jest.runAllTimers();
 
   const loggerCtor = (await import('../src/consoleLogger.js')).ConsoleLogger;
-  consoleLoggerInstance = loggerCtor.mock.results[0].value;
+  // Find the logger instance used by the error handler (should be proxyLogger from server.js)
+  // Logger instances are created in this order during server.js import:
+  // [0] traceRoutes, [1] debugRoutes, [2] healthRoutes, [3] proxyLogger (line 69)
+  // The error handler uses proxyLogger, so we need the last instance created
+  const lastLoggerIndex = loggerCtor.mock.results.length - 1;
+  consoleLoggerInstance = loggerCtor.mock.results[lastLoggerIndex].value;
   errorHandler = app.use.mock.calls.find(
     (c) => typeof c[0] === 'function' && c[0].length === 4
   )[0];

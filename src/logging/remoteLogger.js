@@ -511,10 +511,12 @@ class RemoteLogger {
     this.#logThrottleMap = new Map();
     this.#throttleWindowMs = 5000; // 5 second throttle window
 
-    // Initialize circuit breaker
+    // Initialize circuit breaker with event bus integration
     this.#circuitBreaker = new CircuitBreaker({
       failureThreshold: mergedConfig.circuitBreakerThreshold,
       timeout: mergedConfig.circuitBreakerTimeout,
+      eventBus: this.#eventBus,
+      rollingWindowDuration: mergedConfig.rollingWindowDuration || 10 * 60 * 1000,
     });
 
     // Initialize category detector
