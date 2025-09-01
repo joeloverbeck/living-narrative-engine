@@ -181,11 +181,11 @@ describe('Health Check Endpoints Integration', () => {
       // Set up default healthy state
       mockLlmConfigService.isOperational.mockReturnValue(true);
       mockLlmConfigService.getLlmConfigs.mockReturnValue({
-        llms: {
+        configs: {
           'openai-gpt4': { apiType: 'openai' },
           'anthropic-claude': { apiType: 'anthropic' },
         },
-        defaultLlmId: 'openai-gpt4',
+        defaultConfigId: 'openai-gpt4',
       });
       mockLlmConfigService.getResolvedConfigPath.mockReturnValue(
         '/config/llm-configs.json'
@@ -587,7 +587,7 @@ describe('Health Check Endpoints Integration', () => {
 
     it('should handle readiness checks under load', async () => {
       mockLlmConfigService.isOperational.mockReturnValue(true);
-      mockLlmConfigService.getLlmConfigs.mockReturnValue({ llms: {} });
+      mockLlmConfigService.getLlmConfigs.mockReturnValue({ configs: {} });
 
       // Re-setup cache mock for this test
       const cacheStore = new Map();

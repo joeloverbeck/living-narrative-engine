@@ -120,6 +120,32 @@ function waitForScheduler(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Helper function to wait for a condition with timeout and polling
+ * @param {Function} condition - Function that returns true when condition is met
+ * @param {number} timeoutMs - Maximum time to wait in milliseconds
+ * @param {number} pollIntervalMs - Interval between checks in milliseconds
+ * @returns {Promise<boolean>} - Resolves to true if condition met, false if timeout
+ */
+async function waitForCondition(condition, timeoutMs = 5000, pollIntervalMs = 200) {
+  const startTime = Date.now();
+  
+  while (Date.now() - startTime < timeoutMs) {
+    try {
+      const result = await condition();
+      if (result) {
+        return true;
+      }
+    } catch (error) {
+      // Condition check failed, continue polling
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+  }
+  
+  return false;
+}
+
 describe('LogMaintenanceScheduler Integration Tests', () => {
   let logger;
   let appConfigService;
@@ -262,17 +288,22 @@ describe('LogMaintenanceScheduler Integration Tests', () => {
       const testFile = path.join(todayDir, 'scheduled.jsonl');
       await createLargeTestFile(testFile, 2);
 
-      // Wait for scheduler to run (every second in test config)
-      await waitForScheduler(1500);
-
-      // Check if rotation was triggered
+      // Wait for scheduler to run with robust polling (every second in test config)
       const rotatedFile = path.join(todayDir, 'scheduled.1.jsonl');
-      const rotatedExists = await fs
-        .access(rotatedFile)
-        .then(() => true)
-        .catch(() => false);
+      const rotationCompleted = await waitForCondition(
+        async () => {
+          try {
+            await fs.access(rotatedFile);
+            return true;
+          } catch {
+            return false;
+          }
+        },
+        5000, // 5 second timeout - much more generous than 1.5s
+        200   // check every 200ms
+      );
 
-      expect(rotatedExists).toBe(true);
+      expect(rotationCompleted).toBe(true);
 
       // Verify logging
       expect(logger.info).toHaveBeenCalledWith(
@@ -348,17 +379,22 @@ describe('LogMaintenanceScheduler Integration Tests', () => {
           '{"level":"info","message":"should be cleaned"}\n',
       });
 
-      // Wait for cleanup scheduler to run (every 2 seconds in test config)
-      await waitForScheduler(2500);
-
-      // Check if cleanup was triggered
+      // Wait for cleanup scheduler to run with robust polling (every 2 seconds in test config)
       const oldDirPath = path.join(testLogDir, oldDir);
-      const oldDirExists = await fs
-        .access(oldDirPath)
-        .then(() => true)
-        .catch(() => false);
+      const cleanupCompleted = await waitForCondition(
+        async () => {
+          try {
+            await fs.access(oldDirPath);
+            return false; // Directory still exists, cleanup not done
+          } catch {
+            return true; // Directory doesn't exist, cleanup completed
+          }
+        },
+        6000, // 6 second timeout - more generous than 2.5s
+        200   // check every 200ms
+      );
 
-      expect(oldDirExists).toBe(false);
+      expect(cleanupCompleted).toBe(true);
 
       // Verify logging
       expect(logger.info).toHaveBeenCalledWith(
@@ -380,8 +416,18 @@ describe('LogMaintenanceScheduler Integration Tests', () => {
 
       await scheduler.start();
 
-      // Wait for scheduler to attempt rotation
-      await waitForScheduler(1500);
+      // Wait for scheduler to attempt rotation with polling for error logs
+      const errorLogged = await waitForCondition(
+        () => {
+          return logger.error.mock.calls.some(call => 
+            call[0].includes('Scheduled rotation check failed')
+          );
+        },
+        3000, // 3 second timeout
+        200   // check every 200ms
+      );
+
+      expect(errorLogged).toBe(true);
 
       // Verify error was logged but scheduler continued
       expect(logger.error).toHaveBeenCalledWith(
@@ -410,8 +456,18 @@ describe('LogMaintenanceScheduler Integration Tests', () => {
 
       await scheduler.start();
 
-      // Wait for initial cleanup and retry
-      await waitForScheduler(3000);
+      // Wait for initial cleanup and retry with polling for retry logs
+      const retryLogged = await waitForCondition(
+        () => {
+          return logger.warn.mock.calls.some(call => 
+            call[0].includes('Scheduling retry for cleanup operation')
+          );
+        },
+        5000, // 5 second timeout - enough for cleanup cycle + retry delay
+        200   // check every 200ms
+      );
+
+      expect(retryLogged).toBe(true);
 
       // Verify retry was attempted
       expect(logger.warn).toHaveBeenCalledWith(

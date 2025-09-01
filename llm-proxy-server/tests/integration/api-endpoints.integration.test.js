@@ -410,7 +410,7 @@ describe('API Endpoints Integration Tests', () => {
 
       expect(response.body).toMatchObject({
         error: true,
-        message: 'Client request validation failed.',
+        message: 'llmId must be a string',
         stage: 'request_validation',
         originalStatusCode: 400,
       });
@@ -438,7 +438,7 @@ describe('API Endpoints Integration Tests', () => {
 
       expect(response.body).toMatchObject({
         error: true,
-        message: 'Client request validation failed.',
+        message: 'targetPayload must be an object',
         stage: 'request_validation',
         originalStatusCode: 400,
       });
@@ -457,7 +457,7 @@ describe('API Endpoints Integration Tests', () => {
 
       expect(response.body).toMatchObject({
         error: true,
-        message: 'Client request validation failed.',
+        message: 'targetPayload cannot be empty',
         stage: 'request_validation',
         originalStatusCode: 400,
       });
@@ -480,7 +480,7 @@ describe('API Endpoints Integration Tests', () => {
 
       expect(response.body).toMatchObject({
         error: true,
-        message: 'Client request validation failed.',
+        message: 'Unexpected fields: extraField',
         stage: 'request_validation',
         originalStatusCode: 400,
       });

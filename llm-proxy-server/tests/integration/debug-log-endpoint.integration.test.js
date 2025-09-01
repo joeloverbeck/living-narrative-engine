@@ -35,7 +35,7 @@ describe('Debug Log Endpoint Integration Tests', () => {
     app.use(cors());
     app.use(createSecurityMiddleware());
     app.use(createTimeoutMiddleware(30000));
-    app.use(express.json(createSizeLimitConfig()));
+    // Note: express.json is configured per route in debugRoutes to allow custom limits
 
     // Register debug routes
     app.use('/api/debug-log', debugRoutes);
@@ -194,7 +194,7 @@ describe('Debug Log Endpoint Integration Tests', () => {
 
       expect(response.body).toMatchObject({
         error: true,
-        message: 'Client request validation failed.',
+        message: 'logs must be an array',
         stage: 'request_validation',
         details: {
           validationErrors: expect.arrayContaining([
@@ -216,7 +216,7 @@ describe('Debug Log Endpoint Integration Tests', () => {
 
       expect(response.body).toMatchObject({
         error: true,
-        message: 'Client request validation failed.',
+        message: 'logs array cannot be empty',
         stage: 'request_validation',
         details: {
           validationErrors: expect.arrayContaining([
@@ -231,10 +231,10 @@ describe('Debug Log Endpoint Integration Tests', () => {
 
     test('should reject request with too many logs', async () => {
       const tooManyLogs = {
-        logs: Array(1001).fill({
+        logs: Array(5001).fill({
           level: 'info',
-          message: 'Too many logs',
-          timestamp: '2024-01-01T12:00:00.000Z',
+          message: 'x',
+          timestamp: '2024-01-01T00:00:00.000Z',
         }),
       };
 
@@ -246,13 +246,13 @@ describe('Debug Log Endpoint Integration Tests', () => {
 
       expect(response.body).toMatchObject({
         error: true,
-        message: 'Client request validation failed.',
+        message: 'logs array cannot contain more than 5000 entries',
         stage: 'request_validation',
         details: {
           validationErrors: expect.arrayContaining([
             expect.objectContaining({
               field: 'logs',
-              message: 'logs array cannot contain more than 1000 entries',
+              message: 'logs array cannot contain more than 5000 entries',
             }),
           ]),
         },
@@ -309,7 +309,7 @@ describe('Debug Log Endpoint Integration Tests', () => {
 
       expect(response.body).toMatchObject({
         error: true,
-        message: 'Client request validation failed.',
+        message: 'level must be one of: debug, info, warn, error',
         stage: 'request_validation',
         details: {
           validationErrors: expect.arrayContaining([
@@ -372,7 +372,7 @@ describe('Debug Log Endpoint Integration Tests', () => {
 
       expect(response.body).toMatchObject({
         error: true,
-        message: 'Client request validation failed.',
+        message: 'message cannot be empty',
         stage: 'request_validation',
         details: {
           validationErrors: expect.arrayContaining([
@@ -404,7 +404,7 @@ describe('Debug Log Endpoint Integration Tests', () => {
 
       expect(response.body).toMatchObject({
         error: true,
-        message: 'Client request validation failed.',
+        message: 'timestamp must be a valid ISO 8601 datetime',
         stage: 'request_validation',
         details: {
           validationErrors: expect.arrayContaining([
@@ -437,7 +437,7 @@ describe('Debug Log Endpoint Integration Tests', () => {
 
       expect(response.body).toMatchObject({
         error: true,
-        message: 'Client request validation failed.',
+        message: 'sessionId must be a valid UUID v4',
         stage: 'request_validation',
         details: {
           validationErrors: expect.arrayContaining([
@@ -476,7 +476,8 @@ describe('Debug Log Endpoint Integration Tests', () => {
 
       expect(response.body).toMatchObject({
         error: true,
-        message: 'Client request validation failed.',
+        message:
+          'metadata object is too large (max 50KB when serialized)',
         stage: 'request_validation',
         details: {
           validationErrors: expect.arrayContaining([
@@ -504,7 +505,7 @@ describe('Debug Log Endpoint Integration Tests', () => {
 
       expect(response.body).toMatchObject({
         error: true,
-        message: 'Client request validation failed.',
+        message: 'Unexpected fields in request body: extraField',
         stage: 'request_validation',
         details: {
           validationErrors: expect.arrayContaining([

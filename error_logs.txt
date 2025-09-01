@@ -1,683 +1,492 @@
-AnatomyInitializationService: Generated anatomy for entity 'p_erotica:jon_urena_instance'
-consoleLogger.js:151 AnatomyInitializationService: All anatomy generations completed
-consoleLogger.js:151 GameSessionManager._finalizeGameStart: Anatomy generation completed, starting turns.
-consoleLogger.js:151 CommandProcessor: Action execution tracing enabled
-consoleLogger.js:175 Failed to resolve scope 'core:potential_leaders': [TypeError: em?.entities?.values is not a function
-    at Object.getEntities (http://127.0.0.1:8081/…]
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:870
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Error evaluating scope 'core:potential_leaders': ScopeResolutionError: em?.entities?.values is not a function
-    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
-    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
-    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
-    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
-    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
-    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:890
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Failed to resolve scope 'core:actors_in_location': [TypeError: em?.entities?.values is not a function
-    at Object.getEntities (http://127.0.0.1:8081/…]
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:870
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-await in executeInternal
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Error evaluating scope 'core:actors_in_location': ScopeResolutionError: em?.entities?.values is not a function
-    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
-    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
-    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
-    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
-    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
-    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:890
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-await in executeInternal
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Failed to resolve scope 'positioning:actors_in_location_facing': [TypeError: em?.entities?.values is not a function
-    at Object.getEntities (http://127.0.0.1:8081/…]
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:870
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-await in executeInternal
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Error evaluating scope 'positioning:actors_in_location_facing': ScopeResolutionError: em?.entities?.values is not a function
-    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
-    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
-    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
-    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
-    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
-    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:890
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-await in executeInternal
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Failed to resolve scope 'positioning:actors_in_location_not_facing_away_from_actor': [TypeError: em?.entities?.values is not a function
-    at Object.getEntities (http://127.0.0.1:8081/…]
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:870
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-await in executeInternal
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Error evaluating scope 'positioning:actors_in_location_not_facing_away_from_actor': ScopeResolutionError: em?.entities?.values is not a function
-    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
-    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
-    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
-    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
-    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
-    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:890
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-await in executeInternal
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Failed to resolve scope 'core:actors_in_location': [TypeError: em?.entities?.values is not a function
-    at Object.getEntities (http://127.0.0.1:8081/…]
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:870
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-await in executeInternal
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Error evaluating scope 'core:actors_in_location': ScopeResolutionError: em?.entities?.values is not a function
-    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
-    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
-    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
-    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
-    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
-    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:890
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-await in executeInternal
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Failed to resolve scope 'core:actors_in_location': [TypeError: em?.entities?.values is not a function
-    at Object.getEntities (http://127.0.0.1:8081/…]
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:870
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-await in executeInternal
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Error evaluating scope 'core:actors_in_location': ScopeResolutionError: em?.entities?.values is not a function
-    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
-    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
-    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
-    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
-    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
-    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:890
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-await in executeInternal
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Failed to resolve scope 'core:actors_in_location': [TypeError: em?.entities?.values is not a function
-    at Object.getEntities (http://127.0.0.1:8081/…]
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:870
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-await in executeInternal
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:175 Error evaluating scope 'core:actors_in_location': ScopeResolutionError: em?.entities?.values is not a function
-    at MultiTargetResolutionStage.resolveScope_fn (MultiTargetResolutionStage.js:873:23)
-    at async MultiTargetResolutionStage.resolveMultiTargets_fn (MultiTargetResolutionStage.js:689:28)
-    at async MultiTargetResolutionStage.executeInternal (MultiTargetResolutionStage.js:227:26)
-    at async MultiTargetResolutionStage.execute (PipelineStage.js:49:24)
-    at async Pipeline.executePipeline_fn (Pipeline.js:85:29)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async ActionPipelineOrchestrator.discoverActions (actionPipelineOrchestrator.js:113:20)
-    at async ActionDiscoveryService.getValidActionsInternal_fn (actionDiscoveryService.js:267:20)
-    at async ActionAwareStructuredTrace.withSpanAsync (structuredTrace.js:241:22)
-    at async AvailableActionsProvider.get (availableActionsProvider.js:174:11)
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:668
-resolveScope_fn @ MultiTargetResolutionStage.js:890
-await in resolveScope_fn
-resolveMultiTargets_fn @ MultiTargetResolutionStage.js:689
-executeInternal @ MultiTargetResolutionStage.js:227
-await in executeInternal
-execute @ PipelineStage.js:49
-executePipeline_fn @ Pipeline.js:85
-await in executePipeline_fn
-(anonymous) @ Pipeline.js:52
-withSpanAsync @ structuredTrace.js:241
-execute @ Pipeline.js:49
-discoverActions @ actionPipelineOrchestrator.js:113
-getValidActionsInternal_fn @ actionDiscoveryService.js:267
-trace.withSpanAsync.actorId @ actionDiscoveryService.js:208
-withSpanAsync @ structuredTrace.js:241
-getValidActions @ actionDiscoveryService.js:205
-await in getValidActions
-get @ availableActionsProvider.js:174
-await in get
-buildChoices @ turnActionChoicePipeline.js:36
-decideAction @ genericTurnStrategy.js:45
-_decideAction @ awaitingActorDecisionState.js:189
-run @ actionDecisionWorkflow.js:34
-_handleActionDecision @ awaitingActorDecisionState.js:102
-enterState @ awaitingActorDecisionState.js:119
-await in enterState
-_transitionToState @ baseTurnHandler.js:260
-await in _transitionToState
-requestAwaitingInputStateTransition @ baseTurnHandler.js:661
-requestAwaitingInputStateTransition @ turnContext.js:249
-_requestAwaitingInput @ turnIdleState.js:140
-startTurn @ turnIdleState.js:72
-startTurn @ genericTurnHandler.js:134
-startTurn @ actorTurnHandler.js:64
-advanceTurn @ turnManager.js:444
-await in advanceTurn
-advanceTurn @ turnManager.js:338
-await in advanceTurn
-start @ turnManager.js:203
-finalizeGameStart_fn @ gameSessionManager.js:183Understand this error
-consoleLogger.js:151 ActionDiscoveryService: Action discovery completed for actor p_erotica:jon_urena_instance with action tracing {actorId: 'p_erotica:jon_urena_instance', actionCount: 7, errorCount: 0, tracedActionCount: 2, totalStagesTracked: 7, …}
-consoleLogger.js:151 FileTraceOutputHandler: Writing trace to file {fileName: 'trace_discovery_p_erotica_jon_urena_instance_2025-08-30T18-05-17_876Z.json', actionId: 'discovery', actorId: 'p_erotica:jon_urena_instance', outputDirectory: './traces/sit-down'}
+[2025-09-01T18:22:58.002Z]  "GET /data/mods/p_erotica/portraits/depths_of_park.png" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+[0] [2025-09-01T18:22:58.002Z]  "GET /data/mods/p_erotica/portraits/jon_urena.png" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+[1] [20:22:58.393] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "OPTIONS",
+[1]                       "route": "/api/traces/write",
+[1]                       "statusCode": 204,
+[1]                       "duration": 0.0006095,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 0
+[1]                     }
+[1] [20:22:58.413] 📝 DEBUG System: Health check (liveness) completed
+[1]                     ↳ Context: {
+[1]                       "status": "UP",
+[1]                       "responseTime": 0.08,
+[1]                       "memoryUsed": 17
+[1]                     }
+[1] [20:22:58.413] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "GET",
+[1]                       "route": "/health",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.000875,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 161
+[1]                     }
+[1] [20:22:58.417] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "OPTIONS",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 204,
+[1]                       "duration": 0.0001947,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 0
+[1]                     }
+[1] [20:22:58.438] 📝 INFO System: Trace file written successfully
+[1]                     ↳ Context: {
+[1]                       "fileName": "trace_discovery_p_erotica_jon_urena_instance_2025-09-01T18-22-58_081Z.json",
+[1]                       "directory": "./traces/sit-down",
+[1]                       "fullPath": "/home/joeloverbeck/projects/living-narrative-engine/traces/sit-down/trace_discovery_p_erotica_jon_urena_instance_2025-09-01T18-22-58_081Z.json",
+[1]                       "size": 12355
+[1]                     }
+[1] [20:22:58.438] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "POST",
+[1]                       "route": "/api/traces/write",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.042933701,
+[1]                       "requestSize": 13808,
+[1]                       "responseSize": 261
+[1]                     }
+[1] [20:22:58.442] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "OPTIONS",
+[1]                       "route": "/api/traces/write",
+[1]                       "statusCode": 204,
+[1]                       "duration": 0.000236,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 0
+[1]                     }
+[1] [20:22:58.463] 📝 DEBUG System: LogStorageService.writeLogs: Processing 15 logs
+[1] [20:22:58.463] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 15 logs
+[1]                     ↳ Context: {
+[1]                       "totalBuffered": 15,
+[1]                       "bufferGroups": 4
+[1]                     }
+[1] [20:22:58.463] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+[1]                     ↳ Context: {
+[1]                       "storedCount": 15,
+[1]                       "totalLogs": 15
+[1]                     }
+[1] [20:22:58.463] 📝 INFO System: Debug logs processed successfully
+[1]                     ↳ Context: {
+[1]                       "processedCount": 15,
+[1]                       "totalLogs": 15,
+[1]                       "processingTimeMs": 1,
+[1]                       "endpoint": "/api/debug-log"
+[1]                     }
+[1] [20:22:58.463] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "POST",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.044514501,
+[1]                       "requestSize": 10080,
+[1]                       "responseSize": 70
+[1]                     }
+[1] [20:22:58.473] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "OPTIONS",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 204,
+[1]                       "duration": 0.0003156,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 0
+[1]                     }
+[1] [20:22:58.488] 📝 INFO System: Trace file written successfully
+[1]                     ↳ Context: {
+[1]                       "fileName": "trace_positioning_sit_down_p_erotica_jon_urena_instance_2025-09-01T18-22-58_083Z.txt",
+[1]                       "directory": "./traces/sit-down",
+[1]                       "fullPath": "/home/joeloverbeck/projects/living-narrative-engine/traces/sit-down/trace_positioning_sit_down_p_erotica_jon_urena_instance_2025-09-01T18-22-58_083Z.txt",
+[1]                       "size": 9465
+[1]                     }
+[1] [20:22:58.489] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "POST",
+[1]                       "route": "/api/traces/write",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.044952701,
+[1]                       "requestSize": 10587,
+[1]                       "responseSize": 280
+[1]                     }
+[1] [20:22:58.518] 📝 DEBUG System: LogStorageService.writeLogs: Processing 15 logs
+[1] [20:22:58.518] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 15 logs
+[1]                     ↳ Context: {
+[1]                       "totalBuffered": 30,
+[1]                       "bufferGroups": 8
+[1]                     }
+[1] [20:22:58.518] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+[1]                     ↳ Context: {
+[1]                       "storedCount": 15,
+[1]                       "totalLogs": 15
+[1]                     }
+[1] [20:22:58.518] 📝 INFO System: Debug logs processed successfully
+[1]                     ↳ Context: {
+[1]                       "processedCount": 15,
+[1]                       "totalLogs": 15,
+[1]                       "processingTimeMs": 1,
+[1]                       "endpoint": "/api/debug-log"
+[1]                     }
+[1] [20:22:58.518] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "POST",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.043491201,
+[1]                       "requestSize": 13529,
+[1]                       "responseSize": 70
+[1]                     }
+[1] [20:22:58.527] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "OPTIONS",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 204,
+[1]                       "duration": 0.0002091,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 0
+[1]                     }
+[1] [20:22:58.576] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
+[1] [20:22:58.576] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
+[1]                     ↳ Context: {
+[1]                       "totalBuffered": 47,
+[1]                       "bufferGroups": 8
+[1]                     }
+[1] [20:22:58.576] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+[1]                     ↳ Context: {
+[1]                       "storedCount": 17,
+[1]                       "totalLogs": 17
+[1]                     }
+[1] [20:22:58.576] 📝 INFO System: Debug logs processed successfully
+[1]                     ↳ Context: {
+[1]                       "processedCount": 17,
+[1]                       "totalLogs": 17,
+[1]                       "processingTimeMs": 0,
+[1]                       "endpoint": "/api/debug-log"
+[1]                     }
+[1] [20:22:58.576] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "POST",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.048370201,
+[1]                       "requestSize": 10326,
+[1]                       "responseSize": 70
+[1]                     }
+[1] [20:22:58.586] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "OPTIONS",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 204,
+[1]                       "duration": 0.0002994,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 0
+[1]                     }
+[1] [20:22:58.625] 📝 DEBUG System: LogStorageService.#ensureDirectoryStructure: Created directory logs/2025-09-01
+[1] [20:22:58.626] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 7 logs to logs/2025-09-01/warning.jsonl
+[1] [20:22:58.627] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/general.jsonl
+[1] [20:22:58.627] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 11 logs to logs/2025-09-01/entities.jsonl
+[1] [20:22:58.628] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/actions.jsonl
+[1] [20:22:58.628] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 1 logs to logs/2025-09-01/anatomy.jsonl
+[1] [20:22:58.628] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/utils.jsonl
+[1] [20:22:58.629] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 1 logs to logs/2025-09-01/clothing.jsonl
+[1] [20:22:58.630] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 21 logs to logs/2025-09-01/loaders.jsonl
+[1] [20:22:58.630] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 47 logs
+[1] [20:22:58.633] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
+[1] [20:22:58.633] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
+[1]                     ↳ Context: {
+[1]                       "totalBuffered": 17,
+[1]                       "bufferGroups": 1
+[1]                     }
+[1] [20:22:58.633] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+[1]                     ↳ Context: {
+[1]                       "storedCount": 17,
+[1]                       "totalLogs": 17
+[1]                     }
+[1] [20:22:58.633] 📝 INFO System: Debug logs processed successfully
+[1]                     ↳ Context: {
+[1]                       "processedCount": 17,
+[1]                       "totalLogs": 17,
+[1]                       "processingTimeMs": 0,
+[1]                       "endpoint": "/api/debug-log"
+[1]                     }
+[1] [20:22:58.633] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "POST",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.045842901,
+[1]                       "requestSize": 10449,
+[1]                       "responseSize": 70
+[1]                     }
+[1] [20:22:59.627] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 17 logs to logs/2025-09-01/loaders.jsonl
+[1] [20:22:59.627] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs
+[1] [20:23:00.126] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "OPTIONS",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 204,
+[1]                       "duration": 0.0002211,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 0
+[1]                     }
+[1] [20:23:00.169] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
+[1] [20:23:00.169] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
+[1]                     ↳ Context: {
+[1]                       "totalBuffered": 17,
+[1]                       "bufferGroups": 2
+[1]                     }
+[1] [20:23:00.169] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+[1]                     ↳ Context: {
+[1]                       "storedCount": 17,
+[1]                       "totalLogs": 17
+[1]                     }
+[1] [20:23:00.169] 📝 INFO System: Debug logs processed successfully
+[1]                     ↳ Context: {
+[1]                       "processedCount": 17,
+[1]                       "totalLogs": 17,
+[1]                       "processingTimeMs": 0,
+[1]                       "endpoint": "/api/debug-log"
+[1]                     }
+[1] [20:23:00.170] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "POST",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.042273601,
+[1]                       "requestSize": 10169,
+[1]                       "responseSize": 70
+[1]                     }
+[1] [20:23:00.627] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 16 logs to logs/2025-09-01/loaders.jsonl
+[1] [20:23:00.629] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 1 logs to logs/2025-09-01/utils.jsonl
+[1] [20:23:00.629] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs
+[1] [20:23:36.249] 📝 DEBUG System: Health check (liveness) completed
+[1]                     ↳ Context: {
+[1]                       "status": "UP",
+[1]                       "responseTime": 0.1,
+[1]                       "memoryUsed": 16
+[1]                     }
+[1] [20:23:36.250] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "GET",
+[1]                       "route": "/health",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.0006301,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 160
+[1]                     }
+[1] [20:23:36.253] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "OPTIONS",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 204,
+[1]                       "duration": 0.00019,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 0
+[1]                     }
+[1] [20:23:36.298] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
+[1] [20:23:36.298] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
+[1]                     ↳ Context: {
+[1]                       "totalBuffered": 17,
+[1]                       "bufferGroups": 1
+[1]                     }
+[1] [20:23:36.298] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+[1]                     ↳ Context: {
+[1]                       "storedCount": 17,
+[1]                       "totalLogs": 17
+[1]                     }
+[1] [20:23:36.298] 📝 INFO System: Debug logs processed successfully
+[1]                     ↳ Context: {
+[1]                       "processedCount": 17,
+[1]                       "totalLogs": 17,
+[1]                       "processingTimeMs": 0,
+[1]                       "endpoint": "/api/debug-log"
+[1]                     }
+[1] [20:23:36.299] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "POST",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.0438668,
+[1]                       "requestSize": 10324,
+[1]                       "responseSize": 70
+[1]                     }
+[1] [20:23:36.628] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 17 logs to logs/2025-09-01/loaders.jsonl
+[1] [20:23:36.628] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs
+[1] [20:23:46.910] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "OPTIONS",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 204,
+[1]                       "duration": 0.000295,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 0
+[1]                     }
+[1] [20:23:46.955] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
+[1] [20:23:46.955] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
+[1]                     ↳ Context: {
+[1]                       "totalBuffered": 17,
+[1]                       "bufferGroups": 5
+[1]                     }
+[1] [20:23:46.955] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+[1]                     ↳ Context: {
+[1]                       "storedCount": 17,
+[1]                       "totalLogs": 17
+[1]                     }
+[1] [20:23:46.955] 📝 INFO System: Debug logs processed successfully
+[1]                     ↳ Context: {
+[1]                       "processedCount": 17,
+[1]                       "totalLogs": 17,
+[1]                       "processingTimeMs": 0,
+[1]                       "endpoint": "/api/debug-log"
+[1]                     }
+[1] [20:23:46.955] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "POST",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.0435026,
+[1]                       "requestSize": 11183,
+[1]                       "responseSize": 70
+[1]                     }
+[1] [20:23:47.629] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 8 logs to logs/2025-09-01/loaders.jsonl
+[1] [20:23:47.629] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 1 logs to logs/2025-09-01/dependencyinjection.jsonl
+[1] [20:23:47.631] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/utils.jsonl
+[1] [20:23:47.632] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 4 logs to logs/2025-09-01/actions.jsonl
+[1] [20:23:47.633] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/configuration.jsonl
+[1] [20:23:47.633] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs
+[1] [20:25:44.628] 📝 DEBUG System: Health check (liveness) completed
+[1]                     ↳ Context: {
+[1]                       "status": "UP",
+[1]                       "responseTime": 0.09,
+[1]                       "memoryUsed": 16
+[1]                     }
+[1] [20:25:44.628] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "GET",
+[1]                       "route": "/health",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.0006055,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 162
+[1]                     }
+[1] [20:25:44.632] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "OPTIONS",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 204,
+[1]                       "duration": 0.0001874,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 0
+[1]                     }
+[1] [20:25:44.679] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
+[1] [20:25:44.679] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
+[1]                     ↳ Context: {
+[1]                       "totalBuffered": 17,
+[1]                       "bufferGroups": 5
+[1]                     }
+[1] [20:25:44.679] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+[1]                     ↳ Context: {
+[1]                       "storedCount": 17,
+[1]                       "totalLogs": 17
+[1]                     }
+[1] [20:25:44.679] 📝 INFO System: Debug logs processed successfully
+[1]                     ↳ Context: {
+[1]                       "processedCount": 17,
+[1]                       "totalLogs": 17,
+[1]                       "processingTimeMs": 0,
+[1]                       "endpoint": "/api/debug-log"
+[1]                     }
+[1] [20:25:44.680] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "POST",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.0464891,
+[1]                       "requestSize": 12029,
+[1]                       "responseSize": 70
+[1]                     }
+[1] [20:25:45.638] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 3 logs to logs/2025-09-01/actions.jsonl
+[1] [20:25:45.640] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 3 logs to logs/2025-09-01/anatomy.jsonl
+[1] [20:25:45.640] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/initializers.jsonl
+[1] [20:25:45.642] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 7 logs to logs/2025-09-01/entities.jsonl
+[1] [20:25:45.643] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/utils.jsonl
+[1] [20:25:45.643] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs
+[1] [20:25:46.693] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "OPTIONS",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 204,
+[1]                       "duration": 0.0002394,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 0
+[1]                     }
+[1] [20:25:46.739] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
+[1] [20:25:46.739] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
+[1]                     ↳ Context: {
+[1]                       "totalBuffered": 17,
+[1]                       "bufferGroups": 3
+[1]                     }
+[1] [20:25:46.739] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+[1]                     ↳ Context: {
+[1]                       "storedCount": 17,
+[1]                       "totalLogs": 17
+[1]                     }
+[1] [20:25:46.739] 📝 INFO System: Debug logs processed successfully
+[1]                     ↳ Context: {
+[1]                       "processedCount": 17,
+[1]                       "totalLogs": 17,
+[1]                       "processingTimeMs": 0,
+[1]                       "endpoint": "/api/debug-log"
+[1]                     }
+[1] [20:25:46.740] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "POST",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.0456196,
+[1]                       "requestSize": 11740,
+[1]                       "responseSize": 70
+[1]                     }
+[1] [20:25:47.639] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/anatomy.jsonl
+[1] [20:25:47.641] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 14 logs to logs/2025-09-01/entities.jsonl
+[1] [20:25:47.641] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 1 logs to logs/2025-09-01/engine.jsonl
+[1] [20:25:47.642] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs
+[1] [20:26:04.066] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "OPTIONS",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 204,
+[1]                       "duration": 0.000214,
+[1]                       "requestSize": 0,
+[1]                       "responseSize": 0
+[1]                     }
+[1] [20:26:04.113] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
+[1] [20:26:04.113] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
+[1]                     ↳ Context: {
+[1]                       "totalBuffered": 17,
+[1]                       "bufferGroups": 1
+[1]                     }
+[1] [20:26:04.113] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+[1]                     ↳ Context: {
+[1]                       "storedCount": 17,
+[1]                       "totalLogs": 17
+[1]                     }
+[1] [20:26:04.114] 📝 INFO System: Debug logs processed successfully
+[1]                     ↳ Context: {
+[1]                       "processedCount": 17,
+[1]                       "totalLogs": 17,
+[1]                       "processingTimeMs": 1,
+[1]                       "endpoint": "/api/debug-log"
+[1]                     }
+[1] [20:26:04.114] 🔄 DEBUG System: HTTP request metrics recorded
+[1]                     ↳ Context: {
+[1]                       "method": "POST",
+[1]                       "route": "/api/*",
+[1]                       "statusCode": 200,
+[1]                       "duration": 0.0457467,
+[1]                       "requestSize": 11873,
+[1]                       "responseSize": 70
+[1]                     }
+[1] [20:26:04.643] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 17 logs to logs/2025-09-01/entities.jsonl
+[1] [20:26:04.643] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs

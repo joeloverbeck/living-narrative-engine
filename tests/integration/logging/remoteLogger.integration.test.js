@@ -195,6 +195,12 @@ describe('RemoteLogger Integration Tests', () => {
       return await mockServer.handleRequest(url);
     });
 
+    // Explicitly clear any existing call history to ensure test isolation
+    if (global.fetch.mock) {
+      global.fetch.mock.calls.length = 0;
+      global.fetch.mock.results.length = 0;
+    }
+
     mockConsoleLogger = {
       info: jest.fn(),
       warn: jest.fn(),
@@ -915,7 +921,11 @@ describe('RemoteLogger Integration Tests', () => {
       remoteLogger.warn('Warning message');
       remoteLogger.error('Error message'); // This triggers immediate flush of ALL logs
 
-      await jest.runAllTimersAsync();
+      // Use a more reliable approach: advance timers in small steps to avoid hangs
+      jest.advanceTimersByTime(50); // Allow immediate flush to start
+      await Promise.resolve(); // Let microtasks complete
+      jest.advanceTimersByTime(200); // Complete flush interval
+      await Promise.resolve(); // Let any remaining async work complete
 
       // Verify exactly one request was made (error triggers immediate flush with all logs)
       expect(mockServer.getDebugLogRequestCount()).toBe(1);
@@ -940,6 +950,9 @@ describe('RemoteLogger Integration Tests', () => {
     });
 
     it('should send logs in FIFO order when priority buffering is disabled', async () => {
+      // Track requests captured by this test only
+      const capturedRequests = [];
+      
       // Create config with priority buffering explicitly disabled
       remoteLogger = new RemoteLogger({
         config: createTestConfig({
@@ -951,6 +964,14 @@ describe('RemoteLogger Integration Tests', () => {
       });
 
       // Mock multiple responses since error logs trigger immediate flush
+      // Also capture the requests in our local array
+      global.fetch = jest.fn().mockImplementation(async (url, config) => {
+        if (url === 'http://localhost:3001/api/debug-log') {
+          capturedRequests.push({ url, config });
+        }
+        return await mockServer.handleRequest(url);
+      });
+      
       mockServer.mockResponse({
         ok: true,
         json: () => Promise.resolve({ success: true, processed: 2 }),
@@ -972,17 +993,11 @@ describe('RemoteLogger Integration Tests', () => {
       await remoteLogger.flush();
       await jest.runAllTimersAsync();
 
-      // Verify requests were made
-      expect(mockServer.getDebugLogRequestCount()).toBeGreaterThanOrEqual(2);
-
-      // Find all debug log requests
-      const debugLogCalls = global.fetch.mock.calls.filter(
-        (call) => call[0] === 'http://localhost:3001/api/debug-log'
-      );
-      expect(debugLogCalls.length).toBeGreaterThanOrEqual(2);
+      // Verify requests were made using our captured requests
+      expect(capturedRequests.length).toBeGreaterThanOrEqual(2);
 
       // First request should have first debug and error (FIFO up to immediate flush)
-      const firstRequestBody = JSON.parse(debugLogCalls[0][1].body);
+      const firstRequestBody = JSON.parse(capturedRequests[0].config.body);
       expect(firstRequestBody.logs).toHaveLength(2);
       expect(firstRequestBody.logs[0].level).toBe('debug');
       expect(firstRequestBody.logs[0].message).toBe('First debug');
@@ -990,7 +1005,7 @@ describe('RemoteLogger Integration Tests', () => {
       expect(firstRequestBody.logs[1].message).toBe('Second error');
 
       // Second request should have remaining logs in FIFO order
-      const secondRequestBody = JSON.parse(debugLogCalls[1][1].body);
+      const secondRequestBody = JSON.parse(capturedRequests[1].config.body);
       expect(secondRequestBody.logs).toHaveLength(2);
       expect(secondRequestBody.logs[0].level).toBe('info');
       expect(secondRequestBody.logs[0].message).toBe('Third info');

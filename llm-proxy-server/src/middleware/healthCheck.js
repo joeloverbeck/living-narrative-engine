@@ -204,7 +204,7 @@ async function checkLlmConfigService(llmConfigService) {
       details: {
         operational: true,
         configuredLlms: configCount,
-        defaultLlm: llmConfigs?.defaultLlmId || null,
+        defaultLlm: llmConfigs?.defaultConfigId || null,
         configPath: llmConfigService.getResolvedConfigPath(),
       },
     };

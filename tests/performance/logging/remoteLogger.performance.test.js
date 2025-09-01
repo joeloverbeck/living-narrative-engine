@@ -339,15 +339,16 @@ describe('RemoteLogger - Performance Benchmarks', () => {
         dependencies: { consoleLogger: mockConsoleLogger },
       });
 
-      // Add logs that will trigger failures when flushed
+      // Force flush and expect failures - add log before each flush
+      // to ensure circuit breaker gets multiple failures to count
       remoteLogger.info('Log 1');
-      remoteLogger.info('Log 2');
-      remoteLogger.info('Log 3');
-
-      // Force flush and expect failures
       await remoteLogger.flush().catch(() => {}); // First batch fails
-      await remoteLogger.flush().catch(() => {}); // Second batch fails
-      await remoteLogger.flush().catch(() => {}); // Third batch should trip breaker
+      
+      remoteLogger.info('Log 2'); 
+      await remoteLogger.flush().catch(() => {}); // Second batch fails - should trip breaker
+      
+      remoteLogger.info('Log 3');
+      await remoteLogger.flush().catch(() => {}); // Should be blocked by open circuit
 
       // Circuit should be open after multiple failures
       expect(remoteLogger.getCircuitBreakerState()).toBe(
