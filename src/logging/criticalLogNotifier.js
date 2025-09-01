@@ -354,7 +354,8 @@ class CriticalLogNotifier extends RendererBase {
    */
   #initializeKeyboardManager() {
     this.#keyboardManager = new KeyboardShortcutsManager({
-      logger: this.logger
+      logger: this.logger,
+      documentContext: this.documentContext.getDocument()
     });
     
     this.#keyboardManager.setActionCallback((action, event) => {
@@ -464,7 +465,7 @@ class CriticalLogNotifier extends RendererBase {
    * @param {string} action - The shortcut action to handle
    * @param {Event} event - The keyboard event
    */
-  #handleShortcutAction(action, event) {
+  #handleShortcutAction(action, _event) {
     switch (action) {
       case 'close-panel':
       case 'toggle-panel':

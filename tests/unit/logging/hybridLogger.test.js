@@ -151,8 +151,8 @@ describe('HybridLogger', () => {
 
       hybridLogger.debug(message, ...args);
 
-      // With permissive filters, category detection is optimized away,
-      // so message gets GENERAL prefix instead of ENGINE
+      // Debug doesn't pre-detect category like warn/error do
+      // With permissive filters, no category detection occurs, defaulting to GENERAL
       expect(mockConsoleLogger.debug).toHaveBeenCalledWith(
         '[GENERAL:DEBUG] Debug message',
         ...args
@@ -166,7 +166,8 @@ describe('HybridLogger', () => {
 
       hybridLogger.info(message, ...args);
 
-      // With permissive filters, category detection is optimized away
+      // Info doesn't pre-detect category like warn/error do
+      // With permissive filters, no category detection occurs, defaulting to GENERAL
       expect(mockConsoleLogger.info).toHaveBeenCalledWith(
         '[GENERAL:INFO] Info message',
         ...args
@@ -178,9 +179,10 @@ describe('HybridLogger', () => {
       const message = 'Warning message';
       hybridLogger.warn(message);
 
-      // Even warnings may get GENERAL format due to optimization
+      // Warnings always detect category for critical buffer functionality
+      // Mock returns 'engine' so we expect ENGINE prefix
       expect(mockConsoleLogger.warn).toHaveBeenCalledWith(
-        '[GENERAL:WARN] Warning message'
+        '[ENGINE:WARN] Warning message'
       );
       expect(mockRemoteLogger.warn).toHaveBeenCalledWith(message);
     });
@@ -191,9 +193,10 @@ describe('HybridLogger', () => {
 
       hybridLogger.error(message, error);
 
-      // Even errors may get GENERAL format due to optimization
+      // Errors always detect category for critical buffer functionality
+      // Mock returns 'engine' so we expect ENGINE prefix
       expect(mockConsoleLogger.error).toHaveBeenCalledWith(
-        '[GENERAL:ERROR] Error message',
+        '[ENGINE:ERROR] Error message',
         error
       );
       expect(mockRemoteLogger.error).toHaveBeenCalledWith(message, error);
@@ -851,8 +854,9 @@ describe('HybridLogger', () => {
 
       hybridLogger.warn('Test message');
 
+      // Warnings always detect category; mock returns 'engine'
       expect(mockConsoleLogger.warn).toHaveBeenCalledWith(
-        '[GENERAL:WARN] Test message'
+        '[ENGINE:WARN] Test message'
       );
       expect(mockConsoleLogger.error).toHaveBeenCalledWith(
         '[HybridLogger] Remote logging failed:',

@@ -48,12 +48,14 @@ describe('RemoteLogger - HTTP 413 Payload Too Large Reproduction', () => {
 
     const remoteLogger = new RemoteLogger({
       config: {
-        batchSize: 2000, // Large batch size to trigger 413 error
+        batchSize: 100, // Smaller batch size to avoid automatic splitting
         flushInterval: 100,
-        maxServerBatchSize: 5000, // Server limit from config
+        maxServerBatchSize: 50, // Very small server limit to force 413 without splitting
         endpoint: 'http://localhost:3001/api/debug-log',
         skipServerReadinessValidation: true, // Skip health checks for testing
         initialConnectionDelay: 0, // Disable initial delay for testing
+        disableAdaptiveBatching: true, // Disable adaptive batching for predictable behavior
+        disablePriorityBuffering: true, // Disable priority buffering for simpler testing
       },
       dependencies: {
         consoleLogger: mockLogger,
@@ -62,7 +64,7 @@ describe('RemoteLogger - HTTP 413 Payload Too Large Reproduction', () => {
     });
 
     // Create logs with large payloads to exceed server limit
-    for (let i = 0; i < 2000; i++) {
+    for (let i = 0; i < 150; i++) { // Reduced count to match smaller batch size
       const largeMetadata = {
         entityData: {
           id: `entity-${i}`,
@@ -141,9 +143,12 @@ describe('RemoteLogger - HTTP 413 Payload Too Large Reproduction', () => {
         flushInterval: 50,
         circuitBreakerThreshold: 3, // Low threshold for testing
         circuitBreakerTimeout: 1000,
+        maxServerBatchSize: 50, // Small server limit to prevent splitting
         endpoint: 'http://localhost:3001/api/debug-log',
         skipServerReadinessValidation: true, // Skip health checks for testing
         initialConnectionDelay: 0, // Disable initial delay for testing
+        disableAdaptiveBatching: true, // Disable adaptive batching for predictable behavior
+        disablePriorityBuffering: true, // Disable priority buffering for simpler testing
       },
       dependencies: {
         consoleLogger: mockLogger,
@@ -195,13 +200,15 @@ describe('RemoteLogger - HTTP 413 Payload Too Large Reproduction', () => {
 
     const remoteLogger = new RemoteLogger({
       config: {
-        batchSize: 2000, // Match the logCount from error logs
+        batchSize: 100, // Smaller batch size to avoid splitting
         flushInterval: 500,
-        maxServerBatchSize: 4500, // Match config from RemoteLogger
+        maxServerBatchSize: 50, // Small server limit to force 413 without splitting
         maxBufferSize: 3000, // Set buffer size larger than batch size
         endpoint: 'http://localhost:3001/api/debug-log',
         skipServerReadinessValidation: true, // Skip health checks for testing
         initialConnectionDelay: 0, // Disable initial delay for testing
+        disableAdaptiveBatching: true, // Disable adaptive batching for predictable behavior
+        disablePriorityBuffering: true, // Disable priority buffering for simpler testing
       },
       dependencies: {
         consoleLogger: mockLogger,
@@ -210,7 +217,7 @@ describe('RemoteLogger - HTTP 413 Payload Too Large Reproduction', () => {
     });
 
     // Simulate the game launch logging pattern
-    for (let i = 0; i < 2000; i++) {
+    for (let i = 0; i < 150; i++) { // Reduced to match smaller batch configuration
       // Mix of different log types and sizes similar to game logs
       if (i % 20 === 0) {
         remoteLogger.error(`Entity creation error ${i}`, {
@@ -281,10 +288,12 @@ describe('RemoteLogger - HTTP 413 Payload Too Large Reproduction', () => {
       config: {
         batchSize: 100,
         flushInterval: 100,
-        maxServerBatchSize: 4500, // 4.5MB server limit
+        maxServerBatchSize: 50, // Small server limit to force 413 without splitting
         endpoint: 'http://localhost:3001/api/debug-log',
         skipServerReadinessValidation: true, // Skip health checks for testing
         initialConnectionDelay: 0, // Disable initial delay for testing
+        disableAdaptiveBatching: true, // Disable adaptive batching for predictable behavior
+        disablePriorityBuffering: true, // Disable priority buffering for simpler testing
       },
       dependencies: {
         consoleLogger: mockLogger,

@@ -32,7 +32,6 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
   let entityManager;
   let eventBus;
   let logger;
-  let fixture;
   let assertionHelpers;
   let fs;
 
@@ -50,7 +49,6 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       debug: jest.fn(),
     };
 
-    fixture = new ModTestFixture();
     assertionHelpers = new ModAssertionHelpers(entityManager);
 
     fs = require('fs');
@@ -110,29 +108,30 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
     it('should validate exercise category file naming patterns', async () => {
       // Exercise actions follow naming: exercise_<action>_action.js
-      const expectedPaths = [
-        'data/mods/exercise/actions/exercise_pushup_action.js',
-        'data/mods/exercise/actions/pushup_action.js',
-        'data/mods/exercise/actions/exercise_pushup.js',
-        'data/mods/exercise/actions/pushup.js',
-      ];
+      // These are the expected paths that would be tried:
+      // 'data/mods/exercise/actions/exercise_pushup_action.js',
+      // 'data/mods/exercise/actions/pushup_action.js',
+      // 'data/mods/exercise/actions/exercise_pushup.js',
+      // 'data/mods/exercise/actions/pushup.js',
 
       // Mock file system to test fallback pattern
-      fs.promises.access
-        .mockRejectedValueOnce(new Error('File not found'))
-        .mockRejectedValueOnce(new Error('File not found'))
-        .mockResolvedValueOnce() // Third pattern succeeds
-        .mockResolvedValueOnce(); // Condition file access succeeds
-
+      // ModTestFixture uses readFile directly, not access
+      // Clear any previous mocks
+      fs.promises.readFile.mockClear();
+      
       fs.promises.readFile
-        .mockResolvedValueOnce(
+        .mockRejectedValueOnce(new Error('File not found')) // First rule path fails
+        .mockRejectedValueOnce(new Error('File not found')) // Second rule path fails
+        .mockResolvedValueOnce( // Third rule path succeeds
           JSON.stringify({
             id: 'exercise:show_off_biceps',
             category: 'exercise',
             name: 'Show Off Biceps',
           })
         )
-        .mockResolvedValueOnce(
+        .mockRejectedValueOnce(new Error('File not found')) // First condition path fails
+        .mockRejectedValueOnce(new Error('File not found')) // Second condition path fails
+        .mockResolvedValueOnce( // Third condition path succeeds
           JSON.stringify({
             condition: 'event-is-action-show-off-biceps'
           })
@@ -141,8 +140,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       const testData = await ModTestFixture.forAction('exercise', 'show_off_biceps');
       expect(testData.actionFile).toBeDefined();
 
-      // Verify correct fallback pattern was used
-      expect(fs.promises.access).toHaveBeenCalledTimes(3);
+      // Verify correct fallback pattern was used (3 rule attempts + 3 condition attempts)
+      expect(fs.promises.readFile).toHaveBeenCalledTimes(6);
     });
 
     it('should validate exercise category event patterns', async () => {
@@ -541,20 +540,29 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
 
     it('should validate positioning category file naming patterns', async () => {
       // Positioning actions follow naming: positioning_<action>_action.js
-      fs.promises.access.mockResolvedValue();
-      fs.promises.readFile.mockResolvedValue(
-        JSON.stringify({
-          id: 'positioning:sit_on_chair',
-          category: 'positioning',
-          name: 'Sit on Chair',
-          effects: [
-            {
-              operation: 'ADD_COMPONENT',
-              args: ['self', 'positioning:sitting', '{"furniture": "{{FURNITURE}}"}'],
-            },
-          ],
-        })
-      );
+      // ModTestFixture uses readFile directly, not access
+      // Clear any previous mocks
+      fs.promises.readFile.mockClear();
+      
+      fs.promises.readFile
+        .mockResolvedValueOnce( // Rule file succeeds on first attempt
+          JSON.stringify({
+            id: 'positioning:sit_on_chair',
+            category: 'positioning',
+            name: 'Sit on Chair',
+            effects: [
+              {
+                operation: 'ADD_COMPONENT',
+                args: ['self', 'positioning:sitting', '{"furniture": "{{FURNITURE}}"}'],
+              },
+            ],
+          })
+        )
+        .mockResolvedValueOnce( // Condition file succeeds on first attempt
+          JSON.stringify({
+            condition: 'event-is-action-sit-on-chair'
+          })
+        );
 
       const testData = await ModTestFixture.forAction('positioning', 'sit_on_chair');
       expect(testData.actionFile).toBeDefined();
@@ -575,9 +583,9 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         const handlers = factoryMethod(entityManager, eventBus, logger);
         factoryResults[category] = {
           handlerCount: Object.keys(handlers).length,
-          hasAddComponent: handlers.hasOwnProperty('ADD_COMPONENT'),
+          hasAddComponent: Object.prototype.hasOwnProperty.call(handlers, 'ADD_COMPONENT'),
           commonHandlers: ['GET_NAME', 'END_TURN', 'LOG_MESSAGE'].every(h => 
-            handlers.hasOwnProperty(h)
+            Object.prototype.hasOwnProperty.call(handlers, h)
           ),
         };
       });
@@ -677,18 +685,41 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
     it('should validate consistent file loading patterns across categories', async () => {
       const testCategories = ['exercise', 'violence', 'intimacy', 'sex', 'positioning'];
       
-      // Mock successful file loading for all categories
-      fs.promises.access.mockResolvedValue();
+      // Clear any previous mocks and reset
+      fs.promises.readFile.mockReset();
       
-      const loadPromises = testCategories.map(async (category, index) => {
-        const mockFile = JSON.stringify({
-          id: `${category}:test_action`,
-          category: category,
-          name: `Test ${category} Action`,
-        });
-
-        fs.promises.readFile.mockResolvedValueOnce(mockFile);
-
+      // Mock successful file loading for all categories
+      // ModTestFixture uses readFile directly, not access
+      // Use path-based mocking to handle parallel execution correctly
+      fs.promises.readFile.mockImplementation((filePath) => {
+        // Extract the category from the file path
+        const pathStr = filePath.toString();
+        
+        // Check which category this path belongs to
+        for (const category of testCategories) {
+          if (pathStr.includes(`mods/${category}/`)) {
+            // Check if this is a rule file or condition file
+            if (pathStr.includes('/rules/')) {
+              // Return rule file for this category
+              return Promise.resolve(JSON.stringify({
+                id: `${category}:test_action`,
+                category: category,
+                name: `Test ${category} Action`,
+              }));
+            } else if (pathStr.includes('/conditions/')) {
+              // Return condition file
+              return Promise.resolve(JSON.stringify({
+                condition: `event-is-action-test-action`
+              }));
+            }
+          }
+        }
+        
+        // If path doesn't match any expected pattern, reject
+        return Promise.reject(new Error(`File not found: ${filePath}`));
+      });
+      
+      const loadPromises = testCategories.map(async (category) => {
         const testData = await ModTestFixture.forAction(category, 'test_action');
         expect(testData.actionFile).toBeDefined();
 

@@ -30,13 +30,13 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
       expect(rulePaths).toEqual([
         'data/mods/intimacy/rules/kiss_cheek.rule.json',
         'data/mods/intimacy/rules/handle_kiss_cheek.rule.json',
-        'data/mods/intimacy/rules/kiss_cheek.rule.json', // fullActionId same as actionName for simple IDs
+        'data/mods/intimacy/rules/intimacy_kiss_cheek.rule.json', // fullActionId uses modId_actionName pattern for simple IDs
       ]);
 
       expect(conditionPaths).toEqual([
         'data/mods/intimacy/conditions/event-is-action-kiss-cheek.condition.json',
         'data/mods/intimacy/conditions/kiss-cheek.condition.json',
-        'data/mods/intimacy/conditions/event-is-action-kiss-cheek.condition.json', // fullActionId same as actionName for simple IDs
+        'data/mods/intimacy/conditions/event-is-action-intimacy-kiss-cheek.condition.json', // fullActionId uses modId-actionName pattern for simple IDs
       ]);
     });
 
@@ -277,11 +277,11 @@ describe('ModTestFixture - Auto-Loading Functionality', () => {
     });
 
     it('should auto-load only missing files', async () => {
-      // Mock the tryAutoLoadFiles call (which calls loadModFiles internally)
-      // Will need to mock for both rule and condition patterns even though we only need condition
+      // When only condition needs to be loaded, mock only condition file attempts
+      // The production code will try multiple paths for the condition file
       fs.readFile
-        .mockResolvedValueOnce(JSON.stringify(mockRuleFile))      // Rule file (even though we provide it)
-        .mockResolvedValueOnce(JSON.stringify(mockConditionFile)); // Condition file (this is what we need)
+        .mockRejectedValueOnce(new Error('ENOENT: no such file'))  // First condition attempt fails
+        .mockResolvedValueOnce(JSON.stringify(mockConditionFile)); // Second condition attempt succeeds
 
       const providedRule = { rule_id: 'provided_rule' };
 
