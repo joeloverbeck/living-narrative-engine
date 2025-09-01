@@ -10,6 +10,7 @@ import LogCategoryDetector from './logCategoryDetector.js';
 import LogMetadataEnricher from './logMetadataEnricher.js';
 import SensitiveDataFilter from './SensitiveDataFilter.js';
 import { v4 as uuidv4 } from 'uuid';
+import { gzip } from 'pako';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -300,6 +301,35 @@ class RemoteLogger {
 
   /**
    * @private
+   * @type {object}
+   * @description Compression configuration
+   */
+  #compressionConfig;
+
+  /**
+   * @private
+   * @type {object}
+   * @description Batching configuration
+   */
+  #batchingConfig;
+
+  /**
+   * @private
+   * @type {number[]}
+   * @description Recent transmission times for bandwidth estimation
+   */
+  #transmissionTimes;
+
+
+  /**
+   * @private
+   * @type {object}
+   * @description Network quality metrics
+   */
+  #networkMetrics;
+
+  /**
+   * @private
    * @type {number}
    */
   #memoryPressureThreshold;
@@ -415,12 +445,37 @@ class RemoteLogger {
     this.#disableAdaptiveBatching = mergedConfig.disableAdaptiveBatching;
     this.#disablePriorityBuffering = mergedConfig.disablePriorityBuffering;
 
+    // Initialize compression configuration
+    this.#compressionConfig = {
+      enabled: mergedConfig.compression?.enabled || false,
+      threshold: mergedConfig.compression?.threshold || 1024,
+      algorithm: mergedConfig.compression?.algorithm || 'gzip',
+      level: mergedConfig.compression?.level || 6,
+      maxPayloadSize: mergedConfig.compression?.maxPayloadSize || 5242880,
+    };
+
+    // Initialize batching configuration
+    this.#batchingConfig = {
+      adaptive: mergedConfig.batching?.adaptive ?? true,
+      minBatchSize: mergedConfig.batching?.minBatchSize || 10,
+      maxBatchSize: mergedConfig.batching?.maxBatchSize || 500,
+      targetLatency: mergedConfig.batching?.targetLatency || 100,
+      adjustmentFactor: mergedConfig.batching?.adjustmentFactor || 0.1,
+    };
+
     // Initialize state
     this.#buffer = [];
     this.#flushTimer = null;
     this.#sessionId = uuidv4();
     this.#recentLogTimestamps = [];
     this.#isUnloading = false;
+    this.#transmissionTimes = [];
+    this.#networkMetrics = {
+      successCount: 0,
+      failureCount: 0,
+      totalBytes: 0,
+      totalTime: 0,
+    };
     this.#abortController = null;
     this.#currentFlushPromise = null;
 
@@ -1258,14 +1313,25 @@ class RemoteLogger {
   }
 
   /**
-   * Sends a batch of logs with retry logic and circuit breaker protection.
+   * Sends a batch of logs with retry logic, circuit breaker protection, and optional compression.
    *
    * @private
    * @param {DebugLogEntry[]} logs - Logs to send
    * @returns {Promise<void>}
    */
   async #sendBatch(logs) {
-    // Validate payload size before sending
+    // Check if compression should be applied
+    const shouldCompress = this.#shouldCompress(logs);
+    let payloadData = logs;
+    let compressionResult = null;
+
+    if (shouldCompress) {
+      // Attempt to compress the payload
+      compressionResult = await this.#compressPayload(logs);
+      payloadData = compressionResult.data;
+    }
+
+    // Validate payload size before sending (use original logs for size validation)
     const payloadValidation = this.#validatePayloadSize(logs);
     if (!payloadValidation.valid) {
       if (payloadValidation.shouldSplit) {
@@ -1300,7 +1366,7 @@ class RemoteLogger {
       }
 
       return await this.#retryWithBackoff(
-        () => this.#sendHttpRequest(logs),
+        () => this.#sendHttpRequest(payloadData, compressionResult),
         this.#retryAttempts
       );
     });
@@ -1467,22 +1533,48 @@ class RemoteLogger {
   }
 
   /**
-   * Sends HTTP request to the debug log endpoint.
+   * Sends HTTP request to the debug log endpoint with optional compression support.
    *
    * @private
-   * @param {DebugLogEntry[]} logs - Logs to send
+   * @param {DebugLogEntry[]|Uint8Array|string} payloadData - Logs to send (may be compressed)
+   * @param {object|null} compressionResult - Compression result with metadata
    * @returns {Promise<object>} Response from server
    */
-  async #sendHttpRequest(logs) {
+  async #sendHttpRequest(payloadData, compressionResult = null) {
+    // Track start time for transmission metrics
+    const startTime = Date.now();
+    let payloadSize = 0;
+
     // Create new abort controller for this request
     this.#abortController = new AbortController();
 
+    // Prepare headers
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    // Prepare body based on compression
+    let body;
+    if (compressionResult && compressionResult.compressed) {
+      // Add compression headers
+      headers['Content-Encoding'] = 'gzip';
+      headers['X-Original-Size'] = compressionResult.originalSize;
+      headers['X-Compression-Ratio'] = compressionResult.compressionRatio;
+      
+      // For compressed data, send as binary
+      body = payloadData; // Already compressed Uint8Array
+      payloadSize = payloadData.length;
+    } else {
+      // For uncompressed data, stringify if needed
+      const payload = typeof payloadData === 'string' ? payloadData : JSON.stringify({ logs: payloadData });
+      body = payload;
+      payloadSize = payload.length;
+    }
+
     const requestConfig = {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ logs }),
+      headers,
+      body,
       signal: this.#abortController.signal,
     };
 
@@ -1496,6 +1588,11 @@ class RemoteLogger {
     try {
       const response = await fetch(this.#endpoint, requestConfig);
       clearTimeout(timeoutId);
+
+      const duration = Date.now() - startTime;
+      
+      // Record transmission metrics for network analysis
+      this.#recordTransmissionMetrics(payloadSize, duration, response.ok);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -1511,9 +1608,22 @@ class RemoteLogger {
         throw new Error('Invalid response format from debug log endpoint');
       }
 
+      // Log compression savings if applicable
+      if (compressionResult && compressionResult.compressed && this.#fallbackLogger?.debug) {
+        this.#fallbackLogger.debug('[RemoteLogger] Compression stats', {
+          originalSize: compressionResult.originalSize,
+          compressedSize: compressionResult.compressedSize,
+          compressionRatio: compressionResult.compressionRatio,
+          savedBytes: compressionResult.originalSize - compressionResult.compressedSize,
+        });
+      }
+
       return result;
     } catch (error) {
       clearTimeout(timeoutId);
+
+      const duration = Date.now() - startTime;
+      this.#recordTransmissionMetrics(payloadSize, duration, false);
 
       if (error.name === 'AbortError') {
         throw new Error('Request timeout');
@@ -1814,53 +1924,74 @@ class RemoteLogger {
   }
 
   /**
-   * Updates the adaptive batch size based on current logging rate and buffer conditions.
+   * Updates the adaptive batch size based on current logging rate, buffer conditions, and network analysis.
    *
-   * New strategy: During high-volume periods (like game startup), use larger batches
-   * to reduce HTTP request overhead. Only use smaller batches if buffer is critically full.
+   * Enhanced strategy: Incorporates network quality metrics to optimize batch sizing for
+   * bandwidth, latency, and reliability conditions.
    *
    * @private
    */
   #updateAdaptiveBatchSize() {
-    // If adaptive batching is disabled, keep batch size fixed at the original size
-    if (this.#disableAdaptiveBatching) {
+    // If adaptive batching is disabled or not using batching config, keep batch size fixed
+    if (this.#disableAdaptiveBatching || !this.#batchingConfig?.adaptive) {
       this.#adaptiveBatchSize = this.#batchSize;
       return;
     }
 
-
     const currentSize = this.#buffer.length;
     const bufferUtilization = currentSize / this.#maxBufferSize;
     
-
     // Calculate recent logging rate (logs per second over last 2 seconds)
     const recentLogRate = this.#calculateRecentLoggingRate();
+
+    // Analyze network conditions
+    const networkConditions = this.#analyzeNetworkConditions();
 
     // Detect high-volume periods (like game initialization)
     const isHighVolumePhase = recentLogRate > 50; // More than 50 logs/second
     const isCriticalBuffer = bufferUtilization > 0.9; // Buffer nearly full
 
+    // Calculate optimal batch size based on multiple factors
+    let optimal = this.#batchSize;
 
     if (isCriticalBuffer) {
       // Critical: buffer nearly full, use smaller batches to flush quickly
-      this.#adaptiveBatchSize = Math.max(10, Math.floor(this.#batchSize * 0.6));
+      optimal = Math.max(this.#batchingConfig.minBatchSize, Math.floor(this.#batchSize * 0.6));
     } else if (isHighVolumePhase && currentSize >= 90) {
-      // High volume with sufficient logs: use larger batches (up to 200-500 logs)
-      // This handles game startup efficiently: fewer HTTP requests
+      // High volume with sufficient logs: use larger batches
       const targetBatchSize = Math.min(
-        500, // Max batch size for performance
-        Math.max(100, currentSize * 0.5) // Use ~50% of current buffer
+        this.#batchingConfig.maxBatchSize,
+        Math.max(100, currentSize * 0.5)
       );
-      this.#adaptiveBatchSize = Math.floor(targetBatchSize);
-      
-      
-    } else if (bufferUtilization > 0.5) {
-      // Medium utilization: slightly larger batches than base
-      this.#adaptiveBatchSize = Math.floor(this.#batchSize * 1.5);
+      optimal = Math.floor(targetBatchSize);
     } else {
-      // Low utilization: use normal batch size
-      this.#adaptiveBatchSize = this.#batchSize;
+      // Network-aware batch sizing
+      optimal = this.#calculateOptimalBatchSize(networkConditions, bufferUtilization, recentLogRate);
     }
+
+    // Apply gradual adjustment to prevent oscillation
+    const currentBatch = this.#adaptiveBatchSize || this.#batchSize;
+    const adjustmentFactor = this.#batchingConfig.adjustmentFactor;
+    
+    if (optimal > currentBatch) {
+      // Increase gradually
+      this.#adaptiveBatchSize = Math.min(
+        optimal,
+        Math.floor(currentBatch * (1 + adjustmentFactor))
+      );
+    } else if (optimal < currentBatch) {
+      // Decrease gradually
+      this.#adaptiveBatchSize = Math.max(
+        optimal,
+        Math.floor(currentBatch * (1 - adjustmentFactor))
+      );
+    }
+
+    // Ensure within configured bounds
+    this.#adaptiveBatchSize = Math.max(
+      this.#batchingConfig.minBatchSize,
+      Math.min(this.#batchingConfig.maxBatchSize, this.#adaptiveBatchSize)
+    );
 
     // Debug logging for development
     if (process.env.NODE_ENV === 'development' && this.#fallbackLogger?.debug) {
@@ -1868,11 +1999,65 @@ class RemoteLogger {
         recentLogRate,
         isHighVolumePhase,
         bufferUtilization,
+        networkQuality: networkConditions.quality,
         currentBufferSize: currentSize,
         adaptiveBatchSize: this.#adaptiveBatchSize,
         baseBatchSize: this.#batchSize,
       });
     }
+  }
+
+  /**
+   * Calculates optimal batch size based on network conditions and system state.
+   *
+   * @private
+   * @param {object} networkConditions - Network analysis results
+   * @param {number} bufferUtilization - Current buffer utilization (0-1)
+   * @param {number} logRate - Current logging rate (logs/second)
+   * @returns {number} Optimal batch size
+   */
+  #calculateOptimalBatchSize(networkConditions, bufferUtilization, logRate) {
+    let optimal = this.#batchSize;
+
+    // Adjust based on network bandwidth
+    if (networkConditions.bandwidth > 1000000) {
+      // > 1Mbps: can handle larger batches
+      optimal *= 1.5;
+    } else if (networkConditions.bandwidth < 100000) {
+      // < 100Kbps: use smaller batches
+      optimal *= 0.7;
+    }
+
+    // Adjust based on latency
+    if (networkConditions.latency > this.#batchingConfig.targetLatency * 2) {
+      // High latency: larger batches to reduce round trips
+      optimal *= 1.3;
+    } else if (networkConditions.latency < this.#batchingConfig.targetLatency * 0.5) {
+      // Low latency: can use smaller batches
+      optimal *= 0.9;
+    }
+
+    // Adjust based on reliability
+    if (networkConditions.reliability < 0.8) {
+      // Poor reliability: smaller batches to reduce retry cost
+      optimal *= 0.8;
+    }
+
+    // Adjust based on buffer pressure
+    if (bufferUtilization > 0.7) {
+      optimal *= 1.2; // Increase batch size to clear buffer
+    } else if (bufferUtilization < 0.3) {
+      optimal *= 0.9; // Can use smaller batches
+    }
+
+    // Adjust based on log rate
+    if (logRate > 100) {
+      optimal *= 1.4; // High rate: larger batches
+    } else if (logRate < 10) {
+      optimal *= 0.8; // Low rate: smaller batches
+    }
+
+    return Math.floor(optimal);
   }
 
   /**
@@ -2077,6 +2262,171 @@ class RemoteLogger {
   }
 
   /**
+   * Compresses a payload using gzip if it meets the threshold criteria.
+   *
+   * @private
+   * @param {object} data - Data to compress
+   * @returns {Promise<{data: *, compressed: boolean, compressionRatio?: number, originalSize?: number}>}
+   */
+  async #compressPayload(data) {
+    if (!this.#compressionConfig.enabled) {
+      return { data, compressed: false };
+    }
+
+    const jsonString = JSON.stringify(data);
+    const originalSize = jsonString.length;
+
+    // Skip compression for small payloads
+    if (originalSize < this.#compressionConfig.threshold) {
+      return { data: jsonString, compressed: false };
+    }
+
+    try {
+      // Compress using pako's gzip with configured level
+      const compressed = gzip(jsonString, { level: this.#compressionConfig.level });
+      const compressedSize = compressed.length;
+      const compressionRatio = compressedSize / originalSize;
+
+      // Only use compression if it provides significant savings (>20% reduction)
+      if (compressionRatio < 0.8) {
+        return {
+          data: compressed,
+          compressed: true,
+          compressionRatio,
+          originalSize,
+          compressedSize,
+        };
+      }
+    } catch (error) {
+      // Log compression error but continue with uncompressed data
+      if (this.#fallbackLogger?.warn) {
+        this.#fallbackLogger.warn('[RemoteLogger] Compression failed', error);
+      }
+    }
+
+    return { data: jsonString, compressed: false };
+  }
+
+  /**
+   * Determines if payload should be compressed based on size and configuration.
+   *
+   * @private
+   * @param {DebugLogEntry[]} logs - Logs to check
+   * @returns {boolean}
+   */
+  #shouldCompress(logs) {
+    if (!this.#compressionConfig.enabled) {
+      return false;
+    }
+
+    const estimatedSize = JSON.stringify(logs).length;
+    return estimatedSize >= this.#compressionConfig.threshold;
+  }
+
+  /**
+   * Estimates network bandwidth based on recent transmission times.
+   *
+   * @private
+   * @returns {number} Estimated bandwidth in bytes per second
+   */
+  #estimateBandwidth() {
+    if (this.#transmissionTimes.length < 2) {
+      return 0; // Not enough data
+    }
+
+    // Calculate average bytes per second from recent transmissions
+    const recentTransmissions = this.#transmissionTimes.slice(-10); // Last 10 transmissions
+    const avgBytesPerSecond = recentTransmissions.reduce((sum, t) => sum + (t.bytes / (t.duration / 1000)), 0) / recentTransmissions.length;
+    
+    return avgBytesPerSecond;
+  }
+
+  /**
+   * Analyzes network conditions based on recent metrics.
+   *
+   * @private
+   * @returns {object} Network condition analysis
+   */
+  #analyzeNetworkConditions() {
+    const bandwidth = this.#estimateBandwidth();
+    const successRate = this.#networkMetrics.successCount / 
+                       (this.#networkMetrics.successCount + this.#networkMetrics.failureCount || 1);
+    
+    // Calculate average latency from recent transmissions
+    const avgLatency = this.#transmissionTimes.length > 0
+      ? this.#transmissionTimes.slice(-10).reduce((sum, t) => sum + t.duration, 0) / Math.min(10, this.#transmissionTimes.length)
+      : 0;
+
+    return {
+      bandwidth,
+      latency: avgLatency,
+      reliability: successRate,
+      congestion: this.#networkMetrics.failureCount > 5, // Simple congestion detection
+      quality: this.#assessNetworkQuality(bandwidth, avgLatency, successRate),
+    };
+  }
+
+  /**
+   * Assesses overall network quality based on multiple factors.
+   *
+   * @private
+   * @param {number} bandwidth - Bytes per second
+   * @param {number} latency - Average latency in ms
+   * @param {number} reliability - Success rate (0-1)
+   * @returns {string} Quality assessment: 'good', 'fair', or 'poor'
+   */
+  #assessNetworkQuality(bandwidth, latency, reliability) {
+    let score = 0;
+
+    // Bandwidth scoring
+    if (bandwidth > 1000000) score += 3; // > 1Mbps
+    else if (bandwidth > 100000) score += 2; // > 100Kbps
+    else if (bandwidth > 10000) score += 1; // > 10Kbps
+
+    // Latency scoring
+    if (latency < 50) score += 3; // < 50ms
+    else if (latency < 200) score += 2; // < 200ms
+    else if (latency < 500) score += 1; // < 500ms
+
+    // Reliability scoring
+    if (reliability > 0.95) score += 3; // > 95% success
+    else if (reliability > 0.8) score += 2; // > 80% success
+    else if (reliability > 0.6) score += 1; // > 60% success
+
+    // Overall quality assessment
+    if (score >= 7) return 'good';
+    if (score >= 4) return 'fair';
+    return 'poor';
+  }
+
+  /**
+   * Records transmission metrics for network analysis.
+   *
+   * @private
+   * @param {number} bytes - Bytes transmitted
+   * @param {number} duration - Transmission duration in ms
+   * @param {boolean} success - Whether transmission succeeded
+   */
+  #recordTransmissionMetrics(bytes, duration, success) {
+    // Record transmission time
+    this.#transmissionTimes.push({ bytes, duration, timestamp: Date.now() });
+    
+    // Keep only recent transmissions (last 20)
+    if (this.#transmissionTimes.length > 20) {
+      this.#transmissionTimes = this.#transmissionTimes.slice(-20);
+    }
+
+    // Update network metrics
+    if (success) {
+      this.#networkMetrics.successCount++;
+    } else {
+      this.#networkMetrics.failureCount++;
+    }
+    this.#networkMetrics.totalBytes += bytes;
+    this.#networkMetrics.totalTime += duration;
+  }
+
+  /**
    * Sends an oversized batch by splitting it into smaller chunks.
    *
    * @private
@@ -2115,7 +2465,7 @@ class RemoteLogger {
         if (chunkValidation.valid) {
           const result = await this.#circuitBreaker.execute(async () => {
             return await this.#retryWithBackoff(
-              () => this.#sendHttpRequest(chunk),
+              () => this.#sendHttpRequest(chunk, null),
               this.#retryAttempts
             );
           });
@@ -2401,7 +2751,7 @@ class RemoteLogger {
   /**
    * Gets batch metrics for performance monitoring
    *
-   * @returns {Object} Batch metrics including size, success rate, etc.
+   * @returns {object} Batch metrics including size, success rate, etc.
    */
   getBatchMetrics() {
     return {
@@ -2421,7 +2771,7 @@ class RemoteLogger {
    * Adds a log to the appropriate priority buffer
    *
    * @private
-   * @param {Object} log - The log entry to buffer
+   * @param {object} log - The log entry to buffer
    */
   #addToPriorityBuffer(log) {
     const level = log.level || 'info';

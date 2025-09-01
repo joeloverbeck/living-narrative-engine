@@ -26,7 +26,20 @@ export const DEFAULT_CONFIG = {
     circuitBreakerThreshold: 5,
     circuitBreakerTimeout: 60000,
     requestTimeout: 5000,
-    compression: false,
+    compression: {
+      enabled: false,
+      threshold: 1024, // Minimum payload size in bytes to trigger compression
+      algorithm: 'gzip', // Compression algorithm to use
+      level: 6, // Compression level (1-9, where 9 is maximum compression)
+      maxPayloadSize: 5242880, // 5MB - maximum uncompressed payload size
+    },
+    batching: {
+      adaptive: true, // Enable adaptive batch sizing
+      minBatchSize: 10, // Minimum batch size
+      maxBatchSize: 500, // Maximum batch size
+      targetLatency: 100, // Target latency in ms for optimization
+      adjustmentFactor: 0.1, // Rate of batch size adjustment (0.0-1.0)
+    },
   },
   categories: {
     engine: { enabled: true, level: 'debug' },

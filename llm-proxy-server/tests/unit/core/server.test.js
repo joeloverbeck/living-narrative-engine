@@ -90,12 +90,24 @@ describe('Server - Comprehensive Tests', () => {
       }),
     };
 
+    // Create a mock router for express.Router()
+    const mockRouter = {
+      get: jest.fn(),
+      post: jest.fn(),
+      use: jest.fn(),
+      put: jest.fn(),
+      delete: jest.fn(),
+      patch: jest.fn(),
+    };
+
     expressMock = jest.fn(() => app);
     expressMock.json = jest.fn(() => 'json-mw');
+    expressMock.Router = jest.fn(() => mockRouter);
     jest.doMock('express', () => ({
       __esModule: true,
       default: expressMock,
       json: expressMock.json,
+      Router: expressMock.Router,
     }));
 
     jest.doMock('cors', () => ({
@@ -247,6 +259,11 @@ describe('Server - Comprehensive Tests', () => {
     jest.doMock('../../../src/routes/debugRoutes.js', () => ({
       __esModule: true,
       default: 'debug-routes-mock',
+    }));
+
+    jest.doMock('../../../src/routes/healthRoutes.js', () => ({
+      __esModule: true,
+      default: 'health-routes-mock',
     }));
 
     // Mock setTimeout for graceful shutdown to prevent actual 10s timeout
@@ -668,9 +685,15 @@ describe('Server - Comprehensive Tests', () => {
 
       const expressMockUndefined = jest.fn(() => appUndefined);
       expressMockUndefined.json = jest.fn(() => 'json-mw');
+      expressMockUndefined.Router = jest.fn(() => ({
+        get: jest.fn(),
+        post: jest.fn(),
+        use: jest.fn(),
+      }));
       jest.doMock('express', () => ({
         __esModule: true,
         default: expressMockUndefined,
+        Router: expressMockUndefined.Router,
       }));
 
       // Re-import the server module
@@ -709,9 +732,15 @@ describe('Server - Comprehensive Tests', () => {
 
       const expressMockSlow = jest.fn(() => appSlow);
       expressMockSlow.json = jest.fn(() => 'json-mw');
+      expressMockSlow.Router = jest.fn(() => ({
+        get: jest.fn(),
+        post: jest.fn(),
+        use: jest.fn(),
+      }));
       jest.doMock('express', () => ({
         __esModule: true,
         default: expressMockSlow,
+        Router: expressMockSlow.Router,
       }));
 
       // Mock setTimeout to trigger immediately for testing
