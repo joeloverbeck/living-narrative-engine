@@ -522,16 +522,23 @@ describe('RemoteLogger Integration Tests', () => {
         CircuitBreakerState.OPEN
       );
 
+      // Clear mock calls before testing circuit open behavior
+      mockConsoleLogger.warn.mockClear();
+
       // Send another log - should not make additional debug log requests
       const debugRequestCountBefore = mockServer.getDebugLogRequestCount();
+
+      // Ensure circuit breaker is actually open before sending the next log
+      expect(remoteLogger.getCircuitBreakerState()).toBe(
+        CircuitBreakerState.OPEN
+      );
 
       remoteLogger.error('Error 4 - circuit open');
       await jest.runAllTimersAsync();
 
-      // No additional debug log requests should be made
-      expect(mockServer.getDebugLogRequestCount()).toBe(
-        debugRequestCountBefore
-      );
+      // No additional debug log requests should be made when circuit is open
+      const debugRequestCountAfter = mockServer.getDebugLogRequestCount();
+      expect(debugRequestCountAfter).toBe(debugRequestCountBefore);
 
       // Should fall back to console immediately
       expect(mockConsoleLogger.warn).toHaveBeenCalledWith(

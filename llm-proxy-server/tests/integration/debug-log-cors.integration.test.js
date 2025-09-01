@@ -15,10 +15,12 @@ import {
 import request from 'supertest';
 import express from 'express';
 import cors from 'cors';
-import { getAppConfigService } from '../../src/config/appConfig.js';
+import compression from 'compression';
+import { getAppConfigService, resetAppConfigServiceInstance } from '../../src/config/appConfig.js';
 import { ConsoleLogger } from '../../src/consoleLogger.js';
 import debugRoutes from '../../src/routes/debugRoutes.js';
 import { createSecurityMiddleware } from '../../src/middleware/security.js';
+import { createApiRateLimiter } from '../../src/middleware/rateLimiting.js';
 import {
   createTimeoutMiddleware,
   createSizeLimitConfig,
@@ -34,6 +36,9 @@ describe('Debug Log CORS Integration Tests', () => {
     // Store original environment
     originalEnv = { ...process.env };
 
+    // Reset the AppConfigService singleton to ensure clean state
+    resetAppConfigServiceInstance();
+
     // Set up CORS configuration to include both localhost and 127.0.0.1 on both ports
     process.env.PROXY_ALLOWED_ORIGIN =
       'http://localhost:8080,http://127.0.0.1:8080,http://localhost:8081,http://127.0.0.1:8081';
@@ -45,13 +50,29 @@ describe('Debug Log CORS Integration Tests', () => {
     jest.spyOn(mockLogger, 'warn').mockImplementation(() => {});
     jest.spyOn(mockLogger, 'error').mockImplementation(() => {});
 
-    // Create Express application with proper CORS configuration
+    // Create Express application with middleware stack matching production server.js
     app = express();
 
-    // Apply security middleware
+    // Apply security middleware (matches server.js:86)
     app.use(createSecurityMiddleware());
 
-    // Get app config and configure CORS
+    // Apply compression middleware (matches server.js:98)
+    app.use(compression());
+
+    // Apply general rate limiting (matches server.js:101)
+    app.use(createApiRateLimiter());
+
+    // Apply timeout middleware with conditional logic (matches server.js:105-112)
+    app.use((req, res, next) => {
+      // Skip timeout middleware for LLM request route
+      if (req.path === '/api/llm-request') {
+        return next();
+      }
+      // Apply 30 second timeout for all other routes
+      return createTimeoutMiddleware(30000)(req, res, next);
+    });
+
+    // CORS Configuration matching server.js:114-150
     const appConfigService = getAppConfigService(mockLogger);
     const allowedOriginsArray = appConfigService.getAllowedOriginsArray();
 
@@ -64,9 +85,9 @@ describe('Debug Log CORS Integration Tests', () => {
       app.use(cors(corsOptions));
     }
 
-    // Apply other middleware
-    app.use(createTimeoutMiddleware(30000));
-    app.use(express.json(createSizeLimitConfig()));
+    // Middleware to parse JSON bodies with size limits (matches server.js:152-154)
+    const sizeLimits = createSizeLimitConfig();
+    app.use(express.json(sizeLimits.json));
 
     // Register debug routes
     app.use('/api/debug-log', debugRoutes);
@@ -78,6 +99,9 @@ describe('Debug Log CORS Integration Tests', () => {
   afterEach(async () => {
     // Restore original environment
     process.env = originalEnv;
+
+    // Reset the AppConfigService singleton for clean state in next test
+    resetAppConfigServiceInstance();
 
     if (server) {
       await new Promise((resolve) => {
@@ -335,6 +359,9 @@ describe('Debug Log CORS Integration Tests', () => {
     test('should handle empty PROXY_ALLOWED_ORIGIN gracefully', async () => {
       // Clear the CORS configuration
       process.env.PROXY_ALLOWED_ORIGIN = '';
+
+      // Reset singleton to pick up the new environment
+      resetAppConfigServiceInstance();
 
       // Create a new app without CORS configuration
       const noCorsApp = express();

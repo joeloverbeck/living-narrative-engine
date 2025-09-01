@@ -52,16 +52,6 @@ beforeEach(() => {
 
   expressMock = jest.fn(() => app);
   expressMock.json = jest.fn(() => 'json-mw');
-  
-  // Create mock router with all methods used by route modules
-  const mockRouter = {
-    get: jest.fn(),
-    post: jest.fn(),
-    use: jest.fn(),
-    delete: jest.fn(),
-    put: jest.fn(),
-    patch: jest.fn(),
-  };
   expressMock.Router = jest.fn(() => mockRouter);
   
   jest.doMock('express', () => ({
@@ -145,6 +135,12 @@ beforeEach(() => {
     LlmRequestService: jest.fn(() => ({})),
   }));
 
+  // Mock proxyApiUtils with RetryManager
+  jest.doMock('../src/utils/proxyApiUtils.js', () => ({
+    __esModule: true,
+    RetryManager: jest.fn(() => ({})),
+  }));
+
   jest.doMock('../src/handlers/llmRequestController.js', () => ({
     __esModule: true,
     LlmRequestController: jest.fn(() => ({})),
@@ -215,6 +211,36 @@ beforeEach(() => {
   jest.doMock('compression', () => ({
     __esModule: true,
     default: jest.fn(() => 'compression-mw'),
+  }));
+
+  // Mock healthCheck middleware
+  jest.doMock('../src/middleware/healthCheck.js', () => ({
+    __esModule: true,
+    createLivenessCheck: jest.fn(() => 'liveness-check-mw'),
+    createReadinessCheck: jest.fn(() => 'readiness-check-mw'),
+  }));
+
+  // Mock MetricsService
+  const MetricsService = jest.fn(() => ({
+    isEnabled: jest.fn(() => false),
+    getStats: jest.fn(() => ({
+      totalMetrics: 0,
+      customMetrics: 0,
+      defaultMetrics: 0,
+    })),
+    getMetrics: jest.fn(),
+    clear: jest.fn(),
+  }));
+  jest.doMock('../src/services/metricsService.js', () => ({
+    __esModule: true,
+    default: MetricsService,
+  }));
+
+  // Mock metrics middleware
+  jest.doMock('../src/middleware/metrics.js', () => ({
+    __esModule: true,
+    createMetricsMiddleware: jest.fn(() => 'metrics-mw'),
+    createLlmMetricsMiddleware: jest.fn(() => 'llm-metrics-mw'),
   }));
 
   // Mock the problematic route modules that use import.meta.url

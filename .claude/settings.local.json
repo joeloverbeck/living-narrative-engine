@@ -123,11 +123,21 @@
       "Bash(NODE_ENV=test npx jest tests/unit/logging/remoteLogger.test.js --testNamePattern=\"Compression\" --no-coverage --verbose)",
       "Bash(NODE_ENV=test npm run test:integration tests/integration/logging/compressionBehavior.integration.test.js --silent)",
       "Bash(NODE_ENV=test npx jest tests/integration/logging/compressionBehavior.integration.test.js --testNamePattern=\"should compress large payloads\" --no-coverage --verbose)",
-      "Bash(NODE_ENV=test npx jest tests/unit/logging/remoteLogger.test.js --testNamePattern=\"Compression\" --no-coverage --silent)"
+      "Bash(NODE_ENV=test npx jest tests/unit/logging/remoteLogger.test.js --testNamePattern=\"Compression\" --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/nodes/arrayIteration.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/nodes/arrayIteration.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --no-coverage --silent)",
-      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --testNamePattern=\"edge\\[\\] with non-array field returns empty set\" --no-coverage --silent)"
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --testNamePattern=\"edge\\[\\] with non-array field returns empty set\" --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/logging/remoteLoggerNetworkErrorClassification.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npm run test:unit tests/unit/logging/remoteLoggerNetworkErrorClassification.test.js)",
+      "Bash(NODE_ENV=test npx jest tests/integration/logging/logger-compatibility.test.js --testNamePattern=\"should batch logs correctly\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/logging/remoteLogger.integration.test.js --testNamePattern=\"should open circuit after repeated failures\" --no-coverage)",
+      "Bash(NODE_ENV=test npm run test:integration)",
+      "Bash(NODE_ENV=test npx jest tests/integration/logging/compressionBehavior.integration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npm run test:integration -- tests/integration/logging/dynamicBatchingStrategy.integration.test.js --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/logging/dynamicBatchingStrategy.integration.test.js --testNamePattern=\"verifies that dynamic batching works correctly\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/logging/dynamicBatchingStrategy.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npm run test:integration -- --testPathPattern=\"logging\" --silent)"
     ],
     "deny": [],
     "ask": []

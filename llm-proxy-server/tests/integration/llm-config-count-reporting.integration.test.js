@@ -16,6 +16,9 @@ describe('LLM Configuration Count Reporting Integration', () => {
   let appConfigService;
 
   beforeEach(() => {
+    // Set the environment variable to point to the actual config file location
+    process.env.LLM_CONFIG_PATH = '../config/llm-configs.json';
+    
     logger = new ConsoleLogger();
     fileSystemReader = new NodeFileSystemReader();
     appConfigService = getAppConfigService(logger);
@@ -30,6 +33,8 @@ describe('LLM Configuration Count Reporting Integration', () => {
   afterEach(() => {
     // Reset any singleton state
     jest.clearAllMocks();
+    // Clean up environment variable
+    delete process.env.LLM_CONFIG_PATH;
   });
 
   it('should correctly count LLM configurations from loaded config object', async () => {

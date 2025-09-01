@@ -2187,14 +2187,15 @@ class RemoteLogger {
           selectedLogs.push(log);
           currentPayloadSize += logSize;
 
-          // Hard safety limit to prevent enormous batches
-          if (selectedLogs.length >= this.#maxServerBatchSize) {
+          // Hard safety limit to prevent enormous payloads (not count)
+          // maxServerBatchSize is in KB, so convert to bytes for comparison
+          if (currentPayloadSize >= this.#maxServerBatchSize * 1024) {
             break;
           }
         }
 
         // Break if we've reached our limits
-        if (selectedLogs.length >= maxBatchCount || selectedLogs.length >= this.#maxServerBatchSize) {
+        if (selectedLogs.length >= maxBatchCount || currentPayloadSize >= this.#maxServerBatchSize * 1024) {
           break;
         }
       }
@@ -2215,8 +2216,9 @@ class RemoteLogger {
         selectedLogs.push(log);
         currentPayloadSize += logSize;
 
-        // Hard safety limit to prevent enormous batches
-        if (selectedLogs.length >= this.#maxServerBatchSize) {
+        // Hard safety limit to prevent enormous payloads (not count)
+        // maxServerBatchSize is in KB, so convert to bytes for comparison
+        if (currentPayloadSize >= this.#maxServerBatchSize * 1024) {
           break;
         }
       }
@@ -2700,6 +2702,7 @@ class RemoteLogger {
       circuitBreaker: this.#circuitBreaker.getStats(),
       categoryDetector: this.#categoryDetector.getStats(),
       metadataEnricher: this.#metadataEnricher.getConfig(),
+      adaptiveBatchSize: this.#adaptiveBatchSize,
       configuration: {
         batchSize: this.#batchSize,
         flushInterval: this.#flushInterval,

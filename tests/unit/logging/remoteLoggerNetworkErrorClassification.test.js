@@ -101,7 +101,6 @@ describe('RemoteLogger - Network Error Classification', () => {
 
       // Log message to trigger a batch (use info instead of error to avoid immediate flush)
       remoteLogger.info('Test info message');
-      remoteLogger.warn('Test warning message');
 
       // Force flush to trigger the network call immediately
       await remoteLogger.flush();
