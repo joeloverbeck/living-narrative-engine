@@ -117,7 +117,11 @@
       "Bash(NODE_ENV=test npx jest --config jest.config.unit.js --env=jsdom tests/unit/logging/criticalLogNotifier.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest --config jest.config.integration.js --env=jsdom tests/integration/logging/criticalLogNotification.integration.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest --config jest.config.unit.js --env=jsdom tests/unit/logging/logExporter.test.js --no-coverage)",
-      "Bash(NODE_ENV=test npx jest --config jest.config.integration.js --env=jsdom tests/integration/logging/criticalLogNotification.integration.test.js --no-coverage --silent)"
+      "Bash(NODE_ENV=test npx jest --config jest.config.integration.js --env=jsdom tests/integration/logging/criticalLogNotification.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/nodes/arrayIteration.test.js --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/nodes/arrayIteration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --testNamePattern=\"edge\\[\\] with non-array field returns empty set\" --no-coverage --silent)"
     ],
     "deny": [],
     "ask": []

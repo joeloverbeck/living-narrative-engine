@@ -84,18 +84,22 @@ describe('Server - Comprehensive Tests', () => {
       use: jest.fn(),
       get: jest.fn(),
       post: jest.fn(),
-      listen: jest.fn((p, cb) => {
-        if (cb) cb();
+      listen: jest.fn((_port, _bindAddress, _cb) => {
+        // Handle both 2-arg and 3-arg forms of listen
+        // Note: callback is not used here - loadServer will handle it
+        // Don't call the callback immediately - let loadServer handle it
         return serverInstance;
       }),
     };
 
     expressMock = jest.fn(() => app);
     expressMock.json = jest.fn(() => 'json-mw');
+    expressMock.Router = jest.fn(() => 'router-instance');
     jest.doMock('express', () => ({
       __esModule: true,
       default: expressMock,
       json: expressMock.json,
+      Router: expressMock.Router,
     }));
 
     jest.doMock('cors', () => ({
@@ -238,6 +242,72 @@ describe('Server - Comprehensive Tests', () => {
       })),
     }));
 
+    // Mock health check middleware
+    jest.doMock('../../../src/middleware/healthCheck.js', () => ({
+      __esModule: true,
+      createLivenessCheck: jest.fn(() => 'liveness-check-mw'),
+      createReadinessCheck: jest.fn(() => 'readiness-check-mw'),
+    }));
+
+    // Mock metrics middleware
+    jest.doMock('../../../src/middleware/metrics.js', () => ({
+      __esModule: true,
+      createMetricsMiddleware: jest.fn(() => 'metrics-mw'),
+      createLlmMetricsMiddleware: jest.fn(() => 'llm-metrics-mw'),
+    }));
+
+    // Mock MetricsService
+    const metricsServiceInstance = {
+      isEnabled: jest.fn(() => false),
+      getMetrics: jest.fn(() => Promise.resolve('metrics-data')),
+      getStats: jest.fn(() => ({
+        totalMetrics: 0,
+        customMetrics: 0,
+        defaultMetrics: 0,
+      })),
+      clear: jest.fn(),
+    };
+    const MetricsService = jest.fn(() => metricsServiceInstance);
+    jest.doMock('../../../src/services/metricsService.js', () => ({
+      __esModule: true,
+      default: MetricsService,
+    }));
+
+    // Mock LogStorageService
+    const logStorageServiceInstance = {
+      shutdown: jest.fn(() => Promise.resolve()),
+    };
+    const LogStorageService = jest.fn(() => logStorageServiceInstance);
+    jest.doMock('../../../src/services/logStorageService.js', () => ({
+      __esModule: true,
+      default: LogStorageService,
+    }));
+
+    // Mock LogMaintenanceScheduler
+    const logMaintenanceSchedulerInstance = {
+      start: jest.fn(() => Promise.resolve()),
+      stop: jest.fn(() => Promise.resolve()),
+      getStatus: jest.fn(() => ({
+        isRunning: false,
+        isEnabled: false,
+        nextRotationCheck: null,
+        nextCleanup: null,
+      })),
+    };
+    const LogMaintenanceScheduler = jest.fn(
+      () => logMaintenanceSchedulerInstance
+    );
+    jest.doMock('../../../src/services/logMaintenanceScheduler.js', () => ({
+      __esModule: true,
+      default: LogMaintenanceScheduler,
+    }));
+
+    // Mock RetryManager
+    jest.doMock('../../../src/utils/proxyApiUtils.js', () => ({
+      __esModule: true,
+      RetryManager: jest.fn(),
+    }));
+
     // Mock the problematic route modules that use import.meta.url
     jest.doMock('../../../src/routes/traceRoutes.js', () => ({
       __esModule: true,
@@ -247,6 +317,17 @@ describe('Server - Comprehensive Tests', () => {
     jest.doMock('../../../src/routes/debugRoutes.js', () => ({
       __esModule: true,
       default: 'debug-routes-mock',
+    }));
+
+    // Mock health routes - create a mock router object to handle express.Router() call
+    const mockHealthRouter = {
+      get: jest.fn(),
+      post: jest.fn(),
+      use: jest.fn(),
+    };
+    jest.doMock('../../../src/routes/healthRoutes.js', () => ({
+      __esModule: true,
+      default: mockHealthRouter,
     }));
 
     // Mock setTimeout for graceful shutdown to prevent actual 10s timeout
@@ -287,6 +368,16 @@ describe('Server - Comprehensive Tests', () => {
     const loggerCtor = (await import('../../../src/consoleLogger.js'))
       .ConsoleLogger;
     consoleLoggerInstance = loggerCtor.mock.results[0].value;
+    
+    // Wait for app.listen to be called and trigger its callback
+    if (app.listen.mock.calls.length > 0) {
+      const listenCallback = app.listen.mock.calls[0][2]; // Third argument is the callback
+      if (listenCallback && typeof listenCallback === 'function') {
+        // Execute the listen callback to trigger startup summary logs
+        listenCallback();
+      }
+    }
+    
     rootHandler = app.get.mock.calls.find((c) => c[0] === '/')[1];
     errorHandler = app.use.mock.calls.find(
       (c) => typeof c[0] === 'function' && c[0].length === 4
@@ -374,11 +465,8 @@ describe('Server - Comprehensive Tests', () => {
         apiKeyCacheTtl: 900000,
       });
 
-      // Import server to trigger startup
-      await import('../../../src/core/server.js');
-
-      // Wait for async operations to complete
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      // Use loadServer to trigger startup and listen callback
+      await loadServer();
 
       // Verify cache enabled log message
       expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
@@ -390,11 +478,8 @@ describe('Server - Comprehensive Tests', () => {
       // Configure AppConfigService to return cache disabled (default setup)
       appConfigServiceMock.isCacheEnabled.mockReturnValue(false);
 
-      // Import server to trigger startup
-      await import('../../../src/core/server.js');
-
-      // Wait for async operations to complete
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      // Use loadServer to trigger startup and listen callback
+      await loadServer();
 
       // Verify cache disabled log message
       expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
@@ -416,11 +501,8 @@ describe('Server - Comprehensive Tests', () => {
         maxIdleTime: 180000,
       });
 
-      // Import server to trigger startup
-      await import('../../../src/core/server.js');
-
-      // Wait for async operations to complete
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      // Use loadServer to trigger startup and listen callback
+      await loadServer();
 
       // Verify HTTP agent enabled log message
       expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
@@ -432,11 +514,8 @@ describe('Server - Comprehensive Tests', () => {
       // Configure AppConfigService to return HTTP agent disabled (default setup)
       appConfigServiceMock.isHttpAgentEnabled.mockReturnValue(false);
 
-      // Import server to trigger startup
-      await import('../../../src/core/server.js');
-
-      // Wait for async operations to complete
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      // Use loadServer to trigger startup and listen callback
+      await loadServer();
 
       // Verify HTTP agent disabled log message
       expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
@@ -465,11 +544,8 @@ describe('Server - Comprehensive Tests', () => {
         maxIdleTime: 60000,
       });
 
-      // Import server to trigger startup
-      await import('../../../src/core/server.js');
-
-      // Wait for async operations to complete
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      // Use loadServer to trigger startup and listen callback
+      await loadServer();
 
       // Verify both configuration log messages
       expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
@@ -482,10 +558,7 @@ describe('Server - Comprehensive Tests', () => {
 
     test('logs both cache and HTTP agent disabled configurations', async () => {
       // Both are disabled by default setup, just verify the logs
-      await import('../../../src/core/server.js');
-
-      // Wait for async operations to complete
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await loadServer();
 
       // Verify both disabled configuration log messages
       expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
@@ -506,11 +579,8 @@ describe('Server - Comprehensive Tests', () => {
         apiKeyCacheTtl: 3600000, // 1 hour
       });
 
-      // Import server to trigger startup
-      await import('../../../src/core/server.js');
-
-      // Wait for async operations to complete
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      // Use loadServer to trigger startup and listen callback
+      await loadServer();
 
       // Verify specific cache configuration values are logged
       expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
@@ -532,11 +602,8 @@ describe('Server - Comprehensive Tests', () => {
         maxIdleTime: 600000,
       });
 
-      // Import server to trigger startup
-      await import('../../../src/core/server.js');
-
-      // Wait for async operations to complete
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      // Use loadServer to trigger startup and listen callback
+      await loadServer();
 
       // Verify specific HTTP agent configuration values are logged
       expect(consoleLoggerInstance.info).toHaveBeenCalledWith(
@@ -701,23 +768,31 @@ describe('Server - Comprehensive Tests', () => {
         use: jest.fn(),
         get: jest.fn(),
         post: jest.fn(),
-        listen: jest.fn((port, callback) => {
-          if (callback) callback();
+        listen: jest.fn((port, bindAddress, cb) => {
+          // Handle both 2-arg and 3-arg forms of listen
+          if (typeof bindAddress === 'function') {
+            // 2-arg form: listen(port, callback)
+            cb = bindAddress;
+          }
+          if (cb) cb();
           return slowServerInstance;
         }),
       };
 
       const expressMockSlow = jest.fn(() => appSlow);
       expressMockSlow.json = jest.fn(() => 'json-mw');
+      expressMockSlow.Router = jest.fn(() => 'router-instance');
       jest.doMock('express', () => ({
         __esModule: true,
         default: expressMockSlow,
+        json: expressMockSlow.json,
+        Router: expressMockSlow.Router,
       }));
 
       // Mock setTimeout to trigger immediately for testing
       global.setTimeout = jest.fn((fn, delay) => {
-        if (delay === 10000) {
-          // This is our force shutdown timeout - execute immediately
+        if (delay === 100) {
+          // This is our force shutdown timeout in test environment - execute immediately
           fn();
         }
         return originalSetTimeout(fn, 0);

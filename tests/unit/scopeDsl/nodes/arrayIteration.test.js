@@ -1,10 +1,12 @@
 import createArrayIterationResolver from '../../../../src/scopeDsl/nodes/arrayIterationResolver.js';
 import { createTestEntity } from '../../../common/mockFactories/entities.js';
+import { ErrorCodes } from '../../../../src/scopeDsl/constants/errorCodes.js';
 
 describe('ArrayIterationResolver', () => {
   let resolver;
   let dispatcher;
   let trace;
+  let errorHandler;
 
   beforeEach(() => {
     // Mock dispatcher
@@ -15,6 +17,12 @@ describe('ArrayIterationResolver', () => {
     // Mock trace
     trace = {
       addLog: jest.fn(),
+    };
+    
+    // Mock error handler
+    errorHandler = {
+      handleError: jest.fn(),
+      getErrorBuffer: jest.fn(() => []),
     };
 
     // Create resolver - no dependencies needed
@@ -402,6 +410,220 @@ describe('ArrayIterationResolver', () => {
         // Should filter out null and undefined values
         expect(result).toEqual(new Set(['jacket1', 'pants1']));
       });
+    });
+  });
+
+  describe('error handling', () => {
+    let resolverWithErrorHandler;
+
+    beforeEach(() => {
+      resolverWithErrorHandler = createArrayIterationResolver({ errorHandler });
+    });
+
+    it('should handle error handler in constructor', () => {
+      // Should not throw when creating with error handler
+      expect(() => createArrayIterationResolver({ errorHandler })).not.toThrow();
+    });
+
+    it('should work without error handler (backward compatibility)', () => {
+      const resolverNoHandler = createArrayIterationResolver();
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      dispatcher.resolve.mockReturnValue(new Set([['item1', 'item2']]));
+
+      expect(() => resolverNoHandler.resolve(node, ctx)).not.toThrow();
+    });
+
+    it('should report error for arrays exceeding MAX_ARRAY_SIZE', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      // Create a large array (10001 items)
+      const largeArray = Array.from({ length: 10001 }, (_, i) => `item${i}`);
+      dispatcher.resolve.mockReturnValue(new Set([largeArray]));
+
+      const result = resolverWithErrorHandler.resolve(node, ctx);
+
+      // Should still process the array
+      expect(result.size).toBe(10001);
+      
+      // Should report the error
+      expect(errorHandler.handleError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Array size 10001 exceeds limit 10000',
+        }),
+        expect.objectContaining({ arraySize: 10001 }),
+        'ArrayIterationResolver',
+        ErrorCodes.MEMORY_LIMIT
+      );
+    });
+
+    it('should report error for non-array values', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step', field: 'someField' }, // Not a special case
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      // Return non-array values
+      dispatcher.resolve.mockReturnValue(new Set(['not-an-array', 123, { obj: true }]));
+
+      const result = resolverWithErrorHandler.resolve(node, ctx);
+
+      // Result should be empty for non-arrays
+      expect(result.size).toBe(0);
+      
+      // Should report errors for each non-array value
+      expect(errorHandler.handleError).toHaveBeenCalledTimes(3);
+      expect(errorHandler.handleError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Expected array but got string',
+        }),
+        expect.objectContaining({ actualType: 'string', value: 'not-an-array' }),
+        'ArrayIterationResolver',
+        ErrorCodes.DATA_TYPE_MISMATCH
+      );
+    });
+
+    it('should not report error for special Source node cases', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Source' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      // Return non-array values from Source node
+      dispatcher.resolve.mockReturnValue(new Set(['entity1', 'entity2']));
+
+      const result = resolverWithErrorHandler.resolve(node, ctx);
+
+      // Should pass through entity IDs
+      expect(result).toEqual(new Set(['entity1', 'entity2']));
+      
+      // Should not report errors for Source node pass-through
+      expect(errorHandler.handleError).not.toHaveBeenCalled();
+    });
+
+    it('should handle errors in clothing object processing', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      // Create a clothing access object that will cause an error in priority calculation
+      // by making Object.entries() throw
+      const badClothingAccess = {
+        __isClothingAccessObject: true,
+        get equipped() {
+          throw new Error('Cannot access equipped property');
+        },
+        mode: 'topmost',
+      };
+
+      dispatcher.resolve.mockReturnValue(new Set([badClothingAccess]));
+
+      const result = resolverWithErrorHandler.resolve(node, ctx);
+
+      // Should handle the error and continue
+      expect(errorHandler.handleError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Cannot access equipped property',
+        }),
+        expect.objectContaining({ clothingAccess: badClothingAccess }),
+        'ArrayIterationResolver',
+        ErrorCodes.ARRAY_ITERATION_FAILED
+      );
+      
+      // Result should be empty since the clothing object failed
+      expect(result.size).toBe(0);
+    });
+
+    it('should handle null and undefined in arrays without errors', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      dispatcher.resolve.mockReturnValue(
+        new Set([
+          ['item1', null, 'item2', undefined, 'item3'],
+        ])
+      );
+
+      const result = resolverWithErrorHandler.resolve(node, ctx);
+
+      // Should filter out null and undefined
+      expect(result).toEqual(new Set(['item1', 'item2', 'item3']));
+      
+      // Should not report errors for null/undefined in arrays
+      expect(errorHandler.handleError).not.toHaveBeenCalled();
+    });
+
+    it('should handle empty arrays without errors', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      dispatcher.resolve.mockReturnValue(new Set([[], [], []]));
+
+      const result = resolverWithErrorHandler.resolve(node, ctx);
+
+      expect(result).toEqual(new Set());
+      expect(errorHandler.handleError).not.toHaveBeenCalled();
+    });
+
+    it('should handle mixed type arrays appropriately', () => {
+      const node = {
+        type: 'ArrayIterationStep',
+        parent: { type: 'Step' },
+      };
+      const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
+      const ctx = { dispatcher, trace, actorEntity };
+
+      // Mix of arrays and non-arrays
+      dispatcher.resolve.mockReturnValue(
+        new Set([
+          ['item1', 'item2'],
+          'not-an-array',
+          ['item3'],
+          null,
+          undefined,
+        ])
+      );
+
+      const result = resolverWithErrorHandler.resolve(node, ctx);
+
+      // Should process arrays and skip non-arrays
+      expect(result).toEqual(new Set(['item1', 'item2', 'item3']));
+      
+      // Should report error only for the non-null, non-undefined, non-array value
+      expect(errorHandler.handleError).toHaveBeenCalledTimes(1);
+      expect(errorHandler.handleError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Expected array but got string',
+        }),
+        expect.objectContaining({ actualType: 'string' }),
+        'ArrayIterationResolver',
+        ErrorCodes.DATA_TYPE_MISMATCH
+      );
     });
   });
 });
