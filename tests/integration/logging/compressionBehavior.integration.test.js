@@ -12,7 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import RemoteLogger from '../../../src/logging/remoteLogger.js';
-import { gzip, ungzip } from 'pako';
+import { ungzip } from 'pako';
 
 describe('RemoteLogger Compression Integration', () => {
   let remoteLogger;
@@ -60,6 +60,7 @@ describe('RemoteLogger Compression Integration', () => {
           flushInterval: 5000,
           initialConnectionDelay: 0, // Disable for testing
           skipServerReadinessValidation: true, // Skip validation for testing
+          disableAdaptiveBatching: true, // Disable adaptive batching for predictable test behavior
           compression: {
             enabled: true,
             threshold: 500, // Low threshold for testing
@@ -155,7 +156,6 @@ describe('RemoteLogger Compression Integration', () => {
 
     it('should handle compression failures gracefully', async () => {
       // Mock pako to fail
-      const originalGzip = gzip;
       jest.spyOn(require('pako'), 'gzip').mockImplementation(() => {
         throw new Error('Compression failed');
       });
@@ -296,6 +296,7 @@ describe('RemoteLogger Compression Integration', () => {
           flushInterval: 5000,
           initialConnectionDelay: 0, // Disable for testing
           skipServerReadinessValidation: true, // Skip validation for testing
+          disableAdaptiveBatching: false, // Keep adaptive batching enabled for this test
           batching: {
             adaptive: true,
             minBatchSize: 10,
@@ -314,8 +315,6 @@ describe('RemoteLogger Compression Integration', () => {
         remoteLogger.info(`Fast network log ${i}`);
       }
       await remoteLogger.flush();
-
-      const stats1 = remoteLogger.getStats();
       
       // Second batch - slow network
       for (let i = 25; i < 50; i++) {
@@ -377,7 +376,7 @@ describe('RemoteLogger Compression Integration', () => {
         
         try {
           await remoteLogger.flush();
-        } catch (error) {
+        } catch {
           // Expected for failed transmission
         }
       }

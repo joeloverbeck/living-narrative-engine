@@ -367,6 +367,7 @@ describe('Logger Backward Compatibility', () => {
             flushInterval: 100,
             skipServerReadinessValidation: true, // Bypass health checks for testing
             initialConnectionDelay: 0, // Enable immediate flushing
+            disableAdaptiveBatching: true, // Disable adaptive batching for predictable test behavior
           },
           dependencies: {
             consoleLogger: consoleLogger,

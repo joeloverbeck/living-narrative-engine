@@ -1,5 +1,24 @@
 /**
  * @file Integration test to verify dynamic batching strategy implementation
+ * 
+ * IMPORTANT: Dynamic batching requires explicit configuration to work properly.
+ * The RemoteLogger will NOT enable adaptive batching unless the following config is provided:
+ * 
+ * ```javascript
+ * config: {
+ *   disableAdaptiveBatching: false, // Must be false or omitted
+ *   batching: { // REQUIRED for adaptive batching to work
+ *     adaptive: true,
+ *     minBatchSize: 10,
+ *     maxBatchSize: 500,
+ *     targetLatency: 100,
+ *     adjustmentFactor: 0.1,
+ *   }
+ * }
+ * ```
+ * 
+ * Without the `batching` configuration object, the adaptive batching feature
+ * will be disabled and batch sizes will remain at the base batchSize value.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -63,10 +82,17 @@ describe('Dynamic Batching Strategy Integration Test', () => {
         batchSize: 25, // Base batch size
         flushInterval: 1000, // Increased to allow buffer to accumulate for adaptive batching
         retryAttempts: 1, // Reduce retries for faster test
-        initialConnectionDelay: 50, // Reduce delay for faster test
+        initialConnectionDelay: 500, // Increased to prevent race condition with Jest timing
         disableAdaptiveBatching: false, // Explicitly enable adaptive batching for this test
         disablePriorityBuffering: true, // Keep FIFO order for predictable testing
         maxBufferSize: 1500, // Ensure buffer can hold enough logs for adaptive batching
+        batching: { // FIX: Add explicit batching configuration for adaptive batching
+          adaptive: true,
+          minBatchSize: 10,
+          maxBatchSize: 500,
+          targetLatency: 100,
+          adjustmentFactor: 0.1,
+        },
       }
     });
   });
@@ -125,25 +151,26 @@ describe('Dynamic Batching Strategy Integration Test', () => {
     console.log(`- Total HTTP requests: ${requestCount}`);
     console.log(`- Time to send 800 logs: ${totalTime}ms`);
 
+    // Verify dynamic batching is working
+    expect(batchesSent.length).toBeGreaterThan(0);
+
+    const batchSizes = batchesSent.map((b) => b.logCount);
+    const averageBatchSize = 800 / batchesSent.length;
+    const largeBatches = batchSizes.filter((size) => size > 100);
+    
+    // Test expectations for dynamic batching (moved outside conditionals)
+    const hasFewerBatches = batchesSent.length < 32; // Old system: 800 ÷ 25 = 32 batches
+    const hasLargerAverageSize = averageBatchSize > 50;
+    const hasLargeBatches = largeBatches.length > 0;
+
+    expect(hasFewerBatches).toBe(true);
+    expect(hasLargerAverageSize).toBe(true);
+    expect(hasLargeBatches).toBe(true);
+
     if (batchesSent.length > 0) {
-      const batchSizes = batchesSent.map((b) => b.logCount);
       console.log(`- Batch sizes: ${batchSizes.join(', ')}`);
-      console.log(`- Average batch size: ${800 / batchesSent.length}`);
+      console.log(`- Average batch size: ${averageBatchSize}`);
       console.log(`- Largest batch size: ${Math.max(...batchSizes)}`);
-
-      // Test expectations for dynamic batching
-      const averageBatchSize = 800 / batchesSent.length;
-
-      // Dynamic batching should produce:
-      // 1. Fewer total batches than the old system (< 32 batches for 800 logs)
-      expect(batchesSent.length).toBeLessThan(32); // Old system: 800 ÷ 25 = 32 batches
-
-      // 2. Larger average batch size (> 50 logs per batch)
-      expect(averageBatchSize).toBeGreaterThan(50);
-
-      // 3. At least one large batch (> 100 logs) during high volume
-      const largeBatches = batchSizes.filter((size) => size > 100);
-      expect(largeBatches.length).toBeGreaterThan(0);
 
       console.log(
         `✓ IMPROVEMENT: ${batchesSent.length} batches instead of 32 (${Math.round((1 - batchesSent.length / 32) * 100)}% reduction)`
@@ -180,13 +207,17 @@ describe('Dynamic Batching Strategy Integration Test', () => {
 
     console.log(`Low-volume results: ${batchesSent.length} batches sent`);
 
+    const hasBatches = batchesSent.length > 0;
+    expect(hasBatches).toBe(true);
+
+    // During low volume, should use normal batch sizes (moved outside conditional)
+    const averageBatchSize = batchesSent.length > 0 ? 50 / batchesSent.length : 0;
+    const usesNormalBatches = averageBatchSize < 100; // Should not use large batches
+    expect(usesNormalBatches).toBe(true);
+
     if (batchesSent.length > 0) {
       const batchSizes = batchesSent.map((b) => b.logCount);
       console.log(`- Batch sizes: ${batchSizes.join(', ')}`);
-
-      // During low volume, should use normal batch sizes (close to base 25)
-      const averageBatchSize = 50 / batchesSent.length;
-      expect(averageBatchSize).toBeLessThan(100); // Should not use large batches
     }
 
     // Test should complete successfully
@@ -204,10 +235,17 @@ describe('Dynamic Batching Strategy Integration Test', () => {
         batchSize: 25,
         flushInterval: 5000, // Long interval to prevent time-based flushing
         retryAttempts: 1,
-        initialConnectionDelay: 50,
+        initialConnectionDelay: 500, // Increased to prevent race condition with Jest timing
         disableAdaptiveBatching: false, // Dynamic batching ENABLED
         disablePriorityBuffering: true,
         skipServerReadinessValidation: true,
+        batching: { // FIX: Add explicit batching configuration
+          adaptive: true,
+          minBatchSize: 10,
+          maxBatchSize: 500,
+          targetLatency: 100,
+          adjustmentFactor: 0.1,
+        },
       }
     });
     
@@ -215,6 +253,11 @@ describe('Dynamic Batching Strategy Integration Test', () => {
     const startTime = Date.now();
     for (let i = 1; i <= 200; i++) {
       remoteLogger.info(`Rapid log ${i}`);
+      
+      // Add small delays every 50 logs to give adaptive batching time to adjust
+      if (i % 50 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
     }
     const loggingTime = Date.now() - startTime;
     const loggingRate = 200 / (loggingTime / 1000);
@@ -225,8 +268,8 @@ describe('Dynamic Batching Strategy Integration Test', () => {
     // Verify high-volume detection triggered
     expect(loggingRate).toBeGreaterThan(50);
     
-    // Wait for any async flush operations
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Wait longer for adaptive batching to process and potentially trigger more flushes
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // Check what happened
     const bufferSize = remoteLogger.getBufferSize();
@@ -250,19 +293,22 @@ describe('Dynamic Batching Strategy Integration Test', () => {
     expect(batchCalls.some(b => b.logCount > 25)).toBe(true);
     
     // Additional verification: dynamic batching should result in efficient batching
+    const totalLogsSent = batchCalls.reduce((sum, b) => sum + b.logCount, 0);
+    const averageBatchSize = batchCalls.length > 0 ? totalLogsSent / batchCalls.length : 0;
+    
     if (batchCalls.length > 0) {
-      const totalLogsSent = batchCalls.reduce((sum, b) => sum + b.logCount, 0);
-      const averageBatchSize = totalLogsSent / batchCalls.length;
-      
       console.log(`✓ VERIFICATION: Dynamic batching working correctly`);
       console.log(`- Average batch size: ${averageBatchSize.toFixed(1)} (> 25 base size)`);
       console.log(`- Total logs sent: ${totalLogsSent} out of 200 logged`);
       console.log(`- Efficiency: ${batchCalls.length} HTTP requests instead of ${Math.ceil(200/25)} (${Math.round((1 - batchCalls.length / Math.ceil(200/25)) * 100)}% reduction)`);
-      
-      // Verify efficiency improvements
-      expect(averageBatchSize).toBeGreaterThan(25);
-      expect(batchCalls.length).toBeLessThan(Math.ceil(200/25)); // Should be fewer requests than base batching
     }
+    
+    // Verify efficiency improvements (moved outside conditional)
+    const hasImprovedAverageSize = averageBatchSize > 25;
+    const hasFewerRequests = batchCalls.length < Math.ceil(200/25); // Should be fewer requests than base batching
+    
+    expect(hasImprovedAverageSize).toBe(true);
+    expect(hasFewerRequests).toBe(true);
   });
   
   it('should demonstrate the efficiency improvement', async () => {

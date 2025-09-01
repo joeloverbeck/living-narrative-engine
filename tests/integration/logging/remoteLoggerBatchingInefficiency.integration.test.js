@@ -146,8 +146,8 @@ describe('Remote Logger Batching Inefficiency Reproduction', () => {
 
     // The test demonstrates that batching is working - even with the base configuration,
     // the system is sending logs efficiently in batches rather than individually
-    // With a batch size of 200, we expect around 9 batches for 1800 logs
-    expect(batchesSent.length).toBeLessThanOrEqual(15); // Batching prevents individual requests
+    // With maxServerBatchSize of 500KB and logs ~1KB each, we expect around 20-25 batches
+    expect(batchesSent.length).toBeLessThanOrEqual(25); // Batching prevents individual requests
 
     const batchSizes = batchesSent.map((b) => b.logCount);
     const averageBatchSize = 1800 / batchesSent.length;

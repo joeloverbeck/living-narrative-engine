@@ -58,7 +58,7 @@ class MockAppConfigService {
         cleanupSchedule: '0 2 * * *',
         enableRetry: true,
         maxRetries: 3,
-        retryDelayMs: 1000,
+        retryDelayMs: 5000, // Match production default of 5 seconds
         ...debugConfig.scheduler,
       },
       ...debugConfig,
@@ -391,6 +391,10 @@ describe('LogMaintenanceScheduler - Scheduler Control', () => {
         rotationTaskActive: false,
         cleanupTaskActive: false,
         retryCounters: {},
+        nextRotationCheck: 'Scheduled but not running',
+        nextCleanup: 'Scheduled but not running',
+        rotationSchedule: '0 * * * *',
+        cleanupSchedule: '0 2 * * *',
       });
     });
 
@@ -407,6 +411,35 @@ describe('LogMaintenanceScheduler - Scheduler Control', () => {
         rotationTaskActive: true,
         cleanupTaskActive: true,
         retryCounters: {},
+        nextRotationCheck: 'Per schedule: 0 * * * *',
+        nextCleanup: 'Per schedule: 0 2 * * *',
+        rotationSchedule: '0 * * * *',
+        cleanupSchedule: '0 2 * * *',
+      });
+    });
+
+    it('should return correct status when scheduler is disabled', () => {
+      appConfigService.setDebugConfig({
+        scheduler: { enabled: false },
+      });
+      const disabledScheduler = new LogMaintenanceScheduler(
+        logger,
+        logStorageService,
+        appConfigService
+      );
+
+      const status = disabledScheduler.getStatus();
+
+      expect(status).toEqual({
+        isRunning: false,
+        isEnabled: false,
+        rotationTaskActive: false,
+        cleanupTaskActive: false,
+        retryCounters: {},
+        nextRotationCheck: 'Not scheduled',
+        nextCleanup: 'Not scheduled',
+        rotationSchedule: '0 * * * *',
+        cleanupSchedule: '0 2 * * *',
       });
     });
   });
@@ -421,6 +454,8 @@ describe('LogMaintenanceScheduler - Maintenance Operations', () => {
   let cleanupCallback;
 
   beforeEach(() => {
+    jest.useFakeTimers();
+    
     logger = new ConsoleLogger();
     logger.debug = jest.fn();
     logger.info = jest.fn();
@@ -455,6 +490,8 @@ describe('LogMaintenanceScheduler - Maintenance Operations', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.clearAllTimers();
+    jest.useRealTimers();
     logStorageService.reset();
   });
 
@@ -510,8 +547,12 @@ describe('LogMaintenanceScheduler - Maintenance Operations', () => {
         })
       );
 
-      // Wait for retry delay and execute retry
-      await new Promise((resolve) => setTimeout(resolve, 1100));
+      // Advance timers to trigger the retry
+      jest.advanceTimersByTime(5000);
+      
+      // Allow promises to resolve
+      await Promise.resolve();
+      
       expect(logStorageService.rotateLargeFiles).toHaveBeenCalledTimes(2);
     });
   });
@@ -569,7 +610,10 @@ describe('LogMaintenanceScheduler - Maintenance Operations', () => {
 
       // Execute cleanup twice (initial + 1 retry)
       await retryCleanupCallback();
-      await new Promise((resolve) => setTimeout(resolve, 1100));
+      
+      // Advance timers to trigger retry
+      jest.advanceTimersByTime(5000);
+      await Promise.resolve();
 
       // Execute again - should hit max retries
       await retryCleanupCallback();
