@@ -402,6 +402,41 @@ const gracefulShutdown = (signal) => {
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
+// Windows-specific handlers for better terminal compatibility
+process.on('SIGHUP', () => gracefulShutdown('SIGHUP'));
+
+// Handle beforeExit to ensure logs are flushed
+process.on('beforeExit', async (code) => {
+  if (logStorageService && logStorageService.flushLogs) {
+    try {
+      await logStorageService.flushLogs();
+      proxyLogger.debug('LLM Proxy Server: Flushed logs on beforeExit');
+    } catch (error) {
+      proxyLogger.error('LLM Proxy Server: Failed to flush logs on beforeExit', {
+        error: error.message
+      });
+    }
+  }
+});
+
+// Windows Terminal focus workaround - periodic forced flush
+if (process.platform === 'win32' && logStorageService) {
+  const windowsFlushInterval = setInterval(async () => {
+    if (logStorageService && logStorageService.flushLogs) {
+      try {
+        await logStorageService.flushLogs();
+      } catch (error) {
+        // Silent fail - this is just a backup mechanism
+      }
+    }
+  }, 2000); // Force flush every 2 seconds on Windows
+  
+  // Don't block process exit
+  if (windowsFlushInterval.unref) {
+    windowsFlushInterval.unref();
+  }
+}
+
 // Asynchronous IIFE for server startup
 (async () => {
   // LlmConfigService.initialize() is called here.

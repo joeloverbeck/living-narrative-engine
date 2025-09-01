@@ -407,7 +407,7 @@ class CriticalLogNotifier extends RendererBase {
   #initializeKeyboardManager() {
     this.#keyboardManager = new KeyboardShortcutsManager({
       logger: this.logger,
-      documentContext: this.documentContext.getDocument()
+      documentContext: this.documentContext.document
     });
     
     this.#keyboardManager.setActionCallback((action, event) => {

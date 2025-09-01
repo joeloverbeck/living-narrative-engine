@@ -80,6 +80,7 @@ export async function configureContainer(container, uiElements) {
     // --- Bootstrap logger with LoggerStrategy ---
     // The LoggerStrategy will handle mode detection and logger selection
     const appLogger = new LoggerStrategy({
+      mode: 'development', // Force development mode to ensure HybridLogger with CriticalLogNotifier support
       config: debugConfig || {}, // Pass the loaded debug config or empty object
       dependencies: {
         consoleLogger: new ConsoleLogger(LogLevel.INFO),

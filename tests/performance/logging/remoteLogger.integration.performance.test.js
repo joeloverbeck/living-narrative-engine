@@ -358,10 +358,13 @@ describe('RemoteLogger - Performance Integration Tests', () => {
         'enhanced-burst-logging'
       );
 
-      mockServer.mockResponse({
-        ok: true,
-        json: () => Promise.resolve({ success: true, processed: 100 }),
-      });
+      // Mock responses for 1000 logs with batchSize 100 = 10 batches needed
+      for (let i = 0; i < 10; i++) {
+        mockServer.mockResponse({
+          ok: true,
+          json: () => Promise.resolve({ success: true, processed: 100 }),
+        });
+      }
 
       remoteLogger = new RemoteLogger({
         config: {
@@ -370,6 +373,8 @@ describe('RemoteLogger - Performance Integration Tests', () => {
           enableCategoryCache: true,
           metadataLevel: 'standard',
           initialConnectionDelay: 0, // No delay for tests
+          disablePriorityBuffering: true, // Ensure FIFO behavior for predictable test assertions
+          disableAdaptiveBatching: true, // Disable dynamic batching for consistent performance testing
         },
         dependencies: { consoleLogger: mockConsoleLogger },
       });
@@ -408,6 +413,18 @@ describe('RemoteLogger - Performance Integration Tests', () => {
       expect(metrics.totalTime).toBeLessThan(4000); // Less than 4000ms for 1000 logs
 
       const stats = remoteLogger.getStats();
+      
+      // Debug information for troubleshooting buffer issues
+      if (stats.bufferSize > 0) {
+        console.warn('Buffer not fully flushed:', {
+          bufferSize: stats.bufferSize,
+          requestCount: mockServer.getRequestCount(),
+          expectedBatches: 10, // 1000 logs / 100 batch size
+          circuitBreakerState: stats.circuitBreaker,
+          priorityBufferingDisabled: stats.configuration?.disablePriorityBuffering
+        });
+      }
+      
       expect(stats.bufferSize).toBe(0); // All logs should be sent
       expect(stats.categoryDetector.cacheHits).toBeGreaterThan(0);
     });

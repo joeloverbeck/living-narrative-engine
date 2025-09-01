@@ -1,13 +1,18 @@
 {
   "$schema": "schema://living-narrative-engine/debug-logging-config.schema.json",
-  "enabled": false,
+  "enabled": true,
+  "categorization": {
+    "strategy": "source-based",
+    "enableStackTraceExtraction": true,
+    "fallbackCategory": "general"
+  },
   "mode": "development",
   "fallbackToConsole": true,
-  "logLevel": "INFO",
+  "logLevel": "DEBUG",
   "remote": {
     "endpoint": "http://localhost:3001/api/debug-log",
-    "batchSize": 25,
-    "flushInterval": 250,
+    "batchSize": 200,
+    "flushInterval": 100,
     "retryAttempts": 3,
     "retryBaseDelay": 1000,
     "retryMaxDelay": 30000,

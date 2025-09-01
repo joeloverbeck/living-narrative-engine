@@ -199,6 +199,24 @@ class LogStorageService {
 
       if (totalBuffered >= this.#config.writeBufferSize) {
         await this.#flushWriteBuffer();
+      } else if (totalBuffered > 0) {
+        // Schedule immediate flush for Windows Terminal compatibility
+        // This ensures logs are written even when terminal loses focus
+        setImmediate(async () => {
+          try {
+            // Only flush if buffer still has data and not already flushing
+            if (this.#writeBuffer.size > 0 && !this.#isFlushingBuffer) {
+              await this.#flushWriteBuffer();
+            }
+          } catch (error) {
+            this.#logger.error(
+              'LogStorageService.writeLogs: Immediate flush failed',
+              {
+                error: error.message,
+              }
+            );
+          }
+        });
       }
 
       this.#logger.debug(
@@ -355,7 +373,7 @@ class LogStorageService {
 
     // Stop flush timer
     if (this.#flushTimer) {
-      clearInterval(this.#flushTimer);
+      clearTimeout(this.#flushTimer);
       this.#flushTimer = null;
     }
 
@@ -705,23 +723,36 @@ class LogStorageService {
   }
 
   /**
-   * Starts the periodic flush timer
+   * Starts the periodic flush timer using recursive setTimeout for better Windows compatibility
    * @private
    * @returns {void}
    */
   #startFlushTimer() {
-    this.#flushTimer = setInterval(async () => {
-      try {
-        await this.#flushWriteBuffer();
-      } catch (error) {
-        this.#logger.error(
-          'LogStorageService.#startFlushTimer: Periodic flush failed',
-          {
-            error: error.message,
-          }
-        );
+    const scheduleNextFlush = () => {
+      this.#flushTimer = setTimeout(async () => {
+        try {
+          await this.#flushWriteBuffer();
+        } catch (error) {
+          this.#logger.error(
+            'LogStorageService.#startFlushTimer: Periodic flush failed',
+            {
+              error: error.message,
+            }
+          );
+        }
+        // Schedule next flush recursively
+        if (this.#flushTimer !== null) {
+          scheduleNextFlush();
+        }
+      }, this.#config.flushIntervalMs);
+      
+      // Ensure timer doesn't block process exit on Windows
+      if (this.#flushTimer && this.#flushTimer.unref) {
+        this.#flushTimer.unref();
       }
-    }, this.#config.flushIntervalMs);
+    };
+    
+    scheduleNextFlush();
   }
 }
 

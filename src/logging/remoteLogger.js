@@ -1647,8 +1647,11 @@ class RemoteLogger {
    */
   async #retryWithBackoff(fn, maxAttempts) {
     let lastError;
+    
+    // Ensure at least one attempt is made, even when maxAttempts is 0
+    const totalAttempts = Math.max(1, maxAttempts);
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    for (let attempt = 0; attempt < totalAttempts; attempt++) {
       try {
         return await fn();
       } catch (error) {
@@ -1660,17 +1663,17 @@ class RemoteLogger {
           typeof this.#fallbackLogger.debug === 'function'
         ) {
           this.#fallbackLogger.debug(
-            `[RemoteLogger] Retrying batch send (attempt ${attempt + 1}/${maxAttempts})`,
+            `[RemoteLogger] Retrying batch send (attempt ${attempt + 1}/${totalAttempts})`,
             {
               error: error.message,
               isConnectionError: this.#isConnectionError(error),
-              willRetry: attempt < maxAttempts - 1,
+              willRetry: attempt < totalAttempts - 1,
             }
           );
         }
 
         // Don't retry on the last attempt
-        if (attempt === maxAttempts - 1) {
+        if (attempt === totalAttempts - 1) {
           break;
         }
 

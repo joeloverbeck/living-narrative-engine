@@ -4,6 +4,7 @@
  */
 
 import LRUCache from '../utils/lruCache.js';
+import sourceMapResolver from './sourceMapResolver.js';
 
 /**
  * @typedef {object} SourceLocation
@@ -526,13 +527,26 @@ class LogMetadataEnricher {
       // Dynamic depth detection - skip internal frames
       for (let i = skipFrames; i < lines.length; i++) {
         const line = lines[i].trim();
-        if (line && !this.#isInternalFrame(line)) {
-          // Try each browser pattern to extract full path
-          for (const [, pattern] of this.#browserPatterns) {
-            const match = line.match(pattern);
-            if (match) {
-              const fullPath = match[1];
-              return this.#mapPathToCategory(fullPath);
+        if (line) {
+          // First try source map resolution for bundled files
+          const sourceInfo = sourceMapResolver.extractSourceFromStackLine(line);
+          if (sourceInfo && sourceInfo.source) {
+            // Check if resolved source is an internal frame
+            if (!this.#isInternalFrame(sourceInfo.source)) {
+              // Use resolved source path for categorization
+              const category = this.#mapPathToCategory(sourceInfo.source);
+              if (category !== 'general') {
+                return category;
+              }
+            }
+          } else if (!this.#isInternalFrame(line)) {
+            // Fallback to pattern matching if source map resolution fails
+            for (const [, pattern] of this.#browserPatterns) {
+              const match = line.match(pattern);
+              if (match) {
+                const fullPath = match[1];
+                return this.#mapPathToCategory(fullPath);
+              }
             }
           }
         }
@@ -557,6 +571,10 @@ class LogMetadataEnricher {
       'logCategoryDetector.js',
       'consoleLogger.js',
       'loggerStrategy.js',
+      'hybridLogger.js',
+      'criticalLogNotifier.js',
+      'sourceMapResolver.js',
+      'src/logging/',
     ];
 
     return internalFiles.some((file) => line.includes(file));
@@ -595,11 +613,20 @@ class LogMetadataEnricher {
     
     for (let i = skipFrames; i < lines.length; i++) {
       const line = lines[i].trim();
-      if (line && !this.#isInternalFrame(line)) {
-        // Try enhanced patterns including webpack
-        const parsed = this.#parseStackLineEnhanced(line);
-        if (parsed) {
-          return parsed;
+      if (line) {
+        // First try source map resolution for bundled files
+        const sourceInfo = sourceMapResolver.extractSourceFromStackLine(line);
+        if (sourceInfo && sourceInfo.source) {
+          // Check if resolved source is an internal frame
+          if (!this.#isInternalFrame(sourceInfo.source)) {
+            return `${sourceInfo.source}:${sourceInfo.line}`;
+          }
+        } else if (!this.#isInternalFrame(line)) {
+          // Try enhanced patterns including webpack
+          const parsed = this.#parseStackLineEnhanced(line);
+          if (parsed) {
+            return parsed;
+          }
         }
       }
     }
@@ -614,7 +641,15 @@ class LogMetadataEnricher {
    * @returns {string|undefined} Parsed source location
    */
   #parseStackLineEnhanced(line) {
-    // Try each browser pattern including new webpack patterns
+    // First try source map resolution for bundled files
+    const sourceInfo = sourceMapResolver.extractSourceFromStackLine(line);
+    if (sourceInfo && sourceInfo.source) {
+      // Format the resolved source location
+      const fileName = this.#normalizeFilePath(sourceInfo.source);
+      return `${fileName}:${sourceInfo.line}`;
+    }
+    
+    // Fallback to pattern matching if source map resolution fails
     for (const [patternName, pattern] of this.#browserPatterns) {
       const match = line.match(pattern);
       if (match) {
@@ -714,8 +749,8 @@ class LogMetadataEnricher {
   #mapPathToCategory(fullPath) {
     if (!fullPath) return 'general';
 
-    // Normalize path separators
-    const normalizedPath = fullPath.replace(/\\/g, '/');
+    // Normalize path separators and ensure leading slash for consistent matching
+    const normalizedPath = ('/' + fullPath.replace(/\\/g, '/')).replace(/\/+/g, '/');
 
     // Define category mappings - ordered by expected frequency for performance
     const categoryMappings = [

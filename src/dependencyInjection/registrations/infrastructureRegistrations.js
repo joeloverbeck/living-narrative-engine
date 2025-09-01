@@ -254,7 +254,7 @@ export function registerInfrastructure(container) {
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        hybridLogger: c.resolve(tokens.ILogger), // The actual logger which should be HybridLogger
+        hybridLogger: c.resolve(tokens.ILogger).getCurrentLogger(), // Get the actual HybridLogger from LoggerStrategy
         config: {
           enableVisualNotifications: true,
           notificationPosition: 'top-right',

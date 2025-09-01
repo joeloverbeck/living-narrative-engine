@@ -28,17 +28,17 @@ describe('Runtime Troubleshooting Issues - Integration Tests', () => {
       const { NodeFileSystemReader } = await import(
         '../../src/nodeFileSystemReader.js'
       );
-      const { ProxyLlmConfigLoader } = await import(
+      const { loadProxyLlmConfigs } = await import(
         '../../src/proxyLlmConfigLoader.js'
       );
 
       const fileSystemReader = new NodeFileSystemReader();
-      const configLoader = new ProxyLlmConfigLoader(
-        logger,
+      const llmConfigService = new LlmConfigService(
         fileSystemReader,
-        appConfigService
+        logger,
+        appConfigService,
+        loadProxyLlmConfigs
       );
-      const llmConfigService = new LlmConfigService(logger, configLoader);
 
       await llmConfigService.initialize();
       expect(llmConfigService.isOperational()).toBe(true);
@@ -64,9 +64,9 @@ describe('Runtime Troubleshooting Issues - Integration Tests', () => {
       // - Health check was calling cacheService.size() but method is cacheService.getSize()
       // - Health check was calling cacheService.getMemoryUsage() but method is cacheService.getMemoryInfo()
 
-      const { CacheService } = await import(
-        '../../src/services/cacheService.js'
-      );
+      const CacheService = (
+        await import('../../src/services/cacheService.js')
+      ).default;
 
       const mockLogger = {
         debug: jest.fn(),
@@ -98,9 +98,7 @@ describe('Runtime Troubleshooting Issues - Integration Tests', () => {
   describe('API Key Path Configuration', () => {
     it('should have correct API key path configuration', () => {
       // Verify the API key path was updated from placeholder
-      const apiKeyPath = appConfigService.getConfig(
-        'PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES'
-      );
+      const apiKeyPath = appConfigService.getProxyProjectRootPathForApiKeyFiles();
 
       expect(apiKeyPath).toBeDefined();
       expect(apiKeyPath).not.toBe('/path/to/secure/api_key_files_on_server'); // Should not be placeholder
