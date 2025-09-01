@@ -8,6 +8,7 @@ import { validateDependency } from '../utils/dependencyUtils.js';
 import DragHandler from './dragHandler.js';
 import LogFilter from './logFilter.js';
 import KeyboardShortcutsManager from './keyboardShortcutsManager.js';
+import LogExporter from './logExporter.js';
 
 /** @typedef {import('./types.js').CriticalLogEntry} CriticalLogEntry */
 /** @typedef {import('./types.js').NotifierConfig} NotifierConfig */
@@ -39,6 +40,7 @@ class CriticalLogNotifier extends RendererBase {
   #dragHandler = null;
   #logFilter = null;
   #keyboardManager = null;
+  #exporter = null;
 
   /**
    * Creates a new CriticalLogNotifier instance.
@@ -71,6 +73,15 @@ class CriticalLogNotifier extends RendererBase {
     this.#config = this.#validateConfig(config);
     this.#maxRecentLogs = this.#config.maxRecentLogs || 20;
     this.#position = this.#loadPosition();
+
+    // Initialize LogExporter
+    this.#exporter = new LogExporter({
+      logger: this.logger,
+      appInfo: {
+        name: 'Living Narrative Engine',
+        version: '0.0.1',
+      },
+    });
 
     this.#initialize();
 
@@ -234,18 +245,29 @@ class CriticalLogNotifier extends RendererBase {
     clearBtn.textContent = 'Clear';
     clearBtn.setAttribute('aria-label', 'Clear all logs');
 
+    const exportBtn = this.documentContext.create('button');
+    exportBtn.className = 'lne-export-btn';
+    exportBtn.innerHTML = '📥 Export';
+    exportBtn.setAttribute('aria-label', 'Export logs');
+    exportBtn.setAttribute('title', 'Export logs (Ctrl+Shift+E)');
+
     const closeBtn = this.documentContext.create('button');
     closeBtn.className = 'lne-close-btn';
     closeBtn.innerHTML = '&times;';
     closeBtn.setAttribute('aria-label', 'Close panel');
 
     header.appendChild(title);
+    header.appendChild(exportBtn);
     header.appendChild(clearBtn);
     header.appendChild(closeBtn);
 
     // Log list
     const logList = this.documentContext.create('div');
     logList.className = 'lne-log-list';
+
+    // Export menu
+    const exportMenu = this.#createExportMenu();
+    header.appendChild(exportMenu);
 
     // Filter bar
     const filterBar = this.#createFilterBar();
@@ -331,6 +353,36 @@ class CriticalLogNotifier extends RendererBase {
   }
 
   /**
+   * Creates the export menu with format options.
+   *
+   * @private
+   * @returns {HTMLElement} Export menu element
+   */
+  #createExportMenu() {
+    const menu = this.documentContext.create('div');
+    menu.className = 'lne-export-menu';
+    menu.hidden = true;
+
+    const formats = [
+      { value: 'json', label: 'JSON', icon: '📄' },
+      { value: 'csv', label: 'CSV', icon: '📊' },
+      { value: 'text', label: 'Text', icon: '📝' },
+      { value: 'markdown', label: 'Markdown', icon: '📑' },
+      { value: 'clipboard', label: 'Copy to Clipboard', icon: '📋' }
+    ];
+
+    formats.forEach(format => {
+      const button = this.documentContext.create('button');
+      button.className = 'lne-export-option';
+      button.setAttribute('data-format', format.value);
+      button.innerHTML = `${format.icon} Export as ${format.label}`;
+      menu.appendChild(button);
+    });
+
+    return menu;
+  }
+
+  /**
    * Initialize the log filter component.
    *
    * @private
@@ -405,6 +457,9 @@ class CriticalLogNotifier extends RendererBase {
       }
     );
 
+    // Export button and menu event listeners
+    this.#attachExportListeners();
+
     // Filter controls event listeners
     this.#attachFilterListeners();
 
@@ -449,6 +504,41 @@ class CriticalLogNotifier extends RendererBase {
   }
 
   /**
+   * Attach event listeners for export controls.
+   *
+   * @private
+   */
+  #attachExportListeners() {
+    const exportBtn = this.#panel.querySelector('.lne-export-btn');
+    const exportMenu = this.#panel.querySelector('.lne-export-menu');
+    
+    this._addDomListener(exportBtn, 'click', (e) => {
+      e.stopPropagation();
+      exportMenu.hidden = !exportMenu.hidden;
+    });
+
+    // Export format selection
+    this._addDomListener(exportMenu, 'click', (e) => {
+      if (e.target.classList.contains('lne-export-option')) {
+        const format = e.target.getAttribute('data-format');
+        this.exportLogs(format, { filtered: true });
+        exportMenu.hidden = true;
+      }
+    });
+
+    // Hide menu when clicking outside
+    this._addDomListener(
+      this.documentContext.query('body'),
+      'click',
+      (event) => {
+        if (!exportBtn.contains(event.target) && !exportMenu.contains(event.target)) {
+          exportMenu.hidden = true;
+        }
+      }
+    );
+  }
+
+  /**
    * Sets up keyboard shortcuts for notification control.
    *
    * @private
@@ -463,7 +553,7 @@ class CriticalLogNotifier extends RendererBase {
    *
    * @private
    * @param {string} action - The shortcut action to handle
-   * @param {Event} event - The keyboard event
+   * @param {Event} _event - The keyboard event (unused)
    */
   #handleShortcutAction(action, _event) {
     switch (action) {
@@ -497,9 +587,16 @@ class CriticalLogNotifier extends RendererBase {
         this.#logFilter.setFilter({ level: 'all' });
         this.#updateFilterUI();
         break;
-      case 'export':
-        this.#exportLogs();
+      case 'export': {
+        if (!this.#isExpanded) {
+          this.#handleExpand();
+        }
+        const exportBtn = this.#panel.querySelector('.lne-export-btn');
+        if (exportBtn) {
+          exportBtn.click();
+        }
         break;
+      }
       // Navigation handled in future iteration
     }
   }
@@ -521,18 +618,93 @@ class CriticalLogNotifier extends RendererBase {
   }
 
   /**
-   * Export logs in JSON format (placeholder for future implementation).
+   * Export logs in specified format
    *
-   * @private
+   * @param {string} format - Export format ('json', 'csv', 'text', 'markdown', 'clipboard')
+   * @param {object} options - Export options
    */
-  #exportLogs() {
-    if (this.#logFilter) {
-      const jsonData = this.#logFilter.exportAsJSON();
-      this.logger.debug(`${this._logPrefix} Logs exported`, { count: this.#logFilter.getFilteredLogs().length });
+  async exportLogs(format = 'json', options = {}) {
+    try {
+      const logs = options.filtered && this.#logFilter
+        ? this.#logFilter.getFilteredLogs()
+        : this.#recentLogs;
+
+      const exportOptions = {
+        filters: this.#logFilter?.getFilter(),
+        totalLogs: this.#recentLogs.length,
+        format,
+      };
+
+      let content;
+      let filename;
+      let mimeType;
+
+      switch (format) {
+        case 'json':
+          content = this.#exporter.exportAsJSON(logs, exportOptions);
+          filename = this.#exporter.generateFilename('critical-logs', 'json');
+          mimeType = 'application/json';
+          break;
+
+        case 'csv':
+          content = this.#exporter.exportAsCSV(logs, exportOptions);
+          filename = this.#exporter.generateFilename('critical-logs', 'csv');
+          mimeType = 'text/csv';
+          break;
+
+        case 'text':
+          content = this.#exporter.exportAsText(logs, exportOptions);
+          filename = this.#exporter.generateFilename('critical-logs', 'txt');
+          mimeType = 'text/plain';
+          break;
+
+        case 'markdown':
+          content = this.#exporter.exportAsMarkdown(logs, exportOptions);
+          filename = this.#exporter.generateFilename('critical-logs', 'md');
+          mimeType = 'text/markdown';
+          break;
+
+        case 'clipboard': {
+          // Default to JSON for clipboard
+          content = this.#exporter.exportAsJSON(logs, exportOptions);
+          const success = await this.#exporter.copyToClipboard(content);
+
+          this.validatedEventDispatcher.dispatch({
+            type: 'EXPORT_NOTIFICATION',
+            payload: { 
+              message: success ? 'Logs copied to clipboard' : 'Failed to copy to clipboard', 
+              type: success ? 'success' : 'error' 
+            },
+          });
+          return;
+        }
+
+        default:
+          this.logger.error(`Unknown export format: ${format}`);
+          return;
+      }
+
+      // Download file
+      this.#exporter.downloadAsFile(content, filename, mimeType);
       
-      // Future implementation: trigger download or copy to clipboard
-      // For now, just log that export was requested
-      console.log('Export requested - JSON data ready:', jsonData.length, 'characters');
+      this.validatedEventDispatcher.dispatch({
+        type: 'EXPORT_NOTIFICATION',
+        payload: { 
+          message: `Exported ${logs.length} logs as ${format.toUpperCase()}`, 
+          type: 'success' 
+        },
+      });
+
+      this.logger.debug(`Export completed: ${format}, ${logs.length} logs`);
+    } catch (error) {
+      this.logger.error('Export failed', error);
+      this.validatedEventDispatcher.dispatch({
+        type: 'EXPORT_NOTIFICATION',
+        payload: { 
+          message: 'Export failed - see console for details', 
+          type: 'error' 
+        },
+      });
     }
   }
 
@@ -569,7 +741,7 @@ class CriticalLogNotifier extends RendererBase {
    * Update filter statistics display.
    *
    * @private
-   * @param {Object} stats - Filter statistics
+   * @param {object} stats - Filter statistics
    */
   #updateFilterStats(stats) {
     const filterStats = this.#panel.querySelector('.lne-filter-stats');
@@ -1213,6 +1385,11 @@ class CriticalLogNotifier extends RendererBase {
     // Clean up log filter
     if (this.#logFilter) {
       this.#logFilter = null;
+    }
+
+    // Clean up exporter
+    if (this.#exporter) {
+      this.#exporter = null;
     }
 
     // Clean up old keyboard handler (if still present)

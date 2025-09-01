@@ -3,6 +3,9 @@
  * @description Resolves references to other scopes by looking them up and recursively resolving them
  */
 
+import { validateDependency } from '../../utils/dependencyUtils.js';
+import { ErrorCodes } from '../constants/errorCodes.js';
+
 /**
  * @typedef {import('../nodes/nodeResolver.js').NodeResolver} NodeResolver
  */
@@ -13,12 +16,25 @@
  * @param {object} deps - Dependencies
  * @param {object} deps.scopeRegistry - Registry to look up scope definitions
  * @param {object} deps.cycleDetector - Detector to prevent circular references
+ * @param {object} [deps.errorHandler] - Error handler for centralized error management
  * @returns {NodeResolver} Scope reference node resolver
  */
 export default function createScopeReferenceResolver({
   scopeRegistry,
   cycleDetector,
+  errorHandler = null,
 }) {
+  // Validate dependencies
+  validateDependency(scopeRegistry, 'IScopeRegistry', console, {
+    requiredMethods: ['getScopeAst'],
+  });
+
+  // Only validate errorHandler if provided (for backward compatibility)
+  if (errorHandler) {
+    validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
+      requiredMethods: ['handleError'],
+    });
+  }
   return {
     /**
      * Determines if this resolver can handle the given node
@@ -42,19 +58,43 @@ export default function createScopeReferenceResolver({
      * @returns {Set<string>} Set of entity IDs from the referenced scope
      */
     resolve(node, ctx) {
-      const { dispatcher, actorEntity, runtimeCtx, trace } = ctx;
+      const { dispatcher, actorEntity, runtimeCtx: _runtimeCtx, trace } = ctx;
 
       // Validate context has required properties
       if (!actorEntity) {
-        throw new Error(
+        const error = new Error(
           'ScopeReferenceResolver: actorEntity is missing from context'
         );
+        if (errorHandler) {
+          errorHandler.handleError(
+            error.message,
+            { ...ctx, requestedScope: node.scopeId },
+            'ScopeReferenceResolver',
+            ErrorCodes.MISSING_ACTOR
+          );
+          return new Set(); // Return empty set when using error handler
+        } else {
+          // Fallback for backward compatibility
+          throw error;
+        }
       }
 
       if (!scopeRegistry) {
-        throw new Error(
+        const error = new Error(
           'ScopeReferenceResolver: scopeRegistry is not available'
         );
+        if (errorHandler) {
+          errorHandler.handleError(
+            error.message,
+            { ...ctx, requestedScope: node.scopeId },
+            'ScopeReferenceResolver',
+            ErrorCodes.MISSING_REGISTRY
+          );
+          return new Set(); // Return empty set when using error handler
+        } else {
+          // Fallback for backward compatibility
+          throw error;
+        }
       }
 
       const scopeId = node.scopeId;
@@ -69,7 +109,19 @@ export default function createScopeReferenceResolver({
         const scopeAst = scopeRegistry.getScopeAst(scopeId);
 
         if (!scopeAst) {
-          throw new Error(`Referenced scope not found: ${scopeId}`);
+          const error = new Error(`Referenced scope not found: ${scopeId}`);
+          if (errorHandler) {
+            errorHandler.handleError(
+              error.message,
+              { ...ctx, requestedScope: scopeId },
+              'ScopeReferenceResolver',
+              ErrorCodes.SCOPE_NOT_FOUND
+            );
+            return new Set(); // Return empty set when scope not found
+          } else {
+            // Fallback for backward compatibility
+            throw error;
+          }
         }
 
         if (trace) {

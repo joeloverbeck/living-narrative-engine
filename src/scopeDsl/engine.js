@@ -243,6 +243,7 @@ class ScopeEngine extends IScopeEngine {
         createScopeReferenceResolver({
           scopeRegistry: this.scopeRegistry,
           cycleDetector: this.cycleDetector,
+          errorHandler: this.errorHandler,
         })
       );
     }
