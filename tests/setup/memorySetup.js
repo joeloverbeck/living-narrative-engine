@@ -35,15 +35,18 @@ if (global.gc) {
 // Global memory test utilities
 global.memoryTestUtils = {
   /**
-   * Forces garbage collection and waits for stabilization (highly optimized)
+   * Forces garbage collection and waits for stabilization
    *
    * @returns {Promise<void>}
    */
   async forceGCAndWait() {
     if (global.gc) {
       global.gc();
-      // Removed delays for maximum performance - GC is synchronous
+      // Wait for first GC to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
       global.gc();
+      // Wait for second GC to complete and memory to stabilize
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
   },
 

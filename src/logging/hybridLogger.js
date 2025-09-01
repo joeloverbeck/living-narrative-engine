@@ -89,6 +89,24 @@ class HybridLogger {
 
   /**
    * @private
+   * @type {number}
+   */
+  #bufferHead;
+
+  /**
+   * @private
+   * @type {number}
+   */
+  #bufferTail;
+
+  /**
+   * @private
+   * @type {boolean}
+   */
+  #bufferFull;
+
+  /**
+   * @private
    * @type {object}
    */
   #bufferMetadata;
@@ -166,8 +184,11 @@ class HybridLogger {
     }
 
     // Initialize critical buffer fields after existing initialization
-    this.#criticalBuffer = [];
     this.#maxBufferSize = this.#criticalLoggingConfig?.bufferSize ?? 50;
+    this.#criticalBuffer = new Array(this.#maxBufferSize);
+    this.#bufferHead = 0;
+    this.#bufferTail = 0;
+    this.#bufferFull = false;
     this.#bufferMetadata = {
       totalWarnings: 0,
       totalErrors: 0,
@@ -191,6 +212,7 @@ class HybridLogger {
 
   /**
    * Adds a critical log entry to the buffer (warnings and errors only).
+   * Uses efficient O(1) circular buffer implementation.
    *
    * @private
    * @param {string} level - Log level ('warn' or 'error')
@@ -218,12 +240,20 @@ class HybridLogger {
       id: uuidv4(), // Using uuid package
     };
 
-    // Add to buffer (circular buffer logic)
-    this.#criticalBuffer.push(logEntry);
-
-    // Maintain buffer size limit
-    if (this.#criticalBuffer.length > this.#maxBufferSize) {
-      this.#criticalBuffer.shift(); // Remove oldest
+    // Add to circular buffer at tail position
+    this.#criticalBuffer[this.#bufferTail] = logEntry;
+    
+    // Move tail pointer
+    this.#bufferTail = (this.#bufferTail + 1) % this.#maxBufferSize;
+    
+    // If buffer is full, advance head pointer (overwrite oldest)
+    if (this.#bufferFull) {
+      this.#bufferHead = (this.#bufferHead + 1) % this.#maxBufferSize;
+    }
+    
+    // Check if buffer just became full
+    if (this.#bufferTail === this.#bufferHead) {
+      this.#bufferFull = true;
     }
 
     // Update metadata
@@ -686,17 +716,32 @@ class HybridLogger {
    * @returns {Array} Array of log entries
    */
   getCriticalLogs(options = {}) {
-    let logs = [...this.#criticalBuffer]; // Create copy
+    const logs = [];
+    
+    // Extract logs from circular buffer in chronological order (oldest first)
+    if (this.#bufferFull || this.#bufferTail !== this.#bufferHead) {
+      const count = this.#bufferFull ? this.#maxBufferSize : this.#bufferTail - this.#bufferHead;
+      
+      for (let i = 0; i < count; i++) {
+        const index = (this.#bufferHead + i) % this.#maxBufferSize;
+        const entry = this.#criticalBuffer[index];
+        if (entry) { // Only add non-null entries
+          logs.push(entry);
+        }
+      }
+    }
 
+    let filteredLogs = logs;
+    
     if (options.level) {
-      logs = logs.filter((log) => log.level === options.level);
+      filteredLogs = filteredLogs.filter((log) => log.level === options.level);
     }
 
     if (options.limit) {
-      logs = logs.slice(-options.limit);
+      filteredLogs = filteredLogs.slice(-options.limit);
     }
 
-    return logs;
+    return filteredLogs;
   }
 
   /**
@@ -705,8 +750,18 @@ class HybridLogger {
    * @returns {object} Buffer statistics
    */
   getCriticalBufferStats() {
+    // Calculate current size based on circular buffer state
+    let currentSize;
+    if (this.#bufferFull) {
+      currentSize = this.#maxBufferSize;
+    } else if (this.#bufferTail >= this.#bufferHead) {
+      currentSize = this.#bufferTail - this.#bufferHead;
+    } else {
+      currentSize = this.#maxBufferSize - this.#bufferHead + this.#bufferTail;
+    }
+    
     return {
-      currentSize: this.#criticalBuffer.length,
+      currentSize,
       maxSize: this.#maxBufferSize,
       ...this.#bufferMetadata,
     };
@@ -716,7 +771,10 @@ class HybridLogger {
    * Clear the critical log buffer
    */
   clearCriticalBuffer() {
-    this.#criticalBuffer = [];
+    this.#criticalBuffer = new Array(this.#maxBufferSize);
+    this.#bufferHead = 0;
+    this.#bufferTail = 0;
+    this.#bufferFull = false;
     this.#bufferMetadata = {
       totalWarnings: 0,
       totalErrors: 0,

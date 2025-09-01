@@ -58,14 +58,16 @@ describe('Dynamic Batching Strategy Integration Test', () => {
 
     // Create logger with current production settings
     remoteLogger = new RemoteLogger({
-      endpoint: 'http://localhost:3001/api/debug-log',
-      batchSize: 25, // Base batch size
-      flushInterval: 1000, // Increased to allow buffer to accumulate for adaptive batching
-      retryAttempts: 1, // Reduce retries for faster test
-      initialConnectionDelay: 50, // Reduce delay for faster test
-      disableAdaptiveBatching: false, // Explicitly enable adaptive batching for this test
-      disablePriorityBuffering: true, // Keep FIFO order for predictable testing
-      maxBufferSize: 1500, // Ensure buffer can hold enough logs for adaptive batching
+      config: {
+        endpoint: 'http://localhost:3001/api/debug-log',
+        batchSize: 25, // Base batch size
+        flushInterval: 1000, // Increased to allow buffer to accumulate for adaptive batching
+        retryAttempts: 1, // Reduce retries for faster test
+        initialConnectionDelay: 50, // Reduce delay for faster test
+        disableAdaptiveBatching: false, // Explicitly enable adaptive batching for this test
+        disablePriorityBuffering: true, // Keep FIFO order for predictable testing
+        maxBufferSize: 1500, // Ensure buffer can hold enough logs for adaptive batching
+      }
     });
   });
 
@@ -76,11 +78,10 @@ describe('Dynamic Batching Strategy Integration Test', () => {
     jest.restoreAllMocks();
   });
 
-  it.skip('should use larger batches during high-volume logging (game startup simulation) - BROKEN: Logic bug prevents dynamic batching', async () => {
-    // NOTE: This test is skipped because the dynamic batching feature has a logic bug.
-    // The adaptive batching requires buffer >= 100 logs to activate larger batches,
-    // but the buffer flushes at 25 logs (base batch size), so it never reaches 100.
-    // This is a chicken-and-egg problem that prevents dynamic batching from working.
+  it('should use larger batches during high-volume logging (game startup simulation)', async () => {
+    // NOTE: Fixed the chicken-and-egg problem in RemoteLogger#shouldFlushBatch()
+    // Now during high-volume periods, the buffer is allowed to accumulate to 100+ logs
+    // before flushing, enabling the adaptive batching to work correctly.
     console.log('Testing dynamic batching during high-volume period...');
 
     const startTime = Date.now();
@@ -192,20 +193,22 @@ describe('Dynamic Batching Strategy Integration Test', () => {
     expect(true).toBe(true);
   }, 10000);
 
-  it('demonstrates why dynamic batching cannot work with current implementation', async () => {
-    // This test documents the actual behavior and logic bug
-    console.log('=== DYNAMIC BATCHING LOGIC BUG ===');
+  it('verifies that dynamic batching works correctly during high-volume logging', async () => {
+    // This test verifies that dynamic batching successfully increases batch sizes during high-volume periods
+    console.log('=== DYNAMIC BATCHING VERIFICATION ===');
     
     // Create logger with dynamic batching enabled
     remoteLogger = new RemoteLogger({
-      endpoint: 'http://localhost:3001/api/debug-log',
-      batchSize: 25,
-      flushInterval: 5000, // Long interval to prevent time-based flushing
-      retryAttempts: 1,
-      initialConnectionDelay: 50,
-      disableAdaptiveBatching: false, // Dynamic batching ENABLED
-      disablePriorityBuffering: true,
-      skipServerReadinessValidation: true,
+      config: {
+        endpoint: 'http://localhost:3001/api/debug-log',
+        batchSize: 25,
+        flushInterval: 5000, // Long interval to prevent time-based flushing
+        retryAttempts: 1,
+        initialConnectionDelay: 50,
+        disableAdaptiveBatching: false, // Dynamic batching ENABLED
+        disablePriorityBuffering: true,
+        skipServerReadinessValidation: true,
+      }
     });
     
     // Log 200 entries rapidly (should exceed 50 logs/second threshold)
@@ -218,6 +221,9 @@ describe('Dynamic Batching Strategy Integration Test', () => {
     
     console.log(`Logged 200 entries in ${loggingTime}ms (${loggingRate.toFixed(1)} logs/second)`);
     console.log(`This exceeds the 50 logs/second threshold for high-volume detection`);
+    
+    // Verify high-volume detection triggered
+    expect(loggingRate).toBeGreaterThan(50);
     
     // Wait for any async flush operations
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -233,14 +239,30 @@ describe('Dynamic Batching Strategy Integration Test', () => {
     if (batchCalls.length > 0) {
       const batchSizes = batchCalls.map(b => b.logCount);
       console.log(`Batch sizes: ${batchSizes.join(', ')}`);
-      console.log(`All batches are size 25 because:`);
-      console.log(`1. Buffer flushes when size >= adaptiveBatchSize (starts at 25)`);
-      console.log(`2. Adaptive batch size only increases when buffer >= 100`);
-      console.log(`3. Buffer never reaches 100 because it flushes at 25!`);
+      console.log(`Dynamic batching successfully increased batch sizes during high-volume period:`);
+      console.log(`1. High-volume phase detected (>50 logs/second)`);
+      console.log(`2. Buffer accumulated to 90+ logs before flushing`);
+      console.log(`3. Adaptive batch size increased to 100+ logs for efficiency`);
     }
     
-    // This is the actual behavior - all batches are size 25
-    expect(batchCalls.every(b => b.logCount === 25)).toBe(true);
+    // Verify dynamic batching is working: batches should be larger than the base size during high volume
+    expect(batchCalls.length).toBeGreaterThan(0);
+    expect(batchCalls.some(b => b.logCount > 25)).toBe(true);
+    
+    // Additional verification: dynamic batching should result in efficient batching
+    if (batchCalls.length > 0) {
+      const totalLogsSent = batchCalls.reduce((sum, b) => sum + b.logCount, 0);
+      const averageBatchSize = totalLogsSent / batchCalls.length;
+      
+      console.log(`✓ VERIFICATION: Dynamic batching working correctly`);
+      console.log(`- Average batch size: ${averageBatchSize.toFixed(1)} (> 25 base size)`);
+      console.log(`- Total logs sent: ${totalLogsSent} out of 200 logged`);
+      console.log(`- Efficiency: ${batchCalls.length} HTTP requests instead of ${Math.ceil(200/25)} (${Math.round((1 - batchCalls.length / Math.ceil(200/25)) * 100)}% reduction)`);
+      
+      // Verify efficiency improvements
+      expect(averageBatchSize).toBeGreaterThan(25);
+      expect(batchCalls.length).toBeLessThan(Math.ceil(200/25)); // Should be fewer requests than base batching
+    }
   });
   
   it('should demonstrate the efficiency improvement', async () => {

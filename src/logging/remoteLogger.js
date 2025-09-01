@@ -394,6 +394,7 @@ class RemoteLogger {
 
     const mergedConfig = { ...defaultConfig, ...config };
 
+
     // Validate configuration for safety
     this.#validateConfiguration(mergedConfig);
 
@@ -614,7 +615,6 @@ class RemoteLogger {
 
     try {
       const endpointUrl = new URL(configEndpoint);
-      const pageOrigin = window.location.origin;
       const pageHostname = window.location.hostname;
 
       // If the endpoint uses localhost but the page is served from 127.0.0.1,
@@ -786,8 +786,10 @@ class RemoteLogger {
     }
 
     try {
-      // Check for buffer pressure and handle proactively
-      this.#handleBufferPressure();
+      // Record timestamp FIRST for accurate rate calculation (only if adaptive batching is enabled)
+      if (!this.#disableAdaptiveBatching) {
+        this.#recordLogTimestamp();
+      }
 
       // Create enriched log entry
       let logEntry = this.#enrichLogEntry(level, message, metadata);
@@ -814,19 +816,18 @@ class RemoteLogger {
       this.#estimatedPayloadSize += entrySize;
 
       // Add to priority buffer if enabled, otherwise use legacy buffer
-      if (this.#priorityBuffers.size > 0) {
+      if (!this.#disablePriorityBuffering && this.#priorityBuffers.size > 0) {
         this.#addToPriorityBuffer(logEntry);
       } else {
         this.#buffer.push(logEntry);
       }
 
-      // Record timestamp for logging rate calculation (only if adaptive batching is enabled)
-      if (!this.#disableAdaptiveBatching) {
-        this.#recordLogTimestamp();
-      }
 
       // Update adaptive batch size based on current conditions
       this.#updateAdaptiveBatchSize();
+
+      // Check for buffer pressure and handle proactively (AFTER adding to buffer and updating batch size)
+      this.#handleBufferPressure();
 
       // Check for memory pressure and handle if detected
       if (this.#detectMemoryPressure()) {
@@ -1015,14 +1016,29 @@ class RemoteLogger {
    */
   #scheduleFlush() {
     // Check total buffer size including priority buffers for timer scheduling consistency
-    const totalBufferSize = this.#priorityBuffers.size > 0 ? 
+    const totalBufferSize = (!this.#disablePriorityBuffering && this.#priorityBuffers.size > 0) ? 
       this.#getTotalBufferSize() : this.#buffer.length;
     
     if (this.#flushTimer === null && totalBufferSize > 0) {
+      // During high-volume periods with adaptive batching, use a longer interval
+      // to allow buffer to accumulate for efficient batching
+      let flushDelay = this.#flushInterval;
+      
+      if (!this.#disableAdaptiveBatching) {
+        const recentLogRate = this.#calculateRecentLoggingRate();
+        const isHighVolumePhase = recentLogRate > 50;
+        
+        if (isHighVolumePhase && totalBufferSize < 100) {
+          // During high-volume, delay flush to allow accumulation
+          // Use 3x the normal interval or 3 seconds, whichever is smaller
+          flushDelay = Math.min(3000, this.#flushInterval * 3);
+        }
+      }
+      
       this.#flushTimer = setTimeout(() => {
         this.#flushTimer = null;
         this.#flush();
-      }, this.#flushInterval);
+      }, flushDelay);
     }
   }
 
@@ -1033,13 +1049,14 @@ class RemoteLogger {
    * @returns {Promise<void>}
    */
   async #flush() {
+
     // Prevent concurrent flushes
     if (this.#currentFlushPromise) {
       return this.#currentFlushPromise;
     }
 
     // Check total buffer size including priority buffers
-    const totalBufferSize = this.#priorityBuffers.size > 0 ? 
+    const totalBufferSize = (!this.#disablePriorityBuffering && this.#priorityBuffers.size > 0) ? 
       this.#getTotalBufferSize() : this.#buffer.length;
     
     if (totalBufferSize === 0) {
@@ -1340,7 +1357,7 @@ class RemoteLogger {
     try {
       const endpointUrl = new URL(this.#endpoint);
       healthEndpoint = `${endpointUrl.protocol}//${endpointUrl.host}/health`;
-    } catch (error) {
+    } catch (_error) {
       // If URL parsing fails, assume server readiness (fallback to original behavior)
       this.#serverReadinessCache = { ready: true, error: 'URL parsing failed' };
       this.#lastReadinessCheck = now;
@@ -1705,6 +1722,17 @@ class RemoteLogger {
 
     // If we're at or above the pressure threshold, take action
     if (currentSize >= this.#bufferPressureThreshold) {
+      // Check if we're in high-volume mode to allow buffer accumulation
+      const recentLogRate = this.#calculateRecentLoggingRate();
+      const isHighVolumePhase = recentLogRate > 50;
+      
+      
+      // During high-volume periods, allow buffer to grow for dynamic batching
+      if (isHighVolumePhase && !this.#disableAdaptiveBatching && currentSize < 100) {
+        // Don't flush yet - let buffer accumulate for better batching
+        return;
+      }
+      
       // Force flush if we have enough logs for a batch
       if (currentSize >= this.#adaptiveBatchSize) {
         this.#flush();
@@ -1727,7 +1755,7 @@ class RemoteLogger {
       // Quick estimation based on JSON serialization
       const serialized = JSON.stringify(logEntry);
       return serialized.length * 2; // Rough UTF-8 byte estimation
-    } catch (error) {
+    } catch (_error) {
       // Fallback estimation if serialization fails
       const messageSize = (logEntry.message || '').length;
       const metadataSize = logEntry.metadata ? 500 : 100; // Rough estimate
@@ -1750,8 +1778,24 @@ class RemoteLogger {
       (timestamp) => timestamp > twoSecondsAgo
     );
 
-    // Calculate rate: logs in last 2 seconds / 2
-    return this.#recentLogTimestamps.length / 2;
+    // If no recent logs, rate is 0
+    if (this.#recentLogTimestamps.length === 0) {
+      return 0;
+    }
+
+    // Calculate the actual time window (from the oldest timestamp to now)
+    const oldestTimestamp = Math.min(...this.#recentLogTimestamps);
+    const timeWindowSeconds = (now - oldestTimestamp) / 1000;
+    
+    // Prevent division by zero and handle very small time windows
+    if (timeWindowSeconds < 0.1) {
+      // For very rapid logging (< 100ms window), estimate based on count
+      // This handles the burst at the start of logging
+      return this.#recentLogTimestamps.length * 10; // Extrapolate to per-second rate
+    }
+
+    // Calculate rate: logs in time window / seconds in window
+    return this.#recentLogTimestamps.length / timeWindowSeconds;
   }
 
   /**
@@ -1784,9 +1828,10 @@ class RemoteLogger {
       return;
     }
 
-    const now = Date.now();
+
     const currentSize = this.#buffer.length;
     const bufferUtilization = currentSize / this.#maxBufferSize;
+    
 
     // Calculate recent logging rate (logs per second over last 2 seconds)
     const recentLogRate = this.#calculateRecentLoggingRate();
@@ -1795,10 +1840,11 @@ class RemoteLogger {
     const isHighVolumePhase = recentLogRate > 50; // More than 50 logs/second
     const isCriticalBuffer = bufferUtilization > 0.9; // Buffer nearly full
 
+
     if (isCriticalBuffer) {
       // Critical: buffer nearly full, use smaller batches to flush quickly
       this.#adaptiveBatchSize = Math.max(10, Math.floor(this.#batchSize * 0.6));
-    } else if (isHighVolumePhase && currentSize >= 100) {
+    } else if (isHighVolumePhase && currentSize >= 90) {
       // High volume with sufficient logs: use larger batches (up to 200-500 logs)
       // This handles game startup efficiently: fewer HTTP requests
       const targetBatchSize = Math.min(
@@ -1806,6 +1852,8 @@ class RemoteLogger {
         Math.max(100, currentSize * 0.5) // Use ~50% of current buffer
       );
       this.#adaptiveBatchSize = Math.floor(targetBatchSize);
+      
+      
     } else if (bufferUtilization > 0.5) {
       // Medium utilization: slightly larger batches than base
       this.#adaptiveBatchSize = Math.floor(this.#batchSize * 1.5);
@@ -1835,16 +1883,50 @@ class RemoteLogger {
    */
   #shouldFlushBatch() {
     // Use total buffer size if priority buffers are enabled
-    const currentSize = this.#priorityBuffers.size > 0 ? 
+    const currentSize = (!this.#disablePriorityBuffering && this.#priorityBuffers.size > 0) ? 
       this.#getTotalBufferSize() : this.#buffer.length;
 
-    // Flush if we've reached the adaptive batch size
-    if (currentSize >= this.#adaptiveBatchSize) {
-      return true;
+    // Calculate logging rate to detect high-volume periods
+    const recentLogRate = this.#calculateRecentLoggingRate();
+    const isHighVolumePhase = recentLogRate > 50; // More than 50 logs/second
+    
+    
+    // FIX for dynamic batching: During high-volume periods, allow buffer to accumulate
+    // before triggering flush. This prevents the chicken-and-egg problem where buffer
+    // flushes at 25 logs and never reaches 100 logs needed for adaptive sizing.
+    if (isHighVolumePhase && !this.#disableAdaptiveBatching) {
+      // During high volume, wait for buffer to accumulate enough logs
+      // for effective batching (at least 100 logs)
+      if (currentSize < 90) {
+        // Don't flush yet unless we're approaching max buffer size
+        const bufferUtilization = currentSize / this.#maxBufferSize;
+        if (bufferUtilization < 0.5) {
+          return false; // Allow buffer to grow for better batching efficiency
+        }
+        // If we're above 50% buffer but still < 90 logs in high-volume, keep accumulating
+        return false; // Still accumulate in high-volume mode
+      }
+      // If we have 90+ logs, ensure adaptive batch size is updated for high-volume
+      // The adaptive batch size should have been updated in #updateAdaptiveBatchSize()
+      // to be larger than 25 when buffer >= 90 in high-volume mode
+      if (currentSize >= 90) {
+        // We've accumulated enough for efficient batching
+        // The flush should use the larger adaptive batch size set by updateAdaptiveBatchSize
+        // Only flush if we've reached the LARGER adaptive batch size
+        if (currentSize >= this.#adaptiveBatchSize) {
+          return true;
+        }
+        return false; // Keep accumulating until we reach the adaptive batch size
+      }
+    } else {
+      // Normal volume: flush when we reach the adaptive batch size
+      if (currentSize >= this.#adaptiveBatchSize) {
+        return true;
+      }
     }
 
     // Priority-based flushing: flush immediately if error logs are present
-    if (this.#priorityBuffers.size > 0) {
+    if (!this.#disablePriorityBuffering && this.#priorityBuffers.size > 0) {
       const errorBuffer = this.#priorityBuffers.get('error');
       if (errorBuffer && errorBuffer.length > 0) {
         return true;
@@ -1863,8 +1945,12 @@ class RemoteLogger {
       return true;
     }
 
-    // Flush if buffer pressure is critical
+    // Flush if buffer pressure is critical (but respect high-volume accumulation)
     if (currentSize >= this.#bufferPressureThreshold) {
+      // During high-volume accumulation, allow buffer to grow more
+      if (isHighVolumePhase && !this.#disableAdaptiveBatching && currentSize < 100) {
+        return false; // Continue accumulating
+      }
       return true;
     }
 
@@ -2370,15 +2456,38 @@ class RemoteLogger {
    * @param {Array} selectedLogs - Logs to remove from buffers
    */
   #removeSelectedLogsFromBuffers(selectedLogs) {
-    const selectedSet = new Set(selectedLogs);
+    // Create a set of unique identifiers for selected logs (timestamp + message hash)
+    // This avoids the object identity issue where log objects might be modified
+    const selectedIds = new Set(selectedLogs.map(log => `${log.timestamp}:${this.#hashLogMessage(log.message)}`));
     
     for (const [level, buffer] of this.#priorityBuffers.entries()) {
-      const remainingLogs = buffer.filter(log => !selectedSet.has(log));
+      const remainingLogs = buffer.filter(log => 
+        !selectedIds.has(`${log.timestamp}:${this.#hashLogMessage(log.message)}`)
+      );
       this.#priorityBuffers.set(level, remainingLogs);
     }
     
     // Also clean legacy buffer
-    this.#buffer = this.#buffer.filter(log => !selectedSet.has(log));
+    this.#buffer = this.#buffer.filter(log => 
+      !selectedIds.has(`${log.timestamp}:${this.#hashLogMessage(log.message)}`)
+    );
+  }
+
+  /**
+   * Creates a simple hash of a log message for identification purposes
+   *
+   * @private
+   * @param {string} message - Log message to hash
+   * @returns {string} Simple hash string
+   */
+  #hashLogMessage(message) {
+    let hash = 0;
+    for (let i = 0; i < message.length; i++) {
+      const char = message.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash.toString(36); // Convert to base36 for shorter string
   }
 
   /**
@@ -2450,6 +2559,7 @@ class RemoteLogger {
    * @returns {Promise<void>}
    */
   async destroy() {
+
     // Clear any pending flush timer
     if (this.#flushTimer !== null) {
       clearTimeout(this.#flushTimer);
@@ -2463,12 +2573,19 @@ class RemoteLogger {
     }
 
     // Final flush of any remaining logs BEFORE setting unloading flag
-    await this.#flush();
+    try {
+      await this.#flush();
+    } catch (error) {
+      // If flush fails, log the error but continue with cleanup
+      if (this.#fallbackLogger?.warn) {
+        this.#fallbackLogger.warn('[RemoteLogger] Final flush failed during destroy, force clearing buffers', error);
+      }
+    }
 
     // Set unloading flag to prevent new operations
     this.#isUnloading = true;
 
-    // Clear all buffers and cleanup metadata references
+    // Force clear all buffers regardless of flush success/failure
     this.#clearAllBuffers();
 
     // Clear category cache

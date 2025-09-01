@@ -67,18 +67,19 @@ export function simulateClick(element) {
  * @returns {void}
  */
 export function simulateKeyboard(document, key, options = {}) {
-  const event = document.createEvent('KeyboardEvent');
-  // Use initKeyboardEvent for better JSDOM compatibility
-  if (event.initKeyboardEvent) {
-    event.initKeyboardEvent('keydown', true, true, null, options.ctrlKey || false, false, options.shiftKey || false, false, 0, 0);
-  } else {
-    // Fallback for basic event initialization
-    event.initEvent('keydown', true, true);
-  }
-  // Set properties manually for better compatibility
-  Object.defineProperty(event, 'key', { value: key });
-  Object.defineProperty(event, 'ctrlKey', { value: options.ctrlKey || false });
-  Object.defineProperty(event, 'shiftKey', { value: options.shiftKey || false });
+  // Use the modern KeyboardEvent constructor for better compatibility
+  const event = new (document.defaultView || window).KeyboardEvent('keydown', {
+    key: key,
+    code: key,
+    keyCode: key === 'Escape' ? 27 : (key === 'L' ? 76 : 0),
+    which: key === 'Escape' ? 27 : (key === 'L' ? 76 : 0),
+    ctrlKey: options.ctrlKey || false,
+    altKey: options.altKey || false,
+    shiftKey: options.shiftKey || false,
+    metaKey: options.metaKey || false,
+    bubbles: true,
+    cancelable: true,
+  });
   
   document.dispatchEvent(event);
 }

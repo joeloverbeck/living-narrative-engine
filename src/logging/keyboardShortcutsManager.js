@@ -12,13 +12,16 @@ class KeyboardShortcutsManager {
   #logger;
   #boundHandler;
   #actionCallback = null;
+  #document;
 
-  constructor({ logger }) {
+  constructor({ logger, documentContext = null }) {
     ensureValidLogger(logger, 'KeyboardShortcutsManager constructor');
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
     this.#logger = logger;
+    // Use provided document context or fall back to global document
+    this.#document = documentContext || (typeof document !== 'undefined' ? document : null);
     this.#boundHandler = this.#handleKeydown.bind(this);
     this.#enabled = false; // Explicitly start disabled
     this.#registerDefaultShortcuts();
@@ -121,9 +124,9 @@ class KeyboardShortcutsManager {
    * Enable keyboard shortcuts
    */
   enable() {
-    if (this.#enabled) return;
+    if (this.#enabled || !this.#document) return;
 
-    document.addEventListener('keydown', this.#boundHandler);
+    this.#document.addEventListener('keydown', this.#boundHandler);
     this.#enabled = true;
     this.#logger.debug('Keyboard shortcuts enabled');
   }
@@ -132,9 +135,9 @@ class KeyboardShortcutsManager {
    * Disable keyboard shortcuts
    */
   disable() {
-    if (!this.#enabled) return;
+    if (!this.#enabled || !this.#document) return;
 
-    document.removeEventListener('keydown', this.#boundHandler);
+    this.#document.removeEventListener('keydown', this.#boundHandler);
     this.#enabled = false;
     this.#logger.debug('Keyboard shortcuts disabled');
   }
@@ -156,7 +159,7 @@ class KeyboardShortcutsManager {
 
     // Check if panel is required
     if (shortcut.requiresPanel) {
-      const panel = document.querySelector('.lne-critical-log-panel');
+      const panel = this.#document ? this.#document.querySelector('.lne-critical-log-panel') : null;
       if (!panel || panel.hidden) return;
     }
 
