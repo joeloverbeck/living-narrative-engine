@@ -2,14 +2,26 @@ import {
   calculatePriorityWithValidation,
   sortCandidatesWithTieBreaking,
 } from '../prioritySystem/priorityCalculator.js';
+import { validateDependency } from '../../utils/dependencyUtils.js';
+import { ErrorCodes } from '../constants/errorCodes.js';
 
 /**
  * Creates an ArrayIterationStep node resolver for flattening array values.
  * Resolves ArrayIterationStep nodes by flattening arrays from parent results.
  *
+ * @param {object} deps - Dependencies
+ * @param {object} deps.errorHandler - Optional error handler for centralized error handling
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
-export default function createArrayIterationResolver() {
+export default function createArrayIterationResolver({ errorHandler = null } = {}) {
+  // Only validate if provided (for backward compatibility)
+  if (errorHandler) {
+    validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
+      requiredMethods: ['handleError', 'getErrorBuffer'],
+    });
+  }
+  
+  const MAX_ARRAY_SIZE = 10000; // Configurable limit
   const LAYER_PRIORITY = {
     topmost: ['outer', 'base', 'underwear'],
     all: ['outer', 'base', 'underwear', 'accessories'],
@@ -133,17 +145,14 @@ export default function createArrayIterationResolver() {
         const error = new Error(
           'ArrayIterationResolver: actorEntity is missing from context'
         );
-        console.error(
-          '[CRITICAL] ArrayIterationResolver missing actorEntity:',
-          {
-            hasCtx: !!ctx,
-            ctxKeys: ctx ? Object.keys(ctx) : [],
-            nodeType: node?.type,
-            parentNodeType: node?.parent?.type,
-            depth: ctx?.depth,
-            callStack: new Error().stack,
-          }
-        );
+        if (errorHandler) {
+          errorHandler.handleError(
+            error,
+            ctx,
+            'ArrayIterationResolver',
+            ErrorCodes.MISSING_ACTOR
+          );
+        }
         throw error;
       }
 
@@ -166,6 +175,24 @@ export default function createArrayIterationResolver() {
       // Flatten arrays from parent result
       for (const parentValue of parentResult) {
         if (Array.isArray(parentValue)) {
+          // Check array size limit
+          if (parentValue.length > MAX_ARRAY_SIZE) {
+            if (errorHandler) {
+              try {
+                errorHandler.handleError(
+                  new Error(`Array size ${parentValue.length} exceeds limit ${MAX_ARRAY_SIZE}`),
+                  { ...ctx, arraySize: parentValue.length },
+                  'ArrayIterationResolver',
+                  ErrorCodes.MEMORY_LIMIT
+                );
+              } catch {
+                // Error handler might throw, but we should continue processing
+                // This is a warning - we still process the array
+              }
+            }
+            // Still process the array, but error has been logged
+          }
+          
           for (const item of parentValue) {
             if (item !== null && item !== undefined) {
               result.add(item);
@@ -173,11 +200,27 @@ export default function createArrayIterationResolver() {
           }
         } else if (parentValue && parentValue.__isClothingAccessObject) {
           // Handle clothing access objects from ClothingStepResolver
-          const items = getAllClothingItems(parentValue, trace);
-          for (const item of items) {
-            if (item !== null && item !== undefined) {
-              result.add(item);
+          try {
+            const items = getAllClothingItems(parentValue, trace);
+            for (const item of items) {
+              if (item !== null && item !== undefined) {
+                result.add(item);
+              }
             }
+          } catch (error) {
+            if (errorHandler) {
+              try {
+                errorHandler.handleError(
+                  error,
+                  { ...ctx, clothingAccess: parentValue },
+                  'ArrayIterationResolver',
+                  ErrorCodes.ARRAY_ITERATION_FAILED
+                );
+              } catch {
+                // Error handler might throw, but we should continue processing
+              }
+            }
+            // Continue processing other items
           }
         } else if (node.parent.type === 'Source') {
           // Pass through for entities()[] case where Source returns entity IDs
@@ -192,6 +235,21 @@ export default function createArrayIterationResolver() {
           // Pass through for location.entities(component)[] case
           if (parentValue !== null && parentValue !== undefined) {
             result.add(parentValue);
+          }
+        } else if (parentValue !== null && parentValue !== undefined) {
+          // Log unexpected non-array values in development mode
+          if (errorHandler) {
+            try {
+              errorHandler.handleError(
+                new Error(`Expected array but got ${typeof parentValue}`),
+                { ...ctx, actualType: typeof parentValue, value: parentValue },
+                'ArrayIterationResolver',
+                ErrorCodes.DATA_TYPE_MISMATCH
+              );
+            } catch {
+              // Error handler might throw, but we should continue processing
+              // This is a non-critical error - just logging unexpected types
+            }
           }
         }
         // For other cases (like Step nodes), non-arrays result in empty set
