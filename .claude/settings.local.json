@@ -118,6 +118,12 @@
       "Bash(NODE_ENV=test npx jest --config jest.config.integration.js --env=jsdom tests/integration/logging/criticalLogNotification.integration.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest --config jest.config.unit.js --env=jsdom tests/unit/logging/logExporter.test.js --no-coverage)",
       "Bash(NODE_ENV=test npx jest --config jest.config.integration.js --env=jsdom tests/integration/logging/criticalLogNotification.integration.test.js --no-coverage --silent)",
+      "Bash(NODE_ENV=test npx jest tests/performance/actions/tracing/actionAwareStructuredTrace.performance.test.js --testNamePattern=\"should handle concurrent access without performance degradation\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/logging/remoteLogger.test.js --testNamePattern=\"should compress payloads when enabled and above threshold\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/logging/remoteLogger.test.js --testNamePattern=\"Compression\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npm run test:integration tests/integration/logging/compressionBehavior.integration.test.js --silent)",
+      "Bash(NODE_ENV=test npx jest tests/integration/logging/compressionBehavior.integration.test.js --testNamePattern=\"should compress large payloads\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/unit/logging/remoteLogger.test.js --testNamePattern=\"Compression\" --no-coverage --silent)"
       "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/nodes/arrayIteration.test.js --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/nodes/arrayIteration.test.js --no-coverage --silent)",
       "Bash(NODE_ENV=test npx jest tests/unit/scopeDsl/engine.test.js --no-coverage --silent)",

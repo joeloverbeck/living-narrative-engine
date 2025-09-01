@@ -40,6 +40,16 @@ beforeEach(() => {
   // Use test manager to create properly managed server instance
   testManager.createMockServer(app, { port: 3001 });
 
+  // Create a mock router for express.Router()
+  const mockRouter = {
+    get: jest.fn(),
+    post: jest.fn(),
+    use: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+    patch: jest.fn(),
+  };
+
   expressMock = jest.fn(() => app);
   expressMock.json = jest.fn(() => 'json-mw');
   
@@ -216,6 +226,11 @@ beforeEach(() => {
   jest.doMock('../src/routes/debugRoutes.js', () => ({
     __esModule: true,
     default: 'debug-routes-mock',
+  }));
+
+  jest.doMock('../src/routes/healthRoutes.js', () => ({
+    __esModule: true,
+    default: 'health-routes-mock',
   }));
 });
 
