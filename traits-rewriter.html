@@ -146,6 +146,11 @@
             <p class="progress-text">Rewriting traits in character voice...</p>
           </div>
 
+          <!-- UI State Manager Loading State (maps to generation-progress) -->
+          <div id="loading-state" style="display: none" aria-hidden="true">
+            <!-- This element is required by UIStateManager but content handled by generation-progress -->
+          </div>
+
           <!-- Rewritten Traits Container -->
           <div
             id="rewritten-traits-container"
@@ -190,6 +195,11 @@
             </div>
           </div>
 
+          <!-- UI State Manager Results State (maps to rewritten-traits-container) -->
+          <div id="results-state" style="display: none" aria-hidden="true">
+            <!-- This element is required by UIStateManager but content handled by rewritten-traits-container -->
+          </div>
+
           <!-- Empty State -->
           <div id="empty-state" class="empty-state">
             <div class="empty-state-icon">📝</div>
@@ -217,6 +227,11 @@
               <span class="button-icon">🔄</span>
               <span class="button-text">Retry</span>
             </button>
+          </div>
+
+          <!-- UI State Manager Error State (maps to generation-error) -->
+          <div id="error-state" style="display: none" aria-hidden="true">
+            <!-- This element is required by UIStateManager but content handled by generation-error -->
           </div>
         </section>
       </main>

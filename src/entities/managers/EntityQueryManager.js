@@ -208,12 +208,12 @@ export default class EntityQueryManager {
           totalEntityIdsFound: entityIds.size,
           entitiesFound: results.map(entity => ({
             id: entity.id,
-            hasComponent: this.#entityRepository.hasComponent(entity.id, componentTypeId),
-            componentData: this.#entityRepository.getComponent(entity.id, componentTypeId)
+            hasComponent: entity.hasComponent(componentTypeId),
+            componentData: entity.getComponentData(componentTypeId)
           })),
           repositoryStats: {
-            totalEntities: this.#entityRepository.size,
-            hasComponentIndex: this.#entityRepository.hasComponentIndex ? this.#entityRepository.hasComponentIndex(componentTypeId) : 'unknown'
+            totalEntities: this.#entityRepository.size(),
+            componentIndexSize: this.#entityRepository.getEntityIdsByComponent ? this.#entityRepository.getEntityIdsByComponent(componentTypeId).size : 'unknown'
           }
         }
       );

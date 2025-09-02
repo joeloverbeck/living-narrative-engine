@@ -11,6 +11,10 @@ const API_ENDPOINT = 'http://localhost:3001/api/debug-log';
 const LOG_DIR = './logs';
 
 // Generate test logs
+/**
+ *
+ * @param count
+ */
 function generateTestLogs(count = 10) {
   const logs = [];
   const categories = ['engine', 'ui', 'entities', 'actions', 'general'];
@@ -36,6 +40,10 @@ function generateTestLogs(count = 10) {
 }
 
 // Send logs to the server
+/**
+ *
+ * @param logs
+ */
 async function sendLogs(logs) {
   try {
     const response = await fetch(API_ENDPOINT, {
@@ -60,6 +68,9 @@ async function sendLogs(logs) {
 }
 
 // Check if log files are being written
+/**
+ *
+ */
 async function checkLogFiles() {
   const today = new Date().toISOString().split('T')[0];
   const todayLogDir = path.join(LOG_DIR, today);
@@ -85,6 +96,9 @@ async function checkLogFiles() {
 }
 
 // Main test function
+/**
+ *
+ */
 async function testLogFlushing() {
   console.log('🧪 Starting Windows Terminal Log Flush Test');
   console.log('=' .repeat(50));

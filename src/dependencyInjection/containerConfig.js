@@ -7,6 +7,7 @@ import { Registrar } from '../utils/registrarHelpers.js';
 // --- Import Logger ---
 import ConsoleLogger, { LogLevel } from '../logging/consoleLogger.js';
 import LoggerStrategy from '../logging/loggerStrategy.js';
+import { getEnvironmentMode, isTestEnvironment } from '../utils/environmentUtils.js';
 
 // --- Import Logger Config Utility ---
 import {
@@ -80,7 +81,7 @@ export async function configureContainer(container, uiElements) {
     // --- Bootstrap logger with LoggerStrategy ---
     // The LoggerStrategy will handle mode detection and logger selection
     // Don't force development mode if we're in a test environment
-    const loggerMode = process.env?.NODE_ENV === 'test' ? 'test' : 'development';
+    const loggerMode = isTestEnvironment() ? 'test' : getEnvironmentMode();
     const appLogger = new LoggerStrategy({
       mode: loggerMode, // Use test mode for tests, development mode otherwise
       config: debugConfig || {}, // Pass the loaded debug config or empty object

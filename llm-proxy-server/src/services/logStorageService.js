@@ -8,6 +8,12 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { parseFileSize } from '../config/debugLogConfigValidator.js';
+import { 
+  shouldUseWindowsTerminalFlush, 
+  forceTerminalFlush,
+  forceFilesystemSync,
+  getWSLOptimizedConfig 
+} from '../utils/platformUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -110,6 +116,11 @@ class LogStorageService {
     this.#isFlushingBuffer = false;
     this.#createdDirectories = new Set();
 
+    // Get WSL-optimized configuration (but not in test environment)
+    const wslConfig = process.env.NODE_ENV === 'test' ? 
+      { immediateFlush: false, writeBufferSize: 100, flushIntervalMs: 5000 } : 
+      getWSLOptimizedConfig();
+
     // Determine if we received AppConfigService or legacy config
     if (
       configOrAppConfig &&
@@ -132,27 +143,54 @@ class LogStorageService {
         retentionDays:
           debugConfig.storage?.retentionDays || DEFAULT_CONFIG.retentionDays,
         maxFileSizeMB: maxFileSizeMB,
+        // Use WSL-optimized values if in WSL (but not in tests), otherwise use configured values
         writeBufferSize:
-          debugConfig.performance?.writeBufferSize ||
-          DEFAULT_CONFIG.writeBufferSize,
+          wslConfig.immediateFlush ? wslConfig.writeBufferSize :
+          (debugConfig.performance?.writeBufferSize || DEFAULT_CONFIG.writeBufferSize),
         flushIntervalMs:
-          debugConfig.performance?.flushInterval ||
-          DEFAULT_CONFIG.flushIntervalMs,
+          wslConfig.immediateFlush ? wslConfig.flushIntervalMs :
+          (debugConfig.performance?.flushInterval || DEFAULT_CONFIG.flushIntervalMs),
       };
 
-      this.#logger.debug(
-        'LogStorageService: Initialized with AppConfigService',
-        {
-          config: this.#config,
-          debugLoggingEnabled: configOrAppConfig.isDebugLoggingEnabled(),
-        }
-      );
+      if (process.env.NODE_ENV !== 'test') {
+        this.#logger.debug(
+          'LogStorageService: Initialized with AppConfigService',
+          {
+            config: this.#config,
+            debugLoggingEnabled: configOrAppConfig.isDebugLoggingEnabled(),
+            wslOptimized: wslConfig.immediateFlush,
+          }
+        );
+      } else {
+        this.#logger.debug(
+          'LogStorageService: Initialized with AppConfigService',
+          {
+            config: this.#config,
+            debugLoggingEnabled: configOrAppConfig.isDebugLoggingEnabled(),
+          }
+        );
+      }
     } else {
-      // Legacy configuration object
-      this.#config = { ...DEFAULT_CONFIG, ...configOrAppConfig };
-      this.#logger.debug('LogStorageService: Initialized with legacy config', {
-        config: this.#config,
-      });
+      // Legacy configuration object - apply WSL optimizations if needed
+      this.#config = { 
+        ...DEFAULT_CONFIG, 
+        ...configOrAppConfig,
+        // Override with WSL-optimized values if in WSL (but not in tests)
+        ...(wslConfig.immediateFlush ? {
+          writeBufferSize: wslConfig.writeBufferSize,
+          flushIntervalMs: wslConfig.flushIntervalMs
+        } : {})
+      };
+      if (process.env.NODE_ENV !== 'test') {
+        this.#logger.debug('LogStorageService: Initialized with legacy config', {
+          config: this.#config,
+          wslOptimized: wslConfig.immediateFlush,
+        });
+      } else {
+        this.#logger.debug('LogStorageService: Initialized with legacy config', {
+          config: this.#config,
+        });
+      }
     }
 
     // Start periodic flush timer
@@ -642,7 +680,42 @@ class LogStorageService {
     // Format all logs as JSONL
     const jsonlData = logs.map((log) => this.#formatLogEntry(log)).join('');
 
-    // Atomic write operation
+    // For WSL environments, use enhanced flush mechanisms
+    const isWSLEnvironment = shouldUseWindowsTerminalFlush() && process.env.NODE_ENV !== 'test';
+    if (isWSLEnvironment) {
+      try {
+        // Use file handle API for explicit flush control in WSL
+        const fileHandle = await fs.open(filePath, 'a', 0o644);
+        try {
+          await fileHandle.write(jsonlData, null, 'utf8');
+          // Force OS-level flush for WSL
+          await fileHandle.sync();
+          await fileHandle.datasync();
+        } finally {
+          await fileHandle.close();
+        }
+
+        this.#logger.debug(
+          `LogStorageService.#writeLogsToFileWithPath: Wrote ${logs.length} logs to ${filePath} (WSL mode)`
+        );
+
+        // Additional WSL-specific flush
+        this.#forceWindowsTerminalFlush();
+        
+        // Force filesystem sync in WSL for immediate visibility
+        await forceFilesystemSync(false);
+        
+        return;
+      } catch (error) {
+        this.#logger.warn(
+          'LogStorageService.#writeLogsToFileWithPath: WSL flush failed, falling back to standard write',
+          { error: error.message }
+        );
+        // Fall through to standard write method
+      }
+    }
+
+    // Standard atomic write operation for non-WSL environments
     const tempFilePath = filePath + '.tmp';
 
     try {
@@ -675,6 +748,9 @@ class LogStorageService {
       this.#logger.debug(
         `LogStorageService.#writeLogsToFileWithPath: Wrote ${logs.length} logs to ${filePath}`
       );
+
+      // Force Windows Terminal flush after writing log batches
+      this.#forceWindowsTerminalFlush();
     } catch (error) {
       // Clean up temp file if it exists
       try {
@@ -753,6 +829,18 @@ class LogStorageService {
     };
     
     scheduleNextFlush();
+  }
+
+  /**
+   * Force flush stdout/stderr on Windows and WSL to prevent terminal buffering
+   * This addresses the Windows Terminal issue where logs only appear on focus changes
+   * @private
+   */
+  #forceWindowsTerminalFlush() {
+    // Apply on Windows platform AND WSL environments (which display through Windows Terminal)
+    if (shouldUseWindowsTerminalFlush()) {
+      forceTerminalFlush(false); // Don't log flush attempts to avoid recursion
+    }
   }
 }
 

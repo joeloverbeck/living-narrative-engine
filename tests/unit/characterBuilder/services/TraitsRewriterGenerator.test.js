@@ -286,12 +286,12 @@ describe('TraitsRewriterGenerator', () => {
       await generator.generateRewrittenTraits(characterDef);
 
       expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledWith(
+        expect.stringContaining('Test Character'), // First param: prompt string
+        null, // Second param: abortSignal
         expect.objectContaining({
-          prompt: expect.stringContaining('Test Character'),
           temperature: 0.8,
           maxTokens: 3000,
-          stream: false,
-        })
+        }) // Third param: requestOptions
       );
     });
 
@@ -424,7 +424,7 @@ describe('TraitsRewriterGenerator', () => {
 
       expect(result).toBeDefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        'TraitsRewriterGenerator: Invalid trait keys found',
+        'TraitsRewriterGenerator: Response contains unsupported trait keys',
         expect.objectContaining({
           invalidKeys: ['invalid:trait'],
         })

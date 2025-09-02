@@ -10,9 +10,11 @@ import { DebugLogConfigLoader } from '../debugLogConfigLoader.js';
  * @param {object} [safeEventDispatcher] - Optional event dispatcher.
  * @returns {Promise<object|null>} The debug configuration or null if not available.
  */
+import { shouldSkipDebugConfig } from '../../utils/environmentUtils.js';
+
 export async function loadDebugLogConfig(logger, safeEventDispatcher) {
   // Check if debug config loading is explicitly disabled (e.g., for performance tests)
-  if (process.env?.SKIP_DEBUG_CONFIG === 'true') {
+  if (shouldSkipDebugConfig()) {
     if (logger && typeof logger.debug === 'function') {
       logger.debug(
         'Debug configuration loading is disabled via SKIP_DEBUG_CONFIG environment variable.'

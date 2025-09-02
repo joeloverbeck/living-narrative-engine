@@ -3,6 +3,8 @@
  * Monitors and reports performance metrics for categorization operations
  */
 
+import { createMemoryMonitor, getHighResolutionTime, isMemoryUsageAvailable } from '../browserCompatUtils.js';
+
 /**
  * Performance monitoring utility for action categorization
  */
@@ -10,6 +12,7 @@ export class ActionCategorizationPerformanceMonitor {
   #logger;
   #metrics;
   #config;
+  #memoryMonitor;
 
   constructor({ logger, config = {} }) {
     this.#logger = logger;
@@ -21,6 +24,12 @@ export class ActionCategorizationPerformanceMonitor {
       ...config,
     };
 
+    // Create memory monitor for cross-platform memory tracking
+    this.#memoryMonitor = createMemoryMonitor({
+      trackPeaks: true,
+      warnOnUnavailable: false, // Don't warn since this is expected in browser
+    });
+
     this.#metrics = {
       operations: {
         extractNamespace: { count: 0, totalTime: 0, slowCount: 0 },
@@ -30,9 +39,9 @@ export class ActionCategorizationPerformanceMonitor {
         formatNamespaceDisplayName: { count: 0, totalTime: 0, slowCount: 0 },
       },
       memory: {
-        initialHeapUsed: process.memoryUsage().heapUsed,
-        peakHeapUsed: process.memoryUsage().heapUsed,
-        lastCheckHeapUsed: process.memoryUsage().heapUsed,
+        initialHeapUsed: this.#memoryMonitor.getInitialHeapUsed(),
+        peakHeapUsed: this.#memoryMonitor.getPeakHeapUsed(),
+        lastCheckHeapUsed: this.#memoryMonitor.getInitialHeapUsed(),
       },
       errors: {
         count: 0,
@@ -53,8 +62,8 @@ export class ActionCategorizationPerformanceMonitor {
       return operation();
     }
 
-    const startTime = performance.now();
-    const startMemory = process.memoryUsage().heapUsed;
+    const startTime = getHighResolutionTime();
+    const startMemory = this.#memoryMonitor.getCurrentUsage().heapUsed;
 
     try {
       const result = operation();
@@ -94,8 +103,8 @@ export class ActionCategorizationPerformanceMonitor {
       return await operation();
     }
 
-    const startTime = performance.now();
-    const startMemory = process.memoryUsage().heapUsed;
+    const startTime = getHighResolutionTime();
+    const startMemory = this.#memoryMonitor.getCurrentUsage().heapUsed;
 
     try {
       const result = await operation();
@@ -186,7 +195,7 @@ export class ActionCategorizationPerformanceMonitor {
    * @private
    */
   #checkMemoryUsage(startMemory) {
-    const currentMemory = process.memoryUsage().heapUsed;
+    const currentMemory = this.#memoryMonitor.updatePeakUsage();
 
     if (currentMemory > this.#metrics.memory.peakHeapUsed) {
       this.#metrics.memory.peakHeapUsed = currentMemory;
@@ -244,7 +253,7 @@ export class ActionCategorizationPerformanceMonitor {
    * @private
    */
   #reportMemoryMetrics() {
-    const current = process.memoryUsage().heapUsed;
+    const current = this.#memoryMonitor.getCurrentUsage().heapUsed;
     const peak = this.#metrics.memory.peakHeapUsed;
     const initial = this.#metrics.memory.initialHeapUsed;
     const increase = current - initial;
@@ -269,10 +278,9 @@ export class ActionCategorizationPerformanceMonitor {
     const summary = {
       operations: {},
       memory: {
-        currentHeapUsed: process.memoryUsage().heapUsed,
+        currentHeapUsed: this.#memoryMonitor.getCurrentUsage().heapUsed,
         peakHeapUsed: this.#metrics.memory.peakHeapUsed,
-        memoryIncrease:
-          process.memoryUsage().heapUsed - this.#metrics.memory.initialHeapUsed,
+        memoryIncrease: this.#memoryMonitor.getMemoryIncrease(),
       },
       errors: this.#metrics.errors,
     };
@@ -304,10 +312,13 @@ export class ActionCategorizationPerformanceMonitor {
       formatNamespaceDisplayName: { count: 0, totalTime: 0, slowCount: 0 },
     };
 
+    // Reset the memory monitor
+    this.#memoryMonitor.reset();
+    
     this.#metrics.memory = {
-      initialHeapUsed: process.memoryUsage().heapUsed,
-      peakHeapUsed: process.memoryUsage().heapUsed,
-      lastCheckHeapUsed: process.memoryUsage().heapUsed,
+      initialHeapUsed: this.#memoryMonitor.getInitialHeapUsed(),
+      peakHeapUsed: this.#memoryMonitor.getPeakHeapUsed(),
+      lastCheckHeapUsed: this.#memoryMonitor.getInitialHeapUsed(),
     };
 
     this.#metrics.errors = {

@@ -1,492 +1,263 @@
-[2025-09-01T18:22:58.002Z]  "GET /data/mods/p_erotica/portraits/depths_of_park.png" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
-[0] [2025-09-01T18:22:58.002Z]  "GET /data/mods/p_erotica/portraits/jon_urena.png" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
-[1] [20:22:58.393] 🔄 DEBUG System: HTTP request metrics recorded
+TokenEstimator: Calculated token budget {totalLimit: 200000, reservedTokens: 150, availableForPrompt: 199850}
+consoleLogger.js:187 TokenEstimator: Determined encoding for model {model: 'anthropic/claude-sonnet-4', encoding: 'cl100k_base'}
+consoleLogger.js:187 VED: Event 'core:traits_rewriter_generation_started' dispatch successful.
+consoleLogger.js:187 TokenEstimator: Estimated tokens {model: 'anthropic/claude-sonnet-4', encoding: 'cl100k_base', textLength: 17637, tokenCount: 3814}
+consoleLogger.js:187 TokenEstimator: Token validation result {model: 'anthropic/claude-sonnet-4', limit: 199850, estimatedTokens: 3814, isValid: true, isNearLimit: false, …}
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:traits_rewriter_generation_started'.
+consoleLogger.js:187 Attempting to retrieve API key for LLM 'openrouter-claude-sonnet-4-toolcalling'.
+consoleLogger.js:187 ClientApiKeyProvider.getKey (openrouter-claude-sonnet-4-toolcalling): Configuration for cloud service 'openrouter' has required key identifier(s) for proxy usage (apiKeyEnvVar: 'OPENROUTER_API_KEY_ENV_VAR', apiKeyFileName: 'openrouter_api_key.txt').
+consoleLogger.js:187 API key not required or not found for LLM 'openrouter-claude-sonnet-4-toolcalling', proceeding. (Is Cloud API: true, Is Server: false)
+consoleLogger.js:187 LLMStrategyFactory: Determining strategy for LLM ID: 'openrouter-claude-sonnet-4-toolcalling', apiType: 'openrouter'. {configuredJsonMethod: 'openrouter_tool_calling', fullConfigJsonStrategy: {…}}
+consoleLogger.js:187 LLMStrategyFactory: Selected strategy 'OpenRouterToolCallingStrategy' for LLM ID 'openrouter-claude-sonnet-4-toolcalling'. Details: apiType='openrouter', effectiveMethod='openrouter_tool_calling', configuredMethod='openrouter_tool_calling'.
+consoleLogger.js:187 OpenRouterToolCallingStrategy initialized.
+consoleLogger.js:187 OpenRouterToolCallingStrategy initialized.
+consoleLogger.js:187 LLMRequestExecutor: Executing request {configId: 'openrouter-claude-sonnet-4-toolcalling', strategyMethod: 'openrouter_tool_calling', hasAbortSignal: false, hasRequestOptions: true}
+consoleLogger.js:187 OpenRouterToolCallingStrategy.execute called for LLM ID: openrouter-claude-sonnet-4-toolcalling.
+consoleLogger.js:187 BaseChatLLMStrategy._constructPromptPayload for apiType 'openrouter'. gameSummary (finalPromptString) length: 17637.
+consoleLogger.js:187 BaseChatLLMStrategy._constructPromptPayload: Constructed 'messages' array. The prompt built by PromptBuilder is the sole user message content. [{…}]
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Constructed base prompt payload: {llmId: 'openrouter-claude-sonnet-4-toolcalling', messagesPreview: Array(1)}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): No custom tool schema provided, using default game AI schema. {llmId: 'openrouter-claude-sonnet-4-toolcalling'}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Defined tool for use with name 'function_call'. {llmId: 'openrouter-claude-sonnet-4-toolcalling', toolName: 'function_call', isCustomSchema: false}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Received provider-specific payload additions. {llmId: 'openrouter-claude-sonnet-4-toolcalling', providerSpecificPayloadAdditions: {…}}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Assembled provider request payload. {llmId: 'openrouter-claude-sonnet-4-toolcalling', keys: Array(5)}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Client-side execution. Using proxy URL: http://localhost:3001/api/llm-request. Payload prepared according to proxy API contract. {llmId: 'openrouter-claude-sonnet-4-toolcalling'}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Making API call to 'http://localhost:3001/api/llm-request'. Payload length: 19622 {llmId: 'openrouter-claude-sonnet-4-toolcalling'}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Final prompt to be sent to 'http://localhost:3001/api/llm-request': {llmId: 'openrouter-claude-sonnet-4-toolcalling', payload: '{\n  "llmId": "openrouter-claude-sonnet-4-toolcalli…",\n    "X-Title": "Living Narrative Engine"\n  }\n}'}
+consoleLogger.js:187 RetryHttpClient.request: Initiating request to http://localhost:3001/api/llm-request {method: 'POST'}
+consoleLogger.js:187 RetryHttpClient.request: Attempt 1/4 → http://localhost:3001/api/llm-request
+consoleLogger.js:187 [fetchWithRetry] fetchWithRetry: Initiating request sequence for http://localhost:3001/api/llm-request with maxRetries=1, baseDelayMs=500, maxDelayMs=10000.
+consoleLogger.js:187 [fetchWithRetry] Attempt 1/1 - Fetching POST http://localhost:3001/api/llm-request
+consoleLogger.js:187 [fetchWithRetry] Setting credentials: 'omit' for localhost request to http://localhost:3001/api/llm-request
+consoleLogger.js:187 [fetchWithRetry] fetchWithRetry: Attempt 1/1 for http://localhost:3001/api/llm-request - Request successful (status 200). Parsing JSON response.
+consoleLogger.js:187 [fetchWithRetry] fetchWithRetry: Successfully fetched and parsed JSON from http://localhost:3001/api/llm-request after 1 attempt(s).
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Raw API response received. Preview: {"id":"gen-1756834057-Ur266qY8lURhoEikeaj1","provider":"Google","model":"anthropic/claude-sonnet-4","object":"chat.completion","created":1756834057,"choices":[{"logprobs":null,"finish_reason":"tool_calls","native_finish_reason":"tool_calls","index":0...
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Successfully extracted JSON string from tool_calls[0].function.arguments for tool 'function_call'. {llmId: 'openrouter-claude-sonnet-4-toolcalling', length: 8025, toolName: 'function_call'}
+consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Successfully extracted JSON string. Length: 8025. {llmId: 'openrouter-claude-sonnet-4-toolcalling'}
+consoleLogger.js:187 LLMRequestExecutor: Request executed successfully {configId: 'openrouter-claude-sonnet-4-toolcalling'}
+loggerUtils.js:68 LlmJsonService:  parseAndRepair: Successfully parsed JSON on first attempt after cleaning. {inputLength: 8025, cleanedLength: 8025}
+consoleLogger.js:187 TraitsRewriterGenerator: Raw parsed response structure {characterName: 'Juan Mendarte', responseKeys: Array(0), hasCharacterName: false, hasFunctionCall: false, hasNestedCharacterName: false}
+consoleLogger.js:187 TraitsRewriterGenerator: Extracted response for validation {characterName: 'Juan Mendarte', extractedKeys: Array(0), hasCharacterName: false, hasRewrittenTraits: false, rewrittenTraitsKeys: Array(0)}
+consoleLogger.js:175 TraitsRewriterGenerator: Missing characterName in response {characterName: 'Juan Mendarte', responseStructure: `{\n  "chosenIndex": 1,\n  "speech": "{\\n  \\"characte… I'm being honest. And his hairless, bubbly ass..`, responseKeys: Array(3), responseType: 'object'}
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:674
+validateGenerationResult_fn @ TraitsRewriterGenerator.js:368
+generateRewrittenTraits @ TraitsRewriterGenerator.js:144
+await in generateRewrittenTraits
+generateRewrittenTraits_fn @ TraitsRewriterController.js:394Understand this error
+consoleLogger.js:175 TraitsRewriterGenerator: Generation failed {error: 'Validation failed for characterName: Missing chara…se structure: ["chosenIndex","speech","thoughts"]', stack: 'TraitsRewriterError: Validation failed for charact…tp://127.0.0.1:8080/traits-rewriter.js:159342:22)', characterName: 'Juan Mendarte', processingTime: 59429, options: {…}, …}
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:674
+handleGenerationErrors_fn @ TraitsRewriterGenerator.js:452
+generateRewrittenTraits @ TraitsRewriterGenerator.js:182
+await in generateRewrittenTraits
+generateRewrittenTraits_fn @ TraitsRewriterController.js:394Understand this error
+consoleLogger.js:187 VED: Validating payload for event 'core:traits_rewriter_generation_failed' against schema 'core:traits_rewriter_generation_failed#payload'...
+consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:traits_rewriter_generation_failed'.
+consoleLogger.js:187 VED: Dispatching event 'core:traits_rewriter_generation_failed' via EventBus... {error: 'Validation failed for characterName: Missing chara…se structure: ["chosenIndex","speech","thoughts"]', characterName: 'Juan Mendarte', processingTime: 59429, options: {…}, timestamp: '2025-09-02T17:28:35.476Z', …}
+consoleLogger.js:175 TraitsRewriterController: Generation error {type: 'core:traits_rewriter_generation_failed', payload: {…}}
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:674
+handleGenerationError_fn @ TraitsRewriterController.js:717
+(anonymous) @ eventBus.js:144
+dispatch @ eventBus.js:141
+emitEvent_fn @ validatedEventDispatcher.js:198
+dispatch @ validatedEventDispatcher.js:228
+__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
+executeSafely_fn @ safeEventDispatcher.js:88
+dispatch @ safeEventDispatcher.js:122
+dispatchGenerationEvents_fn @ TraitsRewriterGenerator.js:488
+handleGenerationErrors_fn @ TraitsRewriterGenerator.js:459
+generateRewrittenTraits @ TraitsRewriterGenerator.js:182
+await in generateRewrittenTraits
+generateRewrittenTraits_fn @ TraitsRewriterController.js:394Understand this error
+consoleLogger.js:175 TraitsRewriterController: Generation failed TraitsRewriterError: Validation failed for characterName: Missing character name in response. Response structure: ["chosenIndex","speech","thoughts"]
+    at _TraitsRewriterError.forValidationFailure (TraitsRewriterError.js:95:12)
+    at TraitsRewriterGenerator.validateGenerationResult_fn (TraitsRewriterGenerator.js:375:33)
+    at TraitsRewriterGenerator.generateRewrittenTraits (TraitsRewriterGenerator.js:144:31)
+    at async TraitsRewriterController.generateRewrittenTraits_fn (TraitsRewriterController.js:394:9)
+error @ consoleLogger.js:175
+error @ loggerStrategy.js:674
+generateRewrittenTraits_fn @ TraitsRewriterController.js:404Understand this error
+consoleLogger.js:187 VED: Event 'core:traits_rewriter_generation_failed' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:traits_rewriter_generation_failed'.
+
+
+---
+
+[1] [19:27:36.415] 🔑 DEBUG System: ApiKeyService.isApiKeyRequired: For apiType='openrouter', isLocalType=false. Key required: true
+[1] [19:27:36.415] 🔄 INFO System: ApiKeyService.getApiKey: Attempting API key retrieval for cloud service llmId 'openrouter-claude-sonnet-4-toolcalling'.
+[1] [19:27:36.415] 🔄 DEBUG System: ApiKeyService.getApiKey: Checking environment variable 'OPENROUTER_API_KEY_ENV_VAR' for llmId 'openrouter-claude-sonnet-4-toolcalling'.
+[1] [19:27:36.416] 🔄 INFO System: ApiKeyService.getApiKey: Successfully retrieved API key for llmId 'openrouter-claude-sonnet-4-toolcalling' from environment variable 'OPENROUTER_API_KEY_ENV_VAR'.
+[1] [19:27:36.416] 🔄 DEBUG LlmRequestController: LlmRequestController: API key successfully obtained for llmId 'openrouter-claude-sonnet-4-toolcalling' from source: environment variable 'OPENROUTER_API_KEY_ENV_VAR'. Key: sk-o*********************...
 [1]                     ↳ Context: {
-[1]                       "method": "OPTIONS",
-[1]                       "route": "/api/traces/write",
-[1]                       "statusCode": 204,
-[1]                       "duration": 0.0006095,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 0
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
 [1]                     }
-[1] [20:22:58.413] 📝 DEBUG System: Health check (liveness) completed
+[1] [19:27:36.416] 🔄 DEBUG LlmRequestController: LlmRequestController: API Key Status after retrieval for 'openrouter-claude-sonnet-4-toolcalling': Source: environment variable 'OPENROUTER_API_KEY_ENV_VAR', Required: true, KeyPresent: true
 [1]                     ↳ Context: {
-[1]                       "status": "UP",
-[1]                       "responseTime": 0.08,
-[1]                       "memoryUsed": 17
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
 [1]                     }
-[1] [20:22:58.413] 🔄 DEBUG System: HTTP request metrics recorded
+[1] [19:27:36.416] 🔄 DEBUG LlmRequestController: LlmRequestController: Handing off request for llmId 'openrouter-claude-sonnet-4-toolcalling' to LlmRequestService.
 [1]                     ↳ Context: {
-[1]                       "method": "GET",
-[1]                       "route": "/health",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.000875,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 161
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
 [1]                     }
-[1] [20:22:58.417] 🔄 DEBUG System: HTTP request metrics recorded
+[1] [19:27:36.416] 🔄 DEBUG LlmRequestService: LlmRequestService: forwardRequest invoked.
 [1]                     ↳ Context: {
-[1]                       "method": "OPTIONS",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 204,
-[1]                       "duration": 0.0001947,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 0
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling",
+[1]                       "apiType": "openrouter",
+[1]                       "displayName": "Claude Sonnet 4 (OpenRouter - Tool Calling)"
 [1]                     }
-[1] [20:22:58.438] 📝 INFO System: Trace file written successfully
+[1] [19:27:36.416] 🔄 DEBUG LlmRequestService: LlmRequestService: Constructed headers for llmId 'openrouter-claude-sonnet-4-toolcalling': ["Content-Type","HTTP-Referer","X-Title","Authorization"]. Auth included: true
 [1]                     ↳ Context: {
-[1]                       "fileName": "trace_discovery_p_erotica_jon_urena_instance_2025-09-01T18-22-58_081Z.json",
-[1]                       "directory": "./traces/sit-down",
-[1]                       "fullPath": "/home/joeloverbeck/projects/living-narrative-engine/traces/sit-down/trace_discovery_p_erotica_jon_urena_instance_2025-09-01T18-22-58_081Z.json",
-[1]                       "size": 12355
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
 [1]                     }
-[1] [20:22:58.438] 🔄 DEBUG System: HTTP request metrics recorded
+[1] [19:27:36.416] 🔄 DEBUG LlmRequestService: LlmRequestService: Retry parameters for llmId 'openrouter-claude-sonnet-4-toolcalling': maxRetries=3, baseDelayMs=1000, maxDelayMs=10000
 [1]                     ↳ Context: {
-[1]                       "method": "POST",
-[1]                       "route": "/api/traces/write",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.042933701,
-[1]                       "requestSize": 13808,
-[1]                       "responseSize": 261
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
 [1]                     }
-[1] [20:22:58.442] 🔄 DEBUG System: HTTP request metrics recorded
+[1] [19:27:36.416] 🔄 DEBUG LlmRequestService: LlmRequestService: Preparing to forward request to LLM provider 'Claude Sonnet 4 (OpenRouter - Tool Calling)'.
 [1]                     ↳ Context: {
-[1]                       "method": "OPTIONS",
-[1]                       "route": "/api/traces/write",
-[1]                       "statusCode": 204,
-[1]                       "duration": 0.000236,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 0
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling",
+[1]                       "targetUrl": "https://openrouter.ai/api/v1/chat/completions",
+[1]                       "headerKeys": [
+[1]                         "Content-Type",
+[1]                         "HTTP-Referer",
+[1]                         "X-Title",
+[1]                         "Authorization"
+[1]                       ]
 [1]                     }
-[1] [20:22:58.463] 📝 DEBUG System: LogStorageService.writeLogs: Processing 15 logs
-[1] [20:22:58.463] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 15 logs
+[1] [19:27:36.416] 🔄 DEBUG System:    Sanitized Target Payload Preview for 'openrouter-claude-sonnet-4-toolcalling':
 [1]                     ↳ Context: {
-[1]                       "totalBuffered": 15,
-[1]                       "bufferGroups": 4
+[1]                       "payload": {
+[1]                         "temperature": 1,
+[1]                         "model": "anthropic/claude-sonnet-4",
+[1]                         "messages": [
+[1]                           {
+[1]                             "role": "user",
+[1]                             "content": "<role>\nYou are an expert character voice specialist and narrative writ..."
+[1]                           }
+[1]                         ],
+[1]                         "tools": [
+[1]                           {
+[1]                             "type": "function",
+[1]                             "function": {
+[1]                               "name": "function_call",
+[1]                               "description": "Extracts the character's game action, speech, thoughts, and optional notes based on the current situation. All fields except `notes` are required.",
+[1]                               "parameters": {
+[1]                                 "type": "object",
+[1]                                 "additionalProperties": false,
+[1]                                 "properties": {
+[1]                                   "chosenIndex": {
+[1]                                     "type": "integer",
+[1]                                     "minimum": 1
+[1]                                   },
+[1]                                   "speech": {
+[1]                                     "type": "string"
+[1]                                   },
+[1]                                   "thoughts": {
+[1]                                     "type": "string"
+[1]                                   },
+[1]                                   "notes": {
+[1]                                     "type": "array",
+[1]                                     "items": {
+[1]                                       "type": "object",
+[1]                                       "properties": {
+[1]                                         "text": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1,
+[1]                                           "description": "The note content"
+[1]                                         },
+[1]                                         "subject": {
+[1]                                           "type": "string",
+[1]                                           "minLength": 1,
+[1]                                           "description": "Primary subject of the note (entity, location, concept)"
+[1]                                         },
+[1]                                         "subjectType": {
+[1]                                           "type": "string",
+[1]                                           "enum": [
+[1]                                             "character",
+[1]                                             "location",
+[1]                                             "item",
+[1]                                             "creature",
+[1]                                             "event",
+[1]                                             "concept",
+[1]                                             "relationship",
+[1]                                             "organization",
+[1]                                             "quest",
+[1]                                             "skill",
+[1]                                             "emotion",
+[1]                                             "other"
+[1]                                           ],
+[1]                                           "description": "Explicit categorization of the note's subject type"
+[1]                                         },
+[1]                                         "context": {
+[1]                                           "type": "string",
+[1]                                           "description": "Where/how this was observed (optional)"
+[1]                                         }
+[1]                                       },
+[1]                                       "required": [
+[1]                                         "text",
+[1]                                         "subject",
+[1]                                         "subjectType"
+[1]                                       ],
+[1]                                       "additionalProperties": false
+[1]                                     }
+[1]                                   }
+[1]                                 },
+[1]                                 "required": [
+[1]                                   "chosenIndex",
+[1]                                   "speech",
+[1]                                   "thoughts"
+[1]                                 ]
+[1]                               }
+[1]                             }
+[1]                           }
+[1]                         ],
+[1]                         "tool_choice": {
+[1]                           "type": "function",
+[1]                           "function": {
+[1]                             "name": "function_call"
+[1]                           }
+[1]                         }
+[1]                       },
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
 [1]                     }
-[1] [20:22:58.463] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+[1] [19:27:36.416] 🔄 DEBUG LlmRequestService: LlmRequestService: Initiating call via RetryManager to https://openrouter.ai/api/v1/chat/completions for llmId 'openrouter-claude-sonnet-4-toolcalling'.
 [1]                     ↳ Context: {
-[1]                       "storedCount": 15,
-[1]                       "totalLogs": 15
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
 [1]                     }
-[1] [20:22:58.463] 📝 INFO System: Debug logs processed successfully
+[1] [19:27:36.416] 🌐 INFO HttpAgentService: HttpAgentService: Created new agent for https://openrouter.ai:443
+[1] [19:27:36.416] 🔄 DEBUG HttpAgentService: HttpAgentService: Reusing agent for https://openrouter.ai:443 (1 requests)
+[1] [19:27:36.416] 🔄 DEBUG LlmRequestService: LlmRequestService: Using HTTP agent with connection pooling for llmId 'openrouter-claude-sonnet-4-toolcalling' to https://openrouter.ai/api/v1/chat/completions.
+[1] [19:27:36.417] 🔄 DEBUG RetryManager: RetryManager: Initiating request sequence for https://openrouter.ai/api/v1/chat/completions with maxRetries=3, baseDelayMs=1000, maxDelayMs=10000.
+[1] [19:27:36.417] 🔄 DEBUG System: Attempt 1/3 - Fetching POST https://openrouter.ai/api/v1/chat/completions
+[1] [19:27:39.755] 🔄 DEBUG RetryManager: RetryManager: Attempt 1/3 for https://openrouter.ai/api/v1/chat/completions - Request successful (status 200). Parsing JSON response.
+[1] [19:28:35.467] 🌐 INFO RetryManager: RetryManager: Successfully fetched and parsed JSON from https://openrouter.ai/api/v1/chat/completions after 1 attempt(s).
+[1] [19:28:35.467] 🔄 INFO LlmRequestService: LlmRequestService: Successfully received response from LLM provider for llmId 'openrouter-claude-sonnet-4-toolcalling'. Status: 200 (assumed for RetryManager success).
 [1]                     ↳ Context: {
-[1]                       "processedCount": 15,
-[1]                       "totalLogs": 15,
-[1]                       "processingTimeMs": 1,
-[1]                       "endpoint": "/api/debug-log"
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
 [1]                     }
-[1] [20:22:58.463] 🔄 DEBUG System: HTTP request metrics recorded
+[1] [19:28:35.467] 📝 DEBUG System:    LLM Provider Response Body (Preview for 'openrouter-claude-sonnet-4-toolcalling'): {"id":"gen-1756834057-Ur266qY8lURhoEikeaj1","provider":"Google","model":"anthropic/claude-sonnet-4",...
 [1]                     ↳ Context: {
-[1]                       "method": "POST",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.044514501,
-[1]                       "requestSize": 10080,
-[1]                       "responseSize": 70
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
 [1]                     }
-[1] [20:22:58.473] 🔄 DEBUG System: HTTP request metrics recorded
+[1] [19:28:35.467] 🔄 DEBUG LlmRequestController: LlmRequestController: LlmRequestService returned success for llmId 'openrouter-claude-sonnet-4-toolcalling'. Relaying to client with status 200.
 [1]                     ↳ Context: {
-[1]                       "method": "OPTIONS",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 204,
-[1]                       "duration": 0.0003156,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 0
+[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
 [1]                     }
-[1] [20:22:58.488] 📝 INFO System: Trace file written successfully
+[1] [19:28:35.468] 🔄 DEBUG System: LLM request metrics recorded
 [1]                     ↳ Context: {
-[1]                       "fileName": "trace_positioning_sit_down_p_erotica_jon_urena_instance_2025-09-01T18-22-58_083Z.txt",
-[1]                       "directory": "./traces/sit-down",
-[1]                       "fullPath": "/home/joeloverbeck/projects/living-narrative-engine/traces/sit-down/trace_positioning_sit_down_p_erotica_jon_urena_instance_2025-09-01T18-22-58_083Z.txt",
-[1]                       "size": 9465
+[1]                       "provider": "unknown",
+[1]                       "model": "openrouter-claude-sonnet-4-toolcalling",
+[1]                       "status": "success",
+[1]                       "duration": 59.05593852,
+[1]                       "tokens": "[MASKED]"
 [1]                     }
-[1] [20:22:58.489] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "POST",
-[1]                       "route": "/api/traces/write",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.044952701,
-[1]                       "requestSize": 10587,
-[1]                       "responseSize": 280
-[1]                     }
-[1] [20:22:58.518] 📝 DEBUG System: LogStorageService.writeLogs: Processing 15 logs
-[1] [20:22:58.518] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 15 logs
-[1]                     ↳ Context: {
-[1]                       "totalBuffered": 30,
-[1]                       "bufferGroups": 8
-[1]                     }
-[1] [20:22:58.518] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
-[1]                     ↳ Context: {
-[1]                       "storedCount": 15,
-[1]                       "totalLogs": 15
-[1]                     }
-[1] [20:22:58.518] 📝 INFO System: Debug logs processed successfully
-[1]                     ↳ Context: {
-[1]                       "processedCount": 15,
-[1]                       "totalLogs": 15,
-[1]                       "processingTimeMs": 1,
-[1]                       "endpoint": "/api/debug-log"
-[1]                     }
-[1] [20:22:58.518] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "POST",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.043491201,
-[1]                       "requestSize": 13529,
-[1]                       "responseSize": 70
-[1]                     }
-[1] [20:22:58.527] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "OPTIONS",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 204,
-[1]                       "duration": 0.0002091,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 0
-[1]                     }
-[1] [20:22:58.576] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
-[1] [20:22:58.576] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
-[1]                     ↳ Context: {
-[1]                       "totalBuffered": 47,
-[1]                       "bufferGroups": 8
-[1]                     }
-[1] [20:22:58.576] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
-[1]                     ↳ Context: {
-[1]                       "storedCount": 17,
-[1]                       "totalLogs": 17
-[1]                     }
-[1] [20:22:58.576] 📝 INFO System: Debug logs processed successfully
-[1]                     ↳ Context: {
-[1]                       "processedCount": 17,
-[1]                       "totalLogs": 17,
-[1]                       "processingTimeMs": 0,
-[1]                       "endpoint": "/api/debug-log"
-[1]                     }
-[1] [20:22:58.576] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "POST",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.048370201,
-[1]                       "requestSize": 10326,
-[1]                       "responseSize": 70
-[1]                     }
-[1] [20:22:58.586] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "OPTIONS",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 204,
-[1]                       "duration": 0.0002994,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 0
-[1]                     }
-[1] [20:22:58.625] 📝 DEBUG System: LogStorageService.#ensureDirectoryStructure: Created directory logs/2025-09-01
-[1] [20:22:58.626] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 7 logs to logs/2025-09-01/warning.jsonl
-[1] [20:22:58.627] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/general.jsonl
-[1] [20:22:58.627] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 11 logs to logs/2025-09-01/entities.jsonl
-[1] [20:22:58.628] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/actions.jsonl
-[1] [20:22:58.628] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 1 logs to logs/2025-09-01/anatomy.jsonl
-[1] [20:22:58.628] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/utils.jsonl
-[1] [20:22:58.629] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 1 logs to logs/2025-09-01/clothing.jsonl
-[1] [20:22:58.630] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 21 logs to logs/2025-09-01/loaders.jsonl
-[1] [20:22:58.630] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 47 logs
-[1] [20:22:58.633] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
-[1] [20:22:58.633] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
-[1]                     ↳ Context: {
-[1]                       "totalBuffered": 17,
-[1]                       "bufferGroups": 1
-[1]                     }
-[1] [20:22:58.633] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
-[1]                     ↳ Context: {
-[1]                       "storedCount": 17,
-[1]                       "totalLogs": 17
-[1]                     }
-[1] [20:22:58.633] 📝 INFO System: Debug logs processed successfully
-[1]                     ↳ Context: {
-[1]                       "processedCount": 17,
-[1]                       "totalLogs": 17,
-[1]                       "processingTimeMs": 0,
-[1]                       "endpoint": "/api/debug-log"
-[1]                     }
-[1] [20:22:58.633] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "POST",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.045842901,
-[1]                       "requestSize": 10449,
-[1]                       "responseSize": 70
-[1]                     }
-[1] [20:22:59.627] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 17 logs to logs/2025-09-01/loaders.jsonl
-[1] [20:22:59.627] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs
-[1] [20:23:00.126] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "OPTIONS",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 204,
-[1]                       "duration": 0.0002211,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 0
-[1]                     }
-[1] [20:23:00.169] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
-[1] [20:23:00.169] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
-[1]                     ↳ Context: {
-[1]                       "totalBuffered": 17,
-[1]                       "bufferGroups": 2
-[1]                     }
-[1] [20:23:00.169] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
-[1]                     ↳ Context: {
-[1]                       "storedCount": 17,
-[1]                       "totalLogs": 17
-[1]                     }
-[1] [20:23:00.169] 📝 INFO System: Debug logs processed successfully
-[1]                     ↳ Context: {
-[1]                       "processedCount": 17,
-[1]                       "totalLogs": 17,
-[1]                       "processingTimeMs": 0,
-[1]                       "endpoint": "/api/debug-log"
-[1]                     }
-[1] [20:23:00.170] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "POST",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.042273601,
-[1]                       "requestSize": 10169,
-[1]                       "responseSize": 70
-[1]                     }
-[1] [20:23:00.627] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 16 logs to logs/2025-09-01/loaders.jsonl
-[1] [20:23:00.629] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 1 logs to logs/2025-09-01/utils.jsonl
-[1] [20:23:00.629] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs
-[1] [20:23:36.249] 📝 DEBUG System: Health check (liveness) completed
-[1]                     ↳ Context: {
-[1]                       "status": "UP",
-[1]                       "responseTime": 0.1,
-[1]                       "memoryUsed": 16
-[1]                     }
-[1] [20:23:36.250] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "GET",
-[1]                       "route": "/health",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.0006301,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 160
-[1]                     }
-[1] [20:23:36.253] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "OPTIONS",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 204,
-[1]                       "duration": 0.00019,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 0
-[1]                     }
-[1] [20:23:36.298] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
-[1] [20:23:36.298] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
-[1]                     ↳ Context: {
-[1]                       "totalBuffered": 17,
-[1]                       "bufferGroups": 1
-[1]                     }
-[1] [20:23:36.298] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
-[1]                     ↳ Context: {
-[1]                       "storedCount": 17,
-[1]                       "totalLogs": 17
-[1]                     }
-[1] [20:23:36.298] 📝 INFO System: Debug logs processed successfully
-[1]                     ↳ Context: {
-[1]                       "processedCount": 17,
-[1]                       "totalLogs": 17,
-[1]                       "processingTimeMs": 0,
-[1]                       "endpoint": "/api/debug-log"
-[1]                     }
-[1] [20:23:36.299] 🔄 DEBUG System: HTTP request metrics recorded
+[1] [19:28:35.473] 🔄 DEBUG System: HTTP request metrics recorded
 [1]                     ↳ Context: {
 [1]                       "method": "POST",
-[1]                       "route": "/api/*",
+[1]                       "route": "/api/llm-request",
 [1]                       "statusCode": 200,
-[1]                       "duration": 0.0438668,
-[1]                       "requestSize": 10324,
-[1]                       "responseSize": 70
-[1]                     }
-[1] [20:23:36.628] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 17 logs to logs/2025-09-01/loaders.jsonl
-[1] [20:23:36.628] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs
-[1] [20:23:46.910] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "OPTIONS",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 204,
-[1]                       "duration": 0.000295,
-[1]                       "requestSize": 0,
+[1]                       "duration": 59.10501762,
+[1]                       "requestSize": 19652,
 [1]                       "responseSize": 0
 [1]                     }
-[1] [20:23:46.955] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
-[1] [20:23:46.955] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
-[1]                     ↳ Context: {
-[1]                       "totalBuffered": 17,
-[1]                       "bufferGroups": 5
-[1]                     }
-[1] [20:23:46.955] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
-[1]                     ↳ Context: {
-[1]                       "storedCount": 17,
-[1]                       "totalLogs": 17
-[1]                     }
-[1] [20:23:46.955] 📝 INFO System: Debug logs processed successfully
-[1]                     ↳ Context: {
-[1]                       "processedCount": 17,
-[1]                       "totalLogs": 17,
-[1]                       "processingTimeMs": 0,
-[1]                       "endpoint": "/api/debug-log"
-[1]                     }
-[1] [20:23:46.955] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "POST",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.0435026,
-[1]                       "requestSize": 11183,
-[1]                       "responseSize": 70
-[1]                     }
-[1] [20:23:47.629] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 8 logs to logs/2025-09-01/loaders.jsonl
-[1] [20:23:47.629] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 1 logs to logs/2025-09-01/dependencyinjection.jsonl
-[1] [20:23:47.631] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/utils.jsonl
-[1] [20:23:47.632] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 4 logs to logs/2025-09-01/actions.jsonl
-[1] [20:23:47.633] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/configuration.jsonl
-[1] [20:23:47.633] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs
-[1] [20:25:44.628] 📝 DEBUG System: Health check (liveness) completed
-[1]                     ↳ Context: {
-[1]                       "status": "UP",
-[1]                       "responseTime": 0.09,
-[1]                       "memoryUsed": 16
-[1]                     }
-[1] [20:25:44.628] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "GET",
-[1]                       "route": "/health",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.0006055,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 162
-[1]                     }
-[1] [20:25:44.632] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "OPTIONS",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 204,
-[1]                       "duration": 0.0001874,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 0
-[1]                     }
-[1] [20:25:44.679] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
-[1] [20:25:44.679] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
-[1]                     ↳ Context: {
-[1]                       "totalBuffered": 17,
-[1]                       "bufferGroups": 5
-[1]                     }
-[1] [20:25:44.679] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
-[1]                     ↳ Context: {
-[1]                       "storedCount": 17,
-[1]                       "totalLogs": 17
-[1]                     }
-[1] [20:25:44.679] 📝 INFO System: Debug logs processed successfully
-[1]                     ↳ Context: {
-[1]                       "processedCount": 17,
-[1]                       "totalLogs": 17,
-[1]                       "processingTimeMs": 0,
-[1]                       "endpoint": "/api/debug-log"
-[1]                     }
-[1] [20:25:44.680] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "POST",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.0464891,
-[1]                       "requestSize": 12029,
-[1]                       "responseSize": 70
-[1]                     }
-[1] [20:25:45.638] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 3 logs to logs/2025-09-01/actions.jsonl
-[1] [20:25:45.640] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 3 logs to logs/2025-09-01/anatomy.jsonl
-[1] [20:25:45.640] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/initializers.jsonl
-[1] [20:25:45.642] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 7 logs to logs/2025-09-01/entities.jsonl
-[1] [20:25:45.643] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/utils.jsonl
-[1] [20:25:45.643] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs
-[1] [20:25:46.693] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "OPTIONS",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 204,
-[1]                       "duration": 0.0002394,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 0
-[1]                     }
-[1] [20:25:46.739] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
-[1] [20:25:46.739] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
-[1]                     ↳ Context: {
-[1]                       "totalBuffered": 17,
-[1]                       "bufferGroups": 3
-[1]                     }
-[1] [20:25:46.739] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
-[1]                     ↳ Context: {
-[1]                       "storedCount": 17,
-[1]                       "totalLogs": 17
-[1]                     }
-[1] [20:25:46.739] 📝 INFO System: Debug logs processed successfully
-[1]                     ↳ Context: {
-[1]                       "processedCount": 17,
-[1]                       "totalLogs": 17,
-[1]                       "processingTimeMs": 0,
-[1]                       "endpoint": "/api/debug-log"
-[1]                     }
-[1] [20:25:46.740] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "POST",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.0456196,
-[1]                       "requestSize": 11740,
-[1]                       "responseSize": 70
-[1]                     }
-[1] [20:25:47.639] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 2 logs to logs/2025-09-01/anatomy.jsonl
-[1] [20:25:47.641] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 14 logs to logs/2025-09-01/entities.jsonl
-[1] [20:25:47.641] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 1 logs to logs/2025-09-01/engine.jsonl
-[1] [20:25:47.642] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs
-[1] [20:26:04.066] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "OPTIONS",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 204,
-[1]                       "duration": 0.000214,
-[1]                       "requestSize": 0,
-[1]                       "responseSize": 0
-[1]                     }
-[1] [20:26:04.113] 📝 DEBUG System: LogStorageService.writeLogs: Processing 17 logs
-[1] [20:26:04.113] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 17 logs
-[1]                     ↳ Context: {
-[1]                       "totalBuffered": 17,
-[1]                       "bufferGroups": 1
-[1]                     }
-[1] [20:26:04.113] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
-[1]                     ↳ Context: {
-[1]                       "storedCount": 17,
-[1]                       "totalLogs": 17
-[1]                     }
-[1] [20:26:04.114] 📝 INFO System: Debug logs processed successfully
-[1]                     ↳ Context: {
-[1]                       "processedCount": 17,
-[1]                       "totalLogs": 17,
-[1]                       "processingTimeMs": 1,
-[1]                       "endpoint": "/api/debug-log"
-[1]                     }
-[1] [20:26:04.114] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "POST",
-[1]                       "route": "/api/*",
-[1]                       "statusCode": 200,
-[1]                       "duration": 0.0457467,
-[1]                       "requestSize": 11873,
-[1]                       "responseSize": 70
-[1]                     }
-[1] [20:26:04.643] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 17 logs to logs/2025-09-01/entities.jsonl
-[1] [20:26:04.643] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 17 logs

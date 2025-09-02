@@ -243,9 +243,11 @@ describe('TraitsRewriterController', () => {
     it('should validate JSON character definitions', async () => {
       // Arrange
       const validCharacterJSON = JSON.stringify({
-        'core:name': 'Test Character',
-        'core:personality': 'Brave and noble',
-        'core:likes': 'Adventure',
+        components: {
+          'core:name': 'Test Character',
+          'core:personality': 'Brave and noble',
+          'core:likes': 'Adventure',
+        },
       });
 
       mockElements.characterDefinition.value = validCharacterJSON;
@@ -280,8 +282,10 @@ describe('TraitsRewriterController', () => {
     it('should enable rewrite button for valid input', async () => {
       // Arrange
       const validCharacterJSON = JSON.stringify({
-        'core:name': 'Test Character',
-        'core:profile': 'A test character profile',
+        components: {
+          'core:name': 'Test Character',
+          'core:profile': 'A test character profile',
+        },
       });
 
       mockElements.characterDefinition.value = validCharacterJSON;
@@ -311,7 +315,7 @@ describe('TraitsRewriterController', () => {
 
       // Act - Fix to valid JSON
       characterDefinitionElement.value =
-        '{"core:name": "Test", "core:personality": "Brave"}';
+        '{"components": {"core:name": "Test", "core:personality": "Brave"}}';
       simulateEvent(characterDefinitionElement, 'input');
       await waitForNextTick();
 
@@ -322,8 +326,10 @@ describe('TraitsRewriterController', () => {
     it('should require at least one trait to rewrite', async () => {
       // Arrange
       const characterWithoutTraits = JSON.stringify({
-        'core:name': 'Test Character',
-        'some:other': 'value',
+        components: {
+          'core:name': 'Test Character',
+          'some:other': 'value',
+        },
       });
 
       mockElements.characterDefinition.value = characterWithoutTraits;
@@ -337,7 +343,7 @@ describe('TraitsRewriterController', () => {
 
       // Assert
       expect(mockElements.characterInputError.textContent).toContain(
-        'at least one trait to rewrite'
+        'at least one trait to rewrite inside the components property'
       );
       expect(mockElements.rewriteTraitsButton.disabled).toBe(true);
     });
@@ -352,9 +358,11 @@ describe('TraitsRewriterController', () => {
 
       // Setup valid character input
       const validCharacterJSON = JSON.stringify({
-        'core:name': 'Test Character',
-        'core:personality': 'Brave',
-        'core:likes': 'Adventure',
+        components: {
+          'core:name': 'Test Character',
+          'core:personality': 'Brave',
+          'core:likes': 'Adventure',
+        },
       });
       mockElements.characterDefinition.value = validCharacterJSON;
     });
@@ -365,8 +373,10 @@ describe('TraitsRewriterController', () => {
 
       // Set up valid character input
       const validJSON = JSON.stringify({
-        'core:name': 'Test Character',
-        'core:personality': 'Brave',
+        components: {
+          'core:name': 'Test Character',
+          'core:personality': 'Brave',
+        },
       });
       mockElements.characterDefinition.value = validJSON;
 
@@ -404,8 +414,10 @@ describe('TraitsRewriterController', () => {
     it('should integrate with TraitsRewriterGenerator', async () => {
       // Arrange
       const mockCharacterDefinition = {
-        'core:name': 'Test Character',
-        'core:personality': 'Brave',
+        components: {
+          'core:name': 'Test Character',
+          'core:personality': 'Brave',
+        },
       };
 
       const mockResult = {
@@ -490,8 +502,10 @@ describe('TraitsRewriterController', () => {
 
       // Setup valid input
       const validJSON = JSON.stringify({
-        'core:name': 'Test Character',
-        'core:personality': 'Brave',
+        components: {
+          'core:name': 'Test Character',
+          'core:personality': 'Brave',
+        },
       });
       mockElements.characterDefinition.value = validJSON;
       simulateEvent(mockElements.characterDefinition, 'input');
@@ -841,8 +855,10 @@ describe('TraitsRewriterController', () => {
 
       // Setup valid input
       const validJSON = JSON.stringify({
-        'core:name': 'Test Character',
-        'core:personality': 'Brave',
+        components: {
+          'core:name': 'Test Character',
+          'core:personality': 'Brave',
+        },
       });
       mockElements.characterDefinition.value = validJSON;
       simulateEvent(mockElements.characterDefinition, 'input');
@@ -871,8 +887,10 @@ describe('TraitsRewriterController', () => {
 
       // Setup valid input
       const validJSON = JSON.stringify({
-        'core:name': 'Test Character',
-        'core:personality': 'Brave',
+        components: {
+          'core:name': 'Test Character',
+          'core:personality': 'Brave',
+        },
       });
       mockElements.characterDefinition.value = validJSON;
 
@@ -911,7 +929,7 @@ describe('TraitsRewriterController', () => {
       // Arrange
       const invalidJSON = JSON.stringify({
         'some:field': 'value',
-        // Missing core:name
+        // Missing components property entirely
       });
       mockElements.characterDefinition.value = invalidJSON;
 
@@ -921,7 +939,7 @@ describe('TraitsRewriterController', () => {
 
       // Assert
       expect(mockElements.characterInputError.textContent).toContain(
-        'core:name'
+        'components'
       );
       expect(mockElements.rewriteTraitsButton.disabled).toBe(true);
     });

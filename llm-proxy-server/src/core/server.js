@@ -406,34 +406,76 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGHUP', () => gracefulShutdown('SIGHUP'));
 
 // Handle beforeExit to ensure logs are flushed
-process.on('beforeExit', async (code) => {
+process.on('beforeExit', async (_code) => {
   if (logStorageService && logStorageService.flushLogs) {
     try {
       await logStorageService.flushLogs();
       proxyLogger.debug('LLM Proxy Server: Flushed logs on beforeExit');
-    } catch (error) {
+    } catch (_error) {
       proxyLogger.error('LLM Proxy Server: Failed to flush logs on beforeExit', {
-        error: error.message
+        error: _error.message
       });
     }
   }
 });
 
-// Windows Terminal focus workaround - periodic forced flush
-if (process.platform === 'win32' && logStorageService) {
+// Import WSL-aware platform utilities
+import { shouldUseWindowsTerminalFlush, forceTerminalFlush } from '../utils/platformUtils.js';
+
+// Windows Terminal focus workaround - periodic forced flush for both logs and console output
+// Applies to both native Windows and WSL environments
+if (shouldUseWindowsTerminalFlush()) {
+  /**
+   * Force flush stdout/stderr streams on Windows/WSL to prevent terminal buffering
+   * This addresses the Windows Terminal issue where logs only appear on focus changes
+   */
+  const forceWindowsFlush = () => {
+    forceTerminalFlush(false); // Use the centralized WSL-aware flush utility
+  };
+  
+  // Periodic flush every 100ms for high-volume log batches
   const windowsFlushInterval = setInterval(async () => {
-    if (logStorageService && logStorageService.flushLogs) {
-      try {
+    try {
+      // Flush log storage service if available
+      if (logStorageService && logStorageService.flushLogs) {
         await logStorageService.flushLogs();
-      } catch (error) {
-        // Silent fail - this is just a backup mechanism
       }
+      
+      // Force console output flush
+      forceWindowsFlush();
+    } catch (_error) {
+      // Silent fail - this is just a backup mechanism for Windows compatibility
     }
-  }, 2000); // Force flush every 2 seconds on Windows
+  }, 100); // Increased frequency to 100ms for high-volume log batches
   
   // Don't block process exit
   if (windowsFlushInterval.unref) {
     windowsFlushInterval.unref();
+  }
+  
+  // Additional Windows-specific event handlers for immediate flushing
+  // These provide more responsive output on various Windows terminal events
+  try {
+    // Flush on process warnings (Node.js internal events)
+    process.on('warning', () => {
+      forceWindowsFlush();
+    });
+    
+    // Flush periodically on next tick to catch high-frequency logging
+    const nextTickFlush = () => {
+      forceWindowsFlush();
+      // Schedule next flush, but don't create a tight loop
+      setTimeout(() => process.nextTick(nextTickFlush), 100);
+    };
+    
+    // Start the next tick flush cycle (every 100ms + next tick)
+    process.nextTick(nextTickFlush);
+    
+  } catch (_error) {
+    // Ignore errors in setting up additional event handlers
+    proxyLogger.debug('Windows flush event handlers setup failed, using fallback only', {
+      error: _error.message
+    });
   }
 }
 
