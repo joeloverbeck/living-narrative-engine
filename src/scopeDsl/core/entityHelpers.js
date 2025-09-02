@@ -49,14 +49,6 @@ export function getOrBuildComponents(entityId, entity, gateway, trace) {
   if (!instance) return null;
 
   if (!Array.isArray(instance.componentTypeIds)) {
-    if (trace) {
-      trace.addLog(
-        'warn',
-        `Entity '${entityId}' does not expose componentTypeIds. Unable to retrieve components.`,
-        'EntityHelpers',
-        { entityId }
-      );
-    }
     return {};
   }
 
@@ -158,13 +150,6 @@ export function createEvaluationContext(
       entityCache.set(cacheKey, entity);
 
       // Log how the entity was resolved
-      if (trace) {
-        trace.addLog(
-          'debug',
-          `Item ${item} ${resolvedHow}`,
-          'createEvaluationContext'
-        );
-      }
     }
   } else if (item && typeof item === 'object') {
     entity = item;
@@ -294,13 +279,6 @@ export function createEvaluationContext(
     ((!actor.components && actor.componentTypeIds) ||
       actor.components instanceof Map)
   ) {
-    if (trace) {
-      trace.addLog(
-        'debug',
-        `Processing actor components: actor=${actor.id}, has componentTypeIds=${!!actor.componentTypeIds}, componentTypeIds length=${actor.componentTypeIds?.length || 0}`,
-        'EntityHelpers'
-      );
-    }
     
     actor = addComponentsToEntity(actor, actor.id);
   }
@@ -308,26 +286,6 @@ export function createEvaluationContext(
   const location = locationProvider.getLocation();
 
   // Enhanced debug logging for scope resolution issues
-  if (trace) {
-    trace.addLog(
-      'debug',
-      `createEvaluationContext: entity=${entity?.id}, has components=${!!entity?.components}, actor=${actor?.id}, has components=${!!actor?.components}`,
-      'EntityHelpers',
-      {
-        entityId: entity?.id,
-        entityComponentKeys: entity?.components
-          ? Object.keys(entity.components)
-          : [],
-        actorId: actor?.id,
-        actorComponentKeys: actor?.components
-          ? Object.keys(actor.components)
-          : [],
-        actorHasSittingComponent: actor?.components?.['positioning:sitting_on'] ? 'YES' : 'NO',
-        actorSittingComponentData: actor?.components?.['positioning:sitting_on'] || 'NOT_FOUND',
-        wasActorPreprocessed: !!processedActor,
-      }
-    );
-  }
   
 
   // Create flattened context for easier JSON Logic access

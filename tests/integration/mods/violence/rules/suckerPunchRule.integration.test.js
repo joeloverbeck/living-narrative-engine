@@ -1,396 +1,135 @@
 /**
- * @file Integration tests for the violence:sucker_punch rule.
+ * @file Integration tests for the violence:sucker_punch rule using new mod test infrastructure.
+ * @description Tests the rule structure, condition logic, and action definitions.
  */
 
-import {
-  describe,
-  it,
-  beforeEach,
-  afterEach,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { ModTestFixture } from '../../../../common/mods/ModTestFixture.js';
 import suckerPunchRule from '../../../../../data/mods/violence/rules/handle_sucker_punch.rule.json';
 import eventIsActionSuckerPunch from '../../../../../data/mods/violence/conditions/event-is-action-sucker-punch.condition.json';
-import logSuccessMacro from '../../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../../../src/utils/macroUtils.js';
-import QueryComponentHandler from '../../../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetNameHandler from '../../../../../src/logic/operationHandlers/getNameHandler.js';
-import GetTimestampHandler from '../../../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import DispatchPerceptibleEventHandler from '../../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import EndTurnHandler from '../../../../../src/logic/operationHandlers/endTurnHandler.js';
-import SetVariableHandler from '../../../../../src/logic/operationHandlers/setVariableHandler.js';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../../../common/engine/systemLogicTestEnv.js';
 
-/**
- * Creates handlers needed for the sucker_punch rule.
- *
- * @param {object} entityManager - Entity manager instance
- * @param {object} eventBus - Event bus instance
- * @param {object} logger - Logger instance
- * @returns {object} Handlers object
- */
-function createHandlers(entityManager, eventBus, logger) {
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
-  };
 
-  return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
-  };
-}
+describe('Violence Mod: Sucker Punch Rule', () => {
+  let testFixture;
 
-describe('handle_sucker_punch rule integration', () => {
-  let testEnv;
-
-  beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(suckerPunchRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
-    const ruleWithExpandedActions = {
-      ...suckerPunchRule,
-      actions: expanded,
-    };
-
-    const dataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([ruleWithExpandedActions]),
-      getConditionDefinition: jest.fn((id) => {
-        if (id === 'violence:event-is-action-sucker-punch') {
-          return eventIsActionSuckerPunch;
-        }
-        return undefined;
-      }),
-    };
-
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      entities: [],
-      rules: [ruleWithExpandedActions],
-      dataRegistry,
-    });
+  beforeEach(async () => {
+    // Create test fixture with explicit rule and condition files
+    testFixture = await ModTestFixture.forAction(
+      'violence',
+      'violence:sucker_punch',
+      suckerPunchRule,
+      eventIsActionSuckerPunch
+    );
   });
 
   afterEach(() => {
-    if (testEnv) {
-      testEnv.cleanup();
-    }
+    testFixture.cleanup();
   });
 
-  it('condition evaluates correctly', () => {
-    // Test that the condition works correctly
-    const condition = eventIsActionSuckerPunch.logic;
-    const jsonLogic = testEnv.jsonLogic;
+  describe('Rule Execution', () => {
+    it('successfully executes sucker punch action', async () => {
+      // Create actor and target entities
+      const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
 
-    // Check what the condition expects
-    expect(condition).toEqual({
-      '==': [{ var: 'event.payload.actionId' }, 'violence:sucker_punch'],
+      // Execute the action
+      await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+      testFixture.assertActionSuccess(
+        'Alice sucker-punches Beth in the head.'
+      );
     });
 
-    // The event structure for attempt_action events
-    const matchingData = {
-      event: {
-        payload: {
-          actionId: 'violence:sucker_punch',
-        },
-      },
-    };
+    it('creates correct perceptible event for sucker punch action', async () => {
+      const scenario = testFixture.createStandardActorTarget(['John', 'Mary']);
 
-    expect(jsonLogic.evaluate(condition, matchingData)).toBe(true);
+      await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-    // Should not match when actionId is different
-    const nonMatchingData = {
-      event: {
-        payload: {
-          actionId: 'violence:different_action',
-        },
-      },
-    };
-    expect(jsonLogic.evaluate(condition, nonMatchingData)).toBe(false);
-  });
-
-  it('performs sucker punch action successfully', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'violence:sucker_punch',
-      targetId: 'target1',
-      originalInput: 'sucker_punch target1',
-    });
-
-    const types = testEnv.events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:perceptible_event',
-        'core:display_successful_action_result',
-        'core:turn_ended',
-      ])
-    );
-  });
-
-  it('perceptible event contains correct message', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'violence:sucker_punch',
-      targetId: 'target1',
-      originalInput: 'sucker_punch target1',
-    });
-
-    const perceptibleEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.descriptionText).toBe(
-      'Alice sucker-punches Beth in the head.'
-    );
-  });
-
-  it('rule does not fire for different action', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'intimacy:different_action',
-      targetId: 'target1',
-      originalInput: 'different_action target1',
-    });
-
-    const types = testEnv.events.map((e) => e.eventType);
-    expect(types).not.toContain('core:perceptible_event');
-    expect(types).not.toContain('core:display_successful_action_result');
-    expect(types).not.toContain('core:turn_ended');
-  });
-
-  it('works with multiple actors in location', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Living Room' },
-        },
-      },
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-      {
-        id: 'observer1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Charlie' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'violence:sucker_punch',
-      targetId: 'target1',
-      originalInput: 'sucker_punch target1',
-    });
-
-    const perceptibleEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.locationId).toBe('room1');
-    expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
-    );
-  });
-
-  it('works with different actor and target names', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'John' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Mary' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'violence:sucker_punch',
-      targetId: 'target1',
-      originalInput: 'sucker_punch target1',
-    });
-
-    const perceptibleEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.descriptionText).toBe(
-      'John sucker-punches Mary in the head.'
-    );
-  });
-
-  it('includes correct event payload structure', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'violence:sucker_punch',
-      targetId: 'target1',
-      originalInput: 'sucker_punch target1',
-    });
-
-    const perceptibleEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload).toMatchObject({
-      descriptionText: 'Alice sucker-punches Beth in the head.',
-      perceptionType: 'action_target_general',
-      locationId: 'room1',
-      targetId: 'target1',
-    });
-  });
-
-  it('handles missing actor gracefully', async () => {
-    testEnv.reset([
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
-
-    // This should not throw, but may fail during GET_NAME operation
-    await expect(async () => {
-      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        eventName: 'core:attempt_action',
-        actorId: 'nonexistent',
-        actionId: 'violence:sucker_punch',
-        targetId: 'target1',
-        originalInput: 'sucker_punch target1',
+      testFixture.assertPerceptibleEvent({
+        descriptionText: 'John sucker-punches Mary in the head.',
+        locationId: 'room1',
+        actorId: scenario.actor.id,
+        targetId: scenario.target.id,
+        perceptionType: 'action_target_general',
       });
-    }).not.toThrow();
+    });
 
-    // Should not generate perceptible event with missing actor
-    const perceptibleEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvent).toBeUndefined();
+    it('only fires for correct action ID', async () => {
+      const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+
+      // Try with different action
+      const payload = {
+        eventName: 'core:attempt_action',
+        actorId: scenario.actor.id,
+        actionId: 'core:wait',
+        targetId: scenario.target.id,
+        originalInput: 'wait',
+      };
+
+      await testFixture.eventBus.dispatch('core:attempt_action', payload);
+
+      // Should not have any perceptible events from our rule
+      testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
+    });
+  });
+
+  describe('Rule Structure Validation', () => {
+    it('should have proper rule identification', () => {
+      expect(testFixture.ruleFile.rule_id).toBe('handle_sucker_punch');
+      expect(testFixture.ruleFile.comment).toBe(
+        "Handles the 'violence:sucker_punch' action. Dispatches descriptive text and ends the turn."
+      );
+    });
+
+    it('should have correct condition structure', () => {
+      expect(testFixture.conditionFile.id).toBe('violence:event-is-action-sucker-punch');
+      expect(testFixture.conditionFile.description).toBe(
+        "Checks if the triggering event is for the 'violence:sucker_punch' action."
+      );
+      expect(testFixture.conditionFile.logic).toEqual({
+        '==': [{ var: 'event.payload.actionId' }, 'violence:sucker_punch'],
+      });
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('handles missing actor gracefully', async () => {
+      const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
+
+      // This should not throw, but may fail during GET_NAME operation
+      await expect(async () => {
+        await testFixture.executeAction('nonexistent', scenario.target.id);
+      }).not.toThrow();
+
+      // Should not generate successful action events with missing actor
+      testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
+    });
+
+    it('handles missing target gracefully', async () => {
+      const scenario = testFixture.createStandardActorTarget(['Alice', 'Beth']);
+
+      // This should not throw, but may fail during GET_NAME operation
+      await expect(async () => {
+        await testFixture.executeAction(scenario.actor.id, 'nonexistent');
+      }).not.toThrow();
+
+      // Should not generate successful action events with missing target
+      testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
+    });
+  });
+
+  describe('Rule Action Structure', () => {
+    it('should have correct action sequence', () => {
+      expect(testFixture.ruleFile.actions).toHaveLength(8);
+      
+      // Verify key action types are present
+      const actionTypes = testFixture.ruleFile.actions.map(action => action.type);
+      expect(actionTypes).toContain('GET_NAME'); // Get actor name
+      expect(actionTypes).toContain('QUERY_COMPONENT'); // Get actor position
+      expect(actionTypes).toContain('SET_VARIABLE'); // Set message variables
+      
+      // Check that the last action is the macro expansion
+      const lastAction = testFixture.ruleFile.actions[7];
+      expect(lastAction.macro).toBe('core:logSuccessAndEndTurn');
+    });
   });
 });

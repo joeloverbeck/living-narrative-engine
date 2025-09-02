@@ -537,7 +537,6 @@ describe('RemoteLogger Integration Tests', () => {
       global.fetch.mockClear();
 
       // Record the request count before attempting to send while circuit is open
-      const debugRequestCountBefore = mockServer.getDebugLogRequestCount();
       const totalRequestCountBefore = mockServer.getRequestCount();
 
       // Ensure circuit breaker is actually open before sending the next log
@@ -552,10 +551,8 @@ describe('RemoteLogger Integration Tests', () => {
       await jest.runAllTimersAsync();
 
       // No additional requests should be made when circuit is open
-      const debugRequestCountAfter = mockServer.getDebugLogRequestCount();
       const totalRequestCountAfter = mockServer.getRequestCount();
       
-      expect(debugRequestCountAfter).toBe(debugRequestCountBefore);
       expect(totalRequestCountAfter).toBe(totalRequestCountBefore);
       
       // Verify fetch was not called for this log

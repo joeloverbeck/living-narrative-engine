@@ -99,14 +99,7 @@ export default function createSlotAccessResolver({
       return slotItem;
     }
 
-    // Add enhanced tracing or validation logic
-    if (COVERAGE_FEATURES.enableCoverageResolution && isClothingSlot(field)) {
-      ctx.trace.addLog(
-        'info',
-        `Enhanced coverage applied for ${field}`,
-        'CoverageEnhancer'
-      );
-    }
+    // Enhanced coverage validation logic can be added here if needed
 
     return slotItem;
   }
@@ -158,13 +151,6 @@ export default function createSlotAccessResolver({
           );
         }
 
-        if (trace) {
-          trace.coverageError = {
-            targetSlot,
-            error: error.message,
-            duration: performance.now() - startTime,
-          };
-        }
 
         if (COVERAGE_FEATURES.enableErrorRecovery) {
           return null; // Trigger fallback to legacy
@@ -275,21 +261,6 @@ export default function createSlotAccessResolver({
 
           coverageCandidates.push(candidate);
 
-          if (trace) {
-            trace.addLog(
-              'info',
-              `SlotAccessResolver: Found coverage item ${itemId} in ${slotName}/${layer} covering ${targetSlot}`,
-              'SlotAccessResolver',
-              {
-                itemId,
-                sourceSlot: slotName,
-                layer,
-                targetSlot,
-                coveragePriority: candidate.coveragePriority,
-                covers: coverageMapping.covers,
-              }
-            );
-          }
         }
       }
     }
@@ -419,15 +390,6 @@ export default function createSlotAccessResolver({
     }
 
     if (candidates.length === 0) {
-      if (trace) {
-        const availableSlots = Object.keys(equipped || {});
-        trace.addLog(
-          'info',
-          `SlotAccessResolver: No items found for slot ${slotName} (direct or via coverage). Available slots: ${availableSlots.join(', ') || 'none'}`,
-          'SlotAccessResolver',
-          { slotName, availableSlots, mode }
-        );
-      }
 
       // Structured trace: Log no slot data found
       if (structuredTrace) {
@@ -446,38 +408,6 @@ export default function createSlotAccessResolver({
     }
 
     // Enhanced tracing: Show candidates from all sources
-    if (trace) {
-      const candidateSummary = {
-        total: candidates.length,
-        direct: candidates.filter((c) => c.source === 'direct').length,
-        coverage: candidates.filter((c) => c.source === 'coverage_mapping')
-          .length,
-        byLayer: {},
-      };
-
-      for (const candidate of candidates) {
-        if (!candidateSummary.byLayer[candidate.layer]) {
-          candidateSummary.byLayer[candidate.layer] = [];
-        }
-        candidateSummary.byLayer[candidate.layer].push({
-          itemId: candidate.itemId,
-          source: candidate.source,
-          sourceSlot: candidate.sourceSlot,
-        });
-      }
-
-      trace.addLog(
-        'info',
-        `SlotAccessResolver: Found ${candidates.length} candidates for slot ${slotName}`,
-        'SlotAccessResolver',
-        {
-          slotName,
-          mode,
-          candidateSummary,
-          excludesAccessories: mode === 'topmost_no_accessories',
-        }
-      );
-    }
 
     // Structured trace: Start candidate collection phase
     let candidateCollectionSpan = null;
@@ -523,9 +453,7 @@ export default function createSlotAccessResolver({
       candidate.priority = calculatePriorityWithValidation(
         candidate.coveragePriority,
         candidate.layer,
-        trace
-          ? { warn: (msg) => trace.addLog('warn', msg, 'SlotAccessResolver') }
-          : null
+        null
       );
 
       // Structured trace: Log priority calculation
@@ -583,21 +511,6 @@ export default function createSlotAccessResolver({
       structuredTrace.endSpan(finalSelectionSpan);
     }
 
-    if (trace) {
-      trace.addLog(
-        'info',
-        `SlotAccessResolver: Selected item from slot ${slotName}, layer ${selectedCandidate.layer}`,
-        'SlotAccessResolver',
-        {
-          slotName,
-          layer: selectedCandidate.layer,
-          itemId: selectedCandidate.itemId,
-          mode,
-          priority: selectedCandidate.priority,
-          totalCandidates: candidates.length,
-        }
-      );
-    }
 
     return selectedCandidate.itemId;
   }
@@ -630,14 +543,6 @@ export default function createSlotAccessResolver({
     const parentResults = ctx.dispatcher.resolve(parent, ctx);
     const resultSet = new Set();
 
-    if (ctx.trace) {
-      ctx.trace.addLog(
-        'info',
-        `SlotAccessResolver: Processing slot ${field}`,
-        'SlotAccessResolver',
-        { field, parentResultsSize: parentResults.size }
-      );
-    }
 
     for (const item of parentResults) {
       // Handle arrays that might contain clothing access objects
@@ -681,14 +586,6 @@ export default function createSlotAccessResolver({
       }
     }
 
-    if (ctx.trace) {
-      ctx.trace.addLog(
-        'info',
-        `SlotAccessResolver: Resolution complete, found ${resultSet.size} items`,
-        'SlotAccessResolver',
-        { resultSize: resultSet.size }
-      );
-    }
 
     return resultSet;
   }

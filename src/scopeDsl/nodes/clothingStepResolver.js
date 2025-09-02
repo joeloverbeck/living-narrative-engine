@@ -55,7 +55,7 @@ export default function createClothingStepResolver({
    *
    * @param {string} entityId - The entity ID to resolve clothing for
    * @param {string} field - The clothing field to resolve
-   * @param {object} trace - Optional trace logger
+   * @param {object} trace - Optional trace logger (unused)
    * @returns {any} A clothing access object that can be used for slot access or array iteration
    */
   function resolveClothingField(entityId, field, trace) {
@@ -103,14 +103,6 @@ export default function createClothingStepResolver({
     }
 
     if (!equipment?.equipped) {
-      if (trace) {
-        trace.addLog(
-          'info',
-          `ClothingStepResolver: No equipped items found for entity ${entityId} (equipment component: ${equipment ? 'present' : 'missing'})`,
-          'ClothingStepResolver',
-          { entityId, hasEquipmentComponent: !!equipment }
-        );
-      }
       // Return empty clothing access object
       return {
         __clothingSlotAccess: true,
@@ -126,34 +118,6 @@ export default function createClothingStepResolver({
     }
 
     const mode = CLOTHING_FIELDS[field];
-
-    // Enhanced tracing: Log detailed clothing information
-    if (trace) {
-      const slotSummary = {};
-      for (const [slotName, slotData] of Object.entries(equipment.equipped)) {
-        slotSummary[slotName] = {};
-        for (const [layer, item] of Object.entries(slotData || {})) {
-          if (item) {
-            slotSummary[slotName][layer] = Array.isArray(item)
-              ? item.length + ' items'
-              : item;
-          }
-        }
-      }
-
-      trace.addLog(
-        'info',
-        `ClothingStepResolver: Found clothing for entity ${entityId}, mode: ${mode}`,
-        'ClothingStepResolver',
-        {
-          entityId,
-          mode,
-          field,
-          slotCount: Object.keys(equipment.equipped).length,
-          clothingSlotSummary: slotSummary,
-        }
-      );
-    }
 
     // Return a clothing access object that can be processed by either:
     // 1. SlotAccessResolver for .slot syntax
@@ -223,38 +187,19 @@ export default function createClothingStepResolver({
 
     const resultSet = new Set();
 
-    // Add trace logging
-    if (ctx.trace) {
-      ctx.trace.addLog(
-        'info',
-        `ClothingStepResolver: Processing ${field} field`,
-        'ClothingStepResolver',
-        { field, parentResultsSize: parentResults.size }
-      );
-    }
-
     // Process each parent entity
     for (const entityId of parentResults) {
       if (typeof entityId !== 'string') {
         continue; // Skip non-entity results
       }
 
-      const clothingData = resolveClothingField(entityId, field, ctx.trace);
+      const clothingData = resolveClothingField(entityId, field, null);
 
       if (clothingData) {
         // Add the clothing access object to the result set
         // It will be processed by either SlotAccessResolver or ArrayIterationResolver
         resultSet.add(clothingData);
       }
-    }
-
-    if (ctx.trace) {
-      ctx.trace.addLog(
-        'info',
-        `ClothingStepResolver: Resolution complete, found ${resultSet.size} items`,
-        'ClothingStepResolver',
-        { resultSize: resultSet.size }
-      );
     }
 
     return resultSet;

@@ -421,6 +421,93 @@ entities(core:actor)[{
 }]
 ```
 
+## Error Handling
+
+The ScopeDSL system includes comprehensive error handling with standardized error codes and environment-aware processing.
+
+### Quick Start with Error Handling
+
+When scope resolution fails, you'll receive standardized error messages with specific error codes:
+
+```javascript
+// Example error output
+[ScopeDSL:FilterResolver] SCOPE_1001: Actor entity missing from context
+
+// In development mode, you get detailed context:
+{
+  code: 'SCOPE_1001',
+  category: 'missing_context',
+  resolverName: 'FilterResolver',
+  context: { /* sanitized context for debugging */ }
+}
+```
+
+### Common Error Scenarios
+
+#### Missing Context (SCOPE_1xxx)
+```
+// Error: SCOPE_1001 - Missing actor
+my_scope := actor  // But actor not provided in context
+
+// Fix: Ensure context includes required entities
+```
+
+#### Invalid Data (SCOPE_2xxx)
+```
+// Error: SCOPE_2005 - Invalid component ID
+my_scope := entities(actor)  // Missing namespace
+
+// Fix: Use namespaced component IDs
+my_scope := entities(core:actor)
+```
+
+#### Resolution Failures (SCOPE_3xxx)
+```
+// Error: SCOPE_3001 - Scope not found
+my_scope := other_mod:undefined_scope
+
+// Fix: Ensure referenced scope exists
+my_scope := other_mod:existing_scope
+```
+
+#### System Errors (SCOPE_4xxx)
+```
+// Error: SCOPE_4001 - Circular dependency
+scope_a := scope_b
+scope_b := scope_a  // Circular!
+
+// Fix: Remove circular references
+scope_a := actor
+scope_b := location
+```
+
+### Error Code Categories
+
+| Range | Category | Description |
+|-------|----------|-------------|
+| 1xxx | Context | Missing or invalid context data |
+| 2xxx | Data Validation | Invalid data format or structure |
+| 3xxx | Resolution | Failed resolution operations |
+| 4xxx | System | System limits and constraints |
+| 5xxx | Parse | Syntax and parsing errors |
+| 6xxx | Configuration | Setup and configuration issues |
+| 9xxx | Unknown | Unclassified or fallback errors |
+
+### Debugging Tips
+
+1. **Check error codes** - Each code indicates the specific problem
+2. **Review context** - Development mode shows detailed context
+3. **Validate syntax** - Use proper ScopeDSL syntax patterns
+4. **Test incrementally** - Build complex scopes step by step
+
+### For Developers
+
+If you're implementing custom resolvers or working on the ScopeDSL system:
+
+- [Error Handling Developer Guide](./error-handling-guide.md) - Complete implementation guide
+- [Error Codes Reference](./error-codes-reference.md) - Full error code catalog
+- [Migration Guide](../migration/scopedsl-error-handling-migration.md) - Updating existing resolvers
+
 ## Performance Considerations
 
 ### 1. Filter Early, Filter Often

@@ -139,6 +139,13 @@ export default function createFilterResolver({
       const source = 'ScopeEngine.resolveFilter';
       const initialSize = parentResult.size;
 
+      // Add trace logging for before filtering
+      if (trace) {
+        trace.addLog('info', `Applying filter to ${initialSize} items.`, source, {
+          logic: node.logic,
+        });
+      }
+
       // Preprocess actor once for all filtering operations (performance optimization)
       // This avoids reprocessing the actor for each of potentially 10,000+ entities
       if (!processedActor && initialSize > 0) {
@@ -151,25 +158,7 @@ export default function createFilterResolver({
           ctx[cacheKey] = processedActor;
         } catch (err) {
           // If preprocessing fails, we'll fall back to per-item processing
-          if (trace) {
-            trace.addLog(
-              'warning',
-              `Failed to preprocess actor, falling back to per-item processing: ${err.message}`,
-              source
-            );
-          }
         }
-      }
-
-      if (trace) {
-        trace.addLog(
-          'info',
-          `Applying filter to ${initialSize} items.`,
-          source,
-          {
-            logic: node.logic,
-          }
-        );
       }
 
       if (initialSize === 0) return new Set();
@@ -179,13 +168,6 @@ export default function createFilterResolver({
       for (const item of parentResult) {
         // Skip null or undefined items
         if (item === null || item === undefined) {
-          if (trace) {
-            trace.addLog(
-              'warning',
-              'Skipping null/undefined item in filter',
-              source
-            );
-          }
           continue;
         }
 
@@ -221,102 +203,13 @@ export default function createFilterResolver({
             );
 
             if (!evalCtx) {
-              if (trace) {
-                trace.addLog(
-                  'debug',
-                  `Skipping item ${item} - could not create evaluation context`,
-                  source
-                );
-              }
               continue;
             }
 
-            // Enhanced trace logging for debugging filter evaluation
-            const entityDetails = {
-              itemId: item,
-              hasEntityComponents: !!evalCtx.entity?.components,
-              entityComponentKeys: evalCtx.entity?.components
-                ? Object.keys(evalCtx.entity.components)
-                : [],
-              actorLocationId: evalCtx.actor?.components?.['core:position']?.locationId,
-              entityLocationId: evalCtx.entity?.components?.['core:position']?.locationId,
-              hasPositionComponent: !!evalCtx.entity?.components?.['core:position'],
-              hasAllowsSittingComponent: !!evalCtx.entity?.components?.['positioning:allows_sitting'],
-              allowsSittingSpots: evalCtx.entity?.components?.['positioning:allows_sitting']?.spots,
-              logic: node.logic,
-            };
-
-            if (trace) {
-              trace.addLog(
-                'debug',
-                `Evaluating filter for item ${item}`,
-                source,
-                entityDetails
-              );
-            }
-
-
             const evalResult = logicEval.evaluate(node.logic, evalCtx);
             
-            // Enhanced trace logging with detailed filter evaluation results
             if (evalResult) {
               result.add(item);
-              if (trace) {
-                trace.addLog('debug', `Item ${item} passed filter`, 
-                  'ScopeEngine.filterEvaluation', 
-                  {
-                    ...entityDetails,
-                    filterPassed: true,
-                    evaluationResult: evalResult
-                  }
-                );
-              }
-            } else {
-              if (trace) {
-                // For failed filters, try to provide more details about why it failed
-                const failureDetails = {
-                  ...entityDetails,
-                  filterPassed: false,
-                  evaluationResult: evalResult,
-                };
-
-                // Add specific failure analysis for common filter patterns
-                if (node.logic?.and || node.logic?.['==']) {
-                  failureDetails.filterAnalysis = 'Complex logic evaluation failed';
-                  
-                  // Try to analyze location matching specifically
-                  const locationCheck = node.logic?.and?.find(condition => 
-                    condition?.['==']?.[0]?.var === 'entity.components.core:position.locationId'
-                  );
-                  if (locationCheck) {
-                    const expectedLocation = evalCtx.actor?.components?.['core:position']?.locationId;
-                    const actualLocation = evalCtx.entity?.components?.['core:position']?.locationId;
-                    failureDetails.locationMismatch = {
-                      expected: expectedLocation,
-                      actual: actualLocation,
-                      matches: expectedLocation === actualLocation
-                    };
-                  }
-
-                  // Try to analyze spot availability
-                  const spotCheck = node.logic?.and?.find(condition =>
-                    condition?.some?.[0]?.var === 'entity.components.positioning:allows_sitting.spots'
-                  );
-                  if (spotCheck) {
-                    const spots = evalCtx.entity?.components?.['positioning:allows_sitting']?.spots;
-                    failureDetails.spotAvailability = {
-                      spots: spots,
-                      hasNullSpots: Array.isArray(spots) ? spots.some(spot => spot === null) : false,
-                      spotCount: Array.isArray(spots) ? spots.length : 0
-                    };
-                  }
-                }
-
-                trace.addLog('debug', `Item ${item} failed filter`,
-                  'ScopeEngine.filterEvaluation',
-                  failureDetails
-                );
-              }
             }
           } catch (error) {
             // Re-throw errors for missing condition references
@@ -335,20 +228,12 @@ export default function createFilterResolver({
                 throw error;
               }
             }
-            // Handle other errors gracefully
-            if (trace) {
-              trace.addLog(
-                'error',
-                `Error filtering item ${item}: ${error.message}`,
-                source,
-                { error: error.message, stack: error.stack }
-              );
-            }
-            // Continue processing other items
+            // Handle other errors gracefully - continue processing other items
           }
         }
       }
 
+      // Add trace logging for after filtering
       if (trace) {
         trace.addLog(
           'info',

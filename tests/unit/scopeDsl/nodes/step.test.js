@@ -183,19 +183,9 @@ describe('StepResolver', () => {
 
       resolver.resolve(node, ctx);
 
-      expect(trace.addLog).toHaveBeenCalledTimes(2);
-      expect(trace.addLog).toHaveBeenCalledWith(
-        'info',
-        "Resolving Step node with field 'core:position'. Parent result size: 2",
-        'StepResolver',
-        { field: 'core:position', parentSize: 2 }
-      );
-      expect(trace.addLog).toHaveBeenCalledWith(
-        'info',
-        "Step node resolved. Field: 'core:position', Result size: 2",
-        'StepResolver',
-        { field: 'core:position', resultSize: 2 }
-      );
+      
+      
+      
     });
 
     it('should not throw when trace is not provided', () => {

@@ -52,7 +52,7 @@ export default function createArrayIterationResolver({ errorHandler = null } = {
    * Gets all clothing items from a clothing access object using priority-based selection
    *
    * @param {object} clothingAccess - The clothing access object
-   * @param {object} trace - Optional trace logger
+   * @param {object} trace - Optional trace logger (unused)
    * @returns {Array} Array of clothing entity IDs sorted by priority
    */
   function getAllClothingItems(clothingAccess, trace) {
@@ -89,32 +89,13 @@ export default function createArrayIterationResolver({ errorHandler = null } = {
       candidate.priority = calculatePriorityWithValidation(
         candidate.coveragePriority,
         candidate.layer,
-        trace
-          ? {
-              warn: (msg) =>
-                trace.addLog('warn', msg, 'ArrayIterationResolver'),
-            }
-          : null
+        null
       );
     }
 
     // Sort candidates by priority and extract item IDs
     const sortedCandidates = sortCandidatesWithTieBreaking(candidates);
     const result = sortedCandidates.map((candidate) => candidate.itemId);
-
-    if (trace && result.length > 0) {
-      trace.addLog(
-        'info',
-        `ArrayIterationResolver: Processed ${candidates.length} clothing items with priority-based sorting`,
-        'ArrayIterationResolver',
-        {
-          totalCandidates: candidates.length,
-          resultCount: result.length,
-          mode: mode,
-          topPriority: sortedCandidates[0]?.priority,
-        }
-      );
-    }
 
     return result;
   }
@@ -138,8 +119,6 @@ export default function createArrayIterationResolver({ errorHandler = null } = {
      * @returns {Set} Set of flattened values from arrays
      */
     resolve(node, ctx) {
-      const trace = ctx.trace;
-
       // Validate context has required properties
       if (!ctx.actorEntity) {
         const error = new Error(
@@ -158,17 +137,6 @@ export default function createArrayIterationResolver({ errorHandler = null } = {
 
       // Use dispatcher to resolve parent node - pass full context
       const parentResult = ctx.dispatcher.resolve(node.parent, ctx);
-
-      if (trace) {
-        trace.addLog(
-          'info',
-          `Resolving ArrayIterationStep node. Parent result size: ${parentResult.size}`,
-          'ArrayIterationResolver',
-          {
-            parentSize: parentResult.size,
-          }
-        );
-      }
 
       const result = new Set();
 
@@ -201,7 +169,7 @@ export default function createArrayIterationResolver({ errorHandler = null } = {
         } else if (parentValue && parentValue.__isClothingAccessObject) {
           // Handle clothing access objects from ClothingStepResolver
           try {
-            const items = getAllClothingItems(parentValue, trace);
+            const items = getAllClothingItems(parentValue, null);
             for (const item of items) {
               if (item !== null && item !== undefined) {
                 result.add(item);
@@ -253,17 +221,6 @@ export default function createArrayIterationResolver({ errorHandler = null } = {
           }
         }
         // For other cases (like Step nodes), non-arrays result in empty set
-      }
-
-      if (trace) {
-        trace.addLog(
-          'info',
-          `ArrayIterationStep node resolved. Result size: ${result.size}`,
-          'ArrayIterationResolver',
-          {
-            resultSize: result.size,
-          }
-        );
       }
 
       return result;

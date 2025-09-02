@@ -1072,45 +1072,6 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
   });
 
   describe('Performance and Logging Tests', () => {
-    it('should provide detailed trace logging for debugging', () => {
-      // Arrange
-      const targetId = 'target_for_logging';
-      createTargetWithClothingLayers(targetId, {
-        accessories: 'belt_only',
-      });
-
-      const traceLogs = [];
-      const mockTrace = {
-        addLog: (level, message, source, data) => {
-          traceLogs.push({ level, message, source, data });
-        },
-      };
-
-      // Act
-      clothingStepResolver.resolve(
-        {
-          type: 'Step',
-          field: 'topmost_clothing_no_accessories',
-          parent: { type: 'Variable', name: 'target' },
-        },
-        {
-          dispatcher: {
-            resolve: () => new Set([targetId]),
-          },
-          trace: mockTrace,
-        }
-      );
-
-      // Assert
-      expect(traceLogs.length).toBeGreaterThan(0);
-      expect(
-        traceLogs.some((log) => log.source === 'ClothingStepResolver')
-      ).toBe(true);
-      expect(
-        traceLogs.some((log) => log.message.includes('topmost_no_accessories'))
-      ).toBe(true);
-    });
-
     it('should handle large numbers of clothing items efficiently', () => {
       // Arrange
       const targetId = 'target_with_many_items';

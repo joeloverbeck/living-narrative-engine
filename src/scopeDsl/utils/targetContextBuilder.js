@@ -100,47 +100,10 @@ class TargetContextBuilder {
       if (targetDef.contextFrom && resolvedTargets[targetDef.contextFrom]) {
         const primaryTargets = resolvedTargets[targetDef.contextFrom];
 
-        if (trace) {
-          trace.addLog(
-            'info',
-            `TargetContextBuilder: Building dependent context from ${targetDef.contextFrom}`,
-            'TargetContextBuilder',
-            {
-              contextFrom: targetDef.contextFrom,
-              primaryTargetCount: Array.isArray(primaryTargets)
-                ? primaryTargets.length
-                : 0,
-              hasValidPrimaryTargets:
-                Array.isArray(primaryTargets) && primaryTargets.length > 0,
-            }
-          );
-        }
 
         if (Array.isArray(primaryTargets) && primaryTargets.length > 0) {
           const primaryTargetId = primaryTargets[0].id;
           context.target = this.#buildEntityContext(primaryTargetId);
-
-          if (trace) {
-            trace.addLog(
-              'info',
-              `TargetContextBuilder: Set target context to entity ${primaryTargetId}`,
-              'TargetContextBuilder',
-              {
-                targetEntityId: primaryTargetId,
-                contextFrom: targetDef.contextFrom,
-              }
-            );
-          }
-        } else if (trace) {
-          trace.addLog(
-            'warn',
-            `TargetContextBuilder: No valid primary targets found for contextFrom ${targetDef.contextFrom}`,
-            'TargetContextBuilder',
-            {
-              contextFrom: targetDef.contextFrom,
-              primaryTargets: primaryTargets,
-            }
-          );
         }
       } else if (trace && targetDef.contextFrom) {
         trace.addLog(

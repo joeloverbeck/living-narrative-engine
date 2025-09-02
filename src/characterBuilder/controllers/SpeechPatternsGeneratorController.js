@@ -1157,7 +1157,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
    */
   #exportToFile() {
     if (!this.#lastGeneratedPatterns) {
-      this.showError('No speech patterns to export');
+      this.#displayErrorInState('No speech patterns to export');
       return;
     }
 
@@ -1255,7 +1255,7 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
       );
     } catch (error) {
       this.logger.error('Export failed:', error);
-      this.showError('Failed to export speech patterns');
+      this.#displayErrorInState('Failed to export speech patterns');
     }
   }
 
