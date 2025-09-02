@@ -184,18 +184,7 @@ export default function createStepResolver({
           );
           return new Set(); // Return empty set when using error handler
         }
-        // Keep existing behavior when no errorHandler (backward compatibility)
-        // eslint-disable-next-line no-console
-        console.error('[CRITICAL] StepResolver missing actorEntity:', {
-          hasCtx: !!ctx,
-          ctxKeys: ctx ? Object.keys(ctx) : [],
-          nodeType: node?.type,
-          field: node?.field,
-          parentNodeType: node?.parent?.type,
-          depth: ctx?.depth,
-          callStack: new Error().stack,
-        });
-        throw error;
+        throw error; // Throw error when no errorHandler (backward compatibility)
       }
 
       // Use dispatcher to resolve parent node - pass full context

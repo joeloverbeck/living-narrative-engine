@@ -1,14 +1,22 @@
 import { describe, expect, it, beforeEach, jest } from '@jest/globals';
 import createUnionResolver from '../../../../src/scopeDsl/nodes/unionResolver.js';
+import { ErrorCodes } from '../../../../src/scopeDsl/constants/errorCodes.js';
 
 describe('unionResolver', () => {
   let resolver;
   let dispatcher;
+  let mockErrorHandler;
 
   beforeEach(() => {
     // Create a mock dispatcher for recursive resolution
     dispatcher = {
       resolve: jest.fn(),
+    };
+
+    // Create a mock error handler
+    mockErrorHandler = {
+      handleError: jest.fn(),
+      getErrorBuffer: jest.fn().mockReturnValue([]),
     };
 
     resolver = createUnionResolver();
@@ -362,6 +370,266 @@ describe('unionResolver', () => {
 
         expect(result).toBeInstanceOf(Set);
         expect(result.size).toBe(2200); // 1000 + 1000 + 200 shared (counted once)
+      });
+    });
+
+    describe('error handling', () => {
+      describe('missing context validation', () => {
+        it('should throw error when actorEntity is missing and no errorHandler', () => {
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            dispatcher, // Missing actorEntity
+          };
+
+          expect(() => resolver.resolve(node, ctx)).toThrow(
+            'UnionResolver: actorEntity is missing from context'
+          );
+        });
+
+        it('should use error handler when actorEntity is missing', () => {
+          const resolverWithHandler = createUnionResolver({ errorHandler: mockErrorHandler });
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            dispatcher, // Missing actorEntity
+          };
+
+          resolverWithHandler.resolve(node, ctx);
+
+          expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+            expect.any(Error),
+            ctx,
+            'UnionResolver',
+            ErrorCodes.MISSING_ACTOR
+          );
+        });
+      });
+
+      describe('operand validation', () => {
+        it('should throw error when left operand is not iterable and no errorHandler', () => {
+          const leftResult = 'not-iterable';
+          const rightResult = new Set(['entity1']);
+
+          dispatcher.resolve
+            .mockReturnValueOnce(leftResult)
+            .mockReturnValueOnce(rightResult);
+
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            actorEntity: { id: 'actor123' },
+            dispatcher,
+          };
+
+          expect(() => resolver.resolve(node, ctx)).toThrow(
+            'Cannot union string with object - both operands must be iterable collections (Set, Array, etc.)'
+          );
+        });
+
+        it('should use error handler when operand is not iterable', () => {
+          const resolverWithHandler = createUnionResolver({ errorHandler: mockErrorHandler });
+          const leftResult = null;
+          const rightResult = new Set(['entity1']);
+
+          dispatcher.resolve
+            .mockReturnValueOnce(leftResult)
+            .mockReturnValueOnce(rightResult);
+
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            actorEntity: { id: 'actor123' },
+            dispatcher,
+          };
+
+          resolverWithHandler.resolve(node, ctx);
+
+          expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+            expect.any(Error),
+            ctx,
+            'UnionResolver',
+            ErrorCodes.DATA_TYPE_MISMATCH
+          );
+        });
+
+        it('should throw error when right operand is not iterable and no errorHandler', () => {
+          const leftResult = new Set(['entity1']);
+          const rightResult = 42;
+
+          dispatcher.resolve
+            .mockReturnValueOnce(leftResult)
+            .mockReturnValueOnce(rightResult);
+
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            actorEntity: { id: 'actor123' },
+            dispatcher,
+          };
+
+          expect(() => resolver.resolve(node, ctx)).toThrow(
+            'Cannot union object with number - both operands must be iterable collections (Set, Array, etc.)'
+          );
+        });
+      });
+
+      describe('memory threshold validation', () => {
+
+        it('should use error handler for memory threshold exceeded', () => {
+          const resolverWithHandler = createUnionResolver({ errorHandler: mockErrorHandler });
+          
+          // Create large sets that exceed the 10000 threshold
+          const leftItems = Array.from({ length: 7000 }, (_, i) => `left-${i}`);
+          const rightItems = Array.from({ length: 4000 }, (_, i) => `right-${i}`);
+          
+          const leftResult = new Set(leftItems);
+          const rightResult = new Set(rightItems);
+
+          dispatcher.resolve
+            .mockReturnValueOnce(leftResult)
+            .mockReturnValueOnce(rightResult);
+
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            actorEntity: { id: 'actor123' },
+            dispatcher,
+          };
+
+          resolverWithHandler.resolve(node, ctx);
+
+          expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+            expect.any(Error),
+            expect.objectContaining({
+              ...ctx,
+              estimatedSize: 11000,
+              leftSize: 7000,
+              rightSize: 4000,
+            }),
+            'UnionResolver',
+            ErrorCodes.MEMORY_LIMIT
+          );
+        });
+
+        it('should not trigger memory warning for small unions', () => {
+          const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+          
+          const leftResult = new Set(['entity1', 'entity2']);
+          const rightResult = new Set(['entity3', 'entity4']);
+
+          dispatcher.resolve
+            .mockReturnValueOnce(leftResult)
+            .mockReturnValueOnce(rightResult);
+
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            actorEntity: { id: 'actor123' },
+            dispatcher,
+          };
+
+          const result = resolver.resolve(node, ctx);
+
+          expect(consoleSpy).not.toHaveBeenCalled();
+          expect(result).toBeInstanceOf(Set);
+          expect(result.size).toBe(4);
+          
+          consoleSpy.mockRestore();
+        });
+      });
+
+      describe('backward compatibility', () => {
+        it('should work without errorHandler parameter', () => {
+          const backwardResolver = createUnionResolver();
+          
+          const leftResult = new Set(['entity1']);
+          const rightResult = new Set(['entity2']);
+
+          dispatcher.resolve
+            .mockReturnValueOnce(leftResult)
+            .mockReturnValueOnce(rightResult);
+
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            actorEntity: { id: 'actor123' },
+            dispatcher,
+          };
+
+          const result = backwardResolver.resolve(node, ctx);
+
+          expect(result).toBeInstanceOf(Set);
+          expect(result.size).toBe(2);
+        });
+
+        it('should work with undefined errorHandler', () => {
+          const backwardResolver = createUnionResolver({ errorHandler: null });
+          
+          const leftResult = new Set(['entity1']);
+          const rightResult = new Set(['entity2']);
+
+          dispatcher.resolve
+            .mockReturnValueOnce(leftResult)
+            .mockReturnValueOnce(rightResult);
+
+          const node = {
+            type: 'Union',
+            left: { type: 'Source' },
+            right: { type: 'Source' },
+          };
+          const ctx = {
+            actorEntity: { id: 'actor123' },
+            dispatcher,
+          };
+
+          const result = backwardResolver.resolve(node, ctx);
+
+          expect(result).toBeInstanceOf(Set);
+          expect(result.size).toBe(2);
+        });
+      });
+
+      describe('dependency validation', () => {
+        it('should validate errorHandler has required methods', () => {
+          const invalidErrorHandler = {
+            // Missing required methods
+          };
+
+          expect(() => {
+            createUnionResolver({ errorHandler: invalidErrorHandler });
+          }).toThrow();
+        });
+
+        it('should accept valid errorHandler', () => {
+          expect(() => {
+            createUnionResolver({ errorHandler: mockErrorHandler });
+          }).not.toThrow();
+        });
       });
     });
   });

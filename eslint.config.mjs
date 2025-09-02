@@ -109,6 +109,14 @@ export default [
     },
   },
 
+  // 4.1. Configuration for ScopeDSL resolvers - Zero console tolerance
+  {
+    files: ['src/scopeDsl/**/*.js'],
+    rules: {
+      'no-console': 'error' // No console methods allowed in ScopeDSL
+    }
+  },
+
   // 5. Configuration for Node.js scripts (e.g., files in your 'scripts' directory)
   {
     files: ['scripts/**/*.mjs', 'scripts/**/*.js'],

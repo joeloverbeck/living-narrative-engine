@@ -5,16 +5,28 @@
  */
 
 import { validateDependency } from '../../utils/dependencyUtils.js';
+import { ErrorCodes } from '../constants/errorCodes.js';
 
 /**
  * Creates a clothing step resolver for handling clothing-specific field access
  *
  * @param {object} dependencies - Injected dependencies
  * @param {object} dependencies.entitiesGateway - Gateway for entity data access
+ * @param {object} [dependencies.errorHandler] - Optional centralized error handler
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
-export default function createClothingStepResolver({ entitiesGateway }) {
+export default function createClothingStepResolver({
+  entitiesGateway,
+  errorHandler = null,
+}) {
   validateDependency(entitiesGateway, 'entitiesGateway');
+
+  // Only validate if provided (for backward compatibility)
+  if (errorHandler) {
+    validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
+      requiredMethods: ['handleError', 'getErrorBuffer'],
+    });
+  }
 
   const CLOTHING_FIELDS = {
     topmost_clothing: 'topmost',
@@ -47,10 +59,48 @@ export default function createClothingStepResolver({ entitiesGateway }) {
    * @returns {any} A clothing access object that can be used for slot access or array iteration
    */
   function resolveClothingField(entityId, field, trace) {
-    const equipment = entitiesGateway.getComponentData(
-      entityId,
-      'clothing:equipment'
-    );
+    // Validate inputs
+    if (!entityId || typeof entityId !== 'string') {
+      if (errorHandler) {
+        errorHandler.handleError(
+          'Invalid entity ID provided to ClothingStepResolver',
+          { entityId, field },
+          'ClothingStepResolver',
+          ErrorCodes.INVALID_ENTITY_ID
+        );
+      }
+      return null;
+    }
+
+    if (!field || typeof field !== 'string' || !CLOTHING_FIELDS[field]) {
+      if (errorHandler) {
+        errorHandler.handleError(
+          `Invalid clothing reference: ${field}`,
+          { field, entityId, validFields: Object.keys(CLOTHING_FIELDS) },
+          'ClothingStepResolver',
+          ErrorCodes.INVALID_ENTITY_ID
+        );
+      }
+      return null;
+    }
+
+    let equipment;
+    try {
+      equipment = entitiesGateway.getComponentData(
+        entityId,
+        'clothing:equipment'
+      );
+    } catch (error) {
+      if (errorHandler) {
+        errorHandler.handleError(
+          `Failed to retrieve clothing component for entity ${entityId}: ${error.message}`,
+          { entityId, field, originalError: error.message },
+          'ClothingStepResolver',
+          ErrorCodes.COMPONENT_RESOLUTION_FAILED
+        );
+      }
+      return null;
+    }
 
     if (!equipment?.equipped) {
       if (trace) {
@@ -129,8 +179,48 @@ export default function createClothingStepResolver({ entitiesGateway }) {
    * @returns {Set} Set of resolved values
    */
   function resolve(node, ctx) {
+    // Validate inputs
+    if (!node || !node.field) {
+      if (errorHandler) {
+        errorHandler.handleError(
+          'Invalid node provided to ClothingStepResolver',
+          { node },
+          'ClothingStepResolver',
+          ErrorCodes.INVALID_NODE_STRUCTURE
+        );
+      }
+      return new Set();
+    }
+
+    if (!ctx || !ctx.dispatcher) {
+      if (errorHandler) {
+        errorHandler.handleError(
+          'Invalid context or missing dispatcher',
+          { hasContext: !!ctx, hasDispatcher: !!ctx?.dispatcher },
+          'ClothingStepResolver',
+          ErrorCodes.MISSING_DISPATCHER
+        );
+      }
+      return new Set();
+    }
+
     const { field, parent } = node;
-    const parentResults = ctx.dispatcher.resolve(parent, ctx);
+    let parentResults;
+    
+    try {
+      parentResults = ctx.dispatcher.resolve(parent, ctx);
+    } catch (error) {
+      if (errorHandler) {
+        errorHandler.handleError(
+          `Failed to resolve parent node: ${error.message}`,
+          { field, parentNode: parent, originalError: error.message },
+          'ClothingStepResolver',
+          ErrorCodes.STEP_RESOLUTION_FAILED
+        );
+      }
+      return new Set();
+    }
+
     const resultSet = new Set();
 
     // Add trace logging
@@ -151,9 +241,11 @@ export default function createClothingStepResolver({ entitiesGateway }) {
 
       const clothingData = resolveClothingField(entityId, field, ctx.trace);
 
-      // Add the clothing access object to the result set
-      // It will be processed by either SlotAccessResolver or ArrayIterationResolver
-      resultSet.add(clothingData);
+      if (clothingData) {
+        // Add the clothing access object to the result set
+        // It will be processed by either SlotAccessResolver or ArrayIterationResolver
+        resultSet.add(clothingData);
+      }
     }
 
     if (ctx.trace) {

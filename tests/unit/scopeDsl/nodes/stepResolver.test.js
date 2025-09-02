@@ -74,19 +74,6 @@ describe('StepResolver', () => {
         expect(() => resolver.resolve(node, ctx)).toThrow(
           'StepResolver: actorEntity is missing from context'
         );
-
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-          '[CRITICAL] StepResolver missing actorEntity:',
-          expect.objectContaining({
-            hasCtx: true,
-            ctxKeys: ['dispatcher', 'trace'],
-            nodeType: 'Step',
-            field: 'name',
-            parentNodeType: undefined,
-            depth: undefined,
-            callStack: expect.any(String),
-          })
-        );
       });
 
       it('should use error handler when actorEntity is missing from context (with errorHandler)', () => {
@@ -125,24 +112,6 @@ describe('StepResolver', () => {
         expect(() => resolver.resolve(node, undefined)).toThrow();
       });
 
-      it('should log detailed error information including parent node type', () => {
-        const node = {
-          type: 'Step',
-          field: 'position',
-          parent: { type: 'Source', kind: 'actor' },
-        };
-        const ctx = { dispatcher, trace, depth: 3 };
-
-        expect(() => resolver.resolve(node, ctx)).toThrow();
-
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-          '[CRITICAL] StepResolver missing actorEntity:',
-          expect.objectContaining({
-            parentNodeType: 'Source',
-            depth: 3,
-          })
-        );
-      });
     });
 
     describe('basic field resolution', () => {

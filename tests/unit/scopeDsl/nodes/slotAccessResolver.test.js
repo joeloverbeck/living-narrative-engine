@@ -8,12 +8,15 @@ import {
   getCacheStats,
 } from '../../../../src/scopeDsl/prioritySystem/priorityCalculator.js';
 import { createTestBed } from '../../../common/testBed.js';
+import { ScopeDslError } from '../../../../src/scopeDsl/errors/scopeDslError.js';
+import { ErrorCodes } from '../../../../src/scopeDsl/constants/errorCodes.js';
 
 describe('SlotAccessResolver', () => {
   let resolver;
   let mockEntitiesGateway;
   let mockContext;
   let mockClothingAccessObject;
+  let mockErrorHandler;
   let testBed;
 
   // Test utilities and helper functions
@@ -114,8 +117,14 @@ describe('SlotAccessResolver', () => {
       getComponentData: jest.fn().mockReturnValue(null),
     };
 
+    mockErrorHandler = {
+      handleError: jest.fn(),
+      getErrorBuffer: jest.fn().mockReturnValue([]),
+    };
+
     resolver = createSlotAccessResolver({
       entitiesGateway: mockEntitiesGateway,
+      errorHandler: mockErrorHandler,
     });
 
     mockContext = {
@@ -1354,6 +1363,123 @@ describe('SlotAccessResolver', () => {
       expect(() => {
         resolver.resolve(node, mockContext);
       }).not.toThrow();
+    });
+
+    describe('Error Handler Integration', () => {
+      it('should call errorHandler for invalid clothing access object', () => {
+        const invalidClothingAccess = {
+          __clothingSlotAccess: true,
+          // Missing equipped and mode properties will cause error inside resolveSlotAccess
+        };
+        mockContext.dispatcher.resolve.mockReturnValue(
+          new Set([invalidClothingAccess])
+        );
+
+        const node = {
+          type: 'Step',
+          field: 'torso_upper',
+          parent: {
+            type: 'Step',
+            field: 'topmost_clothing'
+          },
+        };
+
+        // Reset the mock to track calls
+        mockErrorHandler.handleError.mockClear();
+        
+        const result = resolver.resolve(node, mockContext);
+
+        expect(result).toEqual(new Set());
+        expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+          'No equipped items data found',
+          expect.objectContaining({
+            slotName: 'torso_upper'
+          }),
+          'SlotAccessResolver',
+          ErrorCodes.MISSING_CONTEXT_GENERIC
+        );
+      });
+
+      it('should call errorHandler for invalid slot name', () => {
+        const node = {
+          type: 'Step',
+          field: 'invalid_slot',
+          parent: {
+            type: 'Step',
+            field: 'topmost_clothing'
+          },
+        };
+
+        mockErrorHandler.handleError.mockClear();
+        
+        const result = resolver.resolve(node, mockContext);
+
+        expect(result).toEqual(new Set());
+        expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+          expect.stringContaining('Invalid slot identifier'),
+          expect.objectContaining({
+            slotName: 'invalid_slot'
+          }),
+          'SlotAccessResolver',
+          ErrorCodes.INVALID_ENTITY_ID
+        );
+      });
+
+      it('should call errorHandler for invalid clothing mode', () => {
+        const invalidModeClothing = {
+          __clothingSlotAccess: true,
+          equipped: { torso_upper: { base: 'shirt_1' } },
+          mode: 'invalid_mode',
+        };
+        
+        mockContext.dispatcher.resolve.mockReturnValue(
+          new Set([invalidModeClothing])
+        );
+
+        const node = {
+          type: 'Step',
+          field: 'torso_upper',
+          parent: {
+            type: 'Step',
+            field: 'topmost_clothing'
+          },
+        };
+
+        mockErrorHandler.handleError.mockClear();
+        
+        const result = resolver.resolve(node, mockContext);
+
+        expect(result).toEqual(new Set());
+        expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+          expect.stringContaining('Invalid clothing mode'),
+          expect.objectContaining({
+            mode: 'invalid_mode'
+          }),
+          'SlotAccessResolver',
+          ErrorCodes.INVALID_DATA_GENERIC
+        );
+      });
+
+      it('should work without errorHandler for backward compatibility', () => {
+        // Create resolver without errorHandler
+        const resolverWithoutHandler = createSlotAccessResolver({
+          entitiesGateway: mockEntitiesGateway,
+        });
+
+        const node = {
+          type: 'Step',
+          field: 'torso_upper',
+          parent: {
+            type: 'Step',
+            field: 'topmost_clothing'
+          },
+        };
+
+        // Should not throw even with invalid data when no errorHandler
+        expect(() => {
+          resolverWithoutHandler.resolve(node, mockContext);
+        }).not.toThrow();
+      });
     });
   });
 });
