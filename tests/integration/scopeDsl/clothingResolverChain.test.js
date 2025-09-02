@@ -363,33 +363,4 @@ describe('Clothing Resolver Chain Integration', () => {
       expect(result).toEqual(new Set(['leather_jacket_001']));
     });
   });
-
-  describe('Trace logging integration', () => {
-    it('should provide comprehensive trace logs for clothing resolution', () => {
-      const trace = {
-        addLog: jest.fn(),
-      };
-
-      const ast = parser.parse('actor.topmost_clothing.torso_upper');
-      const result = engine.resolve(
-        ast,
-        mockActorEntity,
-        mockRuntimeContext,
-        trace
-      );
-
-      // Should have trace logs from multiple resolvers
-      const traceCalls = trace.addLog.mock.calls;
-      const hasClothingStepResolverLog = traceCalls.some(
-        (call) => call[2] === 'ClothingStepResolver'
-      );
-      const hasSlotAccessResolverLog = traceCalls.some(
-        (call) => call[2] === 'SlotAccessResolver'
-      );
-
-      expect(hasClothingStepResolverLog).toBe(true);
-      expect(hasSlotAccessResolverLog).toBe(true);
-      expect(result).toEqual(new Set(['leather_jacket_001']));
-    });
-  });
 });

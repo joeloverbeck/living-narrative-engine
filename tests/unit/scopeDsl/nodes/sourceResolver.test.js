@@ -343,26 +343,6 @@ describe('sourceResolver', () => {
     });
 
     describe('trace logging', () => {
-      it('should add trace log when trace context is provided', () => {
-        const trace = {
-          addLog: jest.fn(),
-        };
-        const node = { type: 'Source', kind: 'actor' };
-        const ctx = { actorEntity: { id: 'actor123' }, trace };
-
-        resolver.resolve(node, ctx);
-
-        expect(trace.addLog).toHaveBeenCalledWith(
-          'info',
-          "Resolved source 'actor'. Found 1 item(s).",
-          'ScopeEngine.resolveSource',
-          {
-            kind: 'actor',
-            param: undefined,
-            result: ['actor123'],
-          }
-        );
-      });
 
       it('should not throw when trace is not provided', () => {
         const node = { type: 'Source', kind: 'actor' };

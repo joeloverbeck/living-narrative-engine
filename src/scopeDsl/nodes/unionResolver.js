@@ -63,9 +63,6 @@ export default function createUnionResolver({ errorHandler = null } = {}) {
 
       const source = 'UnionResolver';
 
-      if (trace) {
-        trace.addLog('info', 'Starting union resolution.', source);
-      }
 
       // Recursively resolve left and right nodes - pass full context
       const leftResult = dispatcher.resolve(node.left, ctx);
@@ -146,18 +143,6 @@ export default function createUnionResolver({ errorHandler = null } = {}) {
         addToResult(item);
       }
 
-      if (trace) {
-        trace.addLog(
-          'info',
-          `Union complete. Left: ${leftResult.size} items, Right: ${rightResult.size} items, Total: ${result.size} items.`,
-          source,
-          {
-            leftSize: leftResult.size,
-            rightSize: rightResult.size,
-            unionSize: result.size,
-          }
-        );
-      }
 
       return result;
     },

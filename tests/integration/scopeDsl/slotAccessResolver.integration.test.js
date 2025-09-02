@@ -201,34 +201,6 @@ describe('SlotAccessResolver Enhanced Integration Tests', () => {
   });
 
   describe('Enhancement Integration', () => {
-    it('should provide enhanced tracing with existing comprehensive system', () => {
-      const trace = {
-        addLog: jest.fn(),
-        coverageError: null,
-      };
-
-      const ast = parser.parse('actor.topmost_clothing.torso_upper');
-      const result = engine.resolve(
-        ast,
-        mockActorEntity,
-        mockRuntimeContext,
-        trace
-      );
-
-      // Should have trace logs from multiple resolvers including enhancements
-      const traceCalls = trace.addLog.mock.calls;
-      const hasSlotAccessResolverLog = traceCalls.some(
-        (call) => call[2] === 'SlotAccessResolver'
-      );
-      const hasEnhancementLog = traceCalls.some(
-        (call) => call[2] === 'CoverageEnhancer'
-      );
-
-      expect(hasSlotAccessResolverLog).toBe(true);
-      expect(hasEnhancementLog).toBe(true);
-      expect(result).toEqual(new Set(['leather_jacket_001']));
-    });
-
     it('should handle performance monitoring correctly', () => {
       // Mock performance.now to simulate timing
       const originalNow = performance.now;

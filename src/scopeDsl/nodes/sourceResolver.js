@@ -158,33 +158,6 @@ export default function createSourceResolver({
           }
 
           // Enhanced trace logging for entity discovery
-          if (trace) {
-            const entityDetails = entities.map(entity => {
-              // Get additional context for better debugging
-              const hasPositionComponent = entitiesGateway.hasComponent(entity.id, 'core:position');
-              const positionData = hasPositionComponent ? 
-                entitiesGateway.getComponentData(entity.id, 'core:position') : null;
-              
-              return {
-                id: entity.id,
-                hasComponent: true,
-                hasPosition: hasPositionComponent,
-                locationId: positionData?.locationId || null
-              };
-            });
-
-            trace.addLog('info', 
-              `Entity discovery for component '${componentId}': found ${entities.length}/${totalEntityCount} entities`, 
-              'ScopeEngine.entityDiscovery',
-              {
-                componentId,
-                totalEntities: totalEntityCount,
-                foundEntities: entities.length,
-                entityDetails,
-                resultIds: Array.from(result)
-              }
-            );
-          }
 
           break;
         }
@@ -226,6 +199,7 @@ export default function createSourceResolver({
       // Add trace logging if available
       if (trace) {
         const source = 'ScopeEngine.resolveSource';
+        const resultArray = Array.from(result);
         trace.addLog(
           'info',
           `Resolved source '${node.kind}'. Found ${result.size} item(s).`,
@@ -233,7 +207,7 @@ export default function createSourceResolver({
           {
             kind: node.kind,
             param: node.param,
-            result: Array.from(result),
+            result: resultArray,
           }
         );
       }

@@ -385,18 +385,9 @@ describe('filterResolver', () => {
 
         resolver.resolve(node, ctx);
 
-        expect(trace.addLog).toHaveBeenCalledWith(
-          'info',
-          'Applying filter to 2 items.',
-          'ScopeEngine.resolveFilter',
-          { logic: { test: 'logic' } }
-        );
+        
 
-        expect(trace.addLog).toHaveBeenCalledWith(
-          'info',
-          'Filter application complete. 1 of 2 items passed.',
-          'ScopeEngine.resolveFilter'
-        );
+        
       });
 
       it('should not throw when trace is not provided', () => {

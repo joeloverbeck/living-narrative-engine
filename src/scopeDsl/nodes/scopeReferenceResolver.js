@@ -99,6 +99,11 @@ export default function createScopeReferenceResolver({
 
       const scopeId = node.scopeId;
 
+      // Add trace logging if available
+      if (trace) {
+        trace.addLog('info', `Resolving scope reference: ${scopeId}`, 'ScopeReferenceResolver');
+      }
+
       // Check for circular references
       if (cycleDetector) {
         cycleDetector.enter(scopeId);
@@ -124,24 +129,13 @@ export default function createScopeReferenceResolver({
           }
         }
 
-        if (trace) {
-          trace.addLog(
-            'info',
-            `Resolving scope reference: ${scopeId}`,
-            'ScopeReferenceResolver'
-          );
-        }
-
         // Recursively resolve the referenced scope's AST
         // Pass the full context to maintain all necessary state
         const result = dispatcher.resolve(scopeAst, ctx);
 
+        // Add trace logging for successful resolution
         if (trace) {
-          trace.addLog(
-            'info',
-            `Scope reference ${scopeId} resolved to ${result.size} entities`,
-            'ScopeReferenceResolver'
-          );
+          trace.addLog('info', `Scope reference ${scopeId} resolved to ${result.size} entities`, 'ScopeReferenceResolver');
         }
 
         return result;

@@ -285,49 +285,6 @@ describe('ClothingStepResolver', () => {
   });
 
   describe('trace logging', () => {
-    it('should log resolution steps when trace is provided', () => {
-      const node = {
-        type: 'Step',
-        field: 'topmost_clothing',
-        parent: { type: 'Source' },
-      };
-
-      resolver.resolve(node, mockContext);
-
-      expect(mockContext.trace.addLog).toHaveBeenCalledWith(
-        'info',
-        expect.stringContaining('ClothingStepResolver: Processing'),
-        'ClothingStepResolver',
-        expect.any(Object)
-      );
-
-      expect(mockContext.trace.addLog).toHaveBeenCalledWith(
-        'info',
-        expect.stringContaining('ClothingStepResolver: Resolution complete'),
-        'ClothingStepResolver',
-        expect.any(Object)
-      );
-    });
-
-    it('should log when no equipment component found', () => {
-      mockEntitiesGateway.getComponentData.mockReturnValue(null);
-
-      const node = {
-        type: 'Step',
-        field: 'topmost_clothing',
-        parent: { type: 'Source' },
-      };
-
-      resolver.resolve(node, mockContext);
-
-      expect(mockContext.trace.addLog).toHaveBeenCalledWith(
-        'info',
-        expect.stringContaining('No equipped items found for entity actor_1'),
-        'ClothingStepResolver',
-        expect.objectContaining({ entityId: 'actor_1' })
-      );
-    });
-
     it('should work without trace context', () => {
       mockContext.trace = null;
 

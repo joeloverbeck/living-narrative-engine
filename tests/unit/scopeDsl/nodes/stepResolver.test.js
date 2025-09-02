@@ -164,12 +164,7 @@ describe('StepResolver', () => {
         const result = resolver.resolve(node, ctx);
 
         expect(result).toEqual(new Set());
-        expect(trace.addLog).toHaveBeenCalledWith(
-          'info',
-          "Resolving Step node with field 'name'. Parent result size: 0",
-          'StepResolver',
-          { field: 'name', parentSize: 0 }
-        );
+        
       });
 
       it('should handle undefined field values from entities', () => {
@@ -494,19 +489,9 @@ describe('StepResolver', () => {
 
         resolver.resolve(node, ctx);
 
-        expect(trace.addLog).toHaveBeenCalledWith(
-          'info',
-          "Resolving Step node with field 'test'. Parent result size: 1",
-          'StepResolver',
-          { field: 'test', parentSize: 1 }
-        );
+        
 
-        expect(trace.addLog).toHaveBeenCalledWith(
-          'info',
-          "Step node resolved. Field: 'test', Result size: 1",
-          'StepResolver',
-          { field: 'test', resultSize: 1 }
-        );
+        
       });
 
       it('should not log trace messages when trace is not provided', () => {

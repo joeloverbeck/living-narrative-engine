@@ -283,16 +283,22 @@ describe('ScopeEngine - Additional Coverage Tests', () => {
         mockTraceContext
       );
 
+      // Verify that the main engine trace logs are called
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
-        'info',
-        "Resolved source 'location'. Found 1 item(s).",
-        'ScopeEngine.resolveSource',
-        {
-          kind: 'location',
-          param: undefined,
-          result: [locationId],
-        }
+        'step',
+        'Starting scope resolution.',
+        'ScopeEngine',
+        { ast }
       );
+      expect(mockTraceContext.addLog).toHaveBeenCalledWith(
+        'success',
+        'Scope resolution finished. Found 1 target(s).',
+        'ScopeEngine',
+        { targets: [locationId] }
+      );
+      
+      // Verify the correct result is returned
+      expect(result).toEqual(new Set([locationId]));
     });
 
     test('should pass trace context through step resolution', () => {

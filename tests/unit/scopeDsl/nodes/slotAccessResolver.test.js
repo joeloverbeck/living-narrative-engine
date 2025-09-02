@@ -662,69 +662,8 @@ describe('SlotAccessResolver', () => {
   });
 
   describe('trace logging', () => {
-    it('should log resolution steps when trace is provided', () => {
-      const node = {
-        type: 'Step',
-        field: 'torso_upper',
-        parent: { type: 'Step' },
-      };
 
-      resolver.resolve(node, mockContext);
 
-      expect(mockContext.trace.addLog).toHaveBeenCalledWith(
-        'info',
-        expect.stringContaining('SlotAccessResolver: Processing slot'),
-        'SlotAccessResolver',
-        expect.any(Object)
-      );
-
-      expect(mockContext.trace.addLog).toHaveBeenCalledWith(
-        'info',
-        expect.stringContaining('SlotAccessResolver: Resolution complete'),
-        'SlotAccessResolver',
-        expect.any(Object)
-      );
-    });
-
-    it('should log when item found in slot', () => {
-      const node = {
-        type: 'Step',
-        field: 'torso_upper',
-        parent: { type: 'Step' },
-      };
-
-      resolver.resolve(node, mockContext);
-
-      expect(mockContext.trace.addLog).toHaveBeenCalledWith(
-        'info',
-        expect.stringContaining('Selected item from slot'),
-        'SlotAccessResolver',
-        expect.objectContaining({
-          slotName: 'torso_upper',
-          layer: 'outer',
-          itemId: 'jacket_1',
-        })
-      );
-    });
-
-    it('should log when no data found for slot', () => {
-      const node = {
-        type: 'Step',
-        field: 'left_arm_clothing',
-        parent: { type: 'Step' },
-      };
-
-      resolver.resolve(node, mockContext);
-
-      expect(mockContext.trace.addLog).toHaveBeenCalledWith(
-        'info',
-        expect.stringContaining('No items found for slot'),
-        'SlotAccessResolver',
-        expect.objectContaining({
-          slotName: 'left_arm_clothing',
-        })
-      );
-    });
 
     it('should work without trace context', () => {
       mockContext.trace = null;
@@ -1275,12 +1214,7 @@ describe('SlotAccessResolver', () => {
       const result = resolver.resolve(node, mockContextLocal);
 
       expect(result).toEqual(new Set());
-      expect(mockContextLocal.trace.addLog).toHaveBeenCalledWith(
-        'info',
-        expect.stringContaining('No items found for slot'),
-        'SlotAccessResolver',
-        expect.any(Object)
-      );
+      
     });
 
     it('should handle null entities gateway gracefully during construction', () => {

@@ -139,9 +139,6 @@ export default function createStepResolver({
    * @param {object} data - Additional log data.
    */
   function logStepResolution(trace, message, data) {
-    if (trace) {
-      trace.addLog('info', message, 'StepResolver', data);
-    }
   }
 
   return {

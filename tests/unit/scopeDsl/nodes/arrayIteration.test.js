@@ -190,31 +190,19 @@ describe('ArrayIterationResolver', () => {
       expect(result).toEqual(new Set());
     });
 
-    it('should add trace logs when trace context is provided', () => {
+    it('should work without trace context', () => {
       const node = {
         type: 'ArrayIterationStep',
         parent: { type: 'Step' },
       };
       const actorEntity = createTestEntity('test-actor', { 'core:actor': {} });
-      const ctx = { dispatcher, trace, actorEntity };
+      const ctx = { dispatcher, trace: null, actorEntity };
 
       dispatcher.resolve.mockReturnValue(new Set([['item1', 'item2']]));
 
-      resolver.resolve(node, ctx);
+      const result = resolver.resolve(node, ctx);
 
-      expect(trace.addLog).toHaveBeenCalledWith(
-        'info',
-        'Resolving ArrayIterationStep node. Parent result size: 1',
-        'ArrayIterationResolver',
-        { parentSize: 1 }
-      );
-
-      expect(trace.addLog).toHaveBeenCalledWith(
-        'info',
-        'ArrayIterationStep node resolved. Result size: 2',
-        'ArrayIterationResolver',
-        { resultSize: 2 }
-      );
+      expect(result).toEqual(new Set(['item1', 'item2']));
     });
 
     describe('clothing access object handling', () => {

@@ -213,48 +213,6 @@ describe('unionResolver', () => {
     });
 
     describe('trace logging', () => {
-      it('should add trace logs when trace context is provided', () => {
-        const trace = {
-          addLog: jest.fn(),
-        };
-
-        const leftResult = new Set(['entity1', 'entity2']);
-        const rightResult = new Set(['entity2', 'entity3']);
-
-        dispatcher.resolve
-          .mockReturnValueOnce(leftResult)
-          .mockReturnValueOnce(rightResult);
-
-        const node = {
-          type: 'Union',
-          left: { type: 'Source' },
-          right: { type: 'Source' },
-        };
-        const ctx = {
-          actorEntity: { id: 'actor123' },
-          dispatcher,
-          trace,
-        };
-
-        resolver.resolve(node, ctx);
-
-        expect(trace.addLog).toHaveBeenCalledWith(
-          'info',
-          'Starting union resolution.',
-          'UnionResolver'
-        );
-
-        expect(trace.addLog).toHaveBeenCalledWith(
-          'info',
-          'Union complete. Left: 2 items, Right: 2 items, Total: 3 items.',
-          'UnionResolver',
-          {
-            leftSize: 2,
-            rightSize: 2,
-            unionSize: 3,
-          }
-        );
-      });
 
       it('should not throw when trace is not provided', () => {
         const leftResult = new Set(['entity1']);
