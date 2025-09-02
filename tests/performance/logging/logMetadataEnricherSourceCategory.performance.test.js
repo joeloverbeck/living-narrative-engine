@@ -58,6 +58,7 @@ describe('LogMetadataEnricher Source Category - Performance Benchmarks', () => {
       enablePerformance: true,
       enableBrowser: false,
       ErrorConstructor: mockErrorConstructor, // Pass our mock to the constructor
+      sourceMapResolver: null, // Disable source map resolution for testing
     });
   });
 

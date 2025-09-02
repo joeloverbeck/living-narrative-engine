@@ -40,11 +40,26 @@ describe('Developer Experience Performance', () => {
     entityManager = container.resolve(tokens.IEntityManager);
     scopeRegistry = container.resolve(tokens.IScopeRegistry);
     scopeEngine = container.resolve(tokens.IScopeEngine);
+    const dslParser = container.resolve(tokens.DslParser);
+    const logger = container.resolve(tokens.ILogger);
+    const registry = container.resolve(tokens.IDataRegistry);
+
+    // Setup test conditions (required for JSON Logic filters)
+    ScopeTestUtilities.setupScopeTestConditions(registry);
+
+    // Create and initialize scope definitions
+    const scopeDefinitions = ScopeTestUtilities.createTestScopes({
+      dslParser,
+      logger,
+    });
+
+    // Initialize scope registry with test scopes
+    scopeRegistry.initialize(scopeDefinitions);
 
     // Create test actors
     testActors = await ActionTestUtilities.createTestActors({
       entityManager,
-      registry: container.resolve(tokens.IDataRegistry),
+      registry,
     });
   });
 
@@ -59,9 +74,11 @@ describe('Developer Experience Performance', () => {
    */
   function createGameContext() {
     return {
-      entities: [testActors.player, testActors.companion],
+      entities: [testActors.player, testActors.npc],
       location: { id: 'test_location' },
       entityManager,
+      jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
+      logger: container.resolve(tokens.ILogger),
     };
   }
 

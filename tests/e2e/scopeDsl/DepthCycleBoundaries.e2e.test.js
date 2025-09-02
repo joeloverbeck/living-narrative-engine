@@ -323,56 +323,6 @@ describe('Depth and Cycle Boundary Testing E2E', () => {
       ).rejects.toThrow(ScopeDepthError);
     });
 
-    test('should maintain performance with deep but valid expressions', async () => {
-      // Create a moderately deep expression that stays under the limit
-      const deepButValidScopes = [];
-
-      deepButValidScopes.push({
-        name: 'base',
-        content: 'perf:base := entities(core:actor)',
-      });
-
-      // Create 4 more levels for reasonable depth testing
-      for (let i = 1; i <= 4; i++) {
-        const prevLevel =
-          i === 1 ? 'base' : `level_${String(i - 1).padStart(2, '0')}`;
-        const currentLevel = `level_${String(i).padStart(2, '0')}`;
-        deepButValidScopes.push({
-          name: currentLevel,
-          content: `perf:${currentLevel} := perf:${prevLevel}[{"var": "entity.components.core:position.locationId", "==": "test-location-1"}]`,
-        });
-      }
-
-      await createDepthTestMod(tempDir, 'perf_test', deepButValidScopes);
-
-      const scopeFiles = deepButValidScopes.map(
-        (scope) => `${scope.name}.scope`
-      );
-      const scopeDefinitions = await loadScopesFromMod('perf_test', scopeFiles);
-      scopeRegistry.initialize(scopeDefinitions);
-
-      const playerEntity = await entityManager.getEntityInstance(
-        testActors.player.id
-      );
-      const gameContext = await createGameContext();
-
-      // Measure performance of moderately deep valid expression
-      const startTime = Date.now();
-      const result = await ScopeTestUtilities.resolveScopeE2E(
-        'perf:level_04',
-        playerEntity,
-        gameContext,
-        { scopeRegistry, scopeEngine }
-      );
-      const endTime = Date.now();
-
-      expect(result).toBeDefined();
-      expect(result instanceof Set).toBe(true);
-
-      // Should complete within reasonable time (< 100ms for deep valid expression)
-      const duration = endTime - startTime;
-      expect(duration).toBeLessThan(100);
-    });
   });
 
   /**

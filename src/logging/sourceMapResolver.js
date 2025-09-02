@@ -116,9 +116,13 @@ class SourceMapResolver {
   #enabled = true;
 
   constructor() {
-    // Pre-fetch common bundle source maps on initialization
-    // Note: When served via http-server from dist/, files are at root
-    this.prefetchSourceMap('/bundle.js');
+    // Only prefetch source maps in browser environments
+    // Skip in Node.js/test environments to prevent network errors
+    if (typeof window !== 'undefined' && typeof fetch !== 'undefined') {
+      // Pre-fetch common bundle source maps on initialization
+      // Note: When served via http-server from dist/, files are at root
+      this.prefetchSourceMap('/bundle.js');
+    }
   }
 
   /**

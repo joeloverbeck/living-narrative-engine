@@ -186,27 +186,51 @@ describe('CriticalLogNotifier Bootstrap Integration', () => {
     it('should test full infrastructure registration (simulates real bootstrap)', () => {
       // This test simulates the real bootstrap process more closely
       
-      // First register some basic dependencies that infrastructure needs
-      const mockRegistrar = {
-        instance: jest.fn((token, instance) => {
-          container.register(token, () => instance, { lifecycle: 'singleton' });
-        }),
-        single: jest.fn((token, constructor) => {
-          container.register(token, (c) => new constructor(), { lifecycle: 'singleton' });
-        }),
-        singletonFactory: jest.fn((token, factory) => {
-          container.register(token, factory, { lifecycle: 'singleton' });
-        }),
-      };
+      // First register the core dependencies that infrastructure needs
+      // These would normally be provided by registerLoaders()
+      
+      // Mock IDataRegistry (required by IGameDataRepository)
+      const mockDataRegistry = testBed.createMock('dataRegistry', [
+        'getWorldDefinition',
+        'getAllWorldDefinitions',
+        'getStartingPlayerId',
+        'getStartingLocationId',
+        'getActionDefinition',
+        'getAllActionDefinitions',
+        'getEntityDefinition',
+        'getAllEntityDefinitions',
+        'getEventDefinition',
+        'getAllEventDefinitions',
+        'getComponentDefinition',
+        'getAllComponentDefinitions',
+        'getConditionDefinition',
+        'getAllConditionDefinitions',
+        'getGoalDefinition',
+        'getAllGoalDefinitions',
+        'getEntityInstanceDefinition',
+        'getAllEntityInstanceDefinitions',
+        'get',
+        'getAll',
+        'clear',
+        'store',
+      ]);
+      container.register(tokens.IDataRegistry, () => mockDataRegistry, { lifecycle: 'singleton' });
+      
+      // Mock ISchemaValidator (required by IValidatedEventDispatcher)
+      const mockSchemaValidator = testBed.createMock('schemaValidator', ['validate', 'validateAgainstSchema']);
+      container.register(tokens.ISchemaValidator, () => mockSchemaValidator, { lifecycle: 'singleton' });
+      
+      // Mock IScopeRegistry (required by ScopeEngine)
+      const mockScopeRegistry = testBed.createMock('scopeRegistry', ['register', 'get', 'has']);
+      container.register(tokens.IScopeRegistry, () => mockScopeRegistry, { lifecycle: 'singleton' });
 
       // Mock some additional dependencies
-      container.register('ServiceSetup', () => ({}), { lifecycle: 'singleton' });
       container.register(tokens.ServiceSetup, () => ({}), { lifecycle: 'singleton' });
       container.register(tokens.IPathConfiguration, () => ({}), { lifecycle: 'singleton' });
 
-      // Register infrastructure - this should include the fixed CriticalLogNotifier
+      // Register infrastructure - now with all required dependencies
       expect(() => {
-        registerInfrastructure(container, mockRegistrar);
+        registerInfrastructure(container);
       }).not.toThrow();
 
       // Verify the CriticalLogNotifier can be resolved
@@ -218,8 +242,6 @@ describe('CriticalLogNotifier Bootstrap Integration', () => {
   });
 
   describe('Critical Logging Integration', () => {
-    let criticalNotifier;
-
     beforeEach(() => {
       // Create a working CriticalLogNotifier for integration tests
       container.register(
@@ -241,7 +263,8 @@ describe('CriticalLogNotifier Bootstrap Integration', () => {
         }
       );
 
-      criticalNotifier = container.resolve(tokens.ICriticalLogNotifier);
+      // Resolve to ensure it's properly registered
+      container.resolve(tokens.ICriticalLogNotifier);
     });
 
     it('should integrate with HybridLogger critical buffer', () => {

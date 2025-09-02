@@ -4,7 +4,7 @@
  */
 
 import LRUCache from '../utils/lruCache.js';
-import sourceMapResolver from './sourceMapResolver.js';
+import sourceMapResolverImport from './sourceMapResolver.js';
 
 /**
  * @typedef {object} SourceLocation
@@ -124,7 +124,9 @@ class LogMetadataEnricher {
     this.#lazyLoadExpensive = lazyLoadExpensive;
     this.#ErrorConstructor = ErrorConstructor;
     this.#stackTraceCache = enableSource ? new LRUCache(stackCacheSize) : null;
-    this.#sourceMapResolver = sourceMapResolver;
+    // Use the provided resolver (for testing), otherwise use the imported global
+    // Note: Check for undefined vs null - null means explicitly disable
+    this.#sourceMapResolver = sourceMapResolver !== undefined ? sourceMapResolver : sourceMapResolverImport;
 
     // Initialize browser-specific regex patterns for stack parsing
     // Order matters - more specific patterns should come first
@@ -132,8 +134,8 @@ class LogMetadataEnricher {
       // Webpack patterns (check these first as they're more specific)
       // webpack-dev: "at Function.name (webpack-internal:///./src/file.js:10:15)"
       ['webpack-dev', /at\s+(?:(.+?)\s+)?\(webpack-internal:\/\/\/(.+?):(\d+):(\d+)\)/],
-      // webpack-prod: "at t.method (https://example.com/bundle.min.js:1:12345)"
-      ['webpack-prod', /at\s+([a-z])\.[a-z]+\s+\((.+?):(\d+):(\d+)\)/i],
+      // webpack-prod: "at t.method (https://example.com/bundle.min.js:1:12345)" - only match minified names
+      ['webpack-prod', /at\s+[a-z]\.[a-z]+\s+\((.+?\.min\.js):(\d+):(\d+)\)/i],
       // webpack-eval: "at Function eval at <anonymous> (file.js:10:20)"
       ['webpack-eval', /at\s+.+?\s+eval\s+at\s+<anonymous>\s+\((.+?):(\d+):(\d+)\)/],
       
@@ -529,7 +531,14 @@ class LogMetadataEnricher {
         const line = lines[i].trim();
         if (line) {
           // First try source map resolution for bundled files
-          const sourceInfo = sourceMapResolver.extractSourceFromStackLine(line);
+          let sourceInfo = null;
+          try {
+            if (this.#sourceMapResolver && this.#sourceMapResolver.extractSourceFromStackLine) {
+              sourceInfo = this.#sourceMapResolver.extractSourceFromStackLine(line);
+            }
+          } catch {
+            // Ignore source map resolution errors
+          }
           if (sourceInfo && sourceInfo.source) {
             // Check if resolved source is an internal frame
             if (!this.#isInternalFrame(sourceInfo.source)) {
@@ -574,7 +583,8 @@ class LogMetadataEnricher {
       'hybridLogger.js',
       'criticalLogNotifier.js',
       'sourceMapResolver.js',
-      'src/logging/',
+      // Note: We removed 'src/logging/' because not all files in logging directory are internal
+      // Only the specific files above that are part of the logging infrastructure are internal
     ];
 
     return internalFiles.some((file) => line.includes(file));
@@ -615,17 +625,50 @@ class LogMetadataEnricher {
       const line = lines[i].trim();
       if (line) {
         // First try source map resolution for bundled files
-        const sourceInfo = sourceMapResolver.extractSourceFromStackLine(line);
+        let sourceInfo = null;
+        try {
+          if (this.#sourceMapResolver && this.#sourceMapResolver.extractSourceFromStackLine) {
+            sourceInfo = this.#sourceMapResolver.extractSourceFromStackLine(line);
+          }
+        } catch {
+          // Ignore source map resolution errors
+        }
+        
         if (sourceInfo && sourceInfo.source) {
           // Check if resolved source is an internal frame
           if (!this.#isInternalFrame(sourceInfo.source)) {
             return `${sourceInfo.source}:${sourceInfo.line}`;
           }
-        } else if (!this.#isInternalFrame(line)) {
-          // Try enhanced patterns including webpack
-          const parsed = this.#parseStackLineEnhanced(line);
-          if (parsed) {
-            return parsed;
+        } else {
+          // When source map resolution fails, try pattern matching
+          // But first check if this line contains an internal frame
+          let isInternal = false;
+          
+          // Extract filename from the line to check if it's internal
+          // Try to match common stack trace patterns to extract just the filename
+          const filePatterns = [
+            /at\s+(?:.*?\s+)?\(?([^():\s]+\.js):/,  // Chrome/Edge format
+            /@([^@:\s]+\.js):/,                       // Firefox/Safari format
+            /at\s+([^/\s]+\.js):/                     // Simpler Chrome format (at file.js:line:col)
+          ];
+          
+          for (const pattern of filePatterns) {
+            const match = line.match(pattern);
+            if (match) {
+              const filename = match[1];
+              if (this.#isInternalFrame(filename)) {
+                isInternal = true;
+                break;
+              }
+            }
+          }
+          
+          if (!isInternal) {
+            // Try enhanced patterns including webpack
+            const parsed = this.#parseStackLineEnhanced(line);
+            if (parsed) {
+              return parsed;
+            }
           }
         }
       }
@@ -641,15 +684,10 @@ class LogMetadataEnricher {
    * @returns {string|undefined} Parsed source location
    */
   #parseStackLineEnhanced(line) {
-    // First try source map resolution for bundled files
-    const sourceInfo = sourceMapResolver.extractSourceFromStackLine(line);
-    if (sourceInfo && sourceInfo.source) {
-      // Format the resolved source location
-      const fileName = this.#normalizeFilePath(sourceInfo.source);
-      return `${fileName}:${sourceInfo.line}`;
-    }
+    // Note: Source map resolution is already attempted in #parseStackWithEnhancements
+    // This method focuses on pattern matching as a fallback
     
-    // Fallback to pattern matching if source map resolution fails
+    // Try pattern matching for different browser formats
     for (const [patternName, pattern] of this.#browserPatterns) {
       const match = line.match(pattern);
       if (match) {
@@ -695,30 +733,37 @@ class LogMetadataEnricher {
       return `${fileName}:${lineNumber}`;
     }
     
-    const [, , file, lineNumber, column] = match;
+    if (patternType === 'webpack-prod') {
+      // webpack-prod pattern now captures file in group 1
+      const [, file, lineNumber, column] = match;
+      if (this.#sourceMapResolver) {
+        // Attempt source map resolution for production builds
+        try {
+          const resolved = this.#sourceMapResolver.resolveSync(file, lineNumber, column);
+          if (resolved) {
+            return `${resolved.source}:${resolved.line}`;
+          }
+        } catch {
+          // Fall through to default handling
+        }
+      }
+      // Fallback to basic extraction
+      const fileName = this.#normalizeFilePath(file);
+      return `${fileName}:${lineNumber}`;
+    }
     
     if (patternType === 'webpack-dev') {
+      // webpack-dev captures file in group 2
+      const [, , file, lineNumber] = match;
       // webpack-internal:///./src/file.js -> src/file.js
       const normalizedPath = file.replace(/^\.\//, '');
       const fileName = normalizedPath.split('/').pop();
       return `${fileName}:${lineNumber}`;
     }
     
-    if (patternType === 'webpack-prod' && this.#sourceMapResolver) {
-      // Attempt source map resolution for production builds
-      try {
-        const resolved = this.#sourceMapResolver.resolveSync(file, lineNumber, column);
-        if (resolved) {
-          return `${resolved.source}:${resolved.line}`;
-        }
-      } catch {
-        // Fall through to default handling
-      }
-    }
-    
-    // Fallback to basic extraction
-    const fileName = this.#normalizeFilePath(file);
-    return `${fileName}:${lineNumber}`;
+    // Should not reach here for webpack patterns
+    const fileName = this.#normalizeFilePath(match[1]);
+    return `${fileName}:${match[2]}`;
   }
 
   /**

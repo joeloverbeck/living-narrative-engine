@@ -51,6 +51,12 @@ export class PerformanceTestBed {
    * @returns {Promise<AppContainer>} Configured container
    */
   static async createLightweightContainer() {
+    // Set environment variables to disable debug config loading and remote logging
+    // This prevents the container from making network requests during initialization
+    process.env.SKIP_DEBUG_CONFIG = 'true';
+    process.env.DEBUG_LOG_MODE = 'test';
+    process.env.NODE_ENV = 'test';
+    
     const container = new AppContainer();
     
     // Create minimal DOM elements if not cached

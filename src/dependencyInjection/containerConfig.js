@@ -79,8 +79,10 @@ export async function configureContainer(container, uiElements) {
 
     // --- Bootstrap logger with LoggerStrategy ---
     // The LoggerStrategy will handle mode detection and logger selection
+    // Don't force development mode if we're in a test environment
+    const loggerMode = process.env?.NODE_ENV === 'test' ? 'test' : 'development';
     const appLogger = new LoggerStrategy({
-      mode: 'development', // Force development mode to ensure HybridLogger with CriticalLogNotifier support
+      mode: loggerMode, // Use test mode for tests, development mode otherwise
       config: debugConfig || {}, // Pass the loaded debug config or empty object
       dependencies: {
         consoleLogger: new ConsoleLogger(LogLevel.INFO),
