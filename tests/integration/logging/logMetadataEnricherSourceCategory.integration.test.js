@@ -8,10 +8,22 @@ import LogMetadataEnricher from '../../../src/logging/logMetadataEnricher.js';
 describe('LogMetadataEnricher Source Category Integration', () => {
   let enricher;
   let mockErrorConstructor;
+  let mockSourceMapResolver;
 
   beforeEach(() => {
-    // Create a proper mock Error constructor that the enricher will actually use
-    mockErrorConstructor = jest.fn();
+    // Create a proper mock Error constructor that works with the new operator
+    mockErrorConstructor = jest.fn(function() {
+      // This will be set per test case
+      this.stack = '';
+    });
+    
+    // Create a mock source map resolver
+    mockSourceMapResolver = {
+      extractSourceFromStackLine: jest.fn(() => null),
+      prefetchSourceMap: jest.fn(),
+      destroy: jest.fn(),
+      resolveSync: jest.fn(() => null)
+    };
     
     enricher = new LogMetadataEnricher({
       level: 'standard',
@@ -19,6 +31,7 @@ describe('LogMetadataEnricher Source Category Integration', () => {
       enablePerformance: true,
       enableBrowser: false,
       ErrorConstructor: mockErrorConstructor, // Pass our mock to the constructor
+      sourceMapResolver: mockSourceMapResolver // Pass the mock resolver
     });
   });
 
@@ -74,10 +87,10 @@ describe('LogMetadataEnricher Source Category Integration', () => {
       ];
 
       for (const testCase of testCases) {
-        // Use the proper mock Error constructor that enricher will actually call
-        mockErrorConstructor.mockImplementation(() => ({
-          stack: testCase.stackTrace,
-        }));
+        // Update the mock Error constructor to return the correct stack trace
+        mockErrorConstructor.mockImplementation(function() {
+          this.stack = testCase.stackTrace;
+        });
 
         const logEntry = {
           level: 'info',
@@ -128,8 +141,10 @@ global code@module.js:456:26`,
       ];
 
       browserFormats.forEach(({ name, stack, expectedCategory }) => {
-        // Use the proper mock Error constructor
-        mockErrorConstructor.mockImplementation(() => ({ stack }));
+        // Update the mock Error constructor to return the correct stack trace
+        mockErrorConstructor.mockImplementation(function() {
+          this.stack = stack;
+        });
 
         const logEntry = {
           level: 'info',
@@ -206,7 +221,9 @@ global code@module.js:456:26`,
     at RemoteLogger.log (/src/logging/remoteLogger.js:120:10)
     at ConsoleLogger.info (/src/logging/consoleLogger.js:45:8)
     at TestClass.method (${path}:10:15)`;
-        mockErrorConstructor.mockImplementation(() => ({ stack }));
+        mockErrorConstructor.mockImplementation(function() {
+          this.stack = stack;
+        });
 
         const logEntry = {
           level: 'info',
@@ -228,7 +245,9 @@ global code@module.js:456:26`,
     at TestClass.method (/home/user/project/src/actions/userActions.js:10:15)
     at Module._compile (module.js:456:26)`;
 
-      mockErrorConstructor.mockImplementation(() => ({ stack }));
+      mockErrorConstructor.mockImplementation(function() {
+        this.stack = stack;
+      });
 
       const logEntry = {
         level: 'info',
@@ -268,7 +287,9 @@ global code@module.js:456:26`,
     at RemoteLogger.log (/src/logging/remoteLogger.js:120:10)
     at ConsoleLogger.info (/src/logging/consoleLogger.js:45:8)
     at DeepHandler.execute (${path}:100:25)`;
-        mockErrorConstructor.mockImplementation(() => ({ stack }));
+        mockErrorConstructor.mockImplementation(function() {
+          this.stack = stack;
+        });
 
         const logEntry = {
           level: 'info',
@@ -310,7 +331,9 @@ global code@module.js:456:26`,
       ];
 
       edgeCases.forEach(({ name, stack, expectedCategory }) => {
-        mockErrorConstructor.mockImplementation(() => ({ stack }));
+        mockErrorConstructor.mockImplementation(function() {
+          this.stack = stack;
+        });
 
         const logEntry = {
           level: 'info',

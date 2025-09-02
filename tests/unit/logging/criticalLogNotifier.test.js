@@ -61,11 +61,8 @@ describe('CriticalLogNotifier - Dependency Validation', () => {
     jest.clearAllMocks();
   });
 
-  describe('Dependency Validation Issue Reproduction', () => {
-    it('should reproduce the getCriticalLogs method not found error', () => {
-      // This test reproduces the exact error from the logs:
-      // "Invalid or missing method 'getCriticalLogs' on dependency 'HybridLogger'"
-      
+  describe('Dependency Validation', () => {
+    it('should successfully instantiate CriticalLogNotifier with valid HybridLogger', () => {
       const mockLogger = testBed.createMockLogger();
       const mockDocumentContext = {
         query: jest.fn((selector) => {
@@ -79,18 +76,102 @@ describe('CriticalLogNotifier - Dependency Validation', () => {
       };
       const mockValidatedEventDispatcher = testBed.createMock('validatedEventDispatcher', ['dispatch', 'subscribe']);
 
-      // First, let's verify the HybridLogger actually has the required methods
+      // Verify the HybridLogger has the required methods
       expect(typeof hybridLogger.getCriticalLogs).toBe('function');
       expect(typeof hybridLogger.getCriticalBufferStats).toBe('function');
       expect(typeof hybridLogger.clearCriticalBuffer).toBe('function');
 
-      // Now try to create the CriticalLogNotifier - this should fail with the error from logs
+      // Should successfully create CriticalLogNotifier with valid HybridLogger
+      let notifier;
+      expect(() => {
+        notifier = new CriticalLogNotifier({
+          logger: mockLogger,
+          documentContext: mockDocumentContext,
+          validatedEventDispatcher: mockValidatedEventDispatcher,
+          hybridLogger: hybridLogger,
+          config: {
+            enableVisualNotifications: true,
+          },
+        });
+      }).not.toThrow();
+
+      expect(notifier).toBeDefined();
+      
+      // Clean up
+      if (notifier && typeof notifier.dispose === 'function') {
+        notifier.dispose();
+      }
+    });
+
+    it('should throw error when hybridLogger is missing required methods', () => {
+      const mockLogger = testBed.createMockLogger();
+      const mockDocumentContext = {
+        query: jest.fn((selector) => {
+          if (selector === 'document') return document;
+          return document.querySelector(selector);
+        }),
+        create: jest.fn((tagName) => document.createElement(tagName)),
+        getDocument: () => document,
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      };
+      const mockValidatedEventDispatcher = testBed.createMock('validatedEventDispatcher', ['dispatch', 'subscribe']);
+
+      // Create a mock that's missing the required methods
+      const incompleteMockHybridLogger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+        // Missing: getCriticalLogs, getCriticalBufferStats, clearCriticalBuffer
+      };
+
+      // Should throw when missing methods
       expect(() => {
         new CriticalLogNotifier({
           logger: mockLogger,
           documentContext: mockDocumentContext,
           validatedEventDispatcher: mockValidatedEventDispatcher,
-          hybridLogger: hybridLogger,
+          hybridLogger: incompleteMockHybridLogger,
+          config: {
+            enableVisualNotifications: true,
+          },
+        });
+      }).toThrow('Invalid or missing method \'getCriticalLogs\' on dependency \'HybridLogger\'');
+    });
+
+    it('should throw error when hybridLogger methods are not functions', () => {
+      const mockLogger = testBed.createMockLogger();
+      const mockDocumentContext = {
+        query: jest.fn((selector) => {
+          if (selector === 'document') return document;
+          return document.querySelector(selector);
+        }),
+        create: jest.fn((tagName) => document.createElement(tagName)),
+        getDocument: () => document,
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      };
+      const mockValidatedEventDispatcher = testBed.createMock('validatedEventDispatcher', ['dispatch', 'subscribe']);
+
+      // Create a mock with non-function properties
+      const invalidMockHybridLogger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+        getCriticalLogs: 'not-a-function',  // Invalid: string instead of function
+        getCriticalBufferStats: jest.fn(),
+        clearCriticalBuffer: jest.fn(),
+      };
+
+      // Should throw when methods aren't functions
+      expect(() => {
+        new CriticalLogNotifier({
+          logger: mockLogger,
+          documentContext: mockDocumentContext,
+          validatedEventDispatcher: mockValidatedEventDispatcher,
+          hybridLogger: invalidMockHybridLogger,
           config: {
             enableVisualNotifications: true,
           },
@@ -120,23 +201,6 @@ describe('CriticalLogNotifier - Dependency Validation', () => {
       
       // This should not throw
       expect(() => hybridLogger.clearCriticalBuffer()).not.toThrow();
-    });
-
-    it('should test validateDependency function behavior with HybridLogger', () => {
-      // Import the validateDependency function to test it directly
-      const { validateDependency } = require('../../../src/utils/dependencyUtils.js');
-      const mockLogger = testBed.createMockLogger();
-
-      // This should reproduce the exact validation failure
-      expect(() => {
-        validateDependency(hybridLogger, 'HybridLogger', mockLogger, {
-          requiredMethods: [
-            'getCriticalLogs',
-            'getCriticalBufferStats', 
-            'clearCriticalBuffer',
-          ],
-        });
-      }).toThrow('Invalid or missing method \'getCriticalLogs\' on dependency \'HybridLogger\'');
     });
   });
 

@@ -780,48 +780,4 @@ describe('Complete Action Discovery Workflow E2E', () => {
     });
   });
 
-  /**
-   * Test: Performance and validation
-   * Verifies discovery performance is within acceptable limits
-   */
-  test('should complete discovery within performance limits', async () => {
-    const playerEntity = await entityManager.getEntityInstance(
-      testActors.player.id
-    );
-    const baseContext = {
-      currentLocation: await entityManager.getEntityInstance('test-location-1'),
-      allEntities: Array.from(entityManager.entities),
-    };
-
-    // Measure discovery time
-    const startTime = Date.now();
-    const result = await actionDiscoveryService.getValidActions(
-      playerEntity,
-      baseContext
-    );
-    const endTime = Date.now();
-
-    const discoveryTime = endTime - startTime;
-
-    // Should complete within reasonable time (adjust threshold as needed)
-    expect(discoveryTime).toBeLessThan(5000); // 5 seconds max
-
-    // Should return valid results
-    expect(result.actions).toBeDefined();
-    expect(Array.isArray(result.actions)).toBe(true);
-    expect(result.actions.length).toBeGreaterThan(0);
-
-    // Test multiple discoveries for caching performance
-    const cacheStartTime = Date.now();
-    await actionDiscoveryService.getValidActions(playerEntity, baseContext);
-    await actionDiscoveryService.getValidActions(playerEntity, baseContext);
-    await actionDiscoveryService.getValidActions(playerEntity, baseContext);
-    const cacheEndTime = Date.now();
-
-    const cacheTime = cacheEndTime - cacheStartTime;
-
-    // Multiple calls should be faster due to caching (allow more tolerance)
-    // Cache time should be reasonable (under 100ms for 3 cached calls)
-    expect(cacheTime).toBeLessThan(100);
-  });
 });

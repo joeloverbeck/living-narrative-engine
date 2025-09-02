@@ -33,4 +33,12 @@ module.exports = {
   maxWorkers: 1,
   // Allow console output for debugging
   silent: false,
+  // Set environment variables to optimize test execution
+  testEnvironmentOptions: {
+    env: {
+      SKIP_DEBUG_CONFIG: 'true',
+      DEBUG_LOG_MODE: 'test',
+      NODE_ENV: 'test',
+    },
+  },
 };

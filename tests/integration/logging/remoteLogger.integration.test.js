@@ -201,6 +201,9 @@ describe('RemoteLogger Integration Tests', () => {
       global.fetch.mock.results.length = 0;
     }
 
+    // Ensure no pending promises or timers from previous tests
+    jest.runOnlyPendingTimers();
+
     mockConsoleLogger = {
       info: jest.fn(),
       warn: jest.fn(),
@@ -509,7 +512,8 @@ describe('RemoteLogger Integration Tests', () => {
         config: createTestConfig({
           batchSize: 1,
           circuitBreakerThreshold: 3,
-          retryAttempts: 1, // Reduce retries for faster test
+          retryAttempts: 0, // Disable retries completely to avoid race conditions
+          flushInterval: 10000, // High value to prevent timer-based flushes
         }),
         dependencies: { consoleLogger: mockConsoleLogger },
       });
@@ -528,23 +532,34 @@ describe('RemoteLogger Integration Tests', () => {
         CircuitBreakerState.OPEN
       );
 
-      // Clear mock calls before testing circuit open behavior
+      // Clear mock calls and fetch history before testing circuit open behavior
       mockConsoleLogger.warn.mockClear();
+      global.fetch.mockClear();
 
-      // Send another log - should not make additional debug log requests
+      // Record the request count before attempting to send while circuit is open
       const debugRequestCountBefore = mockServer.getDebugLogRequestCount();
+      const totalRequestCountBefore = mockServer.getRequestCount();
 
       // Ensure circuit breaker is actually open before sending the next log
       expect(remoteLogger.getCircuitBreakerState()).toBe(
         CircuitBreakerState.OPEN
       );
 
+      // Send a log while circuit is open - should not make any HTTP requests
       remoteLogger.error('Error 4 - circuit open');
+      
+      // Run timers to process the log
       await jest.runAllTimersAsync();
 
-      // No additional debug log requests should be made when circuit is open
+      // No additional requests should be made when circuit is open
       const debugRequestCountAfter = mockServer.getDebugLogRequestCount();
+      const totalRequestCountAfter = mockServer.getRequestCount();
+      
       expect(debugRequestCountAfter).toBe(debugRequestCountBefore);
+      expect(totalRequestCountAfter).toBe(totalRequestCountBefore);
+      
+      // Verify fetch was not called for this log
+      expect(global.fetch).not.toHaveBeenCalled();
 
       // Should fall back to console immediately
       expect(mockConsoleLogger.warn).toHaveBeenCalledWith(
@@ -666,101 +681,9 @@ describe('RemoteLogger Integration Tests', () => {
       remoteLoggerFull.destroy();
     });
 
-    it('should detect enhanced categories with priority rules', async () => {
-      let capturedRequests = [];
-
-      // Set up responses for batched requests (with extra for potential duplicates)
-      mockServer.mockResponse({
-        ok: true,
-        json: () => Promise.resolve({ success: true, processed: 4 }),
-      });
-      mockServer.mockResponse({
-        ok: true,
-        json: () => Promise.resolve({ success: true, processed: 6 }),
-      });
-      mockServer.mockResponse({
-        ok: true,
-        json: () => Promise.resolve({ success: true, processed: 2 }),
-      });
-
-      global.fetch = jest.fn().mockImplementation(async (url, config) => {
-        capturedRequests.push({ url, config });
-        return await mockServer.handleRequest(url);
-      });
-
-      remoteLogger = new RemoteLogger({
-        config: createTestConfig({
-          batchSize: 5, // Small batch to allow multiple requests
-          flushInterval: 20, // Short interval for testing
-        }),
-        dependencies: { consoleLogger: mockConsoleLogger },
-      });
-
-      // Test enhanced category patterns
-      remoteLogger.info('GameEngine initialization complete');
-      remoteLogger.warn('EntityManager registered new entity');
-      remoteLogger.debug('AI memory system updated');
-      remoteLogger.error('Validation schema check failed'); // This will trigger immediate flush
-
-      // Wait for error flush to complete
-      await jest.runAllTimersAsync();
-      // Add extra wait to ensure flush is fully processed
-      await remoteLogger.waitForPendingFlushes();
-
-      // Add more logs after error flush
-      remoteLogger.info('Anatomy blueprint created');
-      remoteLogger.info('Save game checkpoint created');
-      remoteLogger.info('Turn 5 started');
-      remoteLogger.info('Event dispatched: PLAYER_ACTION');
-      remoteLogger.info('Performance benchmark: 150ms');
-      remoteLogger.info('Random message without category');
-
-      // Explicitly flush remaining logs
-      await remoteLogger.flush();
-      await jest.runAllTimersAsync();
-
-      // Filter to only debug log requests
-      const debugLogRequests = capturedRequests.filter(
-        (req) => req.url === 'http://localhost:3001/api/debug-log'
-      );
-      expect(debugLogRequests.length).toBeGreaterThanOrEqual(1);
-
-      // Collect all log messages and categories to detect duplicates
-      const allLogs = [];
-      const allCategories = [];
-      debugLogRequests.forEach((req) => {
-        const body = JSON.parse(req.config.body);
-        body.logs.forEach((log) => {
-          allLogs.push({ message: log.message, category: log.category });
-          allCategories.push(log.category);
-        });
-      });
-
-      // Use a Set to get unique categories (handles potential duplicates)
-      const uniqueCategories = new Set(allCategories.filter(cat => cat !== undefined));
-      
-      // Verify expected categories are detected (using Set for uniqueness)
-      expect(uniqueCategories).toContain('engine');
-      expect(uniqueCategories).toContain('warning'); // warn-level logs get 'warning' category
-      expect(uniqueCategories).toContain('ai');
-      expect(uniqueCategories).toContain('error');
-      expect(uniqueCategories).toContain('anatomy');
-      expect(uniqueCategories).toContain('persistence');
-      expect(uniqueCategories).toContain('turns');
-      expect(uniqueCategories).toContain('events');
-      expect(uniqueCategories).toContain('performance');
-
-      // Should have at least one undefined category for generic message
-      expect(allCategories).toContain(undefined);
-
-      // Due to potential timing issues with error flush, we may have duplicates
-      // Verify we have at least 10 logs (could be more due to duplicates)
-      expect(allLogs.length).toBeGreaterThanOrEqual(10);
-      
-      // Verify we have exactly 10 unique messages
-      const uniqueMessages = new Set(allLogs.map(log => log.message));
-      expect(uniqueMessages.size).toBe(10);
-    });
+    // NOTE: The "should detect enhanced categories with priority rules" test was moved to
+    // remoteLoggerCategoryDetection.integration.test.js due to test isolation issues
+    // when running with the full test suite.
 
     it('should detect and include appropriate categories', async () => {
       let capturedRequests = [];

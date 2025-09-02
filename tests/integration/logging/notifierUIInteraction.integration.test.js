@@ -121,7 +121,7 @@ describe('Notifier UI Interactions', () => {
           return document.querySelector(selector);
         }),
         create: jest.fn((tagName) => document.createElement(tagName)),
-        getDocument: () => document,
+        document: document,
         addEventListener: jest.fn(),
         removeEventListener: jest.fn(),
       };

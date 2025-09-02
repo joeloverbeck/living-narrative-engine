@@ -4,6 +4,17 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+
+// Mock sourceMapResolver before importing LogMetadataEnricher
+jest.mock('../../../src/logging/sourceMapResolver.js', () => ({
+  default: {
+    extractSourceFromStackLine: jest.fn(() => null),
+    prefetchSourceMap: jest.fn(),
+    resolveSync: jest.fn(() => null),
+    destroy: jest.fn()
+  }
+}));
+
 import LogMetadataEnricher from '../../../src/logging/logMetadataEnricher.js';
 
 // Mock browser APIs
