@@ -239,12 +239,18 @@ class LoggerStrategy {
           break;
 
         case LoggerMode.DEVELOPMENT:
-          // Use HybridLogger for development mode
+          // Use HybridLogger for development mode, unless remote logging is disabled
           if (dependencies.hybridLogger) {
             logger = dependencies.hybridLogger;
           } else {
-            // Create HybridLogger instance
-            logger = this.#createHybridLogger(config, dependencies);
+            // Check if remote logging is disabled in config
+            if (config.enabled === false) {
+              // When remote logging is disabled, use console logger only
+              logger = this.#createConsoleLogger(config);
+            } else {
+              // Create HybridLogger instance when remote logging is enabled
+              logger = this.#createHybridLogger(config, dependencies);
+            }
           }
           break;
 

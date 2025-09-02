@@ -59,7 +59,8 @@ class Entity {
       );
     }
     this.#data = instanceData; // Assign to #data
-    // console.log(`Entity created: ${this.id} (from definition: ${this.definitionId})`);
+    // console.log(`Entity created: ${this.id} (from definition: ${this.definitionId})`)
+    
   }
 
   /**

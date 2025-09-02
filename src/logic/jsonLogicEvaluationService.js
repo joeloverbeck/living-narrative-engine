@@ -4,6 +4,7 @@ import { ServiceSetup } from '../utils/serviceInitializerUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
 import { warnOnBracketPaths } from '../utils/jsonLogicUtils.js';
 import { resolveConditionRefs } from '../utils/conditionRefResolver.js';
+import { isTestEnvironment } from '../utils/environmentUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -416,10 +417,7 @@ class JsonLogicEvaluationService extends BaseService {
         const [op] = Object.keys(resolvedRule);
         const args = resolvedRule[op];
 
-        const isTestEnv =
-          (typeof globalThis !== 'undefined' && globalThis.jest) ||
-          (typeof globalThis.process !== 'undefined' &&
-            globalThis.process.env.NODE_ENV === 'test');
+        const isTestEnv = isTestEnvironment();
         if (
           (op === 'and' || op === 'or') &&
           Array.isArray(args) &&

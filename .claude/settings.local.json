@@ -161,7 +161,9 @@
       "Bash(NODE_ENV=test npx jest tests/performance/scopeDsl/ --no-coverage --verbose)",
       "mcp__serena__list_dir",
       "mcp__serena__replace_symbol_body",
-      "Bash(NODE_ENV=test npx jest tests/unit/logging/criticalLogNotifier.test.js --no-coverage --verbose)"
+      "Bash(NODE_ENV=test npx jest tests/unit/logging/criticalLogNotifier.test.js --no-coverage --verbose)",
+      "mcp__serena__think_about_collected_information",
+      "mcp__serena__find_symbol"
     ],
     "deny": [],
     "ask": []

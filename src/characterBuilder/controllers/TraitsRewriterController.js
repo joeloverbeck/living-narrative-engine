@@ -78,9 +78,6 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
     );
     this.logger.debug('TraitsRewriterController: Loading initial data');
 
-    // Initialize UI with empty state
-    this._showState('empty');
-
     // Subscribe to generation events
     this.#subscribeToGenerationEvents();
   }
@@ -112,6 +109,11 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       generationError: '#generation-error',
       emptyState: '#empty-state',
 
+      // UI State Manager required elements
+      loadingState: '#loading-state',
+      resultsState: '#results-state',
+      errorState: '#error-state',
+
       // Display elements
       characterNameDisplay: '#character-name-display',
       traitsSections: '#traits-sections',
@@ -130,6 +132,20 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
         required: false,
       },
     });
+  }
+
+  /**
+   * Initialize UI state for traits rewriting
+   *
+   * @protected
+   * @returns {Promise<void>}
+   */
+  async _initializeUIState() {
+    // Call parent implementation to initialize UIStateManager
+    await super._initializeUIState();
+
+    // Initialize UI with empty state (after UIStateManager is ready)
+    this._showState('empty');
   }
 
   /**
@@ -182,7 +198,6 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
    */
   async #handleCharacterInput() {
     const inputElement = this._getElement('characterDefinition');
-    const errorElement = this._getElement('characterInputError');
 
     try {
       const inputText = inputElement.value.trim();
@@ -235,10 +250,19 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       );
     }
 
-    // Validate required fields
-    if (!parsed['core:name']) {
+    // Validate components property exists
+    if (!parsed.components || typeof parsed.components !== 'object') {
       throw new TraitsRewriterError(
-        'Character definition must include core:name',
+        'Character definition must include a "components" property with character data',
+        'MISSING_COMPONENTS',
+        { characterData: parsed }
+      );
+    }
+
+    // Validate required fields inside components
+    if (!parsed.components['core:name']) {
+      throw new TraitsRewriterError(
+        'Character definition must include core:name component inside the components property',
         'MISSING_NAME',
         { characterData: parsed }
       );
@@ -263,12 +287,15 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       'core:relationships',
     ];
 
-    const hasTraits = traitKeys.some((key) => parsed[key]);
+    const hasTraits = traitKeys.some((key) => parsed.components && parsed.components[key]);
     if (!hasTraits) {
       throw new TraitsRewriterError(
-        'Character definition must include at least one trait to rewrite',
+        'Character definition must include at least one trait to rewrite inside the components property',
         'NO_TRAITS',
-        { availableKeys: Object.keys(parsed), expectedKeys: traitKeys }
+        { 
+          availableComponents: Object.keys(parsed.components), 
+          expectedTraitKeys: traitKeys 
+        }
       );
     }
 

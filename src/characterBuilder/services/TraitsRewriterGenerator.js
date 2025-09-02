@@ -10,6 +10,7 @@ import {
   createTraitsRewriterPrompt,
   DEFAULT_TRAIT_KEYS,
   TRAITS_REWRITER_LLM_PARAMS,
+  TRAITS_REWRITER_RESPONSE_SCHEMA,
 } from '../prompts/traitsRewriterPrompts.js';
 import { CHARACTER_BUILDER_EVENTS } from './characterBuilderService.js';
 import { TraitsRewriterError } from '../errors/TraitsRewriterError.js';
@@ -198,7 +199,8 @@ export class TraitsRewriterGenerator {
     const extractedTraits = {};
 
     for (const traitKey of DEFAULT_TRAIT_KEYS) {
-      const traitData = characterDefinition[traitKey];
+      // Check for nested structure first (components), then fallback to root level
+      const traitData = characterDefinition.components?.[traitKey] || characterDefinition[traitKey];
 
       if (traitData) {
         // Handle different trait data formats
@@ -254,14 +256,26 @@ export class TraitsRewriterGenerator {
       const activeConfig = this.#llmConfigManager.getActiveConfiguration();
 
       // Generate content with proper parameters using ConfigurableLLMAdapter
-      const response = await this.#llmStrategyFactory.getAIDecision({
-        prompt: prompt,
+      // Create request options including tool schema for proper LLM response format
+      const requestOptions = {
         temperature: TRAITS_REWRITER_LLM_PARAMS.temperature,
         maxTokens: TRAITS_REWRITER_LLM_PARAMS.max_tokens,
-        stream: false, // Ensure we get complete response
-      });
+        toolSchema: TRAITS_REWRITER_RESPONSE_SCHEMA,
+        toolName: 'rewrite_character_traits',
+        toolDescription: 'Rewrite character traits from third-person to first-person perspective using the character\'s unique voice',
+      };
 
-      if (!response || !response.content) {
+      // Call getAIDecision with correct signature: (prompt, abortSignal, requestOptions)
+      const response = await this.#llmStrategyFactory.getAIDecision(
+        prompt,
+        null, // No abort signal
+        requestOptions
+      );
+
+      // Handle both string responses and object responses with content property
+      const responseContent = typeof response === 'string' ? response : response?.content;
+      
+      if (!responseContent) {
         throw TraitsRewriterError.forLLMFailure(
           'Empty response received from LLM',
           {
@@ -273,10 +287,56 @@ export class TraitsRewriterGenerator {
 
       // Parse and repair JSON response
       const parsedResponse = this.#llmJsonService.parseAndRepair(
-        response.content
+        responseContent
       );
 
-      return parsedResponse;
+      // Debug logging to understand response structure
+      this.#logger.debug('TraitsRewriterGenerator: Raw parsed response structure', {
+        characterName,
+        responseKeys: Object.keys(parsedResponse),
+        hasCharacterName: !!parsedResponse.characterName,
+        hasFunctionCall: !!parsedResponse.function_call,
+        hasNestedCharacterName: !!(parsedResponse.function_call?.characterName),
+      });
+
+      // Handle tool call wrapper structure
+      // The LLM might return the response wrapped in a function_call object
+      let actualResponse = parsedResponse;
+      
+      // Check if response is wrapped in function_call or similar structure
+      if (parsedResponse.function_call && typeof parsedResponse.function_call === 'object') {
+        this.#logger.info('TraitsRewriterGenerator: Extracting response from function_call wrapper', {
+          characterName,
+          wrapperKeys: Object.keys(parsedResponse.function_call),
+        });
+        actualResponse = parsedResponse.function_call;
+      } else if (!parsedResponse.characterName && !parsedResponse.rewrittenTraits) {
+        // If the expected fields aren't at the root, check for other wrapper properties
+        const possibleWrappers = Object.keys(parsedResponse).filter(
+          key => typeof parsedResponse[key] === 'object' && 
+                 parsedResponse[key] !== null &&
+                 (parsedResponse[key].characterName || parsedResponse[key].rewrittenTraits)
+        );
+        
+        if (possibleWrappers.length > 0) {
+          this.#logger.info('TraitsRewriterGenerator: Found response in wrapper property', {
+            characterName,
+            wrapperProperty: possibleWrappers[0],
+          });
+          actualResponse = parsedResponse[possibleWrappers[0]];
+        }
+      }
+
+      // Additional debug logging for the extracted response
+      this.#logger.debug('TraitsRewriterGenerator: Extracted response for validation', {
+        characterName,
+        extractedKeys: Object.keys(actualResponse),
+        hasCharacterName: !!actualResponse.characterName,
+        hasRewrittenTraits: !!actualResponse.rewrittenTraits,
+        rewrittenTraitsKeys: actualResponse.rewrittenTraits ? Object.keys(actualResponse.rewrittenTraits) : [],
+      });
+
+      return actualResponse;
     } catch (error) {
       if (error instanceof TraitsRewriterError) {
         throw error;
@@ -307,11 +367,19 @@ export class TraitsRewriterGenerator {
       );
     }
 
+    // Log the actual response structure for debugging
     if (!response.characterName) {
+      this.#logger.error('TraitsRewriterGenerator: Missing characterName in response', {
+        characterName,
+        responseStructure: JSON.stringify(response, null, 2).substring(0, 500), // First 500 chars for debugging
+        responseKeys: Object.keys(response),
+        responseType: typeof response,
+      });
+
       throw TraitsRewriterError.forValidationFailure(
         'characterName',
-        'Missing character name in response',
-        { characterName }
+        'Missing character name in response. Response structure: ' + JSON.stringify(Object.keys(response)),
+        { characterName, actualResponse: response }
       );
     }
 
@@ -319,6 +387,13 @@ export class TraitsRewriterGenerator {
       !response.rewrittenTraits ||
       typeof response.rewrittenTraits !== 'object'
     ) {
+      this.#logger.error('TraitsRewriterGenerator: Missing or invalid rewrittenTraits', {
+        characterName,
+        hasRewrittenTraits: !!response.rewrittenTraits,
+        rewrittenTraitsType: typeof response.rewrittenTraits,
+        responseKeys: Object.keys(response),
+      });
+
       throw TraitsRewriterError.forValidationFailure(
         'rewrittenTraits',
         'Missing or invalid rewritten traits object',
@@ -342,12 +417,21 @@ export class TraitsRewriterGenerator {
     );
 
     if (invalidTraitKeys.length > 0) {
-      this.#logger.warn('TraitsRewriterGenerator: Invalid trait keys found', {
-        characterName,
-        invalidKeys: invalidTraitKeys,
-        validKeys: DEFAULT_TRAIT_KEYS,
-      });
+      this.#logger.warn(
+        'TraitsRewriterGenerator: Response contains unsupported trait keys',
+        {
+          characterName,
+          invalidKeys: invalidTraitKeys,
+          validKeys: DEFAULT_TRAIT_KEYS,
+        }
+      );
     }
+
+    this.#logger.debug('TraitsRewriterGenerator: Validation successful', {
+      characterName,
+      traitCount,
+      traits: Object.keys(response.rewrittenTraits),
+    });
 
     return response;
   }
@@ -422,9 +506,10 @@ export class TraitsRewriterGenerator {
    * @returns {string} Character name
    */
   #extractCharacterName(characterDefinition) {
-    if (characterDefinition['core:name']) {
-      const nameData = characterDefinition['core:name'];
+    // Check for nested structure first (components), then fallback to root level
+    const nameData = characterDefinition.components?.['core:name'] || characterDefinition['core:name'];
 
+    if (nameData) {
       if (typeof nameData === 'string') {
         return nameData;
       }
@@ -480,6 +565,15 @@ export class TraitsRewriterGenerator {
         requiredMethods: ['estimateTokens'],
       });
     }
+  }
+
+  /**
+   * Get the schema used for LLM response validation
+   *
+   * @returns {object} JSON schema object
+   */
+  getResponseSchema() {
+    return TRAITS_REWRITER_RESPONSE_SCHEMA;
   }
 
   /**

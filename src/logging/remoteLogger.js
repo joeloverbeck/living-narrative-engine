@@ -1998,8 +1998,9 @@ class RemoteLogger {
       Math.min(this.#batchingConfig.maxBatchSize, this.#adaptiveBatchSize)
     );
 
-    // Debug logging for development
-    if (process.env.NODE_ENV === 'development' && this.#fallbackLogger?.debug) {
+    // Debug logging for development - disabled to reduce console spam
+    // Only enable this when specifically debugging adaptive batching behavior
+    if (false && process.env.NODE_ENV === 'development' && this.#fallbackLogger?.debug) {
       this.#fallbackLogger.debug('[RemoteLogger] Adaptive batching update', {
         recentLogRate,
         isHighVolumePhase,

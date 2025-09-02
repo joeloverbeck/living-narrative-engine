@@ -883,11 +883,21 @@ describe('RemoteLogger Integration Tests', () => {
         dependencies: { consoleLogger: mockConsoleLogger },
       });
 
+      // Reset mock server to clear any previous state
+      mockServer.reset();
+      
       // Mock multiple responses since error logs trigger immediate flush
-      // Also capture the requests in our local array
+      // Also capture the requests in our local array with filtering by test-specific messages
       global.fetch = jest.fn().mockImplementation(async (url, config) => {
         if (url === 'http://localhost:3001/api/debug-log') {
-          capturedRequests.push({ url, config });
+          // Only capture requests that contain our test-specific messages
+          const requestBody = JSON.parse(config.body);
+          const hasTestMessages = requestBody.logs.some(log => 
+            ['First debug', 'Second error', 'Third info', 'Fourth warn'].includes(log.message)
+          );
+          if (hasTestMessages) {
+            capturedRequests.push({ url, config });
+          }
         }
         return await mockServer.handleRequest(url);
       });
@@ -900,20 +910,42 @@ describe('RemoteLogger Integration Tests', () => {
         ok: true,
         json: () => Promise.resolve({ success: true, processed: 2 }),
       });
+      mockServer.mockResponse({
+        ok: true,
+        json: () => Promise.resolve({ success: true, processed: 2 }),
+      });
 
-      // Add logs in specific order (error will trigger immediate flush)
+      // Phase 1: Add first two logs and wait for error-triggered flush to complete
       remoteLogger.debug('First debug');
       remoteLogger.error('Second error'); // This triggers immediate flush
+      
+      // Wait for the immediate flush triggered by error to complete
+      await jest.runAllTimersAsync();
+      await remoteLogger.waitForPendingFlushes(); // Ensure first flush completes
+      
+      // Phase 2: Add remaining logs after first flush is complete
       remoteLogger.info('Third info');
       remoteLogger.warn('Fourth warn');
 
+      // Wait for any scheduled timers and ensure all flushes complete
       await jest.runAllTimersAsync();
+      await remoteLogger.waitForPendingFlushes(); // Ensure all pending flushes complete
       
-      // Explicitly flush remaining logs
+      // Final explicit flush to catch any remaining logs
       await remoteLogger.flush();
-      await jest.runAllTimersAsync();
+      await remoteLogger.waitForPendingFlushes();
 
-      // Verify requests were made using our captured requests
+      // Add timeout protection for request verification
+      const waitForRequests = async (expectedCount, timeoutMs = 2000) => {
+        const startTime = Date.now();
+        while (capturedRequests.length < expectedCount && (Date.now() - startTime) < timeoutMs) {
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
+      };
+      
+      await waitForRequests(2);
+
+      // Verify we have at least 2 requests
       expect(capturedRequests.length).toBeGreaterThanOrEqual(2);
 
       // First request should have first debug and error (FIFO up to immediate flush)

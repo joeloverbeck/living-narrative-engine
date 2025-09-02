@@ -79,6 +79,8 @@ class EntityInstanceData {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
     this.#logger = ensureValidLogger(logger, 'EntityInstanceData');
+    
+    
     // Use cloneDeep for initialOverrides to ensure deep copy and freeze to
     // discourage external mutation.
     this.#overrides = freeze(

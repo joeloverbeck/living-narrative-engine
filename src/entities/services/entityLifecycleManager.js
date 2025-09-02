@@ -283,6 +283,18 @@ export class EntityLifecycleManager {
         definition
       );
 
+      // Debug logging for park bench
+      if (entity.id === 'p_erotica:park_bench_instance') {
+        this.#logger.info(
+          `[DEBUG] EntityLifecycleManager adding park bench to repository (construct):`,
+          {
+            entityId: entity.id,
+            componentTypeIds: entity.componentTypeIds,
+            hasAllowsSitting: entity.componentTypeIds?.includes('positioning:allows_sitting')
+          }
+        );
+      }
+      
       // Add to repository
       this.#entityRepository.add(entity);
 
@@ -310,6 +322,18 @@ export class EntityLifecycleManager {
         this.#entityRepository
       );
 
+      // Debug logging for park bench
+      if (entity.id === 'p_erotica:park_bench_instance') {
+        this.#logger.info(
+          `[DEBUG] EntityLifecycleManager adding park bench to repository (reconstruct):`,
+          {
+            entityId: entity.id,
+            componentTypeIds: entity.componentTypeIds,
+            hasAllowsSitting: entity.componentTypeIds?.includes('positioning:allows_sitting')
+          }
+        );
+      }
+      
       // Add to repository
       this.#entityRepository.add(entity);
 

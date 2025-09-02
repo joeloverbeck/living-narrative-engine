@@ -9,6 +9,7 @@ let chalk = null;
 import { getLoggerConfiguration } from './loggerConfiguration.js';
 import { getLogFormatter } from './logFormatter.js';
 import { maskApiKey, createSecureLogger } from '../utils/loggerUtils.js';
+import { shouldUseWindowsTerminalFlush, forceTerminalFlush } from '../utils/platformUtils.js';
 
 /**
  * @typedef {object} ILogger
@@ -74,7 +75,7 @@ class EnhancedConsoleLogger {
             if (chalkModule && chalkModule.default) {
               chalkModule = chalkModule.default;
             }
-          } catch (requireError) {
+          } catch (_requireError) {
             // If require fails, chalk is not available
             chalkModule = null;
           }
@@ -100,7 +101,7 @@ class EnhancedConsoleLogger {
         chalk = chalkModule;
         this.#chalkAvailable = true;
         return true;
-      } catch (testError) {
+      } catch (_testError) {
         // Chalk test failed
         chalk = false;
         this.#chalkAvailable = false;
@@ -200,6 +201,17 @@ class EnhancedConsoleLogger {
   }
 
   /**
+   * Force flush stdout/stderr on Windows and WSL to prevent terminal buffering
+   * @private
+   */
+  #forceFlushOnWindows() {
+    // Apply on Windows platform AND WSL environments (which display through Windows Terminal)
+    if (shouldUseWindowsTerminalFlush()) {
+      forceTerminalFlush(false); // Don't log flush attempts to avoid recursion
+    }
+  }
+
+  /**
    * Output log message to appropriate console method
    * @param {string} level - Log level
    * @param {string} output - Formatted output
@@ -227,6 +239,10 @@ class EnhancedConsoleLogger {
         // eslint-disable-next-line no-console
         console.log(output);
     }
+    
+    // Force flush on Windows to prevent terminal buffering that causes
+    // logs to only appear when terminal focus changes
+    this.#forceFlushOnWindows();
   }
 
   /**

@@ -176,10 +176,11 @@ describe('TraitsRewriter Integration Tests', () => {
       expect(displayData).toHaveProperty('sections');
       expect(displayData.sections).toHaveLength(3); // personality, likes, fears
 
-      // Verify LLM strategy factory was called
+      // Verify LLM strategy factory was called with correct parameters
       expect(mockLlmStrategyFactory.getAIDecision).toHaveBeenCalledWith(
+        expect.any(String), // prompt
+        null, // abortSignal
         expect.objectContaining({
-          prompt: expect.any(String),
           temperature: expect.any(Number),
           maxTokens: expect.any(Number),
         })

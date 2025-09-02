@@ -1,0 +1,378 @@
+[18:01:01.403] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+                    ↳ Context: {
+                      "storedCount": 306,
+                      "totalLogs": 306
+                    }
+[18:01:01.403] 📝 INFO System: Debug logs processed successfully
+                    ↳ Context: {
+                      "processedCount": 306,
+                      "totalLogs": 306,
+                      "processingTimeMs": 5,
+                      "endpoint": "/api/debug-log"
+                    }
+[18:01:01.403] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "POST",
+                      "route": "/api/*",
+                      "statusCode": 200,
+                      "duration": 0.058460399,
+                      "requestSize": 206016,
+                      "responseSize": 71
+                    }
+[18:01:01.900] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "OPTIONS",
+                      "route": "/api/*",
+                      "statusCode": 204,
+                      "duration": 0.0001948,
+                      "requestSize": 0,
+                      "responseSize": 0
+                    }
+[18:01:01.956] 📝 DEBUG System: LogStorageService.writeLogs: Processing 306 logs
+[18:01:01.959] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 306 logs to logs/2025-09-02/general.jsonl
+[18:01:01.959] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 306 logs
+[18:01:01.959] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 306 logs
+                    ↳ Context: {
+                      "totalBuffered": 306,
+                      "bufferGroups": 0
+                    }
+[18:01:01.959] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+                    ↳ Context: {
+                      "storedCount": 306,
+                      "totalLogs": 306
+                    }
+[18:01:01.959] 📝 INFO System: Debug logs processed successfully
+                    ↳ Context: {
+                      "processedCount": 306,
+                      "totalLogs": 306,
+                      "processingTimeMs": 3,
+                      "endpoint": "/api/debug-log"
+                    }
+[18:01:01.959] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "POST",
+                      "route": "/api/*",
+                      "statusCode": 200,
+                      "duration": 0.057594799,
+                      "requestSize": 199444,
+                      "responseSize": 71
+                    }
+[18:01:02.207] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "OPTIONS",
+                      "route": "/api/*",
+                      "statusCode": 204,
+                      "duration": 0.0002004,
+                      "requestSize": 0,
+                      "responseSize": 0
+                    }
+[18:01:02.269] 📝 DEBUG System: LogStorageService.writeLogs: Processing 306 logs
+[18:01:02.272] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 306 logs to logs/2025-09-02/general.jsonl
+[18:01:02.273] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 306 logs
+[18:01:02.273] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 306 logs
+                    ↳ Context: {
+                      "totalBuffered": 306,
+                      "bufferGroups": 0
+                    }
+[18:01:02.273] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+                    ↳ Context: {
+                      "storedCount": 306,
+                      "totalLogs": 306
+                    }
+[18:01:02.273] 📝 INFO System: Debug logs processed successfully
+                    ↳ Context: {
+                      "processedCount": 306,
+                      "totalLogs": 306,
+                      "processingTimeMs": 4,
+                      "endpoint": "/api/debug-log"
+                    }
+[18:01:02.273] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "POST",
+                      "route": "/api/*",
+                      "statusCode": 200,
+                      "duration": 0.064300599,
+                      "requestSize": 196166,
+                      "responseSize": 71
+                    }
+[18:01:08.586] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "OPTIONS",
+                      "route": "/api/*",
+                      "statusCode": 204,
+                      "duration": 0.0003588,
+                      "requestSize": 0,
+                      "responseSize": 0
+                    }
+[18:01:08.602] 📝 DEBUG System: LogStorageService.writeLogs: Processing 306 logs
+[18:01:08.606] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 306 logs to logs/2025-09-02/general.jsonl
+[18:01:08.606] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 306 logs
+[18:01:08.607] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 306 logs
+                    ↳ Context: {
+                      "totalBuffered": 306,
+                      "bufferGroups": 0
+                    }
+[18:01:08.607] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+                    ↳ Context: {
+                      "storedCount": 306,
+                      "totalLogs": 306
+                    }
+[18:01:08.607] 📝 INFO System: Debug logs processed successfully
+                    ↳ Context: {
+                      "processedCount": 306,
+                      "totalLogs": 306,
+                      "processingTimeMs": 5,
+                      "endpoint": "/api/debug-log"
+                    }
+[18:01:08.607] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "POST",
+                      "route": "/api/*",
+                      "statusCode": 200,
+                      "duration": 0.018629597,
+                      "requestSize": 189401,
+                      "responseSize": 71
+                    }
+[18:01:24.667] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "OPTIONS",
+                      "route": "/api/*",
+                      "statusCode": 204,
+                      "duration": 0.0001972,
+                      "requestSize": 0,
+                      "responseSize": 0
+                    }
+[18:01:24.680] 📝 DEBUG System: LogStorageService.writeLogs: Processing 306 logs
+[18:01:24.682] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 306 logs to logs/2025-09-02/general.jsonl
+[18:01:24.682] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 306 logs
+[18:01:24.682] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 306 logs
+                    ↳ Context: {
+                      "totalBuffered": 306,
+                      "bufferGroups": 0
+                    }
+[18:01:24.682] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+                    ↳ Context: {
+                      "storedCount": 306,
+                      "totalLogs": 306
+                    }
+[18:01:24.683] 📝 INFO System: Debug logs processed successfully
+                    ↳ Context: {
+                      "processedCount": 306,
+                      "totalLogs": 306,
+                      "processingTimeMs": 2,
+                      "endpoint": "/api/debug-log"
+                    }
+[18:01:24.683] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "POST",
+                      "route": "/api/*",
+                      "statusCode": 200,
+                      "duration": 0.0139298,
+                      "requestSize": 193660,
+                      "responseSize": 71
+                    }
+[18:01:25.923] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "OPTIONS",
+                      "route": "/api/*",
+                      "statusCode": 204,
+                      "duration": 0.00025,
+                      "requestSize": 0,
+                      "responseSize": 0
+                    }
+[18:01:25.979] 📝 DEBUG System: LogStorageService.writeLogs: Processing 306 logs
+[18:01:25.981] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 306 logs to logs/2025-09-02/general.jsonl
+[18:01:25.982] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 306 logs
+[18:01:25.982] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 306 logs
+                    ↳ Context: {
+                      "totalBuffered": 306,
+                      "bufferGroups": 0
+                    }
+[18:01:25.982] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+                    ↳ Context: {
+                      "storedCount": 306,
+                      "totalLogs": 306
+                    }
+[18:01:25.982] 📝 INFO System: Debug logs processed successfully
+                    ↳ Context: {
+                      "processedCount": 306,
+                      "totalLogs": 306,
+                      "processingTimeMs": 3,
+                      "endpoint": "/api/debug-log"
+                    }
+[18:01:25.982] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "POST",
+                      "route": "/api/*",
+                      "statusCode": 200,
+                      "duration": 0.057156099,
+                      "requestSize": 197414,
+                      "responseSize": 71
+                    }
+[18:01:27.373] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "OPTIONS",
+                      "route": "/api/*",
+                      "statusCode": 204,
+                      "duration": 0.000201,
+                      "requestSize": 0,
+                      "responseSize": 0
+                    }
+[18:01:27.426] 📝 DEBUG System: LogStorageService.writeLogs: Processing 306 logs
+[18:01:27.430] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 306 logs to logs/2025-09-02/general.jsonl
+[18:01:27.430] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 306 logs
+[18:01:27.430] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 306 logs
+                    ↳ Context: {
+                      "totalBuffered": 306,
+                      "bufferGroups": 0
+                    }
+[18:01:27.430] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+                    ↳ Context: {
+                      "storedCount": 306,
+                      "totalLogs": 306
+                    }
+[18:01:27.430] 📝 INFO System: Debug logs processed successfully
+                    ↳ Context: {
+                      "processedCount": 306,
+                      "totalLogs": 306,
+                      "processingTimeMs": 4,
+                      "endpoint": "/api/debug-log"
+                    }
+[18:01:27.430] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "POST",
+                      "route": "/api/*",
+                      "statusCode": 200,
+                      "duration": 0.0557833,
+                      "requestSize": 197858,
+                      "responseSize": 71
+                    }
+[18:01:28.746] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "OPTIONS",
+                      "route": "/api/*",
+                      "statusCode": 204,
+                      "duration": 0.0001939,
+                      "requestSize": 0,
+                      "responseSize": 0
+                    }
+[18:01:28.803] 📝 DEBUG System: LogStorageService.writeLogs: Processing 306 logs
+[18:01:28.806] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 306 logs to logs/2025-09-02/general.jsonl
+[18:01:28.806] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 306 logs
+[18:01:28.806] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 306 logs
+                    ↳ Context: {
+                      "totalBuffered": 306,
+                      "bufferGroups": 0
+                    }
+[18:01:28.806] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+                    ↳ Context: {
+                      "storedCount": 306,
+                      "totalLogs": 306
+                    }
+[18:01:28.806] 📝 INFO System: Debug logs processed successfully
+                    ↳ Context: {
+                      "processedCount": 306,
+                      "totalLogs": 306,
+                      "processingTimeMs": 3,
+                      "endpoint": "/api/debug-log"
+                    }
+[18:01:28.806] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "POST",
+                      "route": "/api/*",
+                      "statusCode": 200,
+                      "duration": 0.0585739,
+                      "requestSize": 197913,
+                      "responseSize": 71
+                    }
+[18:01:30.373] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "OPTIONS",
+                      "route": "/api/*",
+                      "statusCode": 204,
+                      "duration": 0.0002047,
+                      "requestSize": 0,
+                      "responseSize": 0
+                    }
+[18:01:30.426] 📝 DEBUG System: LogStorageService.writeLogs: Processing 306 logs
+[18:01:30.429] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 306 logs to logs/2025-09-02/general.jsonl
+[18:01:30.429] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 306 logs
+[18:01:30.429] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 306 logs
+                    ↳ Context: {
+                      "totalBuffered": 306,
+                      "bufferGroups": 0
+                    }
+[18:01:30.429] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+                    ↳ Context: {
+                      "storedCount": 306,
+                      "totalLogs": 306
+                    }
+[18:01:30.429] 📝 INFO System: Debug logs processed successfully
+                    ↳ Context: {
+                      "processedCount": 306,
+                      "totalLogs": 306,
+                      "processingTimeMs": 3,
+                      "endpoint": "/api/debug-log"
+                    }
+[18:01:30.429] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "POST",
+                      "route": "/api/*",
+                      "statusCode": 200,
+                      "duration": 0.0544817,
+                      "requestSize": 198264,
+                      "responseSize": 71
+                    }
+[18:01:50.858] 📝 DEBUG System: Health check (liveness) completed
+                    ↳ Context: {
+                      "status": "UP",
+                      "responseTime": 0.08,
+                      "memoryUsed": 15
+                    }
+[18:01:50.858] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "GET",
+                      "route": "/health",
+                      "statusCode": 200,
+                      "duration": 0.0005957,
+                      "requestSize": 0,
+                      "responseSize": 162
+                    }
+[18:01:50.864] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "OPTIONS",
+                      "route": "/api/*",
+                      "statusCode": 204,
+                      "duration": 0.0001784,
+                      "requestSize": 0,
+                      "responseSize": 0
+                    }
+[18:01:50.880] 📝 DEBUG System: LogStorageService.writeLogs: Processing 306 logs
+[18:01:50.883] ⚙️ DEBUG System: LogStorageService.#writeLogsToFileWithPath: Wrote 306 logs to logs/2025-09-02/general.jsonl
+[18:01:50.883] 📝 DEBUG System: LogStorageService.#flushWriteBuffer: Flushed 306 logs
+[18:01:50.883] 📝 DEBUG System: LogStorageService.writeLogs: Buffered 306 logs
+                    ↳ Context: {
+                      "totalBuffered": 306,
+                      "bufferGroups": 0
+                    }
+[18:01:50.883] 📝 DEBUG System: DebugLogController.#processLogs: Logs written to storage service
+                    ↳ Context: {
+                      "storedCount": 306,
+                      "totalLogs": 306
+                    }
+[18:01:50.883] 📝 INFO System: Debug logs processed successfully
+                    ↳ Context: {
+                      "processedCount": 306,
+                      "totalLogs": 306,
+                      "processingTimeMs": 3,
+                      "endpoint": "/api/debug-log"
+                    }
+[18:01:50.884] 🔄 DEBUG System: HTTP request metrics recorded
+                    ↳ Context: {
+                      "method": "POST",
+                      "route": "/api/*",
+                      "statusCode": 200,
+                      "duration": 0.0184744,
+                      "requestSize": 198308,
+                      "responseSize": 71
+                    }
