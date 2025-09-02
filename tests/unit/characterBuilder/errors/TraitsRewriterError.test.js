@@ -69,6 +69,19 @@ describe('TraitsRewriterError', () => {
       const error = new TraitsRewriterError('Test message', {}, null);
       expect(error.cause).toBeNull();
     });
+
+    it('should handle when Error.captureStackTrace is not available', () => {
+      const originalCaptureStackTrace = Error.captureStackTrace;
+      Error.captureStackTrace = undefined;
+
+      try {
+        const error = new TraitsRewriterError('Test message');
+        expect(error.name).toBe('TraitsRewriterError');
+        expect(error.stack).toBeDefined();
+      } finally {
+        Error.captureStackTrace = originalCaptureStackTrace;
+      }
+    });
   });
 
   describe('Error Codes', () => {
@@ -148,6 +161,26 @@ describe('TraitsRewriterError', () => {
         );
         expect(error.context.stage).toBe('validation');
       });
+
+      it('should work with null context', () => {
+        const reason = 'Missing required fields';
+        const error = TraitsRewriterError.forInvalidCharacterDefinition(reason, null);
+
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.INVALID_CHARACTER_DEFINITION
+        );
+        expect(error.context.stage).toBe('validation');
+      });
+
+      it('should work with undefined context', () => {
+        const reason = 'Missing required fields';
+        const error = TraitsRewriterError.forInvalidCharacterDefinition(reason, undefined);
+
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.INVALID_CHARACTER_DEFINITION
+        );
+        expect(error.context.stage).toBe('validation');
+      });
     });
 
     describe('forGenerationFailure', () => {
@@ -181,6 +214,28 @@ describe('TraitsRewriterError', () => {
         );
         expect(error.cause).toBeNull();
       });
+
+      it('should work with null context and null cause', () => {
+        const reason = 'Generation failure';
+        const error = TraitsRewriterError.forGenerationFailure(reason, null, null);
+
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED
+        );
+        expect(error.context.stage).toBe('generation');
+        expect(error.cause).toBeNull();
+      });
+
+      it('should work with undefined context and undefined cause', () => {
+        const reason = 'Generation failure';
+        const error = TraitsRewriterError.forGenerationFailure(reason, undefined, undefined);
+
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED
+        );
+        expect(error.context.stage).toBe('generation');
+        expect(error.cause).toBeNull();
+      });
     });
 
     describe('forValidationFailure', () => {
@@ -203,6 +258,34 @@ describe('TraitsRewriterError', () => {
         expect(error.context.validationReason).toBe(reason);
         expect(error.context.characterName).toBe('TestChar');
       });
+
+      it('should work with null context', () => {
+        const field = 'traits';
+        const reason = 'Invalid format';
+        const error = TraitsRewriterError.forValidationFailure(field, reason, null);
+
+        expect(error.message).toBe(`Validation failed for ${field}: ${reason}`);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED
+        );
+        expect(error.context.stage).toBe('validation');
+        expect(error.context.validationField).toBe(field);
+        expect(error.context.validationReason).toBe(reason);
+      });
+
+      it('should work with undefined context', () => {
+        const field = 'traits';
+        const reason = 'Invalid format';
+        const error = TraitsRewriterError.forValidationFailure(field, reason, undefined);
+
+        expect(error.message).toBe(`Validation failed for ${field}: ${reason}`);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED
+        );
+        expect(error.context.stage).toBe('validation');
+        expect(error.context.validationField).toBe(field);
+        expect(error.context.validationReason).toBe(reason);
+      });
     });
 
     describe('forMissingTraits', () => {
@@ -223,6 +306,32 @@ describe('TraitsRewriterError', () => {
         expect(error.context.stage).toBe('trait_extraction');
         expect(error.context.attempt).toBe(2);
       });
+
+      it('should work with null context', () => {
+        const characterName = 'TestCharacter';
+        const error = TraitsRewriterError.forMissingTraits(characterName, null);
+
+        expect(error.message).toBe(
+          `No extractable traits found for character: ${characterName}`
+        );
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.MISSING_TRAITS
+        );
+        expect(error.context.stage).toBe('trait_extraction');
+      });
+
+      it('should work with undefined context', () => {
+        const characterName = 'TestCharacter';
+        const error = TraitsRewriterError.forMissingTraits(characterName, undefined);
+
+        expect(error.message).toBe(
+          `No extractable traits found for character: ${characterName}`
+        );
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.MISSING_TRAITS
+        );
+        expect(error.context.stage).toBe('trait_extraction');
+      });
     });
 
     describe('forLLMFailure', () => {
@@ -239,6 +348,30 @@ describe('TraitsRewriterError', () => {
         expect(error.context.stage).toBe('llm_request');
         expect(error.context.provider).toBe('openai');
         expect(error.cause).toBe(cause);
+      });
+
+      it('should work with null context and null cause', () => {
+        const reason = 'API rate limit exceeded';
+        const error = TraitsRewriterError.forLLMFailure(reason, null, null);
+
+        expect(error.message).toBe(`LLM request failed: ${reason}`);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED
+        );
+        expect(error.context.stage).toBe('llm_request');
+        expect(error.cause).toBeNull();
+      });
+
+      it('should work with undefined context and undefined cause', () => {
+        const reason = 'API rate limit exceeded';
+        const error = TraitsRewriterError.forLLMFailure(reason, undefined, undefined);
+
+        expect(error.message).toBe(`LLM request failed: ${reason}`);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.GENERATION_FAILED
+        );
+        expect(error.context.stage).toBe('llm_request');
+        expect(error.cause).toBeNull();
       });
     });
 
@@ -261,6 +394,30 @@ describe('TraitsRewriterError', () => {
         expect(error.context.responseLength).toBe(1024);
         expect(error.cause).toBe(cause);
       });
+
+      it('should work with null context and null cause', () => {
+        const reason = 'Invalid JSON response';
+        const error = TraitsRewriterError.forParsingFailure(reason, null, null);
+
+        expect(error.message).toBe(`Response parsing failed: ${reason}`);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED
+        );
+        expect(error.context.stage).toBe('response_parsing');
+        expect(error.cause).toBeNull();
+      });
+
+      it('should work with undefined context and undefined cause', () => {
+        const reason = 'Invalid JSON response';
+        const error = TraitsRewriterError.forParsingFailure(reason, undefined, undefined);
+
+        expect(error.message).toBe(`Response parsing failed: ${reason}`);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED
+        );
+        expect(error.context.stage).toBe('response_parsing');
+        expect(error.cause).toBeNull();
+      });
     });
 
     describe('forQualityFailure', () => {
@@ -275,6 +432,28 @@ describe('TraitsRewriterError', () => {
         );
         expect(error.context.stage).toBe('quality_validation');
         expect(error.context.qualityScore).toBe(0.3);
+      });
+
+      it('should work with null context', () => {
+        const issues = 'Traits too generic, lacks specificity';
+        const error = TraitsRewriterError.forQualityFailure(issues, null);
+
+        expect(error.message).toBe(`Response quality issues: ${issues}`);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED
+        );
+        expect(error.context.stage).toBe('quality_validation');
+      });
+
+      it('should work with undefined context', () => {
+        const issues = 'Traits too generic, lacks specificity';
+        const error = TraitsRewriterError.forQualityFailure(issues, undefined);
+
+        expect(error.message).toBe(`Response quality issues: ${issues}`);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.VALIDATION_FAILED
+        );
+        expect(error.context.stage).toBe('quality_validation');
       });
     });
 
@@ -296,6 +475,30 @@ describe('TraitsRewriterError', () => {
         expect(error.context.stage).toBe('export');
         expect(error.context.filePath).toBe('/tmp/traits.json');
         expect(error.cause).toBe(cause);
+      });
+
+      it('should work with null context and null cause', () => {
+        const reason = 'File write permission denied';
+        const error = TraitsRewriterError.forExportFailure(reason, null, null);
+
+        expect(error.message).toBe(`Export operation failed: ${reason}`);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.EXPORT_FAILED
+        );
+        expect(error.context.stage).toBe('export');
+        expect(error.cause).toBeNull();
+      });
+
+      it('should work with undefined context and undefined cause', () => {
+        const reason = 'File write permission denied';
+        const error = TraitsRewriterError.forExportFailure(reason, undefined, undefined);
+
+        expect(error.message).toBe(`Export operation failed: ${reason}`);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.EXPORT_FAILED
+        );
+        expect(error.context.stage).toBe('export');
+        expect(error.cause).toBeNull();
       });
     });
 
@@ -321,6 +524,38 @@ describe('TraitsRewriterError', () => {
         expect(error.context.supportedFormats).toEqual(supportedFormats);
         expect(error.context.requestedBy).toBe('user');
       });
+
+      it('should work with null context', () => {
+        const format = 'xml';
+        const supportedFormats = ['json', 'txt', 'csv'];
+        const error = TraitsRewriterError.forInvalidFormat(format, supportedFormats, null);
+
+        expect(error.message).toBe(
+          `Invalid format '${format}'. Supported formats: ${supportedFormats.join(', ')}`
+        );
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.INVALID_FORMAT
+        );
+        expect(error.context.stage).toBe('format_validation');
+        expect(error.context.requestedFormat).toBe(format);
+        expect(error.context.supportedFormats).toEqual(supportedFormats);
+      });
+
+      it('should work with undefined context', () => {
+        const format = 'xml';
+        const supportedFormats = ['json', 'txt', 'csv'];
+        const error = TraitsRewriterError.forInvalidFormat(format, supportedFormats, undefined);
+
+        expect(error.message).toBe(
+          `Invalid format '${format}'. Supported formats: ${supportedFormats.join(', ')}`
+        );
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.INVALID_FORMAT
+        );
+        expect(error.context.stage).toBe('format_validation');
+        expect(error.context.requestedFormat).toBe(format);
+        expect(error.context.supportedFormats).toEqual(supportedFormats);
+      });
     });
 
     describe('forSanitizationFailure', () => {
@@ -344,6 +579,30 @@ describe('TraitsRewriterError', () => {
           'javascript:',
         ]);
         expect(error.cause).toBe(cause);
+      });
+
+      it('should work with null context and null cause', () => {
+        const reason = 'Content contains unsafe patterns';
+        const error = TraitsRewriterError.forSanitizationFailure(reason, null, null);
+
+        expect(error.message).toBe(`Content sanitization failed: ${reason}`);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.CONTENT_SANITIZATION_FAILED
+        );
+        expect(error.context.stage).toBe('content_sanitization');
+        expect(error.cause).toBeNull();
+      });
+
+      it('should work with undefined context and undefined cause', () => {
+        const reason = 'Content contains unsafe patterns';
+        const error = TraitsRewriterError.forSanitizationFailure(reason, undefined, undefined);
+
+        expect(error.message).toBe(`Content sanitization failed: ${reason}`);
+        expect(error.context.errorCode).toBe(
+          TRAITS_REWRITER_ERROR_CODES.CONTENT_SANITIZATION_FAILED
+        );
+        expect(error.context.stage).toBe('content_sanitization');
+        expect(error.cause).toBeNull();
       });
     });
   });

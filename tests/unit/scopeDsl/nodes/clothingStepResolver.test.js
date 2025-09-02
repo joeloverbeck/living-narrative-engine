@@ -1,11 +1,14 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import createClothingStepResolver from '../../../../src/scopeDsl/nodes/clothingStepResolver.js';
+import { ScopeDslError } from '../../../../src/scopeDsl/errors/scopeDslError.js';
+import { ErrorCodes } from '../../../../src/scopeDsl/constants/errorCodes.js';
 
 describe('ClothingStepResolver', () => {
   let resolver;
   let mockEntitiesGateway;
   let mockEquipmentData;
   let mockContext;
+  let mockErrorHandler;
 
   beforeEach(() => {
     // Setup mocks and test data
@@ -34,8 +37,14 @@ describe('ClothingStepResolver', () => {
       getComponentData: jest.fn().mockReturnValue(mockEquipmentData),
     };
 
+    mockErrorHandler = {
+      handleError: jest.fn(),
+      getErrorBuffer: jest.fn().mockReturnValue([]),
+    };
+
     resolver = createClothingStepResolver({
       entitiesGateway: mockEntitiesGateway,
+      errorHandler: mockErrorHandler,
     });
 
     mockContext = {
@@ -330,6 +339,143 @@ describe('ClothingStepResolver', () => {
 
       // Should not throw
       expect(() => resolver.resolve(node, mockContext)).not.toThrow();
+    });
+  });
+
+  describe('Error Handling Integration', () => {
+    it('should call errorHandler for invalid entity ID', () => {
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([''])); // Empty string passes type check but fails validation
+      
+      const node = {
+        type: 'Step',
+        field: 'topmost_clothing',
+        parent: { type: 'Source' },
+      };
+
+      mockErrorHandler.handleError.mockClear();
+      
+      const result = resolver.resolve(node, mockContext);
+
+      expect(result).toEqual(new Set());
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        'Invalid entity ID provided to ClothingStepResolver',
+        expect.objectContaining({
+          entityId: '',
+          field: 'topmost_clothing'
+        }),
+        'ClothingStepResolver',
+        ErrorCodes.INVALID_ENTITY_ID
+      );
+    });
+
+    it('should call errorHandler for invalid clothing field', () => {
+      const node = {
+        type: 'Step',
+        field: 'invalid_clothing_field',
+        parent: { type: 'Source' },
+      };
+
+      mockErrorHandler.handleError.mockClear();
+      
+      const result = resolver.resolve(node, mockContext);
+
+      expect(result).toEqual(new Set());
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid clothing reference'),
+        expect.objectContaining({
+          field: 'invalid_clothing_field'
+        }),
+        'ClothingStepResolver',
+        ErrorCodes.INVALID_ENTITY_ID
+      );
+    });
+
+    it('should call errorHandler for component retrieval failure', () => {
+      mockEntitiesGateway.getComponentData.mockImplementation(() => {
+        throw new Error('Component retrieval failed');
+      });
+      
+      const node = {
+        type: 'Step',
+        field: 'topmost_clothing',
+        parent: { type: 'Source' },
+      };
+
+      mockErrorHandler.handleError.mockClear();
+      
+      const result = resolver.resolve(node, mockContext);
+
+      expect(result).toEqual(new Set());
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to retrieve clothing component'),
+        expect.objectContaining({
+          entityId: 'actor_1',
+          field: 'topmost_clothing',
+          originalError: 'Component retrieval failed'
+        }),
+        'ClothingStepResolver',
+        ErrorCodes.COMPONENT_RESOLUTION_FAILED
+      );
+    });
+
+    it('should call errorHandler for invalid node structure', () => {
+      const invalidNode = null;
+
+      mockErrorHandler.handleError.mockClear();
+      
+      const result = resolver.resolve(invalidNode, mockContext);
+
+      expect(result).toEqual(new Set());
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        'Invalid node provided to ClothingStepResolver',
+        expect.objectContaining({
+          node: null
+        }),
+        'ClothingStepResolver',
+        ErrorCodes.INVALID_NODE_STRUCTURE
+      );
+    });
+
+    it('should call errorHandler for missing dispatcher', () => {
+      const contextWithoutDispatcher = { trace: { addLog: jest.fn() } };
+      
+      const node = {
+        type: 'Step',
+        field: 'topmost_clothing',
+        parent: { type: 'Source' },
+      };
+
+      mockErrorHandler.handleError.mockClear();
+      
+      const result = resolver.resolve(node, contextWithoutDispatcher);
+
+      expect(result).toEqual(new Set());
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        'Invalid context or missing dispatcher',
+        expect.objectContaining({
+          hasContext: true,
+          hasDispatcher: false
+        }),
+        'ClothingStepResolver',
+        ErrorCodes.MISSING_DISPATCHER
+      );
+    });
+
+    it('should work without errorHandler for backward compatibility', () => {
+      const resolverWithoutHandler = createClothingStepResolver({
+        entitiesGateway: mockEntitiesGateway,
+      });
+
+      const node = {
+        type: 'Step',
+        field: 'topmost_clothing',
+        parent: { type: 'Source' },
+      };
+
+      // Should not throw even with valid data
+      expect(() => {
+        resolverWithoutHandler.resolve(node, mockContext);
+      }).not.toThrow();
     });
   });
 });

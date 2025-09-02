@@ -9,6 +9,7 @@ import {
   calculatePriorityWithValidation,
   sortCandidatesWithTieBreaking,
 } from '../prioritySystem/priorityCalculator.js';
+import { ErrorCodes } from '../constants/errorCodes.js';
 
 /**
  * Feature flags for coverage system enhancement
@@ -25,10 +26,21 @@ const COVERAGE_FEATURES = {
  *
  * @param {object} dependencies - Injected dependencies
  * @param {object} dependencies.entitiesGateway - Gateway for entity data access
+ * @param {object} [dependencies.errorHandler] - Optional centralized error handler
  * @returns {object} NodeResolver with canResolve and resolve methods
  */
-export default function createSlotAccessResolver({ entitiesGateway }) {
+export default function createSlotAccessResolver({
+  entitiesGateway,
+  errorHandler = null,
+}) {
   validateDependency(entitiesGateway, 'entitiesGateway');
+
+  // Only validate if provided (for backward compatibility)
+  if (errorHandler) {
+    validateDependency(errorHandler, 'IScopeDslErrorHandler', console, {
+      requiredMethods: ['handleError', 'getErrorBuffer'],
+    });
+  }
 
   const CLOTHING_SLOTS = [
     'torso_upper',
@@ -126,26 +138,25 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
    * @param {object} trace - Optional trace logger
    * @returns {Function} Wrapped resolution function with error handling
    */
-  function safeResolveCoverageAwareSlot(resolveFn, targetSlot, trace) {
+  function _safeResolveCoverageAwareSlot(resolveFn, targetSlot, trace) {
     return function (...args) {
       const startTime = performance.now();
 
       try {
         const result = resolveFn(...args);
 
-        if (COVERAGE_FEATURES.enablePerformanceLogging) {
-          const duration = performance.now() - startTime;
-          if (duration > 10) {
-            // Log slow resolutions
-            console.debug(
-              `Slow coverage resolution: ${duration}ms for ${targetSlot}`
-            );
-          }
-        }
+        // Performance logging removed - use error handler for critical issues only
 
         return result;
       } catch (error) {
-        console.error(`Coverage resolution error for ${targetSlot}:`, error);
+        if (errorHandler) {
+          errorHandler.handleError(
+            `Coverage resolution error for ${targetSlot}: ${error.message}`,
+            { targetSlot, originalError: error.message, duration: performance.now() - startTime },
+            'SlotAccessResolver',
+            ErrorCodes.SLOT_ACCESS_FAILED
+          );
+        }
 
         if (trace) {
           trace.coverageError = {
@@ -171,7 +182,7 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
    * @param {string} targetSlot - Target slot name
    * @returns {string} Strategy type ('legacy' or 'coverage')
    */
-  function selectResolutionStrategy(entityId, targetSlot) {
+  function _selectResolutionStrategy(entityId, targetSlot) {
     // For simple cases, use legacy resolution
     const equipment = entitiesGateway.getComponentData(
       entityId,
@@ -295,13 +306,75 @@ export default function createSlotAccessResolver({ entitiesGateway }) {
    * @returns {string|null} The entity ID of the item in the slot or null
    */
   function resolveSlotAccess(clothingAccess, slotName, ctx) {
+    // Validate inputs
+    if (!clothingAccess || typeof clothingAccess !== 'object') {
+      if (errorHandler) {
+        errorHandler.handleError(
+          'Invalid clothing access object provided',
+          { slotName, clothingAccess },
+          'SlotAccessResolver',
+          ErrorCodes.INVALID_DATA_GENERIC
+        );
+      }
+      return null;
+    }
+
+    if (!slotName || typeof slotName !== 'string') {
+      if (errorHandler) {
+        errorHandler.handleError(
+          'Invalid slot name provided',
+          { slotName },
+          'SlotAccessResolver',
+          ErrorCodes.INVALID_ENTITY_ID
+        );
+      }
+      return null;
+    }
+
+    if (!CLOTHING_SLOTS.includes(slotName)) {
+      if (errorHandler) {
+        errorHandler.handleError(
+          `Invalid slot identifier: ${slotName}`,
+          { slotName, validSlots: CLOTHING_SLOTS },
+          'SlotAccessResolver',
+          ErrorCodes.INVALID_ENTITY_ID
+        );
+      }
+      return null;
+    }
+
     const { equipped, mode, entityId } = clothingAccess;
+    
+    if (!equipped) {
+      if (errorHandler) {
+        errorHandler.handleError(
+          'No equipped items data found',
+          { entityId, slotName },
+          'SlotAccessResolver',
+          ErrorCodes.MISSING_CONTEXT_GENERIC
+        );
+      }
+      return null;
+    }
+
+    if (!mode || !LAYER_PRIORITY[mode]) {
+      if (errorHandler) {
+        errorHandler.handleError(
+          `Invalid clothing mode: ${mode}`,
+          { mode, entityId, slotName, validModes: Object.keys(LAYER_PRIORITY) },
+          'SlotAccessResolver',
+          ErrorCodes.INVALID_DATA_GENERIC
+        );
+      }
+      return null;
+    }
+
     const slotData = equipped[slotName];
 
     // Enhanced structured tracing integration
     const trace = ctx?.trace;
     const structuredTrace = ctx?.structuredTrace;
-    const performanceMonitor = ctx?.performanceMonitor;
+    const _performanceMonitor = ctx?.performanceMonitor;
 
     // Build candidates from both direct slot items and coverage mapping
     const candidates = [];

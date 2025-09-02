@@ -92,19 +92,6 @@ export function createEvaluationContext(
     const error = new Error(
       'createEvaluationContext: actorEntity is undefined. This should never happen during scope evaluation.'
     );
-    if (trace) {
-      console.error(
-        '[CRITICAL] createEvaluationContext called with undefined actor:',
-        {
-          item,
-          itemType: typeof item,
-          hasGateway: !!gateway,
-          hasLocationProvider: !!locationProvider,
-          // Enhanced debugging: show the call stack to trace where this came from
-          callStack: new Error().stack,
-        }
-      );
-    }
     throw error;
   }
 
@@ -117,20 +104,6 @@ export function createEvaluationContext(
     const error = new Error(
       `createEvaluationContext: actorEntity has invalid ID: ${JSON.stringify(actorEntity.id)}. This should never happen.`
     );
-    if (trace) {
-      console.error(
-        '[CRITICAL] createEvaluationContext actor has invalid ID:',
-        {
-          actorId: actorEntity.id,
-          actorIdType: typeof actorEntity.id,
-          actorKeys: Object.keys(actorEntity),
-          hasComponents: !!actorEntity.components,
-          item,
-          itemType: typeof item,
-          callStack: new Error().stack,
-        }
-      );
-    }
     throw error;
   }
 

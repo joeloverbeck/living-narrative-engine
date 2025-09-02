@@ -134,6 +134,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
       deleteCharacterConcept: jest.fn().mockResolvedValue(true),
       getThematicDirections: jest.fn().mockResolvedValue([]),
       generateThematicDirections: jest.fn().mockResolvedValue([]),
+      // Fix: Always return an array to prevent iteration errors
       getAllThematicDirectionsWithConcepts: jest.fn().mockResolvedValue([]),
       getOrphanedThematicDirections: jest.fn().mockResolvedValue([]),
       updateThematicDirection: jest
