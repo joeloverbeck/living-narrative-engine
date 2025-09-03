@@ -1,8 +1,14 @@
 # ScopeDSL Error Handling Developer Guide
 
+**Version**: 2.0.0  
+**Last Updated**: 2024-01-15  
+**Status**: Production Ready
+
 ## Overview
 
 The ScopeDSL system uses a centralized error handling architecture that provides consistent, environment-aware error processing across all resolvers. This guide covers how to use the `ScopeDslErrorHandler` class, implement proper error handling in your resolvers, and troubleshoot common issues.
+
+> **Quick Links:** [Error Handling Quick Reference](./error-handling-quick-reference.md) | [Code Examples](./examples/) | [Error Codes Reference](./error-codes-reference.md) | [Migration Guide](../migration/scopedsl-error-handling-migration.md)
 
 ## Table of Contents
 
@@ -14,7 +20,10 @@ The ScopeDSL system uses a centralized error handling architecture that provides
 6. [Error Buffering and Analysis](#error-buffering-and-analysis)
 7. [Best Practices](#best-practices)
 8. [Common Patterns](#common-patterns)
-9. [Troubleshooting Guide](#troubleshooting-guide)
+9. [Migration Guide](#migration-guide)
+10. [Performance Optimization](#performance-optimization)
+11. [API Reference](#api-reference)
+12. [Troubleshooting Guide](#troubleshooting-guide)
 
 ## Architecture Overview
 
@@ -41,10 +50,12 @@ The error handling system consists of three main components:
 
 ### Key Components
 
-- **ScopeDslErrorHandler**: Central error processor with environment awareness
+- **ScopeDslErrorHandler**: Central error processor with environment awareness and error creation
 - **ErrorCodes**: Standardized error code constants (SCOPE_XXXX format)
 - **ErrorCategories**: Automatic categorization based on error patterns
 - **ScopeDslError**: Custom error class for all ScopeDSL errors
+
+> **Note:** Error creation is handled directly within `ScopeDslErrorHandler` - there is no separate error factory class.
 
 ## Using ScopeDslErrorHandler
 
@@ -484,6 +495,296 @@ resolve(node, ctx) {
 }
 ```
 
+## Migration Guide
+
+### Migrating from Direct Error Throwing
+
+If you're migrating existing resolvers from direct error throwing to the centralized error handler, follow these steps:
+
+#### Step 1: Add Error Handler Dependency
+
+```javascript
+// Before
+export default function createResolver({ logger }) {
+  // ...
+}
+
+// After
+export default function createResolver({ logger, errorHandler = null }) {
+  if (errorHandler) {
+    validateDependency(errorHandler, 'IScopeDslErrorHandler', logger, {
+      requiredMethods: ['handleError', 'getErrorBuffer']
+    });
+  }
+  // ...
+}
+```
+
+#### Step 2: Update Error Handling
+
+```javascript
+// Before
+if (!ctx.actorEntity) {
+  throw new Error('Actor entity is required');
+}
+
+// After
+if (!ctx.actorEntity) {
+  if (errorHandler) {
+    errorHandler.handleError(
+      'Actor entity is required',
+      ctx,
+      'MyResolver',
+      ErrorCodes.MISSING_ACTOR
+    );
+  } else {
+    throw new Error('Actor entity is required'); // Fallback
+  }
+}
+```
+
+#### Step 3: Update Catch Blocks
+
+```javascript
+// Before
+try {
+  return performOperation();
+} catch (error) {
+  logger.error('Operation failed', error);
+  throw error;
+}
+
+// After
+try {
+  return performOperation();
+} catch (error) {
+  if (errorHandler) {
+    errorHandler.handleError(error, ctx, 'MyResolver');
+  } else {
+    logger.error('Operation failed', error);
+    throw error;
+  }
+}
+```
+
+### Progressive Migration Strategy
+
+1. **Phase 1**: Add error handler as optional dependency
+2. **Phase 2**: Implement dual-path error handling (with fallback)
+3. **Phase 3**: Add specific error codes
+4. **Phase 4**: Remove fallback paths once all callers provide error handler
+
+For a complete migration guide, see [ScopeDSL Error Handling Migration Guide](../migration/scopedsl-error-handling-migration.md).
+
+## Performance Optimization
+
+### Minimize Context Size
+
+Large context objects impact performance. Sanitize context before passing:
+
+```javascript
+// Avoid passing entire large objects
+const minimalContext = {
+  actorId: ctx.actorEntity.id,
+  targetId: ctx.targetEntity?.id,
+  depth: ctx.depth,
+  // Only include necessary fields
+};
+
+errorHandler.handleError(error, minimalContext, 'MyResolver');
+```
+
+### Error Code Caching
+
+Cache error code lookups for frequently occurring errors:
+
+```javascript
+const ERROR_CODE_MAP = new Map([
+  ['missing actor', ErrorCodes.MISSING_ACTOR],
+  ['invalid data', ErrorCodes.INVALID_DATA_GENERIC],
+  ['depth exceeded', ErrorCodes.MAX_DEPTH_EXCEEDED]
+]);
+
+function getErrorCode(message) {
+  for (const [pattern, code] of ERROR_CODE_MAP) {
+    if (message.toLowerCase().includes(pattern)) {
+      return code;
+    }
+  }
+  return ErrorCodes.UNKNOWN_ERROR;
+}
+```
+
+### Buffer Management for High-Volume Scenarios
+
+In high-throughput scenarios, manage buffer size and clearing:
+
+```javascript
+class ErrorAnalyzer {
+  constructor(errorHandler) {
+    this.errorHandler = errorHandler;
+    this.analysisInterval = setInterval(() => this.analyze(), 30000);
+  }
+
+  analyze() {
+    const errors = this.errorHandler.getErrorBuffer();
+    if (errors.length > 50) {
+      // Process errors
+      this.processErrors(errors);
+      // Clear to prevent memory growth
+      this.errorHandler.clearErrorBuffer();
+    }
+  }
+
+  cleanup() {
+    clearInterval(this.analysisInterval);
+  }
+}
+```
+
+### Conditional Error Detail
+
+Reduce overhead in production by conditionally including detail:
+
+```javascript
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
+const errorContext = isDevelopment ? {
+  fullEntity: ctx.actorEntity,
+  stack: new Error().stack,
+  timestamp: Date.now(),
+  ...ctx
+} : {
+  actorId: ctx.actorEntity?.id,
+  resolver: 'MyResolver'
+};
+
+errorHandler.handleError(error, errorContext, 'MyResolver');
+```
+
+## API Reference
+
+### ScopeDslErrorHandler Class
+
+#### Constructor
+
+```javascript
+new ScopeDslErrorHandler({
+  logger: ILogger,
+  config?: {
+    isDevelopment?: boolean,
+    maxBufferSize?: number
+  }
+})
+```
+
+**Parameters:**
+- `logger` (required): Logger instance implementing ILogger interface
+- `config` (optional): Configuration object
+  - `isDevelopment`: Boolean indicating development mode (default: auto-detect from NODE_ENV)
+  - `maxBufferSize`: Maximum number of errors to buffer (default: 100)
+
+#### Methods
+
+##### handleError(message, context, resolverName, errorCode)
+
+Processes and throws a standardized error.
+
+```javascript
+handleError(
+  message: string | Error,
+  context: object,
+  resolverName: string,
+  errorCode?: string
+): never
+```
+
+**Parameters:**
+- `message`: Error message string or Error object
+- `context`: Resolution context (will be sanitized automatically)
+- `resolverName`: Name of the resolver for identification
+- `errorCode`: Optional specific error code (defaults to auto-categorization)
+
+**Throws:** `ScopeDslError` with standardized format
+
+**Example:**
+```javascript
+errorHandler.handleError(
+  'Missing required field',
+  { actorEntity, depth: 5 },
+  'FieldResolver',
+  ErrorCodes.MISSING_CONTEXT
+);
+```
+
+##### getErrorBuffer()
+
+Returns the current error buffer for analysis.
+
+```javascript
+getErrorBuffer(): Array<{
+  message: string,
+  code: string,
+  category: string,
+  context: object,
+  timestamp: string,
+  resolver: string
+}>
+```
+
+**Returns:** Array of buffered error objects
+
+**Example:**
+```javascript
+const recentErrors = errorHandler.getErrorBuffer();
+console.log(`${recentErrors.length} errors in buffer`);
+```
+
+##### clearErrorBuffer()
+
+Clears all errors from the buffer.
+
+```javascript
+clearErrorBuffer(): void
+```
+
+**Example:**
+```javascript
+// Clear after analysis
+errorHandler.clearErrorBuffer();
+```
+
+### Error Categories
+
+The error handler automatically categorizes errors based on message patterns:
+
+```javascript
+const ERROR_CATEGORIES = {
+  MISSING_CONTEXT: /missing|undefined|null|not found in context/i,
+  INVALID_DATA: /invalid|malformed|corrupt|incorrect/i,
+  RESOLUTION_FAILURE: /failed to resolve|resolution failed|cannot resolve/i,
+  CYCLE_DETECTED: /cycle|circular|recursive reference/i,
+  DEPTH_EXCEEDED: /depth|limit|maximum.*exceeded/i,
+  PARSE_ERROR: /parse|syntax|unexpected token/i,
+  CONFIGURATION: /config|setting|option|initialization/i,
+  UNKNOWN: /.*/  // Fallback
+};
+```
+
+### ScopeDslError Class
+
+Custom error class thrown by the error handler:
+
+```javascript
+class ScopeDslError extends Error {
+  code: string;        // Error code (e.g., 'SCOPE_1001')
+  category: string;    // Category name
+  context: object;     // Sanitized context
+  resolver: string;    // Resolver name
+  timestamp: string;   // ISO timestamp
+}
+```
+
 ## Troubleshooting Guide
 
 ### Issue: "actorEntity is undefined in context"
@@ -606,7 +907,12 @@ const errorHandler = new ScopeDslErrorHandler({
 
 ## Related Documentation
 
+- [Error Handling Quick Reference](./error-handling-quick-reference.md) - Quick lookup for common patterns
 - [Error Codes Reference](./error-codes-reference.md) - Complete list of error codes
+- [Code Examples](./examples/) - Standalone example files:
+  - [Basic Error Handling](./examples/error-handling-basic.js)
+  - [Complex Error Handling](./examples/error-handling-complex.js)
+  - [Error Recovery Patterns](./examples/error-handling-recovery.js)
 - [Migration Guide](../migration/scopedsl-error-handling-migration.md) - Updating existing resolvers
 - [ScopeDSL README](./README.md) - Main ScopeDSL documentation
 - [Troubleshooting](./troubleshooting.md) - General ScopeDSL troubleshooting

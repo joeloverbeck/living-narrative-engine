@@ -24,12 +24,24 @@ import {
 // Mock the colorValidation module
 jest.mock('../../../src/utils/colorValidation.js', () => ({
   validateColor: jest.fn((color) => {
-    // Simple mock validation - accepts strings starting with # or named colors
+    // More accurate mock validation - accepts hex colors and common named colors
     if (typeof color !== 'string') return false;
-    return color.startsWith('#') || ['red', 'white', 'black'].includes(color);
+    // Accept hex colors (3 or 6 digits)
+    if (/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/.test(color)) return true;
+    // Accept rgb/rgba patterns
+    if (/^rgba?\(/.test(color)) return true;
+    // Accept common named colors
+    const namedColors = ['red', 'white', 'black', 'blue', 'green', 'yellow', 
+                         'transparent', 'currentColor', 'darkslateblue'];
+    return namedColors.includes(color.toLowerCase());
   }),
-  getColorErrorMessage: jest.fn((color) => `Invalid color: ${color}`),
-}));
+  getColorErrorMessage: jest.fn((color) => {
+    if (typeof color !== 'string') {
+      return 'Color must be a string';
+    }
+    return `Invalid CSS color value: "${color}". Expected hex (#RGB or #RRGGBB), rgb(), rgba(), or named color.`;
+  }),
+}))
 
 describe('visualPropertiesValidator', () => {
   describe('validateVisualProperties', () => {
@@ -74,7 +86,7 @@ describe('visualPropertiesValidator', () => {
 
       expect(() => {
         validateVisualProperties(visual, 'test:action');
-      }).toThrow('Invalid visual properties for action test:action');
+      }).toThrow(/Invalid visual properties for action test:action:\nbackgroundColor:/);
     });
 
     it('should throw error for non-object visual properties', () => {
@@ -99,7 +111,7 @@ describe('visualPropertiesValidator', () => {
 
       expect(() => {
         validateVisualProperties(visual, 'test:action');
-      }).toThrow('Unknown visual properties: unknownProperty');
+      }).toThrow(/Invalid visual properties for action test:action:\nUnknown visual properties: unknownProperty/);
     });
 
     it('should handle empty object', () => {
@@ -256,7 +268,7 @@ describe('visualPropertiesValidator', () => {
       testCases.forEach(({ prop, value }) => {
         const visual = { [prop]: value };
         expect(() => validateVisualProperties(visual, 'test:action')).toThrow(
-          'Invalid visual properties for action test:action'
+          /Invalid visual properties for action test:action:/
         );
       });
     });
@@ -270,7 +282,7 @@ describe('visualPropertiesValidator', () => {
       };
 
       expect(() => validateVisualProperties(visual, 'test:action')).toThrow(
-        'Unknown visual properties: unknownProp1, unknownProp2, anotherUnknown'
+        /Invalid visual properties for action test:action:\nUnknown visual properties: unknownProp1, unknownProp2, anotherUnknown/
       );
     });
 
@@ -281,7 +293,7 @@ describe('visualPropertiesValidator', () => {
       };
 
       expect(() => validateVisualProperties(visual, 'test:action')).toThrow(
-        'Unknown visual properties: nested'
+        /Invalid visual properties for action test:action:\nUnknown visual properties: nested/
       );
     });
 
