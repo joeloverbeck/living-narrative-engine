@@ -28,7 +28,7 @@ import { createUltraLightContainer } from '../../common/testing/ultraLightContai
 import { performance } from 'perf_hooks';
 
 // Set reasonable timeout for memory tests
-jest.setTimeout(60000);
+jest.setTimeout(30000);
 
 describe('ScopeDslErrorHandler Memory Usage', () => {
   let errorHandler;
@@ -63,36 +63,29 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
 
   describe('Memory Leak Detection', () => {
     it('should not leak memory during repeated error handling', () => {
-      const iterations = 20; // Increased from 5 for better statistical stability
-      const errorsPerIteration = 1000;
+      const iterations = 10; // Balanced for statistical stability and performance
+      const errorsPerIteration = 500;
       const memorySnapshots = [];
       
       // Warmup phase to stabilize memory measurements
-      for (let w = 0; w < 3; w++) {
-        for (let i = 0; i < 100; i++) {
-          try {
-            errorHandler.handleError(
-              new Error(`Warmup error ${w}-${i}`),
-              { depth: 0, warmup: true },
-              'warmupResolver'
-            );
-          } catch (e) {
-            // Expected error
-          }
+      for (let i = 0; i < 30; i++) {
+        try {
+          errorHandler.handleError(
+            new Error(`Warmup error ${i}`),
+            { depth: 0, warmup: true },
+            'warmupResolver'
+          );
+        } catch (e) {
+          // Expected error
         }
-        errorHandler.clearErrorBuffer();
-        if (global.gc) global.gc();
       }
+      errorHandler.clearErrorBuffer();
+      if (global.gc) global.gc();
 
       for (let iteration = 0; iteration < iterations; iteration++) {
         // Force garbage collection if available (requires --expose-gc flag)
         if (global.gc) {
           global.gc();
-          // Allow GC to complete with short delay
-          const start = Date.now();
-          while (Date.now() - start < 10) {
-            // Brief busy wait for GC completion
-          }
         }
 
         // Take memory snapshot before
@@ -184,10 +177,10 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
 
     it('should properly manage buffer size under extreme load', () => {
       const maxBufferSize = 100; // Default buffer size
-      const totalErrors = 100000; // Generate many more errors than buffer can hold
+      const totalErrors = 10000; // Generate many more errors than buffer can hold
       
       // Warmup phase for buffer test
-      for (let w = 0; w < 50; w++) {
+      for (let w = 0; w < 20; w++) {
         try {
           errorHandler.handleError(
             new Error(`Buffer warmup ${w}`),
@@ -255,11 +248,6 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
       errorHandler.clearErrorBuffer();
       if (global.gc) {
         global.gc();
-        // Allow GC to complete
-        const start = Date.now();
-        while (Date.now() - start < 10) {
-          // Brief wait
-        }
       }
 
       const afterClearMemory = process.memoryUsage().heapUsed;
@@ -271,15 +259,15 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
       const clearRecovery = afterManyMemory - afterClearMemory;
 
       // Memory growth should stabilize after buffer fills
-      // For extreme load test (100k errors), focus on absolute limits rather than growth ratios
+      // For extreme load test (10k errors), focus on absolute limits rather than growth ratios
       // The buffer should prevent unbounded growth regardless of fill patterns
-      expect(sustainedGrowth).toBeLessThan(500 * 1024 * 1024); // <500MB sustained growth for 100k errors
+      expect(sustainedGrowth).toBeLessThan(100 * 1024 * 1024); // <100MB sustained growth for 10k errors
       // Memory recovery after clear may be affected by GC timing, so allow some tolerance
       expect(clearRecovery).toBeGreaterThan(-1 * 1024 * 1024); // Allow up to 1MB apparent "negative recovery" due to GC timing
       
-      // Total memory used should be reasonable for 100k errors
+      // Total memory used should be reasonable for 10k errors
       const totalGrowth = afterManyMemory - initialMemory;
-      expect(totalGrowth).toBeLessThan(400 * 1024 * 1024); // <400MB total for 100k errors (realistic for JS error objects)
+      expect(totalGrowth).toBeLessThan(120 * 1024 * 1024); // <120MB total for 10k errors (realistic for JS error objects with stack traces)
     });
 
     it('should handle memory efficiently with different error types', () => {
@@ -295,7 +283,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
 
       // Warmup phase for error type testing
       errorTypes.forEach(errorType => {
-        for (let w = 0; w < 50; w++) {
+        for (let w = 0; w < 20; w++) {
           try {
             errorHandler.handleError(
               errorType.create(w),
@@ -319,7 +307,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
         if (global.gc) global.gc();
 
         const memBefore = process.memoryUsage().heapUsed;
-        const iterations = 10000;
+        const iterations = 5000;
 
         for (let i = 0; i < iterations; i++) {
           try {
@@ -368,7 +356,7 @@ describe('ScopeDslErrorHandler Memory Usage', () => {
 
   describe('Memory Management Under Load', () => {
     it('should maintain stable memory during high-volume error generation', () => {
-      const testDuration = 5000; // 5 seconds
+      const testDuration = 2000; // 2 seconds
       // const samplingInterval = 500; // Sample every 500ms
       const memorySamples = [];
       

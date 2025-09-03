@@ -82,6 +82,16 @@ export const ErrorCodes = Object.freeze({
   SLOT_ACCESS_FAILED: 'SCOPE_3008',
   /** Clothing step resolution failed */
   CLOTHING_STEP_FAILED: 'SCOPE_3009',
+  /** Connection failed to service or endpoint */
+  CONNECTION_FAILED: 'SCOPE_3010',
+  /** Service not found or unavailable */
+  SERVICE_NOT_FOUND: 'SCOPE_3011',
+  /** Batch operation failed with partial or complete failure */
+  BATCH_OPERATION_FAILED: 'SCOPE_3012',
+  /** Queue processing failed */
+  QUEUE_PROCESSING_FAILED: 'SCOPE_3013',
+  /** Async operation failed */
+  ASYNC_OPERATION_FAILED: 'SCOPE_3014',
 
   // System errors (4xxx) - Existing: SCOPE_4001, SCOPE_4002
   /** Circular dependency detected (existing code) */
@@ -96,6 +106,14 @@ export const ErrorCodes = Object.freeze({
   EXECUTION_TIMEOUT: 'SCOPE_4005',
   /** Stack overflow in recursive operations */
   STACK_OVERFLOW: 'SCOPE_4006',
+  /** Operation timeout (alias for async operations) */
+  TIMEOUT: 'SCOPE_4007',
+  /** Maximum retry attempts exceeded */
+  MAX_RETRIES_EXCEEDED: 'SCOPE_4008',
+  /** Circuit breaker open due to repeated failures */
+  CIRCUIT_BREAKER_OPEN: 'SCOPE_4009',
+  /** Batch error summary for aggregated errors */
+  BATCH_ERROR_SUMMARY: 'SCOPE_4010',
 
   // Parse errors (5xxx) - Base: SCOPE_5000
   /** Generic parse error */

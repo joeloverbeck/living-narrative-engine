@@ -30,7 +30,7 @@ describe('ErrorCodes', () => {
       const codes = Object.keys(ErrorCodes);
       // Should have substantial number of codes covering all categories
       expect(codes.length).toBeGreaterThan(30);
-      expect(codes.length).toBeLessThan(60);
+      expect(codes.length).toBeLessThan(65);
     });
   });
 

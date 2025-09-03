@@ -4,7 +4,7 @@ import {
   dispatchValidationError,
   InvalidDispatcherError,
 } from '../../../src/utils/safeDispatchErrorUtils.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 
 describe('safeDispatchError', () => {
   it('dispatches the display error event', () => {
@@ -29,6 +29,70 @@ describe('safeDispatchError', () => {
       "Invalid or missing method 'dispatch' on dependency 'safeDispatchError: dispatcher'."
     );
     expect(error.details).toEqual({ functionName: 'safeDispatchError' });
+  });
+
+  it('handles ActionErrorContext object', () => {
+    const dispatcher = { dispatch: jest.fn() };
+    const actionErrorContext = {
+      actionId: 'test-action',
+      targetId: 'target-123',
+      error: { message: 'Action failed due to invalid state' },
+      phase: 'validation',
+      actionDefinition: { id: 'test-action', name: 'Test Action' },
+      actorSnapshot: { id: 'actor-1', components: {} },
+      evaluationTrace: {
+        steps: [],
+        failurePoint: 'validation',
+        finalContext: {},
+      },
+      suggestedFixes: [],
+      environmentContext: { location: 'test-location' },
+      timestamp: 1234567890,
+    };
+
+    safeDispatchError(dispatcher, actionErrorContext);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'Action failed due to invalid state',
+      details: {
+        errorContext: actionErrorContext,
+        actionId: 'test-action',
+        phase: 'validation',
+        targetId: 'target-123',
+      },
+    });
+  });
+
+  it('handles ActionErrorContext with missing error message', () => {
+    const dispatcher = { dispatch: jest.fn() };
+    const actionErrorContext = {
+      actionId: 'test-action',
+      targetId: null,
+      error: {}, // No message property
+      phase: 'execution',
+      actionDefinition: { id: 'test-action' },
+      actorSnapshot: {},
+      evaluationTrace: {
+        steps: [],
+        failurePoint: 'execution',
+        finalContext: {},
+      },
+      suggestedFixes: [],
+      environmentContext: {},
+      timestamp: 1234567890,
+    };
+
+    safeDispatchError(dispatcher, actionErrorContext);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message: 'An error occurred in the action system',
+      details: {
+        errorContext: actionErrorContext,
+        actionId: 'test-action',
+        phase: 'execution',
+        targetId: null,
+      },
+    });
   });
 });
 
