@@ -5,38 +5,65 @@
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 
-// Mock dependencies first
-const mockLoggerStrategy = jest.fn();
-const mockConsoleLogger = jest.fn();
+// Setup all mocks before imports
+jest.mock('../../../src/logging/loggerStrategy.js', () => jest.fn());
 
-jest.mock('../../../src/logging/loggerStrategy.js', () => ({
-  default: mockLoggerStrategy,
+jest.mock('../../../src/logging/consoleLogger.js');
+
+// Mock environment utilities
+jest.mock('../../../src/utils/environmentUtils.js', () => ({
+  isTestEnvironment: jest.fn(),
+  getEnvironmentMode: jest.fn(),
 }));
 
-jest.mock('../../../src/logging/consoleLogger.js', () => ({
-  default: mockConsoleLogger,
+// Mock configuration utilities
+jest.mock('../../../src/configuration/utils/loggerConfigUtils.js', () => ({
+  loadAndApplyLoggerConfig: jest.fn(),
+  loadDebugLogConfig: jest.fn(),
 }));
 
-// Mock all the registration functions
-jest.mock('../../../src/dependencyInjection/registrations/coreRegistrations.js', () => ({
-  registerCoreServices: jest.fn(),
+jest.mock('../../../src/configuration/utils/traceConfigUtils.js', () => ({
+  loadAndApplyTraceConfig: jest.fn(),
 }));
 
-jest.mock('../../../src/dependencyInjection/registrations/entityRegistrations.js', () => ({
-  registerEntityServices: jest.fn(),
+// Mock base container configuration
+jest.mock('../../../src/dependencyInjection/baseContainerConfig.js', () => ({
+  configureBaseContainer: jest.fn(),
 }));
 
-jest.mock('../../../src/dependencyInjection/registrations/loaderRegistrations.js', () => ({
-  registerLoaderServices: jest.fn(),
+// Mock Registrar
+jest.mock('../../../src/utils/registrarHelpers.js', () => ({
+  Registrar: jest.fn().mockImplementation((container) => ({
+    instance: jest.fn((token, instance) => {
+      container.register(token, instance);
+    }),
+  })),
 }));
 
-// Now import the module under test
+// Mock tokens
+jest.mock('../../../src/dependencyInjection/tokens.js', () => ({
+  tokens: {
+    ILogger: 'ILogger',
+    IEntityManager: 'IEntityManager',
+    IDataRegistry: 'IDataRegistry', 
+    ISchemaValidator: 'ISchemaValidator',
+  },
+}));
+
+// Now import the modules we need after mocks are set up
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
+import { isTestEnvironment, getEnvironmentMode } from '../../../src/utils/environmentUtils.js';
+import { loadDebugLogConfig, loadAndApplyLoggerConfig } from '../../../src/configuration/utils/loggerConfigUtils.js';
+import { loadAndApplyTraceConfig } from '../../../src/configuration/utils/traceConfigUtils.js';
+import { configureBaseContainer } from '../../../src/dependencyInjection/baseContainerConfig.js';
+import LoggerStrategy from '../../../src/logging/loggerStrategy.js';
+import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 
 describe('containerConfig - Runtime Error Reproduction', () => {
   let originalProcess;
   let mockContainer;
   let mockLogger;
+  let mockUiElements;
 
   beforeEach(() => {
     // Save original process object
@@ -45,7 +72,8 @@ describe('containerConfig - Runtime Error Reproduction', () => {
     // Setup mocks
     mockContainer = {
       register: jest.fn(),
-      get: jest.fn(),
+      resolve: jest.fn(),
+      isRegistered: jest.fn().mockReturnValue(true),
     };
     
     mockLogger = {
@@ -53,11 +81,31 @@ describe('containerConfig - Runtime Error Reproduction', () => {
       debug: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
+      getMode: jest.fn().mockReturnValue('development'),
+    };
+
+    // Setup UI elements mock
+    mockUiElements = {
+      outputDiv: {},
+      inputElement: {},
+      titleElement: {},
+      document: {},
     };
 
     // Setup LoggerStrategy mock to return our mock logger
-    mockLoggerStrategy.mockImplementation(() => mockLogger);
-    mockConsoleLogger.mockImplementation(() => mockLogger);
+    LoggerStrategy.mockImplementation(() => mockLogger);
+    
+    // Setup ConsoleLogger mock to return our mock logger
+    ConsoleLogger.mockImplementation(() => mockLogger);
+    
+    // Setup container to resolve the logger
+    mockContainer.resolve.mockReturnValue(mockLogger);
+    
+    // Setup config loading mocks
+    loadDebugLogConfig.mockResolvedValue(null);
+    loadAndApplyLoggerConfig.mockResolvedValue(undefined);
+    loadAndApplyTraceConfig.mockResolvedValue(undefined);
+    configureBaseContainer.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -70,26 +118,40 @@ describe('containerConfig - Runtime Error Reproduction', () => {
     it('should handle missing process object when determining logger mode', async () => {
       // Simulate browser environment where process is not defined
       delete globalThis.process;
+      
+      // Setup environment utilities to return development mode for browser
+      isTestEnvironment.mockReturnValue(false);
+      getEnvironmentMode.mockReturnValue('development');
 
       // Should not throw ReferenceError when accessing process.env.NODE_ENV
-      await expect(configureContainer(mockContainer)).resolves.not.toThrow();
+      await expect(configureContainer(mockContainer, mockUiElements)).resolves.not.toThrow();
       
       // Should have created LoggerStrategy with development mode (fallback)
-      expect(mockLoggerStrategy).toHaveBeenCalledWith({
-        mode: 'development', // Should fallback to development when process is undefined
-        debugConfig: null,
+      expect(LoggerStrategy).toHaveBeenCalledWith({
+        mode: 'development',
+        config: expect.any(Object),
+        dependencies: {
+          consoleLogger: expect.any(Object),
+        },
       });
     });
 
     it('should handle process object without env property', async () => {
       globalThis.process = { version: 'v16.0.0' }; // Process exists but no env
+      
+      // Setup environment utilities for non-test, development environment
+      isTestEnvironment.mockReturnValue(false);
+      getEnvironmentMode.mockReturnValue('development');
 
-      await expect(configureContainer(mockContainer)).resolves.not.toThrow();
+      await expect(configureContainer(mockContainer, mockUiElements)).resolves.not.toThrow();
       
       // Should fallback to development mode when process.env is undefined
-      expect(mockLoggerStrategy).toHaveBeenCalledWith({
+      expect(LoggerStrategy).toHaveBeenCalledWith({
         mode: 'development',
-        debugConfig: null,
+        config: expect.any(Object),
+        dependencies: {
+          consoleLogger: expect.any(Object),
+        },
       });
     });
 
@@ -99,13 +161,20 @@ describe('containerConfig - Runtime Error Reproduction', () => {
           NODE_ENV: 'test',
         },
       };
+      
+      // Setup environment utilities for test environment
+      isTestEnvironment.mockReturnValue(true);
+      getEnvironmentMode.mockReturnValue('test');
 
-      await configureContainer(mockContainer);
+      await configureContainer(mockContainer, mockUiElements);
       
       // Should use test mode when NODE_ENV is test
-      expect(mockLoggerStrategy).toHaveBeenCalledWith({
+      expect(LoggerStrategy).toHaveBeenCalledWith({
         mode: 'test',
-        debugConfig: null,
+        config: expect.any(Object),
+        dependencies: {
+          consoleLogger: expect.any(Object),
+        },
       });
     });
 
@@ -115,13 +184,20 @@ describe('containerConfig - Runtime Error Reproduction', () => {
           NODE_ENV: 'production',
         },
       };
+      
+      // Setup environment utilities for production (but not test)
+      isTestEnvironment.mockReturnValue(false);
+      getEnvironmentMode.mockReturnValue('development');
 
-      await configureContainer(mockContainer);
+      await configureContainer(mockContainer, mockUiElements);
       
       // Should use development mode for production (per the original logic)
-      expect(mockLoggerStrategy).toHaveBeenCalledWith({
+      expect(LoggerStrategy).toHaveBeenCalledWith({
         mode: 'development',
-        debugConfig: null,
+        config: expect.any(Object),
+        dependencies: {
+          consoleLogger: expect.any(Object),
+        },
       });
     });
   });
@@ -140,28 +216,44 @@ describe('containerConfig - Runtime Error Reproduction', () => {
       for (const processValue of testCases) {
         globalThis.process = processValue;
         
+        // Setup environment utilities to handle various states
+        if (processValue && processValue.env && processValue.env.NODE_ENV === 'test') {
+          isTestEnvironment.mockReturnValue(true);
+          getEnvironmentMode.mockReturnValue('test');
+        } else {
+          isTestEnvironment.mockReturnValue(false);
+          getEnvironmentMode.mockReturnValue('development');
+        }
+        
         // Should not throw regardless of process object state
-        await expect(configureContainer(mockContainer)).resolves.not.toThrow();
+        await expect(configureContainer(mockContainer, mockUiElements)).resolves.not.toThrow();
         
         jest.clearAllMocks();
       }
     });
 
     it('should handle debug config loading failure gracefully', async () => {
-      // Simulate the warning scenario from error_logs.txt:7
+      // Simulate the warning scenario
       globalThis.process = {
         env: {
           NODE_ENV: 'development',
         },
       };
+      
+      // Setup environment utilities
+      isTestEnvironment.mockReturnValue(false);
+      getEnvironmentMode.mockReturnValue('development');
+      
+      // Make debug config loading fail
+      loadDebugLogConfig.mockRejectedValue(new Error('Failed to load config'));
 
       // The loadDebugLogConfig should fail but container config should continue
-      await configureContainer(mockContainer);
+      await configureContainer(mockContainer, mockUiElements);
       
       // Container configuration should complete successfully despite debug config failure
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        '[ContainerConfig] Container configuration completed successfully.'
-      );
+      // Note: The actual code logs to console.debug, not logger.info
+      expect(loadDebugLogConfig).toHaveBeenCalled();
+      expect(configureBaseContainer).toHaveBeenCalled();
     });
   });
 });

@@ -20,7 +20,7 @@ describe('loggerConfigUtils - Runtime Error Reproduction', () => {
   });
 
   describe('Browser Environment Simulation', () => {
-    it('should throw ReferenceError when process is undefined (reproduces error_logs.txt:7)', () => {
+    it('should handle browser environment gracefully when process is undefined', async () => {
       // Simulate browser environment where process is not defined
       delete globalThis.process;
 
@@ -31,13 +31,12 @@ describe('loggerConfigUtils - Runtime Error Reproduction', () => {
         error: jest.fn(),
       };
 
-      // This should throw ReferenceError: process is not defined
-      expect(async () => {
-        await loadDebugLogConfig(mockLogger, null);
-      }).rejects.toThrow('process is not defined');
+      // Should not throw and should return null (graceful fallback)
+      const result = await loadDebugLogConfig(mockLogger, null);
+      expect(result).toBe(null);
     });
 
-    it('should handle undefined process.env gracefully', () => {
+    it('should handle undefined process.env gracefully', async () => {
       // Simulate partial browser polyfill where process exists but env doesn't
       globalThis.process = {};
 
@@ -47,15 +46,15 @@ describe('loggerConfigUtils - Runtime Error Reproduction', () => {
         error: jest.fn(),
       };
 
-      // Should not throw, but should handle missing process.env
-      expect(async () => {
-        await loadDebugLogConfig(mockLogger, null);
-      }).not.toThrow();
+      // Should not throw and should return null (graceful fallback)
+      const result = await loadDebugLogConfig(mockLogger, null);
+      expect(result).toBe(null);
     });
 
     it('should work properly when SKIP_DEBUG_CONFIG is set', async () => {
       // Simulate Node.js environment where process.env exists
       globalThis.process = {
+        versions: { node: 'v16.0.0' }, // Required for Node.js detection
         env: {
           SKIP_DEBUG_CONFIG: 'true',
         },
@@ -78,7 +77,7 @@ describe('loggerConfigUtils - Runtime Error Reproduction', () => {
 
   describe('Environment Detection Edge Cases', () => {
     it('should handle process object without env property', async () => {
-      globalThis.process = { version: 'v16.0.0' }; // Process exists but no env
+      globalThis.process = { versions: { node: 'v16.0.0' } }; // Process exists but no env
 
       const mockLogger = {
         debug: jest.fn(),
@@ -90,12 +89,13 @@ describe('loggerConfigUtils - Runtime Error Reproduction', () => {
       const result = await loadDebugLogConfig(mockLogger, null);
       
       // Since there's no process.env.SKIP_DEBUG_CONFIG, it should attempt to load config
-      // We don't care about the exact result, just that it doesn't throw
-      expect(() => result).not.toThrow();
+      // Result should be null due to graceful error handling
+      expect(result).toBe(null);
     });
 
     it('should handle non-string SKIP_DEBUG_CONFIG values', async () => {
       globalThis.process = {
+        versions: { node: 'v16.0.0' }, // Required for Node.js detection
         env: {
           SKIP_DEBUG_CONFIG: true, // boolean instead of string
         },

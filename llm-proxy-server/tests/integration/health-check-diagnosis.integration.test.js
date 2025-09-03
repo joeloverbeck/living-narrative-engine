@@ -72,9 +72,11 @@ describe('Health Check Endpoint Diagnosis', () => {
 
   it('should simulate remote logger health check behavior', async () => {
     // This simulates what the remote logger does for health checks
+    const controller = new AbortController();
+    let timeoutId;
+
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
+      timeoutId = setTimeout(() => controller.abort(), 2000);
 
       const response = await fetch(`http://localhost:${TEST_PORT}/health`, {
         method: 'GET',
@@ -83,8 +85,6 @@ describe('Health Check Endpoint Diagnosis', () => {
         },
         signal: controller.signal,
       });
-
-      clearTimeout(timeoutId);
 
       expect(response.ok).toBe(true);
       expect(response.status).toBe(200);
@@ -95,6 +95,11 @@ describe('Health Check Endpoint Diagnosis', () => {
       // This should help us understand what's causing the health check failures
       console.error('Health check simulation failed:', error.message);
       throw error;
+    } finally {
+      // Always clear the timeout to prevent dangling timers
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     }
   });
 
@@ -103,7 +108,7 @@ describe('Health Check Endpoint Diagnosis', () => {
     const response = await request(app)
       .get('/health')
       .set('Origin', 'http://localhost:8080')
-      .set('User-Agent', 'RemoteLogger/1.0');
+      .set('User-Agent', 'HealthCheck/1.0');
 
     expect(response.status).toBe(200);
     // Note: CORS headers might not be present since we don't have CORS middleware in this test

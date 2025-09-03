@@ -16,7 +16,6 @@ describe('Contract Test Suite Runner', () => {
       'contract-validation-utils.js',
       'contract-request-validation.test.js',
       'contract-error-response.test.js',
-      'contract-e2e-compliance.test.js',
       'contract-regression.test.js',
     ];
 

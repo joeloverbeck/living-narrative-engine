@@ -4,62 +4,63 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { JSDOM } from 'jsdom';
 import { TraitsRewriterController } from '../../../../src/characterBuilder/controllers/TraitsRewriterController.js';
 import { createTestBed } from '../../../common/testBed.js';
 
 describe('TraitsRewriterController - UI State Fixes', () => {
   let testBed;
   let mockDependencies;
-  let dom;
+  let originalBodyHTML;
   let consoleSpy;
 
   beforeEach(() => {
     testBed = createTestBed();
 
-    // Create DOM structure WITH the required state elements (after the fix)
-    const htmlContent = `<!DOCTYPE html>
-      <html>
-        <head><title>Test</title></head>
-        <body>
-          <div id="app">
-            <!-- Character input elements -->
-            <textarea id="character-definition"></textarea>
-            <div id="character-input-error" style="display: none"></div>
-            
-            <!-- Control buttons -->
-            <button id="rewrite-traits-button"></button>
-            <button id="export-json-button"></button>
-            <button id="export-text-button"></button>
-            <button id="copy-traits-button"></button>
-            <button id="clear-input-button"></button>
-            <button id="retry-button"></button>
+    // Save original body content
+    originalBodyHTML = document.body.innerHTML;
 
-            <!-- State containers (existing ones) -->
-            <div id="generation-progress" style="display: none">
-              <p class="progress-text">Generating...</p>
-            </div>
-            <div id="rewritten-traits-container" style="display: none">
-              <h3 id="character-name-display">Character</h3>
-              <div id="traits-sections"></div>
-            </div>
-            <div id="generation-error" style="display: none">
-              <p class="error-message"></p>
-            </div>
-            <div id="empty-state">Empty state</div>
-            
-            <!-- FIXED: The state elements that UIStateManager requires -->
-            <div id="loading-state" style="display: none"></div>
-            <div id="results-state" style="display: none"></div>
-            <div id="error-state" style="display: none"></div>
-          </div>
-        </body>
-      </html>`;
-      
-    dom = new JSDOM(htmlContent);
-    global.document = dom.window.document;
-    global.window = dom.window;
-    global.navigator = { clipboard: { writeText: jest.fn() } };
+    // Set up DOM structure directly in Jest's existing jsdom environment
+    document.body.innerHTML = `
+      <div id="app">
+        <!-- Character input elements -->
+        <textarea id="character-definition"></textarea>
+        <div id="character-input-error" style="display: none"></div>
+        
+        <!-- Control buttons -->
+        <button id="rewrite-traits-button"></button>
+        <button id="export-json-button"></button>
+        <button id="export-text-button"></button>
+        <button id="copy-traits-button"></button>
+        <button id="clear-input-button"></button>
+        <button id="retry-button"></button>
+
+        <!-- State containers (existing ones) -->
+        <div id="generation-progress" style="display: none">
+          <p class="progress-text">Generating...</p>
+        </div>
+        <div id="rewritten-traits-container" style="display: none">
+          <h3 id="character-name-display">Character</h3>
+          <div id="traits-sections"></div>
+        </div>
+        <div id="generation-error" style="display: none">
+          <p class="error-message"></p>
+        </div>
+        <div id="empty-state">Empty state</div>
+        
+        <!-- FIXED: The state elements that UIStateManager requires -->
+        <div id="loading-state" style="display: none"></div>
+        <div id="results-state" style="display: none"></div>
+        <div id="error-state" style="display: none"></div>
+      </div>
+    `;
+
+    // Mock navigator.clipboard if not already present
+    if (!global.navigator) {
+      global.navigator = {};
+    }
+    if (!global.navigator.clipboard) {
+      global.navigator.clipboard = { writeText: jest.fn() };
+    }
 
     // Mock dependencies
     mockDependencies = {
@@ -99,6 +100,8 @@ describe('TraitsRewriterController - UI State Fixes', () => {
       consoleSpy.error.mockRestore();
       consoleSpy.info.mockRestore();
     }
+    // Restore original body HTML
+    document.body.innerHTML = originalBodyHTML;
   });
 
   describe('UI State Management Fix Verification', () => {

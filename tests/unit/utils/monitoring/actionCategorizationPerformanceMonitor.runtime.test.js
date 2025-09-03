@@ -1,9 +1,9 @@
 /**
- * @file Unit tests to reproduce runtime errors in actionCategorizationPerformanceMonitor.js
- * These tests specifically target the process.memoryUsage() calls that fail in browser environment
+ * @file Unit tests for ActionCategorizationPerformanceMonitor browser compatibility
+ * Tests that the monitor handles browser environments gracefully without throwing errors
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { ActionCategorizationPerformanceMonitor } from '../../../../src/utils/monitoring/actionCategorizationPerformanceMonitor.js';
 
 describe('ActionCategorizationPerformanceMonitor - Runtime Error Reproduction', () => {
@@ -29,23 +29,27 @@ describe('ActionCategorizationPerformanceMonitor - Runtime Error Reproduction', 
   });
 
   describe('Browser Environment Memory Access', () => {
-    it('should throw ReferenceError when process.memoryUsage() is called in browser', () => {
+    it('should handle browser environment gracefully without throwing', () => {
       // Simulate browser environment where process is not defined
       delete globalThis.process;
 
-      // Creating the monitor should fail due to process.memoryUsage() in constructor
-      expect(() => {
-        new ActionCategorizationPerformanceMonitor(mockLogger);
-      }).toThrow('process is not defined');
+      // Creating the monitor should work with fallback values
+      const monitor = new ActionCategorizationPerformanceMonitor({ logger: mockLogger });
+      expect(monitor).toBeInstanceOf(ActionCategorizationPerformanceMonitor);
+      
+      // Should be able to get metrics with zero/default values
+      const metrics = monitor.getMetrics();
+      expect(metrics).toBeDefined();
+      expect(metrics.memory.currentHeapUsed).toBe(0);
     });
 
-    it('should throw when process exists but memoryUsage method is missing', () => {
+    it('should handle partial process object without memoryUsage', () => {
       // Simulate partial polyfill where process exists but memoryUsage doesn't
       globalThis.process = { version: 'v16.0.0' };
 
-      expect(() => {
-        new ActionCategorizationPerformanceMonitor(mockLogger);
-      }).toThrow(); // Should throw because process.memoryUsage is not a function
+      // Should not throw - uses fallback values
+      const monitor = new ActionCategorizationPerformanceMonitor({ logger: mockLogger });
+      expect(monitor).toBeInstanceOf(ActionCategorizationPerformanceMonitor);
     });
 
     it('should work properly in Node.js environment with full process object', () => {
@@ -57,101 +61,93 @@ describe('ActionCategorizationPerformanceMonitor - Runtime Error Reproduction', 
           external: 512 * 1024, // 512KB
           rss: 4 * 1024 * 1024, // 4MB
         })),
+        versions: { node: '16.0.0' },
       };
 
-      const monitor = new ActionCategorizationPerformanceMonitor(mockLogger);
+      const monitor = new ActionCategorizationPerformanceMonitor({ logger: mockLogger });
       expect(monitor).toBeInstanceOf(ActionCategorizationPerformanceMonitor);
-      expect(globalThis.process.memoryUsage).toHaveBeenCalled();
+      
+      // Verify memory values are being used
+      const metrics = monitor.getMetrics();
+      expect(metrics.memory.currentHeapUsed).toBeGreaterThan(0);
     });
   });
 
-  describe('Memory Monitoring Method Failures', () => {
-    it('should fail when measuring operation performance in browser', () => {
+  describe('Memory Monitoring Method Operations', () => {
+    it('should handle monitorOperation in browser environment', () => {
       // Setup process mock for constructor to work
       globalThis.process = {
         memoryUsage: jest.fn(() => ({ heapUsed: 1024 * 1024 })),
+        versions: { node: '16.0.0' },
       };
 
-      const monitor = new ActionCategorizationPerformanceMonitor(mockLogger);
+      const monitor = new ActionCategorizationPerformanceMonitor(mockLogger, { enabled: true });
       
       // Now remove process to simulate browser runtime
       delete globalThis.process;
 
-      // Should throw when trying to measure performance
-      expect(() => {
-        monitor.measureOperationPerformance('testOperation', () => {
-          return 'result';
-        });
-      }).toThrow('process is not defined');
+      // Should work with fallback values, not throw
+      const result = monitor.monitorOperation('testOperation', () => {
+        return 'result';
+      });
+      expect(result).toBe('result');
     });
 
-    it('should fail when starting category measurement in browser', () => {
+    it('should handle async operations in browser environment', async () => {
       // Setup process mock for constructor
       globalThis.process = {
         memoryUsage: jest.fn(() => ({ heapUsed: 1024 * 1024 })),
+        versions: { node: '16.0.0' },
       };
 
-      const monitor = new ActionCategorizationPerformanceMonitor(mockLogger);
+      const monitor = new ActionCategorizationPerformanceMonitor(mockLogger, { enabled: true });
       
       // Remove process to simulate browser runtime
       delete globalThis.process;
 
-      // Should throw when trying to start measurement
-      expect(() => {
-        monitor.startCategoryMeasurement('testCategory');
-      }).toThrow('process is not defined');
+      // Should work with fallback values
+      const result = await monitor.monitorAsyncOperation('testAsyncOp', async () => {
+        return 'async-result';
+      });
+      expect(result).toBe('async-result');
     });
 
-    it('should fail when ending category measurement in browser', () => {
-      // Setup for constructor and start measurement
-      globalThis.process = {
-        memoryUsage: jest.fn(() => ({ heapUsed: 1024 * 1024 })),
-      };
-
-      const monitor = new ActionCategorizationPerformanceMonitor(mockLogger);
-      monitor.startCategoryMeasurement('testCategory');
-      
-      // Remove process to simulate browser runtime
-      delete globalThis.process;
-
-      // Should throw when trying to end measurement
-      expect(() => {
-        monitor.endCategoryMeasurement('testCategory');
-      }).toThrow('process is not defined');
-    });
-
-    it('should fail when generating performance report in browser', () => {
+    it('should generate report successfully in browser environment', () => {
       // Setup process mock for constructor
       globalThis.process = {
         memoryUsage: jest.fn(() => ({ heapUsed: 1024 * 1024 })),
+        versions: { node: '16.0.0' },
       };
 
-      const monitor = new ActionCategorizationPerformanceMonitor(mockLogger);
+      const monitor = new ActionCategorizationPerformanceMonitor({ logger: mockLogger });
       
       // Remove process to simulate browser runtime
       delete globalThis.process;
 
-      // Should throw when trying to generate report
-      expect(() => {
-        monitor.generatePerformanceReport();
-      }).toThrow('process is not defined');
+      // Should generate report with fallback values
+      const report = monitor.generateReport();
+      expect(report).toContain('Action Categorization Performance Report');
+      expect(report).toContain('Memory:');
     });
 
-    it('should fail when resetting metrics in browser', () => {
+    it('should reset metrics successfully in browser environment', () => {
       // Setup process mock for constructor
       globalThis.process = {
         memoryUsage: jest.fn(() => ({ heapUsed: 1024 * 1024 })),
+        versions: { node: '16.0.0' },
       };
 
-      const monitor = new ActionCategorizationPerformanceMonitor(mockLogger);
+      const monitor = new ActionCategorizationPerformanceMonitor({ logger: mockLogger });
       
       // Remove process to simulate browser runtime
       delete globalThis.process;
 
-      // Should throw when trying to reset metrics
-      expect(() => {
-        monitor.resetMetrics();
-      }).toThrow('process is not defined');
+      // Should reset metrics with fallback values
+      monitor.resetMetrics();
+      expect(mockLogger.info).toHaveBeenCalledWith('ActionCategorizationPerformanceMonitor: Metrics reset');
+      
+      const metrics = monitor.getMetrics();
+      expect(metrics.memory.currentHeapUsed).toBe(0);
     });
   });
 
@@ -162,9 +158,10 @@ describe('ActionCategorizationPerformanceMonitor - Runtime Error Reproduction', 
         memoryUsage: jest.fn(() => ({
           heapUsed: 1000000,
         })),
+        versions: { node: '16.0.0' },
       };
 
-      const monitor = new ActionCategorizationPerformanceMonitor(mockLogger);
+      const monitor = new ActionCategorizationPerformanceMonitor({ logger: mockLogger });
       expect(monitor).toBeInstanceOf(ActionCategorizationPerformanceMonitor);
     });
 
@@ -173,9 +170,10 @@ describe('ActionCategorizationPerformanceMonitor - Runtime Error Reproduction', 
         memoryUsage: jest.fn(() => ({
           heapUsed: '1000000', // String instead of number
         })),
+        versions: { node: '16.0.0' },
       };
 
-      const monitor = new ActionCategorizationPerformanceMonitor(mockLogger);
+      const monitor = new ActionCategorizationPerformanceMonitor({ logger: mockLogger });
       expect(monitor).toBeInstanceOf(ActionCategorizationPerformanceMonitor);
     });
   });

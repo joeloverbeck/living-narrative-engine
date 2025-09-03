@@ -55,9 +55,10 @@ export default {
   // Setup and teardown files
   setupFilesAfterEnv: [],
 
-  // Exclude performance tests from default test runs
+  // Exclude performance and E2E tests from default test runs
   // Performance tests should be run separately with npm run test:performance
-  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/performance/'],
+  // E2E tests should be run separately with npm run test:e2e
+  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/performance/', '<rootDir>/tests/e2e/'],
 
   // By default, Jest will look for files ending with .js, .jsx, .ts, .tsx, .cjs, .mjs.
   // Your `babel.config.js` is set up to transpile based on your current Node version,

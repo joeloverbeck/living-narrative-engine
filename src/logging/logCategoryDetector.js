@@ -1,6 +1,5 @@
 /**
  * @file Log category detection utility with enhanced patterns and caching
- * @see remoteLogger.js
  */
 
 import LRUCache from '../utils/lruCache.js';

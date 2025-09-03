@@ -56,14 +56,11 @@ import {
 import traceRoutes from '../routes/traceRoutes.js';
 
 // Import debug routes
-import debugRoutes from '../routes/debugRoutes.js';
 
 // Import health routes
 import healthRoutes from '../routes/healthRoutes.js';
 
 // Import log storage and maintenance scheduler services
-import LogStorageService from '../services/logStorageService.js';
-import LogMaintenanceScheduler from '../services/logMaintenanceScheduler.js';
 
 // Initialize Logger
 const proxyLogger = new ConsoleLogger();
@@ -177,29 +174,6 @@ const cacheService = new CacheService(proxyLogger, {
 const httpAgentConfig = appConfigService.getHttpAgentConfig();
 const httpAgentService = new HttpAgentService(proxyLogger, httpAgentConfig);
 
-// Initialize LogStorageService and LogMaintenanceScheduler (if debug logging is enabled)
-let logStorageService = null;
-let logMaintenanceScheduler = null;
-const isTestEnvironment = process.env.NODE_ENV === 'test';
-
-if (appConfigService.isDebugLoggingEnabled() && !isTestEnvironment) {
-  logStorageService = new LogStorageService(proxyLogger, appConfigService);
-  logMaintenanceScheduler = new LogMaintenanceScheduler(
-    proxyLogger,
-    logStorageService,
-    appConfigService
-  );
-  proxyLogger.info(
-    'LLM Proxy Server: Debug logging enabled, initialized log storage and maintenance scheduler'
-  );
-} else {
-  const reason = isTestEnvironment
-    ? 'test environment'
-    : 'debug logging disabled';
-  proxyLogger.info(
-    `LLM Proxy Server: Log maintenance scheduler not initialized (${reason})`
-  );
-}
 
 // Initialize ApiKeyService with caching support
 const apiKeyService = new ApiKeyService(
@@ -316,8 +290,6 @@ app.post(
 // Register trace routes for action tracing system
 app.use('/api/traces', traceRoutes);
 
-// Register debug routes for debug log collection
-app.use('/api/debug-log', debugRoutes);
 
 // Register health check routes
 app.use('/health', healthRoutes);
@@ -336,35 +308,6 @@ const gracefulShutdown = (signal) => {
       proxyLogger.info('LLM Proxy Server: HTTP server closed');
 
       // Clean up services
-      if (logMaintenanceScheduler) {
-        try {
-          await logMaintenanceScheduler.stop();
-          proxyLogger.info(
-            'LLM Proxy Server: Log maintenance scheduler stopped'
-          );
-        } catch (error) {
-          proxyLogger.error(
-            'LLM Proxy Server: Error stopping log maintenance scheduler',
-            {
-              error: error.message,
-            }
-          );
-        }
-      }
-
-      if (logStorageService && logStorageService.shutdown) {
-        try {
-          await logStorageService.shutdown();
-          proxyLogger.info('LLM Proxy Server: Log storage service shut down');
-        } catch (error) {
-          proxyLogger.error(
-            'LLM Proxy Server: Error shutting down log storage service',
-            {
-              error: error.message,
-            }
-          );
-        }
-      }
 
       if (httpAgentService && httpAgentService.cleanup) {
         httpAgentService.cleanup();
@@ -405,79 +348,12 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // Windows-specific handlers for better terminal compatibility
 process.on('SIGHUP', () => gracefulShutdown('SIGHUP'));
 
-// Handle beforeExit to ensure logs are flushed
+// Handle beforeExit - log storage functionality removed
 process.on('beforeExit', async (_code) => {
-  if (logStorageService && logStorageService.flushLogs) {
-    try {
-      await logStorageService.flushLogs();
-      proxyLogger.debug('LLM Proxy Server: Flushed logs on beforeExit');
-    } catch (_error) {
-      proxyLogger.error('LLM Proxy Server: Failed to flush logs on beforeExit', {
-        error: _error.message
-      });
-    }
-  }
+  // Log storage service was removed - no cleanup needed
+  proxyLogger.debug('LLM Proxy Server: Graceful beforeExit handler completed');
 });
 
-// Import WSL-aware platform utilities
-import { shouldUseWindowsTerminalFlush, forceTerminalFlush } from '../utils/platformUtils.js';
-
-// Windows Terminal focus workaround - periodic forced flush for both logs and console output
-// Applies to both native Windows and WSL environments
-if (shouldUseWindowsTerminalFlush()) {
-  /**
-   * Force flush stdout/stderr streams on Windows/WSL to prevent terminal buffering
-   * This addresses the Windows Terminal issue where logs only appear on focus changes
-   */
-  const forceWindowsFlush = () => {
-    forceTerminalFlush(false); // Use the centralized WSL-aware flush utility
-  };
-  
-  // Periodic flush every 100ms for high-volume log batches
-  const windowsFlushInterval = setInterval(async () => {
-    try {
-      // Flush log storage service if available
-      if (logStorageService && logStorageService.flushLogs) {
-        await logStorageService.flushLogs();
-      }
-      
-      // Force console output flush
-      forceWindowsFlush();
-    } catch (_error) {
-      // Silent fail - this is just a backup mechanism for Windows compatibility
-    }
-  }, 100); // Increased frequency to 100ms for high-volume log batches
-  
-  // Don't block process exit
-  if (windowsFlushInterval.unref) {
-    windowsFlushInterval.unref();
-  }
-  
-  // Additional Windows-specific event handlers for immediate flushing
-  // These provide more responsive output on various Windows terminal events
-  try {
-    // Flush on process warnings (Node.js internal events)
-    process.on('warning', () => {
-      forceWindowsFlush();
-    });
-    
-    // Flush periodically on next tick to catch high-frequency logging
-    const nextTickFlush = () => {
-      forceWindowsFlush();
-      // Schedule next flush, but don't create a tight loop
-      setTimeout(() => process.nextTick(nextTickFlush), 100);
-    };
-    
-    // Start the next tick flush cycle (every 100ms + next tick)
-    process.nextTick(nextTickFlush);
-    
-  } catch (_error) {
-    // Ignore errors in setting up additional event handlers
-    proxyLogger.debug('Windows flush event handlers setup failed, using fallback only', {
-      error: _error.message
-    });
-  }
-}
 
 // Asynchronous IIFE for server startup
 (async () => {
@@ -487,21 +363,6 @@ if (shouldUseWindowsTerminalFlush()) {
   // proxyLogger.info('LLM Proxy Server: Initializing LlmConfigService...'); // This is redundant as LlmConfigService logs its own start.
   await llmConfigService.initialize();
 
-  // Start log maintenance scheduler if initialized
-  if (logMaintenanceScheduler) {
-    try {
-      await logMaintenanceScheduler.start();
-    } catch (error) {
-      proxyLogger.error(
-        'LLM Proxy Server: Failed to start log maintenance scheduler',
-        {
-          error: error.message,
-          stack: error.stack,
-        }
-      );
-      // Don't fail server startup if scheduler fails
-    }
-  }
 
   server = app.listen(PORT, '0.0.0.0', () => {
     proxyLogger.info('--- LLM Proxy Server Startup Summary ---');
@@ -623,30 +484,13 @@ if (shouldUseWindowsTerminalFlush()) {
       );
     }
 
-    // Log Maintenance Scheduler Status
-    if (logMaintenanceScheduler) {
-      const schedulerStatus = logMaintenanceScheduler.getStatus();
-      if (schedulerStatus.isRunning) {
-        proxyLogger.info(
-          `LLM Proxy Server: Log Maintenance Scheduler ENABLED - Next rotation check: ${schedulerStatus.nextRotationCheck}, Next cleanup: ${schedulerStatus.nextCleanup}`
-        );
-      } else if (schedulerStatus.isEnabled) {
-        proxyLogger.warn(
-          `LLM Proxy Server: Log Maintenance Scheduler ENABLED but NOT RUNNING - Check for startup errors`
-        );
-      } else {
-        proxyLogger.info(
-          `LLM Proxy Server: Log Maintenance Scheduler DISABLED in configuration`
-        );
-      }
-    } else {
-      const reason = isTestEnvironment
-        ? 'test environment'
-        : 'debug logging disabled';
-      proxyLogger.info(
-        `LLM Proxy Server: Log Maintenance Scheduler NOT INITIALIZED (${reason})`
-      );
-    }
+    // Log Maintenance Scheduler Status (debug logging functionality removed)
+    const reason = process.env.NODE_ENV === 'test'
+      ? 'test environment'
+      : 'debug logging disabled';
+    proxyLogger.info(
+      `LLM Proxy Server: Log Maintenance Scheduler NOT INITIALIZED (${reason})`
+    );
 
     proxyLogger.info('--- End of Startup Summary ---');
   });

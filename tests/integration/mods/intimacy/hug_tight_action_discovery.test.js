@@ -3,12 +3,30 @@
  * @description Tests that the hug_tight action is properly defined and structured.
  * Note: Full action discovery testing would require complex scope engine setup.
  * This test validates the action definition structure for correct integration.
+ * 
+ * This test is migrated to use ModTestFixture pattern for consistency,
+ * but primarily tests action definition structure rather than execution.
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import hugTightAction from '../../../../data/mods/intimacy/actions/hug_tight.action.json';
 
 describe('intimacy:hug_tight action definition', () => {
+  let testFixture;
+
+  beforeEach(async () => {
+    // Initialize a basic test fixture for consistency
+    // Note: This test primarily validates action structure, not execution
+    testFixture = await ModTestFixture.forAction('intimacy', 'intimacy:hug_tight');
+  });
+
+  afterEach(() => {
+    if (testFixture) {
+      testFixture.cleanup();
+    }
+  });
+
   it('should have correct action structure', () => {
     expect(hugTightAction).toBeDefined();
     expect(hugTightAction.id).toBe('intimacy:hug_tight');

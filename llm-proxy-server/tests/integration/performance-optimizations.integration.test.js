@@ -32,10 +32,11 @@ describe('Performance Optimizations Integration Tests', () => {
   let mockAppConfigService;
 
   beforeEach(() => {
-    // Use fake timers to prevent real intervals
-    jest.useFakeTimers();
+    try {
+      // Use fake timers to prevent real intervals
+      jest.useFakeTimers();
 
-    mockLogger = createMockLogger();
+      mockLogger = createMockLogger();
 
     // Setup RetryManager mock
     proxyApiUtils.RetryManager.mockImplementation(() => ({
@@ -101,17 +102,31 @@ describe('Performance Optimizations Integration Tests', () => {
 
     // Reset mocks
     jest.clearAllMocks();
+    } catch (error) {
+      // Ensure timers are cleaned up if setup fails
+      jest.clearAllTimers();
+      jest.useRealTimers();
+      throw error;
+    }
   });
 
   afterEach(() => {
-    // Clean up the httpAgentService to clear intervals
-    if (httpAgentService && httpAgentService.cleanup) {
-      httpAgentService.cleanup();
+    try {
+      // Clean up the httpAgentService to clear intervals
+      if (httpAgentService && httpAgentService.cleanup) {
+        httpAgentService.cleanup();
+      }
+      jest.restoreAllMocks();
+    } finally {
+      // Always clean up timers regardless of other cleanup failures
+      try {
+        jest.clearAllTimers();
+        jest.useRealTimers();
+      } catch (timerError) {
+        // Log timer cleanup failures but don't re-throw
+        console.warn('Timer cleanup failed:', timerError.message);
+      }
     }
-
-    jest.clearAllTimers();
-    jest.useRealTimers();
-    jest.restoreAllMocks();
   });
 
   describe('API Key Caching Integration', () => {

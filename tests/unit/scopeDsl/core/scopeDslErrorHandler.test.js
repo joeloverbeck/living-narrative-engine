@@ -418,7 +418,7 @@ describe('ScopeDslErrorHandler', () => {
       // Should be truncated at depth 3 (depth > 3 condition in code)
       const sanitized = buffer[0].sanitizedContext;
       expect(sanitized.nested.nested.nested.nested).toBe(
-        '[Circular Reference]'
+        '[Max Depth Exceeded]'
       );
     });
   });
@@ -699,8 +699,8 @@ describe('ScopeDslErrorHandler', () => {
       ).toThrow(ScopeDslError);
 
       const buffer = errorHandler.getErrorBuffer();
-      expect(buffer[0].sanitizedContext.badProperty).toBe(
-        '[Sanitization Error]'
+      expect(buffer[0].sanitizedContext.badProperty).toContain(
+        '[Sanitization Error:'
       );
     });
   });

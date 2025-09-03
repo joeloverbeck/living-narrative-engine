@@ -26,6 +26,7 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
     process.env.PROXY_ALLOWED_ORIGIN =
       'http://localhost:8080,http://127.0.0.1:8080';
     process.env.NODE_ENV = 'test';
+    process.env.LLM_CONFIG_PATH = '../config/llm-configs.json';
 
     serverProcess = spawn('node', [serverPath], {
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -126,28 +127,26 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
           // We expect either success or 404, not connection refused
           expect([200, 404]).toContain(response.status);
         } catch (error) {
-          // If health endpoint doesn't exist, try a basic request
+          // If health endpoint doesn't exist, try a basic request to root
           if (error.code === 'ECONNREFUSED') {
             throw new Error(
               `Server not accessible at ${endpoint}: ${error.message}`
             );
           }
 
-          // Try the debug-log endpoint instead
+          // Try the root endpoint instead
           try {
-            const debugResponse = await fetch(`${endpoint}/api/debug-log`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ logs: [] }),
+            const rootResponse = await fetch(`${endpoint}/`, {
+              method: 'GET',
               timeout: CONNECTION_TEST_TIMEOUT,
             });
 
-            // Should get some response, even if validation fails
-            expect(debugResponse.status).toBeDefined();
-          } catch (debugError) {
-            if (debugError.code === 'ECONNREFUSED') {
+            // Should get some response, even if it's an error
+            expect(rootResponse.status).toBeDefined();
+          } catch (rootError) {
+            if (rootError.code === 'ECONNREFUSED') {
               throw new Error(
-                `Server not accessible at ${endpoint}: ${debugError.message}`
+                `Server not accessible at ${endpoint}: ${rootError.message}`
               );
             }
           }
@@ -156,130 +155,142 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
     });
   });
 
-  describe('Debug Log Endpoint Availability', () => {
-    it('should have debug-log endpoint available at expected URLs', async () => {
+  describe('Health Endpoint Availability', () => {
+    it('should have health endpoint available at expected URLs', async () => {
       const testEndpoints = [
-        `http://localhost:${SERVER_PORT}/api/debug-log`,
-        `http://127.0.0.1:${SERVER_PORT}/api/debug-log`,
+        `http://localhost:${SERVER_PORT}/health`,
+        `http://127.0.0.1:${SERVER_PORT}/health`,
       ];
 
       for (const endpoint of testEndpoints) {
         const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Origin: 'http://localhost:8080', // Valid CORS origin
-          },
-          body: JSON.stringify({
-            logs: [
-              {
-                level: 'info',
-                message: 'Test log message',
-                timestamp: new Date().toISOString(),
-                sessionId: 'test-session',
-              },
-            ],
-          }),
+          method: 'GET',
           timeout: CONNECTION_TEST_TIMEOUT,
         });
 
-        // Should not get connection refused - expect valid HTTP response
+        // Should get a successful response from health endpoint
         expect(response).toBeDefined();
-        expect(response.status).toBeDefined();
-
-        // Should be either success (200) or validation error (400), not connection error
-        expect([200, 400, 422]).toContain(response.status);
+        expect(response.status).toBe(200);
       }
     });
 
+    it('should have readiness endpoint available', async () => {
+      const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/health/ready`, {
+        method: 'GET',
+        timeout: CONNECTION_TEST_TIMEOUT,
+      });
+
+      // Should get a response from readiness endpoint (may be 200 or 503 depending on state)
+      expect(response).toBeDefined();
+      expect([200, 503]).toContain(response.status);
+    });
+  });
+
+  describe('Metrics Endpoint Availability', () => {
+    it('should have metrics endpoint available', async () => {
+      const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/metrics`, {
+        method: 'GET',
+        timeout: CONNECTION_TEST_TIMEOUT,
+      });
+
+      // Should get metrics response
+      expect(response).toBeDefined();
+      expect(response.status).toBe(200);
+      
+      // Should return Prometheus format
+      const contentType = response.headers.get('Content-Type');
+      expect(contentType).toContain('text/plain');
+    });
+  });
+
+  describe('LLM Request Endpoint Availability', () => {
+    it('should have llm-request endpoint available but reject invalid requests', async () => {
+      const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/api/llm-request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Origin: 'http://localhost:8080',
+        },
+        body: JSON.stringify({
+          // Invalid request - missing required fields
+          invalidField: 'test'
+        }),
+        timeout: CONNECTION_TEST_TIMEOUT,
+      });
+
+      // Should get a response (likely 400 for validation error, not connection refused)
+      expect(response).toBeDefined();
+      expect(response.status).toBeDefined();
+      expect([400, 422]).toContain(response.status); // Validation error expected
+    });
+  });
+
+  describe('Traces Endpoint Availability', () => {
+    it('should have traces endpoint available', async () => {
+      const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/api/traces`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Origin: 'http://localhost:8080',
+        },
+        body: JSON.stringify({
+          // Basic trace data - may not be valid but should get a response
+          action: 'test'
+        }),
+        timeout: CONNECTION_TEST_TIMEOUT,
+      });
+
+      // Should get a response from traces endpoint (not connection refused)
+      expect(response).toBeDefined();
+      expect(response.status).toBeDefined();
+      // Accept any valid HTTP status (endpoint exists and responds)
+      expect(response.status).toBeGreaterThanOrEqual(200);
+      expect(response.status).toBeLessThan(600);
+    });
+  });
+
+  describe('CORS Configuration', () => {
     it('should handle CORS properly for allowed origins', async () => {
       const response = await fetch(
-        `http://127.0.0.1:${SERVER_PORT}/api/debug-log`,
+        `http://127.0.0.1:${SERVER_PORT}/health`,
         {
           method: 'OPTIONS', // Preflight request
           headers: {
             Origin: 'http://localhost:8080',
-            'Access-Control-Request-Method': 'POST',
+            'Access-Control-Request-Method': 'GET',
             'Access-Control-Request-Headers': 'Content-Type',
           },
           timeout: CONNECTION_TEST_TIMEOUT,
         }
       );
 
-      // OPTIONS requests typically return 204 No Content for CORS preflight
+      // OPTIONS requests typically return 200 or 204 No Content for CORS preflight
       expect([200, 204]).toContain(response.status);
       expect(response.headers.get('Access-Control-Allow-Origin')).toBeTruthy();
     });
-  });
 
-  describe('Race Condition Testing', () => {
-    it('should handle rapid connection attempts during startup phase', async () => {
-      // Simulate the race condition where client starts logging immediately
-      const connectionPromises = [];
-
-      for (let i = 0; i < 10; i++) {
-        const promise = fetch(`http://127.0.0.1:${SERVER_PORT}/api/debug-log`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Origin: 'http://localhost:8080',
-          },
-          body: JSON.stringify({
-            logs: [
-              {
-                level: 'info',
-                message: `Rapid test message ${i}`,
-                timestamp: new Date().toISOString(),
-                sessionId: 'race-condition-test',
-              },
-            ],
-          }),
-          timeout: 5000,
-        }).catch((error) => ({ error: error.message }));
-
-        connectionPromises.push(promise);
-      }
-
-      const responses = await Promise.all(connectionPromises);
-
-      // All requests should get valid responses, not connection failures
-      for (const response of responses) {
-        if (response.error) {
-          expect(response.error).not.toContain('ECONNREFUSED');
-          expect(response.error).not.toContain('Connection refused');
-        } else {
-          expect(response.status).toBeDefined();
-        }
-      }
-    });
-  });
-
-  describe('Server Configuration Validation', () => {
-    it('should be configured with correct CORS origins', async () => {
-      // This test validates the server configuration matches client expectations
+    it('should be configured with correct CORS origins for API endpoints', async () => {
+      // Test CORS configuration with health endpoint (simpler than LLM requests)
       const testOrigins = [
         'http://localhost:8080',
         'http://127.0.0.1:8080',
-        'http://localhost:8081',
-        'http://127.0.0.1:8081',
       ];
 
       for (const origin of testOrigins) {
         const response = await fetch(
-          `http://127.0.0.1:${SERVER_PORT}/api/debug-log`,
+          `http://127.0.0.1:${SERVER_PORT}/health`,
           {
-            method: 'POST',
+            method: 'GET',
             headers: {
-              'Content-Type': 'application/json',
               Origin: origin,
             },
-            body: JSON.stringify({ logs: [] }),
             timeout: 5000,
           }
         );
 
         // Should not get CORS errors for allowed origins
         expect(response.status).not.toBe(403);
+        expect(response.status).toBe(200);
       }
     });
   });

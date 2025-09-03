@@ -52,8 +52,6 @@ class ScopeEngine extends IScopeEngine {
   constructor({ scopeRegistry = null, errorHandler = null } = {}) {
     super();
     this.maxDepth = 12;
-    this.depthGuard = createDepthGuard(this.maxDepth);
-    this.cycleDetector = createCycleDetector();
     this.contextMerger = new ContextMerger();
     this.scopeRegistry = scopeRegistry;
     this.errorHandler = errorHandler;
@@ -61,9 +59,6 @@ class ScopeEngine extends IScopeEngine {
 
   setMaxDepth(n) {
     this.maxDepth = n;
-    if (this.depthGuard) {
-      this.depthGuard = createDepthGuard(n);
-    }
   }
 
   /**
@@ -242,7 +237,7 @@ class ScopeEngine extends IScopeEngine {
       resolvers.push(
         createScopeReferenceResolver({
           scopeRegistry: this.scopeRegistry,
-          cycleDetector: this.cycleDetector,
+          cycleDetector: null, // Use resolution-scoped cycle detector from context
           errorHandler: this.errorHandler,
         })
       );
@@ -285,10 +280,10 @@ class ScopeEngine extends IScopeEngine {
     const source = 'ScopeEngine';
     trace?.addLog('step', 'Starting scope resolution.', source, { ast });
 
-    // Reset cycle detector and depth guard for each top-level resolution
-    // This ensures no state persists between separate resolve() calls
-    this.cycleDetector = createCycleDetector();
-    this.depthGuard = createDepthGuard(this.maxDepth);
+    // Create isolated cycle detector and depth guard for this resolution
+    // This ensures no state is shared between concurrent resolve() calls
+    const cycleDetector = createCycleDetector();
+    const depthGuard = createDepthGuard(this.maxDepth);
 
     // Ensure engine is initialized with resolvers
     const dispatcher = this._ensureInitialized(runtimeCtx);
@@ -300,14 +295,14 @@ class ScopeEngine extends IScopeEngine {
       trace,
       dispatcher: {
         resolve: (node, innerCtx) =>
-          this._resolveWithDepthAndCycleChecking(node, innerCtx, dispatcher),
+          this._resolveWithDepthAndCycleChecking(node, innerCtx, dispatcher, cycleDetector, depthGuard),
       },
       depth: 0,
-      cycleDetector: this.cycleDetector,
-      depthGuard: this.depthGuard,
+      cycleDetector,
+      depthGuard,
     };
 
-    const result = this._resolveWithDepthAndCycleChecking(ast, ctx, dispatcher);
+    const result = this._resolveWithDepthAndCycleChecking(ast, ctx, dispatcher, cycleDetector, depthGuard);
 
     const finalTargets = Array.from(result);
     trace?.addLog(
@@ -324,12 +319,15 @@ class ScopeEngine extends IScopeEngine {
    *
    * @param {object} node - AST node
    * @param {object} ctx - Resolution context
+   * @param {object} dispatcher - Node dispatcher for resolution
+   * @param {object} cycleDetector - Cycle detector instance for this resolution
+   * @param {object} depthGuard - Depth guard instance for this resolution
    * @returns {Set} Set of resolved values
    * @private
    */
-  _resolveWithDepthAndCycleChecking(node, ctx, dispatcher) {
+  _resolveWithDepthAndCycleChecking(node, ctx, dispatcher, cycleDetector, depthGuard) {
     // Check depth
-    ctx.depthGuard.ensure(ctx.depth);
+    depthGuard.ensure(ctx.depth);
 
     // Generate key for cycle detection
     let nodeKey;
@@ -346,7 +344,7 @@ class ScopeEngine extends IScopeEngine {
     }
 
     // Enter cycle detection
-    ctx.cycleDetector.enter(nodeKey);
+    cycleDetector.enter(nodeKey);
 
     try {
       // Create new context with incremented depth and wrapped dispatcher
@@ -361,7 +359,9 @@ class ScopeEngine extends IScopeEngine {
             return this._resolveWithDepthAndCycleChecking(
               innerNode,
               mergedCtx,
-              dispatcher
+              dispatcher,
+              cycleDetector,
+              depthGuard
             );
           },
         },
@@ -371,7 +371,7 @@ class ScopeEngine extends IScopeEngine {
       return dispatcher.resolve(node, newCtx);
     } finally {
       // Always leave cycle detection
-      ctx.cycleDetector.leave();
+      cycleDetector.leave();
     }
   }
 }

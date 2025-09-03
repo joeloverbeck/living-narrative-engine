@@ -6,141 +6,47 @@
  * see fondle_ass_action_discovery.test.js.
  */
 
-import { describe, it, beforeEach, expect, jest } from '@jest/globals';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import fondleAssRule from '../../../../data/mods/intimacy/rules/handle_fondle_ass.rule.json';
 import eventIsActionFondleAss from '../../../../data/mods/intimacy/conditions/event-is-action-fondle-ass.condition.json';
-import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../../src/utils/macroUtils.js';
-import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
-import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import DispatchPerceptibleEventHandler from '../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
-
-/**
- * Creates handlers needed for the fondle_ass rule.
- *
- * @param {object} entityManager - Entity manager instance
- * @param {object} eventBus - Event bus instance
- * @param {object} logger - Logger instance
- * @returns {object} Handlers object
- */
-function createHandlers(entityManager, eventBus, logger) {
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
-  };
-
-  return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
-  };
-}
 
 describe('intimacy:fondle_ass action integration', () => {
-  let testEnv;
+  let testFixture;
 
-  beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(fondleAssRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
-    const dataRegistry = {
-      getAllSystemRules: jest
-        .fn()
-        .mockReturnValue([{ ...fondleAssRule, actions: expanded }]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'intimacy:event-is-action-fondle-ass'
-          ? eventIsActionFondleAss
-          : undefined
-      ),
-    };
-
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      entities: [],
-      rules: [{ ...fondleAssRule, actions: expanded }],
-      dataRegistry,
-    });
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction(
+      'intimacy',
+      'intimacy:fondle_ass',
+      fondleAssRule,
+      eventIsActionFondleAss
+    );
   });
 
   afterEach(() => {
-    if (testEnv) {
-      testEnv.cleanup();
-    }
+    testFixture.cleanup();
   });
 
   it('performs fondle ass action over clothing successfully', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
+    const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
+    
+    // Add anatomy and clothing components
+    scenario.target.components['anatomy:body'] = { body: { root: 'torso1' } };
+    scenario.target.components['clothing:equipment'] = {
+      equipped: {
+        torso_lower: {
+          underwear: null,
+          base: null,
+          outer: ['skirt1'],
         },
       },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['beth'] },
-        },
-      },
-      {
-        id: 'beth',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['alice'] },
-          'anatomy:body': {
-            body: {
-              root: 'torso1',
-            },
-          },
-          'clothing:equipment': {
-            equipped: {
-              torso_lower: {
-                underwear: null,
-                base: null,
-                outer: ['skirt1'],
-              },
-            },
-          },
-        },
-      },
+    };
+    
+    const complexEntities = [
       {
         id: 'skirt1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'pleated skirt' },
+          'core:name': { text: 'pleated skirt' },
           'clothing:item': {
             slot: 'torso_lower',
             layer: 'outer',
@@ -177,18 +83,20 @@ describe('intimacy:fondle_ass action integration', () => {
           },
         },
       },
-    ]);
+    ];
+    
+    testFixture.reset([scenario.actor, scenario.target, ...complexEntities]);
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
-      actorId: 'alice',
+      actorId: scenario.actor.id,
       actionId: 'intimacy:fondle_ass',
-      primaryId: 'beth',
+      primaryId: scenario.target.id,
       secondaryId: 'skirt1',
-      originalInput: 'fondle beth ass over skirt',
+      originalInput: 'fondle ass over skirt',
     });
 
-    const types = testEnv.events.map((e) => e.eventType);
+    const types = testFixture.events.map((e) => e.eventType);
     expect(types).toEqual(
       expect.arrayContaining([
         'core:perceptible_event',
@@ -203,108 +111,57 @@ describe('intimacy:fondle_ass action integration', () => {
   });
 
   it('does not fire rule for different action', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
-        },
-      },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
+    const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
-    const initialEventCount = testEnv.events.length;
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testFixture.eventBus.dispatch('core:attempt_action', {
       actionId: 'core:wait',
-      actorId: 'alice',
+      actorId: scenario.actor.id,
     });
 
-    // Rule should not trigger for a different action
-    const newEventCount = testEnv.events.length;
-    expect(newEventCount).toBe(initialEventCount + 1); // Only the dispatched event
+    // Should only have the attempt_action event
+    testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
   });
 
   it('handles missing clothing target gracefully', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
-        },
-      },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: [] },
-        },
-      },
-    ]);
+    const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
+    
+    scenario.actor.components['positioning:closeness'] = { partners: [] };
+    testFixture.reset([scenario.actor]);
 
     // This test verifies the rule handles missing entities gracefully
     // The action prerequisites would normally prevent this, but we test rule robustness
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testFixture.eventBus.dispatch('core:attempt_action', {
       actionId: 'intimacy:fondle_ass',
-      actorId: 'alice',
+      actorId: scenario.actor.id,
       primaryId: 'nonexistent',
       secondaryId: 'nonexistent_clothing',
     });
 
     // Should still dispatch events even with missing target
-    const types = testEnv.events.map((e) => e.eventType);
+    const types = testFixture.events.map((e) => e.eventType);
     expect(types).toContain('core:perceptible_event');
   });
 
   it('verifies message content for fondle ass action with clothing', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
+    const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
+    
+    // Add anatomy and clothing components
+    scenario.target.components['anatomy:body'] = { body: { root: 'torso1' } };
+    scenario.target.components['clothing:equipment'] = {
+      equipped: {
+        torso_lower: {
+          underwear: null,
+          base: ['pants1'],
+          outer: null,
         },
       },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['beth'] },
-        },
-      },
-      {
-        id: 'beth',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['alice'] },
-          'anatomy:body': {
-            body: {
-              root: 'torso1',
-            },
-          },
-          'clothing:equipment': {
-            equipped: {
-              torso_lower: {
-                underwear: null,
-                base: ['pants1'],
-                outer: null,
-              },
-            },
-          },
-        },
-      },
+    };
+    
+    const complexEntities = [
       {
         id: 'pants1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'jeans' },
+          'core:name': { text: 'jeans' },
           'clothing:item': {
             slot: 'torso_lower',
             layer: 'base',
@@ -331,18 +188,20 @@ describe('intimacy:fondle_ass action integration', () => {
           },
         },
       },
-    ]);
+    ];
+    
+    testFixture.reset([scenario.actor, scenario.target, ...complexEntities]);
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
-      actorId: 'alice',
+      actorId: scenario.actor.id,
       actionId: 'intimacy:fondle_ass',
-      primaryId: 'beth',
+      primaryId: scenario.target.id,
       secondaryId: 'pants1',
-      originalInput: 'fondle beth ass over jeans',
+      originalInput: 'fondle ass over jeans',
     });
 
-    const perceptibleEvents = testEnv.events.filter(
+    const perceptibleEvents = testFixture.events.filter(
       (e) => e.eventType === 'core:perceptible_event'
     );
 
