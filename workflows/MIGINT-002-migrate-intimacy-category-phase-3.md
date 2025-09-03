@@ -2,14 +2,14 @@
 
 ## Objective
 
-Complete the intimacy category migration by converting the final 8 test files from legacy patterns to ModTestFixture infrastructure, including complex rule tests and a special case file, achieving full category modernization.
+Complete the intimacy category migration by converting the final 9 test files from legacy patterns to ModTestFixture infrastructure, including complex rule tests and a special case file, achieving full category modernization.
 
 ## Background
 
-Phases 1 and 2 will have successfully migrated 18 of the 27 intimacy test files to ModTestFixture. Phase 3 completes this effort by addressing the remaining files, which include:
+Phases 1 and 2 will have successfully migrated 18 of the 27 intimacy test files to ModTestFixture. Phase 3 completes this effort by addressing the remaining 9 files, which include:
 - 2 standard action tests in the root directory
 - 6 rule integration tests in the rules/ subdirectory  
-- 1 special case test with custom setup pattern
+- 1 special case test with custom setup pattern (recommended to AVOID migration)
 
 This phase tackles the most complex migrations, including tests that may have unique validation requirements or cross-module dependencies.
 
@@ -34,11 +34,12 @@ This phase tackles the most complex migrations, including tests that may have un
 7. `rules/runFingersThroughHairRule.integration.test.js`
 8. `rules/thumbWipeCheekRule.integration.test.js`
 
-### Special Case (1 file - evaluate for migration feasibility)
+### Special Case (1 file - AVOID migration)
 - `rules/closenessActionAvailability.integration.test.js`
-  - Currently uses custom setup without createRuleTestEnvironment
-  - Assess if ModTestFixture can support its requirements
-  - May remain as-is if it tests cross-module functionality
+  - Uses complex custom setup for positioning/intimacy integration
+  - Tests cross-module dependencies with extensive manual handler setup
+  - **RECOMMENDATION**: Do NOT migrate - modernize in-place instead
+  - This file's complexity justifies keeping specialized test pattern
 
 ## Implementation Strategy
 
@@ -48,18 +49,19 @@ This phase tackles the most complex migrations, including tests that may have un
 - Focus on maintaining consistency
 
 ### Phase 3B: Rule Integration Tests (Files 3-8)
-- Adapt ModTestFixture for rule-specific testing
-- May require different fixture initialization
-- Consider if `ModTestFixture.forRule()` variant is needed
-- Document any pattern adaptations required
+- Use ModTestFixture.forRule() for rule-specific testing
+- Rule-specific fixture initialization available
+- ModTestFixture.forRule() method exists and supports rule testing
+- Document rule test patterns for future reference
 
-### Phase 3C: Special Case Analysis
-- Analyze closenessActionAvailability.integration.test.js requirements
-- Determine if ModTestFixture can support its test scenarios
-- If not suitable for migration:
-  - Document why it remains different
-  - Ensure it follows modern best practices
-  - Consider creating a specialized test pattern
+### Phase 3C: Special Case Handling
+- **Do NOT attempt migration** of closenessActionAvailability.integration.test.js
+- This file has complex positioning/intimacy cross-module dependencies
+- Instead, apply modern best practices to existing custom setup:
+  - Code formatting and style improvements
+  - Add missing JSDoc documentation
+  - Ensure consistent error handling
+- Document this as an acceptable exception to migration
 
 ## Implementation Patterns
 
@@ -90,7 +92,7 @@ describe('intimacy:[action] action integration', () => {
 
 ### For Rule Integration Tests
 ```javascript
-// May require adaptation for rule-specific testing
+// Pattern for rule-specific testing using ModTestFixture.forRule()
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../../common/mods/ModTestFixture.js';
 
@@ -98,14 +100,16 @@ describe('[rule_name] rule integration', () => {
   let testFixture;
 
   beforeEach(async () => {
-    // Investigate if ModTestFixture supports rule testing
-    // May need ModTestFixture.forRule() or similar
-    testFixture = await ModTestFixture.forAction(
+    // Use ModTestFixture.forRule() for rule testing
+    testFixture = await ModTestFixture.forRule(
       'intimacy',
-      'intimacy:[associated_action]',
-      ruleFile
-      // May need different initialization
+      'intimacy:[rule_name]'
+      // Auto-loading preferred, or explicit rule/condition files
     );
+  });
+
+  afterEach(() => {
+    testFixture.cleanup();
   });
 
   // Rule-specific test scenarios...
@@ -137,21 +141,21 @@ For each file, evaluate:
 ### Migration Requirements
 
 - [ ] **Standard Action Tests (2 files)**
-  - [ ] Both files migrated to ModTestFixture
-  - [ ] Following established patterns
+  - [ ] Both files migrated to ModTestFixture.forAction()
+  - [ ] Following established patterns from Phase 1/2
   - [ ] 80-90% code reduction achieved
 
 - [ ] **Rule Integration Tests (6 files)**
-  - [ ] Migration feasibility assessed for each
-  - [ ] Migrated files use appropriate ModTestFixture pattern
-  - [ ] Rule-specific adaptations documented
-  - [ ] Test coverage maintained
+  - [ ] All 6 files migrated using ModTestFixture.forRule()
+  - [ ] Rule-specific patterns documented
+  - [ ] Auto-loading feature utilized where possible
+  - [ ] Test coverage maintained with improved maintainability
 
 - [ ] **Special Case Handling**
-  - [ ] closenessActionAvailability.integration.test.js evaluated
-  - [ ] Migration decision documented with rationale
-  - [ ] If not migrated, modernization improvements applied
-  - [ ] Pattern documented for similar future cases
+  - [ ] closenessActionAvailability.integration.test.js left unmigrated
+  - [ ] Modernization improvements applied in-place
+  - [ ] Decision rationale documented for future reference
+  - [ ] Exception pattern established for complex cross-module tests
 
 ### Quality Metrics
 
@@ -176,7 +180,7 @@ For each file, evaluate:
 ## Deliverables
 
 1. **Migrated Test Files**
-   - Up to 8 files converted to ModTestFixture
+   - Up to 8 files converted to ModTestFixture (8 of 9 target files)
    - Appropriate patterns for each test type
    - Maintained test coverage and quality
 
@@ -198,9 +202,9 @@ For each file, evaluate:
 ## Success Metrics
 
 ### Quantitative
-- [ ] All feasible files migrated (target: 7-8 of 8)
-- [ ] Overall intimacy category: >90% files on ModTestFixture
-- [ ] Code reduction: Average 70%+ across Phase 3
+- [ ] All feasible files migrated (target: 8 of 9 files)
+- [ ] Overall intimacy category: 26 of 27 files (96%) on ModTestFixture
+- [ ] Code reduction: Average 70%+ across Phase 3 migrated files
 - [ ] All tests passing without regression
 
 ### Qualitative
@@ -219,9 +223,9 @@ Upon Phase 3 completion:
 
 ## Definition of Done
 
-- [ ] All 8 target files evaluated for migration
-- [ ] Feasible files successfully migrated
-- [ ] Non-migrated files have documented rationale
+- [ ] All 9 target files evaluated for migration
+- [ ] 8 feasible files successfully migrated
+- [ ] 1 non-migrated file (closenessActionAvailability) has documented rationale
 - [ ] All tests passing with acceptable performance
 - [ ] Migration documentation complete
-- [ ] Category migration considered complete
+- [ ] Category migration considered complete (96% modernized)
