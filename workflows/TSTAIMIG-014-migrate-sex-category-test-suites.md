@@ -8,6 +8,20 @@ Migrate the 10 test files in the Sex category from legacy patterns to the new te
 
 The Sex category represents complex anatomy-based testing patterns with clothing state management, action prerequisites based on anatomy, and multi-component validation requirements. This migration builds on all previous category successes while introducing the most complex entity setup patterns.
 
+### Current Test State
+The sex category tests are currently using the OLD patterns with:
+- `createRuleTestEnvironment` for test setup
+- Manual handler creation via `new OperationHandler()`
+- Direct entity object creation without builders
+- No `ModTestFixture` usage
+
+They need to migrate TO the new patterns:
+- `ModTestFixture.forAction()` for test setup (with async/await)
+- Automatic handler creation via fixtures
+- `ModEntityBuilder` for all entity creation
+- Standard assertion helpers from `ModAssertionHelpers`
+- Proper anatomy entity structure (separate entities with `anatomy:part` component)
+
 ## Dependencies
 
 - **TSTAIMIG-013**: Intimacy category validation completed
@@ -67,16 +81,38 @@ The Sex category represents complex anatomy-based testing patterns with clothing
 1. **setupAnatomyComponents() Pattern Creation**
    ```javascript
    setupAnatomyComponents() {
+     // Actors reference their root body part
      const actor = new ModEntityBuilder('actor1')
        .withName('TestActor')
        .atLocation('test-location')
-       .withComponent('anatomy:chest', { 
+       .withBody('actor1_torso')  // Reference to root anatomy entity
+       .build();
+       
+     // Anatomy parts are SEPARATE entities
+     const actorTorso = new ModEntityBuilder('actor1_torso')
+       .asBodyPart({
+         parent: null,  // Root part has no parent
+         children: ['actor1_chest', 'actor1_genitals'],
+         subType: 'torso'
+       })
+       .build();
+       
+     const actorChest = new ModEntityBuilder('actor1_chest')
+       .asBodyPart({
+         parent: 'actor1_torso',
+         children: [],
+         subType: 'chest',
          size: 'medium',
          covered: false,
          sensitivity: 'normal'
        })
-       .withComponent('anatomy:genitals', {
-         type: 'penis',
+       .build();
+       
+     const actorGenitals = new ModEntityBuilder('actor1_genitals')
+       .asBodyPart({
+         parent: 'actor1_torso',
+         children: [],
+         subType: 'penis',
          size: 'average',
          state: 'flaccid'
        })
@@ -85,18 +121,42 @@ The Sex category represents complex anatomy-based testing patterns with clothing
      const target = new ModEntityBuilder('target1')
        .withName('TestTarget')
        .inSameLocationAs(actor)
-       .withComponent('anatomy:chest', {
-         size: 'large', 
-         covered: true,
-         sensitivity: 'high'
-       })
+       .withBody('target1_torso')
        .withClothing({
          'clothing:shirt': { worn: true, coverage: ['chest'] },
          'clothing:bra': { worn: true, coverage: ['chest'] }
        })
        .build();
        
-     return { actor, target };
+     // Target anatomy entities
+     const targetTorso = new ModEntityBuilder('target1_torso')
+       .asBodyPart({
+         parent: null,
+         children: ['target1_chest'],
+         subType: 'torso'
+       })
+       .build();
+       
+     const targetChest = new ModEntityBuilder('target1_chest')
+       .asBodyPart({
+         parent: 'target1_torso',
+         children: [],
+         subType: 'chest',
+         size: 'large',
+         covered: true,
+         sensitivity: 'high'
+       })
+       .build();
+       
+     return { 
+       actor, 
+       actorTorso,
+       actorChest,
+       actorGenitals,
+       target,
+       targetTorso,
+       targetChest
+     };
    }
    ```
 
@@ -123,18 +183,29 @@ The Sex category represents complex anatomy-based testing patterns with clothing
 1. **Anatomy Prerequisites Validation**
    ```javascript
    validateAnatomyPrerequisites() {
-     // Use standard assertion helpers for anatomy validation
-     ModAssertionHelpers.assertComponentPresent(
+     // Use existing assertion helpers for anatomy validation
+     ModAssertionHelpers.assertEntityHasComponents(
        this.entityManager,
-       this.actor.id,
-       'anatomy:chest'
+       this.actorChest.id,
+       ['anatomy:part']
      );
      
-     ModAssertionHelpers.assertComponentState(
+     // For component state validation, use direct expectations
+     const chestPart = this.entityManager.getComponentData(
+       this.targetChest.id,
+       'anatomy:part'
+     );
+     expect(chestPart.covered).toBe(false);
+     
+     // Or use assertBodyPart for structured validation
+     ModAssertionHelpers.assertBodyPart(
        this.entityManager,
-       this.target.id, 
-       'anatomy:chest',
-       { covered: false }
+       this.targetChest.id,
+       {
+         parent: 'target1_torso',
+         subType: 'chest',
+         covered: false
+       }
      );
    }
    ```
@@ -155,25 +226,72 @@ The Sex category represents complex anatomy-based testing patterns with clothing
    }
    ```
 
-### Phase 3: File-by-File Migration
+### Phase 3: Test Fixture Setup with Async/Await
+
+1. **Proper Fixture Creation Pattern**
+   ```javascript
+   describe('Sex Action Tests', () => {
+     let testFixture;
+     let entities;
+     
+     beforeEach(async () => {  // Note the async
+       // Create the test fixture - this is async!
+       testFixture = await ModTestFixture.forAction(  // Note the await
+         'sex',
+         'sex:fondle_breasts'
+         // Rule and condition files are auto-loaded
+       );
+       
+       // Setup anatomy entities
+       entities = setupAnatomyComponents();
+       
+       // Add entities to the test environment
+       Object.values(entities).forEach(entity => {
+         testFixture.addEntity(entity);
+       });
+     });
+     
+     afterEach(() => {
+       testFixture?.cleanup();
+     });
+     
+     it('should handle sexual interaction with anatomy', async () => {
+       // Execute the action
+       const result = await testFixture.executeAction({
+         actor: entities.actor.id,
+         target: entities.target.id
+       });
+       
+       // Validate results
+       ModAssertionHelpers.assertActionSuccess(
+         testFixture.capturedEvents,
+         'Sexual action executed successfully'
+       );
+     });
+   });
+   ```
+
+### Phase 4: File-by-File Migration
 
 1. **Pattern Application**
    - Apply anatomy setup patterns consistently
    - Implement clothing state management standardization
    - Convert prerequisites validation to helper usage
    - Preserve all explicit content validation logic
+   - Always use async/await for fixture creation
 
 2. **Quality Validation**
    - Ensure all anatomy scenarios preserved
    - Validate clothing state transitions maintained
    - Confirm prerequisites checking accuracy
    - Verify multi-component integration functionality
+   - Confirm all async operations properly awaited
 
 ## Migration Patterns for Sex Category
 
 ### Pattern 1: Anatomy Component Setup
 ```javascript
-// Legacy: Manual anatomy component addition
+// Legacy: Manual anatomy component addition to single entity
 gameEngine.addComponent(actor, 'anatomy:chest', {
   size: 'medium', covered: false, sensitivity: 'normal'
 });
@@ -181,13 +299,38 @@ gameEngine.addComponent(actor, 'anatomy:genitals', {
   type: 'penis', size: 'average', state: 'flaccid'  
 });
 
-// Migrated: ModEntityBuilder with anatomy
+// Migrated: Separate anatomy entities with proper structure
 const actor = new ModEntityBuilder('actor1')
-  .withComponent('anatomy:chest', { 
-    size: 'medium', covered: false, sensitivity: 'normal'
+  .withName('TestActor')
+  .withBody('actor1_torso')  // Reference to root anatomy entity
+  .build();
+
+const actorTorso = new ModEntityBuilder('actor1_torso')
+  .asBodyPart({
+    parent: null,
+    children: ['actor1_chest', 'actor1_genitals'],
+    subType: 'torso'
   })
-  .withComponent('anatomy:genitals', {
-    type: 'penis', size: 'average', state: 'flaccid'
+  .build();
+
+const actorChest = new ModEntityBuilder('actor1_chest')
+  .asBodyPart({
+    parent: 'actor1_torso',
+    children: [],
+    subType: 'chest',
+    size: 'medium',
+    covered: false,
+    sensitivity: 'normal'
+  })
+  .build();
+
+const actorGenitals = new ModEntityBuilder('actor1_genitals')
+  .asBodyPart({
+    parent: 'actor1_torso',
+    children: [],
+    subType: 'penis',
+    size: 'average',
+    state: 'flaccid'
   })
   .build();
 ```
@@ -216,14 +359,24 @@ expect(anatomyComponent.sensitivity).toBe('high');
 const clothingComponent = gameEngine.getComponent(target, 'clothing:shirt');
 expect(clothingComponent.worn).toBe(false);
 
-// Migrated: Integrated validation helpers
-ModAssertionHelpers.assertComponentState(
-  this.entityManager, actor.id, 'anatomy:chest', 
-  { sensitivity: 'high' }
+// Migrated: Direct validation with proper entity structure
+const chestData = this.entityManager.getComponentData(
+  actorChest.id, 
+  'anatomy:part'
 );
-ModAssertionHelpers.assertComponentState(
-  this.entityManager, target.id, 'clothing:shirt',
-  { worn: false }
+expect(chestData.sensitivity).toBe('high');
+
+const clothingData = this.entityManager.getComponentData(
+  target.id,
+  'clothing:items'
+);
+expect(clothingData['clothing:shirt'].worn).toBe(false);
+
+// Or use assertBodyPart for anatomy validation
+ModAssertionHelpers.assertBodyPart(
+  this.entityManager,
+  actorChest.id,
+  { sensitivity: 'high', subType: 'chest' }
 );
 ```
 

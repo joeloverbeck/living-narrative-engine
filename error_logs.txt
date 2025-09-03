@@ -1,640 +1,76 @@
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
-  }
-  ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
-      await this.#eventBus.dispatch(eventName, payload);
-                           ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
-  }
-  ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
-      await this.#eventBus.dispatch(eventName, payload);
-                           ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
-  }
-  ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
-      await this.#eventBus.dispatch(eventName, payload);
-                           ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
-  }
-  ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
-      await this.#eventBus.dispatch(eventName, payload);
-                           ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
-  }
-  ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
-      await this.#eventBus.dispatch(eventName, payload);
-                           ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
-  }
-  ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
-      await this.#eventBus.dispatch(eventName, payload);
-                           ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
-  }
-  ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
-      await this.#eventBus.dispatch(eventName, payload);
-                           ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
- PASS   integration  tests/integration/anatomy/anatomyGraphCreation.integration.test.js
- PASS   integration  tests/integration/clichesGenerator/eventDefinitionFix.test.js
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
-  }
-  ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
-      await this.#eventBus.dispatch(eventName, payload);
-                           ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
-  }
-  ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
-      await this.#eventBus.dispatch(eventName, payload);
-                           ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
- PASS   integration  tests/integration/anatomy/anatomyGenerationWithSlotMetadata.test.js
- PASS   integration  tests/integration/mods/intimacy/rules/placeHandOnWaistRule.integration.test.js
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
-  }
-  ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
-      await this.#eventBus.dispatch(eventName, payload);
-                           ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
-  }
-  ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
-      await this.#eventBus.dispatch(eventName, payload);
-                           ^
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
-
-Exception in PromiseRejectCallback:
-/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
-    return false;
-
-RangeError: Maximum call stack size exceeded
+HighPrecisionTimer: Using performance.now() with 1μs resolution
+consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
+containerStages.js:39 Bootstrap Stage: setupDIContainerStage starting...
+containerConfig.js:46 [ContainerConfig] Starting container configuration...
+containerConfig.js:53 [ContainerConfig] Container is empty: false
+consoleLogger.js:72 [ConsoleLogger] Initialized. Log level set to INFO (1).
+containerConfig.js:73 [ContainerConfig] Logger registered: true
+containerConfig.js:165 [ContainerConfig] Container configuration failed: TypeError: __privateGet(...).debug is not a function
+    at LoggerStrategy.debug (loggerStrategy.js:644:18)
+    at configureContainer (containerConfig.js:81:12)
+    at setupDIContainerStage (containerStages.js:42:11)
+    at bootstrapApp (main.js:78:28)
+configureContainer @ containerConfig.js:165
+setupDIContainerStage @ containerStages.js:42
+bootstrapApp @ main.js:78
+await in bootstrapApp
+(anonymous) @ game.html:395Understand this error
+containerStages.js:45 Bootstrap Stage: setupDIContainerStage failed. Fatal Error during service registration: __privateGet(...).debug is not a function. TypeError: __privateGet(...).debug is not a function
+    at LoggerStrategy.debug (loggerStrategy.js:644:18)
+    at configureContainer (containerConfig.js:81:12)
+    at setupDIContainerStage (containerStages.js:42:11)
+    at bootstrapApp (main.js:78:28)
+setupDIContainerStage @ containerStages.js:45
+await in setupDIContainerStage
+bootstrapApp @ main.js:78
+await in bootstrapApp
+(anonymous) @ game.html:395Understand this error
+main.js:175 main.js: Bootstrap error caught in main orchestrator. Error Phase: "DI Container Setup" StageError: Fatal Error during service registration: __privateGet(...).debug is not a function.
+    at createStageError (bootstrapperHelpers.js:120:10)
+    at stageFailure2 (bootstrapperHelpers.js:140:27)
+    at setupDIContainerStage (containerStages.js:49:12)
+    at async bootstrapApp (main.js:78:22)Caused by: TypeError: __privateGet(...).debug is not a function
+    at LoggerStrategy.debug (loggerStrategy.js:644:18)
+    at configureContainer (containerConfig.js:81:12)
+    at setupDIContainerStage (containerStages.js:42:11)
+    at bootstrapApp (main.js:78:28)
+bootstrapApp @ main.js:175
+await in bootstrapApp
+(anonymous) @ game.html:395Understand this error
+loggerUtils.js:60 [errorUtils] :  [errorUtils] [Bootstrapper Error - Phase: DI Container Setup] Critical error during application bootstrap in phase: DI Container Setup. StageError: Fatal Error during service registration: __privateGet(...).debug is not a function.
+    at createStageError (bootstrapperHelpers.js:120:10)
+    at stageFailure2 (bootstrapperHelpers.js:140:27)
+    at setupDIContainerStage (containerStages.js:49:12)
+    at async bootstrapApp (main.js:78:22)Caused by: TypeError: __privateGet(...).debug is not a function
+    at LoggerStrategy.debug (loggerStrategy.js:644:18)
+    at configureContainer (containerConfig.js:81:12)
+    at setupDIContainerStage (containerStages.js:42:11)
+    at bootstrapApp (main.js:78:28)
+error @ loggerUtils.js:60
+error @ loggerUtils.js:96
+logStartupError @ startupErrorHandler.js:106
+displayFatalStartupError @ startupErrorHandler.js:275
+displayFatalStartupError @ errorUtils.js:33
+bootstrapApp @ main.js:186
+await in bootstrapApp
+(anonymous) @ game.html:395Understand this error
+main.js:224 main.js: Critical: GameEngine not initialized before attempting Start Game stage.
+beginGame @ main.js:224
+(anonymous) @ game.html:398
+Promise.then
+(anonymous) @ game.html:395Understand this error
+loggerUtils.js:60 [errorUtils] :  [errorUtils] [Bootstrapper Error - Phase: Start Game] Critical: GameEngine not initialized before attempting Start Game stage. Error: Critical: GameEngine not initialized before attempting Start Game stage.
+    at beginGame (main.js:223:22)
+    at game.html:398:18
+error @ loggerUtils.js:60
+error @ loggerUtils.js:96
+logStartupError @ startupErrorHandler.js:106
+displayFatalStartupError @ startupErrorHandler.js:275
+displayFatalStartupError @ errorUtils.js:33
+beginGame @ main.js:225
+(anonymous) @ game.html:398
+Promise.then
+(anonymous) @ game.html:395Understand this error
+main.js:223 Uncaught (in promise) Error: Critical: GameEngine not initialized before attempting Start Game stage.
+    at beginGame (main.js:223:22)
+    at game.html:398:18

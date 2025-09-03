@@ -19,7 +19,6 @@ jest.mock('../../../src/utils/environmentUtils.js', () => ({
 // Mock configuration utilities
 jest.mock('../../../src/configuration/utils/loggerConfigUtils.js', () => ({
   loadAndApplyLoggerConfig: jest.fn(),
-  loadDebugLogConfig: jest.fn(),
 }));
 
 jest.mock('../../../src/configuration/utils/traceConfigUtils.js', () => ({
@@ -53,7 +52,7 @@ jest.mock('../../../src/dependencyInjection/tokens.js', () => ({
 // Now import the modules we need after mocks are set up
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { isTestEnvironment, getEnvironmentMode } from '../../../src/utils/environmentUtils.js';
-import { loadDebugLogConfig, loadAndApplyLoggerConfig } from '../../../src/configuration/utils/loggerConfigUtils.js';
+import { loadAndApplyLoggerConfig } from '../../../src/configuration/utils/loggerConfigUtils.js';
 import { loadAndApplyTraceConfig } from '../../../src/configuration/utils/traceConfigUtils.js';
 import { configureBaseContainer } from '../../../src/dependencyInjection/baseContainerConfig.js';
 import LoggerStrategy from '../../../src/logging/loggerStrategy.js';
@@ -102,7 +101,6 @@ describe('containerConfig - Runtime Error Reproduction', () => {
     mockContainer.resolve.mockReturnValue(mockLogger);
     
     // Setup config loading mocks
-    loadDebugLogConfig.mockResolvedValue(null);
     loadAndApplyLoggerConfig.mockResolvedValue(undefined);
     loadAndApplyTraceConfig.mockResolvedValue(undefined);
     configureBaseContainer.mockResolvedValue(undefined);
@@ -232,28 +230,5 @@ describe('containerConfig - Runtime Error Reproduction', () => {
       }
     });
 
-    it('should handle debug config loading failure gracefully', async () => {
-      // Simulate the warning scenario
-      globalThis.process = {
-        env: {
-          NODE_ENV: 'development',
-        },
-      };
-      
-      // Setup environment utilities
-      isTestEnvironment.mockReturnValue(false);
-      getEnvironmentMode.mockReturnValue('development');
-      
-      // Make debug config loading fail
-      loadDebugLogConfig.mockRejectedValue(new Error('Failed to load config'));
-
-      // The loadDebugLogConfig should fail but container config should continue
-      await configureContainer(mockContainer, mockUiElements);
-      
-      // Container configuration should complete successfully despite debug config failure
-      // Note: The actual code logs to console.debug, not logger.info
-      expect(loadDebugLogConfig).toHaveBeenCalled();
-      expect(configureBaseContainer).toHaveBeenCalled();
-    });
   });
 });

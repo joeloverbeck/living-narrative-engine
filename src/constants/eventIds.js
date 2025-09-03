@@ -258,7 +258,7 @@ export const COMPONENT_REMOVED_ID = 'core:component_removed';
  *
  * @type {string}
  */
-export const WORLDINIT_ENTITY_INSTANTIATED_ID = 'worldinit:entity_instantiated';
+export const WORLDINIT_ENTITY_INSTANTIATED_ID = 'core:entity_instantiated';
 
 /**
  * @typedef {object} WorldInitEntityInstantiationFailedPayload

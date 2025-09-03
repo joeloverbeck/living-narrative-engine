@@ -5,139 +5,35 @@
  * the action is valid and dispatches it directly.
  */
 
-import {
-  describe,
-  it,
-  beforeEach,
-  afterEach,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import suckOnNeckToLeaveHickeyRule from '../../../../data/mods/intimacy/rules/handle_suck_on_neck_to_leave_hickey.rule.json';
 import eventIsActionSuckOnNeckToLeaveHickey from '../../../../data/mods/intimacy/conditions/event-is-action-suck-on-neck-to-leave-hickey.condition.json';
-import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../../src/utils/macroUtils.js';
-import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
-import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import DispatchPerceptibleEventHandler from '../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
-import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
-
-/**
- * Creates handlers needed for the suck_on_neck_to_leave_hickey rule.
- *
- * @param {object} entityManager - Entity manager instance
- * @param {object} eventBus - Event bus instance
- * @param {object} logger - Logger instance
- * @returns {object} Handlers object
- */
-function createHandlers(entityManager, eventBus, logger) {
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
-  };
-
-  return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
-  };
-}
 
 describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
-  let testEnv;
+  let testFixture;
 
-  beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(suckOnNeckToLeaveHickeyRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
-    const dataRegistry = {
-      getAllSystemRules: jest
-        .fn()
-        .mockReturnValue([
-          { ...suckOnNeckToLeaveHickeyRule, actions: expanded },
-        ]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'intimacy:event-is-action-suck-on-neck-to-leave-hickey'
-          ? eventIsActionSuckOnNeckToLeaveHickey
-          : undefined
-      ),
-    };
-
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      entities: [],
-      rules: [{ ...suckOnNeckToLeaveHickeyRule, actions: expanded }],
-      dataRegistry,
-    });
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction(
+      'intimacy',
+      'intimacy:suck_on_neck_to_leave_hickey',
+      suckOnNeckToLeaveHickeyRule,
+      eventIsActionSuckOnNeckToLeaveHickey
+    );
   });
 
   afterEach(() => {
-    if (testEnv) {
-      testEnv.cleanup();
-    }
+    testFixture.cleanup();
   });
 
   it('successfully executes suck on neck to leave hickey action between close actors', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'intimacy:suck_on_neck_to_leave_hickey',
-      targetId: 'target1',
-      originalInput: 'suck_on_neck_to_leave_hickey target1',
+    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
+      location: 'room1'
     });
 
-    const successEvent = testEnv.events.find(
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const successEvent = testFixture.events.find(
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
@@ -145,7 +41,7 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
       "Alice has sucked on Bob's neck, leaving a hickey."
     );
 
-    const turnEndedEvent = testEnv.events.find(
+    const turnEndedEvent = testFixture.events.find(
       (e) => e.eventType === 'core:turn_ended'
     );
     expect(turnEndedEvent).toBeDefined();
@@ -153,83 +49,29 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
   });
 
   it('perception log shows correct message for suck on neck to leave hickey action', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Sarah' },
-          [POSITION_COMPONENT_ID]: { locationId: 'garden' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'James' },
-          [POSITION_COMPONENT_ID]: { locationId: 'garden' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'intimacy:suck_on_neck_to_leave_hickey',
-      targetId: 'target1',
-      originalInput: 'suck_on_neck_to_leave_hickey target1',
+    const scenario = testFixture.createCloseActors(['Sarah', 'James'], {
+      location: 'garden'
     });
 
-    const perceptibleEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.descriptionText).toBe(
-      "Sarah has sucked on James's neck, leaving a hickey."
-    );
-    expect(perceptibleEvent.payload.locationId).toBe('garden');
-    expect(perceptibleEvent.payload.actorId).toBe('actor1');
-    expect(perceptibleEvent.payload.targetId).toBe('target1');
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    testFixture.assertPerceptibleEvent({
+      descriptionText: "Sarah has sucked on James's neck, leaving a hickey.",
+      locationId: 'garden',
+      actorId: scenario.actor.id,
+      targetId: scenario.target.id
+    });
   });
 
   it('handles multiple close partners correctly', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1', 'target2'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1', 'target2'] },
-        },
-      },
-      {
-        id: 'target2',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Charlie' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1', 'target1'] },
-        },
-      },
-    ]);
-
-    // First suck on Bob's neck to leave a hickey
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'intimacy:suck_on_neck_to_leave_hickey',
-      targetId: 'target1',
-      originalInput: 'suck_on_neck_to_leave_hickey target1',
+    const scenario = testFixture.createMultiActorScenario(['Alice', 'Bob', 'Charlie'], {
+      location: 'room1'
     });
 
-    let perceptibleEvent = testEnv.events.find(
+    // First suck on Bob's neck to leave a hickey
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    let perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent.payload.descriptionText).toBe(
@@ -237,18 +79,12 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
     );
 
     // Clear events for the next test
-    testEnv.events.length = 0;
+    testFixture.events.length = 0;
 
     // Then suck on Charlie's neck to leave a hickey
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'intimacy:suck_on_neck_to_leave_hickey',
-      targetId: 'target2',
-      originalInput: 'suck_on_neck_to_leave_hickey target2',
-    });
+    await testFixture.executeAction(scenario.actor.id, scenario.observers[0].id);
 
-    perceptibleEvent = testEnv.events.find(
+    perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
@@ -258,76 +94,35 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
   });
 
   it('action only fires for correct action ID', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-    ]);
+    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
+      location: 'room1'
+    });
 
     // Try with a different action
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
-      actorId: 'actor1',
+      actorId: scenario.actor.id,
       actionId: 'intimacy:kiss_neck_sensually',
-      targetId: 'target1',
-      originalInput: 'kiss_neck_sensually target1',
+      targetId: scenario.target.id,
+      originalInput: 'kiss_neck_sensually target',
     });
 
     // Should not have any perceptible events from our rule
-    const perceptibleEvents = testEnv.events.filter(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvents).toHaveLength(0);
+    testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
   });
 
   it('generates proper perceptible event for observers', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Elena' },
-          [POSITION_COMPONENT_ID]: { locationId: 'bedroom' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Marcus' },
-          [POSITION_COMPONENT_ID]: { locationId: 'bedroom' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'intimacy:suck_on_neck_to_leave_hickey',
-      targetId: 'target1',
-      originalInput: 'suck_on_neck_to_leave_hickey target1',
+    const scenario = testFixture.createCloseActors(['Elena', 'Marcus'], {
+      location: 'bedroom'
     });
 
-    const perceptibleEvent = testEnv.events.find(
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
-    );
+    expect(perceptibleEvent.payload.perceptionType).toBe('action_target_general');
     expect(perceptibleEvent.payload.descriptionText).toBe(
       "Elena has sucked on Marcus's neck, leaving a hickey."
     );
@@ -335,37 +130,16 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
   });
 
   it('validates perceptible event message matches action success message', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Diana' },
-          [POSITION_COMPONENT_ID]: { locationId: 'library' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Victor' },
-          [POSITION_COMPONENT_ID]: { locationId: 'library' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'intimacy:suck_on_neck_to_leave_hickey',
-      targetId: 'target1',
-      originalInput: 'suck_on_neck_to_leave_hickey target1',
+    const scenario = testFixture.createCloseActors(['Diana', 'Victor'], {
+      location: 'library'
     });
 
-    const successEvent = testEnv.events.find(
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const successEvent = testFixture.events.find(
       (e) => e.eventType === 'core:display_successful_action_result'
     );
-    const perceptibleEvent = testEnv.events.find(
+    const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
 
@@ -373,44 +147,24 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
     expect(perceptibleEvent).toBeDefined();
 
     // Both should have the same descriptive message
-    expect(successEvent.payload.message).toBe(
-      "Diana has sucked on Victor's neck, leaving a hickey."
-    );
-    expect(perceptibleEvent.payload.descriptionText).toBe(
-      "Diana has sucked on Victor's neck, leaving a hickey."
-    );
+    const expectedMessage = "Diana has sucked on Victor's neck, leaving a hickey.";
+    expect(successEvent.payload.message).toBe(expectedMessage);
+    expect(perceptibleEvent.payload.descriptionText).toBe(expectedMessage);
   });
 
   it('works correctly when actor is behind target', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Emma' },
-          [POSITION_COMPONENT_ID]: { locationId: 'living_room' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Liam' },
-          [POSITION_COMPONENT_ID]: { locationId: 'living_room' },
-          'positioning:closeness': { partners: ['actor1'] },
-          'positioning:facing_away': { facing_away_from: ['actor1'] },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'intimacy:suck_on_neck_to_leave_hickey',
-      targetId: 'target1',
-      originalInput: 'suck_on_neck_to_leave_hickey target1',
+    const scenario = testFixture.createCloseActors(['Emma', 'Liam'], {
+      location: 'living_room'
     });
 
-    const successEvent = testEnv.events.find(
+    // Add facing_away component to target
+    testFixture.entityManager.addComponent(scenario.target.id, 'positioning:facing_away', {
+      facing_away_from: [scenario.actor.id]
+    });
+
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const successEvent = testFixture.events.find(
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
@@ -420,34 +174,13 @@ describe('intimacy:suck_on_neck_to_leave_hickey action integration', () => {
   });
 
   it('demonstrates intimate and possessive nature of the action', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Aria' },
-          [POSITION_COMPONENT_ID]: { locationId: 'private_room' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Kai' },
-          [POSITION_COMPONENT_ID]: { locationId: 'private_room' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'intimacy:suck_on_neck_to_leave_hickey',
-      targetId: 'target1',
-      originalInput: 'suck_on_neck_to_leave_hickey target1',
+    const scenario = testFixture.createCloseActors(['Aria', 'Kai'], {
+      location: 'private_room'
     });
 
-    const perceptibleEvent = testEnv.events.find(
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();

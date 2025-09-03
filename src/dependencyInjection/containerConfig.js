@@ -10,10 +10,7 @@ import LoggerStrategy from '../logging/loggerStrategy.js';
 import { getEnvironmentMode, isTestEnvironment } from '../utils/environmentUtils.js';
 
 // --- Import Logger Config Utility ---
-import {
-  loadAndApplyLoggerConfig,
-  loadDebugLogConfig,
-} from '../configuration/utils/loggerConfigUtils.js';
+import { loadAndApplyLoggerConfig } from '../configuration/utils/loggerConfigUtils.js';
 
 // --- Import Trace Config Utility ---
 import { loadAndApplyTraceConfig } from '../configuration/utils/traceConfigUtils.js';
@@ -58,33 +55,13 @@ export async function configureContainer(container, uiElements) {
       !container.isRegistered || typeof container.isRegistered !== 'function'
     );
 
-    // --- Load debug configuration before creating LoggerStrategy ---
-    // This allows LoggerStrategy to use the configuration in its constructor
-    let debugConfig = null;
-    try {
-      // Create a temporary console logger for loading config
-      const tempLogger = new ConsoleLogger(LogLevel.INFO);
-      debugConfig = await loadDebugLogConfig(tempLogger, null);
-      if (debugConfig) {
-        tempLogger.debug(
-          '[ContainerConfig] Debug configuration loaded before LoggerStrategy creation.'
-        );
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        '[ContainerConfig] Failed to load debug configuration:',
-        error
-      );
-    }
-
     // --- Bootstrap logger with LoggerStrategy ---
     // The LoggerStrategy will handle mode detection and logger selection
     // Don't force development mode if we're in a test environment
     const loggerMode = isTestEnvironment() ? 'test' : getEnvironmentMode();
     const appLogger = new LoggerStrategy({
       mode: loggerMode, // Use test mode for tests, development mode otherwise
-      config: debugConfig || {}, // Pass the loaded debug config or empty object
+      config: {}, // Empty config object
       dependencies: {
         consoleLogger: new ConsoleLogger(LogLevel.INFO),
       },

@@ -493,21 +493,8 @@ class ActionTraceConfigValidator {
       return { warnings };
     }
 
-    // Count performance impact factors
-    let impactScore = 0;
-
-    if (config.includeComponentData) impactScore += 1;
-    if (config.includePrerequisites) impactScore += 1;
-    if (config.includeTargets) impactScore += 1;
-    if (config.verbosity === 'verbose') impactScore += 2;
-    if (config.verbosity === 'detailed') impactScore += 1;
-
-    if (impactScore >= 4) {
-      warnings.push(
-        `High performance impact configuration detected (score: ${impactScore}/5). ` +
-          `Consider reducing verbosity or disabling detailed data inclusion.`
-      );
-    }
+    // Removed performance impact warning - users who select verbose mode
+    // with all details enabled want that level of detail
 
     return { warnings };
   }
@@ -570,15 +557,15 @@ class ActionTraceConfigValidator {
       );
     }
 
-    // Check for conflicting rotation policies
-    if (config.rotationPolicy === 'count' && config.maxFileAge) {
+    // Check for conflicting rotation policies - only warn if the conflicting field actually exists
+    if (config.rotationPolicy === 'count' && config.maxFileAge !== undefined) {
       warnings.push(
         `Both 'count' rotation policy and maxFileAge are specified. ` +
           `maxFileAge will be ignored when using count-based rotation.`
       );
     }
 
-    if (config.rotationPolicy === 'age' && config.maxTraceFiles) {
+    if (config.rotationPolicy === 'age' && config.maxTraceFiles !== undefined) {
       warnings.push(
         `Both 'age' rotation policy and maxTraceFiles are specified. ` +
           `maxTraceFiles will be ignored when using age-based rotation.`
@@ -640,17 +627,8 @@ class ActionTraceConfigValidator {
       });
     }
 
-    // Recommend appropriate verbosity for output formats
-    if (
-      config.outputFormats &&
-      config.outputFormats.includes('json') &&
-      config.verbosity === 'verbose'
-    ) {
-      recommendations.push(
-        `Recommendation: 'verbose' verbosity with JSON output may create large files. ` +
-          `Consider 'detailed' for better balance.`
-      );
-    }
+    // Removed verbosity recommendation - verbose mode is a valid choice
+    // and users who select it want the detailed output
 
     // Recommend performance settings based on traced actions count
     if (

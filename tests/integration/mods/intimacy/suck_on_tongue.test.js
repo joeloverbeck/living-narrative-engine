@@ -6,148 +6,51 @@
  * the action is valid and dispatches it directly.
  */
 
-import {
-  describe,
-  it,
-  beforeEach,
-  afterEach,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import suckOnTongueRule from '../../../../data/mods/intimacy/rules/suck_on_tongue.rule.json';
 import eventIsActionSuckOnTongue from '../../../../data/mods/intimacy/conditions/event-is-action-suck-on-tongue.condition.json';
-import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../../src/utils/macroUtils.js';
-import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
-import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import DispatchPerceptibleEventHandler from '../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
-import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
-
-/**
- * Creates handlers needed for the suck_on_tongue rule.
- *
- * @param {object} entityManager - Entity manager instance
- * @param {object} eventBus - Event bus instance
- * @param {object} logger - Logger instance
- * @returns {object} Handlers object
- */
-function createHandlers(entityManager, eventBus, logger) {
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
-  };
-
-  return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
-  };
-}
 
 describe('intimacy:suck_on_tongue action integration', () => {
-  let testEnv;
+  let testFixture;
 
-  beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(suckOnTongueRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
-    const dataRegistry = {
-      getAllSystemRules: jest
-        .fn()
-        .mockReturnValue([{ ...suckOnTongueRule, actions: expanded }]),
-      getConditionDefinition: jest.fn((id) => {
-        switch (id) {
-          case 'intimacy:event-is-action-suck-on-tongue':
-            return eventIsActionSuckOnTongue;
-          default:
-            return undefined;
-        }
-      }),
-    };
-
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      entities: [],
-      rules: [{ ...suckOnTongueRule, actions: expanded }],
-      dataRegistry,
-    });
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction(
+      'intimacy',
+      'intimacy:suck_on_tongue',
+      suckOnTongueRule,
+      eventIsActionSuckOnTongue
+    );
   });
 
   afterEach(() => {
-    if (testEnv) {
-      testEnv.cleanup();
-    }
+    testFixture.cleanup();
   });
 
   it('successfully executes suck on tongue for initiator (initiator: true)', async () => {
-    testEnv.reset([
-      {
-        id: 'initiator1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['receiver1'] },
-          'intimacy:kissing': { partner: 'receiver1', initiator: true },
-        },
-      },
-      {
-        id: 'receiver1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['initiator1'] },
-          'intimacy:kissing': { partner: 'initiator1', initiator: false },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'initiator1',
-      actionId: 'intimacy:suck_on_tongue',
-      targetId: 'receiver1',
-      originalInput: 'suck_on_tongue receiver1',
+    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
+      location: 'room1'
     });
 
-    const successEvent = testEnv.events.find(
+    // Add kissing components for this specific action
+    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
+      partner: scenario.target.id,
+      initiator: true
+    });
+    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
+      partner: scenario.actor.id,
+      initiator: false
+    });
+
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const successEvent = testFixture.events.find(
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
     expect(successEvent.payload.message).toBe("Alice sucks on Bob's tongue.");
 
-    const turnEndedEvent = testEnv.events.find(
+    const turnEndedEvent = testFixture.events.find(
       (e) => e.eventType === 'core:turn_ended'
     );
     expect(turnEndedEvent).toBeDefined();
@@ -155,42 +58,29 @@ describe('intimacy:suck_on_tongue action integration', () => {
   });
 
   it('successfully executes suck on tongue for receiver (initiator: false)', async () => {
-    testEnv.reset([
-      {
-        id: 'receiver1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Sarah' },
-          [POSITION_COMPONENT_ID]: { locationId: 'garden' },
-          'positioning:closeness': { partners: ['initiator1'] },
-          'intimacy:kissing': { partner: 'initiator1', initiator: false },
-        },
-      },
-      {
-        id: 'initiator1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'James' },
-          [POSITION_COMPONENT_ID]: { locationId: 'garden' },
-          'positioning:closeness': { partners: ['receiver1'] },
-          'intimacy:kissing': { partner: 'receiver1', initiator: true },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'receiver1',
-      actionId: 'intimacy:suck_on_tongue',
-      targetId: 'initiator1',
-      originalInput: 'suck_on_tongue initiator1',
+    const scenario = testFixture.createCloseActors(['Sarah', 'James'], {
+      location: 'garden'
     });
 
-    const successEvent = testEnv.events.find(
+    // Add kissing components with receiver as actor
+    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
+      partner: scenario.target.id,
+      initiator: false
+    });
+    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
+      partner: scenario.actor.id,
+      initiator: true
+    });
+
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const successEvent = testFixture.events.find(
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
     expect(successEvent.payload.message).toBe("Sarah sucks on James's tongue.");
 
-    const turnEndedEvent = testEnv.events.find(
+    const turnEndedEvent = testFixture.events.find(
       (e) => e.eventType === 'core:turn_ended'
     );
     expect(turnEndedEvent).toBeDefined();
@@ -198,85 +88,55 @@ describe('intimacy:suck_on_tongue action integration', () => {
   });
 
   it('perception log shows correct message for suck on tongue', async () => {
-    testEnv.reset([
-      {
-        id: 'passionate1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Emma' },
-          [POSITION_COMPONENT_ID]: { locationId: 'bedroom' },
-          'positioning:closeness': { partners: ['passionate2'] },
-          'intimacy:kissing': { partner: 'passionate2', initiator: true },
-        },
-      },
-      {
-        id: 'passionate2',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'David' },
-          [POSITION_COMPONENT_ID]: { locationId: 'bedroom' },
-          'positioning:closeness': { partners: ['passionate1'] },
-          'intimacy:kissing': { partner: 'passionate1', initiator: false },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'passionate1',
-      actionId: 'intimacy:suck_on_tongue',
-      targetId: 'passionate2',
-      originalInput: 'suck_on_tongue passionate2',
+    const scenario = testFixture.createCloseActors(['Emma', 'David'], {
+      location: 'bedroom'
     });
 
-    const perceptibleEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.descriptionText).toBe(
-      "Emma has sucked on David's tongue."
-    );
-    expect(perceptibleEvent.payload.locationId).toBe('bedroom');
-    expect(perceptibleEvent.payload.actorId).toBe('passionate1');
-    expect(perceptibleEvent.payload.targetId).toBe('passionate2');
+    // Add kissing components
+    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
+      partner: scenario.target.id,
+      initiator: true
+    });
+    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
+      partner: scenario.actor.id,
+      initiator: false
+    });
+
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    testFixture.assertPerceptibleEvent({
+      descriptionText: "Emma has sucked on David's tongue.",
+      locationId: 'bedroom',
+      actorId: scenario.actor.id,
+      targetId: scenario.target.id
+    });
   });
 
   it('preserves kissing component state (no ADD_COMPONENT or REMOVE_COMPONENT operations)', async () => {
-    testEnv.reset([
-      {
-        id: 'kisser1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['kisser2'] },
-          'intimacy:kissing': { partner: 'kisser2', initiator: true },
-        },
-      },
-      {
-        id: 'kisser2',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['kisser1'] },
-          'intimacy:kissing': { partner: 'kisser1', initiator: false },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'kisser1',
-      actionId: 'intimacy:suck_on_tongue',
-      targetId: 'kisser2',
-      originalInput: 'suck_on_tongue kisser2',
+    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
+      location: 'room1'
     });
+
+    // Add kissing components
+    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
+      partner: scenario.target.id,
+      initiator: true
+    });
+    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
+      partner: scenario.actor.id,
+      initiator: false
+    });
+
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     // Verify this is an enhancement action that preserves kissing state
     // by checking that the rule executed successfully (no component modification errors)
-    const successEvent = testEnv.events.find(
+    const successEvent = testFixture.events.find(
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent).toBeDefined();
 
-    const turnEndedEvent = testEnv.events.find(
+    const turnEndedEvent = testFixture.events.find(
       (e) => e.eventType === 'core:turn_ended'
     );
     expect(turnEndedEvent).toBeDefined();
@@ -284,45 +144,24 @@ describe('intimacy:suck_on_tongue action integration', () => {
   });
 
   it('handles multiple kissing partners correctly', async () => {
-    testEnv.reset([
-      {
-        id: 'polyamorous1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['partner1', 'partner2'] },
-          'intimacy:kissing': { partner: 'partner1', initiator: true },
-        },
-      },
-      {
-        id: 'partner1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['polyamorous1', 'partner2'] },
-          'intimacy:kissing': { partner: 'polyamorous1', initiator: false },
-        },
-      },
-      {
-        id: 'partner2',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Charlie' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['polyamorous1', 'partner1'] },
-        },
-      },
-    ]);
-
-    // Suck on current partner Bob's tongue
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'polyamorous1',
-      actionId: 'intimacy:suck_on_tongue',
-      targetId: 'partner1',
-      originalInput: 'suck_on_tongue partner1',
+    const scenario = testFixture.createMultiActorScenario(['Alice', 'Bob', 'Charlie'], {
+      location: 'room1'
     });
 
-    const perceptibleEvent = testEnv.events.find(
+    // Add kissing components between Alice and Bob only
+    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
+      partner: scenario.target.id,
+      initiator: true
+    });
+    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
+      partner: scenario.actor.id,
+      initiator: false
+    });
+
+    // Suck on current partner Bob's tongue
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent.payload.descriptionText).toBe(
@@ -331,74 +170,51 @@ describe('intimacy:suck_on_tongue action integration', () => {
   });
 
   it('action only fires for correct action ID', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor2'] },
-          'intimacy:kissing': { partner: 'actor2', initiator: true },
-        },
-      },
-      {
-        id: 'actor2',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1'] },
-          'intimacy:kissing': { partner: 'actor1', initiator: false },
-        },
-      },
-    ]);
+    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
+      location: 'room1'
+    });
+
+    // Add kissing components
+    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
+      partner: scenario.target.id,
+      initiator: true
+    });
+    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
+      partner: scenario.actor.id,
+      initiator: false
+    });
 
     // Try with a different action
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
-      actorId: 'actor1',
+      actorId: scenario.actor.id,
       actionId: 'intimacy:break_kiss_gently',
-      targetId: 'actor2',
-      originalInput: 'break_kiss_gently actor2',
+      targetId: scenario.target.id,
+      originalInput: 'break_kiss_gently target',
     });
 
     // Should not have any perceptible events from our rule
-    const perceptibleEvents = testEnv.events.filter(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvents).toHaveLength(0);
+    testFixture.assertOnlyExpectedEvents(['core:attempt_action']);
   });
 
   it('validates complete event flow sequence', async () => {
-    testEnv.reset([
-      {
-        id: 'sequencer1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['sequencer2'] },
-          'intimacy:kissing': { partner: 'sequencer2', initiator: true },
-        },
-      },
-      {
-        id: 'sequencer2',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['sequencer1'] },
-          'intimacy:kissing': { partner: 'sequencer1', initiator: false },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'sequencer1',
-      actionId: 'intimacy:suck_on_tongue',
-      targetId: 'sequencer2',
-      originalInput: 'suck_on_tongue sequencer2',
+    const scenario = testFixture.createCloseActors(['Alice', 'Bob'], {
+      location: 'room1'
     });
 
-    const eventTypes = testEnv.events.map((e) => e.eventType);
+    // Add kissing components
+    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
+      partner: scenario.target.id,
+      initiator: true
+    });
+    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
+      partner: scenario.actor.id,
+      initiator: false
+    });
+
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const eventTypes = testFixture.events.map((e) => e.eventType);
     expect(eventTypes).toEqual(
       expect.arrayContaining([
         'core:perceptible_event',
@@ -419,42 +235,23 @@ describe('intimacy:suck_on_tongue action integration', () => {
   });
 
   it('works with different entity names and locations', async () => {
-    testEnv.reset([
-      {
-        id: 'passionate_sucker',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Sophia' },
-          [POSITION_COMPONENT_ID]: { locationId: 'moonlit_balcony' },
-          'positioning:closeness': { partners: ['willing_recipient'] },
-          'intimacy:kissing': {
-            partner: 'willing_recipient',
-            initiator: true,
-          },
-        },
-      },
-      {
-        id: 'willing_recipient',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Marcus' },
-          [POSITION_COMPONENT_ID]: { locationId: 'moonlit_balcony' },
-          'positioning:closeness': { partners: ['passionate_sucker'] },
-          'intimacy:kissing': {
-            partner: 'passionate_sucker',
-            initiator: false,
-          },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'passionate_sucker',
-      actionId: 'intimacy:suck_on_tongue',
-      targetId: 'willing_recipient',
-      originalInput: 'suck_on_tongue willing_recipient',
+    const scenario = testFixture.createCloseActors(['Sophia', 'Marcus'], {
+      location: 'moonlit_balcony'
     });
 
-    const perceptibleEvent = testEnv.events.find(
+    // Add kissing components
+    testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
+      partner: scenario.target.id,
+      initiator: true
+    });
+    testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
+      partner: scenario.actor.id,
+      initiator: false
+    });
+
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+    const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
@@ -463,7 +260,7 @@ describe('intimacy:suck_on_tongue action integration', () => {
     );
     expect(perceptibleEvent.payload.locationId).toBe('moonlit_balcony');
 
-    const successEvent = testEnv.events.find(
+    const successEvent = testFixture.events.find(
       (e) => e.eventType === 'core:display_successful_action_result'
     );
     expect(successEvent.payload.message).toBe(
@@ -475,48 +272,35 @@ describe('intimacy:suck_on_tongue action integration', () => {
     // Test with both initiator and receiver performing the action
     const testCases = [
       {
-        actorId: 'initiator1',
-        targetId: 'receiver1',
+        isActorInitiator: true,
         actorName: 'Alice',
         targetName: 'Bob',
       },
       {
-        actorId: 'receiver1',
-        targetId: 'initiator1',
-        actorName: 'Bob',
-        targetName: 'Alice',
+        isActorInitiator: false,
+        actorName: 'Alice',
+        targetName: 'Bob',
       },
     ];
 
     for (const testCase of testCases) {
-      testEnv.reset([
-        {
-          id: 'initiator1',
-          components: {
-            [NAME_COMPONENT_ID]: { text: 'Alice' },
-            [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: ['receiver1'] },
-            'intimacy:kissing': { partner: 'receiver1', initiator: true },
-          },
-        },
-        {
-          id: 'receiver1',
-          components: {
-            [NAME_COMPONENT_ID]: { text: 'Bob' },
-            [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-            'positioning:closeness': { partners: ['initiator1'] },
-            'intimacy:kissing': { partner: 'initiator1', initiator: false },
-          },
-        },
-      ]);
-
-      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-        actorId: testCase.actorId,
-        actionId: 'intimacy:suck_on_tongue',
-        targetId: testCase.targetId,
+      const scenario = testFixture.createCloseActors([testCase.actorName, testCase.targetName], {
+        location: 'room1'
       });
 
-      const successEvent = testEnv.events.find(
+      // Set kissing components based on who is initiator
+      testFixture.entityManager.addComponent(scenario.actor.id, 'intimacy:kissing', {
+        partner: scenario.target.id,
+        initiator: testCase.isActorInitiator
+      });
+      testFixture.entityManager.addComponent(scenario.target.id, 'intimacy:kissing', {
+        partner: scenario.actor.id,
+        initiator: !testCase.isActorInitiator
+      });
+
+      await testFixture.executeAction(scenario.actor.id, scenario.target.id);
+
+      const successEvent = testFixture.events.find(
         (e) => e.eventType === 'core:display_successful_action_result'
       );
       expect(successEvent).toBeDefined();
@@ -525,7 +309,7 @@ describe('intimacy:suck_on_tongue action integration', () => {
       );
 
       // Clear events for next iteration
-      testEnv.events.length = 0;
+      testFixture.events.length = 0;
     }
   });
 });

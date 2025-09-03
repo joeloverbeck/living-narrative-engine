@@ -35,6 +35,12 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
   #logger;
 
   /**
+   * @private
+   * @type {boolean}
+   */
+  #isHandlingError = false; // Track if we're already handling an error
+
+  /**
    * Creates an instance of SafeEventDispatcher.
    *
    * @param {object} dependencies - The required dependencies.
@@ -83,24 +89,87 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
    * @returns {Promise<*>} The return value of `fn`, or `undefined` if an error
    * occurs.
    */
+  /**
+   * Executes the provided function while capturing and logging any thrown
+   * errors using a consistent format.
+   *
+   * @private
+   * @param {string} description - Description of the operation being executed.
+   * @param {Function} fn - The function to execute. May return a promise.
+   * @param {object} [context] - Additional context to include in error logs.
+   * @returns {Promise<*>} The return value of `fn`, or `undefined` if an error
+   * occurs.
+   */
   #executeSafely(description, fn, context = {}) {
     try {
       const result = fn();
       if (result && typeof result.then === 'function') {
         return result.catch((error) => {
-          this.#logger.error(
-            `SafeEventDispatcher: Exception caught while ${description}. Error: ${error.message}`,
-            { ...context, error }
-          );
+          // Enhanced recursion detection
+          const isErrorEvent = description.includes('system_error_occurred') || description.includes('error');
+          const hasErrorKeywords = description.match(/(error|exception|fail)/i);
+          
+          if (isErrorEvent || hasErrorKeywords || this.#isHandlingError) {
+            // Use console directly to avoid potential recursion
+            console.error(
+              `SafeEventDispatcher: Exception caught while ${description}. Error: ${error.message}`,
+              { ...context, error }
+            );
+          } else {
+            this.#isHandlingError = true;
+            try {
+              // Use try-catch around logger to prevent any logger-triggered events
+              this.#logger.error(
+                `SafeEventDispatcher: Exception caught while ${description}. Error: ${error.message}`,
+                { ...context, error }
+              );
+            } catch (loggerError) {
+              // Logger failed - use console as ultimate fallback
+              console.error(
+                `SafeEventDispatcher: Logger failed while handling error in ${description}. Original:`,
+                error,
+                'Logger error:',
+                loggerError
+              );
+            } finally {
+              this.#isHandlingError = false;
+            }
+          }
           return undefined;
         });
       }
       return result;
     } catch (error) {
-      this.#logger.error(
-        `SafeEventDispatcher: Exception caught while ${description}. Error: ${error.message}`,
-        { ...context, error }
-      );
+      // Enhanced recursion detection for synchronous errors
+      const isErrorEvent = description.includes('system_error_occurred') || description.includes('error');
+      const hasErrorKeywords = description.match(/(error|exception|fail)/i);
+      
+      if (isErrorEvent || hasErrorKeywords || this.#isHandlingError) {
+        // Use console directly to avoid potential recursion
+        console.error(
+          `SafeEventDispatcher: Exception caught while ${description}. Error: ${error.message}`,
+          { ...context, error }
+        );
+      } else {
+        this.#isHandlingError = true;
+        try {
+          // Use try-catch around logger to prevent any logger-triggered events
+          this.#logger.error(
+            `SafeEventDispatcher: Exception caught while ${description}. Error: ${error.message}`,
+            { ...context, error }
+          );
+        } catch (loggerError) {
+          // Logger failed - use console as ultimate fallback
+          console.error(
+            `SafeEventDispatcher: Logger failed while handling error in ${description}. Original:`,
+            error,
+            'Logger error:',
+            loggerError
+          );
+        } finally {
+          this.#isHandlingError = false;
+        }
+      }
       return undefined;
     }
   }

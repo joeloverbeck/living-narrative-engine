@@ -16,6 +16,11 @@ import { IEventBus } from '../interfaces/IEventBus.js';
 class EventBus extends IEventBus {
   #listeners = new Map(); // Stores eventName -> Set<listenerFn>
   #logger;
+  #dispatchingEvents = new Set(); // Track currently dispatching events to prevent recursion
+  #recursionDepth = new Map(); // Track recursion depth per event type
+  #batchMode = false; // Track if we're in batch loading mode
+  #batchModeOptions = null; // Store batch mode configuration
+  #batchModeTimeoutId = null; // Auto-disable timeout for safety
 
   /**
    * Creates an EventBus instance.
@@ -25,6 +30,84 @@ class EventBus extends IEventBus {
   constructor({ logger = console } = {}) {
     super();
     this.#logger = logger;
+  }
+
+  /**
+   * Enables or disables batch mode for handling high-volume event processing.
+   * Batch mode increases recursion limits to allow legitimate bulk operations.
+   * 
+   * @param {boolean} enabled - Whether to enable batch mode
+   * @param {object} [options] - Configuration options for batch mode
+   * @param {number} [options.maxRecursionDepth=10] - Maximum recursion depth in batch mode
+   * @param {number} [options.maxGlobalRecursion=25] - Maximum global recursion in batch mode
+   * @param {number} [options.timeoutMs=30000] - Auto-disable timeout in milliseconds
+   * @param {string} [options.context='unknown'] - Context description for logging
+   */
+  setBatchMode(enabled, options = {}) {
+    if (enabled === this.#batchMode) {
+      return; // No change needed
+    }
+
+    if (enabled) {
+      const defaultOptions = {
+        maxRecursionDepth: 10,
+        maxGlobalRecursion: 25,
+        timeoutMs: 30000,
+        context: 'unknown'
+      };
+      
+      this.#batchModeOptions = { ...defaultOptions, ...options };
+      this.#batchMode = true;
+      
+      // Safety timeout to auto-disable batch mode
+      if (this.#batchModeTimeoutId) {
+        clearTimeout(this.#batchModeTimeoutId);
+      }
+      
+      this.#batchModeTimeoutId = setTimeout(() => {
+        this.#logger.warn(
+          `EventBus: Auto-disabling batch mode after ${this.#batchModeOptions.timeoutMs}ms timeout for context: ${this.#batchModeOptions.context}`
+        );
+        this.setBatchMode(false);
+      }, this.#batchModeOptions.timeoutMs);
+      
+      this.#logger.debug(
+        `EventBus: Batch mode enabled for context: ${this.#batchModeOptions.context}, ` +
+        `maxRecursionDepth: ${this.#batchModeOptions.maxRecursionDepth}, ` +
+        `maxGlobalRecursion: ${this.#batchModeOptions.maxGlobalRecursion}`
+      );
+    } else {
+      // Disable batch mode
+      this.#batchMode = false;
+      
+      if (this.#batchModeTimeoutId) {
+        clearTimeout(this.#batchModeTimeoutId);
+        this.#batchModeTimeoutId = null;
+      }
+      
+      const context = this.#batchModeOptions?.context || 'unknown';
+      this.#batchModeOptions = null;
+      
+      this.#logger.debug(`EventBus: Batch mode disabled for context: ${context}`);
+    }
+  }
+
+  /**
+   * Returns whether batch mode is currently enabled.
+   * 
+   * @returns {boolean} True if batch mode is enabled
+   */
+  isBatchModeEnabled() {
+    return this.#batchMode;
+  }
+
+  /**
+   * Gets the current batch mode options.
+   * 
+   * @returns {object|null} Current batch mode options or null if disabled
+   */
+  getBatchModeOptions() {
+    return this.#batchModeOptions;
   }
 
   /**
@@ -115,41 +198,151 @@ class EventBus extends IEventBus {
    * @param {object} [eventPayload] - The data payload associated with the event (becomes event.payload). Defaults to empty object.
    * @returns {Promise<void>} A promise that resolves when all relevant listeners have been processed.
    */
+  /**
+   * Dispatches an event, ASYNCHRONOUSLY calling all subscribed listeners for that specific event name
+   * AND listeners subscribed to the wildcard ('*').
+   * Waits for all listener promises to settle.
+   *
+   * @param {string} eventName - The name of the event to dispatch (becomes event.type).
+   * @param {object} [eventPayload] - The data payload associated with the event (becomes event.payload). Defaults to empty object.
+   * @returns {Promise<void>} A promise that resolves when all relevant listeners have been processed.
+   */
   async dispatch(eventName, eventPayload = {}) {
     // Renamed second arg for clarity, added default
     if (!this.#validateEventName(eventName)) {
       return;
     }
 
-    const specificListeners = this.#listeners.get(eventName) || new Set();
-    const wildcardListeners = this.#listeners.get('*') || new Set();
-    const listenersToNotify = new Set([
-      ...specificListeners,
-      ...wildcardListeners,
-    ]);
-
-    if (listenersToNotify.size > 0) {
-      // Construct the full event object expected by listeners like #handleEvent
-      const eventObject = {
-        type: eventName,
-        payload: eventPayload,
-      };
-
-      const listenersArray = Array.from(listenersToNotify);
-
-      await Promise.all(
-        listenersArray.map(async (listener) => {
-          try {
-            // Pass the constructed event object, not just the payload
-            await listener(eventObject);
-          } catch (error) {
-            this.#logger.error(
-              `EventBus: Error executing listener for event "${eventName}":`,
-              error
-            );
-          }
-        })
+    // Enhanced recursion protection with stricter limits for critical events
+    const isCriticalEvent = eventName === 'core:system_error_occurred' || eventName.includes('error');
+    const currentDepth = this.#recursionDepth.get(eventName) || 0;
+    
+    // Global recursion check - sum all current recursion depths
+    const totalGlobalRecursion = Array.from(this.#recursionDepth.values()).reduce((sum, depth) => sum + depth, 0);
+    
+    // Determine recursion limits based on batch mode and event type
+    let MAX_RECURSION_DEPTH;
+    let MAX_GLOBAL_RECURSION;
+    
+    if (this.#batchMode && this.#batchModeOptions) {
+      // In batch mode, use higher limits unless it's a critical event
+      MAX_RECURSION_DEPTH = isCriticalEvent ? 1 : this.#batchModeOptions.maxRecursionDepth;
+      MAX_GLOBAL_RECURSION = this.#batchModeOptions.maxGlobalRecursion;
+    } else {
+      // Normal mode limits
+      MAX_RECURSION_DEPTH = isCriticalEvent ? 1 : 3;
+      MAX_GLOBAL_RECURSION = 10;
+    }
+    
+    // Progressive warnings at 50%, 75%, and 90% of limits
+    const recursionWarningThresholds = [0.5, 0.75, 0.9];
+    const globalWarningThresholds = [0.5, 0.75, 0.9];
+    
+    recursionWarningThresholds.forEach(threshold => {
+      const warningLevel = Math.floor(MAX_RECURSION_DEPTH * threshold);
+      if (currentDepth === warningLevel && warningLevel > 0) {
+        const batchContext = this.#batchMode ? ` (batch mode: ${this.#batchModeOptions.context})` : '';
+        console.warn(
+          `EventBus: Recursion depth warning - ${Math.round(threshold * 100)}% of limit reached ` +
+          `for event "${eventName}" (${currentDepth}/${MAX_RECURSION_DEPTH})${batchContext}`
+        );
+      }
+    });
+    
+    globalWarningThresholds.forEach(threshold => {
+      const warningLevel = Math.floor(MAX_GLOBAL_RECURSION * threshold);
+      if (totalGlobalRecursion === warningLevel && warningLevel > 0) {
+        const batchContext = this.#batchMode ? ` (batch mode: ${this.#batchModeOptions.context})` : '';
+        console.warn(
+          `EventBus: Global recursion warning - ${Math.round(threshold * 100)}% of limit reached ` +
+          `(${totalGlobalRecursion}/${MAX_GLOBAL_RECURSION})${batchContext}. Current event: "${eventName}"`
+        );
+      }
+    });
+    
+    if (currentDepth >= MAX_RECURSION_DEPTH) {
+      // Use console directly to avoid triggering more events
+      const batchContext = this.#batchMode ? ` (batch mode: ${this.#batchModeOptions.context})` : '';
+      console.error(
+        `EventBus: Maximum recursion depth (${MAX_RECURSION_DEPTH}) exceeded for event "${eventName}"${batchContext}. Dispatch blocked to prevent infinite recursion.`
       );
+      return;
+    }
+
+    if (totalGlobalRecursion >= MAX_GLOBAL_RECURSION) {
+      // Global recursion limit exceeded - emergency stop
+      const batchContext = this.#batchMode ? ` (batch mode: ${this.#batchModeOptions.context})` : '';
+      console.error(
+        `EventBus: Global recursion limit (${MAX_GLOBAL_RECURSION}) exceeded${batchContext}. Current event: "${eventName}". All event dispatching blocked.`
+      );
+      return;
+    }
+
+    // Track that we're dispatching this event
+    this.#recursionDepth.set(eventName, currentDepth + 1);
+    const eventKey = `${eventName}-${Date.now()}-${Math.random()}`;
+    this.#dispatchingEvents.add(eventKey);
+
+    try {
+      const specificListeners = this.#listeners.get(eventName) || new Set();
+      const wildcardListeners = this.#listeners.get('*') || new Set();
+      const listenersToNotify = new Set([
+        ...specificListeners,
+        ...wildcardListeners,
+      ]);
+
+      if (listenersToNotify.size > 0) {
+        // Construct the full event object expected by listeners like #handleEvent
+        const eventObject = {
+          type: eventName,
+          payload: eventPayload,
+        };
+
+        const listenersArray = Array.from(listenersToNotify);
+
+        await Promise.all(
+          listenersArray.map(async (listener) => {
+            try {
+              // Pass the constructed event object, not just the payload
+              await listener(eventObject);
+            } catch (error) {
+              // Enhanced error handling - always use console for any event that might trigger recursion
+              if (isCriticalEvent || totalGlobalRecursion > 5) {
+                // Already handling critical events or high recursion - use console directly
+                console.error(
+                  `EventBus: Error in "${eventName}" listener (using console to prevent recursion):`,
+                  error
+                );
+              } else {
+                // For regular events with low recursion, still use logger but monitor recursion
+                try {
+                  this.#logger.error(
+                    `EventBus: Error executing listener for event "${eventName}":`,
+                    error
+                  );
+                } catch (loggerError) {
+                  // Logger itself failed - fallback to console
+                  console.error(
+                    `EventBus: Logger failed while handling error in "${eventName}" listener. Original error:`,
+                    error,
+                    'Logger error:',
+                    loggerError
+                  );
+                }
+              }
+            }
+          })
+        );
+      }
+    } finally {
+      // Clean up tracking
+      this.#dispatchingEvents.delete(eventKey);
+      const newDepth = currentDepth;
+      if (newDepth <= 0) {
+        this.#recursionDepth.delete(eventName);
+      } else {
+        this.#recursionDepth.set(eventName, newDepth);
+      }
     }
   }
 

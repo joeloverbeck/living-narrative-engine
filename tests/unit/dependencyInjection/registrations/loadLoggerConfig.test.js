@@ -3,18 +3,14 @@ import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
 import * as loggerConfigUtils from '../../../../src/configuration/utils/loggerConfigUtils.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { LoggerConfigLoader } from '../../../../src/configuration/loggerConfigLoader.js';
-import { DebugLogConfigLoader } from '../../../../src/configuration/debugLogConfigLoader.js';
-
-// Mock both config loaders at module level to prevent constructor execution
+// Mock config loader at module level to prevent constructor execution
 jest.mock('../../../../src/configuration/loggerConfigLoader.js');
-jest.mock('../../../../src/configuration/debugLogConfigLoader.js');
 
 describe('loadAndApplyLoggerConfig', () => {
   /** @type {AppContainer} */
   let container;
   let logger;
   let mockLoggerConfigLoader;
-  let mockDebugLogConfigLoader;
 
   beforeEach(() => {
     // Clear all mocks before each test
@@ -35,13 +31,8 @@ describe('loadAndApplyLoggerConfig', () => {
     mockLoggerConfigLoader = {
       loadConfig: jest.fn(),
     };
-    mockDebugLogConfigLoader = {
-      loadConfig: jest.fn(),
-    };
-
-    // Configure the mocked constructors to return our mock instances
+    // Configure the mocked constructor to return our mock instance
     LoggerConfigLoader.mockImplementation(() => mockLoggerConfigLoader);
-    DebugLogConfigLoader.mockImplementation(() => mockDebugLogConfigLoader);
   });
 
   afterEach(() => {
@@ -49,9 +40,7 @@ describe('loadAndApplyLoggerConfig', () => {
   });
 
   it('applies log level when configuration specifies a string', async () => {
-    // Mock debug config to return null (not available)
-    mockDebugLogConfigLoader.loadConfig.mockResolvedValue({ error: true });
-    // Mock legacy config to return the log level
+    // Mock config to return the log level
     mockLoggerConfigLoader.loadConfig.mockResolvedValue({ logLevel: 'WARN' });
 
     await loggerConfigUtils.loadAndApplyLoggerConfig(container, logger, tokens);
@@ -61,9 +50,7 @@ describe('loadAndApplyLoggerConfig', () => {
   });
 
   it('logs error when loading configuration throws', async () => {
-    // Mock debug config to return error result (not throw)
-    mockDebugLogConfigLoader.loadConfig.mockResolvedValue({ error: true });
-    // Mock legacy config loader to throw an error
+    // Mock config loader to throw an error
     mockLoggerConfigLoader.loadConfig.mockRejectedValue(new Error('network'));
 
     await loggerConfigUtils.loadAndApplyLoggerConfig(container, logger, tokens);

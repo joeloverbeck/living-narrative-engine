@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:entity_instantiated",
+  "description": "Dispatched when an entity is instantiated during world initialization or runtime.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "The ID of the instantiated entity."
+      },
+      "instanceId": {
+        "type": ["string", "null"],
+        "description": "The unique instance ID of the entity, if applicable."
+      },
+      "definitionId": {
+        "type": "string",
+        "description": "The ID of the entity definition used for instantiation."
+      },
+      "worldName": {
+        "type": "string",
+        "description": "The name of the world where the entity was instantiated."
+      },
+      "reason": {
+        "type": "string",
+        "description": "The reason for instantiation (e.g., 'Initial World Load (Batch)')."
+      }
+    },
+    "required": ["entityId", "definitionId", "worldName", "reason"],
+    "additionalProperties": false
+  }
+}

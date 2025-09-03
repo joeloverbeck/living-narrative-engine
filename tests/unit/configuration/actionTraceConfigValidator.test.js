@@ -335,7 +335,8 @@ describe('ActionTraceConfigValidator', () => {
       );
     });
 
-    it('should assess performance impact', async () => {
+    it('should not warn about performance impact for verbose configuration', async () => {
+      // Users who select verbose mode with all details want that level of detail
       const config = {
         actionTracing: {
           enabled: true,
@@ -351,7 +352,8 @@ describe('ActionTraceConfigValidator', () => {
       const result = await validator.validateConfiguration(config);
 
       expect(result.isValid).toBe(true);
-      expect(result.warnings).toContainEqual(
+      // Should not warn about performance impact for valid verbose configuration
+      expect(result.warnings).not.toContainEqual(
         expect.stringContaining('High performance impact')
       );
     });

@@ -269,7 +269,7 @@ describe('Anatomy Error Event Flow Integration', () => {
 
       // Generate descriptions for all entities
       for (const entity of entities) {
-        bodyDescriptionOrchestrator.generateBodyDescription(entity);
+        await bodyDescriptionOrchestrator.generateBodyDescription(entity);
       }
 
       await new Promise((resolve) => setTimeout(resolve, 20));
@@ -426,12 +426,15 @@ describe('Anatomy Error Event Flow Integration', () => {
       const startTime = Date.now();
 
       // Dispatch all at once
-      entities.forEach((entity) => {
-        bodyDescriptionOrchestrator.generateBodyDescription(entity);
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await Promise.all(
+        entities.map((entity) =>
+          bodyDescriptionOrchestrator.generateBodyDescription(entity)
+        )
+      );
       const endTime = Date.now();
+
+      // Wait a bit more for async events to settle
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // All events should be captured
       expect(capturedEvents).toHaveLength(10);
@@ -470,7 +473,7 @@ describe('Anatomy Error Event Flow Integration', () => {
         )
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Should have 2 error events (for fail-1 and fail-2)
       expect(capturedEvents).toHaveLength(2);

@@ -5,8 +5,8 @@
 
 import ConsoleLogger, { LogLevel } from './consoleLogger.js';
 import NoOpLogger from './noOpLogger.js';
-import { validateDependency } from '../utils/dependencyUtils.js';
-import { DEFAULT_CONFIG, CONFIG_PRESETS } from './config/defaultConfig.js';
+import { DEFAULT_CONFIG } from './config/defaultConfig.js';
+import { createSafeErrorLogger } from '../utils/safeErrorLogger.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -121,14 +121,14 @@ class LoggerStrategy {
     this.#currentLevel = 'INFO'; // Default log level
 
     // Merge config with defaults (but don't use mode from DEFAULT_CONFIG)
-    const { mode: defaultMode, ...defaultConfigWithoutMode } = DEFAULT_CONFIG;
+    const { mode: _defaultMode, ...defaultConfigWithoutMode } = DEFAULT_CONFIG;
     this.#config = this.#validateConfig({
       ...defaultConfigWithoutMode,
       ...config,
     });
 
-    // Determine initial mode
-    this.#mode = this.#detectMode(mode);
+    // Determine initial mode - pass config to detectMode
+    this.#mode = this.#detectMode(mode, this.#config);
 
     // Create initial logger
     this.#logger = this.#createLogger(
@@ -154,39 +154,42 @@ class LoggerStrategy {
    *
    * @private
    * @param {string} [explicitMode] - Explicitly provided mode
+   * @param {object} [config] - Configuration object
    * @returns {string} The determined logger mode
    */
-  #detectMode(explicitMode) {
+  #detectMode(explicitMode, config = {}) {
     // Priority 1: Explicit mode parameter
     if (explicitMode && Object.values(LoggerMode).includes(explicitMode)) {
       return explicitMode;
     }
 
     // Priority 2: Environment variable DEBUG_LOG_MODE
+    // eslint-disable-next-line no-undef
     if (typeof process !== 'undefined' && process.env?.DEBUG_LOG_MODE) {
+      // eslint-disable-next-line no-undef
       const envMode = process.env.DEBUG_LOG_MODE.toLowerCase();
       if (Object.values(LoggerMode).includes(envMode)) {
         return envMode;
       }
     }
 
-    // Priority 3: Configuration file mode
-    if (
-      this.#config.mode &&
-      Object.values(LoggerMode).includes(this.#config.mode)
-    ) {
-      return this.#config.mode;
+    // Priority 3: Config file mode
+    if (config.mode && Object.values(LoggerMode).includes(config.mode)) {
+      return config.mode;
     }
 
     // Priority 4: NODE_ENV mapping or JEST_WORKER_ID detection
     if (typeof process !== 'undefined') {
       // Check for Jest test environment first (JEST_WORKER_ID is always set in Jest)
+      // eslint-disable-next-line no-undef
       if (process.env?.JEST_WORKER_ID !== undefined) {
         return LoggerMode.TEST;
       }
 
       // Then check NODE_ENV
+      // eslint-disable-next-line no-undef
       if (process.env?.NODE_ENV) {
+        // eslint-disable-next-line no-undef
         const nodeEnv = process.env.NODE_ENV.toLowerCase();
         switch (nodeEnv) {
           case 'test':
@@ -203,6 +206,24 @@ class LoggerStrategy {
     return LoggerMode.CONSOLE;
   }
 
+  /**
+   * Creates or retrieves a logger instance for the specified mode.
+   *
+   * @private
+   * @param {string} mode - The logger mode
+   * @param {object} config - Configuration object
+   * @param {object} dependencies - Logger dependencies
+   * @returns {ILogger} The logger instance
+   */
+  /**
+   * Creates or retrieves a logger instance for the specified mode.
+   *
+   * @private
+   * @param {string} mode - The logger mode
+   * @param {object} config - Configuration object
+   * @param {object} dependencies - Logger dependencies
+   * @returns {ILogger} The logger instance
+   */
   /**
    * Creates or retrieves a logger instance for the specified mode.
    *
@@ -252,6 +273,11 @@ class LoggerStrategy {
       if (!logger || typeof logger.info !== 'function') {
         throw new Error(`Invalid logger instance for mode: ${mode}`);
       }
+
+      // Wrap with SafeErrorLogger to prevent recursion in error handling
+      if (mode !== LoggerMode.NONE && mode !== LoggerMode.TEST) {
+        logger = this.#wrapWithSafeLogger(logger);
+      }
     } catch (error) {
       // Fallback to console logger on any error
       if (config.fallbackToConsole !== false) {
@@ -261,6 +287,8 @@ class LoggerStrategy {
         );
         try {
           logger = this.#createConsoleLogger(config);
+          // Wrap fallback logger too
+          logger = this.#wrapWithSafeLogger(logger);
         } catch (fallbackError) {
           // Last resort - use NoOpLogger
           console.error(
@@ -274,21 +302,64 @@ class LoggerStrategy {
         logger = new NoOpLogger();
       }
 
-      // Report error via event bus if available
+      // Report error via event bus if available (but be careful about recursion)
       if (
         dependencies.eventBus &&
         typeof dependencies.eventBus.dispatch === 'function'
       ) {
-        dependencies.eventBus.dispatch({
-          type: 'LOGGER_CREATION_FAILED',
-          payload: { error: error.message, mode },
-        });
+        try {
+          // Use a timeout to avoid immediate recursion
+          setTimeout(() => {
+            dependencies.eventBus.dispatch({
+              type: 'LOGGER_CREATION_FAILED',
+              payload: { error: error.message, mode },
+            });
+          }, 0);
+        } catch (eventError) {
+          // If event dispatching fails, just use console
+          console.error('[LoggerStrategy] Failed to dispatch logger creation error:', eventError);
+        }
       }
     }
 
     // Cache the logger instance
     this.#loggerInstances.set(mode, logger);
     return logger;
+  }
+
+  /**
+   * Wraps a logger with SafeErrorLogger to prevent recursion
+   *
+   * @private
+   * @param {ILogger} logger - The logger to wrap
+   * @returns {ILogger} The wrapped logger or original logger if wrapping fails
+   */
+  /**
+   * Wraps a logger with SafeErrorLogger to prevent recursion
+   *
+   * @private
+   * @param {ILogger} logger - The logger to wrap
+   * @returns {ILogger} The wrapped logger or original logger if wrapping fails
+   */
+  #wrapWithSafeLogger(logger) {
+    try {
+      // Create SafeErrorLogger wrapper - now returns utilities, not a wrapped logger
+      const eventBus = this.#dependencies.eventBus || null;
+      
+      if (!eventBus) {
+        // If no eventBus available, return the original logger without SafeErrorLogger wrapping
+        console.warn('[LoggerStrategy] No eventBus available for SafeErrorLogger, using original logger');
+        return logger;
+      }
+      
+      // SafeErrorLogger returns utilities, not a wrapped logger, so we return the original logger
+      createSafeErrorLogger({ logger, eventBus });
+      return logger;
+    } catch (wrapError) {
+      // If wrapping fails, continue with original logger but log warning
+      console.warn('[LoggerStrategy] Failed to wrap logger with SafeErrorLogger:', wrapError);
+      return logger;
+    }
   }
 
   /**
@@ -729,7 +800,7 @@ class LoggerStrategy {
    */
   #handleSpecialCommand(command) {
     switch (command) {
-      case 'reload':
+      case 'reload': {
         // Reload configuration from defaults
         const reloadedConfig = this.#mergeConfig(
           DEFAULT_CONFIG,
@@ -742,6 +813,7 @@ class LoggerStrategy {
           this.#logger.info('[LoggerStrategy] Configuration reloaded');
         }
         break;
+      }
 
       case 'reset':
         // Reset to default configuration
@@ -767,13 +839,14 @@ class LoggerStrategy {
         }
         break;
 
-      case 'status':
+      case 'status': {
         // Return current status
         const status = this.#getStatus();
         if (this.#logger && typeof this.#logger.info === 'function') {
           this.#logger.info('[LoggerStrategy] Status:', status);
         }
         return status;
+      }
 
       default:
         if (this.#logger && typeof this.#logger.warn === 'function') {

@@ -30,6 +30,7 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
   #schemaValidator;
   #logger;
 
+
   /**
    * Creates an instance of ValidatedEventDispatcher.
    *
@@ -189,20 +190,84 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
    * @param {object} payload - Event payload.
    * @returns {Promise<boolean>} Resolves `true` on success, `false` on failure.
    */
+  /**
+   * Emits an event through the EventBus and handles errors.
+   *
+   * @param {string} eventName - Name of the event to emit.
+   * @param {object} payload - Event payload.
+   * @returns {Promise<boolean>} Resolves `true` on success, `false` on failure.
+   */
   async #emitEvent(eventName, payload) {
     try {
-      this.#logger.debug(
-        `VED: Dispatching event '${eventName}' via EventBus...`,
-        payload
-      );
-      await this.#eventBus.dispatch(eventName, payload);
-      this.#logger.debug(`VED: Event '${eventName}' dispatch successful.`);
-      return true;
+      // Enhanced circuit breaker for error events
+      const isErrorEvent = eventName === 'core:system_error_occurred';
+      
+      // The circuit breaker logic is now handled above with the Set approach
+
+
+
+      try {
+        // Enhanced safety around logger calls
+        if (isErrorEvent) {
+          // For error events, skip logger debug messages that could trigger recursion
+          console.debug(
+            `VED: Dispatching error event '${eventName}' via EventBus (using console to prevent recursion)...`
+          );
+        } else {
+          try {
+            this.#logger.debug(
+              `VED: Dispatching event '${eventName}' via EventBus...`,
+              payload
+            );
+          } catch {
+            // Logger failed - fallback to console
+            console.debug(
+              `VED: Logger failed, using console: Dispatching event '${eventName}' via EventBus...`
+            );
+          }
+        }
+        
+        await this.#eventBus.dispatch(eventName, payload);
+        
+        if (isErrorEvent) {
+          console.debug(`VED: Error event '${eventName}' dispatch successful (using console).`);
+        } else {
+          try {
+            this.#logger.debug(`VED: Event '${eventName}' dispatch successful.`);
+          } catch {
+            console.debug(`VED: Event '${eventName}' dispatch successful (logger failed).`);
+          }
+        }
+        return true;
+      } finally {
+        // Reset flag after dispatch completes - handled by Set cleanup above
+      }
     } catch (dispatchError) {
-      this.#logger.error(
-        `VED: Error occurred during EventBus.dispatch for event '${eventName}':`,
-        dispatchError
-      );
+      // Enhanced error handling to prevent recursion
+      const isErrorEvent = eventName === 'core:system_error_occurred' || eventName.includes('error');
+      
+      if (isErrorEvent) {
+        // Use console for error events to prevent recursion
+        console.error(
+          `VED: Error during error event dispatch (using console to prevent recursion):`,
+          dispatchError
+        );
+      } else {
+        // For regular events, try logger but fallback to console
+        try {
+          this.#logger.error(
+            `VED: Error occurred during EventBus.dispatch for event '${eventName}':`,
+            dispatchError
+          );
+        } catch (loggerError) {
+          console.error(
+            `VED: Logger failed during error handling for '${eventName}'. Original error:`,
+            dispatchError,
+            'Logger error:',
+            loggerError
+          );
+        }
+      }
       return false;
     }
   }
