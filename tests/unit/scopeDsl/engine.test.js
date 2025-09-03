@@ -111,17 +111,11 @@ describe('ScopeEngine', () => {
       expect(engine.maxDepth).toBe(newMaxDepth);
     });
 
-    test('should recreate depthGuard when it exists', () => {
-      // Initial depthGuard
-      const initialDepthGuard = engine.depthGuard;
-      expect(initialDepthGuard).toBeDefined();
-
+    test('should update maxDepth configuration', () => {
       // Set new max depth
       engine.setMaxDepth(8);
 
-      // Verify depthGuard was recreated
-      expect(engine.depthGuard).toBeDefined();
-      expect(engine.depthGuard).not.toBe(initialDepthGuard);
+      // Verify maxDepth was updated
       expect(engine.maxDepth).toBe(8);
     });
 

@@ -1,9 +1,8 @@
 // llm-proxy-server/jest.config.perf.js
 
 /**
- * @description Jest configuration for performance tests (excluding load tests).
- * These tests focus on precise performance measurements without the interference
- * of intensive load testing.
+ * @description Jest configuration for all performance tests (including load tests).
+ * These tests focus on performance measurements, benchmarking, and load testing.
  * @type {import('@jest/types').Config.InitialOptions}
  */
 export default {
@@ -11,12 +10,9 @@ export default {
   testEnvironment: 'node',
   clearMocks: true,
 
-  // Run all performance tests except load testing
+  // Run all performance tests
   testMatch: ['**/tests/performance/**/*.test.js'],
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '<rootDir>/tests/performance/load-testing.test.js',
-  ],
+  testPathIgnorePatterns: ['/node_modules/'],
 
   // Coverage configuration for performance tests
   collectCoverage: true,
@@ -35,8 +31,8 @@ export default {
   // Detect open handles to help identify resource leaks
   detectOpenHandles: true,
 
-  // Standard timeout for performance tests
-  testTimeout: 10000,
+  // Increased timeout for performance and load tests
+  testTimeout: 30000,
 
   // Run tests sequentially for consistent measurements
   maxWorkers: 1,

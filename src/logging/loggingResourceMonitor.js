@@ -14,7 +14,6 @@ import { validateDependency } from '../utils/dependencyUtils.js';
  */
 export class LoggingResourceMonitor {
   #performanceMonitor;
-  #remoteLogger;
   #logger;
   #resourceHistory;
   #alertThresholds;
@@ -26,11 +25,10 @@ export class LoggingResourceMonitor {
    *
    * @param {object} dependencies - Required dependencies
    * @param {object} dependencies.performanceMonitor - LoggingPerformanceMonitor instance
-   * @param {object} dependencies.remoteLogger - RemoteLogger instance for buffer monitoring
    * @param {ILogger} dependencies.logger - Logger for internal use
    * @param {object} [config] - Optional configuration
    */
-  constructor({ performanceMonitor, remoteLogger, logger }, config = {}) {
+  constructor({ performanceMonitor, logger }, config = {}) {
     validateDependency(
       performanceMonitor,
       'LoggingPerformanceMonitor',
@@ -40,16 +38,11 @@ export class LoggingResourceMonitor {
       }
     );
 
-    validateDependency(remoteLogger, 'RemoteLogger', undefined, {
-      requiredMethods: ['debug', 'info', 'warn', 'error'],
-    });
-
     validateDependency(logger, 'ILogger', undefined, {
       requiredMethods: ['debug', 'info', 'warn', 'error'],
     });
 
     this.#performanceMonitor = performanceMonitor;
-    this.#remoteLogger = remoteLogger;
     this.#logger = logger;
 
     // Initialize resource tracking
@@ -183,9 +176,9 @@ export class LoggingResourceMonitor {
    */
   #getHeapUsage() {
     // Check if we're in Node.js environment
-    if (typeof process !== 'undefined' && process.memoryUsage) {
+    if (typeof globalThis.process !== 'undefined' && globalThis.process.memoryUsage) {
       try {
-        const memUsage = process.memoryUsage();
+        const memUsage = globalThis.process.memoryUsage();
         const heapTotal = memUsage.heapTotal;
         const heapUsed = memUsage.heapUsed;
 
@@ -564,8 +557,8 @@ export class LoggingResourceMonitor {
   /**
    * Gets resource usage trend over time
    *
-   * @param {string} [metric='memory'] - Metric to analyze
-   * @param {number} [samples=10] - Number of samples to analyze
+   * @param {string} [metric] - Metric to analyze (defaults to 'memory')
+   * @param {number} [samples] - Number of samples to analyze (defaults to 10)
    * @returns {object} Trend analysis
    */
   getResourceTrend(metric = 'memory', samples = 10) {

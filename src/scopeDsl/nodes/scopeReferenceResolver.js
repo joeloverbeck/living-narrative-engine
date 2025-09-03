@@ -21,7 +21,7 @@ import { ErrorCodes } from '../constants/errorCodes.js';
  */
 export default function createScopeReferenceResolver({
   scopeRegistry,
-  cycleDetector,
+  cycleDetector: _cycleDetector, // Unused - cycle detection now handled via context
   errorHandler = null,
 }) {
   // Validate dependencies
@@ -58,7 +58,7 @@ export default function createScopeReferenceResolver({
      * @returns {Set<string>} Set of entity IDs from the referenced scope
      */
     resolve(node, ctx) {
-      const { dispatcher, actorEntity, runtimeCtx: _runtimeCtx, trace } = ctx;
+      const { dispatcher, actorEntity, runtimeCtx: _runtimeCtx, trace, cycleDetector: contextCycleDetector } = ctx;
 
       // Validate context has required properties
       if (!actorEntity) {
@@ -104,9 +104,9 @@ export default function createScopeReferenceResolver({
         trace.addLog('info', `Resolving scope reference: ${scopeId}`, 'ScopeReferenceResolver');
       }
 
-      // Check for circular references
-      if (cycleDetector) {
-        cycleDetector.enter(scopeId);
+      // Check for circular references using the resolution-scoped cycle detector
+      if (contextCycleDetector) {
+        contextCycleDetector.enter(scopeId);
       }
 
       try {
@@ -141,8 +141,8 @@ export default function createScopeReferenceResolver({
         return result;
       } finally {
         // Exit the scope reference to allow proper cycle detection
-        if (cycleDetector) {
-          cycleDetector.leave();
+        if (contextCycleDetector) {
+          contextCycleDetector.leave();
         }
       }
     },

@@ -54,25 +54,58 @@ class ScopeDslErrorHandler {
    * @throws {ScopeDslError} Always throws a standardized error
    */
   handleError(error, context, resolverName, errorCode = null) {
-    // Create standardized error information
-    const errorInfo = this.#createErrorInfo(
-      error,
-      context,
-      resolverName,
-      errorCode
-    );
-
-    // Buffer the error for analysis
-    this.#bufferError(errorInfo);
-
-    // Log based on environment
-    if (this.#isDevelopment) {
-      this.#logDetailedError(errorInfo);
-    } else {
-      this.#logProductionError(errorInfo);
+    let errorInfo;
+    
+    try {
+      // Create standardized error information
+      errorInfo = this.#createErrorInfo(
+        error,
+        context,
+        resolverName,
+        errorCode
+      );
+    } catch (createError) {
+      // Fallback for critical error info creation failures
+      errorInfo = {
+        message: error instanceof Error ? error.message : String(error),
+        resolverName: resolverName || 'unknown',
+        category: ErrorCategories.UNKNOWN,
+        code: ErrorCodes.UNKNOWN_ERROR,
+        timestamp: new Date().toISOString(),
+        sanitizedContext: { error: 'Context sanitization failed' },
+        originalError: createError.stack,
+      };
     }
 
-    // Always throw a clean ScopeDslError
+    try {
+      // Buffer the error for analysis
+      this.#bufferError(errorInfo);
+    } catch (bufferError) {
+      // Continue even if buffering fails - don't let it break error handling
+      if (this.#isDevelopment) {
+        this.#logger.warn('Error buffering failed:', bufferError.message);
+      }
+    }
+
+    try {
+      // Log based on environment
+      if (this.#isDevelopment) {
+        this.#logDetailedError(errorInfo);
+      } else {
+        this.#logProductionError(errorInfo);
+      }
+    } catch (logError) {
+      // Continue even if logging fails - don't let it break error handling
+      // Use console as fallback if logger fails
+      try {
+        // eslint-disable-next-line no-console
+        console.error(`[ScopeDSL:${errorInfo.resolverName}] Logging failed:`, logError.message);
+      } catch {
+        // Even console failed, but we still need to throw the original error
+      }
+    }
+
+    // Always throw a clean ScopeDslError - this is critical path
     throw this.#createScopeDslError(errorInfo);
   }
 
@@ -115,7 +148,7 @@ class ScopeDslErrorHandler {
       code: errorCode || this.#generateErrorCode(category),
       timestamp,
       sanitizedContext,
-      originalError: error instanceof Error ? error.stack : null,
+      originalError: error instanceof Error && this.#isDevelopment ? error.stack : null,
     };
   }
 
@@ -126,11 +159,18 @@ class ScopeDslErrorHandler {
    * @private
    */
   #bufferError(errorInfo) {
-    this.#errorBuffer.push(errorInfo);
+    try {
+      this.#errorBuffer.push(errorInfo);
 
-    // Maintain buffer size limit
-    if (this.#errorBuffer.length > this.#maxBufferSize) {
-      this.#errorBuffer.shift();
+      // Maintain buffer size limit
+      if (this.#errorBuffer.length > this.#maxBufferSize) {
+        this.#errorBuffer.shift();
+      }
+    } catch (error) {
+      // If buffer operations fail, reset buffer to prevent corruption
+      this.#errorBuffer = [];
+      // Re-throw to let caller handle gracefully
+      throw new Error(`Buffer operation failed: ${error.message}`);
     }
   }
 
@@ -277,50 +317,122 @@ class ScopeDslErrorHandler {
       return {};
     }
 
-    const seen = new WeakSet();
+    // Quick check for simple objects to avoid expensive sanitization
+    if (this.#isSimpleObject(context)) {
+      return { ...context };
+    }
 
-    const sanitize = (obj, depth = 0) => {
-      // Prevent infinite recursion
-      if (depth > 3 || seen.has(obj)) {
-        return '[Circular Reference]';
-      }
+    try {
+      // Create new WeakSet for each sanitization since WeakSet doesn't have clear()
+      const seen = new WeakSet();
 
-      if (obj === null || obj === undefined) {
-        return obj;
-      }
-
-      if (typeof obj !== 'object') {
-        return obj;
-      }
-
-      seen.add(obj);
-
-      if (Array.isArray(obj)) {
-        return obj.slice(0, 5).map((item) => sanitize(item, depth + 1));
-      }
-
-      const result = {};
-      const keys = Object.keys(obj).slice(0, 10); // Limit keys to prevent memory issues
-
-      for (const key of keys) {
+      const sanitize = (obj, depth = 0) => {
         try {
-          // Skip functions and complex objects that might cause issues
-          if (typeof obj[key] === 'function') {
-            result[key] = '[Function]';
-          } else if (obj[key] instanceof Error) {
-            result[key] = obj[key].message;
-          } else {
-            result[key] = sanitize(obj[key], depth + 1);
+          // Prevent infinite recursion and excessive depth
+          if (depth > 3) {
+            return '[Max Depth Exceeded]';
           }
-        } catch {
-          result[key] = '[Sanitization Error]';
+          
+          // Check for circular references
+          if (obj && typeof obj === 'object' && seen.has(obj)) {
+            return '[Circular Reference]';
+          }
+
+          if (obj === null || obj === undefined) {
+            return obj;
+          }
+
+          if (typeof obj !== 'object') {
+            return obj;
+          }
+
+          // Add to seen set only for objects
+          seen.add(obj);
+
+          if (Array.isArray(obj)) {
+            // Limit array size to prevent memory issues
+            return obj.slice(0, 5).map((item, index) => {
+              try {
+                return sanitize(item, depth + 1);
+              } catch {
+                return `[Array Item ${index} Error]`;
+              }
+            });
+          }
+
+          const result = {};
+          const keys = Object.keys(obj).slice(0, 10); // Limit keys to prevent memory issues
+
+          for (const key of keys) {
+            try {
+              // Skip functions and complex objects that might cause issues
+              if (typeof obj[key] === 'function') {
+                result[key] = '[Function]';
+              } else if (obj[key] instanceof Error) {
+                result[key] = obj[key].message;
+              } else if (obj[key] && typeof obj[key] === 'object' && obj[key].constructor && obj[key].constructor.name !== 'Object' && obj[key].constructor.name !== 'Array') {
+                // Complex objects like DOM nodes, etc.
+                result[key] = `[${obj[key].constructor.name}]`;
+              } else {
+                result[key] = sanitize(obj[key], depth + 1);
+              }
+            } catch (sanitizeError) {
+              result[key] = `[Sanitization Error: ${sanitizeError.message}]`;
+            }
+          }
+
+          return result;
+        } catch (innerError) {
+          return `[Inner Sanitization Error: ${innerError.message}]`;
         }
+      };
+
+      return sanitize(context);
+    } catch (outerError) {
+      // Ultimate fallback if all sanitization fails
+      return { 
+        error: 'Context sanitization completely failed',
+        reason: outerError.message,
+        type: typeof context,
+        hasKeys: context && typeof context === 'object' ? Object.keys(context).length > 0 : false
+      };
+    }
+  }
+
+  /**
+   * Check if an object is simple enough to avoid deep sanitization
+   *
+   * @param {object} obj - Object to check
+   * @returns {boolean} True if object is simple
+   * @private
+   */
+  #isSimpleObject(obj) {
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+      return false;
+    }
+
+    const keys = Object.keys(obj);
+    if (keys.length > 5) {
+      return false; // Too many keys, might be complex
+    }
+
+    // Check if all values are primitive types
+    for (const key of keys) {
+      try {
+        const value = obj[key];
+        if (value !== null && typeof value === 'object') {
+          return false; // Contains nested objects
+        }
+        if (typeof value === 'function') {
+          return false; // Contains functions
+        }
+      } catch {
+        // If we can't access the property safely, it's not simple
+        return false;
       }
+    }
 
-      return result;
-    };
-
-    return sanitize(context);
+    return true;
   }
 
   /**

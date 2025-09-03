@@ -87,10 +87,6 @@ describe('DebugLogConfigLoader Integration Tests', () => {
         initialMode
       );
 
-      // Switch to remote mode
-      logger.setLogLevel('remote');
-      expect(logger.getMode()).toBe('production');
-
       // Switch to console mode
       logger.setLogLevel('console');
       expect(logger.getMode()).toBe('console');
@@ -99,9 +95,13 @@ describe('DebugLogConfigLoader Integration Tests', () => {
       logger.setLogLevel('none');
       expect(logger.getMode()).toBe('none');
 
-      // Switch to hybrid mode (development)
-      logger.setLogLevel('hybrid');
-      expect(logger.getMode()).toBe('development');
+      // Switch to test mode
+      logger.setLogLevel('test');
+      expect(logger.getMode()).toBe('test');
+
+      // Switch back to console mode
+      logger.setLogLevel('console');
+      expect(logger.getMode()).toBe('console');
     });
 
     it('should apply regular log levels without changing mode', () => {

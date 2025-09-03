@@ -102,7 +102,7 @@ export async function configureContainer(container, uiElements) {
       container.resolve(tokens.ILogger)
     );
     logger.debug(
-      `[ContainerConfig] Initial logger registered with mode: ${logger.getMode()}. Attempting to load remote logger configuration...`
+      `[ContainerConfig] Initial logger registered with mode: ${logger.getMode()}.`
     );
 
     logger.debug(

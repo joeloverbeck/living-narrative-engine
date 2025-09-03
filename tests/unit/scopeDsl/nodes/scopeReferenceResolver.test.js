@@ -69,6 +69,7 @@ describe('scopeReferenceResolver', () => {
           dispatcher: mockDispatcher,
           actorEntity: { id: 'actor123' },
           runtimeCtx: {},
+          cycleDetector,
         };
 
         const result = resolver.resolve(node, ctx);
@@ -93,6 +94,7 @@ describe('scopeReferenceResolver', () => {
           actorEntity: { id: 'actor123' },
           runtimeCtx: {},
           trace: mockTrace,
+          cycleDetector,
         };
 
         resolver.resolve(node, ctx);
@@ -118,6 +120,7 @@ describe('scopeReferenceResolver', () => {
           dispatcher: mockDispatcher,
           actorEntity: { id: 'actor123' },
           runtimeCtx: {},
+          cycleDetector,
         };
 
         resolver.resolve(node, ctx);
@@ -133,6 +136,7 @@ describe('scopeReferenceResolver', () => {
         const ctx = {
           dispatcher: mockDispatcher,
           runtimeCtx: {},
+          cycleDetector,
         };
 
         const result = resolver.resolve(node, ctx);
@@ -155,6 +159,7 @@ describe('scopeReferenceResolver', () => {
           dispatcher: mockDispatcher,
           actorEntity: { id: 'actor123' },
           runtimeCtx: {},
+          cycleDetector,
         };
 
         const result = resolver.resolve(node, ctx);
@@ -185,6 +190,7 @@ describe('scopeReferenceResolver', () => {
         const ctx = {
           dispatcher: mockDispatcher,
           runtimeCtx: {},
+          cycleDetector,
         };
 
         expect(() => resolver.resolve(node, ctx)).toThrow(
@@ -200,6 +206,7 @@ describe('scopeReferenceResolver', () => {
           dispatcher: mockDispatcher,
           actorEntity: { id: 'actor123' },
           runtimeCtx: {},
+          cycleDetector,
         };
 
         expect(() => resolver.resolve(node, ctx)).toThrow(
@@ -233,6 +240,7 @@ describe('scopeReferenceResolver', () => {
           dispatcher: mockDispatcher,
           actorEntity: { id: 'actor123' },
           runtimeCtx: {},
+          cycleDetector,
         };
 
         // This should throw due to registry failure, but would be caught
@@ -274,30 +282,71 @@ describe('scopeReferenceResolver', () => {
     });
 
     describe('cycle detector edge cases', () => {
-      it('should handle resolution when cycleDetector is not provided', () => {
+      it('should handle resolution when cycleDetector is not provided in context', () => {
         resolver = createScopeReferenceResolver({
           scopeRegistry,
-          cycleDetector: null,
+          cycleDetector: null, // Unused - cycle detection handled via context
           errorHandler,
         });
 
         const mockScopeAst = { type: 'Source', kind: 'actor' };
         scopeRegistry.getScopeAst.mockReturnValue(mockScopeAst);
 
+        // Create a mock context cycle detector to verify it's not called when not in context
+        const mockContextCycleDetector = {
+          enter: jest.fn(),
+          leave: jest.fn(),
+        };
+
         const node = { type: 'ScopeReference', scopeId: 'test:scope' };
         const ctx = {
           dispatcher: mockDispatcher,
           actorEntity: { id: 'actor123' },
           runtimeCtx: {},
+          // No cycleDetector provided in context - this is what we're testing
         };
 
         const result = resolver.resolve(node, ctx);
 
         expect(result).toBeInstanceOf(Set);
         expect(result.size).toBe(2);
-        // Should not call cycle detector methods when not provided
-        expect(cycleDetector.enter).not.toHaveBeenCalled();
-        expect(cycleDetector.leave).not.toHaveBeenCalled();
+        // Verify that no cycle detection occurs when cycleDetector is not in context
+        // Note: We can't test mockContextCycleDetector because it's not passed in ctx
+        // The test validates that resolution works without cycle detection
+        expect(mockDispatcher.resolve).toHaveBeenCalledWith(mockScopeAst, ctx);
+      });
+
+      it('should use context cycleDetector when provided', () => {
+        resolver = createScopeReferenceResolver({
+          scopeRegistry,
+          cycleDetector: null, // Unused - cycle detection handled via context
+          errorHandler,
+        });
+
+        const mockScopeAst = { type: 'Source', kind: 'actor' };
+        scopeRegistry.getScopeAst.mockReturnValue(mockScopeAst);
+
+        // Create a mock context cycle detector to verify it IS called when in context
+        const mockContextCycleDetector = {
+          enter: jest.fn(),
+          leave: jest.fn(),
+        };
+
+        const node = { type: 'ScopeReference', scopeId: 'test:scope' };
+        const ctx = {
+          dispatcher: mockDispatcher,
+          actorEntity: { id: 'actor123' },
+          runtimeCtx: {},
+          cycleDetector: mockContextCycleDetector, // Provide cycle detector in context
+        };
+
+        const result = resolver.resolve(node, ctx);
+
+        expect(result).toBeInstanceOf(Set);
+        expect(result.size).toBe(2);
+        // Verify that context cycle detection is used
+        expect(mockContextCycleDetector.enter).toHaveBeenCalledWith('test:scope');
+        expect(mockContextCycleDetector.leave).toHaveBeenCalled();
       });
 
       it('should clean up cycle detector even when error occurs', () => {
@@ -308,6 +357,7 @@ describe('scopeReferenceResolver', () => {
           dispatcher: mockDispatcher,
           actorEntity: { id: 'actor123' },
           runtimeCtx: {},
+          cycleDetector,
         };
 
         resolver.resolve(node, ctx);

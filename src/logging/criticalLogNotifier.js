@@ -1,10 +1,9 @@
 /**
  * @file Visual notification system for critical logs
- * @see hybridLogger.js, rendererBase.js
+ * @see consoleLogger.js, rendererBase.js
  */
 
 import { RendererBase } from '../domUI/rendererBase.js';
-import { validateDependency } from '../utils/dependencyUtils.js';
 import DragHandler from './dragHandler.js';
 import LogFilter from './logFilter.js';
 import KeyboardShortcutsManager from './keyboardShortcutsManager.js';
@@ -20,13 +19,15 @@ import LogExporter from './logExporter.js';
 /**
  * Visual notification system for critical logs (warnings and errors).
  * Extends RendererBase for automatic dependency management and cleanup.
- * Integrates with HybridLogger's critical buffer for log data.
+ * Manages its own internal buffer for critical log data.
  */
 class CriticalLogNotifier extends RendererBase {
   #config;
-  #hybridLogger;
+  #logger;
   #logCounts = { warnings: 0, errors: 0 };
   #recentLogs = [];
+  #criticalBuffer = [];
+  #maxBufferSize = 100;
   #maxRecentLogs = 20;
   #isExpanded = false;
   #isDismissed = false;
@@ -41,38 +42,33 @@ class CriticalLogNotifier extends RendererBase {
   #logFilter = null;
   #keyboardManager = null;
   #exporter = null;
+  #processingCriticalLog = false;
 
   /**
    * Creates a new CriticalLogNotifier instance.
    *
    * @param {object} dependencies - Dependencies object
-   * @param {ILogger} dependencies.logger - Logger instance
+   * @param {ILogger} dependencies.logger - Logger instance for internal logging and intercepting critical logs
    * @param {IDocumentContext} dependencies.documentContext - Document context abstraction
    * @param {IValidatedEventDispatcher} dependencies.validatedEventDispatcher - Event dispatcher
-   * @param {*} dependencies.hybridLogger - HybridLogger instance with critical buffer
    * @param {NotifierConfig} [dependencies.config] - Configuration object
    */
   constructor({
     logger,
     documentContext,
     validatedEventDispatcher,
-    hybridLogger,
     config = {},
   }) {
     super({ logger, documentContext, validatedEventDispatcher });
 
-    validateDependency(hybridLogger, 'HybridLogger', logger, {
-      requiredMethods: [
-        'getCriticalLogs',
-        'getCriticalBufferStats',
-        'clearCriticalBuffer',
-      ],
-    });
-
-    this.#hybridLogger = hybridLogger;
+    this.#logger = logger;
     this.#config = this.#validateConfig(config);
     this.#maxRecentLogs = this.#config.maxRecentLogs || 20;
+    this.#maxBufferSize = this.#config.maxBufferSize || 100;
     this.#position = this.#loadPosition();
+
+    // Intercept critical logs from the logger
+    this.#interceptCriticalLogs();
 
     // Initialize LogExporter
     this.#exporter = new LogExporter({
@@ -786,22 +782,23 @@ class CriticalLogNotifier extends RendererBase {
    */
   #startUpdateTimer() {
     this.#updateTimer = setInterval(() => {
-      this.#updateFromHybridLogger();
+      this.#updateFromLogger();
     }, 1000); // Update every second
   }
 
   /**
-   * Updates log data from HybridLogger's critical buffer.
+   * Updates log data from logger's critical buffer.
    *
    * @private
    */
-  #updateFromHybridLogger() {
+  #updateFromLogger() {
     if (this.#isDismissed) {
       return;
     }
 
     try {
-      const logs = this.#hybridLogger.getCriticalLogs({
+      // Get logs from internal buffer
+      const logs = this.#getCriticalLogs({
         limit: this.#maxRecentLogs,
       });
 
@@ -827,7 +824,7 @@ class CriticalLogNotifier extends RendererBase {
       this.#updateDisplay();
     } catch (error) {
       this.logger.error(
-        `${this._logPrefix} Failed to update from HybridLogger`,
+        `${this._logPrefix} Failed to update from logger`,
         error
       );
     }
@@ -1123,8 +1120,8 @@ class CriticalLogNotifier extends RendererBase {
    * @private
    */
   #handleClear() {
-    // Clear HybridLogger's critical buffer
-    this.#hybridLogger.clearCriticalBuffer();
+    // Clear internal critical buffer
+    this.#clearCriticalBuffer();
 
     // Reset local state
     this.#logCounts = { warnings: 0, errors: 0 };
@@ -1404,6 +1401,102 @@ class CriticalLogNotifier extends RendererBase {
 
     // Call parent dispose for automatic VED and DOM cleanup
     super.dispose();
+  }
+
+  /**
+   * Intercepts critical logs from the logger to build internal buffer.
+   *
+   * @private
+   */
+  #interceptCriticalLogs() {
+    // Store original methods
+    const originalWarn = this.#logger.warn.bind(this.#logger);
+    const originalError = this.#logger.error.bind(this.#logger);
+
+    // Override warn method to capture warnings
+    this.#logger.warn = (message, ...args) => {
+      // Prevent infinite recursion by checking if we're already processing a critical log
+      if (!this.#processingCriticalLog) {
+        this.#addToCriticalBuffer({
+          level: 'warn',
+          message,
+          args,
+          timestamp: Date.now(),
+          stack: new Error().stack,
+        });
+      }
+      // Call original method
+      originalWarn(message, ...args);
+    };
+
+    // Override error method to capture errors
+    this.#logger.error = (message, ...args) => {
+      // Prevent infinite recursion by checking if we're already processing a critical log
+      if (!this.#processingCriticalLog) {
+        this.#addToCriticalBuffer({
+          level: 'error',
+          message,
+          args,
+          timestamp: Date.now(),
+          stack: new Error().stack,
+        });
+      }
+      // Call original method
+      originalError(message, ...args);
+    };
+  }
+
+  /**
+   * Adds a log entry to the critical buffer.
+   *
+   * @private
+   * @param {CriticalLogEntry} entry - Log entry to add
+   */
+  #addToCriticalBuffer(entry) {
+    // Set flag to prevent recursion during event dispatching
+    this.#processingCriticalLog = true;
+    
+    try {
+      // Add to buffer with size limit
+      this.#criticalBuffer.push(entry);
+      
+      // Trim buffer if it exceeds max size
+      if (this.#criticalBuffer.length > this.#maxBufferSize) {
+        this.#criticalBuffer.shift(); // Remove oldest entry
+      }
+
+      // Trigger new log handler
+      this.#handleNewCriticalLog(entry);
+    } finally {
+      // Always clear the flag, even if an error occurs
+      this.#processingCriticalLog = false;
+    }
+  }
+
+  /**
+   * Gets critical logs from the internal buffer.
+   *
+   * @private
+   * @param {object} options - Options for retrieving logs
+   * @param {number} [options.limit] - Maximum number of logs to return
+   * @returns {Array<CriticalLogEntry>} Array of critical log entries
+   */
+  #getCriticalLogs(options = {}) {
+    const limit = options.limit || this.#maxRecentLogs;
+    
+    // Return the most recent logs up to the limit
+    const startIndex = Math.max(0, this.#criticalBuffer.length - limit);
+    return this.#criticalBuffer.slice(startIndex);
+  }
+
+
+  /**
+   * Clears the critical buffer.
+   *
+   * @private
+   */
+  #clearCriticalBuffer() {
+    this.#criticalBuffer = [];
   }
 }
 

@@ -22,6 +22,7 @@ export default {
     '<rootDir>/tests/unit/',
     '<rootDir>/tests/performance/',
     '<rootDir>/tests/contract/',
+    '<rootDir>/tests/e2e/',
   ],
 
   // Coverage configuration for integration tests
@@ -53,14 +54,17 @@ export default {
   // Detect open handles to catch resource leaks
   detectOpenHandles: true,
 
+  // Force exit after tests to prevent hanging (safety net)
+  forceExit: true,
+
   // Longer timeout for filesystem and network operations
   testTimeout: 15000,
 
   // Run tests sequentially to avoid filesystem conflicts
   maxWorkers: 1,
 
-  // Setup for integration tests
-  setupFilesAfterEnv: [],
+  // Setup for integration tests - add global cleanup
+  setupFilesAfterEnv: ['<rootDir>/tests/integration/globalSetup.js'],
 
   // Set environment variables for tests
   // Disable debug logging to prevent LogStorageService timer issues

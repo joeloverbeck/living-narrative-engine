@@ -5,8 +5,6 @@
 
 import ConsoleLogger, { LogLevel } from './consoleLogger.js';
 import NoOpLogger from './noOpLogger.js';
-import RemoteLogger from './remoteLogger.js';
-import HybridLogger from './hybridLogger.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
 import { DEFAULT_CONFIG, CONFIG_PRESETS } from './config/defaultConfig.js';
 
@@ -34,9 +32,7 @@ export const LoggerMode = {
  * @type {{[key: string]: string}}
  */
 const MODE_SWITCH_MAP = {
-  remote: LoggerMode.PRODUCTION,
   console: LoggerMode.CONSOLE,
-  hybrid: LoggerMode.DEVELOPMENT,
   none: LoggerMode.NONE,
   test: LoggerMode.TEST,
 };
@@ -115,8 +111,6 @@ class LoggerStrategy {
    * @param {object} [options.config] - Configuration object
    * @param {object} [options.dependencies] - Logger dependencies
    * @param {ConsoleLogger} [options.dependencies.consoleLogger] - ConsoleLogger instance
-   * @param {RemoteLogger} [options.dependencies.remoteLogger] - RemoteLogger instance (auto-created if not provided)
-   * @param {*} [options.dependencies.hybridLogger] - HybridLogger instance (future)
    * @param {*} [options.dependencies.mockLogger] - MockLogger instance (for tests)
    * @param {*} [options.dependencies.eventBus] - Event bus for error reporting
    */
@@ -229,29 +223,9 @@ class LoggerStrategy {
     try {
       switch (mode) {
         case LoggerMode.PRODUCTION:
-          // Use provided RemoteLogger or create new instance
-          if (dependencies.remoteLogger) {
-            logger = dependencies.remoteLogger;
-          } else {
-            // Create RemoteLogger with fallback to console logger
-            logger = this.#createRemoteLogger(config, dependencies);
-          }
-          break;
-
         case LoggerMode.DEVELOPMENT:
-          // Use HybridLogger for development mode, unless remote logging is disabled
-          if (dependencies.hybridLogger) {
-            logger = dependencies.hybridLogger;
-          } else {
-            // Check if remote logging is disabled in config
-            if (config.enabled === false) {
-              // When remote logging is disabled, use console logger only
-              logger = this.#createConsoleLogger(config);
-            } else {
-              // Create HybridLogger instance when remote logging is enabled
-              logger = this.#createHybridLogger(config, dependencies);
-            }
-          }
+          // Always use console logger for production and development
+          logger = this.#createConsoleLogger(config);
           break;
 
         case LoggerMode.TEST:
@@ -335,81 +309,6 @@ class LoggerStrategy {
     return new ConsoleLogger(logLevel);
   }
 
-  /**
-   * Creates a HybridLogger instance.
-   *
-   * @private
-   * @param {object} config - Configuration object
-   * @param {object} dependencies - Logger dependencies
-   * @returns {HybridLogger} The hybrid logger instance
-   */
-  #createHybridLogger(config, dependencies) {
-    try {
-      // Create console and remote loggers
-      const consoleLogger = this.#createConsoleLogger(config);
-      const remoteLogger = this.#createRemoteLogger(config, dependencies);
-
-      // Create LogCategoryDetector if not provided
-      const categoryDetector = dependencies.categoryDetector || {
-        detectCategory: () => 'general',
-      };
-
-      // Create HybridLogger
-      return new HybridLogger(
-        {
-          consoleLogger,
-          remoteLogger,
-          categoryDetector,
-        },
-        config.hybrid || {}
-      );
-    } catch (error) {
-      console.error(
-        '[LoggerStrategy] Failed to create HybridLogger, falling back to console:',
-        error
-      );
-      return this.#createConsoleLogger(config);
-    }
-  }
-
-  /**
-   * Creates a RemoteLogger instance with fallback to console logger.
-   *
-   * @private
-   * @param {object} config - Configuration object
-   * @param {object} dependencies - Logger dependencies
-   * @returns {RemoteLogger} The remote logger instance
-   */
-  #createRemoteLogger(config, dependencies) {
-    try {
-      // Create console logger as fallback
-      const consoleLogger = this.#createConsoleLogger(config);
-
-      // Prepare RemoteLogger configuration
-      const remoteConfig = {
-        ...config.remote,
-      };
-
-      // Prepare dependencies for RemoteLogger
-      const remoteDependencies = {
-        consoleLogger,
-        eventBus: dependencies.eventBus,
-      };
-
-      return new RemoteLogger({
-        config: remoteConfig,
-        dependencies: remoteDependencies,
-      });
-    } catch (error) {
-      // Log error and fall back to console logger
-      console.error(
-        '[LoggerStrategy] Failed to create RemoteLogger, falling back to console:',
-        error
-      );
-
-      return this.#createConsoleLogger(config);
-    }
-  }
 
   /**
    * Validates and merges configuration.

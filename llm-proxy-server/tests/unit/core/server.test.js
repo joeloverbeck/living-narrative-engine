@@ -283,34 +283,7 @@ describe('Server - Comprehensive Tests', () => {
       default: MetricsService,
     }));
 
-    // Mock LogStorageService
-    const logStorageServiceInstance = {
-      shutdown: jest.fn(() => Promise.resolve()),
-    };
-    const LogStorageService = jest.fn(() => logStorageServiceInstance);
-    jest.doMock('../../../src/services/logStorageService.js', () => ({
-      __esModule: true,
-      default: LogStorageService,
-    }));
-
-    // Mock LogMaintenanceScheduler
-    const logMaintenanceSchedulerInstance = {
-      start: jest.fn(() => Promise.resolve()),
-      stop: jest.fn(() => Promise.resolve()),
-      getStatus: jest.fn(() => ({
-        isRunning: false,
-        isEnabled: false,
-        nextRotationCheck: null,
-        nextCleanup: null,
-      })),
-    };
-    const LogMaintenanceScheduler = jest.fn(
-      () => logMaintenanceSchedulerInstance
-    );
-    jest.doMock('../../../src/services/logMaintenanceScheduler.js', () => ({
-      __esModule: true,
-      default: LogMaintenanceScheduler,
-    }));
+    // Note: LogStorageService and LogMaintenanceScheduler have been removed from the system
 
     // Mock RetryManager
     jest.doMock('../../../src/utils/proxyApiUtils.js', () => ({
@@ -324,10 +297,7 @@ describe('Server - Comprehensive Tests', () => {
       default: 'trace-routes-mock',
     }));
 
-    jest.doMock('../../../src/routes/debugRoutes.js', () => ({
-      __esModule: true,
-      default: 'debug-routes-mock',
-    }));
+    // Note: debugRoutes.js has been removed from the system
 
     // Mock health routes - create a mock router object to handle express.Router() call
     const mockHealthRouter = {

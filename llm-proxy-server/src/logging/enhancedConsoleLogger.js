@@ -9,7 +9,6 @@ let chalk = null;
 import { getLoggerConfiguration } from './loggerConfiguration.js';
 import { getLogFormatter } from './logFormatter.js';
 import { maskApiKey, createSecureLogger } from '../utils/loggerUtils.js';
-import { shouldUseWindowsTerminalFlush, forceTerminalFlush } from '../utils/platformUtils.js';
 
 /**
  * @typedef {object} ILogger
@@ -202,13 +201,12 @@ class EnhancedConsoleLogger {
 
   /**
    * Force flush stdout/stderr on Windows and WSL to prevent terminal buffering
+   * Note: Windows Terminal flush workaround has been removed as it's no longer needed.
    * @private
+   * @deprecated
    */
   #forceFlushOnWindows() {
-    // Apply on Windows platform AND WSL environments (which display through Windows Terminal)
-    if (shouldUseWindowsTerminalFlush()) {
-      forceTerminalFlush(false); // Don't log flush attempts to avoid recursion
-    }
+    // No-op: Windows Terminal flush workaround removed
   }
 
   /**

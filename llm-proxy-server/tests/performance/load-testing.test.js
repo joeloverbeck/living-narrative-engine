@@ -604,20 +604,24 @@ describe('Load Testing', () => {
 
       mockLlmConfigService.getLlmById.mockReturnValue(mockLlmConfig);
 
-      // Mock API key service to fail intermittently
+      // Mock API key service to fail deterministically
+      // This ensures consistent test results by failing every 5th call (20% failure rate)
+      let callCount = 0;
       mockApiKeyService.getApiKey.mockImplementation(() => {
-        if (Math.random() < 0.8) {
-          return Promise.resolve({
-            apiKey: 'sk-intermittent-key',
-            source: 'environment',
-          });
-        } else {
+        callCount++;
+        // Fail every 5th call for a deterministic 20% failure rate
+        if (callCount % 5 === 0) {
           return Promise.resolve({
             errorDetails: {
               stage: 'api_key_retrieval_error',
               message: 'API key file not found',
               details: { reason: 'Simulated file not found' },
             },
+          });
+        } else {
+          return Promise.resolve({
+            apiKey: 'sk-intermittent-key',
+            source: 'environment',
           });
         }
       });
@@ -678,7 +682,7 @@ describe('Load Testing', () => {
 
       // Should handle key errors gracefully
       expect(results.success).toBeGreaterThan(30); // At least 60% success rate expected
-      expect(results.keyError).toBeGreaterThan(5); // Some key errors expected
+      expect(results.keyError).toBe(10); // Exactly 10 key errors expected (20% of 50 requests)
       expect(results.success + results.keyError + results.other).toBe(50);
 
       mockLogger.info('API Key Failure Load Test Results:', {

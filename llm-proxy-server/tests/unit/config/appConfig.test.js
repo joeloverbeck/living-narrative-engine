@@ -616,60 +616,66 @@ describe('AppConfigService - Comprehensive Tests', () => {
   });
 
   describe('Debug Logging Configuration Getters', () => {
-    test('isDebugLoggingEnabled returns true by default', () => {
+    test('isDebugLoggingEnabled returns false - deprecated feature', () => {
       const service = getAppConfigService(logger);
 
-      expect(service.isDebugLoggingEnabled()).toBe(true);
-    });
-
-    test('isDebugLoggingEnabled returns false when DEBUG_LOGGING_ENABLED is false', () => {
-      process.env.DEBUG_LOGGING_ENABLED = 'false';
-      const service = getAppConfigService(logger);
-
+      // @deprecated Debug logging has been removed from the system
       expect(service.isDebugLoggingEnabled()).toBe(false);
     });
 
-    test('isDebugLoggingEnabled returns true when DEBUG_LOGGING_ENABLED is true', () => {
+    test('isDebugLoggingEnabled returns false when DEBUG_LOGGING_ENABLED is false - deprecated', () => {
+      process.env.DEBUG_LOGGING_ENABLED = 'false';
+      const service = getAppConfigService(logger);
+
+      // @deprecated Debug logging has been removed from the system
+      expect(service.isDebugLoggingEnabled()).toBe(false);
+    });
+
+    test('isDebugLoggingEnabled returns false when DEBUG_LOGGING_ENABLED is true - deprecated', () => {
       process.env.DEBUG_LOGGING_ENABLED = 'true';
       const service = getAppConfigService(logger);
 
-      expect(service.isDebugLoggingEnabled()).toBe(true);
+      // @deprecated Debug logging has been removed from the system
+      expect(service.isDebugLoggingEnabled()).toBe(false);
     });
 
-    test('getDebugLoggingPath returns default value when not set', () => {
+    test('getDebugLoggingPath returns empty string - deprecated feature', () => {
       const service = getAppConfigService(logger);
 
-      expect(service.getDebugLoggingPath()).toBe('./logs');
+      // @deprecated Debug logging has been removed from the system
+      expect(service.getDebugLoggingPath()).toBe('');
     });
 
-    test('getDebugLoggingPath returns custom value when DEBUG_LOGGING_PATH is set', () => {
+    test('getDebugLoggingPath returns empty string when DEBUG_LOGGING_PATH is set - deprecated', () => {
       process.env.DEBUG_LOGGING_PATH = '/var/log/debug';
       const service = getAppConfigService(logger);
 
-      expect(service.getDebugLoggingPath()).toBe('/var/log/debug');
+      // @deprecated Debug logging has been removed from the system
+      expect(service.getDebugLoggingPath()).toBe('');
     });
 
-    test('getDebugLoggingRetentionDays returns default value when not set', () => {
+    test('getDebugLoggingRetentionDays returns 0 - deprecated feature', () => {
       const service = getAppConfigService(logger);
 
-      expect(service.getDebugLoggingRetentionDays()).toBe(7);
+      // @deprecated Debug logging has been removed from the system
+      expect(service.getDebugLoggingRetentionDays()).toBe(0);
     });
 
-    test('getDebugLoggingRetentionDays returns custom value when DEBUG_LOGGING_RETENTION_DAYS is set', () => {
+    test('getDebugLoggingRetentionDays returns 0 when DEBUG_LOGGING_RETENTION_DAYS is set - deprecated', () => {
       process.env.DEBUG_LOGGING_RETENTION_DAYS = '30';
       const service = getAppConfigService(logger);
 
-      expect(service.getDebugLoggingRetentionDays()).toBe(30);
+      // @deprecated Debug logging has been removed from the system
+      expect(service.getDebugLoggingRetentionDays()).toBe(0);
     });
 
-    test('getDebugLoggingRetentionDays returns default when invalid value is set', () => {
+    test('getDebugLoggingRetentionDays returns 0 when invalid value is set - deprecated', () => {
       process.env.DEBUG_LOGGING_RETENTION_DAYS = '400'; // > 365
       const service = getAppConfigService(logger);
 
-      expect(service.getDebugLoggingRetentionDays()).toBe(7);
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('DEBUG_LOGGING_RETENTION_DAYS invalid')
-      );
+      // @deprecated Debug logging has been removed from the system
+      expect(service.getDebugLoggingRetentionDays()).toBe(0);
+      // Note: No warning logged since debug logging is deprecated
     });
 
     test('getDebugLoggingMaxFileSize returns default value when not set', () => {

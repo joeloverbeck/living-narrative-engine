@@ -1,263 +1,640 @@
-TokenEstimator: Calculated token budget {totalLimit: 200000, reservedTokens: 150, availableForPrompt: 199850}
-consoleLogger.js:187 TokenEstimator: Determined encoding for model {model: 'anthropic/claude-sonnet-4', encoding: 'cl100k_base'}
-consoleLogger.js:187 VED: Event 'core:traits_rewriter_generation_started' dispatch successful.
-consoleLogger.js:187 TokenEstimator: Estimated tokens {model: 'anthropic/claude-sonnet-4', encoding: 'cl100k_base', textLength: 17637, tokenCount: 3814}
-consoleLogger.js:187 TokenEstimator: Token validation result {model: 'anthropic/claude-sonnet-4', limit: 199850, estimatedTokens: 3814, isValid: true, isNearLimit: false, …}
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:traits_rewriter_generation_started'.
-consoleLogger.js:187 Attempting to retrieve API key for LLM 'openrouter-claude-sonnet-4-toolcalling'.
-consoleLogger.js:187 ClientApiKeyProvider.getKey (openrouter-claude-sonnet-4-toolcalling): Configuration for cloud service 'openrouter' has required key identifier(s) for proxy usage (apiKeyEnvVar: 'OPENROUTER_API_KEY_ENV_VAR', apiKeyFileName: 'openrouter_api_key.txt').
-consoleLogger.js:187 API key not required or not found for LLM 'openrouter-claude-sonnet-4-toolcalling', proceeding. (Is Cloud API: true, Is Server: false)
-consoleLogger.js:187 LLMStrategyFactory: Determining strategy for LLM ID: 'openrouter-claude-sonnet-4-toolcalling', apiType: 'openrouter'. {configuredJsonMethod: 'openrouter_tool_calling', fullConfigJsonStrategy: {…}}
-consoleLogger.js:187 LLMStrategyFactory: Selected strategy 'OpenRouterToolCallingStrategy' for LLM ID 'openrouter-claude-sonnet-4-toolcalling'. Details: apiType='openrouter', effectiveMethod='openrouter_tool_calling', configuredMethod='openrouter_tool_calling'.
-consoleLogger.js:187 OpenRouterToolCallingStrategy initialized.
-consoleLogger.js:187 OpenRouterToolCallingStrategy initialized.
-consoleLogger.js:187 LLMRequestExecutor: Executing request {configId: 'openrouter-claude-sonnet-4-toolcalling', strategyMethod: 'openrouter_tool_calling', hasAbortSignal: false, hasRequestOptions: true}
-consoleLogger.js:187 OpenRouterToolCallingStrategy.execute called for LLM ID: openrouter-claude-sonnet-4-toolcalling.
-consoleLogger.js:187 BaseChatLLMStrategy._constructPromptPayload for apiType 'openrouter'. gameSummary (finalPromptString) length: 17637.
-consoleLogger.js:187 BaseChatLLMStrategy._constructPromptPayload: Constructed 'messages' array. The prompt built by PromptBuilder is the sole user message content. [{…}]
-consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Constructed base prompt payload: {llmId: 'openrouter-claude-sonnet-4-toolcalling', messagesPreview: Array(1)}
-consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): No custom tool schema provided, using default game AI schema. {llmId: 'openrouter-claude-sonnet-4-toolcalling'}
-consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Defined tool for use with name 'function_call'. {llmId: 'openrouter-claude-sonnet-4-toolcalling', toolName: 'function_call', isCustomSchema: false}
-consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Received provider-specific payload additions. {llmId: 'openrouter-claude-sonnet-4-toolcalling', providerSpecificPayloadAdditions: {…}}
-consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Assembled provider request payload. {llmId: 'openrouter-claude-sonnet-4-toolcalling', keys: Array(5)}
-consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Client-side execution. Using proxy URL: http://localhost:3001/api/llm-request. Payload prepared according to proxy API contract. {llmId: 'openrouter-claude-sonnet-4-toolcalling'}
-consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Making API call to 'http://localhost:3001/api/llm-request'. Payload length: 19622 {llmId: 'openrouter-claude-sonnet-4-toolcalling'}
-consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Final prompt to be sent to 'http://localhost:3001/api/llm-request': {llmId: 'openrouter-claude-sonnet-4-toolcalling', payload: '{\n  "llmId": "openrouter-claude-sonnet-4-toolcalli…",\n    "X-Title": "Living Narrative Engine"\n  }\n}'}
-consoleLogger.js:187 RetryHttpClient.request: Initiating request to http://localhost:3001/api/llm-request {method: 'POST'}
-consoleLogger.js:187 RetryHttpClient.request: Attempt 1/4 → http://localhost:3001/api/llm-request
-consoleLogger.js:187 [fetchWithRetry] fetchWithRetry: Initiating request sequence for http://localhost:3001/api/llm-request with maxRetries=1, baseDelayMs=500, maxDelayMs=10000.
-consoleLogger.js:187 [fetchWithRetry] Attempt 1/1 - Fetching POST http://localhost:3001/api/llm-request
-consoleLogger.js:187 [fetchWithRetry] Setting credentials: 'omit' for localhost request to http://localhost:3001/api/llm-request
-consoleLogger.js:187 [fetchWithRetry] fetchWithRetry: Attempt 1/1 for http://localhost:3001/api/llm-request - Request successful (status 200). Parsing JSON response.
-consoleLogger.js:187 [fetchWithRetry] fetchWithRetry: Successfully fetched and parsed JSON from http://localhost:3001/api/llm-request after 1 attempt(s).
-consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Raw API response received. Preview: {"id":"gen-1756834057-Ur266qY8lURhoEikeaj1","provider":"Google","model":"anthropic/claude-sonnet-4","object":"chat.completion","created":1756834057,"choices":[{"logprobs":null,"finish_reason":"tool_calls","native_finish_reason":"tool_calls","index":0...
-consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Successfully extracted JSON string from tool_calls[0].function.arguments for tool 'function_call'. {llmId: 'openrouter-claude-sonnet-4-toolcalling', length: 8025, toolName: 'function_call'}
-consoleLogger.js:187 OpenRouterToolCallingStrategy (openrouter-claude-sonnet-4-toolcalling): Successfully extracted JSON string. Length: 8025. {llmId: 'openrouter-claude-sonnet-4-toolcalling'}
-consoleLogger.js:187 LLMRequestExecutor: Request executed successfully {configId: 'openrouter-claude-sonnet-4-toolcalling'}
-loggerUtils.js:68 LlmJsonService:  parseAndRepair: Successfully parsed JSON on first attempt after cleaning. {inputLength: 8025, cleanedLength: 8025}
-consoleLogger.js:187 TraitsRewriterGenerator: Raw parsed response structure {characterName: 'Juan Mendarte', responseKeys: Array(0), hasCharacterName: false, hasFunctionCall: false, hasNestedCharacterName: false}
-consoleLogger.js:187 TraitsRewriterGenerator: Extracted response for validation {characterName: 'Juan Mendarte', extractedKeys: Array(0), hasCharacterName: false, hasRewrittenTraits: false, rewrittenTraitsKeys: Array(0)}
-consoleLogger.js:175 TraitsRewriterGenerator: Missing characterName in response {characterName: 'Juan Mendarte', responseStructure: `{\n  "chosenIndex": 1,\n  "speech": "{\\n  \\"characte… I'm being honest. And his hairless, bubbly ass..`, responseKeys: Array(3), responseType: 'object'}
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:674
-validateGenerationResult_fn @ TraitsRewriterGenerator.js:368
-generateRewrittenTraits @ TraitsRewriterGenerator.js:144
-await in generateRewrittenTraits
-generateRewrittenTraits_fn @ TraitsRewriterController.js:394Understand this error
-consoleLogger.js:175 TraitsRewriterGenerator: Generation failed {error: 'Validation failed for characterName: Missing chara…se structure: ["chosenIndex","speech","thoughts"]', stack: 'TraitsRewriterError: Validation failed for charact…tp://127.0.0.1:8080/traits-rewriter.js:159342:22)', characterName: 'Juan Mendarte', processingTime: 59429, options: {…}, …}
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:674
-handleGenerationErrors_fn @ TraitsRewriterGenerator.js:452
-generateRewrittenTraits @ TraitsRewriterGenerator.js:182
-await in generateRewrittenTraits
-generateRewrittenTraits_fn @ TraitsRewriterController.js:394Understand this error
-consoleLogger.js:187 VED: Validating payload for event 'core:traits_rewriter_generation_failed' against schema 'core:traits_rewriter_generation_failed#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:traits_rewriter_generation_failed'.
-consoleLogger.js:187 VED: Dispatching event 'core:traits_rewriter_generation_failed' via EventBus... {error: 'Validation failed for characterName: Missing chara…se structure: ["chosenIndex","speech","thoughts"]', characterName: 'Juan Mendarte', processingTime: 59429, options: {…}, timestamp: '2025-09-02T17:28:35.476Z', …}
-consoleLogger.js:175 TraitsRewriterController: Generation error {type: 'core:traits_rewriter_generation_failed', payload: {…}}
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:674
-handleGenerationError_fn @ TraitsRewriterController.js:717
-(anonymous) @ eventBus.js:144
-dispatch @ eventBus.js:141
-emitEvent_fn @ validatedEventDispatcher.js:198
-dispatch @ validatedEventDispatcher.js:228
-__privateMethod.call.payload.payload @ safeEventDispatcher.js:124
-executeSafely_fn @ safeEventDispatcher.js:88
-dispatch @ safeEventDispatcher.js:122
-dispatchGenerationEvents_fn @ TraitsRewriterGenerator.js:488
-handleGenerationErrors_fn @ TraitsRewriterGenerator.js:459
-generateRewrittenTraits @ TraitsRewriterGenerator.js:182
-await in generateRewrittenTraits
-generateRewrittenTraits_fn @ TraitsRewriterController.js:394Understand this error
-consoleLogger.js:175 TraitsRewriterController: Generation failed TraitsRewriterError: Validation failed for characterName: Missing character name in response. Response structure: ["chosenIndex","speech","thoughts"]
-    at _TraitsRewriterError.forValidationFailure (TraitsRewriterError.js:95:12)
-    at TraitsRewriterGenerator.validateGenerationResult_fn (TraitsRewriterGenerator.js:375:33)
-    at TraitsRewriterGenerator.generateRewrittenTraits (TraitsRewriterGenerator.js:144:31)
-    at async TraitsRewriterController.generateRewrittenTraits_fn (TraitsRewriterController.js:394:9)
-error @ consoleLogger.js:175
-error @ loggerStrategy.js:674
-generateRewrittenTraits_fn @ TraitsRewriterController.js:404Understand this error
-consoleLogger.js:187 VED: Event 'core:traits_rewriter_generation_failed' dispatch successful.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:traits_rewriter_generation_failed'.
+RangeError: Maximum call stack size exceeded
 
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
 
----
+RangeError: Maximum call stack size exceeded
 
-[1] [19:27:36.415] 🔑 DEBUG System: ApiKeyService.isApiKeyRequired: For apiType='openrouter', isLocalType=false. Key required: true
-[1] [19:27:36.415] 🔄 INFO System: ApiKeyService.getApiKey: Attempting API key retrieval for cloud service llmId 'openrouter-claude-sonnet-4-toolcalling'.
-[1] [19:27:36.415] 🔄 DEBUG System: ApiKeyService.getApiKey: Checking environment variable 'OPENROUTER_API_KEY_ENV_VAR' for llmId 'openrouter-claude-sonnet-4-toolcalling'.
-[1] [19:27:36.416] 🔄 INFO System: ApiKeyService.getApiKey: Successfully retrieved API key for llmId 'openrouter-claude-sonnet-4-toolcalling' from environment variable 'OPENROUTER_API_KEY_ENV_VAR'.
-[1] [19:27:36.416] 🔄 DEBUG LlmRequestController: LlmRequestController: API key successfully obtained for llmId 'openrouter-claude-sonnet-4-toolcalling' from source: environment variable 'OPENROUTER_API_KEY_ENV_VAR'. Key: sk-o*********************...
-[1]                     ↳ Context: {
-[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
-[1]                     }
-[1] [19:27:36.416] 🔄 DEBUG LlmRequestController: LlmRequestController: API Key Status after retrieval for 'openrouter-claude-sonnet-4-toolcalling': Source: environment variable 'OPENROUTER_API_KEY_ENV_VAR', Required: true, KeyPresent: true
-[1]                     ↳ Context: {
-[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
-[1]                     }
-[1] [19:27:36.416] 🔄 DEBUG LlmRequestController: LlmRequestController: Handing off request for llmId 'openrouter-claude-sonnet-4-toolcalling' to LlmRequestService.
-[1]                     ↳ Context: {
-[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
-[1]                     }
-[1] [19:27:36.416] 🔄 DEBUG LlmRequestService: LlmRequestService: forwardRequest invoked.
-[1]                     ↳ Context: {
-[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling",
-[1]                       "apiType": "openrouter",
-[1]                       "displayName": "Claude Sonnet 4 (OpenRouter - Tool Calling)"
-[1]                     }
-[1] [19:27:36.416] 🔄 DEBUG LlmRequestService: LlmRequestService: Constructed headers for llmId 'openrouter-claude-sonnet-4-toolcalling': ["Content-Type","HTTP-Referer","X-Title","Authorization"]. Auth included: true
-[1]                     ↳ Context: {
-[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
-[1]                     }
-[1] [19:27:36.416] 🔄 DEBUG LlmRequestService: LlmRequestService: Retry parameters for llmId 'openrouter-claude-sonnet-4-toolcalling': maxRetries=3, baseDelayMs=1000, maxDelayMs=10000
-[1]                     ↳ Context: {
-[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
-[1]                     }
-[1] [19:27:36.416] 🔄 DEBUG LlmRequestService: LlmRequestService: Preparing to forward request to LLM provider 'Claude Sonnet 4 (OpenRouter - Tool Calling)'.
-[1]                     ↳ Context: {
-[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling",
-[1]                       "targetUrl": "https://openrouter.ai/api/v1/chat/completions",
-[1]                       "headerKeys": [
-[1]                         "Content-Type",
-[1]                         "HTTP-Referer",
-[1]                         "X-Title",
-[1]                         "Authorization"
-[1]                       ]
-[1]                     }
-[1] [19:27:36.416] 🔄 DEBUG System:    Sanitized Target Payload Preview for 'openrouter-claude-sonnet-4-toolcalling':
-[1]                     ↳ Context: {
-[1]                       "payload": {
-[1]                         "temperature": 1,
-[1]                         "model": "anthropic/claude-sonnet-4",
-[1]                         "messages": [
-[1]                           {
-[1]                             "role": "user",
-[1]                             "content": "<role>\nYou are an expert character voice specialist and narrative writ..."
-[1]                           }
-[1]                         ],
-[1]                         "tools": [
-[1]                           {
-[1]                             "type": "function",
-[1]                             "function": {
-[1]                               "name": "function_call",
-[1]                               "description": "Extracts the character's game action, speech, thoughts, and optional notes based on the current situation. All fields except `notes` are required.",
-[1]                               "parameters": {
-[1]                                 "type": "object",
-[1]                                 "additionalProperties": false,
-[1]                                 "properties": {
-[1]                                   "chosenIndex": {
-[1]                                     "type": "integer",
-[1]                                     "minimum": 1
-[1]                                   },
-[1]                                   "speech": {
-[1]                                     "type": "string"
-[1]                                   },
-[1]                                   "thoughts": {
-[1]                                     "type": "string"
-[1]                                   },
-[1]                                   "notes": {
-[1]                                     "type": "array",
-[1]                                     "items": {
-[1]                                       "type": "object",
-[1]                                       "properties": {
-[1]                                         "text": {
-[1]                                           "type": "string",
-[1]                                           "minLength": 1,
-[1]                                           "description": "The note content"
-[1]                                         },
-[1]                                         "subject": {
-[1]                                           "type": "string",
-[1]                                           "minLength": 1,
-[1]                                           "description": "Primary subject of the note (entity, location, concept)"
-[1]                                         },
-[1]                                         "subjectType": {
-[1]                                           "type": "string",
-[1]                                           "enum": [
-[1]                                             "character",
-[1]                                             "location",
-[1]                                             "item",
-[1]                                             "creature",
-[1]                                             "event",
-[1]                                             "concept",
-[1]                                             "relationship",
-[1]                                             "organization",
-[1]                                             "quest",
-[1]                                             "skill",
-[1]                                             "emotion",
-[1]                                             "other"
-[1]                                           ],
-[1]                                           "description": "Explicit categorization of the note's subject type"
-[1]                                         },
-[1]                                         "context": {
-[1]                                           "type": "string",
-[1]                                           "description": "Where/how this was observed (optional)"
-[1]                                         }
-[1]                                       },
-[1]                                       "required": [
-[1]                                         "text",
-[1]                                         "subject",
-[1]                                         "subjectType"
-[1]                                       ],
-[1]                                       "additionalProperties": false
-[1]                                     }
-[1]                                   }
-[1]                                 },
-[1]                                 "required": [
-[1]                                   "chosenIndex",
-[1]                                   "speech",
-[1]                                   "thoughts"
-[1]                                 ]
-[1]                               }
-[1]                             }
-[1]                           }
-[1]                         ],
-[1]                         "tool_choice": {
-[1]                           "type": "function",
-[1]                           "function": {
-[1]                             "name": "function_call"
-[1]                           }
-[1]                         }
-[1]                       },
-[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
-[1]                     }
-[1] [19:27:36.416] 🔄 DEBUG LlmRequestService: LlmRequestService: Initiating call via RetryManager to https://openrouter.ai/api/v1/chat/completions for llmId 'openrouter-claude-sonnet-4-toolcalling'.
-[1]                     ↳ Context: {
-[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
-[1]                     }
-[1] [19:27:36.416] 🌐 INFO HttpAgentService: HttpAgentService: Created new agent for https://openrouter.ai:443
-[1] [19:27:36.416] 🔄 DEBUG HttpAgentService: HttpAgentService: Reusing agent for https://openrouter.ai:443 (1 requests)
-[1] [19:27:36.416] 🔄 DEBUG LlmRequestService: LlmRequestService: Using HTTP agent with connection pooling for llmId 'openrouter-claude-sonnet-4-toolcalling' to https://openrouter.ai/api/v1/chat/completions.
-[1] [19:27:36.417] 🔄 DEBUG RetryManager: RetryManager: Initiating request sequence for https://openrouter.ai/api/v1/chat/completions with maxRetries=3, baseDelayMs=1000, maxDelayMs=10000.
-[1] [19:27:36.417] 🔄 DEBUG System: Attempt 1/3 - Fetching POST https://openrouter.ai/api/v1/chat/completions
-[1] [19:27:39.755] 🔄 DEBUG RetryManager: RetryManager: Attempt 1/3 for https://openrouter.ai/api/v1/chat/completions - Request successful (status 200). Parsing JSON response.
-[1] [19:28:35.467] 🌐 INFO RetryManager: RetryManager: Successfully fetched and parsed JSON from https://openrouter.ai/api/v1/chat/completions after 1 attempt(s).
-[1] [19:28:35.467] 🔄 INFO LlmRequestService: LlmRequestService: Successfully received response from LLM provider for llmId 'openrouter-claude-sonnet-4-toolcalling'. Status: 200 (assumed for RetryManager success).
-[1]                     ↳ Context: {
-[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
-[1]                     }
-[1] [19:28:35.467] 📝 DEBUG System:    LLM Provider Response Body (Preview for 'openrouter-claude-sonnet-4-toolcalling'): {"id":"gen-1756834057-Ur266qY8lURhoEikeaj1","provider":"Google","model":"anthropic/claude-sonnet-4",...
-[1]                     ↳ Context: {
-[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
-[1]                     }
-[1] [19:28:35.467] 🔄 DEBUG LlmRequestController: LlmRequestController: LlmRequestService returned success for llmId 'openrouter-claude-sonnet-4-toolcalling'. Relaying to client with status 200.
-[1]                     ↳ Context: {
-[1]                       "llmId": "openrouter-claude-sonnet-4-toolcalling"
-[1]                     }
-[1] [19:28:35.468] 🔄 DEBUG System: LLM request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "provider": "unknown",
-[1]                       "model": "openrouter-claude-sonnet-4-toolcalling",
-[1]                       "status": "success",
-[1]                       "duration": 59.05593852,
-[1]                       "tokens": "[MASKED]"
-[1]                     }
-[1] [19:28:35.473] 🔄 DEBUG System: HTTP request metrics recorded
-[1]                     ↳ Context: {
-[1]                       "method": "POST",
-[1]                       "route": "/api/llm-request",
-[1]                       "statusCode": 200,
-[1]                       "duration": 59.10501762,
-[1]                       "requestSize": 19652,
-[1]                       "responseSize": 0
-[1]                     }
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
+  }
+  ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
+      await this.#eventBus.dispatch(eventName, payload);
+                           ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
+  }
+  ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
+      await this.#eventBus.dispatch(eventName, payload);
+                           ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
+  }
+  ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
+      await this.#eventBus.dispatch(eventName, payload);
+                           ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
+  }
+  ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
+      await this.#eventBus.dispatch(eventName, payload);
+                           ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
+  }
+  ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
+      await this.#eventBus.dispatch(eventName, payload);
+                           ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
+  }
+  ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
+      await this.#eventBus.dispatch(eventName, payload);
+                           ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
+  }
+  ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
+      await this.#eventBus.dispatch(eventName, payload);
+                           ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+ PASS   integration  tests/integration/anatomy/anatomyGraphCreation.integration.test.js
+ PASS   integration  tests/integration/clichesGenerator/eventDefinitionFix.test.js
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
+  }
+  ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
+      await this.#eventBus.dispatch(eventName, payload);
+                           ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
+  }
+  ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
+      await this.#eventBus.dispatch(eventName, payload);
+                           ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+ PASS   integration  tests/integration/anatomy/anatomyGenerationWithSlotMetadata.test.js
+ PASS   integration  tests/integration/mods/intimacy/rules/placeHandOnWaistRule.integration.test.js
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
+  }
+  ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
+      await this.#eventBus.dispatch(eventName, payload);
+                           ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/eventBus.js:1588
+  }
+  ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1776
+      await this.#eventBus.dispatch(eventName, payload);
+                           ^
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded
+
+Exception in PromiseRejectCallback:
+/home/joeloverbeck/projects/living-narrative-engine/src/events/validatedEventDispatcher.js:1854
+    return false;
+
+RangeError: Maximum call stack size exceeded

@@ -904,26 +904,28 @@ class AppConfigService {
 
   /**
    * Gets whether debug logging is enabled.
-   * @returns {boolean} True if debug logging is enabled, false otherwise.
+   * @deprecated Debug logging has been removed from the system
+   * @returns {boolean} Always returns false
    */
   isDebugLoggingEnabled() {
-    return this._debugLoggingEnabled;
+    return false;
   }
 
   /**
    * Gets the debug logging path.
-   * @returns {string} The path for debug log files.
+   * @deprecated Debug logging has been removed from the system
+   * @returns {string} Returns empty string
    */
   getDebugLoggingPath() {
-    return this._debugLoggingPath;
-  }
+    return '';  }
 
   /**
    * Gets the debug logging retention days.
-   * @returns {number} The number of days to retain debug logs.
+   * @deprecated Debug logging has been removed from the system
+   * @returns {number} Returns 0
    */
   getDebugLoggingRetentionDays() {
-    return this._debugLoggingRetentionDays;
+    return 0;
   }
 
   /**

@@ -9,19 +9,6 @@
   "mode": "development",
   "fallbackToConsole": true,
   "logLevel": "DEBUG",
-  "remote": {
-    "endpoint": "http://localhost:3001/api/debug-log",
-    "batchSize": 400,
-    "flushInterval": 100,
-    "retryAttempts": 3,
-    "retryBaseDelay": 1000,
-    "retryMaxDelay": 30000,
-    "initialConnectionDelay": 3000,
-    "circuitBreakerThreshold": 8,
-    "circuitBreakerTimeout": 30000,
-    "requestTimeout": 5000,
-    "compression": false
-  },
   "categories": {
     "engine": {
       "enabled": true,

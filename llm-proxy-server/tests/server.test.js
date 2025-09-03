@@ -181,10 +181,7 @@ beforeEach(() => {
     default: 'trace-routes-mock',
   }));
 
-  jest.doMock('../src/routes/debugRoutes.js', () => ({
-    __esModule: true,
-    default: 'debug-routes-mock',
-  }));
+  // Note: debugRoutes.js has been removed from the system
 
   jest.doMock('../src/routes/healthRoutes.js', () => ({
     __esModule: true,
