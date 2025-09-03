@@ -1,0 +1,266 @@
+/**
+ * @file Integration tests for batch mode event handling during game loading
+ * @description Tests that the game loading process correctly enables EventBus batch mode 
+ * to handle legitimate bulk events without triggering recursion guards
+ */
+
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { createTestBed } from '../../common/testBed.js';
+import GameEngine from '../../../src/engine/gameEngine.js';
+import createSafeErrorLogger from '../../../src/utils/safeErrorLogger.js';
+
+describe('Game Loading Batch Mode Integration', () => {
+  let testBed;
+  let gameEngine;
+  let mockEventBus;
+  let mockContainer;
+  let mockLogger;
+
+  beforeEach(() => {
+    testBed = createTestBed();
+    mockLogger = testBed.createMockLogger();
+    
+    // Mock EventBus with batch mode functionality
+    mockEventBus = {
+      setBatchMode: jest.fn(),
+      isBatchModeEnabled: jest.fn().mockReturnValue(false),
+      getBatchModeOptions: jest.fn().mockReturnValue(null),
+      dispatch: jest.fn().mockResolvedValue(undefined)
+    };
+    
+    // Create comprehensive mock container that resolves all required dependencies
+    mockContainer = {
+      resolve: jest.fn().mockImplementation((token) => {
+        if (token === 'EventBus') return mockEventBus;
+        if (token === 'ILogger') return mockLogger;
+        if (token === 'IEntityManager') return testBed.createMock('IEntityManager', ['clearAll']);
+        if (token === 'ITurnManager') return testBed.createMock('ITurnManager', ['stop']);
+        if (token === 'GamePersistenceService') return testBed.createMock('GamePersistenceService');
+        if (token === 'PlaytimeTracker') return testBed.createMock('PlaytimeTracker', ['reset', 'endSessionAndAccumulate']);
+        if (token === 'ISafeEventDispatcher') return testBed.createMock('ISafeEventDispatcher', ['dispatch']);
+        if (token === 'IInitializationService') return {
+          runInitializationSequence: jest.fn().mockResolvedValue({ success: true })
+        };
+        // Return a generic mock for any other token
+        return testBed.createMock(token, ['dispatch', 'subscribe', 'unsubscribe']);
+      }),
+      isRegistered: jest.fn().mockReturnValue(false)
+    };
+  });
+
+  afterEach(() => {
+    testBed.cleanup();
+  });
+
+  describe('GameEngine Batch Mode Integration', () => {
+    it('should enable batch mode during game loading', async () => {
+      // Arrange
+      gameEngine = new GameEngine({
+        container: mockContainer,
+        logger: mockLogger
+      });
+
+      // Act
+      await gameEngine.startNewGame('testWorld');
+
+      // Assert
+      expect(mockEventBus.setBatchMode).toHaveBeenCalledWith(true, {
+        maxRecursionDepth: 15, // Enhanced limit for game-initialization
+        maxGlobalRecursion: 50, // Enhanced limit for game-initialization
+        timeoutMs: 60000,
+        context: 'game-initialization'
+      });
+    });
+
+    it('should disable batch mode after game loading completes', async () => {
+      // Arrange
+      gameEngine = new GameEngine({
+        container: mockContainer,
+        logger: mockLogger
+      });
+
+      // Act
+      await gameEngine.startNewGame('testWorld');
+
+      // Assert
+      expect(mockEventBus.setBatchMode).toHaveBeenCalledWith(false);
+    });
+
+    it('should disable batch mode even if game loading fails', async () => {
+      // Arrange
+      const initializationService = {
+        runInitializationSequence: jest.fn().mockRejectedValue(new Error('Initialization failed'))
+      };
+      
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === 'IInitializationService') return initializationService;
+        if (token === 'EventBus') return mockEventBus;
+        if (token === 'ILogger') return mockLogger;
+        if (token === 'IEntityManager') return testBed.createMock('IEntityManager', ['clearAll']);
+        if (token === 'ITurnManager') return testBed.createMock('ITurnManager', ['stop']);
+        if (token === 'GamePersistenceService') return testBed.createMock('GamePersistenceService');
+        if (token === 'PlaytimeTracker') return testBed.createMock('PlaytimeTracker', ['reset', 'endSessionAndAccumulate']);
+        if (token === 'ISafeEventDispatcher') return testBed.createMock('ISafeEventDispatcher', ['dispatch']);
+        return testBed.createMock(token, ['dispatch', 'subscribe', 'unsubscribe']);
+      });
+      
+      gameEngine = new GameEngine({
+        container: mockContainer,
+        logger: mockLogger
+      });
+
+      // Act & Assert
+      await expect(gameEngine.startNewGame('testWorld')).rejects.toThrow();
+      expect(mockEventBus.setBatchMode).toHaveBeenCalledWith(false);
+    });
+  });
+
+  describe('SafeErrorLogger Batch Mode Configuration', () => {
+    it('should use enhanced limits for game-initialization context', () => {
+      // Arrange
+      const safeErrorLogger = createSafeErrorLogger({
+        logger: mockLogger,
+        eventBus: mockEventBus
+      });
+
+      // Act
+      safeErrorLogger.enableGameLoadingMode({
+        context: 'game-initialization',
+        timeoutMs: 60000
+      });
+
+      // Assert
+      expect(mockEventBus.setBatchMode).toHaveBeenCalledWith(true, {
+        maxRecursionDepth: 15,
+        maxGlobalRecursion: 50,
+        timeoutMs: 60000,
+        context: 'game-initialization'
+      });
+    });
+
+    it('should use standard limits for other contexts', () => {
+      // Arrange
+      const safeErrorLogger = createSafeErrorLogger({
+        logger: mockLogger,
+        eventBus: mockEventBus
+      });
+
+      // Act
+      safeErrorLogger.enableGameLoadingMode({
+        context: 'bulk-operation',
+        timeoutMs: 30000
+      });
+
+      // Assert
+      expect(mockEventBus.setBatchMode).toHaveBeenCalledWith(true, {
+        maxRecursionDepth: 10,
+        maxGlobalRecursion: 25,
+        timeoutMs: 30000,
+        context: 'bulk-operation'
+      });
+    });
+  });
+
+  describe('Batch Mode Error Handling', () => {
+    it('should handle initialization failures gracefully with batch mode cleanup', async () => {
+      // Arrange
+      const initializationError = new Error('World data not found');
+      const initializationService = {
+        runInitializationSequence: jest.fn().mockRejectedValue(initializationError)
+      };
+      
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === 'IInitializationService') return initializationService;
+        if (token === 'EventBus') return mockEventBus;
+        if (token === 'ILogger') return mockLogger;
+        if (token === 'IEntityManager') return testBed.createMock('IEntityManager', ['clearAll']);
+        if (token === 'ITurnManager') return testBed.createMock('ITurnManager', ['stop']);
+        if (token === 'GamePersistenceService') return testBed.createMock('GamePersistenceService');
+        if (token === 'PlaytimeTracker') return testBed.createMock('PlaytimeTracker', ['reset', 'endSessionAndAccumulate']);
+        if (token === 'ISafeEventDispatcher') return testBed.createMock('ISafeEventDispatcher', ['dispatch']);
+        return testBed.createMock(token, ['dispatch', 'subscribe', 'unsubscribe']);
+      });
+      
+      gameEngine = new GameEngine({
+        container: mockContainer,
+        logger: mockLogger
+      });
+
+      // Act & Assert
+      await expect(gameEngine.startNewGame('invalidWorld')).rejects.toThrow('World data not found');
+      
+      // Verify batch mode was enabled and then disabled
+      expect(mockEventBus.setBatchMode).toHaveBeenCalledWith(true, expect.any(Object));
+      expect(mockEventBus.setBatchMode).toHaveBeenCalledWith(false);
+    });
+
+    it('should log appropriate context for batch mode operations', async () => {
+      // Arrange
+      gameEngine = new GameEngine({
+        container: mockContainer,
+        logger: mockLogger
+      });
+
+      // Act
+      await gameEngine.startNewGame('testWorld');
+
+      // Assert
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('SafeErrorLogger: Enabled batch mode for game-initialization')
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('maxRecursionDepth: 15, maxGlobalRecursion: 50')
+      );
+    });
+  });
+
+  describe('Performance and Safety', () => {
+    it('should set appropriate timeout for game loading batch mode', async () => {
+      // Arrange
+      gameEngine = new GameEngine({
+        container: mockContainer,
+        logger: mockLogger
+      });
+
+      // Act
+      await gameEngine.startNewGame('testWorld');
+
+      // Assert
+      const batchModeCall = mockEventBus.setBatchMode.mock.calls.find(call => call[0] === true);
+      expect(batchModeCall[1].timeoutMs).toBe(60000); // 1 minute timeout
+      expect(batchModeCall[1].context).toBe('game-initialization');
+    });
+
+    it('should properly coordinate with existing batch operations', () => {
+      // This test verifies that SafeErrorLogger's withGameLoadingMode
+      // works correctly for coordinating batch mode across operations
+      
+      // Arrange
+      const safeErrorLogger = createSafeErrorLogger({
+        logger: mockLogger,
+        eventBus: mockEventBus
+      });
+
+      // Act
+      const promise = safeErrorLogger.withGameLoadingMode(
+        async () => {
+          // Simulate some work
+          return 'success';
+        },
+        {
+          context: 'game-initialization',
+          timeoutMs: 30000
+        }
+      );
+
+      // Assert
+      expect(promise).resolves.toBe('success');
+      expect(mockEventBus.setBatchMode).toHaveBeenCalledWith(true, {
+        maxRecursionDepth: 15,
+        maxGlobalRecursion: 50,
+        timeoutMs: 30000,
+        context: 'game-initialization'
+      });
+    });
+  });
+});

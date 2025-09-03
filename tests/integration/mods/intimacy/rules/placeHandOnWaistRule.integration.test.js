@@ -2,116 +2,35 @@
  * @file Integration tests for the intimacy:place_hand_on_waist rule.
  */
 
-import {
-  describe,
-  it,
-  beforeEach,
-  afterEach,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../../common/mods/ModTestFixture.js';
+import JsonLogicEvaluationService from '../../../../../src/logic/jsonLogicEvaluationService.js';
 import placeHandOnWaistRule from '../../../../../data/mods/intimacy/rules/place_hand_on_waist.rule.json';
 import eventIsActionPlaceHandOnWaist from '../../../../../data/mods/intimacy/conditions/event-is-action-place-hand-on-waist.condition.json';
-import logSuccessMacro from '../../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../../../src/utils/macroUtils.js';
-import QueryComponentHandler from '../../../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetNameHandler from '../../../../../src/logic/operationHandlers/getNameHandler.js';
-import GetTimestampHandler from '../../../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import DispatchPerceptibleEventHandler from '../../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import EndTurnHandler from '../../../../../src/logic/operationHandlers/endTurnHandler.js';
-import SetVariableHandler from '../../../../../src/logic/operationHandlers/setVariableHandler.js';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../../../common/engine/systemLogicTestEnv.js';
 
-/**
- * Creates handlers needed for the place_hand_on_waist rule.
- *
- * @param {object} entityManager - Entity manager instance
- * @param {object} eventBus - Event bus instance
- * @param {object} logger - Logger instance
- * @returns {object} Handlers object
- */
-function createHandlers(entityManager, eventBus, logger) {
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
-  };
-
-  return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
-  };
-}
 
 describe('handle_place_hand_on_waist rule integration', () => {
-  let testEnv;
+  let testFixture;
 
-  beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(placeHandOnWaistRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
-    const ruleWithExpandedActions = {
-      ...placeHandOnWaistRule,
-      actions: expanded,
-    };
-
-    const dataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([ruleWithExpandedActions]),
-      getConditionDefinition: jest.fn((id) => {
-        if (id === 'intimacy:event-is-action-place-hand-on-waist') {
-          return eventIsActionPlaceHandOnWaist;
-        }
-        return undefined;
-      }),
-    };
-
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      entities: [],
-      rules: [ruleWithExpandedActions],
-      dataRegistry,
-    });
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forRule(
+      'intimacy',
+      'intimacy:place_hand_on_waist',
+      placeHandOnWaistRule,
+      eventIsActionPlaceHandOnWaist
+    );
   });
 
-  afterEach(() => {
-    if (testEnv) {
-      testEnv.cleanup();
+  afterEach(async () => {
+    if (testFixture) {
+      await testFixture.cleanup();
     }
   });
 
   it('condition evaluates correctly', () => {
     // Test that the condition works correctly
     const condition = eventIsActionPlaceHandOnWaist.logic;
-    const jsonLogic = testEnv.jsonLogic;
+    const jsonLogicService = new JsonLogicEvaluationService();
 
     // Check what the condition expects
     expect(condition).toEqual({
@@ -127,7 +46,7 @@ describe('handle_place_hand_on_waist rule integration', () => {
       },
     };
 
-    expect(jsonLogic.evaluate(condition, matchingData)).toBe(true);
+    expect(jsonLogicService.evaluate(condition, matchingData)).toBe(true);
 
     // Should not match when actionId is different
     const nonMatchingData = {
@@ -137,76 +56,35 @@ describe('handle_place_hand_on_waist rule integration', () => {
         },
       },
     };
-    expect(jsonLogic.evaluate(condition, nonMatchingData)).toBe(false);
+    expect(jsonLogicService.evaluate(condition, nonMatchingData)).toBe(false);
   });
 
   it('performs place hand on waist action successfully', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
+    const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
+    
+    const result = await testFixture.executeAction({
+      actorId: scenario.actor.id,
       actionId: 'intimacy:place_hand_on_waist',
-      targetId: 'target1',
-      originalInput: 'place_hand_on_waist target1',
+      targetId: scenario.target.id
     });
 
-    const types = testEnv.events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:perceptible_event',
-        'core:display_successful_action_result',
-        'core:turn_ended',
-      ])
-    );
+    testFixture.assertPerceptibleEvent(result, [
+      'core:perceptible_event',
+      'core:display_successful_action_result',
+      'core:turn_ended'
+    ]);
   });
 
   it('perceptible event contains correct message', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
+    const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
+    
+    const result = await testFixture.executeAction({
+      actorId: scenario.actor.id,
       actionId: 'intimacy:place_hand_on_waist',
-      targetId: 'target1',
-      originalInput: 'place_hand_on_waist target1',
+      targetId: scenario.target.id
     });
 
-    const perceptibleEvent = testEnv.events.find(
+    const perceptibleEvent = result.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
@@ -216,119 +94,54 @@ describe('handle_place_hand_on_waist rule integration', () => {
   });
 
   it('rule does not fire for different action', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
+    const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
+    
+    const result = await testFixture.executeAction({
+      actorId: scenario.actor.id,
       actionId: 'intimacy:different_action',
-      targetId: 'target1',
-      originalInput: 'different_action target1',
+      targetId: scenario.target.id
     });
 
-    const types = testEnv.events.map((e) => e.eventType);
+    const types = result.events.map((e) => e.eventType);
     expect(types).not.toContain('core:perceptible_event');
     expect(types).not.toContain('core:display_successful_action_result');
     expect(types).not.toContain('core:turn_ended');
   });
 
   it('works with multiple actors in location', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Living Room' },
-        },
-      },
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-      {
-        id: 'observer1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Charlie' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
+    const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
+    
+    // Add an observer in the same location
+    testFixture.entityManager.createEntity('observer1');
+    testFixture.entityManager.addComponent('observer1', 'core:name', { text: 'Charlie' });
+    testFixture.entityManager.addComponent('observer1', 'core:position', { locationId: scenario.actor.locationId });
+    
+    const result = await testFixture.executeAction({
+      actorId: scenario.actor.id,
       actionId: 'intimacy:place_hand_on_waist',
-      targetId: 'target1',
-      originalInput: 'place_hand_on_waist target1',
+      targetId: scenario.target.id
     });
 
-    const perceptibleEvent = testEnv.events.find(
+    const perceptibleEvent = result.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.locationId).toBe('room1');
+    expect(perceptibleEvent.payload.locationId).toBe(scenario.actor.locationId);
     expect(perceptibleEvent.payload.perceptionType).toBe(
       'action_target_general'
     );
   });
 
   it('works with different actor and target names', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'John' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Mary' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
+    const scenario = testFixture.createCloseActors('John', 'Mary');
+    
+    const result = await testFixture.executeAction({
+      actorId: scenario.actor.id,
       actionId: 'intimacy:place_hand_on_waist',
-      targetId: 'target1',
-      originalInput: 'place_hand_on_waist target1',
+      targetId: scenario.target.id
     });
 
-    const perceptibleEvent = testEnv.events.find(
+    const perceptibleEvent = result.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();

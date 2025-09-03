@@ -114,7 +114,7 @@ export class BodyDescriptionOrchestrator {
       const entityName = bodyEntity.getComponentData('core:name');
       const nameText = entityName ? entityName.text : bodyEntity.id;
 
-      this.#eventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+      await this.#eventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: `Failed to generate body description for entity "${nameText}": Description is empty`,
         details: {
           raw: `Entity ID: ${bodyEntity.id}, Recipe ID: ${bodyEntity.getComponentData(ANATOMY_BODY_COMPONENT_ID)?.recipeId || 'unknown'}`,

@@ -3,224 +3,102 @@
  * @see data/mods/intimacy/rules/handle_run_fingers_through_hair.rule.json
  */
 
-import {
-  describe,
-  it,
-  beforeEach,
-  afterEach,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../../common/mods/ModTestFixture.js';
 import runFingersThroughHairRule from '../../../../../data/mods/intimacy/rules/handle_run_fingers_through_hair.rule.json';
 import eventIsActionRunFingersThroughHair from '../../../../../data/mods/intimacy/conditions/event-is-action-run-fingers-through-hair.condition.json';
-import logSuccessMacro from '../../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../../../src/utils/macroUtils.js';
-import QueryComponentHandler from '../../../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetNameHandler from '../../../../../src/logic/operationHandlers/getNameHandler.js';
-import GetTimestampHandler from '../../../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import DispatchPerceptibleEventHandler from '../../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import EndTurnHandler from '../../../../../src/logic/operationHandlers/endTurnHandler.js';
-import SetVariableHandler from '../../../../../src/logic/operationHandlers/setVariableHandler.js';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../../../common/engine/systemLogicTestEnv.js';
-
-/**
- * Creates handlers needed for the run_fingers_through_hair rule.
- *
- * @param {object} entityManager - Entity manager instance
- * @param {object} eventBus - Event bus instance
- * @param {object} logger - Logger instance
- * @returns {object} Handlers object
- */
-function createHandlers(entityManager, eventBus, logger) {
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
-  };
-
-  return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
-  };
-}
-
 describe('intimacy_handle_run_fingers_through_hair rule integration', () => {
-  let testEnv;
+  let testFixture;
 
-  beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(runFingersThroughHairRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
-    const dataRegistry = {
-      getAllSystemRules: jest
-        .fn()
-        .mockReturnValue([{ ...runFingersThroughHairRule, actions: expanded }]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'intimacy:event-is-action-run-fingers-through-hair'
-          ? eventIsActionRunFingersThroughHair
-          : undefined
-      ),
-    };
-
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      entities: [],
-      rules: [{ ...runFingersThroughHairRule, actions: expanded }],
-      dataRegistry,
-    });
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forRule(
+      'intimacy',
+      'intimacy:run_fingers_through_hair',
+      runFingersThroughHairRule,
+      eventIsActionRunFingersThroughHair
+    );
   });
 
-  afterEach(() => {
-    if (testEnv) {
-      testEnv.cleanup();
+  afterEach(async () => {
+    if (testFixture) {
+      await testFixture.cleanup();
     }
   });
 
   it('performs run fingers through hair action successfully', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-    ]);
+    const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
+    
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'intimacy:run_fingers_through_hair',
-      targetId: 'target1',
-      originalInput: 'run_fingers_through_hair target1',
-    });
-
-    const types = testEnv.events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:perceptible_event',
-        'core:display_successful_action_result',
-        'core:turn_ended',
-      ])
+    // Note: assertPerceptibleEvent expects an object with expected properties
+    const perceptibleEvent = testFixture.events.find(
+      e => e.eventType === 'core:perceptible_event'
     );
+    expect(perceptibleEvent).toBeDefined();
+    
+    // Also check other expected events
+    const eventTypes = testFixture.events.map(e => e.eventType);
+    expect(eventTypes).toContain('core:perceptible_event');
+    expect(eventTypes).toContain('core:display_successful_action_result');
+    expect(eventTypes).toContain('core:turn_ended');
   });
 
   it('perceptible event contains correct message', async () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-    ]);
+    const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
+    
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'intimacy:run_fingers_through_hair',
-      targetId: 'target1',
-      originalInput: 'run_fingers_through_hair target1',
-    });
-
-    const perceptibleEvent = testEnv.events.find(
+    const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      "Alice gently runs their fingers through Bob's hair."
+      "Alice gently runs their fingers through Beth's hair."
     );
   });
 
   it('rule does not fire for different action', async () => {
-    testEnv.reset([
+    testFixture.reset([
       {
         id: 'actor1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'core:name': { text: 'Alice' },
+          'core:position': { locationId: 'room1' },
           'positioning:closeness': { partners: ['target1'] },
         },
       },
       {
         id: 'target1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'core:name': { text: 'Bob' },
+          'core:position': { locationId: 'room1' },
           'positioning:closeness': { partners: ['actor1'] },
         },
       },
     ]);
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    // Manually dispatch a different action to test rule selectivity
+    await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
       actorId: 'actor1',
       actionId: 'intimacy:different_action',
       targetId: 'target1',
-      originalInput: 'different_action target1',
+      originalInput: 'different_action target1'
     });
 
-    const types = testEnv.events.map((e) => e.eventType);
+    const types = testFixture.events.map((e) => e.eventType);
     expect(types).not.toContain('core:perceptible_event');
     expect(types).not.toContain('core:display_successful_action_result');
     expect(types).not.toContain('core:turn_ended');
   });
 
   it('allows action when actor is kissing target (no forbidden components)', async () => {
-    testEnv.reset([
+    testFixture.reset([
       {
         id: 'actor1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'core:name': { text: 'Alice' },
+          'core:position': { locationId: 'room1' },
           'positioning:closeness': { partners: ['target1'] },
           'intimacy:kissing': { partner: 'target1' },
         },
@@ -228,95 +106,58 @@ describe('intimacy_handle_run_fingers_through_hair rule integration', () => {
       {
         id: 'target1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'core:name': { text: 'Bob' },
+          'core:position': { locationId: 'room1' },
           'positioning:closeness': { partners: ['actor1'] },
           'intimacy:kissing': { partner: 'actor1' },
         },
       },
     ]);
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'intimacy:run_fingers_through_hair',
-      targetId: 'target1',
-      originalInput: 'run_fingers_through_hair target1',
-    });
+    await testFixture.executeAction('actor1', 'target1');
 
-    const types = testEnv.events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:perceptible_event',
-        'core:display_successful_action_result',
-        'core:turn_ended',
-      ])
-    );
-
-    const perceptibleEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:perceptible_event'
+    // Note: assertPerceptibleEvent expects an object with expected properties
+    const perceptibleEvent = testFixture.events.find(
+      e => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
+    
+    // Also check other expected events
+    const eventTypes = testFixture.events.map(e => e.eventType);
+    expect(eventTypes).toContain('core:perceptible_event');
+    expect(eventTypes).toContain('core:display_successful_action_result');
+    expect(eventTypes).toContain('core:turn_ended');
+    
+    // Use the already defined perceptibleEvent variable
     expect(perceptibleEvent.payload.descriptionText).toBe(
       "Alice gently runs their fingers through Bob's hair."
     );
   });
 
   it('works with multiple actors in location', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Living Room' },
-        },
-      },
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['target1'] },
-        },
-      },
-      {
-        id: 'target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['actor1'] },
-        },
-      },
-      {
-        id: 'observer1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Charlie' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
+    const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
+    
+    // Add an observer in the same location
+    testFixture.entityManager.createEntity('observer1');
+    testFixture.entityManager.addComponent('observer1', 'core:name', { text: 'Charlie' });
+    testFixture.entityManager.addComponent('observer1', 'core:position', { locationId: scenario.actor.locationId });
+    
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'actor1',
-      actionId: 'intimacy:run_fingers_through_hair',
-      targetId: 'target1',
-      originalInput: 'run_fingers_through_hair target1',
-    });
-
-    const types = testEnv.events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:perceptible_event',
-        'core:display_successful_action_result',
-        'core:turn_ended',
-      ])
-    );
-
-    const perceptibleEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:perceptible_event'
+    // Note: assertPerceptibleEvent expects an object with expected properties
+    const perceptibleEvent = testFixture.events.find(
+      e => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
+    
+    // Also check other expected events
+    const eventTypes = testFixture.events.map(e => e.eventType);
+    expect(eventTypes).toContain('core:perceptible_event');
+    expect(eventTypes).toContain('core:display_successful_action_result');
+    expect(eventTypes).toContain('core:turn_ended');
+
+    // Already found perceptibleEvent above, just verify the payload
     expect(perceptibleEvent.payload.locationId).toBe('room1');
-    expect(perceptibleEvent.payload.targetId).toBe('target1');
+    expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);
   });
 });

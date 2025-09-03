@@ -84,15 +84,35 @@ export async function startGameStage(gameEngine, activeWorldName, logger) {
   }
 
   try {
-    await gameEngine.startNewGame(activeWorldName);
     logger.debug(
-      `Bootstrap Stage: ${stageName}: Game started successfully with world: ${activeWorldName}.`
+      `Bootstrap Stage: ${stageName}: Initiating batch mode game loading for world: ${activeWorldName}`
+    );
+    
+    await gameEngine.startNewGame(activeWorldName);
+    
+    logger.debug(
+      `Bootstrap Stage: ${stageName}: Game started successfully with world: ${activeWorldName}. ` +
+      `Batch mode event handling completed successfully.`
     );
   } catch (startGameError) {
-    logger.error(
-      `Bootstrap Stage: ${stageName}: Error during gameEngine.startNewGame for world "${activeWorldName}".`,
-      startGameError
-    );
+    // Enhanced error logging for batch mode issues
+    const isRecursionError = startGameError.message?.includes('recursion') || 
+                            startGameError.message?.includes('Maximum recursion') ||
+                            startGameError.message?.includes('recursion limit');
+    
+    if (isRecursionError) {
+      logger.error(
+        `Bootstrap Stage: ${stageName}: Event recursion issue detected during game loading. ` +
+        `This may indicate that batch mode limits were exceeded or there's an infinite recursion loop.`,
+        startGameError
+      );
+    } else {
+      logger.error(
+        `Bootstrap Stage: ${stageName}: Error during gameEngine.startNewGame for world "${activeWorldName}".`,
+        startGameError
+      );
+    }
+    
     return stageFailure(
       stageName,
       `Failed to start new game with world "${activeWorldName}": ${startGameError.message}`,

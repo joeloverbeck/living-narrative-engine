@@ -174,9 +174,13 @@ describe('ActionTraceConfigValidator Enhancements', () => {
 
       const result = await validator.validateConfiguration(config);
 
+      // This warning was intentionally removed - verbose mode is a valid user choice
+      // The test now verifies that the config is valid and may have other recommendations
+      expect(result.isValid).toBe(true);
+      // Should still recommend timestamps for better correlation
       expect(result.warnings).toContainEqual(
         expect.stringContaining(
-          "'verbose' verbosity with JSON output may create large files"
+          "Enable 'includeTimestamps' in textFormatOptions for better trace correlation"
         )
       );
     });
@@ -388,9 +392,11 @@ describe('ActionTraceConfigValidator Enhancements', () => {
 
       const result = await validator.validateConfiguration(config);
 
+      // The generic "high performance impact" warning was removed
+      // But there's still a specific warning about tracing all actions with verbose verbosity
       expect(result.warnings).toContainEqual(
         expect.stringContaining(
-          'High performance impact configuration detected'
+          "Tracing all actions with 'verbose' verbosity will impact performance"
         )
       );
     });

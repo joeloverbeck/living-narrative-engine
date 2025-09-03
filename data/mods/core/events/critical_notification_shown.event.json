@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:critical_notification_shown",
+  "description": "Dispatched when a critical log notification is displayed to the user via the CriticalLogNotifier UI component.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "level": {
+        "type": "string",
+        "enum": ["error", "warning"],
+        "description": "The severity level of the notification being shown."
+      },
+      "count": {
+        "type": "number",
+        "description": "The current count of notifications at this severity level."
+      }
+    },
+    "required": ["level", "count"],
+    "additionalProperties": false
+  }
+}

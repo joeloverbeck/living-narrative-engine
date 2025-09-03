@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:ui_initializing",
+  "description": "Dispatched when the user interface begins initialization for a new world or game session.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "worldName": {
+        "type": "string",
+        "description": "The name/ID of the world being initialized."
+      }
+    },
+    "required": ["worldName"],
+    "additionalProperties": false
+  }
+}

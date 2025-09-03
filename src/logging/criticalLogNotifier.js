@@ -846,12 +846,9 @@ class CriticalLogNotifier extends RendererBase {
     }
 
     // Dispatch notification event
-    this.validatedEventDispatcher.dispatch({
-      type: 'CRITICAL_NOTIFICATION_SHOWN',
-      payload: {
-        level: logEntry.level,
-        count: this.#logCounts[logEntry.level + 's'],
-      },
+    this.validatedEventDispatcher.dispatch('core:critical_notification_shown', {
+      level: logEntry.level,
+      count: this.#logCounts[logEntry.level + 's'],
     });
   }
 

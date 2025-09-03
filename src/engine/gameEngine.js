@@ -13,6 +13,7 @@ import EngineState from './engineState.js';
 import GameSessionManager from './gameSessionManager.js';
 import PersistenceCoordinator from './persistenceCoordinator.js';
 import { assertNonBlankString } from '../utils/dependencyUtils.js';
+import createSafeErrorLogger from '../utils/safeErrorLogger.js';
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -27,6 +28,7 @@ import { assertNonBlankString } from '../utils/dependencyUtils.js';
 /** @typedef {import('../interfaces/IInitializationService.js').IInitializationService} IInitializationService */
 /** @typedef {import('../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
+/** @typedef {import('../events/eventBus.js').default} EventBus */
 
 class GameEngine {
   /** @type {ILogger} */
@@ -43,6 +45,8 @@ class GameEngine {
   #safeEventDispatcher;
   /** @type {IInitializationService} */
   #initializationService;
+  /** @type {EventBus} */
+  #eventBus;
 
   /** @type {EngineState} */
   #engineState;
@@ -85,6 +89,9 @@ class GameEngine {
       );
       this.#initializationService = /** @type {IInitializationService} */ (
         container.resolve(tokens.IInitializationService)
+      );
+      this.#eventBus = /** @type {EventBus} */ (
+        container.resolve(tokens.EventBus)
       );
     } catch (e) {
       this.#logger.error(
@@ -312,26 +319,42 @@ class GameEngine {
     this.#logger.debug(
       `GameEngine: startNewGame called for world "${worldName}".`
     );
-    let initError = null;
+    
+    // Create safe error logger with EventBus batch mode management
+    const safeErrorLogger = createSafeErrorLogger({
+      logger: this.#logger,
+      eventBus: this.#eventBus
+    });
+    
+    // Use game loading mode to handle legitimate bulk events during initialization
+    return await safeErrorLogger.withGameLoadingMode(
+      async () => {
+        let initError = null;
 
-    try {
-      const initResult = await this.#initializeNewGame(worldName);
+        try {
+          const initResult = await this.#initializeNewGame(worldName);
 
-      if (initResult.success) {
-        await this.#finalizeInitializationSuccess(worldName);
-      } else {
-        initError =
-          initResult.error ||
-          new Error('Unknown failure from InitializationService.');
-        this.#logger.warn(
-          `GameEngine: InitializationService reported failure for "${worldName}".`
-        );
-        await this.#handleNewGameFailure(initError, worldName);
-        throw initError;
+          if (initResult.success) {
+            await this.#finalizeInitializationSuccess(worldName);
+          } else {
+            initError =
+              initResult.error ||
+              new Error('Unknown failure from InitializationService.');
+            this.#logger.warn(
+              `GameEngine: InitializationService reported failure for "${worldName}".`
+            );
+            await this.#handleNewGameFailure(initError, worldName);
+            throw initError;
+          }
+        } catch (error) {
+          await this.#handleInitializationError(error, initError, worldName);
+        }
+      },
+      {
+        context: 'game-initialization',
+        timeoutMs: 60000 // 1 minute timeout for game loading
       }
-    } catch (error) {
-      await this.#handleInitializationError(error, initError, worldName);
-    }
+    );
   }
 
   async stop() {
