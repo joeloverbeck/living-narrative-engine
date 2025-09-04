@@ -360,7 +360,8 @@ class LoggerStrategy {
       
       if (!eventBus) {
         // If no eventBus available, return the original logger without SafeErrorLogger wrapping
-        console.warn('[LoggerStrategy] No eventBus available for SafeErrorLogger, using original logger');
+        // This is expected during early bootstrap before eventBus is registered
+        this.#dependencies.consoleLogger?.debug?.('[LoggerStrategy] EventBus not available during bootstrap - SafeErrorLogger wrapping deferred');
         return logger;
       }
       

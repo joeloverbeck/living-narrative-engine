@@ -47,6 +47,68 @@ let globalEntityPool = null;
 let globalScopeDefinitions = null;
 
 /**
+ * Register required component schemas for memory testing
+ */
+async function registerMemoryTestComponentSchemas(validator) {
+  // Register core:stats schema
+  await validator.addSchema(
+    {
+      type: 'object',
+      properties: {
+        level: { type: 'number', minimum: 1, default: 1 },
+        strength: { type: 'number', minimum: 1, default: 10 },
+        agility: { type: 'number', minimum: 1, default: 10 },
+        health: { type: 'number', minimum: 0, default: 100 },
+        maxHealth: { type: 'number', minimum: 1, default: 100 },
+      },
+      required: ['level'],
+      additionalProperties: false,
+    },
+    'core:stats'
+  );
+
+  // Register core:actor schema
+  await validator.addSchema(
+    {
+      type: 'object',
+      properties: {
+        isPlayer: { type: 'boolean', default: false },
+      },
+      additionalProperties: false,
+    },
+    'core:actor'
+  );
+
+  // Register core:health schema
+  await validator.addSchema(
+    {
+      type: 'object',
+      properties: {
+        current: { type: 'number', minimum: 0, default: 100 },
+        max: { type: 'number', minimum: 1, default: 100 },
+      },
+      required: ['current', 'max'],
+      additionalProperties: false,
+    },
+    'core:health'
+  );
+
+  // Register core:position schema
+  await validator.addSchema(
+    {
+      type: 'object',
+      properties: {
+        locationId: { type: 'string' },
+        x: { type: 'number', default: 0 },
+        y: { type: 'number', default: 0 },
+      },
+      additionalProperties: false,
+    },
+    'core:position'
+  );
+}
+
+/**
  * Memory test suite for high concurrency scenarios in ScopeDSL
  * Validates memory management and leak detection under concurrent load
  */
@@ -109,7 +171,11 @@ describe('High Concurrency Memory Management', () => {
         jsonLogicService: globalContainer.resolve(tokens.JsonLogicEvaluationService),
         spatialIndexManager: globalContainer.resolve(tokens.ISpatialIndexManager),
         registry: globalContainer.resolve(tokens.IDataRegistry),
+        validator: globalContainer.resolve(tokens.ISchemaValidator),
       };
+
+      // Register required component schemas for testing
+      await registerMemoryTestComponentSchemas(globalServices.validator);
       
       // Set up test conditions once
       ScopeTestUtilities.setupScopeTestConditions(globalServices.registry, [

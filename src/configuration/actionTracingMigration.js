@@ -292,11 +292,6 @@ class ActionTracingConfigMigration {
       'rotationPolicy',
       defaults.rotationPolicy
     );
-    const maxFileAge = this.#sanitizeValue(
-      userConfig.maxFileAge,
-      'maxFileAge',
-      defaults.maxFileAge
-    );
     const outputFormats = this.#sanitizeValue(
       userConfig.outputFormats,
       'outputFormats',
@@ -308,7 +303,23 @@ class ActionTracingConfigMigration {
       defaults.textFormatOptions
     );
 
-    return {
+    // Smart handling of rotation policy conflicts
+    // Only include maxFileAge if rotationPolicy is 'age' or if user explicitly provided it
+    let maxFileAge;
+    if (userConfig.maxFileAge !== undefined) {
+      // User explicitly specified maxFileAge, keep it (validator will warn about conflicts)
+      maxFileAge = this.#sanitizeValue(
+        userConfig.maxFileAge,
+        'maxFileAge',
+        defaults.maxFileAge
+      );
+    } else if (rotationPolicy === 'age') {
+      // Using age policy and no user-provided maxFileAge, use default
+      maxFileAge = defaults.maxFileAge;
+    }
+    // If rotationPolicy is 'count' and user didn't specify maxFileAge, omit it entirely
+
+    const result = {
       enabled,
       tracedActions,
       outputDirectory,
@@ -318,10 +329,16 @@ class ActionTracingConfigMigration {
       includeTargets,
       maxTraceFiles,
       rotationPolicy,
-      maxFileAge,
       outputFormats,
       textFormatOptions,
     };
+
+    // Only add maxFileAge if we determined it should be included
+    if (maxFileAge !== undefined) {
+      result.maxFileAge = maxFileAge;
+    }
+
+    return result;
   }
 }
 

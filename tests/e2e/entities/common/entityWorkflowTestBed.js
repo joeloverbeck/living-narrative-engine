@@ -127,6 +127,136 @@ export class EntityWorkflowTestBed extends BaseTestBed {
       'core:description'
     );
 
+    // Register core:stats schema
+    await this.validator.addSchema(
+      {
+        type: 'object',
+        properties: {
+          health: {
+            type: 'number',
+            minimum: 0,
+            default: 100,
+          },
+          maxHealth: {
+            type: 'number',
+            minimum: 1,
+            default: 100,
+          },
+          mana: {
+            type: 'number',
+            minimum: 0,
+            default: 0,
+          },
+          maxMana: {
+            type: 'number',
+            minimum: 0,
+            default: 0,
+          },
+          level: {
+            type: 'number',
+            minimum: 1,
+            default: 1,
+          },
+          strength: {
+            type: 'number',
+            minimum: 1,
+            default: 10,
+          },
+          agility: {
+            type: 'number',
+            minimum: 1,
+            default: 10,
+          },
+          intelligence: {
+            type: 'number',
+            minimum: 1,
+            default: 10,
+          },
+          wisdom: {
+            type: 'number',
+            minimum: 1,
+            default: 10,
+          },
+          dexterity: {
+            type: 'number',
+            minimum: 1,
+            default: 10,
+          },
+          stealth: {
+            type: 'number',
+            minimum: 1,
+            default: 10,
+          },
+        },
+        required: ['health', 'maxHealth'],
+        additionalProperties: false,
+      },
+      'core:stats'
+    );
+
+    // Register core:inventory schema
+    await this.validator.addSchema(
+      {
+        type: 'object',
+        properties: {
+          items: {
+            type: 'array',
+            items: { type: 'string' },
+            default: [],
+          },
+          maxSize: {
+            type: 'number',
+            minimum: 0,
+            default: 20,
+          },
+          capacity: {
+            type: 'number',
+            minimum: 0,
+            default: 20,
+          },
+        },
+        required: ['items'],
+        additionalProperties: false,
+      },
+      'core:inventory'
+    );
+
+    // Register core:actor schema
+    await this.validator.addSchema(
+      {
+        type: 'object',
+        properties: {
+          name: { type: 'string', default: '' },
+          conscious: { type: 'boolean', default: true },
+          trader: { type: 'boolean', default: false },
+          isPlayer: { type: 'boolean', default: false },
+        },
+        additionalProperties: false,
+      },
+      'core:actor'
+    );
+
+    // Register core:item schema
+    await this.validator.addSchema(
+      {
+        type: 'object',
+        properties: {
+          name: { type: 'string', default: '' },
+          value: { type: 'number', minimum: 0, default: 0 },
+          type: { type: 'string', default: '' },
+          weight: { type: 'number', minimum: 0, default: 0 },
+          throwable: { type: 'boolean', default: false },
+          enchantable: { type: 'boolean', default: false },
+          catalyst: { type: 'boolean', default: false },
+          explosive: { type: 'boolean', default: false },
+          equippable: { type: 'boolean', default: false },
+          slot: { type: 'string', default: '' },
+        },
+        additionalProperties: false,
+      },
+      'core:item'
+    );
+
     this.logger.debug('Registered test component schemas successfully');
   }
 

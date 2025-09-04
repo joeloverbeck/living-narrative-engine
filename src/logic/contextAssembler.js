@@ -26,18 +26,7 @@ import { createComponentAccessor } from './componentAccessor.js';
 export function createEntityContext(entityId, entityManager, logger) {
   return {
     id: entityId,
-    components: (componentId) => {
-      try {
-        const componentData = entityManager.getComponentData(entityId, componentId);
-        return componentData ?? undefined;
-      } catch (error) {
-        logger.error(
-          `EntityContext: Error fetching component [${componentId}] for entity [${entityId}]:`,
-          error
-        );
-        return undefined;
-      }
-    },
+    components: createComponentAccessor(entityId, entityManager, logger),
   };
 }
 

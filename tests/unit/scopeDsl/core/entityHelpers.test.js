@@ -3,6 +3,7 @@ import {
   getOrBuildComponents,
   createEvaluationContext,
   clearEntityCache,
+  preprocessActorForEvaluation,
 } from '../../../../src/scopeDsl/core/entityHelpers.js';
 
 describe('entityHelpers', () => {
@@ -488,6 +489,369 @@ describe('entityHelpers', () => {
         { id: 'target1', type: 'npc' },
         { id: 'target2', type: 'item' },
       ]);
+    });
+
+    it('logs cache hit statistics when trace provided and cache hits reach 1000 interval', () => {
+      const actor = { id: 'actor1', componentTypeIds: [] };
+      const gateway = {
+        getEntityInstance: jest.fn(() => ({ id: 'entity1' }))
+      };
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+      const trace = { addLog: jest.fn() };
+
+      // Clear cache and create scenario for cache hits
+      clearEntityCache();
+      
+      // First call creates cache entry (this is a cache miss)
+      createEvaluationContext('entity1', actor, gateway, locationProvider, trace);
+      
+      // Simulate exactly 1000 more cache hits to reach the 1000 hit milestone
+      for (let i = 0; i < 1000; i++) {
+        createEvaluationContext('entity1', actor, gateway, locationProvider, trace);
+      }
+
+      // Verify cache hit logging was called
+      expect(trace.addLog).toHaveBeenCalledWith(
+        'debug',
+        expect.stringMatching(/Cache stats: 1000 hits, 1 misses \(99\.9% hit rate\)/),
+        'createEvaluationContext'
+      );
+    });
+
+    it('triggers cache eviction when cache size limit is exceeded', () => {
+      const actor = { id: 'actor1', componentTypeIds: [] };
+      const gateway = {
+        getEntityInstance: jest.fn((id) => ({ id }))
+      };
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+
+      // Clear cache first
+      clearEntityCache();
+
+      // Fill cache beyond limit (CACHE_SIZE_LIMIT = 10000)
+      // We'll create 10001 unique entities to trigger eviction
+      for (let i = 0; i <= 10000; i++) {
+        const entityId = `entity_${i}`;
+        createEvaluationContext(entityId, actor, gateway, locationProvider);
+      }
+
+      // Verify that gateway was called for each unique entity
+      expect(gateway.getEntityInstance).toHaveBeenCalledTimes(10001);
+      
+      // Create another entity to verify cache still works after eviction
+      createEvaluationContext('test_entity', actor, gateway, locationProvider);
+      expect(gateway.getEntityInstance).toHaveBeenCalledWith('test_entity');
+    });
+
+    it('uses getAllComponents method path in createEvaluationContext when entity has the method', () => {
+      class MockEntityWithGetAllComponents {
+        constructor() {
+          this.id = 'entity_with_method';
+          this.componentTypeIds = ['core:name'];
+        }
+
+        getAllComponents() {
+          return {
+            'core:name': { text: 'Entity With Method' },
+            'core:position': { x: 100, y: 200 }
+          };
+        }
+      }
+
+      const actor = { id: 'actor1', componentTypeIds: [] };
+      const entity = new MockEntityWithGetAllComponents();
+      const gateway = {
+        getEntityInstance: jest.fn(() => entity),
+        getComponentData: jest.fn() // This should not be called
+      };
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+
+      const result = createEvaluationContext('entity_with_method', actor, gateway, locationProvider);
+
+      expect(result.entity.components).toEqual({
+        'core:name': { text: 'Entity With Method' },
+        'core:position': { x: 100, y: 200 }
+      });
+      expect(gateway.getComponentData).not.toHaveBeenCalled(); // Verify getAllComponents was used instead
+    });
+
+    it('uses getAllComponents method path for actor processing in createEvaluationContext', () => {
+      class MockActorEntity {
+        constructor() {
+          this.id = 'actor_with_method';
+          this.componentTypeIds = ['core:actor'];
+        }
+
+        getAllComponents() {
+          return {
+            'core:actor': { type: 'advanced_npc' },
+            'core:stats': { health: 100, mana: 50 }
+          };
+        }
+      }
+
+      const actorEntity = new MockActorEntity();
+      const entity = { id: 'simple_entity' };
+      const gateway = {
+        getEntityInstance: jest.fn(() => entity),
+        getComponentData: jest.fn() // This should not be called for the actor
+      };
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+
+      const result = createEvaluationContext(entity, actorEntity, gateway, locationProvider);
+
+      expect(result.actor.components).toEqual({
+        'core:actor': { type: 'advanced_npc' },
+        'core:stats': { health: 100, mana: 50 }
+      });
+      expect(gateway.getComponentData).not.toHaveBeenCalled(); // getAllComponents should be used
+    });
+
+    it('handles pre-processed actor optimization correctly', () => {
+      const actor = { id: 'actor1', componentTypeIds: [] };
+      const entity = { id: 'entity1' };
+      const gateway = { getEntityInstance: jest.fn(() => entity) };
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+
+      // Pre-process the actor
+      const processedActor = {
+        id: 'actor1',
+        components: { 'core:actor': { type: 'pre_processed' } }
+      };
+
+      const result = createEvaluationContext(
+        entity,
+        actor,
+        gateway,
+        locationProvider,
+        null, // trace
+        null, // runtimeContext  
+        processedActor // processedActor parameter
+      );
+
+      expect(result.actor).toBe(processedActor); // Should use pre-processed actor
+      expect(result.actor.components).toEqual({
+        'core:actor': { type: 'pre_processed' }
+      });
+    });
+
+    it('exposes plain object properties directly in flattened context', () => {
+      const actor = { id: 'actor1', componentTypeIds: [] };
+      const plainObjectItem = {
+        id: 'item1',
+        quantity: 5,
+        type: 'consumable',
+        name: 'Health Potion'
+      };
+      const gateway = { getEntityInstance: jest.fn(() => null) }; // No entity found
+      const locationProvider = { getLocation: jest.fn(() => ({ id: 'loc1' })) };
+
+      const result = createEvaluationContext(
+        plainObjectItem,
+        actor,
+        gateway,
+        locationProvider
+      );
+
+      // Verify plain object properties are exposed at root level
+      expect(result.quantity).toBe(5);
+      expect(result.type).toBe('consumable');
+      expect(result.name).toBe('Health Potion');
+      expect(result.id).toBe('item1'); // Should be from the item, not overridden
+    });
+  });
+
+  describe('preprocessActorForEvaluation', () => {
+    it('throws error when actorEntity is null', () => {
+      const gateway = { getComponentData: jest.fn() };
+      
+      expect(() => {
+        preprocessActorForEvaluation(null, gateway);
+      }).toThrow('preprocessActorForEvaluation: Invalid actor entity');
+    });
+
+    it('throws error when actorEntity is undefined', () => {
+      const gateway = { getComponentData: jest.fn() };
+      
+      expect(() => {
+        preprocessActorForEvaluation(undefined, gateway);
+      }).toThrow('preprocessActorForEvaluation: Invalid actor entity');
+    });
+
+    it('throws error when actorEntity has no id', () => {
+      const gateway = { getComponentData: jest.fn() };
+      const actorEntity = { componentTypeIds: ['core:actor'] };
+      
+      expect(() => {
+        preprocessActorForEvaluation(actorEntity, gateway);
+      }).toThrow('preprocessActorForEvaluation: Invalid actor entity');
+    });
+
+    it('returns actor as-is when it already has plain object components', () => {
+      const actorEntity = {
+        id: 'actor1',
+        components: {
+          'core:actor': { type: 'npc' },
+          'core:name': { text: 'Test Actor' }
+        }
+      };
+      const gateway = { getComponentData: jest.fn() };
+
+      const result = preprocessActorForEvaluation(actorEntity, gateway);
+
+      expect(result).toBe(actorEntity); // Same reference since no processing needed
+      expect(result.components).toEqual({
+        'core:actor': { type: 'npc' },
+        'core:name': { text: 'Test Actor' }
+      });
+    });
+
+    it('converts Map-based components to plain object for plain actor', () => {
+      const componentMap = new Map();
+      componentMap.set('core:actor', { type: 'npc' });
+      componentMap.set('core:name', { text: 'Map Actor' });
+
+      const actorEntity = {
+        id: 'actor1',
+        components: componentMap
+      };
+      const gateway = { getComponentData: jest.fn() };
+
+      const result = preprocessActorForEvaluation(actorEntity, gateway);
+
+      expect(result.components).toEqual({
+        'core:actor': { type: 'npc' },
+        'core:name': { text: 'Map Actor' }
+      });
+      expect(result.components).not.toBeInstanceOf(Map);
+      expect(result.id).toBe('actor1');
+    });
+
+    it('converts Map-based components preserving prototype for custom actor class', () => {
+      class CustomActor {
+        constructor() {
+          this.id = 'custom_actor';
+          this.components = new Map();
+          this.components.set('core:actor', { type: 'custom' });
+        }
+      }
+
+      const actorEntity = new CustomActor();
+      const gateway = { getComponentData: jest.fn() };
+
+      const result = preprocessActorForEvaluation(actorEntity, gateway);
+
+      expect(result.components).toEqual({
+        'core:actor': { type: 'custom' }
+      });
+      expect(result.components).not.toBeInstanceOf(Map);
+      expect(Object.getPrototypeOf(result)).toBe(CustomActor.prototype);
+    });
+
+    it('builds components from componentTypeIds for plain actor', () => {
+      const actorEntity = {
+        id: 'actor1',
+        componentTypeIds: ['core:actor', 'core:name']
+      };
+      const gateway = {
+        getComponentData: jest.fn((entityId, componentId) => {
+          if (componentId === 'core:actor') return { type: 'player' };
+          if (componentId === 'core:name') return { text: 'Player One' };
+          return null;
+        })
+      };
+
+      const result = preprocessActorForEvaluation(actorEntity, gateway);
+
+      expect(result.components).toEqual({
+        'core:actor': { type: 'player' },
+        'core:name': { text: 'Player One' }
+      });
+      expect(gateway.getComponentData).toHaveBeenCalledWith('actor1', 'core:actor');
+      expect(gateway.getComponentData).toHaveBeenCalledWith('actor1', 'core:name');
+    });
+
+    it('uses getAllComponents method when available on Entity class', () => {
+      class MockEntity {
+        constructor() {
+          this.id = 'entity_actor';
+          this.componentTypeIds = ['core:actor'];
+        }
+
+        getAllComponents() {
+          return {
+            'core:actor': { type: 'entity_based' },
+            'core:name': { text: 'Entity Actor' }
+          };
+        }
+      }
+
+      const actorEntity = new MockEntity();
+      const gateway = { getComponentData: jest.fn() };
+
+      const result = preprocessActorForEvaluation(actorEntity, gateway);
+
+      expect(result.components).toEqual({
+        'core:actor': { type: 'entity_based' },
+        'core:name': { text: 'Entity Actor' }
+      });
+      expect(gateway.getComponentData).not.toHaveBeenCalled(); // Should use getAllComponents instead
+    });
+
+    it('preserves Entity class getter properties when building components', () => {
+      class MockEntityActor {
+        constructor() {
+          this._data = { id: 'actor123', definitionId: 'test:actor' };
+        }
+
+        get id() {
+          return this._data.id;
+        }
+
+        get definitionId() {
+          return this._data.definitionId;
+        }
+
+        componentTypeIds = ['core:actor', 'core:name'];
+      }
+
+      const actorEntity = new MockEntityActor();
+      const gateway = {
+        getComponentData: jest.fn((entityId, componentId) => {
+          if (componentId === 'core:actor') return { type: 'complex' };
+          if (componentId === 'core:name') return { text: 'Complex Actor' };
+          return null;
+        })
+      };
+
+      const result = preprocessActorForEvaluation(actorEntity, gateway);
+
+      // Verify getter properties still work
+      expect(result.id).toBe('actor123');
+      expect(result.definitionId).toBe('test:actor');
+      expect(result.componentTypeIds).toEqual(['core:actor', 'core:name']);
+      expect(result.components).toEqual({
+        'core:actor': { type: 'complex' },
+        'core:name': { text: 'Complex Actor' }
+      });
+
+      // Verify prototype chain preservation
+      expect(Object.getPrototypeOf(result)).toBe(MockEntityActor.prototype);
+    });
+
+    it('returns actor as-is when no components and no componentTypeIds', () => {
+      const actorEntity = {
+        id: 'simple_actor',
+        // No components property and no componentTypeIds
+      };
+      const gateway = { getComponentData: jest.fn() };
+
+      const result = preprocessActorForEvaluation(actorEntity, gateway);
+
+      expect(result).toBe(actorEntity); // Same reference
+      expect(result.id).toBe('simple_actor');
+      expect(result.components).toBeUndefined();
+      expect(gateway.getComponentData).not.toHaveBeenCalled();
     });
   });
 });

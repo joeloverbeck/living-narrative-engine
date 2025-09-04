@@ -164,15 +164,6 @@ export function createEvaluationContext(
    * @param entityId
    */
   function addComponentsToEntity(entity, entityId) {
-    // Fast path: already has components as object
-    if (
-      entity.components &&
-      typeof entity.components === 'object' &&
-      !(entity.components instanceof Map)
-    ) {
-      return entity;
-    }
-
     // Convert Map-based components to plain object if needed
     if (entity.components instanceof Map) {
       const plainComponents = {};
@@ -256,9 +247,6 @@ export function createEvaluationContext(
 
       return enhancedEntity;
     }
-
-    // No components and no componentTypeIds - return as-is
-    return entity;
   }
 
   // Process entity if it needs components or has Map-based components that need conversion

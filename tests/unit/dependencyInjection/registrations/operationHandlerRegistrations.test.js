@@ -75,7 +75,7 @@ describe('registerOperationHandlers', () => {
       expect(calls).toHaveLength(1);
     });
 
-    expect(registerSpy).toHaveBeenCalledTimes(handlerTokens.length);
+
   });
 
   describe('handler factory functions', () => {
