@@ -1,6 +1,7 @@
 /**
- * Integration tests that reproduce the specific runtime warnings seen in browser console logs
+ * Integration tests that reproduce the specific runtime debug messages seen in browser console logs
  * Related to CriticalLogNotifier and missing event definitions during game initialization
+ * ValidatedEventDispatcher treats core:critical_notification_shown as bootstrap event (DEBUG level)
  */
 
 import {
@@ -17,7 +18,7 @@ import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatch
 import DocumentContext from '../../../src/domUI/documentContext.js';
 import { JSDOM } from 'jsdom';
 
-describe('CriticalLogNotifier - Runtime Warnings Integration', () => {
+describe('CriticalLogNotifier - Runtime Debug Messages Integration', () => {
   let testBed;
   let notifier;
   let mockEventBus;
@@ -26,6 +27,7 @@ describe('CriticalLogNotifier - Runtime Warnings Integration', () => {
   let validatedEventDispatcher;
   let dom;
   let documentContext;
+  let sharedMockLogger;
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -37,13 +39,22 @@ describe('CriticalLogNotifier - Runtime Warnings Integration', () => {
     global.HTMLElement = dom.window.HTMLElement;
     documentContext = new DocumentContext(dom.window.document);
     
+    // Create shared mock logger for both CriticalLogNotifier and ValidatedEventDispatcher
+    sharedMockLogger = testBed.createMockLogger();
+    jest.spyOn(sharedMockLogger, 'warn');
+    jest.spyOn(sharedMockLogger, 'error');
+    jest.spyOn(sharedMockLogger, 'debug');
+    
     // Mock EventBus
     mockEventBus = {
       dispatch: jest.fn().mockResolvedValue(undefined),
+      subscribe: jest.fn().mockReturnValue(() => {}),
+      unsubscribe: jest.fn(),
     };
 
     // Mock GameDataRepository that returns undefined for event definitions
     // This simulates the condition where event definitions aren't loaded yet
+    // This will cause ValidatedEventDispatcher to treat core:critical_notification_shown as bootstrap event
     mockGameDataRepository = {
       getEventDefinition: jest.fn().mockReturnValue(undefined),
     };
@@ -54,30 +65,28 @@ describe('CriticalLogNotifier - Runtime Warnings Integration', () => {
       validate: jest.fn().mockReturnValue({ valid: true }),
     };
 
-    // Create ValidatedEventDispatcher with mocks
+    // Create ValidatedEventDispatcher with shared mock logger
     validatedEventDispatcher = new ValidatedEventDispatcher({
       eventBus: mockEventBus,
       gameDataRepository: mockGameDataRepository,
       schemaValidator: mockSchemaValidator,
-      logger: testBed.createMockLogger(),
+      logger: sharedMockLogger,
     });
   });
 
   afterEach(() => {
     if (notifier) {
-      notifier.destroy();
+      notifier.dispose?.();
       notifier = null;
     }
     testBed.cleanup();
   });
 
-  it('should reproduce "EventDefinition not found for core:critical_notification_shown" warning', async () => {
-    // Arrange
-    const mockLogger = testBed.createMockLogger();
-
+  it('should reproduce "EventDefinition not found for core:critical_notification_shown" debug message', async () => {
     // Create notifier with real ValidatedEventDispatcher that has no event definitions loaded
+    // Using shared mock logger to capture ValidatedEventDispatcher debug messages
     notifier = new CriticalLogNotifier({
-      logger: mockLogger,
+      logger: sharedMockLogger,
       documentContext: documentContext,
       validatedEventDispatcher,
       config: {
@@ -85,28 +94,30 @@ describe('CriticalLogNotifier - Runtime Warnings Integration', () => {
       },
     });
 
-    // Act - Trigger a critical log which should cause the warning
+    // Act - Trigger a critical log which should cause the debug message
     // This simulates what happens during baseManifestItemLoader.js:379 error
-    mockLogger.error('Test error to trigger critical log notification');
+    sharedMockLogger.error('Test error to trigger critical log notification');
 
-    // Wait for async processing
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Wait for async processing (multiple animation frames + timers)
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Ensure all animation frames are processed
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
 
-    // Assert - Check that the warning was logged
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("VED: EventDefinition not found for 'core:critical_notification_shown'")
+    // Assert - Check that the bootstrap debug message was logged
+    // ValidatedEventDispatcher treats core:critical_notification_shown as a bootstrap event
+    expect(sharedMockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining("VED: EventDefinition not found for 'core:critical_notification_shown' (expected during bootstrap)")
     );
 
     // Verify the event was still dispatched despite the warning
     expect(mockEventBus.dispatch).toHaveBeenCalled();
   });
 
-  it('should reproduce multiple warnings during repeated error events', async () => {
-    // Arrange
-    const mockLogger = testBed.createMockLogger();
-
+  it('should reproduce multiple debug messages during repeated error events', async () => {
+    // Using shared mock logger to capture ValidatedEventDispatcher debug messages
     notifier = new CriticalLogNotifier({
-      logger: mockLogger,
+      logger: sharedMockLogger,
       documentContext: documentContext,
       validatedEventDispatcher,
       config: {
@@ -116,23 +127,24 @@ describe('CriticalLogNotifier - Runtime Warnings Integration', () => {
 
     // Act - Trigger multiple critical logs rapidly (simulating mod loading errors)
     for (let i = 0; i < 5; i++) {
-      mockLogger.error(`Test error ${i} to trigger multiple notifications`);
+      sharedMockLogger.error(`Test error ${i} to trigger multiple notifications`);
     }
 
-    // Wait for async processing
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    // Wait for async processing (multiple animation frames + timers)
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    // Ensure all animation frames are processed
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
 
-    // Assert - Should have multiple warnings
-    const warnCalls = mockLogger.warn.mock.calls.filter(
-      ([msg]) => msg && msg.includes("EventDefinition not found for 'core:critical_notification_shown'")
+    // Assert - Should have multiple debug messages
+    const debugCalls = sharedMockLogger.debug.mock.calls.filter(
+      ([msg]) => msg && msg.includes("VED: EventDefinition not found for 'core:critical_notification_shown' (expected during bootstrap)")
     );
     
-    expect(warnCalls.length).toBeGreaterThanOrEqual(5);
+    expect(debugCalls.length).toBeGreaterThanOrEqual(5);
   });
 
-  it('should not produce warnings when event definition is properly loaded', async () => {
-    // Arrange
-    const mockLogger = testBed.createMockLogger();
+  it('should not produce debug messages when event definition is properly loaded', async () => {
 
     // Mock a properly loaded event definition
     const eventDefinition = {
@@ -155,11 +167,11 @@ describe('CriticalLogNotifier - Runtime Warnings Integration', () => {
       eventBus: mockEventBus,
       gameDataRepository: mockGameDataRepository,
       schemaValidator: mockSchemaValidator,
-      logger: mockLogger,
+      logger: sharedMockLogger,
     });
 
     notifier = new CriticalLogNotifier({
-      logger: mockLogger,
+      logger: sharedMockLogger,
       documentContext: documentContext,
       validatedEventDispatcher: properValidatedEventDispatcher,
       config: {
@@ -168,25 +180,26 @@ describe('CriticalLogNotifier - Runtime Warnings Integration', () => {
     });
 
     // Act - Trigger a critical log
-    mockLogger.error('Test error with proper event definition loaded');
+    sharedMockLogger.error('Test error with proper event definition loaded');
 
-    // Wait for async processing
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Wait for async processing (multiple animation frames + timers)
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Ensure all animation frames are processed
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
 
-    // Assert - Should NOT have any event definition warnings
-    const warnCalls = mockLogger.warn.mock.calls.filter(
-      ([msg]) => msg && msg.includes("EventDefinition not found for 'core:critical_notification_shown'")
+    // Assert - Should NOT have any event definition debug messages
+    const debugCalls = sharedMockLogger.debug.mock.calls.filter(
+      ([msg]) => msg && msg.includes("VED: EventDefinition not found for 'core:critical_notification_shown'")
     );
     
-    expect(warnCalls.length).toBe(0);
+    expect(debugCalls.length).toBe(0);
   });
 
-  it('should handle concurrent critical log processing without producing duplicate warnings', async () => {
-    // Arrange
-    const mockLogger = testBed.createMockLogger();
-
+  it('should handle concurrent critical log processing without producing excessive debug messages', async () => {
+    // Using shared mock logger to capture ValidatedEventDispatcher debug messages
     notifier = new CriticalLogNotifier({
-      logger: mockLogger,
+      logger: sharedMockLogger,
       documentContext: documentContext,
       validatedEventDispatcher,
       config: {
@@ -200,7 +213,7 @@ describe('CriticalLogNotifier - Runtime Warnings Integration', () => {
       promises.push(
         new Promise((resolve) => {
           setTimeout(() => {
-            mockLogger.error(`Concurrent error ${i}`);
+            sharedMockLogger.error(`Concurrent error ${i}`);
             resolve();
           }, i * 10);
         })
@@ -208,15 +221,19 @@ describe('CriticalLogNotifier - Runtime Warnings Integration', () => {
     }
 
     await Promise.all(promises);
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    // Wait for async processing (multiple animation frames + timers)
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    // Ensure all animation frames are processed
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
 
     // Assert - Should handle concurrent processing without issues
-    const warnCalls = mockLogger.warn.mock.calls.filter(
-      ([msg]) => msg && msg.includes("EventDefinition not found for 'core:critical_notification_shown'")
+    const debugCalls = sharedMockLogger.debug.mock.calls.filter(
+      ([msg]) => msg && msg.includes("VED: EventDefinition not found for 'core:critical_notification_shown' (expected during bootstrap)")
     );
     
-    // Should have warnings but should be manageable (no more than expected)
-    expect(warnCalls.length).toBeGreaterThan(0);
-    expect(warnCalls.length).toBeLessThanOrEqual(15); // Some buffer for async timing
+    // Should have debug messages but should be manageable (no more than expected)
+    expect(debugCalls.length).toBeGreaterThan(0);
+    expect(debugCalls.length).toBeLessThanOrEqual(15); // Some buffer for async timing
   });
 });

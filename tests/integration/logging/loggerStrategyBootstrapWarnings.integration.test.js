@@ -25,29 +25,31 @@ describe('LoggerStrategy - Bootstrap Warnings Integration', () => {
     testBed.cleanup();
   });
 
-  it('should reproduce "No eventBus available for SafeErrorLogger" warning during bootstrap', () => {
+  it('should NOT produce warnings during bootstrap (fixed behavior)', () => {
     // Arrange
     const mockConsoleLogger = testBed.createMockLogger();
     
     // Simulate early bootstrap condition where eventBus is not available yet
     const dependencies = {
       consoleLogger: mockConsoleLogger,
-      // eventBus is intentionally undefined to reproduce the warning
+      // eventBus is intentionally undefined to test that no warnings occur
     };
 
-    // Act - Create LoggerStrategy without eventBus (simulates containerConfig.js:62 → loggerStrategy.js:363)
-    const loggerStrategy = new LoggerStrategy(dependencies);
-    const safeErrorLogger = loggerStrategy.createLogger('SafeErrorLogger');
+    // Act - Create LoggerStrategy without eventBus and use it (simulates containerConfig.js:62 → loggerStrategy.js:363)
+    const loggerStrategy = new LoggerStrategy({ dependencies });
+    
+    // Trigger the actual logger creation that calls #wrapWithSafeLogger by calling a logging method
+    loggerStrategy.error('Test message'); // This should NOT produce warnings
 
-    // Assert - Should have logged the warning about missing eventBus
-    expect(mockConsoleLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('[LoggerStrategy] No eventBus available for SafeErrorLogger, using original logger')
+    // Assert - Should NOT have logged any warnings (the fix changed warning to debug)
+    expect(mockConsoleLogger.warn).not.toHaveBeenCalledWith(
+      expect.stringContaining('[LoggerStrategy] No eventBus available for SafeErrorLogger')
     );
 
-    // Verify that logger still functions despite the warning
-    expect(safeErrorLogger).toBeDefined();
-    expect(typeof safeErrorLogger.error).toBe('function');
-    expect(typeof safeErrorLogger.warn).toBe('function');
+    // Verify that logger strategy still functions properly
+    expect(loggerStrategy).toBeDefined();
+    expect(typeof loggerStrategy.error).toBe('function');
+    expect(typeof loggerStrategy.warn).toBe('function');
   });
 
   it('should not produce warnings when eventBus is available', () => {
@@ -63,8 +65,7 @@ describe('LoggerStrategy - Bootstrap Warnings Integration', () => {
     };
 
     // Act - Create LoggerStrategy with eventBus available
-    const loggerStrategy = new LoggerStrategy(dependencies);
-    const safeErrorLogger = loggerStrategy.createLogger('SafeErrorLogger');
+    const loggerStrategy = new LoggerStrategy({ dependencies });
 
     // Assert - Should NOT have any warnings about missing eventBus
     const warnCalls = mockConsoleLogger.warn.mock.calls.filter(
@@ -74,10 +75,10 @@ describe('LoggerStrategy - Bootstrap Warnings Integration', () => {
     expect(warnCalls.length).toBe(0);
 
     // Verify that logger functions properly
-    expect(safeErrorLogger).toBeDefined();
+    expect(loggerStrategy).toBeDefined();
   });
 
-  it('should reproduce the specific bootstrap sequence that causes the warning', () => {
+  it('should handle bootstrap sequence gracefully without warnings (fixed behavior)', () => {
     // Arrange - Simulate the exact sequence from the logs:
     // configureContainer @ containerConfig.js:62 → LoggerStrategy @ loggerStrategy.js:134
     const mockConsoleLogger = testBed.createMockLogger();
@@ -90,29 +91,29 @@ describe('LoggerStrategy - Bootstrap Warnings Integration', () => {
         // eventBus is not available during early container setup
       };
       
-      return new LoggerStrategy(dependencies);
+      return new LoggerStrategy({ dependencies });
     }
 
     const loggerStrategy = simulateContainerConfigurationStage();
     
-    // Simulate the createLogger call that happens during setupDIContainerStage
-    const safeErrorLogger = loggerStrategy.createLogger('SafeErrorLogger');
+    // Trigger the actual logger creation that calls #wrapWithSafeLogger by calling a logging method
+    loggerStrategy.info('Test message'); // This should trigger the wrapper method
 
-    // Assert - Should reproduce the exact warning from the logs
-    expect(mockConsoleLogger.warn).toHaveBeenCalledWith(
-      '[LoggerStrategy] No eventBus available for SafeErrorLogger, using original logger'
+    // Assert - Should NOT produce any warnings (the fix changed warning to debug)
+    expect(mockConsoleLogger.warn).not.toHaveBeenCalledWith(
+      expect.stringContaining('[LoggerStrategy] No eventBus available for SafeErrorLogger')
     );
 
     // Verify the logger still works (degraded mode)
-    expect(safeErrorLogger).toBeDefined();
+    expect(loggerStrategy).toBeDefined();
     
     // Test that the logger can still log without throwing errors
     expect(() => {
-      safeErrorLogger.error('Test error message');
+      loggerStrategy.error('Test error message');
     }).not.toThrow();
   });
 
-  it('should handle multiple logger creations during bootstrap gracefully', () => {
+  it('should handle multiple logger creations during bootstrap without warnings (fixed behavior)', () => {
     // Arrange
     const mockConsoleLogger = testBed.createMockLogger();
     const dependencies = {
@@ -120,28 +121,23 @@ describe('LoggerStrategy - Bootstrap Warnings Integration', () => {
       // eventBus intentionally undefined
     };
 
-    // Act - Create multiple loggers during bootstrap (common scenario)
-    const loggerStrategy = new LoggerStrategy(dependencies);
-    const loggers = [
-      loggerStrategy.createLogger('SafeErrorLogger'),
-      loggerStrategy.createLogger('BaseManifestItemLoader'),
-      loggerStrategy.createLogger('ModProcessor'),
-      loggerStrategy.createLogger('ContentLoadManager'),
-    ];
+    // Act - Create LoggerStrategy during bootstrap and trigger logger creation (common scenario)
+    const loggerStrategy = new LoggerStrategy({ dependencies });
+    
+    // Trigger the actual logger creation that calls #wrapWithSafeLogger by calling a logging method
+    loggerStrategy.error('Test message'); // This should trigger the wrapper method
 
-    // Assert - Should have warnings for each logger creation
+    // Assert - Should NOT have any warnings (the fix eliminated warnings during bootstrap)
     const warnCalls = mockConsoleLogger.warn.mock.calls.filter(
-      ([msg]) => msg && msg.includes('No eventBus available')
+      ([msg]) => msg && msg.includes('[LoggerStrategy] No eventBus available for SafeErrorLogger')
     );
     
-    expect(warnCalls.length).toBe(4);
+    expect(warnCalls.length).toBe(0);
 
-    // Verify all loggers are functional
-    loggers.forEach((logger, index) => {
-      expect(logger).toBeDefined();
-      expect(() => {
-        logger.error(`Test error from logger ${index}`);
-      }).not.toThrow();
-    });
+    // Verify logger strategy is functional
+    expect(loggerStrategy).toBeDefined();
+    expect(() => {
+      loggerStrategy.error('Test error from logger strategy');
+    }).not.toThrow();
   });
 });

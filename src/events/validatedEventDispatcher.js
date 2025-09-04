@@ -84,9 +84,9 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
         this.#gameDataRepository.getEventDefinition(eventName);
 
       if (!eventDefinition) {
-        // Special handling for core:system_error_occurred during bootstrap
-        // This event may be dispatched before it's registered during initialization
-        if (eventName === 'core:system_error_occurred') {
+        // Special handling for bootstrap events that may be dispatched before they're registered
+        // during initialization
+        if (eventName === 'core:system_error_occurred' || eventName === 'core:critical_notification_shown') {
           this.#logger.debug(
             `VED: EventDefinition not found for '${eventName}' (expected during bootstrap). Proceeding with dispatch.`
           );
