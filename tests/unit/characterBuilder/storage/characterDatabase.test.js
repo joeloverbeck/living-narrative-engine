@@ -1844,6 +1844,826 @@ describe('CharacterDatabase', () => {
     });
   });
 
+  describe('Cliché Operations', () => {
+    beforeEach(async () => {
+      database = new CharacterDatabase({ logger: mockLogger });
+      mockRequest.result = mockDbInstance;
+      mockDbInstance.objectStoreNames.contains.mockReturnValue(true);
+
+      const initPromise = database.initialize();
+      setTimeout(() => mockRequest.onsuccess(), 0);
+      await initPromise;
+    });
+
+    describe('saveCliche', () => {
+      it('should successfully save a cliché', async () => {
+        const cliche = {
+          id: 'cliche-1',
+          directionId: 'direction-1',
+          conceptId: 'concept-1',
+          title: 'The Reluctant Hero',
+          items: ['Refuses the call', 'Eventually accepts destiny'],
+        };
+
+        const putRequest = { onsuccess: null, onerror: null };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const savePromise = database.saveCliche(cliche);
+
+        setTimeout(() => putRequest.onsuccess(), 0);
+        const result = await savePromise;
+
+        expect(result).toEqual(cliche);
+        expect(mockObjectStore.put).toHaveBeenCalledWith(cliche);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'CharacterDatabase: Saved cliche cliche-1'
+        );
+      });
+
+      it('should handle save error for cliché', async () => {
+        const cliche = {
+          id: 'cliche-1',
+          directionId: 'direction-1',
+          conceptId: 'concept-1',
+        };
+        const errorMessage = 'Storage quota exceeded';
+
+        const putRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: errorMessage },
+        };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const savePromise = database.saveCliche(cliche);
+
+        setTimeout(() => putRequest.onerror(), 0);
+
+        await expect(savePromise).rejects.toThrow(
+          `Failed to save cliche: ${errorMessage}`
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'CharacterDatabase: Error saving cliche',
+          expect.any(Error)
+        );
+      });
+
+      it('should handle save error with null error object', async () => {
+        const cliche = {
+          id: 'cliche-1',
+          directionId: 'direction-1',
+          conceptId: 'concept-1',
+        };
+
+        const putRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: null,
+        };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const savePromise = database.saveCliche(cliche);
+
+        setTimeout(() => putRequest.onerror(), 0);
+
+        await expect(savePromise).rejects.toThrow(
+          'Failed to save cliche: Unknown error'
+        );
+      });
+    });
+
+    describe('getClicheByDirectionId', () => {
+      it('should successfully get cliché by direction ID', async () => {
+        const cliche = {
+          id: 'cliche-1',
+          directionId: 'direction-1',
+          conceptId: 'concept-1',
+          title: 'The Chosen One',
+        };
+
+        const getRequest = { onsuccess: null, onerror: null, result: cliche };
+        mockIndex.get.mockReturnValue(getRequest);
+
+        const getPromise = database.getClicheByDirectionId('direction-1');
+
+        setTimeout(() => getRequest.onsuccess(), 0);
+        const result = await getPromise;
+
+        expect(result).toEqual(cliche);
+        expect(mockObjectStore.index).toHaveBeenCalledWith('directionId');
+        expect(mockIndex.get).toHaveBeenCalledWith('direction-1');
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Found cliche with ID: cliche-1')
+        );
+      });
+
+      it('should return null when cliché not found', async () => {
+        const getRequest = { onsuccess: null, onerror: null, result: null };
+        mockIndex.get.mockReturnValue(getRequest);
+
+        const getPromise = database.getClicheByDirectionId('nonexistent');
+
+        setTimeout(() => getRequest.onsuccess(), 0);
+        const result = await getPromise;
+
+        expect(result).toBeNull();
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'No cliche found in database for directionId: nonexistent'
+        );
+      });
+
+      it('should handle index query error', async () => {
+        const errorMessage = 'Index query failed';
+        const getRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: errorMessage },
+        };
+        mockIndex.get.mockReturnValue(getRequest);
+
+        const getPromise = database.getClicheByDirectionId('direction-1');
+
+        setTimeout(() => getRequest.onerror(), 0);
+
+        await expect(getPromise).rejects.toThrow(
+          `Failed to get cliche: ${errorMessage}`
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Error in getClicheByDirectionId'),
+          expect.any(Error)
+        );
+      });
+
+      it('should handle transaction error', async () => {
+        const errorMessage = 'Transaction failed';
+        
+        // Set up mock transaction to trigger error
+        const failingTransaction = {
+          ...mockTransaction,
+          error: { message: errorMessage },
+          onerror: null,
+        };
+        mockDbInstance.transaction.mockReturnValue(failingTransaction);
+
+        const getRequest = { onsuccess: null, onerror: null };
+        mockIndex.get.mockReturnValue(getRequest);
+
+        const getPromise = database.getClicheByDirectionId('direction-1');
+
+        // Simulate transaction error
+        setTimeout(() => {
+          if (failingTransaction.onerror) {
+            failingTransaction.onerror();
+          }
+        }, 0);
+
+        await expect(getPromise).rejects.toThrow(
+          `Transaction failed: ${errorMessage}`
+        );
+      });
+
+      it('should handle exception in getClicheByDirectionId', async () => {
+        // Make index throw an exception
+        mockObjectStore.index.mockImplementation(() => {
+          throw new Error('Index access failed');
+        });
+
+        await expect(
+          database.getClicheByDirectionId('direction-1')
+        ).rejects.toThrow('Index access failed');
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Exception in getClicheByDirectionId'),
+          expect.any(Error)
+        );
+      });
+    });
+
+    describe('addCliche', () => {
+      it('should add cliché using saveCliche', async () => {
+        const cliche = {
+          id: 'cliche-1',
+          directionId: 'direction-1',
+          conceptId: 'concept-1',
+        };
+
+        const putRequest = { onsuccess: null, onerror: null };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const addPromise = database.addCliche(cliche);
+
+        setTimeout(() => putRequest.onsuccess(), 0);
+        const result = await addPromise;
+
+        expect(result).toEqual(cliche);
+        expect(mockObjectStore.put).toHaveBeenCalledWith(cliche);
+      });
+    });
+
+    describe('updateCliche', () => {
+      it('should successfully update a cliché', async () => {
+        const id = 'cliche-1';
+        const updatedData = {
+          title: 'Updated Title',
+          items: ['New item 1', 'New item 2'],
+        };
+
+        const putRequest = { onsuccess: null, onerror: null };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const updatePromise = database.updateCliche(id, updatedData);
+
+        setTimeout(() => putRequest.onsuccess(), 0);
+        const result = await updatePromise;
+
+        expect(result).toEqual({ ...updatedData, id });
+        expect(mockObjectStore.put).toHaveBeenCalledWith({
+          ...updatedData,
+          id,
+        });
+      });
+
+      it('should throw error for invalid cliché ID', async () => {
+        await expect(database.updateCliche('', {})).rejects.toThrow(
+          'Cliche ID is required for update'
+        );
+
+        await expect(database.updateCliche(null, {})).rejects.toThrow(
+          'Cliche ID is required for update'
+        );
+
+        await expect(database.updateCliche(123, {})).rejects.toThrow(
+          'Cliche ID is required for update'
+        );
+      });
+
+      it('should throw error for invalid update data', async () => {
+        await expect(database.updateCliche('cliche-1', null)).rejects.toThrow(
+          'Updated cliche data is required'
+        );
+
+        await expect(database.updateCliche('cliche-1', 'string')).rejects.toThrow(
+          'Updated cliche data is required'
+        );
+      });
+    });
+
+    describe('deleteCliche', () => {
+      it('should successfully delete a cliché', async () => {
+        const clicheId = 'cliche-1';
+
+        const deleteRequest = { onsuccess: null, onerror: null };
+        mockObjectStore.delete.mockReturnValue(deleteRequest);
+
+        const deletePromise = database.deleteCliche(clicheId);
+
+        setTimeout(() => deleteRequest.onsuccess(), 0);
+        const result = await deletePromise;
+
+        expect(result).toBe(true);
+        expect(mockObjectStore.delete).toHaveBeenCalledWith(clicheId);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'CharacterDatabase: Successfully deleted cliche cliche-1'
+        );
+      });
+
+      it('should handle delete error', async () => {
+        const clicheId = 'cliche-1';
+        const errorMessage = 'Delete operation failed';
+
+        const deleteRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: errorMessage },
+        };
+        mockObjectStore.delete.mockReturnValue(deleteRequest);
+
+        const deletePromise = database.deleteCliche(clicheId);
+
+        setTimeout(() => deleteRequest.onerror(), 0);
+
+        await expect(deletePromise).rejects.toThrow(
+          `Failed to delete cliche: ${errorMessage}`
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'CharacterDatabase: Error deleting cliche',
+          expect.any(Error)
+        );
+      });
+
+      it('should handle delete error with null error object', async () => {
+        const clicheId = 'cliche-1';
+
+        const deleteRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: null,
+        };
+        mockObjectStore.delete.mockReturnValue(deleteRequest);
+
+        const deletePromise = database.deleteCliche(clicheId);
+
+        setTimeout(() => deleteRequest.onerror(), 0);
+
+        await expect(deletePromise).rejects.toThrow(
+          'Failed to delete cliche: Unknown error'
+        );
+      });
+    });
+  });
+
+  describe('Metadata Operations', () => {
+    beforeEach(async () => {
+      database = new CharacterDatabase({ logger: mockLogger });
+      mockRequest.result = mockDbInstance;
+      mockDbInstance.objectStoreNames.contains.mockReturnValue(true);
+
+      const initPromise = database.initialize();
+      setTimeout(() => mockRequest.onsuccess(), 0);
+      await initPromise;
+    });
+
+    describe('storeMigrationMetadata', () => {
+      it('should successfully store migration metadata', async () => {
+        const migrationKey = 'migration-v1-v2';
+        const migrationData = {
+          version: 2,
+          migratedEntities: 100,
+        };
+
+        const putRequest = { onsuccess: null, onerror: null };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const storePromise = database.storeMigrationMetadata(
+          migrationKey,
+          migrationData
+        );
+
+        setTimeout(() => putRequest.onsuccess(), 0);
+        await storePromise;
+
+        expect(mockObjectStore.put).toHaveBeenCalledWith({
+          key: migrationKey,
+          value: expect.objectContaining({
+            ...migrationData,
+            migratedAt: expect.any(String),
+          }),
+        });
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'CharacterDatabase: Stored migration metadata for migration-v1-v2'
+        );
+      });
+
+      it('should handle storage error', async () => {
+        const migrationKey = 'migration-v1-v2';
+        const migrationData = { version: 2 };
+        const errorMessage = 'Storage failed';
+
+        const putRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: errorMessage },
+        };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const storePromise = database.storeMigrationMetadata(
+          migrationKey,
+          migrationData
+        );
+
+        setTimeout(() => putRequest.onerror(), 0);
+
+        await expect(storePromise).rejects.toThrow(
+          `Failed to store migration metadata: ${errorMessage}`
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'CharacterDatabase: Error storing migration metadata',
+          expect.any(Error)
+        );
+      });
+
+      it('should handle storage error with null error object', async () => {
+        const migrationKey = 'migration-v1-v2';
+        const migrationData = { version: 2 };
+
+        const putRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: null,
+        };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const storePromise = database.storeMigrationMetadata(
+          migrationKey,
+          migrationData
+        );
+
+        setTimeout(() => putRequest.onerror(), 0);
+
+        await expect(storePromise).rejects.toThrow(
+          'Failed to store migration metadata: Unknown error'
+        );
+      });
+    });
+
+    describe('addMetadata', () => {
+      it('should successfully add metadata entry', async () => {
+        const metadata = {
+          key: 'last-sync',
+          value: { timestamp: '2024-01-01T00:00:00Z', count: 42 },
+        };
+
+        const putRequest = { onsuccess: null, onerror: null };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const addPromise = database.addMetadata(metadata);
+
+        setTimeout(() => putRequest.onsuccess(), 0);
+        await addPromise;
+
+        expect(mockObjectStore.put).toHaveBeenCalledWith({
+          key: metadata.key,
+          value: metadata.value,
+          timestamp: expect.any(String),
+        });
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'CharacterDatabase: Added metadata for last-sync'
+        );
+      });
+
+      it('should handle add error', async () => {
+        const metadata = { key: 'test-key', value: 'test-value' };
+        const errorMessage = 'Add failed';
+
+        const putRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: errorMessage },
+        };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const addPromise = database.addMetadata(metadata);
+
+        setTimeout(() => putRequest.onerror(), 0);
+
+        await expect(addPromise).rejects.toThrow(
+          `Failed to add metadata: ${errorMessage}`
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'CharacterDatabase: Error adding metadata',
+          expect.any(Error)
+        );
+      });
+
+      it('should handle add error with null error object', async () => {
+        const metadata = { key: 'test-key', value: 'test-value' };
+
+        const putRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: null,
+        };
+        mockObjectStore.put.mockReturnValue(putRequest);
+
+        const addPromise = database.addMetadata(metadata);
+
+        setTimeout(() => putRequest.onerror(), 0);
+
+        await expect(addPromise).rejects.toThrow(
+          'Failed to add metadata: Unknown error'
+        );
+      });
+    });
+
+    describe('hasClichesStore', () => {
+      it('should return true when cliches store exists', () => {
+        mockDbInstance.objectStoreNames.contains.mockReturnValue(true);
+
+        const result = database.hasClichesStore();
+
+        expect(result).toBe(true);
+        expect(mockDbInstance.objectStoreNames.contains).toHaveBeenCalledWith(
+          'cliches'
+        );
+      });
+
+      it('should return false when cliches store does not exist', () => {
+        mockDbInstance.objectStoreNames.contains.mockReturnValue(false);
+
+        const result = database.hasClichesStore();
+
+        expect(result).toBe(false);
+        expect(mockDbInstance.objectStoreNames.contains).toHaveBeenCalledWith(
+          'cliches'
+        );
+      });
+
+      it('should throw error when database not initialized', () => {
+        const uninitializedDb = new CharacterDatabase({ logger: mockLogger });
+
+        expect(() => uninitializedDb.hasClichesStore()).toThrow(
+          'CharacterDatabase: Database not initialized. Call initialize() first.'
+        );
+      });
+    });
+  });
+
+  describe('Debug Utility Methods', () => {
+    beforeEach(async () => {
+      database = new CharacterDatabase({ logger: mockLogger });
+      mockRequest.result = mockDbInstance;
+      mockDbInstance.objectStoreNames.contains.mockReturnValue(true);
+
+      const initPromise = database.initialize();
+      setTimeout(() => mockRequest.onsuccess(), 0);
+      await initPromise;
+    });
+
+    describe('debugDumpAllCliches', () => {
+      it('should dump all clichés from database', async () => {
+        const cliches = [
+          {
+            id: 'cliche-1',
+            conceptId: 'concept-1',
+            directionId: 'direction-1',
+            title: 'The Hero\'s Journey',
+          },
+          {
+            id: 'cliche-2',
+            conceptId: 'concept-2',
+            directionId: 'direction-2',
+            title: 'The Mentor',
+          },
+        ];
+
+        const getAllRequest = {
+          onsuccess: null,
+          onerror: null,
+          result: cliches,
+        };
+        mockObjectStore.getAll.mockReturnValue(getAllRequest);
+
+        const dumpPromise = database.debugDumpAllCliches();
+
+        setTimeout(() => getAllRequest.onsuccess(), 0);
+        const result = await dumpPromise;
+
+        expect(result).toEqual(cliches);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'DEBUG DB: Starting to dump all clichés...'
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'DEBUG DB: Found 2 total clichés in database'
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Cliche 1: ID=cliche-1')
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Cliche 2: ID=cliche-2')
+        );
+      });
+
+      it('should handle empty clichés list', async () => {
+        const getAllRequest = { onsuccess: null, onerror: null, result: [] };
+        mockObjectStore.getAll.mockReturnValue(getAllRequest);
+
+        const dumpPromise = database.debugDumpAllCliches();
+
+        setTimeout(() => getAllRequest.onsuccess(), 0);
+        const result = await dumpPromise;
+
+        expect(result).toEqual([]);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'DEBUG DB: Found 0 total clichés in database'
+        );
+      });
+
+      it('should handle dump error', async () => {
+        const errorMessage = 'Failed to fetch';
+        const getAllRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: errorMessage },
+        };
+        mockObjectStore.getAll.mockReturnValue(getAllRequest);
+
+        const dumpPromise = database.debugDumpAllCliches();
+
+        setTimeout(() => getAllRequest.onerror(), 0);
+
+        await expect(dumpPromise).rejects.toThrow(
+          `Failed to dump clichés: ${errorMessage}`
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'DEBUG DB: Error dumping clichés:',
+          expect.any(Error)
+        );
+      });
+
+      it('should handle exception during dump', async () => {
+        mockObjectStore.getAll.mockImplementation(() => {
+          throw new Error('Unexpected error');
+        });
+
+        await expect(database.debugDumpAllCliches()).rejects.toThrow(
+          'Unexpected error'
+        );
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'DEBUG DB: Exception dumping clichés:',
+          expect.any(Error)
+        );
+      });
+    });
+
+    describe('debugDumpAllThematicDirections', () => {
+      it('should dump all thematic directions from database', async () => {
+        const directions = [
+          {
+            id: 'direction-1',
+            conceptId: 'concept-1',
+            title: 'Dark and brooding',
+          },
+          {
+            id: 'direction-2',
+            conceptId: 'concept-2',
+            title: 'Light-hearted comedy',
+          },
+        ];
+
+        const getAllRequest = {
+          onsuccess: null,
+          onerror: null,
+          result: directions,
+        };
+        mockObjectStore.getAll.mockReturnValue(getAllRequest);
+
+        const dumpPromise = database.debugDumpAllThematicDirections();
+
+        setTimeout(() => getAllRequest.onsuccess(), 0);
+        const result = await dumpPromise;
+
+        expect(result).toEqual(directions);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'DEBUG DB: Starting to dump all thematic directions...'
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'DEBUG DB: Found 2 total thematic directions in database'
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Direction 1: ID=direction-1')
+        );
+      });
+
+      it('should handle empty directions list', async () => {
+        const getAllRequest = { onsuccess: null, onerror: null, result: null };
+        mockObjectStore.getAll.mockReturnValue(getAllRequest);
+
+        const dumpPromise = database.debugDumpAllThematicDirections();
+
+        setTimeout(() => getAllRequest.onsuccess(), 0);
+        const result = await dumpPromise;
+
+        expect(result).toEqual([]);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'DEBUG DB: Found 0 total thematic directions in database'
+        );
+      });
+
+      it('should handle dump error', async () => {
+        const errorMessage = 'Query failed';
+        const getAllRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: errorMessage },
+        };
+        mockObjectStore.getAll.mockReturnValue(getAllRequest);
+
+        const dumpPromise = database.debugDumpAllThematicDirections();
+
+        setTimeout(() => getAllRequest.onerror(), 0);
+
+        await expect(dumpPromise).rejects.toThrow(
+          `Failed to dump directions: ${errorMessage}`
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'DEBUG DB: Error dumping directions:',
+          expect.any(Error)
+        );
+      });
+
+      it('should handle exception during dump', async () => {
+        // Mock the transaction method to throw an error
+        mockDbInstance.transaction.mockImplementation(() => {
+          throw new Error('Transaction failed');
+        });
+
+        await expect(database.debugDumpAllThematicDirections()).rejects.toThrow(
+          'Transaction failed'
+        );
+
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'DEBUG DB: Exception dumping directions:',
+          expect.any(Error)
+        );
+      });
+    });
+
+    describe('debugDumpAllCharacterConcepts', () => {
+      it('should dump all character concepts from database', async () => {
+        const concepts = [
+          {
+            id: 'concept-1',
+            status: 'draft',
+            createdAt: '2024-01-01T00:00:00Z',
+          },
+          {
+            id: 'concept-2',
+            status: 'published',
+            createdAt: '2024-01-02T00:00:00Z',
+          },
+        ];
+
+        const getAllRequest = {
+          onsuccess: null,
+          onerror: null,
+          result: concepts,
+        };
+        mockObjectStore.getAll.mockReturnValue(getAllRequest);
+
+        const dumpPromise = database.debugDumpAllCharacterConcepts();
+
+        setTimeout(() => getAllRequest.onsuccess(), 0);
+        const result = await dumpPromise;
+
+        expect(result).toEqual(concepts);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'DEBUG DB: Starting to dump all character concepts...'
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'DEBUG DB: Found 2 total character concepts in database'
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Concept 1: ID=concept-1')
+        );
+      });
+
+      it('should handle empty concepts list', async () => {
+        const getAllRequest = { onsuccess: null, onerror: null, result: [] };
+        mockObjectStore.getAll.mockReturnValue(getAllRequest);
+
+        const dumpPromise = database.debugDumpAllCharacterConcepts();
+
+        setTimeout(() => getAllRequest.onsuccess(), 0);
+        const result = await dumpPromise;
+
+        expect(result).toEqual([]);
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'DEBUG DB: Found 0 total character concepts in database'
+        );
+      });
+
+      it('should handle dump error', async () => {
+        const errorMessage = 'Database error';
+        const getAllRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: errorMessage },
+        };
+        mockObjectStore.getAll.mockReturnValue(getAllRequest);
+
+        const dumpPromise = database.debugDumpAllCharacterConcepts();
+
+        setTimeout(() => getAllRequest.onerror(), 0);
+
+        await expect(dumpPromise).rejects.toThrow(
+          `Failed to dump concepts: ${errorMessage}`
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'DEBUG DB: Error dumping concepts:',
+          expect.any(Error)
+        );
+      });
+
+      it('should handle null error object', async () => {
+        const getAllRequest = {
+          onsuccess: null,
+          onerror: null,
+          error: null,
+        };
+        mockObjectStore.getAll.mockReturnValue(getAllRequest);
+
+        const dumpPromise = database.debugDumpAllCharacterConcepts();
+
+        setTimeout(() => getAllRequest.onerror(), 0);
+
+        await expect(dumpPromise).rejects.toThrow(
+          'Failed to dump concepts: Unknown error'
+        );
+      });
+    });
+  });
+
   describe('Core Motivations Methods', () => {
     beforeEach(async () => {
       database = new CharacterDatabase({ logger: mockLogger });

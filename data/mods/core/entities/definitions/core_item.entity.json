@@ -1,0 +1,14 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "core:item",
+  "description": "Basic item entity definition for core system",
+  "components": {
+    "core:description": {
+      "name": ""
+    },
+    "core:item": {
+      "value": 0,
+      "type": ""
+    }
+  }
+}

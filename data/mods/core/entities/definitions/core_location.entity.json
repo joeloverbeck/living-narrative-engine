@@ -1,0 +1,12 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "core:location",
+  "description": "Basic location entity definition for core system",
+  "components": {
+    "core:description": {
+      "name": "",
+      "description": ""
+    },
+    "core:exits": []
+  }
+}

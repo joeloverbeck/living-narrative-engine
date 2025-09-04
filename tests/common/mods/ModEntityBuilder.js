@@ -201,7 +201,7 @@ export class ModEntityBuilder {
    */
   asBodyPart(options = {}) {
     const { parent = null, children = [], subType } = options;
-    this.entityData.components['anatomy:body_part'] = {
+    this.entityData.components['anatomy:part'] = {
       parent,
       children,
       subType,

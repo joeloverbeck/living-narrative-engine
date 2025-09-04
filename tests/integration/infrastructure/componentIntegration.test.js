@@ -205,7 +205,7 @@ describe('Mod Test Infrastructure - Component Integration', () => {
       // Validate anatomy components
       if (scenario.bodyParts && scenario.bodyParts.length > 0) {
         scenario.bodyParts.forEach(bodyPart => {
-          expect(bodyPart.components['anatomy:body_part']).toBeDefined();
+          expect(bodyPart.components['anatomy:part']).toBeDefined();
           expect(bodyPart.components['core:location']).toBeDefined();
         });
       }

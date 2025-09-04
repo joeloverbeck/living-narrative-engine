@@ -822,4 +822,466 @@ describe('ActionAwareStructuredTrace - Core Functionality', () => {
       expect(performance.operationCount).toBe(1);
     });
   });
+
+  describe('Property Getters', () => {
+    it('should provide actorId getter for compatibility', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        actorId: 'test-actor-123',
+        tracedActions: ['core:go'],
+      });
+
+      // Test the getter (lines 346-348)
+      expect(trace.actorId).toBe('test-actor-123');
+      expect(trace.getActorId()).toBe('test-actor-123');
+    });
+
+    it('should provide actionId getter for single action traces', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:go'],
+      });
+
+      // Before any actions are traced (lines 357-367)
+      expect(trace.actionId).toBe('discovery');
+
+      // After tracing a single action
+      trace.captureActionData('test_stage', 'core:go', { data: 'test' });
+      expect(trace.actionId).toBe('core:go');
+    });
+
+    it('should return discovery for multi-action traces', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:*'],
+      });
+
+      // Trace multiple actions
+      trace.captureActionData('stage1', 'core:go', { data: 'test1' });
+      trace.captureActionData('stage1', 'core:look', { data: 'test2' });
+
+      // Should return 'discovery' for multi-action traces (line 364)
+      expect(trace.actionId).toBe('discovery');
+    });
+  });
+
+  describe('Operator Evaluation Capture', () => {
+    it('should capture operator evaluation data', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['_current_scope_evaluation'],
+        verbosity: 'standard',
+      });
+
+      // Test captureOperatorEvaluation (lines 380-441)
+      const operatorData = {
+        operator: 'isSocketCovered',
+        entityId: 'entity-123',
+        result: true,
+        reason: 'Socket is covered',
+        details: { coveringEntity: 'entity-456' },
+      };
+
+      trace.captureOperatorEvaluation(operatorData);
+
+      const scopeTrace = trace.getActionTrace('_current_scope_evaluation');
+      expect(scopeTrace).toBeDefined();
+      expect(scopeTrace.stages.operator_evaluations).toBeDefined();
+      
+      const evaluations = scopeTrace.stages.operator_evaluations.data.evaluations;
+      expect(evaluations).toHaveLength(1);
+      expect(evaluations[0].operator).toBe('isSocketCovered');
+      expect(evaluations[0].entityId).toBe('entity-123');
+      expect(evaluations[0].result).toBe(true);
+      expect(evaluations[0].reason).toBe('Socket is covered');
+      expect(evaluations[0].details).toEqual({ coveringEntity: 'entity-456' });
+    });
+
+    it('should handle multiple operator evaluations', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['_current_scope_evaluation'],
+      });
+
+      // Capture multiple evaluations
+      trace.captureOperatorEvaluation({
+        operator: 'isValidTarget',
+        entityId: 'entity-1',
+        result: true,
+      });
+
+      trace.captureOperatorEvaluation({
+        operator: 'hasPermission',
+        entityId: 'entity-2',
+        result: false,
+        reason: 'No permission granted',
+      });
+
+      const scopeTrace = trace.getActionTrace('_current_scope_evaluation');
+      const evaluations = scopeTrace.stages.operator_evaluations.data.evaluations;
+      expect(evaluations).toHaveLength(2);
+      expect(evaluations[0].operator).toBe('isValidTarget');
+      expect(evaluations[1].operator).toBe('hasPermission');
+    });
+
+    it('should handle operator evaluation errors gracefully', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['_current_scope_evaluation'],
+      });
+
+      // Should not throw on error (lines 435-440)
+      expect(() => {
+        trace.captureOperatorEvaluation(null);
+      }).not.toThrow();
+
+      expect(testBed.mockLogger.error).toHaveBeenCalledWith(
+        'ActionAwareStructuredTrace: Error capturing operator evaluation',
+        expect.any(Error)
+      );
+    });
+  });
+
+  describe('Enhanced Scope Evaluation', () => {
+    it('should capture enhanced scope evaluation data', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:go'],
+        verbosity: 'standard',
+      });
+
+      // Test captureEnhancedScopeEvaluation (lines 668-711)
+      const traceLogs = [
+        {
+          source: 'ScopeEngine.entityDiscovery',
+          data: {
+            componentId: 'core:position',
+            totalEntities: 10,
+            foundEntities: 5,
+            entityDetails: ['entity1', 'entity2'],
+            resultIds: ['id1', 'id2'],
+          },
+        },
+        {
+          source: 'ScopeEngine.filterEvaluation',
+          data: {
+            itemId: 'item-123',
+            filterPassed: true,
+            evaluationResult: 'passed',
+            hasPositionComponent: true,
+            hasAllowsSittingComponent: true,
+            actorLocationId: 'loc-1',
+            entityLocationId: 'loc-1',
+            allowsSittingSpots: 3,
+            locationMismatch: false,
+            spotAvailability: 'available',
+            filterAnalysis: 'all checks passed',
+          },
+        },
+      ];
+
+      trace.captureEnhancedScopeEvaluation('core:go', 'actor.furniture', traceLogs);
+
+      const actionTrace = trace.getActionTrace('core:go');
+      expect(actionTrace).toBeDefined();
+      expect(actionTrace.stages.enhanced_scope_evaluation).toBeDefined();
+      
+      const enhancedData = actionTrace.stages.enhanced_scope_evaluation.data;
+      expect(enhancedData).toBeDefined();
+      // Based on the implementation, check the actual structure of the captured data
+      expect(enhancedData.timestamp).toBeDefined();
+      expect(enhancedData.entityDiscovery).toBeDefined();
+      expect(enhancedData.entityDiscovery).toHaveLength(1);
+      expect(enhancedData.entityDiscovery[0].componentId).toBe('core:position');
+      expect(enhancedData.entityDiscovery[0].totalEntities).toBe(10);
+      expect(enhancedData.filterEvaluations).toBeDefined();
+      expect(enhancedData.filterEvaluations).toHaveLength(1);
+      expect(enhancedData.filterEvaluations[0].itemId).toBe('item-123');
+      expect(enhancedData.filterEvaluations[0].filterPassed).toBe(true);
+    });
+
+    it('should handle empty trace logs', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:go'],
+      });
+
+      // Should handle empty or null trace logs
+      trace.captureEnhancedScopeEvaluation('core:go', 'test.scope', []);
+      
+      const actionTrace = trace.getActionTrace('core:go');
+      expect(actionTrace).toBeDefined();
+      expect(actionTrace.stages.enhanced_scope_evaluation).toBeDefined();
+      expect(actionTrace.stages.enhanced_scope_evaluation.data.entityDiscovery).toEqual([]);
+      expect(actionTrace.stages.enhanced_scope_evaluation.data.filterEvaluations).toEqual([]);
+    });
+
+    it('should not capture if action is not traced', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:look'], // Different action
+      });
+
+      trace.captureEnhancedScopeEvaluation('core:go', 'test.scope', []);
+      
+      expect(trace.getActionTrace('core:go')).toBeNull();
+    });
+  });
+
+  describe('Enhanced Action Data Capture', () => {
+    it('should capture enhanced action data with options', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:go'],
+        verbosity: 'detailed',
+      });
+
+      // Test captureEnhancedActionData (lines 1093-1175)
+      const data = {
+        field1: 'value1',
+        field2: 'value2',
+        performance: { metric: 100 },
+      };
+
+      trace.captureEnhancedActionData('test_stage', 'core:go', data, {
+        category: 'performance',
+        summarize: false,
+      });
+
+      const actionTrace = trace.getActionTrace('core:go');
+      expect(actionTrace.stages.test_stage).toBeDefined();
+      
+      const capturedData = actionTrace.stages.test_stage.data;
+      expect(capturedData._enhanced).toBeDefined();
+      expect(capturedData._enhanced.category).toBe('performance');
+      expect(capturedData._enhanced.verbosityLevel).toBe('detailed');
+    });
+
+    it('should handle enhanced filter not available', async () => {
+      const mockFilter = testBed.createMockActionTraceFilter({
+        tracedActions: ['core:go'],
+      });
+
+      // Don't add shouldCaptureEnhanced method to test fallback (line 1117)
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockFilter,
+        actorId: 'test-actor',
+        logger: testBed.mockLogger,
+      });
+
+      trace.captureEnhancedActionData('test_stage', 'core:go', { test: 'data' });
+
+      // Should fall back to regular shouldTrace
+      expect(mockFilter.shouldTrace).toHaveBeenCalledWith('core:go');
+    });
+
+    it('should apply data summarization when requested', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:go'],
+        verbosity: 'minimal',
+      });
+
+      const data = {
+        important: 'keep',
+        performance: { metric: 100 },
+        timing: { duration: 50 },
+        largeArray: Array(10).fill('item'),
+        diagnostic: 'remove',
+        debug: 'remove',
+        internal: 'remove',
+      };
+
+      trace.captureEnhancedActionData('test_stage', 'core:go', data, {
+        summarize: true,
+        targetVerbosity: 'minimal',
+      });
+
+      const actionTrace = trace.getActionTrace('core:go');
+      const capturedData = actionTrace.stages.test_stage.data;
+      
+      // Should remove performance, diagnostic, debug based on minimal verbosity
+      expect(capturedData.important).toBe('keep');
+      expect(capturedData.performance).toBeUndefined();
+      expect(capturedData.diagnostic).toBeUndefined();
+      expect(capturedData.debug).toBeUndefined();
+      expect(capturedData.largeArray).toHaveLength(3); // Truncated
+      expect(capturedData.largeArray_truncated).toBe(true);
+    });
+  });
+
+  describe('Filtered Trace Export', () => {
+    it('should export filtered trace data by verbosity', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:*'],
+        verbosity: 'verbose',
+      });
+
+      // Add various data with different verbosity levels
+      trace.captureActionData('stage1', 'core:go', { data: 'test1' });
+      trace.captureEnhancedActionData('stage2', 'core:go', { data: 'test2' }, {
+        category: 'performance',
+      });
+
+      // Test exportFilteredTraceData (lines 1280-1319)
+      const exported = trace.exportFilteredTraceData('standard');
+      
+      expect(exported).toBeDefined();
+      expect(exported['core:go']).toBeDefined();
+      expect(exported['core:go'].stages).toBeDefined();
+    });
+
+    it('should filter by categories', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:go'],
+      });
+
+      // Add data with different categories - need to explicitly set verbosity to see all data
+      trace.captureActionData('component_filtering', 'core:go', { data: 'business' });
+      trace.captureActionData('timing_data', 'core:go', { data: 'perf' });
+      trace.captureActionData('error_details', 'core:go', { data: 'diag' });
+
+      // Export only specific categories (line 1290, 1329-1354)
+      const exported = trace.exportFilteredTraceData('verbose', ['business_logic', 'performance', 'diagnostic']);
+      
+      expect(exported['core:go']).toBeDefined();
+      expect(exported['core:go'].stages).toBeDefined();
+      const stages = exported['core:go'].stages;
+      // All stages should be included since we're including all the categories
+      expect(stages.component_filtering).toBeDefined();
+      expect(stages.timing_data).toBeDefined();
+      expect(stages.error_details).toBeDefined();
+    });
+
+    it('should skip data above target verbosity', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:go'],
+      });
+
+      // Add enhanced data with verbosity level
+      trace.captureEnhancedActionData('stage1', 'core:go', { data: 'test' }, {
+        category: 'core',
+      });
+
+      const mockEnhancedData = {
+        data: 'test',
+        _enhanced: { verbosityLevel: 'verbose' }
+      };
+
+      // Manually set enhanced data to test verbosity filtering (line 1300)
+      const actionTrace = trace.getActionTrace('core:go');
+      actionTrace.stages.stage2 = {
+        timestamp: Date.now(),
+        data: mockEnhancedData,
+        stageCompletedAt: Date.now(),
+      };
+
+      const exported = trace.exportFilteredTraceData('minimal');
+      
+      // Should skip verbose data when exporting at minimal level
+      expect(exported['core:go'].stages.stage2).toBeUndefined();
+    });
+  });
+
+  describe('JSON Serialization', () => {
+    it('should serialize trace data to JSON format', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:*'],
+        actorId: 'actor-123',
+      });
+
+      // Add test data
+      trace.captureActionData('stage1', 'core:go', { data: 'test1' });
+      trace.captureActionData('stage2', 'core:go', { data: 'test2' });
+      trace.captureActionData('stage1', 'core:look', { data: 'test3' });
+
+      // Test toJSON method (lines 1398-1422)
+      const json = trace.toJSON();
+      
+      expect(json.timestamp).toBeDefined();
+      expect(json.traceType).toBe('action_aware_structured');
+      expect(json.actorId).toBe('actor-123');
+      expect(json.summary).toBeDefined();
+      expect(json.summary.tracedActionCount).toBe(2);
+      expect(json.actions).toBeDefined();
+      expect(json.actions['core:go']).toBeDefined();
+      expect(json.actions['core:go'].stageOrder).toEqual(['stage1', 'stage2']);
+      expect(json.actions['core:go'].totalDuration).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should calculate total duration correctly', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:go'],
+      });
+
+      // Add stages with time gaps to test duration calculation (lines 1432-1441)
+      const now = Date.now();
+      trace.captureActionData('stage1', 'core:go', { data: 'test1' });
+      
+      // Manually update timestamp to simulate time passing
+      const actionTrace = trace.getActionTrace('core:go');
+      actionTrace.stages.stage1.timestamp = now;
+      
+      // Add second stage with later timestamp
+      setTimeout(() => {
+        trace.captureActionData('stage2', 'core:go', { data: 'test2' });
+      }, 10);
+
+      // Wait and then check
+      await new Promise(resolve => setTimeout(resolve, 20));
+      
+      const json = trace.toJSON();
+      expect(json.actions['core:go'].totalDuration).toBeGreaterThan(0);
+    });
+
+    it('should handle empty trace data in JSON serialization', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:go'],
+        actorId: 'test-actor',
+      });
+
+      // Don't add any data - test with empty trace
+      const json = trace.toJSON();
+      
+      expect(json.timestamp).toBeDefined();
+      expect(json.traceType).toBe('action_aware_structured');
+      expect(json.actorId).toBe('test-actor');
+      expect(json.summary.tracedActionCount).toBe(0);
+      expect(json.actions).toEqual({});
+    });
+
+    it('should handle traces without stages in duration calculation', async () => {
+      const trace = await testBed.createActionAwareTrace({
+        tracedActions: ['core:go'],
+      });
+
+      // Create action trace without stages to test edge case
+      trace.captureActionData('test', 'core:go', { test: 'data' });
+      const actionTrace = trace.getActionTrace('core:go');
+      
+      // Clear stages to simulate edge case
+      actionTrace.stages = {};
+
+      const json = trace.toJSON();
+      expect(json.actions['core:go'].totalDuration).toBe(0);
+    });
+  });
+
+  describe('Error Handling in Verbosity Filtering', () => {
+    it('should handle errors during verbosity filtering', async () => {
+      const mockFilter = testBed.createMockActionTraceFilter({
+        tracedActions: ['core:go'],
+        verbosity: 'standard',
+      });
+
+      // Make getInclusionConfig throw to trigger the error path
+      mockFilter.getInclusionConfig.mockImplementation(() => {
+        throw new Error('Config access error');
+      });
+
+      const trace = new ActionAwareStructuredTrace({
+        actionTraceFilter: mockFilter,
+        actorId: 'test-actor',
+        logger: testBed.mockLogger,
+      });
+
+      // This will trigger the error in #filterDataByVerbosity (lines 857-861)
+      trace.captureActionData('test_stage', 'core:go', { test: 'data' });
+
+      // Should log error about capturing action data
+      expect(testBed.mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining("Error capturing action data"),
+        expect.any(Error)
+      );
+    });
+  });
 });

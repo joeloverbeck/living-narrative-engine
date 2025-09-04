@@ -71,7 +71,7 @@ export class EntityManagerTestBed extends FactoryTestBed {
   /**
    * Configures the mock IDataRegistry to return specific definitions for a test.
    *
-   * @param {...EntityDefinition} definitions - The definitions to make available via the mock registry.
+   * @param {...object} definitions - The definitions to make available via the mock registry.
    */
   setupDefinitions(...definitions) {
     this.mocks.registry.getEntityDefinition.mockImplementation((id) => {
@@ -209,6 +209,53 @@ export class EntityManagerTestBed extends FactoryTestBed {
       instanceId,
       resetDispatch,
     });
+  }
+
+  /**
+   * Creates multiple entities in a batch for better performance.
+   *
+   * @param {Array<{definitionKey: keyof typeof TestData.Definitions, instanceId?: string, overrides?: Record<string, object>}>} entitySpecs - Array of entity specifications
+   * @param {object} [options] - Options for batch creation
+   * @param {boolean} [options.stopOnError] - Stop on first error
+   * @returns {Promise<Array>} Array of created entities
+   */
+  async batchCreateEntities(entitySpecs, options = {}) {
+    // Setup all definitions that will be needed
+    const uniqueDefKeys = [...new Set(entitySpecs.map(spec => spec.definitionKey))];
+    const definitions = uniqueDefKeys.map(key => {
+      const def = TestData.Definitions[key];
+      if (!def) {
+        throw new Error(`Unknown test definition key: ${key}`);
+      }
+      return def;
+    });
+    this.setupDefinitions(...definitions);
+
+    // Convert our test specs to the format expected by entityManager.batchCreateEntities
+    const managerSpecs = entitySpecs.map(spec => ({
+      definitionId: TestData.Definitions[spec.definitionKey].id,
+      opts: {
+        instanceId: spec.instanceId,
+        componentOverrides: spec.overrides
+      }
+    }));
+
+    // Use the entity manager's batch creation if available
+    if (this.entityManager.hasBatchSupport && this.entityManager.hasBatchSupport()) {
+      const result = await this.entityManager.batchCreateEntities(managerSpecs, options);
+      return result.successes.map(s => s.entity);
+    }
+
+    // Fallback to sequential creation if batch not available
+    const entities = [];
+    for (const spec of entitySpecs) {
+      const entity = await this.createEntity(spec.definitionKey, {
+        instanceId: spec.instanceId,
+        overrides: spec.overrides
+      });
+      entities.push(entity);
+    }
+    return entities;
   }
 
   /**

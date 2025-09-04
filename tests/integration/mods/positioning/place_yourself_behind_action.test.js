@@ -5,323 +5,190 @@
  * the action is valid and dispatches it directly.
  */
 
-import {
-  describe,
-  it,
-  beforeEach,
-  afterEach,
-  expect,
-  jest,
-} from '@jest/globals';
-import placeYourselfBehindRule from '../../../../data/mods/positioning/rules/place_yourself_behind.rule.json';
-import eventIsActionPlaceYourselfBehind from '../../../../data/mods/positioning/conditions/event-is-action-place-yourself-behind.condition.json';
-import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../../src/utils/macroUtils.js';
-import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
-import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import DispatchPerceptibleEventHandler from '../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
-import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
-import AddComponentHandler from '../../../../src/logic/operationHandlers/addComponentHandler.js';
-import ModifyArrayFieldHandler from '../../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js';
 
 /**
- * Creates handlers needed for the place_yourself_behind rule.
- *
- * @param {object} entityManager - Entity manager instance
- * @param {object} eventBus - Event bus instance
- * @param {object} logger - Logger instance
- * @returns {object} Handlers object
+ * Creates a standardized behind-positioning scenario.
+ * 
+ * @param {string} actorName - Name for the actor
+ * @param {string} targetName - Name for the target
+ * @param {string} locationId - Location ID
+ * @returns {object} Object with actor, target, and location entities
  */
-function createHandlers(entityManager, eventBus, logger) {
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
+function setupBehindPositioningScenario(actorName = 'Player Character', targetName = 'Guard NPC', locationId = 'test:room') {
+  const room = new ModEntityBuilder(locationId)
+    .asRoom('Test Room')
+    .build();
+
+  const actor = new ModEntityBuilder('test:player')
+    .withName(actorName)
+    .atLocation(locationId)
+    .closeToEntity('test:npc')
+    .asActor()
+    .build();
+
+  const target = new ModEntityBuilder('test:npc')
+    .withName(targetName)
+    .closeToEntity('test:player')
+    .asActor()
+    .build();
+
+  return { room, actor, target };
+}
+
+/**
+ * Creates multi-actor behind-positioning scenario.
+ */
+function setupMultiActorBehindScenario() {
+  const room = new ModEntityBuilder('test:room')
+    .asRoom('Test Room')
+    .build();
+
+  const actor1 = new ModEntityBuilder('test:player1')
+    .withName('Player One')
+    .atLocation('test:room')
+    .closeToEntity('test:npc')
+    .asActor()
+    .build();
+
+  const actor2 = new ModEntityBuilder('test:player2')
+    .withName('Player Two')
+    .atLocation('test:room')
+    .closeToEntity('test:npc')
+    .asActor()
+    .build();
+
+  const target = new ModEntityBuilder('test:npc')
+    .withName('Guard NPC')
+    .closeToEntity('test:player1')
+    .asActor()
+    .build();
+
+  return { room, actor1, actor2, target };
+}
+
+/**
+ * Creates scenario with existing facing_away relationships.
+ */
+function setupExistingFacingAwayScenario() {
+  const scenario = setupBehindPositioningScenario();
+  
+  // Modify target to have existing facing_away component
+  scenario.target.components['positioning:facing_away'] = {
+    facing_away_from: ['test:existing']
   };
 
-  return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_EVENT: new DispatchEventHandler({
-      dispatcher: eventBus,
-      logger,
-    }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
-    SET_VARIABLE: new SetVariableHandler({
-      logger,
-    }),
-    ADD_COMPONENT: new AddComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-  };
+  return scenario;
 }
 
 describe('Place Yourself Behind Action Integration Tests', () => {
-  let testEnv;
+  let testFixture;
 
-  beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(placeYourselfBehindRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
-    const dataRegistry = {
-      getCondition: (id) => {
-        if (id === eventIsActionPlaceYourselfBehind.id) {
-          return eventIsActionPlaceYourselfBehind;
-        }
-        return null;
-      },
-      getConditionDefinition: (id) => {
-        if (id === eventIsActionPlaceYourselfBehind.id) {
-          return eventIsActionPlaceYourselfBehind;
-        }
-        return null;
-      },
-      getAllSystemRules: () => [
-        { ...placeYourselfBehindRule, actions: expanded },
-      ],
-    };
-
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      dataRegistry,
-      entities: [],
-      rules: [{ ...placeYourselfBehindRule, actions: expanded }],
-    });
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction('positioning', 'positioning:place_yourself_behind');
   });
 
   afterEach(() => {
-    testEnv?.cleanup?.();
-    jest.clearAllMocks();
+    if (testFixture) {
+      testFixture.cleanup();
+    }
   });
 
   it('should successfully execute place_yourself_behind action with proper component assignment', async () => {
-    // Arrange
-    const actorId = 'test:player';
-    const targetId = 'test:npc';
-    const locationId = 'test:room';
+    const entities = setupBehindPositioningScenario();
+    testFixture.reset(Object.values(entities));
 
-    testEnv.reset([
-      {
-        id: actorId,
-        components: {
-          [NAME_COMPONENT_ID]: {
-            first: 'Player',
-            last: 'Character',
-          },
-          [POSITION_COMPONENT_ID]: {
-            locationId,
-          },
-        },
-      },
-      {
-        id: targetId,
-        components: {
-          [NAME_COMPONENT_ID]: {
-            first: 'Guard',
-            last: 'NPC',
-          },
-        },
-      },
-    ]);
+    await testFixture.executeAction('test:player', 'test:npc');
 
-    // Act - Dispatch the action attempt event
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId,
-      actionId: 'positioning:place_yourself_behind',
-      targetId,
-      originalInput: 'place yourself behind test:npc',
-    });
-
-    // Assert - Check basic events first to ensure action triggered
-    const types = testEnv.events.map((e) => e.eventType);
-    expect(types).toContain('core:turn_ended');
-
-    // Assert - Verify target receives the facing_away component
-    const target = testEnv.entityManager.getEntityInstance(targetId);
+    // Verify target receives the facing_away component
+    const target = testFixture.entityManager.getEntityInstance('test:npc');
     expect(target?.components['positioning:facing_away']).toBeDefined();
     expect(
       target.components['positioning:facing_away'].facing_away_from
-    ).toContain(actorId);
+    ).toContain('test:player');
 
-    // Assert - Verify actor does NOT receive the facing_away component
-    const actor = testEnv.entityManager.getEntityInstance(actorId);
+    // Verify actor does NOT receive the facing_away component
+    const actor = testFixture.entityManager.getEntityInstance('test:player');
     expect(actor?.components['positioning:facing_away']).toBeUndefined();
 
-    // Assert - Verify proper event dispatch
-    expect(types).toContain('positioning:actor_placed_behind');
-    const placedBehindEvent = testEnv.events.find(
+    // Verify action success
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      'Player Character places themselves behind Guard NPC.'
+    );
+
+    // Verify proper event dispatch
+    const placedBehindEvent = testFixture.events.find(
       (e) => e.eventType === 'positioning:actor_placed_behind'
     );
-    expect(placedBehindEvent.payload.actor).toBe(actorId);
-    expect(placedBehindEvent.payload.target).toBe(targetId);
+    expect(placedBehindEvent.payload.actor).toBe('test:player');
+    expect(placedBehindEvent.payload.target).toBe('test:npc');
   });
 
   it('should handle multiple actors placing themselves behind the same target', async () => {
-    // Arrange
-    const actor1Id = 'test:player1';
-    const actor2Id = 'test:player2';
-    const targetId = 'test:npc';
-    const locationId = 'test:room';
+    const entities = setupMultiActorBehindScenario();
+    testFixture.reset(Object.values(entities));
 
-    testEnv.reset([
-      {
-        id: actor1Id,
-        components: {
-          [NAME_COMPONENT_ID]: {
-            first: 'Player',
-            last: 'One',
-          },
-          [POSITION_COMPONENT_ID]: {
-            locationId,
-          },
-        },
-      },
-      {
-        id: actor2Id,
-        components: {
-          [NAME_COMPONENT_ID]: {
-            first: 'Player',
-            last: 'Two',
-          },
-          [POSITION_COMPONENT_ID]: {
-            locationId,
-          },
-        },
-      },
-      {
-        id: targetId,
-        components: {
-          [NAME_COMPONENT_ID]: {
-            first: 'Guard',
-            last: 'NPC',
-          },
-        },
-      },
-    ]);
+    // First actor places themselves behind target
+    await testFixture.executeAction('test:player1', 'test:npc');
 
-    // Act - First actor places themselves behind target
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: actor1Id,
-      actionId: 'positioning:place_yourself_behind',
-      targetId,
-      originalInput: 'place yourself behind test:npc',
-    });
+    // Second actor places themselves behind same target
+    await testFixture.executeAction('test:player2', 'test:npc');
 
-    // Act - Second actor places themselves behind same target
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: actor2Id,
-      actionId: 'positioning:place_yourself_behind',
-      targetId,
-      originalInput: 'place yourself behind test:npc',
-    });
-
-    // Assert - Target should be facing away from both actors
-    const target = testEnv.entityManager.getEntityInstance(targetId);
+    // Target should be facing away from both actors
+    const target = testFixture.entityManager.getEntityInstance('test:npc');
     expect(target?.components['positioning:facing_away']).toBeDefined();
     expect(
       target.components['positioning:facing_away'].facing_away_from
-    ).toContain(actor1Id);
+    ).toContain('test:player1');
     expect(
       target.components['positioning:facing_away'].facing_away_from
-    ).toContain(actor2Id);
+    ).toContain('test:player2');
     expect(
       target.components['positioning:facing_away'].facing_away_from
     ).toHaveLength(2);
+
+    // Verify both actions succeeded
+    const successEvents = testFixture.events.filter(
+      (e) => e.eventType === 'core:display_successful_action_result'
+    );
+    expect(successEvents).toHaveLength(2);
   });
 
   it('should work with entities that already have facing_away relationships', async () => {
-    // Arrange
-    const actorId = 'test:player';
-    const targetId = 'test:npc';
-    const existingActorId = 'test:existing';
-    const locationId = 'test:room';
+    const entities = setupExistingFacingAwayScenario();
+    testFixture.reset(Object.values(entities));
 
-    testEnv.reset([
-      {
-        id: actorId,
-        components: {
-          [NAME_COMPONENT_ID]: {
-            first: 'Player',
-            last: 'Character',
-          },
-          [POSITION_COMPONENT_ID]: {
-            locationId,
-          },
-        },
-      },
-      {
-        id: targetId,
-        components: {
-          [NAME_COMPONENT_ID]: {
-            first: 'Guard',
-            last: 'NPC',
-          },
-          'positioning:facing_away': {
-            facing_away_from: [existingActorId],
-          },
-        },
-      },
-    ]);
+    await testFixture.executeAction('test:player', 'test:npc');
 
-    // Act - Player places themselves behind target
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId,
-      actionId: 'positioning:place_yourself_behind',
-      targetId,
-      originalInput: 'place yourself behind test:npc',
-    });
-
-    // Assert - Target should be facing away from both original and new actor
-    const target = testEnv.entityManager.getEntityInstance(targetId);
+    // Target should be facing away from both original and new actor
+    const target = testFixture.entityManager.getEntityInstance('test:npc');
     expect(target?.components['positioning:facing_away']).toBeDefined();
     expect(
       target.components['positioning:facing_away'].facing_away_from
-    ).toContain(existingActorId);
+    ).toContain('test:existing');
     expect(
       target.components['positioning:facing_away'].facing_away_from
-    ).toContain(actorId);
+    ).toContain('test:player');
     expect(
       target.components['positioning:facing_away'].facing_away_from
     ).toHaveLength(2);
+
+    // Verify action success
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      'Player Character places themselves behind Guard NPC.'
+    );
+
+    // Verify component array modification
+    ModAssertionHelpers.assertComponentAdded(
+      testFixture.entityManager,
+      'test:npc',
+      'positioning:facing_away',
+      { facing_away_from: ['test:existing', 'test:player'] }
+    );
   });
 });

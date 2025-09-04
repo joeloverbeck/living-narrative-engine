@@ -17,30 +17,19 @@ import {
 } from '@jest/globals';
 import { createMockFacades } from '../../common/facades/testingFacadeRegistrations.js';
 import { EntityManagerTestBed } from '../../common/entities/entityManagerTestBed.js';
-import AppContainer from '../../../src/dependencyInjection/appContainer.js';
-import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
-import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
-import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 
 describe('Single Target Multiple Entities E2E', () => {
   let facades;
   let actionServiceFacade;
-  let entityServiceFacade;
   let entityTestBed;
-  let mockLogger;
 
   beforeEach(async () => {
     // Create facades using the new pattern
     facades = createMockFacades({}, jest.fn);
     actionServiceFacade = facades.actionService;
-    entityServiceFacade = facades.entityService;
 
     // Create entity test bed for entity management
     entityTestBed = new EntityManagerTestBed();
-
-    // Get logger from facades
-    mockLogger = facades.mockDeps.logger;
   });
 
   afterEach(async () => {
@@ -65,39 +54,44 @@ describe('Single Target Multiple Entities E2E', () => {
         // NOTE: generateCombinations is intentionally NOT set (defaults to false)
       };
 
-      // Setup player with multiple items in inventory
-      const playerEntity = await entityTestBed.createEntity('actor', {
-        instanceId: 'player',
-        overrides: {
-          'core:actor': { name: 'Player' },
-          'core:position': { locationId: 'room_001' },
-          'core:inventory': {
-            items: ['potion_001', 'sword_001', 'scroll_001'],
+      // Batch create all entities for better performance
+      const entitySpecs = [
+        {
+          definitionKey: 'actor',
+          instanceId: 'player',
+          overrides: {
+            'core:actor': { name: 'Player' },
+            'core:position': { locationId: 'room_001' },
+            'core:inventory': {
+              items: ['potion_001', 'sword_001', 'scroll_001'],
+            },
           },
         },
-      });
-
-      // Create the items that should be resolved by the scope
-      const potionEntity = await entityTestBed.createEntity('basic', {
-        instanceId: 'potion_001',
-        overrides: {
-          'core:item': { name: 'Health Potion' },
+        {
+          definitionKey: 'basic',
+          instanceId: 'potion_001',
+          overrides: {
+            'core:item': { name: 'Health Potion' },
+          },
         },
-      });
-
-      const swordEntity = await entityTestBed.createEntity('basic', {
-        instanceId: 'sword_001',
-        overrides: {
-          'core:item': { name: 'Iron Sword' },
+        {
+          definitionKey: 'basic',
+          instanceId: 'sword_001',
+          overrides: {
+            'core:item': { name: 'Iron Sword' },
+          },
         },
-      });
-
-      const scrollEntity = await entityTestBed.createEntity('basic', {
-        instanceId: 'scroll_001',
-        overrides: {
-          'core:item': { name: 'Teleport Scroll' },
+        {
+          definitionKey: 'basic',
+          instanceId: 'scroll_001',
+          overrides: {
+            'core:item': { name: 'Teleport Scroll' },
+          },
         },
-      });
+      ];
+
+      // Create all entities in a single batch operation
+      await entityTestBed.batchCreateEntities(entitySpecs);
 
       // Mock the discovery to return what SHOULD happen - multiple actions
       // This is what we expect the system to generate automatically
@@ -185,47 +179,48 @@ describe('Single Target Multiple Entities E2E', () => {
         template: 'give {item} to {npc}',
       };
 
-      // Setup entities
-      const playerEntity = await entityTestBed.createEntity('actor', {
-        instanceId: 'player',
-        overrides: {
-          'core:actor': { name: 'Player' },
-          'core:position': { locationId: 'market' },
-          'core:inventory': { items: ['apple_001', 'bread_001'] },
+      // Batch create all entities
+      await entityTestBed.batchCreateEntities([
+        {
+          definitionKey: 'actor',
+          instanceId: 'player',
+          overrides: {
+            'core:actor': { name: 'Player' },
+            'core:position': { locationId: 'market' },
+            'core:inventory': { items: ['apple_001', 'bread_001'] },
+          },
         },
-      });
-
-      const merchantEntity = await entityTestBed.createEntity('actor', {
-        instanceId: 'merchant_001',
-        overrides: {
-          'core:actor': { name: 'Merchant' },
-          'core:position': { locationId: 'market' },
+        {
+          definitionKey: 'actor',
+          instanceId: 'merchant_001',
+          overrides: {
+            'core:actor': { name: 'Merchant' },
+            'core:position': { locationId: 'market' },
+          },
         },
-      });
-
-      // Create items
-      await entityTestBed.createEntity('basic', {
-        instanceId: 'apple_001',
-        overrides: {
-          'core:item': { name: 'Red Apple' },
+        {
+          definitionKey: 'basic',
+          instanceId: 'apple_001',
+          overrides: {
+            'core:item': { name: 'Red Apple' },
+          },
         },
-      });
-
-      await entityTestBed.createEntity('basic', {
-        instanceId: 'bread_001',
-        overrides: {
-          'core:item': { name: 'Fresh Bread' },
+        {
+          definitionKey: 'basic',
+          instanceId: 'bread_001',
+          overrides: {
+            'core:item': { name: 'Fresh Bread' },
+          },
         },
-      });
-
-      // Create location
-      await entityTestBed.createEntity('basic', {
-        instanceId: 'market',
-        overrides: {
-          'core:location': { name: 'Town Market' },
-          'core:actors': ['player', 'merchant_001'],
+        {
+          definitionKey: 'basic',
+          instanceId: 'market',
+          overrides: {
+            'core:location': { name: 'Town Market' },
+            'core:actors': ['player', 'merchant_001'],
+          },
         },
-      });
+      ]);
 
       // Expected: 2 actions (one for each item, same NPC)
       const expectedActions = [
@@ -298,39 +293,41 @@ describe('Single Target Multiple Entities E2E', () => {
         template: '{actor} talk to {npc}',
       };
 
-      // Setup entities - multiple NPCs in location
-      const playerEntity = await entityTestBed.createEntity('actor', {
-        instanceId: 'player',
-        overrides: {
-          'core:actor': { name: 'Player' },
-          'core:position': { locationId: 'tavern' },
+      // Batch create all entities
+      await entityTestBed.batchCreateEntities([
+        {
+          definitionKey: 'actor',
+          instanceId: 'player',
+          overrides: {
+            'core:actor': { name: 'Player' },
+            'core:position': { locationId: 'tavern' },
+          },
         },
-      });
-
-      const bardEntity = await entityTestBed.createEntity('actor', {
-        instanceId: 'bard_001',
-        overrides: {
-          'core:actor': { name: 'Traveling Bard' },
-          'core:position': { locationId: 'tavern' },
+        {
+          definitionKey: 'actor',
+          instanceId: 'bard_001',
+          overrides: {
+            'core:actor': { name: 'Traveling Bard' },
+            'core:position': { locationId: 'tavern' },
+          },
         },
-      });
-
-      const bartenderEntity = await entityTestBed.createEntity('actor', {
-        instanceId: 'bartender_001',
-        overrides: {
-          'core:actor': { name: 'Tavern Keeper' },
-          'core:position': { locationId: 'tavern' },
+        {
+          definitionKey: 'actor',
+          instanceId: 'bartender_001',
+          overrides: {
+            'core:actor': { name: 'Tavern Keeper' },
+            'core:position': { locationId: 'tavern' },
+          },
         },
-      });
-
-      // Create location
-      await entityTestBed.createEntity('basic', {
-        instanceId: 'tavern',
-        overrides: {
-          'core:location': { name: 'The Prancing Pony' },
-          'core:actors': ['player', 'bard_001', 'bartender_001'],
+        {
+          definitionKey: 'basic',
+          instanceId: 'tavern',
+          overrides: {
+            'core:location': { name: 'The Prancing Pony' },
+            'core:actors': ['player', 'bard_001', 'bartender_001'],
+          },
         },
-      });
+      ]);
 
       // Expected: 2 actions for each NPC
       const expectedActions = [
@@ -409,27 +406,30 @@ describe('Single Target Multiple Entities E2E', () => {
         generateCombinations: true,
       };
 
-      // Setup player with multiple items
-      const playerEntity = await entityTestBed.createEntity('actor', {
-        instanceId: 'player',
-        overrides: {
-          'core:inventory': { items: ['item_001', 'item_002'] },
+      // Batch create all entities
+      await entityTestBed.batchCreateEntities([
+        {
+          definitionKey: 'actor',
+          instanceId: 'player',
+          overrides: {
+            'core:inventory': { items: ['item_001', 'item_002'] },
+          },
         },
-      });
-
-      await entityTestBed.createEntity('basic', {
-        instanceId: 'item_001',
-        overrides: {
-          'core:item': { name: 'Item One' },
+        {
+          definitionKey: 'basic',
+          instanceId: 'item_001',
+          overrides: {
+            'core:item': { name: 'Item One' },
+          },
         },
-      });
-
-      await entityTestBed.createEntity('basic', {
-        instanceId: 'item_002',
-        overrides: {
-          'core:item': { name: 'Item Two' },
+        {
+          definitionKey: 'basic',
+          instanceId: 'item_002',
+          overrides: {
+            'core:item': { name: 'Item Two' },
+          },
         },
-      });
+      ]);
 
       // Mock expected results for both actions
       const expectedWithoutCombinations = [
@@ -494,24 +494,17 @@ describe('Single Target Multiple Entities E2E', () => {
 
   describe('Edge Cases and Limits', () => {
     it('should handle empty target resolution gracefully', async () => {
-      const actionDefinition = {
-        id: 'test:empty_targets',
-        name: 'Use Non-existent Items',
-        targets: {
-          primary: {
-            scope: 'actor.core:inventory.nonexistent_items[]',
-            placeholder: 'item',
+      // Unused actionDefinition removed - test focuses on empty target resolution behavior
+
+      await entityTestBed.batchCreateEntities([
+        {
+          definitionKey: 'actor',
+          instanceId: 'player',
+          overrides: {
+            'core:inventory': { items: [] },
           },
         },
-        template: 'use {item}',
-      };
-
-      const playerEntity = await entityTestBed.createEntity('actor', {
-        instanceId: 'player',
-        overrides: {
-          'core:inventory': { items: [] },
-        },
-      });
+      ]);
 
       // Mock empty discovery result
       actionServiceFacade.setMockActions('player', []);
@@ -538,22 +531,28 @@ describe('Single Target Multiple Entities E2E', () => {
 
       // Create player with many items (testing performance bounds)
       const manyItemIds = Array.from({ length: 25 }, (_, i) => `item_${i}`);
-      const playerEntity = await entityTestBed.createEntity('actor', {
-        instanceId: 'player',
-        overrides: {
-          'core:inventory': { items: manyItemIds },
+      
+      // Build entity specs for batch creation
+      const entitySpecs = [
+        {
+          definitionKey: 'actor',
+          instanceId: 'player',
+          overrides: {
+            'core:inventory': { items: manyItemIds },
+          },
         },
-      });
-
-      // Create all the items
-      for (let i = 0; i < 25; i++) {
-        await entityTestBed.createEntity('basic', {
+        // Create all item specs
+        ...Array.from({ length: 25 }, (_, i) => ({
+          definitionKey: 'basic',
           instanceId: `item_${i}`,
           overrides: {
             'core:item': { name: `Item ${i}` },
           },
-        });
-      }
+        })),
+      ];
+
+      // Batch create all entities at once
+      await entityTestBed.batchCreateEntities(entitySpecs);
 
       // Mock expected actions (should be limited to reasonable number)
       const expectedActions = manyItemIds.slice(0, 20).map((itemId, i) => ({
@@ -593,28 +592,31 @@ describe('Single Target Multiple Entities E2E', () => {
         // CRITICAL: generateCombinations is NOT set (defaults to false)
       };
 
-      // Setup player with exactly 3 items
-      const playerEntity = await entityTestBed.createEntity('actor', {
-        instanceId: 'player',
-        overrides: {
-          'core:inventory': { items: ['gem_001', 'coin_001', 'key_001'] },
+      // Batch create all entities
+      await entityTestBed.batchCreateEntities([
+        {
+          definitionKey: 'actor',
+          instanceId: 'player',
+          overrides: {
+            'core:inventory': { items: ['gem_001', 'coin_001', 'key_001'] },
+          },
         },
-      });
-
-      await entityTestBed.createEntity('basic', {
-        instanceId: 'gem_001',
-        overrides: { 'core:item': { name: 'Ruby Gem' } },
-      });
-
-      await entityTestBed.createEntity('basic', {
-        instanceId: 'coin_001',
-        overrides: { 'core:item': { name: 'Gold Coin' } },
-      });
-
-      await entityTestBed.createEntity('basic', {
-        instanceId: 'key_001',
-        overrides: { 'core:item': { name: 'Brass Key' } },
-      });
+        {
+          definitionKey: 'basic',
+          instanceId: 'gem_001',
+          overrides: { 'core:item': { name: 'Ruby Gem' } },
+        },
+        {
+          definitionKey: 'basic',
+          instanceId: 'coin_001',
+          overrides: { 'core:item': { name: 'Gold Coin' } },
+        },
+        {
+          definitionKey: 'basic',
+          instanceId: 'key_001',
+          overrides: { 'core:item': { name: 'Brass Key' } },
+        },
+      ]);
 
       // What SHOULD happen (3 actions)
       const expectedActions = [

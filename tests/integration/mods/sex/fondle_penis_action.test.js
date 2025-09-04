@@ -6,223 +6,144 @@
  * see fondle_penis_action_discovery.test.js.
  */
 
-import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import fondlePenisRule from '../../../../data/mods/sex/rules/handle_fondle_penis.rule.json';
-import eventIsActionFondlePenis from '../../../../data/mods/sex/conditions/event-is-action-fondle-penis.condition.json';
-import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../../src/utils/macroUtils.js';
-import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
-import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import DispatchPerceptibleEventHandler from '../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js';
 
 /**
- * Creates handlers needed for the fondle_penis rule.
- *
- * @param {object} entityManager - Entity manager instance
- * @param {object} eventBus - Event bus instance
- * @param {object} logger - Logger instance
- * @returns {object} Handlers object
+ * Creates standardized anatomy setup for fondle penis scenarios.
+ * 
+ * @returns {object} Object with actor, target, and all anatomy entities
  */
-function createHandlers(entityManager, eventBus, logger) {
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
-  };
+function setupAnatomyComponents() {
+  // Create main room
+  const room = new ModEntityBuilder('room1')
+    .asRoom('Test Room')
+    .build();
+
+  // Create actor entity
+  const actor = new ModEntityBuilder('alice')
+    .withName('Alice')
+    .atLocation('room1')
+    .closeToEntity('bob')
+    .asActor()
+    .build();
+
+  // Create target entity with body reference and anatomy
+  const target = new ModEntityBuilder('bob')
+    .withName('Bob')
+    .atLocation('room1')
+    .closeToEntity('alice')
+    .withBody('groin1')
+    .asActor()
+    .build();
+
+  // Create anatomy entities as separate entities
+  const groin = new ModEntityBuilder('groin1')
+    .asBodyPart({
+      parent: null,
+      children: ['penis1'],
+      subType: 'groin',
+    })
+    .build();
+
+  const penis = new ModEntityBuilder('penis1')
+    .asBodyPart({
+      parent: 'groin1',
+      children: [],
+      subType: 'penis',
+    })
+    .build();
 
   return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
+    room,
+    actor,
+    target,
+    groin,
+    penis,
   };
 }
 
 describe('sex:fondle_penis action integration', () => {
-  let testEnv;
+  let testFixture;
 
-  beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(fondlePenisRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
-    const dataRegistry = {
-      getAllSystemRules: jest
-        .fn()
-        .mockReturnValue([{ ...fondlePenisRule, actions: expanded }]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'sex:event-is-action-fondle-penis'
-          ? eventIsActionFondlePenis
-          : undefined
-      ),
-    };
-
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      entities: [],
-      rules: [{ ...fondlePenisRule, actions: expanded }],
-      dataRegistry,
-    });
+  beforeEach(async () => {
+    // Create test fixture with auto-loaded files
+    testFixture = await ModTestFixture.forAction('sex', 'sex:fondle_penis');
+    
+    // Setup anatomy entities
+    const entities = setupAnatomyComponents();
+    
+    // Load all entities into the test environment
+    testFixture.reset(Object.values(entities));
   });
 
   afterEach(() => {
-    if (testEnv) {
-      testEnv.cleanup();
+    if (testFixture) {
+      testFixture.cleanup();
     }
   });
 
+  // eslint-disable-next-line jest/expect-expect
   it('performs fondle penis action successfully', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
-        },
-      },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['bob'] },
-        },
-      },
-      {
-        id: 'bob',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['alice'] },
-          'anatomy:body': {
-            body: {
-              root: 'groin1',
-            },
-          },
-        },
-      },
-      {
-        id: 'groin1',
-        components: {
-          'anatomy:part': {
-            parent: null,
-            children: ['penis1'],
-            subType: 'groin',
-          },
-        },
-      },
-      {
-        id: 'penis1',
-        components: {
-          'anatomy:part': {
-            parent: 'groin1',
-            children: [],
-            subType: 'penis',
-          },
-        },
-      },
-    ]);
+    // Execute the fondle_penis action
+    await testFixture.executeAction('alice', 'bob');
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'alice',
-      actionId: 'sex:fondle_penis',
-      targetId: 'bob',
-      originalInput: 'fondle_penis bob',
-    });
-
-    const types = testEnv.events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:perceptible_event',
-        'core:display_successful_action_result',
-        'core:turn_ended',
-      ])
+    // Assert action executed successfully with proper events
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      'Alice eagerly fondles Bob\'s penis.',
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
     );
-
-    // The perceptible event is dispatched but may not have the expected text
-    // This is because the rule relies on the custom hasPartOfType operator
-    // which needs to be properly configured in the test environment
   });
 
   it('does not fire rule for different action', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
-        },
-      },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
+    // Setup minimal entities for this test
+    const minimalEntities = [
+      new ModEntityBuilder('room1').asRoom('Room').build(),
+      new ModEntityBuilder('alice')
+        .withName('Alice')
+        .atLocation('room1')
+        .asActor()
+        .build(),
+    ];
 
-    const initialEventCount = testEnv.events.length;
+    testFixture.reset(minimalEntities);
+    
+    const initialEventCount = testFixture.events.length;
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testFixture.eventBus.dispatch('core:attempt_action', {
       actionId: 'core:wait',
       actorId: 'alice',
     });
 
     // Rule should not trigger for a different action
-    const newEventCount = testEnv.events.length;
+    const newEventCount = testFixture.events.length;
     expect(newEventCount).toBe(initialEventCount + 1); // Only the dispatched event
   });
 
   it('handles missing target gracefully', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
-        },
-      },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: [] },
-        },
-      },
-    ]);
+    // Setup minimal entities without a target
+    const minimalEntities = [
+      new ModEntityBuilder('room1').asRoom('Room').build(),
+      new ModEntityBuilder('alice')
+        .withName('Alice')
+        .atLocation('room1')
+        .closeToEntity([])
+        .asActor()
+        .build(),
+    ];
+
+    testFixture.reset(minimalEntities);
 
     // This test verifies the rule handles missing entities gracefully
     // The action prerequisites would normally prevent this, but we test rule robustness
     await expect(async () => {
-      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      await testFixture.eventBus.dispatch('core:attempt_action', {
         actionId: 'sex:fondle_penis',
         actorId: 'alice',
         targetId: 'nonexistent',
@@ -231,7 +152,7 @@ describe('sex:fondle_penis action integration', () => {
 
     // With missing target, the rule should fail during GET_NAME operation
     // So only the initial attempt_action event should be present
-    const types = testEnv.events.map((e) => e.eventType);
+    const types = testFixture.events.map((e) => e.eventType);
     expect(types).toEqual(['core:attempt_action']);
   });
 });

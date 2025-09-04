@@ -39,6 +39,7 @@ import LockMovementHandler from '../../logic/operationHandlers/lockMovementHandl
 import UnlockMovementHandler from '../../logic/operationHandlers/unlockMovementHandler.js';
 import RegenerateDescriptionHandler from '../../logic/operationHandlers/regenerateDescriptionHandler.js';
 import AtomicModifyComponentHandler from '../../logic/operationHandlers/atomicModifyComponentHandler.js';
+import SequenceHandler from '../../logic/operationHandlers/sequenceHandler.js';
 import jsonLogic from 'json-logic-js';
 
 /**
@@ -394,6 +395,15 @@ export function registerOperationHandlers(registrar) {
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.SequenceHandler,
+      SequenceHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          actionSequence: c.resolve(tokens.ActionSequence),
         }),
     ],
   ];

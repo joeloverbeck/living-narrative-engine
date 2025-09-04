@@ -1,0 +1,37 @@
+{
+  "$schema": "../../schemas/component.schema.json",
+  "id": "core:stats",
+  "name": "Stats",
+  "description": "Component for basic character statistics",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "health": {
+        "type": "number",
+        "description": "Current health points",
+        "minimum": 0,
+        "default": 100
+      },
+      "maxHealth": {
+        "type": "number", 
+        "description": "Maximum health points",
+        "minimum": 1,
+        "default": 100
+      },
+      "mana": {
+        "type": "number",
+        "description": "Current mana points",
+        "minimum": 0,
+        "default": 0
+      },
+      "maxMana": {
+        "type": "number",
+        "description": "Maximum mana points", 
+        "minimum": 0,
+        "default": 0
+      }
+    },
+    "required": ["health", "maxHealth"],
+    "additionalProperties": false
+  }
+}

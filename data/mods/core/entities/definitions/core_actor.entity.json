@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json", 
+  "id": "core:actor",
+  "description": "Basic actor entity definition for core system",
+  "components": {
+    "core:actor": {},
+    "core:description": {
+      "name": ""
+    },
+    "core:position": {
+      "locationId": null
+    },
+    "core:inventory": {
+      "items": []
+    },
+    "core:stats": {
+      "health": 100,
+      "maxHealth": 100
+    }
+  }
+}

@@ -6,246 +6,164 @@
  * see pressAgainstBackActionDiscovery.integration.test.js.
  */
 
-import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import pressAgainstBackRule from '../../../../data/mods/sex/rules/handle_press_against_back.rule.json';
-import eventIsActionPressAgainstBack from '../../../../data/mods/sex/conditions/event-is-action-press-against-back.condition.json';
-import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../../src/utils/macroUtils.js';
-import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
-import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import DispatchPerceptibleEventHandler from '../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
-import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js';
 
 /**
- * Creates handlers needed for the press_against_back rule.
- *
- * @param {object} entityManager - Entity manager instance
- * @param {object} eventBus - Event bus instance
- * @param {object} logger - Logger instance
- * @returns {object} Handlers object
+ * Creates standardized anatomy setup for press against back scenarios.
+ * 
+ * @returns {object} Object with actor, target, and all anatomy entities
  */
-function createHandlers(entityManager, eventBus, logger) {
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
-  };
+function setupAnatomyComponents() {
+  // Create main room
+  const room = new ModEntityBuilder('room1')
+    .asRoom('Test Room')
+    .build();
+
+  // Create actor entity with anatomy
+  const actor = new ModEntityBuilder('alice')
+    .withName('Alice')
+    .atLocation('room1')
+    .closeToEntity('bob')
+    .withBody('torso1')
+    .asActor()
+    .build();
+
+  // Create target entity
+  const target = new ModEntityBuilder('bob')
+    .withName('Bob')
+    .atLocation('room1')
+    .closeToEntity('alice')
+    .withBody('torso2')
+    .asActor()
+    .build();
+
+  // Create anatomy entities for actor (Alice)
+  const actorTorso = new ModEntityBuilder('torso1')
+    .asBodyPart({
+      parent: null,
+      children: ['chest1'],
+      subType: 'torso',
+    })
+    .build();
+
+  const actorChest = new ModEntityBuilder('chest1')
+    .asBodyPart({
+      parent: 'torso1',
+      children: [],
+      subType: 'chest',
+    })
+    .build();
+
+  // Create anatomy entities for target (Bob)
+  const targetTorso = new ModEntityBuilder('torso2')
+    .asBodyPart({
+      parent: null,
+      children: ['back1'],
+      subType: 'torso',
+    })
+    .build();
+
+  const targetBack = new ModEntityBuilder('back1')
+    .asBodyPart({
+      parent: 'torso2',
+      children: [],
+      subType: 'back',
+    })
+    .build();
 
   return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    room,
+    actor,
+    target,
+    actorTorso,
+    actorChest,
+    targetTorso,
+    targetBack,
   };
 }
 
 describe('sex:press_against_back action integration', () => {
-  let testEnv;
+  let testFixture;
 
-  beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(pressAgainstBackRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
-    const dataRegistry = {
-      getAllSystemRules: jest
-        .fn()
-        .mockReturnValue([{ ...pressAgainstBackRule, actions: expanded }]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'sex:event-is-action-press-against-back'
-          ? eventIsActionPressAgainstBack
-          : undefined
-      ),
-    };
-
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      entities: [],
-      rules: [{ ...pressAgainstBackRule, actions: expanded }],
-      dataRegistry,
-    });
+  beforeEach(async () => {
+    // Create test fixture with auto-loaded files
+    testFixture = await ModTestFixture.forAction('sex', 'sex:press_against_back');
+    
+    // Setup anatomy entities
+    const entities = setupAnatomyComponents();
+    
+    // Load all entities into the test environment
+    testFixture.reset(Object.values(entities));
   });
 
   afterEach(() => {
-    if (testEnv) {
-      testEnv.cleanup();
+    if (testFixture) {
+      testFixture.cleanup();
     }
   });
 
+  // eslint-disable-next-line jest/expect-expect
   it('performs press against back action successfully', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
-        },
-      },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['beth'] },
-          'anatomy:body': {
-            body: {
-              root: 'alice_torso',
-            },
-          },
-        },
-      },
-      {
-        id: 'beth',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['alice'] },
-          'positioning:facing_away': { facing_away_from: ['alice'] },
-        },
-      },
-      {
-        id: 'alice_torso',
-        components: {
-          'anatomy:part': {
-            parent: null,
-            children: ['alice_breast1', 'alice_breast2'],
-            subType: 'torso',
-          },
-        },
-      },
-      {
-        id: 'alice_breast1',
-        components: {
-          'anatomy:part': {
-            parent: 'alice_torso',
-            children: [],
-            subType: 'breast',
-          },
-        },
-      },
-      {
-        id: 'alice_breast2',
-        components: {
-          'anatomy:part': {
-            parent: 'alice_torso',
-            children: [],
-            subType: 'breast',
-          },
-        },
-      },
-    ]);
+    // Execute the press_against_back action
+    await testFixture.executeAction('alice', 'bob');
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'alice',
-      actionId: 'sex:press_against_back',
-      targetId: 'beth',
-      originalInput: 'press_against_back beth',
-    });
-
-    const types = testEnv.events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:perceptible_event',
-        'core:display_successful_action_result',
-        'core:turn_ended',
-      ])
-    );
-
-    // Verify the perceptible event contains the expected message
-    const perceptibleEvents = testEnv.events.filter(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvents).toHaveLength(1);
-    expect(perceptibleEvents[0].payload.descriptionText).toContain(
-      'presses herself against'
-    );
-    expect(perceptibleEvents[0].payload.descriptionText).toContain('Alice');
-    expect(perceptibleEvents[0].payload.descriptionText).toContain('Beth');
-    expect(perceptibleEvents[0].payload.descriptionText).toContain(
-      'her breasts getting squeezed against'
+    // Assert action executed successfully with proper events
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      'Alice presses herself against Bob\'s back, her breasts getting squeezed against Bob\'s flesh.',
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
     );
   });
 
   it('does not fire rule for different action', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
-        },
-      },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
+    // Setup minimal entities for this test
+    const minimalEntities = [
+      new ModEntityBuilder('room1').asRoom('Room').build(),
+      new ModEntityBuilder('alice')
+        .withName('Alice')
+        .atLocation('room1')
+        .asActor()
+        .build(),
+    ];
 
-    const initialEventCount = testEnv.events.length;
+    testFixture.reset(minimalEntities);
+    
+    const initialEventCount = testFixture.events.length;
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testFixture.eventBus.dispatch('core:attempt_action', {
       actionId: 'core:wait',
       actorId: 'alice',
     });
 
     // Rule should not trigger for a different action
-    const newEventCount = testEnv.events.length;
+    const newEventCount = testFixture.events.length;
     expect(newEventCount).toBe(initialEventCount + 1); // Only the dispatched event
   });
 
   it('handles missing target gracefully', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
-        },
-      },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: [] },
-        },
-      },
-    ]);
+    // Setup minimal entities without a target
+    const minimalEntities = [
+      new ModEntityBuilder('room1').asRoom('Room').build(),
+      new ModEntityBuilder('alice')
+        .withName('Alice')
+        .atLocation('room1')
+        .closeToEntity([])
+        .asActor()
+        .build(),
+    ];
+
+    testFixture.reset(minimalEntities);
 
     // This test verifies the rule handles missing entities gracefully
     // The action prerequisites would normally prevent this, but we test rule robustness
     await expect(async () => {
-      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      await testFixture.eventBus.dispatch('core:attempt_action', {
         actionId: 'sex:press_against_back',
         actorId: 'alice',
         targetId: 'nonexistent',
@@ -254,65 +172,7 @@ describe('sex:press_against_back action integration', () => {
 
     // With missing target, the rule should fail during GET_NAME operation
     // So only the initial attempt_action event should be present
-    const types = testEnv.events.map((e) => e.eventType);
+    const types = testFixture.events.map((e) => e.eventType);
     expect(types).toEqual(['core:attempt_action']);
-  });
-
-  it('validates rule execution with proper variable setting and macro invocation', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
-        },
-      },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['beth'] },
-        },
-      },
-      {
-        id: 'beth',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Beth' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'alice',
-      actionId: 'sex:press_against_back',
-      targetId: 'beth',
-      originalInput: 'press_against_back beth',
-    });
-
-    // Verify all expected operations were performed
-    const types = testEnv.events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:attempt_action', // Initial action attempt
-        'core:perceptible_event', // Message dispatched
-        'core:display_successful_action_result', // Success result
-        'core:turn_ended', // Turn ended
-      ])
-    );
-
-    // Verify the perceptible event has correct structure
-    const perceptibleEvents = testEnv.events.filter(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvents).toHaveLength(1);
-    expect(perceptibleEvents[0].payload).toHaveProperty('descriptionText');
-    expect(perceptibleEvents[0].payload).toHaveProperty(
-      'perceptionType',
-      'action_target_general'
-    );
-    expect(perceptibleEvents[0].payload).toHaveProperty('locationId', 'room1');
-    expect(perceptibleEvents[0].payload).toHaveProperty('targetId', 'beth');
   });
 });

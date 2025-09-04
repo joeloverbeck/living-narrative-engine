@@ -24,6 +24,11 @@ import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandl
 import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
 import AddComponentHandler from '../../../../src/logic/operationHandlers/addComponentHandler.js';
 import LogHandler from '../../../../src/logic/operationHandlers/logHandler.js';
+import AddPerceptionLogEntryHandler from '../../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
+import RemoveComponentHandler from '../../../../src/logic/operationHandlers/removeComponentHandler.js';
+import UnlockMovementHandler from '../../../../src/logic/operationHandlers/unlockMovementHandler.js';
+import LockMovementHandler from '../../../../src/logic/operationHandlers/lockMovementHandler.js';
+import ModifyArrayFieldHandler from '../../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
 
 describe('ModTestHandlerFactory Migration Validation', () => {
   let entityManager;
@@ -130,6 +135,83 @@ describe('ModTestHandlerFactory Migration Validation', () => {
     return {
       ...baseHandlers,
       ADD_COMPONENT: new AddComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+    };
+  }
+
+  /**
+   * Creates handlers with perception logging support manually
+   *
+   * @param {object} entityManager - Entity manager instance
+   * @param {object} eventBus - Event bus instance
+   * @param {object} logger - Logger instance
+   * @returns {object} Manually created handlers object with perception logging handlers
+   */
+  function createManualHandlersWithPerceptionLogging(
+    entityManager,
+    eventBus,
+    logger
+  ) {
+    // Ensure entityManager has getEntitiesInLocation for AddPerceptionLogEntryHandler
+    if (typeof entityManager.getEntitiesInLocation !== 'function') {
+      entityManager.getEntitiesInLocation = (locationId) => {
+        // Find all entities in the given location
+        const entityIds = entityManager.getEntityIds();
+        const entitiesInLocation = [];
+        
+        for (const entityId of entityIds) {
+          const entity = entityManager.getEntityInstance(entityId);
+          if (entity && entity.components && entity.components['core:position']) {
+            const position = entity.components['core:position'];
+            if (position.locationId === locationId) {
+              entitiesInLocation.push(entityId);
+            }
+          }
+        }
+        
+        return new Set(entitiesInLocation);
+      };
+    }
+
+    const baseHandlers = createManualHandlers(entityManager, eventBus, logger);
+    const safeDispatcher = {
+      dispatch: jest.fn((eventType, payload) => {
+        eventBus.dispatch(eventType, payload);
+        return Promise.resolve(true);
+      }),
+    };
+
+    return {
+      ...baseHandlers,
+      ADD_COMPONENT: new AddComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      ADD_PERCEPTION_LOG_ENTRY: new AddPerceptionLogEntryHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      REMOVE_COMPONENT: new RemoveComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      LOCK_MOVEMENT: new LockMovementHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      UNLOCK_MOVEMENT: new UnlockMovementHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+      }),
+      MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
         entityManager,
         logger,
         safeEventDispatcher: safeDispatcher,
@@ -329,7 +411,7 @@ describe('ModTestHandlerFactory Migration Validation', () => {
         eventBus,
         logger
       );
-      const manualHandlers = createManualHandlersWithAddComponent(
+      const manualHandlers = createManualHandlersWithPerceptionLogging(
         entityManager,
         eventBus,
         logger
