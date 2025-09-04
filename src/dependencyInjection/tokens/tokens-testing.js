@@ -1,4 +1,4 @@
-import { freeze } from '../../utils';
+import { freeze } from '../../utils/cloneUtils.js';
 
 /**
  * @file Testing-specific DI tokens.

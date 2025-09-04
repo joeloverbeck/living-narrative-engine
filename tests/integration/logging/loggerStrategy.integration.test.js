@@ -209,7 +209,7 @@ describe('LoggerStrategy Integration', () => {
   });
 
   describe('Error Recovery Integration', () => {
-    it('should recover from logger creation failures', () => {
+    it('should recover from logger creation failures', async () => {
       const eventBus = {
         dispatch: jest.fn(),
       };
@@ -224,6 +224,9 @@ describe('LoggerStrategy Integration', () => {
           eventBus,
         },
       });
+
+      // Wait for the async dispatch to occur
+      await new Promise(resolve => setTimeout(resolve, 0));
 
       // Should have reported the error
       expect(eventBus.dispatch).toHaveBeenCalledWith({

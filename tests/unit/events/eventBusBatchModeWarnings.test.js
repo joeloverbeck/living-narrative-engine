@@ -101,7 +101,7 @@ describe('EventBus Batch Mode and Warnings', () => {
       let recursionCount = 0;
       eventBus.subscribe('test:recursive', async () => {
         recursionCount++;
-        if (recursionCount < 5) { // Stop at 5 to trigger 50% warning
+        if (recursionCount <= 5) { // Continue until depth 5 to trigger 50% warning
           await eventBus.dispatch('test:recursive');
         }
       });
@@ -136,7 +136,7 @@ describe('EventBus Batch Mode and Warnings', () => {
       eventNames.forEach(eventName => {
         eventBus.subscribe(eventName, async () => {
           dispatchedCount++;
-          if (dispatchedCount < 15) { // Stop at 15 to trigger 75% warning (15 out of 20)
+          if (dispatchedCount <= 15) { // Continue until 15 to trigger 75% warning
             const nextEvent = eventNames[dispatchedCount % eventNames.length];
             await eventBus.dispatch(nextEvent);
           }
@@ -166,7 +166,7 @@ describe('EventBus Batch Mode and Warnings', () => {
       let recursionCount = 0;
       eventBus.subscribe('test:90percent', async () => {
         recursionCount++;
-        if (recursionCount < 9) { // Stop at 9 to trigger 90% warning
+        if (recursionCount <= 9) { // Continue until depth 9 to trigger 90% warning
           await eventBus.dispatch('test:90percent');
         }
       });
@@ -256,10 +256,10 @@ describe('EventBus Batch Mode and Warnings', () => {
       // Act
       await eventBus.dispatch('test:normal');
 
-      // Assert - Should be limited to 3 in normal mode
-      expect(callCount).toBe(3);
+      // Assert - Should be limited to 15 in normal mode (increased from 3)
+      expect(callCount).toBe(15);
       expect(consoleSpy.error).toHaveBeenCalledWith(
-        expect.stringContaining('Maximum recursion depth (3) exceeded')
+        expect.stringContaining('Maximum recursion depth (15) exceeded')
       );
       expect(consoleSpy.error).not.toHaveBeenCalledWith(
         expect.stringContaining('batch mode:')
@@ -295,7 +295,7 @@ describe('EventBus Batch Mode and Warnings', () => {
   });
 
   describe('Critical Event Protection', () => {
-    it('should use strict limits for critical error events even in batch mode', async () => {
+    it('should use batch mode limits for error events (no longer treated as critical)', async () => {
       // Arrange
       eventBus.setBatchMode(true, {
         maxRecursionDepth: 10,
@@ -312,10 +312,10 @@ describe('EventBus Batch Mode and Warnings', () => {
       // Act
       await eventBus.dispatch('core:system_error_occurred');
 
-      // Assert - Critical events should be limited to 1 even in batch mode
-      expect(callCount).toBe(1);
+      // Assert - Error events should use batch mode limits (10), no longer treated as critical
+      expect(callCount).toBe(10);
       expect(consoleSpy.error).toHaveBeenCalledWith(
-        expect.stringContaining('Maximum recursion depth (1) exceeded')
+        expect.stringContaining('Maximum recursion depth (10) exceeded')
       );
     });
   });

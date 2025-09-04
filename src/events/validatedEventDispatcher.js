@@ -337,6 +337,26 @@ class ValidatedEventDispatcher extends IValidatedEventDispatcher {
     // Delegate directly to the internal EventBus instance
     return this.#eventBus.unsubscribe(eventName, listener);
   }
+
+  /**
+   * Sets batch mode on the underlying EventBus to control event processing behavior.
+   * This is primarily used to prevent infinite recursion during bulk operations.
+   *
+   * @param {boolean} enabled - Whether to enable or disable batch mode
+   * @param {object} [options] - Batch mode configuration options
+   * @param {number} [options.maxRecursionDepth] - Maximum recursion depth in batch mode
+   * @param {number} [options.maxGlobalRecursion] - Maximum global recursion in batch mode
+   * @param {number} [options.timeoutMs] - Auto-disable timeout in milliseconds
+   * @param {string} [options.context] - Context description for logging
+   * @returns {void}
+   */
+  setBatchMode(enabled, options = {}) {
+    this.#logger.debug(
+      `VED: Delegating setBatchMode(${enabled}) to EventBus with context: ${options.context || 'unknown'}`
+    );
+    // Delegate directly to the internal EventBus instance
+    this.#eventBus.setBatchMode(enabled, options);
+  }
 }
 
 export default ValidatedEventDispatcher;

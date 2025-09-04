@@ -3,7 +3,7 @@
  * @see tokens.js
  */
 
-import { freeze } from '../../utils';
+import { freeze } from '../../utils/cloneUtils.js';
 
 /**
  * @typedef {string} DiToken
