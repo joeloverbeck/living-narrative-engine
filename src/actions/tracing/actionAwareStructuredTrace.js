@@ -828,7 +828,8 @@ class ActionAwareStructuredTrace extends StructuredTrace {
       stage === 'legacy_detection' ||
       stage === 'multi_target_resolution' ||
       stage === 'scope_evaluation' ||
-      stage === 'target_relationships'
+      stage === 'target_relationships' ||
+      stage === 'enhanced_scope_evaluation'
     ) {
       return { ...filteredData, ...data };
     }

@@ -666,6 +666,29 @@ export class ModActionTestFixture extends BaseModTestFixture {
   }
 
   /**
+   * Executes an action manually with a custom action ID.
+   *
+   * @param {string} actorId - Actor entity ID  
+   * @param {string} actionId - Custom action ID to execute
+   * @param {string} targetId - Target entity ID
+   * @param {object} [options] - Additional options
+   * @returns {Promise} Promise that resolves when action is dispatched
+   */
+  async executeActionManual(actorId, actionId, targetId, options = {}) {
+    const { originalInput, additionalPayload = {} } = options;
+    const payload = {
+      eventName: 'core:attempt_action',
+      actorId,
+      actionId,
+      targetId,
+      originalInput:
+        originalInput || `${actionId.split(':')[1]} ${targetId}`,
+      ...additionalPayload,
+    };
+    return this.eventBus.dispatch(ATTEMPT_ACTION_ID, payload);
+  }
+
+  /**
    * Asserts that the action executed successfully.
    *
    * @param {string} expectedMessage - Expected success message

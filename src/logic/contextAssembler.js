@@ -26,7 +26,18 @@ import { createComponentAccessor } from './componentAccessor.js';
 export function createEntityContext(entityId, entityManager, logger) {
   return {
     id: entityId,
-    components: createComponentAccessor(entityId, entityManager, logger),
+    components: (componentId) => {
+      try {
+        const componentData = entityManager.getComponentData(entityId, componentId);
+        return componentData ?? undefined;
+      } catch (error) {
+        logger.error(
+          `EntityContext: Error fetching component [${componentId}] for entity [${entityId}]:`,
+          error
+        );
+        return undefined;
+      }
+    },
   };
 }
 
@@ -201,4 +212,52 @@ export function createNestedExecutionContext(
     logger,
     evaluationContext: ctx,
   };
+}
+
+/**
+ * Creates an evaluation context by extracting actor/target IDs from event payload.
+ * This function provides a simplified interface that matches E2E test expectations.
+ * 
+ * @param {GameEvent} event - Event with payload containing actorId/targetId
+ * @param {EntityManager} entityManager - Entity manager for lookups
+ * @param {ILogger} logger - Logger instance
+ * @returns {{event: GameEvent, actor?: JsonLogicEntityContext, target?: JsonLogicEntityContext, [key: string]: any}}
+ *   Context object with event and populated actor/target contexts, plus any additional payload data
+ */
+export function createEvaluationContext(event, entityManager, logger) {
+  if (!event || typeof event !== 'object' || typeof event.type !== 'string') {
+    throw new Error(
+      "createEvaluationContext: Missing or invalid 'event' object."
+    );
+  }
+
+  // Create base context with event
+  const context = {
+    event,
+  };
+
+  // Extract IDs from payload
+  const actorId = event.payload?.actorId;
+  const targetId = event.payload?.targetId;
+
+  // Add actor context if actorId exists
+  if (actorId) {
+    context.actor = createEntityContext(actorId, entityManager, logger);
+  }
+
+  // Add target context if targetId exists  
+  if (targetId) {
+    context.target = createEntityContext(targetId, entityManager, logger);
+  }
+
+  // Spread any additional payload data into context (excluding actorId/targetId)
+  if (event.payload && typeof event.payload === 'object') {
+    for (const [key, value] of Object.entries(event.payload)) {
+      if (key !== 'actorId' && key !== 'targetId') {
+        context[key] = value;
+      }
+    }
+  }
+
+  return context;
 }

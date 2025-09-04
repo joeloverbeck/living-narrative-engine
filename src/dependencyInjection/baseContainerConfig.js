@@ -13,8 +13,6 @@ import { registerEventBusAdapters } from './registrations/eventBusAdapterRegistr
 import { registerInitializers } from './registrations/initializerRegistrations.js';
 import { registerRuntime } from './registrations/runtimeRegistrations.js';
 import { registerPipelineServices } from './registrations/pipelineServiceRegistrations.js';
-import { registerLoggingPerformance } from './registrations/loggingPerformanceRegistrations.js';
-import { tokens } from './tokens.js';
 
 // Game-specific registrations (conditionally imported)
 import {
@@ -70,12 +68,6 @@ export async function configureBaseContainer(container, options = {}) {
     if (logger)
       logger.debug('[BaseContainerConfig] Registering action tracing...');
     registerActionTracing(container);
-
-    if (logger)
-      logger.debug(
-        '[BaseContainerConfig] Registering logging performance monitoring...'
-      );
-    registerLoggingPerformance(container);
 
     if (logger)
       logger.debug('[BaseContainerConfig] Registering persistence...');

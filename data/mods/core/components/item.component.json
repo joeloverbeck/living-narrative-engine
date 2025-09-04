@@ -1,0 +1,30 @@
+{
+  "$schema": "../../schemas/component.schema.json",
+  "id": "core:item",
+  "name": "Item",
+  "description": "Basic item properties",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "number",
+        "description": "Monetary or trade value of the item",
+        "minimum": 0,
+        "default": 0
+      },
+      "type": {
+        "type": "string",
+        "description": "Category or type of item",
+        "default": "misc"
+      },
+      "weight": {
+        "type": "number",
+        "description": "Physical weight of the item",
+        "minimum": 0,
+        "default": 0
+      }
+    },
+    "required": ["value", "type"],
+    "additionalProperties": false
+  }
+}

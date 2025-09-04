@@ -14,6 +14,7 @@ import OperationRegistry from '../../logic/operationRegistry.js';
 import OperationInterpreter from '../../logic/operationInterpreter.js';
 import SystemLogicInterpreter from '../../logic/systemLogicInterpreter.js';
 import CommandOutcomeInterpreter from '../../commands/interpreters/commandOutcomeInterpreter.js';
+import ActionSequenceService from '../../logic/actionSequenceService.js';
 
 // operation handlers
 import { registerOperationHandlers } from './operationHandlerRegistrations.js';
@@ -138,6 +139,7 @@ export function registerInterpreters(container) {
       'REGENERATE_DESCRIPTION',
       bind(tokens.RegenerateDescriptionHandler)
     );
+    registry.register('SEQUENCE', bind(tokens.SequenceHandler));
 
     return registry;
   });
@@ -151,6 +153,18 @@ export function registerInterpreters(container) {
       new OperationInterpreter({
         logger: c.resolve(tokens.ILogger),
         operationRegistry: c.resolve(tokens.OperationRegistry),
+      })
+  );
+
+  // ---------------------------------------------------------------------------
+  //  ActionSequence Service
+  // ---------------------------------------------------------------------------
+  registrar.singletonFactory(
+    tokens.ActionSequence,
+    (c) =>
+      new ActionSequenceService({
+        logger: c.resolve(tokens.ILogger),
+        operationInterpreter: c.resolve(tokens.OperationInterpreter),
       })
   );
 

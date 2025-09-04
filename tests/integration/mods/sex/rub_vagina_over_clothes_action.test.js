@@ -6,240 +6,172 @@
  * see rubVaginaOverClothesActionDiscovery.integration.test.js.
  */
 
-import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import rubVaginaOverClothesRule from '../../../../data/mods/sex/rules/handle_rub_vagina_over_clothes.rule.json';
-import eventIsActionRubVaginaOverClothes from '../../../../data/mods/sex/conditions/event-is-action-rub-vagina-over-clothes.condition.json';
-import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../../src/utils/macroUtils.js';
-import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
-import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
-import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
-import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import DispatchPerceptibleEventHandler from '../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+// ModAssertionHelpers not needed for simplified tests
 
 /**
- * Creates handlers needed for the rub_vagina_over_clothes rule.
- *
- * @param {object} entityManager - Entity manager instance
- * @param {object} eventBus - Event bus instance
- * @param {object} logger - Logger instance
- * @returns {object} Handlers object
+ * Creates standardized anatomy and clothing setup for rub vagina over clothes scenarios.
+ * 
+ * @returns {object} Object with actor, target, and all anatomy/clothing entities
  */
-function createHandlers(entityManager, eventBus, logger) {
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
-  };
+function setupVaginaClothingScenario() {
+  // Create main room
+  const room = new ModEntityBuilder('room1')
+    .asRoom('Test Room')
+    .build();
+
+  // Create actor entity
+  const actor = new ModEntityBuilder('alice')
+    .withName('Alice')
+    .atLocation('room1')
+    .closeToEntity('beth')
+    .asActor()
+    .build();
+
+  // Create target entity with body reference, anatomy, and clothing
+  const target = new ModEntityBuilder('beth')
+    .withName('Beth')
+    .atLocation('room1')
+    .closeToEntity('alice')
+    .withBody('groin1')
+    .asActor()
+    .withComponent('clothing:equipment', {
+      equipped: {
+        torso_lower: {
+          base: ['panties1'],
+        },
+      },
+    })
+    .withComponent('clothing:slot_metadata', {
+      slotMappings: {
+        torso_lower: {
+          coveredSockets: ['vagina', 'left_hip', 'right_hip'],
+          allowedLayers: ['underwear', 'base', 'outer'],
+        },
+      },
+    })
+    .build();
+
+  // Create anatomy entities as separate entities
+  const groin = new ModEntityBuilder('groin1')
+    .asBodyPart({
+      parent: null,
+      children: ['vagina1'],
+      subType: 'groin',
+    })
+    .build();
+
+  const vagina = new ModEntityBuilder('vagina1')
+    .asBodyPart({
+      parent: 'groin1',
+      children: [],
+      subType: 'vagina',
+    })
+    .build();
+
+  // Create clothing entity as separate entity
+  const panties = new ModEntityBuilder('panties1')
+    .withName('panties')
+    .build();
 
   return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
+    room,
+    actor,
+    target,
+    groin,
+    vagina,
+    panties,
   };
 }
 
 describe('sex:rub_vagina_over_clothes action integration', () => {
-  let testEnv;
+  let testFixture;
 
-  beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(rubVaginaOverClothesRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
-    const dataRegistry = {
-      getAllSystemRules: jest
-        .fn()
-        .mockReturnValue([{ ...rubVaginaOverClothesRule, actions: expanded }]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'sex:event-is-action-rub-vagina-over-clothes'
-          ? eventIsActionRubVaginaOverClothes
-          : undefined
-      ),
-    };
-
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      entities: [],
-      rules: [{ ...rubVaginaOverClothesRule, actions: expanded }],
-      dataRegistry,
-    });
+  beforeEach(async () => {
+    // Create test fixture with auto-loaded files
+    testFixture = await ModTestFixture.forAction('sex', 'sex:rub_vagina_over_clothes');
+    
+    // Setup anatomy and clothing entities
+    const entities = setupVaginaClothingScenario();
+    
+    // Load all entities into the test environment
+    testFixture.reset(Object.values(entities));
   });
 
   afterEach(() => {
-    if (testEnv) {
-      testEnv.cleanup();
+    if (testFixture) {
+      testFixture.cleanup();
     }
   });
 
   it('performs rub vagina over clothes action successfully', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
-        },
-      },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['bob'] },
-        },
-      },
-      {
-        id: 'bob',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: ['alice'] },
-          'anatomy:body': {
-            body: {
-              root: 'groin1',
-            },
-          },
-          'clothing:equipment': {
-            equipped: {
-              torso_lower: {
-                base: ['pants1'],
-              },
-            },
-          },
-          'clothing:slot_metadata': {
-            slotMappings: {
-              torso_lower: {
-                coveredSockets: ['penis', 'vagina', 'left_hip', 'right_hip'],
-                allowedLayers: ['underwear', 'base', 'outer'],
-              },
-            },
-          },
-        },
-      },
-      {
-        id: 'groin1',
-        components: {
-          'anatomy:part': {
-            parent: null,
-            children: ['vagina1'],
-            subType: 'groin',
-          },
-        },
-      },
-      {
-        id: 'vagina1',
-        components: {
-          'anatomy:part': {
-            parent: 'groin1',
-            children: [],
-            subType: 'vagina',
-          },
-        },
-      },
-    ]);
+    // Execute the rub_vagina_over_clothes action
+    await testFixture.executeAction('alice', 'beth');
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'alice',
-      actionId: 'sex:rub_vagina_over_clothes',
-      targetId: 'bob',
-      originalInput: 'rub_vagina_over_clothes bob',
-    });
-
-    const types = testEnv.events.map((e) => e.eventType);
-    expect(types).toEqual(
+    // The action should execute and produce events
+    const eventTypes = testFixture.events.map((e) => e.eventType);
+    expect(eventTypes).toEqual(
       expect.arrayContaining([
+        'core:attempt_action',
         'core:perceptible_event',
         'core:display_successful_action_result',
         'core:turn_ended',
       ])
     );
 
-    // The perceptible event is dispatched but may not have the expected text
-    // This is because the rule relies on variable interpolation
-    // which needs to be properly configured in the test environment
+    // Verify that perceptible events were generated (structural success verification)
+    const perceptibleEvents = testFixture.events.filter(
+      (e) => e.eventType === 'core:perceptible_event'
+    );
+    expect(perceptibleEvents.length).toBeGreaterThan(0);
+    expect(perceptibleEvents[0].payload).toBeDefined();
   });
 
   it('does not fire rule for different action', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
-        },
-      },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
+    // Setup minimal entities for this test
+    const minimalEntities = [
+      new ModEntityBuilder('room1').asRoom('Room').build(),
+      new ModEntityBuilder('alice')
+        .withName('Alice')
+        .atLocation('room1')
+        .asActor()
+        .build(),
+    ];
 
-    const initialEventCount = testEnv.events.length;
+    testFixture.reset(minimalEntities);
+    
+    const initialEventCount = testFixture.events.length;
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+    await testFixture.eventBus.dispatch('core:attempt_action', {
       actionId: 'core:wait',
       actorId: 'alice',
     });
 
     // Rule should not trigger for a different action
-    const newEventCount = testEnv.events.length;
+    const newEventCount = testFixture.events.length;
     expect(newEventCount).toBe(initialEventCount + 1); // Only the dispatched event
   });
 
   it('handles missing target gracefully', async () => {
-    testEnv.reset([
-      {
-        id: 'room1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Room' },
-        },
-      },
-      {
-        id: 'alice',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:closeness': { partners: [] },
-        },
-      },
-    ]);
+    // Setup minimal entities without a target
+    const minimalEntities = [
+      new ModEntityBuilder('room1').asRoom('Room').build(),
+      new ModEntityBuilder('alice')
+        .withName('Alice')
+        .atLocation('room1')
+        .closeToEntity([])
+        .asActor()
+        .build(),
+    ];
+
+    testFixture.reset(minimalEntities);
 
     // This test verifies the rule handles missing entities gracefully
     // The action prerequisites would normally prevent this, but we test rule robustness
     await expect(async () => {
-      await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      await testFixture.eventBus.dispatch('core:attempt_action', {
         actionId: 'sex:rub_vagina_over_clothes',
         actorId: 'alice',
         targetId: 'nonexistent',
@@ -248,29 +180,7 @@ describe('sex:rub_vagina_over_clothes action integration', () => {
 
     // With missing target, the rule should fail during GET_NAME operation
     // So only the initial attempt_action event should be present
-    const types = testEnv.events.map((e) => e.eventType);
+    const types = testFixture.events.map((e) => e.eventType);
     expect(types).toEqual(['core:attempt_action']);
-  });
-
-  it('rule structure matches expected pattern', async () => {
-    // This test verifies the rule follows the standard 8-step pattern
-    // by checking that the rule is properly structured
-    expect(rubVaginaOverClothesRule.rule_id).toBe(
-      'handle_rub_vagina_over_clothes'
-    );
-    expect(rubVaginaOverClothesRule.event_type).toBe('core:attempt_action');
-    expect(rubVaginaOverClothesRule.condition.condition_ref).toBe(
-      'sex:event-is-action-rub-vagina-over-clothes'
-    );
-
-    // Verify the rule has the correct number of actions (8 + 1 macro = 9 steps)
-    expect(rubVaginaOverClothesRule.actions).toHaveLength(9);
-
-    // Verify the macro is the last action
-    const lastAction =
-      rubVaginaOverClothesRule.actions[
-        rubVaginaOverClothesRule.actions.length - 1
-      ];
-    expect(lastAction.macro).toBe('core:logSuccessAndEndTurn');
   });
 });

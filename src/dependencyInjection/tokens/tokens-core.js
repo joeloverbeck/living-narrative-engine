@@ -188,6 +188,7 @@ export const coreTokens = freeze({
   UnlockMovementHandler: 'UnlockMovementHandler',
   RegenerateDescriptionHandler: 'RegenerateDescriptionHandler',
   AtomicModifyComponentHandler: 'AtomicModifyComponentHandler',
+  SequenceHandler: 'SequenceHandler',
   TurnActionChoicePipeline: 'TurnActionChoicePipeline',
   ITurnDecisionProvider: 'ITurnDecisionProvider',
   IHumanDecisionProvider: 'IHumanDecisionProvider',
@@ -243,4 +244,6 @@ export const coreTokens = freeze({
   // Critical Log Notifier
   ICriticalLogNotifier: 'ICriticalLogNotifier',
   CriticalLogNotifier: 'CriticalLogNotifier',
+  // Action Sequence Service
+  ActionSequence: 'ActionSequence',
 });

@@ -4,82 +4,47 @@
  * to other actors in the location due to invalid perceptionType validation.
  */
 
-import {
-  describe,
-  it,
-  beforeEach,
-  expect,
-  jest,
-  afterEach,
-} from '@jest/globals';
-import standUpRule from '../../../../data/mods/positioning/rules/stand_up.rule.json';
-import eventIsActionStandUp from '../../../../data/mods/positioning/conditions/event-is-action-stand-up.condition.json';
-import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js';
+import { ModTestHandlerFactory } from '../../../common/mods/ModTestHandlerFactory.js';
 import perceptibleEventSchema from '../../../../data/mods/core/events/perceptible_event.event.json';
+import logPerceptibleEventsRule from '../../../../data/mods/core/rules/log_perceptible_events.rule.json';
+import standUpRule from '../../../../data/mods/positioning/rules/stand_up.rule.json';
+import standUpCondition from '../../../../data/mods/positioning/conditions/event-is-action-stand-up.condition.json';
+import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
+import { PERCEPTION_LOG_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
+import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
 import { expandMacros } from '../../../../src/utils/macroUtils.js';
-import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
-import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import AddPerceptionLogEntryHandler from '../../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
-import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
-import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
-import RemoveComponentHandler from '../../../../src/logic/operationHandlers/removeComponentHandler.js';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-  PERCEPTION_LOG_COMPONENT_ID,
-} from '../../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
 
 /**
- * Creates handlers needed for the stand_up rule with real AddPerceptionLogEntryHandler.
- *
- * @param entityManager
- * @param eventBus
- * @param logger
+ * Creates standardized kneeling positioning scenario for stand up tests.
+ * 
+ * @returns {object} Object with actor and witness entities
  */
-function createHandlers(entityManager, eventBus, logger) {
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
-  };
+function setupKneelingStandUpScenario() {
+  const room = new ModEntityBuilder('throne_room')
+    .asRoom('Throne Room')
+    .build();
 
-  return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
-    REMOVE_COMPONENT: new RemoveComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    // Real handler for perception log entries
-    ADD_PERCEPTION_LOG_ENTRY: new AddPerceptionLogEntryHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-  };
+  const actor = new ModEntityBuilder('test:actor1')
+    .withName('Alice')
+    .atLocation('throne_room')
+    .withComponent('positioning:kneeling_before', { entityId: 'test:king' })
+    .asActor()
+    .build();
+
+  const witness = new ModEntityBuilder('test:witness1')
+    .withName('Bob')
+    .atLocation('throne_room')
+    .withComponent(PERCEPTION_LOG_COMPONENT_ID, { logEntries: [], maxEntries: 50 })
+    .asActor()
+    .build();
+
+  return { room, actor, witness };
 }
 
 describe('positioning:stand_up perceptible event fix', () => {
@@ -87,7 +52,7 @@ describe('positioning:stand_up perceptible event fix', () => {
   let ajv;
   let validatePerceptibleEvent;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Set up AJV validator for perceptible events
     ajv = new Ajv({ strict: false, allErrors: true });
     addFormats(ajv);
@@ -111,72 +76,24 @@ describe('positioning:stand_up perceptible event fix', () => {
       perceptibleEventSchema.payloadSchema
     );
 
+    // Expand macros in stand_up rule
     const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(standUpRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
-    const dataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([
-        { ...standUpRule, actions: expanded },
-        // Add the perceptible event logging rule
-        {
-          rule_id: 'log_perceptible_events',
-          event_type: 'core:perceptible_event',
-          actions: [
-            {
-              type: 'ADD_PERCEPTION_LOG_ENTRY',
-              parameters: {
-                location_id: '{event.payload.locationId}',
-                entry: {
-                  descriptionText: '{event.payload.descriptionText}',
-                  timestamp: '{event.payload.timestamp}',
-                  perceptionType: '{event.payload.perceptionType}',
-                  actorId: '{event.payload.actorId}',
-                  targetId: '{event.payload.targetId}',
-                  involvedEntities: '{event.payload.involvedEntities}',
-                },
-                originating_actor_id: '{event.payload.actorId}',
-              },
-            },
-          ],
-        },
-      ]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'positioning:event-is-action-stand-up'
-          ? eventIsActionStandUp
-          : undefined
-      ),
+    const expandedStandUpRule = {
+      ...standUpRule,
+      actions: expandMacros(standUpRule.actions, {
+        get: (type, id) => (type === 'macros' ? macros[id] : undefined),
+      }),
     };
 
+    // Create test environment with both rules and enhanced handlers
     testEnv = createRuleTestEnvironment({
-      createHandlers,
+      createHandlers: (entityManager, eventBus, logger) =>
+        ModTestHandlerFactory.createHandlersWithPerceptionLogging(entityManager, eventBus, logger),
       entities: [],
-      rules: [
-        { ...standUpRule, actions: expanded },
-        {
-          rule_id: 'log_perceptible_events',
-          event_type: 'core:perceptible_event',
-          actions: [
-            {
-              type: 'ADD_PERCEPTION_LOG_ENTRY',
-              parameters: {
-                location_id: '{event.payload.locationId}',
-                entry: {
-                  descriptionText: '{event.payload.descriptionText}',
-                  timestamp: '{event.payload.timestamp}',
-                  perceptionType: '{event.payload.perceptionType}',
-                  actorId: '{event.payload.actorId}',
-                  targetId: '{event.payload.targetId}',
-                  involvedEntities: '{event.payload.involvedEntities}',
-                },
-                originating_actor_id: '{event.payload.actorId}',
-              },
-            },
-          ],
-        },
-      ],
-      dataRegistry,
+      rules: [expandedStandUpRule, logPerceptibleEventsRule],
+      conditions: {
+        'positioning:event-is-action-stand-up': standUpCondition,
+      },
     });
   });
 
@@ -187,31 +104,15 @@ describe('positioning:stand_up perceptible event fix', () => {
   });
 
   it('verifies the perceptible event validation now passes after fix', async () => {
-    // Create actor and witness entities
-    testEnv.reset([
-      {
-        id: 'test:actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'throne_room' },
-          'positioning:kneeling_before': { entityId: 'test:king' },
-        },
-      },
-      {
-        id: 'test:witness1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'throne_room' },
-          [PERCEPTION_LOG_COMPONENT_ID]: { logEntries: [], maxEntries: 50 },
-        },
-      },
-    ]);
+    const entities = setupKneelingStandUpScenario();
+    testEnv.reset(Object.values(entities));
 
+    // Execute the stand_up action
     await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       eventName: 'core:attempt_action',
       actorId: 'test:actor1',
       actionId: 'positioning:stand_up',
-      targetId: 'none',
+      targetId: null,
       originalInput: 'stand up',
     });
 
@@ -248,6 +149,19 @@ describe('positioning:stand_up perceptible event fix', () => {
       'Alice stands up from their kneeling position.'
     );
     expect(logEntries[0].perceptionType).toBe('action_self_general');
+
+    // Validate action success
+    ModAssertionHelpers.assertActionSuccess(
+      testEnv.events,
+      'Alice stands up from their kneeling position.'
+    );
+
+    // Verify component was removed
+    ModAssertionHelpers.assertComponentRemoved(
+      testEnv.entityManager,
+      'test:actor1',
+      'positioning:kneeling_before'
+    );
   });
 
   it('validates perceptionType enum values from schema', () => {

@@ -30,6 +30,7 @@ describe('ModTestHandlerFactory', () => {
       getAllEntities: jest.fn(),
       createEntity: jest.fn(),
       deleteEntity: jest.fn(),
+      getEntityIds: jest.fn(() => []), // Added for createHandlersWithPerceptionLogging
     };
 
     mockEventBus = {
@@ -312,6 +313,132 @@ describe('ModTestHandlerFactory', () => {
     });
   });
 
+  describe('createHandlersWithPerceptionLogging', () => {
+    it('should create standard handlers plus 6 positioning-specific handlers', () => {
+      const handlers = ModTestHandlerFactory.createHandlersWithPerceptionLogging(
+        mockEntityManager,
+        mockEventBus,
+        mockLogger
+      );
+
+      // Should have all standard handlers
+      const standardHandlers = [
+        'QUERY_COMPONENT',
+        'GET_NAME',
+        'GET_TIMESTAMP',
+        'DISPATCH_PERCEPTIBLE_EVENT',
+        'DISPATCH_EVENT',
+        'END_TURN',
+        'SET_VARIABLE',
+        'LOG_MESSAGE',
+      ];
+
+      standardHandlers.forEach((handlerKey) => {
+        expect(handlers).toHaveProperty(handlerKey);
+        expect(handlers[handlerKey]).toBeDefined();
+      });
+
+      // Should have positioning-specific handlers
+      const positioningHandlers = [
+        'ADD_COMPONENT',
+        'ADD_PERCEPTION_LOG_ENTRY',
+        'REMOVE_COMPONENT',
+        'LOCK_MOVEMENT',
+        'UNLOCK_MOVEMENT',
+        'MODIFY_ARRAY_FIELD',
+      ];
+
+      positioningHandlers.forEach((handlerKey) => {
+        expect(handlers).toHaveProperty(handlerKey);
+        expect(handlers[handlerKey]).toBeDefined();
+      });
+
+      // Verify correct total number of handlers (8 standard + 6 positioning)
+      expect(Object.keys(handlers)).toHaveLength(14);
+    });
+
+    it('should configure all handlers with execute functions', () => {
+      const handlers = ModTestHandlerFactory.createHandlersWithPerceptionLogging(
+        mockEntityManager,
+        mockEventBus,
+        mockLogger
+      );
+
+      // Verify all handlers have execute functions
+      Object.keys(handlers).forEach((handlerKey) => {
+        expect(typeof handlers[handlerKey].execute).toBe('function');
+      });
+    });
+
+    it('should add getEntitiesInLocation method to entityManager if missing', () => {
+      const entityManagerWithoutMethod = { ...mockEntityManager };
+      delete entityManagerWithoutMethod.getEntitiesInLocation;
+
+      const handlers = ModTestHandlerFactory.createHandlersWithPerceptionLogging(
+        entityManagerWithoutMethod,
+        mockEventBus,
+        mockLogger
+      );
+
+      // Should have added the method
+      expect(typeof entityManagerWithoutMethod.getEntitiesInLocation).toBe('function');
+      expect(handlers.ADD_PERCEPTION_LOG_ENTRY).toBeDefined();
+    });
+
+    it('should not override existing getEntitiesInLocation method', () => {
+      const customGetEntitiesInLocation = jest.fn();
+      const entityManagerWithMethod = { 
+        ...mockEntityManager,
+        getEntitiesInLocation: customGetEntitiesInLocation
+      };
+
+      ModTestHandlerFactory.createHandlersWithPerceptionLogging(
+        entityManagerWithMethod,
+        mockEventBus,
+        mockLogger
+      );
+
+      // Should still be the original method
+      expect(entityManagerWithMethod.getEntitiesInLocation).toBe(customGetEntitiesInLocation);
+    });
+
+    it('should throw error when entityManager is missing', () => {
+      expect(() => {
+        ModTestHandlerFactory.createHandlersWithPerceptionLogging(
+          null,
+          mockEventBus,
+          mockLogger
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createHandlersWithPerceptionLogging: entityManager is required'
+      );
+    });
+
+    it('should throw error when eventBus is missing', () => {
+      expect(() => {
+        ModTestHandlerFactory.createHandlersWithPerceptionLogging(
+          mockEntityManager,
+          null,
+          mockLogger
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createHandlersWithPerceptionLogging: eventBus is required'
+      );
+    });
+
+    it('should throw error when logger is missing', () => {
+      expect(() => {
+        ModTestHandlerFactory.createHandlersWithPerceptionLogging(
+          mockEntityManager,
+          mockEventBus,
+          null
+        );
+      }).toThrow(
+        'ModTestHandlerFactory.createHandlersWithPerceptionLogging: logger is required'
+      );
+    });
+  });
+
   describe('createCustomHandlers', () => {
     it('should create handlers based on options configuration', () => {
       const options = {
@@ -403,14 +530,23 @@ describe('ModTestHandlerFactory', () => {
   });
 
   describe('getHandlerFactoryForCategory', () => {
-    it('should return createHandlersWithAddComponent for positioning', () => {
+    it('should return createHandlersWithPerceptionLogging for positioning', () => {
       const factory =
         ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
 
       // Test by calling the factory and checking if it produces the expected result
       const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
-      expect(handlers.ADD_COMPONENT).toBeDefined(); // Only positioning has ADD_COMPONENT
-      expect(Object.keys(handlers)).toHaveLength(9); // 8 standard + 1 ADD_COMPONENT
+      
+      // Verify positioning-specific handlers are present
+      expect(handlers.ADD_COMPONENT).toBeDefined();
+      expect(handlers.ADD_PERCEPTION_LOG_ENTRY).toBeDefined();
+      expect(handlers.REMOVE_COMPONENT).toBeDefined();
+      expect(handlers.LOCK_MOVEMENT).toBeDefined();
+      expect(handlers.UNLOCK_MOVEMENT).toBeDefined();
+      expect(handlers.MODIFY_ARRAY_FIELD).toBeDefined();
+      
+      // Should have 8 standard + 6 positioning-specific handlers
+      expect(Object.keys(handlers)).toHaveLength(14);
     });
 
     it('should return createStandardHandlers for other categories', () => {
@@ -420,8 +556,16 @@ describe('ModTestHandlerFactory', () => {
         const factory =
           ModTestHandlerFactory.getHandlerFactoryForCategory(category);
         const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
-        expect(handlers.ADD_COMPONENT).toBeUndefined(); // Standard handlers don't have ADD_COMPONENT
-        expect(Object.keys(handlers)).toHaveLength(8); // 8 standard handlers
+        
+        // Standard handlers don't have positioning-specific handlers
+        expect(handlers.ADD_COMPONENT).toBeUndefined();
+        expect(handlers.ADD_PERCEPTION_LOG_ENTRY).toBeUndefined();
+        expect(handlers.REMOVE_COMPONENT).toBeUndefined();
+        expect(handlers.LOCK_MOVEMENT).toBeUndefined();
+        expect(handlers.UNLOCK_MOVEMENT).toBeUndefined();
+        expect(handlers.MODIFY_ARRAY_FIELD).toBeUndefined();
+        
+        expect(Object.keys(handlers)).toHaveLength(8); // 8 standard handlers only
       });
     });
 
@@ -432,7 +576,10 @@ describe('ModTestHandlerFactory', () => {
         const factory =
           ModTestHandlerFactory.getHandlerFactoryForCategory(category);
         const handlers = factory(mockEntityManager, mockEventBus, mockLogger);
-        expect(handlers.ADD_COMPONENT).toBeUndefined(); // Standard handlers don't have ADD_COMPONENT
+        
+        // Unknown categories get standard handlers without positioning-specific ones
+        expect(handlers.ADD_COMPONENT).toBeUndefined();
+        expect(handlers.ADD_PERCEPTION_LOG_ENTRY).toBeUndefined();
         expect(Object.keys(handlers)).toHaveLength(8); // 8 standard handlers
       });
     });

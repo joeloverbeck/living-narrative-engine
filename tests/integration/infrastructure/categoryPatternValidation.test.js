@@ -442,8 +442,10 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       expect(handlers).toHaveProperty('DISPATCH_PERCEPTIBLE_EVENT');
       expect(handlers).toHaveProperty('END_TURN');
 
-      // Positioning uses extended handler set (9 handlers instead of 8)
-      expect(Object.keys(handlers)).toHaveLength(9);
+      // Positioning uses extended handler set with perception logging (14 handlers instead of 8)
+      // Includes: 8 standard + ADD_COMPONENT, ADD_PERCEPTION_LOG_ENTRY, REMOVE_COMPONENT,
+      // LOCK_MOVEMENT, UNLOCK_MOVEMENT, MODIFY_ARRAY_FIELD
+      expect(Object.keys(handlers)).toHaveLength(14);
 
       // Verify ADD_COMPONENT is functional
       expect(typeof handlers.ADD_COMPONENT.execute).toBe('function');
@@ -597,8 +599,8 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
         expect(factoryResults[category].commonHandlers).toBe(true);
       });
 
-      // Positioning should have 9 handlers (includes ADD_COMPONENT)
-      expect(factoryResults.positioning.handlerCount).toBe(9);
+      // Positioning should have 14 handlers (includes ADD_COMPONENT and perception logging handlers)
+      expect(factoryResults.positioning.handlerCount).toBe(14);
       expect(factoryResults.positioning.hasAddComponent).toBe(true);
       expect(factoryResults.positioning.commonHandlers).toBe(true);
     });

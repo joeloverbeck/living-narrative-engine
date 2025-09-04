@@ -281,7 +281,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
       expect(entity.components['anatomy:body']).toEqual({
         body: { root: 'torso1' },
       });
-      expect(entity.components['anatomy:body_part']).toEqual({
+      expect(entity.components['anatomy:part']).toEqual({
         parent: null,
         children: ['arm1', 'arm2'],
         subType: 'torso',
@@ -485,7 +485,7 @@ describe('ModEntityBuilder - Deep Validation (TSTAIMIG-002)', () => {
         // Check body part structure
         const torsoPart = scenario.bodyParts.find(part => part.id === 'torso1');
         expect(torsoPart).toBeDefined();
-        expect(torsoPart.components['anatomy:body_part'].subType).toBe('torso');
+        expect(torsoPart.components['anatomy:part'].subType).toBe('torso');
       });
     });
 

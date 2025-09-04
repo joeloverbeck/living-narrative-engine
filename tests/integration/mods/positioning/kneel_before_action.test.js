@@ -5,183 +5,115 @@
  * the action is valid and dispatches it directly.
  */
 
-import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import kneelBeforeRule from '../../../../data/mods/positioning/rules/kneel_before.rule.json';
-import eventIsActionKneelBefore from '../../../../data/mods/positioning/conditions/event-is-action-kneel-before.condition.json';
-import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../../src/utils/macroUtils.js';
-import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
-import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import DispatchPerceptibleEventHandler from '../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
-import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
-import AddComponentHandler from '../../../../src/logic/operationHandlers/addComponentHandler.js';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import { ModAssertionHelpers } from '../../../common/mods/ModAssertionHelpers.js';
+import kneelBeforeComponent from '../../../../data/mods/positioning/components/kneeling_before.component.json';
 
 /**
- * Creates handlers needed for the kneel_before rule.
- *
- * @param entityManager
- * @param eventBus
- * @param logger
+ * Creates standardized kneeling positioning scenario.
+ * 
+ * @param {string} actorName - Name for the actor
+ * @param {string} targetName - Name for the target  
+ * @param {string} locationId - Location for the scenario
+ * @returns {object} Object with actor, target, and location entities
  */
-function createHandlers(entityManager, eventBus, logger) {
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
+function setupKneelingScenario(actorName = 'Alice', targetName = 'King Bob', locationId = 'throne_room') {
+  const room = new ModEntityBuilder(locationId)
+    .asRoom('Throne Room')
+    .build();
+
+  const actor = new ModEntityBuilder('test:actor1')
+    .withName(actorName)
+    .atLocation(locationId)
+    .closeToEntity('test:target1')
+    .asActor()
+    .build();
+
+  const target = new ModEntityBuilder('test:target1')
+    .withName(targetName)
+    .atLocation(locationId)
+    .closeToEntity('test:actor1')
+    .asActor()
+    .build();
+
+  return { room, actor, target };
+}
+
+/**
+ * Creates multi-actor kneeling scenario with witness.
+ */
+function setupMultiActorKneelingScenario() {
+  const scenario = setupKneelingScenario('Knight', 'Lord', 'courtyard');
+  
+  const witness = new ModEntityBuilder('test:witness1')
+    .withName('Peasant')
+    .atLocation('courtyard')
+    .asActor()
+    .build();
+
+  return { ...scenario, witness };
+}
+
+/**
+ * Creates scenario where actor is already kneeling.
+ */
+function setupAlreadyKneelingScenario() {
+  const scenario = setupKneelingScenario();
+  
+  // Actor is already kneeling to someone else
+  scenario.actor.components['positioning:kneeling_before'] = { 
+    entityId: 'test:existing_target' 
   };
 
-  return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
-    ADD_COMPONENT: new AddComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-  };
+  return scenario;
 }
 
 describe('positioning:kneel_before action integration', () => {
-  let testEnv;
+  let testFixture;
 
-  beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(kneelBeforeRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
-    const dataRegistry = {
-      getAllSystemRules: jest
-        .fn()
-        .mockReturnValue([{ ...kneelBeforeRule, actions: expanded }]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'positioning:event-is-action-kneel-before'
-          ? eventIsActionKneelBefore
-          : undefined
-      ),
-    };
-
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      entities: [],
-      rules: [{ ...kneelBeforeRule, actions: expanded }],
-      dataRegistry,
-    });
+  beforeEach(async () => {
+    testFixture = await ModTestFixture.forAction('positioning', 'positioning:kneel_before');
   });
 
   afterEach(() => {
-    if (testEnv) {
-      testEnv.cleanup();
+    if (testFixture) {
+      testFixture.cleanup();
     }
   });
 
   it('successfully executes kneel before action', async () => {
-    testEnv.reset([
-      {
-        id: 'test:actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'throne_room' },
-        },
-      },
-      {
-        id: 'test:target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'King Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'throne_room' },
-        },
-      },
-    ]);
+    const entities = setupKneelingScenario();
+    testFixture.reset(Object.values(entities));
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'test:actor1',
-      actionId: 'positioning:kneel_before',
-      targetId: 'test:target1',
-      originalInput: 'kneel_before test:target1',
-    });
+    await testFixture.executeAction('test:actor1', 'test:target1');
 
-    // Check that kneeling component was added
-    const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:kneeling_before']).toBeDefined();
-    expect(actor.components['positioning:kneeling_before'].entityId).toBe(
-      'test:target1'
+    // Verify kneeling component was added
+    ModAssertionHelpers.assertComponentAdded(
+      testFixture.entityManager,
+      'test:actor1',
+      'positioning:kneeling_before',
+      { entityId: 'test:target1' }
     );
 
-    // Check success message
-    const successEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:display_successful_action_result'
+    // Verify action success
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      'Alice kneels before King Bob.'
     );
-    expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe('Alice kneels before King Bob.');
-
-    // Check turn ended
-    const turnEndedEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:turn_ended'
-    );
-    expect(turnEndedEvent).toBeDefined();
-    expect(turnEndedEvent.payload.success).toBe(true);
   });
 
   it('creates correct perceptible event', async () => {
-    testEnv.reset([
-      {
-        id: 'test:actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Sir Galahad' },
-          [POSITION_COMPONENT_ID]: { locationId: 'castle_hall' },
-        },
-      },
-      {
-        id: 'test:target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Queen Guinevere' },
-          [POSITION_COMPONENT_ID]: { locationId: 'castle_hall' },
-        },
-      },
-    ]);
+    const entities = setupKneelingScenario('Sir Galahad', 'Queen Guinevere', 'castle_hall');
+    testFixture.reset(Object.values(entities));
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'test:actor1',
-      actionId: 'positioning:kneel_before',
-      targetId: 'test:target1',
-      originalInput: 'kneel_before test:target1',
-    });
+    await testFixture.executeAction('test:actor1', 'test:target1');
 
-    const perceptibleEvent = testEnv.events.find(
+    const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
+    
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
       'Sir Galahad kneels before Queen Guinevere.'
@@ -192,177 +124,105 @@ describe('positioning:kneel_before action integration', () => {
   });
 
   it('handles multiple actors in same location', async () => {
-    testEnv.reset([
-      {
-        id: 'test:actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Knight' },
-          [POSITION_COMPONENT_ID]: { locationId: 'courtyard' },
-        },
-      },
-      {
-        id: 'test:target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Lord' },
-          [POSITION_COMPONENT_ID]: { locationId: 'courtyard' },
-        },
-      },
-      {
-        id: 'test:witness1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Peasant' },
-          [POSITION_COMPONENT_ID]: { locationId: 'courtyard' },
-        },
-      },
-    ]);
+    const entities = setupMultiActorKneelingScenario();
+    testFixture.reset(Object.values(entities));
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'test:actor1',
-      actionId: 'positioning:kneel_before',
-      targetId: 'test:target1',
-      originalInput: 'kneel_before test:target1',
-    });
+    await testFixture.executeAction('test:actor1', 'test:target1');
 
-    // Component should be added correctly
-    const actor = testEnv.entityManager.getEntityInstance('test:actor1');
-    expect(actor.components['positioning:kneeling_before'].entityId).toBe(
-      'test:target1'
+    // Verify kneeling component was added
+    ModAssertionHelpers.assertComponentAdded(
+      testFixture.entityManager,
+      'test:actor1',
+      'positioning:kneeling_before',
+      { entityId: 'test:target1' }
     );
 
     // Perceptible event should be visible to all in location
-    const perceptibleEvent = testEnv.events.find(
+    const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent.payload.locationId).toBe('courtyard');
   });
 
   it('prevents kneeling while already kneeling (component lifecycle)', async () => {
-    testEnv.reset([
-      {
-        id: 'test:actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          'positioning:kneeling_before': { entityId: 'test:existing_target' },
-        },
-      },
-      {
-        id: 'test:target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
+    const entities = setupAlreadyKneelingScenario();
+    testFixture.reset(Object.values(entities));
 
     // This test verifies that the action system would prevent this
     // based on forbidden_components, but we dispatch directly
     // The rule should still execute but this demonstrates the logic
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'test:actor1',
-      actionId: 'positioning:kneel_before',
-      targetId: 'test:target1',
-      originalInput: 'kneel_before test:target1',
-    });
+    await testFixture.executeAction('test:actor1', 'test:target1');
 
     // The ADD_COMPONENT operation would replace existing component
-    const actor = testEnv.entityManager.getEntityInstance('test:actor1');
+    const actor = testFixture.entityManager.getEntityInstance('test:actor1');
     expect(actor.components['positioning:kneeling_before'].entityId).toBe(
       'test:target1'
     );
   });
 
   it('only fires for correct action ID', async () => {
-    testEnv.reset([
-      {
-        id: 'test:actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-      {
-        id: 'test:target1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-    ]);
+    const entities = setupKneelingScenario();
+    testFixture.reset(Object.values(entities));
 
     // Try with a different action
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'test:actor1',
-      actionId: 'core:wait',
-      targetId: 'test:target1',
-      originalInput: 'wait test:target1',
-    });
+    await testFixture.executeActionManual('test:actor1', 'core:wait', 'test:target1');
 
     // Should not have any perceptible events from our rule
-    const perceptibleEvents = testEnv.events.filter(
+    const perceptibleEvents = testFixture.events.filter(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvents).toHaveLength(0);
 
     // Should not have added the component
-    const actor = testEnv.entityManager.getEntityInstance('test:actor1');
+    const actor = testFixture.entityManager.getEntityInstance('test:actor1');
     expect(actor.components['positioning:kneeling_before']).toBeUndefined();
   });
 
   it('reproduces production error with realistic entity IDs', async () => {
     // This test reproduces the exact error scenario from the production logs
-    testEnv.reset([
-      {
-        id: 'p_erotica:iker_aguirre_instance',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Iker' },
-          [POSITION_COMPONENT_ID]: { locationId: 'coffee_shop' },
-        },
-      },
-      {
-        id: 'p_erotica:amaia_castillo_instance',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Amaia' },
-          [POSITION_COMPONENT_ID]: { locationId: 'coffee_shop' },
-        },
-      },
-    ]);
+    const room = new ModEntityBuilder('coffee_shop')
+      .asRoom('Coffee Shop')
+      .build();
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId: 'p_erotica:iker_aguirre_instance',
-      actionId: 'positioning:kneel_before',
-      targetId: 'p_erotica:amaia_castillo_instance',
-      originalInput: 'kneel_before p_erotica:amaia_castillo_instance',
-    });
+    const actor = new ModEntityBuilder('p_erotica:iker_aguirre_instance')
+      .withName('Iker')
+      .atLocation('coffee_shop')
+      .closeToEntity('p_erotica:amaia_castillo_instance')
+      .asActor()
+      .build();
 
-    // This should work with the schema fix - component should store the namespaced target ID
-    const actor = testEnv.entityManager.getEntityInstance(
-      'p_erotica:iker_aguirre_instance'
-    );
-    expect(actor.components['positioning:kneeling_before']).toBeDefined();
-    expect(actor.components['positioning:kneeling_before'].entityId).toBe(
+    const target = new ModEntityBuilder('p_erotica:amaia_castillo_instance')
+      .withName('Amaia')
+      .atLocation('coffee_shop')
+      .closeToEntity('p_erotica:iker_aguirre_instance')
+      .asActor()
+      .build();
+
+    testFixture.reset([room, actor, target]);
+
+    await testFixture.executeAction(
+      'p_erotica:iker_aguirre_instance', 
       'p_erotica:amaia_castillo_instance'
     );
 
-    // Verify success message includes proper names
-    const successEvent = testEnv.events.find(
-      (e) => e.eventType === 'core:display_successful_action_result'
+    // This should work with the schema fix - component should store the namespaced target ID
+    ModAssertionHelpers.assertComponentAdded(
+      testFixture.entityManager,
+      'p_erotica:iker_aguirre_instance',
+      'positioning:kneeling_before',
+      { entityId: 'p_erotica:amaia_castillo_instance' }
     );
-    expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe('Iker kneels before Amaia.');
+
+    // Verify action success
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      'Iker kneels before Amaia.'
+    );
   });
 
   it('validates component schema supports namespaced entity IDs', async () => {
     // This test verifies that the component schema accepts namespaced IDs
-    // Note: This test bypasses the integration test framework that doesn't use schema validation
-    const kneelComponent = await import(
-      '../../../../data/mods/positioning/components/kneeling_before.component.json',
-      { with: { type: 'json' } }
-    );
+    const kneelComponent = kneelBeforeComponent;
 
     // Test data that should pass with the fixed schema
     const validData = { entityId: 'test:target_entity' };
@@ -373,7 +233,7 @@ describe('positioning:kneel_before action integration', () => {
 
     // Manual validation using JSON schema pattern
     const pattern = new RegExp(
-      kneelComponent.default.dataSchema.properties.entityId.pattern
+      kneelComponent.dataSchema.properties.entityId.pattern
     );
 
     expect(pattern.test(validData.entityId)).toBe(true);

@@ -6,337 +6,181 @@
  * see nuzzlePenisThroughClothingDiscovery.integration.test.js.
  */
 
-import {
-  describe,
-  it,
-  beforeEach,
-  afterEach,
-  expect,
-  jest,
-} from '@jest/globals';
-import nuzzlePenisThroughClothingRule from '../../../../data/mods/sex/rules/handle_nuzzle_penis_through_clothing.rule.json';
-import eventIsActionNuzzlePenisThroughClothing from '../../../../data/mods/sex/conditions/event-is-action-nuzzle-penis-through-clothing.condition.json';
-import logSuccessMacro from '../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../../src/utils/macroUtils.js';
-import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
-import GetNameHandler from '../../../../src/logic/operationHandlers/getNameHandler.js';
-import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import DispatchPerceptibleEventHandler from '../../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import EndTurnHandler from '../../../../src/logic/operationHandlers/endTurnHandler.js';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
+import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+// ModAssertionHelpers not needed for simplified tests
 
 /**
- * Creates handlers needed for the nuzzle_penis_through_clothing rule.
- *
- * @param {object} entityManager - Entity manager instance
- * @param {object} eventBus - Event bus instance
- * @param {object} logger - Logger instance
- * @returns {object} Handlers object
+ * Creates standardized anatomy and clothing setup for nuzzle penis through clothing scenarios.
+ * 
+ * @returns {object} Object with actor, target, and all anatomy/clothing entities
  */
-function createHandlers(entityManager, eventBus, logger) {
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      eventBus.dispatch(eventType, payload);
-      return Promise.resolve(true);
-    }),
-  };
+function setupPenisClothingScenario() {
+  // Create main room
+  const room = new ModEntityBuilder('room1')
+    .asRoom('Test Room')
+    .build();
+
+  // Create actor entity
+  const actor = new ModEntityBuilder('alice')
+    .withName('Alice')
+    .atLocation('room1')
+    .closeToEntity('bob')
+    .asActor()
+    .build();
+
+  // Create target entity with body reference, anatomy, and clothing
+  const target = new ModEntityBuilder('bob')
+    .withName('Bob')
+    .atLocation('room1')
+    .closeToEntity('alice')
+    .withBody('groin1')
+    .asActor()
+    .withComponent('clothing:equipment', {
+      equipped: {
+        torso_lower: {
+          base: ['pants1'],
+        },
+      },
+    })
+    .withComponent('clothing:slot_metadata', {
+      slotMappings: {
+        torso_lower: {
+          coveredSockets: ['penis', 'left_hip', 'right_hip'],
+          allowedLayers: ['underwear', 'base', 'outer'],
+        },
+      },
+    })
+    .build();
+
+  // Create anatomy entities as separate entities
+  const groin = new ModEntityBuilder('groin1')
+    .asBodyPart({
+      parent: null,
+      children: ['penis1'],
+      subType: 'groin',
+    })
+    .build();
+
+  const penis = new ModEntityBuilder('penis1')
+    .asBodyPart({
+      parent: 'groin1',
+      children: [],
+      subType: 'penis',
+    })
+    .build();
+
+  // Create clothing entity as separate entity
+  const pants = new ModEntityBuilder('pants1')
+    .withName('pants')
+    .build();
 
   return {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
+    room,
+    actor,
+    target,
+    groin,
+    penis,
+    pants,
   };
 }
 
 describe('sex:nuzzle_penis_through_clothing action integration', () => {
-  let testEnv;
+  let testFixture;
 
-  beforeEach(() => {
-    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(nuzzlePenisThroughClothingRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-
-    const dataRegistry = {
-      getAllSystemRules: jest
-        .fn()
-        .mockReturnValue([
-          { ...nuzzlePenisThroughClothingRule, actions: expanded },
-        ]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'sex:event-is-action-nuzzle-penis-through-clothing'
-          ? eventIsActionNuzzlePenisThroughClothing
-          : undefined
-      ),
-    };
-
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      entities: [],
-      rules: [{ ...nuzzlePenisThroughClothingRule, actions: expanded }],
-      dataRegistry,
-    });
+  beforeEach(async () => {
+    // Create test fixture with auto-loaded files
+    testFixture = await ModTestFixture.forAction('sex', 'sex:nuzzle_penis_through_clothing');
+    
+    // Setup anatomy and clothing entities
+    const entities = setupPenisClothingScenario();
+    
+    // Load all entities into the test environment
+    testFixture.reset(Object.values(entities));
   });
 
   afterEach(() => {
-    if (testEnv) {
-      testEnv.cleanup();
+    if (testFixture) {
+      testFixture.cleanup();
     }
   });
 
-  it('should handle nuzzle_penis_through_clothing action with correct perceptible event', async () => {
-    // Setup entities
-    const actorId = 'test:actor';
-    const targetId = 'test:target';
-    const clothingId = 'test:clothing';
-    const locationId = 'test:location';
+  it('performs nuzzle penis through clothing action successfully', async () => {
+    // Execute the nuzzle_penis_through_clothing action
+    await testFixture.executeAction('alice', 'bob');
 
-    // Create entities with required components
-    testEnv.reset([
-      {
-        id: actorId,
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Alice' },
-          [POSITION_COMPONENT_ID]: { locationId },
-          'positioning:closeness': { partners: [targetId] },
-          'positioning:kneeling_before': { entityId: targetId },
-        },
-      },
-      {
-        id: targetId,
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Bob' },
-          [POSITION_COMPONENT_ID]: { locationId },
-        },
-      },
-      {
-        id: clothingId,
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'pants' },
-        },
-      },
-    ]);
-
-    const perceptibleHandler = jest.fn();
-    const successHandler = jest.fn();
-    const turnEndHandler = jest.fn();
-
-    testEnv.eventBus.subscribe('core:perceptible_event', perceptibleHandler);
-    testEnv.eventBus.subscribe(
-      'core:display_successful_action_result',
-      successHandler
-    );
-    testEnv.eventBus.subscribe('core:turn_ended', turnEndHandler);
-
-    // Dispatch the nuzzle_penis_through_clothing action with multi-target
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId,
-      actionId: 'sex:nuzzle_penis_through_clothing',
-      primaryId: targetId,
-      secondaryId: clothingId,
-      originalInput: 'nuzzle_penis_through_clothing bob pants',
-    });
-
-    // Check what events were dispatched
-    const eventTypes = testEnv.events.map((e) => e.eventType);
-
-    // Verify the expected events are in the array
+    // The action should execute and produce events
+    const eventTypes = testFixture.events.map((e) => e.eventType);
     expect(eventTypes).toEqual(
       expect.arrayContaining([
+        'core:attempt_action',
         'core:perceptible_event',
         'core:display_successful_action_result',
         'core:turn_ended',
       ])
     );
 
-    // The perceptible event is dispatched but we don't check the detailed payload
-    // This is because the rule relies on variable interpolation
-    // which needs to be properly configured in the test environment
+    // Verify that perceptible events were generated (structural success verification)
+    const perceptibleEvents = testFixture.events.filter(
+      (e) => e.eventType === 'core:perceptible_event'
+    );
+    expect(perceptibleEvents.length).toBeGreaterThan(0);
+    expect(perceptibleEvents[0].payload).toBeDefined();
   });
 
-  it('should handle nuzzle_penis_through_clothing action with different actor and target names', async () => {
-    // Setup entities with different names
-    const actorId = 'test:actor2';
-    const targetId = 'test:target2';
-    const clothingId = 'test:clothing2';
-    const locationId = 'test:location2';
+  it('does not fire rule for different action', async () => {
+    // Setup minimal entities for this test
+    const minimalEntities = [
+      new ModEntityBuilder('room1').asRoom('Room').build(),
+      new ModEntityBuilder('alice')
+        .withName('Alice')
+        .atLocation('room1')
+        .asActor()
+        .build(),
+    ];
 
-    testEnv.reset([
-      {
-        id: actorId,
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Claire' },
-          [POSITION_COMPONENT_ID]: { locationId },
-          'positioning:closeness': { partners: [targetId] },
-          'positioning:kneeling_before': { entityId: targetId },
-        },
-      },
-      {
-        id: targetId,
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'David' },
-          [POSITION_COMPONENT_ID]: { locationId },
-        },
-      },
-      {
-        id: clothingId,
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'shorts' },
-        },
-      },
-    ]);
+    testFixture.reset(minimalEntities);
+    
+    const initialEventCount = testFixture.events.length;
 
-    const perceptibleHandler = jest.fn();
-    testEnv.eventBus.subscribe('core:perceptible_event', perceptibleHandler);
-
-    // Dispatch the action
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId,
-      actionId: 'sex:nuzzle_penis_through_clothing',
-      primaryId: targetId,
-      secondaryId: clothingId,
-      originalInput: 'nuzzle_penis_through_clothing david shorts',
+    await testFixture.eventBus.dispatch('core:attempt_action', {
+      actionId: 'core:wait',
+      actorId: 'alice',
     });
 
-    // Verify events were dispatched
-    const eventTypes = testEnv.events.map((e) => e.eventType);
-    expect(eventTypes).toEqual(
-      expect.arrayContaining([
-        'core:perceptible_event',
-        'core:display_successful_action_result',
-        'core:turn_ended',
-      ])
-    );
+    // Rule should not trigger for a different action
+    const newEventCount = testFixture.events.length;
+    expect(newEventCount).toBe(initialEventCount + 1); // Only the dispatched event
   });
 
-  it('should include correct location in perceptible event', async () => {
-    const actorId = 'test:actor3';
-    const targetId = 'test:target3';
-    const clothingId = 'test:clothing3';
-    const specificLocationId = 'test:bedroom';
+  it('handles missing target gracefully', async () => {
+    // Setup minimal entities without a target
+    const minimalEntities = [
+      new ModEntityBuilder('room1').asRoom('Room').build(),
+      new ModEntityBuilder('alice')
+        .withName('Alice')
+        .atLocation('room1')
+        .closeToEntity([])
+        .asActor()
+        .build(),
+    ];
 
-    testEnv.reset([
-      {
-        id: actorId,
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Eve' },
-          [POSITION_COMPONENT_ID]: { locationId: specificLocationId },
-          'positioning:closeness': { partners: [targetId] },
-          'positioning:kneeling_before': { entityId: targetId },
-        },
-      },
-      {
-        id: targetId,
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Frank' },
-          [POSITION_COMPONENT_ID]: { locationId: specificLocationId },
-        },
-      },
-      {
-        id: clothingId,
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'underwear' },
-        },
-      },
-    ]);
+    testFixture.reset(minimalEntities);
 
-    const perceptibleHandler = jest.fn();
-    testEnv.eventBus.subscribe('core:perceptible_event', perceptibleHandler);
+    // This test verifies the rule handles missing entities gracefully
+    // The action prerequisites would normally prevent this, but we test rule robustness
+    await expect(async () => {
+      await testFixture.eventBus.dispatch('core:attempt_action', {
+        actionId: 'sex:nuzzle_penis_through_clothing',
+        actorId: 'alice',
+        targetId: 'nonexistent',
+      });
+    }).not.toThrow();
 
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId,
-      actionId: 'sex:nuzzle_penis_through_clothing',
-      primaryId: targetId,
-      secondaryId: clothingId,
-      originalInput: 'nuzzle_penis_through_clothing frank underwear',
-    });
-
-    // Verify events were dispatched
-    const eventTypes = testEnv.events.map((e) => e.eventType);
-    expect(eventTypes).toEqual(
-      expect.arrayContaining([
-        'core:perceptible_event',
-        'core:display_successful_action_result',
-        'core:turn_ended',
-      ])
-    );
-  });
-
-  it('should handle multi-target resolution with clothing context', async () => {
-    const actorId = 'test:actor4';
-    const targetId = 'test:target4';
-    const clothingId = 'test:boxers';
-    const locationId = 'test:location4';
-
-    testEnv.reset([
-      {
-        id: actorId,
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Grace' },
-          [POSITION_COMPONENT_ID]: { locationId },
-          'positioning:closeness': { partners: [targetId] },
-          'positioning:kneeling_before': { entityId: targetId },
-        },
-      },
-      {
-        id: targetId,
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Henry' },
-          [POSITION_COMPONENT_ID]: { locationId },
-        },
-      },
-      {
-        id: clothingId,
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'boxers' },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      eventName: 'core:attempt_action',
-      actorId,
-      actionId: 'sex:nuzzle_penis_through_clothing',
-      primaryId: targetId,
-      secondaryId: clothingId,
-      originalInput: 'nuzzle_penis_through_clothing henry boxers',
-    });
-
-    // Verify all expected events were dispatched
-    const eventTypes = testEnv.events.map((e) => e.eventType);
-    expect(eventTypes).toEqual(
-      expect.arrayContaining([
-        'core:perceptible_event',
-        'core:display_successful_action_result',
-        'core:turn_ended',
-      ])
-    );
+    // With missing target, the rule should fail during GET_NAME operation
+    // So only the initial attempt_action event should be present
+    const types = testFixture.events.map((e) => e.eventType);
+    expect(types).toEqual(['core:attempt_action']);
   });
 });

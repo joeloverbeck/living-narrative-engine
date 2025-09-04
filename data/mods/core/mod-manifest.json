@@ -60,7 +60,11 @@
       "exit-is-unblocked.condition.json"
     ],
     "entities": {
-      "definitions": [],
+      "definitions": [
+        "core_location.entity.json",
+        "core_actor.entity.json", 
+        "core_item.entity.json"
+      ],
       "instances": []
     },
     "events": [
