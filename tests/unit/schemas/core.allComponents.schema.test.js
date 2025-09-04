@@ -92,6 +92,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'anatomy:blueprintSlot': { slotId: 'left_breast' },
     'core:owned_by': { ownerId: 'entity-123' },
     'core:material': { material: 'cotton' },
+    'core:item': { value: 100, type: 'weapon' },
   };
 
   /** @type {Record<string, unknown>} */

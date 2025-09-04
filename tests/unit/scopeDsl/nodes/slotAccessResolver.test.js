@@ -1416,4 +1416,674 @@ describe('SlotAccessResolver', () => {
       });
     });
   });
+
+  describe('Coverage System Features', () => {
+    it('should enable coverage resolution by default', () => {
+      // Coverage resolution is enabled via COVERAGE_FEATURES.enableCoverageResolution
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: { base: 'shirt_id' },
+          legs: { base: 'pants_id' },
+        },
+        'topmost'
+      );
+
+      // Mock coverage mapping for cross-slot coverage
+      mockEntitiesGateway.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === 'clothing:coverage_mapping' && entityId === 'pants_id') {
+          return {
+            covers: ['torso_upper'], // Pants cover torso_upper slot
+            coveragePriority: 'outer',
+          };
+        }
+        return null;
+      });
+
+      // Add entityId to clothing access for coverage resolution
+      clothingAccess.entityId = 'test_entity';
+
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+
+      // Should find coverage candidates and direct candidates
+      // The priority system selects the best item, which should be from coverage mapping (pants_id with outer priority)
+      expect(result.size).toBeGreaterThan(0);
+      expect(mockEntitiesGateway.getComponentData).toHaveBeenCalledWith(
+        'pants_id',
+        'clothing:coverage_mapping'
+      );
+    });
+
+    it('should handle coverage mapping with multiple candidates', () => {
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: { base: 'shirt_id' },
+          legs: { outer: 'long_coat_id', base: 'pants_id' },
+          torso_lower: { accessories: 'belt_id' },
+        },
+        'topmost'
+      );
+
+      // Mock coverage mapping for multiple items
+      mockEntitiesGateway.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === 'clothing:coverage_mapping') {
+          if (entityId === 'long_coat_id') {
+            return {
+              covers: ['torso_upper', 'torso_lower'],
+              coveragePriority: 'outer',
+            };
+          }
+          if (entityId === 'belt_id') {
+            return {
+              covers: ['torso_upper'],
+              coveragePriority: 'base',
+            };
+          }
+        }
+        return null;
+      });
+
+      clothingAccess.entityId = 'test_entity';
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+
+      // Should include direct item and coverage items
+      // The priority system will select the highest priority item
+      expect(result.size).toBeGreaterThan(0);
+    });
+
+    it('should skip coverage items not in requested layer mode', () => {
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: { outer: 'jacket_id' },
+          legs: { accessories: 'jewelry_id' },
+        },
+        'outer' // Only outer layer
+      );
+
+      mockEntitiesGateway.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === 'clothing:coverage_mapping' && entityId === 'jewelry_id') {
+          return {
+            covers: ['torso_upper'],
+            coveragePriority: 'base',
+          };
+        }
+        return null;
+      });
+
+      clothingAccess.entityId = 'test_entity';
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+
+      // Should only include jacket (outer) and skip jewelry (accessories not in outer mode)
+      expect(result).toEqual(new Set(['jacket_id']));
+    });
+  });
+
+  describe('Internal Helper Functions', () => {
+    it('should validate clothing slot names correctly', () => {
+      // Test isClothingSlot function through canResolve
+      const validSlots = [
+        'torso_upper', 'torso_lower', 'legs', 'feet', 
+        'head_gear', 'hands', 'left_arm_clothing', 'right_arm_clothing'
+      ];
+
+      validSlots.forEach(slot => {
+        const node = {
+          type: 'Step',
+          field: slot,
+          parent: { type: 'Step', field: 'topmost_clothing' },
+        };
+        expect(resolver.canResolve(node)).toBe(true);
+      });
+
+      // Test invalid slot
+      const invalidNode = {
+        type: 'Step',
+        field: 'invalid_slot',
+        parent: { type: 'Step', field: 'topmost_clothing' },
+      };
+      expect(resolver.canResolve(invalidNode)).toBe(false);
+    });
+
+    it('should map coverage priority from mode correctly', () => {
+      // Test via realistic clothing resolution scenarios
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: {
+            outer: 'coat_id',
+            base: 'shirt_id', 
+            underwear: 'undershirt_id',
+            accessories: 'necklace_id'
+          }
+        },
+        'all'
+      );
+
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+
+      // Should select highest priority item (coat in outer layer)
+      expect(result).toEqual(new Set(['coat_id']));
+    });
+  });
+
+  describe('Resolution Strategy Selection', () => {
+    it('should use legacy strategy for simple equipment scenarios', () => {
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: { base: 'simple_shirt' },
+        },
+        'topmost'
+      );
+      
+      clothingAccess.entityId = 'test_entity';
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+      expect(result).toEqual(new Set(['simple_shirt']));
+    });
+
+    it('should handle complex equipment scenarios with coverage strategy', () => {
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: { base: 'shirt_id', outer: 'jacket_id' },
+          torso_lower: { base: 'pants_id' },
+          legs: { base: 'leggings_id' },
+          feet: { base: 'shoes_id' },
+          hands: { base: 'gloves_id' },
+        },
+        'topmost'
+      );
+      
+      clothingAccess.entityId = 'test_entity';
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+      expect(result).toEqual(new Set(['jacket_id'])); // Outer layer has priority
+    });
+  });
+
+  describe('Performance and Error Recovery', () => {
+    it('should handle performance monitoring context', () => {
+      const clothingAccess = createMockClothingAccess(
+        { torso_upper: { base: 'shirt_id' } },
+        'base'
+      );
+      
+      // Add performance monitor to context
+      const mockPerformanceMonitor = {
+        startTimer: jest.fn().mockReturnValue('timer_id'),
+        endTimer: jest.fn(),
+        recordMetric: jest.fn(),
+      };
+      
+      mockContext.performanceMonitor = mockPerformanceMonitor;
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+      expect(result).toEqual(new Set(['shirt_id']));
+    });
+
+    it('should handle error recovery when coverage resolution fails', () => {
+      const clothingAccess = createMockClothingAccess(
+        { torso_upper: { base: 'shirt_id' } },
+        'topmost'
+      );
+      
+      // Mock getComponentData to throw for coverage mapping
+      mockEntitiesGateway.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === 'clothing:coverage_mapping') {
+          throw new Error('Coverage mapping failed');
+        }
+        return null;
+      });
+      
+      clothingAccess.entityId = 'test_entity';
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      // Should still resolve using direct items despite coverage error
+      const result = resolver.resolve(node, mockContext);
+      expect(result).toEqual(new Set(['shirt_id']));
+    });
+  });
+
+  describe('Enhanced Coverage Validation', () => {
+    it('should apply enhanced coverage validation to results', () => {
+      const clothingAccess = createMockClothingAccess(
+        { torso_upper: { base: 'enhanced_shirt' } },
+        'base'
+      );
+      
+      // Add trace context for enhanced validation
+      mockContext.trace = { addLog: jest.fn() };
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+      
+      // Enhanced coverage should still return the item
+      expect(result).toEqual(new Set(['enhanced_shirt']));
+    });
+
+    it('should handle null slot items in enhanced coverage', () => {
+      const clothingAccess = createMockClothingAccess(
+        { torso_upper: null }, // Null slot data
+        'base'
+      );
+      
+      mockContext.trace = { addLog: jest.fn() };
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+      expect(result).toEqual(new Set());
+    });
+  });
+
+  describe('Safety and Error Recovery Features', () => {
+    it('should handle safe resolve coverage with error recovery enabled', () => {
+      const clothingAccess = createMockClothingAccess(
+        { torso_upper: { base: 'shirt_id' } },
+        'topmost'
+      );
+      
+      clothingAccess.entityId = 'test_entity';
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+      expect(result).toEqual(new Set(['shirt_id']));
+    });
+
+    it('should handle coverage resolution with fallback to legacy', () => {
+      const clothingAccess = createMockClothingAccess(
+        { torso_upper: { outer: 'fallback_jacket' } },
+        'outer'
+      );
+      
+      clothingAccess.entityId = 'test_entity';
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+      expect(result).toEqual(new Set(['fallback_jacket']));
+    });
+  });
+
+  describe('Structured Trace Events', () => {
+    let mockStructuredTrace;
+    let mockSpan;
+
+    beforeEach(() => {
+      const traceContext = createMockStructuredTraceContext();
+      mockStructuredTrace = traceContext.structuredTrace;
+      mockSpan = traceContext.mockSpan;
+      mockContext.structuredTrace = mockStructuredTrace;
+    });
+
+    it('should log no_slot_data events when no candidates found', () => {
+      const clothingAccess = createMockClothingAccess(
+        { legs: { base: 'pants' } }, // No torso_upper
+        'topmost'
+      );
+      
+      clothingAccess.entityId = 'test_entity';
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper', // Requesting slot that doesn't exist
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+      
+      expect(result).toEqual(new Set());
+      expect(mockSpan.addEvent).toHaveBeenCalledWith(
+        'no_slot_data',
+        expect.objectContaining({
+          slotName: 'torso_upper',
+          reason: 'no_candidates_found',
+        })
+      );
+    });
+
+    it('should log priority_calculated events for each candidate', () => {
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: {
+            outer: 'jacket_id',
+            base: 'shirt_id',
+          },
+        },
+        'topmost'
+      );
+      
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      resolver.resolve(node, mockContext);
+
+      // Should log priority calculation for both items
+      expect(mockSpan.addEvent).toHaveBeenCalledWith(
+        'priority_calculated',
+        expect.objectContaining({
+          itemId: 'jacket_id',
+          layer: 'outer',
+        })
+      );
+      
+      expect(mockSpan.addEvent).toHaveBeenCalledWith(
+        'priority_calculated',
+        expect.objectContaining({
+          itemId: 'shirt_id', 
+          layer: 'base',
+        })
+      );
+    });
+
+    it('should log selection_made events with tie-breaking information', () => {
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: {
+            outer: 'winner_item',
+            base: 'runner_up_item',
+          },
+        },
+        'topmost'
+      );
+      
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      resolver.resolve(node, mockContext);
+
+      expect(mockSpan.addEvent).toHaveBeenCalledWith(
+        'selection_made',
+        expect.objectContaining({
+          selectedItem: 'winner_item',
+          reason: 'highest_priority',
+        })
+      );
+    });
+  });
+
+  describe('Error Input Validation', () => {
+    it('should handle invalid clothing access object in resolveSlotAccess', () => {
+      // Create invalid clothing access that will fail validation
+      const invalidClothingAccess = {
+        __clothingSlotAccess: true,
+        // Missing equipped and mode will cause validation error
+      };
+
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([invalidClothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step', field: 'topmost_clothing' },
+      };
+
+      mockErrorHandler.handleError.mockClear();
+      const result = resolver.resolve(node, mockContext);
+
+      expect(result).toEqual(new Set());
+      // Should call error handler for missing equipped data
+      expect(mockErrorHandler.handleError).toHaveBeenCalled();
+    });
+
+    it('should handle null clothing access object', () => {
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([null]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step', field: 'topmost_clothing' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+      expect(result).toEqual(new Set());
+    });
+
+    it('should handle undefined slot name in resolveSlotAccess', () => {
+      const clothingAccess = createMockClothingAccess(
+        { torso_upper: { base: 'shirt' } },
+        'topmost'
+      );
+
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: undefined,
+        parent: { type: 'Step', field: 'topmost_clothing' },
+      };
+
+      mockErrorHandler.handleError.mockClear();
+      const result = resolver.resolve(node, mockContext);
+
+      expect(result).toEqual(new Set());
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        'Invalid slot name provided',
+        expect.objectContaining({
+          slotName: undefined,
+        }),
+        'SlotAccessResolver',
+        ErrorCodes.INVALID_ENTITY_ID
+      );
+    });
+
+    it('should handle non-string slot name in resolveSlotAccess', () => {
+      const clothingAccess = createMockClothingAccess(
+        { torso_upper: { base: 'shirt' } },
+        'topmost'
+      );
+
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 123, // Non-string field
+        parent: { type: 'Step', field: 'topmost_clothing' },
+      };
+
+      mockErrorHandler.handleError.mockClear();
+      const result = resolver.resolve(node, mockContext);
+
+      expect(result).toEqual(new Set());
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        'Invalid slot name provided',
+        expect.objectContaining({
+          slotName: 123,
+        }),
+        'SlotAccessResolver',
+        ErrorCodes.INVALID_ENTITY_ID
+      );
+    });
+  });
+
+  describe('Coverage Collection Edge Cases', () => {
+    it('should handle empty equipped object in coverage collection', () => {
+      const clothingAccess = createMockClothingAccess(
+        {}, // Empty equipped
+        'topmost'
+      );
+      
+      clothingAccess.entityId = 'test_entity';
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+      expect(result).toEqual(new Set());
+    });
+
+    it('should skip empty slots in coverage collection', () => {
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: { base: 'shirt_id' },
+          legs: null, // Null slot
+          feet: {}, // Empty slot
+        },
+        'topmost'
+      );
+      
+      clothingAccess.entityId = 'test_entity';
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+      expect(result).toEqual(new Set(['shirt_id']));
+    });
+
+    it('should skip items without coverage mapping', () => {
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: { base: 'shirt_id' },
+          legs: { base: 'pants_id' },
+        },
+        'topmost'
+      );
+
+      // Mock no coverage mapping found
+      mockEntitiesGateway.getComponentData.mockReturnValue(null);
+      
+      clothingAccess.entityId = 'test_entity';
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+      expect(result).toEqual(new Set(['shirt_id'])); // Only direct item
+    });
+
+    it('should skip coverage items that dont cover target slot', () => {
+      const clothingAccess = createMockClothingAccess(
+        {
+          torso_upper: { base: 'shirt_id' },
+          legs: { base: 'pants_id' },
+        },
+        'topmost'
+      );
+
+      // Mock coverage mapping that doesn't cover torso_upper
+      mockEntitiesGateway.getComponentData.mockImplementation((entityId, componentId) => {
+        if (componentId === 'clothing:coverage_mapping' && entityId === 'pants_id') {
+          return {
+            covers: ['legs', 'feet'], // Doesn't cover torso_upper
+            coveragePriority: 'base',
+          };
+        }
+        return null;
+      });
+      
+      clothingAccess.entityId = 'test_entity';
+      mockContext.dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
+
+      const node = {
+        type: 'Step',
+        field: 'torso_upper',
+        parent: { type: 'Step' },
+      };
+
+      const result = resolver.resolve(node, mockContext);
+      expect(result).toEqual(new Set(['shirt_id'])); // Only direct item
+    });
+  });
 });
