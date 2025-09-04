@@ -272,7 +272,30 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
       model: llmConfig.modelIdentifier,
       ...baseMessagesPayload,
       ...providerSpecificPayloadAdditions,
+      // Merge request-specific LLM parameters (e.g., temperature, max_tokens)
+      // These override any defaults from llmConfig.defaultParameters
+      ...(requestOptions.temperature !== undefined && { temperature: requestOptions.temperature }),
+      ...(requestOptions.maxTokens !== undefined && { max_tokens: requestOptions.maxTokens }),
+      ...(requestOptions.topP !== undefined && { top_p: requestOptions.topP }),
+      ...(requestOptions.topK !== undefined && { top_k: requestOptions.topK }),
+      ...(requestOptions.frequencyPenalty !== undefined && { frequency_penalty: requestOptions.frequencyPenalty }),
+      ...(requestOptions.presencePenalty !== undefined && { presence_penalty: requestOptions.presencePenalty }),
     };
+    
+    // Log if request-specific parameters were applied
+    if (requestOptions.temperature !== undefined || requestOptions.maxTokens !== undefined) {
+      this.logger.debug(
+        `${this.constructor.name} (${llmId}): Applied request-specific LLM parameters.`,
+        {
+          llmId,
+          temperature: requestOptions.temperature,
+          maxTokens: requestOptions.maxTokens,
+          finalTemperature: providerRequestPayload.temperature,
+          finalMaxTokens: providerRequestPayload.max_tokens,
+        }
+      );
+    }
+    
     this.logger.debug(
       `${this.constructor.name} (${llmId}): Assembled provider request payload.`,
       {

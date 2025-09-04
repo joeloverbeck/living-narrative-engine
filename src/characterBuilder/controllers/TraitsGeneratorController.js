@@ -848,9 +848,9 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
           this.#selectedDirection.id
         );
 
-      // Convert single Cliche object to array format expected by TraitsGenerator
-      // If no cliches found, use empty array instead of null
-      const cliches = clicheData ? this.#convertClicheToArray(clicheData) : [];
+      // Pass cliche data as-is (object format) to TraitsGenerator
+      // If no cliches found, pass null to trigger proper validation
+      const cliches = clicheData || null;
 
       const params = {
         concept: this.#selectedConcept,
@@ -1761,47 +1761,7 @@ export class TraitsGeneratorController extends BaseCharacterBuilderController {
     return count;
   }
 
-  /**
-   * Convert Cliche object to array format expected by TraitsGenerator
-   *
-   * @private
-   * @param {Cliche} cliche - Cliche object from characterBuilderService
-   * @returns {Array} Array of cliche objects in format expected by TraitsGenerator
-   */
-  #convertClicheToArray(cliche) {
-    if (!cliche || !cliche.categories) {
-      return [];
-    }
 
-    const clicheArray = [];
-    let itemId = 1;
-
-    // Convert each category from the Cliche object to the format expected by TraitsGenerator
-    for (const [categoryName, items] of Object.entries(cliche.categories)) {
-      if (Array.isArray(items)) {
-        for (const item of items) {
-          clicheArray.push({
-            id: `cliche-${itemId++}`,
-            category: categoryName,
-            content: item,
-          });
-        }
-      }
-    }
-
-    // Also add tropes and stereotypes if they exist
-    if (Array.isArray(cliche.tropesAndStereotypes)) {
-      for (const trope of cliche.tropesAndStereotypes) {
-        clicheArray.push({
-          id: `cliche-${itemId++}`,
-          category: 'tropesAndStereotypes',
-          content: trope,
-        });
-      }
-    }
-
-    return clicheArray;
-  }
 }
 
 export default TraitsGeneratorController;

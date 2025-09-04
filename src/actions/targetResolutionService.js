@@ -122,6 +122,22 @@ export class TargetResolutionService extends ITargetResolutionService {
     actionId = null
   ) {
     const source = 'TargetResolutionService.resolveTargets';
+    
+    // Enhanced debug logging for sit_down action
+    if (actionId === 'positioning:sit_down' || scopeName === 'positioning:available_furniture') {
+      this.#logger.info(
+        `[DEBUG] TargetResolutionService resolving scope for sit_down:`,
+        {
+          scopeName,
+          actionId,
+          actorId: actorEntity?.id,
+          actorLocation: discoveryContext?.currentLocation,
+          hasDiscoveryContext: !!discoveryContext,
+          discoveryContextKeys: discoveryContext ? Object.keys(discoveryContext) : null
+        }
+      );
+    }
+    
     trace?.info(
       `Delegating scope resolution for '${scopeName}' to UnifiedScopeResolver.`,
       source
@@ -135,9 +151,36 @@ export class TargetResolutionService extends ITargetResolutionService {
       trace: trace,
       actionId: actionId,
     };
+    
+    // Enhanced debug logging for sit_down action
+    if (actionId === 'positioning:sit_down' || scopeName === 'positioning:available_furniture') {
+      this.#logger.info(
+        `[DEBUG] Context built for UnifiedScopeResolver:`,
+        {
+          hasActor: !!context.actor,
+          actorId: context.actor?.id,
+          actorLocation: context.actorLocation,
+          hasActionContext: !!context.actionContext,
+          actionContextEntityManager: !!context.actionContext?.entityManager
+        }
+      );
+    }
 
     // Delegate to UnifiedScopeResolver
     const result = this.#unifiedScopeResolver.resolve(scopeName, context);
+    
+    // Enhanced debug logging for sit_down action
+    if (actionId === 'positioning:sit_down' || scopeName === 'positioning:available_furniture') {
+      this.#logger.info(
+        `[DEBUG] UnifiedScopeResolver result for sit_down:`,
+        {
+          success: result.success,
+          hasValue: !!result.value,
+          valueSize: result.value ? result.value.size : 0,
+          entities: result.value ? Array.from(result.value) : []
+        }
+      );
+    }
 
     // Check if the resolution failed
     if (!result.success) {

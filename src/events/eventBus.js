@@ -22,6 +22,8 @@ class EventBus extends IEventBus {
   #batchMode = false; // Track if we're in batch loading mode
   #batchModeOptions = null; // Store batch mode configuration
   #batchModeTimeoutId = null; // Auto-disable timeout for safety
+  #eventChainHistory = new Map(); // Track recent event chains to detect true infinite loops
+  #chainHistoryLimit = 10; // Maximum chain history entries per event type
 
   /**
    * Creates an EventBus instance.
@@ -39,10 +41,10 @@ class EventBus extends IEventBus {
    * 
    * @param {boolean} enabled - Whether to enable batch mode
    * @param {object} [options] - Configuration options for batch mode
-   * @param {number} [options.maxRecursionDepth=10] - Maximum recursion depth in batch mode
-   * @param {number} [options.maxGlobalRecursion=25] - Maximum global recursion in batch mode
-   * @param {number} [options.timeoutMs=30000] - Auto-disable timeout in milliseconds
-   * @param {string} [options.context='unknown'] - Context description for logging
+   * @param {number} [options.maxRecursionDepth] - Maximum recursion depth in batch mode
+   * @param {number} [options.maxGlobalRecursion] - Maximum global recursion in batch mode
+   * @param {number} [options.timeoutMs] - Auto-disable timeout in milliseconds
+   * @param {string} [options.context] - Context description for logging
    */
   setBatchMode(enabled, options = {}) {
     if (enabled === this.#batchMode) {
@@ -142,6 +144,83 @@ class EventBus extends IEventBus {
   }
 
   /**
+   * Gets context-aware timing thresholds for infinite loop detection.
+   * Adjusts thresholds based on batch mode context and event type to allow
+   * legitimate bulk operations while still catching true infinite loops.
+   *
+   * @param {string} eventName - The event being evaluated
+   * @returns {{eventCount: number, timeSpanMs: number}} Timing thresholds
+   */
+  #getInfiniteLoopThresholds(eventName) {
+    const isComponentLifecycleEvent = eventName === 'core:component_added' || 
+                                     eventName === 'core:component_removed' ||
+                                     eventName === 'core:entity_created';
+    
+    if (this.#batchMode && this.#batchModeOptions) {
+      if (this.#batchModeOptions.context === 'game-initialization') {
+        // During game initialization, allow much higher throughput for legitimate bulk operations
+        return isComponentLifecycleEvent ? 
+          { eventCount: 50, timeSpanMs: 100 } : 
+          { eventCount: 20, timeSpanMs: 50 };
+      } else {
+        // Other batch contexts get moderate increases
+        return isComponentLifecycleEvent ? 
+          { eventCount: 20, timeSpanMs: 50 } : 
+          { eventCount: 15, timeSpanMs: 40 };
+      }
+    }
+    
+    // Normal mode - component lifecycle events get slight increase due to cascading nature
+    // Use higher thresholds than recursion limits to avoid interfering with recursion depth tests
+    return isComponentLifecycleEvent ? 
+      { eventCount: 60, timeSpanMs: 100 } : 
+      { eventCount: 20, timeSpanMs: 50 };
+  }
+
+  /**
+   * Tracks event chain history and detects potential infinite loops.
+   * Returns true if the event appears to be part of a rapid infinite loop.
+   * Uses context-aware thresholds to allow legitimate bulk operations.
+   *
+   * @param {string} eventName - The event being dispatched
+   * @returns {boolean} True if this looks like an infinite loop
+   */
+  #detectInfiniteLoop(eventName) {
+    const now = Date.now();
+    
+    // Get or create history for this event type
+    if (!this.#eventChainHistory.has(eventName)) {
+      this.#eventChainHistory.set(eventName, []);
+    }
+    
+    const history = this.#eventChainHistory.get(eventName);
+    
+    // Add current timestamp
+    history.push(now);
+    
+    // Keep only recent entries (last N events)
+    if (history.length > this.#chainHistoryLimit) {
+      history.splice(0, history.length - this.#chainHistoryLimit);
+    }
+    
+    // Get context-aware thresholds for this event type
+    const thresholds = this.#getInfiniteLoopThresholds(eventName);
+    
+    // Check for rapid repeated events (potential infinite loop)
+    if (history.length >= thresholds.eventCount) {
+      const recentEvents = history.slice(-thresholds.eventCount);
+      const timeSpan = recentEvents[recentEvents.length - 1] - recentEvents[0];
+      
+      // Use context-aware thresholds instead of fixed limits
+      if (timeSpan < thresholds.timeSpanMs) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  /**
    * Subscribes a listener to a specific event.
    *
    * @param {string} eventName - The name of the event to subscribe to.
@@ -220,14 +299,44 @@ class EventBus extends IEventBus {
     const currentDepth = this.#recursionDepth.get(eventName) || 0;
     
     // We're only truly recursing if we're dispatching from within a handler (handlerDepth > 0)
-    const isActuallyRecursing = handlerDepth > 0;
+    // const isActuallyRecursing = handlerDepth > 0; // Currently unused but kept for future reference
     
     // Don't treat error events as critical - they should be allowed to dispatch concurrently
     // Only actual deep recursion (beyond normal limits) should be blocked
     const isCriticalEvent = false; // Removed critical event classification for error events
     
-    // Global recursion check - sum all current recursion depths
-    const totalGlobalRecursion = Array.from(this.#recursionDepth.values()).reduce((sum, depth) => sum + depth, 0);
+    // Define workflow events that are part of legitimate game loops and should have higher limits
+    const workflowEvents = new Set([
+      'core:turn_started',
+      'core:turn_processing_started', 
+      'core:turn_processing_ended',
+      'core:turn_ended',
+      'core:player_turn_prompt',
+      'core:action_decided',
+      'core:attempt_action'
+    ]);
+    
+    // Define event-specific limits for legitimate cascading events
+    const isComponentLifecycleEvent = eventName === 'core:component_added' || 
+                                     eventName === 'core:component_removed' ||
+                                     eventName === 'core:entity_created';
+    
+    const isWorkflowEvent = workflowEvents.has(eventName);
+    
+    // Calculate global recursion with separate tracking for different event types
+    let totalGlobalRecursion = 0;
+    let workflowEventRecursion = 0;
+    let componentEventRecursion = 0;
+    
+    for (const [event, depth] of this.#recursionDepth.entries()) {
+      if (workflowEvents.has(event)) {
+        workflowEventRecursion += depth;
+      } else if (event === 'core:component_added' || event === 'core:component_removed' || event === 'core:entity_created') {
+        componentEventRecursion += depth;
+      } else {
+        totalGlobalRecursion += depth;
+      }
+    }
     
     // Determine recursion limits based on batch mode and event type
     let MAX_RECURSION_DEPTH;
@@ -235,12 +344,34 @@ class EventBus extends IEventBus {
     
     if (this.#batchMode && this.#batchModeOptions) {
       // In batch mode, use higher limits unless it's a critical event
-      MAX_RECURSION_DEPTH = isCriticalEvent ? 1 : this.#batchModeOptions.maxRecursionDepth;
+      if (isCriticalEvent) {
+        MAX_RECURSION_DEPTH = 1;
+      } else if (isComponentLifecycleEvent && this.#batchModeOptions.context === 'game-initialization') {
+        // Allow much higher recursion for component lifecycle events during game initialization
+        MAX_RECURSION_DEPTH = 100; // Allow deep component loading cascades
+      } else if (isWorkflowEvent) {
+        // Workflow events get higher individual limits
+        MAX_RECURSION_DEPTH = 25; // Higher limit for workflow events
+      } else {
+        MAX_RECURSION_DEPTH = this.#batchModeOptions.maxRecursionDepth;
+      }
       MAX_GLOBAL_RECURSION = this.#batchModeOptions.maxGlobalRecursion;
     } else {
-      // Normal mode limits - increased to allow more concurrent dispatches
-      MAX_RECURSION_DEPTH = isCriticalEvent ? 1 : 15; // Increased from 3 to 15 for concurrent operations
-      MAX_GLOBAL_RECURSION = 50; // Increased from 10 to 50 for bulk operations
+      // Normal mode limits
+      if (isCriticalEvent) {
+        MAX_RECURSION_DEPTH = 1;
+      } else if (isComponentLifecycleEvent) {
+        // Allow much higher limits for component lifecycle events during initialization
+        // Complex entities can trigger many cascading component additions
+        MAX_RECURSION_DEPTH = 100; // Increased from 50 to handle deep component hierarchies
+      } else if (isWorkflowEvent) {
+        // Workflow events get higher individual limits to allow game loops
+        MAX_RECURSION_DEPTH = 20; // Allow reasonable turn cycling
+      } else {
+        MAX_RECURSION_DEPTH = 10; // Reduced limit for non-workflow events
+      }
+      // Much higher global limit, since workflow events are counted separately
+      MAX_GLOBAL_RECURSION = 200; // Emergency limit for non-workflow events
     }
     
     // Progressive warnings at 50%, 75%, and 90% of limits
@@ -269,6 +400,17 @@ class EventBus extends IEventBus {
       }
     });
     
+    // Check for potential infinite loops using timing-based detection
+    const isInfiniteLoop = this.#detectInfiniteLoop(eventName);
+    if (isInfiniteLoop) {
+      const thresholds = this.#getInfiniteLoopThresholds(eventName);
+      const batchContext = this.#batchMode ? ` (batch mode: ${this.#batchModeOptions.context})` : '';
+      console.error(
+        `EventBus: Potential infinite loop detected for event "${eventName}"${batchContext}. Events occurring too rapidly (>${thresholds.eventCount} in <${thresholds.timeSpanMs}ms). Dispatch blocked.`
+      );
+      return;
+    }
+
     // Check recursion depth using normal limits (no special critical event handling)
     if (currentDepth >= MAX_RECURSION_DEPTH) {
       // Use console directly to avoid triggering more events
@@ -280,10 +422,28 @@ class EventBus extends IEventBus {
     }
 
     if (totalGlobalRecursion >= MAX_GLOBAL_RECURSION) {
-      // Global recursion limit exceeded - emergency stop
+      // Global recursion limit exceeded - emergency stop (excluding workflow events)
       const batchContext = this.#batchMode ? ` (batch mode: ${this.#batchModeOptions.context})` : '';
       console.error(
-        `EventBus: Global recursion limit (${MAX_GLOBAL_RECURSION}) exceeded${batchContext}. Current event: "${eventName}". All event dispatching blocked.`
+        `EventBus: Global recursion limit (${MAX_GLOBAL_RECURSION}) exceeded for non-workflow/non-component events${batchContext}. Current event: "${eventName}" (workflow: ${isWorkflowEvent}, component: ${isComponentLifecycleEvent}). Regular recursion: ${totalGlobalRecursion}, workflow: ${workflowEventRecursion}, component: ${componentEventRecursion}. All event dispatching blocked.`
+      );
+      return;
+    }
+    
+    // Additional emergency check for workflow events if they exceed an extreme limit
+    if (isWorkflowEvent && workflowEventRecursion >= 100) {
+      const batchContext = this.#batchMode ? ` (batch mode: ${this.#batchModeOptions.context})` : '';
+      console.error(
+        `EventBus: Extreme workflow event recursion (${workflowEventRecursion}) detected${batchContext}. Current event: "${eventName}". This may indicate a broken game loop. All event dispatching blocked.`
+      );
+      return;
+    }
+    
+    // Additional emergency check for component lifecycle events if they exceed an extreme limit
+    if (isComponentLifecycleEvent && componentEventRecursion >= 200) {
+      const batchContext = this.#batchMode ? ` (batch mode: ${this.#batchModeOptions.context})` : '';
+      console.error(
+        `EventBus: Extreme component event recursion (${componentEventRecursion}) detected${batchContext}. Current event: "${eventName}". This may indicate an infinite component cascade. All event dispatching blocked.`
       );
       return;
     }
@@ -325,7 +485,7 @@ class EventBus extends IEventBus {
                 await listener(eventObject);
               } catch (error) {
                 // Enhanced error handling - always use console for any event that might trigger recursion
-                if (isCriticalEvent || totalGlobalRecursion > 5) {
+                if (isCriticalEvent || totalGlobalRecursion > 10) {
                   // Already handling critical events or high recursion - use console directly
                   console.error(
                     `EventBus: Error in "${eventName}" listener (using console to prevent recursion):`,

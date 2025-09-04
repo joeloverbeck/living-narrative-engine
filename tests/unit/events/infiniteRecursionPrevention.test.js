@@ -133,10 +133,10 @@ describe('EventBus Infinite Recursion Prevention', () => {
 
       await eventBus.dispatch('test:recursive', { count: 0 });
 
-      // Should stop at depth 15 (updated from 3 to match production code)
-      expect(dispatchCount).toBe(15);
+      // Should stop at depth 10 (reduced from 15 for non-workflow events)
+      expect(dispatchCount).toBe(10);
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Maximum recursion depth (15) exceeded for event "test:recursive"')
+        expect.stringContaining('Maximum recursion depth (10) exceeded for event "test:recursive"')
       );
 
       consoleSpy.mockRestore();
@@ -156,9 +156,9 @@ describe('EventBus Infinite Recursion Prevention', () => {
       await eventBus.dispatch('core:system_error_occurred', { message: 'test' });
 
       // System error events are no longer treated as critical - same limit as regular events
-      expect(dispatchCount).toBe(15);
+      expect(dispatchCount).toBe(10);
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Maximum recursion depth (15) exceeded for event "core:system_error_occurred"')
+        expect.stringContaining('Maximum recursion depth (10) exceeded for event "core:system_error_occurred"')
       );
 
       consoleSpy.mockRestore();
@@ -250,7 +250,7 @@ describe('EventBus Infinite Recursion Prevention', () => {
       // Should stop when global recursion limit (10) is reached
       expect(totalDispatches).toBeLessThanOrEqual(10);
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Global recursion limit (10) exceeded (batch mode: global-limit-test)')
+        expect.stringContaining('Global recursion limit (10) exceeded for non-workflow events (batch mode: global-limit-test)')
       );
 
       consoleSpy.mockRestore();

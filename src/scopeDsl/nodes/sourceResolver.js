@@ -130,6 +130,16 @@ export default function createSourceResolver({
 
         case 'entities': {
           const componentId = node.param;
+          
+          // Debug logging for sit_down action issue
+          if (componentId === 'positioning:allows_sitting') {
+            console.log('[DEBUG] SourceResolver: Resolving entities with positioning:allows_sitting', {
+              componentId,
+              hasEntitiesGateway: !!entitiesGateway,
+              hasGetEntitiesWithComponent: !!entitiesGateway?.getEntitiesWithComponent,
+            });
+          }
+          
           if (!componentId) {
             // No component specified, return empty set
             result = new Set();
@@ -149,6 +159,16 @@ export default function createSourceResolver({
             // Positive component - entities WITH the component
             entities = entitiesGateway.getEntitiesWithComponent(componentId) || [];
             totalEntityCount = entitiesGateway.getEntities().length;
+            
+            // Debug logging for sit_down action issue
+            if (componentId === 'positioning:allows_sitting') {
+              console.log('[DEBUG] SourceResolver: Found entities with component', {
+                componentId,
+                entitiesFound: entities.length,
+                entityIds: entities.map(e => e.id),
+                totalEntityCount,
+              });
+            }
 
             result = new Set(
               entities

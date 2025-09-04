@@ -5,7 +5,7 @@
   "description": "Sit down on available furniture",
   "targets": "positioning:available_furniture",
   "required_components": {
-    "actor": ["core:actor"]
+    "actor": []
   },
   "forbidden_components": {
     "actor": ["positioning:sitting_on", "positioning:kneeling_before"]
