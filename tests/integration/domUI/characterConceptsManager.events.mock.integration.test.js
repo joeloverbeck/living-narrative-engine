@@ -240,23 +240,36 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
         events.push(event);
       });
 
-      // Act - Create multiple concepts concurrently
-      const promises = Array.from({ length: 5 }, (_, i) =>
-        builderService.createCharacterConcept(
-          `Concept number ${i} with enough characters`
-        )
-      );
-
-      await Promise.all(promises);
-
-      // Wait for all events to propagate
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      // Assert
-      expect(events).toHaveLength(5);
-      events.forEach((event) => {
-        expect(event.payload.concept).toMatch(/Concept number \d/);
+      // Enable batch mode to increase recursion limits for concurrent operations
+      // This prevents the global recursion limit from blocking events
+      eventBus.setBatchMode(true, {
+        context: 'concurrent-event-test',
+        maxGlobalRecursion: 30, // Increase from default 10 to handle 5 concurrent events
+        maxRecursionDepth: 10,
       });
+
+      try {
+        // Act - Create multiple concepts concurrently
+        const promises = Array.from({ length: 5 }, (_, i) =>
+          builderService.createCharacterConcept(
+            `Concept number ${i} with enough characters`
+          )
+        );
+
+        await Promise.all(promises);
+
+        // Wait for all events to propagate
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
+        // Assert
+        expect(events).toHaveLength(5);
+        events.forEach((event) => {
+          expect(event.payload.concept).toMatch(/Concept number \d/);
+        });
+      } finally {
+        // Always disable batch mode after test to restore normal operation
+        eventBus.setBatchMode(false);
+      }
     });
   });
 

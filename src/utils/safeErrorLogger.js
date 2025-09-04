@@ -7,7 +7,7 @@ import { ensureValidLogger } from './loggerUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../events/eventBus.js').default} EventBus
+ * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
 
 /**
@@ -17,11 +17,20 @@ import { ensureValidLogger } from './loggerUtils.js';
  * 
  * @param {object} deps - Dependencies
  * @param {ILogger} deps.logger - Logger instance
- * @param {EventBus} deps.eventBus - EventBus instance for batch mode management
+ * @param {ISafeEventDispatcher} deps.safeEventDispatcher - SafeEventDispatcher instance for batch mode management
+ * @param {object} [deps.eventBus] - EventBus instance (deprecated - use safeEventDispatcher)
  * @returns {object} Safe error logging utilities
  */
-export function createSafeErrorLogger({ logger, eventBus }) {
+export function createSafeErrorLogger({ logger, safeEventDispatcher, eventBus }) {
   const safeLogger = ensureValidLogger(logger, 'SafeErrorLogger');
+  
+  // Support both parameter names for backward compatibility
+  // Prefer safeEventDispatcher if provided, otherwise use eventBus
+  const dispatcher = safeEventDispatcher || eventBus;
+  
+  if (!dispatcher) {
+    throw new Error('SafeErrorLogger requires either safeEventDispatcher or eventBus parameter');
+  }
   
   /**
    * Tracks if we're currently in a game loading phase.
@@ -57,7 +66,7 @@ export function createSafeErrorLogger({ logger, eventBus }) {
       context: loadingOptions.context
     };
     
-    eventBus.setBatchMode(true, batchModeConfig);
+    dispatcher.setBatchMode(true, batchModeConfig);
     
     safeLogger.debug(
       `SafeErrorLogger: Enabled batch mode for ${loadingOptions.context} - ` +
@@ -99,8 +108,8 @@ export function createSafeErrorLogger({ logger, eventBus }) {
       loadingTimeoutId = null;
     }
     
-    // Disable batch mode on EventBus
-    eventBus.setBatchMode(false);
+    // Disable batch mode on SafeEventDispatcher
+    dispatcher.setBatchMode(false);
     
     safeLogger.debug(
       `SafeErrorLogger: Game loading mode disabled after ${loadingDuration}ms`

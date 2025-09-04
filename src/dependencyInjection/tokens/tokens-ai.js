@@ -1,4 +1,4 @@
-import { freeze } from '../../utils';
+import { freeze } from '../../utils/cloneUtils.js';
 
 /**
  * @file AI-specific DI tokens.

@@ -30,7 +30,7 @@ describe('handle_place_hand_on_waist rule integration', () => {
   it('condition evaluates correctly', () => {
     // Test that the condition works correctly
     const condition = eventIsActionPlaceHandOnWaist.logic;
-    const jsonLogicService = new JsonLogicEvaluationService();
+    const jsonLogicService = new JsonLogicEvaluationService({ logger: testFixture.logger });
 
     // Check what the condition expects
     expect(condition).toEqual({
@@ -62,29 +62,20 @@ describe('handle_place_hand_on_waist rule integration', () => {
   it('performs place hand on waist action successfully', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
     
-    const result = await testFixture.executeAction({
-      actorId: scenario.actor.id,
-      actionId: 'intimacy:place_hand_on_waist',
-      targetId: scenario.target.id
-    });
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-    testFixture.assertPerceptibleEvent(result, [
-      'core:perceptible_event',
-      'core:display_successful_action_result',
-      'core:turn_ended'
-    ]);
+    const eventTypes = testFixture.events.map(e => e.eventType);
+    expect(eventTypes).toContain('core:perceptible_event');
+    expect(eventTypes).toContain('core:display_successful_action_result');
+    expect(eventTypes).toContain('core:turn_ended');
   });
 
   it('perceptible event contains correct message', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
     
-    const result = await testFixture.executeAction({
-      actorId: scenario.actor.id,
-      actionId: 'intimacy:place_hand_on_waist',
-      targetId: scenario.target.id
-    });
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-    const perceptibleEvent = result.events.find(
+    const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
@@ -96,13 +87,14 @@ describe('handle_place_hand_on_waist rule integration', () => {
   it('rule does not fire for different action', async () => {
     const scenario = testFixture.createCloseActors(['Alice', 'Beth']);
     
-    const result = await testFixture.executeAction({
-      actorId: scenario.actor.id,
-      actionId: 'intimacy:different_action',
-      targetId: scenario.target.id
-    });
-
-    const types = result.events.map((e) => e.eventType);
+    // Use testRuleDoesNotTrigger for different action
+    await testFixture.testRuleDoesNotTrigger(
+      scenario.actor.id, 
+      'intimacy:different_action',
+      scenario.target.id
+    );
+    
+    const types = testFixture.events.map((e) => e.eventType);
     expect(types).not.toContain('core:perceptible_event');
     expect(types).not.toContain('core:display_successful_action_result');
     expect(types).not.toContain('core:turn_ended');
@@ -114,34 +106,26 @@ describe('handle_place_hand_on_waist rule integration', () => {
     // Add an observer in the same location
     testFixture.entityManager.createEntity('observer1');
     testFixture.entityManager.addComponent('observer1', 'core:name', { text: 'Charlie' });
-    testFixture.entityManager.addComponent('observer1', 'core:position', { locationId: scenario.actor.locationId });
+    testFixture.entityManager.addComponent('observer1', 'core:position', { locationId: 'room1' });
     
-    const result = await testFixture.executeAction({
-      actorId: scenario.actor.id,
-      actionId: 'intimacy:place_hand_on_waist',
-      targetId: scenario.target.id
-    });
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-    const perceptibleEvent = result.events.find(
+    const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.locationId).toBe(scenario.actor.locationId);
+    expect(perceptibleEvent.payload.locationId).toBe('room1');
     expect(perceptibleEvent.payload.perceptionType).toBe(
       'action_target_general'
     );
   });
 
   it('works with different actor and target names', async () => {
-    const scenario = testFixture.createCloseActors('John', 'Mary');
+    const scenario = testFixture.createCloseActors(['John', 'Mary']);
     
-    const result = await testFixture.executeAction({
-      actorId: scenario.actor.id,
-      actionId: 'intimacy:place_hand_on_waist',
-      targetId: scenario.target.id
-    });
+    await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-    const perceptibleEvent = result.events.find(
+    const perceptibleEvent = testFixture.events.find(
       (e) => e.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();

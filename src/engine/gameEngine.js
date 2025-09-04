@@ -28,7 +28,6 @@ import createSafeErrorLogger from '../utils/safeErrorLogger.js';
 /** @typedef {import('../interfaces/IInitializationService.js').IInitializationService} IInitializationService */
 /** @typedef {import('../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
-/** @typedef {import('../events/eventBus.js').default} EventBus */
 
 class GameEngine {
   /** @type {ILogger} */
@@ -45,8 +44,6 @@ class GameEngine {
   #safeEventDispatcher;
   /** @type {IInitializationService} */
   #initializationService;
-  /** @type {EventBus} */
-  #eventBus;
 
   /** @type {EngineState} */
   #engineState;
@@ -89,9 +86,6 @@ class GameEngine {
       );
       this.#initializationService = /** @type {IInitializationService} */ (
         container.resolve(tokens.IInitializationService)
-      );
-      this.#eventBus = /** @type {EventBus} */ (
-        container.resolve(tokens.EventBus)
       );
     } catch (e) {
       this.#logger.error(
@@ -320,10 +314,10 @@ class GameEngine {
       `GameEngine: startNewGame called for world "${worldName}".`
     );
     
-    // Create safe error logger with EventBus batch mode management
+    // Create safe error logger with SafeEventDispatcher batch mode management
     const safeErrorLogger = createSafeErrorLogger({
       logger: this.#logger,
-      eventBus: this.#eventBus
+      safeEventDispatcher: this.#safeEventDispatcher
     });
     
     // Use game loading mode to handle legitimate bulk events during initialization

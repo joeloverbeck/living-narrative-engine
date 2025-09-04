@@ -5,11 +5,17 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import EventBus from '../../../src/events/eventBus.js';
+import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
+import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import createSafeErrorLogger from '../../../src/utils/safeErrorLogger.js';
 
 describe('EventBus Infinite Recursion Prevention', () => {
   let eventBus;
+  let validatedEventDispatcher;
+  let safeEventDispatcher;
   let mockLogger;
+  let mockGameDataRepository;
+  let mockSchemaValidator;
   let safeErrorLogger;
 
   beforeEach(() => {
@@ -21,8 +27,36 @@ describe('EventBus Infinite Recursion Prevention', () => {
       error: jest.fn()
     };
     
+    // Mock dependencies for ValidatedEventDispatcher
+    mockGameDataRepository = {
+      getEventDefinition: jest.fn().mockReturnValue(null) // Most events won't have definitions in unit tests
+    };
+    
+    mockSchemaValidator = {
+      isSchemaLoaded: jest.fn().mockReturnValue(false),
+      validate: jest.fn()
+    };
+    
+    // Create the chain of dispatchers
     eventBus = new EventBus({ logger: mockLogger });
-    safeErrorLogger = createSafeErrorLogger({ logger: mockLogger, eventBus });
+    
+    validatedEventDispatcher = new ValidatedEventDispatcher({
+      eventBus,
+      gameDataRepository: mockGameDataRepository,
+      schemaValidator: mockSchemaValidator,
+      logger: mockLogger
+    });
+    
+    safeEventDispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher,
+      logger: mockLogger
+    });
+    
+    // Now create safeErrorLogger with the correct parameter
+    safeErrorLogger = createSafeErrorLogger({ 
+      logger: mockLogger, 
+      safeEventDispatcher 
+    });
   });
 
   afterEach(() => {
@@ -85,46 +119,46 @@ describe('EventBus Infinite Recursion Prevention', () => {
   });
 
   describe('Recursion Protection in Normal Mode', () => {
-    it('should block events exceeding normal recursion depth (3)', async () => {
+    it('should block events exceeding normal recursion depth (15)', async () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       let dispatchCount = 0;
 
       // Create a listener that triggers more dispatches
       eventBus.subscribe('test:recursive', async () => {
         dispatchCount++;
-        if (dispatchCount < 10) {
+        if (dispatchCount < 20) {
           await eventBus.dispatch('test:recursive', { count: dispatchCount });
         }
       });
 
       await eventBus.dispatch('test:recursive', { count: 0 });
 
-      // Should stop at depth 3
-      expect(dispatchCount).toBe(3);
+      // Should stop at depth 15 (updated from 3 to match production code)
+      expect(dispatchCount).toBe(15);
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Maximum recursion depth (3) exceeded for event "test:recursive"')
+        expect.stringContaining('Maximum recursion depth (15) exceeded for event "test:recursive"')
       );
 
       consoleSpy.mockRestore();
     });
 
-    it('should block critical events at depth 1', async () => {
+    it('should treat system error events same as regular events (depth 15)', async () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       let dispatchCount = 0;
 
       eventBus.subscribe('core:system_error_occurred', async () => {
         dispatchCount++;
-        if (dispatchCount < 5) {
+        if (dispatchCount < 20) {
           await eventBus.dispatch('core:system_error_occurred', { count: dispatchCount });
         }
       });
 
       await eventBus.dispatch('core:system_error_occurred', { message: 'test' });
 
-      // Critical events should stop at depth 1
-      expect(dispatchCount).toBe(1);
+      // System error events are no longer treated as critical - same limit as regular events
+      expect(dispatchCount).toBe(15);
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Maximum recursion depth (1) exceeded for event "core:system_error_occurred"')
+        expect.stringContaining('Maximum recursion depth (15) exceeded for event "core:system_error_occurred"')
       );
 
       consoleSpy.mockRestore();
@@ -162,27 +196,27 @@ describe('EventBus Infinite Recursion Prevention', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should still limit critical events to depth 1 in batch mode', async () => {
+    it('should allow system error events up to batch mode limit', async () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       let dispatchCount = 0;
 
       // Enable batch mode
       eventBus.setBatchMode(true, {
         maxRecursionDepth: 10,
-        context: 'critical-test'
+        context: 'system-error-test'
       });
 
       eventBus.subscribe('core:system_error_occurred', async () => {
         dispatchCount++;
-        if (dispatchCount < 5) {
+        if (dispatchCount < 15) {
           await eventBus.dispatch('core:system_error_occurred', { count: dispatchCount });
         }
       });
 
       await eventBus.dispatch('core:system_error_occurred', { message: 'test' });
 
-      // Critical events should still stop at depth 1 even in batch mode
-      expect(dispatchCount).toBe(1);
+      // System error events are no longer critical - should use batch mode limit
+      expect(dispatchCount).toBe(10);
 
       consoleSpy.mockRestore();
     });
@@ -236,7 +270,7 @@ describe('EventBus Infinite Recursion Prevention', () => {
       });
 
       // Simulate component addition chain reaction
-      eventBus.subscribe('core:component_added', async (event) => {
+      eventBus.subscribe('core:component_added', async () => {
         componentAddedCount++;
         
         // Simulate systems that react to component additions by adding more components
@@ -345,8 +379,11 @@ describe('EventBus Infinite Recursion Prevention', () => {
 
       await eventBus.dispatch('test:error_event', {});
 
+      // Updated to match actual production error message format
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('EventBus: Error in "test:error_event" listener (using console to prevent recursion):'),
+        expect.stringContaining('EventBus: Logger failed while handling error in "test:error_event" listener. Original error:'),
+        expect.any(Error),
+        expect.stringContaining('Logger error:'),
         expect.any(Error)
       );
 

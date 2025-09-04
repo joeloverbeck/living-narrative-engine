@@ -373,17 +373,17 @@ describe('Thematic Direction Update Events - Integration Test', () => {
 
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // EventBus recursion protection limits to 3 events maximum
-      // This is expected behavior and demonstrates the system working as designed
-      expect(listener).toHaveBeenCalledTimes(3);
-      expect(capturedEvents).toHaveLength(3);
+      // EventBus recursion protection limits to 5 events (all fields should be processed)
+      // With increased recursion limits, all 5 field updates should succeed
+      expect(listener).toHaveBeenCalledTimes(5);
+      expect(capturedEvents).toHaveLength(5);
 
-      // Verify that we get exactly 3 events (any 3 of the 5 fields)
+      // Verify that we get all 5 events (one for each field)
       const fields = capturedEvents.map((event) => event.field);
-      expect(fields).toHaveLength(3);
+      expect(fields).toHaveLength(5);
       
-      // Each field should be unique
-      expect(new Set(fields).size).toBe(3);
+      // Each field should be unique - all 5 fields should have been updated
+      expect(new Set(fields).size).toBe(5);
       
       // All events should be from the correct direction
       capturedEvents.forEach((event) => {

@@ -7,6 +7,7 @@ import { ModTestFixture } from '../../../../common/mods/ModTestFixture.js';
 import brushHandRule from '../../../../../data/mods/intimacy/rules/brush_hand.rule.json';
 import eventIsActionBrushHand from '../../../../../data/mods/intimacy/conditions/event-is-action-brush-hand.condition.json';
 import JsonLogicEvaluationService from '../../../../../src/logic/jsonLogicEvaluationService.js';
+import { createMockLogger } from '../../../../common/mockFactories/loggerMocks.js';
 
 describe('handle_brush_hand rule integration', () => {
   let testFixture;
@@ -27,7 +28,8 @@ describe('handle_brush_hand rule integration', () => {
   it('condition evaluates correctly', () => {
     // Test that the condition works correctly
     const condition = eventIsActionBrushHand.logic;
-    const jsonLogicService = new JsonLogicEvaluationService();
+    const mockLogger = createMockLogger();
+    const jsonLogicService = new JsonLogicEvaluationService({ logger: mockLogger });
 
     // Check what the condition expects
     expect(condition).toEqual({
@@ -81,7 +83,10 @@ describe('handle_brush_hand rule integration', () => {
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
     testFixture.assertPerceptibleEvent({
-      descriptionText: "Alice brushes Beth's hand with their own."
+      descriptionText: "Alice brushes Beth's hand with their own.",
+      locationId: 'room1',
+      actorId: scenario.actor.id,
+      targetId: scenario.target.id
     });
   });
 

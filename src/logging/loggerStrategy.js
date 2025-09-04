@@ -252,6 +252,18 @@ class LoggerStrategy {
         case LoggerMode.TEST:
           // Use mock logger in test mode if provided
           if (dependencies.mockLogger) {
+            // Validate mockLogger has required ILogger methods
+            const requiredMethods = ['info', 'warn', 'error', 'debug'];
+            const missingMethods = requiredMethods.filter(
+              method => typeof dependencies.mockLogger[method] !== 'function'
+            );
+            
+            if (missingMethods.length > 0) {
+              throw new Error(
+                `Mock logger missing required methods: ${missingMethods.join(', ')}`
+              );
+            }
+            
             logger = dependencies.mockLogger;
           } else {
             // Use NoOpLogger for tests by default

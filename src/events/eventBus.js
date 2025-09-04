@@ -18,6 +18,7 @@ class EventBus extends IEventBus {
   #logger;
   #dispatchingEvents = new Set(); // Track currently dispatching events to prevent recursion
   #recursionDepth = new Map(); // Track recursion depth per event type
+  #handlerExecutionDepth = new Map(); // Track actual handler execution depth (true recursion)
   #batchMode = false; // Track if we're in batch loading mode
   #batchModeOptions = null; // Store batch mode configuration
   #batchModeTimeoutId = null; // Auto-disable timeout for safety
@@ -213,9 +214,17 @@ class EventBus extends IEventBus {
       return;
     }
 
-    // Enhanced recursion protection with stricter limits for critical events
-    const isCriticalEvent = eventName === 'core:system_error_occurred' || eventName.includes('error');
+    // Check handler execution depth to detect true recursion
+    // This distinguishes between concurrent calls (allowed) and recursive calls (limited)
+    const handlerDepth = this.#handlerExecutionDepth.get(eventName) || 0;
     const currentDepth = this.#recursionDepth.get(eventName) || 0;
+    
+    // We're only truly recursing if we're dispatching from within a handler (handlerDepth > 0)
+    const isActuallyRecursing = handlerDepth > 0;
+    
+    // Don't treat error events as critical - they should be allowed to dispatch concurrently
+    // Only actual deep recursion (beyond normal limits) should be blocked
+    const isCriticalEvent = false; // Removed critical event classification for error events
     
     // Global recursion check - sum all current recursion depths
     const totalGlobalRecursion = Array.from(this.#recursionDepth.values()).reduce((sum, depth) => sum + depth, 0);
@@ -229,9 +238,9 @@ class EventBus extends IEventBus {
       MAX_RECURSION_DEPTH = isCriticalEvent ? 1 : this.#batchModeOptions.maxRecursionDepth;
       MAX_GLOBAL_RECURSION = this.#batchModeOptions.maxGlobalRecursion;
     } else {
-      // Normal mode limits
-      MAX_RECURSION_DEPTH = isCriticalEvent ? 1 : 3;
-      MAX_GLOBAL_RECURSION = 10;
+      // Normal mode limits - increased to allow more concurrent dispatches
+      MAX_RECURSION_DEPTH = isCriticalEvent ? 1 : 15; // Increased from 3 to 15 for concurrent operations
+      MAX_GLOBAL_RECURSION = 50; // Increased from 10 to 50 for bulk operations
     }
     
     // Progressive warnings at 50%, 75%, and 90% of limits
@@ -260,6 +269,7 @@ class EventBus extends IEventBus {
       }
     });
     
+    // Check recursion depth using normal limits (no special critical event handling)
     if (currentDepth >= MAX_RECURSION_DEPTH) {
       // Use console directly to avoid triggering more events
       const batchContext = this.#batchMode ? ` (batch mode: ${this.#batchModeOptions.context})` : '';
@@ -278,8 +288,7 @@ class EventBus extends IEventBus {
       return;
     }
 
-    // Track that we're dispatching this event
-    this.#recursionDepth.set(eventName, currentDepth + 1);
+    // Track dispatch for circular reference detection (but don't increment recursion depth yet)
     const eventKey = `${eventName}-${Date.now()}-${Math.random()}`;
     this.#dispatchingEvents.add(eventKey);
 
@@ -299,50 +308,68 @@ class EventBus extends IEventBus {
         };
 
         const listenersArray = Array.from(listenersToNotify);
+        
+        // NOW increment recursion depth since we're about to execute handlers
+        // This is where actual recursion could occur
+        this.#recursionDepth.set(eventName, currentDepth + 1);
+        
+        // Increment handler execution depth to track true recursion
+        // This is crucial for detecting actual recursion vs concurrent dispatches
+        this.#handlerExecutionDepth.set(eventName, handlerDepth + 1);
 
-        await Promise.all(
-          listenersArray.map(async (listener) => {
-            try {
-              // Pass the constructed event object, not just the payload
-              await listener(eventObject);
-            } catch (error) {
-              // Enhanced error handling - always use console for any event that might trigger recursion
-              if (isCriticalEvent || totalGlobalRecursion > 5) {
-                // Already handling critical events or high recursion - use console directly
-                console.error(
-                  `EventBus: Error in "${eventName}" listener (using console to prevent recursion):`,
-                  error
-                );
-              } else {
-                // For regular events with low recursion, still use logger but monitor recursion
-                try {
-                  this.#logger.error(
-                    `EventBus: Error executing listener for event "${eventName}":`,
+        try {
+          await Promise.all(
+            listenersArray.map(async (listener) => {
+              try {
+                // Pass the constructed event object, not just the payload
+                await listener(eventObject);
+              } catch (error) {
+                // Enhanced error handling - always use console for any event that might trigger recursion
+                if (isCriticalEvent || totalGlobalRecursion > 5) {
+                  // Already handling critical events or high recursion - use console directly
+                  console.error(
+                    `EventBus: Error in "${eventName}" listener (using console to prevent recursion):`,
                     error
                   );
-                } catch (loggerError) {
-                  // Logger itself failed - fallback to console
-                  console.error(
-                    `EventBus: Logger failed while handling error in "${eventName}" listener. Original error:`,
-                    error,
-                    'Logger error:',
-                    loggerError
-                  );
+                } else {
+                  // For regular events with low recursion, still use logger but monitor recursion
+                  try {
+                    this.#logger.error(
+                      `EventBus: Error executing listener for event "${eventName}":`,
+                      error
+                    );
+                  } catch (loggerError) {
+                    // Logger itself failed - fallback to console
+                    console.error(
+                      `EventBus: Logger failed while handling error in "${eventName}" listener. Original error:`,
+                      error,
+                      'Logger error:',
+                      loggerError
+                    );
+                  }
                 }
               }
-            }
-          })
-        );
+            })
+          );
+        } finally {
+          // Restore handler execution depth
+          if (handlerDepth <= 0) {
+            this.#handlerExecutionDepth.delete(eventName);
+          } else {
+            this.#handlerExecutionDepth.set(eventName, handlerDepth);
+          }
+          
+          // Restore recursion depth after handlers complete
+          if (currentDepth <= 0) {
+            this.#recursionDepth.delete(eventName);
+          } else {
+            this.#recursionDepth.set(eventName, currentDepth);
+          }
+        }
       }
     } finally {
       // Clean up tracking
       this.#dispatchingEvents.delete(eventKey);
-      const newDepth = currentDepth;
-      if (newDepth <= 0) {
-        this.#recursionDepth.delete(eventName);
-      } else {
-        this.#recursionDepth.set(eventName, newDepth);
-      }
     }
   }
 

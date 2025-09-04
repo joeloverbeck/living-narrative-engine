@@ -7,7 +7,12 @@ import {
 } from './eventBus.js';
 
 export const createMockSafeEventDispatcher = () =>
-  createSimpleMock(['dispatch']);
+  createSimpleMock(['dispatch', 'subscribe', 'unsubscribe', 'setBatchMode'], {
+    dispatch: jest.fn().mockResolvedValue(true),
+    subscribe: jest.fn().mockReturnValue(() => {}),
+    unsubscribe: jest.fn(),
+    setBatchMode: jest.fn()
+  });
 
 export const createMockValidatedEventDispatcher = () =>
   createSimpleMock(['dispatch'], {

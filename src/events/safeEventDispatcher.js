@@ -271,6 +271,30 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
       );
     }
   }
+
+  /**
+   * Safely sets batch mode on the underlying ValidatedEventDispatcher.
+   * This is primarily used to control event processing behavior during bulk operations.
+   * Logs errors internally if batch mode setting fails. Does not throw.
+   *
+   * @param {boolean} enabled - Whether to enable or disable batch mode
+   * @param {object} [options] - Batch mode configuration options
+   * @param {number} [options.maxRecursionDepth] - Maximum recursion depth in batch mode
+   * @param {number} [options.maxGlobalRecursion] - Maximum global recursion in batch mode  
+   * @param {number} [options.timeoutMs] - Auto-disable timeout in milliseconds
+   * @param {string} [options.context] - Context description for logging
+   * @returns {void}
+   */
+  setBatchMode(enabled, options = {}) {
+    this.#executeSafely(
+      `setting batch mode to ${enabled} with context: ${options.context || 'unknown'}`,
+      () => this.#validatedDispatcher.setBatchMode(enabled, options)
+    );
+
+    this.#logger.debug(
+      `SafeEventDispatcher: Delegated setBatchMode(${enabled}) to ValidatedEventDispatcher with context: ${options.context || 'unknown'}`
+    );
+  }
 }
 
 // --- FILE END ---
