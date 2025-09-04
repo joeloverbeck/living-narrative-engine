@@ -179,6 +179,27 @@
   margin: 0 0.125rem;
 }
 
+/* UI State Container Display Rules */
+.ui-state-container {
+  display: none;
+}
+
+/* States that need centering should use flex */
+.ui-state-container.loading-state,
+.ui-state-container.error-state,
+.ui-state-container.empty-state {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+/* Results state should use block for proper content flow */
+.ui-state-container.results-state {
+  display: block !important;
+}
+
 /* Speech Patterns Display */
 .speech-patterns-display-panel {
   display: flex;

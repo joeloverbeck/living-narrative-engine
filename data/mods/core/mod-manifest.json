@@ -60,11 +60,7 @@
       "exit-is-unblocked.condition.json"
     ],
     "entities": {
-      "definitions": [
-        "core_location.entity.json",
-        "core_actor.entity.json", 
-        "core_item.entity.json"
-      ],
+      "definitions": [],
       "instances": []
     },
     "events": [
@@ -105,6 +101,7 @@
       "core_motivations_retrieved.event.json",
       "core_motivations_stored.event.json",
       "core_motivations_ui_initialized.event.json",
+      "critical_notification_shown.event.json",
       "direction_deleted.event.json",
       "direction_selection_completed.event.json",
       "direction_selection_failed.event.json",
@@ -120,6 +117,7 @@
       "display_warning.event.json",
       "enable_input.event.json",
       "entity_created.event.json",
+      "entity_instantiated.event.json",
       "entity_moved.event.json",
       "entity_removed.event.json",
       "entity_spoke.event.json",
@@ -131,6 +129,8 @@
       "perceptible_event.event.json",
       "player_turn_prompt.event.json",
       "player_turn_submitted.event.json",
+      "portrait_modal_closed.event.json",
+      "portrait_modal_opened.event.json",
       "set_title.event.json",
       "speech_input_gained_focus.event.json",
       "speech_input_lost_focus.event.json",
@@ -155,6 +155,7 @@
       "turn_processing_ended.event.json",
       "turn_processing_started.event.json",
       "turn_started.event.json",
+      "ui_initializing.event.json",
       "ui_modal_closed.event.json",
       "ui_modal_opened.event.json",
       "ui_operation_in_progress.event.json",

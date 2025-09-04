@@ -278,6 +278,21 @@ class ScopeEngine extends IScopeEngine {
    */
   resolve(ast, actorEntity, runtimeCtx, trace = null) {
     const source = 'ScopeEngine';
+    
+    // Debug logging for sit_down action issue
+    if (runtimeCtx?.debugScope === 'positioning:available_furniture' || 
+        (ast && JSON.stringify(ast).includes('positioning:allows_sitting'))) {
+      const logger = runtimeCtx?.logger || console;
+      logger.info('[DEBUG] ScopeEngine.resolve called', {
+        actorId: actorEntity?.id,
+        hasAst: !!ast,
+        astType: ast?.type,
+        hasRuntimeCtx: !!runtimeCtx,
+        hasEntityManager: !!runtimeCtx?.entityManager,
+        hasTrace: !!trace,
+      });
+    }
+    
     trace?.addLog('step', 'Starting scope resolution.', source, { ast });
 
     // Create isolated cycle detector and depth guard for this resolution

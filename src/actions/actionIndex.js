@@ -122,6 +122,8 @@ export class ActionIndex {
       }
     }
 
+
+    
     this.#logger.debug(
       `Action index built. ${this.#byActorComponent.size} component-to-action maps created.`
     );
@@ -194,38 +196,12 @@ export class ActionIndex {
       );
     }
 
-    // Filter candidates to ensure actor has ALL required components
-    const candidates = Array.from(candidateSet).filter((actionDef) => {
-      const requiredComponents = actionDef.required_components?.actor;
-
-      // If no required components, include the action
-      if (!requiredComponents || requiredComponents.length === 0) {
-        return true;
-      }
-
-      // Check if actor has ALL required components
-      const hasAllRequired = requiredComponents.every((componentId) =>
-        actorComponentTypes.includes(componentId)
-      );
-
-      if (!hasAllRequired) {
-        trace?.info(
-          `Filtered out action '${actionDef.id}' - actor missing required components`,
-          source,
-          {
-            required: requiredComponents,
-            actorHas: actorComponentTypes.filter((c) =>
-              requiredComponents.includes(c)
-            ),
-            missing: requiredComponents.filter(
-              (c) => !actorComponentTypes.includes(c)
-            ),
-          }
-        );
-      }
-
-      return hasAllRequired;
-    });
+    // Convert candidateSet to array directly - no additional filtering needed
+    // The candidateSet already contains only valid actions:
+    // - Actions with no requirements were added from noActorRequirement
+    // - Actions requiring specific components were only added if actor has those components
+    // - Actions with forbidden components were already removed
+    const candidates = Array.from(candidateSet);
 
     trace?.success(
       `Final candidate list contains ${candidates.length} unique actions after component validation.`,
@@ -237,18 +213,7 @@ export class ActionIndex {
       `ActionIndex: Retrieved ${candidates.length} candidate actions for actor ${actorEntity.id}.`
     );
 
-    // Enhanced logging for debugging sit_down action
-    const hasSitDown = candidates.some((c) => c.id === 'positioning:sit_down');
-    if (!hasSitDown && actorEntity.id === 'p_erotica:ane_arrieta_instance') {
-      console.log('[DEBUG] sit_down action not available for Ane Arrieta');
-      console.log('  - Actor components:', actorComponentTypes);
-      console.log('  - Forbidden candidates:', forbiddenCandidates);
-      console.log('  - Total candidates found:', candidates.length);
-      console.log(
-        '  - Candidate action IDs:',
-        candidates.map((c) => c.id)
-      );
-    }
+
     return candidates;
   }
 }

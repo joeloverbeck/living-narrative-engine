@@ -54,6 +54,11 @@ export default class SimpleEntityManager {
       return undefined;
     }
 
+    // If we have the original Entity instance, return it directly
+    if (entity._originalEntity) {
+      return entity._originalEntity;
+    }
+
     // Check cache first for consistent object references
     if (this.entityInstanceCache.has(id)) {
       return this.entityInstanceCache.get(id);
@@ -249,29 +254,41 @@ export default class SimpleEntityManager {
 
     for (const ent of this.entities.values()) {
       if (Object.prototype.hasOwnProperty.call(ent.components, componentType)) {
-        result.push({
-          id: ent.id,
-          get componentTypeIds() {
-            // Always get fresh data from the entity manager
-            const currentEnt = entityManager.entities.get(ent.id);
-            return currentEnt ? Object.keys(currentEnt.components) : [];
-          },
-          getComponentData: (type) => {
-            // Always get fresh data from the entity manager
-            const currentEnt = entityManager.entities.get(ent.id);
-            return currentEnt ? (currentEnt.components[type] ?? null) : null;
-          },
-          hasComponent: (type) => {
-            // Always get fresh data from the entity manager
-            const currentEnt = entityManager.entities.get(ent.id);
-            return currentEnt
-              ? Object.prototype.hasOwnProperty.call(
-                  currentEnt.components,
-                  type
-                )
-              : false;
-          },
-        });
+        // Check if we have the original Entity instance stored
+        if (ent._originalEntity) {
+          // Return the original Entity instance which has all the proper methods
+          result.push(ent._originalEntity);
+        } else {
+          // Fallback to creating a proxy object as before
+          result.push({
+            id: ent.id,
+            get componentTypeIds() {
+              // Always get fresh data from the entity manager
+              const currentEnt = entityManager.entities.get(ent.id);
+              return currentEnt ? Object.keys(currentEnt.components) : [];
+            },
+            getComponentData: (type) => {
+              // Always get fresh data from the entity manager
+              const currentEnt = entityManager.entities.get(ent.id);
+              return currentEnt ? (currentEnt.components[type] ?? null) : null;
+            },
+            hasComponent: (type) => {
+              // Always get fresh data from the entity manager
+              const currentEnt = entityManager.entities.get(ent.id);
+              return currentEnt
+                ? Object.prototype.hasOwnProperty.call(
+                    currentEnt.components,
+                    type
+                  )
+                : false;
+            },
+            getAllComponents: () => {
+              // Always get fresh data from the entity manager
+              const currentEnt = entityManager.entities.get(ent.id);
+              return currentEnt ? currentEnt.components : {};
+            },
+          });
+        }
       }
     }
     return result;
@@ -328,9 +345,29 @@ export default class SimpleEntityManager {
       throw new Error('SimpleEntityManager.addEntity: entityObject must have an id property');
     }
 
-    const cloned = deepClone(entityObject);
-    this.entities.set(cloned.id, cloned);
+    // Check if this is an Entity instance with methods
+    const isEntityInstance = entityObject.hasComponent && 
+                              typeof entityObject.hasComponent === 'function' &&
+                              entityObject.getAllComponents &&
+                              typeof entityObject.getAllComponents === 'function';
+
+    let entityToStore;
+    if (isEntityInstance) {
+      // For Entity instances, preserve the methods by storing the actual object
+      // and extracting the component data for internal storage
+      entityToStore = {
+        id: entityObject.id,
+        components: entityObject.getAllComponents(),
+        // Store reference to original entity for method preservation
+        _originalEntity: entityObject
+      };
+    } else {
+      // For plain objects, clone as before
+      entityToStore = deepClone(entityObject);
+    }
+
+    this.entities.set(entityToStore.id, entityToStore);
     // Clear cache for this entity since it's new/updated
-    this.entityInstanceCache.delete(cloned.id);
+    this.entityInstanceCache.delete(entityToStore.id);
   }
 }

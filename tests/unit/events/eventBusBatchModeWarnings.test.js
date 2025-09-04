@@ -256,10 +256,10 @@ describe('EventBus Batch Mode and Warnings', () => {
       // Act
       await eventBus.dispatch('test:normal');
 
-      // Assert - Should be limited to 15 in normal mode (increased from 3)
-      expect(callCount).toBe(15);
+      // Assert - Should be limited to 10 in normal mode for non-workflow events
+      expect(callCount).toBe(10);
       expect(consoleSpy.error).toHaveBeenCalledWith(
-        expect.stringContaining('Maximum recursion depth (15) exceeded')
+        expect.stringContaining('Maximum recursion depth (10) exceeded')
       );
       expect(consoleSpy.error).not.toHaveBeenCalledWith(
         expect.stringContaining('batch mode:')

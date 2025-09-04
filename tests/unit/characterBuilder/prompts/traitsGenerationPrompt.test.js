@@ -284,15 +284,28 @@ describe('TraitsGenerationPrompt - buildTraitsGenerationPrompt', () => {
     );
   });
 
-  it('should throw error for invalid cliches', () => {
-    expect(() => {
-      buildTraitsGenerationPrompt(
-        validCharacterConcept,
-        validDirection,
-        validCoreMotivations,
-        null
-      );
-    }).toThrow('TraitsGenerationPrompt: cliches must be a valid object');
+  it('should handle null cliches gracefully', () => {
+    const prompt = buildTraitsGenerationPrompt(
+      validCharacterConcept,
+      validDirection,
+      validCoreMotivations,
+      null
+    );
+
+    expect(prompt).toContain('<cliches_to_avoid>');
+    expect(prompt).toContain('No specific clichés provided.');
+  });
+
+  it('should handle empty cliches object', () => {
+    const prompt = buildTraitsGenerationPrompt(
+      validCharacterConcept,
+      validDirection,
+      validCoreMotivations,
+      {}
+    );
+
+    expect(prompt).toContain('<cliches_to_avoid>');
+    expect(prompt).toContain('No specific clichés provided.');
   });
 
   it('should throw error for empty direction description', () => {

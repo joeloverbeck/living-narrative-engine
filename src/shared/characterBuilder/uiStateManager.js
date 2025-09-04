@@ -68,7 +68,7 @@ export class UIStateManager {
     // Show the requested state
     const element = this.#getStateElement(state);
     if (element) {
-      element.style.display = 'flex';
+      element.style.display = 'block';
 
       // Update message if provided (including empty string)
       if (

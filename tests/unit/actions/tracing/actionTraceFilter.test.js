@@ -593,6 +593,510 @@ describe('ActionTraceFilter - Basic Functionality', () => {
     });
   });
 
+  describe('shouldTrace() Error Handling', () => {
+    it('should throw InvalidArgumentError for null actionId', () => {
+      const filter = new ActionTraceFilter({
+        tracedActions: ['core:*'], // Avoid optimization path
+        logger: mockLogger,
+      });
+
+      expect(() => {
+        filter.shouldTrace(null);
+      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+    });
+
+    it('should throw InvalidArgumentError for undefined actionId', () => {
+      const filter = new ActionTraceFilter({
+        tracedActions: ['core:*'], // Avoid optimization path
+        logger: mockLogger,
+      });
+
+      expect(() => {
+        filter.shouldTrace(undefined);
+      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+    });
+
+    it('should throw InvalidArgumentError for empty string actionId', () => {
+      const filter = new ActionTraceFilter({
+        tracedActions: ['core:*'], // Avoid optimization path
+        logger: mockLogger,
+      });
+
+      expect(() => {
+        filter.shouldTrace('');
+      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+    });
+
+    it('should throw InvalidArgumentError for non-string actionId', () => {
+      const filter = new ActionTraceFilter({
+        tracedActions: ['core:*'], // Avoid optimization path
+        logger: mockLogger,
+      });
+
+      expect(() => {
+        filter.shouldTrace(123);
+      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+
+      expect(() => {
+        filter.shouldTrace({});
+      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+
+      expect(() => {
+        filter.shouldTrace([]);
+      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+
+      expect(() => {
+        filter.shouldTrace(true);
+      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+    });
+
+    it('should not throw for valid string actionId when enabled=false', () => {
+      const filter = new ActionTraceFilter({
+        enabled: false,
+        logger: mockLogger,
+      });
+
+      // Should return false without throwing when disabled
+      expect(() => {
+        const result = filter.shouldTrace('valid:action');
+        expect(result).toBe(false);
+      }).not.toThrow();
+    });
+
+    it('should validate actionId even when disabled globally', () => {
+      const filter = new ActionTraceFilter({
+        enabled: false,
+        logger: mockLogger,
+      });
+
+      // When disabled, there's an early return before validation
+      // So null/undefined should return false, not throw
+      expect(filter.shouldTrace(null)).toBe(false);
+      expect(filter.shouldTrace(undefined)).toBe(false);
+      expect(filter.shouldTrace('')).toBe(false);
+    });
+
+    it('should validate actionId when optimization path is bypassed', () => {
+      const filter = new ActionTraceFilter({
+        enabled: true,
+        tracedActions: ['core:*'], // Non-universal pattern to avoid optimization
+        logger: mockLogger,
+      });
+
+      // Now validation should happen
+      expect(() => {
+        filter.shouldTrace(null);
+      }).toThrow('actionId must be a non-empty string in ActionTraceFilter.shouldTrace');
+    });
+  });
+
+  describe('updateFromConfig() Validation', () => {
+    let filter;
+
+    beforeEach(() => {
+      filter = new ActionTraceFilter({
+        logger: mockLogger,
+      });
+    });
+
+    it('should handle config with missing tracedActions', () => {
+      const config = {
+        enabled: true,
+        verbosity: 'standard',
+        includeComponentData: false,
+        includePrerequisites: false,
+        includeTargets: false,
+      };
+
+      // Should not throw and should default to ['*']
+      expect(() => {
+        filter.updateFromConfig(config);
+      }).not.toThrow();
+
+      expect(filter.shouldTrace('core:go')).toBe(true); // Default '*' behavior
+    });
+
+    it('should handle config with empty tracedActions array', () => {
+      const config = {
+        enabled: true,
+        tracedActions: [],
+        verbosity: 'standard',
+        includeComponentData: false,
+        includePrerequisites: false,
+        includeTargets: false,
+      };
+
+      // Should default to ['*'] when tracedActions is empty
+      filter.updateFromConfig(config);
+      expect(filter.shouldTrace('core:go')).toBe(true);
+    });
+
+    it('should trim whitespace from action strings in tracedActions', () => {
+      const config = {
+        enabled: true,
+        tracedActions: ['  core:go  ', ' test:action ', '  debug:*  '],
+        verbosity: 'standard',
+        includeComponentData: false,
+        includePrerequisites: false,
+        includeTargets: false,
+      };
+
+      filter.updateFromConfig(config);
+
+      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('test:action')).toBe(true);
+      expect(filter.shouldTrace('debug:trace')).toBe(true);
+    });
+
+    it('should trim whitespace from action strings in excludedActions', () => {
+      const config = {
+        enabled: true,
+        tracedActions: ['*'],
+        excludedActions: ['  debug:*  ', ' test:skip ', '  temp:*  '],
+        verbosity: 'standard',
+        includeComponentData: false,
+        includePrerequisites: false,
+        includeTargets: false,
+      };
+
+      filter.updateFromConfig(config);
+
+      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('debug:trace')).toBe(false);
+      expect(filter.shouldTrace('test:skip')).toBe(false);
+      expect(filter.shouldTrace('temp:file')).toBe(false);
+    });
+
+    it('should skip non-string actions in tracedActions array', () => {
+      const config = {
+        enabled: true,
+        tracedActions: ['core:go', null, undefined, 123, '', '  ', 'test:action'],
+        verbosity: 'standard',
+        includeComponentData: false,
+        includePrerequisites: false,
+        includeTargets: false,
+      };
+
+      filter.updateFromConfig(config);
+
+      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('test:action')).toBe(true);
+      // Should not crash, invalid actions are skipped
+    });
+
+    it('should skip non-string actions in excludedActions array', () => {
+      const config = {
+        enabled: true,
+        tracedActions: ['*'],
+        excludedActions: ['debug:*', null, undefined, 123, '', '  ', 'skip:action'],
+        verbosity: 'standard',
+        includeComponentData: false,
+        includePrerequisites: false,
+        includeTargets: false,
+      };
+
+      filter.updateFromConfig(config);
+
+      expect(filter.shouldTrace('core:go')).toBe(true);
+      expect(filter.shouldTrace('debug:trace')).toBe(false);
+      expect(filter.shouldTrace('skip:action')).toBe(false);
+      // Should not crash, invalid actions are skipped
+    });
+
+    it('should handle missing verbosity and use default', () => {
+      const config = {
+        enabled: true,
+        tracedActions: ['core:*'],
+        includeComponentData: false,
+        includePrerequisites: false,
+        includeTargets: false,
+      };
+
+      filter.updateFromConfig(config);
+
+      expect(filter.getVerbosityLevel()).toBe('standard'); // Default value
+    });
+
+    it('should clear existing patterns before updating', () => {
+      // Set initial patterns
+      filter.addTracedActions('initial:action');
+      filter.addExcludedActions('initial:excluded');
+
+      expect(filter.shouldTrace('initial:action')).toBe(true);
+      expect(filter.shouldTrace('initial:excluded')).toBe(false);
+
+      // Update with different config
+      const config = {
+        enabled: true,
+        tracedActions: ['new:action'],
+        excludedActions: ['new:excluded'],
+        verbosity: 'standard',
+        includeComponentData: false,
+        includePrerequisites: false,
+        includeTargets: false,
+      };
+
+      filter.updateFromConfig(config);
+
+      // Old patterns should be cleared
+      expect(filter.shouldTrace('initial:action')).toBe(false);
+      expect(filter.shouldTrace('initial:excluded')).toBe(false);
+
+      // New patterns should work
+      expect(filter.shouldTrace('new:action')).toBe(true);
+      expect(filter.shouldTrace('new:excluded')).toBe(false);
+    });
+
+    it('should update inclusion config from boolean flags', () => {
+      const config = {
+        enabled: true,
+        tracedActions: ['*'],
+        verbosity: 'detailed',
+        includeComponentData: true,
+        includePrerequisites: true,
+        includeTargets: false,
+      };
+
+      filter.updateFromConfig(config);
+
+      const inclusionConfig = filter.getInclusionConfig();
+      expect(inclusionConfig).toEqual({
+        componentData: true,
+        prerequisites: true,
+        targets: false,
+      });
+    });
+  });
+
+  describe('Regex Compilation Error Handling', () => {
+    it('should handle invalid regex patterns gracefully in constructor', () => {
+      expect(() => {
+        new ActionTraceFilter({
+          tracedActions: ['/[unclosed/'],
+          logger: mockLogger,
+        });
+      }).not.toThrow();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid regex pattern will be ignored'),
+        expect.any(Error)
+      );
+    });
+
+    it('should not cache invalid regex patterns', () => {
+      const filter = new ActionTraceFilter({
+        tracedActions: ['/[invalid/'],
+        logger: mockLogger,
+      });
+
+      // Invalid regex should not match anything
+      expect(filter.shouldTrace('any:action')).toBe(false);
+      
+      // Should not have cached the invalid pattern
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid regex pattern will be ignored'),
+        expect.any(Error)
+      );
+    });
+
+    it('should handle regex compilation errors when adding patterns dynamically', () => {
+      const filter = new ActionTraceFilter({
+        tracedActions: [],
+        logger: mockLogger,
+      });
+
+      // Adding invalid regex should not crash
+      expect(() => {
+        filter.addTracedActions('/[invalid/');
+      }).not.toThrow();
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid regex pattern will be ignored'),
+        expect.any(Error)
+      );
+    });
+
+    it('should handle multiple regex compilation errors', () => {
+      const filter = new ActionTraceFilter({
+        tracedActions: ['/[invalid1/', '/(?invalid2/', '/[unclosed/'],
+        logger: mockLogger,
+      });
+
+      // All invalid patterns should be logged but not crash
+      expect(mockLogger.warn).toHaveBeenCalledTimes(3);
+      expect(filter.shouldTrace('any:action')).toBe(false);
+    });
+
+    it('should not recompile already cached regex patterns', () => {
+      const filter = new ActionTraceFilter({
+        tracedActions: ['/^test:.*$/'],
+        logger: mockLogger,
+      });
+
+      // Clear debug calls from constructor
+      mockLogger.debug.mockClear();
+
+      // Add the same pattern again
+      filter.addTracedActions('/^test:.*$/');
+
+      // Should not recompile (no additional debug message about compilation)
+      const compilationCalls = mockLogger.debug.mock.calls.filter(call => 
+        call[0] && call[0].includes('Compiled and cached regex pattern')
+      );
+      expect(compilationCalls.length).toBe(0);
+    });
+  });
+
+  describe('Constructor Edge Cases', () => {
+    it('should handle non-array tracedActions parameter', () => {
+      const filter = new ActionTraceFilter({
+        tracedActions: 'single-string',
+        logger: mockLogger,
+      });
+
+      // Should convert to array with default '*'
+      expect(filter.shouldTrace('core:go')).toBe(true);
+    });
+
+    it('should handle non-array excludedActions parameter', () => {
+      const filter = new ActionTraceFilter({
+        tracedActions: ['*'],
+        excludedActions: 'single-string',
+        logger: mockLogger,
+      });
+
+      // Should convert to empty array (default behavior)
+      expect(filter.shouldTrace('core:go')).toBe(true);
+    });
+
+    it('should handle invalid verbosity level in constructor', () => {
+      expect(() => {
+        new ActionTraceFilter({
+          verbosityLevel: 'invalid-level',
+          logger: mockLogger,
+        });
+      }).toThrow('Invalid verbosity level: invalid-level');
+    });
+
+    it('should validate inclusion config in constructor', () => {
+      expect(() => {
+        new ActionTraceFilter({
+          inclusionConfig: 'not-an-object',
+          logger: mockLogger,
+        });
+      }).toThrow('Inclusion config must be an object');
+    });
+
+    it('should convert truthy values to booleans in inclusion config', () => {
+      const filter = new ActionTraceFilter({
+        inclusionConfig: {
+          componentData: 1,
+          prerequisites: 'true',
+          targets: null,
+        },
+        logger: mockLogger,
+      });
+
+      const config = filter.getInclusionConfig();
+      expect(config.componentData).toBe(true);
+      expect(config.prerequisites).toBe(true);
+      expect(config.targets).toBe(false);
+    });
+  });
+
+  describe('Performance Optimization Coverage', () => {
+    it('should take early return path when tracing disabled', () => {
+      const filter = new ActionTraceFilter({
+        enabled: false,
+        tracedActions: ['*'],
+        logger: mockLogger,
+      });
+
+      // Clear any constructor debug logs
+      mockLogger.debug.mockClear();
+
+      const result = filter.shouldTrace('core:go');
+
+      expect(result).toBe(false);
+      // Should not have called any debug logging (early return)
+      expect(mockLogger.debug).not.toHaveBeenCalled();
+    });
+
+    it('should take optimized path for universal wildcard with no exclusions', () => {
+      const filter = new ActionTraceFilter({
+        enabled: true,
+        tracedActions: ['*'],
+        excludedActions: [],
+        logger: mockLogger,
+      });
+
+      // Clear constructor debug logs
+      mockLogger.debug.mockClear();
+
+      const result = filter.shouldTrace('core:go');
+
+      expect(result).toBe(true);
+      // Should not have performed full validation or logging (optimization path)
+      expect(mockLogger.debug).not.toHaveBeenCalled();
+    });
+
+    it('should skip optimization path when exclusions exist', () => {
+      const filter = new ActionTraceFilter({
+        enabled: true,
+        tracedActions: ['*'],
+        excludedActions: ['debug:*'],
+        logger: mockLogger,
+      });
+
+      // Clear constructor debug logs
+      mockLogger.debug.mockClear();
+
+      const result = filter.shouldTrace('core:go');
+
+      expect(result).toBe(true);
+      // Should have performed full validation path due to exclusions
+      expect(mockLogger.debug).toHaveBeenCalled();
+    });
+
+    it('should skip optimization path for non-wildcard patterns', () => {
+      const filter = new ActionTraceFilter({
+        enabled: true,
+        tracedActions: ['core:*'],
+        excludedActions: [],
+        logger: mockLogger,
+      });
+
+      // Clear constructor debug logs
+      mockLogger.debug.mockClear();
+
+      const result = filter.shouldTrace('core:go');
+
+      expect(result).toBe(true);
+      // Should have performed full validation due to specific patterns
+      expect(mockLogger.debug).toHaveBeenCalled();
+    });
+
+    it('should handle system action bypass even in optimization conditions', () => {
+      const filter = new ActionTraceFilter({
+        enabled: true,
+        tracedActions: [], // No patterns - normally wouldn't trace
+        excludedActions: [],
+        logger: mockLogger,
+      });
+
+      // Clear constructor debug logs  
+      mockLogger.debug.mockClear();
+
+      const result = filter.shouldTrace('__system:init');
+
+      expect(result).toBe(true);
+      // System action should bypass all optimizations and be logged
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('system action bypass')
+      );
+    });
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
   });

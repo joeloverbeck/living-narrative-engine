@@ -249,10 +249,8 @@ export function buildTraitsGenerationPrompt(
     );
   }
 
-  // Validate cliches
-  if (!cliches || typeof cliches !== 'object') {
-    throw new Error('TraitsGenerationPrompt: cliches must be a valid object');
-  }
+  // Cliches are optional - they can be null or an object
+  // formatClichesForPrompt will handle null/undefined properly
 
   // Trim all inputs
   const trimmedConcept = characterConcept.trim();

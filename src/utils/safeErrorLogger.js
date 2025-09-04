@@ -58,10 +58,11 @@ export function createSafeErrorLogger({ logger, safeEventDispatcher, eventBus })
     isGameLoading = true;
     loadingStartTime = Date.now();
     
-    // Enable batch mode on EventBus with optimized limits for game loading
+    // Enable batch mode on EventBus with context-aware limits
+    // EventBus now handles event-specific limits based on context automatically
     const batchModeConfig = {
-      maxRecursionDepth: loadingOptions.context === 'game-initialization' ? 15 : 10,
-      maxGlobalRecursion: loadingOptions.context === 'game-initialization' ? 50 : 25,
+      maxRecursionDepth: 25, // Base limit - EventBus will apply event-specific overrides
+      maxGlobalRecursion: loadingOptions.context === 'game-initialization' ? 200 : 50,
       timeoutMs: loadingOptions.timeoutMs,
       context: loadingOptions.context
     };

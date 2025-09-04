@@ -629,6 +629,59 @@ describe('BaseOpenRouterStrategy', () => {
           })
         );
       });
+
+      it('should override defaultParameters with requestOptions parameters', async () => {
+        const paramsWithRequestOptions = {
+          ...validParams,
+          requestOptions: {
+            temperature: 0.9,
+            maxTokens: 2000,
+            topP: 0.95,
+            toolSchema: { type: 'object', properties: { test: { type: 'string' } } },
+            toolName: 'test_tool',
+            toolDescription: 'Test tool description',
+          },
+        };
+
+        // Default parameters include temperature: 0.7
+        expect(validParams.llmConfig.defaultParameters.temperature).toBe(0.7);
+
+        await strategy.execute(paramsWithRequestOptions);
+
+        const callBody = JSON.parse(
+          mockHttpClient.request.mock.calls[0][1].body
+        );
+        
+        // Request options temperature should override default
+        expect(callBody.temperature).toBe(0.9);
+        expect(callBody.max_tokens).toBe(2000);
+        expect(callBody.top_p).toBe(0.95);
+        expect(callBody.model).toBe('test-model');
+      });
+
+      it('should apply requestOptions temperature even without defaultParameters', async () => {
+        const paramsWithoutDefaults = {
+          ...validParams,
+          llmConfig: {
+            ...validParams.llmConfig,
+            defaultParameters: undefined,
+          },
+          requestOptions: {
+            temperature: 0.8,
+            maxTokens: 1500,
+          },
+        };
+
+        await strategy.execute(paramsWithoutDefaults);
+
+        const callBody = JSON.parse(
+          mockHttpClient.request.mock.calls[0][1].body
+        );
+        
+        // Request options should be applied even without defaults
+        expect(callBody.temperature).toBe(0.8);
+        expect(callBody.max_tokens).toBe(1500);
+      });
     });
   });
 });
