@@ -191,8 +191,13 @@ export class ErrorClassifier {
    * @returns {string} Error category
    */
   #determineCategory(error) {
+    // Handle null/undefined errors gracefully
+    if (!error) {
+      return ERROR_CATEGORIES.UNKNOWN;
+    }
+    
     const errorMessage = error.message || '';
-    const errorType = error.constructor.name || '';
+    const errorType = error.constructor?.name || '';
     const combined = `${errorMessage} ${errorType}`;
 
     for (const [pattern, rule] of this.#classificationRules) {
@@ -219,6 +224,11 @@ export class ErrorClassifier {
    * @returns {string} Error severity
    */
   #determineSeverity(error, context) {
+    // Handle null/undefined error
+    if (!error) {
+      return ERROR_SEVERITY.LOW;
+    }
+    
     // Handle null/undefined context gracefully
     const safeContext = context || {};
 
@@ -307,6 +317,10 @@ export class ErrorClassifier {
    * @returns {boolean} True if transient
    */
   #isTransientError(error) {
+    if (!error) {
+      return false;
+    }
+    
     const transientPatterns = [
       /timeout/i,
       /connection/i,
@@ -347,15 +361,17 @@ export class ErrorClassifier {
    */
   #analyzeError(error, context, classification) {
     const safeContext = context || {};
+    // Handle null/undefined errors gracefully
+    const safeError = error || {};
     return {
-      errorType: error.constructor.name,
-      hasStackTrace: Boolean(error.stack),
-      stackDepth: error.stack ? error.stack.split('\n').length - 1 : 0,
-      hasCause: Boolean(error.cause),
+      errorType: safeError.constructor ? safeError.constructor.name : 'Unknown',
+      hasStackTrace: Boolean(safeError.stack),
+      stackDepth: safeError.stack ? safeError.stack.split('\n').length - 1 : 0,
+      hasCause: Boolean(safeError.cause),
       contextPhase: safeContext.phase || 'unknown',
       contextTiming: safeContext.timing || null,
-      isAsyncError: this.#isAsyncError(error),
-      potentialCauses: this.#identifyPotentialCauses(error, context),
+      isAsyncError: this.#isAsyncError(safeError),
+      potentialCauses: this.#identifyPotentialCauses(safeError, context),
     };
   }
 
@@ -447,7 +463,7 @@ export class ErrorClassifier {
    * @returns {boolean} True if async error
    */
   #isAsyncError(error) {
-    if (!error.stack) return false;
+    if (!error || !error.stack) return false;
 
     const asyncPatterns = [
       /async/i,

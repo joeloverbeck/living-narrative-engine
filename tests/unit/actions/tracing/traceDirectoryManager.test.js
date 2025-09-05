@@ -622,6 +622,7 @@ describe('TraceDirectoryManager', () => {
         expect.any(Error)
       );
     });
+
   });
 
   describe('Permission Handling', () => {
@@ -743,6 +744,230 @@ describe('TraceDirectoryManager', () => {
       expect(result.success).toBe(false);
       expect(result.errors).toHaveLength(3); // traversal + reserved + invalid chars
       expect(mockLogger.error).toHaveBeenCalled();
+    });
+  });
+
+  describe('Directory Selection (selectDirectory)', () => {
+    it('should successfully select directory with granted permissions', async () => {
+      const result = await manager.selectDirectory();
+
+      expect(result).toBe(mockDirectoryHandle);
+      expect(mockShowDirectoryPicker).toHaveBeenCalledWith({
+        mode: 'readwrite',
+        startIn: 'documents',
+      });
+      expect(mockDirectoryHandle.queryPermission).toHaveBeenCalledWith({
+        mode: 'readwrite',
+      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Directory selected for export',
+        { name: 'test-dir' }
+      );
+    });
+
+    it('should request permission when not initially granted', async () => {
+      mockDirectoryHandle.queryPermission.mockResolvedValue('prompt');
+      mockDirectoryHandle.requestPermission.mockResolvedValue('granted');
+
+      const result = await manager.selectDirectory();
+
+      expect(result).toBe(mockDirectoryHandle);
+      expect(mockDirectoryHandle.requestPermission).toHaveBeenCalledWith({
+        mode: 'readwrite',
+      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Directory selected for export',
+        { name: 'test-dir' }
+      );
+    });
+
+    it('should return null when permission request is denied', async () => {
+      mockDirectoryHandle.queryPermission.mockResolvedValue('prompt');
+      mockDirectoryHandle.requestPermission.mockResolvedValue('denied');
+
+      const result = await manager.selectDirectory();
+
+      expect(result).toBe(null);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'User denied write permission to directory'
+      );
+    });
+
+    it('should handle user cancellation during directory selection', async () => {
+      const abortError = new Error('User cancelled');
+      abortError.name = 'AbortError';
+      mockShowDirectoryPicker.mockRejectedValue(abortError);
+
+      const result = await manager.selectDirectory();
+
+      expect(result).toBe(null);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'User cancelled directory selection'
+      );
+    });
+
+    it('should handle generic errors during directory selection', async () => {
+      const genericError = new Error('Generic selection error');
+      mockShowDirectoryPicker.mockRejectedValue(genericError);
+
+      const result = await manager.selectDirectory();
+
+      expect(result).toBe(null);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to select directory',
+        genericError
+      );
+    });
+
+    it('should handle permission query errors', async () => {
+      mockDirectoryHandle.queryPermission.mockRejectedValue(
+        new Error('Permission query failed')
+      );
+
+      const result = await manager.selectDirectory();
+
+      expect(result).toBe(null);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to select directory',
+        expect.any(Error)
+      );
+    });
+
+    it('should handle permission request errors', async () => {
+      mockDirectoryHandle.queryPermission.mockResolvedValue('prompt');
+      mockDirectoryHandle.requestPermission.mockRejectedValue(
+        new Error('Permission request failed')
+      );
+
+      const result = await manager.selectDirectory();
+
+      expect(result).toBe(null);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to select directory',
+        expect.any(Error)
+      );
+    });
+  });
+
+  describe('Subdirectory Management (ensureSubdirectoryExists)', () => {
+    let mockParentHandle;
+
+    beforeEach(() => {
+      mockParentHandle = {
+        name: 'parent-dir',
+        kind: 'directory',
+        getDirectoryHandle: jest.fn().mockResolvedValue({
+          name: 'child-dir',
+          kind: 'directory',
+        }),
+      };
+    });
+
+    it('should successfully create subdirectory', async () => {
+      const result = await manager.ensureSubdirectoryExists(
+        mockParentHandle,
+        'child-dir'
+      );
+
+      expect(result).toEqual({
+        name: 'child-dir',
+        kind: 'directory',
+      });
+      expect(mockParentHandle.getDirectoryHandle).toHaveBeenCalledWith(
+        'child-dir',
+        { create: true }
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith('Subdirectory ensured', {
+        name: 'child-dir',
+      });
+    });
+
+    it('should return null for null parent handle', async () => {
+      const result = await manager.ensureSubdirectoryExists(
+        null,
+        'child-dir'
+      );
+
+      expect(result).toBe(null);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Parent directory handle is required'
+      );
+    });
+
+    it('should return null for undefined parent handle', async () => {
+      const result = await manager.ensureSubdirectoryExists(
+        undefined,
+        'child-dir'
+      );
+
+      expect(result).toBe(null);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Parent directory handle is required'
+      );
+    });
+
+    it('should handle subdirectory creation errors', async () => {
+      const creationError = new Error('Failed to create subdirectory');
+      mockParentHandle.getDirectoryHandle.mockRejectedValue(creationError);
+
+      const result = await manager.ensureSubdirectoryExists(
+        mockParentHandle,
+        'child-dir'
+      );
+
+      expect(result).toBe(null);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to ensure subdirectory exists',
+        creationError,
+        { subdirectoryName: 'child-dir' }
+      );
+    });
+
+    it('should validate subdirectory name', async () => {
+      await expect(
+        manager.ensureSubdirectoryExists(mockParentHandle, '')
+      ).rejects.toThrow();
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    it('should validate subdirectory name for null', async () => {
+      await expect(
+        manager.ensureSubdirectoryExists(mockParentHandle, null)
+      ).rejects.toThrow();
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    it('should validate subdirectory name for undefined', async () => {
+      await expect(
+        manager.ensureSubdirectoryExists(mockParentHandle, undefined)
+      ).rejects.toThrow();
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    it('should handle different types of filesystem errors in subdirectory creation', async () => {
+      const errorTypes = [
+        { name: 'NotAllowedError', message: 'Not allowed' },
+        { name: 'QuotaExceededError', message: 'Quota exceeded' },
+        { name: 'SecurityError', message: 'Security error' },
+      ];
+
+      for (const errorType of errorTypes) {
+        const error = new Error(errorType.message);
+        error.name = errorType.name;
+        mockParentHandle.getDirectoryHandle.mockRejectedValueOnce(error);
+
+        const result = await manager.ensureSubdirectoryExists(
+          mockParentHandle,
+          'test-dir'
+        );
+
+        expect(result).toBe(null);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Failed to ensure subdirectory exists',
+          error,
+          { subdirectoryName: 'test-dir' }
+        );
+      }
     });
   });
 });

@@ -3,7 +3,7 @@
  * @see src/actions/tracing/span.js
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import Span from '../../../../src/actions/tracing/span.js';
 
 describe('Span', () => {
@@ -349,6 +349,152 @@ describe('Span', () => {
       expect(span.startTime).toBe(1000.123);
       expect(span.endTime).toBe(1000.456);
       expect(span.duration).toBeCloseTo(0.333, 3);
+    });
+
+    it('should handle negative duration edge case', () => {
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      
+      // Mock performance.now() to return decreasing values (simulating clock drift/precision issues)
+      mockPerformanceNow.mockRestore();
+      mockPerformanceNow = jest
+        .spyOn(performance, 'now')
+        .mockImplementationOnce(() => 1000.0)
+        .mockImplementationOnce(() => 999.5); // Earlier time
+
+      const span = new Span(1, 'TestOperation');
+      span.end();
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'Span "TestOperation" (1) has negative duration: -0.5ms. Setting to 0.'
+      );
+      expect(span.duration).toBe(0);
+      expect(span.status).toBe('success');
+
+      consoleWarnSpy.mockRestore();
+    });
+  });
+
+  describe('addAttributes()', () => {
+    it('should work as alias for setAttributes', () => {
+      const span = new Span(1, 'TestOperation');
+      const attributes = {
+        key1: 'value1',
+        key2: 42,
+        key3: { nested: true },
+      };
+
+      span.addAttributes(attributes);
+
+      const attrs = span.attributes;
+      expect(attrs.key1).toBe('value1');
+      expect(attrs.key2).toBe(42);
+      expect(attrs.key3).toEqual({ nested: true });
+    });
+
+    it('should throw error for invalid attributes like setAttributes', () => {
+      const span = new Span(1, 'TestOperation');
+      expect(() => span.addAttributes('invalid')).toThrow(
+        'Attributes must be an object'
+      );
+      expect(() => span.addAttributes(null)).toThrow(
+        'Attributes must be an object'
+      );
+    });
+  });
+
+  describe('recordError()', () => {
+    it('should work as alias for setError', () => {
+      const span = new Span(1, 'TestOperation');
+      const error = new Error('Test error');
+
+      span.recordError(error);
+
+      expect(span.error).toBe(error);
+      expect(span.status).toBe('error');
+      expect(span.attributes['error.message']).toBe('Test error');
+      expect(span.attributes['error.stack']).toBeDefined();
+    });
+
+    it('should throw error for non-Error instance like setError', () => {
+      const span = new Span(1, 'TestOperation');
+      expect(() => span.recordError('not an error')).toThrow(
+        'setError requires an Error instance'
+      );
+    });
+  });
+
+  describe('addEvent()', () => {
+    it('should add event with name and attributes', () => {
+      const span = new Span(1, 'TestOperation');
+      const eventAttributes = { key1: 'value1', key2: 42 };
+
+      span.addEvent('test-event', eventAttributes);
+
+      const events = span.attributes.events;
+      expect(events).toHaveLength(1);
+      expect(events[0].name).toBe('test-event');
+      expect(events[0].attributes).toEqual(eventAttributes);
+      expect(events[0].timestamp).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should add event with name only', () => {
+      const span = new Span(1, 'TestOperation');
+
+      span.addEvent('simple-event');
+
+      const events = span.attributes.events;
+      expect(events).toHaveLength(1);
+      expect(events[0].name).toBe('simple-event');
+      expect(events[0].attributes).toEqual({});
+      expect(events[0].timestamp).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should handle multiple events', () => {
+      const span = new Span(1, 'TestOperation');
+
+      span.addEvent('event1', { type: 'start' });
+      span.addEvent('event2', { type: 'middle' });
+      span.addEvent('event3', { type: 'end' });
+
+      const events = span.attributes.events;
+      expect(events).toHaveLength(3);
+      expect(events[0].name).toBe('event1');
+      expect(events[1].name).toBe('event2');
+      expect(events[2].name).toBe('event3');
+      expect(events[0].attributes.type).toBe('start');
+      expect(events[1].attributes.type).toBe('middle');
+      expect(events[2].attributes.type).toBe('end');
+    });
+
+    it('should throw error for empty event name', () => {
+      const span = new Span(1, 'TestOperation');
+      expect(() => span.addEvent('')).toThrow(
+        'Event name must be a non-empty string'
+      );
+      expect(() => span.addEvent('   ')).toThrow(
+        'Event name must be a non-empty string'
+      );
+    });
+
+    it('should throw error for non-string event name', () => {
+      const span = new Span(1, 'TestOperation');
+      expect(() => span.addEvent(123)).toThrow(
+        'Event name must be a non-empty string'
+      );
+      expect(() => span.addEvent(null)).toThrow(
+        'Event name must be a non-empty string'
+      );
+    });
+
+    it('should handle null attributes parameter', () => {
+      const span = new Span(1, 'TestOperation');
+
+      span.addEvent('test-event', null);
+
+      const events = span.attributes.events;
+      expect(events).toHaveLength(1);
+      expect(events[0].name).toBe('test-event');
+      expect(events[0].attributes).toEqual({});
     });
   });
 });

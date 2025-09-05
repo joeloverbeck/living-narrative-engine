@@ -296,7 +296,7 @@ export class ActionExecutionTrace {
 
     // Analyze stack trace if analyzer available
     let stackAnalysis = null;
-    if (this.#stackTraceAnalyzer && error.stack) {
+    if (this.#stackTraceAnalyzer && error?.stack) {
       try {
         stackAnalysis = this.#stackTraceAnalyzer.parseStackTrace(error.stack);
       } catch (analysisError) {
@@ -311,15 +311,15 @@ export class ActionExecutionTrace {
       this.#phaseTimer.isActive()
     ) {
       this.#phaseTimer.addMarker('error_occurred', null, {
-        errorType: error.constructor.name,
-        errorMessage: error.message,
+        errorType: error?.constructor?.name || 'Unknown',
+        errorMessage: error?.message || 'Unknown error',
         errorCategory: classification?.category || 'unknown',
       });
 
       if (this.#endTime === errorTime) {
         this.#phaseTimer.endExecution({
           success: false,
-          error: error.constructor.name,
+          error: error?.constructor?.name || 'Unknown',
           errorCategory: classification?.category || 'unknown',
         });
       }
@@ -327,17 +327,17 @@ export class ActionExecutionTrace {
 
     this.#executionData.error = {
       // Existing error information
-      message: error.message || 'Unknown error',
-      type: error.constructor.name || 'Error',
-      name: error.name || error.constructor.name,
-      stack: error.stack || null,
+      message: error?.message || 'Unknown error',
+      type: error?.constructor?.name || 'Error',
+      name: error?.name || error?.constructor?.name || 'Error',
+      stack: error?.stack || null,
       timestamp: errorTime,
 
       // Extended error properties
-      code: error.code || null,
-      cause: error.cause || null,
-      errno: error.errno || null,
-      syscall: error.syscall || null,
+      code: error?.code || null,
+      cause: error?.cause || null,
+      errno: error?.errno || null,
+      syscall: error?.syscall || null,
 
       // Error context
       context: {
@@ -382,8 +382,8 @@ export class ActionExecutionTrace {
     this.#executionData.phases.push({
       phase: 'error_captured',
       timestamp: errorTime,
-      description: `Error occurred: ${error.message}`,
-      errorType: error.constructor.name,
+      description: `Error occurred: ${error?.message || 'Unknown error'}`,
+      errorType: error?.constructor?.name || 'Unknown',
       errorCategory: classification?.category || 'unknown',
       severity: classification?.severity || 'unknown',
     });
@@ -470,6 +470,13 @@ export class ActionExecutionTrace {
       eventPayload: this.#executionData.eventPayload,
       result: this.#executionData.dispatchResult,
       error: this.#executionData.error,
+      hasError: Boolean(this.#executionData.error),
+      errorData: this.#executionData.error ? {
+        message: this.#executionData.error.message,
+        type: this.#executionData.error.type || 'Unknown',
+        stack: this.#executionData.error.stack,
+      } : null,
+      duration: this.#executionData.duration, // Also expose at top level for easy access
     };
 
     // Add timing data if available
@@ -554,7 +561,7 @@ export class ActionExecutionTrace {
     const error = this.#executionData.error;
     return {
       type: error.type,
-      message: error.message,
+      message: error?.message || 'Unknown error',
       category: error.classification?.category || 'unknown',
       severity: error.classification?.severity || 'unknown',
       isRetryable: error.classification?.isRetryable || false,
@@ -585,8 +592,8 @@ export class ActionExecutionTrace {
       '='.repeat(30),
       `Action: ${this.#actionId}`,
       `Actor: ${this.#actorId}`,
-      `Error Type: ${error.type}`,
-      `Message: ${error.message}`,
+      `Error Type: ${error?.type || 'Unknown'}`,
+      `Message: ${error?.message || 'Unknown error'}`,
       `Category: ${error.classification?.category || 'unknown'}`,
       `Severity: ${error.classification?.severity || 'unknown'}`,
       `Phase: ${error.context?.phase || 'unknown'}`,

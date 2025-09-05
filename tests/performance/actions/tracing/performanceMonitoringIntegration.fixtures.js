@@ -1,0 +1,388 @@
+/**
+ * @file Performance monitoring integration test fixtures
+ * @description Test data and scenarios for validating performance monitoring workflows
+ * during realistic gaming action execution patterns
+ * 
+ * Supports Priority 2.2: Performance Monitoring Integration (MEDIUM) from
+ * reports/actions-tracing-architecture-analysis.md
+ */
+
+/**
+ * Performance monitoring test configurations for different gaming scenarios
+ */
+export const PERFORMANCE_MONITORING_CONFIGS = {
+  // Lightweight monitoring for basic gaming
+  LIGHT_GAMING: {
+    thresholds: {
+      slowOperationMs: 50,
+      criticalOperationMs: 200,
+      maxConcurrency: 5,
+      maxTotalDurationMs: 2000,
+      maxErrorRate: 2,
+      maxMemoryUsageMB: 25,
+    },
+    samplingConfig: {
+      rate: 1.0,
+      strategy: 'random',
+      alwaysSampleErrors: true,
+      alwaysSampleSlow: true,
+      slowThresholdMs: 100,
+    },
+    intervalMs: 500,
+  },
+
+  // Standard monitoring for typical gaming sessions
+  STANDARD_GAMING: {
+    thresholds: {
+      slowOperationMs: 100,
+      criticalOperationMs: 500,
+      maxConcurrency: 10,
+      maxTotalDurationMs: 5000,
+      maxErrorRate: 5,
+      maxMemoryUsageMB: 50,
+    },
+    samplingConfig: {
+      rate: 1.0,
+      strategy: 'adaptive',
+      alwaysSampleErrors: true,
+      alwaysSampleSlow: true,
+      slowThresholdMs: 200,
+    },
+    intervalMs: 1000,
+  },
+
+  // Heavy monitoring for intensive gaming scenarios
+  INTENSIVE_GAMING: {
+    thresholds: {
+      slowOperationMs: 200,
+      criticalOperationMs: 1000,
+      maxConcurrency: 20,
+      maxTotalDurationMs: 10000,
+      maxErrorRate: 10,
+      maxMemoryUsageMB: 100,
+    },
+    samplingConfig: {
+      rate: 0.8,
+      strategy: 'error_biased',
+      alwaysSampleErrors: true,
+      alwaysSampleSlow: true,
+      slowThresholdMs: 500,
+    },
+    intervalMs: 2000,
+  },
+};
+
+/**
+ * Gaming action patterns that simulate realistic usage
+ */
+export const GAMING_ACTION_PATTERNS = {
+  // Basic character movement and interaction
+  EXPLORATION: [
+    { actionId: 'core:move', expectedDurationMs: 20, weight: 0.4 },
+    { actionId: 'core:look', expectedDurationMs: 15, weight: 0.3 },
+    { actionId: 'core:pickup', expectedDurationMs: 30, weight: 0.15 },
+    { actionId: 'core:interact', expectedDurationMs: 25, weight: 0.15 },
+  ],
+
+  // Combat scenarios with timing-sensitive actions
+  COMBAT: [
+    { actionId: 'combat:attack', expectedDurationMs: 50, weight: 0.3 },
+    { actionId: 'combat:defend', expectedDurationMs: 40, weight: 0.2 },
+    { actionId: 'combat:dodge', expectedDurationMs: 35, weight: 0.2 },
+    { actionId: 'combat:cast_spell', expectedDurationMs: 80, weight: 0.15 },
+    { actionId: 'combat:use_item', expectedDurationMs: 45, weight: 0.15 },
+  ],
+
+  // Complex interactions requiring multiple components
+  SOCIAL: [
+    { actionId: 'social:talk', expectedDurationMs: 60, weight: 0.4 },
+    { actionId: 'social:trade', expectedDurationMs: 90, weight: 0.3 },
+    { actionId: 'social:persuade', expectedDurationMs: 75, weight: 0.2 },
+    { actionId: 'social:intimidate', expectedDurationMs: 55, weight: 0.1 },
+  ],
+
+  // Inventory and equipment management
+  INVENTORY: [
+    { actionId: 'inventory:equip', expectedDurationMs: 35, weight: 0.3 },
+    { actionId: 'inventory:unequip', expectedDurationMs: 30, weight: 0.25 },
+    { actionId: 'inventory:drop', expectedDurationMs: 20, weight: 0.2 },
+    { actionId: 'inventory:combine', expectedDurationMs: 50, weight: 0.15 },
+    { actionId: 'inventory:examine', expectedDurationMs: 40, weight: 0.1 },
+  ],
+};
+
+/**
+ * Expected performance metrics for different gaming patterns
+ */
+export const PERFORMANCE_EXPECTATIONS = {
+  EXPLORATION: {
+    averageDurationMs: 22,
+    maxDurationMs: 40,
+    concurrencyLevel: 2,
+    errorRate: 0.5, // 0.5%
+    memoryGrowthMB: 0.1, // per 100 actions
+  },
+
+  COMBAT: {
+    averageDurationMs: 50,
+    maxDurationMs: 120,
+    concurrencyLevel: 4,
+    errorRate: 1.0, // 1%
+    memoryGrowthMB: 0.15, // per 100 actions
+  },
+
+  SOCIAL: {
+    averageDurationMs: 70,
+    maxDurationMs: 150,
+    concurrencyLevel: 3,
+    errorRate: 2.0, // 2%
+    memoryGrowthMB: 0.2, // per 100 actions
+  },
+
+  INVENTORY: {
+    averageDurationMs: 35,
+    maxDurationMs: 80,
+    concurrencyLevel: 2,
+    errorRate: 0.8, // 0.8%
+    memoryGrowthMB: 0.12, // per 100 actions
+  },
+};
+
+/**
+ * Test scenarios that deliberately trigger alerts
+ */
+export const ALERT_TRIGGER_SCENARIOS = {
+  // Slow operations that should trigger warnings
+  SLOW_OPERATIONS: [
+    {
+      actionId: 'test:slow_database_query',
+      simulatedDurationMs: 150, // Above slow threshold
+      expectedAlertType: 'slow_operation',
+      expectedSeverity: 'warning',
+    },
+    {
+      actionId: 'test:complex_calculation',
+      simulatedDurationMs: 120,
+      expectedAlertType: 'slow_operation',
+      expectedSeverity: 'warning',
+    },
+  ],
+
+  // Critical operations that should trigger critical alerts
+  CRITICAL_OPERATIONS: [
+    {
+      actionId: 'test:massive_file_operation',
+      simulatedDurationMs: 800, // Above critical threshold
+      expectedAlertType: 'critical_operation',
+      expectedSeverity: 'critical',
+    },
+    {
+      actionId: 'test:heavy_ai_processing',
+      simulatedDurationMs: 1200,
+      expectedAlertType: 'critical_operation',
+      expectedSeverity: 'critical',
+    },
+  ],
+
+  // High concurrency scenarios
+  HIGH_CONCURRENCY: [
+    {
+      actionId: 'test:parallel_action_1',
+      simulatedDurationMs: 100,
+      concurrentCount: 8,
+      expectedAlertType: 'high_concurrency',
+      expectedSeverity: 'warning',
+    },
+  ],
+
+  // Memory usage scenarios
+  HIGH_MEMORY: [
+    {
+      actionId: 'test:memory_intensive',
+      simulatedDurationMs: 50,
+      simulatedMemoryMB: 60, // Above memory threshold
+      expectedAlertType: 'high_memory_usage',
+      expectedSeverity: 'warning',
+    },
+  ],
+
+  // Error scenarios
+  HIGH_ERROR_RATE: [
+    {
+      actionId: 'test:failing_action',
+      simulatedDurationMs: 30,
+      failureRate: 0.15, // 15% failure rate
+      expectedAlertType: 'high_error_rate',
+      expectedSeverity: 'critical',
+    },
+  ],
+};
+
+/**
+ * Load testing patterns for sustained monitoring validation
+ */
+export const LOAD_TEST_PATTERNS = {
+  // Burst pattern - high activity followed by quiet period
+  BURST_PATTERN: {
+    burstDurationMs: 2000,
+    burstActionCount: 100,
+    quietDurationMs: 1000,
+    cycles: 3,
+    actionPattern: 'EXPLORATION',
+  },
+
+  // Sustained pattern - consistent activity over time
+  SUSTAINED_PATTERN: {
+    durationMs: 10000,
+    actionsPerSecond: 15,
+    actionPattern: 'COMBAT',
+  },
+
+  // Mixed pattern - different action types with varying intensity
+  MIXED_PATTERN: {
+    phases: [
+      { pattern: 'EXPLORATION', durationMs: 3000, intensity: 0.6 },
+      { pattern: 'COMBAT', durationMs: 2000, intensity: 1.0 },
+      { pattern: 'SOCIAL', durationMs: 2000, intensity: 0.4 },
+      { pattern: 'INVENTORY', durationMs: 1000, intensity: 0.8 },
+    ],
+  },
+};
+
+/**
+ * Creates test action data with realistic gaming properties
+ */
+export function createTestActionData(actionId, pattern = 'EXPLORATION') {
+  const patternData = GAMING_ACTION_PATTERNS[pattern];
+  const actionData = patternData.find(a => a.actionId === actionId) || patternData[0];
+
+  return {
+    actionId: actionData.actionId,
+    actorId: `test-actor-${Math.floor(Math.random() * 1000)}`,
+    components: {
+      'core:position': { x: Math.random() * 100, y: Math.random() * 100 },
+      'core:stats': { health: 100, energy: 80 },
+      'core:inventory': { items: ['sword', 'potion'] },
+    },
+    context: {
+      location: 'test-room',
+      timestamp: performance.now(),
+      pattern: pattern,
+    },
+    expectedDuration: actionData.expectedDurationMs, // Make sure this is set correctly
+    // Add some realistic variation (±20%)
+    maxDuration: actionData.expectedDurationMs * 1.2,
+    minDuration: actionData.expectedDurationMs * 0.8,
+  };
+}
+
+/**
+ * Generates a sequence of actions for load testing
+ */
+export function generateActionSequence(pattern, count) {
+  const patternData = GAMING_ACTION_PATTERNS[pattern];
+  const sequence = [];
+
+  for (let i = 0; i < count; i++) {
+    // Select action based on weight distribution
+    const random = Math.random();
+    let cumulativeWeight = 0;
+    let selectedAction = patternData[0];
+
+    for (const action of patternData) {
+      cumulativeWeight += action.weight;
+      if (random <= cumulativeWeight) {
+        selectedAction = action;
+        break;
+      }
+    }
+
+    sequence.push(createTestActionData(selectedAction.actionId, pattern));
+  }
+
+  return sequence;
+}
+
+/**
+ * Performance monitoring validation helpers
+ */
+export const MONITORING_VALIDATION = {
+  // Validate monitoring overhead stays below threshold
+  validateMonitoringOverhead(measurements, thresholdMs = 1.0) {
+    const average = measurements.reduce((sum, m) => sum + m, 0) / measurements.length;
+    const max = Math.max(...measurements);
+    const p95 = measurements.sort((a, b) => a - b)[Math.floor(measurements.length * 0.95)];
+
+    return {
+      isValid: average < thresholdMs && max < (thresholdMs * 2) && p95 < (thresholdMs * 1.5),
+      average,
+      max,
+      p95,
+      threshold: thresholdMs,
+    };
+  },
+
+  // Validate alert generation accuracy
+  validateAlertAccuracy(expectedAlerts, actualAlerts, toleranceMs = 50) {
+    const matches = [];
+    const missed = [];
+    const falsePositives = [];
+
+    for (const expected of expectedAlerts) {
+      const match = actualAlerts.find(actual => 
+        actual.type === expected.expectedAlertType &&
+        actual.severity === expected.expectedSeverity &&
+        actual.operation.includes(expected.actionId) &&
+        Math.abs(actual.timestamp - expected.timestamp) < toleranceMs
+      );
+
+      if (match) {
+        matches.push({ expected, actual: match });
+      } else {
+        missed.push(expected);
+      }
+    }
+
+    // Find false positives (alerts that weren't expected)
+    for (const actual of actualAlerts) {
+      const wasExpected = matches.some(m => m.actual === actual);
+      if (!wasExpected) {
+        falsePositives.push(actual);
+      }
+    }
+
+    return {
+      accuracy: matches.length / expectedAlerts.length,
+      matches,
+      missed,
+      falsePositives,
+      isAccurate: missed.length === 0 && falsePositives.length <= 1, // Allow 1 false positive
+    };
+  },
+
+  // Validate memory usage calculations
+  validateMemoryAccuracy(reported, expected, tolerancePercent = 10) {
+    const difference = Math.abs(reported - expected);
+    const toleranceAmount = expected * (tolerancePercent / 100);
+
+    return {
+      isAccurate: difference <= toleranceAmount,
+      reported,
+      expected,
+      difference,
+      toleranceAmount,
+      accuracyPercent: ((expected - difference) / expected) * 100,
+    };
+  },
+};
+
+export default {
+  PERFORMANCE_MONITORING_CONFIGS,
+  GAMING_ACTION_PATTERNS,
+  PERFORMANCE_EXPECTATIONS,
+  ALERT_TRIGGER_SCENARIOS,
+  LOAD_TEST_PATTERNS,
+  createTestActionData,
+  generateActionSequence,
+  MONITORING_VALIDATION,
+};

@@ -129,12 +129,23 @@ export class RecoveryManager {
     const breaker = this.#circuitBreakers.get(componentName);
     if (!breaker) return false;
 
+    // Check if circuit should be reset based on reset timeout
+    const resetTimeout = this.#config.circuitBreaker?.resetTimeout || 60000;
+    const timeSinceOpen = Date.now() - (breaker.openTime || 0);
+    
+    if (timeSinceOpen >= resetTimeout) {
+      // Circuit should be reset - remove it and reset error count
+      this.#circuitBreakers.delete(componentName);
+      this.#errorCounts.set(componentName, 0);
+      return false;
+    }
+
     // Check if breaker has isOpen method
     if (typeof breaker.isOpen === 'function') {
       return breaker.isOpen();
     }
 
-    // For simple circuit breaker objects, check if it exists (which means it's open)
+    // Circuit is still open
     return true;
   }
 
@@ -335,23 +346,28 @@ export class RecoveryManager {
   #trackComponentError(componentName) {
     const now = Date.now();
 
+    // Increment error count first
+    const currentCount = this.#errorCounts.get(componentName) || 0;
+    const newCount = currentCount + 1;
+
     // Reset counter if more than 5 minutes have passed
     const lastReset = this.#lastResetTimes.get(componentName) || now;
     if (now - lastReset > 300000) {
       // 5 minutes
-      this.#errorCounts.set(componentName, 0);
+      this.#errorCounts.set(componentName, 1); // Set to 1 since we're counting this error
       this.#lastResetTimes.set(componentName, now);
+    } else {
+      // Within time window, use incremented count
+      this.#errorCounts.set(componentName, newCount);
     }
-
-    // Increment error count
-    const currentCount = this.#errorCounts.get(componentName) || 0;
-    this.#errorCounts.set(componentName, currentCount + 1);
   }
 
   #shouldOpenCircuit(componentName) {
     const errorCount = this.#errorCounts.get(componentName) || 0;
-    // Open circuit if more than 5 errors in current window
-    return errorCount > 5;
+    // Use configured threshold or default to 5
+    const threshold = this.#config.circuitBreaker?.threshold || 5;
+    // Open circuit if error count reaches threshold
+    return errorCount >= threshold;
   }
 
   #openCircuitBreaker(componentName) {
