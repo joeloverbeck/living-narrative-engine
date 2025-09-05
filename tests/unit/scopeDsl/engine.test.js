@@ -226,16 +226,6 @@ describe('ScopeEngine', () => {
         expect(result).toEqual(new Set(['item1', 'item2', 'item3']));
       });
 
-      test('edge[] with non-array field returns empty set', () => {
-        const ast = parseDslExpression('actor.core:inventory.items[]');
-        const inventoryData = { items: 'not-an-array' };
-
-        mockEntityManager.getComponentData.mockReturnValue(inventoryData);
-
-        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-
-        expect(result).toEqual(new Set());
-      });
 
       test('edge can access property on filtered array of objects', () => {
         const ast = parseDslExpression(

@@ -15,15 +15,17 @@
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
-import { ENTITY_SPOKE_ID } from '../../constants/eventIds.js';
+import { ENTITY_SPOKE_ID, ENTITY_THOUGHT_ID } from '../../constants/eventIds.js';
 import { CommandProcessingWorkflow } from './helpers/commandProcessingWorkflow.js';
 import { ProcessingWorkflow } from './workflows/processingWorkflow.js';
 import { ProcessingExceptionHandler } from './helpers/processingExceptionHandler.js';
 import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
+import { buildThoughtPayload } from './helpers/buildThoughtPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
 import { finishProcessing } from './helpers/processingErrorUtils.js';
 import { getLogger } from './helpers/contextUtils.js';
 import { dispatchSpeechEvent } from './helpers/dispatchSpeechEvent.js';
+import { dispatchThoughtEvent } from './helpers/dispatchThoughtEvent.js';
 import TurnDirectiveStrategyResolver, {
   DEFAULT_STRATEGY_MAP,
 } from '../strategies/turnDirectiveStrategyResolver.js';
@@ -304,18 +306,28 @@ export class ProcessingCommandState extends AbstractTurnState {
     const speechRaw = decisionMeta?.speech;
 
     if (payloadBase) {
+      // Actor spoke - dispatch speech event
       logger.debug(
         `${this.getStateName()}: Actor ${actorId} spoke: "${payloadBase.speechContent}". Dispatching ${ENTITY_SPOKE_ID}.`
       );
       await dispatchSpeechEvent(turnCtx, this._handler, actorId, payloadBase);
-    } else if (speechRaw !== null && speechRaw !== undefined) {
-      logger.debug(
-        `${this.getStateName()}: Actor ${actorId} had a non-string or empty speech field in decisionMeta. No ${ENTITY_SPOKE_ID} event dispatched. (Type: ${typeof speechRaw}, Value: "${String(speechRaw)}")`
-      );
     } else {
-      logger.debug(
-        `${this.getStateName()}: Actor ${actorId} has no 'speech' field in decisionMeta. No ${ENTITY_SPOKE_ID} event dispatched.`
-      );
+      // No speech - check for thoughts to dispatch
+      const thoughtPayload = buildThoughtPayload(decisionMeta, actorId);
+      if (thoughtPayload) {
+        logger.debug(
+          `${this.getStateName()}: Actor ${actorId} had thoughts but no speech. Dispatching ${ENTITY_THOUGHT_ID}.`
+        );
+        await dispatchThoughtEvent(turnCtx, this._handler, actorId, thoughtPayload);
+      } else if (speechRaw !== null && speechRaw !== undefined) {
+        logger.debug(
+          `${this.getStateName()}: Actor ${actorId} had a non-string or empty speech field in decisionMeta. No ${ENTITY_SPOKE_ID} or ${ENTITY_THOUGHT_ID} event dispatched. (Type: ${typeof speechRaw}, Value: "${String(speechRaw)}")`
+        );
+      } else {
+        logger.debug(
+          `${this.getStateName()}: Actor ${actorId} has no 'speech' or 'thoughts' fields in decisionMeta. No events dispatched.`
+        );
+      }
     }
   }
 

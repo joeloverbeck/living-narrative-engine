@@ -28,11 +28,65 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
   {
     logger: createMockLogger,
     entityManager: createMockEntityManager,
-    prerequisiteEvaluationService: createMockPrerequisiteEvaluationService,
-    actionIndex: createMockActionIndex,
-    targetResolutionService: createMockTargetResolutionService,
+    prerequisiteEvaluationService: () => {
+      const mock = createMockPrerequisiteEvaluationService();
+      // Configure to pass prerequisites by default
+      mock.evaluate = jest.fn().mockReturnValue(true);
+      return mock;
+    },
+    actionIndex: () => {
+      const mock = createMockActionIndex();
+      // Configure default behavior to return sample action definitions
+      mock.getCandidateActions = jest.fn().mockReturnValue([
+        {
+          id: 'core:go',
+          name: 'Go',
+          scope: 'actor.location.exits[]',
+          prerequisites: [],
+          template: 'Go {target}',
+        },
+        {
+          id: 'core:look',
+          name: 'Look',
+          scope: 'self',
+          prerequisites: [],
+          template: 'Look around',
+        },
+        {
+          id: 'core:take',
+          name: 'Take',
+          scope: 'actor.location.items[]',
+          prerequisites: [],
+          template: 'Take {target}',
+        },
+      ]);
+      return mock;
+    },
+    targetResolutionService: () => {
+      const mock = createMockTargetResolutionService();
+      // Configure to return successful resolution with mock targets
+      mock.resolveTargets = jest.fn().mockReturnValue({
+        success: true,
+        value: [
+          {
+            entityId: 'target-1',
+            displayName: 'Target 1',
+            components: {},
+          },
+        ],
+      });
+      return mock;
+    },
     safeEventDispatcher: createMockSafeEventDispatcher,
-    actionCommandFormatter: createMockActionCommandFormatter,
+    actionCommandFormatter: () => {
+      const mock = createMockActionCommandFormatter();
+      // Configure default behavior to successfully format commands
+      mock.format = jest.fn().mockReturnValue({
+        ok: true,
+        value: 'Formatted command',
+      });
+      return mock;
+    },
     getActorLocationFn: () => jest.fn(),
     getEntityDisplayNameFn: () => jest.fn(),
     gameDataRepository: () => ({
@@ -275,6 +329,9 @@ const ServiceFactoryMixin = createServiceFactoryMixin(
           return { actions, errors, trace };
         }),
     };
+
+    // Store the orchestrator in mocks so createStandardDiscoveryService can access it
+    mocks.actionPipelineOrchestrator = actionPipelineOrchestrator;
 
     return new ActionDiscoveryService({
       entityManager: mocks.entityManager,

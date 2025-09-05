@@ -13,11 +13,12 @@ describe('UIStateManager', () => {
   let mockResultsState;
 
   beforeEach(() => {
-    // Create mock DOM elements
+    // Create mock DOM elements with classList support for proper display detection
     mockEmptyState = {
       style: { display: 'none' },
       textContent: '',
       querySelector: jest.fn(),
+      classList: { contains: jest.fn((className) => className === 'cb-empty-state') },
     };
 
     mockLoadingState = {
@@ -25,6 +26,7 @@ describe('UIStateManager', () => {
       querySelector: jest.fn().mockReturnValue({
         textContent: '',
       }),
+      classList: { contains: jest.fn((className) => className === 'cb-loading-state') },
     };
 
     mockErrorState = {
@@ -32,11 +34,13 @@ describe('UIStateManager', () => {
       querySelector: jest.fn().mockReturnValue({
         textContent: '',
       }),
+      classList: { contains: jest.fn((className) => className === 'cb-error-state') },
     };
 
     mockResultsState = {
       style: { display: 'none' },
       querySelector: jest.fn(),
+      classList: { contains: jest.fn((className) => className === 'cb-results-state') },
     };
 
     uiStateManager = new UIStateManager({
@@ -131,7 +135,7 @@ describe('UIStateManager', () => {
       expect(mockEmptyState.style.display).toBe('none');
       expect(mockLoadingState.style.display).toBe('none');
       expect(mockErrorState.style.display).toBe('none');
-      expect(mockResultsState.style.display).toBe('flex');
+      expect(mockResultsState.style.display).toBe('block');
     });
 
     it('should throw error for invalid state', () => {
@@ -219,7 +223,7 @@ describe('UIStateManager', () => {
       uiStateManager.showState('results');
 
       // Final state should be results
-      expect(mockResultsState.style.display).toBe('flex');
+      expect(mockResultsState.style.display).toBe('block');
       expect(mockEmptyState.style.display).toBe('none');
       expect(mockLoadingState.style.display).toBe('none');
       expect(mockErrorState.style.display).toBe('none');

@@ -95,6 +95,7 @@ describe('ActionIndex', () => {
 
       actionIndex.buildIndex(actionDefinitions);
 
+      // Each unique component gets its own map entry
       expect(logger.debug).toHaveBeenCalledWith(
         'Action index built. 3 component-to-action maps created.'
       );
@@ -510,6 +511,72 @@ describe('ActionIndex', () => {
       expect(logger.debug).toHaveBeenCalledWith(
         'Action index built. 10 component-to-action maps created.'
       );
+    });
+  });
+
+  describe('multiple required components validation', () => {
+    it('should only include actions when actor has ALL required components', () => {
+      const actionDefinitions = [
+        {
+          id: 'dual-requirement',
+          name: 'Dual Requirement Action',
+          required_components: { 
+            actor: ['core:combat', 'core:inventory'] 
+          },
+        },
+        {
+          id: 'single-requirement',
+          name: 'Single Requirement Action',
+          required_components: { 
+            actor: ['core:combat'] 
+          },
+        },
+      ];
+
+      actionIndex.buildIndex(actionDefinitions);
+
+      // Actor with only one of the two required components
+      const actorEntity = { id: 'test-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:combat', // Has this
+        // Missing 'core:inventory'
+      ]);
+
+      const candidates = actionIndex.getCandidateActions(actorEntity);
+
+      // Should NOT include dual-requirement (missing core:inventory)
+      // Should include single-requirement (has core:combat)
+      expect(candidates).toHaveLength(1);
+      expect(candidates[0].id).toBe('single-requirement');
+      expect(candidates.map(a => a.id)).not.toContain('dual-requirement');
+    });
+
+    it('should include actions when actor has ALL required components plus extras', () => {
+      const actionDefinitions = [
+        {
+          id: 'dual-requirement',
+          name: 'Dual Requirement Action',
+          required_components: { 
+            actor: ['core:combat', 'core:inventory'] 
+          },
+        },
+      ];
+
+      actionIndex.buildIndex(actionDefinitions);
+
+      // Actor with all required components plus extra ones
+      const actorEntity = { id: 'test-actor' };
+      entityManager.getAllComponentTypesForEntity.mockReturnValue([
+        'core:combat',
+        'core:inventory',
+        'core:extra', // Extra component shouldn't affect inclusion
+      ]);
+
+      const candidates = actionIndex.getCandidateActions(actorEntity);
+
+      // Should include the action since actor has ALL required components
+      expect(candidates).toHaveLength(1);
+      expect(candidates[0].id).toBe('dual-requirement');
     });
   });
 

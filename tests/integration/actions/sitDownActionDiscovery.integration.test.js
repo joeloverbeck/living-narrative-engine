@@ -80,9 +80,10 @@ describe('sit_down action discovery integration', () => {
     // Mock target resolution to resolve the scope
     testBed.mocks.targetResolutionService.resolveTargets.mockImplementation(() => ({
       success: true,
-      targets: {
-        primary: ['park_bench_instance']
-      },
+      value: [{
+        entityId: 'park_bench_instance',
+        displayName: 'park bench'
+      }],
       errors: []
     }));
 
@@ -92,12 +93,19 @@ describe('sit_down action discovery integration', () => {
       details: []
     }));
 
-    // Mock formatter
-    testBed.mocks.actionCommandFormatter.format.mockImplementation((template, targets) => {
-      if (targets?.primary?.[0]) {
-        return template.replace('{target}', 'park bench');
+    // Mock formatter - expects (actionDef, target, context) from test bed
+    testBed.mocks.actionCommandFormatter.format.mockImplementation((actionDef, target, context) => {
+      // Return the expected result structure
+      if (target?.entityId === 'park_bench_instance') {
+        return {
+          ok: true,
+          value: actionDef.template.replace('{target}', 'park bench')
+        };
       }
-      return template;
+      return {
+        ok: true,
+        value: actionDef.template || 'Unknown action'
+      };
     });
 
     // Create the action discovery service
@@ -123,7 +131,7 @@ describe('sit_down action discovery integration', () => {
     const sitDownAvailable = result.actions.find(a => a.id === 'positioning:sit_down');
     expect(sitDownAvailable).toBeDefined();
     expect(sitDownAvailable?.id).toBe('positioning:sit_down');
-    expect(sitDownAvailable?.displayName).toContain('park bench');
+    expect(sitDownAvailable?.command).toContain('park bench');
   });
 
   it('should NOT discover sit_down action when actor is already sitting', async () => {

@@ -19,6 +19,7 @@ export const UI_STATES = {
 export class UIStateManager {
   #elements;
   #currentState = null;
+  #originalDisplayValues = new Map();
 
   /**
    * @param {object} elements - DOM element references
@@ -30,6 +31,7 @@ export class UIStateManager {
   constructor(elements) {
     this.#elements = elements;
     this.#validateElements();
+    this.#captureOriginalDisplayValues();
   }
 
   /**
@@ -52,6 +54,45 @@ export class UIStateManager {
   }
 
   /**
+   * Capture the original display values of elements
+   * This preserves CSS-defined display properties (flex, block, etc.)
+   *
+   * @private
+   */
+  #captureOriginalDisplayValues() {
+    // Define expected display values based on element type
+    // These match the CSS definitions for these elements
+    const expectedDisplayValues = {
+      emptyState: 'flex',    // CSS defines .cb-empty-state as flex
+      loadingState: 'flex',  // CSS defines .cb-loading-state as flex
+      errorState: 'flex',    // CSS defines .cb-error-state as flex
+      resultsState: 'block', // Results are typically block
+    };
+
+    Object.entries(this.#elements).forEach(([key, element]) => {
+      if (element) {
+        let displayValue = expectedDisplayValues[key] || 'block';
+        
+        // Check for specific CSS classes that indicate flex display
+        // This is more reliable than getComputedStyle in test environments
+        if (element.classList) {
+          if (
+            element.classList.contains('cb-empty-state') ||
+            element.classList.contains('cb-loading-state') ||
+            element.classList.contains('cb-error-state')
+          ) {
+            displayValue = 'flex';
+          } else if (element.classList.contains('cb-results-state')) {
+            displayValue = 'block';
+          }
+        }
+        
+        this.#originalDisplayValues.set(key, displayValue);
+      }
+    });
+  }
+
+  /**
    * Show a specific state
    *
    * @param {string} state - State to show (from UI_STATES)
@@ -65,10 +106,14 @@ export class UIStateManager {
     // Hide all states
     this.#hideAllStates();
 
-    // Show the requested state
+    // Show the requested state with its original display value
     const element = this.#getStateElement(state);
     if (element) {
-      element.style.display = 'block';
+      // Get the element key for this state
+      const elementKey = this.#getElementKeyForState(state);
+      // Use the original display value or fall back to 'block'
+      const originalDisplay = this.#originalDisplayValues.get(elementKey) || 'block';
+      element.style.display = originalDisplay;
 
       // Update message if provided (including empty string)
       if (
@@ -137,6 +182,23 @@ export class UIStateManager {
       [UI_STATES.RESULTS]: this.#elements.resultsState,
     };
     return elementMap[state] || null;
+  }
+
+  /**
+   * Get element key for a state
+   *
+   * @private
+   * @param {string} state - State name
+   * @returns {string} Element key
+   */
+  #getElementKeyForState(state) {
+    const keyMap = {
+      [UI_STATES.EMPTY]: 'emptyState',
+      [UI_STATES.LOADING]: 'loadingState',
+      [UI_STATES.ERROR]: 'errorState',
+      [UI_STATES.RESULTS]: 'resultsState',
+    };
+    return keyMap[state] || 'emptyState';
   }
 
   /**

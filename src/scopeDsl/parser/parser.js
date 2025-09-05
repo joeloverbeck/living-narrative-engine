@@ -235,6 +235,7 @@ class Parser {
       const v = this.advance().value;
       if (v === 'true') return true;
       if (v === 'false') return false;
+      if (v === 'null') return null;
       return v;
     }
     if (this.match('LBRACKET')) return this.parseJsonArray();

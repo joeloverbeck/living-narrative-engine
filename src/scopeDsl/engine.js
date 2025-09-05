@@ -279,20 +279,6 @@ class ScopeEngine extends IScopeEngine {
   resolve(ast, actorEntity, runtimeCtx, trace = null) {
     const source = 'ScopeEngine';
     
-    // Debug logging for sit_down action issue
-    if (runtimeCtx?.debugScope === 'positioning:available_furniture' || 
-        (ast && JSON.stringify(ast).includes('positioning:allows_sitting'))) {
-      const logger = runtimeCtx?.logger || console;
-      logger.info('[DEBUG] ScopeEngine.resolve called', {
-        actorId: actorEntity?.id,
-        hasAst: !!ast,
-        astType: ast?.type,
-        hasRuntimeCtx: !!runtimeCtx,
-        hasEntityManager: !!runtimeCtx?.entityManager,
-        hasTrace: !!trace,
-      });
-    }
-    
     trace?.addLog('step', 'Starting scope resolution.', source, { ast });
 
     // Create isolated cycle detector and depth guard for this resolution
@@ -346,8 +332,8 @@ class ScopeEngine extends IScopeEngine {
 
     // Generate key for cycle detection
     let nodeKey;
-    if (node.type === 'Union' || node.type === 'Filter') {
-      // For union and filter nodes, create a unique key based on the node object reference
+    if (node.type === 'Union' || node.type === 'Filter' || node.type === 'ArrayIterationStep') {
+      // For union, filter, and array iteration nodes, create a unique key based on the node object reference
       // This prevents false cycle detection when multiple nodes of the same type are nested
       nodeKey = `${node.type}:${Math.random().toString(36).substr(2, 9)}`;
     } else if (node.type === 'ScopeReference') {
