@@ -154,7 +154,7 @@ export class ResilientServiceWrapper {
     // Apply recovery action
     switch (recoveryResult.recoveryAction) {
       case 'continue':
-        return this.#createFallbackResult(methodName);
+        return this.#createFallbackResult(methodName, args, target);
 
       case 'retry':
         // If retry is recommended, attempt to retry the operation with exponential backoff
@@ -167,9 +167,7 @@ export class ResilientServiceWrapper {
               // Exponential backoff with jitter
               const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
               const jitteredDelay = delay * (0.5 + Math.random() * 0.5);
-              await new Promise((resolve) =>
-                setTimeout(resolve, jitteredDelay)
-              );
+              await this.#waitForDelay(jitteredDelay);
 
               // Attempt the operation
               const result = await target[methodName].apply(target, args);
@@ -187,22 +185,22 @@ export class ResilientServiceWrapper {
           }
 
           // All retries failed, return fallback
-          return this.#createFallbackResult(methodName);
+          return this.#createFallbackResult(methodName, args, target);
         }
         return recoveryResult.shouldContinue
-          ? this.#createFallbackResult(methodName)
+          ? this.#createFallbackResult(methodName, args, target)
           : undefined;
 
       case 'fallback':
         this.#fallbackMode = recoveryResult.fallbackMode;
-        return this.#createFallbackResult(methodName);
+        return this.#createFallbackResult(methodName, args, target);
 
       case 'disable':
         this.disable('Error handler requested disable');
         return this.#handleDisabledService(methodName, args);
 
       default:
-        return this.#createFallbackResult(methodName);
+        return this.#createFallbackResult(methodName, args, target);
     }
   }
 
@@ -248,6 +246,19 @@ export class ResilientServiceWrapper {
   }
 
   #handleDisabledService(methodName, args) {
+    // First check if the service has a fallback method
+    if (this.#wrappedService && typeof this.#wrappedService.getFallbackData === 'function') {
+      try {
+        return this.#wrappedService.getFallbackData.apply(this.#wrappedService, args);
+      } catch (fallbackError) {
+        this.#logger.error('Fallback method failed for disabled service', {
+          service: this.#serviceName,
+          method: methodName,
+          error: fallbackError.message,
+        });
+      }
+    }
+    
     // Return appropriate fallback based on method type
     if (methodName === 'writeTrace' || methodName === 'outputTrace') {
       return Promise.resolve(); // No-op for write methods
@@ -265,7 +276,22 @@ export class ResilientServiceWrapper {
     return undefined;
   }
 
-  #createFallbackResult(methodName) {
+  #createFallbackResult(methodName, args, target) {
+    // Check if the service has a getFallbackData method
+    if (target && typeof target.getFallbackData === 'function') {
+      try {
+        // Use the fallback data method
+        return target.getFallbackData.apply(target, args);
+      } catch (fallbackError) {
+        this.#logger.error('Fallback method also failed', {
+          service: this.#serviceName,
+          method: methodName,
+          error: fallbackError.message,
+        });
+      }
+    }
+    
+    // Standard fallbacks for common methods
     if (methodName === 'writeTrace' || methodName === 'outputTrace') {
       return Promise.resolve(); // No-op for write methods
     }
@@ -276,6 +302,11 @@ export class ResilientServiceWrapper {
 
     if (methodName === 'isEnabled') {
       return false; // Report as disabled in fallback mode
+    }
+
+    if (methodName === 'processData') {
+      // Return a default fallback value for processData method
+      return Promise.resolve('fallback-data');
     }
 
     return undefined; // Default fallback result
@@ -296,5 +327,21 @@ export class ResilientServiceWrapper {
   #shouldDisableBasedOnErrors() {
     // Disable if more than 5 errors in the current 5-minute window
     return this.#errorCount > 5;
+  }
+  
+  /**
+   * Jest-compatible delay implementation
+   *
+   * @param {number} ms - Delay in milliseconds
+   * @returns {Promise<void>} Promise that resolves after the delay
+   * @private
+   */
+  #waitForDelay(ms) {
+    return new Promise(resolve => {
+      const timer = setTimeout(resolve, ms);
+      if (typeof timer === 'object' && timer.unref) {
+        timer.unref();
+      }
+    });
   }
 }

@@ -173,7 +173,7 @@ export class TraceErrorHandler {
 
     // File system errors can vary based on context
     if (errorType === TraceErrorType.FILE_SYSTEM) {
-      if (error.code === 'ENOSPC' || error.code === 'EACCES') {
+      if (error?.code === 'ENOSPC' || error?.code === 'EACCES') {
         return TraceErrorSeverity.HIGH;
       }
       return TraceErrorSeverity.MEDIUM;
@@ -202,10 +202,19 @@ export class TraceErrorHandler {
   }
 
   #sanitizeError(error) {
+    // Handle null/undefined errors
+    if (!error) {
+      return {
+        name: 'UnknownError',
+        message: 'No error information provided',
+        code: undefined,
+      };
+    }
+    
     return {
-      name: error.name,
-      message: error.message,
-      code: error.code,
+      name: error?.name || 'UnknownError',
+      message: error?.message || 'No error message',
+      code: error?.code,
       // Don't include full stack trace in logs to prevent information leakage
     };
   }
@@ -231,7 +240,7 @@ export class TraceErrorHandler {
   }
 
   #extractSafeStackTrace(error) {
-    if (!error.stack) return null;
+    if (!error || !error.stack) return null;
 
     // Return only first few lines of stack trace to prevent log pollution
     return error.stack.split('\n').slice(0, 5).join('\n');
@@ -247,9 +256,16 @@ export class TraceErrorHandler {
     const errors = this.#errorHistory.get(componentName);
     errors.push(errorInfo);
 
-    // Keep only last 100 errors per component
-    if (errors.length > 100) {
-      errors.splice(0, errors.length - 100);
+    // Keep only last 50 errors per component (reduced from 100 to prevent memory issues)
+    if (errors.length > 50) {
+      errors.splice(0, errors.length - 50);
+    }
+    
+    // Also enforce a global limit on total components to prevent memory leaks
+    if (this.#errorHistory.size > 100) {
+      // Remove the oldest component's errors
+      const oldestComponent = this.#errorHistory.keys().next().value;
+      this.#errorHistory.delete(oldestComponent);
     }
   }
 

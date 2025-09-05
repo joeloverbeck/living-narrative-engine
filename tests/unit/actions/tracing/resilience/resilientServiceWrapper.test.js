@@ -360,4 +360,398 @@ describe('ResilientServiceWrapper', () => {
       );
     });
   });
+
+  describe('Error threshold auto-disable', () => {
+    it('should disable service when error count exceeds 5 within 5-minute window', async () => {
+      const error = new Error('Test error');
+      mockService.someMethod.mockRejectedValue(error);
+
+      const proxy = wrapper.createResilientProxy();
+
+      // Trigger 6 errors to exceed threshold
+      for (let i = 0; i < 6; i++) {
+        await proxy.someMethod();
+      }
+
+      // After 6th error, service should be disabled
+      expect(wrapper.isEnabled()).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Service disabled: TestService',
+        { reason: 'Error threshold exceeded' }
+      );
+    });
+
+    it('should reset error count after 5-minute window expires', async () => {
+      jest.useFakeTimers();
+      const error = new Error('Test error');
+      mockService.someMethod.mockRejectedValue(error);
+
+      const proxy = wrapper.createResilientProxy();
+
+      // Trigger 5 errors (not exceeding threshold)
+      for (let i = 0; i < 5; i++) {
+        await proxy.someMethod();
+      }
+      expect(wrapper.isEnabled()).toBe(true);
+
+      // Advance time by more than 5 minutes
+      jest.advanceTimersByTime(301000); // 5 minutes + 1 second
+
+      // Trigger another error - should reset counter
+      await proxy.someMethod();
+      expect(wrapper.isEnabled()).toBe(true); // Still enabled as counter reset
+
+      // Trigger 5 more errors within new window
+      for (let i = 0; i < 5; i++) {
+        await proxy.someMethod();
+      }
+
+      // Should now be disabled after 6 errors in new window
+      expect(wrapper.isEnabled()).toBe(false);
+
+      jest.useRealTimers();
+    });
+  });
+
+  describe('Retry mechanism', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should successfully retry and clear fallback mode', async () => {
+      const error = new Error('Temporary error');
+      
+      // First call fails, then succeeds on retry
+      mockService.someMethod
+        .mockRejectedValueOnce(error)
+        .mockResolvedValueOnce('retry-success');
+      
+      // Set up initial fallback mode
+      wrapper['getFallbackMode'] = jest.fn().mockReturnValue('degraded');
+      const originalGetFallbackMode = wrapper.getFallbackMode.bind(wrapper);
+      wrapper.getFallbackMode = jest.fn().mockImplementation(() => {
+        return wrapper['#fallbackMode'] || null;
+      });
+
+      mockErrorHandler.handleError.mockResolvedValue({
+        recoveryAction: 'retry',
+        shouldContinue: true,
+      });
+
+      const proxy = wrapper.createResilientProxy();
+      const resultPromise = proxy.someMethod();
+
+      // Fast-forward through retry delays
+      await jest.runAllTimersAsync();
+      const result = await resultPromise;
+
+      expect(result).toBe('retry-success');
+      expect(mockService.someMethod).toHaveBeenCalledTimes(2);
+    });
+
+    it('should exhaust all retry attempts and return fallback', async () => {
+      const error = new Error('Persistent error');
+      mockService.someMethod.mockRejectedValue(error);
+
+      mockErrorHandler.handleError.mockResolvedValue({
+        recoveryAction: 'retry',
+        shouldContinue: true,
+      });
+
+      const proxy = wrapper.createResilientProxy();
+      const resultPromise = proxy.someMethod();
+
+      // Fast-forward through all retry delays
+      await jest.runAllTimersAsync();
+      const result = await resultPromise;
+
+      // Should have attempted original + 3 retries = 4 total
+      expect(mockService.someMethod).toHaveBeenCalledTimes(4);
+      expect(result).toBeUndefined(); // Fallback result
+    });
+
+    it('should handle retry without continuation flag', async () => {
+      const error = new Error('Test error');
+      mockService.someMethod.mockRejectedValue(error);
+
+      mockErrorHandler.handleError.mockResolvedValue({
+        recoveryAction: 'retry',
+        shouldContinue: false, // No continuation
+      });
+
+      const proxy = wrapper.createResilientProxy();
+      const result = await proxy.someMethod();
+
+      expect(result).toBeUndefined();
+      expect(mockService.someMethod).toHaveBeenCalledTimes(1); // No retry attempts
+    });
+  });
+
+  describe('Error classification edge cases', () => {
+    it('should classify SyntaxError as serialization error', async () => {
+      const error = new SyntaxError('Invalid JSON');
+      mockService.someMethod.mockRejectedValue(error);
+
+      const proxy = wrapper.createResilientProxy();
+      await proxy.someMethod();
+
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        error,
+        expect.any(Object),
+        TraceErrorType.SERIALIZATION
+      );
+    });
+
+    it('should classify TypeError as serialization error', async () => {
+      const error = new TypeError('Cannot read property of undefined');
+      mockService.someMethod.mockRejectedValue(error);
+
+      const proxy = wrapper.createResilientProxy();
+      await proxy.someMethod();
+
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        error,
+        expect.any(Object),
+        TraceErrorType.SERIALIZATION
+      );
+    });
+
+    it('should classify network-related message as network error', async () => {
+      const error = new Error('Network connection failed');
+      mockService.someMethod.mockRejectedValue(error);
+
+      const proxy = wrapper.createResilientProxy();
+      await proxy.someMethod();
+
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        error,
+        expect.any(Object),
+        TraceErrorType.NETWORK
+      );
+    });
+
+    it('should classify ECONNREFUSED as network error', async () => {
+      const error = new Error('Connection refused');
+      error.code = 'ECONNREFUSED';
+      mockService.someMethod.mockRejectedValue(error);
+
+      const proxy = wrapper.createResilientProxy();
+      await proxy.someMethod();
+
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        error,
+        expect.any(Object),
+        TraceErrorType.NETWORK
+      );
+    });
+
+    it('should classify timeout message as timeout error', async () => {
+      const error = new Error('Request timeout exceeded');
+      mockService.someMethod.mockRejectedValue(error);
+
+      const proxy = wrapper.createResilientProxy();
+      await proxy.someMethod();
+
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        error,
+        expect.any(Object),
+        TraceErrorType.TIMEOUT
+      );
+    });
+
+    it('should classify ETIMEOUT code as timeout error', async () => {
+      const error = new Error('Connection timed out');
+      error.code = 'ETIMEOUT';
+      mockService.someMethod.mockRejectedValue(error);
+
+      const proxy = wrapper.createResilientProxy();
+      await proxy.someMethod();
+
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        error,
+        expect.any(Object),
+        TraceErrorType.TIMEOUT
+      );
+    });
+
+    it('should classify EACCES as file system error', async () => {
+      const error = new Error('Permission denied');
+      error.code = 'EACCES';
+      mockService.someMethod.mockRejectedValue(error);
+
+      const proxy = wrapper.createResilientProxy();
+      await proxy.someMethod();
+
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        error,
+        expect.any(Object),
+        TraceErrorType.FILE_SYSTEM
+      );
+    });
+
+    it('should classify ENOSPC as file system error', async () => {
+      const error = new Error('No space left on device');
+      error.code = 'ENOSPC';
+      mockService.someMethod.mockRejectedValue(error);
+
+      const proxy = wrapper.createResilientProxy();
+      await proxy.someMethod();
+
+      expect(mockErrorHandler.handleError).toHaveBeenCalledWith(
+        error,
+        expect.any(Object),
+        TraceErrorType.FILE_SYSTEM
+      );
+    });
+  });
+
+  describe('Recovery action edge cases', () => {
+    it('should handle unknown recovery action with fallback', async () => {
+      const error = new Error('Test error');
+      mockService.someMethod.mockRejectedValue(error);
+
+      mockErrorHandler.handleError.mockResolvedValue({
+        recoveryAction: 'unknown-action', // Unknown action
+        shouldContinue: true,
+      });
+
+      const proxy = wrapper.createResilientProxy();
+      const result = await proxy.someMethod();
+
+      expect(result).toBeUndefined(); // Should use fallback
+    });
+
+    it('should handle undefined recovery action with fallback', async () => {
+      const error = new Error('Test error');
+      mockService.someMethod.mockRejectedValue(error);
+
+      mockErrorHandler.handleError.mockResolvedValue({
+        recoveryAction: undefined, // No action specified
+        shouldContinue: true,
+      });
+
+      const proxy = wrapper.createResilientProxy();
+      const result = await proxy.someMethod();
+
+      expect(result).toBeUndefined(); // Should use fallback
+    });
+  });
+
+  describe('Fallback with getFallbackData method', () => {
+    it('should use service getFallbackData method if available', async () => {
+      const fallbackData = { fallback: 'data' };
+      mockService.getFallbackData = jest.fn().mockReturnValue(fallbackData);
+
+      const error = new Error('Test error');
+      mockService.someMethod.mockRejectedValue(error);
+
+      mockErrorHandler.handleError.mockResolvedValue({
+        recoveryAction: 'continue',
+        shouldContinue: true,
+      });
+
+      const proxy = wrapper.createResilientProxy();
+      const result = await proxy.someMethod('arg1', 'arg2');
+
+      expect(mockService.getFallbackData).toHaveBeenCalledWith('arg1', 'arg2');
+      expect(result).toBe(fallbackData);
+    });
+
+    it('should handle getFallbackData method failure', async () => {
+      const fallbackError = new Error('Fallback failed');
+      mockService.getFallbackData = jest.fn().mockImplementation(() => {
+        throw fallbackError;
+      });
+
+      const error = new Error('Test error');
+      mockService.someMethod.mockRejectedValue(error);
+
+      mockErrorHandler.handleError.mockResolvedValue({
+        recoveryAction: 'continue',
+        shouldContinue: true,
+      });
+
+      const proxy = wrapper.createResilientProxy();
+      const result = await proxy.someMethod();
+
+      expect(mockService.getFallbackData).toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Fallback method also failed',
+        expect.objectContaining({
+          service: 'TestService',
+          method: 'someMethod',
+          error: 'Fallback failed',
+        })
+      );
+      expect(result).toBeUndefined(); // Falls back to standard fallback
+    });
+  });
+
+  describe('Specific fallback return values', () => {
+    it('should return resolved promise for writeTrace in fallback', async () => {
+      const error = new Error('Test error');
+      mockService.writeTrace.mockRejectedValue(error);
+
+      mockErrorHandler.handleError.mockResolvedValue({
+        recoveryAction: 'continue',
+        shouldContinue: true,
+      });
+
+      const proxy = wrapper.createResilientProxy();
+      const result = await proxy.writeTrace();
+
+      expect(result).toBeUndefined();
+      await expect(Promise.resolve(result)).resolves.toBeUndefined();
+    });
+
+    it('should return resolved promise for outputTrace in fallback', async () => {
+      const error = new Error('Test error');
+      mockService.outputTrace.mockRejectedValue(error);
+
+      mockErrorHandler.handleError.mockResolvedValue({
+        recoveryAction: 'continue',
+        shouldContinue: true,
+      });
+
+      const proxy = wrapper.createResilientProxy();
+      const result = await proxy.outputTrace();
+
+      expect(result).toBeUndefined();
+      await expect(Promise.resolve(result)).resolves.toBeUndefined();
+    });
+
+    it('should return false for shouldTrace in fallback', async () => {
+      const error = new Error('Test error');
+      mockService.shouldTrace.mockRejectedValue(error);
+
+      mockErrorHandler.handleError.mockResolvedValue({
+        recoveryAction: 'continue',
+        shouldContinue: true,
+      });
+
+      const proxy = wrapper.createResilientProxy();
+      const result = await proxy.shouldTrace();
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false for isEnabled in fallback', async () => {
+      const error = new Error('Test error');
+      mockService.isEnabled.mockRejectedValue(error);
+
+      mockErrorHandler.handleError.mockResolvedValue({
+        recoveryAction: 'continue',
+        shouldContinue: true,
+      });
+
+      const proxy = wrapper.createResilientProxy();
+      const result = await proxy.isEnabled();
+
+      expect(result).toBe(false);
+    });
+  });
 });

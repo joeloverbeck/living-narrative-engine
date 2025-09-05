@@ -61,6 +61,11 @@ export class RetryManager {
   }
 
   #wait(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => {
+      const timer = setTimeout(resolve, ms);
+      if (typeof timer === 'object' && timer.unref) {
+        timer.unref();
+      }
+    });
   }
 }

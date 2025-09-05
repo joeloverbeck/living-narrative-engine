@@ -605,6 +605,240 @@ describe('StorageRotationManager - Rotation Policies', () => {
     });
   });
 
+  describe('Edge Cases and Error Handling', () => {
+    beforeEach(() => {
+      manager = new StorageRotationManager({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        config: {},
+      });
+    });
+
+    it('should handle unknown rotation policy gracefully', async () => {
+      manager = new StorageRotationManager({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        config: {
+          policy: 'unknown_policy', // Invalid policy
+        },
+      });
+
+      mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
+
+      const result = await manager.rotateTraces();
+
+      // Should preserve all traces and warn about unknown policy
+      expect(result.preserved).toBe(mockTraces.length);
+      expect(result.deleted).toBe(0);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Unknown policy unknown_policy')
+      );
+    });
+
+    it('should handle preservation pattern with traces having no ID', async () => {
+      const tracesWithoutIds = [
+        { timestamp: Date.now(), data: { test: 'data1' } }, // No id property
+        { id: null, timestamp: Date.now(), data: { test: 'data2' } }, // Null id
+        { id: undefined, timestamp: Date.now(), data: { test: 'data3' } }, // Undefined id
+        { id: '', timestamp: Date.now(), data: { test: 'data4' } }, // Empty id
+        { id: 'valid_id', timestamp: Date.now(), data: { test: 'data5' } }, // Valid id
+      ];
+
+      manager = new StorageRotationManager({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        config: {
+          policy: RotationPolicy.COUNT,
+          maxTraceCount: 1,
+          preservePattern: 'valid.*', // Should only match traces with valid IDs
+        },
+      });
+
+      mockStorageAdapter.getItem.mockResolvedValue(tracesWithoutIds);
+
+      await manager.rotateTraces();
+
+      const savedTraces = mockStorageAdapter.setItem.mock.calls[0][1];
+      // Should preserve the trace with valid_id due to pattern, plus 1 newest by count
+      expect(savedTraces.find((t) => t.id === 'valid_id')).toBeDefined();
+      expect(savedTraces.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should handle decompression when pako is unavailable', async () => {
+      // Remove pako from window
+      const originalPako = global.window?.pako;
+      delete global.window.pako;
+
+      const compressedTrace = {
+        id: 'compressed_trace',
+        timestamp: Date.now(),
+        data: [1, 2, 3, 4, 5],
+        compressed: true,
+      };
+
+      const result = await manager.decompressTrace(compressedTrace);
+
+      // Should return original trace unchanged when pako unavailable
+      expect(result).toEqual(compressedTrace);
+      expect(result.compressed).toBe(true);
+
+      // Restore pako
+      if (originalPako) {
+        global.window.pako = originalPako;
+      }
+    });
+
+    it('should handle decompression errors gracefully', async () => {
+      // Mock pako to throw error during decompression
+      const pakoMock = {
+        deflate: jest.fn(() => new Uint8Array([1, 2, 3, 4, 5])),
+        inflate: jest.fn().mockImplementation(() => {
+          throw new Error('Decompression failed');
+        }),
+      };
+
+      global.window = global.window || {};
+      global.window.pako = pakoMock;
+
+      const compressedTrace = {
+        id: 'compressed_trace',
+        timestamp: Date.now(),
+        data: [1, 2, 3, 4, 5],
+        compressed: true,
+      };
+
+      const result = await manager.decompressTrace(compressedTrace);
+
+      // Should return original trace when decompression fails
+      expect(result).toEqual(compressedTrace);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to decompress trace'),
+        expect.objectContaining({ id: 'compressed_trace' })
+      );
+    });
+
+    it('should handle JSON stringify errors in size estimation', async () => {
+      // Create object that will cause JSON.stringify to throw
+      const problematicTrace = {
+        id: 'problematic_trace',
+        timestamp: Date.now(),
+      };
+
+      // Create circular reference that breaks JSON.stringify
+      problematicTrace.data = { self: problematicTrace };
+
+      manager = new StorageRotationManager({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        config: {
+          policy: RotationPolicy.SIZE,
+          maxStorageSize: 5000,
+          maxTraceSize: 2000,
+        },
+      });
+
+      mockStorageAdapter.getItem.mockResolvedValue([
+        problematicTrace,
+        ...mockTraces.slice(0, 2), // Add some normal traces
+      ]);
+
+      const result = await manager.rotateTraces();
+
+      // Should complete rotation despite size estimation error
+      // The problematic trace should be handled with fallback size
+      expect(result.preserved).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should handle backward compatibility with rotationPolicy config', () => {
+      // Test the old 'rotationPolicy' field name
+      const configWithOldField = {
+        rotationPolicy: RotationPolicy.AGE, // Old field name
+        maxAge: 3600000,
+      };
+
+      manager = new StorageRotationManager({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        config: configWithOldField,
+      });
+
+      expect(manager).toBeDefined();
+      // Manager should accept the old rotationPolicy field
+    });
+
+    it('should handle decompression of non-compressed trace', async () => {
+      const regularTrace = {
+        id: 'regular_trace',
+        timestamp: Date.now(),
+        data: { test: 'data' },
+        compressed: false,
+      };
+
+      const result = await manager.decompressTrace(regularTrace);
+
+      // Should return trace unchanged if not compressed
+      expect(result).toEqual(regularTrace);
+      expect(result.compressed).toBe(false);
+    });
+
+    it('should handle compression when pako is undefined', async () => {
+      // Remove pako completely
+      const originalPako = global.window?.pako;
+      global.window = global.window || {};
+      delete global.window.pako;
+
+      manager = new StorageRotationManager({
+        storageAdapter: mockStorageAdapter,
+        logger: mockLogger,
+        config: {
+          policy: RotationPolicy.COUNT,
+          maxTraceCount: 10,
+          compressionEnabled: true,
+          compressionAge: 0, // Compress all traces
+        },
+      });
+
+      mockStorageAdapter.getItem.mockResolvedValue(mockTraces);
+
+      const result = await manager.rotateTraces();
+
+      // Should complete without compression when pako unavailable
+      expect(result.compressed).toBe(0);
+      expect(result.preserved).toBe(mockTraces.length);
+
+      // Restore pako
+      if (originalPako) {
+        global.window.pako = originalPako;
+      }
+    });
+
+    it('should handle invalid JSON during decompression', async () => {
+      const pakoMock = {
+        deflate: jest.fn(() => new Uint8Array([1, 2, 3, 4, 5])),
+        inflate: jest.fn().mockReturnValue('invalid json {'), // Invalid JSON
+      };
+
+      global.window = global.window || {};
+      global.window.pako = pakoMock;
+
+      const compressedTrace = {
+        id: 'compressed_trace',
+        timestamp: Date.now(),
+        data: [1, 2, 3, 4, 5],
+        compressed: true,
+      };
+
+      const result = await manager.decompressTrace(compressedTrace);
+
+      // Should return original trace when JSON.parse fails
+      expect(result).toEqual(compressedTrace);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to decompress trace'),
+        expect.objectContaining({ id: 'compressed_trace' })
+      );
+    });
+  });
+
   describe('Shutdown', () => {
     it('should cleanup on shutdown', () => {
       manager = new StorageRotationManager({
