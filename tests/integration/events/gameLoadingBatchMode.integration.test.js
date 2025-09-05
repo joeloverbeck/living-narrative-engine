@@ -73,8 +73,8 @@ describe('Game Loading Batch Mode Integration', () => {
 
       // Assert
       expect(mockSafeEventDispatcher.setBatchMode).toHaveBeenCalledWith(true, {
-        maxRecursionDepth: 15, // Enhanced limit for game-initialization
-        maxGlobalRecursion: 50, // Enhanced limit for game-initialization
+        maxRecursionDepth: 25, // Base limit - EventBus will apply event-specific overrides
+        maxGlobalRecursion: 200, // Higher limit for game-initialization to handle complex bulk operations
         timeoutMs: 60000,
         context: 'game-initialization'
       });
@@ -139,8 +139,8 @@ describe('Game Loading Batch Mode Integration', () => {
 
       // Assert
       expect(mockSafeEventDispatcher.setBatchMode).toHaveBeenCalledWith(true, {
-        maxRecursionDepth: 15,
-        maxGlobalRecursion: 50,
+        maxRecursionDepth: 25,
+        maxGlobalRecursion: 200,
         timeoutMs: 60000,
         context: 'game-initialization'
       });
@@ -161,8 +161,8 @@ describe('Game Loading Batch Mode Integration', () => {
 
       // Assert
       expect(mockSafeEventDispatcher.setBatchMode).toHaveBeenCalledWith(true, {
-        maxRecursionDepth: 10,
-        maxGlobalRecursion: 25,
+        maxRecursionDepth: 25,
+        maxGlobalRecursion: 50,
         timeoutMs: 30000,
         context: 'bulk-operation'
       });
@@ -217,7 +217,7 @@ describe('Game Loading Batch Mode Integration', () => {
         expect.stringContaining('SafeErrorLogger: Enabled batch mode for game-initialization')
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('maxRecursionDepth: 15, maxGlobalRecursion: 50')
+        expect.stringContaining('maxRecursionDepth: 25, maxGlobalRecursion: 200')
       );
     });
   });
@@ -264,8 +264,8 @@ describe('Game Loading Batch Mode Integration', () => {
       // Assert
       expect(promise).resolves.toBe('success');
       expect(mockSafeEventDispatcher.setBatchMode).toHaveBeenCalledWith(true, {
-        maxRecursionDepth: 15,
-        maxGlobalRecursion: 50,
+        maxRecursionDepth: 25,
+        maxGlobalRecursion: 200,
         timeoutMs: 30000,
         context: 'game-initialization'
       });

@@ -4,7 +4,7 @@
  */
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
-import { DISPLAY_SPEECH_ID, PORTRAIT_CLICKED } from '../constants/eventIds.js';
+import { DISPLAY_SPEECH_ID, DISPLAY_THOUGHT_ID, PORTRAIT_CLICKED } from '../constants/eventIds.js';
 import { validateDependency } from '../utils/dependencyUtils.js';
 import {
   PLAYER_COMPONENT_ID,
@@ -26,6 +26,7 @@ import { DEFAULT_SPEAKER_NAME } from './uiDefaults.js';
 
 /**
  * @typedef {import('../constants/eventIds.js').DisplaySpeechPayload} DisplaySpeechPayload
+ * @typedef {import('../constants/eventIds.js').DisplayThoughtPayload} DisplayThoughtPayload
  */
 
 export class SpeechBubbleRenderer extends BoundDomRendererBase {
@@ -122,8 +123,9 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
     }
 
     this._subscribe(DISPLAY_SPEECH_ID, this.#onDisplaySpeech.bind(this));
+    this._subscribe(DISPLAY_THOUGHT_ID, this.#onDisplayThought.bind(this));
     this.logger.debug(
-      `${this._logPrefix} Initialized and subscribed to ${DISPLAY_SPEECH_ID}.`
+      `${this._logPrefix} Initialized and subscribed to ${DISPLAY_SPEECH_ID} and ${DISPLAY_THOUGHT_ID}.`
     );
   }
 
@@ -154,6 +156,36 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       return;
     }
     this.renderSpeech(eventObject.payload);
+  }
+
+  /**
+   * Handles the DISPLAY_THOUGHT_ID event.
+   *
+   * @private
+   * @param {{type: string, payload: DisplayThoughtPayload}} eventObject - The event object.
+   */
+  #onDisplayThought(eventObject) {
+    if (!eventObject || !eventObject.payload) {
+      this.logger.warn(
+        `${this._logPrefix} Received invalid DISPLAY_THOUGHT_ID event object.`,
+        eventObject
+      );
+      return;
+    }
+    const { entityId, thoughts } = eventObject.payload;
+    if (
+      typeof entityId !== 'string' ||
+      !entityId ||
+      typeof thoughts !== 'string' ||
+      !thoughts
+    ) {
+      this.logger.warn(
+        `${this._logPrefix} Invalid payload for DISPLAY_THOUGHT_ID.`,
+        eventObject.payload
+      );
+      return;
+    }
+    this.renderThought(eventObject.payload);
   }
 
   /**
@@ -443,6 +475,115 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
 
     this.logger.debug(
       `${this._logPrefix} Rendered speech for ${speakerName}${isPlayer ? ' (Player)' : ''}.`
+    );
+  }
+
+  /**
+   * Renders a thought bubble for a given entity with thoughts and optional notes.
+   *
+   * @param {DisplayThoughtPayload} payload - The thought data.
+   */
+  renderThought(payload) {
+    if (
+      !this.effectiveSpeechContainer ||
+      !this.domElementFactory ||
+      !this.#entityManager
+    ) {
+      this.logger.error(
+        `${this._logPrefix} Cannot render thought: effectiveSpeechContainer, domElementFactory, or entityManager missing.`
+      );
+      return;
+    }
+
+    const { entityId, thoughts, notes } = payload;
+
+    // Create thought-specific elements
+    const speakerName = this.#entityDisplayDataProvider.getEntityName(
+      entityId,
+      'Unknown Character'
+    );
+    const portraitPath =
+      this.#entityDisplayDataProvider.getEntityPortraitPath(entityId);
+
+    const thoughtEntryDiv = this.domElementFactory.create('div', {
+      cls: 'thought-entry',
+    });
+    const thoughtBubbleDiv = this.domElementFactory.create('div', {
+      cls: 'thought-bubble',
+    });
+
+    if (!thoughtEntryDiv || !thoughtBubbleDiv) {
+      this.logger.error(
+        `${this._logPrefix} Failed to create thought entry or bubble div.`
+      );
+      return;
+    }
+
+    // Check if this is a player entity
+    let isPlayer = false;
+    const thinkerEntity = this.#entityManager.getEntityInstance(entityId);
+    if (thinkerEntity) {
+      if (thinkerEntity.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
+        const playerTypeData = thinkerEntity.getComponentData(
+          PLAYER_TYPE_COMPONENT_ID
+        );
+        isPlayer = playerTypeData?.type === 'human';
+      } else if (thinkerEntity.hasComponent(PLAYER_COMPONENT_ID)) {
+        isPlayer = true;
+      }
+    }
+
+    if (isPlayer) {
+      thoughtEntryDiv.classList.add('player-thought');
+    }
+
+    // Add speaker intro for thoughts
+    const speakerIntroSpan = this.domElementFactory.span(
+      'thought-speaker-intro'
+    );
+    if (speakerIntroSpan) {
+      speakerIntroSpan.textContent = `${speakerName} thinks: `;
+      thoughtBubbleDiv.appendChild(speakerIntroSpan);
+    }
+
+    // Add the thought content in italics
+    const thoughtContentSpan = this.domElementFactory.span(
+      'thought-content'
+    );
+    if (thoughtContentSpan) {
+      thoughtContentSpan.textContent = thoughts;
+      thoughtBubbleDiv.appendChild(thoughtContentSpan);
+    }
+
+    // Add notes if present (reuse existing buildSpeechMeta functionality)
+    const thoughtMetaFragment = buildSpeechMeta(
+      this.documentContext.document,
+      this.domElementFactory,
+      {
+        notes,
+      }
+    );
+    if (thoughtMetaFragment) {
+      thoughtBubbleDiv.classList.add('has-meta');
+      thoughtBubbleDiv.appendChild(thoughtMetaFragment);
+    }
+
+    // Add portrait if available
+    const hasPortrait = this.#addPortrait(
+      thoughtEntryDiv,
+      portraitPath,
+      speakerName
+    );
+
+    thoughtEntryDiv.appendChild(thoughtBubbleDiv);
+    this.effectiveSpeechContainer.appendChild(thoughtEntryDiv);
+
+    if (!hasPortrait) {
+      this.scrollToBottom();
+    }
+
+    this.logger.debug(
+      `${this._logPrefix} Rendered thought for ${speakerName}${isPlayer ? ' (Player)' : ''}.`
     );
   }
 

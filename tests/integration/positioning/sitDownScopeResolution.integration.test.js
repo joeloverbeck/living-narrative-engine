@@ -4,66 +4,90 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { EntityManager } from '../../../src/entities/entityManager.js';
-import { EventBus } from '../../../src/events/eventBus.js';
-import { ComponentRegistry } from '../../../src/components/componentRegistry.js';
-import { EntityLifecycleManager } from '../../../src/entities/services/entityLifecycleManager.js';
-import { EntityRepositoryAdapter } from '../../../src/entities/services/entityRepositoryAdapter.js';
-import { EntityQueryManager } from '../../../src/entities/managers/EntityQueryManager.js';
-import { ScopeEngine } from '../../../src/scopeDsl/engine.js';
-import { ScopeRegistry } from '../../../src/scopeDsl/scopeRegistry.js';
-import { createMockLogger } from '../../common/mocks/mockLogger.js';
-import { EntityDefinition } from '../../../src/entities/entityDefinition.js';
-import { EntityInstanceData } from '../../../src/entities/entityInstanceData.js';
-import { Entity } from '../../../src/entities/entity.js';
-import { ComponentRegistryUtility } from '../../../src/components/componentRegistryUtility.js';
+import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
+import { createEntityInstance } from '../../common/entities/entityFactories.js';
+import ScopeEngine from '../../../src/scopeDsl/engine.js';
+import { parseDslExpression } from '../../../src/scopeDsl/parser/parser.js';
+import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
+import { clearEntityCache } from '../../../src/scopeDsl/core/entityHelpers.js';
 
 describe('Sit Down Scope Resolution - Integration', () => {
   let entityManager;
   let scopeEngine;
-  let scopeRegistry;
-  let logger;
-  let eventBus;
-  let componentRegistry;
-  let entityRepository;
+  let mockLogger;
+  let jsonLogicEval;
+  let registry;
 
   beforeEach(() => {
-    logger = createMockLogger();
-    eventBus = new EventBus({ logger });
-    componentRegistry = new ComponentRegistry({ logger });
+    // Clear any global entity cache to prevent test interference
+    clearEntityCache();
     
-    // Create entity repository
-    entityRepository = new EntityRepositoryAdapter({ logger });
+    // Create logger with addLog method for trace support
+    mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      addLog: jest.fn()
+    };
 
-    // Create entity managers
-    const entityQueryManager = new EntityQueryManager({ 
-      logger, 
-      entityRepository 
-    });
-    
-    const entityLifecycleManager = new EntityLifecycleManager({ 
-      logger,
-      eventBus,
-      entityRepository,
-      componentRegistry
+    // Create entity manager
+    entityManager = new SimpleEntityManager();
+
+    // Create data registry and JSON logic evaluator
+    registry = new InMemoryDataRegistry({ logger: mockLogger });
+    jsonLogicEval = new JsonLogicEvaluationService({ logger: mockLogger });
+
+    // Register component definitions in the data registry
+    registry.store('components', 'positioning:allows_sitting', {
+      id: 'positioning:allows_sitting',
+      dataSchema: {
+        type: 'object',
+        properties: {
+          spots: {
+            type: 'array',
+            items: { type: ['null', 'string'] }
+          }
+        },
+        required: ['spots']
+      }
     });
 
-    entityManager = new EntityManager({
-      logger,
-      componentRegistry,
-      eventRepository: entityRepository,
-      queryManager: entityQueryManager,
-      lifecycleManager: entityLifecycleManager,
-      eventBus
+    registry.store('components', 'core:position', {
+      id: 'core:position',
+      dataSchema: {
+        type: 'object',
+        properties: {
+          locationId: { type: 'string' }
+        },
+        required: ['locationId']
+      }
     });
 
-    // Create scope engine and registry
-    scopeRegistry = new ScopeRegistry({ logger });
-    scopeEngine = new ScopeEngine({ 
-      logger, 
-      scopeRegistry,
-      errorHandler: null 
+    registry.store('components', 'core:actor', {
+      id: 'core:actor',
+      dataSchema: {
+        type: 'object',
+        properties: {
+          isPlayerControlled: { type: 'boolean' }
+        }
+      }
     });
+
+    registry.store('components', 'core:name', {
+      id: 'core:name',
+      dataSchema: {
+        type: 'object',
+        properties: {
+          text: { type: 'string' }
+        },
+        required: ['text']
+      }
+    });
+
+    // Create scope engine with no parameters (it will use runtime context)
+    scopeEngine = new ScopeEngine();
   });
 
   afterEach(() => {
@@ -72,134 +96,71 @@ describe('Sit Down Scope Resolution - Integration', () => {
 
   describe('positioning:available_furniture scope resolution', () => {
     it('should find park bench entity with allows_sitting component at same location', () => {
-      // Define the positioning:allows_sitting component
-      componentRegistry.registerComponent({
-        id: 'positioning:allows_sitting',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            spots: {
-              type: 'array',
-              items: { type: ['null', 'string'] }
-            }
-          },
-          required: ['spots']
-        }
-      });
-
-      // Define the core:position component
-      componentRegistry.registerComponent({
-        id: 'core:position',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            locationId: { type: 'string' }
-          },
-          required: ['locationId']
-        }
-      });
-
-      // Define the core:actor component  
-      componentRegistry.registerComponent({
-        id: 'core:actor',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            isPlayerControlled: { type: 'boolean' }
-          }
-        }
-      });
-
-      // Define core:name component
-      componentRegistry.registerComponent({
-        id: 'core:name',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            text: { type: 'string' }
-          },
-          required: ['text']
-        }
-      });
-
-      // Create park bench definition
-      const parkBenchDef = new EntityDefinition({
-        id: 'test:park_bench',
-        components: {
+      // Create park bench entity using factory
+      const parkBench = createEntityInstance({
+        instanceId: 'test:park_bench_instance',
+        definitionId: 'test:park_bench',
+        baseComponents: {
           'core:name': { text: 'park bench' },
+          'core:position': { locationId: 'test:park' },
           'positioning:allows_sitting': { spots: [null, null] }
         }
       });
 
-      // Create park bench instance
-      const parkBenchInstanceData = new EntityInstanceData({
-        instanceId: 'test:park_bench_instance',
-        definitionId: 'test:park_bench',
-        definition: parkBenchDef,
-        overrides: {
-          'core:position': { locationId: 'test:park' }
-        }
-      });
-      const parkBenchEntity = new Entity(parkBenchInstanceData);
-
-      // Create actor definition
-      const actorDef = new EntityDefinition({
-        id: 'test:actor',
-        components: {
+      // Create actor entity using factory
+      const actor = createEntityInstance({
+        instanceId: 'test:actor_instance',
+        definitionId: 'test:actor',
+        baseComponents: {
           'core:name': { text: 'Test Actor' },
           'core:actor': { isPlayerControlled: false },
           'core:position': { locationId: 'test:park' }
         }
       });
 
-      // Create actor instance
-      const actorInstanceData = new EntityInstanceData({
-        instanceId: 'test:actor_instance',
-        definitionId: 'test:actor', 
-        definition: actorDef,
-        overrides: {}
-      });
-      const actorEntity = new Entity(actorInstanceData);
-
       // Add entities to manager
-      entityManager.addEntity(parkBenchEntity);
-      entityManager.addEntity(actorEntity);
+      entityManager.addEntity(parkBench);
+      entityManager.addEntity(actor);
 
-      // Register the scope
-      scopeRegistry.registerScope(
-        'positioning:available_furniture',
-        `entities(positioning:allows_sitting)[][{
-          "and": [
-            {
-              "==": [
-                {"var": "entity.components.core:position.locationId"},
-                {"var": "actor.components.core:position.locationId"}
-              ]
-            },
-            {
-              "some": [
-                {"var": "entity.components.positioning:allows_sitting.spots"},
-                {"==": [{"var": ""}, null]}
-              ]
-            }
-          ]
-        }]`
-      );
-
-      // Create runtime context with entity manager
+      // Create runtime context
       const runtimeCtx = {
-        entityManager,
-        componentRegistry
+        entityManager: entityManager,
+        registry: registry,
+        jsonLogicEval: jsonLogicEval
       };
 
-      // Resolve the scope
+      // Parse the scope expression with filtering
+      const scopeExpr = `entities(positioning:allows_sitting)[][{
+        "and": [
+          {
+            "==": [
+              {"var": "entity.components.core:position.locationId"},
+              {"var": "actor.components.core:position.locationId"}
+            ]
+          },
+          {
+            "some": [
+              {"var": "entity.components.positioning:allows_sitting.spots"},
+              {"==": [{"var": ""}, null]}
+            ]
+          }
+        ]
+      }]`;
+
+      const ast = parseDslExpression(scopeExpr);
+
+      // Resolve the scope - convert actor Entity to plain object with components
+      const actorForScope = {
+        id: actor.id,
+        components: actor.getAllComponents()
+      };
+      
       const result = scopeEngine.resolve(
-        'positioning:available_furniture',
-        {
-          actorEntity,
-          runtimeCtx
-        }
+        ast,
+        actorForScope,
+        runtimeCtx
       );
+
 
       // Verify the park bench was found
       expect(result).toBeDefined();
@@ -214,124 +175,65 @@ describe('Sit Down Scope Resolution - Integration', () => {
     });
 
     it('should not find entities with allows_sitting at different locations', () => {
-      // Define components (same as above)
-      componentRegistry.registerComponent({
-        id: 'positioning:allows_sitting',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            spots: {
-              type: 'array',
-              items: { type: ['null', 'string'] }
-            }
-          },
-          required: ['spots']
-        }
-      });
-
-      componentRegistry.registerComponent({
-        id: 'core:position',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            locationId: { type: 'string' }
-          },
-          required: ['locationId']
-        }
-      });
-
-      componentRegistry.registerComponent({
-        id: 'core:actor',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            isPlayerControlled: { type: 'boolean' }
-          }
-        }
-      });
-
-      componentRegistry.registerComponent({
-        id: 'core:name',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            text: { type: 'string' }
-          },
-          required: ['text']
-        }
-      });
-
-      // Create park bench at different location
-      const parkBenchDef = new EntityDefinition({
-        id: 'test:park_bench',
-        components: {
+      // Create park bench at different location using factory
+      const parkBench = createEntityInstance({
+        instanceId: 'test:park_bench_instance',
+        definitionId: 'test:park_bench',
+        baseComponents: {
           'core:name': { text: 'park bench' },
+          'core:position': { locationId: 'test:different_location' },
           'positioning:allows_sitting': { spots: [null, null] }
         }
       });
 
-      const parkBenchInstanceData = new EntityInstanceData({
-        instanceId: 'test:park_bench_instance',
-        definitionId: 'test:park_bench',
-        definition: parkBenchDef,
-        overrides: {
-          'core:position': { locationId: 'test:different_location' } // Different location
-        }
-      });
-      const parkBenchEntity = new Entity(parkBenchInstanceData);
-
-      // Create actor at park
-      const actorDef = new EntityDefinition({
-        id: 'test:actor',
-        components: {
-          'core:name': { text: 'Test Actor' },
-          'core:actor': { isPlayerControlled: false },
-          'core:position': { locationId: 'test:park' } // Different from bench
-        }
-      });
-
-      const actorInstanceData = new EntityInstanceData({
+      // Create actor at park using factory
+      const actor = createEntityInstance({
         instanceId: 'test:actor_instance',
         definitionId: 'test:actor',
-        definition: actorDef,
-        overrides: {}
+        baseComponents: {
+          'core:name': { text: 'Test Actor' },
+          'core:actor': { isPlayerControlled: false },
+          'core:position': { locationId: 'test:park' }
+        }
       });
-      const actorEntity = new Entity(actorInstanceData);
 
       // Add entities
-      entityManager.addEntity(parkBenchEntity);
-      entityManager.addEntity(actorEntity);
+      entityManager.addEntity(parkBench);
+      entityManager.addEntity(actor);
 
-      // Register the scope
-      scopeRegistry.registerScope(
-        'positioning:available_furniture',
-        `entities(positioning:allows_sitting)[][{
-          "and": [
-            {
-              "==": [
-                {"var": "entity.components.core:position.locationId"},
-                {"var": "actor.components.core:position.locationId"}
-              ]
-            },
-            {
-              "some": [
-                {"var": "entity.components.positioning:allows_sitting.spots"},
-                {"==": [{"var": ""}, null]}
-              ]
-            }
-          ]
-        }]`
-      );
-
-      // Resolve the scope
-      const result = scopeEngine.resolve(
-        'positioning:available_furniture',
-        {
-          actorEntity,
-          runtimeCtx: {
-            entityManager,
-            componentRegistry
+      // Parse the scope expression
+      const scopeExpr = `entities(positioning:allows_sitting)[][{
+        "and": [
+          {
+            "==": [
+              {"var": "entity.components.core:position.locationId"},
+              {"var": "actor.components.core:position.locationId"}
+            ]
+          },
+          {
+            "some": [
+              {"var": "entity.components.positioning:allows_sitting.spots"},
+              {"==": [{"var": ""}, null]}
+            ]
           }
+        ]
+      }]`;
+
+      const ast = parseDslExpression(scopeExpr);
+
+      // Resolve the scope - convert actor Entity to plain object with components
+      const actorForScope = {
+        id: actor.id,
+        components: actor.getAllComponents()
+      };
+      
+      const result = scopeEngine.resolve(
+        ast,
+        actorForScope,
+        {
+          entityManager: entityManager,
+          registry: registry,
+          jsonLogicEval: jsonLogicEval
         }
       );
 
@@ -341,148 +243,81 @@ describe('Sit Down Scope Resolution - Integration', () => {
     });
 
     it('should find entities only with available spots', () => {
-      // Define components
-      componentRegistry.registerComponent({
-        id: 'positioning:allows_sitting',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            spots: {
-              type: 'array',
-              items: { type: ['null', 'string'] }
-            }
-          },
-          required: ['spots']
-        }
-      });
-
-      componentRegistry.registerComponent({
-        id: 'core:position',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            locationId: { type: 'string' }
-          },
-          required: ['locationId']
-        }
-      });
-
-      componentRegistry.registerComponent({
-        id: 'core:actor',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            isPlayerControlled: { type: 'boolean' }
-          }
-        }
-      });
-
-      componentRegistry.registerComponent({
-        id: 'core:name',
-        dataSchema: {
-          type: 'object',
-          properties: {
-            text: { type: 'string' }
-          },
-          required: ['text']
-        }
-      });
-
-      // Create occupied bench (all spots taken)
-      const occupiedBenchDef = new EntityDefinition({
-        id: 'test:occupied_bench',
-        components: {
+      // Create occupied bench (all spots taken) using factory
+      const occupiedBench = createEntityInstance({
+        instanceId: 'test:occupied_bench_instance',
+        definitionId: 'test:occupied_bench',
+        baseComponents: {
           'core:name': { text: 'occupied bench' },
+          'core:position': { locationId: 'test:park' },
           'positioning:allows_sitting': { 
             spots: ['occupant1', 'occupant2'] // All spots occupied
           }
         }
       });
 
-      const occupiedBenchInstanceData = new EntityInstanceData({
-        instanceId: 'test:occupied_bench_instance',
-        definitionId: 'test:occupied_bench',
-        definition: occupiedBenchDef,
-        overrides: {
-          'core:position': { locationId: 'test:park' }
-        }
-      });
-      const occupiedBenchEntity = new Entity(occupiedBenchInstanceData);
-
-      // Create available bench (has null spots)
-      const availableBenchDef = new EntityDefinition({
-        id: 'test:available_bench',
-        components: {
+      // Create available bench (has null spots) using factory
+      const availableBench = createEntityInstance({
+        instanceId: 'test:available_bench_instance',
+        definitionId: 'test:available_bench',
+        baseComponents: {
           'core:name': { text: 'available bench' },
+          'core:position': { locationId: 'test:park' },
           'positioning:allows_sitting': { 
             spots: [null, 'occupant1'] // One spot available
           }
         }
       });
 
-      const availableBenchInstanceData = new EntityInstanceData({
-        instanceId: 'test:available_bench_instance',
-        definitionId: 'test:available_bench',
-        definition: availableBenchDef,
-        overrides: {
-          'core:position': { locationId: 'test:park' }
-        }
-      });
-      const availableBenchEntity = new Entity(availableBenchInstanceData);
-
-      // Create actor
-      const actorDef = new EntityDefinition({
-        id: 'test:actor',
-        components: {
+      // Create actor using factory
+      const actor = createEntityInstance({
+        instanceId: 'test:actor_instance',
+        definitionId: 'test:actor',
+        baseComponents: {
           'core:name': { text: 'Test Actor' },
           'core:actor': { isPlayerControlled: false },
           'core:position': { locationId: 'test:park' }
         }
       });
 
-      const actorInstanceData = new EntityInstanceData({
-        instanceId: 'test:actor_instance',
-        definitionId: 'test:actor',
-        definition: actorDef,
-        overrides: {}
-      });
-      const actorEntity = new Entity(actorInstanceData);
-
       // Add entities
-      entityManager.addEntity(occupiedBenchEntity);
-      entityManager.addEntity(availableBenchEntity);
-      entityManager.addEntity(actorEntity);
+      entityManager.addEntity(occupiedBench);
+      entityManager.addEntity(availableBench);
+      entityManager.addEntity(actor);
 
-      // Register the scope
-      scopeRegistry.registerScope(
-        'positioning:available_furniture',
-        `entities(positioning:allows_sitting)[][{
-          "and": [
-            {
-              "==": [
-                {"var": "entity.components.core:position.locationId"},
-                {"var": "actor.components.core:position.locationId"}
-              ]
-            },
-            {
-              "some": [
-                {"var": "entity.components.positioning:allows_sitting.spots"},
-                {"==": [{"var": ""}, null]}
-              ]
-            }
-          ]
-        }]`
-      );
-
-      // Resolve the scope
-      const result = scopeEngine.resolve(
-        'positioning:available_furniture',
-        {
-          actorEntity,
-          runtimeCtx: {
-            entityManager,
-            componentRegistry
+      // Parse the scope expression
+      const scopeExpr = `entities(positioning:allows_sitting)[][{
+        "and": [
+          {
+            "==": [
+              {"var": "entity.components.core:position.locationId"},
+              {"var": "actor.components.core:position.locationId"}
+            ]
+          },
+          {
+            "some": [
+              {"var": "entity.components.positioning:allows_sitting.spots"},
+              {"==": [{"var": ""}, null]}
+            ]
           }
+        ]
+      }]`;
+
+      const ast = parseDslExpression(scopeExpr);
+
+      // Resolve the scope - convert actor Entity to plain object with components
+      const actorForScope = {
+        id: actor.id,
+        components: actor.getAllComponents()
+      };
+      
+      const result = scopeEngine.resolve(
+        ast,
+        actorForScope,
+        {
+          entityManager: entityManager,
+          registry: registry,
+          jsonLogicEval: jsonLogicEval
         }
       );
 

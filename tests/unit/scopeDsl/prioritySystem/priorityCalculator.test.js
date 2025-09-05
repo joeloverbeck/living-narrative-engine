@@ -1,4 +1,49 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+
+// Mock the priorityConstants module
+jest.mock('../../../../src/scopeDsl/prioritySystem/priorityConstants.js', () => {
+  const mockPriorityConfig = {
+    enableCaching: true,
+    enableTieBreaking: true,
+    enableContextualModifiers: false,
+    enableValidation: true,
+    maxCacheSize: 1000,
+    logInvalidPriorities: true,
+    defaultCoveragePriority: 'direct',
+    defaultLayer: 'base',
+  };
+
+  return {
+    COVERAGE_PRIORITY: Object.freeze({
+      outer: 100,
+      base: 200,
+      underwear: 300,
+      direct: 400,
+    }),
+    LAYER_PRIORITY_WITHIN_COVERAGE: Object.freeze({
+      outer: 10,
+      base: 20,
+      underwear: 30,
+      accessories: 40,
+    }),
+    VALID_COVERAGE_PRIORITIES: Object.freeze([
+      'outer',
+      'base',
+      'underwear', 
+      'direct',
+    ]),
+    VALID_LAYERS: Object.freeze([
+      'outer',
+      'base',
+      'underwear',
+      'accessories',
+    ]),
+    PRIORITY_CONFIG: mockPriorityConfig,
+    // Export the config for test access
+    __mockPriorityConfig: mockPriorityConfig,
+  };
+});
+
 import {
   calculateCoveragePriorityOptimized,
   calculatePriorityWithValidation,
@@ -7,6 +52,7 @@ import {
   clearPriorityCache,
   getCacheStats,
 } from '../../../../src/scopeDsl/prioritySystem/priorityCalculator.js';
+import { __mockPriorityConfig as mockPriorityConfig } from '../../../../src/scopeDsl/prioritySystem/priorityConstants.js';
 
 describe('PriorityCalculator', () => {
   beforeEach(() => {
@@ -449,6 +495,270 @@ describe('PriorityCalculator', () => {
       const sorted = sortCandidatesWithTieBreaking(candidates);
       expect(sorted).toHaveLength(1);
       expect(sorted[0].itemId).toBe('single');
+    });
+  });
+
+  describe('Configuration Override Tests - Coverage Line 42, 124, 142', () => {
+    beforeEach(() => {
+      clearPriorityCache();
+      // Reset config to defaults
+      Object.assign(mockPriorityConfig, {
+        enableCaching: true,
+        enableTieBreaking: true,
+        enableContextualModifiers: false,
+        enableValidation: true,
+        maxCacheSize: 1000,
+      });
+    });
+
+    afterEach(() => {
+      clearPriorityCache();
+    });
+
+    it('should bypass caching when enableCaching is false (Line 42)', () => {
+      // Disable caching in mock config
+      mockPriorityConfig.enableCaching = false;
+
+      const result1 = calculateCoveragePriorityOptimized('outer', 'outer');
+      const result2 = calculateCoveragePriorityOptimized('outer', 'outer');
+
+      expect(result1).toBe(110);
+      expect(result2).toBe(110);
+
+      // Verify cache is not populated when caching is disabled
+      const stats = getCacheStats();
+      expect(stats.size).toBe(0);
+      expect(stats.enabled).toBe(false);
+    });
+
+    it('should bypass validation when enableValidation is false (Line 124)', () => {
+      // Disable validation in mock config
+      mockPriorityConfig.enableValidation = false;
+
+      const mockLogger = { warn: jest.fn() };
+
+      // Use invalid inputs - should not trigger validation warnings
+      const result = calculatePriorityWithValidation(
+        'invalid_coverage',
+        'invalid_layer',
+        mockLogger
+      );
+
+      // Should still get a result (fallback values applied at lower level)
+      expect(typeof result).toBe('number');
+      expect(result).toBe(420); // Both fallbacks applied at base level
+      
+      // Should not log warnings since validation is disabled
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should use simple sort when enableTieBreaking is false (Line 142)', () => {
+      // Disable tie-breaking in mock config
+      mockPriorityConfig.enableTieBreaking = false;
+
+      const candidates = [
+        { itemId: 'direct_item', priority: 220, source: 'direct' },
+        { itemId: 'coverage_item', priority: 220, source: 'coverage' },
+      ];
+
+      const sorted = sortCandidatesWithTieBreaking(candidates);
+
+      // Should maintain original order since priorities are equal
+      // and tie-breaking is disabled
+      expect(sorted).toHaveLength(2);
+      expect(sorted[0].priority).toBe(220);
+      expect(sorted[1].priority).toBe(220);
+      
+      // With simple sort, order should be maintained as input
+      expect(sorted[0].itemId).toBe('direct_item');
+      expect(sorted[1].itemId).toBe('coverage_item');
+    });
+  });
+
+  describe('Cache Size Limit Tests - Coverage Lines 53-54', () => {
+    beforeEach(() => {
+      clearPriorityCache();
+      // Reset config to defaults
+      Object.assign(mockPriorityConfig, {
+        enableCaching: true,
+        maxCacheSize: 1000,
+      });
+    });
+
+    afterEach(() => {
+      clearPriorityCache();
+    });
+
+    it('should evict oldest entries when cache size limit is reached', () => {
+      // Set small cache limit for testing
+      mockPriorityConfig.maxCacheSize = 3;
+      mockPriorityConfig.enableCaching = true;
+
+      // Fill cache to limit
+      calculateCoveragePriorityOptimized('test1', 'layer1'); // Entry 1
+      calculateCoveragePriorityOptimized('test2', 'layer2'); // Entry 2
+      calculateCoveragePriorityOptimized('test3', 'layer3'); // Entry 3
+
+      let stats = getCacheStats();
+      expect(stats.size).toBe(3);
+
+      // Add one more entry to trigger eviction (Line 53-54)
+      calculateCoveragePriorityOptimized('test4', 'layer4'); // Should evict entry 1
+
+      stats = getCacheStats();
+      expect(stats.size).toBe(3); // Size should remain at limit
+      expect(stats.maxSize).toBe(3);
+
+      // Add multiple entries to verify continued eviction
+      calculateCoveragePriorityOptimized('test5', 'layer5'); // Should evict entry 2
+      calculateCoveragePriorityOptimized('test6', 'layer6'); // Should evict entry 3
+
+      stats = getCacheStats();
+      expect(stats.size).toBe(3); // Still at limit
+    });
+
+    it('should maintain cache functionality after eviction', () => {
+      // Set small cache limit
+      mockPriorityConfig.maxCacheSize = 2;
+      mockPriorityConfig.enableCaching = true;
+
+      // Fill cache
+      const result1 = calculateCoveragePriorityOptimized('outer', 'outer');
+      const result2 = calculateCoveragePriorityOptimized('base', 'base');
+
+      expect(getCacheStats().size).toBe(2);
+
+      // Trigger eviction
+      const result3 = calculateCoveragePriorityOptimized('underwear', 'underwear');
+
+      expect(getCacheStats().size).toBe(2); // Size maintained
+      expect(result1).toBe(110);
+      expect(result2).toBe(220);
+      expect(result3).toBe(330);
+
+      // Verify cache still works for recent entries
+      const result3Again = calculateCoveragePriorityOptimized('underwear', 'underwear');
+      expect(result3Again).toBe(330);
+    });
+  });
+
+  describe('Contextual Modifiers Tests - Coverage Lines 179-196', () => {
+    beforeEach(() => {
+      // Reset config to defaults
+      Object.assign(mockPriorityConfig, {
+        enableContextualModifiers: false,
+      });
+    });
+
+    it('should apply weather-based adjustments when contextual modifiers enabled', () => {
+      // Enable contextual modifiers
+      mockPriorityConfig.enableContextualModifiers = true;
+
+      const candidate = { coveragePriority: 'outer', layer: 'outer' };
+      const context = { weather: 'cold' };
+
+      const result = applyContextualModifiers(110, candidate, context);
+
+      // Cold weather should prioritize outer layers (-10 adjustment)
+      expect(result).toBe(100); // 110 - 10 = 100 (Line 183)
+    });
+
+    it('should apply damage-based adjustments when contextual modifiers enabled', () => {
+      // Enable contextual modifiers
+      mockPriorityConfig.enableContextualModifiers = true;
+
+      const candidate = { damaged: true };
+      const context = { weather: 'normal' };
+
+      const result = applyContextualModifiers(110, candidate, context);
+
+      // Damaged items should be deprioritized (+50 adjustment)
+      expect(result).toBe(160); // 110 + 50 = 160 (Line 188)
+    });
+
+    it('should apply social context adjustments when contextual modifiers enabled', () => {
+      // Enable contextual modifiers
+      mockPriorityConfig.enableContextualModifiers = true;
+
+      const candidate = { layer: 'accessories' };
+      const context = { social: 'formal' };
+
+      const result = applyContextualModifiers(110, candidate, context);
+
+      // Formal settings should prioritize accessories (-5 adjustment)
+      expect(result).toBe(105); // 110 - 5 = 105 (Line 193)
+    });
+
+    it('should apply combined contextual modifiers', () => {
+      // Enable contextual modifiers
+      mockPriorityConfig.enableContextualModifiers = true;
+
+      const candidate = { 
+        coveragePriority: 'outer',
+        layer: 'accessories',
+        damaged: true 
+      };
+      const context = { 
+        weather: 'cold',
+        social: 'formal' 
+      };
+
+      const result = applyContextualModifiers(110, candidate, context);
+
+      // Multiple adjustments: -10 (cold) + 50 (damaged) - 5 (formal)
+      expect(result).toBe(145); // 110 - 10 + 50 - 5 = 145
+    });
+
+    it('should handle partial context matches', () => {
+      // Enable contextual modifiers
+      mockPriorityConfig.enableContextualModifiers = true;
+
+      const candidate = { coveragePriority: 'base' }; // No outer priority
+      const context = { weather: 'cold' };
+
+      const result = applyContextualModifiers(220, candidate, context);
+
+      // Should not apply cold weather adjustment since it's not outer layer
+      expect(result).toBe(220); // No change
+    });
+
+    it('should handle missing context properties gracefully', () => {
+      // Enable contextual modifiers
+      mockPriorityConfig.enableContextualModifiers = true;
+
+      const candidate = { layer: 'accessories' };
+      const context = { weather: 'cold' }; // Missing social context
+
+      const result = applyContextualModifiers(110, candidate, context);
+
+      // Should not apply social adjustment since context.social is undefined
+      expect(result).toBe(110); // No change
+    });
+
+    it('should handle empty context object', () => {
+      // Enable contextual modifiers
+      mockPriorityConfig.enableContextualModifiers = true;
+
+      const candidate = { coveragePriority: 'outer', damaged: true };
+      const context = {}; // Empty context
+
+      const result = applyContextualModifiers(110, candidate, context);
+
+      // Should only apply damage adjustment since other contexts are missing
+      expect(result).toBe(160); // 110 + 50 = 160
+    });
+
+    it('should return base priority when contextual modifiers disabled (existing behavior)', () => {
+      // Ensure contextual modifiers are disabled (default state)
+      mockPriorityConfig.enableContextualModifiers = false;
+
+      const candidate = { coveragePriority: 'outer', damaged: true };
+      const context = { weather: 'cold', social: 'formal' };
+
+      const result = applyContextualModifiers(110, candidate, context);
+
+      // Should return base priority without modifications
+      expect(result).toBe(110);
     });
   });
 });

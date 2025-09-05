@@ -201,7 +201,7 @@ describe('ProcessingCommandState helpers', () => {
     await state._dispatchSpeech(ctx, actor, decisionMeta);
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("has no 'speech' field in decisionMeta")
+      expect.stringContaining("has no 'speech' or 'thoughts' fields in decisionMeta")
     );
   });
 
@@ -213,7 +213,7 @@ describe('ProcessingCommandState helpers', () => {
     await state._dispatchSpeech(ctx, actor, decisionMeta);
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("has no 'speech' field in decisionMeta")
+      expect.stringContaining("has no 'speech' or 'thoughts' fields in decisionMeta")
     );
   });
 
@@ -225,7 +225,7 @@ describe('ProcessingCommandState helpers', () => {
     await state._dispatchSpeech(ctx, actor, decisionMeta);
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("has no 'speech' field in decisionMeta")
+      expect.stringContaining('had thoughts but no speech')
     );
   });
 
@@ -266,5 +266,35 @@ describe('ProcessingCommandState helpers', () => {
     await workflow._executeAction(ctx, actor, action);
 
     expect(handlerSpy).toHaveBeenCalledWith(ctx, err, actor.id);
+  });
+
+  test('_dispatchSpeech dispatches thought event when thoughts present but no speech', async () => {
+    const actor = { id: 'a1' };
+    const dispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    const ctx = makeCtx(actor, { getSafeEventDispatcher: () => dispatcher });
+    
+    // Mock the dispatchThoughtEvent module
+    const dispatchThoughtEventModule = await import('../../../../src/turns/states/helpers/dispatchThoughtEvent.js');
+    const thoughtEventSpy = jest.spyOn(dispatchThoughtEventModule, 'dispatchThoughtEvent').mockResolvedValue(undefined);
+    
+    await state._dispatchSpeech(ctx, actor, { thoughts: 'thinking about stuff' });
+    
+    expect(thoughtEventSpy).toHaveBeenCalledWith(ctx, mockHandler, 'a1', {
+      entityId: 'a1',
+      thoughts: 'thinking about stuff'
+    });
+    thoughtEventSpy.mockRestore();
+  });
+
+  test('_dispatchSpeech handles both empty speech and thoughts fields', async () => {
+    const actor = { id: 'a1' };
+    const ctx = makeCtx(actor);
+    const decisionMeta = {}; // completely empty
+
+    await state._dispatchSpeech(ctx, actor, decisionMeta);
+
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining("has no 'speech' or 'thoughts' fields in decisionMeta")
+    );
   });
 });

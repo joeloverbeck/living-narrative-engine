@@ -16,6 +16,7 @@ export const ACTION_DECIDED_ID = 'core:action_decided';
 
 export const ATTEMPT_ACTION_ID = 'core:attempt_action';
 export const ENTITY_SPOKE_ID = 'core:entity_spoke';
+export const ENTITY_THOUGHT_ID = 'core:entity_thought';
 
 /**
  * @typedef {object} DisplaySpeechPayload
@@ -34,6 +35,22 @@ export const ENTITY_SPOKE_ID = 'core:entity_spoke';
  * @see {DisplaySpeechPayload}
  */
 export const DISPLAY_SPEECH_ID = 'core:display_speech';
+
+/**
+ * @typedef {object} DisplayThoughtPayload
+ * @property {string} entityId The ID of the entity that had thoughts. Used to fetch the portrait.
+ * @property {string} thoughts Internal monologue or thoughts.
+ * @property {*} [notes] Private notes or annotations (optional).
+ */
+
+/**
+ * Fired when an entity's thoughts should be displayed in the UI (without speech).
+ *
+ * @type {string}
+ * @constant
+ * @see {DisplayThoughtPayload}
+ */
+export const DISPLAY_THOUGHT_ID = 'core:display_thought';
 
 /**
  * @typedef {object} PortraitClickedPayload

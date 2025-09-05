@@ -208,6 +208,7 @@ export default function createFilterResolver({
 
             const evalResult = logicEval.evaluate(node.logic, evalCtx);
             
+            
             if (evalResult) {
               result.add(item);
             }

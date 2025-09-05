@@ -195,6 +195,11 @@ export default function createArrayIterationResolver({ errorHandler = null } = {
           if (parentValue !== null && parentValue !== undefined) {
             result.add(parentValue);
           }
+        } else if (node.parent.type === 'ArrayIterationStep') {
+          // Pass through for entities()[][] case where parent ArrayIterationStep returns entity IDs
+          if (parentValue !== null && parentValue !== undefined) {
+            result.add(parentValue);
+          }
         } else if (
           node.parent.type === 'Step' &&
           node.parent.field === 'entities' &&

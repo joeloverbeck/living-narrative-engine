@@ -250,7 +250,7 @@ describe('EventBus Infinite Recursion Prevention', () => {
       // Should stop when global recursion limit (10) is reached
       expect(totalDispatches).toBeLessThanOrEqual(10);
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Global recursion limit (10) exceeded for non-workflow events (batch mode: global-limit-test)')
+        expect.stringContaining('Global recursion limit (10) exceeded for non-workflow/non-component events (batch mode: global-limit-test)')
       );
 
       consoleSpy.mockRestore();

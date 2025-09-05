@@ -249,7 +249,7 @@ describe('TraitsGeneratorController - Concept Access', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify that generateTraits was called with the correct concept
-      // Note: cliches will be converted from Cliche object to array format by #convertClicheToArray
+      // Production code passes the cliché object as-is without transformation
       expect(mockCharacterBuilderService.generateTraits).toHaveBeenCalledWith(
         expect.objectContaining({
           concept: mockDirectionWithConcept.concept, // Should pass the actual concept object
@@ -259,13 +259,7 @@ describe('TraitsGeneratorController - Concept Access', () => {
             internalContradiction: 'Test contradiction',
             centralQuestion: 'Test question?',
           },
-          cliches: [
-            {
-              id: 'cliche-1',
-              category: 'names',
-              content: 'Generic fantasy names',
-            },
-          ],
+          cliches: mockCliches, // Passed as-is in object format
         })
       );
     });

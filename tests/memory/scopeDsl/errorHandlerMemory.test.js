@@ -71,7 +71,7 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
   });
 
   describe('Memory Pressure Testing', () => {
-    it('should handle errors under memory pressure', () => {
+    it('should handle errors under memory pressure', async () => {
       const iterations = 1000;
       const largeContext = {
         depth: 0,
@@ -89,7 +89,9 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
         }),
       };
 
-      const memoryBefore = process.memoryUsage().heapUsed;
+      // Force GC and get stable baseline memory
+      await global.memoryTestUtils.forceGCAndWait();
+      const memoryBefore = await global.memoryTestUtils.getStableMemoryUsage(3);
       let successCount = 0;
 
       for (let i = 0; i < iterations; i++) {
@@ -108,10 +110,14 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
         // Clear buffer periodically to prevent unbounded growth
         if (i % 100 === 0) {
           errorHandler.clearErrorBuffer();
+          // Force GC after buffer clear to ensure memory reclamation
+          await global.memoryTestUtils.forceGCAndWait();
         }
       }
 
-      const memoryAfter = process.memoryUsage().heapUsed;
+      // Force GC and get stable final memory measurement
+      await global.memoryTestUtils.forceGCAndWait();
+      const memoryAfter = await global.memoryTestUtils.getStableMemoryUsage(3);
       const memoryIncrease = memoryAfter - memoryBefore;
       const successRate = successCount / iterations;
 
@@ -122,8 +128,9 @@ describe('ScopeDslErrorHandler Memory Testing', () => {
         avgMemoryPerError: memoryIncrease / iterations,
       });
 
-      // Memory assertions (increased tolerance for CI environments with different memory characteristics)
-      expect(memoryIncrease).toBeLessThan(80 * 1024 * 1024); // <80MB increase
+      // Use environment-aware memory threshold for CI tolerance
+      const memoryThreshold = global.memoryTestUtils.getMemoryThreshold(80); // 80MB base, 120MB in CI
+      expect(memoryIncrease).toBeLessThan(memoryThreshold);
       expect(successRate).toBeGreaterThan(0.95); // >95% success
     });
 

@@ -186,22 +186,12 @@ These workflows are fundamental to system operation and data integrity.
 - Concurrent registration scenarios
 
 #### 1.2 Context Assembly Pipeline
-**File**: `tests/e2e/logic/contextAssemblyWorkflow.e2e.test.js`
-**Note**: Has indirect coverage through JSON Logic tests but needs direct workflow testing
-**Coverage Goals**:
-- Full context creation from events
-- Actor/target resolution edge cases
-- Component accessor functionality
-- Nested context preservation
-- Integration with operation execution pipeline
+**Status**: Test suite removed due to outdated API assumptions requiring complete rewrite
+**Note**: Has indirect coverage through JSON Logic tests
 
-#### 1.3 Flow Control Execution
-**File**: `tests/e2e/logic/flowControlWorkflow.e2e.test.js`
-**Coverage Goals**:
-- Nested IF/ELSE branches
-- FOR_EACH with large collections
-- Variable scoping and restoration
-- Error propagation in nested flows
+#### 1.3 Flow Control Execution  
+**Status**: Test suite removed due to ill-designed implementation requiring complete rewrite
+**Note**: Basic flow control is tested through other integration tests
 
 ### Priority 2: HIGH - Data Modification and State Management
 These workflows directly modify game state and require transactional integrity.

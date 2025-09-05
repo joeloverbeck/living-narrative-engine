@@ -196,12 +196,35 @@ export class ActionIndex {
       );
     }
 
-    // Convert candidateSet to array directly - no additional filtering needed
-    // The candidateSet already contains only valid actions:
-    // - Actions with no requirements were added from noActorRequirement
-    // - Actions requiring specific components were only added if actor has those components
-    // - Actions with forbidden components were already removed
-    const candidates = Array.from(candidateSet);
+    // Filter candidates to ensure actor has ALL required components
+    // Actions may have been added to candidateSet if actor has ANY of the required components,
+    // but we need to ensure actor has ALL required components
+    const candidates = Array.from(candidateSet).filter((action) => {
+      const requiredActorComponents = action.required_components?.actor;
+      
+      // If no required components or empty array, include the action
+      if (!requiredActorComponents || !Array.isArray(requiredActorComponents) || requiredActorComponents.length === 0) {
+        return true;
+      }
+      
+      // Check if actor has ALL required components
+      const hasAllRequired = requiredActorComponents.every((componentType) => 
+        actorComponentTypes.includes(componentType)
+      );
+      
+      if (!hasAllRequired) {
+        trace?.info(
+          `Excluding action '${action.id}' - actor missing required components.`,
+          source,
+          { 
+            required: requiredActorComponents,
+            actorHas: actorComponentTypes.filter(c => requiredActorComponents.includes(c))
+          }
+        );
+      }
+      
+      return hasAllRequired;
+    });
 
     trace?.success(
       `Final candidate list contains ${candidates.length} unique actions after component validation.`,

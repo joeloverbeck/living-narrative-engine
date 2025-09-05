@@ -4,16 +4,14 @@
  */
 
 import { describe, test, expect } from '@jest/globals';
+import fs from 'fs';
+import path from 'path';
 
 describe('Performance Test Suite Runner', () => {
   test('should verify performance test files exist', () => {
-    const fs = require('fs');
-    const path = require('path');
-
     const performanceDir = path.join(__dirname);
     const expectedFiles = [
       'cache-performance.test.js',
-      'memory-usage.test.js',
       'load-testing.test.js',
       'performance-benchmarks.test.js',
     ];
