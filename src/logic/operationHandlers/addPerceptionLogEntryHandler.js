@@ -98,9 +98,10 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       return;
     }
 
-    let updated = 0;
-
-    /* ── update each perceiver ──────────────────────────────────── */
+    // Prepare batch updates
+    const componentSpecs = [];
+    
+    /* ── prepare batch updates ──────────────────────────────────── */
     for (const id of entityIds) {
       if (!this.#entityManager.hasComponent(id, PERCEPTION_LOG_COMPONENT_ID)) {
         continue; // not a perceiver
@@ -128,26 +129,92 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
         logEntries: nextLogEntries,
       };
 
-      /* write back ---------------------------------------------------------- */
-      try {
-        await this.#entityManager.addComponent(
-          id,
-          PERCEPTION_LOG_COMPONENT_ID,
-          updatedComponent
-        );
-        updated++;
-      } catch (e) {
-        safeDispatchError(
-          this.#dispatcher,
-          `ADD_PERCEPTION_LOG_ENTRY: failed to update ${id}: ${e.message}`,
-          { stack: e.stack, entityId: id }
-        );
-      }
+      // Add to batch
+      componentSpecs.push({
+        instanceId: id,
+        componentTypeId: PERCEPTION_LOG_COMPONENT_ID,
+        componentData: updatedComponent
+      });
     }
 
-    log.debug(
-      `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updated}/${entityIds.size} perceivers in ${locationId}`
-    );
+    /* ── execute batch update ─────────────────────────────────────── */
+    if (componentSpecs.length > 0) {
+      try {
+        // Check if the optimized batch method exists
+        if (typeof this.#entityManager.batchAddComponentsOptimized === 'function') {
+          // Use optimized batch update that emits a single event
+          const { updateCount, errors } = await this.#entityManager.batchAddComponentsOptimized(
+            componentSpecs,
+            true // emit single batch event
+          );
+          
+          if (errors && errors.length > 0) {
+            for (const { spec, error } of errors) {
+              safeDispatchError(
+                this.#dispatcher,
+                `ADD_PERCEPTION_LOG_ENTRY: failed to update ${spec.instanceId}: ${error.message}`,
+                { stack: error.stack, entityId: spec.instanceId }
+              );
+            }
+          }
+          
+          log.debug(
+            `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updateCount}/${entityIds.size} perceivers in ${locationId} (batch mode)`
+          );
+        } else {
+          // Fallback to regular batch method if optimized version doesn't exist
+          let updated = 0;
+          for (const spec of componentSpecs) {
+            try {
+              await this.#entityManager.addComponent(
+                spec.instanceId,
+                spec.componentTypeId,
+                spec.componentData
+              );
+              updated++;
+            } catch (e) {
+              safeDispatchError(
+                this.#dispatcher,
+                `ADD_PERCEPTION_LOG_ENTRY: failed to update ${spec.instanceId}: ${e.message}`,
+                { stack: e.stack, entityId: spec.instanceId }
+              );
+            }
+          }
+          
+          log.debug(
+            `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updated}/${entityIds.size} perceivers in ${locationId}`
+          );
+        }
+      } catch (e) {
+        log.error('ADD_PERCEPTION_LOG_ENTRY: Batch update failed', e);
+        // Fallback to individual updates if batch fails
+        let updated = 0;
+        for (const spec of componentSpecs) {
+          try {
+            await this.#entityManager.addComponent(
+              spec.instanceId,
+              spec.componentTypeId,
+              spec.componentData
+            );
+            updated++;
+          } catch (err) {
+            safeDispatchError(
+              this.#dispatcher,
+              `ADD_PERCEPTION_LOG_ENTRY: failed to update ${spec.instanceId}: ${err.message}`,
+              { stack: err.stack, entityId: spec.instanceId }
+            );
+          }
+        }
+        
+        log.debug(
+          `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updated}/${entityIds.size} perceivers in ${locationId} (fallback mode)`
+        );
+      }
+    } else {
+      log.debug(
+        `ADD_PERCEPTION_LOG_ENTRY: No perceivers found in location ${locationId}`
+      );
+    }
   }
 }
 

@@ -387,7 +387,7 @@ describe('Error Capture Integration', () => {
       // (since trace is already completed with first error)
       expect(() => {
         trace.captureError(error2);
-      }).toThrow(); // Should throw because trace is already ended
+      }).not.toThrow(); // Should not throw - gracefully ignores duplicate error capture
     });
 
     it('should handle malformed stack traces without breaking', () => {

@@ -22,7 +22,9 @@
           "navy",
           "deep-navy",
           "sand-beige",
-          "indigo"
+          "indigo",
+          "taupe",
+          "smoke-black"
         ],
         "default": "raven-black"
       }

@@ -14,7 +14,7 @@
     "actor": []
   },
   "forbidden_components": {
-    "actor": ["positioning:facing_away"]
+    "actor": ["positioning:facing_away", "positioning:sitting_on"]
   },
   "template": "turn your back to {target}",
   "prerequisites": [],

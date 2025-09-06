@@ -121,6 +121,7 @@
       "entity_moved.event.json",
       "entity_removed.event.json",
       "entity_spoke.event.json",
+      "entity_thought.event.json",
       "existing_cliches_loaded.event.json",
       "limb_detached.event.json",
       "motivations_search_performed.event.json",
@@ -177,6 +178,7 @@
     "rules": [
       "dismiss.rule.json",
       "entity_speech.rule.json",
+      "entity_thought.rule.json",
       "follow.rule.json",
       "follow_auto_move.rule.json",
       "go.rule.json",

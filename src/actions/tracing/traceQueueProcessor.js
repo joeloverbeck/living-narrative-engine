@@ -12,7 +12,7 @@ import {
   getPriorityLevels,
 } from './tracePriority.js';
 import { QUEUE_CONSTANTS, QUEUE_EVENTS } from './actionTraceTypes.js';
-import { TimerService, defaultTimerService } from './timerService.js';
+import { defaultTimerService } from './timerService.js';
 import { TraceIdGenerator } from './traceIdGenerator.js';
 
 /**
@@ -34,6 +34,7 @@ export class TraceQueueProcessor {
   #isProcessing;
   #processingBatch;
   #batchTimer;
+  #processedTraceIds;
 
   // Resource management
   #currentMemoryUsage;
@@ -103,6 +104,7 @@ export class TraceQueueProcessor {
     this.#isProcessing = false;
     this.#processingBatch = new Set();
     this.#batchTimer = null;
+    this.#processedTraceIds = new Set();
 
     // Initialize resource management
     this.#currentMemoryUsage = 0;
@@ -600,7 +602,16 @@ export class TraceQueueProcessor {
       this.#resetFailureTracking();
     } catch (error) {
       this.#logger.error('TraceQueueProcessor: Batch processing failed', error);
-      await this.#handleBatchFailure(batch, error);
+      
+      // Only handle batch failure for sequential processing
+      // In parallel mode, items have already handled their own failures
+      if (!this.#config.enableParallelProcessing || batch.length === 1) {
+        await this.#handleBatchFailure(batch, error);
+      } else {
+        // For parallel processing, just track the batch failure without re-queuing
+        this.#metrics.totalErrors++;
+        this.#trackFailure();
+      }
     }
 
     // Update latency metrics
@@ -681,19 +692,35 @@ export class TraceQueueProcessor {
     if (this.#config.enableParallelProcessing && batch.length > 1) {
       // Process items in parallel with concurrency limit
       const concurrencyLimit = Math.min(batch.length, 5);
-      const promises = [];
+      const allResults = [];
+      let hasFailures = false;
 
       for (let i = 0; i < batch.length; i += concurrencyLimit) {
         const chunk = batch.slice(i, i + concurrencyLimit);
-        const chunkPromises = chunk.map((item) => this.#processItem(item));
-        promises.push(Promise.all(chunkPromises));
+        // Use Promise.allSettled to ensure all items are processed even if some fail
+        const chunkResults = await Promise.allSettled(
+          chunk.map((item) => this.#processItem(item, true)) // Pass flag for parallel mode
+        );
+        
+        // Track results and check for failures
+        chunkResults.forEach((result) => {
+          allResults.push(result);
+          if (result.status === 'rejected') {
+            hasFailures = true;
+          }
+        });
       }
 
-      await Promise.all(promises);
+      // If any items failed, throw error to trigger batch failure handling
+      // Note: Individual item failures and retries are already handled by #processItem
+      if (hasFailures) {
+        const failureCount = allResults.filter(r => r.status === 'rejected').length;
+        throw new Error(`Batch processing failed: ${failureCount}/${allResults.length} items failed`);
+      }
     } else {
       // Process items sequentially
       for (const item of batch) {
-        await this.#processItem(item);
+        await this.#processItem(item, false); // Pass flag for sequential mode
       }
     }
   }
@@ -705,8 +732,19 @@ export class TraceQueueProcessor {
    * @param {object} item - Queue item to process
    * @returns {Promise<void>}
    */
-  async #processItem(item) {
+  async #processItem(item, isParallel = false) {
     const itemStartTime = Date.now();
+
+    // Check if this item is already being processed or has been processed
+    if (this.#processedTraceIds.has(item.id) || this.#processingBatch.has(item.id)) {
+      this.#logger.debug('TraceQueueProcessor: Item already processed or processing', {
+        itemId: item.id,
+      });
+      return;
+    }
+
+    // Mark as being processed
+    this.#processingBatch.add(item.id);
 
     try {
       // Get existing traces from storage
@@ -744,6 +782,9 @@ export class TraceQueueProcessor {
       // Update success metrics
       this.#metrics.totalProcessed++;
 
+      // Mark as successfully processed
+      this.#processedTraceIds.add(item.id);
+
       // Track latency for critical items
       if (item.priority === TracePriority.CRITICAL) {
         const itemLatency = Date.now() - item.timestamp;
@@ -761,9 +802,18 @@ export class TraceQueueProcessor {
       // Track failure for circuit breaker
       this.#trackFailure();
 
-      // Handle item failure
-      await this.#handleItemFailure(item, error);
-      throw error; // Re-throw for batch handling
+      // Handle item failure (retry scheduling)
+      // In parallel mode, always handle retry here
+      // In sequential mode, let batch handler do it to avoid double retry
+      if (isParallel) {
+        await this.#handleItemFailure(item, error);
+      }
+      
+      // Always re-throw for batch handling
+      throw error;
+    } finally {
+      // Always remove from processing batch
+      this.#processingBatch.delete(item.id);
     }
   }
 
@@ -1010,7 +1060,7 @@ export class TraceQueueProcessor {
         try {
           existingTraces =
             (await this.#storageAdapter.getItem(this.#config.storageKey)) || [];
-        } catch (e) {
+        } catch (_error) {
           // If we can't read, start fresh
           this.#logger.debug(
             'TraceQueueProcessor: Could not read existing traces during shutdown'

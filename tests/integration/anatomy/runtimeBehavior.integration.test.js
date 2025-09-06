@@ -486,7 +486,7 @@ describe('Anatomy Runtime Behavior Integration', () => {
         testBed.anatomyGenerationService.generateAnatomyIfNeeded
       ).toHaveBeenCalledWith(bodyEntity.id);
 
-      anatomyInitService.dispose();
+      anatomyInitService.destroy();
     });
 
     it('should not regenerate anatomy for reconstructed entities', async () => {
@@ -558,7 +558,7 @@ describe('Anatomy Runtime Behavior Integration', () => {
 
       expect(generateCalled).toBe(false);
 
-      anatomyInitService.dispose();
+      anatomyInitService.destroy();
     });
   });
 

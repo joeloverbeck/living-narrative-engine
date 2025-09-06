@@ -257,6 +257,7 @@ export const PERFORMANCE_THRESHOLDS = {
   // Memory thresholds
   MAX_MEMORY_MB: 150,
   MEMORY_GROWTH_LIMIT_MB: 10,
+  MEMORY_GROWTH_LIMIT_PERCENT: 50, // Maximum 50% growth allowed
   
   // Performance analysis thresholds
   ACCEPTABLE_SLOWDOWN_PERCENT: 10,

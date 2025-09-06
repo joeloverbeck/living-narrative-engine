@@ -130,6 +130,7 @@ describe('BodyComponent Schema Validation', () => {
           'toned',
           'athletic',
           'shapely',
+          'hourglass',
           'thick',
           'muscular',
           'stocky',

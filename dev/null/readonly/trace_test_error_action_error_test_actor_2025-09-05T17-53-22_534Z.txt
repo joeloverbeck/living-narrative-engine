@@ -1,0 +1,30 @@
+=== Trace ID: 20250905_175322_test-error_action_39be93 ===
+Timestamp: 2025-09-05T17:53:22.534Z
+
+{
+  "metadata": {
+    "actionId": "test:error_action",
+    "actorId": "error_test_actor",
+    "traceType": "execution",
+    "createdAt": "2025-09-05T17:53:22.532Z",
+    "version": "1.0"
+  },
+  "turnAction": {
+    "actionDefinitionId": "test:error_action",
+    "commandString": "test command",
+    "parameters": {}
+  },
+  "components": {},
+  "prerequisites": [],
+  "targets": [],
+  "execution": {
+    "startTime": 1757094802432,
+    "endTime": 1757094802532,
+    "duration": 100,
+    "status": "success",
+    "result": {
+      "success": true,
+      "error": null
+    }
+  }
+}

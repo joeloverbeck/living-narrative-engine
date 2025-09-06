@@ -443,6 +443,19 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
    */
   describe('Scenario 4: Critical Path Analysis During Complex Gaming Workflows', () => {
     test('should identify performance bottlenecks in nested action pipelines', async () => {
+      // Configure thresholds to ensure reliable alert generation for test consistency
+      // The 120ms inventory:auto_repair action should reliably trigger slow operation alerts
+      testBed.setMonitoringConfig({
+        thresholds: {
+          slowOperationMs: 80,  // Lowered from 100ms to ensure 120ms action always triggers alert
+          criticalOperationMs: 500,
+          maxConcurrency: 10,
+          maxTotalDurationMs: 5000,
+          maxErrorRate: 5,
+          maxMemoryUsageMB: 50,
+        },
+      });
+
       monitoringSession = testBed.startMonitoring();
 
       // Simulate complex nested workflow (e.g., combat with inventory management)

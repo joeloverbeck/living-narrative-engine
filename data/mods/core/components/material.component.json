@@ -28,7 +28,9 @@
           "fabric",
           "synthetic",
           "nylon",
-          "organic"
+          "organic",
+          "microfiber",
+          "satin"
         ]
       },
       "durability": {

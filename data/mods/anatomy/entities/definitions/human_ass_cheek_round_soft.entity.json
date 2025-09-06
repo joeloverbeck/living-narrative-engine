@@ -1,0 +1,19 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:human_ass_cheek_round_soft",
+    "description": "A human ass cheek with round shape characteristics",
+    "components": {
+        "anatomy:part": {
+            "subType": "ass_cheek"
+        },
+        "descriptors:shape_general": {
+            "shape": "round"
+        },
+        "descriptors:firmness": {
+            "firmness": "soft"
+        },
+        "core:name": {
+            "text": "ass cheek"
+        }
+    }
+}
