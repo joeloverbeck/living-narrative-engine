@@ -8,6 +8,7 @@ import { tokens } from '../tokens.js';
 import DispatchEventHandler from '../../logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import DispatchSpeechHandler from '../../logic/operationHandlers/dispatchSpeechHandler.js';
+import DispatchThoughtHandler from '../../logic/operationHandlers/dispatchThoughtHandler.js';
 import LogHandler from '../../logic/operationHandlers/logHandler.js';
 import ModifyComponentHandler from '../../logic/operationHandlers/modifyComponentHandler.js';
 import AddComponentHandler from '../../logic/operationHandlers/addComponentHandler.js';
@@ -33,6 +34,7 @@ import ModifyContextArrayHandler from '../../logic/operationHandlers/modifyConte
 import AutoMoveFollowersHandler from '../../logic/operationHandlers/autoMoveFollowersHandler.js';
 import MergeClosenessCircleHandler from '../../logic/operationHandlers/mergeClosenessCircleHandler.js';
 import RemoveFromClosenessCircleHandler from '../../logic/operationHandlers/removeFromClosenessCircleHandler.js';
+import EstablishSittingClosenessHandler from '../../logic/operationHandlers/establishSittingClosenessHandler.js';
 import HasBodyPartWithComponentValueHandler from '../../logic/operationHandlers/hasBodyPartWithComponentValueHandler.js';
 import UnequipClothingHandler from '../../logic/operationHandlers/unequipClothingHandler.js';
 import LockMovementHandler from '../../logic/operationHandlers/lockMovementHandler.js';
@@ -74,6 +76,15 @@ export function registerOperationHandlers(registrar) {
     [
       tokens.DispatchSpeechHandler,
       DispatchSpeechHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        }),
+    ],
+    [
+      tokens.DispatchThoughtHandler,
+      DispatchThoughtHandler,
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),
@@ -326,6 +337,17 @@ export function registerOperationHandlers(registrar) {
     [
       tokens.RemoveFromClosenessCircleHandler,
       RemoveFromClosenessCircleHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          closenessCircleService: c.resolve(tokens.ClosenessCircleService),
+        }),
+    ],
+    [
+      tokens.EstablishSittingClosenessHandler,
+      EstablishSittingClosenessHandler,
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),

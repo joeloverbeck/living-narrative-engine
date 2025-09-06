@@ -41,6 +41,7 @@
           "item_drop",
           "item_use",
           "speech_local",
+          "thought_internal",
           "action_self_general",
           "action_target_general",
           "combat_attack",

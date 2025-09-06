@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/unlockMouthEngagement.schema.json",
+  "title": "UNLOCK_MOUTH_ENGAGEMENT Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "UNLOCK_MOUTH_ENGAGEMENT",
+          "description": "Operation type identifier for unlocking mouth engagement"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      },
+      "required": ["type", "parameters"]
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the UNLOCK_MOUTH_ENGAGEMENT operation. Unlocks mouth engagement for the specified actor.",
+      "properties": {
+        "actor_id": {
+          "type": "string",
+          "description": "The ID of the actor to unlock mouth engagement for",
+          "minLength": 1
+        }
+      },
+      "required": ["actor_id"],
+      "additionalProperties": false
+    }
+  }
+}

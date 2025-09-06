@@ -17,6 +17,7 @@ const OPERATION_SCHEMA_FILES = [
   'dispatchEvent.schema.json',
   'dispatchPerceptibleEvent.schema.json',
   'dispatchSpeech.schema.json',
+  'dispatchThought.schema.json',
   'endTurn.schema.json',
   'establishFollowRelation.schema.json',
   'establishSittingCloseness.schema.json',
@@ -26,6 +27,7 @@ const OPERATION_SCHEMA_FILES = [
   'hasComponent.schema.json',
   'if.schema.json',
   'ifCoLocated.schema.json',
+  'lockMouthEngagement.schema.json',
   'lockMovement.schema.json',
   'log.schema.json',
   'math.schema.json',
@@ -45,6 +47,7 @@ const OPERATION_SCHEMA_FILES = [
   'setVariable.schema.json',
   'systemMoveEntity.schema.json',
   'unequipClothing.schema.json',
+  'unlockMouthEngagement.schema.json',
   'unlockMovement.schema.json',
 ];
 

@@ -33,6 +33,34 @@ describe('Dual-Format Action Tracing Integration', () => {
 
   afterEach(async () => {
     await cleanupTempDirectory(tempDirectory);
+    
+    // Clean up any accidentally created directories from error tests
+    const fs = await import('fs/promises');
+    const path = await import('path');
+    
+    // Check and clean up relative paths that might have been created
+    const accidentalPaths = [
+      'dev/null/readonly',
+      'nonexistent/directory/path'
+    ];
+    
+    for (const accidentalPath of accidentalPaths) {
+      try {
+        await fs.rm(accidentalPath, { recursive: true, force: true });
+        // Also try to remove parent directories if empty
+        const parentPath = path.dirname(accidentalPath);
+        if (parentPath && parentPath !== '.') {
+          try {
+            await fs.rmdir(parentPath);
+          } catch {
+            // Parent not empty or doesn't exist, ignore
+          }
+        }
+      } catch {
+        // Path doesn't exist, which is fine
+      }
+    }
+    
     if (mockLlmProxyServer) {
       await mockLlmProxyServer.stop();
     }
@@ -555,7 +583,7 @@ describe('Dual-Format Action Tracing Integration', () => {
       const readOnlyConfig = {
         enabled: true,
         tracedActions: ['test:error_action'],
-        outputDirectory: '/dev/null/readonly', // Invalid path
+        outputDirectory: '/nonexistent/directory/path', // Guaranteed non-writable path
         outputToFile: true,
         outputFormats: ['json', 'text'],
       };

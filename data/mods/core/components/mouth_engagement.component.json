@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:mouth_engagement",
+  "description": "Controls an entity's mouth availability for actions. Contains a lock that can be set by systems (like intimacy or eating mods) to temporarily prevent conflicting mouth-based actions.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "locked": {
+        "description": "If true, mouth-based actions are blocked. Systems can set this to prevent conflicting oral activities. Does not specify what is using the mouth.",
+        "type": "boolean",
+        "default": false
+      },
+      "forcedOverride": {
+        "description": "Reserved for future use. A potential mechanism for special actions to bypass the 'locked' state.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": ["locked"],
+    "additionalProperties": false
+  }
+}

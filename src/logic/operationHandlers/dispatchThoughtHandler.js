@@ -18,7 +18,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
  * @typedef {object} DispatchThoughtParams
  * @property {string} entity_id       - ID of the entity that had thoughts.
  * @property {string} thoughts        - Content of the thoughts.
- * @property {string=} notes          - Optional notes.
+ * @property {Array<{text: string, subject?: string, subjectType?: string, context?: string}>=} notes - Optional structured notes array.
  */
 
 class DispatchThoughtHandler extends BaseOperationHandler {
@@ -72,7 +72,8 @@ class DispatchThoughtHandler extends BaseOperationHandler {
       thoughts,
     };
 
-    if (params.notes !== undefined) {
+    // Only include notes if it's a non-empty array
+    if (Array.isArray(params.notes) && params.notes.length > 0) {
       payload.notes = params.notes;
     }
 

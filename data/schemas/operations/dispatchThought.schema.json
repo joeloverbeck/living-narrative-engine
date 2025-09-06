@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/dispatchThought.schema.json",
+  "title": "DISPATCH_THOUGHT Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "DISPATCH_THOUGHT"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the DISPATCH_THOUGHT operation. Emits core:display_thought.",
+      "properties": {
+        "entity_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ID of the entity that had thoughts."
+        },
+        "thoughts": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Content of the thoughts."
+        },
+        "notes": {
+          "type": "array",
+          "description": "Optional structured notes array.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The note text."
+              },
+              "subject": {
+                "type": "string",
+                "description": "What the note is about."
+              },
+              "subjectType": {
+                "type": "string",
+                "description": "The type of subject (e.g., character, location, emotion)."
+              },
+              "context": {
+                "type": "string",
+                "description": "Additional context for the note."
+              }
+            },
+            "required": ["text"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["entity_id", "thoughts"],
+      "additionalProperties": false
+    }
+  }
+}

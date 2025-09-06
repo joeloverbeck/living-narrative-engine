@@ -27,8 +27,12 @@
       "parameters": {
         "condition": {
           "and": [
-            { "var": "context.thinkerNameComponent" },
-            { "var": "context.thinkerPositionComponent" }
+            {
+              "var": "context.thinkerNameComponent"
+            },
+            {
+              "var": "context.thinkerPositionComponent"
+            }
           ]
         },
         "then_actions": [

@@ -1,6 +1,27 @@
 {
   "defaultConfigId": "openrouter-claude-sonnet-4-toolcalling",
   "configs": {
+    "deepseek-chat-v3.1-toolcalling": {
+      "configId": "deepseek-chat-v3.1-toolcalling",
+      "displayName": "DeepSeek Chat v3.1 (OpenRouter - Tool Calling)",
+      "apiKeyEnvVar": "OPENROUTER_API_KEY_ENV_VAR",
+      "apiKeyFileName": "openrouter_api_key.txt",
+      "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
+      "modelIdentifier": "deepseek/deepseek-chat-v3.1",
+      "apiType": "openrouter",
+      "jsonOutputStrategy": {
+        "method": "openrouter_tool_calling",
+        "toolName": "function_call"
+      },
+      "defaultParameters": {
+        "temperature": 1.0
+      },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://my-text-adventure-game.com",
+        "X-Title": "Living Narrative Engine"
+      },
+      "contextTokenLimit": 256000
+    },
     "qwen3-max-toolcalling": {
       "configId": "qwen3-max-toolcalling",
       "displayName": "Qwen3 Max (OpenRouter - Tool Calling)",

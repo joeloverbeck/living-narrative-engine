@@ -346,7 +346,7 @@ describe('ActionButtonsRenderer', () => {
       );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringMatching(/Removing 2 DOM event listeners./) // ActionButtonsRenderer registers 2: click (send button) + keydown (container)
+        expect.stringMatching(/Removing 6 DOM event listeners./) // ActionButtonsRenderer registers 6: click (send button) + keydown (container) + 4 hover delegation listeners (mouseenter, mouseleave, focusin, focusout)
       );
     });
 

@@ -105,12 +105,17 @@ describe('ActionButtonsRenderer Performance Validation', () => {
     const avgTime = times.reduce((sum, time) => sum + time, 0) / times.length;
     const maxTime = Math.max(...times);
 
-    // Performance targets adjusted for JSDOM environment
+    // Performance targets adjusted for JSDOM environment and optimized codebase
     // Note: JSDOM adds overhead compared to real browsers. These thresholds account for:
     // - JSDOM simulation overhead (significant DOM operation penalties vs native browser engines)
     // - Recent feature additions (visual styling, accessibility checks, hover states)
     // - System variability (GC pauses, CPU scheduling, other processes)
     // - Production performance in real browsers would be significantly better
+    //
+    // Performance Optimizations Applied (reducing flakiness):
+    // - Event delegation for hover management (eliminates per-button listener overhead)
+    // - Color parsing cache (avoids repeated DOM operations for same colors)
+    // - Batched CSS custom property assignments (minimizes reflows)
     //
     // The maximum threshold is more lenient than average to tolerate occasional spikes
     // from garbage collection or system load without causing false test failures
