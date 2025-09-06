@@ -1,6 +1,27 @@
 {
   "defaultConfigId": "openrouter-claude-sonnet-4-toolcalling",
   "configs": {
+    "qwen3-max-toolcalling": {
+      "configId": "qwen3-max-toolcalling",
+      "displayName": "Qwen3 Max (OpenRouter - Tool Calling)",
+      "apiKeyEnvVar": "OPENROUTER_API_KEY_ENV_VAR",
+      "apiKeyFileName": "openrouter_api_key.txt",
+      "endpointUrl": "https://openrouter.ai/api/v1/chat/completions",
+      "modelIdentifier": "qwen/qwen3-max",
+      "apiType": "openrouter",
+      "jsonOutputStrategy": {
+        "method": "openrouter_tool_calling",
+        "toolName": "function_call"
+      },
+      "defaultParameters": {
+        "temperature": 1.0
+      },
+      "providerSpecificHeaders": {
+        "HTTP-Referer": "https://my-text-adventure-game.com",
+        "X-Title": "Living Narrative Engine"
+      },
+      "contextTokenLimit": 256000
+    },
     "openrouter-claude-sonnet-4-toolcalling": {
       "configId": "openrouter-claude-sonnet-4-toolcalling",
       "displayName": "Claude Sonnet 4 (OpenRouter - Tool Calling)",
@@ -20,7 +41,7 @@
         "HTTP-Referer": "https://my-text-adventure-game.com",
         "X-Title": "Living Narrative Engine"
       },
-      "contextTokenLimit": 200000
+      "contextTokenLimit": 1000000
     },
     "openrouter-claude-sonnet-4": {
       "configId": "openrouter-claude-sonnet-4",
@@ -41,7 +62,7 @@
         "HTTP-Referer": "https://my-text-adventure-game.com",
         "X-Title": "Living Narrative Engine"
       },
-      "contextTokenLimit": 200000
+      "contextTokenLimit": 1000000
     },
     "openrouter-qwen3-235b-a22b": {
       "configId": "openrouter-qwen3-235b-a22b",

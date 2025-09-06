@@ -1,0 +1,70 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "entity_thought",
+  "comment": "Handles entity thoughts (without speech) by dispatching a UI thought display event. Mirrors the structure of entity_speech.rule.json but for thoughts only.",
+  "event_type": "core:entity_thought",
+  "actions": [
+    {
+      "type": "QUERY_COMPONENTS",
+      "comment": "Fetch required thinker components in bulk.",
+      "parameters": {
+        "entity_ref": "actor",
+        "pairs": [
+          {
+            "component_type": "core:name",
+            "result_variable": "thinkerNameComponent"
+          },
+          {
+            "component_type": "core:position",
+            "result_variable": "thinkerPositionComponent"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Only proceed if the entity has the required components.",
+      "parameters": {
+        "condition": {
+          "and": [
+            { "var": "context.thinkerNameComponent" },
+            { "var": "context.thinkerPositionComponent" }
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "GET_TIMESTAMP",
+            "comment": "Get the current ISO timestamp for perception logging.",
+            "parameters": {
+              "result_variable": "currentTimestamp"
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "comment": "Dispatch a perceptible event for the thought act, to be logged.",
+            "parameters": {
+              "location_id": "{context.thinkerPositionComponent.locationId}",
+              "description_text": "{context.thinkerNameComponent.text} is lost in thought",
+              "perception_type": "thought_internal",
+              "actor_id": "{event.payload.entityId}",
+              "target_id": null,
+              "involved_entities": [],
+              "contextual_data": {
+                "thoughts": "{event.payload.thoughts}"
+              }
+            }
+          },
+          {
+            "type": "DISPATCH_THOUGHT",
+            "comment": "Dispatch core:display_thought event for UI rendering.",
+            "parameters": {
+              "entity_id": "{event.payload.entityId}",
+              "thoughts": "{event.payload.thoughts}",
+              "notes": "{event.payload.notes?}"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

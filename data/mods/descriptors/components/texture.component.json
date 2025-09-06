@@ -17,7 +17,8 @@
           "velvety",
           "rib-knit",
           "rugged",
-          "scarred"
+          "scarred",
+          "matte"
         ],
         "default": "smooth"
       }

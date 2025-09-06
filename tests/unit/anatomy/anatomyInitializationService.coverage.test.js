@@ -31,24 +31,23 @@ describe('AnatomyInitializationService coverage additions', () => {
     });
   });
 
-  it('dispose should handle missing unsubscribe function gracefully', () => {
+  it('destroy should handle missing unsubscribe function gracefully', () => {
     // Subscribe returns undefined which leaves #unsubscribeEntityCreated falsy
     mockEventDispatcher.subscribe.mockReturnValueOnce(undefined);
 
     service.initialize();
 
     // Calling dispose should not throw even though unsubscribe fn is missing
-    expect(() => service.dispose()).not.toThrow();
+    expect(() => service.destroy()).not.toThrow();
 
     // After disposal we can initialize again meaning internal state reset
     service.initialize();
 
     expect(mockEventDispatcher.subscribe).toHaveBeenCalledTimes(2);
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      'AnatomyInitializationService: Removing event listeners'
-    );
+    // The debug log for "Removing event listeners" was removed from production code
+    // Only the info log for "Destroyed" remains
     expect(mockLogger.info).toHaveBeenCalledWith(
-      'AnatomyInitializationService: Disposed'
+      'AnatomyInitializationService: Destroyed'
     );
   });
 });

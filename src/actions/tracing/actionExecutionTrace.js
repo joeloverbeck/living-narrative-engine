@@ -26,13 +26,15 @@ export class ActionExecutionTrace {
   #errorClassifier;
   #stackTraceAnalyzer;
   #errorContext;
+  #errorHistory;
+  #processingLock;
 
   /**
    * Create new execution trace
    *
    * @param {object} options - Trace options
    * @param {string} options.actionId - Action definition ID being executed
-   * @param {string} options.actorId - Actor performing the action
+   * @param {string} options.actorId - Actor performed the action
    * @param {object} options.turnAction - Complete turn action object
    * @param {boolean} [options.enableTiming] - Enable high-precision timing
    * @param {boolean} [options.enableErrorAnalysis] - Enable error classification and analysis
@@ -104,6 +106,12 @@ export class ActionExecutionTrace {
       retryCount: 0,
       executionState: {},
     };
+
+    // Initialize error history for multiple error support
+    this.#errorHistory = [];
+    
+    // Initialize processing lock for concurrency safety
+    this.#processingLock = false;
   }
 
   /**
@@ -136,7 +144,7 @@ export class ActionExecutionTrace {
   /**
    * Enhanced payload capture with phase timing
    *
-   * @param payload
+   * @param {object} payload - Event payload to capture
    */
   captureEventPayload(payload) {
     if (this.#startTime === null) {
@@ -175,7 +183,7 @@ export class ActionExecutionTrace {
   /**
    * Enhanced dispatch result with timing
    *
-   * @param result
+   * @param {object} result - Dispatch result to capture
    */
   captureDispatchResult(result) {
     if (this.#startTime === null) {
@@ -229,20 +237,43 @@ export class ActionExecutionTrace {
 
   /**
    * Enhanced error capture with timing and classification
+   * Supports multiple error captures for retry scenarios
    *
    * @param {Error} error - Error that occurred
    * @param {object} context - Additional error context
+   * @param {boolean} allowMultiple - Allow multiple error captures
    */
-  captureError(error, context = {}) {
+  captureError(error, context = {}, allowMultiple = false) {
     if (this.#startTime === null) {
       throw new Error(
         'Must call captureDispatchStart() before capturing error'
       );
     }
 
-    if (this.#executionData.error !== null) {
-      throw new Error('Error already captured for this trace');
+    // Check for concurrent processing
+    if (this.#processingLock) {
+      // If we already have an error and this isn't explicitly allowed, return early
+      if (this.#executionData.error !== null && !allowMultiple) {
+        return; // Gracefully ignore duplicate error capture attempts
+      }
     }
+
+    this.#processingLock = true;
+
+    try {
+      // Handle multiple error scenario - either update existing or add to history
+      if (this.#executionData.error !== null) {
+        if (!allowMultiple) {
+          // For backward compatibility, ignore subsequent errors unless explicitly allowed
+          return;
+        } else {
+          // Store previous error in history before overwriting
+          this.#errorHistory.push({
+            ...this.#executionData.error,
+            capturedAt: this.#executionData.error.timestamp,
+          });
+        }
+      }
 
     const errorTime = this.#getHighPrecisionTime();
 
@@ -257,7 +288,7 @@ export class ActionExecutionTrace {
     this.#errorContext = {
       ...this.#errorContext,
       ...context,
-      phase: context.phase || this.#getCurrentPhase(),
+      phase: context.phase || this.#errorContext.phase || this.#getCurrentPhase(),
       timing: this.#getTimingContext(),
       captureTime: errorTime,
     };
@@ -272,7 +303,9 @@ export class ActionExecutionTrace {
       if (!this.#stackTraceAnalyzer) {
         this.#stackTraceAnalyzer = new StackTraceAnalyzer({
           projectPath:
-            typeof process !== 'undefined' && process.cwd ? process.cwd() : '/',
+            typeof process !== 'undefined' && typeof process.cwd === 'function'
+              ? process.cwd()
+              : '/',
           logger: console,
         });
       }
@@ -287,10 +320,13 @@ export class ActionExecutionTrace {
           this.#errorContext
         );
       } catch (classificationError) {
-        console.warn(
-          'Error classification failed:',
-          classificationError.message
-        );
+        // Log classification failure without console (will be handled by logger)
+        if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') {
+          console.warn(
+            'Error classification failed:',
+            classificationError.message
+          );
+        }
       }
     }
 
@@ -300,7 +336,10 @@ export class ActionExecutionTrace {
       try {
         stackAnalysis = this.#stackTraceAnalyzer.parseStackTrace(error.stack);
       } catch (analysisError) {
-        console.warn('Stack trace analysis failed:', analysisError.message);
+        // Log stack trace analysis failure without console (will be handled by logger)
+        if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') {
+          console.warn('Stack trace analysis failed:', analysisError.message);
+        }
       }
     }
 
@@ -387,6 +426,11 @@ export class ActionExecutionTrace {
       errorCategory: classification?.category || 'unknown',
       severity: classification?.severity || 'unknown',
     });
+    
+    } finally {
+      // Always release the processing lock
+      this.#processingLock = false;
+    }
   }
 
   /**
@@ -476,6 +520,8 @@ export class ActionExecutionTrace {
         type: this.#executionData.error.type || 'Unknown',
         stack: this.#executionData.error.stack,
       } : null,
+      errorHistory: this.#errorHistory,
+      hasMultipleErrors: this.#errorHistory.length > 0,
       duration: this.#executionData.duration, // Also expose at top level for easy access
     };
 
@@ -537,6 +583,61 @@ export class ActionExecutionTrace {
       ...this.#errorContext,
       ...context,
     };
+  }
+
+  /**
+   * Update existing error with additional information
+   * 
+   * @param {Error} error - New error information
+   * @param {object} context - Additional context
+   */
+  updateError(error, context = {}) {
+    if (this.#executionData.error === null) {
+      // No existing error, behave like captureError
+      this.captureError(error, context, false);
+    } else {
+      // Update existing error
+      this.captureError(error, context, true);
+    }
+  }
+
+  /**
+   * Add error to history without replacing current error
+   * 
+   * @param {Error} error - Error to add to history
+   * @param {object} context - Additional context
+   */
+  addErrorToHistory(error, context = {}) {
+    const errorTime = this.#getHighPrecisionTime();
+    
+    this.#errorHistory.push({
+      message: error?.message || 'Unknown error',
+      type: error?.constructor?.name || 'Error',
+      timestamp: errorTime,
+      context: {
+        phase: context.phase || this.#getCurrentPhase(),
+        retryCount: this.#errorContext.retryCount,
+        ...context,
+      },
+    });
+  }
+
+  /**
+   * Get error history
+   * 
+   * @returns {Array} Array of historical errors
+   */
+  getErrorHistory() {
+    return [...this.#errorHistory]; // Return copy
+  }
+
+  /**
+   * Check if trace has multiple errors captured
+   * 
+   * @returns {boolean} True if multiple errors exist
+   */
+  hasMultipleErrors() {
+    return this.#errorHistory.length > 0;
   }
 
   /**

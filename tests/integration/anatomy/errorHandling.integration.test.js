@@ -420,7 +420,7 @@ describe('Anatomy Error Handling Integration', () => {
         });
       }).not.toThrow();
 
-      anatomyInitService.dispose();
+      anatomyInitService.destroy();
     });
 
     it('should handle entity manager failures during anatomy operations', async () => {

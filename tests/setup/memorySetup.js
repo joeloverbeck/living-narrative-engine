@@ -99,4 +99,91 @@ global.memoryTestUtils = {
     const multiplier = isCI ? 1.5 : 1.0; // More lenient in CI
     return baseThresholdMB * multiplier * 1024 * 1024;
   },
+
+  /**
+   * Performs memory assertion with retry logic and adaptive thresholds
+   *
+   * @param {Function} measurementFn - Function that returns memory usage in bytes
+   * @param {number} limitMB - Memory limit in MB
+   * @param {number} retries - Number of retry attempts
+   * @returns {Promise<void>}
+   */
+  async assertMemoryWithRetry(measurementFn, limitMB, retries = 3) {
+    const adjustedLimit = this.getMemoryThreshold(limitMB);
+    
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      if (global.gc) {
+        global.gc();
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      const memory = await measurementFn();
+      
+      if (memory < adjustedLimit) {
+        return; // Test passed
+      }
+      
+      if (attempt < retries) {
+        console.log(
+          `Memory assertion attempt ${attempt} failed: ${(memory / 1024 / 1024).toFixed(2)}MB > ${(adjustedLimit / 1024 / 1024).toFixed(2)}MB. Retrying...`
+        );
+        // Wait longer between retries to allow more GC
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } else {
+        // Final attempt failed
+        throw new Error(
+          `Memory assertion failed after ${retries} attempts: ${(memory / 1024 / 1024).toFixed(2)}MB exceeds limit of ${(adjustedLimit / 1024 / 1024).toFixed(2)}MB`
+        );
+      }
+    }
+  },
+
+  /**
+   * Calculates memory growth as a percentage
+   *
+   * @param {number} initial - Initial memory in bytes
+   * @param {number} final - Final memory in bytes
+   * @returns {number} Growth percentage (0-100)
+   */
+  calculateMemoryGrowthPercentage(initial, final) {
+    if (initial === 0) return 100;
+    return ((final - initial) / initial) * 100;
+  },
+
+  /**
+   * Asserts memory growth is within acceptable percentage
+   *
+   * @param {number} initial - Initial memory in bytes
+   * @param {number} final - Final memory in bytes
+   * @param {number} maxGrowthPercent - Maximum acceptable growth percentage
+   * @param {string} context - Context for error messages
+   */
+  assertMemoryGrowthPercentage(initial, final, maxGrowthPercent, context = '') {
+    const growthPercent = this.calculateMemoryGrowthPercentage(initial, final);
+    const adjustedMaxGrowth = this.isCI() ? maxGrowthPercent * 1.5 : maxGrowthPercent;
+    
+    if (growthPercent > adjustedMaxGrowth) {
+      throw new Error(
+        `${context ? context + ': ' : ''}Memory growth ${growthPercent.toFixed(1)}% exceeds limit of ${adjustedMaxGrowth.toFixed(1)}% (Initial: ${(initial / 1024 / 1024).toFixed(2)}MB, Final: ${(final / 1024 / 1024).toFixed(2)}MB)`
+      );
+    }
+  },
+
+  /**
+   * Gets adaptive memory limits based on current system state
+   *
+   * @param {Object} baseThresholds - Base thresholds object
+   * @returns {Object} Adapted thresholds
+   */
+  getAdaptiveThresholds(baseThresholds) {
+    const isCI = this.isCI();
+    const multiplier = isCI ? 1.5 : 1.0;
+    
+    return {
+      ...baseThresholds,
+      MAX_MEMORY_MB: baseThresholds.MAX_MEMORY_MB * multiplier,
+      MEMORY_GROWTH_LIMIT_MB: baseThresholds.MEMORY_GROWTH_LIMIT_MB * multiplier,
+      MEMORY_GROWTH_LIMIT_PERCENT: (baseThresholds.MEMORY_GROWTH_LIMIT_PERCENT || 50) * multiplier,
+    };
+  },
 };

@@ -1,0 +1,46 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:entity_thought",
+  "description": "Dispatched when an entity has thoughts without speech (e.g., an LLM character thinking but not speaking).",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "entityId": {
+        "type": "string",
+        "description": "The ID of the entity that had thoughts."
+      },
+      "thoughts": {
+        "type": "string",
+        "description": "The entity's internal thoughts or monologue."
+      },
+      "notes": {
+        "type": "array",
+        "description": "Optional notes or annotations about the thoughts.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "The note text."
+            },
+            "subject": {
+              "type": "string",
+              "description": "What the note is about."
+            },
+            "subjectType": {
+              "type": "string",
+              "description": "The type of subject (e.g., character, location, emotion)."
+            },
+            "context": {
+              "type": "string",
+              "description": "Additional context for the note."
+            }
+          },
+          "required": ["text"]
+        }
+      }
+    },
+    "required": ["entityId", "thoughts"],
+    "additionalProperties": false
+  }
+}

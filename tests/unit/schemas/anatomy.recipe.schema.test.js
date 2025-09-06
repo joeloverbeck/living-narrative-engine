@@ -348,6 +348,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
         'toned',
         'athletic',
         'shapely',
+        'hourglass',
         'thick',
         'muscular',
         'stocky',

@@ -405,6 +405,109 @@ export class ComponentMutationService {
 
     return { results, errors };
   }
+
+  /**
+   * Optimized batch add that reduces event emissions.
+   * Updates multiple components on entities with minimal event dispatching.
+   * 
+   * @param {Array<{instanceId: string, componentTypeId: string, componentData: object}>} componentSpecs
+   * @param {boolean} emitBatchEvent - Whether to emit a single batch event instead of individual events
+   * @returns {Promise<object>} Results with successes and errors
+   */
+  async batchAddComponentsOptimized(componentSpecs, emitBatchEvent = true) {
+    const results = [];
+    const errors = [];
+    const updates = [];
+
+    // Process all updates without emitting individual events
+    for (const spec of componentSpecs) {
+      try {
+        // Validate the component spec
+        if (!spec.instanceId || !spec.componentTypeId) {
+          throw new Error('Invalid component spec: missing instanceId or componentTypeId');
+        }
+
+        const entity = this.#fetchEntity(spec.instanceId);
+        const oldComponentData = entity.hasComponent(spec.componentTypeId)
+          ? entity.getComponentData(spec.componentTypeId)
+          : undefined;
+
+        // Validate and clone the component data
+        const validatedData = this.#validateComponentData(
+          spec.instanceId,
+          spec.componentTypeId,
+          spec.componentData,
+          spec.instanceId
+        );
+
+        // Check if this is a new component (not just an update)
+        const isNewComponent = !entity.hasComponent(spec.componentTypeId);
+
+        // Apply the update
+        this.#applyComponentUpdate(
+          entity,
+          spec.componentTypeId,
+          validatedData,
+          spec.instanceId
+        );
+
+        // Update component index if this is a new component
+        if (isNewComponent) {
+          this.#entityRepository.indexComponentAdd(spec.instanceId, spec.componentTypeId);
+        }
+
+        // Store update info for batch event
+        updates.push({
+          instanceId: spec.instanceId,
+          componentTypeId: spec.componentTypeId,
+          componentData: validatedData,
+          oldComponentData,
+          isNewComponent
+        });
+
+        results.push({ spec, success: true });
+
+        this.#logger.debug(
+          `Batch: Successfully added/updated component '${spec.componentTypeId}' on entity '${spec.instanceId}'.`
+        );
+      } catch (error) {
+        errors.push({ spec, error });
+        this.#logger.error(
+          `Batch: Failed to add component '${spec.componentTypeId}' to entity '${spec.instanceId}': ${error.message}`
+        );
+      }
+    }
+
+    // Emit a single batch event if requested
+    if (emitBatchEvent && updates.length > 0) {
+      this.#eventDispatcher.dispatch('core:components_batch_added', {
+        updates,
+        timestamp: new Date().toISOString()
+      });
+      this.#logger.debug(
+        `Emitted batch event for ${updates.length} component updates`
+      );
+    } else if (!emitBatchEvent) {
+      // Emit individual events for backward compatibility
+      for (const update of updates) {
+        const entity = this.#fetchEntity(update.instanceId);
+        this.#emitComponentAdded(
+          entity,
+          update.componentTypeId,
+          update.componentData,
+          update.oldComponentData
+        );
+      }
+    }
+
+    if (errors.length > 0) {
+      this.#logger.warn(
+        `Batch add components completed with ${errors.length} errors out of ${componentSpecs.length} total`
+      );
+    }
+
+    return { results, errors, updateCount: updates.length };
+  }
 }
 
 export default ComponentMutationService;

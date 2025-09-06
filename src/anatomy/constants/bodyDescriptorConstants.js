@@ -12,6 +12,7 @@ export const BODY_BUILD_TYPES = {
   TONED: 'toned',
   ATHLETIC: 'athletic',
   SHAPELY: 'shapely',
+  HOURGLASS: 'hourglass',
   THICK: 'thick',
   MUSCULAR: 'muscular',
   HULKING: 'hulking',

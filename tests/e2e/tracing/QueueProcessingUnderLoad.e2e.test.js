@@ -38,6 +38,20 @@ import {
 } from './fixtures/tracingTestActions.js';
 
 /**
+ * Seeded random number generator for deterministic tests
+ */
+class SeededRandom {
+  constructor(seed = 12345) {
+    this.seed = seed;
+  }
+
+  next() {
+    this.seed = (this.seed * 16807) % 2147483647;
+    return (this.seed - 1) / 2147483646;
+  }
+}
+
+/**
  * Extended load scenarios for comprehensive queue testing
  */
 const EXTENDED_LOAD_SCENARIOS = {
@@ -101,6 +115,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
   let mockEventBus;
   let startMemory;
   let testTraces;
+  let seededRandom;
 
   beforeEach(async () => {
     // Mock performance.memory if not available (for jsdom environment)
@@ -149,6 +164,9 @@ describe('Queue Processing Under Realistic Load E2E', () => {
 
     // Initialize test traces array
     testTraces = [];
+
+    // Initialize seeded random for deterministic tests
+    seededRandom = new SeededRandom(42); // Fixed seed for reproducibility
   });
 
   afterEach(async () => {
@@ -486,8 +504,8 @@ describe('Queue Processing Under Realistic Load E2E', () => {
       
       const takeMemorySnapshot = () => {
         if (typeof performance !== 'undefined' && performance.memory) {
-          // Simulate slight memory growth for testing
-          global.performance.memory.usedJSHeapSize += Math.random() * 50000; // Add 0-50KB
+          // Simulate slight memory growth for testing with deterministic values
+          global.performance.memory.usedJSHeapSize += seededRandom.next() * 50000; // Add 0-50KB
           
           memorySnapshots.push({
             timestamp: Date.now(),
@@ -604,7 +622,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
       // Add realistic timing and completion using correct ActionExecutionTrace API
       trace.captureDispatchStart();
       
-      const success = Math.random() > (scenario.errorRate || 0.1);
+      const success = seededRandom.next() > (scenario.errorRate || 0.1);
       if (success) {
         trace.captureDispatchResult({
           success: true,
@@ -626,18 +644,50 @@ describe('Queue Processing Under Realistic Load E2E', () => {
    * @returns {Array} Array of trace objects with error scenarios
    */
   function createRealisticTracesWithErrors(scenario) {
-    const traces = createRealisticTraces(scenario);
+    // Create traces without errors first, then add errors selectively
+    const actors = [
+      createTestActor('player-1', TEST_ACTORS.BASIC_PLAYER.components),
+      createTestActor('player-2', TEST_ACTORS.COMPLEX_ACTOR.components),
+    ];
+
+    const traces = [];
     
-    // Mark some traces as errors based on error rate
-    const errorCount = Math.floor(traces.length * (scenario.errorRate || 0.1));
+    // Use a separate seeded random for error creation
+    const errorRandom = new SeededRandom(123);
     
-    for (let i = 0; i < errorCount; i++) {
-      const trace = traces[i];
-      // Force error state by capturing an error using correct API
-      trace.captureError(new Error(`Test error ${i}`), {
-        phase: 'execution',
-        retryCount: 0,
+    for (let i = 0; i < scenario.actionCount; i++) {
+      const actionId = scenario.actions[i % scenario.actions.length];
+      const actor = actors[i % actors.length];
+      const turnAction = createTestAction(actionId, {
+        commandString: `error-test-${i} ${actionId}`,
+        parameters: { testIndex: i },
       });
+
+      const trace = traceFactory.createTrace({
+        actionId: `${actionId}-error-${i}`,
+        actorId: actor.id,
+        turnAction,
+      });
+
+      // Add realistic timing and controlled error creation
+      trace.captureDispatchStart();
+      
+      const shouldError = errorRandom.next() < (scenario.errorRate || 0.1);
+      if (shouldError) {
+        // Create error trace - use updateError to handle retries gracefully
+        trace.captureError(new Error(`Test error ${i}`), {
+          phase: 'execution',
+          retryCount: 0,
+        });
+        // No need to mark - hasError getter will return true automatically
+      } else {
+        trace.captureDispatchResult({
+          success: true,
+          timestamp: Date.now(),
+        });
+      }
+
+      traces.push(trace);
     }
 
     return traces;
@@ -650,7 +700,7 @@ describe('Queue Processing Under Realistic Load E2E', () => {
    * @returns {string} Selected priority level
    */
   function determinePriority(index, distribution) {
-    const rand = Math.random();
+    const rand = seededRandom.next();
     let cumulative = 0;
     
     for (const [priority, percentage] of Object.entries(distribution)) {

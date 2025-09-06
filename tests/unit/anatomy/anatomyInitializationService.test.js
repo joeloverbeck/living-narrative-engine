@@ -152,8 +152,13 @@ describe('AnatomyInitializationService', () => {
 
         await boundHandlerRef(event);
 
+        // Check that entity was added to the queue
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          "AnatomyInitializationService: Starting anatomy generation for entity 'entity-1'"
+          "AnatomyInitializationService: Added entity 'entity-1' to generation queue (queue size: 1)"
+        );
+        // Check that entity is being processed from the queue
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          "AnatomyInitializationService: Processing anatomy generation for entity 'entity-1' (remaining in queue: 0)"
         );
         expect(
           mockAnatomyGenerationService.generateAnatomyIfNeeded
@@ -365,33 +370,29 @@ describe('AnatomyInitializationService', () => {
     });
   });
 
-  describe('dispose', () => {
+  describe('destroy', () => {
     it('should remove event listener when initialized', () => {
       service.initialize();
 
-      service.dispose();
+      service.destroy();
 
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'AnatomyInitializationService: Removing event listeners'
-      );
+      // The destroy method no longer logs about removing event listeners
       expect(mockUnsubscribeFn).toHaveBeenCalled();
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'AnatomyInitializationService: Disposed'
+        'AnatomyInitializationService: Destroyed'
       );
     });
 
     it('should do nothing if not initialized', () => {
-      service.dispose();
+      service.destroy();
 
       expect(mockUnsubscribeFn).not.toHaveBeenCalled();
-      expect(mockLogger.debug).not.toHaveBeenCalledWith(
-        'AnatomyInitializationService: Removing event listeners'
-      );
+      // The destroy method no longer logs about removing event listeners
     });
 
     it('should allow re-initialization after disposal', () => {
       service.initialize();
-      service.dispose();
+      service.destroy();
 
       // Clear mocks
       mockEventDispatcher.subscribe.mockClear();
@@ -411,14 +412,14 @@ describe('AnatomyInitializationService', () => {
 
     it('should handle multiple dispose calls', () => {
       service.initialize();
-      service.dispose();
+      service.destroy();
 
       // Clear mocks
       mockUnsubscribeFn.mockClear();
       mockLogger.info.mockClear();
 
       // Second dispose should do nothing
-      service.dispose();
+      service.destroy();
 
       expect(mockUnsubscribeFn).not.toHaveBeenCalled();
     });
@@ -431,14 +432,14 @@ describe('AnatomyInitializationService', () => {
       mockEventDispatcher.subscribe.mockReturnValueOnce(firstUnsubscribe);
 
       service.initialize();
-      service.dispose();
+      service.destroy();
 
       // Second cycle - create another new unsubscribe function
       const secondUnsubscribe = jest.fn();
       mockEventDispatcher.subscribe.mockReturnValueOnce(secondUnsubscribe);
 
       service.initialize();
-      service.dispose();
+      service.destroy();
 
       expect(mockEventDispatcher.subscribe).toHaveBeenCalledTimes(2);
       expect(firstUnsubscribe).toHaveBeenCalled();
@@ -465,7 +466,7 @@ describe('AnatomyInitializationService', () => {
       ).toHaveBeenCalled();
 
       // Dispose
-      service.dispose();
+      service.destroy();
       expect(mockUnsubscribeFn).toHaveBeenCalled();
 
       // Clear mocks

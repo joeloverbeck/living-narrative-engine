@@ -445,6 +445,21 @@ class EntityManager extends IEntityManager {
   }
 
   /**
+   * Optimized batch add components that reduces event emissions.
+   * Updates multiple components on entities with minimal event dispatching.
+   *
+   * @param {Array<{instanceId: string, componentTypeId: string, componentData: object}>} componentSpecs - Array of component specifications
+   * @param {boolean} emitBatchEvent - Whether to emit a single batch event instead of individual events
+   * @returns {Promise<{results: Array, errors: Array, updateCount: number}>} Results with successes, errors, and update count
+   */
+  async batchAddComponentsOptimized(componentSpecs, emitBatchEvent = true) {
+    return await this.#componentMutationService.batchAddComponentsOptimized(
+      componentSpecs,
+      emitBatchEvent
+    );
+  }
+
+  /**
    * Remove an entity instance from the manager.
    *
    * @param {string} instanceId - The ID of the entity instance to remove

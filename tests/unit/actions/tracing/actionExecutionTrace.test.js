@@ -217,7 +217,7 @@ describe('ActionExecutionTrace', () => {
       );
     });
 
-    it('should prevent multiple error captures', () => {
+    it('should gracefully handle multiple error captures by ignoring subsequent ones', () => {
       trace.captureDispatchStart();
 
       const error1 = new Error('First error');
@@ -225,9 +225,11 @@ describe('ActionExecutionTrace', () => {
 
       trace.captureError(error1);
 
-      expect(() => trace.captureError(error2)).toThrow(
-        'Error already captured for this trace'
-      );
+      // Second error should be ignored gracefully (no exception)
+      expect(() => trace.captureError(error2)).not.toThrow();
+      
+      // Original error should be preserved
+      expect(trace.getError().message).toBe('First error');
     });
   });
 
