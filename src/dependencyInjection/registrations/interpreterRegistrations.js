@@ -65,6 +65,7 @@ export function registerInterpreters(container) {
       bind(tokens.DispatchPerceptibleEventHandler)
     );
     registry.register('DISPATCH_SPEECH', bind(tokens.DispatchSpeechHandler));
+    registry.register('DISPATCH_THOUGHT', bind(tokens.DispatchThoughtHandler));
     registry.register('LOG', bind(tokens.LogHandler));
     registry.register('MODIFY_COMPONENT', bind(tokens.ModifyComponentHandler));
     registry.register('ADD_COMPONENT', bind(tokens.AddComponentHandler));

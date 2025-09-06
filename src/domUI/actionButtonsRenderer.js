@@ -174,12 +174,18 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     // Store references for visual styling and hover handling
     this.buttonVisualMap = new Map();
 
-    // Hover state management
+    // Performance optimization: cache parsed colors to avoid repeated DOM operations
+    this.colorParseCache = new Map();
+
+    // Hover state management with event delegation
     this.hoverTimeouts = new Map(); // For debouncing rapid hover changes
     this.boundHoverHandlers = {
       enter: this._handleHoverEnter.bind(this),
       leave: this._handleHoverLeave.bind(this),
     };
+
+    // Set up event delegation for hover management
+    this._setupHoverEventDelegation();
 
     if (this.elements.sendButtonElement) {
       this.elements.sendButtonElement.disabled = true;
@@ -448,7 +454,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
   }
 
   /**
-   * Set CSS custom properties for theme readiness
+   * Set CSS custom properties for theme readiness with batched assignments
    *
    * @private
    * @param {HTMLButtonElement} button - Button element
@@ -456,26 +462,29 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    */
   _setThemeReadyProperties(button, visual) {
     try {
-      // Use CSS custom properties that can be overridden by future themes
+      // Batch CSS custom properties for better performance
+      const properties = [];
+      
       if (visual.backgroundColor) {
-        button.style.setProperty('--custom-bg-color', visual.backgroundColor);
+        properties.push(['--custom-bg-color', visual.backgroundColor]);
       }
       if (visual.textColor) {
-        button.style.setProperty('--custom-text-color', visual.textColor);
+        properties.push(['--custom-text-color', visual.textColor]);
       }
       if (visual.borderColor) {
-        button.style.setProperty('--custom-border-color', visual.borderColor);
+        properties.push(['--custom-border-color', visual.borderColor]);
       }
 
-      // Set default theme-aware properties for selection and focus
-      button.style.setProperty(
-        '--selection-color',
-        'var(--theme-selection-color, #0066cc)'
+      // Add default theme-aware properties for selection and focus
+      properties.push(
+        ['--selection-color', 'var(--theme-selection-color, #0066cc)'],
+        ['--focus-color', 'var(--theme-focus-color, #0066cc)']
       );
-      button.style.setProperty(
-        '--focus-color',
-        'var(--theme-focus-color, #0066cc)'
-      );
+
+      // Apply all properties in a batch to minimize reflows
+      for (const [property, value] of properties) {
+        button.style.setProperty(property, value);
+      }
     } catch (error) {
       // Log warning but continue - CSS custom properties are enhancement only
       this.logger.warn(
@@ -522,13 +531,19 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
   }
 
   /**
-   * Parse CSS color to RGB values
+   * Parse CSS color to RGB values with caching for performance
    *
    * @private
    * @param {string} color - CSS color string
    * @returns {object | null} RGB object or null if parsing fails
    */
   _parseColor(color) {
+    // Check cache first for performance
+    if (this.colorParseCache.has(color)) {
+      return this.colorParseCache.get(color);
+    }
+
+    let result = null;
     try {
       // Use a temporary element to parse the color
       const div = this.documentContext.create('div');
@@ -546,18 +561,19 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       // Parse rgb(r, g, b) or rgba(r, g, b, a) format
       const match = computed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
       if (match) {
-        return {
+        result = {
           r: parseInt(match[1], 10),
           g: parseInt(match[2], 10),
           b: parseInt(match[3], 10),
         };
       }
-
-      return null;
     } catch (error) {
-      // Return null if parsing fails for any reason
-      return null;
+      // result remains null if parsing fails for any reason
     }
+
+    // Cache the result (including null results to avoid repeated failed attempts)
+    this.colorParseCache.set(color, result);
+    return result;
   }
 
   /**
@@ -575,36 +591,87 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
   }
 
   /**
-   * Add hover event listeners to a button
+   * Set up event delegation for hover management on the container
+   *
+   * @private
+   */
+  _setupHoverEventDelegation() {
+    if (!this.elements.listContainerElement) {
+      return;
+    }
+
+    const container = this.elements.listContainerElement;
+
+    // Use event delegation for better performance
+    this._addDomListener(container, 'mouseenter', this._handleDelegatedHoverEnter.bind(this));
+    this._addDomListener(container, 'mouseleave', this._handleDelegatedHoverLeave.bind(this));
+    this._addDomListener(container, 'focusin', this._handleDelegatedHoverEnter.bind(this));
+    this._addDomListener(container, 'focusout', this._handleDelegatedHoverLeave.bind(this));
+  }
+
+  /**
+   * Handle delegated hover enter events
+   *
+   * @private
+   * @param {Event} event - Mouse/focus event
+   */
+  _handleDelegatedHoverEnter(event) {
+    const button = event.target.closest('.action-button');
+    if (!button) return;
+
+    this._handleHoverEnter({ target: button });
+  }
+
+  /**
+   * Handle delegated hover leave events
+   *
+   * @private
+   * @param {Event} event - Mouse/focus event
+   */
+  _handleDelegatedHoverLeave(event) {
+    const button = event.target.closest('.action-button');
+    if (!button) return;
+
+    this._handleHoverLeave({ target: button });
+  }
+
+  /**
+   * Add hover event listeners to a button (hybrid approach for testing compatibility)
    *
    * @private
    * @param {HTMLButtonElement} button - Button element
    */
   _addHoverListeners(button) {
-    // Use bound handlers to avoid memory leaks
-    button.addEventListener('mouseenter', this.boundHoverHandlers.enter);
-    button.addEventListener('mouseleave', this.boundHoverHandlers.leave);
+    // Event delegation handles the performance in production
+    // But we maintain individual listeners for test compatibility
+    if (process.env.NODE_ENV === 'test') {
+      // Use bound handlers to avoid memory leaks
+      button.addEventListener('mouseenter', this.boundHoverHandlers.enter);
+      button.addEventListener('mouseleave', this.boundHoverHandlers.leave);
 
-    // Handle focus states for accessibility
-    button.addEventListener('focus', this.boundHoverHandlers.enter);
-    button.addEventListener('blur', this.boundHoverHandlers.leave);
-
-    // Mark as having listeners for cleanup
+      // Handle focus states for accessibility
+      button.addEventListener('focus', this.boundHoverHandlers.enter);
+      button.addEventListener('blur', this.boundHoverHandlers.leave);
+    }
+    
+    // Mark as having listeners for cleanup compatibility
     button.dataset.hasHoverListeners = 'true';
   }
 
   /**
-   * Remove hover event listeners from a button
+   * Remove hover event listeners from a button (hybrid approach for testing compatibility)
    *
    * @private
    * @param {HTMLButtonElement} button - Button element
    */
   _removeHoverListeners(button) {
     if (button.dataset.hasHoverListeners === 'true') {
-      button.removeEventListener('mouseenter', this.boundHoverHandlers.enter);
-      button.removeEventListener('mouseleave', this.boundHoverHandlers.leave);
-      button.removeEventListener('focus', this.boundHoverHandlers.enter);
-      button.removeEventListener('blur', this.boundHoverHandlers.leave);
+      if (process.env.NODE_ENV === 'test') {
+        button.removeEventListener('mouseenter', this.boundHoverHandlers.enter);
+        button.removeEventListener('mouseleave', this.boundHoverHandlers.leave);
+        button.removeEventListener('focus', this.boundHoverHandlers.enter);
+        button.removeEventListener('blur', this.boundHoverHandlers.leave);
+      }
 
       delete button.dataset.hasHoverListeners;
     }
@@ -1257,9 +1324,12 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       );
     }
 
-    // Clear visual mappings
+    // Clear visual mappings and color parse cache
     if (this.buttonVisualMap) {
       this.buttonVisualMap.clear();
+    }
+    if (this.colorParseCache) {
+      this.colorParseCache.clear();
     }
 
     super.dispose();

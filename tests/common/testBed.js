@@ -349,5 +349,27 @@ export function createTestBed() {
     cleanup() {
       jest.clearAllMocks();
     },
+
+    /**
+     * Creates an AJV schema validator instance using the project's AJV validator class
+     * @returns {object} AjvSchemaValidator instance
+     */
+    createAjvValidator() {
+      // Dynamic import to avoid circular dependencies
+      const AjvSchemaValidator = require('../../src/validation/ajvSchemaValidator.js').default;
+      
+      return new AjvSchemaValidator({ 
+        logger: mockObjects.mockLogger 
+      });
+    },
+
+    /**
+     * Creates a pre-configured AJV instance with test schemas loaded
+     * @returns {object} AJV instance with schemas
+     */
+    createTestAjv() {
+      const createTestAjv = require('../validation/createTestAjv.js').default;
+      return createTestAjv();
+    },
   };
 }

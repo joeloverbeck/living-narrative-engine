@@ -849,7 +849,7 @@ class CriticalLogNotifier extends RendererBase {
     // Fix the count property: 'warn' -> 'warnings', 'error' -> 'errors'
     const countKey = logEntry.level === 'warn' ? 'warnings' : 'errors';
     this.validatedEventDispatcher.dispatch('core:critical_notification_shown', {
-      level: logEntry.level,
+      level: logEntry.level === 'warn' ? 'warning' : logEntry.level,
       count: this.#logCounts[countKey] || 0,
     });
   }

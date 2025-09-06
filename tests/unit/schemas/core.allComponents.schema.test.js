@@ -92,7 +92,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'anatomy:blueprintSlot': { slotId: 'left_breast' },
     'core:owned_by': { ownerId: 'entity-123' },
     'core:material': { material: 'cotton' },
-    'core:item': { value: 100, type: 'weapon' },
+    'core:mouth_engagement': { locked: false },
   };
 
   /** @type {Record<string, unknown>} */
@@ -130,6 +130,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'anatomy:blueprintSlot': {},
     'core:owned_by': {},
     'core:material': { material: 'invalid_material_not_in_enum' },
+    'core:mouth_engagement': { locked: 'not-a-boolean' },
   };
 
   Object.entries(validators).forEach(([id, validate]) => {

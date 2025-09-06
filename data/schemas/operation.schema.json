@@ -60,6 +60,9 @@
           "$ref": "./operations/dispatchSpeech.schema.json"
         },
         {
+          "$ref": "./operations/dispatchThought.schema.json"
+        },
+        {
           "$ref": "./operations/endTurn.schema.json"
         },
         {
