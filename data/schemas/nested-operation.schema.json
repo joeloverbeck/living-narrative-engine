@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/nested-operation.schema.json",
+  "title": "Nested Operation Schema",
+  "description": "Simplified operation schema for nested operations to avoid circular references. Used in IF/FOR_EACH then_actions and else_actions arrays.",
+  "$ref": "#/$defs/NestedAction",
+  "$defs": {
+    "NestedAction": {
+      "description": "A nested action that can be either a concrete operation or a macro reference, with simplified validation to prevent circular schema references.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/NestedOperation"
+        },
+        {
+          "$ref": "#/$defs/NestedMacroReference"
+        }
+      ]
+    },
+    "NestedMacroReference": {
+      "type": "object",
+      "description": "A reference to a macro for nested operations.",
+      "properties": {
+        "macro": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "The namespaced identifier of the macro to execute."
+        },
+        "comment": {
+          "type": "string",
+          "description": "Optional note for modders. Ignored at runtime."
+        }
+      },
+      "required": ["macro"],
+      "additionalProperties": false
+    },
+    "NestedOperation": {
+      "description": "A simplified operation for nested contexts with essential validation.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The operation type identifier"
+        },
+        "comment": {
+          "type": "string",
+          "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
+        },
+        "condition": {
+          "$ref": "./condition-container.schema.json#",
+          "description": "Optional. If present, this operation only executes if the condition evaluates to true."
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Operation-specific parameters (validated separately by operation handlers)"
+        }
+      },
+      "required": ["type", "parameters"],
+      "additionalProperties": false
+    }
+  }
+}

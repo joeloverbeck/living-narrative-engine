@@ -125,7 +125,7 @@ describe('EntityInstanceLoader', () => {
       expect(result.failures[0]).toHaveProperty('error');
       // The error comes from schema validation, not parseAndValidateId
       expect(result.failures[0].error.message).toContain(
-        "must have required property 'instanceId'"
+        "Missing required property 'instanceId'"
       );
       expect(
         dataRegistry.get('entityInstances', 'test:invalid_instance')
@@ -187,7 +187,7 @@ describe('EntityInstanceLoader', () => {
       expect(result.failures[0]).toHaveProperty('error');
       // The actual error message contains the full validation error details
       expect(result.failures[0].error.message).toContain(
-        "must have required property 'definitionId'"
+        "Missing required property 'definitionId'"
       );
     });
 
@@ -255,7 +255,7 @@ describe('EntityInstanceLoader', () => {
       expect(result.failures[0]).toHaveProperty('error');
       // The actual error message contains validation details
       expect(result.failures[0].error.message).toContain(
-        'must NOT have additional properties'
+        'Unexpected property'
       );
     });
 

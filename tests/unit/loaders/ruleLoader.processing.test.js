@@ -404,11 +404,11 @@ describe('RuleLoader (Rule Processing Logic via loadItemsForMod)', () => {
       const dataWithId = {
         rule_id: 'explicit_id',
         event_type: 'core:event_explicit',
-        actions: [],
+        actions: [{ type: 'LOG', parameters: { message: 'Explicit test action' } }],
       };
       const dataWithoutId = {
         event_type: 'core:event_derived',
-        actions: [],
+        actions: [{ type: 'LOG', parameters: { message: 'Derived test action' } }],
       };
 
       mockResolver.resolveModContentPath.mockImplementation(

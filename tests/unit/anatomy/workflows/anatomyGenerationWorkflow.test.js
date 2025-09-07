@@ -460,7 +460,7 @@ describe('AnatomyGenerationWorkflow', () => {
       expect(() =>
         workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
       ).toThrow(
-        "Invalid build descriptor: 'invalid-build' in recipe 'test-recipe'. Must be one of: skinny, slim, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky"
+        "Invalid build descriptor: 'invalid-build' in recipe 'test-recipe'. Must be one of: skinny, slim, lissom, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky"
       );
     });
 
@@ -526,6 +526,7 @@ describe('AnatomyGenerationWorkflow', () => {
       const validBuilds = [
         'skinny',
         'slim',
+        'lissom',
         'toned',
         'athletic',
         'shapely',

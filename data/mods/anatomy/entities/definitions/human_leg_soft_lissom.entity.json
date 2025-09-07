@@ -1,0 +1,37 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:human_leg_soft_lissom",
+    "description": "A soft, lissom human leg",
+    "components": {
+        "anatomy:part": {
+            "subType": "leg"
+        },
+        "anatomy:sockets": {
+            "sockets": [
+                {
+                    "id": "ankle",
+                    "allowedTypes": [
+                        "foot"
+                    ],
+                    "nameTpl": "{{effective_orientation}} {{type}}"
+                }
+            ]
+        },
+        "descriptors:build": {
+            "build": "lissom"
+        },
+        "descriptors:firmness": {
+            "firmness": "soft"
+        },
+        "descriptors:body_hair": {
+            "density": "hairless"
+        },
+        "core:name": {
+            "text": "soft, lissom leg"
+        },
+        "core:movement": {
+            "locked": false,
+            "forcedOverride": false
+        }
+    }
+}

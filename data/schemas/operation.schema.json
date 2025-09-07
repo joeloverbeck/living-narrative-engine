@@ -145,6 +145,18 @@
         },
         {
           "$ref": "./operations/atomicModifyComponent.schema.json"
+        },
+        {
+          "$ref": "./operations/establishSittingCloseness.schema.json"
+        },
+        {
+          "$ref": "./operations/removeSittingCloseness.schema.json"
+        },
+        {
+          "$ref": "./operations/lockMouthEngagement.schema.json"
+        },
+        {
+          "$ref": "./operations/unlockMouthEngagement.schema.json"
         }
       ]
     }

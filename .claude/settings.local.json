@@ -171,7 +171,10 @@
       "mcp__serena__insert_after_symbol",
       "mcp__serena__think_about_task_adherence",
       "mcp__serena__think_about_whether_you_are_done",
-      "mcp__serena__read_memory"
+      "mcp__serena__read_memory",
+      "Bash(NODE_ENV=test npx jest tests/unit/validation/ajvSchemaCacheIssue.test.js --no-coverage --verbose)",
+      "mcp__morphllm-fast-apply__read_file",
+      "mcp__morphllm-fast-apply__read_multiple_files"
     ],
     "deny": [],
     "ask": []

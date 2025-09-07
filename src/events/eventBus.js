@@ -68,7 +68,7 @@ class EventBus extends IEventBus {
       }
       
       this.#batchModeTimeoutId = setTimeout(() => {
-        this.#logger.warn(
+        this.#logger.debug(
           `EventBus: Auto-disabling batch mode after ${this.#batchModeOptions.timeoutMs}ms timeout for context: ${this.#batchModeOptions.context}`
         );
         this.setBatchMode(false);

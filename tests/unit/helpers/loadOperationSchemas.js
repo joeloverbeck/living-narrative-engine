@@ -25,6 +25,22 @@ function loadOperationSchemas(ajv) {
     'schema://living-narrative-engine/base-operation.schema.json'
   );
 
+  // Load the nested-operation schema that operation schemas depend on
+  const nestedSchemaPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    'data',
+    'schemas',
+    'nested-operation.schema.json'
+  );
+  const nestedSchema = require(nestedSchemaPath);
+  ajv.addSchema(
+    nestedSchema,
+    'schema://living-narrative-engine/nested-operation.schema.json'
+  );
+
   // Then load all individual operation schemas
   const dir = path.join(
     __dirname,

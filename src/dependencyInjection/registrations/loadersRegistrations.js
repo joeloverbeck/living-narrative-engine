@@ -402,21 +402,40 @@ export function registerLoaders(container) {
   });
 
   registrar.singletonFactory(tokens.ModsLoader, (c) => {
-    const phases = [
-      c.resolve(tokens.SchemaPhase),
-      c.resolve(tokens.GameConfigPhase),
-      c.resolve(tokens.ManifestPhase),
-      c.resolve(tokens.ContentPhase),
-      c.resolve(tokens.WorldPhase),
-      c.resolve(tokens.SummaryPhase),
+    const logger = c.resolve(tokens.ILogger);
+    logger.debug('ModsLoader: Starting phase resolution...');
+    
+    const phases = [];
+    const phaseTokens = [
+      { token: tokens.SchemaPhase, name: 'SchemaPhase' },
+      { token: tokens.GameConfigPhase, name: 'GameConfigPhase' },
+      { token: tokens.ManifestPhase, name: 'ManifestPhase' },
+      { token: tokens.ContentPhase, name: 'ContentPhase' },
+      { token: tokens.WorldPhase, name: 'WorldPhase' },
+      { token: tokens.SummaryPhase, name: 'SummaryPhase' },
     ];
+    
+    for (const { token, name } of phaseTokens) {
+      try {
+        logger.debug(`ModsLoader: Resolving ${name}...`);
+        const phase = c.resolve(token);
+        logger.debug(`ModsLoader: Successfully resolved ${name} (${phase.name})`);
+        phases.push(phase);
+      } catch (error) {
+        logger.error(`ModsLoader: Failed to resolve ${name}: ${error.message}`, error);
+        throw error;
+      }
+    }
+    
+    logger.debug(`ModsLoader: All ${phases.length} phases resolved successfully`);
+    
     return new ModsLoader({
-      logger: c.resolve(tokens.ILogger),
+      logger,
       cache: c.resolve(tokens.ILoadCache),
       session: new ModsLoadSession({
         phases,
         cache: c.resolve(tokens.ILoadCache),
-        logger: c.resolve(tokens.ILogger),
+        logger,
       }),
       registry: c.resolve(tokens.IDataRegistry),
     });

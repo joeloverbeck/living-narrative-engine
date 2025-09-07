@@ -345,6 +345,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
       const builds = [
         'skinny',
         'slim',
+        'lissom',
         'toned',
         'athletic',
         'shapely',

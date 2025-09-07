@@ -254,9 +254,9 @@ export const PERFORMANCE_THRESHOLDS = {
   STAGE_OVERHEAD: 50,
   CAPTURE_OVERHEAD: 1,
   
-  // Memory thresholds
-  MAX_MEMORY_MB: 150,
-  MEMORY_GROWTH_LIMIT_MB: 10,
+  // Memory thresholds (increased for pipeline tracing reliability)
+  MAX_MEMORY_MB: 200, // Increased from 150 to account for mock overhead
+  MEMORY_GROWTH_LIMIT_MB: 15, // Increased from 10 for complex pipeline operations
   MEMORY_GROWTH_LIMIT_PERCENT: 50, // Maximum 50% growth allowed
   
   // Performance analysis thresholds

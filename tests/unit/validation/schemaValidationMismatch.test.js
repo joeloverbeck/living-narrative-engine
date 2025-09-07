@@ -47,6 +47,7 @@ describe('Schema Validation Mismatch Issue', () => {
     mockValidator.validate.mockReturnValue(simulatedError);
 
     const entityThoughtRule = {
+      "event_type": "core:entity_thought",  // Add required field for pre-validation
       "actions": [
         {
           "type": "QUERY_COMPONENTS",
@@ -56,7 +57,7 @@ describe('Schema Validation Mismatch Issue', () => {
           "type": "IF",  // This is incorrectly validated against QUERY_COMPONENTS schema
           "parameters": {
             "condition": { "var": "context.someVariable" },
-            "then_actions": []
+            "then_actions": [{ "type": "LOG", "parameters": { "message": "test" } }]
           }
         }
       ]

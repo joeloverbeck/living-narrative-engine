@@ -220,6 +220,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
         failureMessage: `${loaderName} [${modId}]: Primary schema validation failed for '${filename}' using schema '${schemaId}'.`,
         failureContext: { modId, filename, resolvedPath },
         failureThrowMessage: `${loaderName} [${modId}]: Primary schema validation failed for '${filename}' using schema '${schemaId}'.`,
+        filePath: resolvedPath,
       }
     );
   }

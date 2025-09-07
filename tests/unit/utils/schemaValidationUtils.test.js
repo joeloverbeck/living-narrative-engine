@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { validateAgainstSchema } from '../../../src/utils/schemaValidationUtils.js';
-import { formatAjvErrors } from '../../../src/utils/ajvUtils.js';
+import { formatAjvErrorsEnhanced } from '../../../src/utils/ajvAnyOfErrorFormatter.js';
 import { createMockLogger } from '../testUtils.js';
 
 /** @typedef {import('../../../src/interfaces/coreServices.js').ValidationResult} ValidationResult */
@@ -57,7 +57,7 @@ describe('validateAgainstSchema', () => {
     validator.isSchemaLoaded.mockReturnValue(true);
     const errors = [{ instancePath: '/name', message: 'bad', params: {} }];
     validator.validate.mockReturnValue({ isValid: false, errors });
-    const formatted = formatAjvErrors(errors);
+    const formatted = formatAjvErrorsEnhanced(errors, {});
     expect(() =>
       validateAgainstSchema(validator, 'schema', {}, logger, {
         failureMessage: 'Invalid',
@@ -77,7 +77,7 @@ describe('validateAgainstSchema', () => {
     validator.isSchemaLoaded.mockReturnValue(true);
     const errors = [{ instancePath: '', message: 'oops', params: {} }];
     validator.validate.mockReturnValue({ isValid: false, errors });
-    const formatted = formatAjvErrors(errors);
+    const formatted = formatAjvErrorsEnhanced(errors, {});
     expect(() =>
       validateAgainstSchema(validator, 'schema', {}, logger, {
         failureMessage: (errs) => `bad ${errs.length}`,

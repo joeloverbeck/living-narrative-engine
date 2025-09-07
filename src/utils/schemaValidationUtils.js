@@ -7,6 +7,8 @@
 /** @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 import { formatAjvErrors } from './ajvUtils.js';
+import { formatAjvErrorsEnhanced } from './ajvAnyOfErrorFormatter.js';
+import { performPreValidation, formatPreValidationError } from './preValidationUtils.js';
 
 /**
  * Validates data against a schema using the provided validator.
@@ -29,6 +31,8 @@ import { formatAjvErrors } from './ajvUtils.js';
  * @param {object} [context.failureContext] - Additional context object passed to the logger on validation failure.
  * @param {string} [context.failureThrowMessage] - Base message for the thrown Error on validation failure.
  * @param {boolean} [context.appendErrorDetails] - Whether to append formatted error details to the thrown error.
+ * @param {string} [context.filePath] - Optional file path for enhanced error reporting in pre-validation.
+ * @param {boolean} [context.skipPreValidation] - When true, skips pre-validation checks and runs only AJV validation.
  * @returns {ValidationResult} Result of the validation. If skipping due to unloaded schema, returns `{isValid: true, errors: null}`.
  * @throws {Error} When the schema is missing (and skipping disabled), no validator function exists, or validation fails.
  */
@@ -49,6 +53,8 @@ export function validateAgainstSchema(
     failureContext = {},
     failureThrowMessage,
     appendErrorDetails = true,
+    filePath,
+    skipPreValidation = false,
   } = context;
 
   if (!validator.isSchemaLoaded(schemaId)) {
@@ -73,6 +79,35 @@ export function validateAgainstSchema(
     logger.debug(validationDebugMessage);
   }
 
+  // Perform pre-validation checks to catch common issues before running full AJV validation
+  if (!skipPreValidation) {
+    const preValidationResult = performPreValidation(data, schemaId, filePath);
+    
+    if (!preValidationResult.isValid) {
+      // Pre-validation failed - provide specific, actionable error
+      const fileName = filePath ? filePath.split('/').pop() : 'unknown file';
+      const preValidationError = formatPreValidationError(preValidationResult, fileName, schemaId);
+      
+      logger.error(`Pre-validation failed for '${fileName}'`, {
+        ...failureContext,
+        schemaId,
+        preValidationError: preValidationResult.error,
+        preValidationPath: preValidationResult.path,
+        preValidationSuggestions: preValidationResult.suggestions,
+      });
+      
+      const baseMessage = failureThrowMessage || `Pre-validation failed for '${fileName}'`;
+      const finalMessage = appendErrorDetails
+        ? `${baseMessage}\nDetails:\n${preValidationError}`
+        : baseMessage;
+      
+      throw new Error(finalMessage);
+    }
+    
+    // Pre-validation passed, log success for debugging
+    logger.debug(`Pre-validation passed for '${filePath || 'data'}' against schema '${schemaId}'`);
+  }
+
   const validationResult = validator.validate(schemaId, data);
 
   if (!validationResult.isValid) {
@@ -80,7 +115,7 @@ export function validateAgainstSchema(
       typeof failureMessage === 'function'
         ? failureMessage(validationResult.errors ?? [])
         : failureMessage;
-    const errorDetails = formatAjvErrors(validationResult.errors);
+    const errorDetails = formatAjvErrorsEnhanced(validationResult.errors, data);
     if (computedFailureMsg) {
       logger.error(computedFailureMsg, {
         ...failureContext,

@@ -92,7 +92,7 @@ export class EntityInstanceLoader extends BaseManifestItemLoader {
       );
 
       if (!isValid) {
-        const formattedErrors = formatAjvErrors(errors);
+        const formattedErrors = formatAjvErrors(errors, componentData);
         this._logger.error(
           `EntityInstanceLoader [${modId}]: Schema validation failed for component override '${componentId}' in instance '${instanceId}' (file: ${filename}). Errors: ${formattedErrors}`,
           {
