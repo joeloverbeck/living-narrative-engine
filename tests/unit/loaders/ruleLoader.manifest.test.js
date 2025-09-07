@@ -253,8 +253,14 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
       const resolvedPath2 = `./data/mods/${modId}/${RULE_CONTENT_DIR}/${ruleFile2Relative.trim()}`; // Path includes subfolder, use trimmed filename
 
       // Mock data for each file
-      const dataForRule1 = { event_type: 'core:event1', actions: [] };
-      const dataForRule2 = { event_type: 'core:event2', actions: [] };
+      const dataForRule1 = { 
+        event_type: 'core:event1', 
+        actions: [{ type: 'LOG', parameters: { message: 'Test action 1' } }] 
+      };
+      const dataForRule2 = { 
+        event_type: 'core:event2', 
+        actions: [{ type: 'LOG', parameters: { message: 'Test action 2' } }] 
+      };
 
       // Configure mock resolver
       mockResolver.resolveModContentPath.mockImplementation(
@@ -606,7 +612,10 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
         },
       };
       const resolvedValidPath = `./data/mods/${modId}/${RULE_CONTENT_DIR}/${validFile}`;
-      const dataForValidFile = { event_type: 'core:valid_event', actions: [] };
+      const dataForValidFile = { 
+        event_type: 'core:valid_event', 
+        actions: [{ type: 'LOG', parameters: { message: 'Test valid action' } }] 
+      };
 
       // Configure resolver and fetcher for the valid path
       mockResolver.resolveModContentPath.mockImplementation(

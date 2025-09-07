@@ -100,7 +100,7 @@ describe('EventBus Infinite Recursion Prevention', () => {
       jest.advanceTimersByTime(5001);
 
       expect(eventBus.isBatchModeEnabled()).toBe(false);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Auto-disabling batch mode after 5000ms timeout')
       );
     });

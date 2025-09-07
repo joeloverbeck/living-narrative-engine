@@ -7,6 +7,7 @@ import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { validateAgainstSchema as validateAgainstSchemaUtil } from '../utils/schemaValidationUtils.js';
 import { formatAjvErrors } from '../utils/ajvUtils.js';
+import { formatAjvErrorsEnhanced } from '../utils/ajvAnyOfErrorFormatter.js';
 
 // ── IMPORT v3 TURN‐ACTION SCHEMA ─────────────────────────────────────────────
 // Schema IDs can be preloaded by passing them in via constructor options.
@@ -740,10 +741,11 @@ class AjvSchemaValidator {
    * This method provides compatibility with character builder services.
    *
    * @param {object[]} errors - Array of Ajv error objects
+   * @param {any} [data] - The data being validated (optional)
    * @returns {string} - Formatted error string
    */
-  formatAjvErrors(errors) {
-    return formatAjvErrors(errors);
+  formatAjvErrors(errors, data) {
+    return formatAjvErrorsEnhanced(errors, data);
   }
 }
 

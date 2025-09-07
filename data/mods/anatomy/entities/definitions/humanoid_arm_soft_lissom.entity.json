@@ -1,0 +1,33 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "anatomy:humanoid_arm_soft_lissom",
+    "description": "A soft, lissom humanoid arm",
+    "components": {
+        "anatomy:part": {
+            "subType": "arm"
+        },
+        "anatomy:sockets": {
+            "sockets": [
+                {
+                    "id": "wrist",
+                    "allowedTypes": [
+                        "hand"
+                    ],
+                    "nameTpl": "{{effective_orientation}} {{type}}"
+                }
+            ]
+        },
+        "descriptors:build": {
+            "build": "lissom"
+        },
+        "descriptors:body_hair": {
+            "density": "hairless"
+        },
+        "descriptors:firmness": {
+            "firmness": "soft"
+        },
+        "core:name": {
+            "text": "soft, lissom arm"
+        }
+    }
+}

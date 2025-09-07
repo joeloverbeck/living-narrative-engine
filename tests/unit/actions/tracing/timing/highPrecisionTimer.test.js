@@ -147,4 +147,117 @@ describe('HighPrecisionTimer', () => {
       expect(expectedApis).toContain(info.api);
     });
   });
+
+  describe('Environment-Specific Timing APIs', () => {
+    let originalPerformance;
+    let originalProcess;
+
+    beforeEach(() => {
+      // Store original globals
+      originalPerformance = global.performance;
+      originalProcess = global.process;
+    });
+
+    afterEach(() => {
+      // Restore original globals
+      global.performance = originalPerformance;
+      global.process = originalProcess;
+    });
+
+    describe('Node.js process.hrtime() environment', () => {
+      beforeEach(() => {
+        // Mock environment with no performance API but with process.hrtime
+        delete global.performance;
+        global.process = {
+          hrtime: jest.fn(() => [1, 500000000]), // 1.5 seconds
+        };
+      });
+
+      it('should use process.hrtime() when performance API is unavailable', () => {
+        const timer = new HighPrecisionTimer();
+        
+        // Call now() to trigger hrtime path
+        const result = timer.now();
+        
+        expect(global.process.hrtime).toHaveBeenCalled();
+        expect(result).toBe(1500); // 1 second * 1000 + 500000000 nanoseconds / 1000000
+      });
+
+      it('should report process.hrtime() API in precision info', () => {
+        const timer = new HighPrecisionTimer();
+        const info = timer.getPrecisionInfo();
+        
+        expect(info.api).toBe('process.hrtime()');
+      });
+
+      it('should report nanosecond resolution for process.hrtime()', () => {
+        const timer = new HighPrecisionTimer();
+        const info = timer.getPrecisionInfo();
+        
+        expect(info.resolution).toBe(0.000001); // 1 nanosecond
+      });
+
+      it('should detect high precision as available with process.hrtime()', () => {
+        const timer = new HighPrecisionTimer();
+        
+        expect(timer.isHighPrecisionAvailable()).toBe(true);
+      });
+    });
+
+    describe('Date.now() fallback environment', () => {
+      let originalDateNow;
+
+      beforeEach(() => {
+        // Mock environment with no performance API and no process.hrtime
+        delete global.performance;
+        delete global.process;
+        
+        // Mock Date.now to return predictable values
+        originalDateNow = Date.now;
+        let callCount = 0;
+        Date.now = jest.fn(() => {
+          callCount++;
+          return 1000000 + callCount * 10; // Incremental timestamps
+        });
+      });
+
+      afterEach(() => {
+        Date.now = originalDateNow;
+      });
+
+      it('should use Date.now() when neither performance nor hrtime available', () => {
+        const timer = new HighPrecisionTimer();
+        
+        // Reset call count for predictable results
+        Date.now.mockClear();
+        Date.now.mockReturnValueOnce(1000100).mockReturnValueOnce(1000150);
+        
+        const result = timer.now();
+        
+        expect(Date.now).toHaveBeenCalled();
+        // Should return relative time from base timestamp
+        expect(typeof result).toBe('number');
+      });
+
+      it('should report Date.now() API in precision info', () => {
+        const timer = new HighPrecisionTimer();
+        const info = timer.getPrecisionInfo();
+        
+        expect(info.api).toBe('Date.now()');
+      });
+
+      it('should report millisecond resolution for Date.now()', () => {
+        const timer = new HighPrecisionTimer();
+        const info = timer.getPrecisionInfo();
+        
+        expect(info.resolution).toBe(1); // 1 millisecond
+      });
+
+      it('should detect high precision as unavailable with Date.now()', () => {
+        const timer = new HighPrecisionTimer();
+        
+        expect(timer.isHighPrecisionAvailable()).toBe(false);
+      });
+    });
+  });
 });

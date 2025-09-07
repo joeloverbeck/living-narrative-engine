@@ -29,11 +29,16 @@ jest.mock('../../../src/utils/ajvUtils.js', () => ({
   formatAjvErrors: jest.fn(),
 }));
 
+jest.mock('../../../src/utils/ajvAnyOfErrorFormatter.js', () => ({
+  formatAjvErrorsEnhanced: jest.fn(),
+}));
+
 describe('AjvSchemaValidator Utility Methods Tests', () => {
   let mockLogger;
   let validator;
   let mockValidateAgainstSchemaUtil;
   let mockFormatAjvErrors;
+  let mockFormatAjvErrorsEnhanced;
 
   beforeEach(async () => {
     mockLogger = createMockLogger();
@@ -43,9 +48,11 @@ describe('AjvSchemaValidator Utility Methods Tests', () => {
       '../../../src/utils/schemaValidationUtils.js'
     );
     const ajvUtils = await import('../../../src/utils/ajvUtils.js');
+    const ajvAnyOfErrorFormatter = await import('../../../src/utils/ajvAnyOfErrorFormatter.js');
 
     mockValidateAgainstSchemaUtil = schemaValidationUtils.validateAgainstSchema;
     mockFormatAjvErrors = ajvUtils.formatAjvErrors;
+    mockFormatAjvErrorsEnhanced = ajvAnyOfErrorFormatter.formatAjvErrorsEnhanced;
 
     // Clear all mocks
     jest.clearAllMocks();
@@ -167,42 +174,42 @@ describe('AjvSchemaValidator Utility Methods Tests', () => {
       ];
 
       const expectedFormattedString = 'name: must be string; age: must be >= 0';
-      mockFormatAjvErrors.mockReturnValue(expectedFormattedString);
+      mockFormatAjvErrorsEnhanced.mockReturnValue(expectedFormattedString);
 
       // Act
       const result = validator.formatAjvErrors(errors);
 
       // Assert
       expect(result).toBe(expectedFormattedString);
-      expect(mockFormatAjvErrors).toHaveBeenCalledWith(errors);
+      expect(mockFormatAjvErrorsEnhanced).toHaveBeenCalledWith(errors, undefined);
     });
 
     it('should handle empty errors array', () => {
       // Arrange
       const errors = [];
       const expectedFormattedString = 'No validation errors';
-      mockFormatAjvErrors.mockReturnValue(expectedFormattedString);
+      mockFormatAjvErrorsEnhanced.mockReturnValue(expectedFormattedString);
 
       // Act
       const result = validator.formatAjvErrors(errors);
 
       // Assert
       expect(result).toBe(expectedFormattedString);
-      expect(mockFormatAjvErrors).toHaveBeenCalledWith(errors);
+      expect(mockFormatAjvErrorsEnhanced).toHaveBeenCalledWith(errors, undefined);
     });
 
     it('should handle null errors', () => {
       // Arrange
       const errors = null;
-      const expectedFormattedString = '';
-      mockFormatAjvErrors.mockReturnValue(expectedFormattedString);
+      const expectedFormattedString = 'No validation errors';
+      mockFormatAjvErrorsEnhanced.mockReturnValue(expectedFormattedString);
 
       // Act
       const result = validator.formatAjvErrors(errors);
 
       // Assert
       expect(result).toBe(expectedFormattedString);
-      expect(mockFormatAjvErrors).toHaveBeenCalledWith(errors);
+      expect(mockFormatAjvErrorsEnhanced).toHaveBeenCalledWith(errors, undefined);
     });
 
     it('should pass through complex error objects', () => {
@@ -222,14 +229,14 @@ describe('AjvSchemaValidator Utility Methods Tests', () => {
       ];
 
       const expectedFormattedString = 'Complex nested validation error';
-      mockFormatAjvErrors.mockReturnValue(expectedFormattedString);
+      mockFormatAjvErrorsEnhanced.mockReturnValue(expectedFormattedString);
 
       // Act
       const result = validator.formatAjvErrors(complexErrors);
 
       // Assert
       expect(result).toBe(expectedFormattedString);
-      expect(mockFormatAjvErrors).toHaveBeenCalledWith(complexErrors);
+      expect(mockFormatAjvErrorsEnhanced).toHaveBeenCalledWith(complexErrors, undefined);
     });
   });
 });

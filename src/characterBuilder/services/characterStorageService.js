@@ -150,7 +150,8 @@ export class CharacterStorageService {
         );
         if (!validationResult.isValid) {
           const errorMsg = this.#schemaValidator.formatAjvErrors(
-            validationResult.errors
+            validationResult.errors,
+            serializedConcept
           );
           const detailedErrorMsg =
             errorMsg || 'Schema validation failed without specific details';
@@ -253,7 +254,8 @@ export class CharacterStorageService {
           );
           if (!validationResult.isValid) {
             const errorMsg = this.#schemaValidator.formatAjvErrors(
-              validationResult.errors
+              validationResult.errors,
+              direction
             );
             throw new CharacterStorageError(
               `Thematic direction validation failed: ${errorMsg}`
@@ -527,7 +529,8 @@ export class CharacterStorageService {
       );
       if (!validationResult.isValid) {
         const errorMsg = this.#schemaValidator.formatAjvErrors(
-          validationResult.errors
+          validationResult.errors,
+          updatedDirection
         );
         throw new CharacterStorageError(
           `Updated thematic direction validation failed: ${errorMsg}`

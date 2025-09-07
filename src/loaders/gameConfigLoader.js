@@ -142,7 +142,7 @@ class GameConfigLoader extends AbstractLoader {
         noValidatorMessage: `FATAL: Could not retrieve validator function for game config schema '${schemaId}'. Schema might be invalid or compilation failed.`,
         noValidatorThrowMessage: `Validator function unavailable for game config schema '${schemaId}'.`,
         failureMessage: (errors) => {
-          const formattedErrors = formatAjvErrors(errors);
+          const formattedErrors = formatAjvErrors(errors, configData);
           return `FATAL: Game configuration file '${filename}' failed schema validation. Path: ${path}. Schema ID: '${schemaId}'. Errors: ${formattedErrors}`;
         },
         failureThrowMessage: `Game configuration validation failed for '${filename}'.`,

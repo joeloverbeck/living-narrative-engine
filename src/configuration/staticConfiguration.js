@@ -118,6 +118,7 @@ class StaticConfiguration {
       'game.schema.json',
       'goal.schema.json',
       'mod-manifest.schema.json',
+      'nested-operation.schema.json',
       'operation.schema.json',
       'rule.schema.json',
       'llm-configs.schema.json',

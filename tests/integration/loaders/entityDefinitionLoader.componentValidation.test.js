@@ -370,7 +370,7 @@ describe('EntityDefinitionLoader Component Validation', () => {
     expect(results.errors).toBe(1);
     expect(results.failures).toBeDefined();
     expect(results.failures[0].error.message).toContain(
-      "must have required property 'id'"
+      "Missing required property 'id'"
     );
   });
 });

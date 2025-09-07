@@ -3,7 +3,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 // Adjust the import path as necessary
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js';
-import { formatAjvErrors } from '../../../src/utils/ajvUtils.js';
+import { formatAjvErrorsEnhanced } from '../../../src/utils/ajvAnyOfErrorFormatter.js';
 import {
   createMockConfiguration,
   createMockPathResolver,
@@ -253,7 +253,7 @@ describe('BaseManifestItemLoader _validatePrimarySchema', () => {
     mockValidator.isSchemaLoaded.mockReturnValue(true);
     mockValidator.validate.mockReturnValue(failureResult);
     const expectedBaseErrorMsg = `${loaderName} [${modId}]: Primary schema validation failed for '${filename}' using schema '${schemaId}'.`;
-    const formatted = formatAjvErrors(validationErrors);
+    const formatted = formatAjvErrorsEnhanced(validationErrors, data);
 
     // Act & Assert
     expect(() =>
@@ -312,7 +312,7 @@ describe('BaseManifestItemLoader _validatePrimarySchema', () => {
       loader._validatePrimarySchema(data, filename, modId, resolvedPath);
       throw new Error('Test failed: Expected _validatePrimarySchema to throw');
     } catch (error) {
-      const expectedFullErrorMsg = `${expectedBaseErrorMsg}\nDetails:\nNo specific error details provided.`;
+      const expectedFullErrorMsg = `${expectedBaseErrorMsg}\nDetails:\nNo validation errors`;
       expect(error.message).toBe(expectedFullErrorMsg);
     }
 
@@ -320,7 +320,7 @@ describe('BaseManifestItemLoader _validatePrimarySchema', () => {
       expectedBaseErrorMsg,
       expect.objectContaining({
         validationErrors: null,
-        validationErrorDetails: formatAjvErrors(null),
+        validationErrorDetails: formatAjvErrorsEnhanced(null),
       })
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(

@@ -126,6 +126,10 @@ export function registerInterpreters(container) {
       bind(tokens.RemoveFromClosenessCircleHandler)
     );
     registry.register(
+      'ESTABLISH_SITTING_CLOSENESS',
+      bind(tokens.EstablishSittingClosenessHandler)
+    );
+    registry.register(
       'HAS_BODY_PART_WITH_COMPONENT_VALUE',
       bind(tokens.HasBodyPartWithComponentValueHandler)
     );

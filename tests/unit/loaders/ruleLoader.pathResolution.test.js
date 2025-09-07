@@ -265,8 +265,14 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
         }
       );
 
-      const dataA = { event_type: 'core:eventA', actions: [] };
-      const dataB = { event_type: 'core:eventB', actions: [] };
+      const dataA = { 
+        event_type: 'core:eventA', 
+        actions: [{ type: 'LOG', parameters: { message: 'Test action A' } }] 
+      };
+      const dataB = { 
+        event_type: 'core:eventB', 
+        actions: [{ type: 'LOG', parameters: { message: 'Test action B' } }] 
+      };
       mockFetcher.fetch.mockImplementation(async (filePath) => {
         if (filePath === resolvedPathA) return Promise.resolve(dataA);
         if (filePath === resolvedPathB) return Promise.resolve(dataB);
@@ -322,7 +328,7 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
           _modId: modId,
           _sourceFile: ruleFileA,
           event_type: 'core:eventA', // From dataA
-          actions: [], // From dataA
+          actions: [{ type: 'LOG', parameters: { message: 'Test action A' } }], // From dataA
         })
       );
       expect(mockRegistry.store).toHaveBeenCalledWith(
@@ -334,7 +340,7 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
           _modId: modId,
           _sourceFile: ruleFileB,
           event_type: 'core:eventB', // From dataB
-          actions: [], // From dataB
+          actions: [{ type: 'LOG', parameters: { message: 'Test action B' } }], // From dataB
         })
       );
 

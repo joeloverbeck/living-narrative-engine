@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { validateAgainstSchema } from '../../../src/utils/schemaValidationUtils.js';
-import * as ajvUtils from '../../../src/utils/ajvUtils.js';
+import * as ajvAnyOfErrorFormatter from '../../../src/utils/ajvAnyOfErrorFormatter.js';
 import { createMockLogger } from '../testUtils.js';
 
 describe('validateAgainstSchema additional branches', () => {
@@ -28,11 +28,11 @@ describe('validateAgainstSchema additional branches', () => {
     validator.isSchemaLoaded.mockReturnValue(true);
     const errors = [{ instancePath: '', message: 'bad', params: {} }];
     validator.validate.mockReturnValue({ isValid: false, errors });
-    jest.spyOn(ajvUtils, 'formatAjvErrors').mockReturnValue('DETAILS');
+    jest.spyOn(ajvAnyOfErrorFormatter, 'formatAjvErrorsEnhanced').mockReturnValue('Validation errors:\n  - root: bad');
     expect(() =>
       validateAgainstSchema(validator, 'schema', {}, logger)
-    ).toThrow('Schema validation failed.\nDetails:\nDETAILS');
+    ).toThrow('Schema validation failed.\nDetails:\nValidation errors:\n  - root: bad');
     expect(logger.error).not.toHaveBeenCalled();
-    expect(ajvUtils.formatAjvErrors).toHaveBeenCalledWith(errors);
+    expect(ajvAnyOfErrorFormatter.formatAjvErrorsEnhanced).toHaveBeenCalledWith(errors, {});
   });
 });

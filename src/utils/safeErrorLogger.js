@@ -81,7 +81,7 @@ export function createSafeErrorLogger({ logger, safeEventDispatcher, eventBus })
     }
     
     loadingTimeoutId = setTimeout(() => {
-      safeLogger.warn(
+      safeLogger.debug(
         `SafeErrorLogger: Auto-disabling game loading mode after ${loadingOptions.timeoutMs}ms timeout`
       );
       disableGameLoadingMode();

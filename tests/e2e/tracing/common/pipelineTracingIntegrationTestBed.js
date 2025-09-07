@@ -814,6 +814,27 @@ export class PipelineTracingIntegrationTestBed {
     this.executionTimes.clear();
     this.stageMetrics.clear();
     
+    // Explicitly null out large objects to help GC
+    this.tracingComponents = {
+      filter: null,
+      structuredTrace: null,
+      performanceAnalyzer: null,
+      performanceMonitor: null,
+    };
+    
+    this.facades = null;
+    this.turnExecutionFacade = null;
+    this.actionService = null;
+    this.entityService = null;
+    this.performanceCapture = null;
+    this.errorCapture = null;
+    this.memorySnapshots = [];
+    
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
+    
     this.initialized = false;
   }
 }

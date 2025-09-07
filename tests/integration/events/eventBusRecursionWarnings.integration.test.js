@@ -251,8 +251,8 @@ describe('EventBus - Recursion Warnings Integration', () => {
     // Don't dispatch any completion event, let it timeout
     await new Promise(resolve => setTimeout(resolve, 150)); // Wait longer than timeout
     
-    // Assert - Should have logged the timeout warning
-    expect(mockLogger.warn).toHaveBeenCalledWith(
+    // Assert - Should have logged the timeout debug message
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('EventBus: Auto-disabling batch mode after 100ms timeout for context: game-initialization')
     );
   });

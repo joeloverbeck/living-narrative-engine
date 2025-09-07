@@ -127,6 +127,7 @@ describe('BodyComponent Schema Validation', () => {
         const buildValues = [
           'skinny',
           'slim',
+          'lissom',
           'toned',
           'athletic',
           'shapely',

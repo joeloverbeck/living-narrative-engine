@@ -1,0 +1,15 @@
+// Scope for actors that this entity is facing away from who have a covered penis
+// Combines positioning validation (facing away + closeness) with anatomy checks
+// Used by actions that require the actor to be facing away from someone with covered penis anatomy
+sex:actors_with_covered_penis_im_facing_away_from := actor.components.positioning:facing_away.facing_away_from[][{
+  "and": [
+    {
+      "in": [
+        { "var": "entity.id" },
+        { "var": "actor.components.positioning:closeness.partners" }
+      ]
+    },
+    {"hasPartOfType": [".", "penis"]},
+    {"isSocketCovered": [".", "penis"]}
+  ]
+}]

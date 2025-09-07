@@ -9,6 +9,7 @@
 export const BODY_BUILD_TYPES = {
   SKINNY: 'skinny',
   SLIM: 'slim',
+  LISSOM: 'lissom',
   TONED: 'toned',
   ATHLETIC: 'athletic',
   SHAPELY: 'shapely',

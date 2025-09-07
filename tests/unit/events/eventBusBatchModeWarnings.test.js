@@ -80,7 +80,7 @@ describe('EventBus Batch Mode and Warnings', () => {
       
       setTimeout(() => {
         expect(eventBus.isBatchModeEnabled()).toBe(false);
-        expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining('Auto-disabling batch mode after')
         );
         done();
