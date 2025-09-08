@@ -92,15 +92,23 @@ export class TraitsRewriterGenerator {
    *
    * @param {object} characterDefinition - Complete character definition
    * @param {object} options - Generation options
+   * @param {string} [options.llmConfigId] - Specific LLM configuration ID to use
    * @returns {Promise<object>} Rewritten traits result
    */
   async generateRewrittenTraits(characterDefinition, options = {}) {
     const startTime = Date.now();
     const characterName = this.#extractCharacterName(characterDefinition);
 
+    // If specific LLM config ID provided, temporarily set it as active
+    const originalLlmId = options.llmConfigId ? await this.#llmConfigManager.getActiveConfigId() : null;
+    if (options.llmConfigId) {
+      await this.#llmConfigManager.setActiveConfiguration(options.llmConfigId);
+    }
+
     this.#logger.info('TraitsRewriterGenerator: Starting generation', {
       characterName,
       options,
+      activeLlmId: options.llmConfigId || originalLlmId,
     });
 
     try {
@@ -178,8 +186,22 @@ export class TraitsRewriterGenerator {
         }
       );
 
+      // Restore original LLM configuration if it was temporarily changed
+      if (options.llmConfigId && originalLlmId) {
+        await this.#llmConfigManager.setActiveConfiguration(originalLlmId);
+      }
+
       return result;
     } catch (error) {
+      // Restore original LLM configuration even in case of error
+      if (options.llmConfigId && originalLlmId) {
+        try {
+          await this.#llmConfigManager.setActiveConfiguration(originalLlmId);
+        } catch (restoreError) {
+          this.#logger.error('Failed to restore original LLM configuration', restoreError);
+        }
+      }
+      
       return this.#handleGenerationErrors(error, {
         characterName,
         processingTime: Date.now() - startTime,

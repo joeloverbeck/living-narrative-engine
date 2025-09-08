@@ -96,7 +96,11 @@ describe('E2E: LLM Configuration Management', () => {
    * Verifies that all configuration properties are properly loaded and accessible
    */
   test('should correctly load all configuration properties', async () => {
-    // Arrange & Act - Get current config
+    // Arrange - Ensure we're testing the default configuration
+    // Previous tests may have switched to a different configuration
+    await testBed.switchLLMConfig('test-llm-toolcalling');
+    
+    // Act - Get current config
     const { config } = await testBed.getCurrentLLMConfig();
 
     // Assert - All required properties should be present

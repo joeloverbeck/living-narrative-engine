@@ -45,6 +45,10 @@ describe('E2E: Token Estimation and Limits', () => {
 
     // Clear any events from initialization
     testBed.clearRecordedEvents();
+
+    // Ensure consistent starting configuration for all tests
+    // Tests that need a different configuration should explicitly switch
+    await testBed.switchLLMConfig('test-llm-toolcalling');
   });
 
   afterEach(async () => {
@@ -320,6 +324,9 @@ describe('E2E: Token Estimation and Limits', () => {
     // This test is more of a integration test since we can't easily
     // mock the tokenizer in the E2E environment, but we can verify
     // the system handles various prompt formats gracefully
+
+    // Note: Using default configuration set in beforeEach (test-llm-toolcalling)
+    // which has 8000 token limit, sufficient for our test prompts
 
     const weirdCharPrompt = 'Strange characters: ñáéíóú 中文 🚀 ♠️ ∑∏∆';
 

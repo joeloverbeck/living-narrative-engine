@@ -18,7 +18,6 @@ import handleGetUpRule from '../../../data/mods/positioning/rules/handle_get_up_
 import eventIsActionSitDown from '../../../data/mods/positioning/conditions/event-is-action-sit-down.condition.json';
 import eventIsActionGetUp from '../../../data/mods/positioning/conditions/event-is-action-get-up-from-furniture.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import { expandMacros } from '../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
@@ -32,13 +31,14 @@ import LockMovementHandler from '../../../src/logic/operationHandlers/lockMoveme
 import UnlockMovementHandler from '../../../src/logic/operationHandlers/unlockMovementHandler.js';
 import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
 import AtomicModifyComponentHandler from '../../../src/logic/operationHandlers/atomicModifyComponentHandler.js';
+import RemoveSittingClosenessHandler from '../../../src/logic/operationHandlers/removeSittingClosenessHandler.js';
+import * as closenessCircleService from '../../../src/logic/services/closenessCircleService.js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
   DESCRIPTION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
-import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 
 // Action definitions
 const sitDownAction = {
@@ -146,6 +146,12 @@ function createHandlers(entityManager, eventBus, logger) {
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
+    }),
+    REMOVE_SITTING_CLOSENESS: new RemoveSittingClosenessHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+      closenessCircleService,
     }),
   };
 }
@@ -586,6 +592,249 @@ describe('furniture sitting system', () => {
       );
       expect(sittingOn).toBeDefined();
       expect(sittingOn.furniture_id).toBe(chair);
+    });
+  });
+
+  describe('closeness removal on stand up', () => {
+    it('should remove closeness when standing up from adjacent position', async () => {
+      // Create second actor
+      const actor2 = 'test:actor2';
+      testEnv.entityManager.addComponent(actor2, ACTOR_COMPONENT_ID, {});
+      testEnv.entityManager.addComponent(actor2, NAME_COMPONENT_ID, {
+        name: 'Bob',
+      });
+      testEnv.entityManager.addComponent(actor2, POSITION_COMPONENT_ID, {
+        locationId: 'location:room',
+      });
+
+      // Both actors sit adjacent on couch
+      await testEnv.dispatchAction({
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: couch,
+      });
+      await testEnv.dispatchAction({
+        actionId: 'positioning:sit_down',
+        actorId: actor2,
+        targetId: couch,
+      });
+
+      // Add closeness components to simulate sitting-based closeness
+      testEnv.entityManager.addComponent(actor, 'positioning:closeness', {
+        partners: [actor2],
+        sitting_based: [actor2],
+      });
+      testEnv.entityManager.addComponent(actor2, 'positioning:closeness', {
+        partners: [actor],
+        sitting_based: [actor],
+      });
+
+      // Alice stands up
+      await testEnv.dispatchAction({
+        actionId: 'positioning:get_up_from_furniture',
+        actorId: actor,
+        targetId: couch,
+      });
+
+      // Verify closeness was removed
+      const aliceCloseness = testEnv.entityManager.getComponentData(
+        actor,
+        'positioning:closeness'
+      );
+      const bobCloseness = testEnv.entityManager.getComponentData(
+        actor2,
+        'positioning:closeness'
+      );
+      
+      expect(aliceCloseness).toBeNull();
+      expect(bobCloseness).toBeNull();
+
+      // Verify Alice still stood up successfully
+      const aliceSitting = testEnv.entityManager.getComponentData(
+        actor,
+        'positioning:sitting_on'
+      );
+      expect(aliceSitting).toBeNull();
+    });
+
+    it('should remove closeness based on adjacency heuristics', async () => {
+      // Create second actor
+      const actor2 = 'test:actor2';
+      testEnv.entityManager.addComponent(actor2, ACTOR_COMPONENT_ID, {});
+      testEnv.entityManager.addComponent(actor2, NAME_COMPONENT_ID, {
+        name: 'Bob',
+      });
+      testEnv.entityManager.addComponent(actor2, POSITION_COMPONENT_ID, {
+        locationId: 'location:room',
+      });
+
+      // Both actors sit adjacent on couch
+      await testEnv.dispatchAction({
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: couch,
+      });
+      await testEnv.dispatchAction({
+        actionId: 'positioning:sit_down',
+        actorId: actor2,
+        targetId: couch,
+      });
+
+      // Add closeness components
+      // Note: The handler uses position-based heuristics, not the manual/sitting_based fields
+      testEnv.entityManager.addComponent(actor, 'positioning:closeness', {
+        partners: [actor2],
+        sitting_based: [actor2],
+      });
+      testEnv.entityManager.addComponent(actor2, 'positioning:closeness', {
+        partners: [actor],
+        sitting_based: [actor],
+      });
+
+      // Alice stands up
+      await testEnv.dispatchAction({
+        actionId: 'positioning:get_up_from_furniture',
+        actorId: actor,
+        targetId: couch,
+      });
+
+      // Verify closeness was removed (actors were adjacent, so relationship is removed)
+      const aliceCloseness = testEnv.entityManager.getComponentData(
+        actor,
+        'positioning:closeness'
+      );
+      const bobCloseness = testEnv.entityManager.getComponentData(
+        actor2,
+        'positioning:closeness'
+      );
+      
+      // Since Alice and Bob were adjacent, the handler removes their closeness
+      expect(aliceCloseness).toBeNull();
+      expect(bobCloseness).toBeNull();
+    });
+
+    it('should handle actor with no closeness relationships', async () => {
+      // Actor sits alone on chair
+      await testEnv.dispatchAction({
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: chair,
+      });
+
+      // Verify no closeness component exists
+      const closenessBeforeStanding = testEnv.entityManager.getComponentData(
+        actor,
+        'positioning:closeness'
+      );
+      expect(closenessBeforeStanding).toBeNull();
+
+      // Actor stands up
+      await testEnv.dispatchAction({
+        actionId: 'positioning:get_up_from_furniture',
+        actorId: actor,
+        targetId: chair,
+      });
+
+      // Verify standing succeeded normally
+      const sittingOn = testEnv.entityManager.getComponentData(
+        actor,
+        'positioning:sitting_on'
+      );
+      expect(sittingOn).toBeNull();
+
+      // Verify still no closeness component
+      const closenessAfterStanding = testEnv.entityManager.getComponentData(
+        actor,
+        'positioning:closeness'
+      );
+      expect(closenessAfterStanding).toBeNull();
+    });
+
+    it('should handle three actors with middle position standing', async () => {
+      // Create second and third actors
+      const actor2 = 'test:actor2';
+      const actor3 = 'test:actor3';
+      
+      testEnv.entityManager.addComponent(actor2, ACTOR_COMPONENT_ID, {});
+      testEnv.entityManager.addComponent(actor2, NAME_COMPONENT_ID, {
+        name: 'Bob',
+      });
+      testEnv.entityManager.addComponent(actor2, POSITION_COMPONENT_ID, {
+        locationId: 'location:room',
+      });
+
+      testEnv.entityManager.addComponent(actor3, ACTOR_COMPONENT_ID, {});
+      testEnv.entityManager.addComponent(actor3, NAME_COMPONENT_ID, {
+        name: 'Charlie',
+      });
+      testEnv.entityManager.addComponent(actor3, POSITION_COMPONENT_ID, {
+        locationId: 'location:room',
+      });
+
+      // All three actors sit on couch (Alice-Bob-Charlie)
+      await testEnv.dispatchAction({
+        actionId: 'positioning:sit_down',
+        actorId: actor,
+        targetId: couch,
+      });
+      await testEnv.dispatchAction({
+        actionId: 'positioning:sit_down',
+        actorId: actor2,
+        targetId: couch,
+      });
+      await testEnv.dispatchAction({
+        actionId: 'positioning:sit_down',
+        actorId: actor3,
+        targetId: couch,
+      });
+
+      // Set up closeness (Alice-Bob and Bob-Charlie)
+      testEnv.entityManager.addComponent(actor, 'positioning:closeness', {
+        partners: [actor2],
+        sitting_based: [actor2],
+      });
+      testEnv.entityManager.addComponent(actor2, 'positioning:closeness', {
+        partners: [actor, actor3],
+        sitting_based: [actor, actor3],
+      });
+      testEnv.entityManager.addComponent(actor3, 'positioning:closeness', {
+        partners: [actor2],
+        sitting_based: [actor2],
+      });
+
+      // Bob (middle position) stands up
+      await testEnv.dispatchAction({
+        actionId: 'positioning:get_up_from_furniture',
+        actorId: actor2,
+        targetId: couch,
+      });
+
+      // Verify Bob's closeness is removed
+      const bobCloseness = testEnv.entityManager.getComponentData(
+        actor2,
+        'positioning:closeness'
+      );
+      expect(bobCloseness).toBeNull();
+
+      // Verify Alice and Charlie's closeness to Bob is removed
+      const aliceCloseness = testEnv.entityManager.getComponentData(
+        actor,
+        'positioning:closeness'
+      );
+      const charlieCloseness = testEnv.entityManager.getComponentData(
+        actor3,
+        'positioning:closeness'
+      );
+      
+      expect(aliceCloseness).toBeNull();
+      expect(charlieCloseness).toBeNull();
+
+      // Verify Bob stood up successfully
+      const bobSitting = testEnv.entityManager.getComponentData(
+        actor2,
+        'positioning:sitting_on'
+      );
+      expect(bobSitting).toBeNull();
     });
   });
 });

@@ -5,6 +5,38 @@
 
 import { CharacterBuilderBootstrap } from './characterBuilder/CharacterBuilderBootstrap.js';
 import { SpeechPatternsGeneratorController } from './characterBuilder/controllers/SpeechPatternsGeneratorController.js';
+import { LLMSelectionPersistence } from './llms/services/llmSelectionPersistence.js';
+
+/**
+ * Update the LLM status display on the page
+ * @param {object} container - Dependency injection container
+ */
+async function updateLLMDisplay(container) {
+  const llmNameElement = document.getElementById('active-llm-name');
+  if (!llmNameElement) return;
+  
+  try {
+    const llmAdapter = container.resolve('ILLMAdapter');
+    const currentLlmId = await llmAdapter.getCurrentActiveLlmId();
+    
+    if (currentLlmId) {
+      // Get the display name for the current LLM
+      const availableOptions = await llmAdapter.getAvailableLlmOptions();
+      const currentOption = availableOptions.find(opt => opt.configId === currentLlmId);
+      
+      if (currentOption) {
+        llmNameElement.textContent = currentOption.displayName || currentLlmId;
+      } else {
+        llmNameElement.textContent = currentLlmId;
+      }
+    } else {
+      llmNameElement.textContent = 'Default LLM';
+    }
+  } catch (error) {
+    console.error('Failed to update LLM display', error);
+    llmNameElement.textContent = 'Unknown';
+  }
+}
 
 /**
  * Initialize the Speech Patterns Generator application
@@ -13,11 +45,14 @@ async function initializeSpeechPatternsGenerator() {
   try {
     const bootstrap = new CharacterBuilderBootstrap();
 
-    const { controller } = await bootstrap.bootstrap({
+    const { controller, container } = await bootstrap.bootstrap({
       pageName: 'Speech Patterns Generator',
       controllerClass: SpeechPatternsGeneratorController,
       includeModLoading: true, // Enable mod loading to include event definitions
     });
+
+    // Update LLM status display
+    await updateLLMDisplay(container);
 
     console.info('Speech Patterns Generator initialized successfully');
   } catch (error) {
