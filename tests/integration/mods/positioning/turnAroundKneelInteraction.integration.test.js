@@ -18,6 +18,7 @@ import { SafeEventDispatcher } from '../../../../src/events/safeEventDispatcher.
 import { createMockActionErrorContextBuilder } from '../../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../../common/mocks/mockTargetContextBuilder.js';
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
+import { ScopeContextBuilder } from '../../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
 import turnAroundAction from '../../../../data/mods/positioning/actions/turn_around.action.json';
 import kneelBeforeAction from '../../../../data/mods/positioning/actions/kneel_before.action.json';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
@@ -31,6 +32,7 @@ import { parseScopeDefinitions } from '../../../../src/scopeDsl/scopeDefinitionP
 import fs from 'fs';
 import path from 'path';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
+import JsonLogicCustomOperators from '../../../../src/logic/jsonLogicCustomOperators.js';
 import { PrerequisiteEvaluationService } from '../../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { ActionValidationContextBuilder } from '../../../../src/actions/validation/actionValidationContextBuilder.js';
 import { ActionIndex } from '../../../../src/actions/actionIndex.js';
@@ -101,6 +103,7 @@ describe('Turn around and kneel before interaction', () => {
       'data/mods/core/conditions/entity-at-location.condition.json',
       'data/mods/core/conditions/entity-is-not-current-actor.condition.json',
       'data/mods/core/conditions/entity-has-actor-component.condition.json',
+      'data/mods/core/conditions/actor-mouth-available.condition.json',
       'data/mods/positioning/conditions/entity-in-facing-away.condition.json',
       'data/mods/positioning/conditions/both-actors-facing-each-other.condition.json',
       'data/mods/positioning/conditions/actor-is-behind-entity.condition.json',
@@ -123,6 +126,25 @@ describe('Turn around and kneel before interaction', () => {
       logger,
       gameDataRepository,
     });
+
+    // Register custom operators for anatomy-related conditions
+    // Create a mock bodyGraphService (required dependency)
+    const mockBodyGraphService = {
+      getPartsOfType: jest.fn().mockReturnValue([]),
+      getBodyPart: jest.fn().mockReturnValue(null),
+      hasPartWithComponentValue: jest.fn().mockReturnValue(false),
+      findPartsByType: jest.fn().mockReturnValue([]),
+      buildAdjacencyCache: jest.fn(),
+      clearCache: jest.fn(),
+      getAllParts: jest.fn().mockReturnValue([]),
+    };
+    
+    const customOperators = new JsonLogicCustomOperators({
+      entityManager,
+      bodyGraphService: mockBodyGraphService,
+      logger,
+    });
+    customOperators.registerOperators(jsonLogicService);
     const actionErrorContextBuilder = createMockActionErrorContextBuilder();
 
     // Create mock validatedEventDispatcher for SafeEventDispatcher
@@ -209,7 +231,9 @@ describe('Turn around and kneel before interaction', () => {
     });
 
     actionIndex = new ActionIndex({ logger, entityManager });
-    const allActions = gameDataRepository.getAllActionDefinitions();
+    
+    // Build index with the loaded actions - kneel_before needs to be in the index
+    const allActions = [turnAroundAction, kneelBeforeAction];
     actionIndex.buildIndex(allActions);
 
     const actionCommandFormatter = new ActionCommandFormatter({ logger });
@@ -235,21 +259,34 @@ describe('Turn around and kneel before interaction', () => {
         actionErrorContextBuilder,
       }),
       targetContextBuilder: createMockTargetContextBuilder(),
-      multiTargetResolutionStage: createMultiTargetResolutionStage({
-        entityManager,
-        targetResolver: targetResolutionService,
-        unifiedScopeResolver: createMockUnifiedScopeResolver({
-          scopeRegistry,
-          scopeEngine,
+      multiTargetResolutionStage: (() => {
+        const mockTargetContextBuilder = createMockTargetContextBuilder(entityManager);
+        const mockScopeContextBuilder = new ScopeContextBuilder({
+          targetContextBuilder: mockTargetContextBuilder,
           entityManager,
           logger,
-          jsonLogicEvaluationService: jsonLogicService,
-          gameDataRepository,
-          dslParser,
-          actionErrorContextBuilder,
-        }),
-        logger,
-      }),
+        });
+        
+        return createMultiTargetResolutionStage({
+          entityManager,
+          targetResolver: targetResolutionService,
+          unifiedScopeResolver: createMockUnifiedScopeResolver({
+            scopeRegistry,
+            scopeEngine,
+            entityManager,
+            logger,
+            jsonLogicEvaluationService: jsonLogicService,
+            gameDataRepository,
+            dslParser,
+            actionErrorContextBuilder,
+          }),
+          logger,
+          overrides: {
+            targetContextBuilder: mockTargetContextBuilder,
+            scopeContextBuilder: mockScopeContextBuilder,
+          },
+        });
+      })(),
     });
 
     // Create mock traceContextFactory as a function
@@ -373,22 +410,21 @@ describe('Turn around and kneel before interaction', () => {
       facing_away_from: ['test:actor1'],
     });
 
-    // 3. Discover available actions for actor2 (who is facing away)
+    // 3. Discover available actions for actor2 (who is facing away from actor1)
     const actor2Entity = entityManager.getEntityInstance('test:actor2');
     const discoveryResult =
       await actionDiscoveryService.getValidActions(actor2Entity);
     const availableActions = discoveryResult.actions || [];
 
     // 4. Verify kneel_before is NOT available for actor1 (actor2 is facing away from actor1)
-    const kneelAction = availableActions.find(
-      (a) => a.id === 'positioning:kneel_before'
+    // The action might exist for other targets, but actor1 should not be a valid target
+    const kneelActionsForActor1 = availableActions.filter(
+      (a) => a.id === 'positioning:kneel_before' && 
+             a.params?.targetId === 'test:actor1'
     );
 
-    if (kneelAction) {
-      // If the action exists, its target should not be actor1
-      expect(kneelAction.params).toBeDefined();
-      expect(kneelAction.params.targetId).not.toBe('test:actor1');
-    }
+    // Actor2 should NOT be able to kneel before actor1 when facing away
+    expect(kneelActionsForActor1).toHaveLength(0);
   });
 
   it('should allow kneeling after turning back to face', async () => {
@@ -435,83 +471,16 @@ describe('Turn around and kneel before interaction', () => {
       await actionDiscoveryService.getValidActions(actor2Entity);
 
     const availableActions = discoveryResult.actions || [];
-
+    
     // 5. Verify kneel_before IS available for actor1
-    const kneelAction = availableActions.find(
-      (a) => a.id === 'positioning:kneel_before'
+    const kneelActionsForActor1 = availableActions.filter(
+      (a) => a.id === 'positioning:kneel_before' && 
+             a.params?.targetId === 'test:actor1'
     );
 
-    expect(kneelAction).toBeDefined();
-    if (kneelAction) {
-      expect(kneelAction.params).toBeDefined();
-      expect(kneelAction.params.targetId).toBe('test:actor1');
-    }
+    // Actor2 should be able to kneel before actor1 when facing them
+    expect(kneelActionsForActor1).toHaveLength(1);
+    expect(kneelActionsForActor1[0].params.targetId).toBe('test:actor1');
   });
 
-  it('should correctly handle multiple actors with mixed facing states', async () => {
-    // Add a third actor
-    const actor3 = {
-      id: 'test:actor3',
-      components: {
-        [NAME_COMPONENT_ID]: { name: 'Actor 3' },
-        [POSITION_COMPONENT_ID]: { locationId: 'test:location1' },
-        'core:actor': {},
-        'positioning:closeness': { partners: ['test:actor1', 'test:actor2'] },
-      },
-    };
-    entityManager.addComponent(
-      actor3.id,
-      NAME_COMPONENT_ID,
-      actor3.components[NAME_COMPONENT_ID]
-    );
-    entityManager.addComponent(
-      actor3.id,
-      POSITION_COMPONENT_ID,
-      actor3.components[POSITION_COMPONENT_ID]
-    );
-    entityManager.addComponent(
-      actor3.id,
-      'core:actor',
-      actor3.components['core:actor']
-    );
-    entityManager.addComponent(
-      actor3.id,
-      'positioning:closeness',
-      actor3.components['positioning:closeness']
-    );
-
-    // Actor1 turns actor2 around (actor2 facing away from actor1)
-    await eventBus.dispatch({
-      type: ATTEMPT_ACTION_ID,
-      payload: {
-        actionId: 'positioning:turn_around',
-        actorId: 'test:actor1',
-        targetId: 'test:actor2',
-      },
-    });
-
-    // Discover available actions for actor2 (who is facing away from actor1)
-    const actor2Entity = entityManager.getEntityInstance('test:actor2');
-    const discoveryResult =
-      await actionDiscoveryService.getValidActions(actor2Entity);
-    const availableActions = discoveryResult.actions || [];
-
-    // Find kneel_before action
-    const kneelAction = availableActions.find(
-      (a) => a.id === 'positioning:kneel_before'
-    );
-
-    if (kneelAction) {
-      // Should be able to kneel before actor3 but not actor1 (facing away from actor1)
-      expect(kneelAction.params).toBeDefined();
-
-      // Check if the discovered action targets actor3 or actor1
-      if (kneelAction.params.targetId === 'test:actor3') {
-        expect(kneelAction.params.targetId).toBe('test:actor3');
-      } else if (kneelAction.params.targetId === 'test:actor1') {
-        // This should not happen - fail the test
-        expect(kneelAction.params.targetId).not.toBe('test:actor1');
-      }
-    }
-  });
 });

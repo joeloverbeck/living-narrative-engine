@@ -273,7 +273,7 @@ export function createMockUnifiedScopeResolver(dependencies) {
         }
 
         // Resolve scope
-
+        
         let resolvedIds;
         try {
           resolvedIds = scopeEngine.resolve(
@@ -291,6 +291,8 @@ export function createMockUnifiedScopeResolver(dependencies) {
             `Scope engine returned invalid result: ${typeof resolvedIds}`
           );
         }
+
+
 
         return ActionResult.success(resolvedIds);
       } catch (error) {

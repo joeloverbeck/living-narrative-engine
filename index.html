@@ -1,273 +1,209 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Living Narrative Engine</title>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/index-redesign.css" />
-  </head>
 
-  <body>
-    <div class="index-container">
-      <!-- Header Section -->
-      <header class="main-header">
-        <div class="header-content">
-          <img
-            src="android-chrome-192x192.png"
-            alt="Living Narrative Engine Logo"
-            class="logo"
-          />
-          <div class="header-text">
-            <h1 class="main-title">Living Narrative Engine</h1>
-            <p class="tagline">Create immersive narratives</p>
-          </div>
-        </div>
-      </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Living Narrative Engine</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/index-redesign.css" />
+</head>
 
-      <!-- Main Content -->
-      <main class="main-content">
-        <!-- Game Operations Section -->
-        <section
-          class="button-category button-category--game"
-          aria-labelledby="game-operations-title"
-        >
-          <h2 id="game-operations-title" class="category-title">
-            Game Operations
-          </h2>
-          <p class="category-description">
-            Start playing or continue your adventure
-          </p>
-          <div class="button-grid button-grid--2col">
-            <button
-              id="start-button"
-              class="menu-button nav-button nav-button--game"
-            >
-              <span class="button-icon" aria-hidden="true">🎮</span>
-              <span class="button-text">Start New Game</span>
-            </button>
-            <button
-              id="load-button"
-              class="menu-button nav-button nav-button--game"
-            >
-              <span class="button-icon" aria-hidden="true">📁</span>
-              <span class="button-text">Load Game</span>
-            </button>
-          </div>
-        </section>
-
-        <!-- Anatomy System Section -->
-        <section
-          class="button-category button-category--anatomy"
-          aria-labelledby="anatomy-system-title"
-        >
-          <h2 id="anatomy-system-title" class="category-title">
-            Anatomy System
-          </h2>
-          <p class="category-description">
-            Visualize and manage character anatomy
-          </p>
-          <div class="button-grid button-grid--1col">
-            <button
-              id="anatomy-button"
-              class="menu-button nav-button nav-button--anatomy"
-            >
-              <span class="button-icon" aria-hidden="true">❤️</span>
-              <span class="button-text">Anatomy Visualizer</span>
-            </button>
-          </div>
-        </section>
-
-        <!-- LLM Configuration Section -->
-        <section
-          class="button-category button-category--llm"
-          aria-labelledby="llm-config-title"
-          id="llm-config"
-        >
-          <h2 id="llm-config-title" class="category-title">
-            Language Model Configuration
-          </h2>
-          <p class="category-description">
-            Configure the AI language model for character generation
-          </p>
-          <div class="llm-status">
-            <span class="llm-status-text">Current LLM: <strong id="current-llm-name">Loading...</strong></span>
-            <button id="change-llm-button" class="menu-button nav-button nav-button--llm">
-              <span class="button-icon" aria-hidden="true">🤖</span>
-              <span class="button-text">Change LLM</span>
-            </button>
-          </div>
-        </section>
-
-        <!-- Character Building Section -->
-        <section
-          class="button-category button-category--character"
-          aria-labelledby="character-building-title"
-        >
-          <h2 id="character-building-title" class="category-title">
-            Character Building
-          </h2>
-          <p class="category-description">Create and develop your characters</p>
-          <div class="button-grid button-grid--4col">
-            <button
-              id="character-concepts-button"
-              class="menu-button nav-button nav-button--character nav-button--orange"
-            >
-              <span class="button-icon" aria-hidden="true">👤</span>
-              <span class="button-text">Character Concepts Manager</span>
-            </button>
-            <button
-              id="thematic-direction-button"
-              class="menu-button nav-button nav-button--character nav-button--purple"
-            >
-              <span class="button-icon" aria-hidden="true">💭</span>
-              <span class="button-text">Thematic Direction Generator</span>
-            </button>
-            <button
-              id="thematic-directions-manager-button"
-              class="menu-button nav-button nav-button--character nav-button--orange"
-            >
-              <span class="button-icon" aria-hidden="true">📋</span>
-              <span class="button-text">Thematic Directions Manager</span>
-            </button>
-            <button
-              id="cliches-generator-button"
-              class="menu-button nav-button nav-button--character nav-button--purple"
-            >
-              <span class="button-icon" aria-hidden="true">✨</span>
-              <span class="button-text">Clichés Generator</span>
-            </button>
-          </div>
-          <div class="button-grid button-grid--3col button-grid--centered">
-            <button
-              id="core-motivations-button"
-              class="menu-button nav-button nav-button--character nav-button--orange"
-            >
-              <span class="button-icon" aria-hidden="true">🧠</span>
-              <span class="button-text">Core Motivations Generator</span>
-            </button>
-            <button
-              id="traits-generator-button"
-              class="menu-button nav-button nav-button--character nav-button--purple"
-            >
-              <span class="button-icon" aria-hidden="true">🎭</span>
-              <span class="button-text">Traits Generator</span>
-            </button>
-            <button
-              id="speech-patterns-generator-button"
-              class="menu-button nav-button nav-button--character nav-button--orange"
-            >
-              <span class="button-icon" aria-hidden="true">💬</span>
-              <span class="button-text">Speech Patterns Generator</span>
-            </button>
-            <button
-              id="traits-rewriter-button"
-              class="menu-button nav-button nav-button--character nav-button--purple"
-            >
-              <span class="button-icon" aria-hidden="true">✍️</span>
-              <span class="button-text">Traits Rewriter</span>
-            </button>
-          </div>
-        </section>
-      </main>
-    </div>
-
-    <!-- LLM Selection Modal -->
-    <div
-      id="llm-selection-modal"
-      class="modal-overlay"
-      role="dialog"
-      aria-labelledby="llm-selection-modal-title"
-      aria-modal="true"
-      style="display: none"
-    >
-      <div class="modal-content">
-        <h2 id="llm-selection-modal-title" class="modal-title">
-          Select Language Model
-        </h2>
-        <div
-          id="llm-selection-status-message"
-          class="status-message"
-          role="status"
-          aria-live="polite"
-        ></div>
-        <div
-          id="llm-selection-list"
-          class="slot-list"
-          role="list"
-          aria-label="Available language models"
-        >
-          <!-- LLM options will be dynamically populated here -->
-        </div>
-        <div class="modal-actions">
-          <button
-            type="button"
-            id="llm-selection-modal-close-button"
-            class="button-secondary"
-          >
-            Cancel
-          </button>
+<body>
+  <div class="index-container">
+    <!-- Header Section -->
+    <header class="main-header">
+      <div class="header-content">
+        <img src="android-chrome-192x192.png" alt="Living Narrative Engine Logo" class="logo" />
+        <div class="header-text">
+          <h1 class="main-title">Living Narrative Engine</h1>
+          <p class="tagline">Create immersive narratives</p>
         </div>
       </div>
-    </div>
+    </header>
 
-    <script type="module" src="./dist/index-llm-selector.js"></script>
-    <script>
-      document.getElementById('start-button').addEventListener('click', () => {
-        window.location.href = 'game.html';
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Game Operations Section -->
+      <section class="button-category button-category--game" aria-labelledby="game-operations-title">
+        <h2 id="game-operations-title" class="category-title">
+          Game Operations
+        </h2>
+        <p class="category-description">
+          Start playing or continue your adventure
+        </p>
+        <div class="button-grid button-grid--2col">
+          <button id="start-button" class="menu-button nav-button nav-button--game">
+            <span class="button-icon" aria-hidden="true">🎮</span>
+            <span class="button-text">Start New Game</span>
+          </button>
+          <button id="load-button" class="menu-button nav-button nav-button--game">
+            <span class="button-icon" aria-hidden="true">📁</span>
+            <span class="button-text">Load Game</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Anatomy System Section -->
+      <section class="button-category button-category--anatomy" aria-labelledby="anatomy-system-title">
+        <h2 id="anatomy-system-title" class="category-title">
+          Anatomy System
+        </h2>
+        <p class="category-description">
+          Visualize and manage character anatomy
+        </p>
+        <div class="button-grid button-grid--1col">
+          <button id="anatomy-button" class="menu-button nav-button nav-button--anatomy">
+            <span class="button-icon" aria-hidden="true">❤️</span>
+            <span class="button-text">Anatomy Visualizer</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- LLM Configuration Section -->
+      <section class="button-category button-category--llm" aria-labelledby="llm-config-title" id="llm-config">
+        <h2 id="llm-config-title" class="category-title">
+          Language Model Configuration
+        </h2>
+        <p class="category-description">
+          Configure the AI language model for character generation
+        </p>
+        <div class="llm-status">
+          <span class="llm-status-text">Current LLM: <strong id="current-llm-name">Loading...</strong></span>
+          <button id="change-llm-button" class="menu-button nav-button nav-button--llm">
+            <span class="button-icon" aria-hidden="true">🤖</span>
+            <span class="button-text">Change LLM</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Character Building Section -->
+      <section class="button-category button-category--character" aria-labelledby="character-building-title">
+        <h2 id="character-building-title" class="category-title">
+          Character Building
+        </h2>
+        <p class="category-description">Create and develop your characters</p>
+        <div class="button-grid button-grid--4col">
+          <button id="character-concepts-button"
+            class="menu-button nav-button nav-button--character nav-button--orange">
+            <span class="button-icon" aria-hidden="true">👤</span>
+            <span class="button-text">Character Concepts Manager</span>
+          </button>
+          <button id="thematic-direction-button"
+            class="menu-button nav-button nav-button--character nav-button--purple">
+            <span class="button-icon" aria-hidden="true">💭</span>
+            <span class="button-text">Thematic Direction Generator</span>
+          </button>
+          <button id="thematic-directions-manager-button"
+            class="menu-button nav-button nav-button--character nav-button--orange">
+            <span class="button-icon" aria-hidden="true">📋</span>
+            <span class="button-text">Thematic Directions Manager</span>
+          </button>
+          <button id="cliches-generator-button" class="menu-button nav-button nav-button--character nav-button--purple">
+            <span class="button-icon" aria-hidden="true">✨</span>
+            <span class="button-text">Clichés Generator</span>
+          </button>
+        </div>
+        <div class="button-grid button-grid--3col button-grid--centered">
+          <button id="core-motivations-button" class="menu-button nav-button nav-button--character nav-button--orange">
+            <span class="button-icon" aria-hidden="true">🧠</span>
+            <span class="button-text">Core Motivations Generator</span>
+          </button>
+          <button id="traits-generator-button" class="menu-button nav-button nav-button--character nav-button--purple">
+            <span class="button-icon" aria-hidden="true">🎭</span>
+            <span class="button-text">Traits Generator</span>
+          </button>
+          <button id="speech-patterns-generator-button"
+            class="menu-button nav-button nav-button--character nav-button--orange">
+            <span class="button-icon" aria-hidden="true">💬</span>
+            <span class="button-text">Speech Patterns Generator</span>
+          </button>
+          <button id="traits-rewriter-button" class="menu-button nav-button nav-button--character nav-button--purple">
+            <span class="button-icon" aria-hidden="true">✍️</span>
+            <span class="button-text">Traits Rewriter</span>
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- LLM Selection Modal -->
+  <div id="llm-selection-modal" class="modal-overlay" role="dialog" aria-labelledby="llm-selection-modal-title"
+    aria-modal="true" style="display: none">
+    <div class="modal-content">
+      <h2 id="llm-selection-modal-title" class="modal-title">
+        Select Language Model
+      </h2>
+      <div id="llm-selection-status-message" class="status-message" role="status" aria-live="polite"></div>
+      <div id="llm-selection-list" class="slot-list" role="list" aria-label="Available language models">
+        <!-- LLM options will be dynamically populated here -->
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="llm-selection-modal-close-button" class="button-secondary">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./index-llm-selector.js"></script>
+  <script>
+    document.getElementById('start-button').addEventListener('click', () => {
+      window.location.href = 'game.html';
+    });
+    document.getElementById('load-button').addEventListener('click', () => {
+      window.location.href = 'game.html?load=true';
+    });
+    document
+      .getElementById('anatomy-button')
+      .addEventListener('click', () => {
+        window.location.href = 'anatomy-visualizer.html';
       });
-      document.getElementById('load-button').addEventListener('click', () => {
-        window.location.href = 'game.html?load=true';
+    document
+      .getElementById('character-concepts-button')
+      .addEventListener('click', () => {
+        window.location.href = 'character-concepts-manager.html';
       });
-      document
-        .getElementById('anatomy-button')
-        .addEventListener('click', () => {
-          window.location.href = 'anatomy-visualizer.html';
-        });
-      document
-        .getElementById('character-concepts-button')
-        .addEventListener('click', () => {
-          window.location.href = 'character-concepts-manager.html';
-        });
-      document
-        .getElementById('thematic-direction-button')
-        .addEventListener('click', () => {
-          window.location.href = 'thematic-direction-generator.html';
-        });
-      document
-        .getElementById('thematic-directions-manager-button')
-        .addEventListener('click', () => {
-          window.location.href = 'thematic-directions-manager.html';
-        });
-      document
-        .getElementById('cliches-generator-button')
-        .addEventListener('click', () => {
-          window.location.href = 'cliches-generator.html';
-        });
-      document
-        .getElementById('core-motivations-button')
-        .addEventListener('click', () => {
-          window.location.href = 'core-motivations-generator.html';
-        });
-      document
-        .getElementById('traits-generator-button')
-        .addEventListener('click', () => {
-          window.location.href = 'traits-generator.html';
-        });
-      document
-        .getElementById('speech-patterns-generator-button')
-        .addEventListener('click', () => {
-          window.location.href = 'speech-patterns-generator.html';
-        });
-      document
-        .getElementById('traits-rewriter-button')
-        .addEventListener('click', () => {
-          window.location.href = 'traits-rewriter.html';
-        });
-    </script>
-  </body>
+    document
+      .getElementById('thematic-direction-button')
+      .addEventListener('click', () => {
+        window.location.href = 'thematic-direction-generator.html';
+      });
+    document
+      .getElementById('thematic-directions-manager-button')
+      .addEventListener('click', () => {
+        window.location.href = 'thematic-directions-manager.html';
+      });
+    document
+      .getElementById('cliches-generator-button')
+      .addEventListener('click', () => {
+        window.location.href = 'cliches-generator.html';
+      });
+    document
+      .getElementById('core-motivations-button')
+      .addEventListener('click', () => {
+        window.location.href = 'core-motivations-generator.html';
+      });
+    document
+      .getElementById('traits-generator-button')
+      .addEventListener('click', () => {
+        window.location.href = 'traits-generator.html';
+      });
+    document
+      .getElementById('speech-patterns-generator-button')
+      .addEventListener('click', () => {
+        window.location.href = 'speech-patterns-generator.html';
+      });
+    document
+      .getElementById('traits-rewriter-button')
+      .addEventListener('click', () => {
+        window.location.href = 'traits-rewriter.html';
+      });
+  </script>
+</body>
+
 </html>

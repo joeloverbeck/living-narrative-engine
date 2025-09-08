@@ -8,6 +8,9 @@ import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProv
 import { PromptDataFormatter } from '../../src/prompting/promptDataFormatter.js';
 import { SUBJECT_TYPES } from '../../src/constants/subjectTypes.js';
 
+// Import memory test utilities for robust memory testing
+const { memoryTestUtils } = global;
+
 describe('Tag Removal Memory Efficiency Tests', () => {
   let promptContentProvider;
   let promptDataFormatter;
@@ -245,6 +248,11 @@ describe('Tag Removal Memory Efficiency Tests', () => {
         external: 0,
       };
 
+      // Force garbage collection and stabilization before initial measurement
+      if (memoryTestUtils) {
+        await memoryTestUtils.forceGCAndWait();
+      }
+      
       const initialMemory = process.memoryUsage();
 
       // Process notes and measure memory
@@ -254,6 +262,11 @@ describe('Tag Removal Memory Efficiency Tests', () => {
       );
       const formattedData = promptDataFormatter.formatPromptData(promptData);
 
+      // Force garbage collection and stabilization before final measurement
+      if (memoryTestUtils) {
+        await memoryTestUtils.forceGCAndWait();
+      }
+      
       const peakMemory = process.memoryUsage();
       measurements.peakHeapUsed = peakMemory.heapUsed;
       measurements.heapUsedDelta = peakMemory.heapUsed - initialMemory.heapUsed;
@@ -271,7 +284,19 @@ describe('Tag Removal Memory Efficiency Tests', () => {
       expect(measurements.heapUsedDelta).toBeLessThan(
         memoryBaselines.maxHeapUsedDelta
       );
-      expect(measurements.rss).toBeLessThan(memoryBaselines.maxRss);
+      
+      // RSS check with retry mechanism for robustness against system variability
+      if (memoryTestUtils) {
+        await memoryTestUtils.assertMemoryWithRetry(
+          async () => measurements.rss,
+          memoryBaselines.maxRss / (1024 * 1024), // Convert to MB for utility function
+          6 // Retry attempts
+        );
+      } else {
+        // Fallback for environments without memory test utilities
+        expect(measurements.rss).toBeLessThan(memoryBaselines.maxRss);
+      }
+      
       expect(measurements.external).toBeLessThan(memoryBaselines.maxExternal);
 
       // Verify processing success

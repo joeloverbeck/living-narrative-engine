@@ -48,6 +48,7 @@
         "human_female_torso.entity.json",
         "human_female_torso_hourglass_soft.entity.json",
         "human_female_torso_hulking.entity.json",
+        "human_futa_torso.entity.json",
         "human_foot.entity.json",
         "human_hair.entity.json",
         "human_hair_blonde.entity.json",
@@ -98,11 +99,13 @@
     },
     "blueprints": [
       "human_female.blueprint.json",
+      "human_futa.blueprint.json",
       "human_male.blueprint.json"
     ],
     "recipes": [
       "gorgeous_milf.recipe.json",
       "human_female.recipe.json",
+      "human_futa.recipe.json",
       "human_male.recipe.json"
     ],
     "anatomyFormatting": [

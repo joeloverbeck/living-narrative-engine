@@ -174,7 +174,13 @@
       "mcp__serena__read_memory",
       "Bash(NODE_ENV=test npx jest tests/unit/validation/ajvSchemaCacheIssue.test.js --no-coverage --verbose)",
       "mcp__morphllm-fast-apply__read_file",
-      "mcp__morphllm-fast-apply__read_multiple_files"
+      "mcp__morphllm-fast-apply__read_multiple_files",
+      "mcp__serena__prepare_for_new_conversation",
+      "mcp__serena__switch_modes",
+      "Bash(find:*)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/turnAroundKneelInteraction.integration.test.js --testNamePattern=\"should correctly handle multiple actors with mixed facing states\" --no-coverage --verbose)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/turnAroundKneelInteraction.integration.test.js --testNamePattern=\"should correctly handle multiple actors with mixed facing states\" --no-coverage)",
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/turnAroundKneelInteraction.integration.test.js --no-coverage --runInBand)"
     ],
     "deny": [],
     "ask": []

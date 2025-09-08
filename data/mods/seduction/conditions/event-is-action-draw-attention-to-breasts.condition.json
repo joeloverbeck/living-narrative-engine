@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "seduction:event-is-action-draw-attention-to-breasts",
+  "description": "Checks if the triggering event is for the 'seduction:draw_attention_to_breasts' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "seduction:draw_attention_to_breasts"]
+  }
+}

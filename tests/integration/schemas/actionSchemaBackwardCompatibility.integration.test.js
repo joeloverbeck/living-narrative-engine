@@ -1,7 +1,7 @@
 // tests/integration/schemas/actionSchemaBackwardCompatibility.integration.test.js
 // -----------------------------------------------------------------------------
-// Integration tests to verify all existing action files continue to validate
-// with the updated multi-target schema
+// Integration tests to verify all existing action files validate with the current
+// action schema. All actions now use the new 'targets' format.
 // -----------------------------------------------------------------------------
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
@@ -14,7 +14,7 @@ import commonSchema from '../../../data/schemas/common.schema.json';
 import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 
-describe('Action Schema Backward Compatibility Integration', () => {
+describe('Action Schema Validation Integration', () => {
   /** @type {import('ajv').ValidateFunction} */
   let validate;
 
@@ -53,8 +53,8 @@ describe('Action Schema Backward Compatibility Integration', () => {
     console.log(`Found ${actionFiles.length} action files to validate`);
   });
 
-  describe('Existing Action Files Validation', () => {
-    test('should validate all existing action files with updated schema', async () => {
+  describe('Action Files Schema Validation', () => {
+    test('should validate all existing action files against current schema', async () => {
       const validationResults = [];
 
       for (const filePath of actionFiles) {
@@ -131,110 +131,79 @@ describe('Action Schema Backward Compatibility Integration', () => {
     });
   });
 
-  describe('Legacy Properties Detection', () => {
-    test('should identify actions still using legacy scope property', async () => {
-      const legacyActions = [];
-      const newFormatActions = [];
+  describe('Action Format Analysis', () => {
+    test('should report action format usage (all actions now use targets format)', async () => {
+      const stringTargetActions = [];
+      const objectTargetActions = [];
 
       for (const filePath of actionFiles) {
         try {
           const fileContent = await readFile(filePath, 'utf-8');
           const actionData = JSON.parse(fileContent);
 
-          if (actionData.scope && !actionData.targets) {
-            legacyActions.push({
-              file: filePath,
-              id: actionData.id,
-              scope: actionData.scope,
-            });
-          } else if (actionData.targets) {
-            newFormatActions.push({
-              file: filePath,
-              id: actionData.id,
-              targets: actionData.targets,
-              isMultiTarget: typeof actionData.targets === 'object',
-            });
+          if (actionData.targets) {
+            if (typeof actionData.targets === 'string') {
+              stringTargetActions.push({
+                file: filePath,
+                id: actionData.id,
+                targets: actionData.targets,
+              });
+            } else if (typeof actionData.targets === 'object') {
+              objectTargetActions.push({
+                file: filePath,
+                id: actionData.id,
+                targets: actionData.targets,
+                targetCount: Object.keys(actionData.targets).length,
+              });
+            }
           }
         } catch (error) {
           console.error(`Error processing ${filePath}:`, error);
         }
       }
 
-      console.log(`\nProperty Usage Summary:`);
-      console.log(`  Legacy 'scope' property: ${legacyActions.length} actions`);
-      console.log(
-        `  New 'targets' property: ${newFormatActions.length} actions`
-      );
+      console.log(`
+Action Format Summary:`);
+      console.log(`  String targets format: ${stringTargetActions.length} actions`);
+      console.log(`  Object targets format: ${objectTargetActions.length} actions`);
+      console.log(`  Total actions: ${stringTargetActions.length + objectTargetActions.length} actions`);
 
-      const multiTargetActions = newFormatActions.filter(
-        (a) => a.isMultiTarget
+      const multiTargetActions = objectTargetActions.filter(
+        (a) => a.targetCount > 1
       );
-      console.log(
-        `  Multi-target format: ${multiTargetActions.length} actions`
-      );
+      console.log(`  Multi-target actions: ${multiTargetActions.length} actions`);
 
-      // Log some examples for reference
-      if (legacyActions.length > 0) {
-        console.log(`\nLegacy actions (first 5):`);
-        legacyActions.slice(0, 5).forEach((action) => {
-          console.log(
-            `  - ${action.id} (${action.file}): scope="${action.scope}"`
-          );
-        });
-      }
-
-      // This test just reports information, all existing actions should validate
-      expect(legacyActions.length + newFormatActions.length).toBe(
+      // All actions should use the targets format
+      expect(stringTargetActions.length + objectTargetActions.length).toBe(
         actionFiles.length
       );
+      
+      // Verify no root-level scope properties exist
+      expect(stringTargetActions.length + objectTargetActions.length).toBeGreaterThan(0);
     });
   });
 
   describe('Schema Compliance Verification', () => {
-    test('should verify no actions have both scope and targets properties', async () => {
-      const conflictingActions = [];
+    test('should verify all actions have targets property (no root-level scope)', async () => {
+      const actionsWithoutTargets = [];
+      const actionsWithRootScope = [];
 
       for (const filePath of actionFiles) {
         try {
           const fileContent = await readFile(filePath, 'utf-8');
           const actionData = JSON.parse(fileContent);
 
+          // Check for missing targets property
+          if (!actionData.targets) {
+            actionsWithoutTargets.push({
+              file: filePath,
+              id: actionData.id,
+            });
+          }
+
+          // Check for deprecated root-level scope property
           if (actionData.scope && actionData.targets) {
-            conflictingActions.push({
-              file: filePath,
-              id: actionData.id,
-              hasScope: !!actionData.scope,
-              hasTargets: !!actionData.targets,
-            });
-          }
-        } catch (error) {
-          console.error(`Error processing ${filePath}:`, error);
-        }
-      }
-
-      if (conflictingActions.length > 0) {
-        console.log(`\nActions with conflicting properties:`);
-        conflictingActions.forEach((action) => {
-          console.log(
-            `  - ${action.id} (${action.file}): has both scope and targets`
-          );
-        });
-      }
-
-      // No actions should have both properties
-      expect(conflictingActions.length).toBe(0);
-    });
-
-    test('should verify all actions have required targeting property', async () => {
-      const missingTargetingActions = [];
-
-      for (const filePath of actionFiles) {
-        try {
-          const fileContent = await readFile(filePath, 'utf-8');
-          const actionData = JSON.parse(fileContent);
-
-          if (!actionData.scope && !actionData.targets) {
-            missingTargetingActions.push({
+            actionsWithRootScope.push({
               file: filePath,
               id: actionData.id,
             });
@@ -244,17 +213,27 @@ describe('Action Schema Backward Compatibility Integration', () => {
         }
       }
 
-      if (missingTargetingActions.length > 0) {
-        console.log(`\nActions missing targeting properties:`);
-        missingTargetingActions.forEach((action) => {
-          console.log(
-            `  - ${action.id} (${action.file}): missing both scope and targets`
-          );
+      if (actionsWithoutTargets.length > 0) {
+        console.log(`
+Actions missing targets property:`);
+        actionsWithoutTargets.forEach((action) => {
+          console.log(`  - ${action.id} (${action.file})`);
         });
       }
 
-      // All actions should have either scope or targets
-      expect(missingTargetingActions.length).toBe(0);
+      if (actionsWithRootScope.length > 0) {
+        console.log(`
+Actions with deprecated root-level scope property:`);
+        actionsWithRootScope.forEach((action) => {
+          console.log(`  - ${action.id} (${action.file})`);
+        });
+      }
+
+      // All actions should have targets property
+      expect(actionsWithoutTargets.length).toBe(0);
+      
+      // No actions should have root-level scope property
+      expect(actionsWithRootScope.length).toBe(0);
     });
   });
 });

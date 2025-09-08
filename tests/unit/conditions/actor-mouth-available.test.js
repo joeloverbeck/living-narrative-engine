@@ -201,7 +201,7 @@ describe('actor-mouth-available condition', () => {
       expect(result).toBe(false);
     });
 
-    test('should return false when entity has no mouth part', () => {
+    test('should return true when entity has no mouth part', () => {
       const context = {
         actor: {
           id: 'actor123',
@@ -224,6 +224,11 @@ describe('actor-mouth-available condition', () => {
       const conditionLogic = {
         or: [
           {
+            not: {
+              hasPartOfType: ['actor', 'mouth']
+            }
+          },
+          {
             hasPartOfTypeWithComponentValue: ['actor', 'mouth', 'core:mouth_engagement', 'locked', false]
           },
           {
@@ -242,7 +247,7 @@ describe('actor-mouth-available condition', () => {
       };
 
       const result = jsonLogicService.evaluate(conditionLogic, context);
-      expect(result).toBe(false);
+      expect(result).toBe(true);
     });
 
     test('should return false when entity has no anatomy', () => {
