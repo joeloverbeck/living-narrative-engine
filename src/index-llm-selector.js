@@ -6,6 +6,9 @@
 
 import { CharacterBuilderBootstrap } from './characterBuilder/CharacterBuilderBootstrap.js';
 import { LLMSelectionPersistence } from './llms/services/llmSelectionPersistence.js';
+import { tokens } from './dependencyInjection/tokens.js';
+import { LlmSelectionModal } from './domUI/llmSelectionModal.js';
+import DocumentContext from './domUI/documentContext.js';
 
 /**
  * Simple controller for the index page LLM selector
@@ -16,7 +19,14 @@ class IndexLLMController {
 
   constructor({ container }) {
     this.#container = container;
-    this.#llmAdapter = container.resolve('ILLMAdapter');
+    this.#llmAdapter = container.resolve(tokens.LLMAdapter);
+  }
+
+  /**
+   * Initialize method required by CharacterBuilderBootstrap
+   */
+  async initialize() {
+    return this.init();
   }
 
   async init() {
@@ -24,11 +34,43 @@ class IndexLLMController {
     await this.updateCurrentLLMDisplay();
     
     // Initialize the LLM selection modal
-    const llmSelectionModal = this.#container.resolve('LlmSelectionModal');
+    // Try to resolve the modal, but handle the case where UI might not be registered
+    let llmSelectionModal = null;
+    try {
+      // First try with the token (correct way)
+      llmSelectionModal = this.#container.resolve(tokens.LlmSelectionModal);
+    } catch (error) {
+      // If UI components aren't registered, register just the LlmSelectionModal
+      console.info('LlmSelectionModal not found, registering it directly');
+      
+      // Ensure DocumentContext is registered
+      if (!this.#container.isRegistered(tokens.DocumentContext)) {
+        this.#container.register(
+          tokens.DocumentContext,
+          () => new DocumentContext(document),
+          { lifecycle: 'singleton' }
+        );
+      }
+      
+      // Register the LlmSelectionModal as a singleton
+      this.#container.register(
+        tokens.LlmSelectionModal,
+        () => new LlmSelectionModal({
+          logger: this.#container.resolve(tokens.ILogger),
+          documentContext: this.#container.resolve(tokens.DocumentContext),
+          llmAdapter: this.#container.resolve(tokens.LLMAdapter),
+          validatedEventDispatcher: this.#container.resolve(tokens.IValidatedEventDispatcher),
+        }),
+        { lifecycle: 'singleton' }
+      );
+      
+      // Now resolve it
+      llmSelectionModal = this.#container.resolve(tokens.LlmSelectionModal);
+    }
     
     // Add event listener to update display when modal is closed
     const modalElement = document.getElementById('llm-selection-modal');
-    if (modalElement) {
+    if (modalElement && llmSelectionModal) {
       // Use MutationObserver to detect when modal is hidden
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {

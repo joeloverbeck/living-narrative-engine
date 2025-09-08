@@ -1,9 +1,14 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "core:actor-mouth-available",
-  "description": "Checks if the actor has a mouth that is not currently engaged/locked. Returns true if the actor has a mouth part with core:mouth_engagement component where locked is false, or if the mouth part exists without the engagement component.",
+  "description": "Checks if the actor's mouth is available (not engaged). Returns true if the actor has no mouth parts, has a mouth part with core:mouth_engagement component where locked is false, or if the mouth part exists without the engagement component. Returns false only when a mouth exists and is explicitly locked/engaged.",
   "logic": {
     "or": [
+      {
+        "not": {
+          "hasPartOfType": ["actor", "mouth"]
+        }
+      },
       {
         "hasPartOfTypeWithComponentValue": ["actor", "mouth", "core:mouth_engagement", "locked", false]
       },

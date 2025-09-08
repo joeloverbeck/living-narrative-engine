@@ -83,7 +83,7 @@
     "build:debug": "node scripts/build.js --verbose --no-parallel",
     "build:test": "node scripts/build.js --fast",
     "prebuild": "npm run build:clean",
-    "start": "npm run build && http-server dist -o",
+    "start": "npm run build && http-server dist -p 8080 -o --cors",
     "start:all": "concurrently \"npm run start\" \"npm run start --prefix llm-proxy-server\"",
     "dev": "concurrently \"npm run start\" \"npm run dev --prefix llm-proxy-server\""
   }

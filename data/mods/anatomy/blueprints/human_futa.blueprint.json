@@ -1,0 +1,105 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
+  "id": "anatomy:human_futa",
+  "root": "anatomy:human_futa_torso",
+  "compose": [
+    {
+      "part": "anatomy:humanoid_core",
+      "include": ["slots", "clothingSlotMappings"]
+    }
+  ],
+  "slots": {
+    "left_breast": {
+      "socket": "left_chest",
+      "requirements": {
+        "partType": "breast",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_breast": {
+      "socket": "right_chest",
+      "requirements": {
+        "partType": "breast",
+        "components": ["anatomy:part"]
+      }
+    },
+    "penis": {
+      "socket": "penis",
+      "requirements": {
+        "partType": "penis",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_testicle": {
+      "socket": "left_testicle",
+      "requirements": {
+        "partType": "testicle",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_testicle": {
+      "socket": "right_testicle",
+      "requirements": {
+        "partType": "testicle",
+        "components": ["anatomy:part"]
+      }
+    }
+  },
+  "clothingSlotMappings": {
+    "back_accessory": {
+      "anatomySockets": ["upper_back", "lower_back"],
+      "allowedLayers": ["accessory", "armor"]
+    },
+    "torso_lower": {
+      "anatomySockets": [
+        "left_hip",
+        "right_hip",
+        "pubic_hair",
+        "penis",
+        "left_testicle",
+        "right_testicle"
+      ],
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "full_body": {
+      "blueprintSlots": [
+        "head",
+        "left_arm",
+        "right_arm",
+        "left_leg",
+        "right_leg",
+        "left_breast",
+        "right_breast"
+      ],
+      "allowedLayers": ["outer"]
+    },
+    "torso_upper": {
+      "anatomySockets": [
+        "left_breast",
+        "right_breast",
+        "left_chest",
+        "right_chest",
+        "chest_center",
+        "left_shoulder",
+        "right_shoulder"
+      ],
+      "allowedLayers": ["underwear", "base", "outer", "armor"]
+    },
+    "legs": {
+      "blueprintSlots": ["left_leg", "right_leg"],
+      "allowedLayers": ["base", "outer"]
+    },
+    "left_arm_clothing": {
+      "blueprintSlots": ["left_arm"],
+      "allowedLayers": ["base", "outer"]
+    },
+    "right_arm_clothing": {
+      "blueprintSlots": ["right_arm"],
+      "allowedLayers": ["base", "outer"]
+    },
+    "feet": {
+      "blueprintSlots": ["left_foot", "right_foot"],
+      "allowedLayers": ["base", "outer"]
+    }
+  }
+}

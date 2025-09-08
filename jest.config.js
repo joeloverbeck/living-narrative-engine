@@ -13,8 +13,8 @@ module.exports = {
   setupFilesAfterEnv: ['./jest.setup.js'],
 
   transformIgnorePatterns: [
-    // Ignore node_modules except for 'tinyqueue'
-    '/node_modules/(?!tinyqueue/)',
+    // Ignore node_modules except for 'tinyqueue' and 'uuid'
+    '/node_modules/(?!tinyqueue/|uuid/)',
     '\\.pnp\\.[^\\/]+$',
   ],
 

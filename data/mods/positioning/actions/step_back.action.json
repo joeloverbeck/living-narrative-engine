@@ -8,7 +8,14 @@
     "actor": ["positioning:closeness"]
   },
   "template": "step back",
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "core:actor-mouth-available"
+      },
+      "failure_message": "You cannot do that while your mouth is engaged."
+    }
+  ],
   "visual": {
     "backgroundColor": "#bf360c",
     "textColor": "#ffffff",

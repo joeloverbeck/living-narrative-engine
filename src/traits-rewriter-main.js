@@ -6,6 +6,7 @@
 import { CharacterBuilderBootstrap } from './characterBuilder/CharacterBuilderBootstrap.js';
 import { TraitsRewriterController } from './characterBuilder/controllers/TraitsRewriterController.js';
 import { LLMSelectionPersistence } from './llms/services/llmSelectionPersistence.js';
+import { tokens } from './dependencyInjection/tokens.js';
 
 /**
  * Update the LLM status display on the page
@@ -16,7 +17,7 @@ async function updateLLMDisplay(container) {
   if (!llmNameElement) return;
   
   try {
-    const llmAdapter = container.resolve('ILLMAdapter');
+    const llmAdapter = container.resolve(tokens.LLMAdapter);
     const currentLlmId = await llmAdapter.getCurrentActiveLlmId();
     
     if (currentLlmId) {

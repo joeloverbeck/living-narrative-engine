@@ -14,7 +14,7 @@ This specification provides a curated collection of pre-validated color combinat
 
 ## Current Usage Overview
 
-**Status**: 7 of 24 color combinations currently in use by existing mods (17 available)
+**Status**: 8 of 24 color combinations currently in use by existing mods (16 available)
 
 ### Active Mod Assignments
 
@@ -27,16 +27,17 @@ This specification provides a curated collection of pre-validated color combinat
 | Sex         | Mystic Purple      | 5.1     | `#4a148c`        |
 | Positioning | Deep Orange Energy | 9.2     | `#bf360c`        |
 | Exercise    | Orange Flame       | 2.3     | `#e65100`        |
+| Seduction   | Golden Divine      | 5.2     | `#f57f17`        |
 
 ### Available Color Combinations
 
-The following **17 color combinations** remain available for new mods:
+The following **16 color combinations** remain available for new mods:
 
 - **Neutral/System**: Slate Grey (1.2), Charcoal (1.3)
 - **Action/Combat**: Bold Red (2.1)
 - **Social/Intimacy**: Soft Purple (3.1), Deep Teal (3.3)
 - **Nature/Environment**: Forest Green (4.1), Ocean Blue (4.3)
-- **Magic/Special**: Golden Divine (5.2)
+- **Magic/Special**: _(none available)_
 - **Warning/Alert**: Amber Warning (6.1), Dark Red Alert (6.2)
 - **Dark Theme**: Deep Blue (7.1), Dark Purple (7.2), Midnight Green (7.3)
 - **High Contrast**: Pure Black & White (8.1), White & Black (8.2), Yellow on Black (8.3)
@@ -290,9 +291,9 @@ The following **17 color combinations** remain available for new mods:
 
 - **Normal Contrast**: 8.59:1 🌟 AAA
 - **Hover Contrast**: 10.07:1 🌟 AAA
-- **Use Cases**: Divine magic, holy abilities, blessings
-- **Theme**: Sacred, radiant, powerful
-- 🟢 **AVAILABLE**
+- **Use Cases**: Divine magic, holy abilities, blessings, seductive actions
+- **Theme**: Sacred, radiant, powerful, alluring
+- ✅ **USED BY**: Seduction mod (seductive actions, attention-drawing gestures)
 
 ### 6. Warning/Alert Colors
 

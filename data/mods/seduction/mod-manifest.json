@@ -1,0 +1,30 @@
+{
+  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
+  "id": "seduction",
+  "version": "1.0.0",
+  "name": "seduction",
+  "description": "This module allows seduction-related actions.",
+  "author": "joeloverbeck",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "clothing",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "draw_attention_to_breasts.action.json"
+    ],
+    "rules": [
+      "draw_attention_to_breasts.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-draw-attention-to-breasts.condition.json"
+    ]
+  }
+}
