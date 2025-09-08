@@ -66,10 +66,11 @@ export async function updateMouthEngagementLock(entityManager, entityId, locked)
 /**
  * Update mouth engagement for anatomy-based entities.
  *
- * @param entityManager
- * @param entityId
- * @param bodyComponent
- * @param locked
+ * @param {EntityManager} entityManager - Entity manager instance
+ * @param {string} entityId - ID of the entity to update
+ * @param {object} bodyComponent - The anatomy:body component data
+ * @param {boolean} locked - Whether mouth engagement should be locked
+ * @returns {Promise<MouthEngagementUpdateResult|null>} Update result or null if no mouth found
  * @private
  */
 async function updateAnatomyBasedMouthEngagement(
@@ -130,9 +131,10 @@ async function updateAnatomyBasedMouthEngagement(
 /**
  * Update mouth engagement for legacy entities.
  *
- * @param entityManager
- * @param entityId
- * @param locked
+ * @param {EntityManager} entityManager - Entity manager instance
+ * @param {string} entityId - ID of the entity to update
+ * @param {boolean} locked - Whether mouth engagement should be locked
+ * @returns {Promise<{locked: boolean}>} Update result with locked state
  * @private
  */
 async function updateLegacyMouthEngagement(
@@ -164,7 +166,8 @@ async function updateLegacyMouthEngagement(
 /**
  * Clone a component object safely.
  *
- * @param component
+ * @param {object} component - The component to clone
+ * @returns {object} The cloned component
  * @private
  */
 function cloneComponent(component) {
@@ -197,7 +200,7 @@ export function isMouthLocked(entityManager, entityId) {
 
   if (bodyComponent && bodyComponent.body && bodyComponent.body.parts) {
     // Check all mouth parts
-    for (const [partType, partId] of Object.entries(
+    for (const [_partType, partId] of Object.entries(
       bodyComponent.body.parts
     )) {
       const partComponent = entityManager.getComponentData(
@@ -249,7 +252,7 @@ export function getMouthParts(entityManager, entityId) {
   );
 
   if (bodyComponent && bodyComponent.body && bodyComponent.body.parts) {
-    for (const [partType, partId] of Object.entries(
+    for (const [_partType, partId] of Object.entries(
       bodyComponent.body.parts
     )) {
       const partComponent = entityManager.getComponentData(
