@@ -35,11 +35,13 @@ import AutoMoveFollowersHandler from '../../logic/operationHandlers/autoMoveFoll
 import MergeClosenessCircleHandler from '../../logic/operationHandlers/mergeClosenessCircleHandler.js';
 import RemoveFromClosenessCircleHandler from '../../logic/operationHandlers/removeFromClosenessCircleHandler.js';
 import EstablishSittingClosenessHandler from '../../logic/operationHandlers/establishSittingClosenessHandler.js';
+import RemoveSittingClosenessHandler from '../../logic/operationHandlers/removeSittingClosenessHandler.js';
 import HasBodyPartWithComponentValueHandler from '../../logic/operationHandlers/hasBodyPartWithComponentValueHandler.js';
 import UnequipClothingHandler from '../../logic/operationHandlers/unequipClothingHandler.js';
 import LockMovementHandler from '../../logic/operationHandlers/lockMovementHandler.js';
 import LockMouthEngagementHandler from '../../logic/operationHandlers/lockMouthEngagementHandler.js';
 import UnlockMovementHandler from '../../logic/operationHandlers/unlockMovementHandler.js';
+import UnlockMouthEngagementHandler from '../../logic/operationHandlers/unlockMouthEngagementHandler.js';
 import RegenerateDescriptionHandler from '../../logic/operationHandlers/regenerateDescriptionHandler.js';
 import AtomicModifyComponentHandler from '../../logic/operationHandlers/atomicModifyComponentHandler.js';
 import SequenceHandler from '../../logic/operationHandlers/sequenceHandler.js';
@@ -358,6 +360,17 @@ export function registerOperationHandlers(registrar) {
         }),
     ],
     [
+      tokens.RemoveSittingClosenessHandler,
+      RemoveSittingClosenessHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          closenessCircleService: c.resolve(tokens.ClosenessCircleService),
+        }),
+    ],
+    [
       tokens.HasBodyPartWithComponentValueHandler,
       HasBodyPartWithComponentValueHandler,
       (c, Handler) =>
@@ -402,6 +415,16 @@ export function registerOperationHandlers(registrar) {
     [
       tokens.UnlockMovementHandler,
       UnlockMovementHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.UnlockMouthEngagementHandler,
+      UnlockMouthEngagementHandler,
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),

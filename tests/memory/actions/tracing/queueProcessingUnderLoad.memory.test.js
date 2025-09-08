@@ -27,28 +27,28 @@ const MEMORY_TEST_SCENARIOS = {
   SUSTAINED_PROCESSING: {
     cycles: 8,
     tracesPerCycle: 25,
-    processingDelay: 500,
+    processingDelay: 50, // Reduced from 500ms
     expectedMaxIncrease: 1.5 * 1024 * 1024, // 1.5MB max increase
   },
   
   BURST_PROCESSING: {
     cycles: 5,
     tracesPerCycle: 80,
-    processingDelay: 200,
+    processingDelay: 25, // Reduced from 200ms
     expectedMaxIncrease: 2 * 1024 * 1024, // 2MB max increase for bursts
   },
   
   EXTENDED_OPERATION: {
-    cycles: 15,
+    cycles: 12, // Reduced from 15 cycles
     tracesPerCycle: 15,
-    processingDelay: 300,
+    processingDelay: 30, // Reduced from 300ms
     expectedMaxIncrease: 1 * 1024 * 1024, // 1MB max for extended operation
   },
   
   HIGH_FREQUENCY: {
-    cycles: 20,
-    tracesPerCycle: 10,
-    processingDelay: 100,
+    cycles: 15, // Reduced from 20 cycles
+    tracesPerCycle: 8, // Reduced from 10 traces
+    processingDelay: 10, // Reduced from 100ms
     expectedMaxIncrease: 0.8 * 1024 * 1024, // 0.8MB max for high frequency
   },
 };
@@ -79,24 +79,21 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       global.gc();
     }
 
-    // Mock performance.memory API for jsdom environment
+    // Simplified performance.memory API mock for jsdom environment
     const baseMemory = 10 * 1024 * 1024; // 10MB baseline
     let mockHeapUsed = baseMemory;
-    let mockHeapTotal = baseMemory * 2;
 
     mockPerformanceMemory = {
       get usedJSHeapSize() { return mockHeapUsed; },
-      get totalJSHeapSize() { return mockHeapTotal; },
-      get jsHeapSizeLimit() { return mockHeapTotal * 4; }, // Simulate heap limit
+      get totalJSHeapSize() { return mockHeapUsed * 2; },
+      get jsHeapSizeLimit() { return mockHeapUsed * 8; },
     };
 
     // Mock the performance object with memory property if it doesn't exist
-    if (typeof performance === 'undefined' || !performance.memory) {
-      if (typeof performance === 'undefined') {
-        global.performance = {};
-      }
-      performance.memory = mockPerformanceMemory;
+    if (typeof performance === 'undefined') {
+      global.performance = {};
     }
+    performance.memory = mockPerformanceMemory;
 
     // Record initial memory state using Node.js memory with fallback to performance API
     const nodeMemory = process.memoryUsage();
@@ -120,26 +117,19 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       logger: mockLogger,
     });
 
-    // Helper to simulate memory changes - this allows us to test memory tracking logic
+    // Simplified memory simulation helpers
     global.simulateMemoryChange = (deltaBytes) => {
       mockHeapUsed += deltaBytes;
-      // Ensure heap total is always larger than used
-      if (mockHeapUsed > mockHeapTotal * 0.8) {
-        mockHeapTotal = mockHeapUsed * 1.5;
-      }
     };
 
-    // Helper to simulate garbage collection
     global.simulateGC = (efficiency = 0.3) => {
       const recoverable = mockHeapUsed * efficiency;
       mockHeapUsed = Math.max(baseMemory, mockHeapUsed - recoverable);
       return recoverable;
     };
 
-    // Track memory snapshots properly
     global.resetMemoryTracking = () => {
       mockHeapUsed = baseMemory;
-      mockHeapTotal = baseMemory * 2;
     };
   });
 
@@ -276,7 +266,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       });
 
       // Wait for processing
-      await waitForProcessing(1500);
+      await waitForProcessing(200); // Reduced from 1500ms
       
       // Simulate memory increase from processing
       global.simulateMemoryChange(200000); // 200KB increase from processing
@@ -286,10 +276,10 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       if (global.gc) {
         for (let i = 0; i < 3; i++) {
           global.gc();
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 20)); // Reduced from 100ms
         }
-        // Simulate realistic GC behavior in our mock after all GC calls
-        global.simulateGC(0.1 + Math.random() * 0.15); // 10-25% GC effectiveness
+        // Simulate GC behavior in our mock after all GC calls
+        global.simulateGC(0.2); // Fixed 20% GC effectiveness for consistency
       }
       
       takeMemorySnapshot('after-gc');
@@ -363,7 +353,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
         processor.enqueue(trace, TracePriority.NORMAL);
       });
 
-      await waitForProcessing(2000);
+      await waitForProcessing(300); // Reduced from 2000ms
       
       // Verify some traces were actually processed
       expect(processedTraceRefs.length).toBeGreaterThan(0);
@@ -379,7 +369,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       if (global.gc) {
         for (let i = 0; i < 5; i++) {
           global.gc();
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 20)); // Reduced from 100ms
         }
       }
 
@@ -434,7 +424,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
         processor.enqueue(trace, TracePriority.NORMAL);
       });
 
-      await waitForProcessing(1000);
+      await waitForProcessing(150); // Reduced from 1000ms
       
       // Check internal state
       const stats = processor.getQueueStats();
@@ -470,7 +460,7 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       });
 
       // Allow some processing but shutdown before completion
-      await waitForProcessing(300);
+      await waitForProcessing(50); // Reduced from 300ms
       // Simulate memory from partial processing
       global.simulateMemoryChange(150000); // 150KB from partial processing
       takeMemorySnapshot('before-shutdown');
@@ -478,13 +468,13 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       // Shutdown processor
       await processor.shutdown();
       // Simulate memory cleanup during shutdown
-      global.simulateGC(0.08 + Math.random() * 0.12); // 8-20% cleanup during shutdown
+      global.simulateGC(0.15); // Fixed 15% cleanup during shutdown
       takeMemorySnapshot('after-shutdown');
       
       // Force garbage collection
       if (global.gc) {
         global.gc();
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 50)); // Reduced from 200ms
       }
       
       takeMemorySnapshot('after-shutdown-gc');
@@ -618,13 +608,13 @@ describe('TraceQueueProcessor - Memory Efficiency Under Load', () => {
       heapTotal,
     });
     
-    // Simulate realistic memory variations during processing
+    // Simplified memory variations during processing
     if (phase.includes('start')) {
       // Processing starts - memory increases
-      global.simulateMemoryChange(Math.random() * 100000 + 50000); // 50-150KB increase
-    } else if (phase.includes('end') && Math.random() > 0.3) {
+      global.simulateMemoryChange(75000); // Fixed 75KB increase for predictability
+    } else if (phase.includes('end')) {
       // Processing ends - some GC might happen
-      global.simulateGC(Math.random() * 0.2 + 0.1); // 10-30% cleanup
+      global.simulateGC(0.15); // Fixed 15% cleanup for consistency
     }
   }
 

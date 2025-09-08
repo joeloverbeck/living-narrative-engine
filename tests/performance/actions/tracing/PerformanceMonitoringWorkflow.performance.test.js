@@ -465,13 +465,13 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
         { actionId: 'setup:load_inventory', expectedDuration: 10, critical: false },
         
         // Critical path: main combat loop
-        { actionId: 'combat:calculate_damage', expectedDuration: 20, critical: true }, // Potential bottleneck
+        { actionId: 'combat:calculate_damage', expectedDuration: 35, critical: true }, // Guaranteed slow (25ms threshold + margin)
         { actionId: 'combat:apply_effects', expectedDuration: 15, critical: true },
         { actionId: 'combat:update_stats', expectedDuration: 11, critical: true },
         
         // Nested inventory operations
         { actionId: 'inventory:check_durability', expectedDuration: 6, critical: false },
-        { actionId: 'inventory:auto_repair', expectedDuration: 30, critical: true }, // Bottleneck (reduced from 120)
+        { actionId: 'inventory:auto_repair', expectedDuration: 45, critical: true }, // Guaranteed bottleneck (well above 25ms threshold)
         
         // Final combat resolution
         { actionId: 'combat:determine_outcome', expectedDuration: 9, critical: true },
@@ -509,7 +509,7 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       );
 
       // Validate that we found a bottleneck (any slow operation is fine for this test)
-      expect(slowestAction.actualDuration).toBeGreaterThan(15); // Should be significantly slow (adjusted for reduced durations)
+      expect(slowestAction.actualDuration).toBeGreaterThan(30); // Should be significantly slow (expect auto_repair to be slowest at ~45ms)
       expect(slowestAction.actionId).toBeDefined();
       
       // Log the actual bottleneck for verification
