@@ -263,7 +263,9 @@ export default ModReferenceExtractor;
 
 ### Type Definitions
 
-Create `src/validation/types.js` for shared type definitions:
+**Step: Create Type Definitions File**
+
+First, create `src/validation/types.js` for shared type definitions:
 
 ```javascript
 /**
@@ -311,7 +313,7 @@ describe('ModReferenceExtractor - Core Functionality', () => {
   beforeEach(() => {
     testBed = createTestBed();
     const mockLogger = testBed.createMockLogger();
-    const mockAjvValidator = testBed.createMock('ajvValidator', ['validateSchema']);
+    const mockAjvValidator = testBed.createMock('ajvValidator', ['validate']);
     
     extractor = new ModReferenceExtractor({
       logger: mockLogger,
