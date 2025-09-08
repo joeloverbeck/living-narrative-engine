@@ -17,6 +17,16 @@
       }
     },
     {
+      "type": "REMOVE_SITTING_CLOSENESS",
+      "comment": "Remove automatic closeness based on sitting proximity",
+      "parameters": {
+        "furniture_id": "{event.payload.targetId}",
+        "actor_id": "{event.payload.actorId}",
+        "spot_index": "{context.sittingInfo.spot_index}",
+        "result_variable": "closenessRemoved"
+      }
+    },
+    {
       "type": "IF",
       "comment": "Clear spot 0 if that's where actor was sitting",
       "parameters": {

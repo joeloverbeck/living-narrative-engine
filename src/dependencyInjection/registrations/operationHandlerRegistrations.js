@@ -38,6 +38,7 @@ import EstablishSittingClosenessHandler from '../../logic/operationHandlers/esta
 import HasBodyPartWithComponentValueHandler from '../../logic/operationHandlers/hasBodyPartWithComponentValueHandler.js';
 import UnequipClothingHandler from '../../logic/operationHandlers/unequipClothingHandler.js';
 import LockMovementHandler from '../../logic/operationHandlers/lockMovementHandler.js';
+import LockMouthEngagementHandler from '../../logic/operationHandlers/lockMouthEngagementHandler.js';
 import UnlockMovementHandler from '../../logic/operationHandlers/unlockMovementHandler.js';
 import RegenerateDescriptionHandler from '../../logic/operationHandlers/regenerateDescriptionHandler.js';
 import AtomicModifyComponentHandler from '../../logic/operationHandlers/atomicModifyComponentHandler.js';
@@ -381,6 +382,16 @@ export function registerOperationHandlers(registrar) {
     [
       tokens.LockMovementHandler,
       LockMovementHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.LockMouthEngagementHandler,
+      LockMouthEngagementHandler,
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),

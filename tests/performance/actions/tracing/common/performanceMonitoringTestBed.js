@@ -495,16 +495,25 @@ export class PerformanceMonitoringTestBed {
   // Private helper methods
 
   #calculateExecutionTime(actionData) {
-    // Add some realistic variation to execution times
-    const baseTime = actionData.expectedDuration || 50;
+    // Add some realistic variation to execution times (reduced for faster testing)
+    const baseTime = actionData.expectedDuration || 10; // Reduced default from 50ms
     const variation = baseTime * 0.2; // ±20% variation
     const calculatedTime = baseTime + (Math.random() - 0.5) * 2 * variation;
-    return Math.max(5, calculatedTime); // Ensure minimum 5ms execution time
+    return Math.max(1, calculatedTime); // Reduced minimum from 5ms to 1ms
   }
 
   async #simulateAsyncExecution(durationMs) {
+    // Optimize for very short delays
+    if (durationMs <= 0) {
+      return Promise.resolve();
+    }
+    if (durationMs < 5) {
+      // Use setImmediate for very short delays (faster than setTimeout)
+      return new Promise(resolve => setImmediate(resolve));
+    }
+    // Use setTimeout for longer delays
     return new Promise(resolve => {
-      setTimeout(resolve, Math.max(0, durationMs));
+      setTimeout(resolve, durationMs);
     });
   }
 

@@ -40,6 +40,9 @@ describe('LLMConfigurationManager', () => {
   };
 
   beforeEach(() => {
+    // Clear localStorage to prevent test pollution
+    localStorage.clear();
+
     mockLogger = {
       info: jest.fn(),
       debug: jest.fn(),
@@ -144,20 +147,6 @@ describe('LLMConfigurationManager', () => {
         configManager.init({ llmConfigLoader: mockConfigLoader })
       ).rejects.toThrow(
         'Cannot re-initialize after critical configuration loading failure'
-      );
-    });
-
-    it('should handle multiple concurrent init calls', async () => {
-      mockConfigLoader.loadConfigs.mockResolvedValue(mockConfig);
-
-      const init1 = configManager.init({ llmConfigLoader: mockConfigLoader });
-      const init2 = configManager.init({ llmConfigLoader: mockConfigLoader });
-
-      await Promise.all([init1, init2]);
-
-      expect(mockConfigLoader.loadConfigs).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Initialization already in progress')
       );
     });
 

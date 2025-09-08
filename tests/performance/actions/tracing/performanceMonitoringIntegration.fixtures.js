@@ -74,74 +74,76 @@ export const PERFORMANCE_MONITORING_CONFIGS = {
 
 /**
  * Gaming action patterns that simulate realistic usage
+ * Note: Durations reduced by 75% for faster test execution while maintaining relative timing relationships
  */
 export const GAMING_ACTION_PATTERNS = {
   // Basic character movement and interaction
   EXPLORATION: [
-    { actionId: 'core:move', expectedDurationMs: 20, weight: 0.4 },
-    { actionId: 'core:look', expectedDurationMs: 15, weight: 0.3 },
-    { actionId: 'core:pickup', expectedDurationMs: 30, weight: 0.15 },
-    { actionId: 'core:interact', expectedDurationMs: 25, weight: 0.15 },
+    { actionId: 'core:move', expectedDurationMs: 5, weight: 0.4 },
+    { actionId: 'core:look', expectedDurationMs: 4, weight: 0.3 },
+    { actionId: 'core:pickup', expectedDurationMs: 8, weight: 0.15 },
+    { actionId: 'core:interact', expectedDurationMs: 6, weight: 0.15 },
   ],
 
   // Combat scenarios with timing-sensitive actions
   COMBAT: [
-    { actionId: 'combat:attack', expectedDurationMs: 50, weight: 0.3 },
-    { actionId: 'combat:defend', expectedDurationMs: 40, weight: 0.2 },
-    { actionId: 'combat:dodge', expectedDurationMs: 35, weight: 0.2 },
-    { actionId: 'combat:cast_spell', expectedDurationMs: 80, weight: 0.15 },
-    { actionId: 'combat:use_item', expectedDurationMs: 45, weight: 0.15 },
+    { actionId: 'combat:attack', expectedDurationMs: 12, weight: 0.3 },
+    { actionId: 'combat:defend', expectedDurationMs: 10, weight: 0.2 },
+    { actionId: 'combat:dodge', expectedDurationMs: 9, weight: 0.2 },
+    { actionId: 'combat:cast_spell', expectedDurationMs: 20, weight: 0.15 },
+    { actionId: 'combat:use_item', expectedDurationMs: 11, weight: 0.15 },
   ],
 
   // Complex interactions requiring multiple components
   SOCIAL: [
-    { actionId: 'social:talk', expectedDurationMs: 60, weight: 0.4 },
-    { actionId: 'social:trade', expectedDurationMs: 90, weight: 0.3 },
-    { actionId: 'social:persuade', expectedDurationMs: 75, weight: 0.2 },
-    { actionId: 'social:intimidate', expectedDurationMs: 55, weight: 0.1 },
+    { actionId: 'social:talk', expectedDurationMs: 15, weight: 0.4 },
+    { actionId: 'social:trade', expectedDurationMs: 22, weight: 0.3 },
+    { actionId: 'social:persuade', expectedDurationMs: 19, weight: 0.2 },
+    { actionId: 'social:intimidate', expectedDurationMs: 14, weight: 0.1 },
   ],
 
   // Inventory and equipment management
   INVENTORY: [
-    { actionId: 'inventory:equip', expectedDurationMs: 35, weight: 0.3 },
-    { actionId: 'inventory:unequip', expectedDurationMs: 30, weight: 0.25 },
-    { actionId: 'inventory:drop', expectedDurationMs: 20, weight: 0.2 },
-    { actionId: 'inventory:combine', expectedDurationMs: 50, weight: 0.15 },
-    { actionId: 'inventory:examine', expectedDurationMs: 40, weight: 0.1 },
+    { actionId: 'inventory:equip', expectedDurationMs: 9, weight: 0.3 },
+    { actionId: 'inventory:unequip', expectedDurationMs: 8, weight: 0.25 },
+    { actionId: 'inventory:drop', expectedDurationMs: 5, weight: 0.2 },
+    { actionId: 'inventory:combine', expectedDurationMs: 12, weight: 0.15 },
+    { actionId: 'inventory:examine', expectedDurationMs: 10, weight: 0.1 },
   ],
 };
 
 /**
  * Expected performance metrics for different gaming patterns
+ * Note: Expectations adjusted to match reduced durations
  */
 export const PERFORMANCE_EXPECTATIONS = {
   EXPLORATION: {
-    averageDurationMs: 22,
-    maxDurationMs: 40,
+    averageDurationMs: 5.5,
+    maxDurationMs: 10,
     concurrencyLevel: 2,
     errorRate: 0.5, // 0.5%
     memoryGrowthMB: 0.1, // per 100 actions
   },
 
   COMBAT: {
-    averageDurationMs: 50,
-    maxDurationMs: 120,
+    averageDurationMs: 12.5,
+    maxDurationMs: 30,
     concurrencyLevel: 4,
     errorRate: 1.0, // 1%
     memoryGrowthMB: 0.15, // per 100 actions
   },
 
   SOCIAL: {
-    averageDurationMs: 70,
-    maxDurationMs: 150,
+    averageDurationMs: 17.5,
+    maxDurationMs: 37,
     concurrencyLevel: 3,
     errorRate: 2.0, // 2%
     memoryGrowthMB: 0.2, // per 100 actions
   },
 
   INVENTORY: {
-    averageDurationMs: 35,
-    maxDurationMs: 80,
+    averageDurationMs: 8.8,
+    maxDurationMs: 20,
     concurrencyLevel: 2,
     errorRate: 0.8, // 0.8%
     memoryGrowthMB: 0.12, // per 100 actions
@@ -150,19 +152,20 @@ export const PERFORMANCE_EXPECTATIONS = {
 
 /**
  * Test scenarios that deliberately trigger alerts
+ * Note: Durations reduced for faster test execution
  */
 export const ALERT_TRIGGER_SCENARIOS = {
   // Slow operations that should trigger warnings
   SLOW_OPERATIONS: [
     {
       actionId: 'test:slow_database_query',
-      simulatedDurationMs: 150, // Above slow threshold
+      simulatedDurationMs: 60, // Above slow threshold (reduced from 150)
       expectedAlertType: 'slow_operation',
       expectedSeverity: 'warning',
     },
     {
       actionId: 'test:complex_calculation',
-      simulatedDurationMs: 120,
+      simulatedDurationMs: 55,
       expectedAlertType: 'slow_operation',
       expectedSeverity: 'warning',
     },
@@ -172,13 +175,13 @@ export const ALERT_TRIGGER_SCENARIOS = {
   CRITICAL_OPERATIONS: [
     {
       actionId: 'test:massive_file_operation',
-      simulatedDurationMs: 800, // Above critical threshold
+      simulatedDurationMs: 250, // Above critical threshold (reduced from 800)
       expectedAlertType: 'critical_operation',
       expectedSeverity: 'critical',
     },
     {
       actionId: 'test:heavy_ai_processing',
-      simulatedDurationMs: 1200,
+      simulatedDurationMs: 300,
       expectedAlertType: 'critical_operation',
       expectedSeverity: 'critical',
     },
@@ -188,7 +191,7 @@ export const ALERT_TRIGGER_SCENARIOS = {
   HIGH_CONCURRENCY: [
     {
       actionId: 'test:parallel_action_1',
-      simulatedDurationMs: 100,
+      simulatedDurationMs: 25, // Reduced from 100
       concurrentCount: 8,
       expectedAlertType: 'high_concurrency',
       expectedSeverity: 'warning',
@@ -199,7 +202,7 @@ export const ALERT_TRIGGER_SCENARIOS = {
   HIGH_MEMORY: [
     {
       actionId: 'test:memory_intensive',
-      simulatedDurationMs: 50,
+      simulatedDurationMs: 12, // Reduced from 50
       simulatedMemoryMB: 60, // Above memory threshold
       expectedAlertType: 'high_memory_usage',
       expectedSeverity: 'warning',
@@ -210,7 +213,7 @@ export const ALERT_TRIGGER_SCENARIOS = {
   HIGH_ERROR_RATE: [
     {
       actionId: 'test:failing_action',
-      simulatedDurationMs: 30,
+      simulatedDurationMs: 8, // Reduced from 30
       failureRate: 0.15, // 15% failure rate
       expectedAlertType: 'high_error_rate',
       expectedSeverity: 'critical',
@@ -220,31 +223,32 @@ export const ALERT_TRIGGER_SCENARIOS = {
 
 /**
  * Load testing patterns for sustained monitoring validation
+ * Note: Durations and counts reduced for faster test execution
  */
 export const LOAD_TEST_PATTERNS = {
   // Burst pattern - high activity followed by quiet period
   BURST_PATTERN: {
-    burstDurationMs: 2000,
-    burstActionCount: 100,
-    quietDurationMs: 1000,
-    cycles: 3,
+    burstDurationMs: 500, // Reduced from 2000
+    burstActionCount: 25, // Reduced from 100
+    quietDurationMs: 250, // Reduced from 1000
+    cycles: 2, // Reduced from 3
     actionPattern: 'EXPLORATION',
   },
 
   // Sustained pattern - consistent activity over time
   SUSTAINED_PATTERN: {
-    durationMs: 10000,
-    actionsPerSecond: 15,
+    durationMs: 2500, // Reduced from 10000
+    actionsPerSecond: 15, // Kept same for rate testing
     actionPattern: 'COMBAT',
   },
 
   // Mixed pattern - different action types with varying intensity
   MIXED_PATTERN: {
     phases: [
-      { pattern: 'EXPLORATION', durationMs: 3000, intensity: 0.6 },
-      { pattern: 'COMBAT', durationMs: 2000, intensity: 1.0 },
-      { pattern: 'SOCIAL', durationMs: 2000, intensity: 0.4 },
-      { pattern: 'INVENTORY', durationMs: 1000, intensity: 0.8 },
+      { pattern: 'EXPLORATION', durationMs: 750, intensity: 0.6 }, // Reduced from 3000
+      { pattern: 'COMBAT', durationMs: 500, intensity: 1.0 }, // Reduced from 2000
+      { pattern: 'SOCIAL', durationMs: 500, intensity: 0.4 }, // Reduced from 2000
+      { pattern: 'INVENTORY', durationMs: 250, intensity: 0.8 }, // Reduced from 1000
     ],
   },
 };

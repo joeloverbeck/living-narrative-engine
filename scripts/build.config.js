@@ -61,6 +61,11 @@ module.exports = {
       entry: 'src/traits-rewriter-main.js',
       output: 'traits-rewriter.js',
     },
+    {
+      name: 'index-llm-selector',
+      entry: 'src/index-llm-selector.js',
+      output: 'index-llm-selector.js',
+    },
   ],
 
   // HTML files (explicit list to prevent missing files)

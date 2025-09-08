@@ -58,7 +58,9 @@ describe('Index.html - Main Menu', () => {
     });
 
     it('should have correct event listener setup in script', () => {
-      const scriptContent = document.querySelector('script').textContent;
+      // Get the second script tag which contains the inline event listeners
+      const scripts = document.querySelectorAll('script');
+      const scriptContent = scripts[1] ? scripts[1].textContent : '';
 
       // Check that the script contains the event listener for character-concepts-button
       expect(scriptContent).toContain(
@@ -78,6 +80,7 @@ describe('Index.html - Main Menu', () => {
         'Start New Game',
         'Load Game',
         'Anatomy Visualizer',
+        'Change LLM',
         'Character Concepts Manager',
         'Thematic Direction Generator',
         'Thematic Directions Manager',
@@ -100,6 +103,7 @@ describe('Index.html - Main Menu', () => {
         { id: 'start-button', text: 'Start New Game' },
         { id: 'load-button', text: 'Load Game' },
         { id: 'anatomy-button', text: 'Anatomy Visualizer' },
+        { id: 'change-llm-button', text: 'Change LLM' },
         { id: 'character-concepts-button', text: 'Character Concepts Manager' },
         {
           id: 'thematic-direction-button',
@@ -132,7 +136,9 @@ describe('Index.html - Main Menu', () => {
     });
 
     it('should have event listeners for all buttons in script', () => {
-      const scriptContent = document.querySelector('script').textContent;
+      // Get the second script tag which contains the inline event listeners
+      const scripts = document.querySelectorAll('script');
+      const scriptContent = scripts[1] ? scripts[1].textContent : '';
 
       const buttonConfigs = [
         { id: 'start-button', href: 'game.html' },
@@ -161,6 +167,7 @@ describe('Index.html - Main Menu', () => {
           href: 'speech-patterns-generator.html',
         },
         { id: 'traits-rewriter-button', href: 'traits-rewriter.html' },
+        // Note: change-llm-button is handled by the external module, not inline script
       ];
 
       buttonConfigs.forEach(({ id, href }) => {

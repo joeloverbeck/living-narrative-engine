@@ -6,6 +6,7 @@
 import { ILLMConfigurationManager } from '../interfaces/ILLMConfigurationManager.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { assertNonBlankString } from '../../utils/dependencyUtils.js';
+import { LLMSelectionPersistence } from './llmSelectionPersistence.js';
 
 /**
  * @typedef {import('../services/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader
@@ -217,14 +218,37 @@ export class LLMConfigurationManager extends ILLMConfigurationManager {
           `LLMConfigurationManager: Config '${this.#currentActiveConfigId}' set as active from initialLlmId.`
         );
         configSelected = true;
+        // Save the selection to persistence
+        LLMSelectionPersistence.save(this.#currentActiveConfigId);
       } else {
         this.#logger.warn(
-          `LLMConfigurationManager: initialLlmId '${this.#initialLlmId}' not found. Falling back to default.`
+          `LLMConfigurationManager: initialLlmId '${this.#initialLlmId}' not found. Falling back to persisted or default.`
         );
       }
     }
 
-    // Priority 2: defaultConfigId from configuration file
+    // Priority 2: persisted selection from localStorage
+    if (!configSelected) {
+      const persistedLlmId = LLMSelectionPersistence.load();
+      if (persistedLlmId) {
+        const targetConfig = this.#allConfigsMap[persistedLlmId];
+        if (targetConfig) {
+          this.#currentActiveConfigId = persistedLlmId;
+          this.#currentActiveConfig = targetConfig;
+          this.#logger.debug(
+            `LLMConfigurationManager: Config '${this.#currentActiveConfigId}' set as active from persisted selection.`
+          );
+          configSelected = true;
+        } else {
+          this.#logger.warn(
+            `LLMConfigurationManager: Persisted LLM ID '${persistedLlmId}' not found in current configs. Clearing persistence.`
+          );
+          LLMSelectionPersistence.clear();
+        }
+      }
+    }
+
+    // Priority 3: defaultConfigId from configuration file
     if (
       !configSelected &&
       this.#defaultConfigId &&
@@ -238,6 +262,8 @@ export class LLMConfigurationManager extends ILLMConfigurationManager {
           `LLMConfigurationManager: Config '${this.#currentActiveConfigId}' set as active from defaultConfigId.`
         );
         configSelected = true;
+        // Save the default selection to persistence
+        LLMSelectionPersistence.save(this.#currentActiveConfigId);
       } else {
         this.#logger.warn(
           `LLMConfigurationManager: defaultConfigId '${this.#defaultConfigId}' not found in configs.`
@@ -361,6 +387,15 @@ export class LLMConfigurationManager extends ILLMConfigurationManager {
       this.#logger.debug(
         `LLMConfigurationManager: Active config changed from '${oldConfigId || 'none'}' to '${configId}'.`
       );
+      
+      // Persist the new selection
+      const saved = LLMSelectionPersistence.save(configId);
+      if (!saved) {
+        this.#logger.warn(
+          `LLMConfigurationManager: Failed to persist LLM selection '${configId}' to localStorage.`
+        );
+      }
+      
       return true;
     }
 
