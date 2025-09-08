@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
   "id": "anatomy:humanoid_mouth",
-  "description": "A humanoid mouth",
+  "description": "A humanoid mouth with engagement tracking capabilities for preventing conflicting oral actions",
   "components": {
     "anatomy:part": {
       "subType": "mouth"
@@ -17,6 +17,10 @@
     },
     "core:name": {
       "text": "mouth"
+    },
+    "core:mouth_engagement": {
+      "locked": false,
+      "forcedOverride": false
     }
   }
 }
