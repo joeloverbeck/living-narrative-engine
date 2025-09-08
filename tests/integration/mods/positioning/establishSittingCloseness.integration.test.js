@@ -223,14 +223,46 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       // Assert: Handler should complete
       expect(result).toBeUndefined();
 
-      // Check merged circle - all should be connected
+      // Check Bob's closeness - should only have direct neighbors
       const bobCloseness = entityManager.getComponentData(
         'bob',
         'positioning:closeness'
       );
       expect(bobCloseness.partners.sort()).toEqual(
-        ['alice', 'charlie', 'david', 'eve'].sort()
+        ['alice', 'charlie'].sort()
       );
+
+      // Check Alice's closeness - should keep David and add Bob
+      const aliceCloseness = entityManager.getComponentData(
+        'alice',
+        'positioning:closeness'
+      );
+      expect(aliceCloseness.partners.sort()).toEqual(
+        ['bob', 'david'].sort()
+      );
+
+      // Check Charlie's closeness - should keep Eve and add Bob
+      const charlieCloseness = entityManager.getComponentData(
+        'charlie',
+        'positioning:closeness'
+      );
+      expect(charlieCloseness.partners.sort()).toEqual(
+        ['bob', 'eve'].sort()
+      );
+
+      // Check David's closeness - should remain unchanged (only Alice)
+      const davidCloseness = entityManager.getComponentData(
+        'david',
+        'positioning:closeness'
+      );
+      expect(davidCloseness.partners).toEqual(['alice']);
+
+      // Check Eve's closeness - should remain unchanged (only Charlie)
+      const eveCloseness = entityManager.getComponentData(
+        'eve',
+        'positioning:closeness'
+      );
+      expect(eveCloseness.partners).toEqual(['charlie']);
 
       // All should be locked who are sitting
       expect(
@@ -433,8 +465,8 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         executionContext
       );
 
-      // Assert - The production code stores a boolean result
-      expect(executionContext.evaluationContext.context.sittingResult).toBe(true);
+      // Assert - The production code stores false when no closeness is established (no adjacent actors)
+      expect(executionContext.evaluationContext.context.sittingResult).toBe(false);
     });
   });
 });

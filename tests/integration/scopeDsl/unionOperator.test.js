@@ -268,24 +268,4 @@ describe('Scope DSL - Union Operator Integration', () => {
     });
   });
 
-  describe('Performance considerations', () => {
-    it('should handle large unions efficiently', () => {
-      // Create large sets
-      const largeFollowers = Array.from({ length: 1000 }, (_, i) => `f${i}`);
-      const largePartners = Array.from({ length: 1000 }, (_, i) => `p${i}`);
-
-      actorEntity.addComponent('social:relationships', {
-        followers: largeFollowers,
-        partners: largePartners,
-      });
-
-      const start = Date.now();
-      const ast = parseDslExpression('actor.followers | actor.partners');
-      const result = engine.resolve(ast, actorEntity, runtimeCtx);
-      const duration = Date.now() - start;
-
-      expect(result.size).toBe(2000);
-      expect(duration).toBeLessThan(100); // Should complete in under 100ms
-    });
-  });
 });

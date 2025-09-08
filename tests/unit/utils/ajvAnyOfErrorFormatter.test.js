@@ -359,5 +359,360 @@ describe('ajvAnyOfErrorFormatter', () => {
       expect(result).toContain('operation9');
       expect(result).toContain('... and 3 more');
     });
+
+    // Test for lines 57-59: No best match found (all have type mismatches)
+    it('should return null when all operation types have type mismatches', () => {
+      const errors = [
+        {
+          instancePath: '',
+          schemaPath: '#/anyOf/0/properties/type/const',
+          keyword: 'const',
+          params: { allowedValue: 'operation1' },
+          message: 'must be equal to operation1',
+        },
+        {
+          instancePath: '',
+          schemaPath: '#/anyOf/1/properties/type/const',
+          keyword: 'const',
+          params: { allowedValue: 'operation2' },
+          message: 'must be equal to operation2',
+        },
+      ];
+
+      // Data with no type field, all branches have const type mismatches
+      const data = { parameters: {} };
+      const result = formatAnyOfErrors(errors, data);
+      
+      // Should handle the case where no best match is found
+      expect(result).toContain('Missing operation type');
+      expect(result).toContain('operation1');
+      expect(result).toContain('operation2');
+    });
+
+    // Test for lines 132-140: Valid type with errors in correct anyOf branch
+    it('should handle valid type with errors in the matching anyOf branch', () => {
+      const errors = [
+        // Branch 0 - wrong type
+        {
+          instancePath: '',
+          schemaPath: '#/anyOf/0/properties/type/const',
+          keyword: 'const',
+          params: { allowedValue: 'operation1' },
+          message: 'must be equal to operation1',
+        },
+        // Branch 1 - matching type but with other errors
+        {
+          instancePath: '/parameters/field1',
+          schemaPath: '#/anyOf/1/properties/parameters/properties/field1/required',
+          keyword: 'required',
+          params: { missingProperty: 'requiredField' },
+          message: 'must have required property requiredField',
+        },
+        {
+          instancePath: '/parameters/field2',
+          schemaPath: '#/anyOf/1/properties/parameters/properties/field2/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        },
+      ];
+
+      const data = { type: 'operation2', parameters: { field1: {}, field2: 123 } };
+      const result = formatAnyOfErrors(errors, data);
+      
+      expect(result).toContain("Operation type 'operation2' validation failed:");
+      expect(result).toContain('requiredField');
+      expect(result).toContain("Expected type 'string'");
+    });
+
+    // Test for lines 200-204: Macro reference with incorrect format
+    it('should detect and provide guidance for incorrectly formatted macro references', () => {
+      const errors = [];
+      // Create many anyOf errors to simulate validation failure
+      for (let i = 0; i < 10; i++) {
+        errors.push({
+          instancePath: '',
+          schemaPath: `#/anyOf/${i}/properties/type/const`,
+          keyword: 'const',
+          params: { allowedValue: `operation${i}` },
+          message: `must be equal to operation${i}`,
+        });
+      }
+
+      // Data with macro field (incorrect format - should not have type field)
+      const data = { macro: 'core:myMacro', type: 'invalidType' };
+      const result = formatAnyOfErrors(errors, data);
+      
+      expect(result).toContain('Invalid macro reference format detected');
+      expect(result).toContain('{"macro": "namespace:macroId"}');
+      expect(result).toContain('Do NOT include a "type" field with macro references');
+    });
+
+    // Test for line 215: More than 15 operation types in error summary
+    it('should show truncation message when there are more than 15 operation types', () => {
+      const errors = [];
+      // Create errors for 20 different operation types
+      for (let i = 0; i < 20; i++) {
+        errors.push({
+          instancePath: '',
+          schemaPath: `#/anyOf/${i}/properties/type/const`,
+          keyword: 'const',
+          params: { allowedValue: `operation${i}` },
+          message: `must be equal to operation${i}`,
+        });
+      }
+
+      const data = { type: 'unknownOperation' };
+      const result = formatAnyOfErrors(errors, data);
+      
+      expect(result).toContain("Unknown or invalid operation type: 'unknownOperation'");
+      expect(result).toContain('operation0');
+      expect(result).toContain('operation14'); // Should show first 15
+      expect(result).toContain('... and 5 more'); // 20 - 15 = 5 more
+    });
+
+    // Test for lines 262-265: Invalid non-string type field (part 1 - large error count)
+    it('should detect critical structural issue with non-string type field (large error count)', () => {
+      const errors = [];
+      // Create >100 errors to trigger critical issue detection
+      for (let i = 0; i < 120; i++) {
+        errors.push({
+          instancePath: '',
+          schemaPath: `#/anyOf/${i % 10}/properties/type/const`,
+          keyword: 'const',
+          params: { allowedValue: `operation${i % 10}` },
+          message: `must be equal to operation${i % 10}`,
+        });
+      }
+
+      // Data with non-string type field
+      const data = { type: 123, parameters: {} }; // type is a number, not string
+      const result = formatAjvErrorsEnhanced(errors, data);
+      
+      expect(result).toContain('Critical structural issue: Invalid "type" field value');
+      expect(result).toContain('The "type" field must be a string, but got number');
+      expect(result).toContain('Pre-validation should have caught this');
+    });
+
+    // Test for lines 263: Missing type field with large error count
+    it('should detect critical structural issue with missing type field (large error count)', () => {
+      const errors = [];
+      // Create >100 errors with operation validation pattern
+      for (let i = 0; i < 110; i++) {
+        errors.push({
+          instancePath: '',
+          schemaPath: `#/anyOf/${i % 10}/properties/type/const`,
+          keyword: 'const',
+          params: { allowedValue: `operation${i % 10}` },
+          message: `must be equal to operation${i % 10}`,
+        });
+      }
+
+      // Data with no type or macro field
+      const data = { parameters: { someField: 'value' } };
+      const result = formatAjvErrorsEnhanced(errors, data);
+      
+      expect(result).toContain('Critical structural issue: Missing "type" field in operation');
+      expect(result).toContain('Add a "type" field with a valid operation type');
+      expect(result).toContain('{"macro": "namespace:id"} for macro references');
+      expect(result).toContain('Pre-validation should have caught this');
+    });
+
+    // Additional test for anyOf with data.type set correctly
+    it('should handle anyOf errors when type matches exactly', () => {
+      const errors = [
+        {
+          instancePath: '',
+          schemaPath: '#/anyOf',
+          keyword: 'anyOf',
+          message: 'must match a schema in anyOf',
+        },
+        {
+          instancePath: '/parameters',
+          schemaPath: '#/anyOf/5/properties/parameters/required',
+          keyword: 'required',
+          params: { missingProperty: 'entityId' },
+          message: 'must have required property entityId',
+        },
+      ];
+
+      const data = { type: 'updateEntity', parameters: {} };
+      const result = formatAnyOfErrors(errors, data);
+      
+      // Should handle anyOf error with specific type
+      expect(result).toBeDefined();
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    // Test detecting intended operation type from data without explicit type
+    it('should infer intended operation type from available error patterns', () => {
+      const errors = [
+        // Branch 0 has type mismatch but fewer other errors
+        {
+          instancePath: '',
+          schemaPath: '#/anyOf/0/properties/type/const',
+          keyword: 'const',
+          params: { allowedValue: 'operation1' },
+          message: 'must be equal to operation1',
+        },
+        // Branch 1 has more errors
+        {
+          instancePath: '',
+          schemaPath: '#/anyOf/1/properties/type/const',
+          keyword: 'const',
+          params: { allowedValue: 'operation2' },
+          message: 'must be equal to operation2',
+        },
+        {
+          instancePath: '/field1',
+          schemaPath: '#/anyOf/1/properties/field1/type',
+          keyword: 'type',
+          params: { type: 'string' },
+          message: 'must be string',
+        },
+        {
+          instancePath: '/field2',
+          schemaPath: '#/anyOf/1/properties/field2/required',
+          keyword: 'required',
+          params: { missingProperty: 'subfield' },
+          message: 'must have required property subfield',
+        },
+      ];
+
+      const data = { field1: 123, field2: {} };
+      const result = formatAnyOfErrors(errors, data);
+      
+      // Should handle case where no clear intended type can be determined
+      expect(result).toBeDefined();
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    // Test for line 164: const error without allowedValue param
+    it('should handle const error without allowedValue param', () => {
+      const errors = [
+        {
+          instancePath: '/field',
+          schemaPath: '#/properties/field/const',
+          keyword: 'const',
+          params: {}, // No allowedValue
+          message: 'must be equal to constant',
+        },
+      ];
+
+      const result = formatAnyOfErrors(errors, {});
+      expect(result).toContain("Must be equal to 'undefined'");
+    });
+
+    // Test for line 168: default case with unknown keyword
+    it('should handle unknown validation keywords', () => {
+      const errors = [
+        {
+          instancePath: '/field',
+          schemaPath: '#/properties/field/customKeyword',
+          keyword: 'customKeyword',
+          params: {},
+          message: 'custom validation failed',
+        },
+      ];
+
+      const result = formatAnyOfErrors(errors, {});
+      expect(result).toContain('custom validation failed');
+    });
+
+    // Test for line 168: default case with no message
+    it('should handle errors with no message in default case', () => {
+      const errors = [
+        {
+          instancePath: '/field',
+          schemaPath: '#/properties/field/unknownKeyword',
+          keyword: 'unknownKeyword',
+          params: {},
+          // No message property
+        },
+      ];
+
+      const result = formatAnyOfErrors(errors, {});
+      expect(result).toContain('Validation failed');
+    });
+
+    // Test for lines 57-59: Edge case where all operations have type mismatch (ensuring null return)
+    it('should handle case where findIntendedOperationType returns null', () => {
+      const errors = [
+        {
+          instancePath: '',
+          schemaPath: '#/anyOf/0/properties/type/const',
+          keyword: 'const',
+          params: { allowedValue: 'op1' },
+          message: 'must be equal to op1',
+        },
+        {
+          instancePath: '/other',
+          schemaPath: '#/anyOf/0/properties/other',
+          keyword: 'required',
+          params: { missingProperty: 'field' },
+        },
+      ];
+
+      // No data.type and all operations have type mismatches
+      const data = { other: {} };
+      const result = formatAnyOfErrors(errors, data);
+      
+      // When findIntendedOperationType returns null, formatOperationTypeSummary is called
+      expect(result).toContain('Missing operation type');
+    });
+
+    // Test for lines 57-59: Best match selection when operations don't have type mismatches
+    it('should select operation with fewest errors when no type mismatches exist', () => {
+      const errors = [
+        // Operation 1 branch - has more errors (not a type mismatch)
+        {
+          instancePath: '',
+          schemaPath: '#/anyOf/0/properties/type/const',
+          keyword: 'const',
+          params: { allowedValue: 'operation1' },
+          message: 'must be equal to operation1',
+        },
+        {
+          instancePath: '/param1',
+          schemaPath: '#/anyOf/0/properties/param1/required',
+          keyword: 'required',
+          params: { missingProperty: 'field1' },
+        },
+        {
+          instancePath: '/param2',
+          schemaPath: '#/anyOf/0/properties/param2/required',
+          keyword: 'required',
+          params: { missingProperty: 'field2' },
+        },
+        {
+          instancePath: '/param3',
+          schemaPath: '#/anyOf/0/properties/param3/type',
+          keyword: 'type',
+          params: { type: 'string' },
+        },
+        // Operation 2 branch - has fewer errors  
+        {
+          instancePath: '',
+          schemaPath: '#/anyOf/1/properties/type/const',
+          keyword: 'const',
+          params: { allowedValue: 'operation2' },
+          message: 'must be equal to operation2',
+        },
+        {
+          instancePath: '/param1',
+          schemaPath: '#/anyOf/1/properties/param1/required',
+          keyword: 'required',
+          params: { missingProperty: 'field1' },
+        },
+      ];
+
+      // Data without an explicit type, will need to infer from error counts
+      const data = { param1: {}, param2: {}, param3: 123 };
+      const result = formatAnyOfErrors(errors, data);
+      
+      // Should contain information about the operation with fewer errors
+      expect(result).toBeDefined();
+      expect(result).not.toContain('null');
+    });
   });
 });

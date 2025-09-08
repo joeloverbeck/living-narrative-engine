@@ -9,7 +9,6 @@ import {
   createSimpleMock,
   createMockEntityManager,
 } from '../../../common/mockFactories/index.js';
-import jsonLogic from 'json-logic-js';
 
 /**
  * @file Tests for registerOperationHandlers ensuring each handler token is registered once
@@ -65,7 +64,9 @@ describe('registerOperationHandlers', () => {
       tokens.HasBodyPartWithComponentValueHandler,
       tokens.UnequipClothingHandler,
       tokens.LockMovementHandler,
+      tokens.LockMouthEngagementHandler,
       tokens.UnlockMovementHandler,
+      tokens.UnlockMouthEngagementHandler,
       tokens.RegenerateDescriptionHandler,
       tokens.AtomicModifyComponentHandler,
     ];
@@ -82,7 +83,6 @@ describe('registerOperationHandlers', () => {
     let mockContainer;
     let mockLogger;
     let mockEntityManager;
-    let mockDispatcher;
     let mockSafeEventDispatcher;
     let mockValidatedEventDispatcher;
 
@@ -104,7 +104,6 @@ describe('registerOperationHandlers', () => {
       mockEntityManager.getAllEntities = jest.fn();
       mockEntityManager.getEntitiesWithComponent = jest.fn(() => []);
       mockEntityManager.getEntitiesInLocation = jest.fn(() => []);
-      mockDispatcher = createSimpleMock(['dispatch']);
       mockSafeEventDispatcher = createSimpleMock(['dispatch']);
       mockValidatedEventDispatcher = createSimpleMock(['dispatch']);
 
