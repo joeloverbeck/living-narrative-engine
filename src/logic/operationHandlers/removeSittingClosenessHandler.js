@@ -276,30 +276,42 @@ class RemoveSittingClosenessHandler extends BaseOperationHandler {
   #removeSittingBasedCloseness(departingActorId, formerAdjacentActors, currentPartners) {
     const updatedPartnerData = {};
     
-    // Start with actors that need partner list updates
-    const partnersToProcess = new Set([departingActorId, ...currentPartners]);
-    
-    for (const actorId of partnersToProcess) {
-      const actorCloseness = this.#entityManager.getComponentData(actorId, 'positioning:closeness');
-      if (!actorCloseness || !Array.isArray(actorCloseness.partners)) {
-        continue;
-      }
-      
-      let updatedPartners = [...actorCloseness.partners];
-      
-      if (actorId === departingActorId) {
-        // Remove former adjacent actors from departing actor's list
-        updatedPartners = updatedPartners.filter(partner => 
-          !this.#isSittingBasedRelationship(partner, formerAdjacentActors)
-        );
-      } else if (formerAdjacentActors.includes(actorId)) {
-        // Remove departing actor from former adjacent actors' lists
-        updatedPartners = updatedPartners.filter(partner => partner !== departingActorId);
-      }
+    // Process the departing actor first
+    const departingActorCloseness = this.#entityManager.getComponentData(departingActorId, 'positioning:closeness');
+    if (departingActorCloseness && Array.isArray(departingActorCloseness.partners)) {
+      // Remove former adjacent actors from departing actor's list (these are sitting-based)
+      let updatedPartners = departingActorCloseness.partners.filter(partner => 
+        !this.#isSittingBasedRelationship(partner, formerAdjacentActors)
+      );
       
       // Use closeness circle service to deduplicate and sort the partners array
       updatedPartners = this.#closenessCircleService.repair(updatedPartners);
-      updatedPartnerData[actorId] = updatedPartners;
+      updatedPartnerData[departingActorId] = updatedPartners;
+    } else {
+      // Even if no closeness component, ensure we track that it should have no partners
+      updatedPartnerData[departingActorId] = [];
+    }
+    
+    // Process all current partners to ensure bidirectional consistency
+    // This includes both adjacent and non-adjacent partners
+    for (const partnerId of currentPartners) {
+      const partnerCloseness = this.#entityManager.getComponentData(partnerId, 'positioning:closeness');
+      
+      if (partnerCloseness && Array.isArray(partnerCloseness.partners)) {
+        let updatedPartners = [...partnerCloseness.partners];
+        
+        // Only remove the departing actor if this partner was adjacent
+        // Non-adjacent partners keep their manual relationships
+        if (formerAdjacentActors.includes(partnerId)) {
+          updatedPartners = updatedPartners.filter(partner => partner !== departingActorId);
+        }
+        
+        // Use closeness circle service to deduplicate and sort the partners array
+        updatedPartners = this.#closenessCircleService.repair(updatedPartners);
+        updatedPartnerData[partnerId] = updatedPartners;
+      }
+      // Note: If a partner doesn't have a closeness component, we don't add them to updatedPartnerData
+      // This preserves the existing state (no component = no closeness)
     }
     
     return updatedPartnerData;

@@ -112,7 +112,7 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
       );
 
       if (adjacentActors.length === 0) {
-        // No adjacent actors - operation succeeds but no action needed
+        // No adjacent actors - no closeness established
         logger.info('No adjacent actors found for closeness establishment', {
           actorId: parameters.actor_id,
           furnitureId: parameters.furniture_id,
@@ -125,7 +125,7 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
           }
           tryWriteContextVariable(
             parameters.result_variable,
-            true,
+            false, // Return false when no closeness was established
             executionContext,
             this.#dispatcher,
             logger
@@ -241,21 +241,30 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
       'positioning:closeness'
     );
 
-    // Merge all member IDs using closeness circle service utility
-    const mergedMemberIds = this.#closenessCircleService.merge(
-      [actorId, adjacentActorId],
-      Array.isArray(actorCloseness?.partners) ? actorCloseness.partners : [],
-      Array.isArray(adjacentCloseness?.partners) ? adjacentCloseness.partners : []
-    );
+    // For seated actors, only establish adjacent relationships (not transitive)
+    // Get current partners lists or initialize empty arrays
+    const actorPartners = Array.isArray(actorCloseness?.partners) 
+      ? [...actorCloseness.partners] 
+      : [];
+    const adjacentPartners = Array.isArray(adjacentCloseness?.partners) 
+      ? [...adjacentCloseness.partners] 
+      : [];
 
-    // Update all actors in the merged circle
-    for (const id of mergedMemberIds) {
-      // Each actor's partners list excludes themselves
-      const partners = mergedMemberIds.filter((p) => p !== id);
-      await this.#entityManager.addComponent(id, 'positioning:closeness', {
-        partners,
-      });
+    // Add each actor to the other's partners list if not already present
+    if (!actorPartners.includes(adjacentActorId)) {
+      actorPartners.push(adjacentActorId);
     }
+    if (!adjacentPartners.includes(actorId)) {
+      adjacentPartners.push(actorId);
+    }
+
+    // Update both actors with their new partners lists
+    await this.#entityManager.addComponent(actorId, 'positioning:closeness', {
+      partners: actorPartners,
+    });
+    await this.#entityManager.addComponent(adjacentActorId, 'positioning:closeness', {
+      partners: adjacentPartners,
+    });
   }
 
   /**

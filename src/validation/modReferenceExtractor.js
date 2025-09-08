@@ -94,8 +94,7 @@ class ModReferenceExtractor {
   }
 
   /**
-   * Extracts references from a single file based on file type
-   *
+   * Enhanced file processing with better error recovery and reporting
    * @private
    * @param {string} filePath - File to process
    * @param {ModReferenceMap} references - Reference map to populate
@@ -108,24 +107,30 @@ class ModReferenceExtractor {
       switch (ext) {
         case '.json':
           await this.#extractFromJsonFile(filePath, references);
+          this.#logger.debug(`Processed JSON file: ${basename}`);
           break;
         case '.scope':
           await this.#extractFromScopeFile(filePath, references);
+          this.#logger.debug(`Processed scope file: ${basename}`);
           break;
         default:
-          // Skip non-relevant file types
-          this.#logger.debug(`Skipping file with unsupported extension: ${filePath}`);
+          this.#logger.debug(`Skipping unsupported file: ${basename}`);
           break;
       }
     } catch (error) {
-      this.#logger.warn(`Failed to process file ${basename}: ${error.message}`);
-      // Continue processing other files rather than failing completely
+      // Enhanced error context
+      this.#logger.warn(`Failed to process ${basename} (${ext}): ${error.message}`, {
+        filePath,
+        fileType: ext,
+        error: error.name
+      });
+      
+      // Continue processing - don't fail entire extraction for one bad file
     }
   }
 
   /**
-   * Extracts references from JSON files (actions, rules, conditions, components, events)
-   *
+   * Enhanced JSON processing with file-type-specific extraction logic
    * @private
    * @param {string} filePath - JSON file path
    * @param {ModReferenceMap} references - Reference map to populate
@@ -135,16 +140,42 @@ class ModReferenceExtractor {
     const data = JSON.parse(content);
     
     const fileType = this.#detectJsonFileType(filePath);
-    const extractedRefs = this.#extractReferencesFromObject(data, fileType);
     
-    // Merge extracted references into main map
-    for (const [modId, components] of extractedRefs) {
-      if (!references.has(modId)) {
-        references.set(modId, new Set());
-      }
-      for (const component of components) {
-        references.get(modId).add(component);
-      }
+    switch (fileType) {
+      case 'action':
+        this.#extractFromActionFile(data, references);
+        break;
+      case 'rule':
+        this.#extractFromRuleFile(data, references);
+        break;
+      case 'condition':
+        this.#extractFromConditionFile(data, references);
+        break;
+      case 'component':
+        this.#extractFromComponentFile(data, references);
+        break;
+      case 'event':
+        this.#extractFromEventFile(data, references);
+        break;
+      case 'blueprint':
+        this.#extractFromBlueprintFile(data, references);
+        break;
+      case 'recipe':
+        this.#extractFromRecipeFile(data, references);
+        break;
+      default:
+        // Fallback to existing generic processing
+        const extractedRefs = this.#extractReferencesFromObject(data, fileType);
+        // Merge extracted references into the main reference map
+        for (const [modId, componentIds] of extractedRefs) {
+          if (!references.has(modId)) {
+            references.set(modId, new Set());
+          }
+          for (const componentId of componentIds) {
+            references.get(modId).add(componentId);
+          }
+        }
+        break;
     }
   }
 
@@ -185,7 +216,7 @@ class ModReferenceExtractor {
    */
   #traverseObject(obj, path, references, fileType) {
     if (typeof obj === 'string') {
-      this.#extractModReferencesFromString(obj, references);
+      this.#extractModReferencesFromString(obj, references, path || fileType);
     } else if (Array.isArray(obj)) {
       obj.forEach((item, index) => {
         this.#traverseObject(item, `${path}[${index}]`, references, fileType);
@@ -198,31 +229,51 @@ class ModReferenceExtractor {
   }
 
   /**
-   * Extracts mod references from string values using pattern matching
-   *
+   * Enhanced mod reference extraction with context awareness
    * @private
    * @param {string} str - String to analyze
    * @param {ModReferenceMap} references - Reference map to populate
+   * @param {string} context - Context information for better extraction
    */
-  #extractModReferencesFromString(str, references) {
-    // Pattern: modId:componentId (but not core:* or none/self)
-    // Match valid mod:component pairs with word boundaries to avoid matching parts of larger identifiers
-    const MOD_REFERENCE_PATTERN = /\b([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_]*)\b/g;
-    
-    let match;
-    while ((match = MOD_REFERENCE_PATTERN.exec(str)) !== null) {
-      const [, modId, componentId] = match;
-      
-      // Skip core references (always valid) and special cases
-      if (modId === 'core' || modId === 'none' || modId === 'self') {
-        continue;
-      }
-      
-      if (!references.has(modId)) {
-        references.set(modId, new Set());
-      }
-      references.get(modId).add(componentId);
+  #extractModReferencesFromString(str, references, context = '') {
+    if (typeof str !== 'string' || !str.trim()) {
+      return;
     }
+
+    // Enhanced pattern matching for various mod reference formats
+    const patterns = [
+      // Standard modId:componentId pattern (including hyphens for compatibility)
+      /\b([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)\b/g,
+      
+      // Scope DSL patterns in JSON strings (preview for MODDEPVAL-003)
+      /\b([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)\s*:=/g,
+      
+      // Component access patterns: modId:componentId.field
+      /\b([a-zA-Z][a-zA-Z0-9_]*):([a-zA-Z][a-zA-Z0-9_-]*)\.[a-zA-Z_][a-zA-Z0-9_]*\b/g
+    ];
+
+    patterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(str)) !== null) {
+        const [, modId, componentId] = match;
+        
+        // Skip core references and special cases
+        if (modId === 'core' || modId === 'none' || modId === 'self') {
+          continue;
+        }
+
+        if (!references.has(modId)) {
+          references.set(modId, new Set());
+        }
+        
+        references.get(modId).add(componentId);
+        
+        // Log context for debugging
+        if (context) {
+          this.#logger.debug(`Found reference ${modId}:${componentId} in ${context}`);
+        }
+      }
+    });
   }
 
   /**
@@ -244,6 +295,382 @@ class ModReferenceExtractor {
     if (basename.endsWith('.recipe.json')) return 'recipe';
     
     return 'unknown';
+  }
+
+  /**
+   * Extracts references from action files with specialized logic
+   * @private
+   * @param {Object} actionData - Parsed action JSON
+   * @param {ModReferenceMap} references - Reference map to populate
+   */
+  #extractFromActionFile(actionData, references) {
+    // Required components - typically arrays of component IDs
+    if (actionData.required_components) {
+      for (const [entityType, components] of Object.entries(actionData.required_components)) {
+        if (Array.isArray(components)) {
+          components.forEach(comp => this.#extractModReferencesFromString(comp, references, 'required_components'));
+        }
+      }
+    }
+
+    // Forbidden components - same structure as required
+    if (actionData.forbidden_components) {
+      for (const [entityType, components] of Object.entries(actionData.forbidden_components)) {
+        if (Array.isArray(components)) {
+          components.forEach(comp => this.#extractModReferencesFromString(comp, references, 'forbidden_components'));
+        }
+      }
+    }
+
+    // Target scopes - reference to scope definitions
+    if (actionData.targets?.scope) {
+      this.#extractModReferencesFromString(actionData.targets.scope, references, 'target_scope');
+    }
+
+    // Handle targets as string (alternative format)
+    if (typeof actionData.targets === 'string') {
+      this.#extractModReferencesFromString(actionData.targets, references, 'targets_string');
+    }
+
+    // Handle target as string (singular form)
+    if (typeof actionData.target === 'string') {
+      this.#extractModReferencesFromString(actionData.target, references, 'target_string');
+    }
+
+    // Operation handlers may contain component operations
+    if (actionData.operations) {
+      this.#extractFromOperationHandlers(actionData.operations, references);
+    }
+
+    // JSON Logic conditions in actions
+    if (actionData.condition) {
+      this.#extractFromJsonLogic(actionData.condition, references);
+    }
+  }
+
+  /**
+   * Extracts references from rule files
+   * @private
+   * @param {Object} ruleData - Parsed rule JSON
+   * @param {ModReferenceMap} references - Reference map to populate
+   */
+  #extractFromRuleFile(ruleData, references) {
+    // Condition references - link to other mods' conditions
+    if (ruleData.condition_ref) {
+      this.#extractModReferencesFromString(ruleData.condition_ref, references, 'condition_ref');
+    }
+
+    // Condition object with condition_ref nested
+    if (ruleData.condition?.condition_ref) {
+      this.#extractModReferencesFromString(ruleData.condition.condition_ref, references, 'nested_condition_ref');
+    }
+
+    // Direct condition as string reference
+    if (typeof ruleData.condition === 'string') {
+      this.#extractModReferencesFromString(ruleData.condition, references, 'condition_string');
+    }
+
+    // Inline JSON Logic conditions
+    if (ruleData.condition && typeof ruleData.condition === 'object' && !ruleData.condition.condition_ref) {
+      this.#extractFromJsonLogic(ruleData.condition, references);
+    }
+
+    // Actions array with operation handlers
+    if (ruleData.actions) {
+      this.#extractFromOperationHandlers(ruleData.actions, references);
+    }
+
+    // Operation handlers with component operations (legacy format)
+    if (ruleData.operations) {
+      this.#extractFromOperationHandlers(ruleData.operations, references);
+    }
+
+    // Rule metadata may contain mod references
+    if (ruleData.metadata) {
+      const metadataRefs = this.#extractReferencesFromObject(ruleData.metadata, 'rule-metadata');
+      // Merge metadata references
+      for (const [modId, componentIds] of metadataRefs) {
+        if (!references.has(modId)) {
+          references.set(modId, new Set());
+        }
+        for (const componentId of componentIds) {
+          references.get(modId).add(componentId);
+        }
+      }
+    }
+  }
+
+  /**
+   * Extracts references from condition files  
+   * @private
+   * @param {Object} conditionData - Parsed condition JSON
+   * @param {ModReferenceMap} references - Reference map to populate
+   */
+  #extractFromConditionFile(conditionData, references) {
+    // Condition files are primarily JSON Logic structures
+    if (conditionData.condition) {
+      this.#extractFromJsonLogic(conditionData.condition, references);
+    }
+
+    // Some conditions may have metadata or dependencies
+    const genericRefs = this.#extractReferencesFromObject(conditionData, 'condition');
+    // Merge generic references
+    for (const [modId, componentIds] of genericRefs) {
+      if (!references.has(modId)) {
+        references.set(modId, new Set());
+      }
+      for (const componentId of componentIds) {
+        references.get(modId).add(componentId);
+      }
+    }
+  }
+
+  /**
+   * Extracts references from component definition files
+   * @private
+   * @param {Object} componentData - Parsed component JSON
+   * @param {ModReferenceMap} references - Reference map to populate
+   */
+  #extractFromComponentFile(componentData, references) {
+    // Component schemas may reference other mod components
+    if (componentData.dataSchema) {
+      const schemaRefs = this.#extractReferencesFromObject(componentData.dataSchema, 'component-schema');
+      // Merge schema references
+      for (const [modId, componentIds] of schemaRefs) {
+        if (!references.has(modId)) {
+          references.set(modId, new Set());
+        }
+        for (const componentId of componentIds) {
+          references.get(modId).add(componentId);
+        }
+      }
+    }
+
+    // Default values might contain mod references
+    if (componentData.defaultData) {
+      const defaultRefs = this.#extractReferencesFromObject(componentData.defaultData, 'component-defaults');
+      // Merge default references
+      for (const [modId, componentIds] of defaultRefs) {
+        if (!references.has(modId)) {
+          references.set(modId, new Set());
+        }
+        for (const componentId of componentIds) {
+          references.get(modId).add(componentId);
+        }
+      }
+    }
+
+    // Validation rules may contain component references
+    if (componentData.validation) {
+      const validationRefs = this.#extractReferencesFromObject(componentData.validation, 'component-validation');
+      // Merge validation references
+      for (const [modId, componentIds] of validationRefs) {
+        if (!references.has(modId)) {
+          references.set(modId, new Set());
+        }
+        for (const componentId of componentIds) {
+          references.get(modId).add(componentId);
+        }
+      }
+    }
+  }
+
+  /**
+   * Extracts references from event definition files
+   * @private
+   * @param {Object} eventData - Parsed event JSON
+   * @param {ModReferenceMap} references - Reference map to populate
+   */
+  #extractFromEventFile(eventData, references) {
+    // Event payload schemas may reference components
+    if (eventData.payloadSchema) {
+      const payloadRefs = this.#extractReferencesFromObject(eventData.payloadSchema, 'event-payload');
+      // Merge payload references
+      for (const [modId, componentIds] of payloadRefs) {
+        if (!references.has(modId)) {
+          references.set(modId, new Set());
+        }
+        for (const componentId of componentIds) {
+          references.get(modId).add(componentId);
+        }
+      }
+    }
+
+    // Event handlers may contain component operations
+    if (eventData.handlers) {
+      this.#extractFromOperationHandlers(eventData.handlers, references);
+    }
+
+    // Event metadata
+    const eventRefs = this.#extractReferencesFromObject(eventData, 'event');
+    // Merge event references
+    for (const [modId, componentIds] of eventRefs) {
+      if (!references.has(modId)) {
+        references.set(modId, new Set());
+      }
+      for (const componentId of componentIds) {
+        references.get(modId).add(componentId);
+      }
+    }
+  }
+
+  /**
+   * Extracts references from blueprint files (anatomy system)
+   * @private
+   * @param {Object} blueprintData - Parsed blueprint JSON
+   * @param {ModReferenceMap} references - Reference map to populate
+   */
+  #extractFromBlueprintFile(blueprintData, references) {
+    // Blueprints define anatomy structures with potential cross-mod references
+    const blueprintRefs = this.#extractReferencesFromObject(blueprintData, 'blueprint');
+    // Merge blueprint references
+    for (const [modId, componentIds] of blueprintRefs) {
+      if (!references.has(modId)) {
+        references.set(modId, new Set());
+      }
+      for (const componentId of componentIds) {
+        references.get(modId).add(componentId);
+      }
+    }
+  }
+
+  /**
+   * Extracts references from recipe files (anatomy system)
+   * @private  
+   * @param {Object} recipeData - Parsed recipe JSON
+   * @param {ModReferenceMap} references - Reference map to populate
+   */
+  #extractFromRecipeFile(recipeData, references) {
+    // Recipes may reference components from other mods
+    const recipeRefs = this.#extractReferencesFromObject(recipeData, 'recipe');
+    // Merge recipe references
+    for (const [modId, componentIds] of recipeRefs) {
+      if (!references.has(modId)) {
+        references.set(modId, new Set());
+      }
+      for (const componentId of componentIds) {
+        references.get(modId).add(componentId);
+      }
+    }
+  }
+
+  /**
+   * Recursively processes JSON Logic expressions to extract mod references
+   * @private
+   * @param {Object} jsonLogic - JSON Logic expression object
+   * @param {ModReferenceMap} references - Reference map to populate
+   */
+  #extractFromJsonLogic(jsonLogic, references) {
+    if (!jsonLogic || typeof jsonLogic !== 'object') {
+      return;
+    }
+
+    // Handle JSON Logic operators that commonly contain mod references
+    const COMPONENT_OPERATORS = [
+      'has_component',
+      'get_component_value', 
+      'set_component_value',
+      'remove_component',
+      'add_component'
+    ];
+
+    for (const [operator, operands] of Object.entries(jsonLogic)) {
+      if (COMPONENT_OPERATORS.includes(operator)) {
+        // Component operators: ["entity", "modId:componentId", ...args]
+        if (Array.isArray(operands) && operands.length >= 2) {
+          const componentRef = operands[1];
+          if (typeof componentRef === 'string') {
+            this.#extractModReferencesFromString(componentRef, references, `json_logic_${operator}`);
+          }
+        }
+      } else if (Array.isArray(operands)) {
+        // Recursive processing for arrays
+        operands.forEach(operand => {
+          if (typeof operand === 'object') {
+            this.#extractFromJsonLogic(operand, references);
+          } else if (typeof operand === 'string') {
+            this.#extractModReferencesFromString(operand, references, 'json_logic_operand');
+          }
+        });
+      } else if (typeof operands === 'object') {
+        // Recursive processing for objects
+        this.#extractFromJsonLogic(operands, references);
+      } else if (typeof operands === 'string') {
+        // String operands may contain references
+        this.#extractModReferencesFromString(operands, references, 'json_logic_string');
+      }
+    }
+  }
+
+  /**
+   * Processes operation handler structures for component references
+   * @private
+   * @param {Array|Object} operations - Operation handler data
+   * @param {ModReferenceMap} references - Reference map to populate
+   */
+  #extractFromOperationHandlers(operations, references) {
+    if (Array.isArray(operations)) {
+      operations.forEach(op => this.#extractFromSingleOperation(op, references));
+    } else if (typeof operations === 'object') {
+      this.#extractFromSingleOperation(operations, references);
+    }
+  }
+
+  /**
+   * Processes a single operation for component references
+   * @private
+   * @param {Object} operation - Single operation object
+   * @param {ModReferenceMap} references - Reference map to populate
+   */
+  #extractFromSingleOperation(operation, references) {
+    if (!operation || typeof operation !== 'object') {
+      return;
+    }
+
+    // Component operations often have 'component' or 'componentId' fields
+    if (operation.component) {
+      this.#extractModReferencesFromString(operation.component, references, 'operation_component');
+    }
+    
+    if (operation.componentId) {
+      this.#extractModReferencesFromString(operation.componentId, references, 'operation_componentId');
+    }
+
+    // Target specifications may contain mod references
+    if (operation.target) {
+      this.#extractModReferencesFromString(operation.target, references, 'operation_target');
+    }
+
+    // Component type specifications
+    if (operation.component_type) {
+      this.#extractModReferencesFromString(operation.component_type, references, 'operation_component_type');
+    }
+
+    // Parameters may contain nested references
+    if (operation.parameters) {
+      const paramRefs = this.#extractReferencesFromObject(operation.parameters, 'operation_parameters');
+      // Merge parameter references
+      for (const [modId, componentIds] of paramRefs) {
+        if (!references.has(modId)) {
+          references.set(modId, new Set());
+        }
+        for (const componentId of componentIds) {
+          references.get(modId).add(componentId);
+        }
+      }
+    }
+
+    // Recursively process nested operation data
+    const operationRefs = this.#extractReferencesFromObject(operation, 'operation');
+    // Merge operation references
+    for (const [modId, componentIds] of operationRefs) {
+      if (!references.has(modId)) {
+        references.set(modId, new Set());
+      }
+      for (const componentId of componentIds) {
+        references.get(modId).add(componentId);
+      }
+    }
   }
 }
 

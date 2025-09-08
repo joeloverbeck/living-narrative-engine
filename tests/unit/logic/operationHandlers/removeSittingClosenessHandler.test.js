@@ -226,6 +226,58 @@ describe('RemoveSittingClosenessHandler', () => {
         })
       );
     });
+
+    it('should handle missing evaluation context for result variable in no-closeness case', async () => {
+      const parameters = {
+        furniture_id: 'furniture:couch',
+        actor_id: 'game:alice',
+        spot_index: 1,
+        result_variable: 'operation_result',
+      };
+
+      // Use empty array instead of null to ensure we hit the right code path
+      mockEntityManager.getComponentData.mockReturnValue({ partners: [] });
+      evaluationContextUtils.ensureEvaluationContext.mockReturnValue(false);
+
+      await handler.execute(parameters, executionContext);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No closeness relationships to remove',
+        expect.objectContaining({
+          actorId: 'game:alice',
+        })
+      );
+      expect(contextVariableUtils.tryWriteContextVariable).not.toHaveBeenCalled();
+    });
+
+    it('should handle successful no-closeness case with available evaluation context', async () => {
+      const parameters = {
+        furniture_id: 'furniture:couch',
+        actor_id: 'game:alice',
+        spot_index: 1,
+        result_variable: 'operation_result',
+      };
+
+      // Use empty array to trigger the no-closeness path with result variable
+      mockEntityManager.getComponentData.mockReturnValue({ partners: [] });
+      evaluationContextUtils.ensureEvaluationContext.mockReturnValue(true);
+
+      await handler.execute(parameters, executionContext);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'No closeness relationships to remove',
+        expect.objectContaining({
+          actorId: 'game:alice',
+        })
+      );
+      expect(contextVariableUtils.tryWriteContextVariable).toHaveBeenCalledWith(
+        'operation_result',
+        true,
+        executionContext,
+        mockDispatcher,
+        mockLogger
+      );
+    });
   });
 
   describe('Former Adjacent Actor Detection', () => {
@@ -649,6 +701,84 @@ describe('RemoveSittingClosenessHandler', () => {
       await handler.execute(parameters, executionContext);
 
       expect(contextVariableUtils.tryWriteContextVariable).not.toHaveBeenCalled();
+    });
+
+    it('should handle successful operation with missing evaluation context for result variable', async () => {
+      const parameters = {
+        furniture_id: 'furniture:couch',
+        actor_id: 'game:alice',
+        spot_index: 0,
+        result_variable: 'removal_result',
+      };
+
+      const furnitureComponent = {
+        spots: [null, 'game:bob', null],
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({ partners: ['game:bob'] }) // Alice's closeness
+        .mockReturnValueOnce(furnitureComponent) // Furniture component
+        .mockReturnValueOnce({ partners: ['game:bob'] }) // Alice for processing
+        .mockReturnValueOnce({ partners: ['game:alice'] }) // Bob for processing
+        .mockReturnValueOnce(null) // Alice has no partners left after removal
+        .mockReturnValueOnce(null); // Bob has no partners left
+
+      proximityUtils.getAdjacentSpots.mockReturnValue([1]);
+      mockClosenessCircleService.repair
+        .mockReturnValueOnce([]) // Alice has no partners
+        .mockReturnValueOnce([]); // Bob has no partners
+
+      evaluationContextUtils.ensureEvaluationContext.mockReturnValue(false);
+
+      await handler.execute(parameters, executionContext);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Sitting closeness removed successfully',
+        expect.any(Object)
+      );
+      expect(contextVariableUtils.tryWriteContextVariable).not.toHaveBeenCalled();
+    });
+
+    it('should handle successful operation and write result variable when context is available', async () => {
+      const parameters = {
+        furniture_id: 'furniture:couch',
+        actor_id: 'game:alice',
+        spot_index: 0,
+        result_variable: 'removal_result',
+      };
+
+      const furnitureComponent = {
+        spots: [null, 'game:bob', null],
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({ partners: ['game:bob'] }) // Alice's closeness
+        .mockReturnValueOnce(furnitureComponent) // Furniture component
+        .mockReturnValueOnce({ partners: ['game:bob'] }) // Alice for processing
+        .mockReturnValueOnce({ partners: ['game:alice'] }) // Bob for processing
+        .mockReturnValueOnce(null) // Alice has no partners left after removal
+        .mockReturnValueOnce(null); // Bob has no partners left
+
+      proximityUtils.getAdjacentSpots.mockReturnValue([1]);
+      mockClosenessCircleService.repair
+        .mockReturnValueOnce([]) // Alice has no partners
+        .mockReturnValueOnce([]); // Bob has no partners
+
+      evaluationContextUtils.ensureEvaluationContext.mockReturnValue(true);
+
+      await handler.execute(parameters, executionContext);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Sitting closeness removed successfully',
+        expect.any(Object)
+      );
+      expect(contextVariableUtils.tryWriteContextVariable).toHaveBeenCalledWith(
+        'removal_result',
+        true,
+        executionContext,
+        mockDispatcher,
+        mockLogger
+      );
     });
   });
 

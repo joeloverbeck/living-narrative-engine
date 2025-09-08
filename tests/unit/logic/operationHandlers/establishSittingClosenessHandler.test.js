@@ -242,12 +242,38 @@ describe('EstablishSittingClosenessHandler', () => {
       );
       expect(contextVariableUtils.tryWriteContextVariable).toHaveBeenCalledWith(
         'result',
-        true,
+        false, // No closeness established returns false
         executionContext,
         mockDispatcher,
         expect.objectContaining({
           info: expect.any(Function),
           error: expect.any(Function),
+        })
+      );
+      expect(mockClosenessCircleService.merge).not.toHaveBeenCalled();
+    });
+
+    it('should handle furniture component with null spots array', async () => {
+      const parameters = {
+        furniture_id: 'couch:1',
+        actor_id: 'alice',
+        spot_index: 1,
+      };
+
+      const furnitureComponent = {
+        spots: null, // Null spots array
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce(furnitureComponent) // Validation call
+        .mockReturnValueOnce(furnitureComponent); // Adjacent detection call
+
+      await handler.execute(parameters, executionContext);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'EstablishSittingClosenessHandler: No adjacent actors found for closeness establishment',
+        expect.objectContaining({
+          actorId: 'alice',
         })
       );
       expect(mockClosenessCircleService.merge).not.toHaveBeenCalled();
@@ -312,33 +338,23 @@ describe('EstablishSittingClosenessHandler', () => {
         .mockReturnValueOnce(aliceCloseness); // Alice's existing closeness
 
       proximityUtils.findAdjacentOccupants.mockReturnValue(['alice']);
-      mockClosenessCircleService.merge.mockReturnValue(['alice', 'bob', 'charlie']);
 
       await handler.execute(parameters, executionContext);
 
-      // Verify merge was called with all relevant partners
-      expect(mockClosenessCircleService.merge).toHaveBeenCalledWith(
-        ['charlie', 'alice'],
-        [],
-        ['bob']
-      );
-
-      // Verify all three actors get updated
+      // Production code no longer uses merge service - direct partner updates only
+      // Charlie and Alice become direct partners (no transitive relationship with Bob)
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'alice',
         'positioning:closeness',
-        { partners: ['bob', 'charlie'] }
-      );
-      expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
-        'bob',
-        'positioning:closeness',
-        { partners: ['alice', 'charlie'] }
+        { partners: ['bob', 'charlie'] } // Alice keeps Bob and adds Charlie
       );
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'charlie',
         'positioning:closeness',
-        { partners: ['alice', 'bob'] }
+        { partners: ['alice'] } // Charlie only gets Alice as direct neighbor
       );
+      // Note: Bob is NOT updated because he's not adjacent to Charlie
+      expect(mockClosenessCircleService.merge).not.toHaveBeenCalled();
     });
 
     it('should preserve manual closeness relationships', async () => {
@@ -506,7 +522,7 @@ describe('EstablishSittingClosenessHandler', () => {
       );
       expect(contextVariableUtils.tryWriteContextVariable).toHaveBeenCalledWith(
         'result',
-        true,
+        false, // No closeness established returns false
         executionContext,
         mockDispatcher,
         expect.objectContaining({
@@ -561,6 +577,36 @@ describe('EstablishSittingClosenessHandler', () => {
 
       await handler.execute(parameters, executionContext);
 
+      expect(contextVariableUtils.tryWriteContextVariable).not.toHaveBeenCalled();
+    });
+
+    it('should handle successful execution with missing evaluation context for result variable', async () => {
+      const parameters = {
+        furniture_id: 'couch:1',
+        actor_id: 'alice',
+        spot_index: 0,
+        result_variable: 'result',
+      };
+
+      const furnitureComponent = {
+        spots: ['alice', 'bob', null],
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce(furnitureComponent)
+        .mockReturnValueOnce(furnitureComponent)
+        .mockReturnValue(null);
+
+      proximityUtils.findAdjacentOccupants.mockReturnValue(['bob']);
+      mockClosenessCircleService.merge.mockReturnValue(['alice', 'bob']);
+      evaluationContextUtils.ensureEvaluationContext.mockReturnValue(false);
+
+      await handler.execute(parameters, executionContext);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'EstablishSittingClosenessHandler: Sitting closeness established successfully',
+        expect.any(Object)
+      );
       expect(contextVariableUtils.tryWriteContextVariable).not.toHaveBeenCalled();
     });
   });
