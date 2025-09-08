@@ -188,21 +188,26 @@ describe('ModReferenceExtractor - Core Functionality', () => {
       );
     });
 
-    it('should handle scope files with placeholder implementation', async () => {
+    it('should process scope files and extract mod references', async () => {
       const testPath = '/test/mod/path';
+      const scopeContent = `
+        // Comment should be ignored
+        positioning:close_actors := actor.components.positioning:closeness.partners
+        intimacy:attracted_actors := actor.components.intimacy:attraction.targets
+      `;
       
       fs.readdir.mockResolvedValue([
         { name: 'test.scope', isFile: () => true, isDirectory: () => false }
       ]);
-      fs.readFile.mockResolvedValue('some scope content');
+      fs.readFile.mockResolvedValue(scopeContent);
 
       const result = await extractor.extractReferences(testPath);
 
       expect(result).toBeInstanceOf(Map);
-      expect(result.size).toBe(0);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Scope file processing not yet implemented')
-      );
+      expect(result.has('positioning')).toBe(true);
+      expect(result.has('intimacy')).toBe(true);
+      expect(result.get('positioning')).toContain('closeness');
+      expect(result.get('intimacy')).toContain('attraction');
     });
   });
 
@@ -927,6 +932,295 @@ describe('ModReferenceExtractor - Core Functionality', () => {
 
       // Should find multiple positioning references but filter self-references
       expect(result.has('positioning')).toBe(false); // Self-references filtered
+    });
+  });
+
+  describe('Scope DSL Processing', () => {
+    // Mock the parseScopeDefinitions function
+    beforeEach(() => {
+      jest.mock('../../../src/scopeDsl/scopeDefinitionParser.js', () => ({
+        parseScopeDefinitions: jest.fn()
+      }));
+    });
+
+    describe('Basic Scope Definitions', () => {
+      it('should extract references from simple scope assignments', async () => {
+        const testPath = '/test/mod/path';
+        const scopeContent = `
+          positioning:close_actors := actor.components.positioning:closeness.partners
+          intimacy:attracted_actors := actor.components.intimacy:attraction.targets
+        `;
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(scopeContent);
+
+        const result = await extractor.extractReferences(testPath);
+
+        expect(result.has('positioning')).toBe(true);
+        expect(result.has('intimacy')).toBe(true);
+        expect(result.get('positioning')).toContain('closeness');
+        expect(result.get('intimacy')).toContain('attraction');
+      });
+
+      it('should extract component references from expressions', async () => {
+        const testPath = '/test/mod/path';
+        const scopeContent = `
+          test:scope := actor.components.positioning:closeness.partners
+        `;
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(scopeContent);
+
+        const result = await extractor.extractReferences(testPath);
+        
+        expect(result.get('positioning')).toContain('closeness');
+      });
+    });
+
+    describe('Complex Scope Expressions', () => {
+      it('should handle filtered access with JSON Logic', async () => {
+        const testPath = '/test/mod/path';
+        const scopeContent = `
+          intimacy:available_partners := actor.components.positioning:closeness.partners[
+            {
+              "and": [
+                {"has_component": ["item", "intimacy:attraction"]},
+                {">=": [{"get_component_value": ["item", "intimacy:attraction", "level"]}, 30]}
+              ]
+            }
+          ]
+        `;
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(scopeContent);
+
+        const result = await extractor.extractReferences(testPath);
+        
+        expect(result.get('positioning')).toContain('closeness');
+        expect(result.get('intimacy')).toContain('attraction');
+      });
+
+      it('should handle union expressions with pipe operator', async () => {
+        const testPath = '/test/mod/path';
+        const scopeContent = `
+          positioning:all_nearby := actor.components.positioning:closeness.partners | actor.followers
+        `;
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(scopeContent);
+
+        const result = await extractor.extractReferences(testPath);
+        
+        expect(result.get('positioning')).toContain('closeness');
+      });
+
+      it('should handle union expressions with plus operator', async () => {
+        const testPath = '/test/mod/path';
+        const scopeContent = `
+          intimacy:all_connections := actor.partners + actor.components.intimacy:bond.targets
+        `;
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(scopeContent);
+
+        const result = await extractor.extractReferences(testPath);
+        
+        expect(result.get('intimacy')).toContain('bond');
+      });
+
+      it('should handle array iterations', async () => {
+        const testPath = '/test/mod/path';
+        const scopeContent = `
+          positioning:furniture_users := actor.components.positioning:sitting.furniture.users[]
+        `;
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(scopeContent);
+
+        const result = await extractor.extractReferences(testPath);
+        
+        expect(result.get('positioning')).toContain('sitting');
+      });
+
+      it('should handle condition_ref in filters', async () => {
+        const testPath = '/test/mod/path';
+        const scopeContent = `
+          intimacy:close_actors_facing := actor.components.positioning:closeness.partners[][{
+            "condition_ref": "positioning:both-actors-facing-each-other"
+          }]
+        `;
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(scopeContent);
+
+        const result = await extractor.extractReferences(testPath);
+        
+        expect(result.get('positioning')).toContain('closeness');
+        expect(result.get('positioning')).toContain('both-actors-facing-each-other');
+      });
+    });
+
+    describe('Error Handling', () => {
+      it('should use regex fallback when parser fails', async () => {
+        const testPath = '/test/mod/path';
+        const malformedContent = `
+          invalid syntax without assignment but has intimacy:kissing reference
+          and positioning:sitting references
+        `;
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(malformedContent);
+
+        const result = await extractor.extractReferences(testPath);
+        
+        // Should still extract references via regex fallback
+        expect(result.get('intimacy')).toContain('kissing');
+        expect(result.get('positioning')).toContain('sitting');
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to parse scope file test.scope')
+        );
+      });
+
+      it('should handle mixed valid and invalid scope definitions', async () => {
+        const testPath = '/test/mod/path';
+        const partialContent = `
+          positioning:valid_scope := actor.components.positioning:closeness
+          invalid_scope_without_assignment := 
+          another:valid := actor.components.intimacy:attraction
+        `;
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(partialContent);
+
+        const result = await extractor.extractReferences(testPath);
+        
+        // Should extract what it can
+        expect(result.has('positioning')).toBe(true);
+        expect(result.has('intimacy')).toBe(true);
+      });
+    });
+
+    describe('Real-world Scope Files', () => {
+      it('should process intimacy mod scope file correctly', async () => {
+        const testPath = '/test/mod/path';
+        const realWorldContent = `
+          // Scope for actors in closeness who are facing each other
+          // Used by actions that require face-to-face interaction
+          intimacy:close_actors_facing_each_other := actor.components.positioning:closeness.partners[][{
+            "condition_ref": "positioning:both-actors-facing-each-other"
+          }]
+        `;
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'close_actors_facing_each_other.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(realWorldContent);
+
+        const result = await extractor.extractReferences(testPath);
+        
+        expect(result.get('intimacy')).toContain('close_actors_facing_each_other');
+        expect(result.get('positioning')).toContain('closeness');
+        expect(result.get('positioning')).toContain('both-actors-facing-each-other');
+      });
+
+      it('should handle complex union examples', async () => {
+        const testPath = '/test/mod/path';
+        const unionExamples = `
+          # Union Operator Examples
+          all_connections := actor.followers | actor.partners | actor.components.intimacy:friends
+          close_connections := actor.partners + actor.components.intimacy:family
+          mixed_example := actor.followers + actor.friends | actor.partners
+        `;
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'union-examples.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(unionExamples);
+
+        const result = await extractor.extractReferences(testPath);
+        
+        expect(result.get('intimacy')).toContain('friends');
+        expect(result.get('intimacy')).toContain('family');
+      });
+    });
+
+    describe('Performance', () => {
+      it('should handle large scope files efficiently', async () => {
+        const testPath = '/test/mod/path';
+        const largeContent = Array.from({length: 100}, (_, i) => 
+          `mod${i}:scope${i} := actor.components.mod${i}:component${i}.field`
+        ).join('\n');
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'large.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(largeContent);
+
+        const startTime = performance.now();
+        const result = await extractor.extractReferences(testPath);
+        const endTime = performance.now();
+        
+        expect(endTime - startTime).toBeLessThan(200); // <200ms for 100 definitions
+        expect(result.size).toBeGreaterThan(0);
+      });
+    });
+
+    describe('Scope Reference Patterns', () => {
+      it('should skip core, none, and self references in scope files', async () => {
+        const testPath = '/test/mod/path';
+        const scopeContent = `
+          core:test := actor.components.core:actor
+          none:test := none
+          self:test := self
+          intimacy:valid := actor.components.intimacy:attraction
+        `;
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(scopeContent);
+
+        const result = await extractor.extractReferences(testPath);
+        
+        expect(result.has('core')).toBe(false);
+        expect(result.has('none')).toBe(false);
+        expect(result.has('self')).toBe(false);
+        expect(result.has('intimacy')).toBe(true);
+      });
+
+      it('should handle entity source references', async () => {
+        const testPath = '/test/mod/path';
+        const scopeContent = `
+          test:all_items := entities(intimacy:special_item)
+        `;
+        
+        fs.readdir.mockResolvedValue([
+          { name: 'test.scope', isFile: () => true, isDirectory: () => false }
+        ]);
+        fs.readFile.mockResolvedValue(scopeContent);
+
+        const result = await extractor.extractReferences(testPath);
+        
+        expect(result.get('intimacy')).toContain('special_item');
+      });
     });
   });
 });
