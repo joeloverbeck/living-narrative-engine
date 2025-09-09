@@ -77,7 +77,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
 
       // Create actors
       const alice = createEntityInstance({
-        instanceId: 'alice',
+        instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
           'positioning:closeness': { partners: [] },
@@ -87,7 +87,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       entityManager.addEntity(alice);
 
       const bob = createEntityInstance({
-        instanceId: 'bob',
+        instanceId: 'test:bob',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
           'positioning:closeness': { partners: [] },
@@ -98,14 +98,14 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
 
       // Place actors on furniture
       entityManager.addComponent('couch:1', 'positioning:allows_sitting', {
-        spots: ['alice', 'bob', null],
+        spots: ['test:alice', 'test:bob', null],
       });
 
       // Act: Execute handler
       const result = await handler.execute(
         {
           furniture_id: 'couch:1',
-          actor_id: 'alice',
+          actor_id: 'test:alice',
           spot_index: 0, // Alice is at index 0 in spots array
         },
         executionContext
@@ -116,24 +116,24 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       expect(result).toBeUndefined();
 
       const aliceCloseness = entityManager.getComponentData(
-        'alice',
+        'test:alice',
         'positioning:closeness'
       );
       const bobCloseness = entityManager.getComponentData(
-        'bob',
+        'test:bob',
         'positioning:closeness'
       );
 
-      expect(aliceCloseness.partners).toContain('bob');
-      expect(bobCloseness.partners).toContain('alice');
+      expect(aliceCloseness.partners).toContain('test:bob');
+      expect(bobCloseness.partners).toContain('test:alice');
 
       // Movement locks should be set
       const aliceLock = entityManager.getComponentData(
-        'alice',
+        'test:alice',
         'core:movement'
       );
       const bobLock = entityManager.getComponentData(
-        'bob',
+        'test:bob',
         'core:movement'
       );
 
@@ -147,7 +147,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'couch:1',
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: ['alice', null, 'charlie'],
+            spots: ['test:alice', null, 'test:charlie'],
           },
         },
       });
@@ -155,10 +155,10 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
 
       // Alice with existing closeness to david
       const alice = createEntityInstance({
-        instanceId: 'alice',
+        instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: ['david'] },
+          'positioning:closeness': { partners: ['test:david'] },
           'core:movement': { locked: false },
         },
       });
@@ -166,10 +166,10 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
 
       // Charlie with existing closeness to eve
       const charlie = createEntityInstance({
-        instanceId: 'charlie',
+        instanceId: 'test:charlie',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: ['eve'] },
+          'positioning:closeness': { partners: ['test:eve'] },
           'core:movement': { locked: false },
         },
       });
@@ -177,26 +177,26 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
 
       // David and Eve
       const david = createEntityInstance({
-        instanceId: 'david',
+        instanceId: 'test:david',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: ['alice'] },
+          'positioning:closeness': { partners: ['test:alice'] },
         },
       });
       entityManager.addEntity(david);
 
       const eve = createEntityInstance({
-        instanceId: 'eve',
+        instanceId: 'test:eve',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
-          'positioning:closeness': { partners: ['charlie'] },
+          'positioning:closeness': { partners: ['test:charlie'] },
         },
       });
       entityManager.addEntity(eve);
 
       // Now bob sits between them
       const bob = createEntityInstance({
-        instanceId: 'bob',
+        instanceId: 'test:bob',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
           'positioning:closeness': { partners: [] },
@@ -207,14 +207,14 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
 
       // Update furniture
       entityManager.addComponent('couch:1', 'positioning:allows_sitting', {
-        spots: ['alice', 'bob', 'charlie'],
+        spots: ['test:alice', 'test:bob', 'test:charlie'],
       });
 
       // Act: Execute handler
       const result = await handler.execute(
         {
           furniture_id: 'couch:1',
-          actor_id: 'bob',
+          actor_id: 'test:bob',
           spot_index: 1, // Bob is at index 1 in spots array
         },
         executionContext
@@ -225,54 +225,54 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
 
       // Check Bob's closeness - should only have direct neighbors
       const bobCloseness = entityManager.getComponentData(
-        'bob',
+        'test:bob',
         'positioning:closeness'
       );
       expect(bobCloseness.partners.sort()).toEqual(
-        ['alice', 'charlie'].sort()
+        ['test:alice', 'test:charlie'].sort()
       );
 
       // Check Alice's closeness - should keep David and add Bob
       const aliceCloseness = entityManager.getComponentData(
-        'alice',
+        'test:alice',
         'positioning:closeness'
       );
       expect(aliceCloseness.partners.sort()).toEqual(
-        ['bob', 'david'].sort()
+        ['test:bob', 'test:david'].sort()
       );
 
       // Check Charlie's closeness - should keep Eve and add Bob
       const charlieCloseness = entityManager.getComponentData(
-        'charlie',
+        'test:charlie',
         'positioning:closeness'
       );
       expect(charlieCloseness.partners.sort()).toEqual(
-        ['bob', 'eve'].sort()
+        ['test:bob', 'test:eve'].sort()
       );
 
       // Check David's closeness - should remain unchanged (only Alice)
       const davidCloseness = entityManager.getComponentData(
-        'david',
+        'test:david',
         'positioning:closeness'
       );
-      expect(davidCloseness.partners).toEqual(['alice']);
+      expect(davidCloseness.partners).toEqual(['test:alice']);
 
       // Check Eve's closeness - should remain unchanged (only Charlie)
       const eveCloseness = entityManager.getComponentData(
-        'eve',
+        'test:eve',
         'positioning:closeness'
       );
-      expect(eveCloseness.partners).toEqual(['charlie']);
+      expect(eveCloseness.partners).toEqual(['test:charlie']);
 
       // All should be locked who are sitting
       expect(
-        entityManager.getComponentData('alice', 'core:movement').locked
+        entityManager.getComponentData('test:alice', 'core:movement').locked
       ).toBe(true);
       expect(
-        entityManager.getComponentData('bob', 'core:movement').locked
+        entityManager.getComponentData('test:bob', 'core:movement').locked
       ).toBe(true);
       expect(
-        entityManager.getComponentData('charlie', 'core:movement').locked
+        entityManager.getComponentData('test:charlie', 'core:movement').locked
       ).toBe(true);
     });
 
@@ -282,14 +282,14 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'bench:1',
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: [null, 'alice', null],
+            spots: [null, 'test:alice', null],
           },
         },
       });
       entityManager.addEntity(bench);
 
       const alice = createEntityInstance({
-        instanceId: 'alice',
+        instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
           'positioning:closeness': { partners: [] },
@@ -302,7 +302,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       const result = await handler.execute(
         {
           furniture_id: 'bench:1',
-          actor_id: 'alice',
+          actor_id: 'test:alice',
           spot_index: 1, // Alice is at index 1 in spots array
         },
         executionContext
@@ -312,14 +312,14 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       expect(result).toBeUndefined();
 
       const aliceCloseness = entityManager.getComponentData(
-        'alice',
+        'test:alice',
         'positioning:closeness'
       );
       expect(aliceCloseness.partners).toEqual([]);
 
       // Movement lock should NOT be set when no adjacent actors
       const aliceLock = entityManager.getComponentData(
-        'alice',
+        'test:alice',
         'core:movement'
       );
       expect(aliceLock.locked).toBe(false);
@@ -338,14 +338,14 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'sofa:1',
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: ['alice', 'bob', null],
+            spots: ['test:alice', 'test:bob', null],
           },
         },
       });
       entityManager.addEntity(sofa);
 
       const alice = createEntityInstance({
-        instanceId: 'alice',
+        instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
           'positioning:closeness': { partners: [] },
@@ -355,7 +355,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       entityManager.addEntity(alice);
 
       const bob = createEntityInstance({
-        instanceId: 'bob',
+        instanceId: 'test:bob',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
           'positioning:closeness': { partners: [] },
@@ -368,7 +368,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       await handler.execute(
         {
           furniture_id: 'sofa:1',
-          actor_id: 'alice',
+          actor_id: 'test:alice',
           spot_index: 0, // Alice is at index 0
         },
         executionContext
@@ -392,7 +392,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
 
       // Create an actor that exists (needed for validation)
       const alice = createEntityInstance({
-        instanceId: 'alice',
+        instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
         },
@@ -404,7 +404,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       await handler.execute(
         {
           furniture_id: 'invalid:furniture',
-          actor_id: 'alice',
+          actor_id: 'test:alice',
           spot_index: 0,
         },
         executionContext
@@ -438,14 +438,14 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         instanceId: 'chair:1',
         baseComponents: {
           'positioning:allows_sitting': {
-            spots: ['alice'],
+            spots: ['test:alice'],
           },
         },
       });
       entityManager.addEntity(chair);
 
       const alice = createEntityInstance({
-        instanceId: 'alice',
+        instanceId: 'test:alice',
         baseComponents: {
           'core:actor': { isPlayerControlled: false },
           'positioning:closeness': { partners: [] },
@@ -458,7 +458,7 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
       await handler.execute(
         {
           furniture_id: 'chair:1',
-          actor_id: 'alice',
+          actor_id: 'test:alice',
           spot_index: 0, // Alice is at index 0
           result_variable: 'sittingResult',
         },
