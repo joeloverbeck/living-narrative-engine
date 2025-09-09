@@ -77,11 +77,11 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       entityManager.addEntity(aliceEntity);
 
       // Alice sits on single-spot furniture
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      await entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
         spots: [aliceId]
       });
       
-      entityManager.addComponent(aliceId, 'positioning:sitting_on', {
+      await entityManager.addComponent(aliceId, 'positioning:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 0
       });
@@ -309,11 +309,11 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       expect(entityManager.getComponent(charlieId, 'positioning:closeness')).toBeNull();
 
       // Bob sits in the gap (spot 1)
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      await entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
         spots: [aliceId, bobId, charlieId, null, null]
       });
       
-      entityManager.addComponent(bobId, 'positioning:sitting_on', {
+      await entityManager.addComponent(bobId, 'positioning:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 1
       });
@@ -367,13 +367,13 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
 
       // First two actors sit
       for (let i = 0; i < 2; i++) {
-        entityManager.addComponent(actors[i], 'positioning:sitting_on', {
+        await entityManager.addComponent(actors[i], 'positioning:sitting_on', {
           furniture_id: furnitureId,
           spot_index: i
         });
       }
       
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      await entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
         spots: [actors[0], actors[1]]
       });
 
@@ -393,17 +393,17 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       expect(actor2Closeness.partners).toEqual([actors[0]]);
 
       // Simulate furniture expansion (add more spots)
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      await entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
         spots: [actors[0], actors[1], null] // Added third spot
       });
 
       // Third actor sits
-      entityManager.addComponent(actors[2], 'positioning:sitting_on', {
+      await entityManager.addComponent(actors[2], 'positioning:sitting_on', {
         furniture_id: furnitureId,
         spot_index: 2
       });
       
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+      await entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
         spots: [actors[0], actors[1], actors[2]]
       });
 
@@ -432,13 +432,13 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       // Test various null spot configurations
       const configurations = [
         { spots: [null, null, null], expectedCloseness: [] },
-        { spots: ['a', null, null], expectedCloseness: [] },
-        { spots: [null, 'b', null], expectedCloseness: [] },
-        { spots: [null, null, 'c'], expectedCloseness: [] },
-        { spots: ['a', 'b', null], expectedCloseness: [['a', 'b']] },
-        { spots: [null, 'b', 'c'], expectedCloseness: [['b', 'c']] },
-        { spots: ['a', null, 'c'], expectedCloseness: [] },
-        { spots: ['a', 'b', 'c'], expectedCloseness: [['a', 'b'], ['b', 'c']] },
+        { spots: ['test:a', null, null], expectedCloseness: [] },
+        { spots: [null, 'test:b', null], expectedCloseness: [] },
+        { spots: [null, null, 'test:c'], expectedCloseness: [] },
+        { spots: ['test:a', 'test:b', null], expectedCloseness: [['test:a', 'test:b']] },
+        { spots: [null, 'test:b', 'test:c'], expectedCloseness: [['test:b', 'test:c']] },
+        { spots: ['test:a', null, 'test:c'], expectedCloseness: [] },
+        { spots: ['test:a', 'test:b', 'test:c'], expectedCloseness: [['test:a', 'test:b'], ['test:b', 'test:c']] },
       ];
 
       for (const config of configurations) {
@@ -543,10 +543,10 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
 
       // All actors sit down sequentially
       const spots = [...actors];
-      entityManager.addComponent(furnitureId, 'positioning:allows_sitting', { spots });
+      await entityManager.addComponent(furnitureId, 'positioning:allows_sitting', { spots });
 
       for (let i = 0; i < actors.length; i++) {
-        entityManager.addComponent(actors[i], 'positioning:sitting_on', {
+        await entityManager.addComponent(actors[i], 'positioning:sitting_on', {
           furniture_id: furnitureId,
           spot_index: i
         });
@@ -616,13 +616,13 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       for (let cycle = 0; cycle < cycles; cycle++) {
         // All sit
         for (let i = 0; i < actors.length; i++) {
-          entityManager.addComponent(actors[i], 'positioning:sitting_on', {
+          await entityManager.addComponent(actors[i], 'positioning:sitting_on', {
             furniture_id: furnitureId,
             spot_index: i
           });
         }
         
-        entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+        await entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
           spots: [...actors]
         });
 
@@ -646,7 +646,7 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
           entityManager.removeComponent(actorId, 'positioning:closeness');
         }
         
-        entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
+        await entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
           spots: [null, null, null]
         });
 

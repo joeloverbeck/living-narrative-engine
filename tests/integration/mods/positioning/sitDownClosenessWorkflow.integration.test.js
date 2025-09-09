@@ -1,6 +1,9 @@
 /**
  * @file Integration tests for sit down closeness workflow
  * Tests automatic closeness establishment when actors sit adjacently
+ * 
+ * NOTE: This test requires namespaced entity IDs (modId:identifier format)
+ * as enforced by proximityUtils.validateProximityParameters()
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
@@ -54,9 +57,11 @@ describe('Sit Down Closeness Workflow Integration', () => {
 
   it('should establish closeness when sitting adjacent to another actor', async () => {
     // Arrange: Setup furniture with multiple spots and two actors
-    const furnitureId = 'test_bench';
-    const aliceId = 'alice';
-    const bobId = 'bob';
+    // NOTE: Using namespaced IDs required by validateProximityParameters()
+    // Entity IDs must be in 'modId:identifier' format or validation will fail
+    const furnitureId = 'test:bench';
+    const aliceId = 'test:alice';
+    const bobId = 'test:bob';
 
     // Create furniture entity with two spots, Alice in spot 0
     const furnitureEntity = createEntityInstance({
@@ -119,11 +124,12 @@ describe('Sit Down Closeness Workflow Integration', () => {
     // is properly registered and can be referenced in rules
     
     // Arrange: Create a simple rule-like structure that references the operation
+    // NOTE: Using namespaced IDs in parameters as required by production code
     const mockRule = {
       "type": "ESTABLISH_SITTING_CLOSENESS",
       "parameters": {
-        "furniture_id": "test_furniture",
-        "actor_id": "test_actor",
+        "furniture_id": "test:furniture",
+        "actor_id": "test:actor",
         "spot_index": 0,
         "result_variable": "testResult"
       }

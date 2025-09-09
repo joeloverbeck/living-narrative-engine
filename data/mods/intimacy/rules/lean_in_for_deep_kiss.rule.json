@@ -46,6 +46,18 @@
       }
     },
     {
+      "type": "LOCK_MOUTH_ENGAGEMENT",
+      "parameters": {
+        "actor_id": "{event.payload.actorId}"
+      }
+    },
+    {
+      "type": "LOCK_MOUTH_ENGAGEMENT",
+      "parameters": {
+        "actor_id": "{event.payload.targetId}"
+      }
+    },
+    {
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
