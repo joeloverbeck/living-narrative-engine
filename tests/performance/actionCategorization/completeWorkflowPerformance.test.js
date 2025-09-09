@@ -23,7 +23,7 @@ describe('Complete Action Categorization Workflow Performance', () => {
   let actionCategorizationService;
   let promptProvider;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Create container with required services
     container = new AppContainer();
     const registrar = new Registrar(container);
@@ -46,7 +46,7 @@ describe('Complete Action Categorization Workflow Performance', () => {
     );
 
     // Configure base container which includes action categorization
-    configureBaseContainer(container, {
+    await configureBaseContainer(container, {
       includeGameSystems: false, // Minimal setup for testing
       includeUI: false,
       includeCharacterBuilder: false,

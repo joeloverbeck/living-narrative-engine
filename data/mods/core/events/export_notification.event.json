@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:export_notification",
+  "description": "Dispatched when a log export operation (copy to clipboard or download) completes, providing user feedback.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "type": {
+        "type": "string",
+        "enum": ["success", "error"],
+        "description": "Whether the export operation succeeded or failed."
+      },
+      "message": {
+        "type": "string",
+        "description": "A user-friendly message describing the export result."
+      }
+    },
+    "required": ["type", "message"],
+    "additionalProperties": false
+  }
+}

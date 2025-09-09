@@ -59,35 +59,85 @@ export async function configureBaseContainer(container, options = {}) {
     // --- Core Registration (always needed) ---
     // These services are required by both game and tools
     if (logger) logger.debug('[BaseContainerConfig] Registering loaders...');
-    registerLoaders(container);
+    try {
+      await registerLoaders(container);
+    } catch (error) {
+      const errorMessage = `Failed to register loaders: ${error.message}`;
+      if (logger) {
+        logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
+      }
+      throw new Error(errorMessage);
+    }
 
     if (logger)
       logger.debug('[BaseContainerConfig] Registering infrastructure...');
-    registerInfrastructure(container);
+    try {
+      registerInfrastructure(container);
+    } catch (error) {
+      const errorMessage = `Failed to register infrastructure: ${error.message}`;
+      if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
+      throw new Error(errorMessage);
+    }
 
     if (logger)
       logger.debug('[BaseContainerConfig] Registering action tracing...');
-    registerActionTracing(container);
+    try {
+      registerActionTracing(container);
+    } catch (error) {
+      const errorMessage = `Failed to register action tracing: ${error.message}`;
+      if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
+      throw new Error(errorMessage);
+    }
 
     if (logger)
       logger.debug('[BaseContainerConfig] Registering persistence...');
-    registerPersistence(container);
+    try {
+      registerPersistence(container);
+    } catch (error) {
+      const errorMessage = `Failed to register persistence: ${error.message}`;
+      if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
+      throw new Error(errorMessage);
+    }
 
     if (logger)
       logger.debug('[BaseContainerConfig] Registering world and entity...');
-    registerWorldAndEntity(container);
+    try {
+      registerWorldAndEntity(container);
+    } catch (error) {
+      const errorMessage = `Failed to register world and entity: ${error.message}`;
+      if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
+      throw new Error(errorMessage);
+    }
 
     if (logger)
       logger.debug('[BaseContainerConfig] Registering pipeline services...');
-    registerPipelineServices(container);
+    try {
+      registerPipelineServices(container);
+    } catch (error) {
+      const errorMessage = `Failed to register pipeline services: ${error.message}`;
+      if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
+      throw new Error(errorMessage);
+    }
 
     if (logger)
       logger.debug('[BaseContainerConfig] Registering command and action...');
-    registerCommandAndAction(container);
+    try {
+      registerCommandAndAction(container);
+    } catch (error) {
+      const errorMessage = `Failed to register command and action: ${error.message}`;
+      if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
+      throw new Error(errorMessage);
+    }
 
     if (logger)
       logger.debug('[BaseContainerConfig] Registering interpreters...');
-    registerInterpreters(container);
+    try {
+      registerInterpreters(container);
+    } catch (error) {
+      const errorMessage = `Failed to register interpreters: ${error.message}`;
+      if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
+      throw new Error(errorMessage);
+    }
 
     // --- Conditionally register game-specific services ---
     if (includeGameSystems) {
@@ -124,7 +174,16 @@ export async function configureBaseContainer(container, options = {}) {
     registerEventBusAdapters(container);
 
     // Register action categorization services
-    registerActionCategorization(container);
+    if (logger) logger.debug('[BaseContainerConfig] Registering action categorization services...');
+    try {
+      registerActionCategorization(container);
+    } catch (error) {
+      const errorMessage = `Failed to register action categorization services: ${error.message}`;
+      if (logger) {
+        logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
+      }
+      throw new Error(errorMessage);
+    }
 
     // --- Conditionally register UI ---
     if (includeUI && uiElements) {

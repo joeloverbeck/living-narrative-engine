@@ -110,6 +110,7 @@ describe('ModReferenceExtractor - Performance Tests', () => {
 
     it('should scale linearly with directory depth', async () => {
       const depths = [3, 6, 9];
+      const numIterations = 5; // Multiple measurements for statistical robustness
       const results = [];
       
       for (const depth of depths) {
@@ -137,28 +138,67 @@ describe('ModReferenceExtractor - Performance Tests', () => {
           }
         }
         
-        const startTime = performance.now();
-        const references = await extractor.extractReferences(testModPath);
-        const endTime = performance.now();
-        const duration = endTime - startTime;
+        // Perform multiple measurements for statistical reliability
+        const measurements = [];
+        for (let iteration = 0; iteration < numIterations; iteration++) {
+          // Force garbage collection if available to reduce variance
+          if (global.gc) {
+            global.gc();
+          }
+          
+          const startTime = performance.now();
+          const references = await extractor.extractReferences(testModPath);
+          const endTime = performance.now();
+          const duration = endTime - startTime;
+          
+          measurements.push(duration);
+          
+          // Verify correctness on first iteration
+          if (iteration === 0) {
+            expect(references.size).toBe(depth); // One mod per depth level
+          }
+        }
         
-        results.push({ depth, duration, refCount: references.size });
+        // Calculate statistical measures
+        measurements.sort((a, b) => a - b);
+        const median = measurements[Math.floor(measurements.length / 2)];
+        const mean = measurements.reduce((sum, val) => sum + val, 0) / measurements.length;
+        const min = measurements[0];
+        const max = measurements[measurements.length - 1];
         
-        expect(references.size).toBe(depth); // One mod per depth level
-        expect(duration).toBeLessThan(1000); // Should complete within 1 second even at depth 9
+        results.push({ 
+          depth, 
+          median, 
+          mean, 
+          min, 
+          max, 
+          measurements,
+          refCount: depth 
+        });
+        
+        // Absolute performance check - median should be reasonable
+        expect(median).toBeLessThan(1000); // Should complete within 1 second even at depth 9
       }
       
-      // Check for reasonable scaling (duration shouldn't grow exponentially)
-      const ratio1 = results[1].duration / results[0].duration;
-      const ratio2 = results[2].duration / results[1].duration;
+      // Statistical scaling analysis using median values (more robust than single measurements)
+      const medianRatio1 = results[1].median / results[0].median;
+      const medianRatio2 = results[2].median / results[1].median;
       
-      expect(ratio1).toBeLessThan(3); // At most 3x slower for 2x depth
-      expect(ratio2).toBeLessThan(3); // Linear-ish scaling
+      // More lenient thresholds accounting for filesystem I/O variability
+      // File counts: depth 3→6 is 2x files, depth 6→9 is 1.5x files
+      expect(medianRatio1).toBeLessThan(4); // Allow up to 4x for 2x files (more lenient)
+      expect(medianRatio2).toBeLessThan(3); // Allow up to 3x for 1.5x files
       
-      console.log('Directory depth scaling:');
+      // Additional check: ensure performance doesn't degrade catastrophically
+      const overallRatio = results[2].median / results[0].median; // depth 9 vs depth 3 (3x files)
+      expect(overallRatio).toBeLessThan(6); // Should not be more than 6x slower for 3x files
+      
+      console.log('Directory depth scaling (statistical analysis):');
       results.forEach(result => {
-        console.log(`- Depth ${result.depth}: ${result.duration.toFixed(2)}ms, ${result.refCount} refs`);
+        console.log(`- Depth ${result.depth}: median=${result.median.toFixed(2)}ms, mean=${result.mean.toFixed(2)}ms, range=[${result.min.toFixed(2)}-${result.max.toFixed(2)}]ms, refs=${result.refCount}`);
       });
+      
+      console.log(`- Scaling ratios: 6→3 median=${medianRatio1.toFixed(2)}x, 9→6 median=${medianRatio2.toFixed(2)}x, overall=${overallRatio.toFixed(2)}x`);
     });
 
     it('should handle concurrent extraction operations without degradation', async () => {

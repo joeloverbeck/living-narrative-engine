@@ -64,7 +64,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
   let visualizerStateController;
   let visualizationComposer;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Set up JSDOM for DOM operations
     dom = new JSDOM(`
       <!DOCTYPE html>
@@ -96,7 +96,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
 
     // Create and configure real container
     container = new AppContainer();
-    configureMinimalContainer(container);
+    await configureMinimalContainer(container);
 
     // Resolve real services
     logger = container.resolve(tokens.ILogger);

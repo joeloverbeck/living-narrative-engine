@@ -13,7 +13,7 @@ import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 describe('System Integration Regression', () => {
   let container;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Create container with action categorization support
     container = new AppContainer();
     const registrar = new Registrar(container);
@@ -36,7 +36,7 @@ describe('System Integration Regression', () => {
     );
 
     // Configure base container which includes action categorization
-    configureBaseContainer(container, {
+    await configureBaseContainer(container, {
       includeGameSystems: false, // Minimal setup for testing
       includeUI: false,
       includeCharacterBuilder: false,

@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:critical_log_panel_expanded",
+  "description": "Dispatched when the critical log notifier panel is expanded to show detailed log entries.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "logCount": {
+        "type": "number",
+        "description": "The number of log entries currently visible in the expanded panel."
+      }
+    },
+    "required": ["logCount"],
+    "additionalProperties": false
+  }
+}

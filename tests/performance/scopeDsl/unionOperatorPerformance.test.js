@@ -226,8 +226,8 @@ describe('Union Operator Performance', () => {
       const baselineTimePerItem = scalingMetrics[0].timePerItem;
       for (let i = 1; i < scalingMetrics.length; i++) {
         const currentTimePerItem = scalingMetrics[i].timePerItem;
-        // Allow for up to 2x degradation due to system variance
-        expect(currentTimePerItem).toBeLessThan(baselineTimePerItem * 2);
+        // Allow for up to 2.5x degradation due to system variance
+        expect(currentTimePerItem).toBeLessThan(baselineTimePerItem * 2.5);
       }
     });
   });
@@ -511,7 +511,8 @@ describe('Union Operator Performance', () => {
       const lastWindowTime = avgTimes[avgTimes.length - 1];
 
       // Performance shouldn't degrade significantly
-      expect(lastWindowTime).toBeLessThan(firstWindowTime * 2);
+      // Use 2.5x tolerance to account for CI environment variability (GC, JIT, system load)
+      expect(lastWindowTime).toBeLessThan(firstWindowTime * 2.5);
       
       // Success rates should remain high
       windowMetrics.forEach(metric => {

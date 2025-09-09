@@ -16,7 +16,7 @@ describe('Action Categorization Performance Regression', () => {
   let service;
   let promptProvider;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Create container with action categorization support
     container = new AppContainer();
     const registrar = new Registrar(container);
@@ -39,7 +39,7 @@ describe('Action Categorization Performance Regression', () => {
     );
 
     // Configure base container which includes action categorization
-    configureBaseContainer(container, {
+    await configureBaseContainer(container, {
       includeGameSystems: false, // Minimal setup for testing
       includeUI: false,
       includeCharacterBuilder: false,

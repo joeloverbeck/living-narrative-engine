@@ -468,11 +468,9 @@ describe('CriticalLogNotifier', () => {
       await notifier.exportLogs('json');
       
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:export_notification',
         expect.objectContaining({
-          type: 'EXPORT_NOTIFICATION',
-          payload: expect.objectContaining({
-            type: 'success',
-          }),
+          type: 'success',
         })
       );
     });
@@ -481,8 +479,9 @@ describe('CriticalLogNotifier', () => {
       await notifier.exportLogs('csv');
       
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:export_notification',
         expect.objectContaining({
-          type: 'EXPORT_NOTIFICATION',
+          type: 'success',
         })
       );
     });

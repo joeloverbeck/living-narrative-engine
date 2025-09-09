@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:critical_notifications_dismissed",
+  "description": "Dispatched when the user dismisses critical log notifications, temporarily hiding the notifier badge.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

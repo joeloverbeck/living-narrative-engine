@@ -14,7 +14,7 @@ describe('Cross-Component Integration', () => {
   let container;
   let categorizationService;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     container = new AppContainer();
     const registrar = new Registrar(container);
 
@@ -36,7 +36,7 @@ describe('Cross-Component Integration', () => {
     );
 
     // Configure base container which includes action categorization
-    configureBaseContainer(container, {
+    await configureBaseContainer(container, {
       includeGameSystems: false,
       includeUI: false,
       includeCharacterBuilder: false,
