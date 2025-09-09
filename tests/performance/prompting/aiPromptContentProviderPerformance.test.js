@@ -23,7 +23,7 @@ describe('AIPromptContentProvider Performance', () => {
   let promptContentProvider;
   let mockLogger;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     container = new AppContainer();
     const registrar = new Registrar(container);
 
@@ -52,13 +52,15 @@ describe('AIPromptContentProvider Performance', () => {
     );
 
     // Configure base container which includes action categorization
-    configureBaseContainer(container, {
+    // MUST be called BEFORE resolving IActionCategorizationService
+    await configureBaseContainer(container, {
       includeGameSystems: false, // Minimal setup for testing
       includeUI: false,
       includeCharacterBuilder: false,
     });
 
     // Create provider with all dependencies
+    // Now IActionCategorizationService is available after configureBaseContainer
     promptContentProvider = new AIPromptContentProvider({
       logger: mockLogger,
       promptStaticContentService: {

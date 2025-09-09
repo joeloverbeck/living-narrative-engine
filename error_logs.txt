@@ -1,1 +1,21 @@
-
+consoleLogger.js:163 GameDataRepository: getEventDefinition called with invalid ID: [object Object]
+warn @ consoleLogger.js:163
+warn @ loggerStrategy.js:647
+__privateGet.warn @ criticalLogNotifier.js:1428
+getDef_fn @ gameDataRepository.js:45
+getEventDefinition @ gameDataRepository.js:211
+validatePayload_fn @ validatedEventDispatcher.js:84
+dispatch @ validatedEventDispatcher.js:290
+handleExpand_fn @ criticalLogNotifier.js:1080
+handleToggle_fn @ criticalLogNotifier.js:1058
+(anonymous) @ criticalLogNotifier.js:422Understand this warning
+consoleLogger.js:163 VED: EventDefinition not found for '[object Object]'. Cannot validate payload. Proceeding with dispatch.
+warn @ consoleLogger.js:163
+warn @ loggerStrategy.js:647
+__privateGet.warn @ criticalLogNotifier.js:1428
+validatePayload_fn @ validatedEventDispatcher.js:94
+dispatch @ validatedEventDispatcher.js:290
+handleExpand_fn @ criticalLogNotifier.js:1080
+handleToggle_fn @ criticalLogNotifier.js:1058
+(anonymous) @ criticalLogNotifier.js:422Understand this warning
+consoleLogger.js:175 EventBus: Invalid event name provided. {type: 'CRITICAL_LOG_PANEL_EXPANDED', payload: {…}}

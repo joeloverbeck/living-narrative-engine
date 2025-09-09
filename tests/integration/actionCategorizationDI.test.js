@@ -20,7 +20,7 @@ import ConsoleLogger, { LogLevel } from '../../src/logging/consoleLogger.js';
 describe('Action Categorization Dependency Injection Integration', () => {
   let container;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     container = new AppContainer();
     const registrar = new Registrar(container);
 
@@ -42,7 +42,7 @@ describe('Action Categorization Dependency Injection Integration', () => {
     );
 
     // Configure base container which includes action categorization
-    configureBaseContainer(container, {
+    await configureBaseContainer(container, {
       includeGameSystems: false, // Minimal setup for testing
       includeUI: false,
       includeCharacterBuilder: false,

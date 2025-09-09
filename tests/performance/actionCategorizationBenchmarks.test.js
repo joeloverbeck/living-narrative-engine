@@ -13,6 +13,7 @@ import {
 } from '@jest/globals';
 import AppContainer from '../../src/dependencyInjection/appContainer.js';
 import { configureBaseContainer } from '../../src/dependencyInjection/baseContainerConfig.js';
+import { UI_CATEGORIZATION_CONFIG } from '../../src/entities/utils/actionCategorizationConfig.js';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
 import { Registrar } from '../../src/utils/registrarHelpers.js';
 import ConsoleLogger, { LogLevel } from '../../src/logging/consoleLogger.js';
@@ -30,7 +31,7 @@ describe('Action Categorization Performance Benchmarks', () => {
   let dom;
   let documentContext;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Set up JSDOM for UI testing
     dom = new JSDOM(`
       <!DOCTYPE html>
@@ -65,14 +66,16 @@ describe('Action Categorization Performance Benchmarks', () => {
     );
 
     // Configure base container which includes action categorization
-    configureBaseContainer(container, {
+    await configureBaseContainer(container, {
       includeGameSystems: false, // Minimal setup for testing
       includeUI: false,
       includeCharacterBuilder: false,
     });
 
+    // Resolve the service from container - this will have UI_CATEGORIZATION_CONFIG
     service = container.resolve(tokens.IActionCategorizationService);
 
+    // Use the service from container which has the correct UI configuration
     promptProvider = new AIPromptContentProvider({
       logger: appLogger,
       promptStaticContentService: {
@@ -83,11 +86,12 @@ describe('Action Categorization Performance Benchmarks', () => {
       },
       perceptionLogFormatter: { format: () => 'Log' },
       gameStateValidationService: { validate: () => ({ isValid: true }) },
-      actionCategorizationService: service,
+      actionCategorizationService: service, // This now has UI_CATEGORIZATION_CONFIG
     });
 
     const domElementFactory = new DomElementFactory(documentContext);
 
+    // Use the service from container which has the correct UI configuration
     uiRenderer = new ActionButtonsRenderer({
       logger: appLogger,
       documentContext: documentContext,
@@ -98,7 +102,7 @@ describe('Action Categorization Performance Benchmarks', () => {
       },
       domElementFactory: domElementFactory,
       actionButtonsContainerSelector: '#actions-container',
-      actionCategorizationService: service,
+      actionCategorizationService: service, // This now has UI_CATEGORIZATION_CONFIG
     });
   });
 
@@ -174,14 +178,8 @@ describe('Action Categorization Performance Benchmarks', () => {
         },
       ];
 
-      const config = {
-        enabled: true,
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-        namespaceOrder: ['namespace0', 'namespace1', 'namespace2'],
-        showCounts: false,
-      };
-
+      // Note: The service uses UI_CATEGORIZATION_CONFIG internally
+      // which has showCounts: true and the same thresholds
       const iterations = 1000;
 
       testDataSets.forEach((dataset) => {
@@ -232,20 +230,7 @@ describe('Action Categorization Performance Benchmarks', () => {
         },
       ];
 
-      const config = {
-        enabled: true,
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-        namespaceOrder: [
-          'namespace0',
-          'namespace1',
-          'namespace2',
-          'namespace3',
-          'namespace4',
-        ],
-        showCounts: false,
-      };
-
+      // Note: The service uses UI_CATEGORIZATION_CONFIG internally
       const iterations = 100;
 
       testDataSets.forEach((dataset) => {
@@ -292,16 +277,7 @@ describe('Action Categorization Performance Benchmarks', () => {
         },
       ];
 
-      const config = {
-        namespaceOrder: [
-          'namespace0',
-          'namespace1',
-          'namespace2',
-          'namespace3',
-          'namespace4',
-        ],
-      };
-
+      // Note: The service uses UI_CATEGORIZATION_CONFIG internally
       const iterations = 1000;
 
       testCases.forEach((testCase) => {
@@ -501,14 +477,7 @@ describe('Action Categorization Performance Benchmarks', () => {
         description: `Description ${i}`,
       }));
 
-      const config = {
-        enabled: true,
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-        namespaceOrder: ['namespace0', 'namespace1', 'namespace2'],
-        showCounts: false,
-      };
-
+      // Note: The service uses UI_CATEGORIZATION_CONFIG internally
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
@@ -556,14 +525,7 @@ describe('Action Categorization Performance Benchmarks', () => {
       const beforeMemory = process.memoryUsage().heapUsed;
 
       // Process large dataset
-      const config = {
-        enabled: true,
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-        namespaceOrder: ['namespace0', 'namespace1', 'namespace2'],
-        showCounts: false,
-      };
-
+      // Note: The service uses UI_CATEGORIZATION_CONFIG internally
       const grouped = service.groupActionsByNamespace(largeActions);
       const gameState = { availableActions: largeActions };
       const prompt = promptProvider.getAvailableActionsInfoContent(gameState);
@@ -590,14 +552,7 @@ describe('Action Categorization Performance Benchmarks', () => {
         description: `Description ${i}`,
       }));
 
-      const config = {
-        enabled: true,
-        minActionsForGrouping: 6,
-        minNamespacesForGrouping: 2,
-        namespaceOrder: ['namespace0', 'namespace1', 'namespace2'],
-        showCounts: false,
-      };
-
+      // Note: The service uses UI_CATEGORIZATION_CONFIG internally
       const concurrentOperations = 100;
       const operations = [];
 

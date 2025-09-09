@@ -365,6 +365,15 @@ describe('Build System Performance', () => {
       'should produce valid build output with reasonable bundle sizes',
       async () => {
         const result = await executeBuildWithRetries('build:prod');
+        
+        // Add more detailed logging
+        console.log('Build result:', {
+          actualSuccess: result.actualSuccess,
+          isDevValidationFailure: result.isDevValidationFailure,
+          stdout: result.stdout?.substring(0, 500),
+          stderr: result.stderr?.substring(0, 500)
+        });
+        
         expect(result.actualSuccess || result.isDevValidationFailure).toBe(
           true
         );
@@ -376,15 +385,20 @@ describe('Build System Performance', () => {
         }
 
         // Check that dist directory exists and has content
-        expect(await fs.pathExists(distDir)).toBe(true);
+        const distExists = await fs.pathExists(distDir);
+        console.log(`Dist directory exists: ${distExists}`);
+        expect(distExists).toBe(true);
 
         const distContents = await fs.readdir(distDir);
+        console.log(`Total files in dist: ${distContents.length}`);
         expect(distContents.length).toBeGreaterThan(0);
 
         console.log(`Build output files: ${distContents.join(', ')}`);
 
         // Check for JavaScript bundle files (flexible list since config may change)
         const jsBundles = distContents.filter((file) => file.endsWith('.js'));
+        console.log(`JavaScript bundles found: ${jsBundles.length}`);
+        console.log(`JS files: ${jsBundles.join(', ')}`);
         expect(jsBundles.length).toBeGreaterThan(0);
 
         let totalSize = 0;

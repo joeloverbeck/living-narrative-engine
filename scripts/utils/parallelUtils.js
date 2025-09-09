@@ -12,31 +12,25 @@
  */
 async function parallelLimit(tasks, concurrency) {
   const results = [];
-  const executing = [];
-
+  const executing = new Set();
+  
   for (const [index, task] of tasks.entries()) {
-    const promise = Promise.resolve()
-      .then(() => task())
-      .then(
-        (value) => {
-          results[index] = { status: 'fulfilled', value };
-        },
-        (reason) => {
-          results[index] = { status: 'rejected', reason };
-        }
-      );
-
-    executing.push(promise);
-
-    if (executing.length >= concurrency) {
+    const promise = (async () => {
+      try {
+        const value = await task();
+        results[index] = { status: 'fulfilled', value };
+      } catch (reason) {
+        results[index] = { status: 'rejected', reason };
+      }
+    })().finally(() => executing.delete(promise));
+    
+    executing.add(promise);
+    
+    if (executing.size >= concurrency) {
       await Promise.race(executing);
-      executing.splice(
-        executing.findIndex((p) => p === promise),
-        1
-      );
     }
   }
-
+  
   await Promise.all(executing);
   return results;
 }

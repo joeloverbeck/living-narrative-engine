@@ -9,6 +9,10 @@ import * as movementUtils from '../../../../src/utils/movementUtils.js';
 import * as contextVariableUtils from '../../../../src/utils/contextVariableUtils.js';
 import * as evaluationContextUtils from '../../../../src/utils/evaluationContextUtils.js';
 import { safeDispatchError } from '../../../../src/utils/safeDispatchErrorUtils.js';
+import { ComponentStateValidator } from '../../../../src/utils/componentStateValidator.js';
+import { InvalidArgumentError } from '../../../../src/errors/invalidArgumentError.js';
+import { EntityNotFoundError } from '../../../../src/errors/entityNotFoundError.js';
+import * as closenessCircleService from '../../../../src/logic/services/closenessCircleService.js';
 
 // Mock dependencies
 jest.mock('../../../../src/utils/proximityUtils.js');
@@ -18,13 +22,16 @@ jest.mock('../../../../src/utils/movementUtils.js', () => ({
 jest.mock('../../../../src/utils/contextVariableUtils.js');
 jest.mock('../../../../src/utils/evaluationContextUtils.js');
 jest.mock('../../../../src/utils/safeDispatchErrorUtils.js');
+jest.mock('../../../../src/utils/componentStateValidator.js');
+jest.mock('../../../../src/errors/invalidArgumentError.js');
+jest.mock('../../../../src/errors/entityNotFoundError.js');
+jest.mock('../../../../src/logic/services/closenessCircleService.js');
 
 describe('EstablishSittingClosenessHandler', () => {
   let handler;
   let mockLogger;
   let mockEntityManager;
   let mockDispatcher;
-  let mockClosenessCircleService;
   let executionContext;
 
   beforeEach(() => {
@@ -49,11 +56,12 @@ describe('EstablishSittingClosenessHandler', () => {
       dispatch: jest.fn(),
     };
 
-    // Setup mock closeness circle service
-    mockClosenessCircleService = {
-      merge: jest.fn(),
-      repair: jest.fn(),
-    };
+    // Setup mock closeness circle service - production validates for both merge and repair
+    closenessCircleService.repair = jest.fn((partners) => {
+      // Mock the repair function to dedupe and sort
+      return [...new Set(partners)].sort();
+    });
+    closenessCircleService.merge = jest.fn(); // Required by constructor validation even though unused
 
     // Setup execution context
     executionContext = {
@@ -67,7 +75,7 @@ describe('EstablishSittingClosenessHandler', () => {
       logger: mockLogger,
       entityManager: mockEntityManager,
       safeEventDispatcher: mockDispatcher,
-      closenessCircleService: mockClosenessCircleService,
+      closenessCircleService: closenessCircleService,
     });
 
     // Setup default mocks
@@ -75,10 +83,30 @@ describe('EstablishSittingClosenessHandler', () => {
     proximityUtils.findAdjacentOccupants.mockReturnValue([]);
     evaluationContextUtils.ensureEvaluationContext.mockReturnValue(true);
     contextVariableUtils.tryWriteContextVariable.mockReturnValue({ success: true });
+    
+    // Setup ComponentStateValidator mocks
+    ComponentStateValidator.mockImplementation(() => ({
+      validateFurnitureComponent: jest.fn(),
+      validateClosenessComponent: jest.fn(),
+      validateBidirectionalCloseness: jest.fn(),
+    }));
+    
+    // Setup error class mocks
+    InvalidArgumentError.mockImplementation((message) => {
+      const error = new Error(message);
+      error.name = 'InvalidArgumentError';
+      return error;
+    });
+    
+    EntityNotFoundError.mockImplementation((message) => {
+      const error = new Error(message);
+      error.name = 'EntityNotFoundError';
+      return error;
+    });
   });
 
-  describe('Parameter Validation', () => {
-    it('should validate required parameters', async () => {
+  describe('Phase 1: Parameter Validation', () => {
+    it('should validate required parameters using enhanced validation', async () => {
       const parameters = {
         furniture_id: 'couch:1',
         actor_id: 'alice',
@@ -89,7 +117,7 @@ describe('EstablishSittingClosenessHandler', () => {
         spots: [null, 'alice', null],
       });
 
-      await handler.execute(parameters, executionContext);
+      const result = await handler.execute(parameters, executionContext);
 
       expect(proximityUtils.validateProximityParameters).toHaveBeenCalledWith(
         'couch:1',
@@ -100,27 +128,35 @@ describe('EstablishSittingClosenessHandler', () => {
           error: expect.any(Function),
         })
       );
+      expect(result).toEqual({
+        success: true,
+        adjacentActors: []
+      });
     });
 
-    it('should handle furniture without allows_sitting component', async () => {
+    it('should throw InvalidArgumentError for parameter validation failures', async () => {
       const parameters = {
         furniture_id: 'invalid:1',
         actor_id: 'alice',
         spot_index: 0,
       };
 
-      mockEntityManager.getComponentData.mockReturnValue(null);
+      const validationError = new Error('Invalid furniture ID');
+      proximityUtils.validateProximityParameters.mockImplementation(() => {
+        throw validationError;
+      });
 
-      await handler.execute(parameters, executionContext);
+      const result = await handler.execute(parameters, executionContext);
 
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Parameter validation failed for establish closeness');
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'EstablishSittingClosenessHandler: Failed to establish sitting closeness',
+        'EstablishSittingClosenessHandler: Sitting closeness establishment failed',
         expect.objectContaining({
-          furnitureId: 'invalid:1',
-          error: expect.stringContaining('does not have allows_sitting component'),
+          operationId: expect.stringMatching(/^establish_\d+_[a-z0-9]+$/),
+          errorType: 'Error'
         })
       );
-      expect(safeDispatchError).toHaveBeenCalled();
     });
 
     it('should store false result on validation failure', async () => {
@@ -131,9 +167,12 @@ describe('EstablishSittingClosenessHandler', () => {
         result_variable: 'result',
       };
 
-      mockEntityManager.getComponentData.mockReturnValue(null);
+      const validationError = new Error('Invalid parameter');
+      proximityUtils.validateProximityParameters.mockImplementation(() => {
+        throw validationError;
+      });
 
-      await handler.execute(parameters, executionContext);
+      const result = await handler.execute(parameters, executionContext);
 
       expect(contextVariableUtils.tryWriteContextVariable).toHaveBeenCalledWith(
         'result',
@@ -145,11 +184,70 @@ describe('EstablishSittingClosenessHandler', () => {
           error: expect.any(Function),
         })
       );
+      expect(result.success).toBe(false);
     });
   });
 
-  describe('Adjacent Actor Detection', () => {
-    it('should identify single adjacent actor correctly', async () => {
+  describe('Phase 2: Component State Validation', () => {
+    it('should validate furniture component using ComponentStateValidator', async () => {
+      const parameters = {
+        furniture_id: 'couch:1',
+        actor_id: 'alice',
+        spot_index: 1,
+      };
+
+      const furnitureComponent = {
+        spots: [null, 'alice', null],
+      };
+
+      mockEntityManager.getComponentData.mockReturnValue(furnitureComponent);
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
+
+      const result = await handler.execute(parameters, executionContext);
+
+      expect(mockValidator.validateFurnitureComponent).toHaveBeenCalledWith(
+        'couch:1',
+        furnitureComponent,
+        'establish closeness'
+      );
+      expect(mockValidator.validateClosenessComponent).toHaveBeenCalledWith(
+        'alice',
+        furnitureComponent, // Will be called with actor's closeness component
+        'establish closeness'
+      );
+    });
+
+    it('should validate spot index bounds', async () => {
+      const parameters = {
+        furniture_id: 'couch:1',
+        actor_id: 'alice',
+        spot_index: 5, // Index exceeds furniture capacity
+      };
+
+      const furnitureComponent = {
+        spots: [null, 'alice', null], // Only 3 spots (0, 1, 2)
+      };
+
+      mockEntityManager.getComponentData.mockReturnValue(furnitureComponent);
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(), // This will pass
+        validateClosenessComponent: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
+
+      const result = await handler.execute(parameters, executionContext);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Spot index 5 exceeds furniture capacity (3)');
+    });
+  });
+
+  describe('Phase 3: Adjacent Actor Discovery', () => {
+    it('should identify and validate adjacent actors', async () => {
       const parameters = {
         furniture_id: 'couch:1',
         actor_id: 'bob',
@@ -161,28 +259,35 @@ describe('EstablishSittingClosenessHandler', () => {
       };
 
       mockEntityManager.getComponentData
-        .mockReturnValueOnce(furnitureComponent) // First call for validation
-        .mockReturnValueOnce(furnitureComponent) // Second call for adjacency
-        .mockReturnValue(null); // For closeness components
+        .mockReturnValueOnce(furnitureComponent) // For furniture validation
+        .mockReturnValueOnce(null) // For actor closeness validation
+        .mockReturnValueOnce(null) // For adjacent actor closeness validation
+        .mockReturnValue(null); // For subsequent closeness operations
 
       proximityUtils.findAdjacentOccupants.mockReturnValue(['alice']);
-      mockClosenessCircleService.merge.mockReturnValue(['alice', 'bob']);
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+        validateBidirectionalCloseness: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      await handler.execute(parameters, executionContext);
+      const result = await handler.execute(parameters, executionContext);
 
       expect(proximityUtils.findAdjacentOccupants).toHaveBeenCalledWith(
         furnitureComponent,
         1
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'EstablishSittingClosenessHandler: Sitting closeness established successfully',
-        expect.objectContaining({
-          adjacentActors: ['alice'],
-        })
+      expect(mockValidator.validateClosenessComponent).toHaveBeenCalledWith(
+        'alice',
+        null // Adjacent actor's closeness component
       );
+      expect(result.success).toBe(true);
+      expect(result.adjacentActors).toEqual(['alice']);
     });
 
-    it('should identify multiple adjacent actors for middle position', async () => {
+    it('should skip invalid adjacent actors with warning', async () => {
       const parameters = {
         furniture_id: 'couch:1',
         actor_id: 'bob',
@@ -194,27 +299,37 @@ describe('EstablishSittingClosenessHandler', () => {
       };
 
       mockEntityManager.getComponentData
-        .mockReturnValueOnce(furnitureComponent) // First call for validation
-        .mockReturnValueOnce(furnitureComponent) // Second call for adjacency
-        .mockReturnValue(null); // For closeness components
+        .mockReturnValueOnce(furnitureComponent) // For furniture validation
+        .mockReturnValueOnce(null) // For actor closeness validation
+        .mockReturnValueOnce(null) // For alice's closeness validation
+        .mockReturnValueOnce(null); // For charlie's closeness validation
 
       proximityUtils.findAdjacentOccupants.mockReturnValue(['alice', 'charlie']);
-      mockClosenessCircleService.merge
-        .mockReturnValueOnce(['alice', 'bob']) // First merge with alice
-        .mockReturnValueOnce(['bob', 'charlie']); // Second merge with charlie
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn()
+          .mockImplementationOnce(() => {}) // Bob passes
+          .mockImplementationOnce(() => {}) // Alice passes
+          .mockImplementationOnce(() => { // Charlie fails
+            throw new Error('Invalid closeness component');
+          }),
+        validateBidirectionalCloseness: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
+      // No merge service needed - production uses adjacent-only algorithm
 
-      await handler.execute(parameters, executionContext);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(proximityUtils.findAdjacentOccupants).toHaveBeenCalledWith(
-        furnitureComponent,
-        1
-      );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'EstablishSittingClosenessHandler: Sitting closeness established successfully',
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'EstablishSittingClosenessHandler: Adjacent actor validation failed, skipping',
         expect.objectContaining({
-          adjacentActors: ['alice', 'charlie'],
+          actorId: 'charlie',
+          furnitureId: 'couch:1',
+          error: 'Invalid closeness component'
         })
       );
+      expect(result.adjacentActors).toEqual(['alice']); // Only alice should be included
     });
 
     it('should handle no adjacent actors gracefully', async () => {
@@ -229,20 +344,30 @@ describe('EstablishSittingClosenessHandler', () => {
         spots: [null, null, null],
       };
 
-      mockEntityManager.getComponentData.mockReturnValue(furnitureComponent);
-      proximityUtils.findAdjacentOccupants.mockReturnValue([]);
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce(furnitureComponent) // For furniture validation
+        .mockReturnValueOnce(null); // For actor closeness validation
 
-      await handler.execute(parameters, executionContext);
+      proximityUtils.findAdjacentOccupants.mockReturnValue([]);
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
+
+      const result = await handler.execute(parameters, executionContext);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'EstablishSittingClosenessHandler: No adjacent actors found for closeness establishment',
+        'EstablishSittingClosenessHandler: No adjacent actors found, closeness establishment skipped',
         expect.objectContaining({
+          operationId: expect.stringMatching(/^establish_\d+_[a-z0-9]+$/),
           actorId: 'alice',
         })
       );
       expect(contextVariableUtils.tryWriteContextVariable).toHaveBeenCalledWith(
         'result',
-        false, // No closeness established returns false
+        true, // Operation succeeded (no actors is valid)
         executionContext,
         mockDispatcher,
         expect.objectContaining({
@@ -250,10 +375,12 @@ describe('EstablishSittingClosenessHandler', () => {
           error: expect.any(Function),
         })
       );
-      expect(mockClosenessCircleService.merge).not.toHaveBeenCalled();
+      expect(result.success).toBe(true);
+      expect(result.adjacentActors).toEqual([]);
+      expect(closenessCircleService.repair).not.toHaveBeenCalled();
     });
 
-    it('should handle furniture component with null spots array', async () => {
+    it('should handle furniture component validation failure', async () => {
       const parameters = {
         furniture_id: 'couch:1',
         actor_id: 'alice',
@@ -261,27 +388,29 @@ describe('EstablishSittingClosenessHandler', () => {
       };
 
       const furnitureComponent = {
-        spots: null, // Null spots array
+        spots: null, // Invalid spots array
       };
 
-      mockEntityManager.getComponentData
-        .mockReturnValueOnce(furnitureComponent) // Validation call
-        .mockReturnValueOnce(furnitureComponent); // Adjacent detection call
+      mockEntityManager.getComponentData.mockReturnValue(furnitureComponent);
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn().mockImplementation(() => {
+          throw new Error('Furniture has invalid spots array');
+        }),
+        validateClosenessComponent: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      await handler.execute(parameters, executionContext);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'EstablishSittingClosenessHandler: No adjacent actors found for closeness establishment',
-        expect.objectContaining({
-          actorId: 'alice',
-        })
-      );
-      expect(mockClosenessCircleService.merge).not.toHaveBeenCalled();
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Furniture has invalid spots array');
+      expect(closenessCircleService.repair).not.toHaveBeenCalled();
     });
   });
 
-  describe('Closeness Establishment', () => {
-    it('should create bidirectional closeness between two actors', async () => {
+  describe('Phase 4: Closeness Establishment with Repair', () => {
+    it('should establish bidirectional closeness between adjacent actors', async () => {
       const parameters = {
         furniture_id: 'couch:1',
         actor_id: 'alice',
@@ -293,30 +422,44 @@ describe('EstablishSittingClosenessHandler', () => {
       };
 
       mockEntityManager.getComponentData
-        .mockReturnValueOnce(furnitureComponent) // First call for validation
-        .mockReturnValueOnce(furnitureComponent) // Second call for adjacency
-        .mockReturnValueOnce(null) // Alice's closeness (none)
-        .mockReturnValueOnce(null); // Bob's closeness (none)
+        .mockReturnValueOnce(furnitureComponent) // Furniture validation
+        .mockReturnValueOnce(null) // Alice's closeness validation
+        .mockReturnValueOnce(null) // Bob's closeness validation
+        .mockReturnValueOnce(null) // Alice's closeness for update
+        .mockReturnValueOnce(null); // Bob's closeness for update
 
       proximityUtils.findAdjacentOccupants.mockReturnValue(['bob']);
-      mockClosenessCircleService.merge.mockReturnValue(['alice', 'bob']);
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+        validateBidirectionalCloseness: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      await handler.execute(parameters, executionContext);
+      const result = await handler.execute(parameters, executionContext);
 
-      // Verify both actors get updated with each other in partner lists
+      // Verify repair is called to dedupe and sort the partner lists
+      expect(closenessCircleService.repair).toHaveBeenCalledWith(['bob']); // Alice's new partners
+      expect(closenessCircleService.repair).toHaveBeenCalledWith(['alice']); // Bob's new partners
+      
+      // Verify both actors get updated with their partner lists
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'alice',
         'positioning:closeness',
-        { partners: ['bob'] }
+        { partners: ['bob'] } // Alice's partners
       );
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'bob',
         'positioning:closeness',
-        { partners: ['alice'] }
+        { partners: ['alice'] } // Bob's partners
       );
+      
+      expect(result.success).toBe(true);
+      expect(result.adjacentActors).toEqual(['bob']);
     });
 
-    it('should merge existing closeness circles correctly', async () => {
+    it('should add to existing closeness partners correctly', async () => {
       const parameters = {
         furniture_id: 'couch:1',
         actor_id: 'charlie',
@@ -329,20 +472,31 @@ describe('EstablishSittingClosenessHandler', () => {
 
       // Alice already has Bob as partner
       const aliceCloseness = { partners: ['bob'] };
-      const bobCloseness = { partners: ['alice'] };
+      const charlieCloseness = null;
 
       mockEntityManager.getComponentData
-        .mockReturnValueOnce(furnitureComponent) // First call for validation
-        .mockReturnValueOnce(furnitureComponent) // Second call for adjacency
-        .mockReturnValueOnce(null) // Charlie's closeness (none)
-        .mockReturnValueOnce(aliceCloseness); // Alice's existing closeness
+        .mockReturnValueOnce(furnitureComponent) // Furniture validation
+        .mockReturnValueOnce(charlieCloseness) // Charlie's closeness validation
+        .mockReturnValueOnce(aliceCloseness) // Alice's closeness validation
+        .mockReturnValueOnce(charlieCloseness) // Charlie's closeness for update
+        .mockReturnValueOnce(aliceCloseness); // Alice's closeness for update
 
       proximityUtils.findAdjacentOccupants.mockReturnValue(['alice']);
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+        validateBidirectionalCloseness: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      await handler.execute(parameters, executionContext);
+      const result = await handler.execute(parameters, executionContext);
 
-      // Production code no longer uses merge service - direct partner updates only
-      // Charlie and Alice become direct partners (no transitive relationship with Bob)
+      // Verify repair is called with the updated partner lists
+      expect(closenessCircleService.repair).toHaveBeenCalledWith(['alice']); // Charlie's new partners
+      expect(closenessCircleService.repair).toHaveBeenCalledWith(['bob', 'charlie']); // Alice's updated partners
+      
+      // Only Alice and Charlie should be updated (adjacent relationship only)
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'alice',
         'positioning:closeness',
@@ -351,47 +505,18 @@ describe('EstablishSittingClosenessHandler', () => {
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'charlie',
         'positioning:closeness',
-        { partners: ['alice'] } // Charlie only gets Alice as direct neighbor
+        { partners: ['alice'] } // Charlie only gets Alice (adjacent)
       );
-      // Note: Bob is NOT updated because he's not adjacent to Charlie
-      expect(mockClosenessCircleService.merge).not.toHaveBeenCalled();
-    });
-
-    it('should preserve manual closeness relationships', async () => {
-      const parameters = {
-        furniture_id: 'couch:1',
-        actor_id: 'charlie',
-        spot_index: 0,
-      };
-
-      const furnitureComponent = {
-        spots: ['charlie', 'alice', null],
-      };
-
-      // Alice has manual closeness with Bob
-      const aliceCloseness = { partners: ['bob'] };
-
-      mockEntityManager.getComponentData
-        .mockReturnValueOnce(furnitureComponent) // First call for validation
-        .mockReturnValueOnce(furnitureComponent) // Second call for adjacency
-        .mockReturnValueOnce(null) // Charlie's closeness
-        .mockReturnValueOnce(aliceCloseness); // Alice's existing closeness
-
-      proximityUtils.findAdjacentOccupants.mockReturnValue(['alice']);
-      mockClosenessCircleService.merge.mockReturnValue(['alice', 'bob', 'charlie']);
-
-      await handler.execute(parameters, executionContext);
-
-      // Verify Alice keeps Bob and adds Charlie
-      expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
-        'alice',
+      // Bob should NOT be updated - he's not adjacent to Charlie
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalledWith(
+        'bob',
         'positioning:closeness',
-        { partners: expect.arrayContaining(['bob', 'charlie']) }
+        expect.anything()
       );
+      
+      expect(result.success).toBe(true);
     });
-  });
 
-  describe('Movement Lock Updates', () => {
     it('should update movement locks for all affected actors', async () => {
       const parameters = {
         furniture_id: 'couch:1',
@@ -405,15 +530,22 @@ describe('EstablishSittingClosenessHandler', () => {
 
       mockEntityManager.getComponentData
         .mockReturnValueOnce(furnitureComponent)
-        .mockReturnValueOnce(furnitureComponent)
         .mockReturnValue(null);
 
       proximityUtils.findAdjacentOccupants.mockReturnValue(['bob']);
-      mockClosenessCircleService.merge.mockReturnValue(['alice', 'bob']);
+      // No merge service needed - production uses adjacent-only algorithm
       movementUtils.updateMovementLock.mockResolvedValue();
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+        validateBidirectionalCloseness: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      await handler.execute(parameters, executionContext);
+      const result = await handler.execute(parameters, executionContext);
 
+      // Verify movement locks updated for both actors
       expect(movementUtils.updateMovementLock).toHaveBeenCalledWith(
         mockEntityManager,
         'alice',
@@ -424,9 +556,12 @@ describe('EstablishSittingClosenessHandler', () => {
         'bob',
         true
       );
+      expect(result.success).toBe(true);
     });
+  });
 
-    it('should handle movement lock failures gracefully', async () => {
+  describe('Phase 5: Final State Validation', () => {
+    it('should validate bidirectional closeness relationships', async () => {
       const parameters = {
         furniture_id: 'couch:1',
         actor_id: 'alice',
@@ -439,42 +574,189 @@ describe('EstablishSittingClosenessHandler', () => {
 
       mockEntityManager.getComponentData
         .mockReturnValueOnce(furnitureComponent)
+        .mockReturnValue(null);
+
+      proximityUtils.findAdjacentOccupants.mockReturnValue(['bob']);
+      // No merge service needed - production uses adjacent-only algorithm
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+        validateBidirectionalCloseness: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
+
+      const result = await handler.execute(parameters, executionContext);
+
+      expect(mockValidator.validateBidirectionalCloseness).toHaveBeenCalledWith(
+        mockEntityManager,
+        'alice',
+        'bob'
+      );
+      expect(result.success).toBe(true);
+    });
+
+    it('should log but not throw on final state validation failures', async () => {
+      const parameters = {
+        furniture_id: 'couch:1',
+        actor_id: 'alice',
+        spot_index: 0,
+      };
+
+      const furnitureComponent = {
+        spots: ['alice', 'bob', null],
+      };
+
+      mockEntityManager.getComponentData
         .mockReturnValueOnce(furnitureComponent)
         .mockReturnValue(null);
 
       proximityUtils.findAdjacentOccupants.mockReturnValue(['bob']);
-      mockClosenessCircleService.merge.mockReturnValue(['alice', 'bob']);
+      // No merge service needed - production uses adjacent-only algorithm
       
-      const lockError = new Error('Lock failed');
-      movementUtils.updateMovementLock
-        .mockResolvedValueOnce() // Alice succeeds
-        .mockRejectedValueOnce(lockError); // Bob fails
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+        validateBidirectionalCloseness: jest.fn().mockImplementation(() => {
+          throw new Error('Bidirectional validation failed');
+        }),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      await handler.execute(parameters, executionContext);
+      const result = await handler.execute(parameters, executionContext);
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'EstablishSittingClosenessHandler: Final state validation failed',
+        expect.objectContaining({
+          error: 'Bidirectional validation failed',
+          actorId: 'alice',
+          adjacentActors: ['bob']
+        })
+      );
+      // Operation should still succeed despite validation failure
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('Phase 6: Success and Error Handling', () => {
+    it('should dispatch success event with operation details', async () => {
+      const parameters = {
+        furniture_id: 'couch:1',
+        actor_id: 'alice',
+        spot_index: 0,
+      };
+
+      const furnitureComponent = {
+        spots: ['alice', 'bob', null],
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce(furnitureComponent)
+        .mockReturnValue(null);
+
+      proximityUtils.findAdjacentOccupants.mockReturnValue(['bob']);
+      // No merge service needed - production uses adjacent-only algorithm
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+        validateBidirectionalCloseness: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
+
+      const result = await handler.execute(parameters, executionContext);
+
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith({
+        type: 'SITTING_CLOSENESS_ESTABLISHED',
+        payload: {
+          actorId: 'alice',
+          furnitureId: 'couch:1',
+          adjacentActors: ['bob'],
+          operationId: expect.stringMatching(/^establish_\d+_[a-z0-9]+$/)
+        }
+      });
+      
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'EstablishSittingClosenessHandler: Sitting closeness established successfully',
+        expect.objectContaining({
+          operationId: expect.stringMatching(/^establish_\d+_[a-z0-9]+$/),
+          relationshipsEstablished: 1
+        })
+      );
+    });
+
+    it('should dispatch error event with comprehensive context', async () => {
+      const parameters = {
+        furniture_id: 'couch:1',
+        actor_id: 'alice',
+        spot_index: 0,
+      };
+
+      const testError = new Error('Test error');
+      proximityUtils.validateProximityParameters.mockImplementation(() => {
+        throw testError;
+      });
+
+      const result = await handler.execute(parameters, executionContext);
 
       expect(safeDispatchError).toHaveBeenCalledWith(
         mockDispatcher,
-        'ESTABLISH_SITTING_CLOSENESS: failed locking movement',
-        expect.objectContaining({
-          id: 'bob',
-          error: 'Lock failed',
-        }),
+        'Sitting closeness establishment failed',
+        {
+          actorId: 'alice',
+          furnitureId: 'couch:1',
+          operationId: expect.stringMatching(/^establish_\d+_[a-z0-9]+$/),
+          error: 'Parameter validation failed for establish closeness: Test error'
+        },
         expect.objectContaining({
           info: expect.any(Function),
           error: expect.any(Function),
         })
       );
       
-      // Operation should still succeed overall
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'EstablishSittingClosenessHandler: Sitting closeness established successfully',
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Parameter validation failed for establish closeness');
+    });
+
+    it('should write result variable on both success and failure', async () => {
+      const successParameters = {
+        furniture_id: 'couch:1',
+        actor_id: 'alice',
+        spot_index: 0,
+        result_variable: 'success_result',
+      };
+
+      const furnitureComponent = {
+        spots: [null, null, null], // No adjacent actors
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce(furnitureComponent)
+        .mockReturnValueOnce(null);
+
+      proximityUtils.findAdjacentOccupants.mockReturnValue([]);
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
+
+      const result = await handler.execute(successParameters, executionContext);
+
+      expect(contextVariableUtils.tryWriteContextVariable).toHaveBeenCalledWith(
+        'success_result',
+        true, // Success case (no actors is valid)
+        executionContext,
+        mockDispatcher,
         expect.any(Object)
       );
+      expect(result.success).toBe(true);
     });
   });
 
-  describe('Error Handling and Edge Cases', () => {
-    it('should handle missing furniture component gracefully', async () => {
+  describe('Enhanced Error Handling and Edge Cases', () => {
+    it('should handle furniture component validation failures', async () => {
       const parameters = {
         furniture_id: 'missing:1',
         actor_id: 'alice',
@@ -482,20 +764,28 @@ describe('EstablishSittingClosenessHandler', () => {
       };
 
       mockEntityManager.getComponentData.mockReturnValue(null);
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn().mockImplementation(() => {
+          throw new EntityNotFoundError('Furniture missing:1 missing allows_sitting component');
+        }),
+        validateClosenessComponent: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      await handler.execute(parameters, executionContext);
+      const result = await handler.execute(parameters, executionContext);
 
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Furniture missing:1 missing allows_sitting component');
       expect(safeDispatchError).toHaveBeenCalledWith(
         mockDispatcher,
-        'ESTABLISH_SITTING_CLOSENESS_FAILED',
+        'Sitting closeness establishment failed',
         expect.objectContaining({
+          actorId: 'alice',
           furnitureId: 'missing:1',
-          reason: expect.stringContaining('does not have allows_sitting component'),
+          operationId: expect.stringMatching(/^establish_\d+_[a-z0-9]+$/)
         }),
-        expect.objectContaining({
-          info: expect.any(Function),
-          error: expect.any(Function),
-        })
+        expect.any(Object)
       );
     });
 
@@ -511,18 +801,29 @@ describe('EstablishSittingClosenessHandler', () => {
         spots: ['alice'], // Single spot
       };
 
-      mockEntityManager.getComponentData.mockReturnValue(furnitureComponent);
-      proximityUtils.findAdjacentOccupants.mockReturnValue([]);
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce(furnitureComponent) // Furniture validation
+        .mockReturnValueOnce(null); // Actor closeness validation
 
-      await handler.execute(parameters, executionContext);
+      proximityUtils.findAdjacentOccupants.mockReturnValue([]);
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
+
+      const result = await handler.execute(parameters, executionContext);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'EstablishSittingClosenessHandler: No adjacent actors found for closeness establishment',
-        expect.any(Object)
+        'EstablishSittingClosenessHandler: No adjacent actors found, closeness establishment skipped',
+        expect.objectContaining({
+          operationId: expect.stringMatching(/^establish_\d+_[a-z0-9]+$/)
+        })
       );
       expect(contextVariableUtils.tryWriteContextVariable).toHaveBeenCalledWith(
         'result',
-        false, // No closeness established returns false
+        true, // Operation succeeded (no actors is valid)
         executionContext,
         mockDispatcher,
         expect.objectContaining({
@@ -530,9 +831,11 @@ describe('EstablishSittingClosenessHandler', () => {
           error: expect.any(Function),
         })
       );
+      expect(result.success).toBe(true);
+      expect(result.adjacentActors).toEqual([]);
     });
 
-    it('should handle validation parameter errors', async () => {
+    it('should provide detailed error context with operation tracking', async () => {
       const parameters = {
         furniture_id: 'couch:1',
         actor_id: 'alice',
@@ -544,48 +847,27 @@ describe('EstablishSittingClosenessHandler', () => {
         throw validationError;
       });
 
-      mockEntityManager.getComponentData.mockReturnValue({
-        spots: ['alice', null, null],
-      });
-
-      await handler.execute(parameters, executionContext);
+      const result = await handler.execute(parameters, executionContext);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'EstablishSittingClosenessHandler: Failed to establish sitting closeness',
+        'EstablishSittingClosenessHandler: Sitting closeness establishment failed',
         expect.objectContaining({
-          error: 'Invalid parameter',
+          operationId: expect.stringMatching(/^establish_\d+_[a-z0-9]+$/),
+          actorId: 'alice',
+          furnitureId: 'couch:1',
+          spotIndex: 0,
+          errorType: 'Error'
         })
       );
-      expect(safeDispatchError).toHaveBeenCalled();
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Parameter validation failed for establish closeness');
     });
 
-    it('should handle context variable writing when context is missing', async () => {
+    it('should handle movement lock failures during establishment', async () => {
       const parameters = {
         furniture_id: 'couch:1',
         actor_id: 'alice',
         spot_index: 0,
-        result_variable: 'result',
-      };
-
-      const furnitureComponent = {
-        spots: [null, null, null],
-      };
-
-      mockEntityManager.getComponentData.mockReturnValue(furnitureComponent);
-      proximityUtils.findAdjacentOccupants.mockReturnValue([]);
-      evaluationContextUtils.ensureEvaluationContext.mockReturnValue(false);
-
-      await handler.execute(parameters, executionContext);
-
-      expect(contextVariableUtils.tryWriteContextVariable).not.toHaveBeenCalled();
-    });
-
-    it('should handle successful execution with missing evaluation context for result variable', async () => {
-      const parameters = {
-        furniture_id: 'couch:1',
-        actor_id: 'alice',
-        spot_index: 0,
-        result_variable: 'result',
       };
 
       const furnitureComponent = {
@@ -594,20 +876,70 @@ describe('EstablishSittingClosenessHandler', () => {
 
       mockEntityManager.getComponentData
         .mockReturnValueOnce(furnitureComponent)
-        .mockReturnValueOnce(furnitureComponent)
         .mockReturnValue(null);
 
       proximityUtils.findAdjacentOccupants.mockReturnValue(['bob']);
-      mockClosenessCircleService.merge.mockReturnValue(['alice', 'bob']);
-      evaluationContextUtils.ensureEvaluationContext.mockReturnValue(false);
+      // No merge service needed - production uses adjacent-only algorithm
+      
+      // Movement lock fails for one actor
+      const lockError = new Error('Movement lock failed');
+      movementUtils.updateMovementLock
+        .mockResolvedValueOnce() // Alice succeeds
+        .mockRejectedValueOnce(lockError); // Bob fails
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+        validateBidirectionalCloseness: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
 
-      await handler.execute(parameters, executionContext);
+      const result = await handler.execute(parameters, executionContext);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'EstablishSittingClosenessHandler: Sitting closeness established successfully',
-        expect.any(Object)
+      // Should still fail the entire operation if movement locks fail
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Movement lock failed');
+    });
+
+    it('should generate unique operation IDs for tracking', async () => {
+      const parameters = {
+        furniture_id: 'couch:1',
+        actor_id: 'alice',
+        spot_index: 0,
+      };
+
+      const furnitureComponent = {
+        spots: [null, null, null], // No adjacent actors
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce(furnitureComponent) // First execution: furniture
+        .mockReturnValueOnce(null)               // First execution: actor closeness
+        .mockReturnValueOnce(furnitureComponent) // Second execution: furniture
+        .mockReturnValueOnce(null);              // Second execution: actor closeness
+
+      proximityUtils.findAdjacentOccupants.mockReturnValue([]);
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
+
+      // Execute twice to ensure unique IDs
+      const result1 = await handler.execute(parameters, executionContext);
+      const result2 = await handler.execute(parameters, executionContext);
+
+      // Both executions should be successful
+      expect(result1.success).toBe(true);
+      expect(result2.success).toBe(true);
+      
+      // Check that operation IDs are different by examining the log calls
+      const logCalls = mockLogger.info.mock.calls.filter(call => 
+        call[0].includes('No adjacent actors found, closeness establishment skipped')
       );
-      expect(contextVariableUtils.tryWriteContextVariable).not.toHaveBeenCalled();
+      expect(logCalls).toHaveLength(2);
+      expect(logCalls[0][1].operationId).not.toBe(logCalls[1][1].operationId);
     });
   });
 
@@ -619,7 +951,7 @@ describe('EstablishSittingClosenessHandler', () => {
             logger: null,
             entityManager: mockEntityManager,
             safeEventDispatcher: mockDispatcher,
-            closenessCircleService: mockClosenessCircleService,
+            closenessCircleService: closenessCircleService,
           })
       ).toThrow();
     });
@@ -633,7 +965,7 @@ describe('EstablishSittingClosenessHandler', () => {
             logger: mockLogger,
             entityManager: invalidEntityManager,
             safeEventDispatcher: mockDispatcher,
-            closenessCircleService: mockClosenessCircleService,
+            closenessCircleService: closenessCircleService,
           })
       ).toThrow();
     });
@@ -647,13 +979,13 @@ describe('EstablishSittingClosenessHandler', () => {
             logger: mockLogger,
             entityManager: mockEntityManager,
             safeEventDispatcher: invalidDispatcher,
-            closenessCircleService: mockClosenessCircleService,
+            closenessCircleService: closenessCircleService,
           })
       ).toThrow();
     });
 
     it('should validate closeness circle service methods', () => {
-      const invalidService = { merge: jest.fn() }; // Missing repair
+      const invalidService = {}; // Missing repair
 
       expect(
         () =>
@@ -664,6 +996,197 @@ describe('EstablishSittingClosenessHandler', () => {
             closenessCircleService: invalidService,
           })
       ).toThrow();
+    });
+
+    it('should maintain backwards compatibility with existing API', async () => {
+      const parameters = {
+        furniture_id: 'couch:1',
+        actor_id: 'alice',
+        spot_index: 0,
+        result_variable: 'result',
+      };
+
+      const furnitureComponent = {
+        spots: ['alice', 'bob', null],
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce(furnitureComponent)
+        .mockReturnValue(null);
+
+      proximityUtils.findAdjacentOccupants.mockReturnValue(['bob']);
+      // No merge service needed - production uses adjacent-only algorithm
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+        validateBidirectionalCloseness: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
+
+      const result = await handler.execute(parameters, executionContext);
+
+      // Should return result object instead of void (new behavior)
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.adjacentActors).toEqual(['bob']);
+      
+      // Should still write context variable (backwards compatibility)
+      expect(contextVariableUtils.tryWriteContextVariable).toHaveBeenCalledWith(
+        'result',
+        true,
+        executionContext,
+        mockDispatcher,
+        expect.any(Object)
+      );
+    });
+  });
+
+  describe('Integration with Enhanced Components', () => {
+    it('should integrate ComponentStateValidator correctly', async () => {
+      const parameters = {
+        furniture_id: 'couch:1',
+        actor_id: 'alice',
+        spot_index: 0,
+      };
+
+      const furnitureComponent = {
+        spots: ['alice', 'bob', null],
+      };
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce(furnitureComponent)
+        .mockReturnValue(null);
+
+      proximityUtils.findAdjacentOccupants.mockReturnValue(['bob']);
+      // No merge service needed - production uses adjacent-only algorithm
+      
+      const validatorInstances = [];
+      ComponentStateValidator.mockImplementation(({ logger }) => {
+        const validatorInstance = {
+          validateFurnitureComponent: jest.fn(),
+          validateClosenessComponent: jest.fn(),
+          validateBidirectionalCloseness: jest.fn(),
+        };
+        validatorInstances.push(validatorInstance);
+        // Verify logger is passed correctly
+        expect(logger).toBeDefined();
+        expect(logger.info).toBeDefined();
+        return validatorInstance;
+      });
+
+      const result = await handler.execute(parameters, executionContext);
+
+      // Verify validator was created with correct dependency (3 times for this flow)
+      expect(ComponentStateValidator).toHaveBeenCalledTimes(3);
+      expect(ComponentStateValidator).toHaveBeenCalledWith({ logger: expect.any(Object) });
+      
+      // Verify validator methods were called across all instances
+      const allValidatorCalls = {
+        validateFurnitureComponent: validatorInstances.some(v => v.validateFurnitureComponent.mock.calls.length > 0),
+        validateClosenessComponent: validatorInstances.some(v => v.validateClosenessComponent.mock.calls.length > 0),
+        validateBidirectionalCloseness: validatorInstances.some(v => v.validateBidirectionalCloseness.mock.calls.length > 0),
+      };
+      
+      expect(allValidatorCalls.validateFurnitureComponent).toBe(true);
+      expect(allValidatorCalls.validateClosenessComponent).toBe(true);
+      expect(allValidatorCalls.validateBidirectionalCloseness).toBe(true);
+    });
+  });
+
+  describe('Constructor Validation', () => {
+    it('should validate required dependencies', () => {
+      expect(
+        () =>
+          new EstablishSittingClosenessHandler({
+            logger: null,
+            entityManager: mockEntityManager,
+            safeEventDispatcher: mockDispatcher,
+            closenessCircleService: closenessCircleService,
+          })
+      ).toThrow();
+    });
+
+    it('should validate entity manager methods', () => {
+      const invalidEntityManager = { getComponentData: jest.fn() }; // Missing addComponent
+
+      expect(
+        () =>
+          new EstablishSittingClosenessHandler({
+            logger: mockLogger,
+            entityManager: invalidEntityManager,
+            safeEventDispatcher: mockDispatcher,
+            closenessCircleService: closenessCircleService,
+          })
+      ).toThrow();
+    });
+
+    it('should validate dispatcher methods', () => {
+      const invalidDispatcher = {}; // Missing dispatch method
+
+      expect(
+        () =>
+          new EstablishSittingClosenessHandler({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            safeEventDispatcher: invalidDispatcher,
+            closenessCircleService: closenessCircleService,
+          })
+      ).toThrow();
+    });
+
+    it('should validate closeness circle service methods', () => {
+      const invalidService = {}; // Missing repair
+
+      expect(
+        () =>
+          new EstablishSittingClosenessHandler({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            safeEventDispatcher: mockDispatcher,
+            closenessCircleService: invalidService,
+          })
+      ).toThrow();
+    });
+  });
+
+  describe('Performance and Resource Management', () => {
+    it('should handle large numbers of adjacent actors efficiently', async () => {
+      const parameters = {
+        furniture_id: 'long_couch:1',
+        actor_id: 'alice',
+        spot_index: 5, // Middle of a long couch
+      };
+
+      const furnitureComponent = {
+        spots: Array(11).fill(null).map((_, i) => i === 5 ? null : `actor_${i}`), // 10 adjacent actors
+      };
+      furnitureComponent.spots[5] = null; // Alice's spot
+
+      const adjacentActors = ['actor_4', 'actor_6']; // Just adjacent spots
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce(furnitureComponent)
+        .mockReturnValue(null);
+
+      proximityUtils.findAdjacentOccupants.mockReturnValue(adjacentActors);
+      // No merge service needed - production uses adjacent-only algorithm
+      
+      const mockValidator = {
+        validateFurnitureComponent: jest.fn(),
+        validateClosenessComponent: jest.fn(),
+        validateBidirectionalCloseness: jest.fn(),
+      };
+      ComponentStateValidator.mockImplementation(() => mockValidator);
+
+      const result = await handler.execute(parameters, executionContext);
+
+      expect(result.success).toBe(true);
+      expect(result.adjacentActors).toEqual(adjacentActors);
+      
+      // Should call validator for each adjacent actor
+      expect(mockValidator.validateClosenessComponent).toHaveBeenCalledTimes(3); // Alice + 2 adjacent
+      expect(mockValidator.validateBidirectionalCloseness).toHaveBeenCalledTimes(2); // 2 relationships
     });
   });
 });

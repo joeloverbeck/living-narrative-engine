@@ -111,9 +111,10 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         executionContext
       );
 
-      // Assert: Handler should complete without throwing
-      // Note: The production handler doesn't return a result object
-      expect(result).toBeUndefined();
+      // Assert: Handler should complete and return a result object
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.adjacentActors).toEqual(['test:bob']);
 
       const aliceCloseness = entityManager.getComponentData(
         'test:alice',
@@ -220,8 +221,10 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         executionContext
       );
 
-      // Assert: Handler should complete
-      expect(result).toBeUndefined();
+      // Assert: Handler should complete and return a result object
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.adjacentActors.sort()).toEqual(['test:alice', 'test:charlie'].sort());
 
       // Check Bob's closeness - should only have direct neighbors
       const bobCloseness = entityManager.getComponentData(
@@ -308,8 +311,10 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         executionContext
       );
 
-      // Assert: Handler should complete
-      expect(result).toBeUndefined();
+      // Assert: Handler should complete and return a result object
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.adjacentActors).toEqual([]);
 
       const aliceCloseness = entityManager.getComponentData(
         'test:alice',
@@ -465,8 +470,8 @@ describe('EstablishSittingClosenessHandler - Integration', () => {
         executionContext
       );
 
-      // Assert - The production code stores false when no closeness is established (no adjacent actors)
-      expect(executionContext.evaluationContext.context.sittingResult).toBe(false);
+      // Assert - The production code stores true when operation succeeds (even with no adjacent actors)
+      expect(executionContext.evaluationContext.context.sittingResult).toBe(true);
     });
   });
 });

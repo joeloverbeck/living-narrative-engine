@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:critical_log_panel_collapsed",
+  "description": "Dispatched when the critical log notifier panel is collapsed to hide detailed log entries.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

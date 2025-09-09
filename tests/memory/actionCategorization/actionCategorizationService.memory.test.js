@@ -42,7 +42,7 @@ describe('ActionCategorizationService - Memory Tests', () => {
     );
 
     // Configure base container which includes action categorization
-    configureBaseContainer(container, {
+    await configureBaseContainer(container, {
       includeGameSystems: false,
       includeUI: false,
       includeCharacterBuilder: false,

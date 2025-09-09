@@ -20,9 +20,9 @@ import { parseScopeDefinitions } from '../scopeDsl/scopeDefinitionParser.js';
  * Integrates with existing validation infrastructure for consistent error handling
  */
 class ModReferenceExtractor {
-  #logger;
+  _logger;
   // eslint-disable-next-line no-unused-private-class-members
-  #ajvValidator; // Reserved for future schema validation in MODDEPVAL-002
+  _ajvValidator; // Reserved for future schema validation in MODDEPVAL-002
   
   /**
    * Creates a new ModReferenceExtractor instance
@@ -39,8 +39,8 @@ class ModReferenceExtractor {
       requiredMethods: ['validate'],
     });
     
-    this.#logger = logger;
-    this.#ajvValidator = ajvValidator;
+    this._logger = logger;
+    this._ajvValidator = ajvValidator;
   }
 
   /**
@@ -51,23 +51,66 @@ class ModReferenceExtractor {
    * @throws {Error} If modPath is invalid or inaccessible
    */
   async extractReferences(modPath) {
-    string.assertNonBlank(modPath, 'modPath', 'ModReferenceExtractor.extractReferences', this.#logger);
+    string.assertNonBlank(modPath, 'modPath', 'ModReferenceExtractor.extractReferences', this._logger);
     
     try {
       const modId = path.basename(modPath);
-      this.#logger.debug(`Starting reference extraction for mod: ${modId}`);
+      this._logger.debug(`Starting reference extraction for mod: ${modId}`);
       
       const references = new Map();
-      await this.#scanDirectory(modPath, references, modId);
+      await this._scanDirectory(modPath, references, modId);
       
       // Remove self-references (references to the mod being analyzed)
       references.delete(modId);
       
-      this.#logger.info(`Extracted references for mod '${modId}': ${Array.from(references.keys()).join(', ')}`);
+      this._logger.info(`Extracted references for mod '${modId}': ${Array.from(references.keys()).join(', ')}`);
       return references;
       
     } catch (error) {
-      this.#logger.error(`Failed to extract references from ${modPath}`, error);
+      this._logger.error(`Failed to extract references from ${modPath}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enhanced reference extraction with file context information
+   * Extension of existing extractReferences to include file locations
+   * 
+   * @param {string} modPath - Path to mod directory
+   * @returns {Promise<Map<string, Array<{componentId: string, contexts: Array<Object>}>>>} 
+   * References with file context information
+   */
+  async extractReferencesWithFileContext(modPath) {
+    string.assertNonBlank(modPath, 'modPath', 'ModReferenceExtractor.extractReferencesWithFileContext', this._logger);
+    
+    try {
+      const modId = path.basename(modPath);
+      this._logger.debug(`Starting contextual reference extraction for mod: ${modId}`);
+      
+      // First get basic references using existing method
+      const basicReferences = await this.extractReferences(modPath);
+      const contextualReferences = new Map();
+      
+      // For each reference, re-scan files to capture context
+      for (const [referencedModId, componentIds] of basicReferences) {
+        const componentsWithContext = [];
+        
+        for (const componentId of componentIds) {
+          const contexts = await this._findReferenceContexts(modPath, referencedModId, componentId);
+          componentsWithContext.push({
+            componentId,
+            contexts: contexts || []
+          });
+        }
+        
+        contextualReferences.set(referencedModId, componentsWithContext);
+      }
+      
+      this._logger.debug(`Extracted contextual references for mod '${modId}': ${contextualReferences.size} referenced mods`);
+      return contextualReferences;
+      
+    } catch (error) {
+      this._logger.error(`Failed to extract contextual references from ${modPath}`, error);
       throw error;
     }
   }
@@ -80,16 +123,16 @@ class ModReferenceExtractor {
    * @param {ModReferenceMap} references - Reference map to populate
    * @param {string} modId - ID of the mod being analyzed (for filtering self-references)
    */
-  async #scanDirectory(dirPath, references, modId) {
+  async _scanDirectory(dirPath, references, modId) {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });
     
     for (const entry of entries) {
       const fullPath = path.join(dirPath, entry.name);
       
       if (entry.isDirectory()) {
-        await this.#scanDirectory(fullPath, references, modId);
+        await this._scanDirectory(fullPath, references, modId);
       } else if (entry.isFile()) {
-        await this.#extractFromFile(fullPath, references);
+        await this._extractFromFile(fullPath, references);
       }
     }
   }
@@ -101,27 +144,27 @@ class ModReferenceExtractor {
    * @param {string} filePath - File to process
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  async #extractFromFile(filePath, references) {
+  async _extractFromFile(filePath, references) {
     const ext = path.extname(filePath);
     const basename = path.basename(filePath);
     
     try {
       switch (ext) {
         case '.json':
-          await this.#extractFromJsonFile(filePath, references);
-          this.#logger.debug(`Processed JSON file: ${basename}`);
+          await this._extractFromJsonFile(filePath, references);
+          this._logger.debug(`Processed JSON file: ${basename}`);
           break;
         case '.scope':
-          await this.#extractFromScopeFile(filePath, references);
-          this.#logger.debug(`Processed scope file: ${basename}`);
+          await this._extractFromScopeFile(filePath, references);
+          this._logger.debug(`Processed scope file: ${basename}`);
           break;
         default:
-          this.#logger.debug(`Skipping unsupported file: ${basename}`);
+          this._logger.debug(`Skipping unsupported file: ${basename}`);
           break;
       }
     } catch (error) {
       // Enhanced error context
-      this.#logger.warn(`Failed to process ${basename} (${ext}): ${error.message}`, {
+      this._logger.warn(`Failed to process ${basename} (${ext}): ${error.message}`, {
         filePath,
         fileType: ext,
         error: error.name
@@ -138,37 +181,37 @@ class ModReferenceExtractor {
    * @param {string} filePath - JSON file path
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  async #extractFromJsonFile(filePath, references) {
+  async _extractFromJsonFile(filePath, references) {
     const content = await fs.readFile(filePath, 'utf8');
     const data = JSON.parse(content);
     
-    const fileType = this.#detectJsonFileType(filePath);
+    const fileType = this._detectJsonFileType(filePath);
     
     switch (fileType) {
       case 'action':
-        this.#extractFromActionFile(data, references);
+        this._extractFromActionFile(data, references);
         break;
       case 'rule':
-        this.#extractFromRuleFile(data, references);
+        this._extractFromRuleFile(data, references);
         break;
       case 'condition':
-        this.#extractFromConditionFile(data, references);
+        this._extractFromConditionFile(data, references);
         break;
       case 'component':
-        this.#extractFromComponentFile(data, references);
+        this._extractFromComponentFile(data, references);
         break;
       case 'event':
-        this.#extractFromEventFile(data, references);
+        this._extractFromEventFile(data, references);
         break;
       case 'blueprint':
-        this.#extractFromBlueprintFile(data, references);
+        this._extractFromBlueprintFile(data, references);
         break;
       case 'recipe':
-        this.#extractFromRecipeFile(data, references);
+        this._extractFromRecipeFile(data, references);
         break;
       default: {
         // Fallback to existing generic processing
-        const extractedRefs = this.#extractReferencesFromObject(data, fileType);
+        const extractedRefs = this._extractReferencesFromObject(data, fileType);
         // Merge extracted references into the main reference map
         for (const [modId, componentIds] of extractedRefs) {
           if (!references.has(modId)) {
@@ -190,27 +233,27 @@ class ModReferenceExtractor {
    * @param {string} filePath - Scope file path  
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  async #extractFromScopeFile(filePath, references) {
+  async _extractFromScopeFile(filePath, references) {
     const content = await fs.readFile(filePath, 'utf8');
     const fileName = path.basename(filePath);
     
     try {
-      this.#logger.debug(`Processing scope file: ${fileName}`);
+      this._logger.debug(`Processing scope file: ${fileName}`);
       
       // Use existing scope definition parser from scopeDsl module
       const scopeDefinitions = parseScopeDefinitions(content, filePath);
       
       // Extract references from parsed scope definitions
       for (const [scopeName, { ast }] of scopeDefinitions) {
-        this.#extractReferencesFromScopeAST(scopeName, ast, references);
+        this._extractReferencesFromScopeAST(scopeName, ast, references);
       }
       
-      this.#logger.debug(`Extracted ${references.size} mod references from ${fileName}`);
+      this._logger.debug(`Extracted ${references.size} mod references from ${fileName}`);
       
     } catch (error) {
-      this.#logger.warn(`Failed to parse scope file ${fileName}: ${error.message}`);
+      this._logger.warn(`Failed to parse scope file ${fileName}: ${error.message}`);
       // Fallback to regex-based extraction for partial results
-      this.#extractScopeReferencesWithRegex(content, references);
+      this._extractScopeReferencesWithRegex(content, references);
     }
   }
 
@@ -222,19 +265,19 @@ class ModReferenceExtractor {
    * @param {object} ast - Parsed AST from parseScopeDefinitions
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractReferencesFromScopeAST(scopeName, ast, references) {
+  _extractReferencesFromScopeAST(scopeName, ast, references) {
     // Extract from scope name (left side of :=)
     const colonIndex = scopeName.indexOf(':');
     if (colonIndex !== -1) {
       const modId = scopeName.substring(0, colonIndex);
       const scopeId = scopeName.substring(colonIndex + 1);
       if (modId !== 'core' && modId !== 'none' && modId !== 'self') {
-        this.#addScopeReference(modId, scopeId, references);
+        this._addScopeReference(modId, scopeId, references);
       }
     }
     
     // Extract from AST tree (right side of :=)
-    this.#extractFromScopeExpression(ast, references);
+    this._extractFromScopeExpression(ast, references);
   }
 
   /**
@@ -250,38 +293,38 @@ class ModReferenceExtractor {
    * @param {object} node - AST node from parseDslExpression
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractFromScopeExpression(node, references) {
+  _extractFromScopeExpression(node, references) {
     if (!node) return;
     
     switch (node.type) {
       case 'Step':
-        this.#extractFromStepNode(node, references);
+        this._extractFromStepNode(node, references);
         break;
         
       case 'Filter':
-        this.#extractFromFilterNode(node, references);
+        this._extractFromFilterNode(node, references);
         break;
         
       case 'Union':
-        this.#extractFromUnionNode(node, references);
+        this._extractFromUnionNode(node, references);
         break;
         
       case 'ArrayIterationStep':
         // Process parent node for array iteration
         if (node.parent) {
-          this.#extractFromScopeExpression(node.parent, references);
+          this._extractFromScopeExpression(node.parent, references);
         }
         break;
         
       case 'Source':
         // Source nodes may contain entity references
         if (node.param && node.param.includes(':')) {
-          this.#extractModReferencesFromString(node.param, references, 'source_param');
+          this._extractModReferencesFromString(node.param, references, 'source_param');
         }
         break;
         
       default:
-        this.#logger.debug(`Processing AST node type: ${node.type}`);
+        this._logger.debug(`Processing AST node type: ${node.type}`);
         break;
     }
   }
@@ -293,16 +336,16 @@ class ModReferenceExtractor {
    * @param {object} node - Step node from AST
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractFromStepNode(node, references) {
+  _extractFromStepNode(node, references) {
     // Step nodes represent field access like .components.modId:componentId
     if (node.field && node.field.includes(':')) {
       // Field contains a mod reference
-      this.#extractModReferencesFromString(node.field, references, 'step_field');
+      this._extractModReferencesFromString(node.field, references, 'step_field');
     }
     
     // Process parent node
     if (node.parent) {
-      this.#extractFromScopeExpression(node.parent, references);
+      this._extractFromScopeExpression(node.parent, references);
     }
   }
 
@@ -313,15 +356,15 @@ class ModReferenceExtractor {
    * @param {object} node - Filter node from AST
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractFromFilterNode(node, references) {
+  _extractFromFilterNode(node, references) {
     // Process parent expression
     if (node.parent) {
-      this.#extractFromScopeExpression(node.parent, references);
+      this._extractFromScopeExpression(node.parent, references);
     }
     
     // Process JSON Logic in filter
     if (node.logic) {
-      this.#extractFromJsonLogic(node.logic, references);
+      this._extractFromJsonLogic(node.logic, references);
     }
   }
 
@@ -332,13 +375,13 @@ class ModReferenceExtractor {
    * @param {object} node - Union node from AST
    * @param {ModReferenceMap} references - Reference map to populate  
    */
-  #extractFromUnionNode(node, references) {
+  _extractFromUnionNode(node, references) {
     // Process left and right branches of the union
     if (node.left) {
-      this.#extractFromScopeExpression(node.left, references);
+      this._extractFromScopeExpression(node.left, references);
     }
     if (node.right) {
-      this.#extractFromScopeExpression(node.right, references);
+      this._extractFromScopeExpression(node.right, references);
     }
   }
 
@@ -350,7 +393,7 @@ class ModReferenceExtractor {
    * @param {string} componentId - Component identifier
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #addScopeReference(modId, componentId, references) {
+  _addScopeReference(modId, componentId, references) {
     // Skip core references and special cases
     if (modId === 'core' || modId === 'none' || modId === 'self') {
       return;
@@ -361,7 +404,7 @@ class ModReferenceExtractor {
     }
     
     references.get(modId).add(componentId);
-    this.#logger.debug(`Found scope reference: ${modId}:${componentId}`);
+    this._logger.debug(`Found scope reference: ${modId}:${componentId}`);
   }
 
   /**
@@ -372,9 +415,9 @@ class ModReferenceExtractor {
    * @param {string} fileType - Type of file being processed
    * @returns {ModReferenceMap} Extracted references
    */
-  #extractReferencesFromObject(obj, fileType) {
+  _extractReferencesFromObject(obj, fileType) {
     const references = new Map();
-    this.#traverseObject(obj, '', references, fileType);
+    this._traverseObject(obj, '', references, fileType);
     return references;
   }
 
@@ -387,16 +430,16 @@ class ModReferenceExtractor {
    * @param {ModReferenceMap} references - Reference map to populate
    * @param {string} fileType - Type of file being processed
    */
-  #traverseObject(obj, path, references, fileType) {
+  _traverseObject(obj, path, references, fileType) {
     if (typeof obj === 'string') {
-      this.#extractModReferencesFromString(obj, references, path || fileType);
+      this._extractModReferencesFromString(obj, references, path || fileType);
     } else if (Array.isArray(obj)) {
       obj.forEach((item, index) => {
-        this.#traverseObject(item, `${path}[${index}]`, references, fileType);
+        this._traverseObject(item, `${path}[${index}]`, references, fileType);
       });
     } else if (obj && typeof obj === 'object') {
       for (const [key, value] of Object.entries(obj)) {
-        this.#traverseObject(value, `${path}.${key}`, references, fileType);
+        this._traverseObject(value, `${path}.${key}`, references, fileType);
       }
     }
   }
@@ -409,7 +452,7 @@ class ModReferenceExtractor {
    * @param {ModReferenceMap} references - Reference map to populate
    * @param {string} context - Context information for better extraction
    */
-  #extractModReferencesFromString(str, references, context = '') {
+  _extractModReferencesFromString(str, references, context = '') {
     if (typeof str !== 'string' || !str.trim()) {
       return;
     }
@@ -444,7 +487,7 @@ class ModReferenceExtractor {
         
         // Log context for debugging
         if (context) {
-          this.#logger.debug(`Found reference ${modId}:${componentId} in ${context}`);
+          this._logger.debug(`Found reference ${modId}:${componentId} in ${context}`);
         }
       }
     });
@@ -457,7 +500,7 @@ class ModReferenceExtractor {
    * @param {string} filePath - File path to analyze
    * @returns {string} File type identifier
    */
-  #detectJsonFileType(filePath) {
+  _detectJsonFileType(filePath) {
     const basename = path.basename(filePath);
     
     if (basename.endsWith('.action.json')) return 'action';
@@ -478,12 +521,12 @@ class ModReferenceExtractor {
    * @param {object} actionData - Parsed action JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractFromActionFile(actionData, references) {
+  _extractFromActionFile(actionData, references) {
     // Required components - typically arrays of component IDs
     if (actionData.required_components) {
       for (const [_entityType, components] of Object.entries(actionData.required_components)) {
         if (Array.isArray(components)) {
-          components.forEach(comp => this.#extractModReferencesFromString(comp, references, 'required_components'));
+          components.forEach(comp => this._extractModReferencesFromString(comp, references, 'required_components'));
         }
       }
     }
@@ -492,34 +535,34 @@ class ModReferenceExtractor {
     if (actionData.forbidden_components) {
       for (const [_entityType, components] of Object.entries(actionData.forbidden_components)) {
         if (Array.isArray(components)) {
-          components.forEach(comp => this.#extractModReferencesFromString(comp, references, 'forbidden_components'));
+          components.forEach(comp => this._extractModReferencesFromString(comp, references, 'forbidden_components'));
         }
       }
     }
 
     // Target scopes - reference to scope definitions
     if (actionData.targets?.scope) {
-      this.#extractModReferencesFromString(actionData.targets.scope, references, 'target_scope');
+      this._extractModReferencesFromString(actionData.targets.scope, references, 'target_scope');
     }
 
     // Handle targets as string (alternative format)
     if (typeof actionData.targets === 'string') {
-      this.#extractModReferencesFromString(actionData.targets, references, 'targets_string');
+      this._extractModReferencesFromString(actionData.targets, references, 'targets_string');
     }
 
     // Handle target as string (singular form)
     if (typeof actionData.target === 'string') {
-      this.#extractModReferencesFromString(actionData.target, references, 'target_string');
+      this._extractModReferencesFromString(actionData.target, references, 'target_string');
     }
 
     // Operation handlers may contain component operations
     if (actionData.operations) {
-      this.#extractFromOperationHandlers(actionData.operations, references);
+      this._extractFromOperationHandlers(actionData.operations, references);
     }
 
     // JSON Logic conditions in actions
     if (actionData.condition) {
-      this.#extractFromJsonLogic(actionData.condition, references);
+      this._extractFromJsonLogic(actionData.condition, references);
     }
   }
 
@@ -530,40 +573,40 @@ class ModReferenceExtractor {
    * @param {object} ruleData - Parsed rule JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractFromRuleFile(ruleData, references) {
+  _extractFromRuleFile(ruleData, references) {
     // Condition references - link to other mods' conditions
     if (ruleData.condition_ref) {
-      this.#extractModReferencesFromString(ruleData.condition_ref, references, 'condition_ref');
+      this._extractModReferencesFromString(ruleData.condition_ref, references, 'condition_ref');
     }
 
     // Condition object with condition_ref nested
     if (ruleData.condition?.condition_ref) {
-      this.#extractModReferencesFromString(ruleData.condition.condition_ref, references, 'nested_condition_ref');
+      this._extractModReferencesFromString(ruleData.condition.condition_ref, references, 'nested_condition_ref');
     }
 
     // Direct condition as string reference
     if (typeof ruleData.condition === 'string') {
-      this.#extractModReferencesFromString(ruleData.condition, references, 'condition_string');
+      this._extractModReferencesFromString(ruleData.condition, references, 'condition_string');
     }
 
     // Inline JSON Logic conditions
     if (ruleData.condition && typeof ruleData.condition === 'object' && !ruleData.condition.condition_ref) {
-      this.#extractFromJsonLogic(ruleData.condition, references);
+      this._extractFromJsonLogic(ruleData.condition, references);
     }
 
     // Actions array with operation handlers
     if (ruleData.actions) {
-      this.#extractFromOperationHandlers(ruleData.actions, references);
+      this._extractFromOperationHandlers(ruleData.actions, references);
     }
 
     // Operation handlers with component operations (legacy format)
     if (ruleData.operations) {
-      this.#extractFromOperationHandlers(ruleData.operations, references);
+      this._extractFromOperationHandlers(ruleData.operations, references);
     }
 
     // Rule metadata may contain mod references
     if (ruleData.metadata) {
-      const metadataRefs = this.#extractReferencesFromObject(ruleData.metadata, 'rule-metadata');
+      const metadataRefs = this._extractReferencesFromObject(ruleData.metadata, 'rule-metadata');
       // Merge metadata references
       for (const [modId, componentIds] of metadataRefs) {
         if (!references.has(modId)) {
@@ -583,14 +626,14 @@ class ModReferenceExtractor {
    * @param {object} conditionData - Parsed condition JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractFromConditionFile(conditionData, references) {
+  _extractFromConditionFile(conditionData, references) {
     // Condition files are primarily JSON Logic structures
     if (conditionData.condition) {
-      this.#extractFromJsonLogic(conditionData.condition, references);
+      this._extractFromJsonLogic(conditionData.condition, references);
     }
 
     // Some conditions may have metadata or dependencies
-    const genericRefs = this.#extractReferencesFromObject(conditionData, 'condition');
+    const genericRefs = this._extractReferencesFromObject(conditionData, 'condition');
     // Merge generic references
     for (const [modId, componentIds] of genericRefs) {
       if (!references.has(modId)) {
@@ -609,10 +652,10 @@ class ModReferenceExtractor {
    * @param {object} componentData - Parsed component JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractFromComponentFile(componentData, references) {
+  _extractFromComponentFile(componentData, references) {
     // Component schemas may reference other mod components
     if (componentData.dataSchema) {
-      const schemaRefs = this.#extractReferencesFromObject(componentData.dataSchema, 'component-schema');
+      const schemaRefs = this._extractReferencesFromObject(componentData.dataSchema, 'component-schema');
       // Merge schema references
       for (const [modId, componentIds] of schemaRefs) {
         if (!references.has(modId)) {
@@ -626,7 +669,7 @@ class ModReferenceExtractor {
 
     // Default values might contain mod references
     if (componentData.defaultData) {
-      const defaultRefs = this.#extractReferencesFromObject(componentData.defaultData, 'component-defaults');
+      const defaultRefs = this._extractReferencesFromObject(componentData.defaultData, 'component-defaults');
       // Merge default references
       for (const [modId, componentIds] of defaultRefs) {
         if (!references.has(modId)) {
@@ -640,7 +683,7 @@ class ModReferenceExtractor {
 
     // Validation rules may contain component references
     if (componentData.validation) {
-      const validationRefs = this.#extractReferencesFromObject(componentData.validation, 'component-validation');
+      const validationRefs = this._extractReferencesFromObject(componentData.validation, 'component-validation');
       // Merge validation references
       for (const [modId, componentIds] of validationRefs) {
         if (!references.has(modId)) {
@@ -660,10 +703,10 @@ class ModReferenceExtractor {
    * @param {object} eventData - Parsed event JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractFromEventFile(eventData, references) {
+  _extractFromEventFile(eventData, references) {
     // Event payload schemas may reference components
     if (eventData.payloadSchema) {
-      const payloadRefs = this.#extractReferencesFromObject(eventData.payloadSchema, 'event-payload');
+      const payloadRefs = this._extractReferencesFromObject(eventData.payloadSchema, 'event-payload');
       // Merge payload references
       for (const [modId, componentIds] of payloadRefs) {
         if (!references.has(modId)) {
@@ -677,11 +720,11 @@ class ModReferenceExtractor {
 
     // Event handlers may contain component operations
     if (eventData.handlers) {
-      this.#extractFromOperationHandlers(eventData.handlers, references);
+      this._extractFromOperationHandlers(eventData.handlers, references);
     }
 
     // Event metadata
-    const eventRefs = this.#extractReferencesFromObject(eventData, 'event');
+    const eventRefs = this._extractReferencesFromObject(eventData, 'event');
     // Merge event references
     for (const [modId, componentIds] of eventRefs) {
       if (!references.has(modId)) {
@@ -700,9 +743,9 @@ class ModReferenceExtractor {
    * @param {object} blueprintData - Parsed blueprint JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractFromBlueprintFile(blueprintData, references) {
+  _extractFromBlueprintFile(blueprintData, references) {
     // Blueprints define anatomy structures with potential cross-mod references
-    const blueprintRefs = this.#extractReferencesFromObject(blueprintData, 'blueprint');
+    const blueprintRefs = this._extractReferencesFromObject(blueprintData, 'blueprint');
     // Merge blueprint references
     for (const [modId, componentIds] of blueprintRefs) {
       if (!references.has(modId)) {
@@ -721,9 +764,9 @@ class ModReferenceExtractor {
    * @param {object} recipeData - Parsed recipe JSON
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractFromRecipeFile(recipeData, references) {
+  _extractFromRecipeFile(recipeData, references) {
     // Recipes may reference components from other mods
-    const recipeRefs = this.#extractReferencesFromObject(recipeData, 'recipe');
+    const recipeRefs = this._extractReferencesFromObject(recipeData, 'recipe');
     // Merge recipe references
     for (const [modId, componentIds] of recipeRefs) {
       if (!references.has(modId)) {
@@ -742,7 +785,7 @@ class ModReferenceExtractor {
    * @param {object} jsonLogic - JSON Logic expression object
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractFromJsonLogic(jsonLogic, references) {
+  _extractFromJsonLogic(jsonLogic, references) {
     if (!jsonLogic || typeof jsonLogic !== 'object') {
       return;
     }
@@ -762,24 +805,24 @@ class ModReferenceExtractor {
         if (Array.isArray(operands) && operands.length >= 2) {
           const componentRef = operands[1];
           if (typeof componentRef === 'string') {
-            this.#extractModReferencesFromString(componentRef, references, `json_logic_${operator}`);
+            this._extractModReferencesFromString(componentRef, references, `json_logic_${operator}`);
           }
         }
       } else if (Array.isArray(operands)) {
         // Recursive processing for arrays
         operands.forEach(operand => {
           if (typeof operand === 'object') {
-            this.#extractFromJsonLogic(operand, references);
+            this._extractFromJsonLogic(operand, references);
           } else if (typeof operand === 'string') {
-            this.#extractModReferencesFromString(operand, references, 'json_logic_operand');
+            this._extractModReferencesFromString(operand, references, 'json_logic_operand');
           }
         });
       } else if (typeof operands === 'object') {
         // Recursive processing for objects
-        this.#extractFromJsonLogic(operands, references);
+        this._extractFromJsonLogic(operands, references);
       } else if (typeof operands === 'string') {
         // String operands may contain references
-        this.#extractModReferencesFromString(operands, references, 'json_logic_string');
+        this._extractModReferencesFromString(operands, references, 'json_logic_string');
       }
     }
   }
@@ -791,11 +834,11 @@ class ModReferenceExtractor {
    * @param {Array | object} operations - Operation handler data
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractFromOperationHandlers(operations, references) {
+  _extractFromOperationHandlers(operations, references) {
     if (Array.isArray(operations)) {
-      operations.forEach(op => this.#extractFromSingleOperation(op, references));
+      operations.forEach(op => this._extractFromSingleOperation(op, references));
     } else if (typeof operations === 'object') {
-      this.#extractFromSingleOperation(operations, references);
+      this._extractFromSingleOperation(operations, references);
     }
   }
 
@@ -806,33 +849,33 @@ class ModReferenceExtractor {
    * @param {object} operation - Single operation object
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractFromSingleOperation(operation, references) {
+  _extractFromSingleOperation(operation, references) {
     if (!operation || typeof operation !== 'object') {
       return;
     }
 
     // Component operations often have 'component' or 'componentId' fields
     if (operation.component) {
-      this.#extractModReferencesFromString(operation.component, references, 'operation_component');
+      this._extractModReferencesFromString(operation.component, references, 'operation_component');
     }
     
     if (operation.componentId) {
-      this.#extractModReferencesFromString(operation.componentId, references, 'operation_componentId');
+      this._extractModReferencesFromString(operation.componentId, references, 'operation_componentId');
     }
 
     // Target specifications may contain mod references
     if (operation.target) {
-      this.#extractModReferencesFromString(operation.target, references, 'operation_target');
+      this._extractModReferencesFromString(operation.target, references, 'operation_target');
     }
 
     // Component type specifications
     if (operation.component_type) {
-      this.#extractModReferencesFromString(operation.component_type, references, 'operation_component_type');
+      this._extractModReferencesFromString(operation.component_type, references, 'operation_component_type');
     }
 
     // Parameters may contain nested references
     if (operation.parameters) {
-      const paramRefs = this.#extractReferencesFromObject(operation.parameters, 'operation_parameters');
+      const paramRefs = this._extractReferencesFromObject(operation.parameters, 'operation_parameters');
       // Merge parameter references
       for (const [modId, componentIds] of paramRefs) {
         if (!references.has(modId)) {
@@ -845,7 +888,7 @@ class ModReferenceExtractor {
     }
 
     // Recursively process nested operation data
-    const operationRefs = this.#extractReferencesFromObject(operation, 'operation');
+    const operationRefs = this._extractReferencesFromObject(operation, 'operation');
     // Merge operation references
     for (const [modId, componentIds] of operationRefs) {
       if (!references.has(modId)) {
@@ -858,14 +901,228 @@ class ModReferenceExtractor {
   }
 
   /**
+   * Finds all contextual occurrences of a specific mod:component reference
+   * 
+   * @private
+   * @param {string} modPath - Path to mod directory
+   * @param {string} modId - Target mod ID to find
+   * @param {string} componentId - Target component ID to find  
+   * @returns {Promise<Array<Object>>} Array of context objects with file, line, column, snippet, type
+   */
+  async _findReferenceContexts(modPath, modId, componentId) {
+    const contexts = [];
+    const targetReference = `${modId}:${componentId}`;
+    
+    try {
+      await this._scanDirectoryForContext(modPath, targetReference, contexts, modPath);
+      
+      this._logger.debug(`Found ${contexts.length} contexts for ${targetReference}`);
+      return contexts;
+      
+    } catch (error) {
+      this._logger.warn(`Failed to find contexts for ${targetReference}: ${error.message}`);
+      return [];
+    }
+  }
+
+  /**
+   * Recursively scans directory for specific reference contexts
+   * 
+   * @private
+   * @param {string} dirPath - Directory to scan
+   * @param {string} targetReference - The mod:component reference to find
+   * @param {Array<Object>} contexts - Array to populate with contexts
+   * @param {string} basePath - Base path for relative file paths
+   */
+  async _scanDirectoryForContext(dirPath, targetReference, contexts, basePath) {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+      
+      if (entry.isDirectory()) {
+        await this._scanDirectoryForContext(fullPath, targetReference, contexts, basePath);
+      } else if (entry.isFile()) {
+        await this._extractContextFromFile(fullPath, targetReference, contexts, basePath);
+      }
+    }
+  }
+
+  /**
+   * Extracts context information for a specific reference from a file
+   * 
+   * @private
+   * @param {string} filePath - File to process
+   * @param {string} targetReference - The mod:component reference to find
+   * @param {Array<Object>} contexts - Array to populate with contexts
+   * @param {string} basePath - Base path for relative file paths
+   */
+  async _extractContextFromFile(filePath, targetReference, contexts, basePath) {
+    const ext = path.extname(filePath);
+    const basename = path.basename(filePath);
+    
+    try {
+      const content = await fs.readFile(filePath, 'utf8');
+      const lines = content.split('\n');
+      
+      // Search for the target reference in each line
+      for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+        const line = lines[lineIndex];
+        const columnIndex = line.indexOf(targetReference);
+        
+        if (columnIndex !== -1) {
+          // Found the reference, create context object
+          const context = {
+            file: path.relative(basePath, filePath),
+            line: lineIndex + 1, // 1-based line numbers
+            column: columnIndex + 1, // 1-based column numbers
+            snippet: this._createContextSnippet(line, columnIndex, targetReference.length),
+            type: this._determineContextType(filePath, line, ext),
+            isBlocking: this._isBlockingContext(filePath, line, ext),
+            isOptional: this._isOptionalContext(filePath, line, ext),
+            isUserFacing: this._isUserFacingContext(filePath, line, ext)
+          };
+          
+          contexts.push(context);
+          this._logger.debug(`Found context: ${context.file}:${context.line} (${context.type})`);
+        }
+      }
+      
+    } catch (error) {
+      this._logger.warn(`Failed to process ${basename} for context: ${error.message}`);
+    }
+  }
+
+  /**
+   * Creates a context snippet around the found reference
+   * 
+   * @private
+   * @param {string} line - The line containing the reference
+   * @param {number} startPos - Starting position of the reference
+   * @param {number} refLength - Length of the reference
+   * @returns {string} Context snippet
+   */
+  _createContextSnippet(line, startPos, refLength) {
+    const snippetRadius = 20; // Characters to show before/after
+    const start = Math.max(0, startPos - snippetRadius);
+    const end = Math.min(line.length, startPos + refLength + snippetRadius);
+    
+    let snippet = line.substring(start, end).trim();
+    
+    // Add ellipsis if truncated
+    if (start > 0) snippet = '...' + snippet;
+    if (end < line.length) snippet = snippet + '...';
+    
+    return snippet;
+  }
+
+  /**
+   * Determines the context type based on file path and content
+   * 
+   * @private
+   * @param {string} filePath - File path
+   * @param {string} line - Line content
+   * @param {string} ext - File extension
+   * @returns {string} Context type
+   */
+  _determineContextType(filePath, line, ext) {
+    const basename = path.basename(filePath);
+    
+    // File type-based detection
+    if (basename.endsWith('.action.json')) return 'action';
+    if (basename.endsWith('.rule.json')) return 'rule';
+    if (basename.endsWith('.condition.json')) return 'condition';
+    if (basename.endsWith('.component.json')) return 'component';
+    if (basename.endsWith('.event.json')) return 'event';
+    if (ext === '.scope') return 'scope';
+    
+    // Content-based detection for generic JSON files
+    if (line.includes('required_components')) return 'action';
+    if (line.includes('condition_ref')) return 'rule';
+    if (line.includes('has_component')) return 'condition';
+    
+    return 'unknown';
+  }
+
+  /**
+   * Determines if the context represents a blocking operation
+   * 
+   * @private
+   * @param {string} filePath - File path
+   * @param {string} line - Line content
+   * @param {string} ext - File extension
+   * @returns {boolean} True if blocking
+   */
+  _isBlockingContext(filePath, line, ext) {
+    const basename = path.basename(filePath);
+    
+    // Rule files are typically blocking
+    if (basename.endsWith('.rule.json')) return true;
+    
+    // Required components are blocking
+    if (line.includes('required_components')) return true;
+    
+    // Conditions in rules are blocking
+    if (line.includes('condition_ref') || line.includes('"condition"')) return true;
+    
+    return false;
+  }
+
+  /**
+   * Determines if the context reference is optional
+   * 
+   * @private
+   * @param {string} filePath - File path
+   * @param {string} line - Line content
+   * @param {string} ext - File extension
+   * @returns {boolean} True if optional
+   */
+  _isOptionalContext(filePath, line, ext) {
+    // Forbidden components are optional violations (could be removed)
+    if (line.includes('forbidden_components')) return true;
+    
+    // Target scopes might be optional
+    if (line.includes('target') && !line.includes('required')) return true;
+    
+    // Event handlers might be optional
+    if (line.includes('handlers')) return true;
+    
+    return false;
+  }
+
+  /**
+   * Determines if the context affects user-facing functionality
+   * 
+   * @private
+   * @param {string} filePath - File path
+   * @param {string} line - Line content
+   * @param {string} ext - File extension
+   * @returns {boolean} True if user-facing
+   */
+  _isUserFacingContext(filePath, line, ext) {
+    const basename = path.basename(filePath);
+    
+    // Actions are typically user-facing
+    if (basename.endsWith('.action.json')) return true;
+    
+    // Event files might be user-facing
+    if (basename.endsWith('.event.json')) return true;
+    
+    // UI-related content
+    if (line.includes('description') || line.includes('name') || line.includes('display')) return true;
+    
+    return false;
+  }
+
+  /**
    * Fallback regex-based extraction for scope files when parsing fails
    *
    * @private
    * @param {string} content - File content
    * @param {ModReferenceMap} references - Reference map to populate
    */
-  #extractScopeReferencesWithRegex(content, references) {
-    this.#logger.debug('Using fallback regex extraction for scope file');
+  _extractScopeReferencesWithRegex(content, references) {
+    this._logger.debug('Using fallback regex extraction for scope file');
     
     // Multiple patterns to catch different scope syntax variations
     const patterns = [
@@ -892,8 +1149,8 @@ class ModReferenceExtractor {
           continue;
         }
         
-        this.#addScopeReference(modId, componentId, references);
-        this.#logger.debug(`Regex fallback found: ${modId}:${componentId} (pattern ${index})`);
+        this._addScopeReference(modId, componentId, references);
+        this._logger.debug(`Regex fallback found: ${modId}:${componentId} (pattern ${index})`);
       }
     });
   }

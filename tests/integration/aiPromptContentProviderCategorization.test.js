@@ -23,7 +23,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
   let promptContentProvider;
   let mockLogger;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     container = new AppContainer();
     const registrar = new Registrar(container);
 
@@ -52,7 +52,7 @@ describe('AIPromptContentProvider Categorization Integration', () => {
     );
 
     // Configure base container which includes action categorization
-    configureBaseContainer(container, {
+    await configureBaseContainer(container, {
       includeGameSystems: false, // Minimal setup for testing
       includeUI: false,
       includeCharacterBuilder: false,

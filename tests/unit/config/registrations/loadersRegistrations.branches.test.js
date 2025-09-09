@@ -20,16 +20,16 @@ describe('registerLoaders uncovered branches', () => {
     jest.clearAllMocks();
   });
 
-  it('throws for invalid container instance', () => {
+  it('throws for invalid container instance', async () => {
     const {
       registerLoaders,
     } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
-    expect(() => registerLoaders({})).toThrow(
+    await expect(registerLoaders({})).rejects.toThrow(
       'Registrar requires a valid AppContainer instance.'
     );
   });
 
-  it('throws when a loader token is undefined', () => {
+  it('throws when a loader token is undefined', async () => {
     const realTokens = jest.requireActual(
       '../../../../src/dependencyInjection/tokens.js'
     ).tokens;
@@ -51,7 +51,7 @@ describe('registerLoaders uncovered branches', () => {
       lifecycle: 'singleton',
     });
 
-    expect(() => registerLoaders(container)).toThrow(
+    await expect(registerLoaders(container)).rejects.toThrow(
       /registerLoader called with undefined token/
     );
   });

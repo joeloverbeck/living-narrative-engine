@@ -665,12 +665,9 @@ class CriticalLogNotifier extends RendererBase {
           content = this.#exporter.exportAsJSON(logs, exportOptions);
           const success = await this.#exporter.copyToClipboard(content);
 
-          this.validatedEventDispatcher.dispatch({
-            type: 'EXPORT_NOTIFICATION',
-            payload: { 
-              message: success ? 'Logs copied to clipboard' : 'Failed to copy to clipboard', 
-              type: success ? 'success' : 'error' 
-            },
+          this.validatedEventDispatcher.dispatch('core:export_notification', {
+            message: success ? 'Logs copied to clipboard' : 'Failed to copy to clipboard', 
+            type: success ? 'success' : 'error'
           });
           return;
         }
@@ -683,23 +680,17 @@ class CriticalLogNotifier extends RendererBase {
       // Download file
       this.#exporter.downloadAsFile(content, filename, mimeType);
       
-      this.validatedEventDispatcher.dispatch({
-        type: 'EXPORT_NOTIFICATION',
-        payload: { 
-          message: `Exported ${logs.length} logs as ${format.toUpperCase()}`, 
-          type: 'success' 
-        },
+      this.validatedEventDispatcher.dispatch('core:export_notification', {
+        message: `Exported ${logs.length} logs as ${format.toUpperCase()}`, 
+        type: 'success'
       });
 
       this.logger.debug(`Export completed: ${format}, ${logs.length} logs`);
     } catch (error) {
       this.logger.error('Export failed', error);
-      this.validatedEventDispatcher.dispatch({
-        type: 'EXPORT_NOTIFICATION',
-        payload: { 
-          message: 'Export failed - see console for details', 
-          type: 'error' 
-        },
+      this.validatedEventDispatcher.dispatch('core:export_notification', {
+        message: 'Export failed - see console for details', 
+        type: 'error'
       });
     }
   }
@@ -1077,9 +1068,8 @@ class CriticalLogNotifier extends RendererBase {
 
     this.logger.debug(`${this._logPrefix} Panel expanded`);
 
-    this.validatedEventDispatcher.dispatch({
-      type: 'CRITICAL_LOG_PANEL_EXPANDED',
-      payload: { logCount: this.#recentLogs.length },
+    this.validatedEventDispatcher.dispatch('core:critical_log_panel_expanded', {
+      logCount: this.#recentLogs.length
     });
   }
 
@@ -1107,10 +1097,7 @@ class CriticalLogNotifier extends RendererBase {
 
     this.logger.debug(`${this._logPrefix} Panel collapsed`);
 
-    this.validatedEventDispatcher.dispatch({
-      type: 'CRITICAL_LOG_PANEL_COLLAPSED',
-      payload: {},
-    });
+    this.validatedEventDispatcher.dispatch('core:critical_log_panel_collapsed', {});
   }
 
   /**
@@ -1129,10 +1116,7 @@ class CriticalLogNotifier extends RendererBase {
 
     this.logger.debug(`${this._logPrefix} Logs cleared`);
 
-    this.validatedEventDispatcher.dispatch({
-      type: 'CRITICAL_LOGS_CLEARED',
-      payload: {},
-    });
+    this.validatedEventDispatcher.dispatch('core:critical_logs_cleared', {});
   }
 
   /**
@@ -1274,10 +1258,7 @@ class CriticalLogNotifier extends RendererBase {
       this.#isDismissed = false;
     }, 30000); // 30 seconds
 
-    this.validatedEventDispatcher.dispatch({
-      type: 'CRITICAL_NOTIFICATIONS_DISMISSED',
-      payload: {},
-    });
+    this.validatedEventDispatcher.dispatch('core:critical_notifications_dismissed', {});
   }
 
   /**

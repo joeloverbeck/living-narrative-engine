@@ -229,6 +229,21 @@ class BuildSystem {
       if (bundleConfig.minify) {
         args.push('--minify');
       }
+      
+      // Add define options if present
+      if (bundleConfig.define) {
+        for (const [key, value] of Object.entries(bundleConfig.define)) {
+          // The values are already JSON.stringified from the config
+          // but we need to ensure they're properly escaped for the shell
+          // Empty string "" needs special handling
+          let formattedValue = value;
+          if (value === '""' || value === "''") {
+            // Empty string needs to be passed as '""' to esbuild
+            formattedValue = '\'""\'';
+          }
+          args.push(`--define:${key}=${formattedValue}`);
+        }
+      }
 
       // Run esbuild
       await this.runEsbuild(args);
@@ -258,6 +273,11 @@ class BuildSystem {
    */
   runEsbuild(args) {
     return new Promise((resolve, reject) => {
+      // Log the command being run for debugging
+      if (this.options.verbose) {
+        console.log('Running esbuild with args:', ['esbuild', ...args].join(' '));
+      }
+      
       // Use npx to run esbuild
       const proc = spawn('npx', ['esbuild', ...args], {
         stdio: this.options.verbose ? 'inherit' : 'pipe',

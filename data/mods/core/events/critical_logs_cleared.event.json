@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:critical_logs_cleared",
+  "description": "Dispatched when the user clears all critical log entries from the notifier.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}
