@@ -13,11 +13,21 @@
   "required_components": {
     "actor": ["positioning:closeness"]
   },
-  "forbidden_components": {
-    "actor": ["intimacy:kissing"]
-  },
   "template": "turn {target} around",
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "core:actor-can-move"
+      },
+      "failure_message": "You cannot move right now."
+    },
+    {
+      "logic": {
+        "condition_ref": "core:actor-mouth-available"
+      },
+      "failure_message": "You cannot do that while your mouth is engaged."
+    }
+  ],
   "visual": {
     "backgroundColor": "#bf360c",
     "textColor": "#ffffff",

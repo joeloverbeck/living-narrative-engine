@@ -107,6 +107,8 @@
  * @property {string} [profile] - Optional. The character's profile information.
  * @property {string} [likes] - Optional. Things the character likes.
  * @property {string} [dislikes] - Optional. Things the character dislikes.
+ * @property {string} [strengths] - Optional. Character's capabilities and advantages.
+ * @property {string} [weaknesses] - Optional. Character's limitations and vulnerabilities.
  * @property {string} [secrets] - Optional. Secrets the character might have.
  * @property {string} [fears] - Optional. Things the character fears.
  * @property {string[]} [speechPatterns] - Optional. An array of trimmed, valid speech patterns. An empty array or undefined if no valid patterns exist.
