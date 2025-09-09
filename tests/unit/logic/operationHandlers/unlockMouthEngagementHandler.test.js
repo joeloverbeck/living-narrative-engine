@@ -84,13 +84,13 @@ describe('UnlockMouthEngagementHandler', () => {
       );
 
       // Verify success event
-      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith({
-        type: 'MOUTH_ENGAGEMENT_UNLOCKED',
-        payload: {
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:mouth_engagement_unlocked',
+        {
           actorId: 'actor_1',
           timestamp: expect.any(String),
-        },
-      });
+        }
+      );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Successfully unlocked mouth engagement'),
@@ -141,7 +141,8 @@ describe('UnlockMouthEngagementHandler', () => {
 
       // Should not dispatch success event
       expect(mockEventDispatcher.dispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'MOUTH_ENGAGEMENT_UNLOCKED' })
+        'core:mouth_engagement_unlocked',
+        expect.any(Object)
       );
     });
   });

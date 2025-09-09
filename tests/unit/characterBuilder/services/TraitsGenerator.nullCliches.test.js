@@ -9,11 +9,105 @@ import {
   it,
   expect,
   beforeEach,
-  afterEach,
   jest,
 } from '@jest/globals';
 import { TraitsGenerator } from '../../../../src/characterBuilder/services/TraitsGenerator.js';
-import { TraitsGenerationError } from '../../../../src/characterBuilder/errors/TraitsGenerationError.js';
+
+// Shared mock response object to eliminate duplication
+const MOCK_PARSED_RESPONSE = {
+  names: [
+    {
+      name: 'Test Name',
+      justification:
+        'This is a test justification that meets the minimum length requirement.',
+    },
+  ],
+  physicalDescription:
+    'This is a test physical description that meets the minimum length requirement of 100 characters for validation purposes.',
+  personality: [
+    {
+      trait: 'friendly',
+      explanation:
+        'This person is naturally friendly and welcoming to others',
+    },
+  ],
+  strengths: ['brave'],
+  weaknesses: ['stubborn'],
+  likes: ['reading'],
+  dislikes: ['noise'],
+  fears: ['heights'],
+  goals: {
+    primary: 'test goal',
+    longTerm: 'What will they achieve in life?',
+  },
+  notes: ['test note'],
+  profile:
+    'This is a comprehensive test profile that meets the minimum 200 character requirement for validation. It provides detailed information about the character including their background, personality traits, and motivations.',
+  secrets: ['test secret'],
+};
+
+// Shared test data constants
+const TEST_CONCEPT = {
+  id: '9f5e16fb-3cd8-42a3-891d-22c078a24762',
+  concept: 'Test concept',
+};
+
+const TEST_DIRECTION = {
+  id: 'bd1409eb-7e2a-4d4f-abd5-10af53d28df6',
+  title: 'Test direction',
+  description: 'Test direction description',
+  coreTension: 'Test core tension',
+  uniqueTwist: 'Test unique twist',
+  narrativePotential: 'Test narrative potential',
+};
+
+const TEST_USER_INPUTS = {
+  coreMotivation: 'To find redemption through helping others',
+  internalContradiction: 'Wants to help but fears discovery of dark past',
+  centralQuestion: 'Can someone truly change their nature?',
+  additionalNotes: 'Test notes',
+};
+
+// Mock factory functions to reduce setup overhead
+const createMockLogger = () => ({
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+});
+
+const createMockLlmJsonService = () => ({
+  clean: jest.fn(),
+  parseAndRepair: jest.fn(),
+});
+
+const createMockLlmStrategyFactory = () => ({
+  getAIDecision: jest.fn(),
+});
+
+const createMockLlmConfigManager = () => ({
+  loadConfiguration: jest.fn(),
+  getActiveConfiguration: jest.fn().mockResolvedValue({ configId: 'test-config' }),
+  setActiveConfiguration: jest.fn(),
+});
+
+const createMockEventBus = () => ({
+  dispatch: jest.fn(),
+  subscribe: jest.fn(),
+  unsubscribe: jest.fn(),
+});
+
+const createMockTokenEstimator = () => ({
+  estimateTokens: jest.fn().mockReturnValue(100),
+});
+
+// Helper function to set up successful mock responses
+const setupSuccessfulMockResponse = (mocks) => {
+  const mockResponse = JSON.stringify(MOCK_PARSED_RESPONSE);
+  mocks.llmStrategyFactory.getAIDecision.mockResolvedValue(mockResponse);
+  mocks.llmJsonService.clean.mockReturnValue(mockResponse);
+  mocks.llmJsonService.parseAndRepair.mockResolvedValue(MOCK_PARSED_RESPONSE);
+};
 
 // Mock the prompt functions to prevent real LLM calls
 jest.mock(
@@ -67,336 +161,69 @@ jest.mock(
 
 describe('TraitsGenerator - Null Cliches Reproduction', () => {
   let traitsGenerator;
-  let mockLogger;
-  let mockLlmJsonService;
-  let mockLlmStrategyFactory;
-  let mockLlmConfigManager;
-  let mockEventBus;
-  let mockTokenEstimator;
+  let mocks;
 
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
 
-    // Create mock dependencies
-    mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    mockLlmJsonService = {
-      clean: jest.fn(),
-      parseAndRepair: jest.fn(),
-    };
-
-    mockLlmStrategyFactory = {
-      getAIDecision: jest.fn(),
-    };
-
-    mockLlmConfigManager = {
-      loadConfiguration: jest.fn(),
-      getActiveConfiguration: jest
-        .fn()
-        .mockResolvedValue({ configId: 'test-config' }),
-      setActiveConfiguration: jest.fn(),
-    };
-
-    mockEventBus = {
-      dispatch: jest.fn(),
-      subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
-    };
-
-    mockTokenEstimator = {
-      estimateTokens: jest.fn().mockReturnValue(100),
+    // Create mock dependencies using factory functions
+    mocks = {
+      logger: createMockLogger(),
+      llmJsonService: createMockLlmJsonService(),
+      llmStrategyFactory: createMockLlmStrategyFactory(),
+      llmConfigManager: createMockLlmConfigManager(),
+      eventBus: createMockEventBus(),
+      tokenEstimator: createMockTokenEstimator(),
     };
 
     // Create the TraitsGenerator instance with correct dependencies
-    traitsGenerator = new TraitsGenerator({
-      logger: mockLogger,
-      llmJsonService: mockLlmJsonService,
-      llmStrategyFactory: mockLlmStrategyFactory,
-      llmConfigManager: mockLlmConfigManager,
-      eventBus: mockEventBus,
-      tokenEstimator: mockTokenEstimator,
-    });
+    traitsGenerator = new TraitsGenerator(mocks);
   });
 
   describe('Null Cliches Validation Error Reproduction', () => {
-    it('should NOT throw error when cliches is null (cliches are optional)', async () => {
-      // Arrange: Create parameters with null cliches (reproduces the actual runtime error)
-      const params = {
-        concept: {
-          id: '9f5e16fb-3cd8-42a3-891d-22c078a24762',
-          concept: 'Test concept',
-        },
-        direction: {
-          id: 'bd1409eb-7e2a-4d4f-abd5-10af53d28df6',
-          title: 'Test direction',
-          description: 'Test direction description',
-          coreTension: 'Test core tension',
-          uniqueTwist: 'Test unique twist',
-          narrativePotential: 'Test narrative potential',
-        },
-        userInputs: {
-          coreMotivation: 'To find redemption through helping others',
-          internalContradiction:
-            'Wants to help but fears discovery of dark past',
-          centralQuestion: 'Can someone truly change their nature?',
-          additionalNotes: 'Test notes',
-        },
-        cliches: null, // null is actually valid - cliches are optional
-      };
+    describe.each([
+      ['null', null],
+      ['undefined', undefined],
+      ['empty object', {}],
+    ])('should NOT throw error when cliches is %s', (description, clichesValue) => {
+      it(`should handle ${description} cliches correctly`, async () => {
+        // Arrange: Create parameters with test cliches value
+        const params = {
+          concept: TEST_CONCEPT,
+          direction: TEST_DIRECTION,
+          userInputs: TEST_USER_INPUTS,
+        };
+        
+        // Only add cliches property if it's not undefined
+        if (clichesValue !== undefined) {
+          params.cliches = clichesValue;
+        }
 
-      // Mock the correct LLM strategy factory method
-      const mockParsedResponse = {
-        names: [
-          {
-            name: 'Test Name',
-            justification:
-              'This is a test justification that meets the minimum length requirement.',
-          },
-        ],
-        physicalDescription:
-          'This is a test physical description that meets the minimum length requirement of 100 characters for validation purposes.',
-        personality: [
-          {
-            trait: 'friendly',
-            explanation:
-              'This person is naturally friendly and welcoming to others',
-          },
-        ],
-        strengths: ['brave'],
-        weaknesses: ['stubborn'],
-        likes: ['reading'],
-        dislikes: ['noise'],
-        fears: ['heights'],
-        goals: {
-          primary: 'test goal',
-          longTerm: 'What will they achieve in life?',
-        },
-        notes: ['test note'],
-        profile:
-          'This is a comprehensive test profile that meets the minimum 200 character requirement for validation. It provides detailed information about the character including their background, personality traits, and motivations.',
-        secrets: ['test secret'],
-      };
+        setupSuccessfulMockResponse(mocks);
 
-      const mockResponse = JSON.stringify(mockParsedResponse);
+        // Act: Should NOT throw an error - valid cliches values
+        const result = await traitsGenerator.generateTraits(params);
 
-      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockResponse);
-      mockLlmJsonService.clean.mockReturnValue(mockResponse);
-      mockLlmJsonService.parseAndRepair.mockResolvedValue(mockParsedResponse);
-
-      // Act: Should NOT throw an error - null cliches are valid
-      const result = await traitsGenerator.generateTraits(params);
-
-      // Assert: Should have successfully generated traits
-      expect(result).toBeDefined();
-      expect(result.names).toEqual([
-        {
-          name: 'Test Name',
-          justification:
-            'This is a test justification that meets the minimum length requirement.',
-        },
-      ]);
-      expect(result.metadata).toBeDefined();
-    });
-
-    it('should NOT throw error when cliches is undefined (cliches are optional)', async () => {
-      // Arrange: Create parameters with undefined cliches
-      const params = {
-        concept: {
-          id: '9f5e16fb-3cd8-42a3-891d-22c078a24762',
-          concept: 'Test concept',
-        },
-        direction: {
-          id: 'bd1409eb-7e2a-4d4f-abd5-10af53d28df6',
-          title: 'Test direction',
-          description: 'Test direction description',
-          coreTension: 'Test core tension',
-          uniqueTwist: 'Test unique twist',
-          narrativePotential: 'Test narrative potential',
-        },
-        userInputs: {
-          coreMotivation: 'To find redemption through helping others',
-          internalContradiction:
-            'Wants to help but fears discovery of dark past',
-          centralQuestion: 'Can someone truly change their nature?',
-          additionalNotes: 'Test notes',
-        },
-        // cliches is undefined (missing property) - this is valid
-      };
-
-      // Mock the correct LLM strategy factory method
-      const mockParsedResponse = {
-        names: [
-          {
-            name: 'Test Name',
-            justification:
-              'This is a test justification that meets the minimum length requirement.',
-          },
-        ],
-        physicalDescription:
-          'This is a test physical description that meets the minimum length requirement of 100 characters for validation purposes.',
-        personality: [
-          {
-            trait: 'friendly',
-            explanation:
-              'This person is naturally friendly and welcoming to others',
-          },
-        ],
-        strengths: ['brave'],
-        weaknesses: ['stubborn'],
-        likes: ['reading'],
-        dislikes: ['noise'],
-        fears: ['heights'],
-        goals: {
-          primary: 'test goal',
-          longTerm: 'What will they achieve in life?',
-        },
-        notes: ['test note'],
-        profile:
-          'This is a comprehensive test profile that meets the minimum 200 character requirement for validation. It provides detailed information about the character including their background, personality traits, and motivations.',
-        secrets: ['test secret'],
-      };
-
-      const mockResponse = JSON.stringify(mockParsedResponse);
-
-      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockResponse);
-      mockLlmJsonService.clean.mockReturnValue(mockResponse);
-      mockLlmJsonService.parseAndRepair.mockResolvedValue(mockParsedResponse);
-
-      // Act: Should NOT throw an error - undefined cliches are valid
-      const result = await traitsGenerator.generateTraits(params);
-
-      // Assert: Should have successfully generated traits
-      expect(result).toBeDefined();
-      expect(result.names).toEqual([
-        {
-          name: 'Test Name',
-          justification:
-            'This is a test justification that meets the minimum length requirement.',
-        },
-      ]);
-      expect(result.metadata).toBeDefined();
-    });
-
-    it('should NOT throw error when cliches is empty object', async () => {
-      // Arrange: Create parameters with empty array cliches (should work)
-      const mockParsedResponse = {
-        names: [
-          {
-            name: 'Test Name',
-            justification:
-              'This is a test justification that meets the minimum length requirement.',
-          },
-        ],
-        physicalDescription:
-          'This is a test physical description that meets the minimum length requirement of 100 characters for validation purposes.',
-        personality: [
-          {
-            trait: 'friendly',
-            explanation:
-              'This person is naturally friendly and welcoming to others',
-          },
-        ],
-        strengths: ['brave'],
-        weaknesses: ['stubborn'],
-        likes: ['reading'],
-        dislikes: ['noise'],
-        fears: ['heights'],
-        goals: {
-          primary: 'test goal',
-          longTerm: 'What will they achieve in life?',
-        },
-        notes: ['test note'],
-        profile:
-          'This is a comprehensive test profile that meets the minimum 200 character requirement for validation. It provides detailed information about the character including their background, personality traits, and motivations.',
-        secrets: ['test secret'],
-      };
-
-      const mockResponse = JSON.stringify(mockParsedResponse);
-
-      // Mock the correct LLM strategy factory method
-      mockLlmStrategyFactory.getAIDecision.mockResolvedValue(mockResponse);
-
-      // Mock the JSON service to return parsed response
-      mockLlmJsonService.clean.mockReturnValue(mockResponse);
-      mockLlmJsonService.parseAndRepair.mockResolvedValue(mockParsedResponse);
-
-      const params = {
-        concept: {
-          id: '9f5e16fb-3cd8-42a3-891d-22c078a24762',
-          concept: 'Test concept',
-        },
-        direction: {
-          id: 'bd1409eb-7e2a-4d4f-abd5-10af53d28df6',
-          title: 'Test direction',
-          description: 'Test direction description',
-          coreTension: 'Test core tension',
-          uniqueTwist: 'Test unique twist',
-          narrativePotential: 'Test narrative potential',
-        },
-        userInputs: {
-          coreMotivation: 'To find redemption through helping others',
-          internalContradiction:
-            'Wants to help but fears discovery of dark past',
-          centralQuestion: 'Can someone truly change their nature?',
-          additionalNotes: 'Test notes',
-        },
-        cliches: {}, // Empty object should be valid
-      };
-
-      // Act: Should not throw an error
-      const result = await traitsGenerator.generateTraits(params);
-
-      // Assert: Should have successfully generated traits
-      expect(result).toBeDefined();
-      expect(result.names).toEqual([
-        {
-          name: 'Test Name',
-          justification:
-            'This is a test justification that meets the minimum length requirement.',
-        },
-      ]);
-      expect(result.metadata).toBeDefined();
+        // Assert: Should have successfully generated traits
+        expect(result).toBeDefined();
+        expect(result.names).toEqual(MOCK_PARSED_RESPONSE.names);
+        expect(result.metadata).toBeDefined();
+      });
     });
 
     it('should throw TraitsGenerationError when cliches is an array (invalid type)', async () => {
       // Arrange: Create parameters with array cliches (invalid)
       const params = {
-        concept: {
-          id: '9f5e16fb-3cd8-42a3-891d-22c078a24762',
-          concept: 'Test concept',
-        },
-        direction: {
-          id: 'bd1409eb-7e2a-4d4f-abd5-10af53d28df6',
-          title: 'Test direction',
-          description: 'Test direction description',
-          coreTension: 'Test core tension',
-          uniqueTwist: 'Test unique twist',
-          narrativePotential: 'Test narrative potential',
-        },
-        userInputs: {
-          coreMotivation: 'To find redemption through helping others',
-          internalContradiction:
-            'Wants to help but fears discovery of dark past',
-          centralQuestion: 'Can someone truly change their nature?',
-          additionalNotes: 'Test notes',
-        },
+        concept: TEST_CONCEPT,
+        direction: TEST_DIRECTION,
+        userInputs: TEST_USER_INPUTS,
         cliches: [], // Array is invalid - should be object or null
       };
 
       // Act & Assert: Should throw error when trying to access properties on array
       // Note: The production code doesn't explicitly validate against arrays, 
       // but fails when trying to access .categories property
-      await expect(traitsGenerator.generateTraits(params)).rejects.toThrow(
-        TraitsGenerationError
-      );
-
-      // The error happens in the prompt builder when accessing array properties
       await expect(traitsGenerator.generateTraits(params)).rejects.toThrow(
         "Cannot read properties of undefined (reading 'length')"
       );

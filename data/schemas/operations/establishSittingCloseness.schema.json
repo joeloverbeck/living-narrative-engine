@@ -34,9 +34,18 @@
         },
         "spot_index": {
           "description": "The spot index where the actor is now sitting",
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9
+            },
+            {
+              "type": "string",
+              "description": "Variable reference (e.g., '{context.spotIndex}')",
+              "minLength": 1
+            }
+          ]
         },
         "result_variable": {
           "description": "Optional variable name to store operation result for rule conditions",

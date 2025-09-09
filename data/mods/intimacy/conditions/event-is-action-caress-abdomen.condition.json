@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "intimacy:event-is-action-caress-abdomen",
+  "description": "Checks if the triggering event is for the 'intimacy:caress_abdomen' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "intimacy:caress_abdomen"]
+  }
+}

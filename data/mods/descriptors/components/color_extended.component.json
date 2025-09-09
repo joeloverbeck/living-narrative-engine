@@ -24,7 +24,9 @@
           "sand-beige",
           "indigo",
           "taupe",
-          "smoke-black"
+          "smoke-black",
+          "bronze",
+          "dark-olive"
         ],
         "default": "raven-black"
       }

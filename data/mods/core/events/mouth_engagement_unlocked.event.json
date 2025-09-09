@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "core:mouth_engagement_unlocked",
+  "description": "Fired when an entity's mouth engagement lock is released, allowing the mouth to be used for other activities. This event signals that the entity is no longer engaged in mouth-specific actions like kissing.",
+  "payloadSchema": {
+    "description": "Defines the structure for the 'core:mouth_engagement_unlocked' event payload.",
+    "type": "object",
+    "required": ["actorId", "timestamp"],
+    "properties": {
+      "actorId": {
+        "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
+        "description": "The unique instance ID of the entity whose mouth engagement was unlocked."
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO 8601 timestamp of when the mouth engagement was unlocked."
+      }
+    },
+    "additionalProperties": false
+  }
+}

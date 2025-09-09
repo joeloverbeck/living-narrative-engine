@@ -180,7 +180,8 @@
       "Bash(find:*)",
       "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/turnAroundKneelInteraction.integration.test.js --testNamePattern=\"should correctly handle multiple actors with mixed facing states\" --no-coverage --verbose)",
       "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/turnAroundKneelInteraction.integration.test.js --testNamePattern=\"should correctly handle multiple actors with mixed facing states\" --no-coverage)",
-      "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/turnAroundKneelInteraction.integration.test.js --no-coverage --runInBand)"
+      "Bash(NODE_ENV=test npx jest tests/integration/mods/positioning/turnAroundKneelInteraction.integration.test.js --no-coverage --runInBand)",
+      "Bash(NODE_ENV=test node debug-if-operation-validation.js)"
     ],
     "deny": [],
     "ask": []
