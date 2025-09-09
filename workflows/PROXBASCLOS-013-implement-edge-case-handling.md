@@ -23,14 +23,12 @@ Implement comprehensive edge case handling, input validation, and error recovery
 #### 2. Edge Case Scenarios
 - Single-spot furniture handling
 - Empty furniture scenarios  
-- Race condition prevention
-- Concurrent modification handling
 - Component state inconsistencies
+- JavaScript single-threaded execution model considerations
 
 #### 3. Error Recovery and Graceful Degradation
 - Partial failure handling
 - System state recovery
-- Rollback mechanisms for failed operations
 - Clear error messaging and logging
 
 #### 4. Data Integrity Validation
@@ -48,8 +46,7 @@ Implement comprehensive edge case handling, input validation, and error recovery
 
 ##### Enhanced `validateProximityParameters()` Function
 ```javascript
-export function validateProximityParameters(furnitureId, actorId, spotIndex, logger, options = {}) {
-  const context = options.context || 'proximity operation';
+export function validateProximityParameters(furnitureId, actorId, spotIndex, logger) {
   const errors = [];
 
   try {
@@ -108,11 +105,10 @@ export function validateProximityParameters(furnitureId, actorId, spotIndex, log
 
     // If any errors, throw with detailed information
     if (errors.length > 0) {
-      const errorMessage = `Parameter validation failed in ${context}: ${errors.join(', ')}`;
+      const errorMessage = `Parameter validation failed: ${errors.join(', ')}`;
       
       if (logger && typeof logger.error === 'function') {
         logger.error('Proximity parameter validation failed', {
-          context,
           furnitureId,
           actorId,
           spotIndex,
@@ -127,7 +123,6 @@ export function validateProximityParameters(furnitureId, actorId, spotIndex, log
     // Log successful validation at debug level
     if (logger && typeof logger.debug === 'function') {
       logger.debug('Proximity parameters validated successfully', {
-        context,
         furnitureId,
         actorId,
         spotIndex
@@ -144,7 +139,6 @@ export function validateProximityParameters(furnitureId, actorId, spotIndex, log
     
     if (logger && typeof logger.error === 'function') {
       logger.error('Unexpected validation error', {
-        context,
         originalError: error.message,
         stack: error.stack
       });
@@ -162,6 +156,9 @@ export function validateProximityParameters(furnitureId, actorId, spotIndex, log
 /**
  * Validates component state consistency for proximity operations
  */
+import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
+import { EntityNotFoundError } from '../errors/entityNotFoundError.js';
+
 export class ComponentStateValidator {
   #logger;
 
@@ -174,25 +171,25 @@ export class ComponentStateValidator {
    */
   validateFurnitureComponent(furnitureId, component, context = 'furniture validation') {
     if (!component) {
-      throw new ComponentNotFoundError(`Furniture ${furnitureId} missing allows_sitting component`);
+      throw new EntityNotFoundError(`Furniture ${furnitureId} missing allows_sitting component`);
     }
 
     if (!component.spots || !Array.isArray(component.spots)) {
-      throw new InvalidComponentStateError(`Furniture ${furnitureId} has invalid spots array`);
+      throw new InvalidArgumentError(`Furniture ${furnitureId} has invalid spots array`);
     }
 
     if (component.spots.length === 0) {
-      throw new InvalidComponentStateError(`Furniture ${furnitureId} has empty spots array`);
+      throw new InvalidArgumentError(`Furniture ${furnitureId} has empty spots array`);
     }
 
     if (component.spots.length > 10) {
-      throw new InvalidComponentStateError(`Furniture ${furnitureId} exceeds maximum spots (10)`);
+      throw new InvalidArgumentError(`Furniture ${furnitureId} exceeds maximum spots (10)`);
     }
 
     // Validate each spot
     component.spots.forEach((spot, index) => {
       if (spot !== null && (typeof spot !== 'string' || !spot.includes(':'))) {
-        throw new InvalidComponentStateError(
+        throw new InvalidArgumentError(
           `Furniture ${furnitureId} spot ${index} has invalid occupant ID: ${spot}`
         );
       }
@@ -210,13 +207,13 @@ export class ComponentStateValidator {
     }
 
     if (!component.partners || !Array.isArray(component.partners)) {
-      throw new InvalidComponentStateError(`Actor ${actorId} has invalid closeness partners array`);
+      throw new InvalidArgumentError(`Actor ${actorId} has invalid closeness partners array`);
     }
 
     // Validate partner IDs
     component.partners.forEach((partnerId, index) => {
       if (typeof partnerId !== 'string' || !partnerId.includes(':')) {
-        throw new InvalidComponentStateError(
+        throw new InvalidArgumentError(
           `Actor ${actorId} has invalid partner ID at index ${index}: ${partnerId}`
         );
       }
@@ -225,12 +222,12 @@ export class ComponentStateValidator {
     // Check for duplicates
     const uniquePartners = new Set(component.partners);
     if (uniquePartners.size !== component.partners.length) {
-      throw new InvalidComponentStateError(`Actor ${actorId} has duplicate partners in closeness component`);
+      throw new InvalidArgumentError(`Actor ${actorId} has duplicate partners in closeness component`);
     }
 
     // Check for self-reference
     if (component.partners.includes(actorId)) {
-      throw new InvalidComponentStateError(`Actor ${actorId} cannot be partner with themselves`);
+      throw new InvalidArgumentError(`Actor ${actorId} cannot be partner with themselves`);
     }
 
     this.#logger.debug('Closeness component validated', { 
@@ -243,73 +240,25 @@ export class ComponentStateValidator {
    * Validates bidirectional closeness consistency
    */
   async validateBidirectionalCloseness(entityManager, actorId, partnerId) {
-    const actorCloseness = entityManager.getComponent(actorId, 'positioning:closeness');
-    const partnerCloseness = entityManager.getComponent(partnerId, 'positioning:closeness');
+    const actorCloseness = entityManager.getComponentData(actorId, 'positioning:closeness');
+    const partnerCloseness = entityManager.getComponentData(partnerId, 'positioning:closeness');
 
     const actorHasPartner = actorCloseness?.partners?.includes(partnerId) || false;
     const partnerHasActor = partnerCloseness?.partners?.includes(actorId) || false;
 
     if (actorHasPartner && !partnerHasActor) {
-      throw new InconsistentStateError(
+      throw new InvalidArgumentError(
         `Unidirectional closeness detected: ${actorId} → ${partnerId} but not reverse`
       );
     }
 
     if (!actorHasPartner && partnerHasActor) {
-      throw new InconsistentStateError(
+      throw new InvalidArgumentError(
         `Unidirectional closeness detected: ${partnerId} → ${actorId} but not reverse`
       );
     }
 
     this.#logger.debug('Bidirectional closeness validated', { actorId, partnerId });
-  }
-}
-```
-
-### Enhanced Error Classes
-
-#### Custom Error Types
-**New File**: `src/errors/proximityErrors.js`
-
-```javascript
-export class ComponentNotFoundError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'ComponentNotFoundError';
-    this.code = 'PROXIMITY_COMPONENT_NOT_FOUND';
-  }
-}
-
-export class InvalidComponentStateError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'InvalidComponentStateError';
-    this.code = 'PROXIMITY_INVALID_COMPONENT_STATE';
-  }
-}
-
-export class InconsistentStateError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'InconsistentStateError'; 
-    this.code = 'PROXIMITY_INCONSISTENT_STATE';
-  }
-}
-
-export class ConcurrencyError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'ConcurrencyError';
-    this.code = 'PROXIMITY_CONCURRENCY_ERROR';
-  }
-}
-
-export class ProximityOperationError extends Error {
-  constructor(message, originalError = null) {
-    super(message);
-    this.name = 'ProximityOperationError';
-    this.code = 'PROXIMITY_OPERATION_ERROR';
-    this.originalError = originalError;
   }
 }
 ```
@@ -322,355 +271,375 @@ export class ProximityOperationError extends Error {
 ##### Add comprehensive error handling and validation
 ```javascript
 import { ComponentStateValidator } from '../../utils/componentStateValidator.js';
-import { 
-  ComponentNotFoundError, 
-  InvalidComponentStateError, 
-  ConcurrencyError, 
-  ProximityOperationError 
-} from '../../errors/proximityErrors.js';
+import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
+import { EntityNotFoundError } from '../../errors/entityNotFoundError.js';
+import { getLogger } from './baseOperationHandler.js';
 
-export default class EstablishSittingClosenessHandler {
-  #logger;
-  #entityManager;
-  #eventBus;
-  #closenessCircleService;
-  #operationContext;
-  #validator;
+// Inside the EstablishSittingClosenessHandler class:
 
-  constructor({ logger, entityManager, eventBus, closenessCircleService, operationContext }) {
-    // Existing dependency validation...
+async execute(parameters, executionContext) {
+  const logger = getLogger(executionContext);
+  const operationId = `establish_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  try {
+    // Phase 1: Enhanced parameter validation
+    this.#validateParameters(parameters, operationId, logger);
     
-    this.#validator = new ComponentStateValidator(logger);
-  }
-
-  async execute(parameters) {
-    const operationId = `establish_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Phase 2: Component state validation
+    const { furnitureComponent, actorClosenessComponent } = await this.#validateComponentState(
+      parameters,
+      logger
+    );
     
-    try {
-      // Phase 1: Enhanced parameter validation
-      this.#validateParameters(parameters, operationId);
-      
-      // Phase 2: Component state validation
-      const { furnitureComponent, actorClosenessComponent } = await this.#validateComponentState(parameters);
-      
-      // Phase 3: Adjacent actor discovery with validation
-      const adjacentActors = await this.#findValidatedAdjacentActors(parameters, furnitureComponent);
-      
-      if (adjacentActors.length === 0) {
-        return this.#handleNoAdjacentActors(parameters, operationId);
-      }
-      
-      // Phase 4: Establish closeness with concurrency protection
-      await this.#establishClosenessWithValidation(parameters, adjacentActors, operationId);
-      
-      // Phase 5: Validate final state
-      await this.#validateFinalState(parameters, adjacentActors);
-      
-      return this.#handleSuccess(parameters, adjacentActors, operationId);
-      
-    } catch (error) {
-      return this.#handleError(error, parameters, operationId);
+    // Phase 3: Adjacent actor discovery with validation
+    const adjacentActors = await this.#findValidatedAdjacentActors(
+      parameters, 
+      furnitureComponent,
+      logger
+    );
+    
+    if (adjacentActors.length === 0) {
+      return this.#handleNoAdjacentActors(parameters, operationId, executionContext, logger);
     }
+    
+    // Phase 4: Establish closeness with proper merge handling
+    await this.#establishClosenessWithValidation(
+      parameters, 
+      adjacentActors, 
+      operationId,
+      executionContext,
+      logger
+    );
+    
+    // Phase 5: Validate final state
+    await this.#validateFinalState(parameters, adjacentActors, logger);
+    
+    return this.#handleSuccess(parameters, adjacentActors, operationId, executionContext, logger);
+    
+  } catch (error) {
+    return this.#handleError(error, parameters, operationId, executionContext, logger);
   }
+}
 
-  #validateParameters(parameters, operationId) {
-    try {
-      validateProximityParameters(
-        parameters.furniture_id, 
-        parameters.actor_id, 
-        parameters.spot_index, 
-        this.#logger,
-        { context: `establish closeness operation ${operationId}` }
-      );
-    } catch (error) {
-      throw new ProximityOperationError(
-        `Parameter validation failed for establish closeness: ${error.message}`, 
-        error
+#validateParameters(parameters, operationId, logger) {
+  try {
+    validateProximityParameters(
+      parameters.furniture_id, 
+      parameters.actor_id, 
+      parameters.spot_index, 
+      logger
+    );
+  } catch (error) {
+    throw new InvalidArgumentError(
+      `Parameter validation failed for establish closeness: ${error.message}`
+    );
+  }
+}
+
+async #validateComponentState(parameters, logger) {
+  const validator = new ComponentStateValidator(logger);
+  
+  try {
+    const furnitureComponent = this.#entityManager.getComponentData(
+      parameters.furniture_id, 
+      'positioning:allows_sitting'
+    );
+    
+    validator.validateFurnitureComponent(
+      parameters.furniture_id, 
+      furnitureComponent, 
+      'establish closeness'
+    );
+
+    // Validate spot index bounds for this specific furniture
+    if (parameters.spot_index >= furnitureComponent.spots.length) {
+      throw new InvalidArgumentError(
+        `Spot index ${parameters.spot_index} exceeds furniture capacity (${furnitureComponent.spots.length})`
       );
     }
+
+    const actorClosenessComponent = this.#entityManager.getComponentData(
+      parameters.actor_id, 
+      'positioning:closeness'
+    );
+    
+    validator.validateClosenessComponent(
+      parameters.actor_id, 
+      actorClosenessComponent,
+      'establish closeness'
+    );
+
+    return { furnitureComponent, actorClosenessComponent };
+    
+  } catch (error) {
+    if (error instanceof EntityNotFoundError || error instanceof InvalidArgumentError) {
+      throw error;
+    }
+    
+    throw new Error(`Component state validation failed: ${error.message}`);
   }
+}
 
-  async #validateComponentState(parameters) {
-    try {
-      const furnitureComponent = this.#entityManager.getComponent(
-        parameters.furniture_id, 
-        'positioning:allows_sitting'
-      );
-      
-      this.#validator.validateFurnitureComponent(
-        parameters.furniture_id, 
-        furnitureComponent, 
-        'establish closeness'
-      );
-
-      // Validate spot index bounds for this specific furniture
-      if (parameters.spot_index >= furnitureComponent.spots.length) {
-        throw new InvalidComponentStateError(
-          `Spot index ${parameters.spot_index} exceeds furniture capacity (${furnitureComponent.spots.length})`
-        );
+async #findValidatedAdjacentActors(parameters, furnitureComponent, logger) {
+  const validator = new ComponentStateValidator(logger);
+  
+  try {
+    const adjacentActors = findAdjacentOccupants(furnitureComponent, parameters.spot_index);
+    
+    // Validate each adjacent actor exists and has valid components
+    const validActors = [];
+    for (const actorId of adjacentActors) {
+      // Check if entity exists (using hasEntity if available, otherwise try to get a component)
+      try {
+        const actorCloseness = this.#entityManager.getComponentData(actorId, 'positioning:closeness');
+        validator.validateClosenessComponent(actorId, actorCloseness);
+        validActors.push(actorId);
+      } catch (error) {
+        logger.warn('Adjacent actor validation failed, skipping', { 
+          actorId, 
+          furnitureId: parameters.furniture_id,
+          error: error.message
+        });
       }
+    }
 
-      const actorClosenessComponent = this.#entityManager.getComponent(
+    return validActors;
+    
+  } catch (error) {
+    throw new Error(`Adjacent actor validation failed: ${error.message}`);
+  }
+}
+
+async #establishClosenessWithValidation(parameters, adjacentActors, operationId, executionContext, logger) {
+  try {
+    const updates = new Map();
+    
+    for (const adjacentActorId of adjacentActors) {
+      // Get current components
+      const actorCloseness = this.#entityManager.getComponentData(
         parameters.actor_id, 
         'positioning:closeness'
       );
+      const adjacentCloseness = this.#entityManager.getComponentData(
+        adjacentActorId, 
+        'positioning:closeness'
+      );
       
-      this.#validator.validateClosenessComponent(
+      // Use closeness circle service to merge - it returns a deduplicated array
+      const allParticipants = this.#closenessCircleService.merge(
+        actorCloseness?.partners || [],
+        adjacentCloseness?.partners || [],
+        [parameters.actor_id],
+        [adjacentActorId]
+      );
+
+      // Create updates for all participants
+      for (const participantId of allParticipants) {
+        const otherPartners = allParticipants.filter(id => id !== participantId);
+        updates.set(participantId, { partners: otherPartners });
+      }
+    }
+
+    // Apply all updates
+    for (const [entityId, componentData] of updates) {
+      this.#entityManager.addComponent(entityId, 'positioning:closeness', componentData);
+    }
+
+    // Update movement locks (single ID + boolean)
+    for (const actorId of [parameters.actor_id, ...adjacentActors]) {
+      updateMovementLock(this.#entityManager, actorId, true);
+    }
+    
+  } catch (error) {
+    throw new Error(`Closeness establishment failed: ${error.message}`);
+  }
+}
+
+async #validateFinalState(parameters, adjacentActors, logger) {
+  const validator = new ComponentStateValidator(logger);
+  
+  try {
+    // Validate bidirectional relationships were created
+    for (const adjacentActorId of adjacentActors) {
+      await validator.validateBidirectionalCloseness(
+        this.#entityManager, 
         parameters.actor_id, 
-        actorClosenessComponent,
-        'establish closeness'
-      );
-
-      return { furnitureComponent, actorClosenessComponent };
-      
-    } catch (error) {
-      if (error instanceof ComponentNotFoundError || error instanceof InvalidComponentStateError) {
-        throw error;
-      }
-      
-      throw new ProximityOperationError(
-        `Component state validation failed: ${error.message}`, 
-        error
+        adjacentActorId
       );
     }
-  }
-
-  async #findValidatedAdjacentActors(parameters, furnitureComponent) {
-    try {
-      const adjacentActors = findAdjacentOccupants(furnitureComponent, parameters.spot_index);
-      
-      // Validate each adjacent actor exists and has valid components
-      for (const actorId of adjacentActors) {
-        const actorExists = this.#entityManager.hasEntity(actorId);
-        if (!actorExists) {
-          this.#logger.warn('Adjacent actor no longer exists, skipping', { 
-            actorId, 
-            furnitureId: parameters.furniture_id 
-          });
-          continue;
-        }
-
-        const actorCloseness = this.#entityManager.getComponent(actorId, 'positioning:closeness');
-        this.#validator.validateClosenessComponent(actorId, actorCloseness);
-      }
-
-      return adjacentActors.filter(actorId => this.#entityManager.hasEntity(actorId));
-      
-    } catch (error) {
-      throw new ProximityOperationError(
-        `Adjacent actor validation failed: ${error.message}`, 
-        error
-      );
-    }
-  }
-
-  async #establishClosenessWithValidation(parameters, adjacentActors, operationId) {
-    try {
-      const updates = new Map();
-      
-      for (const adjacentActorId of adjacentActors) {
-        // Get current components
-        const actorCloseness = this.#entityManager.getComponent(parameters.actor_id, 'positioning:closeness');
-        const adjacentCloseness = this.#entityManager.getComponent(adjacentActorId, 'positioning:closeness');
-        
-        // Use closeness circle service to merge
-        const mergedPartners = this.#closenessCircleService.merge(
-          actorCloseness?.partners || [],
-          adjacentCloseness?.partners || [],
-          parameters.actor_id,
-          adjacentActorId
-        );
-
-        // Store updates for batch application
-        for (const [entityId, partners] of Object.entries(mergedPartners)) {
-          updates.set(entityId, { partners });
-        }
-      }
-
-      // Apply all updates atomically
-      for (const [entityId, componentData] of updates) {
-        this.#entityManager.upsertComponent(entityId, 'positioning:closeness', componentData);
-      }
-
-      // Update movement locks
-      const allAffectedActors = [parameters.actor_id, ...adjacentActors];
-      await updateMovementLock(this.#entityManager, allAffectedActors, this.#logger);
-      
-    } catch (error) {
-      throw new ProximityOperationError(
-        `Closeness establishment failed: ${error.message}`, 
-        error
-      );
-    }
-  }
-
-  async #validateFinalState(parameters, adjacentActors) {
-    try {
-      // Validate bidirectional relationships were created
-      for (const adjacentActorId of adjacentActors) {
-        await this.#validator.validateBidirectionalCloseness(
-          this.#entityManager, 
-          parameters.actor_id, 
-          adjacentActorId
-        );
-      }
-    } catch (error) {
-      this.#logger.error('Final state validation failed', { 
-        error: error.message, 
-        actorId: parameters.actor_id,
-        adjacentActors
-      });
-      
-      // Don't throw - closeness was established, just log the inconsistency
-    }
-  }
-
-  #handleNoAdjacentActors(parameters, operationId) {
-    this.#logger.info('No adjacent actors found, closeness establishment skipped', {
-      operationId,
+  } catch (error) {
+    logger.error('Final state validation failed', { 
+      error: error.message, 
       actorId: parameters.actor_id,
-      furnitureId: parameters.furniture_id,
-      spotIndex: parameters.spot_index
+      adjacentActors
     });
+    
+    // Don't throw - closeness was established, just log the inconsistency
+  }
+}
 
-    if (parameters.result_variable) {
-      this.#operationContext.setVariable(parameters.result_variable, true);
-    }
+#handleNoAdjacentActors(parameters, operationId, executionContext, logger) {
+  logger.info('No adjacent actors found, closeness establishment skipped', {
+    operationId,
+    actorId: parameters.actor_id,
+    furnitureId: parameters.furniture_id,
+    spotIndex: parameters.spot_index
+  });
 
-    return { success: true, adjacentActors: [] };
+  if (parameters.result_variable) {
+    tryWriteContextVariable(executionContext, parameters.result_variable, true);
   }
 
-  #handleSuccess(parameters, adjacentActors, operationId) {
-    this.#logger.info('Sitting closeness established successfully', {
-      operationId,
+  return { success: true, adjacentActors: [] };
+}
+
+#handleSuccess(parameters, adjacentActors, operationId, executionContext, logger) {
+  logger.info('Sitting closeness established successfully', {
+    operationId,
+    actorId: parameters.actor_id,
+    furnitureId: parameters.furniture_id,
+    spotIndex: parameters.spot_index,
+    adjacentActors: adjacentActors,
+    relationshipsEstablished: adjacentActors.length
+  });
+
+  if (parameters.result_variable) {
+    tryWriteContextVariable(executionContext, parameters.result_variable, true);
+  }
+
+  safeDispatchError(this.#dispatcher, {
+    type: 'SITTING_CLOSENESS_ESTABLISHED',
+    payload: {
       actorId: parameters.actor_id,
       furnitureId: parameters.furniture_id,
-      spotIndex: parameters.spot_index,
       adjacentActors: adjacentActors,
-      relationshipsEstablished: adjacentActors.length
-    });
-
-    if (parameters.result_variable) {
-      this.#operationContext.setVariable(parameters.result_variable, true);
+      operationId
     }
+  }, logger);
 
-    this.#eventBus.dispatch({
-      type: 'SITTING_CLOSENESS_ESTABLISHED',
-      payload: {
-        actorId: parameters.actor_id,
-        furnitureId: parameters.furniture_id,
-        adjacentActors: adjacentActors,
-        operationId
-      }
-    });
+  return { success: true, adjacentActors };
+}
 
-    return { success: true, adjacentActors };
+#handleError(error, parameters, operationId, executionContext, logger) {
+  const errorContext = {
+    operationId,
+    actorId: parameters.actor_id,
+    furnitureId: parameters.furniture_id,
+    spotIndex: parameters.spot_index,
+    errorType: error.constructor.name,
+    errorMessage: error.message
+  };
+
+  logger.error('Failed to establish sitting closeness', errorContext);
+
+  safeDispatchError(this.#dispatcher, {
+    type: 'ESTABLISH_SITTING_CLOSENESS_FAILED',
+    payload: {
+      ...errorContext,
+      reason: error.message
+    }
+  }, logger);
+
+  if (parameters.result_variable) {
+    tryWriteContextVariable(executionContext, parameters.result_variable, false);
   }
 
-  #handleError(error, parameters, operationId) {
-    const errorContext = {
-      operationId,
-      actorId: parameters.actor_id,
-      furnitureId: parameters.furniture_id,
-      spotIndex: parameters.spot_index,
-      errorType: error.constructor.name,
-      errorMessage: error.message
-    };
-
-    this.#logger.error('Failed to establish sitting closeness', errorContext);
-
-    this.#eventBus.dispatch({
-      type: 'ESTABLISH_SITTING_CLOSENESS_FAILED',
-      payload: {
-        ...errorContext,
-        reason: error.message
-      }
-    });
-
-    if (parameters.result_variable) {
-      this.#operationContext.setVariable(parameters.result_variable, false);
-    }
-
-    // Don't re-throw - let the rule engine continue
-    return { success: false, error: error.message };
-  }
+  // Don't re-throw - let the rule engine continue
+  return { success: false, error: error.message };
 }
 ```
 
-## Race Condition Prevention
+## Data Consistency Checks
 
-### Atomic Operation Wrapper
-**New File**: `src/utils/atomicOperationWrapper.js`
+### State Consistency Validator
+**New File**: `src/utils/stateConsistencyValidator.js`
 
 ```javascript
 /**
- * Provides atomic operation capabilities for proximity closeness operations
+ * Validates state consistency across the proximity closeness system
  */
-export class AtomicOperationWrapper {
+export class StateConsistencyValidator {
   #logger;
-  #locks = new Map();
+  #entityManager;
 
-  constructor(logger) {
+  constructor(logger, entityManager) {
     this.#logger = logger;
+    this.#entityManager = entityManager;
   }
 
   /**
-   * Execute operation with entity-level locking to prevent race conditions
+   * Validate that all closeness relationships are bidirectional
    */
-  async executeWithLock(entityIds, operation, context = 'atomic operation') {
-    const sortedEntityIds = [...entityIds].sort(); // Prevent deadlock with consistent ordering
-    const lockKey = sortedEntityIds.join('|');
-    
-    if (this.#locks.has(lockKey)) {
-      throw new ConcurrencyError(`Concurrent operation detected for entities: ${lockKey}`);
+  validateAllClosenessRelationships() {
+    const issues = [];
+    const checkedPairs = new Set();
+
+    // Get all entities with closeness components
+    const entitiesWithCloseness = this.#entityManager.getEntitiesWithComponent('positioning:closeness');
+
+    for (const entityId of entitiesWithCloseness) {
+      const closenessData = this.#entityManager.getComponentData(entityId, 'positioning:closeness');
+      
+      if (!closenessData || !closenessData.partners) continue;
+
+      for (const partnerId of closenessData.partners) {
+        // Skip if we've already checked this pair
+        const pairKey = [entityId, partnerId].sort().join('|');
+        if (checkedPairs.has(pairKey)) continue;
+        checkedPairs.add(pairKey);
+
+        // Check for bidirectional relationship
+        const partnerCloseness = this.#entityManager.getComponentData(partnerId, 'positioning:closeness');
+        
+        if (!partnerCloseness || !partnerCloseness.partners || !partnerCloseness.partners.includes(entityId)) {
+          issues.push({
+            type: 'unidirectional_closeness',
+            from: entityId,
+            to: partnerId,
+            message: `${entityId} has ${partnerId} as partner, but not vice versa`
+          });
+        }
+      }
     }
 
-    this.#locks.set(lockKey, Date.now());
-    
-    try {
-      this.#logger.debug('Acquired entity locks for atomic operation', { 
-        lockKey, 
-        context, 
-        entityIds 
-      });
-      
-      const result = await operation();
-      
-      this.#logger.debug('Atomic operation completed successfully', { 
-        lockKey, 
-        context 
-      });
-      
-      return result;
-      
-    } catch (error) {
-      this.#logger.error('Atomic operation failed', { 
-        lockKey, 
-        context, 
-        error: error.message 
-      });
-      throw error;
-      
-    } finally {
-      this.#locks.delete(lockKey);
-      this.#logger.debug('Released entity locks', { lockKey, context });
+    if (issues.length > 0) {
+      this.#logger.warn('Closeness relationship consistency issues found', { issues });
     }
+
+    return issues;
   }
 
   /**
-   * Check if entities are currently locked
+   * Check for orphaned movement locks
    */
-  areEntitiesLocked(entityIds) {
-    const sortedEntityIds = [...entityIds].sort();
-    const lockKey = sortedEntityIds.join('|');
-    return this.#locks.has(lockKey);
-  }
+  validateMovementLocks() {
+    const issues = [];
+    
+    const entitiesWithMovement = this.#entityManager.getEntitiesWithComponent('positioning:movement');
+    
+    for (const entityId of entitiesWithMovement) {
+      const movementData = this.#entityManager.getComponentData(entityId, 'positioning:movement');
+      
+      if (movementData && movementData.locked) {
+        // Check if entity has closeness partners or is sitting
+        const closenessData = this.#entityManager.getComponentData(entityId, 'positioning:closeness');
+        const sittingData = this.#entityManager.getComponentData(entityId, 'positioning:sitting');
+        
+        if ((!closenessData || closenessData.partners.length === 0) && !sittingData) {
+          issues.push({
+            type: 'orphaned_movement_lock',
+            entityId,
+            message: `${entityId} has movement locked but no closeness partners or sitting state`
+          });
+        }
+      }
+    }
 
-  /**
-   * Get current lock count (for monitoring)
-   */
-  getLockCount() {
-    return this.#locks.size;
+    if (issues.length > 0) {
+      this.#logger.warn('Movement lock consistency issues found', { issues });
+    }
+
+    return issues;
   }
 }
 ```
@@ -681,6 +650,8 @@ export class AtomicOperationWrapper {
 **File**: `tests/unit/logic/operationHandlers/proximityEdgeCases.test.js`
 
 ```javascript
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+
 describe('Proximity Closeness Edge Cases', () => {
   describe('Input Validation Edge Cases', () => {
     it('should handle malformed entity IDs gracefully', async () => {
@@ -736,7 +707,7 @@ describe('Proximity Closeness Edge Cases', () => {
 
   describe('Component State Edge Cases', () => {
     it('should handle corrupted furniture component', async () => {
-      mockEntityManager.getComponent.mockReturnValue({
+      mockEntityManager.getComponentData.mockReturnValue({
         spots: 'not-an-array' // Corrupted data
       });
 
@@ -744,12 +715,12 @@ describe('Proximity Closeness Edge Cases', () => {
         furniture_id: 'furniture:corrupted',
         actor_id: 'game:alice',
         spot_index: 1
-      })).rejects.toThrow(InvalidComponentStateError);
+      })).rejects.toThrow(InvalidArgumentError);
     });
 
     it('should handle circular closeness references', async () => {
       // Setup circular reference: A → B → C → A
-      mockEntityManager.getComponent.mockImplementation((entityId, componentType) => {
+      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
         if (componentType === 'positioning:closeness') {
           switch (entityId) {
             case 'game:alice': return { partners: ['game:bob'] };
@@ -771,29 +742,27 @@ describe('Proximity Closeness Edge Cases', () => {
     });
   });
 
-  describe('Concurrency Edge Cases', () => {
-    it('should prevent race conditions during concurrent operations', async () => {
-      const concurrentOperations = [];
+  describe('JavaScript Single-Threaded Model', () => {
+    it('should handle sequential operations correctly', async () => {
+      // JavaScript is single-threaded, so operations are inherently atomic
+      // This test verifies that sequential operations maintain data consistency
+      
+      const operations = [];
       
       for (let i = 0; i < 10; i++) {
-        concurrentOperations.push(handler.execute({
+        operations.push(handler.execute({
           furniture_id: 'furniture:shared',
           actor_id: `game:actor_${i}`,
           spot_index: i % 3
         }));
       }
 
-      // Should handle concurrent operations without data corruption
-      const results = await Promise.allSettled(concurrentOperations);
+      // Operations execute sequentially in JavaScript's event loop
+      const results = await Promise.all(operations);
       
-      // At least some operations should succeed
-      const successful = results.filter(r => r.status === 'fulfilled').length;
-      expect(successful).toBeGreaterThan(0);
-
-      // Failed operations should have meaningful errors
-      const failed = results.filter(r => r.status === 'rejected');
-      failed.forEach(result => {
-        expect(result.reason.message).toBeDefined();
+      // All operations should complete without data corruption
+      results.forEach(result => {
+        expect(result.success).toBeDefined();
       });
     });
   });
@@ -805,26 +774,28 @@ describe('Proximity Closeness Edge Cases', () => {
 ### Phase 1: Enhanced Validation Infrastructure
 - [ ] Implement comprehensive parameter validation with detailed error messages
 - [ ] Create component state validator with consistency checks
-- [ ] Create custom error classes for different failure scenarios
+- [ ] Use existing error classes (InvalidArgumentError, EntityNotFoundError)
 - [ ] Add input sanitization and type safety checks
 
 ### Phase 2: Operation Handler Enhancements
 - [ ] Enhance EstablishSittingClosenessHandler with robust error handling
-- [ ] Enhance RemoveSittingClosenessHandler with validation and recovery
-- [ ] Add atomic operation wrapper for race condition prevention
-- [ ] Implement comprehensive logging and error reporting
+- [ ] Fix EntityManager method calls (getComponentData, addComponent)
+- [ ] Fix ClosenessCircleService merge() usage (returns array, not object)
+- [ ] Use tryWriteContextVariable for context variable handling
+- [ ] Use safeDispatchError for event dispatching
+- [ ] Call updateMovementLock with correct signature (entityId, boolean)
 
 ### Phase 3: Edge Case Testing
 - [ ] Create comprehensive edge case test suites
 - [ ] Test malformed input handling across all entry points
-- [ ] Test concurrent operation scenarios
 - [ ] Test component state corruption recovery
+- [ ] Test JavaScript single-threaded execution model
 
 ### Phase 4: Integration and Documentation
 - [ ] Integrate enhanced validation with existing operation handlers
 - [ ] Test error recovery mechanisms with integration tests
 - [ ] Document error codes and troubleshooting procedures
-- [ ] Create monitoring and alerting for common failure scenarios
+- [ ] Create monitoring patterns for common failure scenarios
 
 ## Acceptance Criteria
 
@@ -838,28 +809,26 @@ describe('Proximity Closeness Edge Cases', () => {
 - [ ] **Input Validation**: All inputs validated with detailed error messages
 - [ ] **Component Consistency**: All component states validated for consistency
 - [ ] **Bidirectional Integrity**: All closeness relationships validated as bidirectional
-- [ ] **Race Condition Prevention**: Concurrent operations handled safely
+- [ ] **Single-threaded Safety**: Leverage JavaScript's single-threaded model
 
 ### Edge Case Requirements
 - [ ] **Malformed Data**: Handles corrupted or malformed component data gracefully
 - [ ] **Extreme Values**: Handles extreme or unexpected parameter values
 - [ ] **Missing Components**: Handles missing or null components appropriately
-- [ ] **Concurrent Access**: Prevents data corruption during concurrent operations
+- [ ] **Data Consistency**: Maintains data consistency in JavaScript's event loop
 
 ### Performance Requirements
 - [ ] **Validation Overhead**: Validation adds <10ms to operation execution time
 - [ ] **Error Handling**: Error scenarios don't cause memory leaks or resource issues
-- [ ] **Concurrency Control**: Lock contention doesn't significantly impact performance
 - [ ] **Recovery Time**: System recovery from errors completes within reasonable time
 
 ## Definition of Done
 - [ ] All input validation enhanced with comprehensive error checking
 - [ ] Component state validation implemented with consistency checks
-- [ ] Custom error classes created and integrated throughout system
-- [ ] Race condition prevention implemented with atomic operation wrapper
-- [ ] Operation handlers enhanced with robust error handling and recovery
+- [ ] Use existing error classes throughout system
+- [ ] Operation handlers enhanced with correct API usage
 - [ ] Comprehensive edge case test suite created and passing
 - [ ] Error handling and validation integrated with existing codebase
 - [ ] Performance impact of validation measured and acceptable
 - [ ] Documentation updated with error codes and troubleshooting information
-- [ ] Monitoring and alerting capabilities documented for operations team
+- [ ] Monitoring patterns documented for operations team

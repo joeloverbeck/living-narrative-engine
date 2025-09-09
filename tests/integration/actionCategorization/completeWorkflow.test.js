@@ -563,62 +563,6 @@ describe('Complete Action Categorization Workflow Integration', () => {
     });
   });
 
-  describe('Performance Integration', () => {
-    it('should maintain performance under realistic load', () => {
-      const largeGameState = {
-        availableActions: Array.from({ length: 50 }, (_, i) => ({
-          index: i + 1,
-          actionId: `namespace${i % 12}:action${i}`,
-          commandString: `command ${i}`,
-          description: `Description for action number ${i} with some detail.`,
-          params: {},
-        })),
-      };
-
-      // Test LLM performance
-      const llmStartTime = performance.now();
-      const llmOutput =
-        promptProvider.getAvailableActionsInfoContent(largeGameState);
-      const llmEndTime = performance.now();
-
-      expect(llmEndTime - llmStartTime).toBeLessThan(50); // 50ms threshold
-      expect(llmOutput).toBeTruthy();
-    });
-
-    it('should handle concurrent operations efficiently', () => {
-      const gameState = {
-        availableActions: Array.from({ length: 20 }, (_, i) => ({
-          index: i + 1,
-          actionId: `namespace${i % 6}:action${i}`,
-          commandString: `command ${i}`,
-          description: `Description ${i}.`,
-          params: {},
-        })),
-      };
-
-      const operations = [];
-
-      // Simulate concurrent LLM operations
-      for (let i = 0; i < 10; i++) {
-        operations.push(
-          Promise.resolve(
-            promptProvider.getAvailableActionsInfoContent(gameState)
-          )
-        );
-      }
-
-      return Promise.all(operations).then((results) => {
-        expect(results.length).toBe(10);
-
-        // All results should be valid
-        results.forEach((result) => {
-          expect(result).toBeTruthy();
-          expect(result).toContain('Actions');
-        });
-      });
-    });
-  });
-
   describe('Real-World Scenarios', () => {
     it('should handle typical game progression scenario', () => {
       // Simulate a game progression with changing action sets

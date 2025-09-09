@@ -14,6 +14,15 @@ import {
 describe('Pipeline Tracing Integration Memory', () => {
   let testBed;
 
+  // Validate that memory test utilities are available
+  beforeAll(() => {
+    if (!global.memoryTestUtils) {
+      throw new Error(
+        'Memory test utilities not loaded. Ensure jest.config.memory.js includes ./tests/setup/memorySetup.js in setupFilesAfterEnv'
+      );
+    }
+  });
+
   beforeEach(async () => {
     testBed = new PipelineTracingIntegrationTestBed();
     await testBed.initialize();
@@ -80,26 +89,36 @@ describe('Pipeline Tracing Integration Memory', () => {
       
       // Use adaptive thresholds and retry logic for more resilient testing
       // Apply higher multiplier for pipeline tracing tests due to mock overhead
-      const baseAdaptedThresholds = global.memoryTestUtils.getAdaptiveThresholds(PERFORMANCE_THRESHOLDS);
-      const adaptedThresholds = {
-        ...baseAdaptedThresholds,
-        MEMORY_GROWTH_LIMIT_MB: baseAdaptedThresholds.MEMORY_GROWTH_LIMIT_MB * 1.5, // Extra multiplier for pipeline tests
-        MEMORY_GROWTH_LIMIT_PERCENT: baseAdaptedThresholds.MEMORY_GROWTH_LIMIT_PERCENT * 1.5,
-      };
-      
-      try {
-        await global.memoryTestUtils.assertMemoryWithRetry(
-          async () => finalMemory - initialMemory,
-          adaptedThresholds.MEMORY_GROWTH_LIMIT_MB,
-          6 // increased retry attempts for better reliability
-        );
-      } catch (error) {
-        // Fallback to percentage-based check
-        const growthPercent = global.memoryTestUtils.calculateMemoryGrowthPercentage(initialMemory, finalMemory);
-        console.log(`Memory growth percentage: ${growthPercent.toFixed(1)}%`);
+      if (global.memoryTestUtils) {
+        const baseAdaptedThresholds = global.memoryTestUtils.getAdaptiveThresholds(PERFORMANCE_THRESHOLDS);
+        const adaptedThresholds = {
+          ...baseAdaptedThresholds,
+          MEMORY_GROWTH_LIMIT_MB: baseAdaptedThresholds.MEMORY_GROWTH_LIMIT_MB * 1.5, // Extra multiplier for pipeline tests
+          MEMORY_GROWTH_LIMIT_PERCENT: baseAdaptedThresholds.MEMORY_GROWTH_LIMIT_PERCENT * 1.5,
+        };
         
-        if (growthPercent > adaptedThresholds.MEMORY_GROWTH_LIMIT_PERCENT) {
-          throw new Error(`Memory growth ${growthPercent.toFixed(1)}% exceeds ${adaptedThresholds.MEMORY_GROWTH_LIMIT_PERCENT}% limit`);
+        try {
+          await global.memoryTestUtils.assertMemoryWithRetry(
+            async () => finalMemory - initialMemory,
+            adaptedThresholds.MEMORY_GROWTH_LIMIT_MB,
+            6 // increased retry attempts for better reliability
+          );
+        } catch (error) {
+          // Fallback to percentage-based check
+          const growthPercent = global.memoryTestUtils.calculateMemoryGrowthPercentage(initialMemory, finalMemory);
+          console.log(`Memory growth percentage: ${growthPercent.toFixed(1)}%`);
+          
+          if (growthPercent > adaptedThresholds.MEMORY_GROWTH_LIMIT_PERCENT) {
+            throw new Error(`Memory growth ${growthPercent.toFixed(1)}% exceeds ${adaptedThresholds.MEMORY_GROWTH_LIMIT_PERCENT}% limit`);
+          }
+        }
+      } else {
+        // Basic fallback check without utilities
+        const memoryGrowth = (finalMemory - initialMemory) / 1024 / 1024;
+        console.log(`Memory growth: ${memoryGrowth.toFixed(2)} MB (utilities not available)`);
+        const basicLimitMB = PERFORMANCE_THRESHOLDS.MEMORY_GROWTH_LIMIT_MB * 2.25; // 1.5 * 1.5 for pipeline tests
+        if (memoryGrowth > basicLimitMB) {
+          throw new Error(`Memory growth ${memoryGrowth.toFixed(2)}MB exceeds basic limit of ${basicLimitMB}MB`);
         }
       }
     });
@@ -154,6 +173,9 @@ describe('Pipeline Tracing Integration Memory', () => {
       console.log(`Total memory growth: ${memoryGrowthMB.toFixed(2)} MB`);
       
       // Use percentage-based growth check for better portability
+      if (!global.memoryTestUtils) {
+        throw new Error('Memory test utilities not available. Cannot calculate memory growth percentage.');
+      }
       const growthPercent = global.memoryTestUtils.calculateMemoryGrowthPercentage(initialMemory, finalMemory);
       console.log(`Memory growth percentage: ${growthPercent.toFixed(1)}%`);
       
@@ -161,6 +183,9 @@ describe('Pipeline Tracing Integration Memory', () => {
       const maxGrowthPercent = 200; // 200% growth accounts for mock overhead and GC timing
       
       try {
+        if (!global.memoryTestUtils) {
+          throw new Error('Memory test utilities not available for assertMemoryGrowthPercentage.');
+        }
         global.memoryTestUtils.assertMemoryGrowthPercentage(
           initialMemory,
           finalMemory,
@@ -169,13 +194,21 @@ describe('Pipeline Tracing Integration Memory', () => {
         );
       } catch (error) {
         // Fallback to absolute check with adaptive threshold
-        const adaptedThresholds = global.memoryTestUtils.getAdaptiveThresholds({ 
-          MAX_MEMORY_MB: 200, // Increased for pipeline tests
-          MEMORY_GROWTH_LIMIT_MB: 30 // Increased for 100 iterations
-        });
-        
-        if (memoryGrowthMB > adaptedThresholds.MEMORY_GROWTH_LIMIT_MB) {
-          throw new Error(`Memory growth ${memoryGrowthMB.toFixed(2)}MB exceeds adapted limit of ${adaptedThresholds.MEMORY_GROWTH_LIMIT_MB}MB`);
+        if (global.memoryTestUtils) {
+          const adaptedThresholds = global.memoryTestUtils.getAdaptiveThresholds({ 
+            MAX_MEMORY_MB: 200, // Increased for pipeline tests
+            MEMORY_GROWTH_LIMIT_MB: 30 // Increased for 100 iterations
+          });
+          
+          if (memoryGrowthMB > adaptedThresholds.MEMORY_GROWTH_LIMIT_MB) {
+            throw new Error(`Memory growth ${memoryGrowthMB.toFixed(2)}MB exceeds adapted limit of ${adaptedThresholds.MEMORY_GROWTH_LIMIT_MB}MB`);
+          }
+        } else {
+          // If utilities not available, use basic check
+          const basicLimitMB = 30;
+          if (memoryGrowthMB > basicLimitMB) {
+            throw new Error(`Memory growth ${memoryGrowthMB.toFixed(2)}MB exceeds basic limit of ${basicLimitMB}MB (memory utilities not available)`);
+          }
         }
       }
       
@@ -237,40 +270,54 @@ describe('Pipeline Tracing Integration Memory', () => {
       expect(result.success).toBe(true);
 
       // Assert - Memory efficiency with adaptive thresholds
-      const adaptedThresholds = global.memoryTestUtils.getAdaptiveThresholds(PERFORMANCE_THRESHOLDS);
-      
-      // Check absolute memory limit with retry logic
-      // Apply extra multiplier for extreme complexity pipeline tests
-      await global.memoryTestUtils.assertMemoryWithRetry(
-        async () => finalMemoryMB * 1024 * 1024,
-        adaptedThresholds.MAX_MEMORY_MB * 1.25, // Extra 25% for extreme complexity
-        8 // increased retry attempts for better reliability
-      );
-      
-      // Check growth with both percentage and absolute limits
-      const growthPercent = global.memoryTestUtils.calculateMemoryGrowthPercentage(
-        memorySnapshots[0].memory,
-        memorySnapshots[1].memory
-      );
-      console.log(`Memory growth percentage: ${growthPercent.toFixed(1)}%`);
-      
-      // For extreme complexity, allow 300% growth or 3x the normal limit
-      const maxGrowthForExtreme = Math.min(300, adaptedThresholds.MEMORY_GROWTH_LIMIT_PERCENT * 5);
-      
-      try {
-        global.memoryTestUtils.assertMemoryGrowthPercentage(
-          memorySnapshots[0].memory,
-          memorySnapshots[1].memory,
-          maxGrowthForExtreme,
-          'Extreme complexity operation'
+      if (global.memoryTestUtils) {
+        const adaptedThresholds = global.memoryTestUtils.getAdaptiveThresholds(PERFORMANCE_THRESHOLDS);
+        
+        // Check absolute memory limit with retry logic
+        // Apply extra multiplier for extreme complexity pipeline tests
+        await global.memoryTestUtils.assertMemoryWithRetry(
+          async () => finalMemoryMB * 1024 * 1024,
+          adaptedThresholds.MAX_MEMORY_MB * 1.25, // Extra 25% for extreme complexity
+          8 // increased retry attempts for better reliability
         );
-      } catch (error) {
-        // Fallback to absolute check with higher tolerance for extreme complexity
-        const extremeGrowthLimitMB = adaptedThresholds.MEMORY_GROWTH_LIMIT_MB * 2;
-        if (growthMB > extremeGrowthLimitMB) {
-          throw new Error(
-            `Memory growth ${growthMB.toFixed(2)}MB exceeds extreme complexity limit of ${extremeGrowthLimitMB}MB`
+        
+        // Check growth with both percentage and absolute limits
+        const growthPercent = global.memoryTestUtils.calculateMemoryGrowthPercentage(
+          memorySnapshots[0].memory,
+          memorySnapshots[1].memory
+        );
+        console.log(`Memory growth percentage: ${growthPercent.toFixed(1)}%`);
+        
+        // For extreme complexity, allow 300% growth or 3x the normal limit
+        const maxGrowthForExtreme = Math.min(300, adaptedThresholds.MEMORY_GROWTH_LIMIT_PERCENT * 5);
+        
+        try {
+          global.memoryTestUtils.assertMemoryGrowthPercentage(
+            memorySnapshots[0].memory,
+            memorySnapshots[1].memory,
+            maxGrowthForExtreme,
+            'Extreme complexity operation'
           );
+        } catch (error) {
+          // Fallback to absolute check with higher tolerance for extreme complexity
+          const extremeGrowthLimitMB = adaptedThresholds.MEMORY_GROWTH_LIMIT_MB * 2;
+          if (growthMB > extremeGrowthLimitMB) {
+            throw new Error(
+              `Memory growth ${growthMB.toFixed(2)}MB exceeds extreme complexity limit of ${extremeGrowthLimitMB}MB`
+            );
+          }
+        }
+      } else {
+        // Basic fallback check without utilities
+        console.log(`Memory growth: ${growthMB.toFixed(2)} MB (utilities not available)`);
+        const basicMaxMemoryMB = PERFORMANCE_THRESHOLDS.MAX_MEMORY_MB * 2.5; // Extra tolerance for extreme complexity
+        const basicGrowthLimitMB = PERFORMANCE_THRESHOLDS.MEMORY_GROWTH_LIMIT_MB * 3; // Higher limit for extreme
+        
+        if (finalMemoryMB > basicMaxMemoryMB) {
+          throw new Error(`Final memory ${finalMemoryMB.toFixed(2)}MB exceeds basic limit of ${basicMaxMemoryMB}MB`);
+        }
+        if (growthMB > basicGrowthLimitMB) {
+          throw new Error(`Memory growth ${growthMB.toFixed(2)}MB exceeds basic limit of ${basicGrowthLimitMB}MB`);
         }
       }
     });

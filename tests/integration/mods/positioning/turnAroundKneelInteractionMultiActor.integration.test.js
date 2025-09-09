@@ -229,28 +229,32 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
       dslParser,
       scopeContextBuilder,
       unifiedScopeResolver,
-      scopeMap: new Map([
-        ['positioning:actors_in_location_facing', { expr: 'actors in location[{"!=": [{"var": "positioning:facing_away.facing_away_from"}, null]}]' }],
-      ]),
     });
 
-    // Create the action pipeline orchestrator
-    actionPipelineOrchestrator = new ActionPipelineOrchestrator({
-      logger,
-      entityManager,
-      dataRegistry,
-      targetResolutionService,
-      scopeRegistry,
-      scopeEngine,
-      jsonLogicService,
-      prerequisiteEvaluationService,
-      multiTargetResolutionStage,
-      gameDataRepository,
-    });
-
-    // Create action index and build it
+    // Create action index and build it first
     actionIndex = new ActionIndex({ logger, entityManager });
     actionIndex.buildIndex([turnAroundAction, kneelBeforeAction]);
+    
+    // Create action command formatter
+    const actionFormatter = new ActionCommandFormatter({
+      getEntityDisplayName,
+    });
+    
+    // Create the action pipeline orchestrator
+    actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+      actionIndex,
+      prerequisiteService: prerequisiteEvaluationService,
+      targetService: targetResolutionService,
+      formatter: actionFormatter,
+      entityManager,
+      safeEventDispatcher,
+      getEntityDisplayNameFn: getEntityDisplayName,
+      errorBuilder: actionErrorContextBuilder,
+      logger,
+      unifiedScopeResolver,
+      targetContextBuilder: targetContextBuilder,
+      multiTargetResolutionStage,
+    });
 
     // Create mock traceContextFactory
     const traceContextFactory = jest.fn().mockReturnValue({
@@ -269,33 +273,35 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
       traceContextFactory,
     });
 
-    // Set up action command formatter
-    const actionFormatter = new ActionCommandFormatter({
-      getEntityDisplayName,
+    // Create location entity
+    const location = entityManager.createEntity('test:location1');
+    entityManager.addComponent('test:location1', NAME_COMPONENT_ID, {
+      name: 'Test Location',
     });
+    entityManager.addComponent('test:location1', 'core:location', {});
 
     // Set up entities
     actor1 = entityManager.createEntity('test:actor1');
-    entityManager.addComponent(actor1, NAME_COMPONENT_ID, {
+    entityManager.addComponent('test:actor1', NAME_COMPONENT_ID, {
       name: 'Actor 1',
     });
-    entityManager.addComponent(actor1, POSITION_COMPONENT_ID, {
+    entityManager.addComponent('test:actor1', POSITION_COMPONENT_ID, {
       locationId: 'test:location1',
     });
-    entityManager.addComponent(actor1, 'core:actor', {});
-    entityManager.addComponent(actor1, 'positioning:closeness', {
+    entityManager.addComponent('test:actor1', 'core:actor', {});
+    entityManager.addComponent('test:actor1', 'positioning:closeness', {
       partners: ['test:actor2'],
     });
 
     actor2 = entityManager.createEntity('test:actor2');
-    entityManager.addComponent(actor2, NAME_COMPONENT_ID, {
+    entityManager.addComponent('test:actor2', NAME_COMPONENT_ID, {
       name: 'Actor 2',
     });
-    entityManager.addComponent(actor2, POSITION_COMPONENT_ID, {
+    entityManager.addComponent('test:actor2', POSITION_COMPONENT_ID, {
       locationId: 'test:location1',
     });
-    entityManager.addComponent(actor2, 'core:actor', {});
-    entityManager.addComponent(actor2, 'positioning:closeness', {
+    entityManager.addComponent('test:actor2', 'core:actor', {});
+    entityManager.addComponent('test:actor2', 'positioning:closeness', {
       partners: ['test:actor1'],
     });
 
@@ -342,20 +348,16 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
 
     // Add a third actor
     const actor3 = entityManager.createEntity('test:actor3');
-    entityManager.addComponent(actor3, NAME_COMPONENT_ID, {
+    entityManager.addComponent('test:actor3', NAME_COMPONENT_ID, {
       name: 'Actor 3',
     });
-    entityManager.addComponent(actor3, POSITION_COMPONENT_ID, {
+    entityManager.addComponent('test:actor3', POSITION_COMPONENT_ID, {
       locationId: 'test:location1',
     });
-    entityManager.addComponent(actor3, 'core:actor', {});
-    entityManager.addComponent(actor3, 'positioning:closeness', {
+    entityManager.addComponent('test:actor3', 'core:actor', {});
+    entityManager.addComponent('test:actor3', 'positioning:closeness', {
       partners: ['test:actor1', 'test:actor2'],
     });
-    
-    // IMPORTANT: Rebuild the action index after adding actor3
-    // This ensures the action discovery system knows about the new entity
-    actionIndex.buildIndex([turnAroundAction, kneelBeforeAction]);
 
     // Actor1 turns actor2 around (actor2 facing away from actor1)
     await eventBus.dispatch({
