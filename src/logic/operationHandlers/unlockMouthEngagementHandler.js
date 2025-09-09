@@ -113,12 +113,9 @@ class UnlockMouthEngagementHandler extends BaseOperationHandler {
         );
 
         // Dispatch success event for other systems to react
-        this.#dispatcher.dispatch({
-          type: 'MOUTH_ENGAGEMENT_UNLOCKED',
-          payload: {
-            actorId,
-            timestamp: new Date().toISOString(),
-          },
+        this.#dispatcher.dispatch('core:mouth_engagement_unlocked', {
+          actorId,
+          timestamp: new Date().toISOString(),
         });
       } else {
         logger.warn(

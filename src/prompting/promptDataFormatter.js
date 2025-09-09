@@ -400,7 +400,8 @@ export class PromptDataFormatter {
 Recent thoughts (avoid repeating or barely rephrasing these):
 ${content}
 
-Generate a fresh, unique thought that builds upon your mental state.
+-----
+Generate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.
 </thoughts>`;
   }
 
@@ -412,10 +413,10 @@ Generate a fresh, unique thought that builds upon your mental state.
    */
   formatThoughtsVoiceGuidance(thoughtsArray) {
     if (!thoughtsArray || thoughtsArray.length === 0) {
-      return "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style.";
+      return "INNER VOICE GUIDANCE: Generate thoughts that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects.";
     }
 
-    return "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style.";
+    return "INNER VOICE GUIDANCE: Your thoughts must be fresh and unique - do not repeat or barely rephrase the previous thoughts shown above. Build upon your existing mental state with new insights, reactions, or perspectives that authentically reflect your character's unique mental voice, personality patterns, and internal speech style. CRITICAL: Generate thoughts that occur IMMEDIATELY BEFORE performing your chosen action - you do NOT know what will happen as a result of your action yet. Do not assume outcomes, reactions, or results. Think about your intentions and reasoning for the action, not its anticipated effects.";
   }
 
   /**

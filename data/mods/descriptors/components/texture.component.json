@@ -18,7 +18,8 @@
           "rib-knit",
           "rugged",
           "scarred",
-          "matte"
+          "matte",
+          "croc-embossed"
         ],
         "default": "smooth"
       }

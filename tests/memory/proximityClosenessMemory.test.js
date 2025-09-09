@@ -371,11 +371,28 @@ describe('Proximity Closeness Memory Tests', () => {
       // Memory growth should be minimal for create/destroy cycles
       expect(totalGrowth).toBeLessThan(5); // Less than 5MB total growth
       
-      // Growth should not be linear (indicating proper cleanup)
-      const firstCheckpoint = memoryCheckpoints[0];
-      const lastCheckpoint = memoryCheckpoints[memoryCheckpoints.length - 1];
-      const growthRate = lastCheckpoint.growth / firstCheckpoint.growth;
-      expect(growthRate).toBeLessThan(5); // Growth rate should not exceed 5x in test environment
+      // Check for reasonable growth pattern using stable metrics
+      const growthPerOperation = totalGrowth / cycles;
+      expect(growthPerOperation).toBeLessThan(0.01); // Less than 0.01MB per operation
+      
+      // Verify growth trend stability across checkpoints
+      if (memoryCheckpoints.length >= 2) {
+        const growthDifferences = [];
+        for (let i = 1; i < memoryCheckpoints.length; i++) {
+          const growthDiff = memoryCheckpoints[i].growth - memoryCheckpoints[i - 1].growth;
+          growthDifferences.push(growthDiff);
+        }
+        
+        const maxGrowthDiff = Math.max(...growthDifferences.map(Math.abs));
+        expect(maxGrowthDiff).toBeLessThan(2); // Growth between checkpoints should be stable (<2MB)
+        
+        console.log('Memory Growth Stability:');
+        memoryCheckpoints.forEach((checkpoint, i) => {
+          console.log(`  Checkpoint ${i + 1} (${checkpoint.cycle} cycles): ${checkpoint.growth.toFixed(2)}MB`);
+        });
+        console.log(`  Per-operation growth: ${(growthPerOperation * 1024).toFixed(2)}KB/op`);
+        console.log(`  Max growth diff: ${maxGrowthDiff.toFixed(2)}MB`);
+      }
     });
   });
 
