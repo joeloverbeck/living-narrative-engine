@@ -251,4 +251,7 @@ export const coreTokens = freeze({
   CriticalLogNotifier: 'CriticalLogNotifier',
   // Action Sequence Service
   ActionSequence: 'ActionSequence',
+  // Mod Cross-Reference Validation
+  IModReferenceExtractor: 'IModReferenceExtractor',
+  IModCrossReferenceValidator: 'IModCrossReferenceValidator',
 });

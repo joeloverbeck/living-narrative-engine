@@ -99,6 +99,8 @@ import { Registrar } from '../../utils/registrarHelpers.js';
 import { makeRegistryCache } from '../../loaders/registryCacheAdapter.js';
 import { BaseManifestItemLoader } from '../../loaders/baseManifestItemLoader.js';
 import { createDefaultContentLoadersConfig } from '../../loaders/defaultLoaderConfig.js';
+import ModCrossReferenceValidator from '../../validation/modCrossReferenceValidator.js';
+import ModReferenceExtractor from '../../validation/modReferenceExtractor.js';
 
 /**
  * Registers core data infrastructure services, data loaders, and the phase-based mod loading system.
@@ -453,6 +455,29 @@ export function registerLoaders(container) {
         c.resolve(tokens.ILogger)
       )
   );
+
+  // === Mod Cross-Reference Validation Services ===
+  
+  // Register reference extractor
+  registrar.singletonFactory(
+    tokens.IModReferenceExtractor,
+    (c) => new ModReferenceExtractor({
+      logger: c.resolve(tokens.ILogger),
+      ajvValidator: c.resolve(tokens.ISchemaValidator)
+    })
+  );
+  
+  // Register cross-reference validator
+  registrar.singletonFactory(
+    tokens.IModCrossReferenceValidator,
+    (c) => new ModCrossReferenceValidator({
+      logger: c.resolve(tokens.ILogger),
+      modDependencyValidator: ModDependencyValidator,
+      referenceExtractor: c.resolve(tokens.IModReferenceExtractor)
+    })
+  );
+
+  safeDebug('Registered mod cross-reference validation services');
 
   logger.info(
     'Loaders Registration: All core services, loaders, and phases registered.'
